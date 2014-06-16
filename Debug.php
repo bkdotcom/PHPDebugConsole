@@ -4,7 +4,7 @@
  * Browser/javascript like console class for PHP
  *
  * @license http://opensource.org/licenses/MIT MIT
- * @version GIT: $id$
+ * @version v1.0
  *
  * @see     http://www.github.com/bkdotcom/
  * @see     https://developer.mozilla.org/en-US/docs/Web/API/console

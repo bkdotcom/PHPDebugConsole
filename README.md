@@ -3,7 +3,7 @@ PHPDebugConsole
 
 Browser/javascript like console class for PHP
 
-**Website:** http://www.bradkent.com/?page=php/debug
+**Website/Usage/Examples:** http://www.bradkent.com/?page=php/debug
 
 * PHP port of the [javascript web console api](https://developer.mozilla.org/en-US/docs/Web/API/console)
 * abstracts/wraps [FirePHP](http://www.firephp.org/)  

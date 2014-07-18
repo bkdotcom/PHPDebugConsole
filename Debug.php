@@ -1,10 +1,18 @@
 <?php
 
+if ( !defined('E_STRICT') )
+	define('E_STRICT', 2048);				// PHP 5.0.0
+if ( !defined('E_RECOVERABLE_ERROR') )
+	define('E_RECOVERABLE_ERROR', 4096);	// PHP 5.2.0
+if ( !defined('E_DEPRECATED') )
+	define('E_DEPRECATED', 8192);			// PHP 5.3.0
+if ( !defined('E_USER_DEPRECATED') )
+	define('E_USER_DEPRECATED', 16384);		// PHP 5.3.0
+
 /**
  * Browser/javascript like console class for PHP
  *
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.0
  *
  * @see     http://www.github.com/bkdotcom/
  * @see     https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -18,21 +26,30 @@ class Debug
 		E_PARSE				=> 'Parsing Error',		// handled via shutdown function
 		E_NOTICE			=> 'Notice',
 		E_CORE_ERROR		=> 'Core Error',		// handled via shutdown function
-		E_CORE_WARNING		=> 'Core Warning',		// not handled
+		E_CORE_WARNING		=> 'Core Warning',		// handled?
 		E_COMPILE_ERROR		=> 'Compile Error',		// handled via shutdown function
-		E_COMPILE_WARNING	=> 'Compile Warning',	// not handled
+		E_COMPILE_WARNING	=> 'Compile Warning',	// handled?
 		E_USER_ERROR		=> 'User Error',
 		E_USER_WARNING		=> 'User Warning',
 		E_USER_NOTICE		=> 'User Notice',
-		E_ALL				=> 'E_ALL',				// only listed here for completeness
-		E_STRICT			=> 'Runtime Notice (E_STRICT)',	// PHP 5.0.0
-		E_RECOVERABLE_ERROR	=> 'Fatal Error',		// PHP 5.2.0
-		E_DEPRECATED		=> 'Deprecated',		// PHP 5.3.0
-		E_USER_DEPRECATED	=> 'User Deprecated',	// PHP 5.3.0
+		E_ALL				=> 'E_ALL',				// listed here for completeness
+		E_STRICT			=> 'Runtime Notice (E_STRICT)',
+		E_RECOVERABLE_ERROR	=> 'Fatal Error',
+		E_DEPRECATED		=> 'Deprecated',
+		E_USER_DEPRECATED	=> 'User Deprecated',
+	);
+
+	var $errTypesGrouped = array(
+		'deprecated'	=> array( E_DEPRECATED, E_USER_DEPRECATED ),
+		'error'			=> array( E_USER_ERROR, E_RECOVERABLE_ERROR ),
+		'notice'		=> array( E_NOTICE, E_USER_NOTICE ),
+		'strict'		=> array( E_STRICT ),
+		'warning'		=> array( E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING ),
+		'fatal'			=> array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
 	);
 
 	/**
-	 * constructor
+	 * constructor (php 4 compatable)
 	 *
 	 * @param array $cfg config
 	 *
@@ -62,21 +79,19 @@ class Debug
 					'emailTo'	=> !empty($_SERVER['SERVER_ADMIN'])
 						? $_SERVER['SERVER_ADMIN']
 						: null,
-					'onOutput'	=> null,			// set to something callable
+					'onOutput'	=> null,				// set to something callable
 					'errorHandler' => array(
 						'onError'			=> null,	// set to something callable, will receive a single boolean indicating whether error was fatal
 						'emailMin'			=> 15,
 						'emailMask'			=> E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
 						'emailTraceMask'	=> E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-						'fatalMask'			=> E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR,
+						'fatalMask'			=> array_reduce($this->errTypesGrouped['fatal'], create_function('$a, $b', 'return $a | $b;')),
 						'emailThrottleFile'	=> dirname(__FILE__).'/error_emails.txt',
 					),
 				),
 				'data' => array(
-					'counts' => array(),
+					'counts' => array(),	// count method
 					'errorHandler' => array(
-						//'collect'		=> false,	// whether collect was on @ time of error
-						//'email'		=> false,
 						'errorCaller'	=> array(),
 						'errors'		=> array(),
 						'lastError'		=> array(),
@@ -86,8 +101,8 @@ class Debug
 					'groupDepth'	=> 0,
 					'groupDepthFile'=> 0,
 					'log'			=> array(),
-					'recursiveArray' => false,
-					'timers' => array(
+					'recursion'		=> false,
+					'timers' => array(		// timer method
 						'labels' => array(
 							'debugInit' => microtime(),
 						),
@@ -329,6 +344,58 @@ class Debug
 				call_user_func($this->cfg['onOutput'], $outputAs);
 			}
 			$outputAs = $this->get('outputAs');
+
+			/**
+			 * create an error summary if there were errors
+			 */
+			if ( !empty($this->data['errorHandler']['errors']) ) {
+				$counts = array();
+				foreach ( $this->data['errorHandler']['errors'] as $error ) {
+					if ( $error['suppressed'] )
+						continue;
+					foreach ( $this->errTypesGrouped as $k => $errTypes ) {
+						if ( !in_array($error['type'], $errTypes) )
+							continue;
+						$counts[$k] = isset($counts[$k])
+							? $counts[$k] + 1
+							: 1;
+						break;
+					}
+				}
+				if ( $counts ) {
+					$tot = array_sum($counts);
+					ksort($counts);
+					if ( count($counts) == 1 ) {
+						// all same type of error
+						$type = key($counts);
+						if ( $tot == 1 ) {
+							$alert = 'There was 1 error';
+							if ( $type == 'fatal' ) {
+								$alert = null;	// don't bother with this alert..
+												// fatal are still prominently displayed
+							} elseif ( $type != 'error' ) {
+								$alert .= ' ('.$type.')';
+							}
+						} else {
+							$alert = 'There were '.$tot.' errors';
+							if ( $type != 'error' )
+								$alert .= ' of type '.$type;
+						}
+						if ( $alert )
+							$alert = '<h3>'.$alert.'</h3>'."\n";
+					} else {
+						$alert = '<h3>There were '.$tot.' errors:</h3>'."\n";
+						$alert .= '<ul class="list-unstyled indent">';
+						foreach ( $counts as $k => $v ) {
+							$alert .= '<li>'.$k.': '.$v.'</li>';
+						}
+						$alert .= '</ul>';
+					}
+					if ( $alert )
+						$this->alert = $alert;
+				}
+			}
+
 			$this->data['groupDepth'] = 0;
 			if ( $outputAs == 'html' ) {
 				$return = $this->_outputHtml();
@@ -702,7 +769,6 @@ class Debug
 				$email_body .= "\n".'backtrace: '.$str;
 			}
 			mail($this->cfg['emailTo'], $subject, $email_body);
-			//$this->log('<pre style="display: block; border:1px solid #000; padding:10px;">email_body:'."\n".$email_body.'</pre>');
 		}
 		return;
 	}
@@ -924,6 +990,7 @@ EOD;
 			$str = '<div class="log">'.$str.'</div>';
 		} else {
 			$keys = $this->arrayColKeys($array);
+			$undefined = "\x00".'undefined'."\x00";
 			$str = '<table cellpadding="1" cellspacing="0" border="1">'."\n";	// style="border:solid 1px;"
 			$values = array();
 			foreach ( $keys as $key ) {
@@ -943,12 +1010,14 @@ EOD;
 					if ( is_array($row) ) {
 						$value = array_key_exists($key, $row)
 							? $row[$key]
-							: null;
+							: $undefined;
 					} elseif ( $key === '' ) {
 						$value = $row;
 					}
 					if ( is_array($value) ) {
 						$value = call_user_func(array($this,__FUNCTION__), $value);
+					} elseif ( $value === $undefined ) {
+						$value = '<span class="t_undefined"></span>';
 					} else {
 						$value = $this->getDisplayValue($value);
 					}
@@ -958,7 +1027,7 @@ EOD;
 				foreach ( $values as $v ) {
 					// remove the span wrapper.. add span's class to TD
 					$class = null;
-					if ( preg_match('#^<span class="([^"]+)">(.+)</span>$#s', $v, $matches) ) {
+					if ( preg_match('#^<span class="([^"]+)">(.*)</span>$#s', $v, $matches) ) {
 						$class = $matches[1];
 						$v = $matches[2];
 					}
@@ -976,16 +1045,23 @@ EOD;
 	}
 
 	/**
-	 * @param mixed $v       value
-	 * @param bool  $htmlout true
-	 * @param array $hist    {@internal - used to check for recursion}
+	 * @param mixed $v    value
+	 * @param array $opts options
+	 * @param array $hist {@internal - used to check for recursion}
 	 *
 	 * @return string
 	 */
-	function getDisplayValue($v, $htmlout=true, $hist=array())
+	function getDisplayValue($v, $opts=array(), $hist=array())
 	{
 		$type = null;
 		$typeMore = null;
+		if ( empty($hist) ) {
+			$opts = array_merge(array(
+				'html' => true,		// use html markup
+				'flatten' => false,	// flatten array & obj structures (only applies when !html)
+				'boolNullToString' => true,
+			), $opts);
+		}
 		if ( is_string($v) ) {
 			$type = 'string';
 			if ( is_numeric($v) ) {
@@ -993,11 +1069,10 @@ EOD;
 			} elseif ( $this->isBinary($v) ) {
 				// all or partially binary data
 				$typeMore = 'binary';
-				$v = $this->getDisplayBinary($v, $htmlout);
-			} elseif ( preg_match('/^<span class="t_resource">Resource id #\d+:/', $v) ) {
-				$type = null;	// already designated
-			} elseif ( !preg_match('#\n|<br#', $v) ) {
-				//$v = '"'.$v.'"';
+				$v = $this->getDisplayBinary($v, $opts['html']);
+			} elseif ( preg_match('/^<span class="t_resource">(Resource id #\d+:.*?)<\/span>/', $v, $matches) ) {
+				$type = 'resource';
+				$v = $matches[1];
 			}
 		} elseif ( is_int($v) ) {
 			$type = 'int';
@@ -1005,11 +1080,14 @@ EOD;
 			$type = 'float';
 		} elseif ( is_bool($v) ) {
 			$type = 'bool';
-			$v = $v ? 'true' : 'false';
-			$typeMore = $v;
+			$vStr = $v ? 'true' : 'false';
+			if ( $opts['boolNullToString'] )
+				$v = $vStr;
+			$typeMore = $vStr;
 		} elseif ( is_null($v) ) {
 			$type = 'null';
-			$v = 'null';
+			if ( $opts['boolNullToString'] )
+				$v = 'null';
 		} elseif ( is_resource($v) ) {
 			$type = 'resource';
 			$v = print_r($v, true).': '.get_resource_type($v);
@@ -1017,18 +1095,24 @@ EOD;
 			$type = 'array';
 			if ( empty($hist) ) {
 				// check if we need to be on the look out for self-reference loop
-				$this->data['recursiveArray'] = $this->isRecursiveArray($v);
+				$this->data['recursion'] = $this->isRecursive($v);
 			}
-			$hist[] = &$v;
+			$hist[] = 'array';
 			foreach ( $v as $k => $v2 ) {
-				if ( $this->data['recursiveArray'] && $this->isRecursiveArray($v2, $k) ) {
+				if ( $this->data['recursion'] && $this->isRecursive($v2, $k) ) {
 					// this is where the recursion is
-					$v[$k] = '<span class="t_recursion">*RECURSION*</span>';
+					$v2 = is_object($v2)
+						? '<span class="t_object"><span class="label">'.get_class($v2).' object</span></span> '
+						: '<span class="t_keyword">Array</span> ';
+					$v2 .= '<span class="t_recursion">*RECURSION*</span>';
+					if ( !$opts['html'] )
+						$v2 = strip_tags($v2);
 				} else {
-					$v[$k] = $this->getDisplayValue($v2, $htmlout, $hist);
+					$v2 = $this->getDisplayValue($v2, $opts, $hist);
 				}
+				$v[$k] = $v2;
 			}
-			if ( !$htmlout ) {
+			if ( $opts['flatten'] ) {
 				$v = trim(print_r($v, true));
 				if ( count($hist) > 1 ) {
 					$v = str_replace("\n", "\n    ", $v);
@@ -1036,29 +1120,45 @@ EOD;
 			}
 		} elseif ( is_object($v) ) {
 			$type = 'object';
+			if ( empty($hist) ) {
+				// check if we need to be on the look out for self-reference loop
+				$this->data['recursion'] = $this->isRecursive($v);
+			}
 			if ( in_array($v, $hist, true) ) {
-				$v = '<span class="t_object">'.get_class($v).' object</span> <span class="t_recursion">*RECURSION*</span>';
+				$v = '<span class="t_object"><span class="label">'.get_class($v).' object</span></span> '
+					.'<span class="t_recursion">*RECURSION*</span>';
+				if ( !$opts['html'] ) {
+					$v = strip_tags($v);
+				}
 			} else {
 				$hist[] = &$v;
-				$className = get_class($v).' object';
-				$vars = $this->getDisplayValue(get_object_vars($v), $htmlout, $hist);
-				$methods = $this->getDisplayValue(get_class_methods($v), $htmlout, $hist);
-				$v = $className."\n"
-					.'    methods: '.$methods."\n"
-					.'    vars: '.$vars;
-				if ( !$htmlout && count($hist) > 1 ) {
-					$v = str_replace("\n", "\n    ", $v);
+				$v = array(
+					'className' => get_class($v).' object',
+					'vars'		=> $this->getDisplayValue(get_object_vars($v), $opts, $hist),
+					'methods'	=> $this->getDisplayValue(get_class_methods($v), $opts, $hist),
+				);
+				if ( $opts['html'] || $opts['flatten'] ) {
+					$v = $v['className']."\n"
+						.'    methods: '.$v['methods']."\n"
+						.'    vars: '.$v['vars'];
+					if ( $opts['flatten'] && count($hist) > 1 ) {
+						$v = str_replace("\n", "\n    ", $v);
+					}
 				}
 			}
 		}
-		if ( $htmlout ) {
+		if ( $opts['html'] ) {
 			if ( in_array($type, array('array','object')) ) {
 				if ( $type == 'array' ) {
 					$str = '<span class="t_keyword">Array</span><br />'."\n"
 						.'<span class="t_punct">(</span>'."\n"
 						.'<span class="t_array-inner">'."\n";
 					foreach ( $v as $k => $v2 ) {
-						$str .= "\t".'<span class="t_key_value"><span class="t_key">['.$k.']</span> <span class="t_operator">=&gt;</span> '.$v2.'</span>'."\n";
+						$str .= "\t".'<span class="t_key_value">'
+								.'<span class="t_key">['.$k.']</span> '
+								.'<span class="t_operator">=&gt;</span> '
+								.$v2
+							.'</span>'."\n";
 					}
 					$str .= '</span>'
 						.'<span class="t_punct">)</span>';
@@ -1066,8 +1166,6 @@ EOD;
 				} elseif ( $type == 'object' ) {
 					$v = preg_replace('#^([^\n]+)\n(.+)$#s', '<span class="label">\1</span>'."".'<span class="t_object-inner">\2</span>', $v);
 					$v = preg_replace('#\svars: #', '<br />vars: ', $v);
-					// needs more indent
-					//$v = str_replace("\n", "\n    ", $v);
 				}
 				$v = '<span class="t_'.$type.'">'.$v.'</span>';
 			} elseif ( $type ) {
@@ -1112,19 +1210,7 @@ EOD;
 			$error = error_get_last();
 			if ( $error['type'] & $this->cfg['errorHandler']['fatalMask'] ) {
 				$this->errorHandler($error['type'], $error['message'], $error['file'], $error['line']);
-				if ( $this->output ) {
-					if ( is_callable($this->cfg['onOutput']) ) {
-						/**
-						 * calling onOutput here because the lastError output will send headers
-						 *  and any onOutput callback may do a headers_sent() check
-						 */
-						call_user_func($this->cfg['onOutput']);
-						$this->setCfg('onOutput', null);
-					}
-					if ( $this->get('outputAs') == 'html' )
-						echo '<pre>'; print_r($this->get('lastError')); echo '</pre>';
-					echo $this->output();
-				}
+				echo $this->output();
 			}
 		}
 		/**
@@ -1210,8 +1296,9 @@ EOD;
 		foreach ( $args as $i => $v ) {
 			// if want to identify the resource type, needs done before resource is closed
 			if ( is_resource($v) )
+				// @todo should also check do this inside arrays, etc..
 				$args[$i] = $this->getDisplayValue($v);
-			elseif ( is_array($v) )
+			elseif ( is_array($v) || is_object($v) )
 				$args[$i] = $this->removeReferences($v);
 		}
 		array_unshift($args, $method);
@@ -1274,7 +1361,7 @@ EOD;
 					$args[0] = strip_tags($args[0]);
 				foreach ( $args as $k => $v ) {
 					if ( $k > 0 || !is_string($v) ) {
-						$v = $this->getDisplayValue($v, false);
+						$v = $this->getDisplayValue($v, array('html'=>false, 'flatten'=>true));
 						$v = preg_replace('#<span class="t_\w+">(.*?)</span>#', '\\1', $v);
 						$args[$k] = $v;
 					}
@@ -1328,14 +1415,13 @@ EOD;
 		$return = <<<EOD
 		.debug { clear: both; font-family: Verdana; font-size: 9px; line-height: normal; text-shadow: none; }
 		.debug * {
-			background-color: transparent;
+			/*background-color: transparent;*/
 			font-size: inherit;
 			text-indent: 0;
 		}
 		.debug h3 { margin-top: 0; font-size: 1.25em; font-weight: bold; }
 		.debug img { border:0px; }
 		.debug pre {
-			display: inline;
 			padding: 0;
 		 	border: 0;
 			margin: 0;
@@ -1346,11 +1432,31 @@ EOD;
 			  -o-tag-size: 3;
 			    -tab-size: 3;
 		}
-		.debug pre br { display:none; }
+		/*.debug pre br { display:none; }*/
 		.debug table { border-collapse:collapse; }
 		.debug table caption { font-weight:bold; font-style:italic; }
 		.debug table th { font-weight:bold; background-color: rgba(0,0,0,0.1); }
 		.debug table th, .debug table td { border:1px solid #000; padding:1px .25em; }
+		.debug ul { margin-top: 0; margin-bottom: 0; }
+
+		.debug .alert {
+			padding: 10px;
+			margin-bottom: 10px;
+			border: 1px solid transparent;
+			border-radius: 4px;
+		}
+		.debug .alert-danger {
+			background-color: #FFBABA;
+			color: #D8000C;
+			border-color: #D8000C;
+		}
+		.debug .alert h3 { margin-bottom: 4px; }
+		.debug .alert h3:last-child { margin-bottom: 0; }
+		.debug .list-unstyled{
+			list-style: none outside none;
+			padding-left: 0;
+		}
+		.debug .indent { padding-left: 10px; }
 
 		/* methods */
 		.debug .assert,
@@ -1364,9 +1470,6 @@ EOD;
 		.debug table {
 			float:left;
 			clear:left;
-		}
-		.debug .log {
-			/*float: none;*/
 		}
 		.debug .error,
 		.debug .info,
@@ -1395,7 +1498,19 @@ EOD;
 		.debug .error { background-color: #FFBABA; color: #D8000C; }
 		.debug .info  { background-color: #BDE5F8; color: #00529B; }
 		.debug .warn  { background-color: #FEEFB3; color: #9F6000; }
-
+		.error-fatal:before {
+			display: block;
+			padding-left: 10px;
+			margin-bottom: 5px;
+			content: "Fatal error";
+			font-size: 1.2em;
+			font-weight: bold;
+		}
+		.debug .error-fatal {
+			padding: 10px;
+			margin-bottom: 11px;
+			border-left: solid 2px #D8000C;
+		}
 		/* data types */
 		.debug .t_string { white-space: pre-wrap; }
 		.debug .t_string .binary {
@@ -1430,6 +1545,7 @@ EOD;
 			content: close-quote;
 			opacity: 0.33;
 		}
+		.debug .t_undefined { background-color: rgba(0, 0, 0, 0.1); }
 		.debug .t_key_value {
 			display: block;
 			padding-left: 10px;
@@ -1468,8 +1584,16 @@ EOD;
 			//'maxObjectDepth'		=> 2,
 			//'maxDepth'			=> 2,
 		));
+		if ( !empty($this->alert) ) {
+			$alert = str_replace('<br />', "\n", $this->alert);
+			array_unshift($this->data['log'], array('error', $alert));
+		}
 		foreach ( $this->data['log'] as $i => $args ) {
 			$method = array_shift($args);
+			$opts = array();
+			foreach ( $args as $k => $arg ) {
+				$args[$k] = $this->getDisplayValue($arg, array('html'=>false,'boolNullToString'=>false));
+			}
 			if ( in_array($method, array('group','groupCollapsed')) ) {
 				$this->data['groupDepth']++;
 				$method = 'group';
@@ -1482,7 +1606,7 @@ EOD;
 					$more = array();
 					while ( count($args) > 1 ) {
 						$v = array_splice($args, 1, 1);
-						$more[] = $this->getDisplayValue(reset($v), false);
+						$more[] = reset($v);
 					}
 					$args[0] .= ' - '.implode(', ', $more);
 				}
@@ -1505,8 +1629,6 @@ EOD;
 						$i++;
 					}
 				}
-				//
-				$args[1] = $opts;
 			} elseif ( $method == 'groupEnd' ) {
 				$this->data['groupDepth']--;
 			} elseif ( $method == 'table' && is_array($args[0]) ) {
@@ -1531,10 +1653,13 @@ EOD;
 				$method = 'log';
 			} else {
 				if ( in_array($method, array('error','warn')) ) {
-					// discard errorCaller array, if present
 					$end = end($args);
 					if ( is_array($end) && isset($end['__errorCaller__']) ) {
-						$a = array_pop($args);
+						array_pop($args);
+						$opts = array(
+							'File' => $end['file'],
+							'Line' => $end['line'],
+						);
 					}
 				}
 				if ( count($args) > 1 ) {
@@ -1549,6 +1674,12 @@ EOD;
 			}
 			if ( !in_array($method, $firephpMethods) )
 				$method = 'log';
+			if ( $opts ) {
+				// opts array needs to be 2nd arg for group method, 3rd arg for all others
+				if ( $method !== 'group' && count($args) == 1 )
+					$args[] = null;
+				$args[] = $opts;
+			}
 			call_user_func_array(array($firephp,$method), $args);
 		}
 		while ( $this->data['groupDepth'] > 0 ) {
@@ -1569,8 +1700,14 @@ EOD;
 					.$this->_getCss()."\n"
 				.'</style>'."\n";
 		}
-		$str .= '<h3>Debug Log:</h3>'."\n"
-			.'<div class="debug-content clearfix">'."\n";
+		$lastError = $this->get('lastError');
+		if ( $lastError && $lastError['type'] & $this->cfg['errorHandler']['fatalMask'] ) {
+			array_unshift($this->data['log'], array('error error-fatal',$lastError));
+		}
+		$str .= '<h3>Debug Log:</h3>'."\n";
+		if ( !empty($this->alert) )
+			$str .= '<div class="alert alert-danger">'.$this->alert.'</div>';
+		$str .= '<div class="debug-content clearfix">'."\n";
 		foreach ( $this->data['log'] as $k_log => $args ) {
 			$method = array_shift($args);
 			if ( in_array($method, array('group','groupCollapsed')) ) {
@@ -1637,6 +1774,7 @@ EOD;
 						$args[$k] = $this->visualWhiteSpace($v);
 					}
 				}
+				/*
 				$wrapPre = false;
 				foreach ( $args as $i => $arg ) {
 					if ( strpos($arg, '<pre') === 0 ) {
@@ -1644,10 +1782,13 @@ EOD;
 						$args[$i] = preg_replace('#^<pre(.*)pre>$#s', '<span\1span>', $arg);
 					}
 				}
+				*/
 				$args = implode($glue, $args);
+				/*
 				if ( $wrapPre ) {
 					$args = '<pre>'.$args.'</pre>';
 				}
+				*/
 				$str .= '<div '.$this->buildAttribString($attribs).'>'.$args.'</div>';
 			}
 			$str .= "\n";
@@ -1820,18 +1961,19 @@ EOD;
 	 * @internal
 	 * @link http://stackoverflow.com/questions/9105816/is-there-a-way-to-detect-circular-arrays-in-pure-php
 	 */
-	function isRecursiveArray($array, $k=null)
+	function isRecursive($array, $k=null)
 	{
 		$recursive = false;
-		if ( strpos(print_r($array, true), "Array\n *RECURSION*\n") !== false ) {
+		//"Array *RECURSION" or "Object *RECURSION*"
+		if ( strpos(print_r($array, true), "\n *RECURSION*\n") !== false )
+			$recursive = true;
+		if ( $recursive && is_array($array) && $k !== null ) {
 			// array contains recursion or a string containing "Array *RECURSION*"
-			$unique = new stdclass();
-			$recursive = $this->isRecursiveArrayIteration($array, $unique);
-			if ( $recursive && $k !== null ) {
+			$recursive = $this->isRecursiveIteration($array);
+			if ( $recursive ) {	// && $k !== null
 				// test if this is the value that's the reference
 				$recursive = $k === $recursive[0];
 			}
-			$recursive = !empty($recursive);
 		}
 		return $recursive;
 	}
@@ -1846,11 +1988,13 @@ EOD;
 	 *
 	 * @return mixed false, or path to reference
 	 * @internal
-	 * @used-by isRecursiveArray()
+	 * @used-by isRecursive()
 	 */
-	function isRecursiveArrayIteration(&$array, $unique, $path=array())
+	function isRecursiveIteration(&$array, $unique=null, $path=array())
 	{
-		if ( $unique === end($array) ) {
+		if ( $unique === null ) {
+			$unique = new stdclass();
+		} elseif ( $unique === end($array) ) {
 			return $path;
 		}
 		$array[] = $unique;
@@ -1860,19 +2004,19 @@ EOD;
 			$path_new = $path;
 			$path_new[] = $k;
 			if ( is_array($v) ) {
-				$path_new = $this->isRecursiveArrayIteration($v, $unique, $path_new);
+				$path_new = $this->isRecursiveIteration($v, $unique, $path_new);
 				if ( $path_new ) {
-					if ( $unique === end($array) ) {
+					if ( end($array) === $unique ) {
 						unset($array[key($array)]);
 					}
 					return $path_new;
 				}
 			}
 		}
-		if ( $unique === end($array) ) {
+		if ( end($array) === $unique ) {
 			unset($array[key($array)]);
 		}
-		return false;
+		return array();
 	}
 
 	/**
@@ -1914,36 +2058,58 @@ EOD;
 	 * Remove any reference to an "external" variable
 	 * self-referencing array loops are left in place
 	 *
-	 * @param mixed $v    value to dereference
+	 * @param mixed $a    array or object to dereference
+	 * @param array $hist (@internal)
 	 * @param array $path {@internal}
 	 *
 	 * @return mixed
 	 * @link http://php.net/manual/en/language.references.php
 	 */
-	function removeReferences($v,$path=array())
+	function removeReferences($a,$hist=array(),$path=array())
 	{
-		if ( is_array($v) ) {
-			if ( !$path ) {
-				// check if we need to be on the look out for self-reference loop
-				$this->data['recursiveArray'] = $this->isRecursiveArray($v);
-			}
-			if ( $path
-				&& $this->data['recursiveArray']
-				&& $this->isRecursiveArray($v, end($path))
+		if ( empty($hist) ) {
+			// check if we need to be on the look out for self-reference loop
+			$this->data['recursion'] = $this->isRecursive($a);
+		}
+		$vars = array();
+		if ( is_array($a) ) {
+			$type = 'array';
+			if ( !$path
+				|| !$this->data['recursion']
+				|| !$this->isRecursive($a, end($path))
 			) {
-				// self referencing array loop.. leave as is
-			} else {
-				foreach ( $v as $k => $v2 ) {
-					$path_new = $path;
-					$path_new[] = $k;
-					unset($v[$k]);	// remove any reference
-					$v[$k] = is_array($v2)
-						? $this->removeReferences($v2, $path_new)
-						: $v2;
-				}
+				$hist[] = &$a;
+				$vars = $a;
+			}
+		} elseif ( is_object($a) ) {
+			$type = 'object';
+			$a_clone = null;
+			if ( !in_array($a, $hist, true) ) {
+				$hist[] = &$a;
+				$vars = get_object_vars($a);
+			}
+			if ( version_compare(PHP_VERSION, '5.0', '>=') ) {
+				$a_clone = clone $a;
 			}
 		}
-		return $v;
+		foreach ( $vars as $k => $v ) {
+			$path_new = $path;
+			$path_new[] = $k;
+			$v_new = is_array($v) || is_object($v)
+				? $this->removeReferences($v, $hist, $path_new)
+				: $v;
+			if ( $type == 'array' ) {
+				unset($a[$k]);
+				$a[$k] = $v_new;
+			} else {
+				unset($a_clone->{$k});
+				$a_clone->{$k} = $v_new;
+			}
+		}
+		if ( $type == 'object' && isset($a_clone) ) {
+			$a = $a_clone;
+		}
+		return $a;
 	}
 
 	/**

@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\Debug;
+
 if (!defined('E_STRICT')) {
     define('E_STRICT', 2048);               // PHP 5.0.0
 }
@@ -24,7 +26,7 @@ if (!defined('E_USER_DEPRECATED')) {
 class Debug
 {
 
-    var $errTypes = array(
+    private $errTypes = array(
         E_ERROR             => 'Error',             // handled via shutdown function
         E_WARNING           => 'Warning',
         E_PARSE             => 'Parsing Error',     // handled via shutdown function
@@ -43,7 +45,7 @@ class Debug
         E_USER_DEPRECATED   => 'User Deprecated',
     );
 
-    var $errTypesGrouped = array(
+    private $errTypesGrouped = array(
         'deprecated'    => array( E_DEPRECATED, E_USER_DEPRECATED ),
         'error'         => array( E_USER_ERROR, E_RECOVERABLE_ERROR ),
         'notice'        => array( E_NOTICE, E_USER_NOTICE ),
@@ -52,81 +54,75 @@ class Debug
         'fatal'         => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
     );
 
-    var $state = null;  // 'output' while in output()
+    private $state = null;  // 'output' while in output()
+
+    private static $instance;
 
     const VALUE_ABSTRACTION = "\x00debug\x00";
 
     /**
-     * constructor (php 4 compatable)
-     *
      * @param array $cfg config
      *
      * @return void
      */
-    function Debug($cfg = array())
+    public function __construct($cfg = array())
     {
-        if (!isset($GLOBALS['debugClassData'])) {
-            ini_set('display_errors', 0);
-            error_reporting(-1);    // report every possible error ( E_ALL | E_STRICT )
-                                    // not actually necessary as all errors get sent to custom error handler
-            $GLOBALS['debugClassData'] = array(
-                'cfg' => array(
-                    'addBR'     => false,           // convert \n to <br />\n in strings?
-                    'css'       => '',
-                    'collect'   => false,
-                    'file'      => null,            // if a filepath, will receive log data
-                    'firephpInc'=> version_compare(PHP_VERSION, '5.0.0', '>=')
-                                ? dirname(__FILE__).'/FirePHP/FirePHP.class.php'
-                                : dirname(__FILE__).'/FirePHP/FirePHP.class.php4',
-                    'key'       => null,
-                    'output'    => false,           // should output() actually output to browser (either as html or firephp)
-                    'outputAs'  => null,            // 'html' or 'firephp', if null, will be determined automatically
-                    'outputCss' => true,
-                    'emailLog'  => false,           // whether to email a debug log. false, 'onError' (true), or 'always'
-                                                    //   requires 'collect' to also be true
-                    'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
-                        ? $_SERVER['SERVER_ADMIN']
-                        : null,
-                    'onOutput'  => null,                // set to something callable
-                    'errorHandler' => array(
-                        'onError'           => null,    // set to something callable, will receive a single boolean indicating whether error was fatal
-                        'emailMin'          => 15,
-                        'emailMask'         => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-                        'emailTraceMask'    => E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-                        'fatalMask'         => array_reduce($this->errTypesGrouped['fatal'], create_function('$a, $b', 'return $a | $b;')),
-                        'emailThrottleFile' => dirname(__FILE__).'/error_emails.txt',
-                    ),
+        ini_set('display_errors', 0);
+        error_reporting(-1);    // report every possible error ( E_ALL | E_STRICT )
+                                // not actually necessary as all errors get sent to custom error handler
+        $this->cfg = array(
+            'addBR'     => false,           // convert \n to <br />\n in strings?
+            'css'       => '',
+            'collect'   => false,
+            'file'      => null,            // if a filepath, will receive log data
+            'firephpInc'=> version_compare(PHP_VERSION, '5.0.0', '>=')
+                ? dirname(__FILE__).'/FirePHP/FirePHP.class.php'
+                : dirname(__FILE__).'/FirePHP/FirePHP.class.php4',
+            'key'       => null,
+            'output'    => false,           // should output() actually output to browser (either as html or firephp)
+            'outputAs'  => null,            // 'html' or 'firephp', if null, will be determined automatically
+            'outputCss' => true,
+            'emailLog'  => false,           // whether to email a debug log. false, 'onError' (true), or 'always'
+                                            //   requires 'collect' to also be true
+            'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
+                ? $_SERVER['SERVER_ADMIN']
+                : null,
+            'onOutput'  => null,                // set to something callable
+            'errorHandler' => array(
+                'onError'           => null,    // set to something callable, will receive a single boolean indicating whether error was fatal
+                'emailMin'          => 15,
+                'emailMask'         => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
+                'emailTraceMask'    => E_WARNING | E_USER_ERROR | E_USER_NOTICE,
+                'fatalMask'         => array_reduce($this->errTypesGrouped['fatal'], create_function('$a, $b', 'return $a | $b;')),
+                'emailThrottleFile' => dirname(__FILE__).'/error_emails.txt',
+            ),
+        );
+        $this->data = array(
+            'counts' => array(),    // count method
+            'errorHandler' => array(
+                'errorCaller'   => array(),
+                'errors'        => array(),
+                'lastError'     => array(),
+                'oldErrorHandler' => set_error_handler(array($this,'errorHandler')),
+            ),
+            'fileHandle'    => null,
+            'groupDepth'    => 0,
+            'groupDepthFile'=> 0,
+            'log'           => array(),
+            'recursion'     => false,
+            'timers' => array(      // timer method
+                'labels' => array(
+                    'debugInit' => microtime(),
                 ),
-                'data' => array(
-                    'counts' => array(),    // count method
-                    'errorHandler' => array(
-                        'errorCaller'   => array(),
-                        'errors'        => array(),
-                        'lastError'     => array(),
-                        'oldErrorHandler' => set_error_handler(array($this,'errorHandler')),
-                    ),
-                    'fileHandle'    => null,
-                    'groupDepth'    => 0,
-                    'groupDepthFile'=> 0,
-                    'log'           => array(),
-                    'recursion'     => false,
-                    'timers' => array(      // timer method
-                        'labels' => array(
-                            'debugInit' => microtime(),
-                        ),
-                        'stack' => array(),
-                    ),
-                ),
-            );
-            register_shutdown_function(array($this,'shutdownFunction'));
-            if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
-                list($whole, $dec) = explode('.', $_SERVER['REQUEST_TIME_FLOAT']);
-                $mt = '.'.$dec.' '.$whole;
-                $GLOBALS['debugClassData']['data']['timers']['labels']['debugInit'] = $mt;
-            }
+                'stack' => array(),
+            ),
+        );
+        register_shutdown_function(array($this,'shutdownFunction'));
+        if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
+            list($whole, $dec) = explode('.', $_SERVER['REQUEST_TIME_FLOAT']);
+            $mt = '.'.$dec.' '.$whole;
+            $this->data['timers']['labels']['debugInit'] = $mt;
         }
-        $this->cfg = &$GLOBALS['debugClassData']['cfg'];
-        $this->data = &$GLOBALS['debugClassData']['data'];
         $this->setCfg($cfg);
         $this->collect = &$this->cfg['collect'];
         $this->output = &$this->cfg['output'];
@@ -138,7 +134,7 @@ class Debug
      *
      * @return void
      */
-    function assert()
+    public function assert()
     {
         if ($this->collect) {
             $args = func_get_args();
@@ -156,7 +152,7 @@ class Debug
      *
      * @return int
      */
-    function count($label = null)
+    public function count($label = null)
     {
         $return = null;
         if ($this->collect) {
@@ -187,7 +183,7 @@ class Debug
      *
      * @return void
      */
-    function error()
+    public function error()
     {
         if ($this->collect) {
             $args = func_get_args();
@@ -202,7 +198,7 @@ class Debug
      *
      * @return mixed
      */
-    function get($k)
+    public function get($k)
     {
         if ($k == 'outputAs') {
             $ret = $this->cfg['outputAs'];
@@ -241,11 +237,27 @@ class Debug
     }
 
     /**
+     * @param array $cfg optional config
+     *
+     * @return object
+     */
+    public static function getInstance($cfg = array())
+    {
+        if (!isset(self::$instance)) {
+            $className = __CLASS__;
+            self::$instance = new $className($cfg);
+        } elseif ($cfg) {
+            self::$instance->setCfg($cfg);
+        }
+        return self::$instance;
+    }
+
+    /**
      * Creates a new inline group
      *
      * @return void
      */
-    function group()
+    public function group()
     {
         $this->data['groupDepth']++;
         if ($this->collect) {
@@ -262,7 +274,7 @@ class Debug
      *
      * @return void
      */
-    function groupCollapsed()
+    public function groupCollapsed()
     {
         $this->data['groupDepth']++;
         if ($this->collect) {
@@ -279,7 +291,7 @@ class Debug
      *
      * @return void
      */
-    function groupUncollapse()
+    public function groupUncollapse()
     {
         for ($i = count($this->data['log']) - 1; $i >=0; $i--) {
             $method = $this->data['log'][$i][0];
@@ -298,7 +310,7 @@ class Debug
      *
      * @return void
      */
-    function groupEnd()
+    public function groupEnd()
     {
         if ($this->data['groupDepth'] > 0) {
             $this->data['groupDepth']--;
@@ -318,7 +330,7 @@ class Debug
      *
      * @return void
      */
-    function info()
+    public function info()
     {
         if ($this->collect) {
             $args = func_get_args();
@@ -331,7 +343,7 @@ class Debug
      *
      * @return void
      */
-    function log()
+    public function log()
     {
         if ($this->collect) {
             $args = func_get_args();
@@ -346,7 +358,7 @@ class Debug
      *
      * @return string or void
      */
-    function output()
+    public function output()
     {
         $return = null;
         $this->state = 'output';
@@ -442,7 +454,7 @@ class Debug
      *
      * @return mixed
      */
-    function setCfg($k, $v = null)
+    public function setCfg($k, $v = null)
     {
         $return = null;
         if (is_string($k)) {
@@ -484,7 +496,7 @@ class Debug
      *
      * @return void
      */
-    function setErrorCaller($caller = 'notPassed')
+    public function setErrorCaller($caller = 'notPassed')
     {
         if ($caller === 'notPassed') {
             $backtrace = debug_backtrace();
@@ -513,7 +525,7 @@ class Debug
      *
      * @return void
      */
-    function table()
+    public function table()
     {
         if ($this->collect) {
             $args = func_get_args();
@@ -552,7 +564,7 @@ class Debug
      *
      * @return void
      */
-    function time($label = null)
+    public function time($label = null)
     {
         if (isset($label)) {
             if (!isset($this->data['timers']['labels'][$label])) {
@@ -573,7 +585,7 @@ class Debug
      *
      * @return void
      */
-    function timeEnd($label = null, $return = false)
+    public function timeEnd($label = null, $return = false)
     {
         $ret = null;
         if (isset($label)) {
@@ -599,7 +611,7 @@ class Debug
      *
      * @return void
      */
-    function warn()
+    public function warn()
     {
         if ($this->collect) {
             $args = func_get_args();
@@ -620,7 +632,7 @@ class Debug
      *
      * @return  void
      */
-    function errorHandler($errType, $errmsg, $file, $line, $vars = array())
+    public function errorHandler($errType, $errmsg, $file, $line, $vars = array())
     {
         $eh_cfg = &$this->cfg['errorHandler'];
         $eh_data = &$this->data['errorHandler'];
@@ -648,7 +660,7 @@ class Debug
         $eh_data['errors'][$errMd5] = $error;
         if ($isSuppressed) {
             // @suppressed error
-        } elseif ($this->output) {
+        } elseif ($this->collect) {
             /**
              * log error in 'console'
              *    will not get logged to server's error_log
@@ -659,6 +671,10 @@ class Debug
                 $this->error($err_string);
             } else {
                 $this->warn($err_string);
+            }
+            if (!$this->output) {
+                // not currently outputing... send to error log
+                error_log('PHP '.$err_string);
             }
             $this->setCfg('collect', $db_was);
         } elseif ($first_occur) {
@@ -689,7 +705,7 @@ class Debug
      *
      * @return void
      */
-    function emailErr($errType, $errmsg, $file, $line, $vars = array())
+    protected function emailErr($errType, $errmsg, $file, $line, $vars = array())
     {
         $eh_cfg     = &$this->cfg['errorHandler'];
         $eh_data    = &$this->data['errorHandler'];
@@ -767,7 +783,7 @@ class Debug
                 .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
                 .'';
             if (!empty($_POST)) {
-                $email_body .= 'post params: '.var_export($_POST)."\n";
+                $email_body .= 'post params: '.var_export($_POST, true)."\n";
             }
             if ($errType & $eh_cfg['emailTraceMask']) {
                 /*
@@ -802,7 +818,7 @@ class Debug
      *
      * @return void
      */
-    function emailLog()
+    protected function emailLog()
     {
         $body = '';
         $unsuppressedError = false;
@@ -847,7 +863,7 @@ class Debug
      *
      * @return void
      */
-    function emailTrashCollection($data)
+    protected function emailTrashCollection($data)
     {
         $ts_now     = time();
         $ts_cutoff  = $ts_now - $this->cfg['errorHandler']['emailMin'] * 60;
@@ -888,7 +904,7 @@ class Debug
      *
      * @return string
      */
-    function getDisplayBinary($str, $htmlout)
+    public function getDisplayBinary($str, $htmlout)
     {
         $this->htmlout = $htmlout;
         $this->data['displayBinaryStats'] = array(
@@ -941,7 +957,7 @@ EOD;
      *
      * @return string
      */
-    function getDisplayBinaryCallback($m)
+    protected function getDisplayBinaryCallback($m)
     {
         $stats = &$this->data['displayBinaryStats'];
         $showHex = false;
@@ -1008,7 +1024,7 @@ EOD;
      *
      * @return string
      */
-    function getDisplayTable($array, $caption = null)
+    public function getDisplayTable($array, $caption = null)
     {
         $str = '';
         if (!is_array($array)) {
@@ -1086,7 +1102,7 @@ EOD;
      *
      * @return string
      */
-    function getDisplayValue($v, $opts = array(), $hist = array())
+    public function getDisplayValue($v, $opts = array(), $hist = array())
     {
         $type = null;
         $typeMore = null;
@@ -1241,7 +1257,7 @@ EOD;
      * @return void
      * @requires PHP 5.2.0
      */
-    function shutdownFunction()
+    public function shutdownFunction()
     {
         /**
          * if PHP 5.2+ we can check for fatal error
@@ -1285,7 +1301,7 @@ EOD;
      *
      * @return string
      */
-    function unserialize($str)
+    public function unserialize($str)
     {
         $pos = strpos($str, 'START DEBUG');
         if ($pos !== false) {
@@ -1309,18 +1325,26 @@ EOD;
      *
      * @return string
      */
-    function visualWhiteSpace($str)
+    public function visualWhiteSpace($str)
     {
         // display \r, \n, & \t
-        $callback = create_function(
-            '$m',
-            '$br = $GLOBALS["debugClassData"]["cfg"]["addBR"] ? "<br />" : "";
-            return str_replace(array("\r","\n"), array(\'<span class="ws_r"></span>\',\'<span class="ws_n"></span>\'.$br."\n"), $m[1]);'
-        );
-        $str = preg_replace_callback('/(\r\n|\r|\n)/', $callback, $str);
+        $str = preg_replace_callback('/(\r\n|\r|\n)/', array($this, '_visualWhiteSpaceCallback'), $str);
         $str = preg_replace('#(<br />)?\n$#', '', $str);
         $str = str_replace("\t", '<span class="ws_t">'."\t".'</span>', $str);
         return $str;
+    }
+
+    /**
+     * @param array $matches passed from preg_replace_callback
+     *
+     * @return string
+     */
+    protected function _visualWhiteSpaceCallback($matches)
+    {
+        $br = $this->cfg['addBR'] ? '<br />' : '';
+        $search = array("\r","\n");
+        $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>'.$br."\n");
+        return str_replace($search, $replace, $matches[1]);
     }
 
     /**
@@ -1332,7 +1356,7 @@ EOD;
      *
      * @return void
      */
-    function _appendLog($method, $args)
+    protected function _appendLog($method, $args)
     {
         foreach ($args as $i => $v) {
             if (is_array($v) || is_object($v) || is_resource($v)) {
@@ -1375,7 +1399,7 @@ EOD;
      *
      * @return void
      */
-    function _appendLogFile($args)
+    protected function _appendLogFile($args)
     {
         if (!isset($this->data['fileHandle'])) {
             $this->data['fileHandle'] = fopen($this->cfg['file'], 'a');
@@ -1443,7 +1467,7 @@ EOD;
      *
      * @return array
      */
-    function _appendLogPrep($mixed, $hist = array(), $path = array())
+    protected function _appendLogPrep($mixed, $hist = array(), $path = array())
     {
         $new = array(
             'debug' => self::VALUE_ABSTRACTION,
@@ -1512,7 +1536,7 @@ EOD;
      *
      * @return int|false
      */
-    function _fileWrite($file, $str)
+    protected function _fileWrite($file, $str)
     {
         $return = false;
         if (!file_exists($file)) {
@@ -1531,7 +1555,7 @@ EOD;
     /**
      * @return string
      */
-    function _getCss()
+    protected function _getCss()
     {
         $return = <<<EOD
         .debug { clear: both; font-family: Verdana; font-size: 9px; line-height: normal; text-shadow: none; }
@@ -1691,7 +1715,7 @@ EOD;
     /**
      * @return void
      */
-    function _outputFirephp()
+    protected function _outputFirephp()
     {
         if (!file_exists($this->cfg['firephpInc'])) {
             return;
@@ -1817,7 +1841,7 @@ EOD;
     /**
      * @return string
      */
-    function _outputHtml()
+    protected function _outputHtml()
     {
         $str = '<div class="debug">'."\n";
         if ($this->cfg['outputCss']) {
@@ -1940,7 +1964,7 @@ EOD;
      *
      * @return array
      */
-    function arrayColKeys($rows)
+    public function arrayColKeys($rows)
     {
         $last_stack = array();
         $new_stack = array();
@@ -1985,7 +2009,7 @@ EOD;
      *
      * @return array
      */
-    function arrayMergeDeep($def_array, $a2)
+    public function arrayMergeDeep($def_array, $a2)
     {
         if (!is_array($def_array) || !is_array($a2)) {
             $def_array = $a2;
@@ -2014,7 +2038,7 @@ EOD;
      *
      * @return string
      */
-    function buildAttribString($attribs)
+    public function buildAttribString($attribs)
     {
         $attrib_pairs = array();
         foreach ($attribs as $k => $v) {
@@ -2033,7 +2057,7 @@ EOD;
      *
      * @return string
      */
-    function getResponseHeader($key = 'Content-Type')
+    public function getResponseHeader($key = 'Content-Type')
     {
         $value = null;
         if (function_exists('headers_list')) {
@@ -2056,7 +2080,7 @@ EOD;
      *
      * @return bool
      */
-    function isBase64Encoded($str)
+    public function isBase64Encoded($str)
     {
         return preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', trim($str));
     }
@@ -2068,7 +2092,7 @@ EOD;
      *
      * @return bool
      */
-    function isBinary($str)
+    public function isBinary($str)
     {
         $b = false;
         if (is_string($str)) {
@@ -2090,7 +2114,7 @@ EOD;
      * @internal
      * @link http://stackoverflow.com/questions/9105816/is-there-a-way-to-detect-circular-arrays-in-pure-php
      */
-    function isRecursive($mixed, $k = null)
+    public function isRecursive($mixed, $k = null)
     {
         $recursive = false;
         //"Array *RECURSION" or "Object *RECURSION*"
@@ -2119,12 +2143,11 @@ EOD;
      *
      * @return mixed false, or path to reference
      * @internal
-     * @used-by isRecursive()
      */
-    function isRecursiveIteration(&$array, $unique = null, $path = array())
+    public function isRecursiveIteration(&$array, $unique = null, $path = array())
     {
         if ($unique === null) {
-            $unique = new stdclass();
+            $unique = new \stdclass();
         } elseif ($unique === end($array)) {
             return $path;
         }
@@ -2166,7 +2189,7 @@ EOD;
      *
      * @return bool
      */
-    function isUtf8($str, &$ctrl = false)
+    public function isUtf8($str, &$ctrl = false)
     {
         $length = strlen($str);
         $ctrl = false;
@@ -2209,7 +2232,7 @@ EOD;
      *
      * @return string
      */
-    function toUtf8($str)
+    public function toUtf8($str)
     {
         if (extension_loaded('mbstring') && function_exists('iconv')) {
             $encoding = mb_detect_encoding($str, mb_detect_order(), true);

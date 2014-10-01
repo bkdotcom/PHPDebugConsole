@@ -1,110 +1,65 @@
 <?php
+/**
+ * Web-browser/javascript like console class for PHP
+ *
+ * @author Brad Kent <bkfake-github@yahoo.com>
+ * @license http://opensource.org/licenses/MIT MIT
+ * @version v1.1
+ *
+ * @link    http://www.github.com/bkdotcom/PHPDebugConsole
+ * @link    https://developer.mozilla.org/en-US/docs/Web/API/console
+ */
 
 namespace bdk\Debug;
 
-if (!defined('E_STRICT')) {
-    define('E_STRICT', 2048);               // PHP 5.0.0
-}
-if (!defined('E_RECOVERABLE_ERROR')) {
-    define('E_RECOVERABLE_ERROR', 4096);    // PHP 5.2.0
-}
-if (!defined('E_DEPRECATED')) {
-    define('E_DEPRECATED', 8192);           // PHP 5.3.0
-}
-if (!defined('E_USER_DEPRECATED')) {
-    define('E_USER_DEPRECATED', 16384);     // PHP 5.3.0
-}
-
 /**
- * Browser/javascript like console class for PHP
- *
- * @license http://opensource.org/licenses/MIT MIT
- *
- * @see     http://www.github.com/bkdotcom/
- * @see     https://developer.mozilla.org/en-US/docs/Web/API/console
+ * Web-browser/javascript like console class for PHP
  */
 class Debug
 {
 
-    private $errTypes = array(
-        E_ERROR             => 'Error',             // handled via shutdown function
-        E_WARNING           => 'Warning',
-        E_PARSE             => 'Parsing Error',     // handled via shutdown function
-        E_NOTICE            => 'Notice',
-        E_CORE_ERROR        => 'Core Error',        // handled via shutdown function
-        E_CORE_WARNING      => 'Core Warning',      // handled?
-        E_COMPILE_ERROR     => 'Compile Error',     // handled via shutdown function
-        E_COMPILE_WARNING   => 'Compile Warning',   // handled?
-        E_USER_ERROR        => 'User Error',
-        E_USER_WARNING      => 'User Warning',
-        E_USER_NOTICE       => 'User Notice',
-        E_ALL               => 'E_ALL',             // listed here for completeness
-        E_STRICT            => 'Runtime Notice (E_STRICT)',
-        E_RECOVERABLE_ERROR => 'Fatal Error',
-        E_DEPRECATED        => 'Deprecated',
-        E_USER_DEPRECATED   => 'User Deprecated',
-    );
-
-    private $errTypesGrouped = array(
-        'deprecated'    => array( E_DEPRECATED, E_USER_DEPRECATED ),
-        'error'         => array( E_USER_ERROR, E_RECOVERABLE_ERROR ),
-        'notice'        => array( E_NOTICE, E_USER_NOTICE ),
-        'strict'        => array( E_STRICT ),
-        'warning'       => array( E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING ),
-        'fatal'         => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
-    );
-
-    private $state = null;  // 'output' while in output()
-
     private static $instance;
+    protected $state = null;  // 'output' while in output()
+    protected $cfg = array();
+    protected $data = array();
+    protected $collect;
 
     const VALUE_ABSTRACTION = "\x00debug\x00";
 
     /**
-     * @param array $cfg config
+     * Constructor
      *
-     * @return void
+     * @param array $cfg config
      */
     public function __construct($cfg = array())
     {
-        ini_set('display_errors', 0);
-        error_reporting(-1);    // report every possible error ( E_ALL | E_STRICT )
-                                // not actually necessary as all errors get sent to custom error handler
         $this->cfg = array(
             'addBR'     => false,           // convert \n to <br />\n in strings?
             'css'       => '',
             'collect'   => false,
             'file'      => null,            // if a filepath, will receive log data
-            'firephpInc'=> version_compare(PHP_VERSION, '5.0.0', '>=')
-                ? dirname(__FILE__).'/FirePHP/FirePHP.class.php'
-                : dirname(__FILE__).'/FirePHP/FirePHP.class.php4',
+            'firephpInc' => dirname(__FILE__).'/FirePHP.class.php',
+            'firephpOptions' => array(
+                'useNativeJsonEncode'   => true,
+                'includeLineNumbers'    => false,
+            ),
             'key'       => null,
             'output'    => false,           // should output() actually output to browser (either as html or firephp)
             'outputAs'  => null,            // 'html' or 'firephp', if null, will be determined automatically
             'outputCss' => true,
+            'outputScript' => true,
+            'filepathCss' => dirname(__FILE__).'/Debug.css',
+            'filepathScript' => dirname(__FILE__).'/Debug.jquery.min.js',
             'emailLog'  => false,           // whether to email a debug log. false, 'onError' (true), or 'always'
                                             //   requires 'collect' to also be true
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
             'onOutput'  => null,                // set to something callable
-            'errorHandler' => array(
-                'onError'           => null,    // set to something callable, will receive a single boolean indicating whether error was fatal
-                'emailMin'          => 15,
-                'emailMask'         => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-                'emailTraceMask'    => E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-                'fatalMask'         => array_reduce($this->errTypesGrouped['fatal'], create_function('$a, $b', 'return $a | $b;')),
-                'emailThrottleFile' => dirname(__FILE__).'/error_emails.txt',
-            ),
         );
         $this->data = array(
+            'alert' => '',
             'counts' => array(),    // count method
-            'errorHandler' => array(
-                'errorCaller'   => array(),
-                'errors'        => array(),
-                'lastError'     => array(),
-                'oldErrorHandler' => set_error_handler(array($this,'errorHandler')),
-            ),
             'fileHandle'    => null,
             'groupDepth'    => 0,
             'groupDepthFile'=> 0,
@@ -117,20 +72,27 @@ class Debug
                 'stack' => array(),
             ),
         );
-        register_shutdown_function(array($this,'shutdownFunction'));
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
             list($whole, $dec) = explode('.', $_SERVER['REQUEST_TIME_FLOAT']);
             $mt = '.'.$dec.' '.$whole;
             $this->data['timers']['labels']['debugInit'] = $mt;
         }
-        $this->setCfg($cfg);
+        // Initialize self::$instance if not set
+        //    so that self::getInstance() will always return original instance
+        //    as opposed the the last instance created with new Debug()
+        if (!isset(self::$instance)) {
+            self::$instance = $this;
+        }
+        require_once dirname(__FILE__).'/ErrorHandler.php';
+        $this->errorHandler = new ErrorHandler(array(), $this);
+        $this->set($cfg);
         $this->collect = &$this->cfg['collect'];
-        $this->output = &$this->cfg['output'];
+        register_shutdown_function(array($this, 'shutdownFunction'));
         return;
     }
 
     /**
-     * Log a message and stack trace to console if first argument is false
+     * Log a message and stack trace to console if first argument is false.
      *
      * @return void
      */
@@ -140,7 +102,7 @@ class Debug
             $args = func_get_args();
             $test = array_shift($args);
             if (!$test) {
-                $this->_appendLog('assert', $args);
+                $this->appendLog('assert', $args);
             }
         }
     }
@@ -150,11 +112,11 @@ class Debug
      *
      * @param mixed $label label
      *
-     * @return int
+     * @return integer
      */
     public function count($label = null)
     {
-        $return = null;
+        $return = 0;
         if ($this->collect) {
             $args = array();
             if (isset($label)) {
@@ -170,7 +132,7 @@ class Debug
                 $this->data['counts'][$label]++;
             }
             $args[] = $this->data['counts'][$label];
-            $this->_appendLog('count', $args);
+            $this->appendLog('count', $args);
             $return = $this->data['counts'][$label];
         }
         return $return;
@@ -179,7 +141,7 @@ class Debug
     /**
      * Outputs an error message.
      *
-     * @param mixed $label label
+     * @param mixed $label,... label
      *
      * @return void
      */
@@ -187,12 +149,12 @@ class Debug
     {
         if ($this->collect) {
             $args = func_get_args();
-            $this->_appendLog('error', $args);
+            $this->appendLog('error', $args);
         }
     }
 
     /**
-     * retrieve a config value, lastError, or css
+     * Retrieve a config value, lastError, or css
      *
      * @param string $k what to get
      *
@@ -203,11 +165,14 @@ class Debug
         if ($k == 'outputAs') {
             $ret = $this->cfg['outputAs'];
             if (empty($ret)) {
-                /**
-                 * determine outputAs automatically
-                 */
+                /*
+                    determine outputAs automatically
+                */
                 $ret = 'html';
-                $ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
+                $requestedWith = isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+                    ? $_SERVER['HTTP_X_REQUESTED_WITH']
+                    : null;
+                $ajax = $requestedWith == 'XMLHttpRequest';
                 if ($ajax) {
                     $ret = 'firephp';
                 } else {
@@ -218,18 +183,27 @@ class Debug
                 }
             }
         } elseif ($k == 'lastError') {
-            $ret = $this->data['errorHandler']['lastError'];
+            $ret = $this->errorHandler->get('lastError');
         } elseif ($k == 'css') {
-            $ret = $this->_getCss();
+            $ret = $this->getCss();
         } else {
-            $ret = $this->cfg;
             $path = preg_split('#[\./]#', $k);
-            foreach ($path as $k) {
-                if (isset($ret[$k])) {
-                    $ret = $ret[$k];
+            if ($path[0] == 'errorHandler') {
+                $ret = $this->errorHandler->get($path[1]);
+            } else {
+                if ($path[0] == 'data') {
+                    $ret = $this->data;
+                    array_shift($path);
                 } else {
-                    $ret = null;
-                    break;
+                    $ret = $this->cfg;
+                }
+                foreach ($path as $k) {
+                    if (isset($ret[$k])) {
+                        $ret = $ret[$k];
+                    } else {
+                        $ret = null;
+                        break;
+                    }
                 }
             }
         }
@@ -237,6 +211,8 @@ class Debug
     }
 
     /**
+     * Returns the *Singleton* instance of this class.
+     *
      * @param array $cfg optional config
      *
      * @return object
@@ -245,9 +221,10 @@ class Debug
     {
         if (!isset(self::$instance)) {
             $className = __CLASS__;
-            self::$instance = new $className($cfg);
+            // self::$instance set in __construct
+            new $className($cfg);
         } elseif ($cfg) {
-            self::$instance->setCfg($cfg);
+            self::$instance->set($cfg);
         }
         return self::$instance;
     }
@@ -265,7 +242,7 @@ class Debug
             if (empty($args)) {
                 $args[] = 'group';
             }
-            $this->_appendLog('group', $args);
+            $this->appendLog('group', $args);
         }
     }
 
@@ -282,12 +259,12 @@ class Debug
             if (empty($args)) {
                 $args[] = 'group';
             }
-            $this->_appendLog('groupCollapsed', $args);
+            $this->appendLog('groupCollapsed', $args);
         }
     }
 
     /**
-     * sets current group or groupCollapsed to 'group' (ie, make sure it's uncollapsed)
+     * Sets current group or groupCollapsed to 'group' (ie, make sure it's uncollapsed)
      *
      * @return void
      */
@@ -315,13 +292,13 @@ class Debug
         if ($this->data['groupDepth'] > 0) {
             $this->data['groupDepth']--;
         }
-        $eC = $this->data['errorHandler']['errorCaller'];
+        $eC = $this->errorHandler->get('errorCaller');
         if ($eC && $this->data['groupDepth'] < $eC['depth']) {
-            $this->data['errorHandler']['errorCaller'] = array();
+            $this->errorHandler->setErrorCaller(null);
         }
         if ($this->collect) {
             $args = func_get_args();
-            $this->_appendLog('groupEnd', $args);
+            $this->appendLog('groupEnd', $args);
         }
     }
 
@@ -334,7 +311,7 @@ class Debug
     {
         if ($this->collect) {
             $args = func_get_args();
-            $this->_appendLog('info', $args);
+            $this->appendLog('info', $args);
         }
     }
 
@@ -347,14 +324,16 @@ class Debug
     {
         if ($this->collect) {
             $args = func_get_args();
-            $this->_appendLog('log', $args);
+            $this->appendLog('log', $args);
         }
     }
 
     /**
-     *  if outputAs == null -> determined automatically
-     *  if outputAs == 'html' -> returns html string
-     *  if outputAs == 'firephp' -> returns null
+     * Return the log (formatted as html), or send to FirePHP
+     *
+     *  If outputAs == null -> determined automatically
+     *  If outputAs == 'html' -> returns html string
+     *  If outputAs == 'firephp' -> returns null
      *
      * @return string or void
      */
@@ -362,75 +341,22 @@ class Debug
     {
         $return = null;
         $this->state = 'output';
-        if ($this->output) {
+        if ($this->cfg['output']) {
             array_unshift($this->data['log'], array('info','Built In '.$this->timeEnd('debugInit', true).' sec'));
             $outputAs = $this->get('outputAs');
             if (is_callable($this->cfg['onOutput'])) {
                 call_user_func($this->cfg['onOutput'], $outputAs);
             }
             $outputAs = $this->get('outputAs');
-
-            /**
-             * create an error summary if there were errors
-             */
-            if (!empty($this->data['errorHandler']['errors'])) {
-                $counts = array();
-                foreach ($this->data['errorHandler']['errors'] as $error) {
-                    if ($error['suppressed']) {
-                        continue;
-                    }
-                    foreach ($this->errTypesGrouped as $k => $errTypes) {
-                        if (!in_array($error['type'], $errTypes)) {
-                            continue;
-                        }
-                        $counts[$k] = isset($counts[$k])
-                            ? $counts[$k] + 1
-                            : 1;
-                        break;
-                    }
-                }
-                if ($counts) {
-                    $tot = array_sum($counts);
-                    ksort($counts);
-                    if (count($counts) == 1) {
-                        // all same type of error
-                        $type = key($counts);
-                        if ($tot == 1) {
-                            $alert = 'There was 1 error';
-                            if ($type == 'fatal') {
-                                $alert = null;  // don't bother with this alert..
-                                                // fatal are still prominently displayed
-                            } elseif ($type != 'error') {
-                                $alert .= ' ('.$type.')';
-                            }
-                        } else {
-                            $alert = 'There were '.$tot.' errors';
-                            if ($type != 'error') {
-                                $alert .= ' of type '.$type;
-                            }
-                        }
-                        if ($alert) {
-                            $alert = '<h3>'.$alert.'</h3>'."\n";
-                        }
-                    } else {
-                        $alert = '<h3>There were '.$tot.' errors:</h3>'."\n";
-                        $alert .= '<ul class="list-unstyled indent">';
-                        foreach ($counts as $k => $v) {
-                            $alert .= '<li>'.$k.': '.$v.'</li>';
-                        }
-                        $alert .= '</ul>';
-                    }
-                    if ($alert) {
-                        $this->alert = $alert;
-                    }
-                }
+            $errorSummary = $this->errorSummary();
+            if ($errorSummary) {
+                $this->data['alert'] = $errorSummary;
             }
-
             $this->data['groupDepth'] = 0;
             if ($outputAs == 'html') {
-                $return = $this->_outputHtml();
+                $return = $this->outputHtml();
             } elseif ($outputAs == 'firephp') {
-                $this->_outputFirephp();
+                $this->outputFirephp();
                 $return = null;
             }
         }
@@ -440,57 +366,90 @@ class Debug
     }
 
     /**
-     * set one more more config values
-     *    setCfg('key', 'value')
-     *    setCfg('level1.level2', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     * Set one or more config values
      *
-     * if setting a single value via method a or b, old value is returned
+     * If setting a single value via method a or b, old value is returned
      *
-     *  setting/updating 'key' will also 'collect' and 'output'
+     * Setting/updating 'key' will also set 'collect' and 'output'
+     *
+     *    set('key', 'value')
+     *    set('level1.level2', 'value')
+     *    set(array('k1'=>'v1', 'k2'=>'v2'))
      *
      * @param string $k key
      * @param mixed  $v value
      *
      * @return mixed
      */
-    public function setCfg($k, $v = null)
+    public function set($k, $v = null)
     {
-        $return = null;
+        $ret = null;
+        $what = 'cfg';
+        $new = array(); // the new value(s) to merge
         if (is_string($k)) {
             $path = preg_split('#[\./]#', $k);
-            $cfg = array();
-            $ref = &$cfg;
-            $return = $this->cfg;
+            $ref = &$new;
+            if ($path[0] == 'data') {
+                $what = 'data';
+                $ret = $this->data;
+                array_shift($path);
+            } else {
+                $ret = $this->cfg;
+            }
             foreach ($path as $k) {
-                $return = isset($return[$k])
-                    ? $return[$k]
+                $ret = isset($ret[$k])
+                    ? $ret[$k]
                     : null;
-                $ref[$k] = array(); // initialize as array
+                $ref[$k] = array(); // initialize this level
                 $ref = &$ref[$k];
             }
             $ref = $v;
         } elseif (is_array($k)) {
-            $cfg = $k;
+            $new = $k;
         }
-        if (isset($cfg['key'])) {
-            $cfg['collect'] = isset($_REQUEST['debug']) && $_REQUEST['debug'] == $cfg['key'];
-            $cfg['output'] = $cfg['collect'];
+        if (isset($new['key'])) {
+            $keyPassed = null;
+            if (isset($_REQUEST['debug'])) {
+                $keyPassed = $_REQUEST['debug'];
+            } elseif (isset($_COOKIE['debug'])) {
+                $keyPassed = $_COOKIE['debug'];
+            }
+            $new['collect'] = $keyPassed == $new['key'];
+            $new['output'] = $new['collect'];
         }
-        if (isset($cfg['emailLog']) && $cfg['emailLog'] === true) {
-            $cfg['emailLog'] = 'onError';
+        if (isset($new['emailLog']) && $new['emailLog'] === true) {
+            $new['emailLog'] = 'onError';
         }
-        $this->cfg = $this->arrayMergeDeep($this->cfg, $cfg);
-        return $return;
+        if (isset($new['errorHandler'])) {
+            $this->errorHandler->set($new['errorHandler']);
+            unset($new['errorHandler']);
+        }
+        if ($what == 'data') {
+            $this->data = array_merge($this->data, $new);
+        } else {
+            $this->cfg = $this->arrayMergeDeep($this->cfg, $new);
+        }
+        return $ret;
     }
 
     /**
-     * set the calling file/line for next error
-     * this override will apply until cleared, error occurs, or groupEnd()
+     * Set one or more config values
      *
-     * example.. some wrapper function that is called often:
-     *     Rather than reporting that an error occurred within the wrapper, you can use
-     *     setErrorCaller() to report the error originating from the file/line that called the function
+     * @param string $k,... key
+     * @param mixed  $v,... value
+     *
+     * @return mixed
+     * @deprecated use set() instead
+     */
+    public function setCfg()
+    {
+        $this->errorHandler->setErrorCaller();
+        trigger_error('setCfg() is deprecated -> use set instead()', E_USER_DEPRECATED);
+        return call_user_func_array(array($this,'set'), func_get_args());
+    }
+
+    /**
+     * A wrapper for errorHandler->setErrorCaller
      *
      * @param array $caller optional. pass null or array() to clear
      *
@@ -498,27 +457,11 @@ class Debug
      */
     public function setErrorCaller($caller = 'notPassed')
     {
-        if ($caller === 'notPassed') {
-            $backtrace = debug_backtrace();
-            $caller = isset($backtrace[1])
-                ? $backtrace[1]
-                : $backtrace[0];
-            $caller = array(
-                'depth' => $this->data['groupDepth'],
-                'file' => $caller['file'],
-                'line' => $caller['line'],
-            );
-        } elseif (empty($caller)) {
-            $caller = array();  // clear
-        } elseif (is_array($caller)) {
-            $caller['depth'] = $this->data['groupDepth'];
-        }
-        $this->data['errorHandler']['errorCaller'] = $caller;
-        return;
+        $this->errorHandler->setErrorCaller($caller);
     }
 
     /**
-     * output array as a table
+     * Output array as a table
      * accepts
      *    array[, string]
      *    string, array
@@ -551,12 +494,12 @@ class Debug
                     $args[] = array_shift($args);
                 }
             }
-            $this->_appendLog($method, $args);
+            $this->appendLog($method, $args);
         }
     }
 
     /**
-     * start a timer identified by label
+     * Start a timer identified by label
      *    if timer with label already started, it will not be reset
      * if no label is passed a timer will be added to a timer stack
      *
@@ -577,17 +520,17 @@ class Debug
     }
 
     /**
-     * logs time elapsed since started with time()
-     * if no label is passed, timer is removed from a timer stack
+     * Logs time elapsed since started with time()
+     * If no label is passed, timer is removed from a timer stack
      *
-     * @param string $label  unique label
-     * @param bool   $return = false. If true, return elapsed time rather than log it
+     * @param string  $label  unique label
+     * @param boolean $return = false. If true, return elapsed time rather than log it
      *
-     * @return void
+     * @return float
      */
     public function timeEnd($label = null, $return = false)
     {
-        $ret = null;
+        $ret = 0;
         if (isset($label)) {
             $mt = $this->data['timers']['labels'][$label];
         } else {
@@ -600,7 +543,7 @@ class Debug
             $ret = (float)$b_sec - (float)$a_sec + (float)$b_dec - (float)$a_dec;
             $ret = round($ret, 4);
             if (!$return) {
-                $this->_appendLog('time', array($label, $ret.' sec'));
+                $this->appendLog('time', array($label, $ret.' sec'));
             }
         }
         return $ret;
@@ -615,203 +558,13 @@ class Debug
     {
         if ($this->collect) {
             $args = func_get_args();
-            $this->_appendLog('warn', $args);
+            $this->appendLog('warn', $args);
         }
     }
 
     /**
-     * "Non-Public functions"
+     * "Non-Public" methods
      */
-
-    /**
-     * @param int    $errType the level of the error
-     * @param string $errmsg  the error message
-     * @param string $file    filepath the error was raised in
-     * @param string $line    the line the error was raised in
-     * @param array  $vars    active symbol table at point error occured
-     *
-     * @return  void
-     */
-    public function errorHandler($errType, $errmsg, $file, $line, $vars = array())
-    {
-        $eh_cfg = &$this->cfg['errorHandler'];
-        $eh_data = &$this->data['errorHandler'];
-        $isFatal = $errType & $eh_cfg['fatalMask'];
-        /**
-         * @see http://www.php.net/manual/en/language.operators.errorcontrol.php
-         */
-        $isSuppressed = !$isFatal && error_reporting() === 0;
-        $errMd5 = md5($file.$line); // use true source for tracking
-        $first_occur = !isset($eh_data['errors'][$errMd5]);
-        if (!empty($eh_data['errorCaller'])) {
-            $file = $eh_data['errorCaller']['file'];
-            $line = $eh_data['errorCaller']['line'];
-        }
-        $err_string = $this->errTypes[$errType].': '.$file.' : '.$errmsg.' on line '.$line;
-        $error = array(
-            'type'      => $errType,
-            'typeStr'   => $this->errTypes[$errType],
-            'suppressed'=> $isSuppressed,
-            'message'   => $errmsg,
-            'file'      => $file,
-            'line'      => $line,
-        );
-        $eh_data['lastError'] = $error;
-        $eh_data['errors'][$errMd5] = $error;
-        if ($isSuppressed) {
-            // @suppressed error
-        } elseif ($this->collect) {
-            /**
-             * log error in 'console'
-             *    will not get logged to server's error_log
-             *    will not get emailed
-             */
-            $db_was = $this->setCfg('collect', true);
-            if (in_array($errType, array(E_ERROR,E_WARNING,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR,E_USER_ERROR,E_RECOVERABLE_ERROR))) {
-                $this->error($err_string);
-            } else {
-                $this->warn($err_string);
-            }
-            if (!$this->output) {
-                // not currently outputing... send to error log
-                error_log('PHP '.$err_string);
-            }
-            $this->setCfg('collect', $db_was);
-        } elseif ($first_occur) {
-            if (!empty($this->cfg['emailTo']) && ( $errType & $eh_cfg['emailMask'] )) {
-                $args = func_get_args();
-                call_user_func_array(array($this,'emailErr'), $args);
-            }
-            error_log('PHP '.$err_string);
-        }
-        if (!$isSuppressed) {
-            $eh_data['errorCaller'] = array();
-        }
-        if ($eh_cfg['onError'] && is_callable($eh_cfg['onError'])) {
-            call_user_func($eh_cfg['onError'], $isFatal);
-        }
-        return;
-    }
-
-    /**
-     * email this error... if...
-     *   uses emailThrottleFile to keep track of when emails were sent
-     *
-     * @param int    $errType the level of the error
-     * @param string $errmsg  the error message
-     * @param string $file    filepath the error was raised in
-     * @param string $line    the line the error was raised in
-     * @param array  $vars    active symbol table at point error occured
-     *
-     * @return void
-     */
-    protected function emailErr($errType, $errmsg, $file, $line, $vars = array())
-    {
-        $eh_cfg     = &$this->cfg['errorHandler'];
-        $eh_data    = &$this->data['errorHandler'];
-        $email = false;
-        if ($eh_cfg['emailMin'] > 0 && $eh_cfg['emailThrottleFile']) {
-            $ts_now     = time();
-            $ts_cutoff  = $ts_now - $eh_cfg['emailMin'] * 60;
-            $data_str   = is_readable($eh_cfg['emailThrottleFile'])
-                            ? file_get_contents($eh_cfg['emailThrottleFile'])
-                            : '';
-            $data       = unserialize($data_str);
-            if (!is_array($data)) {
-                $data = array(
-                    'ts_trash_collection'   => $ts_now,
-                    'errors'                => array(),
-                );
-            }
-            #$this->log('ts_cutoff', date('Ymd H:i:s', $ts_cutoff));
-            #$this->log('data[ts_trash_collection]', date('Ymd H:i:s', $data['ts_trash_collection']));
-            // for key creation:
-            //   use true error location
-            //   remove "numbers" from error message
-            $errmsg_tmp = $errmsg;
-            $errmsg_tmp = preg_replace('/(\(.*?)\d+(.*?\))/', '\1x\2', $errmsg_tmp);
-            $errmsg_tmp = preg_replace('/\b([a-z]+\d+)+\b/', 'xxx', $errmsg_tmp);
-            $errmsg_tmp = preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errmsg_tmp);
-            #debug('errmsg_tmp', $errmsg_tmp);
-            $key = md5($file.$line.$errType.$errmsg_tmp);
-            if ($eh_data['errorCaller']) {
-                $file = $eh_data['errorCaller']['file'];
-                $line = $eh_data['errorCaller']['file'];
-            }
-            //if ( !empty($data['errors'][$key]['tsEmailed']) )
-            //  $this->log('tsEmailed', date('Y-m-d H:i:s', $data['errors'][$key]['tsEmailed']));
-            if (!isset($data['errors'][$key]) || $data['errors'][$key]['tsEmailed'] < $ts_cutoff) {
-                // this error has not occurred recently -> email it
-                $email = true;
-                if ($this->collect && in_array($this->cfg['emailLog'], array('always','onError'))) {
-                    // Don't email error.  Will email log at shutdownFunction
-                    $email = false;
-                }
-                $data['errors'][$key] = array(
-                    'file'          => $file,
-                    'line'          => $line,
-                    'errType'       => $errType,
-                    'errmsg'        => $errmsg,
-                    'tsEmailed'     => $ts_now,
-                    'emailTo'       => $this->cfg['emailTo'],
-                    'countSince'    => 0,
-                );
-            } else {
-                // Don't email error.  Was recently emailed.
-                $data['errors'][$key]['countSince']++;
-            }
-            $data = $this->emailTrashCollection($data);
-            $wrote = $this->_fileWrite($eh_cfg['emailThrottleFile'], serialize($data));
-        }
-        if ($email) {
-            // send error email!
-            $errmsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $errmsg);   // remove links from errmsg
-            $cs         = $data['errors'][$key]['countSince'];
-            $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errmsg.( $cs ? ' ('.$cs.'x)' : '' );
-            $email_body = '';
-            if (!empty($cs)) {
-                $email_body .= 'Error has occurred '.$cs.' times since last email.'."\n\n";
-            }
-            $email_body .= ''
-                .'datetime: '.date('Y-m-d H:i:s (T)')."\n"
-                .'errormsg: '.$errmsg."\n"
-                .'errortype: '.$errType.' ('.$this->errTypes[$errType].')'."\n"
-                .'file: '.$file."\n"
-                .'line: '.$line."\n"
-                .'remote_addr: '.$_SERVER['REMOTE_ADDR']."\n"
-                .'http_host: '.$_SERVER['HTTP_HOST']."\n"
-                .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
-                .'';
-            if (!empty($_POST)) {
-                $email_body .= 'post params: '.var_export($_POST, true)."\n";
-            }
-            if ($errType & $eh_cfg['emailTraceMask']) {
-                /*
-                backtrace
-                    0: here
-                    1: call_user_func_array
-                    2: errorHandler
-                    3: where error occured
-                */
-                $search = array(
-                    ")\n\n",
-                );
-                $replace = array(
-                    ")\n",
-                );
-                $backtrace = debug_backtrace();
-                $backtrace = array_slice($backtrace, 3);
-                $backtrace[0]['vars'] = $vars;
-                $str = print_r($backtrace, true);
-                $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty array
-                $str = str_replace($search, $replace, $str);
-                $str = substr($str, 0, -1);
-                $email_body .= "\n".'backtrace: '.$str;
-            }
-            mail($this->cfg['emailTo'], $subject, $email_body);
-        }
-        return;
-    }
 
     /**
      * Serializes and emails log
@@ -822,30 +575,31 @@ class Debug
     {
         $body = '';
         $unsuppressedError = false;
-        /**
-         * List errors that occured
-         */
+        /*
+            List errors that occured
+        */
+        $errors = $this->errorHandler->get('errors');
         $cmp = create_function('$a1, $a2', 'return strcmp($a1["file"].$a1["line"], $a2["file"].$a2["line"]);');
-        uasort($this->data['errorHandler']['errors'], $cmp);
-        $last_file = '';
-        foreach ($this->data['errorHandler']['errors'] as $error) {
+        uasort($errors, $cmp);
+        $lastFile = '';
+        foreach ($errors as $error) {
             if ($error['suppressed']) {
                 continue;
             }
-            if ($error['file'] !== $last_file) {
+            if ($error['file'] !== $lastFile) {
                 $body .= $error['file'].':'."\n";
-                $last_file = $error['file'];
+                $lastFile = $error['file'];
             }
             $body .= '  Line '.$error['line'].': '.$error['message']."\n";
             $unsuppressedError = true;
         }
         $subject = 'Debug Log: '.$_SERVER['HTTP_HOST'].( $unsuppressedError ? ' (Error)' : '' );
-        /**
-         * Serialize the log
-         */
-        $outputCssWas = $this->setCfg('outputCss', false);
-        $serialized = $this->_outputHtml();
-        $this->setCfg('outputCss', $outputCssWas);
+        /*
+            Serialize the log
+        */
+        $outputCssWas = $this->set('outputCss', false);
+        $serialized = $this->outputHtml();
+        $this->set('outputCss', $outputCssWas);
         if (function_exists('gzdeflate')) {
             $serialized = gzdeflate($serialized);
         }
@@ -857,50 +611,117 @@ class Debug
     }
 
     /**
-     * clean out errors stored in emailThrottleFile that havent occured recently
+     * Returns an error summary
      *
-     * @param array $data Data structure as stored in emailThrottleFile
-     *
-     * @return void
+     * @return string html
      */
-    protected function emailTrashCollection($data)
+    protected function errorSummary()
     {
-        $ts_now     = time();
-        $ts_cutoff  = $ts_now - $this->cfg['errorHandler']['emailMin'] * 60;
-        if ($data['ts_trash_collection'] < $ts_cutoff) {
-            // trash collection time
-            $data['ts_trash_collection'] = $ts_now;
-            $email_body = '';
-            foreach ($data['errors'] as $k => $err) {
-                if ($err['tsEmailed'] > $ts_cutoff) {
-                    continue;
-                }
-                // it's been a while since this error was emailed
-                if ($err['emailTo'] != $this->cfg['emailTo']) {
-                    if ($err['countSince'] < 1 || $err['tsEmailed'] < $ts_now - 60*60*24) {
-                        unset($data['errors'][$k]);
-                    }
-                    continue;
-                }
-                unset($data['errors'][$k]);
-                if ($err['countSince'] > 0) {
-                    $email_body .= ''
-                        .'File: '.$err['file']."\n"
-                        .'Line: '.$err['line']."\n"
-                        .'Error: '.$this->errTypes[ $err['errType'] ].': '.$err['errmsg']."\n"
-                        .'Has occured '.$err['countSince'].' times since '.date('Y-m-d H:i:s', $err['tsEmailed'])."\n\n";
-                }
+        $html = '';
+        $counts = array();
+        $errors = $this->errorHandler->get('errors');
+        foreach ($errors as $error) {
+            if ($error['suppressed']) {
+                continue;
             }
-            if ($email_body) {
-                mail($this->cfg['emailTo'], 'Website Errors: '.$_SERVER['SERVER_NAME'], $email_body);
+            $errTypesGrouped = $this->errorHandler->get('errTypesGrouped');
+            foreach ($errTypesGrouped as $type => $errTypes) {
+                if (!in_array($error['type'], $errTypes)) {
+                    continue;
+                }
+                if (!isset($counts[$type])) {
+                    $counts[$type] = array(
+                        'inConsole' => 0,
+                        'notInConsole' => 0,
+                    );
+                }
+                $k = $error['inConsole'] ? 'inConsole' : 'notInConsole';
+                $counts[$type][$k]++;
+                break;
             }
         }
-        return $data;
+        if ($counts) {
+            $totals = array(
+                'inConsole' => 0,
+                'inConsoleTypes' => 0,
+                'notInConsole' => 0,
+                // 'both' => 0,
+            );
+            foreach ($counts as $a) {
+                $totals['inConsole'] += $a['inConsole'];
+                $totals['notInConsole'] += $a['notInConsole'];
+                if ($a['inConsole']) {
+                    $totals['inConsoleTypes']++;
+                }
+            }
+            // $totals['both'] = $totals['inConsole'] + $a['notInConsole'];
+            ksort($counts);
+            /*
+                first show logged counts
+                then show not-logged counts
+            */
+            if ($totals['inConsole']) {
+                if ($totals['inConsoleTypes'] == 1) {
+                    // all same type of error
+                    reset($counts);
+                    $type = key($counts);
+                    if ($totals['inConsole'] == 1) {
+                        $html = 'There was 1 error';
+                        if ($type == 'fatal') {
+                            $html = ''; // don't bother with this alert..
+                                        // fatal are still prominently displayed
+                        } elseif ($type != 'error') {
+                            $html .= ' ('.$type.')';
+                        }
+                    } else {
+                        $html = 'There were '.$totals['inConsole'].' errors';
+                        if ($type != 'error') {
+                            $html .= ' of type '.$type;
+                        }
+                    }
+                    if ($html) {
+                        $html = '<h3 class="error-'.$type.'">'.$html.'</h3>'."\n";
+                    }
+                } else {
+                    // multiple error types
+                    $html = '<h3>There were '.$totals['inConsole'].' errors:</h3>'."\n";
+                    $html .= '<ul class="list-unstyled indent">';
+                    foreach ($counts as $type => $a) {
+                        if (!$a['inConsole']) {
+                            continue;
+                        }
+                        $html .= '<li class="error-'.$type.'">'.$type.': '.$a['inConsole'].'</li>';
+                    }
+                    $html .= '</ul>';
+                }
+            }
+            if ($totals['notInConsole']) {
+                $count = 0;
+                $htmlNotIn = '<ul class="list-unstyled indent">';
+                foreach ($errors as $err) {
+                    if ($err['suppressed'] || $err['inConsole']) {
+                        continue;
+                    }
+                    $count ++;
+                    $htmlNotIn .= '<li>'.$err['typeStr'].': '.$err['file'].' (line '.$err['line'].'): '.$err['message'].'</li>';
+                }
+                $htmlNotIn .= '</ul>';
+                $count = $count == 1
+                    ? 'was 1 error'
+                    : 'were '.$count.' errors';
+                $html .= '<h3>There '.$count.' captured while not collecting debug info</h3>'
+                    . $htmlNotIn;
+
+            }
+        }
+        return $html;
     }
 
     /**
-     * @param string $str     string containing binary
-     * @param bool   $htmlout add html markup?
+     * Display non-printable characters as hex
+     *
+     * @param string  $str     string containing binary
+     * @param boolean $htmlout add html markup?
      *
      * @return string
      */
@@ -951,7 +772,7 @@ EOD;
     }
 
     /**
-     * callback used by getDisplayBinary's preg_replace_callback
+     * Callback used by getDisplayBinary's preg_replace_callback
      *
      * @param array $m matches
      *
@@ -1019,6 +840,8 @@ EOD;
     }
 
     /**
+     * Formats an array as a table
+     *
      * @param array  $array   array
      * @param string $caption optional caption
      *
@@ -1096,6 +919,8 @@ EOD;
     }
 
     /**
+     * Returns string representation of value
+     *
      * @param mixed $v    value
      * @param array $opts options
      * @param array $hist {@internal - used to check for recursion}
@@ -1113,18 +938,18 @@ EOD;
                 'boolNullToString' => true,
             ), $opts);
             if ($this->state !== 'output') {
-                /**
-                 * getDisplayValue() called directly?
-                 */
+                /*
+                    getDisplayValue() called directly?
+                */
                 if (is_array($v) || is_object($v) || is_resource($v)) {
-                    $v = $this->_appendLogPrep($v);
+                    $v = $this->appendLogPrep($v);
                 }
             }
         }
         if (is_array($v) && in_array(self::VALUE_ABSTRACTION, $v, true)) {
-            /**
-             * array (recursion), object, or resource
-             */
+            /*
+                array (recursion), object, or resource
+            */
             $type = $v['type'];
             if ($type == 'object') {
                 $type = 'object';
@@ -1219,7 +1044,11 @@ EOD;
                     .'<span class="t_punct">)</span>';
                 $v = '<span class="t_'.$type.'">'.$html.'</span>';
             } elseif ($type == 'object') {
-                $html = preg_replace('#^([^\n]+)\n(.+)$#s', '<span class="t_object-class">\1</span>'."\n".'<span class="t_object-inner">\2</span>', $v);
+                $html = preg_replace(
+                    '#^([^\n]+)\n(.+)$#s',
+                    '<span class="t_object-class">\1</span>'."\n".'<span class="t_object-inner">\2</span>',
+                    $v
+                );
                 $html = preg_replace('#\sproperties: #', '<br />properties: ', $html);
                 $v = '<span class="t_'.$type.'">'.$html.'</span>';
             } elseif ($type) {
@@ -1251,37 +1080,23 @@ EOD;
     }
 
     /**
-     * Catch Fatal Error ( if PHP >= 5.2 )
-     * Email Log if emailLog = 'always' or 'onError'
+     * Email Log if emailLog is 'always' or 'onError'
      *
      * @return void
-     * @requires PHP 5.2.0
      */
     public function shutdownFunction()
     {
-        /**
-         * if PHP 5.2+ we can check for fatal error
-         */
-        if (version_compare(PHP_VERSION, '5.2.0', '>=')) {
-            $error = error_get_last();
-            if ($error['type'] & $this->cfg['errorHandler']['fatalMask']) {
-                $this->errorHandler($error['type'], $error['message'], $error['file'], $error['line']);
-                echo $this->output();
-            }
-        }
-        /**
-         * Email debug log if...
-         */
-        $email = false; // send shutdown debug log?
-        $unsuppressedError = false; // was there a non-suppressed error?
-        foreach ($this->data['errorHandler']['errors'] as $error) {
-            if (!$error['suppressed']) {
-                $unsuppressedError = true;
-                continue;
-            }
-        }
+        $email = false;
         // data['log']  will likely be non-empty... initial debug info is always collected
-        if (!empty($this->cfg['emailTo']) && !$this->output && !empty($this->data['log'])) {
+        if ($this->cfg['emailTo'] && !$this->cfg['output'] && $this->data['log']) {
+            $unsuppressedError = false;
+            $errors = $this->errorHandler->get('errors');
+            foreach ($errors as $error) {
+                if (!$error['suppressed']) {
+                    $unsuppressedError = true;
+                    continue;
+                }
+            }
             if ($this->cfg['emailLog'] === 'always') {
                 $email = true;
             } elseif ($this->cfg['emailLog'] === 'onError' && $unsuppressedError) {
@@ -1321,6 +1136,8 @@ EOD;
     }
 
     /**
+     * Add whitespace markup
+     *
      * @param string $str string which to add whitespace html markup
      *
      * @return string
@@ -1328,18 +1145,20 @@ EOD;
     public function visualWhiteSpace($str)
     {
         // display \r, \n, & \t
-        $str = preg_replace_callback('/(\r\n|\r|\n)/', array($this, '_visualWhiteSpaceCallback'), $str);
+        $str = preg_replace_callback('/(\r\n|\r|\n)/', array($this, 'visualWhiteSpaceCallback'), $str);
         $str = preg_replace('#(<br />)?\n$#', '', $str);
         $str = str_replace("\t", '<span class="ws_t">'."\t".'</span>', $str);
         return $str;
     }
 
     /**
+     * Adds whitespace markup
+     *
      * @param array $matches passed from preg_replace_callback
      *
      * @return string
      */
-    protected function _visualWhiteSpaceCallback($matches)
+    protected function visualWhiteSpaceCallback($matches)
     {
         $br = $this->cfg['addBR'] ? '<br />' : '';
         $search = array("\r","\n");
@@ -1356,33 +1175,46 @@ EOD;
      *
      * @return void
      */
-    protected function _appendLog($method, $args)
+    protected function appendLog($method, $args)
     {
         foreach ($args as $i => $v) {
             if (is_array($v) || is_object($v) || is_resource($v)) {
-                $args[$i] = $this->_appendLogPrep($v);
+                $args[$i] = $this->appendLogPrep($v);
             }
         }
         array_unshift($args, $method);
         if (!empty($this->cfg['file'])) {
-            $this->_appendLogFile($args);
+            $this->appendLogFile($args);
         }
-        /**
-         * if logging an error or notice, also log originating file/line
-         */
+        /*
+            if logging an error or notice, also log originating file/line
+        */
         if (in_array($method, array('error','warn'))) {
             $backtrace = debug_backtrace();
             foreach ($backtrace as $k => $a) {
-                if ($a['function'] == 'errorHandler') {
+                if ($a['function'] == 'handler' && $a['class'] == 'bdk\Debug\ErrorHandler') {
                     // no need to store originating file/line... it's part of error message
+                    // store errorCat -> can output as a className
+                    $errorInfo = $this->get('lastError');
+                    $errTypesGrouped = $this->errorHandler->get('errTypesGrouped');
+                    foreach ($errTypesGrouped as $errorCat => $errTypes) {
+                        if (in_array($errorInfo['type'], $errTypes)) {
+                            break;
+                        }
+                    }
+                    $args[] = array(
+                        '__debugMeta__' => true,
+                        'errorType' => $errorInfo['type'],
+                        'errorCat' => $errorCat,
+                    );
                     break;
                 }
                 if (isset($a['file']) && $a['file'] !== __FILE__) {
-                    if (!empty($a['function']) && in_array($a['function'], array('call_user_func','call_user_func_array'))) {
+                    if (in_array($a['function'], array('call_user_func','call_user_func_array'))) {
                         continue;
                     }
                     $args[] = array(
-                        '__errorCaller__' => true,
+                        '__debugMeta__' => true,
                         'file' => $a['file'],
                         'line' => $a['line'],
                     );
@@ -1395,18 +1227,18 @@ EOD;
     }
 
     /**
+     * Appends log entry to $this->cfg['file']
+     *
      * @param array $args args
      *
      * @return void
      */
-    protected function _appendLogFile($args)
+    protected function appendLogFile($args)
     {
         if (!isset($this->data['fileHandle'])) {
             $this->data['fileHandle'] = fopen($this->cfg['file'], 'a');
             if ($this->data['fileHandle']) {
                 fwrite($this->data['fileHandle'], '***** '.date('Y-m-d H:i:s').' *****'."\n");
-                //fwrite($this->data['fileHandle'], 'Remote Addr = '.$_SERVER['REMOTE_ADDR']."\n");
-                //fwrite($this->data['fileHandle'], 'Request URI = '.$_SERVER['REQUEST_URI']."\n");
             } else {
                 // failed to open file
                 $this->cfg['file'] = null;
@@ -1467,7 +1299,7 @@ EOD;
      *
      * @return array
      */
-    protected function _appendLogPrep($mixed, $hist = array(), $path = array())
+    protected function appendLogPrep($mixed, $hist = array(), $path = array())
     {
         $new = array(
             'debug' => self::VALUE_ABSTRACTION,
@@ -1515,7 +1347,7 @@ EOD;
             if (is_array($v) || is_object($v) || is_resource($v)) {
                 $path_new = $path;
                 $path_new[] = $k;
-                $v_new = $this->_appendLogPrep($v, $hist, $path_new);
+                $v_new = $this->appendLogPrep($v, $hist, $path_new);
             } else {
                 $v_new = $v;
             }
@@ -1531,181 +1363,13 @@ EOD;
     }
 
     /**
-     * @param string $file filepath
-     * @param string $str  string to write
+     * Return the log's CSS
      *
-     * @return int|false
-     */
-    protected function _fileWrite($file, $str)
-    {
-        $return = false;
-        if (!file_exists($file)) {
-            $dir = dirname($file);
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);    // 3rd param is php 5
-            }
-        }
-        $fh = fopen($file, 'w');
-        if ($fh) {
-            $return = fwrite($fh, $str);
-            fclose($fh);
-        }
-    }
-
-    /**
      * @return string
      */
-    protected function _getCss()
+    protected function getCss()
     {
-        $return = <<<EOD
-        .debug { clear: both; font-family: Verdana; font-size: 9px; line-height: normal; text-shadow: none; }
-        .debug * {
-            /*background-color: transparent;*/
-            font-size: inherit;
-            text-indent: 0;
-        }
-        .debug h3 { margin-top: 0; font-size: 1.25em; font-weight: bold; }
-        .debug img { border:0px; }
-        .debug pre {
-            padding: 0;
-            border: 0;
-            margin: 0;
-            color: inherit;
-            font-size: 1.2em;
-            line-height: 1.1em;
-            -moz-tab-size: 3;
-              -o-tag-size: 3;
-                -tab-size: 3;
-        }
-        /*.debug pre br { display:none; }*/
-        .debug table { border-collapse:collapse; }
-        .debug table caption { font-weight:bold; font-style:italic; }
-        .debug table th { font-weight:bold; background-color: rgba(0,0,0,0.1); }
-        .debug table th, .debug table td { border:1px solid #000; padding:1px .25em; }
-        .debug ul { margin-top: 0; margin-bottom: 0; }
-
-        .debug .alert {
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-        .debug .alert-danger {
-            background-color: #FFBABA;
-            color: #D8000C;
-            border-color: #D8000C;
-        }
-        .debug .alert h3 { margin-bottom: 4px; }
-        .debug .alert h3:last-child { margin-bottom: 0; }
-        .debug .list-unstyled{
-            list-style: none outside none;
-            padding-left: 0;
-        }
-        .debug .indent { padding-left: 10px; }
-
-        /* methods */
-        .debug .assert,
-        .debug .count,
-        .debug .log,
-        .debug .error,
-        .debug .group-header,
-        .debug .info,
-        .debug .time,
-        .debug .warn,
-        .debug table {
-            float:left;
-            clear:left;
-        }
-        .debug .error,
-        .debug .info,
-        .debug .log,
-        .debug .warn {
-            padding-left: 10px;
-            text-indent: -10px;
-        }
-        .debug .group {
-            clear: left;
-            margin-left: 1em;
-            border-left: 1px solid rgba(0, 0, 0, 0.25);
-            padding-left: 1px;
-        }
-        .debug .group-label { font-weight:bold; }
-        /* clearfix group */
-        .debug .group:before,
-        .debug .group:after {
-            content: " ";
-            display: table;
-        }
-        .debug .group:after {
-            clear: both;
-        }
-        .debug .assert{ background-color: rgba(255,204,204,.75); }
-        .debug .error { background-color: #FFBABA; color: #D8000C; }
-        .debug .info  { background-color: #BDE5F8; color: #00529B; }
-        .debug .warn  { background-color: #FEEFB3; color: #9F6000; }
-        .error-fatal:before {
-            display: block;
-            padding-left: 10px;
-            margin-bottom: 5px;
-            content: "Fatal error";
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        .debug .error-fatal {
-            padding: 10px;
-            margin-bottom: 11px;
-            border-left: solid 2px #D8000C;
-        }
-        /* data types */
-        .debug .t_string { white-space: pre-wrap; }
-        .debug .t_string .binary {
-            margin: 0 .1em;
-            padding: .1em .5em;
-            background-color: #c0c0c0;
-            color: #003;
-            font-weight: bold;
-        }
-        .debug .t_bool.true { color: #993; text-shadow: 1px 1px 2px rgba(153, 153, 51, 0.5); }
-        .debug .t_bool.false { color: #C33; text-shadow: 1px 1px 2px rgba(204, 51, 51, 0.5); }
-        .debug .t_int,
-        .debug .t_float,
-        .debug .t_string.numeric {
-            font-family: Courier New,monospace,Ariel;
-            color: #009;
-            font-size: 1.15em;
-        }
-        .debug .t_null { opacity: 0.3; }
-        .debug .t_object-class { color: inherit; font-weight: bold; text-decoration: underline; }
-        .debug .t_object + br { display: none; }
-        .debug .t_recursion { font-weight: bold; color:#F00; }
-        .debug .t_resource { font-style: italic; }
-        .debug .t_array-inner,
-        .debug .t_object-inner { display: block; margin-left: 1.5em; }
-        .debug td.t_string { display: table-cell; }
-        .debug .t_string:before {
-            content: open-quote;
-            opacity: 0.33;
-        }
-        .debug .t_string:after {
-            content: close-quote;
-            opacity: 0.33;
-        }
-        .debug .t_undefined { background-color: rgba(0, 0, 0, 0.1); }
-        .debug .t_key_value {
-            display: block;
-            padding-left: 10px;
-            text-indent: -10px;
-        }
-        .debug .t_key { opacity: .75; }
-        .debug .t_keyword { color: #07A; }
-        .debug .t_operator { color: #A67F59; }
-        .debug .t_punct { color: #999; }
-        /* Whitespace */
-        .ws_s, .ws_t, .ws_r, .ws_n, .ws_p { opacity: 0.33; }
-        .debug .ws_t:before { content: "\\203A"; display: inline-block; width: 1em; }   /* &rsaquo; */
-        .debug .ws_r:before { content: "\\\\r"; }
-        .debug .ws_n:before { content: "\\\\n"; }
-EOD;
+        $return = file_get_contents($this->cfg['filepathCss']);
         if (!empty($this->cfg['css'])) {
             $return .=  "\n".$this->cfg['css']."\n";
         }
@@ -1713,25 +1377,21 @@ EOD;
     }
 
     /**
+     * Pass the log to FirePHP methods
+     *
      * @return void
      */
-    protected function _outputFirephp()
+    protected function outputFirephp()
     {
         if (!file_exists($this->cfg['firephpInc'])) {
             return;
         }
         require_once $this->cfg['firephpInc'];
-        $firephp = FirePHP::getInstance(true);
+        $firephp = \FirePHP::getInstance(true);
         $firephpMethods = get_class_methods($firephp);
-        $firephp->setOptions(array(
-            'useNativeJsonEncode'   => true,
-            'includeLineNumbers'    => false,
-            //'maxArrayDepth'       => 2,
-            //'maxObjectDepth'      => 2,
-            //'maxDepth'            => 2,
-        ));
-        if (!empty($this->alert)) {
-            $alert = str_replace('<br />', "\n", $this->alert);
+        $firephp->setOptions($this->get('firephpOptions'));
+        if (!empty($this->data['alert'])) {
+            $alert = str_replace('<br />', "\n", $this->data['alert']);
             array_unshift($this->data['log'], array('error', $alert));
         }
         foreach ($this->data['log'] as $i => $args) {
@@ -1756,7 +1416,6 @@ EOD;
                     }
                     $args[0] .= ' - '.implode(', ', $more);
                 }
-                //
                 if ($opts['Collapsed']) {
                     $i++;
                     $d = 0;
@@ -1801,12 +1460,14 @@ EOD;
             } else {
                 if (in_array($method, array('error','warn'))) {
                     $end = end($args);
-                    if (is_array($end) && isset($end['__errorCaller__'])) {
+                    if (is_array($end) && isset($end['__debugMeta__'])) {
                         array_pop($args);
-                        $opts = array(
-                            'File' => $end['file'],
-                            'Line' => $end['line'],
-                        );
+                        if (isset($end['file'])) {
+                            $opts = array(
+                                'File' => $end['file'],
+                                'Line' => $end['line'],
+                            );
+                        }
                     }
                 }
                 if (count($args) > 1) {
@@ -1839,23 +1500,30 @@ EOD;
     }
 
     /**
+     * Return the log as HTML
+     *
      * @return string
      */
-    protected function _outputHtml()
+    protected function outputHtml()
     {
         $str = '<div class="debug">'."\n";
         if ($this->cfg['outputCss']) {
             $str .= '<style type="text/css">'."\n"
-                    .$this->_getCss()."\n"
+                    .$this->getCss()."\n"
                 .'</style>'."\n";
         }
+        if ($this->cfg['outputScript']) {
+            $str .= '<script type="text/javascript">'
+                .file_get_contents($this->cfg['filepathScript'])
+                .'</script>';
+        }
         $lastError = $this->get('lastError');
-        if ($lastError && $lastError['type'] & $this->cfg['errorHandler']['fatalMask']) {
+        if ($lastError && $lastError['type'] & $this->errorHandler->get('fatalMask')) {
             array_unshift($this->data['log'], array('error error-fatal',$lastError));
         }
         $str .= '<h3>Debug Log:</h3>'."\n";
-        if (!empty($this->alert)) {
-            $str .= '<div class="alert alert-danger">'.$this->alert.'</div>';
+        if (!empty($this->data['alert'])) {
+            $str .= '<div class="alert alert-danger">'.$this->data['alert'].'</div>';
         }
         $str .= '<div class="debug-content clearfix">'."\n";
         foreach ($this->data['log'] as $k_log => $args) {
@@ -1901,12 +1569,16 @@ EOD;
                 );
                 if (in_array($method, array('error','warn'))) {
                     $end = end($args);
-                    if (is_array($end) && isset($end['__errorCaller__'])) {
+                    if (is_array($end) && isset($end['__debugMeta__'])) {
                         $a = array_pop($args);
-                        $attribs['title'] = $a['file'].': line '.$a['line'];
+                        if (isset($a['file'])) {
+                            $attribs['title'] = $a['file'].': line '.$a['line'];
+                        }
+                        if (isset($a['errorCat'])) {
+                            $attribs['class'] .= ' error-'.$a['errorCat'];
+                        }
                     }
                 }
-                //
                 $num_args = count($args);
                 $glue = ', ';
                 if ($num_args == 2) {
@@ -1915,31 +1587,17 @@ EOD;
                         : ' = ';
                 }
                 foreach ($args as $k => $v) {
-                    /**
-                     * first arg, if string will be left untouched
-                     * unless it is only arg, which will be visualWhiteSpaced'd
-                     */
+                    /*
+                        first arg, if string will be left untouched
+                        unless it is only arg, which will be visualWhiteSpaced'd
+                    */
                     if ($k > 0 || !is_string($v)) {
                         $args[$k] = $this->getDisplayValue($v);
                     } elseif ($num_args == 1) {
                         $args[$k] = $this->visualWhiteSpace($v);
                     }
                 }
-                /*
-                $wrapPre = false;
-                foreach ($args as $i => $arg) {
-                    if (strpos($arg, '<pre') === 0) {
-                        $wrapPre = true;
-                        $args[$i] = preg_replace('#^<pre(.*)pre>$#s', '<span\1span>', $arg);
-                    }
-                }
-                */
                 $args = implode($glue, $args);
-                /*
-                if ($wrapPre) {
-                    $args = '<pre>'.$args.'</pre>';
-                }
-                */
                 $str .= '<div '.$this->buildAttribString($attribs).'>'.$args.'</div>';
             }
             $str .= "\n";
@@ -1958,7 +1616,7 @@ EOD;
      */
 
     /**
-     * go through all the "rows" of array to determine what the keys are and their order
+     * Go through all the "rows" of array to determine what the keys are and their order
      *
      * @param array $rows array
      *
@@ -1990,7 +1648,7 @@ EOD;
                             array_push($new_stack, $current_key);
                         }
                     }
-                    //put on remaining from last_stack
+                    // put on remaining from last_stack
                     array_splice($new_stack, count($new_stack), 0, $last_stack);
                     $new_stack = array_unique($new_stack);
                     $last_stack = $new_stack;
@@ -2002,7 +1660,7 @@ EOD;
     }
 
     /**
-     * [array_merge_deep description]
+     * Recursively merge two arrays
      *
      * @param array $def_array default array
      * @param array $a2        array 2
@@ -2032,7 +1690,7 @@ EOD;
     }
 
     /**
-     * basic html attrib builder
+     * Basic html attrib builder
      *
      * @param array $attribs key/pair values
      *
@@ -2050,7 +1708,7 @@ EOD;
     }
 
     /**
-     * returns a sent/pending response header value
+     * Returns a sent/pending response header value
      * only works with php >= 5
      *
      * @param string $key default = 'Content-Type', header to return
@@ -2078,7 +1736,7 @@ EOD;
      *
      * @param string $str string to check
      *
-     * @return bool
+     * @return boolean
      */
     public function isBase64Encoded($str)
     {
@@ -2090,7 +1748,7 @@ EOD;
      *
      * @param string $str string to check
      *
-     * @return bool
+     * @return boolean
      */
     public function isBinary($str)
     {
@@ -2110,14 +1768,14 @@ EOD;
      * @param mixed $mixed array or object to check
      * @param mixed $k     check if this is the key/value that is the reference
      *
-     * @return bool
+     * @return boolean
      * @internal
      * @link http://stackoverflow.com/questions/9105816/is-there-a-way-to-detect-circular-arrays-in-pure-php
      */
     public function isRecursive($mixed, $k = null)
     {
         $recursive = false;
-        //"Array *RECURSION" or "Object *RECURSION*"
+        // "Array *RECURSION" or "Object *RECURSION*"
         if (strpos(print_r($mixed, true), "\n *RECURSION*\n") !== false) {
             // contains recursion somewhere
             $recursive = true;
@@ -2134,7 +1792,7 @@ EOD;
     }
 
     /**
-     * returns a path to first recursive loop found or false if no recursion
+     * Returns a path to first recursive loop found or false if no recursion
      *
      * @param array &$array array
      * @param mixed $unique some unique value/object
@@ -2184,10 +1842,12 @@ EOD;
     }
 
     /**
-     * @param string $str   string to check
-     * @param bool   &$ctrl does string contain a "non-printable" control char?
+     * Determine if string is UTF-8 encoded
      *
-     * @return bool
+     * @param string  $str   string to check
+     * @param boolean &$ctrl does string contain a "non-printable" control char?
+     *
+     * @return boolean
      */
     public function isUtf8($str, &$ctrl = false)
     {
@@ -2228,6 +1888,8 @@ EOD;
     }
 
     /**
+     * Attempt to convert string to UTF-8 encoding
+     *
      * @param string $str string to convert
      *
      * @return string

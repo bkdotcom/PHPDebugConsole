@@ -25,4 +25,7 @@ Browser/javascript like console class for PHP
 * table
 * time
 * timeEnd
-* *... [more](http://www.bradkent.com/?page=php/debug#docs-methods)*
+* *&hellip; [more](http://www.bradkent.com/?page=php/debug#docs-methods)*
+
+### Changelog
+http://www.bradkent.com/?page=php/debug#docs-changelog

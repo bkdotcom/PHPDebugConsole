@@ -1,0 +1,158 @@
+/**
+ * Base debug CSS
+ *
+ * not recommended to modify
+ *
+ * use set('css', 'more css'); to add rules / override default
+ */
+
+.debug { clear: both; font-family: Verdana; font-size: 9px; line-height: normal; text-shadow: none; }
+.debug-content {
+	margin-top: 0.75em;
+}
+.debug * {
+	/*background-color: transparent;*/
+	font-size: inherit;
+	text-indent: 0;
+}
+.debug h3 { margin-top: 0; font-size: 1.25em; font-weight: bold; }
+.debug img { border:0px; }
+.debug pre {
+	padding: 0;
+	border: 0;
+	margin: 0;
+	color: inherit;
+	font-size: 1.2em;
+	line-height: 1.1em;
+	-moz-tab-size: 3;
+	  -o-tag-size: 3;
+		-tab-size: 3;
+}
+/*.debug pre br { display:none; }*/
+.debug table { border-collapse:collapse; }
+.debug table caption { font-weight:bold; font-style:italic; }
+.debug table th { font-weight:bold; background-color: rgba(0,0,0,0.1); }
+.debug table th, .debug table td { border:1px solid #000; padding:1px .25em; }
+.debug ul { margin-top: 0; margin-bottom: 0; }
+
+.debug .alert {
+	padding: 10px;
+	margin-bottom: 10px;
+	border: 1px solid transparent;
+	border-radius: 4px;
+}
+.debug .alert-danger {
+	background-color: #FFBABA;
+	color: #D8000C;
+	border-color: #D8000C;
+}
+.debug .alert h3 { margin-bottom: 4px; }
+.debug .alert h3:last-child { margin-bottom: 0; }
+.debug .list-unstyled{
+	list-style: none outside none;
+	padding-left: 0;
+}
+.debug .indent { padding-left: 10px; }
+
+/* methods */
+.debug .assert,
+.debug .count,
+.debug .log,
+.debug .error,
+.debug .group-header,
+.debug .info,
+.debug .time,
+.debug .warn,
+.debug table {
+	float:left;
+	clear:left;
+}
+.debug .error,
+.debug .info,
+.debug .log,
+.debug .warn {
+	padding-left: 10px;
+	text-indent: -10px;
+}
+.debug .group {
+	clear: left;
+	margin-left: 1em;
+	border-left: 1px solid rgba(0, 0, 0, 0.25);
+	padding-left: 1px;
+}
+.debug .group-label { font-weight:bold; }
+/* clearfix group */
+.debug .group:before,
+.debug .group:after {
+	content: " ";
+	display: table;
+}
+.debug .group:after {
+	clear: both;
+}
+.debug .assert{ background-color: rgba(255,204,204,.75); }
+.debug .error { background-color: #FFBABA; color: #D8000C; }
+.debug .info  { background-color: #BDE5F8; color: #00529B; }
+.debug .warn  { background-color: #FEEFB3; color: #9F6000; }
+.debug-content .error-fatal:before {
+	display: block;
+	padding-left: 10px;
+	margin-bottom: 5px;
+	content: "Fatal error";
+	font-size: 1.2em;
+	font-weight: bold;
+}
+.debug-content .error-fatal {
+	padding: 10px;
+	margin-bottom: 11px;
+	border-left: solid 2px #D8000C;
+}
+/* data types */
+.debug .t_string { white-space: pre-wrap; }
+.debug .t_string .binary {
+	margin: 0 .1em;
+	padding: .1em .5em;
+	background-color: #c0c0c0;
+	color: #003;
+	font-weight: bold;
+}
+.debug .t_bool.true { color: #993; text-shadow: 1px 1px 2px rgba(153, 153, 51, 0.5); }
+.debug .t_bool.false { color: #C33; text-shadow: 1px 1px 2px rgba(204, 51, 51, 0.5); }
+.debug .t_int,
+.debug .t_float,
+.debug .t_string.numeric {
+	font-family: Courier New,monospace,Ariel;
+	color: #009;
+	font-size: 1.15em;
+}
+.debug .t_null { opacity: 0.3; }
+.debug .t_object-class { color: inherit; font-weight: bold; text-decoration: underline; }
+.debug .t_object + br { display: none; }
+.debug .t_recursion { font-weight: bold; color:#F00; }
+.debug .t_resource { font-style: italic; }
+.debug .t_array-inner,
+.debug .t_object-inner { display: block; margin-left: 1.5em; }
+.debug td.t_string { display: table-cell; }
+.debug .t_string:before {
+	content: open-quote;
+	opacity: 0.33;
+}
+.debug .t_string:after {
+	content: close-quote;
+	opacity: 0.33;
+}
+.debug .t_undefined { background-color: rgba(0, 0, 0, 0.1); }
+.debug .t_key_value {
+	display: block;
+	padding-left: 10px;
+	text-indent: -10px;
+}
+.debug .t_key { opacity: .75; }
+.debug .t_keyword { color: #07A; }
+.debug .t_operator { color: #A67F59; }
+.debug .t_punct { color: #999; }
+/* Whitespace */
+.ws_s, .ws_t, .ws_r, .ws_n, .ws_p { opacity: 0.33; }
+.debug .ws_t:before { content: "\203A"; display: inline-block; width: 1em; }   /* &rsaquo; */
+.debug .ws_r:before { content: "\\r"; }
+.debug .ws_n:before { content: "\\n"; }

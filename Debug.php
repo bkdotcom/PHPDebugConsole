@@ -1191,34 +1191,41 @@ EOD;
         */
         if (in_array($method, array('error','warn'))) {
             $backtrace = debug_backtrace();
+            $viaErrorHandler = false;
             foreach ($backtrace as $k => $a) {
                 if ($a['function'] == 'handler' && $a['class'] == 'bdk\Debug\ErrorHandler') {
                     // no need to store originating file/line... it's part of error message
                     // store errorCat -> can output as a className
-                    $errorInfo = $this->get('lastError');
+                    $viaErrorHandler = true;
+                    $lastError = $this->errorHandler->get('lastError');
                     $errTypesGrouped = $this->errorHandler->get('errTypesGrouped');
+                    // find errorCat
                     foreach ($errTypesGrouped as $errorCat => $errTypes) {
-                        if (in_array($errorInfo['type'], $errTypes)) {
+                        if (in_array($lastError['type'], $errTypes)) {
                             break;
                         }
                     }
                     $args[] = array(
                         '__debugMeta__' => true,
-                        'errorType' => $errorInfo['type'],
+                        'errorType' => $lastError['type'],
                         'errorCat' => $errorCat,
                     );
                     break;
                 }
-                if (isset($a['file']) && $a['file'] !== __FILE__) {
-                    if (in_array($a['function'], array('call_user_func','call_user_func_array'))) {
-                        continue;
+            }
+            if (!$viaErrorHandler) {
+                foreach ($backtrace as $k => $a) {
+                    if (isset($a['file']) && $a['file'] !== __FILE__) {
+                        if (in_array($a['function'], array('call_user_func','call_user_func_array'))) {
+                            continue;
+                        }
+                        $args[] = array(
+                            '__debugMeta__' => true,
+                            'file' => $a['file'],
+                            'line' => $a['line'],
+                        );
+                        break;
                     }
-                    $args[] = array(
-                        '__debugMeta__' => true,
-                        'file' => $a['file'],
-                        'line' => $a['line'],
-                    );
-                    break;
                 }
             }
         }

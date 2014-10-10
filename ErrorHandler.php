@@ -52,6 +52,7 @@ class ErrorHandler
     );
     protected $registered = false;
     protected $oldErrorHandler = null;
+    protected $throttleData = array();
 
     /**
      * Constructor
@@ -110,49 +111,45 @@ class ErrorHandler
         $data = &$this->data;
         $email = false;
         if ($cfg['emailMin'] > 0 && $cfg['emailThrottleFile']) {
-            $ts_now     = time();
-            $ts_cutoff  = $ts_now - $cfg['emailMin'] * 60;
-            $data_str   = is_readable($cfg['emailThrottleFile'])
-                            ? file_get_contents($cfg['emailThrottleFile'])
-                            : '';
-            $throttleData = unserialize($data_str);
-            if (!is_array($throttleData)) {
-                $throttleData = array(
-                    'ts_trash_collection' => $ts_now,
-                    'errors'              => array(),
-                );
+            $tsNow = time();
+            $tsCutoff = $tsNow - $cfg['emailMin'] * 60;
+            $throttleData = &$this->throttleData;
+            if (!$throttleData) {
+                $data_str   = is_readable($cfg['emailThrottleFile'])
+                                ? file_get_contents($cfg['emailThrottleFile'])
+                                : '';
+                $throttleData = unserialize($data_str);
+                if (!is_array($throttleData)) {
+                    $throttleData = array(
+                        'tsTrashCollection' => $tsNow,
+                        'errors'              => array(),
+                    );
+                }
             }
-            // for key creation:
-            //   use true error location
-            //   remove "numbers" from error message
-            $errMsgTmp = $errMsg;
-            $errMsgTmp = preg_replace('/(\(.*?)\d+(.*?\))/', '\1x\2', $errMsgTmp);
-            $errMsgTmp = preg_replace('/\b([a-z]+\d+)+\b/', 'xxx', $errMsgTmp);
-            $errMsgTmp = preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errMsgTmp);
-            $key = md5($file.$line.$errType.$errMsgTmp);
+            $hash = $this->getErrorHash($errType, $errMsg, $file, $line);
             if ($data['errorCaller']) {
                 $file = $data['errorCaller']['file'];
                 $line = $data['errorCaller']['file'];
             }
-            if (!isset($throttleData['errors'][$key]) || $throttleData['errors'][$key]['tsEmailed'] < $ts_cutoff) {
+            if (!isset($throttleData['errors'][$hash]) || $throttleData['errors'][$hash]['tsEmailed'] < $tsCutoff) {
                 // this error has not occurred recently -> email it
                 $email = true;
                 if ($this->debug->get('collect') && in_array($this->debug->get('emailLog'), array('always','onError'))) {
                     // Don't email error.  debug's shutdownFunction will email
                     $email = false;
                 }
-                $throttleData['errors'][$key] = array(
+                $throttleData['errors'][$hash] = array(
                     'file'          => $file,
                     'line'          => $line,
                     'errType'       => $errType,
                     'errMsg'        => $errMsg,
-                    'tsEmailed'     => $ts_now,
+                    'tsEmailed'     => $tsNow,
                     'emailTo'       => $this->debug->get('emailTo'),
                     'countSince'    => 0,
                 );
             } else {
                 // Don't email error.  Was recently emailed.
-                $throttleData['errors'][$key]['countSince']++;
+                $throttleData['errors'][$hash]['countSince']++;
             }
             $throttleData = $this->emailTrashCollection($throttleData);
             $wrote = $this->fileWrite($cfg['emailThrottleFile'], serialize($throttleData));
@@ -160,7 +157,7 @@ class ErrorHandler
         if ($email) {
             // send error email!
             $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $errMsg);   // remove links from errMsg
-            $cs         = $throttleData['errors'][$key]['countSince'];
+            $cs         = $throttleData['errors'][$hash]['countSince'];
             $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errMsg.( $cs ? ' ('.$cs.'x)' : '' );
             $emailBody = '';
             if (!empty($cs)) {
@@ -216,19 +213,19 @@ class ErrorHandler
      */
     protected function emailTrashCollection($data)
     {
-        $ts_now     = time();
-        $ts_cutoff  = $ts_now - $this->cfg['emailMin'] * 60;
-        if ($data['ts_trash_collection'] < $ts_cutoff) {
+        $tsNow     = time();
+        $tsCutoff  = $tsNow - $this->cfg['emailMin'] * 60;
+        if ($data['tsTrashCollection'] < $tsCutoff) {
             // trash collection time
-            $data['ts_trash_collection'] = $ts_now;
+            $data['tsTrashCollection'] = $tsNow;
             $emailBody = '';
             foreach ($data['errors'] as $k => $err) {
-                if ($err['tsEmailed'] > $ts_cutoff) {
+                if ($err['tsEmailed'] > $tsCutoff) {
                     continue;
                 }
                 // it's been a while since this error was emailed
                 if ($err['emailTo'] != $this->cfg['emailTo']) {
-                    if ($err['countSince'] < 1 || $err['tsEmailed'] < $ts_now - 60*60*24) {
+                    if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60*60*24) {
                         unset($data['errors'][$k]);
                     }
                     continue;
@@ -296,6 +293,25 @@ class ErrorHandler
     }
 
     /**
+     * generate hash
+     *
+     * @param integer $errType the level of the error
+     * @param string  $errMsg  the error message
+     * @param string  $file    filepath the error was raised in
+     * @param string  $line    the line the error was raised in
+     *
+     * @return string hash
+     */
+    protected function getErrorHash($errType, $errMsg, $file, $line)
+    {
+        $errMsg = preg_replace('/(\(.*?)\d+(.*?\))/', '\1x\2', $errMsg);
+        $errMsg = preg_replace('/\b([a-z]+\d+)+\b/', 'xxx', $errMsg);
+        $errMsg = preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errMsg);
+        $hash = md5($file.$line.$errType.$errMsg);
+        return $hash;
+    }
+
+    /**
      * Error handler
      *
      * @param integer $errType the level of the error
@@ -313,22 +329,23 @@ class ErrorHandler
         $data = &$this->data;
         $isFatal = $errType & $cfg['fatalMask'];
         $isSuppressed = !$isFatal && error_reporting() === 0;
-        $errMd5 = md5($file.$line.$errMsg); // use true source for tracking
-        $first_occur = !isset($data['errors'][$errMd5]);
+        $hash = $this->getErrorHash($errType, $errMsg, $file, $line);
+        $firstOccur = !isset($data['errors'][$hash]);
         if (!empty($data['errorCaller'])) {
             $file = $data['errorCaller']['file'];
             $line = $data['errorCaller']['line'];
         }
-        $err_string = $this->errTypes[$errType].': '.$file.' : '.$errMsg.' on line '.$line;
+        $errStr = $this->errTypes[$errType].': '.$file.' (line '.$line.'): '.$errMsg;
+        $errStrLog = $this->errTypes[$errType].': '.$file.' : '.$errMsg.' on line '.$line;
         $error = array(
             'type'      => $errType,
             'typeStr'   => $this->errTypes[$errType],
             // if any instance of this error was not supprseed, reflect that
-            'suppressed'=> !$first_occur && !$data['errors'][$errMd5]['suppressed']
+            'suppressed'=> !$firstOccur && !$data['errors'][$hash]['suppressed']
                 ? false
                 : $isSuppressed,
             // likewise if any any instance was logged in console
-            'inConsole' => !$first_occur && $data['errors'][$errMd5]['inConsole']
+            'inConsole' => !$firstOccur && $data['errors'][$hash]['inConsole']
                 ? true
                 : !$isSuppressed && $this->debug->get('collect'),
             'message'   => $errMsg,
@@ -336,7 +353,7 @@ class ErrorHandler
             'line'      => $line,
         );
         $data['lastError'] = $error;
-        $data['errors'][$errMd5] = $error;
+        $data['errors'][$hash] = $error;
         if ($isSuppressed) {
             // @suppressed error
         } elseif ($this->debug->get('collect')) {
@@ -347,20 +364,20 @@ class ErrorHandler
             */
             $errors = array(E_ERROR,E_WARNING,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR,E_USER_ERROR,E_RECOVERABLE_ERROR);
             if (in_array($errType, $errors)) {
-                $this->debug->error($err_string);
+                $this->debug->error($errStr);
             } else {
-                $this->debug->warn($err_string);
+                $this->debug->warn($errStr);
             }
             if (!$this->debug->get('output')) {
                 // not currently outputing... send to error log
-                error_log('PHP '.$err_string);
+                error_log('PHP '.$errStrLog);
             }
-        } elseif ($first_occur) {
+        } elseif ($firstOccur) {
             if ($this->debug->get('emailTo') && ( $errType & $cfg['emailMask'] )) {
                 $args = func_get_args();
                 call_user_func_array(array($this,'emailErr'), $args);
             }
-            error_log('PHP '.$err_string);
+            error_log('PHP '.$errStrLog);
         }
         if (!$isSuppressed) {
             $data['errorCaller'] = array();

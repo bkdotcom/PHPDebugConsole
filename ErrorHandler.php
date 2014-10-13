@@ -25,7 +25,7 @@ class ErrorHandler
     protected $data = array();
     protected $debug = null;
     protected $errTypes = array(
-        E_ERROR             => 'Error',             // handled via shutdown function
+        E_ERROR             => 'Fatal Error',       // handled via shutdown function
         E_WARNING           => 'Warning',
         E_PARSE             => 'Parsing Error',     // handled via shutdown function
         E_NOTICE            => 'Notice',
@@ -107,64 +107,37 @@ class ErrorHandler
      */
     protected function emailErr($errType, $errMsg, $file, $line, $vars = array())
     {
-        $cfg  = &$this->cfg;
-        $data = &$this->data;
         $email = false;
-        if ($cfg['emailMin'] > 0 && $cfg['emailThrottleFile']) {
+        if ($this->cfg['emailMin'] > 0) {
+            $stats = $this->throttleDataUpdate($errType, $errMsg, $file, $line);
             $tsNow = time();
-            $tsCutoff = $tsNow - $cfg['emailMin'] * 60;
-            $throttleData = &$this->throttleData;
-            if (!$throttleData) {
-                $data_str   = is_readable($cfg['emailThrottleFile'])
-                                ? file_get_contents($cfg['emailThrottleFile'])
-                                : '';
-                $throttleData = unserialize($data_str);
-                if (!is_array($throttleData)) {
-                    $throttleData = array(
-                        'tsTrashCollection' => $tsNow,
-                        'errors'              => array(),
-                    );
-                }
+            $tsCutoff = $tsNow - $this->cfg['emailMin'] * 60;
+            $email = true;
+            if ($this->debug->get('collect') && in_array($this->debug->get('emailLog'), array('always','onError'))) {
+                // Don't email error.  debug's shutdownFunction will email log
+                $email = false;
+            } elseif ($stats['tsEmailed'] > $tsCutoff) {
+                // recently emailed
+                $email = false;
             }
-            $hash = $this->getErrorHash($errType, $errMsg, $file, $line);
-            if ($data['errorCaller']) {
-                $file = $data['errorCaller']['file'];
-                $line = $data['errorCaller']['file'];
-            }
-            if (!isset($throttleData['errors'][$hash]) || $throttleData['errors'][$hash]['tsEmailed'] < $tsCutoff) {
-                // this error has not occurred recently -> email it
-                $email = true;
-                if ($this->debug->get('collect') && in_array($this->debug->get('emailLog'), array('always','onError'))) {
-                    // Don't email error.  debug's shutdownFunction will email
-                    $email = false;
-                }
-                $throttleData['errors'][$hash] = array(
-                    'file'          => $file,
-                    'line'          => $line,
-                    'errType'       => $errType,
-                    'errMsg'        => $errMsg,
-                    'tsEmailed'     => $tsNow,
-                    'emailTo'       => $this->debug->get('emailTo'),
-                    'countSince'    => 0,
-                );
-            } else {
-                // Don't email error.  Was recently emailed.
-                $throttleData['errors'][$hash]['countSince']++;
-            }
-            $throttleData = $this->emailTrashCollection($throttleData);
-            $wrote = $this->fileWrite($cfg['emailThrottleFile'], serialize($throttleData));
+        }
+        if ($this->data['errorCaller']) {
+            $file = $this->data['errorCaller']['file'];
+            $line = $this->data['errorCaller']['file'];
         }
         if ($email) {
             // send error email!
+            $dateTimeFmt = 'Y-m-d H:i:s (T)';
             $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $errMsg);   // remove links from errMsg
-            $cs         = $throttleData['errors'][$hash]['countSince'];
+            $cs         = $stats['countSince'];
             $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errMsg.( $cs ? ' ('.$cs.'x)' : '' );
             $emailBody = '';
             if (!empty($cs)) {
-                $emailBody .= 'Error has occurred '.$cs.' times since last email.'."\n\n";
+                $dateTimePrev = date($dateTimeFmt, $stats['tsEmailed']);
+                $emailBody .= 'Error has occurred '.$cs.' times since last email ('.$dateTimePrev.').'."\n\n";
             }
             $emailBody .= ''
-                .'datetime: '.date('Y-m-d H:i:s (T)')."\n"
+                .'datetime: '.date($dateTimeFmt)."\n"
                 .'errormsg: '.$errMsg."\n"
                 .'errortype: '.$errType.' ('.$this->errTypes[$errType].')'."\n"
                 .'file: '.$file."\n"
@@ -176,7 +149,7 @@ class ErrorHandler
             if (!empty($_POST)) {
                 $emailBody .= 'post params: '.var_export($_POST, true)."\n";
             }
-            if ($errType & $cfg['emailTraceMask']) {
+            if ($errType & $this->cfg['emailTraceMask']) {
                 /*
                     backtrace:
                     0: here
@@ -194,7 +167,7 @@ class ErrorHandler
                 $backtrace = array_slice($backtrace, 3);
                 $backtrace[0]['vars'] = $vars;
                 $str = print_r($backtrace, true);
-                $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty array
+                $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
                 $str = str_replace($search, $replace, $str);
                 $str = substr($str, 0, -1);
                 $emailBody .= "\n".'backtrace: '.$str;
@@ -202,49 +175,6 @@ class ErrorHandler
             mail($this->debug->get('emailTo'), $subject, $emailBody);
         }
         return;
-    }
-
-    /**
-     * Clean out errors stored in emailThrottleFile that havent occured recently
-     *
-     * @param array $data Data structure as stored in emailThrottleFile
-     *
-     * @return array
-     */
-    protected function emailTrashCollection($data)
-    {
-        $tsNow     = time();
-        $tsCutoff  = $tsNow - $this->cfg['emailMin'] * 60;
-        if ($data['tsTrashCollection'] < $tsCutoff) {
-            // trash collection time
-            $data['tsTrashCollection'] = $tsNow;
-            $emailBody = '';
-            foreach ($data['errors'] as $k => $err) {
-                if ($err['tsEmailed'] > $tsCutoff) {
-                    continue;
-                }
-                // it's been a while since this error was emailed
-                if ($err['emailTo'] != $this->cfg['emailTo']) {
-                    if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60*60*24) {
-                        unset($data['errors'][$k]);
-                    }
-                    continue;
-                }
-                unset($data['errors'][$k]);
-                if ($err['countSince'] > 0) {
-                    $dateLastEmailed = date('Y-m-d H:i:s', $err['tsEmailed']);
-                    $emailBody .= ''
-                        .'File: '.$err['file']."\n"
-                        .'Line: '.$err['line']."\n"
-                        .'Error: '.$this->errTypes[ $err['errType'] ].': '.$err['errMsg']."\n"
-                        .'Has occured '.$err['countSince'].' times since '.$dateLastEmailed."\n\n";
-                }
-            }
-            if ($emailBody) {
-                mail($this->cfg['emailTo'], 'Website Errors: '.$_SERVER['SERVER_NAME'], $emailBody);
-            }
-        }
-        return $data;
     }
 
     /**
@@ -396,7 +326,7 @@ class ErrorHandler
     public function register()
     {
         if (!$this->registered) {
-            $this->registered = true;   // used by shutdownFunction()
+            $this->registered = true;   // used by this->shutdownFunction()
             $this->oldErrorHandler = set_error_handler(array($this, 'handler'));
         }
     }
@@ -494,11 +424,127 @@ class ErrorHandler
     }
 
     /**
+     * Returns associative array containing
+     *    tsEmailed     // previously emailed ts
+     *    countSince    // times error has occured since being emailed
+     *    emailTo       // who the error was emailed to
+     *
+     * @param integer $errType the level of the error
+     * @param string  $errMsg  the error message
+     * @param string  $file    filepath the error was raised in
+     * @param string  $line    the line the error was raised in
+     *
+     * @return array
+     */
+    protected function throttleDataUpdate($errType, $errMsg, $file, $line)
+    {
+        $return = array(
+            'tsEmailed'  => 0,
+            'countSince' => 0,
+            'emailTo'    => '',
+        );
+        $cfg = &$this->cfg;
+        if ($cfg['emailThrottleFile']) {
+            $tsNow = time();
+            $tsCutoff = $tsNow - $cfg['emailMin'] * 60;
+            $hash = $this->getErrorHash($errType, $errMsg, $file, $line);
+            $throttleData = &$this->throttleData;
+            if (!$throttleData) {
+                $dataStr = is_readable($cfg['emailThrottleFile'])
+                                ? file_get_contents($cfg['emailThrottleFile'])
+                                : '';
+                $throttleData = json_decode($dataStr, true);
+                if (!is_array($throttleData)) {
+                    $throttleData = array(
+                        'tsTrashCollection' => $tsNow,
+                        'errors' => array(),
+                    );
+                }
+            }
+            $init = true;
+            if (isset($throttleData['errors'][$hash])) {
+                foreach ($return as $k => $v) {
+                    $return[$k] = $throttleData['errors'][$hash][$k];
+                }
+                if ($throttleData['errors'][$hash]['tsEmailed'] > $tsCutoff) {
+                    // This error was recently emailed
+                    $init = false;
+                    $throttleData['errors'][$hash]['countSince']++;
+                }
+            }
+            if ($init) {
+                if ($this->data['errorCaller']) {
+                    $file = $this->data['errorCaller']['file'];
+                    $line = $this->data['errorCaller']['file'];
+                }
+                $throttleData['errors'][$hash] = array(
+                    'file'       => $file,
+                    'line'       => $line,
+                    'errType'    => $errType,
+                    'errMsg'     => $errMsg,
+                    'tsEmailed'  => $tsNow,
+                    'emailTo'    => $this->debug->get('emailTo'),
+                    'countSince' => 0,
+                );
+            }
+            $throttleData = $this->throttleTrashCollection($throttleData);
+            $wrote = $this->fileWrite($cfg['emailThrottleFile'], json_encode($throttleData));
+        }
+        return $return;
+    }
+
+    /**
+     * Clean out errors stored in emailThrottleFile that havent occured recently
+     * If error(s) have occured since they were last emailed, a summary email will be sent
+     *
+     * @param array $data Data structure as stored in emailThrottleFile
+     *
+     * @return array
+     */
+    protected function throttleTrashCollection($data)
+    {
+        $tsNow     = time();
+        $tsCutoff  = $tsNow - $this->cfg['emailMin'] * 60;
+        if ($data['tsTrashCollection'] < $tsCutoff) {
+            // trash collection time
+            $data['tsTrashCollection'] = $tsNow;
+            $emailBody = '';
+            foreach ($data['errors'] as $k => $err) {
+                if ($err['tsEmailed'] > $tsCutoff) {
+                    continue;
+                }
+                // it's been a while since this error was emailed
+                if ($err['emailTo'] != $this->cfg['emailTo']) {
+                    // it was emailed to a different address
+                    if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60*60*24) {
+                        unset($data['errors'][$k]);
+                    }
+                    continue;
+                }
+                unset($data['errors'][$k]);
+                if ($err['countSince'] > 0) {
+                    $dateLastEmailed = date('Y-m-d H:i:s', $err['tsEmailed']);
+                    $emailBody .= ''
+                        .'File: '.$err['file']."\n"
+                        .'Line: '.$err['line']."\n"
+                        .'Error: '.$this->errTypes[ $err['errType'] ].': '.$err['errMsg']."\n"
+                        .'Has occured '.$err['countSince'].' times since '.$dateLastEmailed."\n\n";
+                }
+            }
+            if ($emailBody) {
+                mail($this->cfg['emailTo'], 'Website Errors: '.$_SERVER['SERVER_NAME'], $emailBody);
+            }
+        }
+        return $data;
+    }
+
+    /**
      * un-register this error hander and shutdown function
      *
-     * Note:  PHP conspicuously lacks an unregister_shutdown_function function
-     *     so it will continue to be called... $this->registered will be used to keep track
-     *     of whether it's "registered" or not
+     * Note:  PHP conspicuously lacks an unregister_shutdown_function function.
+     *     Technically this will still be registered, however:
+     *     $this->registered will be used to keep track of whether
+     *     we're "registered" or not and behave accordingly
      *
      * @return void
      */

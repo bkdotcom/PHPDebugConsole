@@ -4,7 +4,7 @@
  *
  * @author Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.1
+ * @version v1.2
  *
  * @link    http://www.github.com/bkdotcom/PHPDebugConsole
  * @link    https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -23,15 +23,17 @@ class Debug
     protected $cfg = array();
     protected $data = array();
     protected $collect;
+    protected $outputSent = false;
 
     const VALUE_ABSTRACTION = "\x00debug\x00";
 
     /**
      * Constructor
      *
-     * @param array $cfg config
+     * @param array  $cfg          config
+     * @param object $errorHandler optional - uses \bdk\Debug\ErrorHandler if not passed
      */
-    public function __construct($cfg = array())
+    public function __construct($cfg = array(), $errorHandler = null)
     {
         $this->cfg = array(
             'addBR'     => false,           // convert \n to <br />\n in strings?
@@ -50,12 +52,15 @@ class Debug
             'outputScript' => true,
             'filepathCss' => dirname(__FILE__).'/Debug.css',
             'filepathScript' => dirname(__FILE__).'/Debug.jquery.min.js',
+            // errorMask = errors that appear as "error" in debug console... all other errors are "warn"
+            'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
+                            | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
             'emailLog'  => false,           // whether to email a debug log. false, 'onError' (true), or 'always'
                                             //   requires 'collect' to also be true
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
-            'onOutput'  => null,                // set to something callable
+            'onOutput'  => null,            // set to something callable
         );
         $this->data = array(
             'alert' => '',
@@ -83,8 +88,13 @@ class Debug
         if (!isset(self::$instance)) {
             self::$instance = $this;
         }
-        require_once dirname(__FILE__).'/ErrorHandler.php';
-        $this->errorHandler = new ErrorHandler(array(), $this);
+        if ($errorHandler) {
+            $this->errorHandler = $errorHandler;
+        } else {
+            require_once dirname(__FILE__).'/ErrorHandler.php';
+            $this->errorHandler = ErrorHandler::getInstance();
+        }
+        $this->errorHandler->registerOnErrorFunction(array($this,'onError'));
         $this->set($cfg);
         $this->collect = &$this->cfg['collect'];
         register_shutdown_function(array($this, 'shutdownFunction'));
@@ -293,7 +303,7 @@ class Debug
             $this->data['groupDepth']--;
         }
         $eC = $this->errorHandler->get('errorCaller');
-        if ($eC && $this->data['groupDepth'] < $eC['depth']) {
+        if ($eC && isset($eC['depth']) && $this->data['groupDepth'] < $eC['depth']) {
             $this->errorHandler->setErrorCaller(null);
         }
         if ($this->collect) {
@@ -359,8 +369,9 @@ class Debug
                 $this->outputFirephp();
                 $return = null;
             }
+            $this->outputSent = true;
+            $this->data['log'] = array();
         }
-        $this->data['log'] = array();
         $this->state = null;
         return $return;
     }
@@ -414,11 +425,19 @@ class Debug
             } elseif (isset($_COOKIE['debug'])) {
                 $keyPassed = $_COOKIE['debug'];
             }
-            $new['collect'] = $keyPassed == $new['key'];
-            $new['output'] = $new['collect'];
+            $validKey = $keyPassed == $new['key'];
+            if ($validKey) {
+                // only enable collect / don't disable it
+                $new['collect'] = true;
+            }
+            $new['output'] = $validKey;
         }
         if (isset($new['emailLog']) && $new['emailLog'] === true) {
             $new['emailLog'] = 'onError';
+        }
+        if (isset($new['emailTo']) && !isset($new['errorHandler']['emailTo'])) {
+            // also set errorHandler's emailTo
+            $this->errorHandler->set('emailTo', $new['emailTo']);
         }
         if (isset($new['errorHandler'])) {
             $this->errorHandler->set($new['errorHandler']);
@@ -457,7 +476,10 @@ class Debug
      */
     public function setErrorCaller($caller = 'notPassed')
     {
-        $this->errorHandler->setErrorCaller($caller);
+        $this->errorHandler->setErrorCaller($caller, 2);
+        if (!empty($caller)) {
+            $this->errorHandler->set('data/errorCaller/depth', $this->data['groupDepth']);
+        }
     }
 
     /**
@@ -624,21 +646,15 @@ class Debug
             if ($error['suppressed']) {
                 continue;
             }
-            $errTypesGrouped = $this->errorHandler->get('errTypesGrouped');
-            foreach ($errTypesGrouped as $type => $errTypes) {
-                if (!in_array($error['type'], $errTypes)) {
-                    continue;
-                }
-                if (!isset($counts[$type])) {
-                    $counts[$type] = array(
-                        'inConsole' => 0,
-                        'notInConsole' => 0,
-                    );
-                }
-                $k = $error['inConsole'] ? 'inConsole' : 'notInConsole';
-                $counts[$type][$k]++;
-                break;
+            $category = $error['category'];
+            if (!isset($counts[$category])) {
+                $counts[$category] = array(
+                    'inConsole' => 0,
+                    'notInConsole' => 0,
+                );
             }
+            $k = $error['inConsole'] ? 'inConsole' : 'notInConsole';
+            $counts[$category][$k]++;
         }
         if ($counts) {
             $totals = array(
@@ -1089,22 +1105,35 @@ EOD;
         $email = false;
         // data['log']  will likely be non-empty... initial debug info is always collected
         if ($this->cfg['emailTo'] && !$this->cfg['output'] && $this->data['log']) {
-            $unsuppressedError = false;
-            $errors = $this->errorHandler->get('errors');
-            foreach ($errors as $error) {
-                if (!$error['suppressed']) {
-                    $unsuppressedError = true;
-                    continue;
-                }
-            }
             if ($this->cfg['emailLog'] === 'always') {
                 $email = true;
-            } elseif ($this->cfg['emailLog'] === 'onError' && $unsuppressedError) {
-                $email = true;
+            } elseif ($this->cfg['emailLog'] === 'onError') {
+                $unsuppressedError = false;
+                $emailableError = false;
+                $errors = $this->errorHandler->get('errors');
+                $emailMask = $this->errorHandler->get('emailMask');
+                foreach ($errors as $error) {
+                    if (!$error['suppressed']) {
+                        $unsuppressedError = true;
+                    }
+                    if ($error['type'] & $emailMask) {
+                        $emailableError = true;
+                    }
+                }
+                if ($unsuppressedError && $emailableError) {
+                    $email = true;
+                }
             }
         }
         if ($email) {
             $this->emailLog();
+        }
+        /*
+            output the log if it hasn't already been output
+            this will also output for fatal errors
+        */
+        if (!$this->outputSent) {
+            echo $this->output();
         }
         return;
     }
@@ -1191,29 +1220,21 @@ EOD;
         */
         if (in_array($method, array('error','warn'))) {
             $backtrace = debug_backtrace();
-            $viaErrorHandler = false;
-            foreach ($backtrace as $k => $a) {
-                if ($a['function'] == 'handler' && $a['class'] == 'bdk\Debug\ErrorHandler') {
-                    // no need to store originating file/line... it's part of error message
-                    // store errorCat -> can output as a className
-                    $viaErrorHandler = true;
-                    $lastError = $this->errorHandler->get('lastError');
-                    $errTypesGrouped = $this->errorHandler->get('errTypesGrouped');
-                    // find errorCat
-                    foreach ($errTypesGrouped as $errorCat => $errTypes) {
-                        if (in_array($lastError['type'], $errTypes)) {
-                            break;
-                        }
-                    }
-                    $args[] = array(
-                        '__debugMeta__' => true,
-                        'errorType' => $lastError['type'],
-                        'errorCat' => $errorCat,
-                    );
-                    break;
-                }
-            }
-            if (!$viaErrorHandler) {
+            // path if via ErrorHandler :
+            //    ErrorHandler::handler -> call_user_function -> self::onError -> self::warn -> here we are
+            $viaErrorHandler = isset($backtrace[4])
+                && $backtrace[4]['function'] == 'handler'
+                && $backtrace[4]['class'] == 'bdk\Debug\ErrorHandler';
+            if ($viaErrorHandler) {
+                // no need to store originating file/line... it's part of error message
+                // store errorCat -> can output as a className
+                $lastError = $this->errorHandler->get('lastError');
+                $args[] = array(
+                    '__debugMeta__' => true,
+                    'errorType' => $lastError['type'],
+                    'errorCat' => $lastError['category'],
+                );
+            } else {
                 foreach ($backtrace as $k => $a) {
                     if (isset($a['file']) && $a['file'] !== __FILE__) {
                         if (in_array($a['function'], array('call_user_func','call_user_func_array'))) {
@@ -1339,6 +1360,11 @@ EOD;
             ));
             if ($new['isRecursion']) {
                 return $new;
+            } elseif ($new['class'] == __CLASS__) {
+                // special case for debugging self (only show public methods/props for self)
+                $hist[] = &$mixed;
+                $new['methods'] = call_user_func('get_class_methods', $mixed);
+                $vars = call_user_func('get_object_vars', $mixed);
             } else {
                 $hist[] = &$mixed;
                 $vars = get_object_vars($mixed);
@@ -1504,6 +1530,38 @@ EOD;
             $this->data['groupDepth']--;
         }
         return;
+    }
+
+    /**
+     * onError callback
+     * called by $this->errorHandler
+     * adds error to console as error or warn
+     *
+     * @param array $error array containing error details
+     *
+     * @return mixed
+     */
+    public function onError($error)
+    {
+        $return = null;
+        if ($this->collect) {
+            // $this->log('onError callback');
+            $return = false;    // no need to error_log or email this error
+            $errStr = $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message'];
+            if ($error['type'] & $this->cfg['errorMask']) {
+                $this->error($errStr);
+            } else {
+                $this->warn($errStr);
+            }
+            $this->errorHandler->set('data/errors/'.$error['hash'].'/inConsole', true);
+            if (in_array($this->cfg['emailLog'], array('always','onError'))) {
+                // Don't let errorHandler email error.  our shutdownFunction will email log
+                $this->errorHandler->set('data/currentError/allowEmail', false);
+            }
+        } elseif (!isset($error['inConsole'])) {
+            $this->errorHandler->set('data/errors/'.$error['hash'].'/inConsole', false);
+        }
+        return $return;
     }
 
     /**

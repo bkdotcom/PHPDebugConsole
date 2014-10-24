@@ -23,7 +23,6 @@ class ErrorHandler
 
     protected $cfg = array();
     protected $data = array();
-    protected $debug = null;
     protected $errTypes = array(
         E_ERROR             => 'Fatal Error',       // handled via shutdown function
         E_WARNING           => 'Warning',
@@ -42,7 +41,7 @@ class ErrorHandler
         E_DEPRECATED        => 'Deprecated',
         E_USER_DEPRECATED   => 'User Deprecated',
     );
-    protected $errTypesGrouped = array(
+    protected $errCategories = array(
         'deprecated'    => array( E_DEPRECATED, E_USER_DEPRECATED ),
         'error'         => array( E_USER_ERROR, E_RECOVERABLE_ERROR ),
         'notice'        => array( E_NOTICE, E_USER_NOTICE ),
@@ -50,40 +49,51 @@ class ErrorHandler
         'warning'       => array( E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING ),
         'fatal'         => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
     );
+    protected $onErrorFunctions = array();
     protected $registered = false;
-    protected $oldErrorHandler = null;
+    protected $prevErrorHandler = null;
     protected $throttleData = array();
+    private static $instance;
 
     /**
      * Constructor
      *
-     * @param array  $cfg   config
-     * @param object $debug optional debug object
+     * @param array $cfg config
      */
-    public function __construct($cfg = array(), $debug = null)
+    public function __construct($cfg = array())
     {
-        if ($debug) {
-            $this->debug = $debug;
-        } else {
-            $this->debug = Debug::getInstance();
-        }
         $this->cfg = array(
-            // set onError to something callable, will receive a single boolean indicating whether error was fatal
-            'onError'           => null,
             'emailMin'          => 15,
+            'emailTo' => !empty($_SERVER['SERVER_ADMIN'])
+                ? $_SERVER['SERVER_ADMIN']
+                : null,
             'emailMask'         => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
             'emailTraceMask'    => E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-            'fatalMask'         => array_reduce(
-                $this->errTypesGrouped['fatal'],
-                create_function('$a, $b', 'return $a | $b;')
-            ),
-            'emailThrottleFile' => dirname(__FILE__).'/error_emails.txt',
+            'continueToPrevHandler' => true,    // if there was a prev error handler
+            'emailThrottleFile' => dirname(__FILE__).'/error_emails.json',
+            // set onError to something callable, will receive error array
+            //     shortcut for registerOnErrorFunction()
+            'onError'           => null,
         );
         $this->data = array(
             'errorCaller'   => array(),
             'errors'        => array(),
             'lastError'     => array(),
+            'currentError'  => array(
+                'allowEmail' => true,   // error email will be sent if
+                                        //    emailTo is not empty
+                                        //    errType matches emailMask
+                                        //    no onError function returns false
+                                        //    throttle conditions met
+                                        //    and 'allowEmail' is true
+            ),
         );
+        // Initialize self::$instance if not set
+        //    so that self::getInstance() will always return original instance
+        //    as opposed the the last instance created with new ErrorHandler()
+        if (!isset(self::$instance)) {
+            self::$instance = $this;
+        }
         $this->set($cfg);
         $this->register();
         ini_set('display_errors', 0);
@@ -94,86 +104,64 @@ class ErrorHandler
     }
 
     /**
-     * Email this error... if...
-     *   Uses emailThrottleFile to keep track of when emails were sent
+     * Email this error
      *
      * @param integer $errType the level of the error
      * @param string  $errMsg  the error message
-     * @param string  $file    filepath the error was raised in
-     * @param string  $line    the line the error was raised in
+     * @param string  $file    "actual" filepath the error was raised in
+     * @param string  $line    "actual" line the error was raised in
      * @param array   $vars    active symbol table at point error occured
      *
      * @return void
      */
     protected function emailErr($errType, $errMsg, $file, $line, $vars = array())
     {
-        $email = false;
-        if ($this->cfg['emailMin'] > 0) {
-            $stats = $this->throttleDataUpdate($errType, $errMsg, $file, $line);
-            $tsNow = time();
-            $tsCutoff = $tsNow - $this->cfg['emailMin'] * 60;
-            $email = true;
-            if ($this->debug->get('collect') && in_array($this->debug->get('emailLog'), array('always','onError'))) {
-                // Don't email error.  debug's shutdownFunction will email log
-                $email = false;
-            } elseif ($stats['tsEmailed'] > $tsCutoff) {
-                // recently emailed
-                $email = false;
-            }
+        $dateTimeFmt = 'Y-m-d H:i:s (T)';
+        $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $errMsg);   // remove links from errMsg
+        $cs         = $stats['countSince'];
+        $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errMsg.( $cs ? ' ('.$cs.'x)' : '' );
+        $emailBody = '';
+        if (!empty($cs)) {
+            $dateTimePrev = date($dateTimeFmt, $stats['tsEmailed']);
+            $emailBody .= 'Error has occurred '.$cs.' times since last email ('.$dateTimePrev.').'."\n\n";
         }
-        if ($this->data['errorCaller']) {
-            $file = $this->data['errorCaller']['file'];
-            $line = $this->data['errorCaller']['file'];
+        $emailBody .= ''
+            .'datetime: '.date($dateTimeFmt)."\n"
+            .'errormsg: '.$errMsg."\n"
+            .'errortype: '.$errType.' ('.$this->errTypes[$errType].')'."\n"
+            .'file: '.$file."\n"
+            .'line: '.$line."\n"
+            .'remote_addr: '.$_SERVER['REMOTE_ADDR']."\n"
+            .'http_host: '.$_SERVER['HTTP_HOST']."\n"
+            .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
+            .'';
+        if (!empty($_POST)) {
+            $emailBody .= 'post params: '.var_export($_POST, true)."\n";
         }
-        if ($email) {
-            // send error email!
-            $dateTimeFmt = 'Y-m-d H:i:s (T)';
-            $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $errMsg);   // remove links from errMsg
-            $cs         = $stats['countSince'];
-            $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errMsg.( $cs ? ' ('.$cs.'x)' : '' );
-            $emailBody = '';
-            if (!empty($cs)) {
-                $dateTimePrev = date($dateTimeFmt, $stats['tsEmailed']);
-                $emailBody .= 'Error has occurred '.$cs.' times since last email ('.$dateTimePrev.').'."\n\n";
-            }
-            $emailBody .= ''
-                .'datetime: '.date($dateTimeFmt)."\n"
-                .'errormsg: '.$errMsg."\n"
-                .'errortype: '.$errType.' ('.$this->errTypes[$errType].')'."\n"
-                .'file: '.$file."\n"
-                .'line: '.$line."\n"
-                .'remote_addr: '.$_SERVER['REMOTE_ADDR']."\n"
-                .'http_host: '.$_SERVER['HTTP_HOST']."\n"
-                .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
-                .'';
-            if (!empty($_POST)) {
-                $emailBody .= 'post params: '.var_export($_POST, true)."\n";
-            }
-            if ($errType & $this->cfg['emailTraceMask']) {
-                /*
-                    backtrace:
-                    0: here
-                    1: call_user_func_array
-                    2: errorHandler
-                    3: where error occured
-                */
-                $search = array(
-                    ")\n\n",
-                );
-                $replace = array(
-                    ")\n",
-                );
-                $backtrace = debug_backtrace();
-                $backtrace = array_slice($backtrace, 3);
-                $backtrace[0]['vars'] = $vars;
-                $str = print_r($backtrace, true);
-                $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
-                $str = str_replace($search, $replace, $str);
-                $str = substr($str, 0, -1);
-                $emailBody .= "\n".'backtrace: '.$str;
-            }
-            mail($this->debug->get('emailTo'), $subject, $emailBody);
+        if ($errType & $this->cfg['emailTraceMask']) {
+            /*
+                backtrace:
+                0: here
+                1: call_user_func_array
+                2: errorHandler
+                3: where error occured
+            */
+            $search = array(
+                ")\n\n",
+            );
+            $replace = array(
+                ")\n",
+            );
+            $backtrace = debug_backtrace();
+            $backtrace = array_slice($backtrace, 3);
+            $backtrace[0]['vars'] = $vars;
+            $str = print_r($backtrace, true);
+            $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
+            $str = str_replace($search, $replace, $str);
+            $str = substr($str, 0, -1);
+            $emailBody .= "\n".'backtrace: '.$str;
         }
+        mail($this->cfg['emailTo'], $subject, $emailBody);
         return;
     }
 
@@ -242,6 +230,25 @@ class ErrorHandler
     }
 
     /**
+     * Returns the *Singleton* instance of this class.
+     *
+     * @param array $cfg optional config
+     *
+     * @return object
+     */
+    public static function getInstance($cfg = array())
+    {
+        if (!isset(self::$instance)) {
+            $className = __CLASS__;
+            // self::$instance set in __construct
+            new $className($cfg);
+        } elseif ($cfg) {
+            self::$instance->set($cfg);
+        }
+        return self::$instance;
+    }
+
+    /**
      * Error handler
      *
      * @param integer $errType the level of the error
@@ -257,69 +264,111 @@ class ErrorHandler
     {
         $cfg = &$this->cfg;
         $data = &$this->data;
-        $isFatal = $errType & $cfg['fatalMask'];
-        $isSuppressed = !$isFatal && error_reporting() === 0;
+		// determine $category
+        foreach ($this->errCategories as $category => $errTypes) {
+            if (in_array($errType, $errTypes)) {
+                break;
+            }
+        }
+        $isSuppressed = $category != 'fatal' && error_reporting() === 0;
         $hash = $this->getErrorHash($errType, $errMsg, $file, $line);
         $firstOccur = !isset($data['errors'][$hash]);
         if (!empty($data['errorCaller'])) {
             $file = $data['errorCaller']['file'];
             $line = $data['errorCaller']['line'];
         }
-        $errStr = $this->errTypes[$errType].': '.$file.' (line '.$line.'): '.$errMsg;
         $errStrLog = $this->errTypes[$errType].': '.$file.' : '.$errMsg.' on line '.$line;
         $error = array(
             'type'      => $errType,
+            'category'  => $category,
             'typeStr'   => $this->errTypes[$errType],
-            // if any instance of this error was not supprseed, reflect that
-            'suppressed'=> !$firstOccur && !$data['errors'][$hash]['suppressed']
-                ? false
-                : $isSuppressed,
-            // likewise if any any instance was logged in console
-            'inConsole' => !$firstOccur && $data['errors'][$hash]['inConsole']
-                ? true
-                : !$isSuppressed && $this->debug->get('collect'),
             'message'   => $errMsg,
             'file'      => $file,
             'line'      => $line,
+            'hash'      => $hash,
+            'firstOccur'=> $firstOccur,
+            // if any instance of this error was not supprssed, reflect that
+            'suppressed'=> !$firstOccur && !$data['errors'][$hash]['suppressed']
+                ? false
+                : $isSuppressed,
         );
-        $data['lastError'] = $error;
         $data['errors'][$hash] = $error;
+        $data['lastError'] = &$data['errors'][$hash];
+        $data['currentError'] = array(
+            'allowEmail' => true, // onError function(s) may set to false to prevent email
+        );
+        $email = false;
+        $callErrorLog = false;
         if ($isSuppressed) {
             // @suppressed error
-        } elseif ($this->debug->get('collect')) {
-            /*
-                log error in 'console'
-                  will not get logged to server's error_log
-                  will not get emailed
-            */
-            $errors = array(E_ERROR,E_WARNING,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR,E_USER_ERROR,E_RECOVERABLE_ERROR);
-            if (in_array($errType, $errors)) {
-                $this->debug->error($errStr);
-            } else {
-                $this->debug->warn($errStr);
+        } else {
+            $onErrorReturnedFalse = false;
+            foreach ($this->onErrorFunctions as $callable) {
+                $response = call_user_func($callable, $error);
+                if ($response === false) {
+                    $onErrorReturnedFalse = true;
+                }
             }
-            if (!$this->debug->get('output')) {
-                // not currently outputing... send to error log
-                error_log('PHP '.$errStrLog);
+            if ($firstOccur && !$onErrorReturnedFalse) {
+                if ($this->cfg['emailTo'] && ( $errType & $cfg['emailMask'] )) {
+                    if ($this->cfg['emailMin'] > 0) {
+                        /*
+                            keep track of error emails to prevent email flood
+                        */
+                        $stats = $this->throttleDataUpdate($errType, $errMsg, $file, $line);
+                        $tsNow = time();
+                        $tsCutoff = $tsNow - $this->cfg['emailMin'] * 60;
+                        $email = $stats['tsEmailed'] <= $tsCutoff;
+                    }
+                    if (!$data['currentError']['allowEmail']) {
+                        $email = false;
+                    }
+                }
+                $callErrorLog = true;
             }
-        } elseif ($firstOccur) {
-            if ($this->debug->get('emailTo') && ( $errType & $cfg['emailMask'] )) {
-                $args = func_get_args();
-                call_user_func_array(array($this,'emailErr'), $args);
-            }
-            error_log('PHP '.$errStrLog);
         }
         if (!$isSuppressed) {
             $data['errorCaller'] = array();
         }
-        if ($cfg['onError'] && is_callable($cfg['onError'])) {
-            call_user_func($cfg['onError'], $isFatal);
+        if ($email) {
+            $this->emailErr($errType, $errMsg, $file, $line, $vars);
         }
+        if ($cfg['continueToPrevHandler'] && $this->prevErrorHandler) {
+            call_user_func($this->prevErrorHandler, $errType, $errMsg, $file, $line, $vars);
+        } elseif ($callErrorLog) {
+            error_log('PHP '.$errStrLog);
+        }
+        // return false to continue to "normal" error handler
         return;
     }
 
     /**
-     * Register this error hander and shutdown function
+     * Return a unique identifier for callable
+     *
+     * @param mixed $callable callable
+     *
+     * @return string|false  returns false if not callable
+     */
+    protected function idCallable($callable)
+    {
+        $id = false;
+        $isCallable = is_callable($callable, true, $callableName);
+        if ($isCallable) {
+            if (is_object($callable)) {
+                // ie instanceof Closure
+                $id = spl_object_hash($callable);
+            } else {
+                $id = $callableName;
+                if (is_array($callable) && is_object($callable[0])) {
+                    $id .= ' '.spl_object_hash($callable[0]);
+                }
+            }
+        }
+        return $id;
+    }
+
+    /**
+     * Register this error handler and shutdown function
      *
      * @return void
      */
@@ -327,16 +376,31 @@ class ErrorHandler
     {
         if (!$this->registered) {
             $this->registered = true;   // used by this->shutdownFunction()
-            $this->oldErrorHandler = set_error_handler(array($this, 'handler'));
+            $this->prevErrorHandler = set_error_handler(array($this, 'handler'));
         }
+        return;
+    }
+
+    /**
+     * register an onError function
+     *
+     * @param callable $callable a callable function
+     *
+     * @return void
+     */
+    public function registerOnErrorFunction($callable)
+    {
+        $id = $this->idCallable($callable);
+        if ($id && !isset($this->onErrorFunctions[$id])) {
+            $this->onErrorFunctions[$id] = $callable;
+        }
+        return;
     }
 
     /**
      * Set one or more config values
      *
      * If setting a single value via method a or b, old value is returned
-     *
-     * Setting/updating 'key' will also set 'collect' and 'output'
      *
      *    set('key', 'value')
      *    set('level1.level2', 'value')
@@ -351,20 +415,30 @@ class ErrorHandler
     {
         $ret = null;
         if (is_string($k)) {
-            $what = 'cfg';
-            if (preg_match('#^(cfg|data)[\./](.+)$#', $k, $matches)) {
-                $what = $matches[1];
-                $k = $matches[2];
-            }
-            if ($what == 'cfg') {
-                $ret = $this->cfg[$k];
-                $this->cfg[$k] = $v;
+            $path = preg_split('#[\./]#', $k);
+            if ($path[0] == 'data') {
+                $ret = $this->data;
+                $ref = &$this->data;
+                array_shift($path);
             } else {
-                $ret = $this->data[$k];
-                $this->data[$k] = $v;
+                $ret = $this->cfg;
+                $ref = &$this->cfg;
+                if ($path[0] == 'onError') {
+                    $this->registerOnErrorFunction($v);
+                }
             }
+            foreach ($path as $k) {
+                $ret = isset($ret[$k])
+                    ? $ret[$k]
+                    : null;
+                $ref = &$ref[$k];
+            }
+            $ref = $v;
         } elseif (is_array($k)) {
             $this->cfg = array_merge($this->cfg, $k);
+            if (isset($k['onError'])) {
+                $this->registerOnErrorFunction($k['onError']);
+            }
         }
         return $ret;
     }
@@ -377,29 +451,28 @@ class ErrorHandler
      *     Rather than reporting that an error occurred within the wrapper, you can use
      *     setErrorCaller() to report the error originating from the file/line that called the function
      *
-     * @param array $caller optional. pass null or array() to clear
+     * @param array   $caller pass null or array() to clear (default)
+     * @param integer $offset if determining automatically : how many fuctions to go back (default = 1)
      *
      * @return void
      */
-    public function setErrorCaller($caller = 'notPassed')
+    public function setErrorCaller($caller = 'notPassed', $offset = 1)
     {
         if ($caller === 'notPassed') {
             $backtrace = debug_backtrace();
-            $i = isset($backtrace[1])
-                ? 1
-                : 0;
+            $i = isset($backtrace[$offset])
+                ? $offset
+                : $offset-1;
             $caller = isset($backtrace[$i]['file'])
                 ? $backtrace[$i]
                 : $backtrace[$i+1];
             $caller = array(
-                'depth' => $this->debug->get('data/groupDepth'),
                 'file' => $caller['file'],
                 'line' => $caller['line'],
             );
         } elseif (empty($caller)) {
-            $caller = array();  // clear
-        } elseif (is_array($caller)) {
-            $caller['depth'] = $this->debug->get('data/groupDepth');
+            // clear errorCaller
+            $caller = array();
         }
         $this->data['errorCaller'] = $caller;
         return;
@@ -415,9 +488,8 @@ class ErrorHandler
     {
         if ($this->registered && version_compare(PHP_VERSION, '5.2.0', '>=')) {
             $error = error_get_last();
-            if ($error['type'] & $this->cfg['fatalMask']) {
+            if (in_array($error['type'], $this->errCategories['fatal'])) {
                 $this->handler($error['type'], $error['message'], $error['file'], $error['line']);
-                echo $this->debug->output();
             }
         }
         return;
@@ -483,7 +555,7 @@ class ErrorHandler
                     'errType'    => $errType,
                     'errMsg'     => $errMsg,
                     'tsEmailed'  => $tsNow,
-                    'emailTo'    => $this->debug->get('emailTo'),
+                    'emailTo'    => $this->cfg['emailTo'],
                     'countSince' => 0,
                 );
             }
@@ -539,7 +611,7 @@ class ErrorHandler
     }
 
     /**
-     * un-register this error hander and shutdown function
+     * un-register this error handler and shutdown function
      *
      * Note:  PHP conspicuously lacks an unregister_shutdown_function function.
      *     Technically this will still be registered, however:
@@ -551,14 +623,32 @@ class ErrorHandler
     public function unregister()
     {
         if ($this->registered) {
-            // we think we're the current error handler.. dbl check when restoring
-            $errHandlerWas = set_error_handler($this->oldErrorHandler);
-            if ($errHandlerWas != array($this, 'handler')) {
-                // we weren't... restore to prev
+            // set and restore error handler to determine the current error handler
+            $errHandlerCur = set_error_handler(array($this, 'handler'));
+            restore_error_handler();
+            if ($errHandlerCur == array($this, 'handler')) {
+                // we are the current error handler
                 restore_error_handler();
             }
-            $this->oldErrorHandler = null;
+            $this->prevErrorHandler = null;
             $this->registered = false;  // used by shutdownFunction()
         }
+        return;
+    }
+
+    /**
+     * unregister an onError function
+     *
+     * @param callable $callable a callable function
+     *
+     * @return void
+     */
+    public function unregisterOnErrorFunction($callable)
+    {
+        $id = $this->idCallable($callable);
+        if ($id) {
+            unset($this->onErrorFunctions[$id]);
+        }
+        return;
     }
 }

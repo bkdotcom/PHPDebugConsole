@@ -1,6 +1,9 @@
 <?php
+/**
+ * Run with --process-isolation option
+ */
 
-require_once dirname(__FILE__).'/../Debug.php';
+require_once dirname(__FILE__).'/Debug.php';
 
 /**
  * test
@@ -23,10 +26,11 @@ class DebugTests extends PHPUnit_Framework_TestCase
      */
     public function setUp()
     {
-        $this->debug = new Debug(array(
+        $this->debug = new \bdk\Debug\Debug(array(
             'collect' => true,
             'output' => true,
             'outputCss' => false,
+            'outputScript' => false,
         ));
     }
 
@@ -49,7 +53,6 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $ref = &$src;
         $this->debug->log('ref', $ref);
         $src = 'fail';
-        //
         $output = $this->debug->output();
         $this->assertContains('success', $output);
     }
@@ -65,7 +68,6 @@ class DebugTests extends PHPUnit_Framework_TestCase
         );
         $this->debug->log('test_a', $test_a);
         $test_val = 'fail';
-        //
         $output = $this->debug->output();
         $this->assertContains('success', $output);
     }
@@ -78,7 +80,6 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test_a = array( 'foo' => 'bar' );
         $test_a['val'] = &$test_a;
         $this->debug->log('test_a', $test_a);
-        //
         $output = $this->debug->output();
         $this->assertContains('t_recursion', $output);
     }
@@ -88,16 +89,15 @@ class DebugTests extends PHPUnit_Framework_TestCase
      */
     public function testRecursiveArray2()
     {
-        /**
-         * $test_a is a circular reference
-         * $test_b references $test_a
-         */
+        /*
+            $test_a is a circular reference
+            $test_b references $test_a
+        */
         $test_a = array();
         $test_a[] = &$test_a;
         $this->debug->log('test_a', $test_a);
         $test_b = array('foo', &$test_a, 'bar');
         $this->debug->log('test_b', $test_b);
-        //
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
@@ -118,7 +118,6 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test_val = 'success B';
         $this->debug->log('test_o', $test_o);
         $test_val = 'fail';
-        //
         $output = $this->debug->output();
         $this->assertContains('success A', $output);
         $this->assertContains('success B', $output);
@@ -127,9 +126,9 @@ class DebugTests extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @return void
-     *
      * v 1.0 = fatal error
+     *
+     * @return void
      */
     public function testRecursiveObjectProp1()
     {
@@ -137,7 +136,6 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test->prop = array();
         $test->prop[] = &$test->prop;
         $this->debug->log('test', $test);
-        //
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
@@ -157,7 +155,6 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test = new Test();
         $test->prop = &$test;
         $this->debug->log('test', $test);
-        //
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
@@ -176,7 +173,6 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test = new Test();
         $test->prop = array( &$test );
         $this->debug->log('test', $test);
-        //
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
@@ -188,6 +184,9 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $this->assertSelectCount($select, 1, $xml);
     }
 
+    /**
+     * @return void
+     */
     public function testTypeResource()
     {
         $fh = fopen(__FILE__, 'r');
@@ -198,9 +197,9 @@ class DebugTests extends PHPUnit_Framework_TestCase
         );
         $this->debug->log('array with resource', $a);
         fclose($a['resource']);
-        //
         $output = $this->debug->output();
-        //@todo assert
+        $this->assertRegExp('|= <span class="t_resource">Resource id #\d+: stream</span>|', $output);
+        $this->assertRegExp('|> <span class="t_resource">Resource id #\d+: stream</span>|', $output);
     }
 
     /**
@@ -208,7 +207,6 @@ class DebugTests extends PHPUnit_Framework_TestCase
      */
     public function testCrossRefObjects()
     {
-        $test = new Test();
         $test_oa = new Test();
         $test_ob = new Test();
         $test_oa->prop = 'this is object a';
@@ -216,7 +214,6 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test_oa->ob = $test_ob;
         $test_ob->oa = $test_oa;
         $this->debug->log('test_oa', $test_oa);
-        //
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
@@ -228,5 +225,4 @@ class DebugTests extends PHPUnit_Framework_TestCase
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
     }
-
 }

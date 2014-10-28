@@ -661,7 +661,6 @@ class Debug
                 'inConsole' => 0,
                 'inConsoleTypes' => 0,
                 'notInConsole' => 0,
-                // 'both' => 0,
             );
             foreach ($counts as $a) {
                 $totals['inConsole'] += $a['inConsole'];
@@ -670,7 +669,6 @@ class Debug
                     $totals['inConsoleTypes']++;
                 }
             }
-            // $totals['both'] = $totals['inConsole'] + $a['notInConsole'];
             ksort($counts);
             /*
                 first show logged counts
@@ -963,49 +961,7 @@ EOD;
             }
         }
         if (is_array($v) && in_array(self::VALUE_ABSTRACTION, $v, true)) {
-            /*
-                array (recursion), object, or resource
-            */
-            $type = $v['type'];
-            if ($type == 'object') {
-                $type = 'object';
-                if ($v['isRecursion']) {
-                    $v = '<span class="t_object">'
-                            .'<span class="t_object-class">'.$v['class'].' object</span>'
-                            .' <span class="t_recursion">*RECURSION*</span>'
-                        .'</span>';
-                    if (!$opts['html']) {
-                        $v = strip_tags($v);
-                    }
-                    $type = null;
-                } else {
-                    $hist[] = &$v;
-                    $v = array(
-                        'class'      => $v['class'].' object',
-                        'properties' => $this->getDisplayValue($v['properties'], $opts, $hist),
-                        'methods'    => $this->getDisplayValue($v['methods'], $opts, $hist),
-                    );
-                    if ($opts['html'] || $opts['flatten']) {
-                        $v = $v['class']."\n"
-                            .'    methods: '.$v['methods']."\n"
-                            .'    properties: '.$v['properties'];
-                        if ($opts['flatten'] && count($hist) > 1) {
-                            $v = str_replace("\n", "\n    ", $v);
-                        }
-                    }
-                }
-            } elseif ($type == 'array') {
-                $v = '<span class="t_array">'
-                        .'<span class="t_keyword">Array</span>'
-                        .' <span class="t_recursion">*RECURSION*</span>'
-                    .'</span>';
-                if (!$opts['html']) {
-                    $v = strip_tags($v);
-                }
-                $type = null;
-            } else {
-                $v = $v['value'];
-            }
+            list($type, $v) = $this->getDisplayValueAbstraction($v, $opts);
         } elseif (is_array($v)) {
             $type = 'array';
             $hist[] = 'array';
@@ -1045,52 +1001,122 @@ EOD;
             }
         }
         if ($opts['html']) {
-            if ($type == 'array') {
-                $html = '<span class="t_keyword">Array</span><br />'."\n"
-                    .'<span class="t_punct">(</span>'."\n"
-                    .'<span class="t_array-inner">'."\n";
-                foreach ($v as $k => $v2) {
-                    $html .= "\t".'<span class="t_key_value">'
-                            .'<span class="t_key">['.$k.']</span> '
-                            .'<span class="t_operator">=&gt;</span> '
-                            .$v2
-                        .'</span>'."\n";
+            $v = $this->getDisplayValueHtml($v, $type, $typeMore);
+        }
+        return $v;
+    }
+
+    /**
+     * gets a value that has been abstracted
+     * array (recursion), object, or resource
+     *
+     * @param array $v    abstracted value
+     * @param array $opts options
+     * @param array $hist {@internal - used to check for recursion}
+     *
+     * @return array [string $type, mixed $value]
+     */
+    protected function getDisplayValueAbstraction($v, $opts = array(), $hist = array())
+    {
+        $type = $v['type'];
+        if ($type == 'object') {
+            $type = 'object';
+            if ($v['isRecursion']) {
+                $v = '<span class="t_object">'
+                        .'<span class="t_object-class">'.$v['class'].' object</span>'
+                        .' <span class="t_recursion">*RECURSION*</span>'
+                    .'</span>';
+                if (!$opts['html']) {
+                    $v = strip_tags($v);
                 }
-                $html .= '</span>'
-                    .'<span class="t_punct">)</span>';
-                $v = '<span class="t_'.$type.'">'.$html.'</span>';
-            } elseif ($type == 'object') {
-                $html = preg_replace(
-                    '#^([^\n]+)\n(.+)$#s',
-                    '<span class="t_object-class">\1</span>'."\n".'<span class="t_object-inner">\2</span>',
-                    $v
+                $type = null;
+            } else {
+                $hist[] = &$v;
+                $v = array(
+                    'class'      => $v['class'].' object',
+                    'properties' => $this->getDisplayValue($v['properties'], $opts, $hist),
+                    'methods'    => $this->getDisplayValue($v['methods'], $opts, $hist),
                 );
-                $html = preg_replace('#\sproperties: #', '<br />properties: ', $html);
-                $v = '<span class="t_'.$type.'">'.$html.'</span>';
-            } elseif ($type) {
-                $attribs = array(
-                    'class' => 't_'.$type,
-                    'title' => null,
-                );
-                if (!empty($typeMore) && $typeMore != 'binary') {
-                    $attribs['class'] .= ' '.$typeMore;
-                }
-                if ($type == 'string') {
-                    if ($typeMore != 'binary') {
-                        $v = htmlspecialchars($this->toUtf8($v), ENT_COMPAT, 'UTF-8');
-                    }
-                    $v = $this->visualWhiteSpace($v);
-                }
-                if (in_array($type, array('float','int')) || $typeMore == 'numeric') {
-                    $ts_now = time();
-                    $secs = 86400 * 90; // 90 days worth o seconds
-                    if ($v > $ts_now  - $secs && $v < $ts_now + $secs) {
-                        $attribs['class'] .= ' timestamp';
-                        $attribs['title'] = date('Y-m-d H:i:s', $v);
+                if ($opts['html'] || $opts['flatten']) {
+                    $v = $v['class']."\n"
+                        .'    methods: '.$v['methods']."\n"
+                        .'    properties: '.$v['properties'];
+                    if ($opts['flatten'] && count($hist) > 1) {
+                        $v = str_replace("\n", "\n    ", $v);
                     }
                 }
-                $v = '<span '.$this->buildAttribString($attribs).'>'.$v.'</span>';
             }
+        } elseif ($type == 'array') {
+            $v = '<span class="t_array">'
+                    .'<span class="t_keyword">Array</span>'
+                    .' <span class="t_recursion">*RECURSION*</span>'
+                .'</span>';
+            if (!$opts['html']) {
+                $v = strip_tags($v);
+            }
+            $type = null;
+        } else {
+            $v = $v['value'];
+        }
+        return array($type, $v);
+    }
+
+    /**
+     * add markup to value
+     *
+     * @param mixed  $v        value
+     * @param string $type     type
+     * @param string $typeMore numeric, binary, true, or false
+     *
+     * @return string html
+     */
+    protected function getDisplayValueHtml($v, $type = null, $typeMore = null)
+    {
+        if ($type == 'array') {
+            $html = '<span class="t_keyword">Array</span><br />'."\n"
+                .'<span class="t_punct">(</span>'."\n"
+                .'<span class="t_array-inner">'."\n";
+            foreach ($v as $k => $v2) {
+                $html .= "\t".'<span class="t_key_value">'
+                        .'<span class="t_key">['.$k.']</span> '
+                        .'<span class="t_operator">=&gt;</span> '
+                        .$v2
+                    .'</span>'."\n";
+            }
+            $html .= '</span>'
+                .'<span class="t_punct">)</span>';
+            $v = '<span class="t_'.$type.'">'.$html.'</span>';
+        } elseif ($type == 'object') {
+            $html = preg_replace(
+                '#^([^\n]+)\n(.+)$#s',
+                '<span class="t_object-class">\1</span>'."\n".'<span class="t_object-inner">\2</span>',
+                $v
+            );
+            $html = preg_replace('#\sproperties: #', '<br />properties: ', $html);
+            $v = '<span class="t_'.$type.'">'.$html.'</span>';
+        } elseif ($type) {
+            $attribs = array(
+                'class' => 't_'.$type,
+                'title' => null,
+            );
+            if (!empty($typeMore) && $typeMore != 'binary') {
+                $attribs['class'] .= ' '.$typeMore;
+            }
+            if ($type == 'string') {
+                if ($typeMore != 'binary') {
+                    $v = htmlspecialchars($this->toUtf8($v), ENT_COMPAT, 'UTF-8');
+                }
+                $v = $this->visualWhiteSpace($v);
+            }
+            if (in_array($type, array('float','int')) || $typeMore == 'numeric') {
+                $ts_now = time();
+                $secs = 86400 * 90; // 90 days worth o seconds
+                if ($v > $ts_now  - $secs && $v < $ts_now + $secs) {
+                    $attribs['class'] .= ' timestamp';
+                    $attribs['title'] = date('Y-m-d H:i:s', $v);
+                }
+            }
+            $v = '<span '.$this->buildAttribString($attribs).'>'.$v.'</span>';
         }
         return $v;
     }

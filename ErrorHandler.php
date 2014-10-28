@@ -560,7 +560,7 @@ class ErrorHandler
                 );
             }
             $throttleData = $this->throttleTrashCollection($throttleData);
-            $wrote = $this->fileWrite($cfg['emailThrottleFile'], json_encode($throttleData));
+            $this->fileWrite($cfg['emailThrottleFile'], json_encode($throttleData));
         }
         return $return;
     }

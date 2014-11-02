@@ -4,14 +4,7 @@
  */
 
 require_once dirname(__FILE__).'/../Debug.php';
-
-/**
- * test
- */
-class Test
-{
-    public $prop = 'val';
-}
+require_once dirname(__FILE__).'/Test.php';
 
 /**
  * PHPUnit tests for Debug class

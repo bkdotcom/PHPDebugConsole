@@ -1,21 +1,21 @@
 {
-	"name": "bdk/Debug",
+	"name": "bdk/debug",
 	"description": "Browser/javascript like console class for PHP",
 	"keywords": ["debug", "debugging", "var_dump", "inspect", "errorhandler"],
 	"homepage": "http://github.com/bkdotcom/PHPDebugConsole",
 	"license": "MIT",
 	"authors": [
-        {
-            "name": "Brad kent",
-            "email": "bkfake-packagist@yahoo.com",
-            "homepage": "http://www.bradkent.com/",
-            "role": "Developer"
-        }
-    ],
+		{
+			"name": "Brad kent",
+			"email": "bkfake-packagist@yahoo.com",
+			"homepage": "http://www.bradkent.com/",
+			"role": "Developer"
+		}
+	],
 	"autoload": {
-        "psr-4": { "bdk\\Debug\\": "" }
-    },
-    "require": {
+		"psr-4": { "bdk\\Debug\\": "" }
+	},
+	"require": {
 		"php": ">=5.0.0"
 	}
 }

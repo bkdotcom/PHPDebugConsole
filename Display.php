@@ -61,7 +61,7 @@ class Display
         }
         if (is_array($v)) {
             if (in_array(self::VALUE_ABSTRACTION, $v, true)) {
-                list($type, $v) = $this->getDisplayValueAbstraction($v, $opts);
+                list($type, $v) = $this->getValueAbstraction($v, $opts);
             }
             if (is_array($v)) {
                 $type = 'array';
@@ -83,7 +83,7 @@ class Display
             } elseif ($this->utilities->isBinary($v)) {
                 // all or partially binary data
                 $typeMore = 'binary';
-                $v = $this->getDisplayBinary($v, $opts['html']);
+                $v = $this->getBinary($v, $opts['html']);
             }
         } elseif (is_int($v)) {
             $type = 'int';
@@ -103,7 +103,7 @@ class Display
             }
         }
         if ($opts['html']) {
-            $v = $this->getDisplayValueHtml($v, $type, $typeMore);
+            $v = $this->getValueHtml($v, $type, $typeMore);
         }
         return $v;
     }
@@ -116,7 +116,7 @@ class Display
      *
      * @return string
      */
-    public function getDisplayBinary($str, $htmlout)
+    public function getBinary($str, $htmlout)
     {
         $this->htmlout = $htmlout;
         $this->displayBinaryStats = array(
@@ -144,7 +144,7 @@ class Display
 EOD;
         $str_orig = $str;
         $strlen = strlen($str);
-        $str = preg_replace_callback($regex, array($this,'getDisplayBinaryCallback'), $str);
+        $str = preg_replace_callback($regex, array($this,'getBinaryCallback'), $str);
         if ($stats['cur_text_len'] > $stats['max_text_len']) {
             $stats['max_text_len'] = $stats['cur_text_len'];
         }
@@ -163,13 +163,13 @@ EOD;
     }
 
     /**
-     * Callback used by getDisplayBinary's preg_replace_callback
+     * Callback used by getBinary's preg_replace_callback
      *
      * @param array $m matches
      *
      * @return string
      */
-    protected function getDisplayBinaryCallback($m)
+    protected function getBinaryCallback($m)
     {
         $stats = &$this->displayBinaryStats;
         $showHex = false;
@@ -210,22 +210,36 @@ EOD;
             $showHex = true;
         }
         if ($showHex) {
-            $stats['other']++;
-            if ($stats['cur_text_len']) {
-                if ($stats['cur_text_len'] > $stats['max_text_len']) {
-                    $stats['max_text_len'] = $stats['cur_text_len'];
-                }
-                $stats['cur_text_len'] = 0;
-                $stats['text_segments']++;
+            $str = $this->getBinaryHex($str, $stats);
+        }
+        return $str;
+    }
+
+    /**
+     * [getBinaryHex description]
+     *
+     * @param string $str string containing binary
+     *
+     * @return string
+     */
+    protected function getBinaryHex($str)
+    {
+        $stats = &$this->displayBinaryStats;
+        $stats['other']++;
+        if ($stats['cur_text_len']) {
+            if ($stats['cur_text_len'] > $stats['max_text_len']) {
+                $stats['max_text_len'] = $stats['cur_text_len'];
             }
-            $chars = str_split($str);
-            foreach ($chars as $i => $c) {
-                $chars[$i] = '\x'.bin2hex($c);
-            }
-            $str = implode('', $chars);
-            if ($this->htmlout) {
-                $str = '<span class="binary">'.$str.'</span>';
-            }
+            $stats['cur_text_len'] = 0;
+            $stats['text_segments']++;
+        }
+        $chars = str_split($str);
+        foreach ($chars as $i => $c) {
+            $chars[$i] = '\x'.bin2hex($c);
+        }
+        $str = implode('', $chars);
+        if ($this->htmlout) {
+            $str = '<span class="binary">'.$str.'</span>';
         }
         return $str;
     }
@@ -238,7 +252,7 @@ EOD;
      *
      * @return string
      */
-    public function getDisplayTable($array, $caption = null)
+    public function getTable($array, $caption = null)
     {
         $str = '';
         if (is_array($array) && in_array(self::VALUE_ABSTRACTION, $array, true)) {
@@ -259,18 +273,19 @@ EOD;
         } else {
             $keys = $this->utilities->arrayColKeys($array);
             $undefined = "\x00".'undefined'."\x00";
-            $str = '<table cellpadding="1" cellspacing="0" border="1">'."\n";   // style="border:solid 1px;"
+            $str = '<table cellpadding="1" cellspacing="0" border="1">'."\n"   // style="border:solid 1px;"
+                .'<caption>'.$caption.'</caption>'."\n";
             $values = array();
             foreach ($keys as $key) {
                 $values[] = $key === ''
                     ? 'value'
                     : htmlspecialchars($key);
             }
-            $str .= '<caption>'.$caption.'</caption>'."\n"
+            $str .= ''
                 .'<thead>'
                 .'<tr><th>&nbsp;</th><th>'.implode('</th><th scope="col">', $values).'</th></tr>'."\n"
-                .'</thead>'."\n"
-                .'<tbody>'."\n";
+                .'</thead>'."\n";
+            $str .= '<tbody>'."\n";
             foreach ($array as $k => $row) {
                 $values = array();
                 foreach ($keys as $key) {
@@ -322,7 +337,7 @@ EOD;
      *
      * @return array [string $type, mixed $value]
      */
-    protected function getDisplayValueAbstraction($v, $opts = array(), $hist = array())
+    protected function getValueAbstraction($v, $opts = array(), $hist = array())
     {
         $type = $v['type'];
         if ($type == 'object') {
@@ -376,7 +391,7 @@ EOD;
      *
      * @return string html
      */
-    protected function getDisplayValueHtml($v, $type = null, $typeMore = null)
+    protected function getValueHtml($v, $type = null, $typeMore = null)
     {
         if ($type == 'array') {
             $html = '<span class="t_keyword">Array</span><br />'."\n"

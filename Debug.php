@@ -978,116 +978,147 @@ class Debug
             return;
         }
         require_once $this->cfg['firephpInc'];
-        $firephp = \FirePHP::getInstance(true);
-        $firephpMethods = get_class_methods($firephp);
-        $firephp->setOptions($this->get('firephpOptions'));
+        $this->firephp = \FirePHP::getInstance(true);
+        $this->firephp->setOptions($this->get('firephpOptions'));
+        $this->firephpMethods = get_class_methods($this->firephp);
         if (!empty($this->data['alert'])) {
             $alert = str_replace('<br />', "\n", $this->data['alert']);
             array_unshift($this->data['log'], array('error', $alert));
         }
         foreach ($this->data['log'] as $i => $args) {
             $method = array_shift($args);
-            $opts = array();
-            foreach ($args as $k => $arg) {
-                $args[$k] = $this->display->getDisplayValue($arg, array('html'=>false,'boolNullToString'=>false));
-            }
-            if (in_array($method, array('group','groupCollapsed'))) {
-                $this->data['groupDepth']++;
-                $method = 'group';
-                $opts = array(
-                    'Collapsed' => true,    // collapse both group and groupCollapsed
-                );
-                if (empty($args)) {
-                    $args[] = 'group';
-                } elseif (count($args) > 1) {
-                    $more = array();
-                    while (count($args) > 1) {
-                        $v = array_splice($args, 1, 1);
-                        $more[] = reset($v);
-                    }
-                    $args[0] .= ' - '.implode(', ', $more);
-                }
-                if ($opts['Collapsed']) {
-                    $i++;
-                    $d = 0;
-                    while ($i < count($this->data['log'])) {
-                        $args2 = $this->data['log'][$i];
-                        $m2 = array_shift($args2);
-                        if (in_array($m2, array('error','warn'))) {
-                            $opts['Collapsed'] = false;
-                        } elseif (in_array($m2, array('group','groupCollapsed'))) {
-                            $d++;
-                        } elseif ($m2 == 'groupEnd') {
-                            $d--;
-                        }
-                        if ($d < 0 || !$opts['Collapsed']) {
-                            break;
-                        }
-                        $i++;
-                    }
-                }
-            } elseif ($method == 'groupEnd') {
-                $this->data['groupDepth']--;
-            } elseif ($method == 'table' && is_array($args[0])) {
-                $label = isset($args[1])
-                    ? $args[1]
-                    : 'table';
-                $keys = $this->utilities->arrayColkeys($args[0]);
-                $table = array();
-                $table[] = $keys;
-                array_unshift($table[0], '');
-                foreach ($args[0] as $k => $row) {
-                    $values = array($k);
-                    foreach ($keys as $key) {
-                        $values[] = isset($row[$key])
-                            ? $row[$key]
-                            : null;
-                    }
-                    $table[] = $values;
-                }
-                $args = array($label, $table);
-            } elseif ($method == 'table') {
-                $method = 'log';
-            } else {
-                if (in_array($method, array('error','warn'))) {
-                    $end = end($args);
-                    if (is_array($end) && isset($end['__debugMeta__'])) {
-                        array_pop($args);
-                        if (isset($end['file'])) {
-                            $opts = array(
-                                'File' => $end['file'],
-                                'Line' => $end['line'],
-                            );
-                        }
-                    }
-                }
-                if (count($args) > 1) {
-                    $label = array_shift($args);
-                    if (count($args) > 1) {
-                        $args = array( implode(', ', $args) );
-                    }
-                    $args[] = $label;
-                } elseif (is_string($args[0])) {
-                    $args[0] = strip_tags($args[0]);
-                }
-            }
-            if (!in_array($method, $firephpMethods)) {
-                $method = 'log';
-            }
-            if ($opts) {
-                // opts array needs to be 2nd arg for group method, 3rd arg for all others
-                if ($method !== 'group' && count($args) == 1) {
-                    $args[] = null;
-                }
-                $args[] = $opts;
-            }
-            call_user_func_array(array($firephp,$method), $args);
+            $this->outputFirephpLogEntry($method, $args);
         }
         while ($this->data['groupDepth'] > 0) {
             call_user_func(array($firephp,'groupEnd'));
             $this->data['groupDepth']--;
         }
         return;
+    }
+
+    /**
+     * output a log entry to Firephp
+     *
+     * @param string $method method
+     * @param array  $args   args
+     *
+     * @return void
+     */
+    protected function outputFirephpLogEntry($method, $args)
+    {
+        $opts = array();
+        foreach ($args as $k => $arg) {
+            $args[$k] = $this->display->getDisplayValue($arg, array('html'=>false,'boolNullToString'=>false));
+        }
+        if (in_array($method, array('group','groupCollapsed','groupEnd'))) {
+            list($method, $args, $opts) = $this->outputFirephpGroupMethod($method, $args);
+        } elseif ($method == 'table' && is_array($args[0])) {
+            $label = isset($args[1])
+                ? $args[1]
+                : 'table';
+            $keys = $this->utilities->arrayColkeys($args[0]);
+            $table = array();
+            $table[] = $keys;
+            array_unshift($table[0], '');
+            foreach ($args[0] as $k => $row) {
+                $values = array($k);
+                foreach ($keys as $key) {
+                    $values[] = isset($row[$key])
+                        ? $row[$key]
+                        : null;
+                }
+                $table[] = $values;
+            }
+            $args = array($label, $table);
+        } elseif ($method == 'table') {
+            $method = 'log';
+        } else {
+            if (in_array($method, array('error','warn'))) {
+                $end = end($args);
+                if (is_array($end) && isset($end['__debugMeta__'])) {
+                    array_pop($args);
+                    if (isset($end['file'])) {
+                        $opts = array(
+                            'File' => $end['file'],
+                            'Line' => $end['line'],
+                        );
+                    }
+                }
+            }
+            if (count($args) > 1) {
+                $label = array_shift($args);
+                if (count($args) > 1) {
+                    $args = array( implode(', ', $args) );
+                }
+                $args[] = $label;
+            } elseif (is_string($args[0])) {
+                $args[0] = strip_tags($args[0]);
+            }
+        }
+        if (!in_array($method, $this->firephpMethods)) {
+            $method = 'log';
+        }
+        if ($opts) {
+            // opts array needs to be 2nd arg for group method, 3rd arg for all others
+            if ($method !== 'group' && count($args) == 1) {
+                $args[] = null;
+            }
+            $args[] = $opts;
+        }
+        call_user_func_array(array($this->firephp,$method), $args);
+        return;
+    }
+
+    /**
+     * handle firephp output of group, groupCollapsed, & groupEnd
+     *
+     * @param string $method method
+     * @param array  $args   args passed to method
+     *
+     * @return array [$method, $args, $opts]
+     */
+    protected function outputFirephpGroupMethod($method, $args = array())
+    {
+        $opts = array();
+        if (in_array($method, array('group','groupCollapsed'))) {
+            $this->data['groupDepth']++;
+            $method = 'group';
+            $opts = array(
+                'Collapsed' => true,    // collapse both group and groupCollapsed
+            );
+            if (empty($args)) {
+                $args[] = 'group';
+            } elseif (count($args) > 1) {
+                $more = array();
+                while (count($args) > 1) {
+                    $v = array_splice($args, 1, 1);
+                    $more[] = reset($v);
+                }
+                $args[0] .= ' - '.implode(', ', $more);
+            }
+            if ($opts['Collapsed']) {
+                $i++;
+                $d = 0;
+                while ($i < count($this->data['log'])) {
+                    $args2 = $this->data['log'][$i];
+                    $m2 = array_shift($args2);
+                    if (in_array($m2, array('error','warn'))) {
+                        $opts['Collapsed'] = false;
+                    } elseif (in_array($m2, array('group','groupCollapsed'))) {
+                        $d++;
+                    } elseif ($m2 == 'groupEnd') {
+                        $d--;
+                    }
+                    if ($d < 0 || !$opts['Collapsed']) {
+                        break;
+                    }
+                    $i++;
+                }
+            }
+        } elseif ($method == 'groupEnd') {
+            $this->data['groupDepth']--;
+        }
+        return array($method, $args, $opts);
     }
 
     /**
@@ -1119,79 +1150,7 @@ class Debug
         $str .= '<div class="debug-content clearfix">'."\n";
         foreach ($this->data['log'] as $k_log => $args) {
             $method = array_shift($args);
-            if (in_array($method, array('group','groupCollapsed'))) {
-                $this->data['groupDepth']++;
-                $collapsed_class = '';
-                if (!empty($args)) {
-                    $label = array_shift($args);
-                    $arg_str = '';
-                    if ($args) {
-                        foreach ($args as $k => $v) {
-                            $args[$k] = $this->display->getDisplayValue($v);
-                        }
-                        $arg_str = implode(', ', $args);
-                    }
-                    $collapsed_class = $method == 'groupCollapsed'
-                        ? 'collapsed'
-                        : 'expanded';
-                    $str .= '<div class="group-header">'
-                            .'<span class="group-label">'
-                                .$label
-                                .( !empty($arg_str)
-                                    ? '(</span>'.$arg_str.'<span class="group-label">)'
-                                    : '' )
-                            .'</span>'
-                        .'</div>'."\n";
-                }
-                $str .= '<div class="group '.$collapsed_class.'">';
-            } elseif ($method == 'groupEnd') {
-                if ($this->data['groupDepth'] > 0) {
-                    $this->data['groupDepth']--;
-                    $str .= '</div>';
-                }
-            } elseif ($method == 'table') {
-                $str .= call_user_func_array(array($this->display,'getDisplayTable'), $args);
-            } elseif ($method == 'time') {
-                $str .= '<div class="time">'.$args[0].': '.$args[1].'</div>';
-            } else {
-                $attribs = array(
-                    'class' => $method,
-                    'title' => null,
-                );
-                if (in_array($method, array('error','warn'))) {
-                    $end = end($args);
-                    if (is_array($end) && isset($end['__debugMeta__'])) {
-                        $a = array_pop($args);
-                        if (isset($a['file'])) {
-                            $attribs['title'] = $a['file'].': line '.$a['line'];
-                        }
-                        if (isset($a['errorCat'])) {
-                            $attribs['class'] .= ' error-'.$a['errorCat'];
-                        }
-                    }
-                }
-                $num_args = count($args);
-                $glue = ', ';
-                if ($num_args == 2) {
-                    $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                        ? ''
-                        : ' = ';
-                }
-                foreach ($args as $k => $v) {
-                    /*
-                        first arg, if string will be left untouched
-                        unless it is only arg, which will be visualWhiteSpaced'd
-                    */
-                    if ($k > 0 || !is_string($v)) {
-                        $args[$k] = $this->display->getDisplayValue($v);
-                    } elseif ($num_args == 1) {
-                        $args[$k] = $this->display->visualWhiteSpace($v);
-                    }
-                }
-                $args = implode($glue, $args);
-                $str .= '<div '.$this->utilities->buildAttribString($attribs).'>'.$args.'</div>';
-            }
-            $str .= "\n";
+            $str .= $this->outputHtmlLogEntry($method, $args);
         }
         while ($this->data['groupDepth'] > 0) {
             $this->data['groupDepth']--;
@@ -1199,6 +1158,110 @@ class Debug
         }
         $str .= '</div>'."\n";  // close debug-content
         $str .= '</div>';       // close debug
+        return $str;
+    }
+
+    /**
+     * output a log entry as HTML
+     *
+     * @param string $method method
+     * @param array  $args   args
+     *
+     * @return string
+     */
+    protected function outputHtmlLogEntry($method, $args)
+    {
+        $str = '';
+        if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+            $str = $this->outputHtmlGroupMethod($method, $args);
+        } elseif ($method == 'table') {
+            $str = call_user_func_array(array($this->display,'getTable'), $args);
+        } elseif ($method == 'time') {
+            $str = '<div class="time">'.$args[0].': '.$args[1].'</div>';
+        } else {
+            $attribs = array(
+                'class' => $method,
+                'title' => null,
+            );
+            if (in_array($method, array('error','warn'))) {
+                $end = end($args);
+                if (is_array($end) && isset($end['__debugMeta__'])) {
+                    $a = array_pop($args);
+                    if (isset($a['file'])) {
+                        $attribs['title'] = $a['file'].': line '.$a['line'];
+                    }
+                    if (isset($a['errorCat'])) {
+                        $attribs['class'] .= ' error-'.$a['errorCat'];
+                    }
+                }
+            }
+            $num_args = count($args);
+            $glue = ', ';
+            if ($num_args == 2) {
+                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                    ? ''
+                    : ' = ';
+            }
+            foreach ($args as $k => $v) {
+                /*
+                    first arg, if string will be left untouched
+                    unless it is only arg, which will be visualWhiteSpaced'd
+                */
+                if ($k > 0 || !is_string($v)) {
+                    $args[$k] = $this->display->getDisplayValue($v);
+                } elseif ($num_args == 1) {
+                    $args[$k] = $this->display->visualWhiteSpace($v);
+                }
+            }
+            $args = implode($glue, $args);
+            $str = '<div '.$this->utilities->buildAttribString($attribs).'>'.$args.'</div>';
+        }
+        $str .= "\n";
+        return $str;
+    }
+
+    /**
+     * handle html output of group, groupCollapsed, & groupEnd
+     *
+     * @param string $method method
+     * @param array  $args   args passed to method
+     *
+     * @return string
+     */
+    protected function outputHtmlGroupMethod($method, $args = array())
+    {
+        $str = '';
+        if (in_array($method, array('group','groupCollapsed'))) {
+            $this->data['groupDepth']++;
+            $collapsed_class = '';
+            if (!empty($args)) {
+                $label = array_shift($args);
+                $arg_str = '';
+                if ($args) {
+                    foreach ($args as $k => $v) {
+                        $args[$k] = $this->display->getDisplayValue($v);
+                    }
+                    $arg_str = implode(', ', $args);
+                }
+                $collapsed_class = $method == 'groupCollapsed'
+                    ? 'collapsed'
+                    : 'expanded';
+                $str .= '<div class="group-header">'
+                        .'<span class="group-label">'
+                            .$label
+                            .( !empty($arg_str)
+                                ? '(</span>'.$arg_str.'<span class="group-label">)'
+                                : '' )
+                        .'</span>'
+                    .'</div>'."\n";
+            }
+            $str .= '<div class="group '.$collapsed_class.'">';
+        } elseif ($method == 'groupEnd') {
+            if ($this->data['groupDepth'] > 0) {
+                $this->data['groupDepth']--;
+                $str .= '</div>';
+            }
+        }
         return $str;
     }
 }

@@ -681,39 +681,7 @@ class Debug
                 then show not-logged counts
             */
             if ($totals['inConsole']) {
-                if ($totals['inConsoleTypes'] == 1) {
-                    // all same type of error
-                    reset($counts);
-                    $type = key($counts);
-                    if ($totals['inConsole'] == 1) {
-                        $html = 'There was 1 error';
-                        if ($type == 'fatal') {
-                            $html = ''; // don't bother with this alert..
-                                        // fatal are still prominently displayed
-                        } elseif ($type != 'error') {
-                            $html .= ' ('.$type.')';
-                        }
-                    } else {
-                        $html = 'There were '.$totals['inConsole'].' errors';
-                        if ($type != 'error') {
-                            $html .= ' of type '.$type;
-                        }
-                    }
-                    if ($html) {
-                        $html = '<h3 class="error-'.$type.'">'.$html.'</h3>'."\n";
-                    }
-                } else {
-                    // multiple error types
-                    $html = '<h3>There were '.$totals['inConsole'].' errors:</h3>'."\n";
-                    $html .= '<ul class="list-unstyled indent">';
-                    foreach ($counts as $type => $a) {
-                        if (!$a['inConsole']) {
-                            continue;
-                        }
-                        $html .= '<li class="error-'.$type.'">'.$type.': '.$a['inConsole'].'</li>';
-                    }
-                    $html .= '</ul>';
-                }
+                $html .= $this->errorSummaryInConsole($totals, $counts);
             }
             if ($totals['notInConsole']) {
                 $count = 0;
@@ -731,8 +699,53 @@ class Debug
                     : 'were '.$count.' errors';
                 $html .= '<h3>There '.$count.' captured while not collecting debug info</h3>'
                     . $htmlNotIn;
-
             }
+        }
+        return $html;
+    }
+
+    /**
+     * returns summary for errors that were logged to console (while this->collect = true)
+     *
+     * @param array $totals totals
+     * @param array $counts category counts
+     *
+     * @return string
+     */
+    protected function errorSummaryInConsole($totals, $counts)
+    {
+        if ($totals['inConsoleTypes'] == 1) {
+            // all same type of error
+            reset($counts);
+            $type = key($counts);
+            if ($totals['inConsole'] == 1) {
+                $html = 'There was 1 error';
+                if ($type == 'fatal') {
+                    $html = ''; // don't bother with this alert..
+                                // fatal are still prominently displayed
+                } elseif ($type != 'error') {
+                    $html .= ' ('.$type.')';
+                }
+            } else {
+                $html = 'There were '.$totals['inConsole'].' errors';
+                if ($type != 'error') {
+                    $html .= ' of type '.$type;
+                }
+            }
+            if ($html) {
+                $html = '<h3 class="error-'.$type.'">'.$html.'</h3>'."\n";
+            }
+        } else {
+            // multiple error types
+            $html = '<h3>There were '.$totals['inConsole'].' errors:</h3>'."\n";
+            $html .= '<ul class="list-unstyled indent">';
+            foreach ($counts as $type => $a) {
+                if (!$a['inConsole']) {
+                    continue;
+                }
+                $html .= '<li class="error-'.$type.'">'.$type.': '.$a['inConsole'].'</li>';
+            }
+            $html .= '</ul>';
         }
         return $html;
     }

@@ -22,6 +22,116 @@ class Output
 	}
 
     /**
+     * Returns an error summary
+     *
+     * @return string html
+     */
+    public function errorSummary()
+    {
+        $html = '';
+        $errors = $this->debug->errorHandler->get('errors');
+        $counts = array();
+        $totals = array(
+            'inConsole' => 0,
+            'inConsoleCategories' => 0,
+            'notInConsole' => 0,
+        );
+        foreach ($errors as $error) {
+            if ($error['suppressed']) {
+                continue;
+            }
+            $category = $error['category'];
+            if (!isset($counts[$category])) {
+                $counts[$category] = array(
+                    'inConsole' => 0,
+                    'notInConsole' => 0,
+                );
+            }
+            $k = $error['inConsole'] ? 'inConsole' : 'notInConsole';
+            $counts[$category][$k]++;
+        }
+        foreach ($counts as $a) {
+            $totals['inConsole'] += $a['inConsole'];
+            $totals['notInConsole'] += $a['notInConsole'];
+            if ($a['inConsole']) {
+                $totals['inConsoleCategories']++;
+            }
+        }
+        ksort($counts);
+        /*
+            first show logged counts
+            then show not-logged counts
+        */
+        if ($totals['inConsole']) {
+            $html .= $this->errorSummaryInConsole($totals, $counts);
+        }
+        if ($totals['notInConsole']) {
+            $count = 0;
+            $htmlNotIn = '<ul class="list-unstyled indent">';
+            foreach ($errors as $err) {
+                if ($err['suppressed'] || $err['inConsole']) {
+                    continue;
+                }
+                $count ++;
+                $htmlNotIn .= '<li>'.$err['typeStr'].': '.$err['file'].' (line '.$err['line'].'): '.$err['message'].'</li>';
+            }
+            $htmlNotIn .= '</ul>';
+            $count = $count == 1
+                ? 'was 1 error'
+                : 'were '.$count.' errors';
+            $html .= '<h3>There '.$count.' captured while not collecting debug info</h3>'
+                . $htmlNotIn;
+        }
+        return $html;
+    }
+
+    /**
+     * returns summary for errors that were logged to console (while this->collect = true)
+     *
+     * @param array $totals totals
+     * @param array $counts category counts
+     *
+     * @return string
+     */
+    protected function errorSummaryInConsole($totals, $counts)
+    {
+        if ($totals['inConsoleCategories'] == 1) {
+            // all same category of error
+            reset($counts);
+            $category = key($counts);
+            if ($totals['inConsole'] == 1) {
+                $html = 'There was 1 error';
+                if ($category == 'fatal') {
+                    $html = ''; // don't bother with this alert..
+                                // fatal are still prominently displayed
+                } elseif ($category != 'error') {
+                    $html .= ' ('.$category.')';
+                }
+            } else {
+                $html = 'There were '.$totals['inConsole'].' errors';
+                if ($category != 'error') {
+                    $html .= ' of type '.$category;
+                }
+            }
+            if ($html) {
+                $html = '<h3 class="error-'.$category.'">'.$html.'</h3>'."\n";
+            }
+        } else {
+            // multiple error categories
+            $html = '<h3>There were '.$totals['inConsole'].' errors:</h3>'."\n";
+            $html .= '<ul class="list-unstyled indent">';
+            foreach ($counts as $category => $a) {
+                if (!$a['inConsole']) {
+                    continue;
+                }
+                $html .= '<li class="error-'.$category.'">'.$category.': '.$a['inConsole'].'</li>';
+            }
+            $html .= '</ul>';
+        }
+        return $html;
+    }
+
+    /**
      * Return the log's CSS
      *
      * @return string

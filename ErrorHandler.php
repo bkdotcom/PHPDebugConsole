@@ -111,16 +111,17 @@ class ErrorHandler
      * @param string  $file    "actual" filepath the error was raised in
      * @param string  $line    "actual" line the error was raised in
      * @param array   $vars    active symbol table at point error occured
+     * @param array   $stats   contains tsEmailed, countSince, & emailTo
      *
      * @return void
      */
-    protected function emailErr($errType, $errMsg, $file, $line, $vars = array())
+    protected function emailErr($errType, $errMsg, $file, $line, $vars = array(), $stats = array())
     {
         $dateTimeFmt = 'Y-m-d H:i:s (T)';
         $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $errMsg);   // remove links from errMsg
         $cs         = $stats['countSince'];
         $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errMsg.( $cs ? ' ('.$cs.'x)' : '' );
-        $emailBody = '';
+        $emailBody  = '';
         if (!empty($cs)) {
             $dateTimePrev = date($dateTimeFmt, $stats['tsEmailed']);
             $emailBody .= 'Error has occurred '.$cs.' times since last email ('.$dateTimePrev.').'."\n\n";
@@ -264,7 +265,7 @@ class ErrorHandler
     {
         $cfg = &$this->cfg;
         $data = &$this->data;
-		// determine $category
+        // determine $category
         foreach ($this->errCategories as $category => $errTypes) {
             if (in_array($errType, $errTypes)) {
                 break;
@@ -331,7 +332,7 @@ class ErrorHandler
             $data['errorCaller'] = array();
         }
         if ($email) {
-            $this->emailErr($errType, $errMsg, $file, $line, $vars);
+            $this->emailErr($errType, $errMsg, $file, $line, $vars, $stats);
         }
         if ($cfg['continueToPrevHandler'] && $this->prevErrorHandler) {
             call_user_func($this->prevErrorHandler, $errType, $errMsg, $file, $line, $vars);

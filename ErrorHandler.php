@@ -63,7 +63,7 @@ class ErrorHandler
     public function __construct($cfg = array())
     {
         $this->cfg = array(
-            'emailMin'          => 15,
+            'emailMin' => 15,
             'emailTo' => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
@@ -73,7 +73,7 @@ class ErrorHandler
             'emailThrottleFile' => dirname(__FILE__).'/error_emails.json',
             // set onError to something callable, will receive error array
             //     shortcut for registerOnErrorFunction()
-            'onError'           => null,
+            'onError' => null,
         );
         $this->data = array(
             'errorCaller'   => array(),
@@ -119,12 +119,12 @@ class ErrorHandler
     {
         $dateTimeFmt = 'Y-m-d H:i:s (T)';
         $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $errMsg);   // remove links from errMsg
-        $cs         = $stats['countSince'];
-        $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errMsg.( $cs ? ' ('.$cs.'x)' : '' );
+        $countSince = $stats['countSince'];
+        $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errMsg.($countSince ? ' ('.$countSince.'x)' : '');
         $emailBody  = '';
-        if (!empty($cs)) {
+        if (!empty($countSince)) {
             $dateTimePrev = date($dateTimeFmt, $stats['tsEmailed']);
-            $emailBody .= 'Error has occurred '.$cs.' times since last email ('.$dateTimePrev.').'."\n\n";
+            $emailBody .= 'Error has occurred '.$countSince.' times since last email ('.$dateTimePrev.').'."\n\n";
         }
         $emailBody .= ''
             .'datetime: '.date($dateTimeFmt)."\n"
@@ -194,19 +194,19 @@ class ErrorHandler
     /**
      * Retrieve a config or data value
      *
-     * @param string $k what to get
+     * @param string $path what to get
      *
      * @return mixed
      */
-    public function get($k)
+    public function get($path)
     {
         $ret = null;
-        if (isset($this->cfg[$k])) {
-            $ret = $this->cfg[$k];
-        } elseif (isset($this->data[$k])) {
-            $ret = $this->data[$k];
-        } elseif (isset($this->{$k})) {
-            $ret = $this->{$k};
+        if (isset($this->cfg[$path])) {
+            $ret = $this->cfg[$path];
+        } elseif (isset($this->data[$path])) {
+            $ret = $this->data[$path];
+        } elseif (isset($this->{$path})) {
+            $ret = $this->{$path};
         }
         return $ret;
     }
@@ -214,19 +214,17 @@ class ErrorHandler
     /**
      * generate hash
      *
-     * @param integer $errType the level of the error
-     * @param string  $errMsg  the error message
-     * @param string  $file    filepath the error was raised in
-     * @param string  $line    the line the error was raised in
+     * @param array $error error array
      *
      * @return string hash
      */
-    protected function getErrorHash($errType, $errMsg, $file, $line)
+    protected function getErrorHash($error)
     {
+        $errMsg = $error['message'];
         $errMsg = preg_replace('/(\(.*?)\d+(.*?\))/', '\1x\2', $errMsg);
         $errMsg = preg_replace('/\b([a-z]+\d+)+\b/', 'xxx', $errMsg);
         $errMsg = preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errMsg);
-        $hash = md5($file.$line.$errType.$errMsg);
+        $hash = md5($error['file'].$error['line'].$error['type'].$errMsg);
         return $hash;
     }
 
@@ -263,7 +261,6 @@ class ErrorHandler
      */
     public function handler($errType, $errMsg, $file, $line, $vars = array())
     {
-        $cfg = &$this->cfg;
         $data = &$this->data;
         // determine $category
         foreach ($this->errCategories as $category => $errTypes) {
@@ -298,49 +295,65 @@ class ErrorHandler
         $data['currentError'] = array(
             'allowEmail' => true, // onError function(s) may set to false to prevent email
         );
-        $email = false;
-        $callErrorLog = false;
-        if ($isSuppressed) {
-            // @suppressed error
-        } else {
-            $onErrorReturnedFalse = false;
-            foreach ($this->onErrorFunctions as $callable) {
-                $response = call_user_func($callable, $error);
-                if ($response === false) {
-                    $onErrorReturnedFalse = true;
-                }
-            }
-            if ($firstOccur && !$onErrorReturnedFalse) {
-                if ($this->cfg['emailTo'] && ( $errType & $cfg['emailMask'] )) {
-                    if ($this->cfg['emailMin'] > 0) {
-                        /*
-                            keep track of error emails to prevent email flood
-                        */
-                        $stats = $this->throttleDataUpdate($errType, $errMsg, $file, $line);
-                        $tsNow = time();
-                        $tsCutoff = $tsNow - $this->cfg['emailMin'] * 60;
-                        $email = $stats['tsEmailed'] <= $tsCutoff;
-                    }
-                    if (!$data['currentError']['allowEmail']) {
-                        $email = false;
-                    }
-                }
-                $callErrorLog = true;
-            }
-        }
+        $actions = array(
+            'email' => false,
+            'errorLog' => false,
+        );
         if (!$isSuppressed) {
+            $actions = $this->handleUnsuppressed($error);
+            // ( suppressed error should not clear error caller )
             $data['errorCaller'] = array();
         }
-        if ($email) {
+        if ($actions['email']) {
             $this->emailErr($errType, $errMsg, $file, $line, $vars, $stats);
         }
-        if ($cfg['continueToPrevHandler'] && $this->prevErrorHandler) {
+        if ($this->cfg['continueToPrevHandler'] && $this->prevErrorHandler) {
             call_user_func($this->prevErrorHandler, $errType, $errMsg, $file, $line, $vars);
-        } elseif ($callErrorLog) {
+        } elseif ($actions['errorLog']) {
             error_log('PHP '.$errStrLog);
         }
         // return false to continue to "normal" error handler
         return;
+    }
+
+    /**
+     * test unsuppressed errors whether should email or error_log
+     *
+     * @param array $error error array
+     *
+     * @return array
+     */
+    protected function handleUnsuppressed($error)
+    {
+        $return = array(
+            'email' => false,
+            'errorLog' => false,
+        );
+        $onErrorReturnedFalse = false;
+        foreach ($this->onErrorFunctions as $callable) {
+            $response = call_user_func($callable, $error);
+            if ($response === false) {
+                $onErrorReturnedFalse = true;
+            }
+        }
+        if ($error['firstOccur'] && !$onErrorReturnedFalse) {
+            if ($this->cfg['emailTo'] && ( $error['type'] & $this->cfg['emailMask'] )) {
+                if ($this->cfg['emailMin'] > 0) {
+                    /*
+                        keep track of error emails to prevent email flood
+                    */
+                    $stats = $this->throttleDataUpdate($error);
+                    $tsNow = time();
+                    $tsCutoff = $tsNow - $this->cfg['emailMin'] * 60;
+                    $return['email'] = $stats['tsEmailed'] <= $tsCutoff;
+                }
+                if (!$data['currentError']['allowEmail']) {
+                    $return['email'] = false;
+                }
+            }
+            $return['errorLog'] = true;
+        }
+        return $return;
     }
 
     /**
@@ -407,16 +420,16 @@ class ErrorHandler
      *    set('level1.level2', 'value')
      *    set(array('k1'=>'v1', 'k2'=>'v2'))
      *
-     * @param string $k key
-     * @param mixed  $v value
+     * @param string $path   key
+     * @param mixed  $newVal value
      *
      * @return mixed
      */
-    public function set($k, $v = null)
+    public function set($path, $newVal = null)
     {
         $ret = null;
-        if (is_string($k)) {
-            $path = preg_split('#[\./]#', $k);
+        if (is_string($path)) {
+            $path = preg_split('#[\./]#', $path);
             if ($path[0] == 'data') {
                 $ret = $this->data;
                 $ref = &$this->data;
@@ -425,7 +438,7 @@ class ErrorHandler
                 $ret = $this->cfg;
                 $ref = &$this->cfg;
                 if ($path[0] == 'onError') {
-                    $this->registerOnErrorFunction($v);
+                    $this->registerOnErrorFunction($newVal);
                 }
             }
             foreach ($path as $k) {
@@ -434,9 +447,9 @@ class ErrorHandler
                     : null;
                 $ref = &$ref[$k];
             }
-            $ref = $v;
-        } elseif (is_array($k)) {
-            $this->cfg = array_merge($this->cfg, $k);
+            $ref = $newVal;
+        } elseif (is_array($path)) {
+            $this->cfg = array_merge($this->cfg, $path);
             if (isset($k['onError'])) {
                 $this->registerOnErrorFunction($k['onError']);
             }
@@ -502,14 +515,11 @@ class ErrorHandler
      *    countSince    // times error has occured since being emailed
      *    emailTo       // who the error was emailed to
      *
-     * @param integer $errType the level of the error
-     * @param string  $errMsg  the error message
-     * @param string  $file    filepath the error was raised in
-     * @param string  $line    the line the error was raised in
+     * @param array $error error array
      *
      * @return array
      */
-    protected function throttleDataUpdate($errType, $errMsg, $file, $line)
+    protected function throttleDataUpdate($error)
     {
         $return = array(
             'tsEmailed'  => 0,
@@ -520,7 +530,7 @@ class ErrorHandler
         if ($cfg['emailThrottleFile']) {
             $tsNow = time();
             $tsCutoff = $tsNow - $cfg['emailMin'] * 60;
-            $hash = $this->getErrorHash($errType, $errMsg, $file, $line);
+            $hash = $this->getErrorHash($error);
             $throttleData = &$this->throttleData;
             if (!$throttleData) {
                 $dataStr = is_readable($cfg['emailThrottleFile'])
@@ -536,7 +546,7 @@ class ErrorHandler
             }
             $init = true;
             if (isset($throttleData['errors'][$hash])) {
-                foreach ($return as $k => $v) {
+                foreach (array_keys($return) as $k) {
                     $return[$k] = $throttleData['errors'][$hash][$k];
                 }
                 if ($throttleData['errors'][$hash]['tsEmailed'] > $tsCutoff) {
@@ -547,14 +557,14 @@ class ErrorHandler
             }
             if ($init) {
                 if ($this->data['errorCaller']) {
-                    $file = $this->data['errorCaller']['file'];
-                    $line = $this->data['errorCaller']['file'];
+                    $error['file'] = $this->data['errorCaller']['file'];
+                    $error['line'] = $this->data['errorCaller']['file'];
                 }
                 $throttleData['errors'][$hash] = array(
-                    'file'       => $file,
-                    'line'       => $line,
-                    'errType'    => $errType,
-                    'errMsg'     => $errMsg,
+                    'file'       => $error['file'],
+                    'line'       => $error['line'],
+                    'errType'    => $error['type'],
+                    'errMsg'     => $error['message'],
                     'tsEmailed'  => $tsNow,
                     'emailTo'    => $this->cfg['emailTo'],
                     'countSince' => 0,

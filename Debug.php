@@ -25,6 +25,8 @@ class Debug
     protected $collect;
     protected $outputSent = false;
     public $display;
+    public $errorHandler;
+    public $output;
     public $utilities;
 
     /**
@@ -36,22 +38,10 @@ class Debug
     public function __construct($cfg = array(), $errorHandler = null)
     {
         $this->cfg = array(
-            'addBR'     => false,           // convert \n to <br />\n in strings?
-            'css'       => '',
             'collect'   => false,
             'file'      => null,            // if a filepath, will receive log data
-            'firephpInc' => dirname(__FILE__).'/FirePHP.class.php',
-            'firephpOptions' => array(
-                'useNativeJsonEncode'   => true,
-                'includeLineNumbers'    => false,
-            ),
             'key'       => null,
             'output'    => false,           // should output() actually output to browser (either as html or firephp)
-            'outputAs'  => null,            // 'html' or 'firephp', if null, will be determined automatically
-            'outputCss' => true,
-            'outputScript' => true,
-            'filepathCss' => dirname(__FILE__).'/Debug.css',
-            'filepathScript' => dirname(__FILE__).'/Debug.jquery.min.js',
             // errorMask = errors that appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
                             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
@@ -60,7 +50,8 @@ class Debug
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
-            'onOutput'  => null,            // set to something callable
+            // Display
+            'addBR'     => false,           // convert \n to <br />\n in strings?
         );
         $this->data = array(
             'alert' => '',
@@ -79,8 +70,8 @@ class Debug
         );
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
             list($whole, $dec) = explode('.', $_SERVER['REQUEST_TIME_FLOAT']);
-            $mt = '.'.$dec.' '.$whole;
-            $this->data['timers']['labels']['debugInit'] = $mt;
+            $microT = '.'.$dec.' '.$whole;
+            $this->data['timers']['labels']['debugInit'] = $microT;
         }
         // Initialize self::$instance if not set
         //    so that self::getInstance() will always return original instance
@@ -88,9 +79,12 @@ class Debug
         if (!isset(self::$instance)) {
             self::$instance = $this;
         }
-        require_once dirname(__FILE__).'/Utilities.php';
         require_once dirname(__FILE__).'/Display.php';
+        require_once dirname(__FILE__).'/Output.php';
+        require_once dirname(__FILE__).'/Utilities.php';
         $this->utilities = new Utilities();
+        $this->output = new Output(array(), $this->data);
+        $this->display = new Display(array(), $this->utilities);
         if ($errorHandler) {
             $this->errorHandler = $errorHandler;
         } else {
@@ -99,9 +93,6 @@ class Debug
         }
         $this->errorHandler->registerOnErrorFunction(array($this,'onError'));
         $this->set($cfg);
-        $this->display = new Display(array(
-            'addBR' => $this->cfg['addBR'],
-        ), $this->utilities);
         $this->collect = &$this->cfg['collect'];
         register_shutdown_function(array($this, 'shutdownFunction'));
         return;
@@ -139,8 +130,8 @@ class Debug
                 $args[] = $label;
             } else {
                 $args[] = 'count';
-                $bt = debug_backtrace();
-                $label = $bt[0]['file'].': '.$bt[0]['line'];
+                $backtrace = debug_backtrace();
+                $label = $backtrace[0]['file'].': '.$backtrace[0]['line'];
             }
             if (!isset($this->data['counts'][$label])) {
                 $this->data['counts'][$label] = 1;
@@ -172,56 +163,31 @@ class Debug
     /**
      * Retrieve a config value, lastError, or css
      *
-     * @param string $k what to get
+     * @param string $path what to get
      *
      * @return mixed
      */
-    public function get($k)
+    public function get($path)
     {
-        if ($k == 'outputAs') {
-            $ret = $this->cfg['outputAs'];
-            if (empty($ret)) {
-                /*
-                    determine outputAs automatically
-                */
-                $ret = 'html';
-                $requestedWith = isset($_SERVER['HTTP_X_REQUESTED_WITH'])
-                    ? $_SERVER['HTTP_X_REQUESTED_WITH']
-                    : null;
-                $ajax = $requestedWith == 'XMLHttpRequest';
-                if ($ajax) {
-                    $ret = 'firephp';
-                } else {
-                    $contentType = $this->utilities->getResponseHeader();
-                    if ($contentType && $contentType !== 'text/html') {
-                        $ret = 'firephp';
-                    }
-                }
-            }
-        } elseif ($k == 'lastError') {
-            $ret = $this->errorHandler->get('lastError');
-        } elseif ($k == 'css') {
-            require_once dirname(__FILE__).'/Output.php';
-            $this->output = new Output($this->cfg, $this->data);
-            $ret = $this->output->getCss();
+        $path = $this->translateCfgKeys($path);
+        $path = preg_split('#[\./]#', $path);
+        if (isset($path[1]) && isset($this->{$path[0]}) && is_object($this->{$path[0]})) {
+            // child class config value
+            $path_rel = implode('/', array_slice($path, 1));
+            $ret = $this->{$path[0]}->get($path_rel);
         } else {
-            $path = preg_split('#[\./]#', $k);
-            if ($path[0] == 'errorHandler') {
-                $ret = $this->errorHandler->get($path[1]);
+            if ($path[0] == 'data') {
+                $ret = $this->data;
+                array_shift($path);
             } else {
-                if ($path[0] == 'data') {
-                    $ret = $this->data;
-                    array_shift($path);
+                $ret = $this->cfg;
+            }
+            foreach ($path as $k) {
+                if (isset($ret[$k])) {
+                    $ret = $ret[$k];
                 } else {
-                    $ret = $this->cfg;
-                }
-                foreach ($path as $k) {
-                    if (isset($ret[$k])) {
-                        $ret = $ret[$k];
-                    } else {
-                        $ret = null;
-                        break;
-                    }
+                    $ret = null;
+                    break;
                 }
             }
         }
@@ -310,8 +276,8 @@ class Debug
         if ($this->data['groupDepth'] > 0) {
             $this->data['groupDepth']--;
         }
-        $eC = $this->errorHandler->get('errorCaller');
-        if ($eC && isset($eC['depth']) && $this->data['groupDepth'] < $eC['depth']) {
+        $errorCaller = $this->errorHandler->get('errorCaller');
+        if ($errorCaller && isset($errorCaller['depth']) && $this->data['groupDepth'] < $errorCaller['depth']) {
             $this->errorHandler->setErrorCaller(null);
         }
         if ($this->collect) {
@@ -361,21 +327,7 @@ class Debug
         $this->state = 'output';
         if ($this->cfg['output']) {
             array_unshift($this->data['log'], array('info','Built In '.$this->timeEnd('debugInit', true).' sec'));
-            $outputAs = $this->get('outputAs');
-            if (is_callable($this->cfg['onOutput'])) {
-                call_user_func($this->cfg['onOutput'], $outputAs);
-            }
-            require_once dirname(__FILE__).'/Output.php';
-            $this->output = new Output($this->cfg, $this->data);
-            $outputAs = $this->get('outputAs');
-            $this->data['alert'] = $this->output->errorSummary();
-            $this->data['groupDepth'] = 0;
-            if ($outputAs == 'html') {
-                $return = $this->output->outputHtml();
-            } elseif ($outputAs == 'firephp') {
-                $this->output->outputFirephp();
-                $return = null;
-            }
+            $return = $this->output->output();
             $this->outputSent = true;
             $this->data['log'] = array();
         }
@@ -394,23 +346,22 @@ class Debug
      *    set('level1.level2', 'value')
      *    set(array('k1'=>'v1', 'k2'=>'v2'))
      *
-     * @param string $k key
-     * @param mixed  $v value
+     * @param string $path   path
+     * @param mixed  $newVal value
      *
      * @return mixed
      */
-    public function set($k, $v = null)
+    public function set($path, $newVal = null)
     {
         $ret = null;
-        $what = 'cfg';
         $new = array(); // the new value(s) to merge
-        if (is_string($k)) {
-            $path = preg_split('#[\./]#', $k);
+        $path = $this->translateCfgKeys($path);
+        if (is_string($path)) {
+            // build $new array from the passed string
+            $path = preg_split('#[\./]#', $path);
             $ref = &$new;
             if ($path[0] == 'data') {
-                $what = 'data';
                 $ret = $this->data;
-                array_shift($path);
             } else {
                 $ret = $this->cfg;
             }
@@ -421,11 +372,12 @@ class Debug
                 $ref[$k] = array(); // initialize this level
                 $ref = &$ref[$k];
             }
-            $ref = $v;
-        } elseif (is_array($k)) {
-            $new = $k;
+            $ref = $newVal;
+        } elseif (is_array($path)) {
+            $new = $path;
         }
         if (isset($new['key'])) {
+            // update 'collect and output'
             $keyPassed = null;
             if (isset($_REQUEST['debug'])) {
                 $keyPassed = $_REQUEST['debug'];
@@ -444,17 +396,19 @@ class Debug
         }
         if (isset($new['emailTo']) && !isset($new['errorHandler']['emailTo'])) {
             // also set errorHandler's emailTo
-            $this->errorHandler->set('emailTo', $new['emailTo']);
+            $new['errorHandler']['emailTo'] = $new['emailTo'];
         }
-        if (isset($new['errorHandler'])) {
-            $this->errorHandler->set($new['errorHandler']);
-            unset($new['errorHandler']);
+        if (isset($new['data'])) {
+            $this->data = array_merge($this->data, $new['data']);
+            unset($new['data']);
         }
-        if ($what == 'data') {
-            $this->data = array_merge($this->data, $new);
-        } else {
-            $this->cfg = $this->utilities->arrayMergeDeep($this->cfg, $new);
+        foreach ($new as $k => $v) {
+            if (is_array($v) && isset($this->{$k}) && is_object($this->{$k})) {
+                $ret = $this->{$k}->set($v);
+                unset($new[$k]);
+            }
         }
+        $this->cfg = $this->utilities->arrayMergeDeep($this->cfg, $new);
         return $ret;
     }
 
@@ -565,13 +519,13 @@ class Debug
             $label = null;
         }
         if (isset($label)) {
-            $mt = $this->data['timers']['labels'][$label];
+            $microT = $this->data['timers']['labels'][$label];
         } else {
-            $mt = array_pop($this->data['timers']['stack']);
+            $microT = array_pop($this->data['timers']['stack']);
             $label = 'time';
         }
-        if ($mt) {
-            list($a_dec, $a_sec) = explode(' ', $mt);
+        if ($microT) {
+            list($a_dec, $a_sec) = explode(' ', $microT);
             list($b_dec, $b_sec) = explode(' ', microtime());
             $ret = (float)$b_sec - (float)$a_sec + (float)$b_dec - (float)$a_dec;
             $ret = round($ret, 4);
@@ -598,50 +552,6 @@ class Debug
     /**
      * "Non-Public" methods
      */
-
-    /**
-     * Serializes and emails log
-     *
-     * @return void
-     */
-    protected function emailLog()
-    {
-        $body = '';
-        $unsuppressedError = false;
-        /*
-            List errors that occured
-        */
-        $errors = $this->errorHandler->get('errors');
-        $cmp = create_function('$a1, $a2', 'return strcmp($a1["file"].$a1["line"], $a2["file"].$a2["line"]);');
-        uasort($errors, $cmp);
-        $lastFile = '';
-        foreach ($errors as $error) {
-            if ($error['suppressed']) {
-                continue;
-            }
-            if ($error['file'] !== $lastFile) {
-                $body .= $error['file'].':'."\n";
-                $lastFile = $error['file'];
-            }
-            $body .= '  Line '.$error['line'].': '.$error['message']."\n";
-            $unsuppressedError = true;
-        }
-        $subject = 'Debug Log: '.$_SERVER['HTTP_HOST'].( $unsuppressedError ? ' (Error)' : '' );
-        /*
-            Serialize the log
-        */
-        $outputCssWas = $this->set('outputCss', false);
-        $serialized = $this->outputHtml();
-        $this->set('outputCss', $outputCssWas);
-        if (function_exists('gzdeflate')) {
-            $serialized = gzdeflate($serialized);
-        }
-        $serialized = chunk_split(base64_encode($serialized), 1024);
-        $body .= "\nSTART DEBUG:\n";
-        $body .= $serialized;
-        mail($this->cfg['emailTo'], $subject, $body);
-        return;
-    }
 
     /**
      * Email Log if emailLog is 'always' or 'onError'
@@ -674,7 +584,7 @@ class Debug
             }
         }
         if ($email) {
-            $this->emailLog();
+            $this->output->emailLog();
         }
         /*
             output the log if it hasn't already been output
@@ -741,7 +651,10 @@ class Debug
             //    ErrorHandler::handler -> call_user_function -> self::onError -> self::warn -> here we are
             $viaErrorHandler = isset($backtrace[4])
                 && $backtrace[4]['function'] == 'handler'
-                && $backtrace[4]['class'] == 'bdk\Debug\ErrorHandler';
+                && $backtrace[4]['class'] == 'bdk\Debug\ErrorHandler'
+                && $backtrace[3]['function'] == 'call_user_func'
+                && isset($backtrace[3]['args'][0][1])
+                && $backtrace[3]['args'][0][1] === 'onError';
             if ($viaErrorHandler) {
                 // no need to store originating file/line... it's part of error message
                 // store errorCat -> can output as a className
@@ -752,7 +665,7 @@ class Debug
                     'errorCat' => $lastError['category'],
                 );
             } else {
-                foreach ($backtrace as $k => $a) {
+                foreach ($backtrace as $a) {
                     if (isset($a['file']) && $a['file'] !== __FILE__) {
                         if (in_array($a['function'], array('call_user_func','call_user_func_array'))) {
                             continue;
@@ -857,5 +770,44 @@ class Debug
             $this->errorHandler->set('data/errors/'.$error['hash'].'/inConsole', false);
         }
         return $return;
+    }
+
+    /**
+     * translate configuration keys
+     *
+     * @param mixed $mixed string key or config array
+     *
+     * @return mixed
+     */
+    protected function translateCfgKeys($mixed)
+    {
+        $objKeys = array(
+            'errorHandler' => array('lastError'),
+            'output' => array(
+                'css', 'filepathCss', 'filepathScript', 'firephpInc', 'firephpOptions',
+                'onOutput', 'outputAs', 'outputCss', 'outputScript',
+            ),
+        );
+        if (is_string($mixed)) {
+            $path = preg_split('#[\./]#', $mixed);
+            foreach ($objKeys as $objKey => $keys) {
+                if (in_array($path[0], $keys)) {
+                    array_unshift($path, $objKey);
+                    break;
+                }
+            }
+            $mixed = implode('/', $path);
+        } elseif (is_array($mixed)) {
+            foreach ($mixed as $k => $v) {
+                foreach ($objKeys as $objKey => $keys) {
+                    if (in_array($k, $keys)) {
+                        unset($mixed[$k]);
+                        $mixed[$objKey][$k] = $v;
+                        break;
+                    }
+                }
+            }
+        }
+        return $mixed;
     }
 }

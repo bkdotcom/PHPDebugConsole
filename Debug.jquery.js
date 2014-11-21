@@ -34,7 +34,7 @@
 
 	jQuery.fn.debugEnhance = function(method) {
 		if ( method ) {
-			if ( method == 'addCss' ) {
+			if ( method === 'addCss' ) {
 				addCss(arguments[1]);
 			}
 			return;
@@ -174,7 +174,7 @@
 			var html = $(this).html(),
 				htmlNew = '<label><input type="checkbox" checked /> ' + html + '</label>',
 				className = $(this).attr('class');
-			$(this).html(htmlNew)
+			$(this).html(htmlNew);
 			$(this).find('input').on('change', function(){
 				console.log('this', this);
 				if ( $(this).is(':checked') ) {

@@ -36,13 +36,13 @@ class Display
     /**
      * Returns string representation of value
      *
-     * @param mixed $v    value
+     * @param mixed $val  value
      * @param array $opts options
      * @param array $hist {@internal - used to check for recursion}
      *
      * @return string
      */
-    public function getDisplayValue($v, $opts = array(), $hist = array())
+    public function getDisplayValue($val, $opts = array(), $hist = array())
     {
         $type = null;
         $typeMore = null;
@@ -52,60 +52,60 @@ class Display
                 'flatten' => false, // flatten array & obj structures (only applies when !html)
                 'boolNullToString' => true,
             ), $opts);
-            if (is_array($v) && !in_array(self::VALUE_ABSTRACTION, $v, true)) {
+            if (is_array($val) && !in_array(self::VALUE_ABSTRACTION, $val, true)) {
                 // array hasn't been prepped / could contain recursion
-                $v = $this->utilities->valuePrep($v);
-            } elseif (is_object($v) || is_resource($v)) {
-                $v = $this->utilities->valuePrep($v);
+                $val = $this->utilities->valuePrep($val);
+            } elseif (is_object($val) || is_resource($val)) {
+                $val = $this->utilities->valuePrep($val);
             }
         }
-        if (is_array($v)) {
-            if (in_array(self::VALUE_ABSTRACTION, $v, true)) {
-                list($type, $v) = $this->getValueAbstraction($v, $opts);
+        if (is_array($val)) {
+            if (in_array(self::VALUE_ABSTRACTION, $val, true)) {
+                list($type, $val) = $this->getValueAbstraction($val, $opts);
             }
-            if (is_array($v)) {
+            if (is_array($val)) {
                 $type = 'array';
                 $hist[] = 'array';
-                foreach ($v as $k => $v2) {
-                    $v[$k] = $this->getDisplayValue($v2, $opts, $hist);
+                foreach ($val as $k => $val2) {
+                    $val[$k] = $this->getDisplayValue($val2, $opts, $hist);
                 }
                 if ($opts['flatten']) {
-                    $v = trim(print_r($v, true));
+                    $val = trim(print_r($val, true));
                     if (count($hist) > 1) {
-                        $v = str_replace("\n", "\n    ", $v);
+                        $val = str_replace("\n", "\n    ", $val);
                     }
                 }
             }
-        } elseif (is_string($v)) {
+        } elseif (is_string($val)) {
             $type = 'string';
-            if (is_numeric($v)) {
+            if (is_numeric($val)) {
                 $typeMore = 'numeric';
-            } elseif ($this->utilities->isBinary($v)) {
+            } elseif ($this->utilities->isBinary($val)) {
                 // all or partially binary data
                 $typeMore = 'binary';
-                $v = $this->getBinary($v, $opts['html']);
+                $val = $this->getBinary($val, $opts['html']);
             }
-        } elseif (is_int($v)) {
+        } elseif (is_int($val)) {
             $type = 'int';
-        } elseif (is_float($v)) {
+        } elseif (is_float($val)) {
             $type = 'float';
-        } elseif (is_bool($v)) {
+        } elseif (is_bool($val)) {
             $type = 'bool';
-            $vStr = $v ? 'true' : 'false';
+            $vStr = $val ? 'true' : 'false';
             if ($opts['boolNullToString']) {
-                $v = $vStr;
+                $val = $vStr;
             }
             $typeMore = $vStr;
-        } elseif (is_null($v)) {
+        } elseif (is_null($val)) {
             $type = 'null';
             if ($opts['boolNullToString']) {
-                $v = 'null';
+                $val = 'null';
             }
         }
         if ($opts['html']) {
-            $v = $this->getValueHtml($v, $type, $typeMore);
+            $val = $this->getValueHtml($val, $type, $typeMore);
         }
-        return $v;
+        return $val;
     }
 
     /**
@@ -165,17 +165,17 @@ EOD;
     /**
      * Callback used by getBinary's preg_replace_callback
      *
-     * @param array $m matches
+     * @param array $matches matches
      *
      * @return string
      */
-    protected function getBinaryCallback($m)
+    protected function getBinaryCallback($matches)
     {
         $stats = &$this->displayBinaryStats;
         $showHex = false;
-        if ($m[1] !== '') {
+        if ($matches[1] !== '') {
             // single byte sequence (may contain control char)
-            $str = $m[1];
+            $str = $matches[1];
             if (ord($str) < 32 || ord($str) == 127) {
                 $showHex = true;
                 if (in_array($str, array("\t","\n","\r"))) {
@@ -189,24 +189,24 @@ EOD;
             if ($this->htmlout) {
                 $str = htmlspecialchars($str);
             }
-        } elseif ($m[2] !== '') {
+        } elseif ($matches[2] !== '') {
             // Valid byte sequence. return unmodified.
-            $str = $m[2];
+            $str = $matches[2];
             $stats['utf8'] += strlen($str);
             $stats['cur_text_len'] += strlen($str);
             if ($str === "\xef\xbb\xbf") {
                 // BOM
                 $showHex = true;
             }
-        } elseif ($m[3] !== '' || $m[4] !== '') {
+        } elseif ($matches[3] !== '' || $matches[4] !== '') {
             // Invalid byte
-            $str = $m[3] != ''
-                ? $m[3]
-                : $m[4];
+            $str = $matches[3] != ''
+                ? $matches[3]
+                : $matches[4];
             $showHex = true;
         } else {
             // null char
-            $str = $m[5];
+            $str = $matches[5];
             $showHex = true;
         }
         if ($showHex) {
@@ -272,7 +272,6 @@ EOD;
             $str = '<div class="log">'.$str.'</div>';
         } else {
             $keys = $this->utilities->arrayColKeys($array);
-            $undefined = "\x00".'undefined'."\x00";
             $str = '<table cellpadding="1" cellspacing="0" border="1">'."\n"   // style="border:solid 1px;"
                 .'<caption>'.$caption.'</caption>'."\n";
             $values = array();
@@ -287,40 +286,7 @@ EOD;
                 .'</thead>'."\n";
             $str .= '<tbody>'."\n";
             foreach ($array as $k => $row) {
-                $values = array();
-                foreach ($keys as $key) {
-                    $value = '';
-                    if (is_array($row)) {
-                        $value = array_key_exists($key, $row)
-                            ? $row[$key]
-                            : $undefined;
-                    } elseif ($key === '') {
-                        $value = $row;
-                    }
-                    if (is_array($value)) {
-                        $value = call_user_func(array($this,__FUNCTION__), $value);
-                    } elseif ($value === $undefined) {
-                        $value = '<span class="t_undefined"></span>';
-                    } else {
-                        $value = $this->getDisplayValue($value);
-                    }
-                    $values[] = $value;
-                }
-                $str .= '<tr valign="top"><td>'.$k.'</td>';
-                foreach ($values as $v) {
-                    // remove the span wrapper.. add span's class to TD
-                    $class = null;
-                    if (preg_match('#^<span class="([^"]+)">(.*)</span>$#s', $v, $matches)) {
-                        $class = $matches[1];
-                        $v = $matches[2];
-                    }
-                    $str .= $class
-                        ? '<td class="'.$class.'">'
-                        : '<td>';
-                    $str .= $v;
-                    $str .= '</td>';
-                }
-                $str .= '</tr>'."\n";
+                $str .= $this->getTableRow($keys, $row, $k);
             }
             $str .= '</tbody>'."\n".'</table>';
         }
@@ -328,93 +294,149 @@ EOD;
     }
 
     /**
+     * Returns table row
+     *
+     * @param array $keys   column keys
+     * @param array $row    row
+     * @param array $rowKey row key
+     *
+     * @return string
+     */
+    protected function getTableRow($keys, $row, $rowKey)
+    {
+        $str = '';
+        $values = array();
+        $undefined = "\x00".'undefined'."\x00";
+        $displayValRegEx = '#^<span class="([^"]+)">(.*)</span>$#s';
+        foreach ($keys as $key) {
+            $value = '';
+            if (is_array($row)) {
+                $value = array_key_exists($key, $row)
+                    ? $row[$key]
+                    : $undefined;
+            } elseif ($key === '') {
+                $value = $row;
+            }
+            if (is_array($value)) {
+                $value = call_user_func(array($this,__FUNCTION__), $value);
+            } elseif ($value === $undefined) {
+                $value = '<span class="t_undefined"></span>';
+            } else {
+                $value = $this->getDisplayValue($value);
+            }
+            $values[] = $value;
+        }
+        $rowKey = $this->getDisplayValue($rowKey);
+        if (preg_match($displayValRegEx, $rowKey, $matches)) {
+            $class = $matches[1];
+            $rowKey = $matches[2];
+        }
+        $str .= '<tr valign="top"><td class="'.$class.'">'.$rowKey.'</td>';
+        foreach ($values as $v) {
+            // remove the span wrapper.. add span's class to TD
+            $class = null;
+            if (preg_match($displayValRegEx, $v, $matches)) {
+                $class = $matches[1];
+                $v = $matches[2];
+            }
+            $str .= $class
+                ? '<td class="'.$class.'">'
+                : '<td>';
+            $str .= $v;
+            $str .= '</td>';
+        }
+        $str .= '</tr>'."\n";
+        return $str;
+    }
+
+    /**
      * gets a value that has been abstracted
      * array (recursion), object, or resource
      *
-     * @param array $v    abstracted value
+     * @param array $val  abstracted value
      * @param array $opts options
      * @param array $hist {@internal - used to check for recursion}
      *
      * @return array [string $type, mixed $value]
      */
-    protected function getValueAbstraction($v, $opts = array(), $hist = array())
+    protected function getValueAbstraction($val, $opts = array(), $hist = array())
     {
-        $type = $v['type'];
+        $type = $val['type'];
         if ($type == 'object') {
             $type = 'object';
-            if ($v['isRecursion']) {
-                $v = '<span class="t_object">'
-                        .'<span class="t_object-class">'.$v['class'].' object</span>'
+            if ($val['isRecursion']) {
+                $val = '<span class="t_object">'
+                        .'<span class="t_object-class">'.$val['class'].' object</span>'
                         .' <span class="t_recursion">*RECURSION*</span>'
                     .'</span>';
                 if (!$opts['html']) {
-                    $v = strip_tags($v);
+                    $val = strip_tags($val);
                 }
                 $type = null;
             } else {
-                $hist[] = &$v;
-                $v = array(
-                    'class'      => $v['class'].' object',
-                    'properties' => $this->getDisplayValue($v['properties'], $opts, $hist),
-                    'methods'    => $this->getDisplayValue($v['methods'], $opts, $hist),
+                $hist[] = &$val;
+                $val = array(
+                    'class'      => $val['class'].' object',
+                    'properties' => $this->getDisplayValue($val['properties'], $opts, $hist),
+                    'methods'    => $this->getDisplayValue($val['methods'], $opts, $hist),
                 );
                 if ($opts['html'] || $opts['flatten']) {
-                    $v = $v['class']."\n"
-                        .'    methods: '.$v['methods']."\n"
-                        .'    properties: '.$v['properties'];
+                    $val = $val['class']."\n"
+                        .'    methods: '.$val['methods']."\n"
+                        .'    properties: '.$val['properties'];
                     if ($opts['flatten'] && count($hist) > 1) {
-                        $v = str_replace("\n", "\n    ", $v);
+                        $val = str_replace("\n", "\n    ", $val);
                     }
                 }
             }
-        } elseif ($type == 'array' && $v['isRecursion']) {
-            $v = '<span class="t_array">'
+        } elseif ($type == 'array' && $val['isRecursion']) {
+            $val = '<span class="t_array">'
                     .'<span class="t_keyword">Array</span>'
                     .' <span class="t_recursion">*RECURSION*</span>'
                 .'</span>';
             if (!$opts['html']) {
-                $v = strip_tags($v);
+                $val = strip_tags($val);
             }
             $type = null;
         } else {
-            $v = $v['value'];
+            $val = $val['value'];
         }
-        return array($type, $v);
+        return array($type, $val);
     }
 
     /**
      * add markup to value
      *
-     * @param mixed  $v        value
+     * @param mixed  $val      value
      * @param string $type     type
      * @param string $typeMore numeric, binary, true, or false
      *
      * @return string html
      */
-    protected function getValueHtml($v, $type = null, $typeMore = null)
+    protected function getValueHtml($val, $type = null, $typeMore = null)
     {
         if ($type == 'array') {
             $html = '<span class="t_keyword">Array</span><br />'."\n"
                 .'<span class="t_punct">(</span>'."\n"
                 .'<span class="t_array-inner">'."\n";
-            foreach ($v as $k => $v2) {
+            foreach ($val as $k => $val2) {
                 $html .= "\t".'<span class="t_key_value">'
                         .'<span class="t_key">['.$k.']</span> '
                         .'<span class="t_operator">=&gt;</span> '
-                        .$v2
+                        .$val2
                     .'</span>'."\n";
             }
             $html .= '</span>'
                 .'<span class="t_punct">)</span>';
-            $v = '<span class="t_'.$type.'">'.$html.'</span>';
+            $val = '<span class="t_'.$type.'">'.$html.'</span>';
         } elseif ($type == 'object') {
             $html = preg_replace(
                 '#^([^\n]+)\n(.+)$#s',
                 '<span class="t_object-class">\1</span>'."\n".'<span class="t_object-inner">\2</span>',
-                $v
+                $val
             );
             $html = preg_replace('#\sproperties: #', '<br />properties: ', $html);
-            $v = '<span class="t_'.$type.'">'.$html.'</span>';
+            $val = '<span class="t_'.$type.'">'.$html.'</span>';
         } elseif ($type) {
             $attribs = array(
                 'class' => 't_'.$type,
@@ -425,21 +447,21 @@ EOD;
             }
             if ($type == 'string') {
                 if ($typeMore != 'binary') {
-                    $v = htmlspecialchars($this->utilities->toUtf8($v), ENT_COMPAT, 'UTF-8');
+                    $val = htmlspecialchars($this->utilities->toUtf8($val), ENT_COMPAT, 'UTF-8');
                 }
-                $v = $this->visualWhiteSpace($v);
+                $val = $this->visualWhiteSpace($val);
             }
             if (in_array($type, array('float','int')) || $typeMore == 'numeric') {
                 $ts_now = time();
                 $secs = 86400 * 90; // 90 days worth o seconds
-                if ($v > $ts_now  - $secs && $v < $ts_now + $secs) {
+                if ($val > $ts_now  - $secs && $val < $ts_now + $secs) {
                     $attribs['class'] .= ' timestamp';
-                    $attribs['title'] = date('Y-m-d H:i:s', $v);
+                    $attribs['title'] = date('Y-m-d H:i:s', $val);
                 }
             }
-            $v = '<span '.$this->utilities->buildAttribString($attribs).'>'.$v.'</span>';
+            $val = '<span '.$this->utilities->buildAttribString($attribs).'>'.$val.'</span>';
         }
-        return $v;
+        return $val;
     }
 
     /**
@@ -467,9 +489,9 @@ EOD;
      */
     protected function visualWhiteSpaceCallback($matches)
     {
-        $br = $this->cfg['addBR'] ? '<br />' : '';
+        $strBr = $this->cfg['addBR'] ? '<br />' : '';
         $search = array("\r","\n");
-        $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>'.$br."\n");
+        $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>'.$strBr."\n");
         return str_replace($search, $replace, $matches[1]);
     }
 }

@@ -23,7 +23,7 @@ class Utilities
         $new_stack = array();
         $current_stack = array();
         if (is_array($rows)) {
-            foreach ($rows as $row_key => $row) {
+            foreach ($rows as $row) {
                 $current_stack = is_array($row)
                     ? array_keys($row)
                     : array('');
@@ -57,31 +57,31 @@ class Utilities
     /**
      * Recursively merge two arrays
      *
-     * @param array $def_array default array
-     * @param array $a2        array 2
+     * @param array $arrayDef default array
+     * @param array $array2   array 2
      *
      * @return array
      */
-    public function arrayMergeDeep($def_array, $a2)
+    public function arrayMergeDeep($arrayDef, $array2)
     {
-        if (!is_array($def_array) || !is_array($a2)) {
-            $def_array = $a2;
+        if (!is_array($arrayDef) || !is_array($array2)) {
+            $arrayDef = $array2;
         } else {
-            foreach ($a2 as $k2 => $v2) {
+            foreach ($array2 as $k2 => $v2) {
                 if (is_int($k2)) {
-                    if (!in_array($v2, $def_array)) {
-                        $def_array[] = $v2;
+                    if (!in_array($v2, $arrayDef)) {
+                        $arrayDef[] = $v2;
                     }
-                } elseif (!isset($def_array[$k2])) {
-                    $def_array[$k2] = $v2;
+                } elseif (!isset($arrayDef[$k2])) {
+                    $arrayDef[$k2] = $v2;
                 } elseif (!is_array($v2)) {
-                    $def_array[$k2] = $v2;
+                    $arrayDef[$k2] = $v2;
                 } else {
-                    $def_array[$k2] = $this->arrayMergeDeep($def_array[$k2], $v2);
+                    $arrayDef[$k2] = $this->arrayMergeDeep($arrayDef[$k2], $v2);
                 }
             }
         }
-        return $def_array;
+        return $arrayDef;
     }
 
     /**
@@ -147,39 +147,39 @@ class Utilities
      */
     public function isBinary($str)
     {
-        $b = false;
+        $isBinary = false;
         if (is_string($str)) {
             $isUtf8 = $this->isUtf8($str, $ctrl);
             if (!$isUtf8 || $ctrl) {
-                $b = true;
+                $isBinary = true;
             }
         }
-        return $b;
+        return $isBinary;
     }
 
     /**
      * Determine if passed array contains a self referencing loop
      *
      * @param mixed $mixed array or object to check
-     * @param mixed $k     check if this is the key/value that is the reference
+     * @param mixed $key   check if this is the key/value that is the reference
      *
      * @return boolean
      * @internal
      * @link http://stackoverflow.com/questions/9105816/is-there-a-way-to-detect-circular-arrays-in-pure-php
      */
-    public function isRecursive($mixed, $k = null)
+    public function isRecursive($mixed, $key = null)
     {
         $recursive = false;
         // "Array *RECURSION" or "Object *RECURSION*"
         if (strpos(print_r($mixed, true), "\n *RECURSION*\n") !== false) {
             // contains recursion somewhere
             $recursive = true;
-            if ($k !== null) {
+            if ($key !== null) {
                 // array contains recursion or a string containing "Array *RECURSION*"
                 $recursive = $this->isRecursiveIteration($mixed);
-                if ($recursive) { // && $k !== null
+                if ($recursive) {
                     // test if this is the value that's the reference
-                    $recursive = $k === $recursive[0];
+                    $recursive = $key === $recursive[0];
                 }
             }
         }
@@ -189,7 +189,7 @@ class Utilities
     /**
      * Returns a path to first recursive loop found or false if no recursion
      *
-     * @param array &$array array
+     * @param array $array  array
      * @param mixed $unique some unique value/object
      *          this value will be appended to the array and checked for in nested structure
      * @param array $path   {@internal}
@@ -207,16 +207,16 @@ class Utilities
         if (is_array($array)) {
             $type = 'array';
             $array[] = $unique;
-            $ks = array_keys($array);
+            $keys = array_keys($array);
         } else {
             $type = 'object';
-            $ks = array_keys(get_object_vars($array));
+            $keys = array_keys(get_object_vars($array));
         }
-        foreach ($ks as $k) {
+        foreach ($keys as $k) {
             if ($type == 'array') {
                 $v = &$array[$k];
             } else {
-                $v = &$object->{$k};
+                $v = &$array->{$k};
             }
             $path_new = $path;
             $path_new[] = $k;
@@ -239,8 +239,8 @@ class Utilities
     /**
      * Determine if string is UTF-8 encoded
      *
-     * @param string  $str   string to check
-     * @param boolean &$ctrl does string contain a "non-printable" control char?
+     * @param string  $str  string to check
+     * @param boolean $ctrl does string contain a "non-printable" control char?
      *
      * @return boolean
      */
@@ -249,28 +249,28 @@ class Utilities
         $length = strlen($str);
         $ctrl = false;
         for ($i=0; $i < $length; $i++) {
-            $c = ord($str[$i]);
-            if ($c < 0x80) {                    # 0bbbbbbb
-                $n = 0;
-            } elseif (($c & 0xE0) == 0xC0) {    # 110bbbbb
-                $n=1;
-            } elseif (($c & 0xF0) == 0xE0) {    # 1110bbbb
-                $n=2;
-            } elseif (($c & 0xF8) == 0xF0) {    # 11110bbb
-                $n=3;
-            } elseif (($c & 0xFC) == 0xF8) {    # 111110bb
-                $n=4;
-            } elseif (($c & 0xFE) == 0xFC) {    # 1111110b
-                $n=5;
+            $char = ord($str[$i]);
+            if ($char < 0x80) {                 # 0bbbbbbb
+                $bytes = 0;
+            } elseif (($char & 0xE0) == 0xC0) { # 110bbbbb
+                $bytes=1;
+            } elseif (($char & 0xF0) == 0xE0) { # 1110bbbb
+                $bytes=2;
+            } elseif (($char & 0xF8) == 0xF0) { # 11110bbb
+                $bytes=3;
+            } elseif (($char & 0xFC) == 0xF8) { # 111110bb
+                $bytes=4;
+            } elseif (($char & 0xFE) == 0xFC) { # 1111110b
+                $bytes=5;
             } else {                            # Does not match any model
                 return false;
             }
-            for ($j=0; $j<$n; $j++) { # n bytes matching 10bbbbbb follow ?
+            for ($j=0; $j<$bytes; $j++) { # n bytes matching 10bbbbbb follow ?
                 if ((++$i == $length) || ( (ord($str[$i]) & 0xC0) != 0x80 )) {
                     return false;
                 }
             }
-            if ($n == 0 && ( $c < 32 || $c == 127 )) {
+            if ($bytes == 0 && ( $char < 32 || $char == 127 )) {
                 if (!in_array($str[$i], array("\t","\n","\r"))) {
                     $ctrl = true;
                 }

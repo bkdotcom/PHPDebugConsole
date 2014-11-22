@@ -180,6 +180,9 @@ class Debug
                 $ret = $this->data;
                 array_shift($path);
             } else {
+                if ($path[0] == 'debug') {
+                    array_shift($path);
+                }
                 $ret = $this->cfg;
             }
             foreach ($path as $k) {
@@ -354,53 +357,38 @@ class Debug
     public function set($path, $newVal = null)
     {
         $ret = null;
-        $new = array(); // the new value(s) to merge
         $path = $this->translateCfgKeys($path);
         if (is_string($path)) {
-            // build $new array from the passed string
-            $path = preg_split('#[\./]#', $path);
-            $ref = &$new;
-            if ($path[0] == 'data') {
-                $ret = $this->data;
-            } else {
-                $ret = $this->cfg;
-            }
-            foreach ($path as $k) {
-                $ret = isset($ret[$k])
-                    ? $ret[$k]
-                    : null;
-                $ref[$k] = array(); // initialize this level
-                $ref = &$ref[$k];
-            }
-            $ref = $newVal;
-        } elseif (is_array($path)) {
-            $new = $path;
+            $ret = $this->get($path);
         }
-        if (isset($new['key'])) {
+        $new = $this->setBuildNew($path, $newVal);
+        if (isset($new['debug']['key'])) {
             // update 'collect and output'
-            $keyPassed = null;
+            $requestKey = null;
             if (isset($_REQUEST['debug'])) {
-                $keyPassed = $_REQUEST['debug'];
+                $requestKey = $_REQUEST['debug'];
             } elseif (isset($_COOKIE['debug'])) {
-                $keyPassed = $_COOKIE['debug'];
+                $requestKey = $_COOKIE['debug'];
             }
-            $validKey = $keyPassed == $new['key'];
+            $validKey = $requestKey == $new['debug']['key'];
             if ($validKey) {
                 // only enable collect / don't disable it
-                $new['collect'] = true;
+                $new['debug']['collect'] = true;
             }
-            $new['output'] = $validKey;
+            $new['debug']['output'] = $validKey;
         }
-        if (isset($new['emailLog']) && $new['emailLog'] === true) {
-            $new['emailLog'] = 'onError';
+        if (isset($new['debug']['emailLog']) && $new['debug']['emailLog'] === true) {
+            $new['debug']['emailLog'] = 'onError';
         }
-        if (isset($new['emailTo']) && !isset($new['errorHandler']['emailTo'])) {
+        if (isset($new['debug']['emailTo']) && !isset($new['errorHandler']['emailTo'])) {
             // also set errorHandler's emailTo
             $new['errorHandler']['emailTo'] = $new['emailTo'];
         }
         if (isset($new['data'])) {
             $this->data = array_merge($this->data, $new['data']);
-            unset($new['data']);
+        }
+        if (isset($new['debug'])) {
+            $this->cfg = $this->utilities->arrayMergeDeep($this->cfg, $new['debug']);
         }
         foreach ($new as $k => $v) {
             if (is_array($v) && isset($this->{$k}) && is_object($this->{$k})) {
@@ -408,7 +396,6 @@ class Debug
                 unset($new[$k]);
             }
         }
-        $this->cfg = $this->utilities->arrayMergeDeep($this->cfg, $new);
         return $ret;
     }
 
@@ -773,6 +760,32 @@ class Debug
     }
 
     /**
+     * Build config array to merge with current config
+     *
+     * @param string $path   path
+     * @param mixed  $newVal value
+     *
+     * @return mixed;
+     */
+    protected function setBuildNew($path, $newVal = null)
+    {
+        $new = array();
+        if (is_string($path)) {
+            // build $new array from the passed string
+            $path = preg_split('#[\./]#', $path);
+            $ref = &$new;
+            foreach ($path as $k) {
+                $ref[$k] = array(); // initialize this level
+                $ref = &$ref[$k];
+            }
+            $ref = $newVal;
+        } elseif (is_array($path)) {
+            $new = $path;
+        }
+        return $new;
+    }
+
+    /**
      * translate configuration keys
      *
      * @param mixed $mixed string key or config array
@@ -796,15 +809,27 @@ class Debug
                     break;
                 }
             }
+            if (count($path==1)) {
+                array_unshift($path, 'debug');
+            }
             $mixed = implode('/', $path);
         } elseif (is_array($mixed)) {
             foreach ($mixed as $k => $v) {
+                if (is_array($v)) {
+                    continue;
+                }
+                $translated = false;
                 foreach ($objKeys as $objKey => $keys) {
                     if (in_array($k, $keys)) {
                         unset($mixed[$k]);
                         $mixed[$objKey][$k] = $v;
+                        $translated = true;
                         break;
                     }
+                }
+                if (!$translated) {
+                    unset($mixed[$k]);
+                    $mixed['debug'][$k] = $v;
                 }
             }
         }

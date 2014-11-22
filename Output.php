@@ -452,7 +452,7 @@ class Output
         }
         $lastError = $this->debug->errorHandler->get('lastError');
         if ($lastError && $lastError['category'] === 'fatal') {
-        	foreach (array('type', 'category', 'hash', 'firstOccur', 'suppressed', 'inConsole') as $k) {
+        	foreach (array('type','category','hash','firstOccur','suppressed','inConsole','stats','vars') as $k) {
         		unset($lastError[$k]);
         	}
             array_unshift($this->data['log'], array('error error-fatal',$lastError));

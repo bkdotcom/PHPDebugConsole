@@ -106,32 +106,27 @@ class ErrorHandler
     /**
      * Email this error
      *
-     * @param integer $errType the level of the error
-     * @param string  $errMsg  the error message
-     * @param string  $file    "actual" filepath the error was raised in
-     * @param string  $line    "actual" line the error was raised in
-     * @param array   $vars    active symbol table at point error occured
-     * @param array   $stats   contains tsEmailed, countSince, & emailTo
+     * @param array $error error array
      *
      * @return void
      */
-    protected function emailErr($errType, $errMsg, $file, $line, $vars = array(), $stats = array())
+    protected function emailErr($error)
     {
         $dateTimeFmt = 'Y-m-d H:i:s (T)';
-        $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $errMsg);   // remove links from errMsg
-        $countSince = $stats['countSince'];
+        $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $error['message']);   // remove links from errMsg
+        $countSince = $error['stats']['countSince'];
         $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errMsg.($countSince ? ' ('.$countSince.'x)' : '');
         $emailBody  = '';
         if (!empty($countSince)) {
-            $dateTimePrev = date($dateTimeFmt, $stats['tsEmailed']);
+            $dateTimePrev = date($dateTimeFmt, $error['stats']['tsEmailed']);
             $emailBody .= 'Error has occurred '.$countSince.' times since last email ('.$dateTimePrev.').'."\n\n";
         }
         $emailBody .= ''
             .'datetime: '.date($dateTimeFmt)."\n"
             .'errormsg: '.$errMsg."\n"
-            .'errortype: '.$errType.' ('.$this->errTypes[$errType].')'."\n"
-            .'file: '.$file."\n"
-            .'line: '.$line."\n"
+            .'errortype: '.$error['type'].' ('.$error['typeStr'].')'."\n"
+            .'file: '.$error['file']."\n"
+            .'line: '.$error['line']."\n"
             .'remote_addr: '.$_SERVER['REMOTE_ADDR']."\n"
             .'http_host: '.$_SERVER['HTTP_HOST']."\n"
             .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
@@ -139,7 +134,7 @@ class ErrorHandler
         if (!empty($_POST)) {
             $emailBody .= 'post params: '.var_export($_POST, true)."\n";
         }
-        if ($errType & $this->cfg['emailTraceMask']) {
+        if ($error['type'] & $this->cfg['emailTraceMask']) {
             /*
                 backtrace:
                 0: here
@@ -155,7 +150,7 @@ class ErrorHandler
             );
             $backtrace = debug_backtrace();
             $backtrace = array_slice($backtrace, 3);
-            $backtrace[0]['vars'] = $vars;
+            $backtrace[0]['vars'] = $error['vars'];
             $str = print_r($backtrace, true);
             $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
             $str = str_replace($search, $replace, $str);
@@ -277,9 +272,9 @@ class ErrorHandler
         }
         $errStrLog = $this->errTypes[$errType].': '.$file.' : '.$errMsg.' on line '.$line;
         $error = array(
-            'type'      => $errType,
+            'type'      => $errType,                        // int
             'category'  => $category,
-            'typeStr'   => $this->errTypes[$errType],
+            'typeStr'   => $this->errTypes[$errType],       // friendly string version of 'type'
             'message'   => $errMsg,
             'file'      => $file,
             'line'      => $line,
@@ -289,27 +284,32 @@ class ErrorHandler
             'suppressed'=> !$firstOccur && !$data['errors'][$hash]['suppressed']
                 ? false
                 : $isSuppressed,
+            'stats' => array(
+                'tsEmailed'  => 0,
+                'countSince' => 0,
+                'emailedTo'  => '',
+            ),
+            'vars' => $vars,
         );
-        $data['errors'][$hash] = $error;
+        $data['errors'][$hash] = &$error;
         $data['lastError'] = &$data['errors'][$hash];
         $data['currentError'] = array(
-            'allowEmail' => true, // onError function(s) may set to false to prevent email
-        );
-        $actions = array(
+            // this array is updated in handleUnsuppressed()
             'email' => false,
             'errorLog' => false,
+            'allowEmail' => true, // onError function(s) may set to false to prevent email
         );
         if (!$isSuppressed) {
-            $actions = $this->handleUnsuppressed($error);
+            $this->handleUnsuppressed($error);
             // ( suppressed error should not clear error caller )
             $data['errorCaller'] = array();
         }
-        if ($actions['email']) {
-            $this->emailErr($errType, $errMsg, $file, $line, $vars, $stats);
+        if ($data['currentError']['email']) {
+            $this->emailErr($error);
         }
         if ($this->cfg['continueToPrevHandler'] && $this->prevErrorHandler) {
             call_user_func($this->prevErrorHandler, $errType, $errMsg, $file, $line, $vars);
-        } elseif ($actions['errorLog']) {
+        } elseif ($data['currentError']['errorLog']) {
             error_log('PHP '.$errStrLog);
         }
         // return false to continue to "normal" error handler
@@ -317,18 +317,17 @@ class ErrorHandler
     }
 
     /**
+     * calls onErrorFunctions
      * test unsuppressed errors whether should email or error_log
+     * updates $this->data['currentError']
      *
      * @param array $error error array
      *
-     * @return array
+     * @return void
      */
     protected function handleUnsuppressed($error)
     {
-        $return = array(
-            'email' => false,
-            'errorLog' => false,
-        );
+        $data = &$this->data;
         $onErrorReturnedFalse = false;
         foreach ($this->onErrorFunctions as $callable) {
             $response = call_user_func($callable, $error);
@@ -345,15 +344,16 @@ class ErrorHandler
                     $stats = $this->throttleDataUpdate($error);
                     $tsNow = time();
                     $tsCutoff = $tsNow - $this->cfg['emailMin'] * 60;
-                    $return['email'] = $stats['tsEmailed'] <= $tsCutoff;
+                    $data['lastError']['stats'] = $stats;
+                    $data['currentError']['email'] = $stats['tsEmailed'] <= $tsCutoff;
                 }
                 if (!$data['currentError']['allowEmail']) {
-                    $return['email'] = false;
+                    $data['currentError']['email'] = false;
                 }
             }
-            $return['errorLog'] = true;
+            $data['currentError']['errorLog'] = true;
         }
-        return $return;
+        return;
     }
 
     /**
@@ -521,11 +521,7 @@ class ErrorHandler
      */
     protected function throttleDataUpdate($error)
     {
-        $return = array(
-            'tsEmailed'  => 0,
-            'countSince' => 0,
-            'emailTo'    => '',
-        );
+        $return = $this->data['lastError']['stats']; // initialize
         $cfg = &$this->cfg;
         if ($cfg['emailThrottleFile']) {
             $tsNow = time();
@@ -566,7 +562,7 @@ class ErrorHandler
                     'errType'    => $error['type'],
                     'errMsg'     => $error['message'],
                     'tsEmailed'  => $tsNow,
-                    'emailTo'    => $this->cfg['emailTo'],
+                    'emailedTo'  => $this->cfg['emailTo'],
                     'countSince' => 0,
                 );
             }

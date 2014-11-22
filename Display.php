@@ -34,6 +34,22 @@ class Display
     }
 
     /**
+     * Retrieve a config or data value
+     *
+     * @param string $path what to get
+     *
+     * @return mixed
+     */
+    public function get($path)
+    {
+        $ret = null;
+        if (isset($this->cfg[$path])) {
+            $ret = $this->cfg[$path];
+        }
+        return $ret;
+    }
+
+    /**
      * Returns string representation of value
      *
      * @param mixed $val  value
@@ -462,6 +478,26 @@ EOD;
             $val = '<span '.$this->utilities->buildAttribString($attribs).'>'.$val.'</span>';
         }
         return $val;
+    }
+
+    /**
+     * Set one or more config values
+     *
+     * @param string $path   key
+     * @param mixed  $newVal value
+     *
+     * @return mixed
+     */
+    public function set($path, $newVal = null)
+    {
+        $ret = null;
+        if (is_string($path)) {
+            $ret = $this->cfg[$path];
+            $this->cfg[$path] = $newVal;
+        } elseif (is_array($path)) {
+            $this->cfg = array_merge($this->cfg, $path);
+        }
+        return $ret;
     }
 
     /**

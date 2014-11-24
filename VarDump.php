@@ -3,9 +3,9 @@
 namespace bdk\Debug;
 
 /**
- * Display/Formatting related methods
+ * VarDump:  Methods concerning the display and formatting of values
  */
-class Display
+class VarDump
 {
 
     protected $cfg = array();
@@ -34,22 +34,6 @@ class Display
     }
 
     /**
-     * Retrieve a config or data value
-     *
-     * @param string $path what to get
-     *
-     * @return mixed
-     */
-    public function get($path)
-    {
-        $ret = null;
-        if (isset($this->cfg[$path])) {
-            $ret = $this->cfg[$path];
-        }
-        return $ret;
-    }
-
-    /**
      * Returns string representation of value
      *
      * @param mixed $val  value
@@ -58,7 +42,7 @@ class Display
      *
      * @return string
      */
-    public function getDisplayValue($val, $opts = array(), $hist = array())
+    public function dump($val, $opts = array(), $hist = array())
     {
         $type = null;
         $typeMore = null;
@@ -83,7 +67,7 @@ class Display
                 $type = 'array';
                 $hist[] = 'array';
                 foreach ($val as $k => $val2) {
-                    $val[$k] = $this->getDisplayValue($val2, $opts, $hist);
+                    $val[$k] = $this->dump($val2, $opts, $hist);
                 }
                 if ($opts['flatten']) {
                     $val = trim(print_r($val, true));
@@ -99,7 +83,7 @@ class Display
             } elseif ($this->utilities->isBinary($val)) {
                 // all or partially binary data
                 $typeMore = 'binary';
-                $val = $this->getBinary($val, $opts['html']);
+                $val = $this->dumpBinary($val, $opts['html']);
             }
         } elseif (is_int($val)) {
             $type = 'int';
@@ -132,10 +116,10 @@ class Display
      *
      * @return string
      */
-    public function getBinary($str, $htmlout)
+    public function dumpBinary($str, $htmlout)
     {
         $this->htmlout = $htmlout;
-        $this->displayBinaryStats = array(
+        $this->binaryStats = array(
             'ascii' => 0,
             'utf8'  => 0,   // bytes, not "chars"
             'other' => 0,
@@ -143,7 +127,7 @@ class Display
             'max_text_len' => 0,
             'text_segments' => 0,   // number of utf8 blocks
         );
-        $stats = &$this->displayBinaryStats;
+        $stats = &$this->binaryStats;
         $regex = <<<EOD
 /
 ( [\x01-\x7F] )                 # single-byte sequences   0xxxxxxx  (ascii 0 - 127)
@@ -160,7 +144,7 @@ class Display
 EOD;
         $str_orig = $str;
         $strlen = strlen($str);
-        $str = preg_replace_callback($regex, array($this,'getBinaryCallback'), $str);
+        $str = preg_replace_callback($regex, array($this,'dumpBinaryCallback'), $str);
         if ($stats['cur_text_len'] > $stats['max_text_len']) {
             $stats['max_text_len'] = $stats['cur_text_len'];
         }
@@ -179,15 +163,15 @@ EOD;
     }
 
     /**
-     * Callback used by getBinary's preg_replace_callback
+     * Callback used by dumpBinary's preg_replace_callback
      *
      * @param array $matches matches
      *
      * @return string
      */
-    protected function getBinaryCallback($matches)
+    protected function dumpBinaryCallback($matches)
     {
-        $stats = &$this->displayBinaryStats;
+        $stats = &$this->binaryStats;
         $showHex = false;
         if ($matches[1] !== '') {
             // single byte sequence (may contain control char)
@@ -226,21 +210,21 @@ EOD;
             $showHex = true;
         }
         if ($showHex) {
-            $str = $this->getBinaryHex($str, $stats);
+            $str = $this->dumpBinaryHex($str, $stats);
         }
         return $str;
     }
 
     /**
-     * [getBinaryHex description]
+     * display binary chars as hex
      *
      * @param string $str string containing binary
      *
      * @return string
      */
-    protected function getBinaryHex($str)
+    protected function dumpBinaryHex($str)
     {
-        $stats = &$this->displayBinaryStats;
+        $stats = &$this->binaryStats;
         $stats['other']++;
         if ($stats['cur_text_len']) {
             if ($stats['cur_text_len'] > $stats['max_text_len']) {
@@ -268,7 +252,7 @@ EOD;
      *
      * @return string
      */
-    public function getTable($array, $caption = null)
+    public function dumpTable($array, $caption = null)
     {
         $str = '';
         if (is_array($array) && in_array(self::VALUE_ABSTRACTION, $array, true)) {
@@ -278,7 +262,7 @@ EOD;
             if (isset($caption)) {
                 $str = $caption.' = ';
             }
-            $str .= $this->getDisplayValue($array);
+            $str .= $this->dump($array);
             $str = '<div class="log">'.$str.'</div>';
         } elseif (empty($array)) {
             if (isset($caption)) {
@@ -302,7 +286,7 @@ EOD;
                 .'</thead>'."\n";
             $str .= '<tbody>'."\n";
             foreach ($array as $k => $row) {
-                $str .= $this->getTableRow($keys, $row, $k);
+                $str .= $this->dumpTableRow($keys, $row, $k);
             }
             $str .= '</tbody>'."\n".'</table>';
         }
@@ -318,7 +302,7 @@ EOD;
      *
      * @return string
      */
-    protected function getTableRow($keys, $row, $rowKey)
+    protected function dumpTableRow($keys, $row, $rowKey)
     {
         $str = '';
         $values = array();
@@ -338,11 +322,11 @@ EOD;
             } elseif ($value === $undefined) {
                 $value = '<span class="t_undefined"></span>';
             } else {
-                $value = $this->getDisplayValue($value);
+                $value = $this->dump($value);
             }
             $values[] = $value;
         }
-        $rowKey = $this->getDisplayValue($rowKey);
+        $rowKey = $this->dump($rowKey);
         if (preg_match($displayValRegEx, $rowKey, $matches)) {
             $class = $matches[1];
             $rowKey = $matches[2];
@@ -363,6 +347,22 @@ EOD;
         }
         $str .= '</tr>'."\n";
         return $str;
+    }
+
+    /**
+     * Retrieve a config or data value
+     *
+     * @param string $path what to get
+     *
+     * @return mixed
+     */
+    public function get($path)
+    {
+        $ret = null;
+        if (isset($this->cfg[$path])) {
+            $ret = $this->cfg[$path];
+        }
+        return $ret;
     }
 
     /**
@@ -393,8 +393,8 @@ EOD;
                 $hist[] = &$val;
                 $val = array(
                     'class'      => $val['class'].' object',
-                    'properties' => $this->getDisplayValue($val['properties'], $opts, $hist),
-                    'methods'    => $this->getDisplayValue($val['methods'], $opts, $hist),
+                    'properties' => $this->dump($val['properties'], $opts, $hist),
+                    'methods'    => $this->dump($val['methods'], $opts, $hist),
                 );
                 if ($opts['html'] || $opts['flatten']) {
                     $val = $val['class']."\n"

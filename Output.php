@@ -293,7 +293,7 @@ class Output
         $this->firephp->setOptions($this->cfg['firephpOptions']);
         $this->firephpMethods = get_class_methods($this->firephp);
         if (!empty($this->data['alert'])) {
-            $alert = str_replace('<br />', "\n", $this->data['alert']);
+            $alert = str_replace('<br />', ", \n", $this->data['alert']);
             array_unshift($this->data['log'], array('error', $alert));
         }
         foreach ($this->data['log'] as $args) {
@@ -319,7 +319,7 @@ class Output
     {
         $opts = array();
         foreach ($args as $k => $arg) {
-            $args[$k] = $this->debug->display->getDisplayValue($arg, array('html'=>false,'boolNullToString'=>false));
+            $args[$k] = $this->debug->varDump->dump($arg, array('html'=>false,'boolNullToString'=>false));
         }
         if (in_array($method, array('group','groupCollapsed','groupEnd'))) {
             list($method, $args, $opts) = $this->outputFirephpGroupMethod($method, $args);
@@ -452,9 +452,9 @@ class Output
         }
         $lastError = $this->debug->errorHandler->get('lastError');
         if ($lastError && $lastError['category'] === 'fatal') {
-        	foreach (array('type','category','hash','firstOccur','suppressed','inConsole','stats','vars') as $k) {
-        		unset($lastError[$k]);
-        	}
+            foreach (array('type','category','hash','firstOccur','suppressed','inConsole','stats','vars') as $k) {
+                unset($lastError[$k]);
+            }
             array_unshift($this->data['log'], array('error error-fatal',$lastError));
         }
         $str .= '<h3>Debug Log:</h3>'."\n";
@@ -489,7 +489,7 @@ class Output
         if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->outputHtmlGroupMethod($method, $args);
         } elseif ($method == 'table') {
-            $str = call_user_func_array(array($this->debug->display,'getTable'), $args);
+            $str = call_user_func_array(array($this->debug->varDump,'dumpTable'), $args);
         } elseif ($method == 'time') {
             $str = '<div class="time">'.$args[0].': '.$args[1].'</div>';
         } else {
@@ -522,9 +522,9 @@ class Output
                     unless it is only arg, which will be visualWhiteSpaced'd
                 */
                 if ($k > 0 || !is_string($v)) {
-                    $args[$k] = $this->debug->display->getDisplayValue($v);
+                    $args[$k] = $this->debug->varDump->dump($v);
                 } elseif ($num_args == 1) {
-                    $args[$k] = $this->debug->display->visualWhiteSpace($v);
+                    $args[$k] = $this->debug->varDump->visualWhiteSpace($v);
                 }
             }
             $args = implode($glue, $args);
@@ -553,7 +553,7 @@ class Output
                 $arg_str = '';
                 if ($args) {
                     foreach ($args as $k => $v) {
-                        $args[$k] = $this->debug->display->getDisplayValue($v);
+                        $args[$k] = $this->debug->varDump->dump($v);
                     }
                     $arg_str = implode(', ', $args);
                 }

@@ -2,7 +2,8 @@
 /**
  * Web-browser/javascript like console class for PHP
  *
- * @author Brad Kent <bkfake-github@yahoo.com>
+ * @package PHPDebugConsole
+ * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
  * @version v1.2
  *
@@ -24,10 +25,10 @@ class Debug
     protected $data = array();
     protected $collect;
     protected $outputSent = false;
-    public $display;
     public $errorHandler;
     public $output;
     public $utilities;
+    public $varDump;
 
     /**
      * Constructor
@@ -50,12 +51,10 @@ class Debug
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
-            // Display
-            'addBR'     => false,           // convert \n to <br />\n in strings?
         );
         $this->data = array(
-            'alert' => '',
-            'counts' => array(),    // count method
+            'alert'         => '',
+            'counts'        => array(),    // count method
             'fileHandle'    => null,
             'groupDepth'    => 0,
             'groupDepthFile'=> 0,
@@ -79,12 +78,12 @@ class Debug
         if (!isset(self::$instance)) {
             self::$instance = $this;
         }
-        require_once dirname(__FILE__).'/Display.php';
         require_once dirname(__FILE__).'/Output.php';
         require_once dirname(__FILE__).'/Utilities.php';
+        require_once dirname(__FILE__).'/VarDump.php';
         $this->utilities = new Utilities();
         $this->output = new Output(array(), $this->data);
-        $this->display = new Display(array(), $this->utilities);
+        $this->varDump = new VarDump(array(), $this->utilities);
         if ($errorHandler) {
             $this->errorHandler = $errorHandler;
         } else {
@@ -171,7 +170,7 @@ class Debug
     {
         $path = $this->translateCfgKeys($path);
         $path = preg_split('#[\./]#', $path);
-        if (isset($path[1]) && isset($this->{$path[0]}) && is_object($this->{$path[0]})) {
+        if (isset($this->{$path[0]}) && is_object($this->{$path[0]}) && isset($path[1])) {
             // child class config value
             $path_rel = implode('/', array_slice($path, 1));
             $ret = $this->{$path[0]}->get($path_rel);
@@ -341,7 +340,7 @@ class Debug
     /**
      * Set one or more config values
      *
-     * If setting a single value via method a or b, old value is returned
+     * If setting a value via method a or b, old value is returned
      *
      * Setting/updating 'key' will also set 'collect' and 'output'
      *
@@ -357,11 +356,21 @@ class Debug
     public function set($path, $newVal = null)
     {
         $ret = null;
+        $new = array();
         $path = $this->translateCfgKeys($path);
         if (is_string($path)) {
             $ret = $this->get($path);
+            // build $new array from the passed string
+            $path = preg_split('#[\./]#', $path);
+            $ref = &$new;
+            foreach ($path as $k) {
+                $ref[$k] = array(); // initialize this level
+                $ref = &$ref[$k];
+            }
+            $ref = $newVal;
+        } elseif (is_array($path)) {
+            $new = $path;
         }
-        $new = $this->setBuildNew($path, $newVal);
         if (isset($new['debug']['key'])) {
             // update 'collect and output'
             $requestKey = null;
@@ -411,7 +420,7 @@ class Debug
     public function setCfg()
     {
         $this->errorHandler->setErrorCaller();
-        trigger_error('setCfg() is deprecated -> use set instead()', E_USER_DEPRECATED);
+        trigger_error('setCfg() is deprecated -> use set() instead', E_USER_DEPRECATED);
         return call_user_func_array(array($this,'set'), func_get_args());
     }
 
@@ -541,7 +550,39 @@ class Debug
      */
 
     /**
+     * onError callback
+     * called by $this->errorHandler
+     * adds error to console as error or warn
+     *
+     * @param array $error array containing error details
+     *
+     * @return mixed
+     */
+    public function onError($error)
+    {
+        $return = null;
+        if ($this->collect) {
+            $return = false;    // no need to error_log or email this error
+            $errStr = $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message'];
+            if ($error['type'] & $this->cfg['errorMask']) {
+                $this->error($errStr);
+            } else {
+                $this->warn($errStr);
+            }
+            $this->errorHandler->set('data/errors/'.$error['hash'].'/inConsole', true);
+            if (in_array($this->cfg['emailLog'], array('always','onError'))) {
+                // Don't let errorHandler email error.  our shutdownFunction will email log
+                $this->errorHandler->set('data/currentError/allowEmail', false);
+            }
+        } elseif (!isset($error['inConsole'])) {
+            $this->errorHandler->set('data/errors/'.$error['hash'].'/inConsole', false);
+        }
+        return $return;
+    }
+
+    /**
      * Email Log if emailLog is 'always' or 'onError'
+     * output log if not already output
      *
      * @return void
      */
@@ -573,40 +614,10 @@ class Debug
         if ($email) {
             $this->output->emailLog();
         }
-        /*
-            output the log if it hasn't already been output
-            this will also output for fatal errors
-        */
         if (!$this->outputSent) {
             echo $this->output();
         }
         return;
-    }
-
-    /**
-     * Use to unserialize the log serialized by emailLog
-     *
-     * @param string $str serialized log
-     *
-     * @return string
-     */
-    public function unserialize($str)
-    {
-        $pos = strpos($str, 'START DEBUG');
-        if ($pos !== false) {
-            $str = substr($str, $pos+11);
-            $str = preg_replace('/^[^\r\n]*[\r\n]+/', '', $str);
-        }
-        $str = $this->utilities->isBase64Encoded($str)
-            ? base64_decode($str)
-            : false;
-        if ($str && function_exists('gzinflate')) {
-            $strInflated = gzinflate($str);
-            if ($strInflated) {
-                $str = $strInflated;
-            }
-        }
-        return $str;
     }
 
     /**
@@ -691,11 +702,9 @@ class Debug
         }
         if ($this->data['fileHandle']) {
             $method = array_shift($args);
-            if ($method == 'table') {
-                if (count($args) == 2) {
-                    $caption = array_pop($args);
-                    array_unshift($args, $caption);
-                }
+            if ($method == 'table' && count($args) == 2) {
+                $caption = array_pop($args);
+                array_unshift($args, $caption);
             }
             if ($args) {
                 if (count($args) == 1 && is_string($args[0])) {
@@ -703,7 +712,7 @@ class Debug
                 }
                 foreach ($args as $k => $v) {
                     if ($k > 0 || !is_string($v)) {
-                        $v = $this->display->getDisplayValue($v, array('html'=>false, 'flatten'=>true));
+                        $v = $this->varDump->dump($v, array('html'=>false, 'flatten'=>true));
                         $v = preg_replace('#<span class="t_\w+">(.*?)</span>#', '\\1', $v);
                         $args[$k] = $v;
                     }
@@ -714,9 +723,9 @@ class Debug
                         ? ''
                         : ' = ';
                 }
-                $indent_string = str_repeat('    ', $this->data['groupDepthFile']);
+                $strIndent = str_repeat('    ', $this->data['groupDepthFile']);
                 $str = implode($glue, $args);
-                $str = $indent_string.str_replace("\n", "\n".$indent_string, $str);
+                $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
                 fwrite($this->data['fileHandle'], $str."\n");
             }
             if (in_array($method, array('group','groupCollapsed'))) {
@@ -729,63 +738,6 @@ class Debug
     }
 
     /**
-     * onError callback
-     * called by $this->errorHandler
-     * adds error to console as error or warn
-     *
-     * @param array $error array containing error details
-     *
-     * @return mixed
-     */
-    public function onError($error)
-    {
-        $return = null;
-        if ($this->collect) {
-            $return = false;    // no need to error_log or email this error
-            $errStr = $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message'];
-            if ($error['type'] & $this->cfg['errorMask']) {
-                $this->error($errStr);
-            } else {
-                $this->warn($errStr);
-            }
-            $this->errorHandler->set('data/errors/'.$error['hash'].'/inConsole', true);
-            if (in_array($this->cfg['emailLog'], array('always','onError'))) {
-                // Don't let errorHandler email error.  our shutdownFunction will email log
-                $this->errorHandler->set('data/currentError/allowEmail', false);
-            }
-        } elseif (!isset($error['inConsole'])) {
-            $this->errorHandler->set('data/errors/'.$error['hash'].'/inConsole', false);
-        }
-        return $return;
-    }
-
-    /**
-     * Build config array to merge with current config
-     *
-     * @param string $path   path
-     * @param mixed  $newVal value
-     *
-     * @return mixed;
-     */
-    protected function setBuildNew($path, $newVal = null)
-    {
-        $new = array();
-        if (is_string($path)) {
-            // build $new array from the passed string
-            $path = preg_split('#[\./]#', $path);
-            $ref = &$new;
-            foreach ($path as $k) {
-                $ref[$k] = array(); // initialize this level
-                $ref = &$ref[$k];
-            }
-            $ref = $newVal;
-        } elseif (is_array($path)) {
-            $new = $path;
-        }
-        return $new;
-    }
-
-    /**
      * translate configuration keys
      *
      * @param mixed $mixed string key or config array
@@ -795,6 +747,7 @@ class Debug
     protected function translateCfgKeys($mixed)
     {
         $objKeys = array(
+            'varDump' => array('addBR'),
             'errorHandler' => array('lastError'),
             'output' => array(
                 'css', 'filepathCss', 'filepathScript', 'firephpInc', 'firephpOptions',

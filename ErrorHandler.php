@@ -459,7 +459,7 @@ class ErrorHandler
 
     /**
      * Set the calling file/line for next error
-     * this override will apply until cleared, error occurs, or groupEnd()
+     * this override will apply until cleared or error occurs
      *
      * Example:  some wrapper function that is called often:
      *     Rather than reporting that an error occurred within the wrapper, you can use

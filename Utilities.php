@@ -306,6 +306,32 @@ class Utilities
     }
 
     /**
+     * Use to unserialize the log serialized by emailLog
+     *
+     * @param string $str serialized log
+     *
+     * @return string
+     */
+    public function unserializeLog($str)
+    {
+        $pos = strpos($str, 'START DEBUG');
+        if ($pos !== false) {
+            $str = substr($str, $pos+11);
+            $str = preg_replace('/^[^\r\n]*[\r\n]+/', '', $str);
+        }
+        $str = $this->isBase64Encoded($str)
+            ? base64_decode($str)
+            : false;
+        if ($str && function_exists('gzinflate')) {
+            $strInflated = gzinflate($str);
+            if ($strInflated) {
+                $str = $strInflated;
+            }
+        }
+        return $str;
+    }
+
+    /**
      * Want to store a "snapshot" of arrays, objects, & resources
      * Remove any reference to an "external" variable
      *

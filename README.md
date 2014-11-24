@@ -27,5 +27,7 @@ Browser/javascript like console class for PHP
 * timeEnd
 * *&hellip; [more](http://www.bradkent.com/?page=php/debug#docs-methods)*
 
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c/big.png)](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c)
+
 ### Changelog
 http://www.bradkent.com/?page=php/debug#docs-changelog

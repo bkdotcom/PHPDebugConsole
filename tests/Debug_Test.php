@@ -34,7 +34,7 @@ class DebugTests extends PHPUnit_Framework_TestCase
      */
     public function tearDown()
     {
-        unset($GLOBALS['debugClassData']);
+        unset($this->debug);
     }
 
     /**

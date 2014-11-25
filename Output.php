@@ -1,4 +1,12 @@
 <?php
+/**
+ * Output log as html or to FirePHP
+ *
+ * @package PHPDebugConsole
+ * @author  Brad Kent <bkfake-github@yahoo.com>
+ * @license http://opensource.org/licenses/MIT MIT
+ * @version v1.2
+ */
 
 namespace bdk\Debug;
 
@@ -23,8 +31,8 @@ class Output
         $this->debug = Debug::getInstance();
         $this->cfg = array(
             'css' => '',                    // additional "override" css
-            'filepathCss' => dirname(__FILE__).'/Debug.css',
-            'filepathScript' => dirname(__FILE__).'/Debug.jquery.min.js',
+            'filepathCss' => dirname(__FILE__).'/css/Debug.css',
+            'filepathScript' => dirname(__FILE__).'/js/Debug.jquery.min.js',
             'firephpInc' => dirname(__FILE__).'/FirePHP.class.php',
             'firephpOptions' => array(
                 'useNativeJsonEncode'   => true,
@@ -452,7 +460,9 @@ class Output
         }
         $lastError = $this->debug->errorHandler->get('lastError');
         if ($lastError && $lastError['category'] === 'fatal') {
-            foreach (array('type','category','hash','firstOccur','suppressed','inConsole','stats','vars') as $k) {
+            $keysKeep = array('typeStr','message','file','line');
+            $keysRemove = array_diff(array_keys($lastError), $keysKeep);
+            foreach ($keysRemove as $k) {
                 unset($lastError[$k]);
             }
             array_unshift($this->data['log'], array('error error-fatal',$lastError));

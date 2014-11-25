@@ -1,9 +1,17 @@
 <?php
+/**
+ * Methods used to display and format values
+ *
+ * @package PHPDebugConsole
+ * @author  Brad Kent <bkfake-github@yahoo.com>
+ * @license http://opensource.org/licenses/MIT MIT
+ * @version v1.2
+ */
 
 namespace bdk\Debug;
 
 /**
- * VarDump:  Methods concerning the display and formatting of values
+ * VarDump:  Methods used to display and format values
  */
 class VarDump
 {

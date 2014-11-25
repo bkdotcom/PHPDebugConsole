@@ -762,7 +762,7 @@ class Debug
                     break;
                 }
             }
-            if (count($path==1)) {
+            if (count($path)==1) {
                 array_unshift($path, 'debug');
             }
             $mixed = implode('/', $path);

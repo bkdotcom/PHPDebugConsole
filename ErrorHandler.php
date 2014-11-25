@@ -1,4 +1,12 @@
 <?php
+/**
+ * Stand-alone, general-purpose error handler
+ *
+ * @package PHPDebugConsole
+ * @author  Brad Kent <bkfake-github@yahoo.com>
+ * @license http://opensource.org/licenses/MIT MIT
+ * @version v1.2
+ */
 
 namespace bdk\Debug;
 
@@ -16,7 +24,10 @@ if (!defined('E_USER_DEPRECATED')) {
 }
 
 /**
- * Error handling methods
+ * Stand-Alone general-purpose error handler class that supports fatal errors
+ *
+ * Able to register multiple onError "callback" functions
+ * Can email an error report on error and throttles said email so does not excessively send email
  */
 class ErrorHandler
 {

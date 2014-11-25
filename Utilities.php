@@ -1,4 +1,12 @@
 <?php
+/**
+ * General-purpose utilities
+ *
+ * @package PHPDebugConsole
+ * @author  Brad Kent <bkfake-github@yahoo.com>
+ * @license http://opensource.org/licenses/MIT MIT
+ * @version v1.2
+ */
 
 namespace bdk\Debug;
 
@@ -197,7 +205,7 @@ class Utilities
      * @return mixed false, or path to reference
      * @internal
      */
-    public function isRecursiveIteration(&$array, $unique = null, $path = array())
+    protected function isRecursiveIteration(&$array, $unique = null, $path = array())
     {
         if ($unique === null) {
             $unique = new \stdclass();

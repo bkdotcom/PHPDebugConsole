@@ -391,7 +391,7 @@ class Debug
         }
         if (isset($new['debug']['emailTo']) && !isset($new['errorHandler']['emailTo'])) {
             // also set errorHandler's emailTo
-            $new['errorHandler']['emailTo'] = $new['emailTo'];
+            $new['errorHandler']['emailTo'] = $new['debug']['emailTo'];
         }
         if (isset($new['data'])) {
             $this->data = array_merge($this->data, $new['data']);

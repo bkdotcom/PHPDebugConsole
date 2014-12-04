@@ -39,7 +39,7 @@
 .debug table { border-collapse:collapse; }
 .debug table caption { font-weight:bold; font-style:italic; }
 .debug table th { font-weight:bold; background-color: rgba(0,0,0,0.1); }
-.debug table th, .debug table td { border:1px solid #000; padding:1px .25em; }
+.debug table th, .debug table td { border:1px solid #000; padding:1px .25em; vertical-align:top; }
 .debug ul { margin-top: 0; margin-bottom: 0; }
 
 .debug .alert {

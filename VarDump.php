@@ -280,7 +280,7 @@ EOD;
             $str = '<div class="log">'.$str.'</div>';
         } else {
             $keys = $this->utilities->arrayColKeys($array);
-            $str = '<table cellpadding="1" cellspacing="0" border="1">'."\n"   // style="border:solid 1px;"
+            $str = '<table>'."\n"
                 .'<caption>'.$caption.'</caption>'."\n";
             $values = array();
             foreach ($keys as $key) {
@@ -326,7 +326,7 @@ EOD;
                 $value = $row;
             }
             if (is_array($value)) {
-                $value = call_user_func(array($this,__FUNCTION__), $value);
+                $value = $this->dumpTable($value);
             } elseif ($value === $undefined) {
                 $value = '<span class="t_undefined"></span>';
             } else {
@@ -339,7 +339,7 @@ EOD;
             $class = $matches[1];
             $rowKey = $matches[2];
         }
-        $str .= '<tr valign="top"><td class="'.$class.'">'.$rowKey.'</td>';
+        $str .= '<tr><td class="'.$class.'">'.$rowKey.'</td>';
         foreach ($values as $v) {
             // remove the span wrapper.. add span's class to TD
             $class = null;
@@ -406,8 +406,8 @@ EOD;
                 );
                 if ($opts['html'] || $opts['flatten']) {
                     $val = $val['class']."\n"
-                        .'    methods: '.$val['methods']."\n"
-                        .'    properties: '.$val['properties'];
+                        .'    properties: '.$val['properties']."\n"
+                        .'    methods: '.$val['methods'];
                     if ($opts['flatten'] && count($hist) > 1) {
                         $val = str_replace("\n", "\n    ", $val);
                     }
@@ -459,7 +459,7 @@ EOD;
                 '<span class="t_object-class">\1</span>'."\n".'<span class="t_object-inner">\2</span>',
                 $val
             );
-            $html = preg_replace('#\sproperties: #', '<br />properties: ', $html);
+            $html = preg_replace('#\smethods: #', '<br />methods: ', $html);
             $val = '<span class="t_'.$type.'">'.$html.'</span>';
         } elseif ($type) {
             $attribs = array(

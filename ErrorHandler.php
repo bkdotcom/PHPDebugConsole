@@ -275,20 +275,21 @@ class ErrorHandler
             }
         }
         $isSuppressed = $category != 'fatal' && error_reporting() === 0;
-        $hash = $this->getErrorHash($errType, $errMsg, $file, $line);
-        $firstOccur = !isset($data['errors'][$hash]);
-        if (!empty($data['errorCaller'])) {
-            $file = $data['errorCaller']['file'];
-            $line = $data['errorCaller']['line'];
-        }
-        $errStrLog = $this->errTypes[$errType].': '.$file.' : '.$errMsg.' on line '.$line;
         $error = array(
-            'type'      => $errType,                        // int
+            'type'      => $errType,                    // int
             'category'  => $category,
-            'typeStr'   => $this->errTypes[$errType],       // friendly string version of 'type'
+            'typeStr'   => $this->errTypes[$errType],   // friendly string version of 'type'
             'message'   => $errMsg,
             'file'      => $file,
             'line'      => $line,
+        );
+        $hash = $this->getErrorHash($error);
+        $firstOccur = !isset($data['errors'][$hash]);
+        if (!empty($data['errorCaller'])) {
+            $error['file'] = $data['errorCaller']['file'];
+            $error['line'] = $data['errorCaller']['line'];
+        }
+        $error = array_merge($error, array(
             'hash'      => $hash,
             'firstOccur'=> $firstOccur,
             // if any instance of this error was not supprssed, reflect that
@@ -301,7 +302,7 @@ class ErrorHandler
                 'emailedTo'  => '',
             ),
             'vars' => $vars,
-        );
+        ));
         $data['errors'][$hash] = &$error;
         $data['lastError'] = &$data['errors'][$hash];
         $data['currentError'] = array(
@@ -319,8 +320,9 @@ class ErrorHandler
             $this->emailErr($error);
         }
         if ($this->cfg['continueToPrevHandler'] && $this->prevErrorHandler) {
-            call_user_func($this->prevErrorHandler, $errType, $errMsg, $file, $line, $vars);
+            call_user_func($this->prevErrorHandler, $errType, $errMsg, $error['file'], $error['line'], $vars);
         } elseif ($data['currentError']['errorLog']) {
+            $errStrLog = $error['typeStr'].': '.$error['file'].' : '.$error['message'].' on line '.$error['line'];
             error_log('PHP '.$errStrLog);
         }
         // return false to continue to "normal" error handler
@@ -460,10 +462,11 @@ class ErrorHandler
             }
             $ref = $newVal;
         } elseif (is_array($path)) {
-            $this->cfg = array_merge($this->cfg, $path);
-            if (isset($k['onError'])) {
-                $this->registerOnErrorFunction($k['onError']);
+            if (isset($path['onError'])) {
+                $this->registerOnErrorFunction($path['onError']);
+                unset($path['onError']);
             }
+            $this->cfg = array_merge($this->cfg, $path);
         }
         return $ret;
     }

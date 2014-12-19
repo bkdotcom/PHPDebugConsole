@@ -151,8 +151,9 @@ class Output
             $count = $count == 1
                 ? 'was 1 error'
                 : 'were '.$count.' errors';
-            $html .= '<h3>There '.$count.' captured while not collecting debug info</h3>'
-                . $htmlNotIn;
+            $html .= '<h3>'.($totals['inConsole'] ? 'Additionally, there ' : 'There ')
+                .$count.' captured while not collecting debug info</h3>'
+                .$htmlNotIn;
         }
         return $html;
     }

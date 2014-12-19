@@ -607,7 +607,7 @@ class ErrorHandler
                     continue;
                 }
                 // it's been a while since this error was emailed
-                if ($err['emailTo'] != $this->cfg['emailTo']) {
+                if ($err['emailedTo'] != $this->cfg['emailTo']) {
                     // it was emailed to a different address
                     if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60*60*24) {
                         unset($data['errors'][$k]);

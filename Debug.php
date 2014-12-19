@@ -62,7 +62,7 @@ class Debug
             'recursion'     => false,
             'timers' => array(      // timer method
                 'labels' => array(
-                    'debugInit' => microtime(),
+                    // label => array(accumulatedTime, lastStartedTime|null)
                 ),
                 'stack' => array(),
             ),
@@ -70,7 +70,9 @@ class Debug
         if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
             list($whole, $dec) = explode('.', $_SERVER['REQUEST_TIME_FLOAT']);
             $microT = '.'.$dec.' '.$whole;
-            $this->data['timers']['labels']['debugInit'] = $microT;
+            $this->data['timers']['labels']['debugInit'] = array(0, $microT);
+        } else {
+            $this->data['timers']['labels']['debugInit'] = array(0, microtime());
         }
         // Initialize self::$instance if not set
         //    so that self::getInstance() will always return original instance
@@ -479,8 +481,12 @@ class Debug
 
     /**
      * Start a timer identified by label
-     *    if timer with label already started, it will not be reset
-     * if no label is passed a timer will be added to a timer stack
+     *
+     * Label passed
+     *    if doesn't exist: starts timer
+     *    if does exist: unpauses (does not reset)
+     * Label not passed
+     *    timer will be added to a no-label stack
      *
      * @param string $label unique label
      *
@@ -489,8 +495,13 @@ class Debug
     public function time($label = null)
     {
         if (isset($label)) {
-            if (!isset($this->data['timers']['labels'][$label])) {
-                $this->data['timers']['labels'][$label] = microtime();
+            $timers = &$this->data['timers']['labels'];
+            if (!isset($timers[$label])) {
+                // new label
+                $timers[$label] = array(0, microtime());
+            } elseif (!isset($timers[$label][1])) {
+                // no microtime -> the timer is currently paused -> unpause
+                $timers[$label][1] = microtime();
             }
         } else {
             $this->data['timers']['stack'][] = microtime();
@@ -499,35 +510,78 @@ class Debug
     }
 
     /**
-     * Logs time elapsed since started with time()
-     * If no label is passed, timer is removed from a timer stack
+     * Behaves like a stopwatch.. returns running time
+     *    If label is passed, timer is "paused"
+     *    If label is not passed, timer is removed from no-label tack
      *
      * @param string  $label  unique label
-     * @param boolean $return = false. If true, return elapsed time rather than log it
+     * @param boolean $return = false. If true, only return elapsed time rather than log it
      *
      * @return float
      */
     public function timeEnd($label = null, $return = false)
     {
-        $ret = 0;
         if (is_bool($label)) {
             $return = $label;
             $label = null;
         }
+        $ret = $this->timeGet($label, true, null); // get not-rounded running time
         if (isset($label)) {
-            $microT = $this->data['timers']['labels'][$label];
+            if (isset($this->data['timers']['labels'][$label])) {
+                $this->data['timers']['labels'][$label] = array(
+                    $ret,  // store the new "running" time
+                    null,  // "pause" the timer
+                );
+            }
         } else {
-            $microT = array_pop($this->data['timers']['stack']);
             $label = 'time';
+            array_pop($this->data['timers']['stack']);
+        }
+        $ret = round($ret, 4);
+        if (!$return) {
+            $this->appendLog('time', array($label, $ret.' sec'));
+        }
+        return $ret;
+    }
+
+    /**
+     * Get the running time without stopping/pausing the timer
+     *
+     * @param string  $label     unique label
+     * @param boolean $return    = false. If true, only return elapsed time rather than log it
+     * @param integer $precision rounding precision (pass null for no rounding)
+     *
+     * @return float
+     */
+    public function timeGet($label = null, $return = false, $precision = 4)
+    {
+        if (is_bool($label)) {
+            $precision = $return;
+            $return = $label;
+            $label = null;
+        }
+        $microT = 0;
+        $ret = 0;
+        if (isset($label)) {
+            if (isset($this->data['timers']['labels'][$label])) {
+                list($ret, $microT) = $this->data['timers']['labels'][$label];
+            }
+        } else {
+            $label = 'time';
+            $microT = end($this->data['timers']['stack']);
         }
         if ($microT) {
+            // compute time ellapsed since started
             list($a_dec, $a_sec) = explode(' ', $microT);
             list($b_dec, $b_sec) = explode(' ', microtime());
-            $ret = (float)$b_sec - (float)$a_sec + (float)$b_dec - (float)$a_dec;
-            $ret = round($ret, 4);
-            if (!$return) {
-                $this->appendLog('time', array($label, $ret.' sec'));
-            }
+            $ellapsed = (float)$b_sec - (float)$a_sec + (float)$b_dec - (float)$a_dec;
+            $ret += $ellapsed;
+        }
+        if (is_int($precision)) {
+            $ret = round($ret, $precision);
+        }
+        if (!$return) {
+            $this->appendLog('time', array($label, $ret.' sec'));
         }
         return $ret;
     }
@@ -646,10 +700,10 @@ class Debug
         if (in_array($method, array('error','warn'))) {
             $backtrace = debug_backtrace();
             // path if via ErrorHandler :
-            //    ErrorHandler::handler -> call_user_function -> self::onError -> self::warn -> here we are
+            //    ErrorHandler::handleUnsuppressed -> call_user_function -> self::onError -> self::warn -> here we are
             $viaErrorHandler = isset($backtrace[4])
-                && $backtrace[4]['function'] == 'handler'
                 && $backtrace[4]['class'] == 'bdk\Debug\ErrorHandler'
+                && $backtrace[4]['function'] == 'handleUnsuppressed'
                 && $backtrace[3]['function'] == 'call_user_func'
                 && isset($backtrace[3]['args'][0][1])
                 && $backtrace[3]['args'][0][1] === 'onError';

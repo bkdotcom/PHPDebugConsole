@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.2
+ * @version v1.2.1
  *
  * @link    http://www.github.com/bkdotcom/PHPDebugConsole
  * @link    https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -170,7 +170,7 @@ class Debug
      */
     public function get($path)
     {
-        $path = $this->translateCfgKeys($path);
+        $path = $this->utilities->translateCfgKeys($path);
         $path = preg_split('#[\./]#', $path);
         if (isset($this->{$path[0]}) && is_object($this->{$path[0]}) && isset($path[1])) {
             // child class config value
@@ -359,7 +359,7 @@ class Debug
     {
         $ret = null;
         $new = array();
-        $path = $this->translateCfgKeys($path);
+        $path = $this->utilities->translateCfgKeys($path);
         if (is_string($path)) {
             $ret = $this->get($path);
             // build $new array from the passed string
@@ -515,7 +515,7 @@ class Debug
      *    If label is not passed, timer is removed from no-label tack
      *
      * @param string  $label  unique label
-     * @param boolean $return = false. If true, only return elapsed time rather than log it
+     * @param boolean $return = false. If true, only return time, rather than log it
      *
      * @return float
      */
@@ -548,7 +548,7 @@ class Debug
      * Get the running time without stopping/pausing the timer
      *
      * @param string  $label     unique label
-     * @param boolean $return    = false. If true, only return elapsed time rather than log it
+     * @param boolean $return    = false. If true, only return time, rather than log it
      * @param integer $precision rounding precision (pass null for no rounding)
      *
      * @return float
@@ -702,6 +702,7 @@ class Debug
             // path if via ErrorHandler :
             //    ErrorHandler::handleUnsuppressed -> call_user_function -> self::onError -> self::warn -> here we are
             $viaErrorHandler = isset($backtrace[4])
+                && isset($backtrace[4]['class'])
                 && $backtrace[4]['class'] == 'bdk\Debug\ErrorHandler'
                 && $backtrace[4]['function'] == 'handleUnsuppressed'
                 && $backtrace[3]['function'] == 'call_user_func'
@@ -789,57 +790,5 @@ class Debug
             }
         }
         return;
-    }
-
-    /**
-     * translate configuration keys
-     *
-     * @param mixed $mixed string key or config array
-     *
-     * @return mixed
-     */
-    protected function translateCfgKeys($mixed)
-    {
-        $objKeys = array(
-            'varDump' => array('addBR'),
-            'errorHandler' => array('lastError'),
-            'output' => array(
-                'css', 'filepathCss', 'filepathScript', 'firephpInc', 'firephpOptions',
-                'onOutput', 'outputAs', 'outputCss', 'outputScript',
-            ),
-        );
-        if (is_string($mixed)) {
-            $path = preg_split('#[\./]#', $mixed);
-            foreach ($objKeys as $objKey => $keys) {
-                if (in_array($path[0], $keys)) {
-                    array_unshift($path, $objKey);
-                    break;
-                }
-            }
-            if (count($path)==1) {
-                array_unshift($path, 'debug');
-            }
-            $mixed = implode('/', $path);
-        } elseif (is_array($mixed)) {
-            foreach ($mixed as $k => $v) {
-                if (is_array($v)) {
-                    continue;
-                }
-                $translated = false;
-                foreach ($objKeys as $objKey => $keys) {
-                    if (in_array($k, $keys)) {
-                        unset($mixed[$k]);
-                        $mixed[$objKey][$k] = $v;
-                        $translated = true;
-                        break;
-                    }
-                }
-                if (!$translated) {
-                    unset($mixed[$k]);
-                    $mixed['debug'][$k] = $v;
-                }
-            }
-        }
-        return $mixed;
     }
 }

@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.2
+ * @version v1.2.1
  */
 
 namespace bdk\Debug;
@@ -311,6 +311,58 @@ class Utilities
             }
         }
         return $str;
+    }
+
+    /**
+     * translate configuration keys
+     *
+     * @param mixed $mixed string key or config array
+     *
+     * @return mixed
+     */
+    public function translateCfgKeys($mixed)
+    {
+        $objKeys = array(
+            'varDump' => array('addBR'),
+            'errorHandler' => array('lastError'),
+            'output' => array(
+                'css', 'filepathCss', 'filepathScript', 'firephpInc', 'firephpOptions',
+                'onOutput', 'outputAs', 'outputCss', 'outputScript',
+            ),
+        );
+        if (is_string($mixed)) {
+            $path = preg_split('#[\./]#', $mixed);
+            foreach ($objKeys as $objKey => $keys) {
+                if (in_array($path[0], $keys)) {
+                    array_unshift($path, $objKey);
+                    break;
+                }
+            }
+            if (count($path)==1) {
+                array_unshift($path, 'debug');
+            }
+            $mixed = implode('/', $path);
+        } elseif (is_array($mixed)) {
+            foreach ($mixed as $k => $v) {
+                if (is_array($v)) {
+                    continue;
+                }
+                $translated = false;
+                foreach ($objKeys as $objKey => $keys) {
+                    if (in_array($k, $keys)) {
+                        unset($mixed[$k]);
+                        $mixed[$objKey][$k] = $v;
+                        $translated = true;
+                        break;
+                    }
+                }
+                if (!$translated) {
+                    unset($mixed[$k]);
+                    $mixed['debug'][$k] = $v;
+                }
+            }
+        }
+        return $mixed;
     }
 
     /**

@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.2.1
+ * @version v1.3b
  */
 
 namespace bdk\Debug;
@@ -74,6 +74,7 @@ class ErrorHandler
     public function __construct($cfg = array())
     {
         $this->cfg = array(
+            'emailFunc' => 'mail',
             'emailMin' => 15,
             'emailTo' => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
@@ -112,6 +113,20 @@ class ErrorHandler
                                 // not actually necessary as all errors get sent to custom error handler
         register_shutdown_function(array($this,'shutdownFunction'));
         return;
+    }
+
+    /**
+     * Send an email
+     *
+     * @param string $to      to
+     * @param string $subject subject
+     * @param string $body    body
+     *
+     * @return void
+     */
+    protected function email($to, $subject, $body)
+    {
+        call_user_func($this->cfg['emailFunc'], $to, $subject, $body);
     }
 
     /**
@@ -168,7 +183,7 @@ class ErrorHandler
             $str = substr($str, 0, -1);
             $emailBody .= "\n".'backtrace: '.$str;
         }
-        mail($this->cfg['emailTo'], $subject, $emailBody);
+        $this->email($this->cfg['emailTo'], $subject, $emailBody);
         return;
     }
 
@@ -487,7 +502,9 @@ class ErrorHandler
     public function setErrorCaller($caller = 'notPassed', $offset = 1)
     {
         if ($caller === 'notPassed') {
-            $backtrace = debug_backtrace();
+            $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
+                ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 1)
+                : debug_backtrace(false);   // don't provide object
             $i = isset($backtrace[$offset])
                 ? $offset
                 : $offset-1;
@@ -625,7 +642,7 @@ class ErrorHandler
                 }
             }
             if ($emailBody) {
-                mail($this->cfg['emailTo'], 'Website Errors: '.$_SERVER['SERVER_NAME'], $emailBody);
+                $this->email($this->cfg['emailTo'], 'Website Errors: '.$_SERVER['SERVER_NAME'], $emailBody);
             }
         }
         return $data;

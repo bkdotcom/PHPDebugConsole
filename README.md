@@ -23,7 +23,7 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
     }
 }
 ```
-Alternatively, [download a release](https://github.com/bkdotcom/debug/releases) or clone this repository, then require or include its `Debug.php`_ file
+Alternatively, [download a release](https://github.com/bkdotcom/debug/releases) or clone this repository, then require or include its `Debug.php` file
 
 See http://www.bradkent.com/?page=php/debug for more information
 

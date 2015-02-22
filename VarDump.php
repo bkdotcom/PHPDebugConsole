@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.2
+ * @version v1.3b
  */
 
 namespace bdk\Debug;
@@ -18,8 +18,11 @@ class VarDump
 
     protected $cfg = array();
     protected $utilities;
+    protected $varDumpArray;
+    protected $varDumpObject;
 
-    const VALUE_ABSTRACTION = "\x00debug\x00";
+    const ABSTRACTION = "\x00debug\x00";
+    const UNDEFINED = "\x00undefined\x00";
 
     /**
      * Constructor
@@ -31,6 +34,8 @@ class VarDump
     {
         $this->cfg = array(
             'addBR' => false,
+            'collectMethods' => true,
+            'outputMethods' => true,
         );
         $this->cfg = array_merge($this->cfg, $cfg);
         if (is_object($utilities)) {
@@ -39,50 +44,38 @@ class VarDump
             require_once dirname(__FILE__).'/Utilities.php';
             $this->utilities = new Utilities();
         }
+        $this->varDumpArray = new VarDumpArray();
+        $this->varDumpObject = new VarDumpObject();
     }
 
     /**
      * Returns string representation of value
      *
-     * @param mixed $val  value
-     * @param array $opts options
-     * @param array $hist {@internal - used to check for recursion}
+     * @param mixed  $val      value
+     * @param string $outputAs options
+     * @param array  $path     {@internal - used to check for recursion}
      *
      * @return string
      */
-    public function dump($val, $opts = array(), $hist = array())
+    public function dump($val, $outputAs = 'html', $path = array())
     {
         $type = null;
         $typeMore = null;
-        if (empty($hist)) {
-            $opts = array_merge(array(
-                'html' => true,     // use html markup
-                'flatten' => false, // flatten array & obj structures (only applies when !html)
-                'boolNullToString' => true,
-            ), $opts);
-            if (is_array($val) && !in_array(self::VALUE_ABSTRACTION, $val, true)) {
+        if (empty($path)) {
+            if (is_array($val) && !in_array(self::ABSTRACTION, $val, true)) {
                 // array hasn't been prepped / could contain recursion
-                $val = $this->utilities->valuePrep($val);
+                $val = $this->getAbstraction($val);
             } elseif (is_object($val) || is_resource($val)) {
-                $val = $this->utilities->valuePrep($val);
+                $val = $this->getAbstraction($val);
             }
         }
         if (is_array($val)) {
-            if (in_array(self::VALUE_ABSTRACTION, $val, true)) {
-                list($type, $val) = $this->getValueAbstraction($val, $opts);
-            }
-            if (is_array($val)) {
+            if (in_array(self::ABSTRACTION, $val, true)) {
+                $type = $val['type'];
+                $val = $this->dumpAbstraction($val, $outputAs, $path);
+            } else {
                 $type = 'array';
-                $hist[] = 'array';
-                foreach ($val as $k => $val2) {
-                    $val[$k] = $this->dump($val2, $opts, $hist);
-                }
-                if ($opts['flatten']) {
-                    $val = trim(print_r($val, true));
-                    if (count($hist) > 1) {
-                        $val = str_replace("\n", "\n    ", $val);
-                    }
-                }
+                $val = $this->varDumpArray->dump($val, $outputAs, $path);
             }
         } elseif (is_string($val)) {
             $type = 'string';
@@ -91,7 +84,10 @@ class VarDump
             } elseif ($this->utilities->isBinary($val)) {
                 // all or partially binary data
                 $typeMore = 'binary';
-                $val = $this->dumpBinary($val, $opts['html']);
+                $val = $this->dumpBinary($val, $outputAs == 'html');
+            }
+            if ($outputAs == 'text') {
+                $val = '"'.$val.'"';
             }
         } elseif (is_int($val)) {
             $type = 'int';
@@ -99,20 +95,83 @@ class VarDump
             $type = 'float';
         } elseif (is_bool($val)) {
             $type = 'bool';
-            $vStr = $val ? 'true' : 'false';
-            if ($opts['boolNullToString']) {
-                $val = $vStr;
+            if (in_array($outputAs, array('html', 'text'))) {
+                $val = $val ? 'true' : 'false';
             }
-            $typeMore = $vStr;
         } elseif (is_null($val)) {
             $type = 'null';
-            if ($opts['boolNullToString']) {
+            if (in_array($outputAs, array('html', 'text'))) {
                 $val = 'null';
             }
         }
-        if ($opts['html']) {
-            $val = $this->getValueHtml($val, $type, $typeMore);
+        if ($outputAs == 'html') {
+            if (!in_array($type, array('array','object'))) {
+                $val = $this->dumpAsHtml($val, $type, $typeMore);
+            }
+        } elseif ($outputAs == 'script' && empty($path)) {
+            $val = json_encode($val);
         }
+        return $val;
+    }
+
+    /**
+     * gets a value that has been abstracted
+     * array (recursion), object, or resource
+     *
+     * @param array  $val      abstracted value
+     * @param string $outputAs options
+     * @param array  $path     {@internal - used to check for recursion}
+     *
+     * @return array [string $type, mixed $value]
+     */
+    protected function dumpAbstraction($val, $outputAs = 'html', $path = array())
+    {
+        $type = $val['type'];
+        if ($type == 'array') {
+            $val = $this->varDumpArray->dump($val, $outputAs, $path);
+        } elseif ($type == 'object') {
+            $val = $this->varDumpObject->dump($val, $outputAs, $path);
+        } else {
+            $val = $val['value'];
+        }
+        return $val;
+    }
+
+    /**
+     * Add markup to value
+     *
+     * @param mixed  $val      value
+     * @param string $type     type
+     * @param string $typeMore numeric, binary, true, or false
+     *
+     * @return string html
+     */
+    protected function dumpAsHtml($val, $type = null, $typeMore = null)
+    {
+        $attribs = array(
+            'class' => 't_'.$type,
+            'title' => null,
+        );
+        if ($type == 'string') {
+            if ($typeMore != 'binary') {
+                $val = htmlspecialchars($this->utilities->toUtf8($val), ENT_COMPAT, 'UTF-8');
+            }
+            $val = $this->visualWhiteSpace($val);
+        } elseif ($type == 'bool') {
+            $typeMore = $val;
+        }
+        if (in_array($type, array('float','int')) || $typeMore == 'numeric') {
+            $ts_now = time();
+            $secs = 86400 * 90; // 90 days worth o seconds
+            if ($val > $ts_now  - $secs && $val < $ts_now + $secs) {
+                $attribs['class'] .= ' timestamp';
+                $attribs['title'] = date('Y-m-d H:i:s', $val);
+            }
+        }
+        if (!empty($typeMore) && $typeMore != 'binary') {
+            $attribs['class'] .= ' '.$typeMore;
+        }
+        $val = '<span '.$this->utilities->buildAttribString($attribs).'>'.$val.'</span>';
         return $val;
     }
 
@@ -263,8 +322,8 @@ EOD;
     public function dumpTable($array, $caption = null)
     {
         $str = '';
-        if (is_array($array) && in_array(self::VALUE_ABSTRACTION, $array, true)) {
-            $array = $array['value'];
+        if (is_array($array) && in_array(self::ABSTRACTION, $array, true)) {
+            $array = $array['values'];
         }
         if (!is_array($array)) {
             if (isset($caption)) {
@@ -314,43 +373,35 @@ EOD;
     {
         $str = '';
         $values = array();
-        $undefined = "\x00".'undefined'."\x00";
-        $displayValRegEx = '#^<span class="([^"]+)">(.*)</span>$#s';
         foreach ($keys as $key) {
             $value = '';
             if (is_array($row)) {
                 $value = array_key_exists($key, $row)
                     ? $row[$key]
-                    : $undefined;
+                    : self::UNDEFINED;
             } elseif ($key === '') {
                 $value = $row;
             }
             if (is_array($value)) {
-                $value = $this->dumpTable($value);
-            } elseif ($value === $undefined) {
+                $value = in_array(self::ABSTRACTION, $value, true) && $value['isRecursion']
+                    ? '<span class="t_recursion">*RECURSION*</span>'
+                    : $this->dumpTable($value);
+            } elseif ($value === self::UNDEFINED) {
                 $value = '<span class="t_undefined"></span>';
             } else {
                 $value = $this->dump($value);
             }
             $values[] = $value;
         }
-        $rowKey = $this->dump($rowKey);
-        if (preg_match($displayValRegEx, $rowKey, $matches)) {
-            $class = $matches[1];
-            $rowKey = $matches[2];
-        }
-        $str .= '<tr><td class="'.$class.'">'.$rowKey.'</td>';
+        $classAndInner = $this->utilities->parseAttribString($this->dump($rowKey));
+        $str .= '<tr><td class="'.$classAndInner['class'].'">'.$classAndInner['innerhtml'].'</td>';
         foreach ($values as $v) {
             // remove the span wrapper.. add span's class to TD
-            $class = null;
-            if (preg_match($displayValRegEx, $v, $matches)) {
-                $class = $matches[1];
-                $v = $matches[2];
-            }
-            $str .= $class
-                ? '<td class="'.$class.'">'
+            $classAndInner = $this->utilities->parseAttribString($v);
+            $str .= $classAndInner['class']
+                ? '<td class="'.$classAndInner['class'].'">'
                 : '<td>';
-            $str .= $v;
+            $str .= $classAndInner['innerhtml'];
             $str .= '</td>';
         }
         $str .= '</tr>'."\n";
@@ -374,118 +425,33 @@ EOD;
     }
 
     /**
-     * gets a value that has been abstracted
-     * array (recursion), object, or resource
+     * Want to store a "snapshot" of arrays, objects, & resources
+     * Remove any reference to an "external" variable
      *
-     * @param array $val  abstracted value
-     * @param array $opts options
-     * @param array $hist {@internal - used to check for recursion}
+     * Deep cloning objects = problematic
+     *   + some objects are uncloneable & throw fatal error
+     *   + difficult to maintain circular references
+     * Instead of storing objects in log, store "abstraction" array containing
+     *     type, methods, & properties
      *
-     * @return array [string $type, mixed $value]
+     * @param mixed $mixed array, object, or resource to prep
+     * @param array $hist  (@internal) array/object history (used to test for recursion)
+     *
+     * @return array
      */
-    protected function getValueAbstraction($val, $opts = array(), $hist = array())
+    public function getAbstraction(&$mixed, $hist = array())
     {
-        $type = $val['type'];
-        if ($type == 'object') {
-            $type = 'object';
-            if ($val['isRecursion']) {
-                $val = '<span class="t_object">'
-                        .'<span class="t_object-class">'.$val['class'].' object</span>'
-                        .' <span class="t_recursion">*RECURSION*</span>'
-                    .'</span>';
-                if (!$opts['html']) {
-                    $val = strip_tags($val);
-                }
-                $type = null;
-            } else {
-                $hist[] = &$val;
-                $val = array(
-                    'class'      => $val['class'].' object',
-                    'properties' => $this->dump($val['properties'], $opts, $hist),
-                    'methods'    => $this->dump($val['methods'], $opts, $hist),
-                );
-                if ($opts['html'] || $opts['flatten']) {
-                    $val = $val['class']."\n"
-                        .'    properties: '.$val['properties']."\n"
-                        .'    methods: '.$val['methods'];
-                    if ($opts['flatten'] && count($hist) > 1) {
-                        $val = str_replace("\n", "\n    ", $val);
-                    }
-                }
-            }
-        } elseif ($type == 'array' && $val['isRecursion']) {
-            $val = '<span class="t_array">'
-                    .'<span class="t_keyword">Array</span>'
-                    .' <span class="t_recursion">*RECURSION*</span>'
-                .'</span>';
-            if (!$opts['html']) {
-                $val = strip_tags($val);
-            }
-            $type = null;
-        } else {
-            $val = $val['value'];
-        }
-        return array($type, $val);
-    }
-
-    /**
-     * add markup to value
-     *
-     * @param mixed  $val      value
-     * @param string $type     type
-     * @param string $typeMore numeric, binary, true, or false
-     *
-     * @return string html
-     */
-    protected function getValueHtml($val, $type = null, $typeMore = null)
-    {
-        if ($type == 'array') {
-            $html = '<span class="t_keyword">Array</span><br />'."\n"
-                .'<span class="t_punct">(</span>'."\n"
-                .'<span class="t_array-inner">'."\n";
-            foreach ($val as $k => $val2) {
-                $html .= "\t".'<span class="t_key_value">'
-                        .'<span class="t_key">['.$k.']</span> '
-                        .'<span class="t_operator">=&gt;</span> '
-                        .$val2
-                    .'</span>'."\n";
-            }
-            $html .= '</span>'
-                .'<span class="t_punct">)</span>';
-            $val = '<span class="t_'.$type.'">'.$html.'</span>';
-        } elseif ($type == 'object') {
-            $html = preg_replace(
-                '#^([^\n]+)\n(.+)$#s',
-                '<span class="t_object-class">\1</span>'."\n".'<span class="t_object-inner">\2</span>',
-                $val
+        if (is_array($mixed)) {
+            return $this->varDumpArray->getAbstraction($mixed, $hist);
+        } elseif (is_object($mixed)) {
+            return $this->varDumpObject->getAbstraction($mixed, $hist);
+        } elseif (is_resource($mixed)) {
+            return array(
+                'debug' => self::ABSTRACTION,
+                'type' => 'resource',
+                'value' => print_r($mixed, true).': '.get_resource_type($mixed),
             );
-            $html = preg_replace('#\smethods: #', '<br />methods: ', $html);
-            $val = '<span class="t_'.$type.'">'.$html.'</span>';
-        } elseif ($type) {
-            $attribs = array(
-                'class' => 't_'.$type,
-                'title' => null,
-            );
-            if (!empty($typeMore) && $typeMore != 'binary') {
-                $attribs['class'] .= ' '.$typeMore;
-            }
-            if ($type == 'string') {
-                if ($typeMore != 'binary') {
-                    $val = htmlspecialchars($this->utilities->toUtf8($val), ENT_COMPAT, 'UTF-8');
-                }
-                $val = $this->visualWhiteSpace($val);
-            }
-            if (in_array($type, array('float','int')) || $typeMore == 'numeric') {
-                $ts_now = time();
-                $secs = 86400 * 90; // 90 days worth o seconds
-                if ($val > $ts_now  - $secs && $val < $ts_now + $secs) {
-                    $attribs['class'] .= ' timestamp';
-                    $attribs['title'] = date('Y-m-d H:i:s', $val);
-                }
-            }
-            $val = '<span '.$this->utilities->buildAttribString($attribs).'>'.$val.'</span>';
         }
-        return $val;
     }
 
     /**

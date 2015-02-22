@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.2.1
+ * @version v1.3b
  *
  * @link    http://www.github.com/bkdotcom/PHPDebugConsole
  * @link    https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -30,6 +30,8 @@ class Debug
     public $utilities;
     public $varDump;
 
+    const META = "\x00meta\x00";
+
     /**
      * Constructor
      *
@@ -51,6 +53,7 @@ class Debug
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
+            'emailFunc' => 'mail',          // callable
         );
         $this->data = array(
             'alert'         => '',
@@ -80,9 +83,16 @@ class Debug
         if (!isset(self::$instance)) {
             self::$instance = $this;
         }
-        require_once dirname(__FILE__).'/Output.php';
-        require_once dirname(__FILE__).'/Utilities.php';
-        require_once dirname(__FILE__).'/VarDump.php';
+        $files = array(
+            'Output.php',
+            'Utilities.php',
+            'VarDump.php',
+            'VarDumpArray.php',
+            'VarDumpObject.php',
+        );
+        foreach ($files as $file) {
+            require_once dirname(__FILE__).'/'.$file;
+        }
         $this->utilities = new Utilities();
         $this->output = new Output(array(), $this->data);
         $this->varDump = new VarDump(array(), $this->utilities);
@@ -131,7 +141,9 @@ class Debug
                 $args[] = $label;
             } else {
                 $args[] = 'count';
-                $backtrace = debug_backtrace();
+                $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
+                    ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)
+                    : debug_backtrace(false);   // don't provide object
                 $label = $backtrace[0]['file'].': '.$backtrace[0]['line'];
             }
             if (!isset($this->data['counts'][$label])) {
@@ -144,6 +156,20 @@ class Debug
             $return = $this->data['counts'][$label];
         }
         return $return;
+    }
+
+    /**
+     * Send an email
+     *
+     * @param string $emailAddr to
+     * @param string $subject   subject
+     * @param string $body      body
+     *
+     * @return void
+     */
+    public function email($emailAddr, $subject, $body)
+    {
+        call_user_func($this->cfg['emailFunc'], $emailAddr, $subject, $body);
     }
 
     /**
@@ -252,20 +278,27 @@ class Debug
     }
 
     /**
-     * Sets current group or groupCollapsed to 'group' (ie, make sure it's uncollapsed)
+     * Sets ancestor groups to uncollapsed
      *
      * @return void
      */
     public function groupUncollapse()
     {
+        $curDepth = $this->data['groupDepth'];   // will fluctuate as go through log
+        $minDepth = $this->data['groupDepth'];   // decrease as we work our way down
         for ($i = count($this->data['log']) - 1; $i >=0; $i--) {
+            if ($curDepth < 1) {
+                break;
+            }
             $method = $this->data['log'][$i][0];
-            if ($method == 'group') {
-                break;
-            } elseif ($method == 'groupCollapsed') {
-                // change to group
-                $this->data['log'][$i][0] = 'group';
-                break;
+            if (in_array($method, array('group', 'groupCollapsed'))) {
+                $curDepth--;
+                if ($curDepth < $minDepth) {
+                    $minDepth--;
+                    $this->data['log'][$i][0] = 'group';
+                }
+            } elseif ($method == 'groupEnd') {
+                $curDepth++;
             }
         }
     }
@@ -391,9 +424,11 @@ class Debug
         if (isset($new['debug']['emailLog']) && $new['debug']['emailLog'] === true) {
             $new['debug']['emailLog'] = 'onError';
         }
-        if (isset($new['debug']['emailTo']) && !isset($new['errorHandler']['emailTo'])) {
-            // also set errorHandler's emailTo
-            $new['errorHandler']['emailTo'] = $new['debug']['emailTo'];
+        foreach (array('emailFunc','emailTo') as $key) {
+            if (isset($new['debug'][$key]) && !isset($new['errorHandler'][$key])) {
+                // also set for errorHandler
+                $new['errorHandler'][$key] = $new['debug'][$key];
+            }
         }
         if (isset($new['data'])) {
             $this->data = array_merge($this->data, $new['data']);
@@ -408,22 +443,6 @@ class Debug
             }
         }
         return $ret;
-    }
-
-    /**
-     * Set one or more config values
-     *
-     * @param string $k,... key
-     * @param mixed  $v,... value
-     *
-     * @return mixed
-     * @deprecated use set() instead
-     */
-    public function setCfg()
-    {
-        $this->errorHandler->setErrorCaller();
-        trigger_error('setCfg() is deprecated -> use set() instead', E_USER_DEPRECATED);
-        return call_user_func_array(array($this,'set'), func_get_args());
     }
 
     /**
@@ -512,7 +531,7 @@ class Debug
     /**
      * Behaves like a stopwatch.. returns running time
      *    If label is passed, timer is "paused"
-     *    If label is not passed, timer is removed from no-label tack
+     *    If label is not passed, timer is removed from no-label stack
      *
      * @param string  $label  unique label
      * @param boolean $return = false. If true, only return time, rather than log it
@@ -604,6 +623,145 @@ class Debug
      */
 
     /**
+     * Store the arguments
+     * will be output when output method is called
+     *
+     * @param string $method error, info, log, warn
+     * @param array  $args   arguments passed to method
+     *
+     * @return void
+     */
+    protected function appendLog($method, $args)
+    {
+        foreach ($args as $i => $v) {
+            if (is_array($v) || is_object($v) || is_resource($v)) {
+                $args[$i] = $this->varDump->getAbstraction($v);
+            }
+        }
+        array_unshift($args, $method);
+        if (!empty($this->cfg['file'])) {
+            $this->appendLogFile($args);
+        }
+        /*
+            if logging an error or warn, also log originating file/line
+        */
+        if (in_array($method, array('error','warn'))) {
+            $args[] = $this->getErrorCaller();
+        }
+        $this->data['log'][] = $args;
+        return;
+    }
+
+    /**
+     * Appends log entry to $this->cfg['file']
+     *
+     * @param array $args args
+     *
+     * @return void
+     */
+    protected function appendLogFile($args)
+    {
+        if (!isset($this->data['fileHandle'])) {
+            $this->data['fileHandle'] = fopen($this->cfg['file'], 'a');
+            if ($this->data['fileHandle']) {
+                fwrite($this->data['fileHandle'], '***** '.date('Y-m-d H:i:s').' *****'."\n");
+            } else {
+                // failed to open file
+                $this->cfg['file'] = null;
+            }
+        }
+        if ($this->data['fileHandle']) {
+            $method = array_shift($args);
+            if ($method == 'table' && count($args) == 2) {
+                $caption = array_pop($args);
+                array_unshift($args, $caption);
+            }
+            if ($args) {
+                if (count($args) == 1 && is_string($args[0])) {
+                    $args[0] = strip_tags($args[0]);
+                }
+                foreach ($args as $k => $v) {
+                    if ($k > 0 || !is_string($v)) {
+                        $args[$k] = $this->varDump->dump($v, 'text');
+                    }
+                }
+                $num_args = count($args);
+                if ($method == 'time') {
+                    $glue = ': ';
+                } else {
+                    $glue = ', ';
+                    if ($num_args == 2) {
+                        $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                            ? ''
+                            : ' = ';
+                    }
+                }
+                $strIndent = str_repeat('    ', $this->data['groupDepthFile']);
+                $str = implode($glue, $args);
+                $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
+                fwrite($this->data['fileHandle'], $str."\n");
+            }
+            if (in_array($method, array('group','groupCollapsed'))) {
+                $this->data['groupDepthFile']++;
+            } elseif ($method == 'groupEnd' && $this->data['groupDepthFile'] > 0) {
+                $this->data['groupDepthFile']--;
+            }
+        }
+        return;
+    }
+
+    /**
+     * get calling line/file for error and warn
+     *
+     * @return array
+     */
+    protected function getErrorCaller()
+    {
+        $meta = array();
+        $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
+            ? debug_backtrace(0, 6)
+            : debug_backtrace(false);   // don't provide object
+        // path if via ErrorHandler :
+        //    0: here we are
+        //    1: self::appendLog
+        //    2: self::warn
+        //    3: self::onError
+        //    4: call_user_function
+        //    5: ErrorHandler::handleUnsuppressed
+        $viaErrorHandler = isset($backtrace[5]['class'])
+            && $backtrace[5]['class'] == get_class($this->errorHandler)
+            && $backtrace[5]['function'] == 'handleUnsuppressed'
+            && $backtrace[4]['function'] == 'call_user_func'
+            && isset($backtrace[4]['args'][0][1])
+            && $backtrace[4]['args'][0][1] === 'onError';
+        if ($viaErrorHandler) {
+            // no need to store originating file/line... it's part of error message
+            // store errorCat -> can output as a css class
+            $lastError = $this->errorHandler->get('lastError');
+            $meta = array(
+                'debug' => self::META,
+                'errorType' => $lastError['type'],
+                'errorCat' => $lastError['category'],
+            );
+        } else {
+            foreach ($backtrace as $frame) {
+                if (isset($frame['file']) && $frame['file'] !== __FILE__) {
+                    if (in_array($frame['function'], array('call_user_func','call_user_func_array'))) {
+                        continue;
+                    }
+                    $meta = array(
+                        'debug' => self::META,
+                        'file' => $frame['file'],
+                        'line' => $frame['line'],
+                    );
+                    break;
+                }
+            }
+        }
+        return $meta;
+    }
+
+    /**
      * onError callback
      * called by $this->errorHandler
      * adds error to console as error or warn
@@ -670,124 +828,6 @@ class Debug
         }
         if (!$this->outputSent) {
             echo $this->output();
-        }
-        return;
-    }
-
-    /**
-     * Store the arguments
-     * will be output when output method is called
-     *
-     * @param string $method error, info, log, warn
-     * @param array  $args   arguments passed to method
-     *
-     * @return void
-     */
-    protected function appendLog($method, $args)
-    {
-        foreach ($args as $i => $v) {
-            if (is_array($v) || is_object($v) || is_resource($v)) {
-                $args[$i] = $this->utilities->valuePrep($v);
-            }
-        }
-        array_unshift($args, $method);
-        if (!empty($this->cfg['file'])) {
-            $this->appendLogFile($args);
-        }
-        /*
-            if logging an error or notice, also log originating file/line
-        */
-        if (in_array($method, array('error','warn'))) {
-            $backtrace = debug_backtrace();
-            // path if via ErrorHandler :
-            //    ErrorHandler::handleUnsuppressed -> call_user_function -> self::onError -> self::warn -> here we are
-            $viaErrorHandler = isset($backtrace[4])
-                && isset($backtrace[4]['class'])
-                && $backtrace[4]['class'] == 'bdk\Debug\ErrorHandler'
-                && $backtrace[4]['function'] == 'handleUnsuppressed'
-                && $backtrace[3]['function'] == 'call_user_func'
-                && isset($backtrace[3]['args'][0][1])
-                && $backtrace[3]['args'][0][1] === 'onError';
-            if ($viaErrorHandler) {
-                // no need to store originating file/line... it's part of error message
-                // store errorCat -> can output as a className
-                $lastError = $this->errorHandler->get('lastError');
-                $args[] = array(
-                    '__debugMeta__' => true,
-                    'errorType' => $lastError['type'],
-                    'errorCat' => $lastError['category'],
-                );
-            } else {
-                foreach ($backtrace as $a) {
-                    if (isset($a['file']) && $a['file'] !== __FILE__) {
-                        if (in_array($a['function'], array('call_user_func','call_user_func_array'))) {
-                            continue;
-                        }
-                        $args[] = array(
-                            '__debugMeta__' => true,
-                            'file' => $a['file'],
-                            'line' => $a['line'],
-                        );
-                        break;
-                    }
-                }
-            }
-        }
-        $this->data['log'][] = $args;
-        return;
-    }
-
-    /**
-     * Appends log entry to $this->cfg['file']
-     *
-     * @param array $args args
-     *
-     * @return void
-     */
-    protected function appendLogFile($args)
-    {
-        if (!isset($this->data['fileHandle'])) {
-            $this->data['fileHandle'] = fopen($this->cfg['file'], 'a');
-            if ($this->data['fileHandle']) {
-                fwrite($this->data['fileHandle'], '***** '.date('Y-m-d H:i:s').' *****'."\n");
-            } else {
-                // failed to open file
-                $this->cfg['file'] = null;
-            }
-        }
-        if ($this->data['fileHandle']) {
-            $method = array_shift($args);
-            if ($method == 'table' && count($args) == 2) {
-                $caption = array_pop($args);
-                array_unshift($args, $caption);
-            }
-            if ($args) {
-                if (count($args) == 1 && is_string($args[0])) {
-                    $args[0] = strip_tags($args[0]);
-                }
-                foreach ($args as $k => $v) {
-                    if ($k > 0 || !is_string($v)) {
-                        $v = $this->varDump->dump($v, array('html'=>false, 'flatten'=>true));
-                        $v = preg_replace('#<span class="t_\w+">(.*?)</span>#', '\\1', $v);
-                        $args[$k] = $v;
-                    }
-                }
-                $glue = ', ';
-                if (count($args) == 2) {
-                    $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                        ? ''
-                        : ' = ';
-                }
-                $strIndent = str_repeat('    ', $this->data['groupDepthFile']);
-                $str = implode($glue, $args);
-                $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
-                fwrite($this->data['fileHandle'], $str."\n");
-            }
-            if (in_array($method, array('group','groupCollapsed'))) {
-                $this->data['groupDepthFile']++;
-            } elseif ($method == 'groupEnd' && $this->data['groupDepthFile'] > 0) {
-                $this->data['groupDepthFile']--;
-            }
         }
         return;
     }

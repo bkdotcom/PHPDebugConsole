@@ -70,6 +70,17 @@ class DebugTests extends PHPUnit_Framework_TestCase
      */
     public function testRecursiveArray()
     {
+        $array = array();
+        $array[] = &$array;
+        $this->debug->log('array', $array);
+        $abstraction = $this->debug->get('data/log/0/2');
+        $this->assertEquals(
+            true,
+            $abstraction['values'][0]['isRecursion'],
+            'Did not find expected recursion'
+        );
+        $output = $this->debug->output();
+
         $test_a = array( 'foo' => 'bar' );
         $test_a['val'] = &$test_a;
         $this->debug->log('test_a', $test_a);
@@ -115,7 +126,7 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $this->assertContains('success A', $output);
         $this->assertContains('success B', $output);
         $this->assertNotContains('fail', $output);
-        $this->assertSame('fail', $test_o->prop);   // prop should be 'fail' at this poing
+        $this->assertSame('fail', $test_o->prop);   // prop should be 'fail' at this point
     }
 
     /**
@@ -129,11 +140,17 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test->prop = array();
         $test->prop[] = &$test->prop;
         $this->debug->log('test', $test);
+        $abstraction = $this->debug->get('data/log/0/2');
+        $this->assertEquals(
+            true,
+            $abstraction['properties']['prop']['value']['values'][0]['isRecursion'],
+            'Did not find expected recursion'
+        );
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
         $select = '.log
-            > .t_object > .t_object-inner
+            > .t_object > .object-inner
             > .t_array > .t_array-inner > .t_key_value
             > .t_array > .t_array-inner > .t_key_value
             > .t_array > .t_recursion';
@@ -148,14 +165,23 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test = new \bdk\Debug\Test();
         $test->prop = &$test;
         $this->debug->log('test', $test);
+        /*
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
         $select = '.log
-            > .t_object > .t_object-inner
-            > .t_array > .t_array-inner > .t_key_value
+            > .t_object > .object-inner
+            > .t_array > .array-inner > .key-value
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
+        */
+        $abstraction = $this->debug->get('data/log/0/2');
+        $this->assertEquals(
+            true,
+            $abstraction['properties']['prop']['value']['isRecursion'],
+            'Did not find expected recursion'
+        );
+        $this->debug->output();
     }
 
     /**
@@ -166,15 +192,24 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test = new \bdk\Debug\Test();
         $test->prop = array( &$test );
         $this->debug->log('test', $test);
+        /*
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
         $select = '.log
-            > .t_object > .t_object-inner
-            > .t_array > .t_array-inner > .t_key_value
-            > .t_array > .t_array-inner > .t_key_value
+            > .t_object > .object-inner
+            > .t_array > .array-inner > .key-value
+            > .t_array > .array-inner > .key-value
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
+        */
+        $abstraction = $this->debug->get('data/log/0/2');
+        $this->assertEquals(
+            true,
+            $abstraction['properties']['prop']['value']['values'][0]['isRecursion'],
+            'Did not find expected recursion'
+        );
+        $this->debug->output();
     }
 
     /**
@@ -207,15 +242,24 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test_oa->ob = $test_ob;
         $test_ob->oa = $test_oa;
         $this->debug->log('test_oa', $test_oa);
+        /*
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
         $select = '.log
-            > .t_object > .t_object-inner
-            > .t_array > .t_array-inner > .t_key_value
-            > .t_object > .t_object-inner
-            > .t_array > .t_array-inner > .t_key_value
+            > .t_object > .object-inner
+            > .t_array > .array-inner > .t_key_value
+            > .t_object > .object-inner
+            > .t_array > .array-inner > .t_key_value
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
+        */
+        $abstraction = $this->debug->get('data/log/0/2');
+        $this->assertEquals(
+            true,
+            $abstraction['properties']['ob']['value']['properties']['oa']['value']['isRecursion'],
+            'Did not find expected recursion'
+        );
+        $this->debug->output();
     }
 }

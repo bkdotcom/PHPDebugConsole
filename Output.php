@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.2.1
+ * @version v1.3b
  */
 
 namespace bdk\Debug;
@@ -39,7 +39,7 @@ class Output
                 'includeLineNumbers'    => false,
             ),
             'onOutput'  => null,            // set to something callable
-            'outputAs'  => null,            // 'html' or 'firephp', if null, will be determined automatically
+            'outputAs'  => null,            // 'html', 'script', 'text', or 'firephp', if null, will be determined automatically
             'outputCss' => true,
             'outputScript' => true,
         );
@@ -80,7 +80,7 @@ class Output
         */
         $outputCssWas = $this->debug->set('outputCss', false);
         $outputScriptWas = $this->debug->set('outputScript', false);
-        $serialized = $this->outputHtml();
+        $serialized = $this->outputAsHtml();
         $this->debug->set('outputCss', $outputCssWas);
         $this->debug->set('outputScript', $outputScriptWas);
         if (function_exists('gzdeflate')) {
@@ -89,7 +89,7 @@ class Output
         $serialized = chunk_split(base64_encode($serialized), 1024);
         $body .= "\nSTART DEBUG:\n";
         $body .= $serialized;
-        mail($this->debug->get('emailTo'), $subject, $body);
+        $this->debug->email($this->debug->get('emailTo'), $subject, $body);
         return;
     }
 
@@ -279,10 +279,12 @@ class Output
         $this->data['alert'] = $this->errorSummary();
         $this->data['groupDepth'] = 0;
         if ($outputAs == 'html') {
-            $return = $this->outputHtml();
+            $return = $this->outputAsHtml();
         } elseif ($outputAs == 'firephp') {
-            $this->outputFirephp();
+            $this->outputAsFirephp();
             $return = null;
+        } elseif ($outputAs == 'script') {
+            $return = $this->outputAsScript();
         }
         return $return;
     }
@@ -292,7 +294,7 @@ class Output
      *
      * @return void
      */
-    protected function outputFirephp()
+    protected function outputAsFirephp()
     {
         if (!file_exists($this->cfg['firephpInc'])) {
             return;
@@ -305,6 +307,7 @@ class Output
             $alert = str_replace('<br />', ", \n", $this->data['alert']);
             array_unshift($this->data['log'], array('error', $alert));
         }
+        $this->uncollapseErrors();
         foreach ($this->data['log'] as $args) {
             $method = array_shift($args);
             $this->outputFirephpLogEntry($method, $args);
@@ -327,8 +330,20 @@ class Output
     protected function outputFirephpLogEntry($method, $args)
     {
         $opts = array();
+        if (in_array($method, array('error','warn'))) {
+            $end = end($args);
+            if (is_array($end) && in_array(Debug::META, $end)) {
+                array_pop($args);
+                if (isset($end['file'])) {
+                    $opts = array(
+                        'File' => $end['file'],
+                        'Line' => $end['line'],
+                    );
+                }
+            }
+        }
         foreach ($args as $k => $arg) {
-            $args[$k] = $this->debug->varDump->dump($arg, array('html'=>false,'boolNullToString'=>false));
+            $args[$k] = $this->debug->varDump->dump($arg, 'firephp');
         }
         if (in_array($method, array('group','groupCollapsed','groupEnd'))) {
             list($method, $args, $opts) = $this->outputFirephpGroupMethod($method, $args);
@@ -353,18 +368,6 @@ class Output
         } elseif ($method == 'table') {
             $method = 'log';
         } else {
-            if (in_array($method, array('error','warn'))) {
-                $end = end($args);
-                if (is_array($end) && isset($end['__debugMeta__'])) {
-                    array_pop($args);
-                    if (isset($end['file'])) {
-                        $opts = array(
-                            'File' => $end['file'],
-                            'Line' => $end['line'],
-                        );
-                    }
-                }
-            }
             if (count($args) > 1) {
                 $label = array_shift($args);
                 if (count($args) > 1) {
@@ -400,45 +403,23 @@ class Output
     protected function outputFirephpGroupMethod($method, $args = array())
     {
         $opts = array();
+        $firephpMethod = 'group';
         if (in_array($method, array('group','groupCollapsed'))) {
             $this->data['groupDepth']++;
-            $method = 'group';
             $opts = array(
-                'Collapsed' => true,    // collapse both group and groupCollapsed
+                'Collapsed' => $method == 'groupCollapsed',    // collapse both group and groupCollapsed
             );
             if (empty($args)) {
                 $args[] = 'group';
             } elseif (count($args) > 1) {
-                $more = array();
-                while (count($args) > 1) {
-                    $v = array_splice($args, 1, 1);
-                    $more[] = reset($v);
-                }
+                $more = array_splice($args, 1);
                 $args[0] .= ' - '.implode(', ', $more);
             }
-            if ($opts['Collapsed']) {
-                $i++;
-                $d = 0;
-                while ($i < count($this->data['log'])) {
-                    $args2 = $this->data['log'][$i];
-                    $methodCur = array_shift($args2);
-                    if (in_array($methodCur, array('error','warn'))) {
-                        $opts['Collapsed'] = false;
-                    } elseif (in_array($methodCur, array('group','groupCollapsed'))) {
-                        $d++;
-                    } elseif ($methodCur == 'groupEnd') {
-                        $d--;
-                    }
-                    if ($d < 0 || !$opts['Collapsed']) {
-                        break;
-                    }
-                    $i++;
-                }
-            }
         } elseif ($method == 'groupEnd') {
+            $firephpMethod = 'groupEnd';
             $this->data['groupDepth']--;
         }
-        return array($method, $args, $opts);
+        return array($firephpMethod, $args, $opts);
     }
 
     /**
@@ -446,7 +427,7 @@ class Output
      *
      * @return string
      */
-    protected function outputHtml()
+    protected function outputAsHtml()
     {
         $str = '<div class="debug">'."\n";
         if ($this->cfg['outputCss']) {
@@ -501,16 +482,14 @@ class Output
             $str = $this->outputHtmlGroupMethod($method, $args);
         } elseif ($method == 'table') {
             $str = call_user_func_array(array($this->debug->varDump,'dumpTable'), $args);
-        } elseif ($method == 'time') {
-            $str = '<div class="time">'.$args[0].': '.$args[1].'</div>';
         } else {
             $attribs = array(
-                'class' => $method,
+                'class' => 'm_'.$method,
                 'title' => null,
             );
             if (in_array($method, array('error','warn'))) {
                 $end = end($args);
-                if (is_array($end) && isset($end['__debugMeta__'])) {
+                if (is_array($end) && in_array(Debug::META, $end)) {
                     $meta = array_pop($args);
                     if (isset($meta['file'])) {
                         $attribs['title'] = $meta['file'].': line '.$meta['line'];
@@ -521,11 +500,15 @@ class Output
                 }
             }
             $num_args = count($args);
-            $glue = ', ';
-            if ($num_args == 2) {
-                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                    ? ''
-                    : ' = ';
+            if ($method == 'time') {
+                $glue = ': ';
+            } else {
+                $glue = ', ';
+                if ($num_args == 2) {
+                    $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                        ? ''
+                        : ' = ';
+                }
             }
             foreach ($args as $k => $v) {
                 /*
@@ -533,7 +516,7 @@ class Output
                     unless it is only arg, which will be visualWhiteSpaced'd
                 */
                 if ($k > 0 || !is_string($v)) {
-                    $args[$k] = $this->debug->varDump->dump($v);
+                    $args[$k] = $this->debug->varDump->dump($v, 'html');
                 } elseif ($num_args == 1) {
                     $args[$k] = $this->debug->varDump->visualWhiteSpace($v);
                 }
@@ -580,7 +563,7 @@ class Output
                         .'</span>'
                     .'</div>'."\n";
             }
-            $str .= '<div class="group '.$collapsed_class.'">';
+            $str .= '<div class="m_group '.$collapsed_class.'">';
         } elseif ($method == 'groupEnd') {
             if ($this->data['groupDepth'] > 0) {
                 $this->data['groupDepth']--;
@@ -588,6 +571,76 @@ class Output
             }
         }
         return $str;
+    }
+
+    /**
+     * output the log as javascript
+     *    which outputs the log to the console
+     *
+     * @return string
+     */
+    protected function outputAsScript()
+    {
+        $this->uncollapseErrors();
+        $str = '<script type="text/javascript">'."\n";
+        $str .= 'console.groupCollapsed("PHP");'."\n";
+        foreach ($this->data['log'] as $args) {
+            $method = array_shift($args);
+            if ($method == 'assert') {
+                array_unshift($args, false);
+            } elseif ($method == 'count') {
+                $method = 'log';
+            } elseif ($method == 'time') {
+                $method = 'log';
+            } elseif ($method == 'table') {
+                foreach ($args as $i => $v) {
+                    if (!is_array($v)) {
+                        unset($args[$i]);
+                    }
+                }
+            } elseif (in_array($method, array('error','warn'))) {
+                $end = end($args);
+                if (is_array($end) && in_array(Debug::META, $end)) {
+                    $meta = array_pop($args);
+                    if (isset($meta['file'])) {
+                        $args[] = $meta['file'].': line '.$meta['line'];
+                    }
+                }
+            }
+            foreach ($args as $k => $arg) {
+                $args[$k] = $this->debug->varDump->dump($arg, 'script');
+            }
+            $str .= 'console.'.$method.'('.implode(',', $args).");\n";
+        }
+        while ($this->data['groupDepth'] > 0) {
+            $this->data['groupDepth']--;
+            $str .='groupEnd();';
+        }
+        $str .= 'console.groupEnd();';
+        $str .= '</script>';
+        return $str;
+    }
+
+    /**
+     * when outputting to script and firephp make sure all nested errors are in uncollapsed groups
+     *
+     * @return void
+     */
+    protected function uncollapseErrors()
+    {
+        $groupStack = array();
+        for ($i = 0, $count = count($this->data['log']); $i < $count; $i++) {
+            $method = $this->data['log'][$i][0];
+            if (in_array($method, array('group', 'groupCollapsed'))) {
+                $groupStack[] = $i;
+            } elseif ($method == 'groupEnd') {
+                array_pop($groupStack);
+            } elseif (in_array($method, array('error', 'warn'))) {
+                foreach ($groupStack as $groupI) {
+                    $this->data['log'][$groupI][0] = 'group';
+                }
+            }
+        }
     }
 
     /**

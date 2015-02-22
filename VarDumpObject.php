@@ -282,14 +282,12 @@ class VarDumpObject
                 ).'>'.htmlspecialchars($info['name']).'</span>';
             if ($info['defaultValue'] != VarDump::UNDEFINED) {
                 $defaultValue = $info['defaultValue'];
-                // $defaultValue = $this->debug->varDump->dump($defaultValue);
                 $defaultValue = str_replace("\n", ' ', $defaultValue);
                 $paramStr .= ' <span class="t_operator">=</span> ';
                 $paramStr .= '<span class="t_parameter-default">'.$this->debug->varDump->dump($defaultValue).'</span>';
             }
             $paramStr .= '</span>, '; // end .parameter
         }
-        // $paramStr = str_replace('...', '&hellip;', $paramStr);
         $paramStr = trim($paramStr, ', ');
         return $paramStr;
     }
@@ -428,12 +426,12 @@ class VarDumpObject
     /**
      * get parameter details
      *
-     * @param ReflectionMethod $reflectionMethod method object
-     * @param array            $commentParts     parsedDocComment
+     * @param \ReflectionMethod $reflectionMethod method object
+     * @param array             $commentParts     parsedDocComment
      *
      * @return array
      */
-    public function getParams($reflectionMethod, $commentParts = array())
+    public function getParams(\ReflectionMethod $reflectionMethod, $commentParts = array())
     {
         $paramArray = array();
         $params = $reflectionMethod->getParameters();

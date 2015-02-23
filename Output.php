@@ -423,6 +423,46 @@ class Output
     }
 
     /**
+     * return log entry for writing to file
+     *
+     * @param string  $method method
+     * @param array   $args   arguments
+     * @param integer $depth  group depth (for indentation)
+     *
+     * @return string
+     */
+    public function outputFileLogEntry($method, $args, $depth)
+    {
+        if ($method == 'table' && count($args) == 2) {
+            $caption = array_pop($args);
+            array_unshift($args, $caption);
+        }
+        if (count($args) == 1 && is_string($args[0])) {
+            $args[0] = strip_tags($args[0]);
+        }
+        foreach ($args as $k => $v) {
+            if ($k > 0 || !is_string($v)) {
+                $args[$k] = $this->debug->varDump->dump($v, 'text');
+            }
+        }
+        $num_args = count($args);
+        if ($method == 'time') {
+            $glue = ': ';
+        } else {
+            $glue = ', ';
+            if ($num_args == 2) {
+                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                    ? ''
+                    : ' = ';
+            }
+        }
+        $strIndent = str_repeat('    ', $depth);
+        $str = implode($glue, $args);
+        $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
+        return $str;
+    }
+
+    /**
      * Return the log as HTML
      *
      * @return string

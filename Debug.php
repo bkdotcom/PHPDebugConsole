@@ -84,6 +84,7 @@ class Debug
             self::$instance = $this;
         }
         $files = array(
+            'ErrorHandler.php',
             'Output.php',
             'Utilities.php',
             'VarDump.php',
@@ -99,7 +100,6 @@ class Debug
         if ($errorHandler) {
             $this->errorHandler = $errorHandler;
         } else {
-            require_once dirname(__FILE__).'/ErrorHandler.php';
             $this->errorHandler = ErrorHandler::getInstance();
         }
         $this->errorHandler->registerOnErrorFunction(array($this,'onError'));
@@ -161,15 +161,15 @@ class Debug
     /**
      * Send an email
      *
-     * @param string $emailAddr to
-     * @param string $subject   subject
-     * @param string $body      body
+     * @param string $emailTo to
+     * @param string $subject subject
+     * @param string $body    body
      *
      * @return void
      */
-    public function email($emailAddr, $subject, $body)
+    public function email($emailTo, $subject, $body)
     {
-        call_user_func($this->cfg['emailFunc'], $emailAddr, $subject, $body);
+        call_user_func($this->cfg['emailFunc'], $emailTo, $subject, $body);
     }
 
     /**
@@ -672,33 +672,8 @@ class Debug
         }
         if ($this->data['fileHandle']) {
             $method = array_shift($args);
-            if ($method == 'table' && count($args) == 2) {
-                $caption = array_pop($args);
-                array_unshift($args, $caption);
-            }
             if ($args) {
-                if (count($args) == 1 && is_string($args[0])) {
-                    $args[0] = strip_tags($args[0]);
-                }
-                foreach ($args as $k => $v) {
-                    if ($k > 0 || !is_string($v)) {
-                        $args[$k] = $this->varDump->dump($v, 'text');
-                    }
-                }
-                $num_args = count($args);
-                if ($method == 'time') {
-                    $glue = ': ';
-                } else {
-                    $glue = ', ';
-                    if ($num_args == 2) {
-                        $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                            ? ''
-                            : ' = ';
-                    }
-                }
-                $strIndent = str_repeat('    ', $this->data['groupDepthFile']);
-                $str = implode($glue, $args);
-                $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
+                $str = $this->output->outputFileLogEntry($method, $args, $this->data['groupDepthFile']);
                 fwrite($this->data['fileHandle'], $str."\n");
             }
             if (in_array($method, array('group','groupCollapsed'))) {

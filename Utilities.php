@@ -23,7 +23,7 @@ class Utilities
      *
      * @return array
      */
-    public function arrayColKeys($rows)
+    public static function arrayColKeys($rows)
     {
         $last_stack = array();
         $new_stack = array();
@@ -68,7 +68,7 @@ class Utilities
      *
      * @return array
      */
-    public function arrayMergeDeep($arrayDef, $array2)
+    public static function arrayMergeDeep($arrayDef, $array2)
     {
         if (!is_array($arrayDef) || !is_array($array2)) {
             $arrayDef = $array2;
@@ -83,7 +83,7 @@ class Utilities
                 } elseif (!is_array($v2)) {
                     $arrayDef[$k2] = $v2;
                 } else {
-                    $arrayDef[$k2] = $this->arrayMergeDeep($arrayDef[$k2], $v2);
+                    $arrayDef[$k2] = self::arrayMergeDeep($arrayDef[$k2], $v2);
                 }
             }
         }
@@ -97,7 +97,7 @@ class Utilities
      *
      * @return string
      */
-    public function buildAttribString($attribs)
+    public static function buildAttribString($attribs)
     {
         $attrib_pairs = array();
         foreach ($attribs as $k => $v) {
@@ -116,7 +116,7 @@ class Utilities
      *
      * @return string
      */
-    public function getResponseHeader($key = 'Content-Type')
+    public static function getResponseHeader($key = 'Content-Type')
     {
         $value = null;
         if (function_exists('headers_list')) {
@@ -139,7 +139,7 @@ class Utilities
      *
      * @return boolean
      */
-    public function isBase64Encoded($str)
+    public static function isBase64Encoded($str)
     {
         return preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', trim($str));
     }
@@ -151,11 +151,11 @@ class Utilities
      *
      * @return boolean
      */
-    public function isBinary($str)
+    public static function isBinary($str)
     {
         $isBinary = false;
         if (is_string($str)) {
-            $isUtf8 = $this->isUtf8($str, $ctrl);
+            $isUtf8 = self::isUtf8($str, $ctrl);
             if (!$isUtf8 || $ctrl) {
                 $isBinary = true;
             }
@@ -171,7 +171,7 @@ class Utilities
      *
      * @return boolean
      */
-    public function isUtf8($str, &$ctrl = false)
+    public static function isUtf8($str, &$ctrl = false)
     {
         $length = strlen($str);
         $ctrl = false;
@@ -217,7 +217,7 @@ class Utilities
      *
      * @return array
      */
-    public function parseAttribString($html)
+    public static function parseAttribString($html)
     {
         $regEx = '#^<span class="([^"]+)">(.*)</span>$#s';
         preg_match($regEx, $html, $matches);
@@ -234,7 +234,7 @@ class Utilities
      *
      * @return string
      */
-    public function toUtf8($str)
+    public static function toUtf8($str)
     {
         if (extension_loaded('mbstring') && function_exists('iconv')) {
             $encoding = mb_detect_encoding($str, mb_detect_order(), true);
@@ -257,7 +257,7 @@ class Utilities
      *
      * @return mixed
      */
-    public function translateCfgKeys($mixed)
+    public static function translateCfgKeys($mixed)
     {
         $objKeys = array(
             'varDump' => array('addBR', 'collectMethods', 'outputMethods'),
@@ -309,14 +309,14 @@ class Utilities
      *
      * @return string
      */
-    public function unserializeLog($str)
+    public static function unserializeLog($str)
     {
         $pos = strpos($str, 'START DEBUG');
         if ($pos !== false) {
             $str = substr($str, $pos+11);
             $str = preg_replace('/^[^\r\n]*[\r\n]+/', '', $str);
         }
-        $str = $this->isBase64Encoded($str)
+        $str = self::isBase64Encoded($str)
             ? base64_decode($str)
             : false;
         if ($str && function_exists('gzinflate')) {

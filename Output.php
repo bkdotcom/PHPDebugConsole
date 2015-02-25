@@ -76,19 +76,12 @@ class Output
         }
         $subject = 'Debug Log: '.$_SERVER['HTTP_HOST'].( $unsuppressedError ? ' (Error)' : '' );
         /*
-            Serialize the log
+            "attach" "serialized" log
         */
-        $outputCssWas = $this->debug->set('outputCss', false);
-        $outputScriptWas = $this->debug->set('outputScript', false);
-        $serialized = $this->outputAsHtml();
-        $this->debug->set('outputCss', $outputCssWas);
-        $this->debug->set('outputScript', $outputScriptWas);
-        if (function_exists('gzdeflate')) {
-            $serialized = gzdeflate($serialized);
-        }
-        $serialized = chunk_split(base64_encode($serialized), 1024);
-        $body .= "\nSTART DEBUG:\n";
-        $body .= $serialized;
+        $body .= $this->debug->utilities->serializeLog($this->debug->get('data/log'));
+        /*
+            Now email
+        */
         $this->debug->email($this->debug->get('emailTo'), $subject, $body);
         return;
     }
@@ -265,6 +258,24 @@ class Output
     }
 
     /**
+     * Returns meta-data and removes it from the passed arguments
+     *
+     * @param array $args args to check
+     *
+     * @return array|false meta array or false
+     */
+    public function getMetaArg(&$args)
+    {
+        $return = false;
+        $end = end($args);
+        if (is_array($end) && in_array(Debug::META, $end)) {
+            array_pop($args);
+            $return = $end;
+        }
+        return $return;
+    }
+
+    /**
      * Returns output
      *
      * @return mixed
@@ -331,15 +342,12 @@ class Output
     {
         $opts = array();
         if (in_array($method, array('error','warn'))) {
-            $end = end($args);
-            if (is_array($end) && in_array(Debug::META, $end)) {
-                array_pop($args);
-                if (isset($end['file'])) {
-                    $opts = array(
-                        'File' => $end['file'],
-                        'Line' => $end['line'],
-                    );
-                }
+            $meta = $this->getMetaArg($args);
+            if ($meta && isset($meta['file'])) {
+                $opts = array(
+                    'File' => $end['file'],
+                    'Line' => $end['line'],
+                );
             }
         }
         foreach ($args as $k => $arg) {
@@ -403,8 +411,8 @@ class Output
     protected function outputFirephpGroupMethod($method, $args = array())
     {
         $opts = array();
-        $firephpMethod = 'group';
         if (in_array($method, array('group','groupCollapsed'))) {
+            $firephpMethod = 'group';
             $this->data['groupDepth']++;
             $opts = array(
                 'Collapsed' => $method == 'groupCollapsed',    // collapse both group and groupCollapsed
@@ -528,9 +536,8 @@ class Output
                 'title' => null,
             );
             if (in_array($method, array('error','warn'))) {
-                $end = end($args);
-                if (is_array($end) && in_array(Debug::META, $end)) {
-                    $meta = array_pop($args);
+                $meta = $this->getMetaArg($args);
+                if ($meta) {
                     if (isset($meta['file'])) {
                         $attribs['title'] = $meta['file'].': line '.$meta['line'];
                     }
@@ -628,9 +635,7 @@ class Output
             $method = array_shift($args);
             if ($method == 'assert') {
                 array_unshift($args, false);
-            } elseif ($method == 'count') {
-                $method = 'log';
-            } elseif ($method == 'time') {
+            } elseif ($method == 'count' || $method == 'time') {
                 $method = 'log';
             } elseif ($method == 'table') {
                 foreach ($args as $i => $v) {
@@ -639,12 +644,9 @@ class Output
                     }
                 }
             } elseif (in_array($method, array('error','warn'))) {
-                $end = end($args);
-                if (is_array($end) && in_array(Debug::META, $end)) {
-                    $meta = array_pop($args);
-                    if (isset($meta['file'])) {
-                        $args[] = $meta['file'].': line '.$meta['line'];
-                    }
+                $meta = $this->getMetaArg($args);
+                if ($meta && isset($meta['file'])) {
+                    $args[] = $meta['file'].': line '.$meta['line'];
                 }
             }
             foreach ($args as $k => $arg) {
@@ -676,8 +678,8 @@ class Output
             } elseif ($method == 'groupEnd') {
                 array_pop($groupStack);
             } elseif (in_array($method, array('error', 'warn'))) {
-                foreach ($groupStack as $groupI) {
-                    $this->data['log'][$groupI][0] = 'group';
+                foreach ($groupStack as $i2) {
+                    $this->data['log'][$i2][0] = 'group';
                 }
             }
         }

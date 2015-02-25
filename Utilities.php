@@ -303,11 +303,30 @@ class Utilities
     }
 
     /**
+     * serialize log for emailing
+     *
+     * @param string $str string
+     *
+     * @return string
+     */
+    public static function serializeLog($log)
+    {
+        $str = serialize($log);
+        if (function_exists('gzdeflate')) {
+            $str = gzdeflate($str);
+        }
+        $str = chunk_split(base64_encode($str), 1024);
+        $str = "\nSTART DEBUG:\n"
+            .$str;
+        return $str;
+    }
+
+    /**
      * Use to unserialize the log serialized by emailLog
      *
      * @param string $str serialized log
      *
-     * @return string
+     * @return array
      */
     public static function unserializeLog($str)
     {
@@ -325,6 +344,7 @@ class Utilities
                 $str = $strInflated;
             }
         }
-        return $str;
+        $log = unserialize($str);
+        return $log;
     }
 }

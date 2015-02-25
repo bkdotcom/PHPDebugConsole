@@ -42,7 +42,7 @@
 }
 /*.debug pre br { display:none; }*/
 .debug table { border-collapse:collapse; }
-.debug table caption { font-weight:bold; font-style:italic; }
+.debug table caption { font-weight:bold; font-style:italic; padding-bottom:0; padding-top:2px; }
 .debug table th { font-weight:bold; background-color: rgba(0,0,0,0.1); }
 .debug table th, .debug table td { border:1px solid #000; padding:1px .25em; vertical-align:top; }
 .debug td.t_string { display: table-cell; }

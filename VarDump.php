@@ -339,23 +339,23 @@ EOD;
             $str = '<div class="log">'.$str.'</div>';
         } else {
             $keys = $this->utilities->arrayColKeys($array);
-            $str = '<table>'."\n"
-                .'<caption>'.$caption.'</caption>'."\n";
-            $values = array();
+            $headers = array();
             foreach ($keys as $key) {
-                $values[] = $key === ''
+                $headers[] = $key === ''
                     ? 'value'
                     : htmlspecialchars($key);
             }
-            $str .= ''
+            $str = '<table>'."\n"
+                .'<caption>'.$caption.'</caption>'."\n"
                 .'<thead>'
-                .'<tr><th>&nbsp;</th><th>'.implode('</th><th scope="col">', $values).'</th></tr>'."\n"
-                .'</thead>'."\n";
-            $str .= '<tbody>'."\n";
+                .'<tr><th>&nbsp;</th><th>'.implode('</th><th scope="col">', $headers).'</th></tr>'."\n"
+                .'</thead>'."\n"
+                .'<tbody>'."\n";
             foreach ($array as $k => $row) {
                 $str .= $this->dumpTableRow($keys, $row, $k);
             }
-            $str .= '</tbody>'."\n".'</table>';
+            $str .= '</tbody>'."\n"
+                .'</table>';
         }
         return $str;
     }

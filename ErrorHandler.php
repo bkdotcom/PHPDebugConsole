@@ -82,7 +82,7 @@ class ErrorHandler
             'emailMask'         => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
             'emailTraceMask'    => E_WARNING | E_USER_ERROR | E_USER_NOTICE,
             'continueToPrevHandler' => true,    // if there was a prev error handler
-            'emailThrottleFile' => dirname(__FILE__).'/error_emails.json',
+            'emailThrottleFile' => __DIR__.'/error_emails.json',
             // set onError to something callable, will receive error array
             //     shortcut for registerOnErrorFunction()
             'onError' => null,
@@ -527,7 +527,7 @@ class ErrorHandler
      * Catch Fatal Error ( if PHP >= 5.2 )
      *
      * @return void
-     * @requires PHP 5.2.0
+     * @requires PHP >= 5.2.0 / should be met as class requires PHP >= 5.3.0 (namespaces)
      */
     public function shutdownFunction()
     {

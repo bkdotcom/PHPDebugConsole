@@ -41,7 +41,6 @@ class VarDump
         if (is_object($utilities)) {
             $this->utilities = $utilities;
         } else {
-            require_once dirname(__FILE__).'/Utilities.php';
             $this->utilities = new Utilities();
         }
         $this->varDumpArray = new VarDumpArray();

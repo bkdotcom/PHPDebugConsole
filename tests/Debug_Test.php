@@ -149,11 +149,12 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
-        $select = '.log
+        $select = '.m_log
             > .t_object > .object-inner
-            > .t_array > .t_array-inner > .t_key_value
-            > .t_array > .t_array-inner > .t_key_value
-            > .t_array > .t_recursion';
+            > .property
+            > .t_array .array-inner > .key-value
+            > .t_array
+            > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
     }
 
@@ -169,7 +170,7 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
-        $select = '.log
+        $select = '.m_log
             > .t_object > .object-inner
             > .t_array > .array-inner > .key-value
             > .t_object > .t_recursion';
@@ -196,7 +197,7 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
-        $select = '.log
+        $select = '.m_log
             > .t_object > .object-inner
             > .t_array > .array-inner > .key-value
             > .t_array > .array-inner > .key-value
@@ -246,7 +247,7 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $output = $this->debug->output();
         $xml = new DomDocument;
         $xml->loadXML($output);
-        $select = '.log
+        $select = '.m_log
             > .t_object > .object-inner
             > .t_array > .array-inner > .t_key_value
             > .t_object > .object-inner

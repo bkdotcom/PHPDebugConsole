@@ -83,17 +83,7 @@ class Debug
         if (!isset(self::$instance)) {
             self::$instance = $this;
         }
-        $files = array(
-            'ErrorHandler.php',
-            'Output.php',
-            'Utilities.php',
-            'VarDump.php',
-            'VarDumpArray.php',
-            'VarDumpObject.php',
-        );
-        foreach ($files as $file) {
-            require_once dirname(__FILE__).'/'.$file;
-        }
+        spl_autoload_register(array($this, 'autoloader'));
         $this->utilities = new Utilities();
         $this->output = new Output(array(), $this->data);
         $this->varDump = new VarDump(array(), $this->utilities);
@@ -107,6 +97,24 @@ class Debug
         $this->collect = &$this->cfg['collect'];
         register_shutdown_function(array($this, 'shutdownFunction'));
         return;
+    }
+
+    /**
+     * Debug class autoloader
+     *
+     * @param string $className classname to attempt to load
+     *
+     * @return void
+     */
+    protected function autoloader($className)
+    {
+        $className = ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
+        if (preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches) && $matches[1] === __NAMESPACE__) {
+            $filePath = __DIR__.'/'.$matches[2].'.php';
+            if (file_exists($filePath)) {
+                require_once $filePath;
+            }
+        }
     }
 
     /**

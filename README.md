@@ -12,7 +12,7 @@ Browser/javascript like console class for PHP
 ![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/bradkent.com/php/screenshot.png)
 
 ### Installation
-This library requires PHP 5.0 or later (PHP 5.2 to "catch" fatal errors), and has no userland dependencies.
+This library requires PHP 5.3 (namespaces) or later and has no userland dependencies.
 
 It is installable and autoloadable via [Composer](https://getcomposer.org/) as [bdk/debug](https://packagist.org/packages/bdk/debug).
 

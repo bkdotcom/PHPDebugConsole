@@ -18,7 +18,7 @@ class Output
 
     private $cfg = array();
     private $data = array();
-    private $debug = null;
+    private $debug;
 
     /**
      * Constructor
@@ -31,9 +31,9 @@ class Output
         $this->debug = Debug::getInstance();
         $this->cfg = array(
             'css' => '',                    // additional "override" css
-            'filepathCss' => dirname(__FILE__).'/css/Debug.css',
-            'filepathScript' => dirname(__FILE__).'/js/Debug.jquery.min.js',
-            'firephpInc' => dirname(__FILE__).'/FirePHP.class.php',
+            'filepathCss' => __DIR__.'/css/Debug.css',
+            'filepathScript' => __DIR__.'/js/Debug.jquery.min.js',
+            'firephpInc' => __DIR__.'/FirePHP.class.php',
             'firephpOptions' => array(
                 'useNativeJsonEncode'   => true,
                 'includeLineNumbers'    => false,
@@ -292,142 +292,15 @@ class Output
         if ($outputAs == 'html') {
             $return = $this->outputAsHtml();
         } elseif ($outputAs == 'firephp') {
-            $this->outputAsFirephp();
+            $this->uncollapseErrors();
+            $outputFirephp = new OutputFirephp($this->data);
+            $outputFirephp->output();
             $return = null;
         } elseif ($outputAs == 'script') {
+            $this->uncollapseErrors();
             $return = $this->outputAsScript();
         }
         return $return;
-    }
-
-    /**
-     * Pass the log to FirePHP methods
-     *
-     * @return void
-     */
-    protected function outputAsFirephp()
-    {
-        if (!file_exists($this->cfg['firephpInc'])) {
-            return;
-        }
-        require_once $this->cfg['firephpInc'];
-        $this->firephp = \FirePHP::getInstance(true);
-        $this->firephp->setOptions($this->cfg['firephpOptions']);
-        $this->firephpMethods = get_class_methods($this->firephp);
-        if (!empty($this->data['alert'])) {
-            $alert = str_replace('<br />', ", \n", $this->data['alert']);
-            array_unshift($this->data['log'], array('error', $alert));
-        }
-        $this->uncollapseErrors();
-        foreach ($this->data['log'] as $args) {
-            $method = array_shift($args);
-            $this->outputFirephpLogEntry($method, $args);
-        }
-        while ($this->data['groupDepth'] > 0) {
-            $this->firephp->groupEnd();
-            $this->data['groupDepth']--;
-        }
-        return;
-    }
-
-    /**
-     * output a log entry to Firephp
-     *
-     * @param string $method method
-     * @param array  $args   args
-     *
-     * @return void
-     */
-    protected function outputFirephpLogEntry($method, $args)
-    {
-        $opts = array();
-        if (in_array($method, array('error','warn'))) {
-            $meta = $this->getMetaArg($args);
-            if ($meta && isset($meta['file'])) {
-                $opts = array(
-                    'File' => $end['file'],
-                    'Line' => $end['line'],
-                );
-            }
-        }
-        foreach ($args as $k => $arg) {
-            $args[$k] = $this->debug->varDump->dump($arg, 'firephp');
-        }
-        if (in_array($method, array('group','groupCollapsed','groupEnd'))) {
-            list($method, $args, $opts) = $this->outputFirephpGroupMethod($method, $args);
-        } elseif ($method == 'table' && is_array($args[0])) {
-            $label = isset($args[1])
-                ? $args[1]
-                : 'table';
-            $keys = $this->debug->utilities->arrayColkeys($args[0]);
-            $table = array();
-            $table[] = $keys;
-            array_unshift($table[0], '');
-            foreach ($args[0] as $k => $row) {
-                $values = array($k);
-                foreach ($keys as $key) {
-                    $values[] = isset($row[$key])
-                        ? $row[$key]
-                        : null;
-                }
-                $table[] = $values;
-            }
-            $args = array($label, $table);
-        } elseif ($method == 'table') {
-            $method = 'log';
-        } else {
-            if (count($args) > 1) {
-                $label = array_shift($args);
-                if (count($args) > 1) {
-                    $args = array( implode(', ', $args) );
-                }
-                $args[] = $label;
-            } elseif (is_string($args[0])) {
-                $args[0] = strip_tags($args[0]);
-            }
-        }
-        if (!in_array($method, $this->firephpMethods)) {
-            $method = 'log';
-        }
-        if ($opts) {
-            // opts array needs to be 2nd arg for group method, 3rd arg for all others
-            if ($method !== 'group' && count($args) == 1) {
-                $args[] = null;
-            }
-            $args[] = $opts;
-        }
-        call_user_func_array(array($this->firephp,$method), $args);
-        return;
-    }
-
-    /**
-     * handle firephp output of group, groupCollapsed, & groupEnd
-     *
-     * @param string $method method
-     * @param array  $args   args passed to method
-     *
-     * @return array [$method, $args, $opts]
-     */
-    protected function outputFirephpGroupMethod($method, $args = array())
-    {
-        $opts = array();
-        if (in_array($method, array('group','groupCollapsed'))) {
-            $firephpMethod = 'group';
-            $this->data['groupDepth']++;
-            $opts = array(
-                'Collapsed' => $method == 'groupCollapsed',    // collapse both group and groupCollapsed
-            );
-            if (empty($args)) {
-                $args[] = 'group';
-            } elseif (count($args) > 1) {
-                $more = array_splice($args, 1);
-                $args[0] .= ' - '.implode(', ', $more);
-            }
-        } elseif ($method == 'groupEnd') {
-            $firephpMethod = 'groupEnd';
-            $this->data['groupDepth']--;
-        }
-        return array($firephpMethod, $args, $opts);
     }
 
     /**
@@ -628,7 +501,6 @@ class Output
      */
     protected function outputAsScript()
     {
-        $this->uncollapseErrors();
         $str = '<script type="text/javascript">'."\n";
         $str .= 'console.groupCollapsed("PHP");'."\n";
         foreach ($this->data['log'] as $args) {

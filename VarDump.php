@@ -329,13 +329,13 @@ EOD;
                 $str = $caption.' = ';
             }
             $str .= $this->dump($array);
-            $str = '<div class="log">'.$str.'</div>';
+            $str = '<div class="m_log">'.$str.'</div>';
         } elseif (empty($array)) {
             if (isset($caption)) {
                 $str = $caption.' = ';
             }
             $str .= 'array()';
-            $str = '<div class="log">'.$str.'</div>';
+            $str = '<div class="m_log">'.$str.'</div>';
         } else {
             $keys = $this->utilities->arrayColKeys($array);
             $headers = array();

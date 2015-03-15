@@ -107,11 +107,6 @@
 			'.debug .group-header i.fa-plus-square-o, .debug .group-header i.fa-minus-square-o { vertical-align: middle; }'+
 			'.debug i.fa-plus-circle { opacity: 0.42 }'+
 			'.debug i.fa-calendar { font-size: 1.1em; }'+
-
-			'.debug .hasIssue.expanded i.fa-warning, .debug .hasIssue.expanded i.fa-times-circle { display: none; }'+
-			'.debug .hasIssue i.fa-warning { color: #cdcb06; }'+		// warning
-			'.debug .hasIssue i.fa-times-circle { color: #D8000C; }'+	// error
-
 			//'.debug .assert i { font-size: 1.3em; line-height: 1; margin-right: .33em; }'+
 			'.debug a.expand-all { color: inherit; text-decoration: none; }'+
 			'.debug a.expand-all { font-size:1.25em; }'+
@@ -160,23 +155,16 @@
 		$('.group-header', root).each( function(){
 			var $toggle = $(this),
 				$target = $toggle.next(),
-				icon = getHiddenErrorIcon($target),
-				selectorKeepVis = '.m_error:visible, .m_warn:visible';	// , .m_group.expanded
+				selectorKeepVis = '.m_error:visible, .m_warn:visible, .m_group.expanded';
 			if ( $target.is(':empty') || !$.trim($target.html()).length ) {
 				return;
 			}
 			$toggle.attr('data-toggle', 'group');
-			if (icon) {
-				$toggle.addClass('hasIssue');
-				$toggle.append(' ' + icon);
-			}
 			if ( !$target.hasClass('expanded') && !$target.find(selectorKeepVis).length ) {
-				$toggle.removeClass('expanded');
-				$toggle.children('i').eq(0).addClass(classExpand).removeClass(classCollapse);
+				$toggle.find('i').addClass(classExpand).removeClass(classCollapse);
 				$target.hide();
 			} else {
-				$toggle.addClass('expanded');
-				$toggle.children('i').eq(0).addClass(classCollapse).removeClass(classExpand);
+				$toggle.find('i').addClass(classCollapse).removeClass(classExpand);
 			}
 			$target.removeClass('collapsed expanded');
 		});
@@ -317,26 +305,14 @@
 		var $toggle = $(toggle),
 			$target = $toggle.next();
 		if ( $target.is(':visible') ) {
-			$toggle.removeClass('expanded');
-			$target.slideUp('fast', function() {
-				$toggle.children('i').eq(0).addClass(classExpand).removeClass(classCollapse);
+			$target.slideUp('fast', function(){
+				$toggle.find('i').addClass(classExpand).removeClass(classCollapse);
 			});
 		} else {
 			$target.slideDown('fast', function(){
-				$toggle.addClass('expanded');
-				$toggle.children('i').eq(0).addClass(classCollapse).removeClass(classExpand);
-			});
+				$toggle.find('i').addClass(classCollapse).removeClass(classExpand);
+			});	//.css('display','');
 		}
-	}
-
-	function getHiddenErrorIcon($container) {
-		var icon = '';
-		if ($container.find('.m_error').length) {
-			icon = icons['.m_error']
-		} else if ($container.find('.m_warn').length) {
-			icon = icons['.m_warn']
-		}
-		return icon;
 	}
 
 }( window.jQuery || undefined ));

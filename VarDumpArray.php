@@ -107,7 +107,7 @@ class VarDumpArray
      *
      * @return array
      */
-    public function getAbstraction(&$array, &$hist = array())
+    public function getAbstraction(&$array, $hist = array())
     {
         $return = array(
             'debug' => VarDump::ABSTRACTION,

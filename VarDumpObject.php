@@ -336,7 +336,7 @@ class VarDumpObject
      *
      * @return array
      */
-    public function getAbstraction($obj, &$hist = array())
+    public function getAbstraction($obj, $hist = array())
     {
         $reflectionClass = new \reflectionClass($obj);
         $extends = array();
@@ -358,7 +358,6 @@ class VarDumpObject
         );
         if (!$isRecursion) {
             $return['properties'] = $this->getProperties($obj, $hist);
-            // file_put_contents(__DIR__.'/grr.txt', str_repeat('-', count($hist)).get_class($obj)."\n", FILE_APPEND);
             if ($return['collectMethods']) {
                 $return['methods'] = $this->getMethods($obj);
             } elseif (method_exists($obj, '__toString')) {
@@ -511,15 +510,14 @@ class VarDumpObject
      *
      * @return array
      */
-    public function getProperties($obj, &$hist = array())
+    public function getProperties($obj, $hist = array())
     {
         $hist[] = $obj;
         $propArray = array();
         $reflectionObject = new \ReflectionObject($obj);
         $properties = $reflectionObject->getProperties();
         $isDebugObj = strpos(get_class($obj), __NAMESPACE__) === 0;
-        while ($properties) {
-            $prop = array_shift($properties);
+        foreach ($properties as $prop) {
             $name = $prop->getName();
             if ($isDebugObj && in_array($name, array('data','debug','instance'))) {
                 continue;
@@ -527,36 +525,33 @@ class VarDumpObject
             $prop->setAccessible(true); // only accessible via reflection
             $docComment = $prop->getDocComment();
             $commentParts = $this->parseDocComment($docComment);
-            $propValues = array(
-                'visibility' => 'public',
-                'isStatic' => $prop->isStatic(),
-                'type' => VarDump::UNDEFINED,
-                'value' => null,
-                'desc' => VarDump::UNDEFINED,
-            );
+            $vis = 'public';
             if ($prop->isPrivate()) {
-                $propValues['visibility'] = 'private';
+                $vis = 'private';
             } elseif ($prop->isProtected()) {
-                $propValues['visibility'] = 'protected';
+                $vis = 'protected';
             }
+            $type = VarDump::UNDEFINED;
             if (isset($commentParts['var'])) {
                 $type = $commentParts['var'][0];
                 if (preg_match('/^(\w+)\s(.+)$/', $type, $matches)) {
                     $type = $matches[1];
                     $commentParts['comment'][0] = $matches[1];
                 }
-                $propValues['type'] = $type;
-            }
-            if (trim($commentParts['comment'][0])) {
-                $propValues['desc'] = $commentParts['comment'][0];
             }
             $value = $prop->getValue($obj);
-            unset($prop);
             if (is_array($value) || is_object($value) || is_resource($value)) {
                 $value = $this->debug->varDump->getAbstraction($value, $hist);
             }
-            $propValues['value'] = $value;
-            $propArray[$name] = $propValues;
+            $propArray[$name] = array(
+                'visibility' => $vis,
+                'isStatic' => $prop->isStatic(),
+                'type' => $type,
+                'value' => $value,
+                'desc' => trim($commentParts['comment'][0])
+                    ? $commentParts['comment'][0]
+                    : VarDump::UNDEFINED,
+            );
         }
         return $propArray;
     }
@@ -568,7 +563,7 @@ class VarDumpObject
      *
      * @return null|string
      */
-    protected function getScopeClass(&$hist)
+    protected function getScopeClass($hist)
     {
         $className = null;
         for ($i = count($hist) - 1; $i >= 0; $i--) {

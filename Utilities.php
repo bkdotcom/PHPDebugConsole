@@ -260,7 +260,10 @@ class Utilities
     public static function translateCfgKeys($mixed)
     {
         $objKeys = array(
-            'varDump' => array('addBR', 'collectMethods', 'outputMethods'),
+            'varDump' => array(
+                'addBR', 'useDebugInfo',
+                'collectConstants', 'outputConstants', 'collectMethods', 'outputMethods',
+            ),
             'errorHandler' => array('lastError', 'onError'),
             'output' => array(
                 'css', 'filepathCss', 'filepathScript', 'firephpInc', 'firephpOptions',

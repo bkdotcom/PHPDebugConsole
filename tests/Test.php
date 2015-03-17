@@ -10,6 +10,8 @@ define('SOMECONSTANT', 'Constant value');
 class Test
 {
 
+    const MY_CONSTANT = 'constant value';
+
 	/**
 	 * Public Property.
 	 */

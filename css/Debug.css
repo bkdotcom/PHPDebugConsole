@@ -97,6 +97,7 @@
 	padding-left: 10px;
 	text-indent: -10px;
 }
+.debug .constant-name,
 .debug .property-name,
 .debug .method-name {
 	font-weight: bold;
@@ -204,3 +205,5 @@
 .debug .ws_t:before { content: "\203A"; display: inline-block; width: 1em; }   /* &rsaquo; */
 .debug .ws_r:before { content: "\\r"; }
 .debug .ws_n:before { content: "\\n"; }
+
+.debug .text-muted { opacity: 0.5; }

@@ -63,10 +63,14 @@ class VarDumpObject
     {
         $dump = array(
             'class' => $abs['className'],
+            'constants' => $abs['constants'],
             'properties' => $abs['properties'],
             'methods' => $abs['methods'],
         );
         $pathCount = count($path);
+        if (empty($dump['constants']) || !$this->debug->varDump->get('outputConstants')) {
+            unset($dump['constants']);
+        }
         foreach ($dump['properties'] as $property => $propertyInfo) {
             foreach ($propertyInfo as $prop => $val) {
                 if ($val === VarDump::UNDEFINED) {
@@ -129,7 +133,11 @@ class VarDumpObject
             $html = $objToString
                 .$strClassName
                 .'<dl class="object-inner">'
-                    .$this->dumpPropertiesAsHtml($abs['properties'], $path)
+                    .($this->debug->varDump->get('outputConstants')
+                        ? $this->dumpConstantsAsHtml($abs['constants'])
+                        : ''
+                    )
+                    .$this->dumpPropertiesAsHtml($abs['properties'], $path, array('viaDebugInfo'=>$abs['viaDebugInfo']))
                     .($abs['collectMethods'] && $this->debug->varDump->get('outputMethods')
                         ? $this->dumpMethodsAsHtml($abs['methods'])
                         : ''
@@ -210,11 +218,33 @@ class VarDumpObject
     }
 
     /**
+     * get formatted constant info
+     *
+     * @param array $constants array of name=>value
+     *
+     * @return string html
+     */
+    protected function dumpConstantsAsHtml($constants)
+    {
+        $str = $constants
+            ? '<dt class="constants">constants</dt>'
+            : '';
+        foreach ($constants as $k => $value) {
+            $str .= '<dd class="constant">'
+                .'<span class="constant-name">'.$k.'</span>'
+                .' <span class="t_operator">=</span> '
+                .$this->debug->varDump->dump($value, 'html')
+                .'</dd>';
+        }
+        return $str;
+    }
+
+    /**
      * get formatted method info
      *
      * @param array $methods methods as returned from getMethods
      *
-     * @return string
+     * @return string html
      */
     protected function dumpMethodsAsHtml($methods)
     {
@@ -265,7 +295,7 @@ class VarDumpObject
      *
      * @param array $params params as returned from getPaarams()
      *
-     * @return string
+     * @return string html
      */
     protected function dumpParamsAsHtml($params)
     {
@@ -296,20 +326,25 @@ class VarDumpObject
      * Dump object properties as HTML
      *
      * @param array $properties properties as returned from getProperties()
-     * @param array $path       {@internal}
+     * @param array $path       array/object path taken
+     * @param array $meta       meta information (viaDebugInfo)
      *
      * @return string
      */
-    protected function dumpPropertiesAsHtml($properties, $path = array())
+    protected function dumpPropertiesAsHtml($properties, $path = array(), $meta = array())
     {
         $label = count($properties)
             ? 'properties'
             : 'no properties';
+        if ($meta['viaDebugInfo']) {
+            $label .= ' <span class="text-muted">(via __debugInfo)</span>';
+        }
         $str = '<dt class="properties">'.$label.'</dt>';
         $pathCount = count($path);
         foreach ($properties as $k => $info) {
             $path[$pathCount] = $k;
-            $str .= '<dd class="property visibility-'.$info['visibility'].'">'
+            $viaDebugInfo = !empty($info['viaDebugInfo']);
+            $str .= '<dd class="property visibility-'.$info['visibility'].' '.($viaDebugInfo ? 'debug-value' : '').'">'
                 .'<span class="t_modifier">'.$info['visibility'].'</span>'
                 .($info['type'] !== VarDump::UNDEFINED
                     ? ' <span class="t_type">'.$info['type'].'</span>'
@@ -336,7 +371,7 @@ class VarDumpObject
      *
      * @return array
      */
-    public function getAbstraction($obj, $hist = array())
+    public function getAbstraction($obj, &$hist = array())
     {
         $reflectionClass = new \reflectionClass($obj);
         $extends = array();
@@ -349,15 +384,21 @@ class VarDumpObject
             'debug' => VarDump::ABSTRACTION,
             'type' => 'object',
             'collectMethods' => $this->debug->varDump->get('collectMethods'),
+            'viaDebugInfo' => $this->debug->varDump->get('useDebugInfo') && method_exists($obj, '__debugInfo'),
             'isRecursion' => $isRecursion,
             'className' => get_class($obj),
             'extends' => $extends,
+            'constants' => array(),
             'properties' => array(),
             'methods' => array(),
             'scopeClass' => $this->getScopeClass($hist),
         );
         if (!$isRecursion) {
             $return['properties'] = $this->getProperties($obj, $hist);
+            // file_put_contents(__DIR__.'/grr.txt', str_repeat('-', count($hist)).get_class($obj)."\n", FILE_APPEND);
+            if ($this->debug->varDump->get('collectConstants')) {
+                $return['constants'] = $reflectionClass->getConstants();
+            }
             if ($return['collectMethods']) {
                 $return['methods'] = $this->getMethods($obj);
             } elseif (method_exists($obj, '__toString')) {
@@ -510,47 +551,86 @@ class VarDumpObject
      *
      * @return array
      */
-    public function getProperties($obj, $hist = array())
+    public function getProperties($obj, &$hist = array())
     {
         $hist[] = $obj;
         $propArray = array();
+        $objClassName = get_class($obj);
         $reflectionObject = new \ReflectionObject($obj);
+        $useDebugInfo = $reflectionObject->hasMethod('__debugInfo') && $this->debug->varDump->get('useDebugInfo');
         $properties = $reflectionObject->getProperties();
-        $isDebugObj = strpos(get_class($obj), __NAMESPACE__) === 0;
-        foreach ($properties as $prop) {
+        $debugInfo = $useDebugInfo
+            ? call_user_func(array($obj, '__debugInfo'))
+            : array();
+        $isDebugObj = strpos($objClassName, __NAMESPACE__) === 0;
+        unset($reflectionObject);
+        while ($properties) {
+            $prop = array_shift($properties);
             $name = $prop->getName();
+            if ($useDebugInfo && !array_key_exists($name, $debugInfo)) {
+                continue;
+            }
             if ($isDebugObj && in_array($name, array('data','debug','instance'))) {
                 continue;
             }
+            $propDeclared = property_exists($objClassName, $name);
             $prop->setAccessible(true); // only accessible via reflection
-            $docComment = $prop->getDocComment();
+            $docComment = $propDeclared
+                ? $prop->getDocComment()
+                : '';
             $commentParts = $this->parseDocComment($docComment);
-            $vis = 'public';
+            $propValues = array(
+                'visibility' => 'public',
+                'isStatic' => $prop->isStatic(),
+                'type' => VarDump::UNDEFINED,
+                'value' => null,
+                'desc' => VarDump::UNDEFINED,
+                // viaDebugInfo
+            );
             if ($prop->isPrivate()) {
-                $vis = 'private';
+                $propValues['visibility'] = 'private';
             } elseif ($prop->isProtected()) {
-                $vis = 'protected';
+                $propValues['visibility'] = 'protected';
             }
-            $type = VarDump::UNDEFINED;
             if (isset($commentParts['var'])) {
                 $type = $commentParts['var'][0];
                 if (preg_match('/^(\w+)\s(.+)$/', $type, $matches)) {
                     $type = $matches[1];
                     $commentParts['comment'][0] = $matches[1];
                 }
+                $propValues['type'] = $type;
+            }
+            if (trim($commentParts['comment'][0])) {
+                $propValues['desc'] = $commentParts['comment'][0];
             }
             $value = $prop->getValue($obj);
+            if ($useDebugInfo) {
+                $debugValue = $debugInfo[$name];
+                $propValues['viaDebugInfo'] = $debugValue != $value;
+                $value = $debugValue;
+                unset($debugValue);
+                unset($debugInfo[$name]);
+            }
+            unset($prop);
+            unset($docComment);
+            unset($commentParts);
+            if (is_array($value) || is_object($value) || is_resource($value)) {
+                $value = $this->debug->varDump->getAbstraction($value, $hist);
+            }
+            $propValues['value'] = $value;
+            $propArray[$name] = $propValues;
+        }
+        foreach ($debugInfo as $name => $value) {
             if (is_array($value) || is_object($value) || is_resource($value)) {
                 $value = $this->debug->varDump->getAbstraction($value, $hist);
             }
             $propArray[$name] = array(
-                'visibility' => $vis,
-                'isStatic' => $prop->isStatic(),
-                'type' => $type,
+                'visibility' => 'debug',
+                'isStatic' => false,
+                'type' => VarDump::UNDEFINED,
                 'value' => $value,
-                'desc' => trim($commentParts['comment'][0])
-                    ? $commentParts['comment'][0]
-                    : VarDump::UNDEFINED,
+                'desc' => VarDump::UNDEFINED,
+                'viaDebugInfo' => true,
             );
         }
         return $propArray;
@@ -563,7 +643,7 @@ class VarDumpObject
      *
      * @return null|string
      */
-    protected function getScopeClass($hist)
+    protected function getScopeClass(&$hist)
     {
         $className = null;
         for ($i = count($hist) - 1; $i >= 0; $i--) {

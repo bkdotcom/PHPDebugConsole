@@ -9,7 +9,7 @@ Browser/javascript like console class for PHP
 * can abstract/wrap [FirePHP](http://www.firephp.org/)
 * custom error handler
 
-![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/bradkent.com/php/screenshot.png)
+![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/bradkent.com/php/screenshot_1.3.png)
 
 ### Installation
 This library requires PHP 5.3 (namespaces) or later and has no userland dependencies.

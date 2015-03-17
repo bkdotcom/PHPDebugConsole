@@ -11,15 +11,16 @@
 		fontAwesomeCss = '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css',
 		jQuerySrc = '//code.jquery.com/jquery-1.11.2.min.js',
 		icons = {
-			'.expand-all' : '<i class="fa fa-plus"></i>',
-			'.group-header' : '<i class="fa '+classCollapse+'"></i>',
+			'.debug-value' : '<i class="fa fa-eye" title="via __debugInfo()"></i>',
+			'.expand-all' : '<i class="fa fa-lg fa-plus"></i>',
+			'.group-header' : '<i class="fa fa-lg '+classCollapse+'"></i>',
+			'.m_assert' :	'<i class="fa-lg"><b>&ne;</b></i>',
+			'.m_count' :	'<i class="fa fa-lg fa-plus-circle"></i>',
+			'.m_error' :	'<i class="fa fa-lg fa-times-circle"></i>',
+			'.m_info' :		'<i class="fa fa-lg fa-info-circle"></i>',
+			'.m_warn' :		'<i class="fa fa-lg fa-warning"></i>',
+			'.m_time' :		'<i class="fa fa-lg fa-clock-o"></i>',
 			'.timestamp' :	'<i class="fa fa-calendar"></i>',
-			'.m_assert' :	'<i><b>&ne;</b></i>',
-			'.m_count' :	'<i class="fa fa-plus-circle"></i>',
-			'.m_info' :		'<i class="fa fa-info-circle"></i>',
-			'.m_warn' :		'<i class="fa fa-warning"></i>',
-			'.m_error' :	'<i class="fa fa-times-circle"></i>',
-			'.m_time' :		'<i class="fa fa-clock-o"></i>',
 			'.toggle-protected' :	'<i class="fa fa-shield"></i>',
 			'.toggle-private' :		'<i class="fa fa-user-secret"></i>'
 		},
@@ -103,10 +104,18 @@
 	function addCss(scope) {
 		console.log('addCss');
 		var css = ''+
-			'.debug i.fa, .debug .assert i { font-size: 1.33em; line-height: 1; margin-right: .33em; }'+
+			'.debug i.fa, .debug .m_assert i { margin-right: .33em; }'+
 			'.debug .group-header i.fa-plus-square-o, .debug .group-header i.fa-minus-square-o { vertical-align: middle; }'+
 			'.debug i.fa-plus-circle { opacity: 0.42 }'+
 			'.debug i.fa-calendar { font-size: 1.1em; }'+
+			'.debug i.fa-eye { color: #00529b; font-size: 1.1em; border-bottom: 0; }'+
+			'.debug i.fa-eye[title] { border-bottom: inherit; }'+
+			'.debug .fa-lg { font-size: 1.33em; }'+
+
+			'.debug .hasIssue.expanded i.fa-warning, .debug .hasIssue.expanded i.fa-times-circle { display: none; }'+
+			'.debug .hasIssue i.fa-warning { color: #cdcb06; }'+		// warning
+			'.debug .hasIssue i.fa-times-circle { color: #D8000C; }'+	// error
+
 			//'.debug .assert i { font-size: 1.3em; line-height: 1; margin-right: .33em; }'+
 			'.debug a.expand-all { color: inherit; text-decoration: none; }'+
 			'.debug a.expand-all { font-size:1.25em; }'+
@@ -155,16 +164,24 @@
 		$('.group-header', root).each( function(){
 			var $toggle = $(this),
 				$target = $toggle.next(),
-				selectorKeepVis = '.m_error:visible, .m_warn:visible, .m_group.expanded';
+				icon = getHiddenErrorIcon($target);
+				// selectorKeepVis = '.m_error:visible, .m_warn:visible';	// , .m_group.expanded
 			if ( $target.is(':empty') || !$.trim($target.html()).length ) {
 				return;
 			}
 			$toggle.attr('data-toggle', 'group');
-			if ( !$target.hasClass('expanded') && !$target.find(selectorKeepVis).length ) {
-				$toggle.find('i').addClass(classExpand).removeClass(classCollapse);
+			if (icon) {
+				$toggle.addClass('hasIssue');
+				$toggle.append(' ' + icon);
+			}
+			// if ( !$target.hasClass('expanded') && !$target.find(selectorKeepVis).length ) {
+			if ( !$target.hasClass('expanded') && !icon ) {
+				$toggle.removeClass('expanded');
+				$toggle.children('i').eq(0).addClass(classExpand).removeClass(classCollapse);
 				$target.hide();
 			} else {
-				$toggle.find('i').addClass(classCollapse).removeClass(classExpand);
+				$toggle.addClass('expanded');
+				$toggle.children('i').eq(0).addClass(classCollapse).removeClass(classExpand);
 			}
 			$target.removeClass('collapsed expanded');
 		});
@@ -305,14 +322,26 @@
 		var $toggle = $(toggle),
 			$target = $toggle.next();
 		if ( $target.is(':visible') ) {
-			$target.slideUp('fast', function(){
-				$toggle.find('i').addClass(classExpand).removeClass(classCollapse);
+			$toggle.removeClass('expanded');
+			$target.slideUp('fast', function() {
+				$toggle.children('i').eq(0).addClass(classExpand).removeClass(classCollapse);
 			});
 		} else {
 			$target.slideDown('fast', function(){
-				$toggle.find('i').addClass(classCollapse).removeClass(classExpand);
-			});	//.css('display','');
+				$toggle.addClass('expanded');
+				$toggle.children('i').eq(0).addClass(classCollapse).removeClass(classExpand);
+			});
 		}
+	}
+
+	function getHiddenErrorIcon($container) {
+		var icon = '';
+		if ($container.find('.m_error').length) {
+			icon = icons['.m_error']
+		} else if ($container.find('.m_warn').length) {
+			icon = icons['.m_warn']
+		}
+		return icon;
 	}
 
 }( window.jQuery || undefined ));

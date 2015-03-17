@@ -34,8 +34,11 @@ class VarDump
     {
         $this->cfg = array(
             'addBR' => false,
+            'collectConstants' => true,
+            'outputConstants' => true,
             'collectMethods' => true,
             'outputMethods' => true,
+            'useDebugInfo' => true,
         );
         $this->cfg = array_merge($this->cfg, $cfg);
         if (is_object($utilities)) {
@@ -329,13 +332,13 @@ EOD;
                 $str = $caption.' = ';
             }
             $str .= $this->dump($array);
-            $str = '<div class="log">'.$str.'</div>';
+            $str = '<div class="m_log">'.$str.'</div>';
         } elseif (empty($array)) {
             if (isset($caption)) {
                 $str = $caption.' = ';
             }
             $str .= 'array()';
-            $str = '<div class="log">'.$str.'</div>';
+            $str = '<div class="m_log">'.$str.'</div>';
         } else {
             $keys = $this->utilities->arrayColKeys($array);
             $headers = array();

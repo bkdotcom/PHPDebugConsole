@@ -395,7 +395,6 @@ class VarDumpObject
         );
         if (!$isRecursion) {
             $return['properties'] = $this->getProperties($obj, $hist);
-            // file_put_contents(__DIR__.'/grr.txt', str_repeat('-', count($hist)).get_class($obj)."\n", FILE_APPEND);
             if ($this->debug->varDump->get('collectConstants')) {
                 $return['constants'] = $reflectionClass->getConstants();
             }

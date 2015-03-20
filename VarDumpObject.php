@@ -460,6 +460,20 @@ class VarDumpObject
                 $methodArray[$methodName]['returnValue'] = $reflectionMethod->invoke($obj);
             }
         }
+        if ($methodArray) {
+            $sort = $this->debug->varDump->get('objectSort');
+            if ($sort == 'name') {
+                ksort($methodArray);
+            } elseif ($sort == 'visibility') {
+                $sortVisOrder = array('public', 'protected', 'private', 'debug');
+                $sortData = array();
+                foreach ($methodArray as $name => $info) {
+                    $sortData['name'][$name] = $name;
+                    $sortData['vis'][$name] = array_search($info['visibility'], $sortVisOrder);
+                }
+                array_multisort($sortData['vis'], $sortData['name'], $methodArray);
+            }
+        }
         return $methodArray;
     }
 
@@ -578,7 +592,7 @@ class VarDumpObject
                 ? $prop->getDocComment()
                 : '';
             $commentParts = $this->parseDocComment($docComment);
-            $propValues = array(
+            $propInfo = array(
                 'visibility' => 'public',
                 'isStatic' => $prop->isStatic(),
                 'type' => VarDump::UNDEFINED,
@@ -587,9 +601,9 @@ class VarDumpObject
                 // viaDebugInfo
             );
             if ($prop->isPrivate()) {
-                $propValues['visibility'] = 'private';
+                $propInfo['visibility'] = 'private';
             } elseif ($prop->isProtected()) {
-                $propValues['visibility'] = 'protected';
+                $propInfo['visibility'] = 'protected';
             }
             if (isset($commentParts['var'])) {
                 $type = $commentParts['var'][0];
@@ -597,15 +611,15 @@ class VarDumpObject
                     $type = $matches[1];
                     $commentParts['comment'][0] = $matches[1];
                 }
-                $propValues['type'] = $type;
+                $propInfo['type'] = $type;
             }
             if (trim($commentParts['comment'][0])) {
-                $propValues['desc'] = $commentParts['comment'][0];
+                $propInfo['desc'] = $commentParts['comment'][0];
             }
             $value = $prop->getValue($obj);
             if ($useDebugInfo) {
                 $debugValue = $debugInfo[$name];
-                $propValues['viaDebugInfo'] = $debugValue != $value;
+                $propInfo['viaDebugInfo'] = $debugValue != $value;
                 $value = $debugValue;
                 unset($debugValue);
                 unset($debugInfo[$name]);
@@ -616,8 +630,8 @@ class VarDumpObject
             if (is_array($value) || is_object($value) || is_resource($value)) {
                 $value = $this->debug->varDump->getAbstraction($value, $hist);
             }
-            $propValues['value'] = $value;
-            $propArray[$name] = $propValues;
+            $propInfo['value'] = $value;
+            $propArray[$name] = $propInfo;
         }
         foreach ($debugInfo as $name => $value) {
             if (is_array($value) || is_object($value) || is_resource($value)) {
@@ -633,15 +647,15 @@ class VarDumpObject
             );
         }
         if ($propArray) {
-            $sort = $this->debug->varDump->get('propertySort');
+            $sort = $this->debug->varDump->get('objectSort');
             if ($sort == 'name') {
                 ksort($propArray);
             } elseif ($sort == 'visibility') {
                 $sortVisOrder = array('public', 'protected', 'private', 'debug');
                 $sortData = array();
-                foreach ($propArray as $name => $propValues) {
+                foreach ($propArray as $name => $info) {
                     $sortData['name'][$name] = $name;
-                    $sortData['vis'][$name] = array_search($propValues['visibility'], $sortVisOrder);
+                    $sortData['vis'][$name] = array_search($info['visibility'], $sortVisOrder);
                 }
                 array_multisort($sortData['vis'], $sortData['name'], $propArray);
             }

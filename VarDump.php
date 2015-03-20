@@ -34,7 +34,7 @@ class VarDump
     {
         $this->cfg = array(
             'addBR' => false,
-            'propertySort' => 'visibility',   // none, visibility, or name
+            'objectSort' => 'visibility',   // none, visibility, or name
             'collectConstants' => true,
             'outputConstants' => true,
             'collectMethods' => true,

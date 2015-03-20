@@ -42,6 +42,9 @@ class Debug
     {
         $this->cfg = array(
             'collect'   => false,
+            'objectsExclude' => array(
+                __CLASS__,                  // don't inspect the debug object when encountered
+            ),
             'file'      => null,            // if a filepath, will receive log data
             'key'       => null,
             'output'    => false,           // should output() actually output to browser (either as html or firephp)

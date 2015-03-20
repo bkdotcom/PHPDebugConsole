@@ -101,8 +101,10 @@ class VarDumpObject
         } else {
             unset($dump['methods']);
         }
-        if ($abs['isRecursion']) {
-            $dump['isRecursion'] = true;
+        if ($abs['isRecursion'] || $abs['excluded']) {
+            $dump['info'] = $abs['isRecursion']
+                ? 'recursion'
+                : 'excluded';
             unset($dump['properties']);
             unset($dump['methods']);
         }
@@ -123,6 +125,9 @@ class VarDumpObject
         if ($abs['isRecursion']) {
             $html = $strClassName
                 .' <span class="t_recursion">*RECURSION*</span>';
+        } elseif ($abs['excluded']) {
+            $html = $strClassName
+                .' <span class="excluded">(not inspected)</span>';
         } else {
             $objToString = null;
             if (isset($abs['methods']['__toString']['returnValue'])) {
@@ -162,8 +167,10 @@ class VarDumpObject
     protected function dumpAsText($abs, $path = array())
     {
         $dump = $this->dumpAsArray($abs, 'text', $path);
-        if (!empty($dump['isRecursion'])) {
+        if (!empty($dump['info']) ** $dump['info'] == 'recursion') {
             $str = '(object) '.$dump['class'].' *RECURSION*';
+        } elseif (!empty($dump['info']) && $dump['info'] == 'excluded') {
+            $str = '(object) '.$dump['class'].' (not inspected)';
         } else {
             $accessible = $abs['scopeClass'] == $abs['className']
                 ? 'private'
@@ -379,13 +386,13 @@ class VarDumpObject
             $extends[] = $parent->getName();
             $reflectionClass = $parent;
         }
-        $isRecursion = in_array($obj, $hist, true);
         $return = array(
             'debug' => VarDump::ABSTRACTION,
             'type' => 'object',
+            'excluded' => $hist && in_array(get_class($obj), $this->debug->get('objectsExclude')),
             'collectMethods' => $this->debug->varDump->get('collectMethods'),
             'viaDebugInfo' => $this->debug->varDump->get('useDebugInfo') && method_exists($obj, '__debugInfo'),
-            'isRecursion' => $isRecursion,
+            'isRecursion' => in_array($obj, $hist, true),
             'className' => get_class($obj),
             'extends' => $extends,
             'constants' => array(),
@@ -393,7 +400,7 @@ class VarDumpObject
             'methods' => array(),
             'scopeClass' => $this->getScopeClass($hist),
         );
-        if (!$isRecursion) {
+        if (!$return['isRecursion'] && !$return['excluded']) {
             $return['properties'] = $this->getProperties($obj, $hist);
             if ($this->debug->varDump->get('collectConstants')) {
                 $return['constants'] = $reflectionClass->getConstants();
@@ -460,20 +467,7 @@ class VarDumpObject
                 $methodArray[$methodName]['returnValue'] = $reflectionMethod->invoke($obj);
             }
         }
-        if ($methodArray) {
-            $sort = $this->debug->varDump->get('objectSort');
-            if ($sort == 'name') {
-                ksort($methodArray);
-            } elseif ($sort == 'visibility') {
-                $sortVisOrder = array('public', 'protected', 'private', 'debug');
-                $sortData = array();
-                foreach ($methodArray as $name => $info) {
-                    $sortData['name'][$name] = $name;
-                    $sortData['vis'][$name] = array_search($info['visibility'], $sortVisOrder);
-                }
-                array_multisort($sortData['vis'], $sortData['name'], $methodArray);
-            }
-        }
+        $this->sort($methodArray);
         return $methodArray;
     }
 
@@ -646,20 +640,7 @@ class VarDumpObject
                 'viaDebugInfo' => true,
             );
         }
-        if ($propArray) {
-            $sort = $this->debug->varDump->get('objectSort');
-            if ($sort == 'name') {
-                ksort($propArray);
-            } elseif ($sort == 'visibility') {
-                $sortVisOrder = array('public', 'protected', 'private', 'debug');
-                $sortData = array();
-                foreach ($propArray as $name => $info) {
-                    $sortData['name'][$name] = $name;
-                    $sortData['vis'][$name] = array_search($info['visibility'], $sortVisOrder);
-                }
-                array_multisort($sortData['vis'], $sortData['name'], $propArray);
-            }
-        }
+        $this->sort($propArray);
         return $propArray;
     }
 
@@ -725,5 +706,30 @@ class VarDumpObject
             $tags[ $match['tag'] ][] = $value;
         }
         return $tags;
+    }
+
+    /**
+     * Sorts property/method array by visibility or name
+     *
+     * @param array $array array to sort
+     *
+     * @return void
+     */
+    protected function sort(&$array)
+    {
+        if ($array) {
+            $sort = $this->debug->varDump->get('objectSort');
+            if ($sort == 'name') {
+                ksort($array);
+            } elseif ($sort == 'visibility') {
+                $sortVisOrder = array('public', 'protected', 'private', 'debug');
+                $sortData = array();
+                foreach ($array as $name => $info) {
+                    $sortData['name'][$name] = $name;
+                    $sortData['vis'][$name] = array_search($info['visibility'], $sortVisOrder);
+                }
+                array_multisort($sortData['vis'], $sortData['name'], $array);
+            }
+        }
     }
 }

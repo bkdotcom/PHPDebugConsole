@@ -292,7 +292,7 @@
 					? 'show'
 					: 'hide',
 				visToggles = '';
-			if ($target.is('.t_recursion')) {
+			if ($target.is('.t_recursion, .excluded')) {
 				return;
 			}
 			$toggle.append(' <i class="fa '+classExpand+'"></i>');

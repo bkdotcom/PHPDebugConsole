@@ -632,17 +632,19 @@ class VarDumpObject
                 'viaDebugInfo' => true,
             );
         }
-        $sort = $this->debug->varDump->get('propertySort');
-        if ($sort == 'name') {
-            ksort($propArray);
-        } elseif ($sort == 'visibility') {
-            $sortVisOrder = array('public', 'protected', 'private', 'debug');
-            $sortData = array();
-            foreach ($propArray as $name => $propValues) {
-                $sortData['name'][$name] = $name;
-                $sortData['vis'][$name] = array_search($propValues['visibility'], $sortVisOrder);
+        if ($propArray) {
+            $sort = $this->debug->varDump->get('propertySort');
+            if ($sort == 'name') {
+                ksort($propArray);
+            } elseif ($sort == 'visibility') {
+                $sortVisOrder = array('public', 'protected', 'private', 'debug');
+                $sortData = array();
+                foreach ($propArray as $name => $propValues) {
+                    $sortData['name'][$name] = $name;
+                    $sortData['vis'][$name] = array_search($propValues['visibility'], $sortVisOrder);
+                }
+                array_multisort($sortData['vis'], $sortData['name'], $propArray);
             }
-            array_multisort($sortData['vis'], $sortData['name'], $propArray);
         }
         return $propArray;
     }

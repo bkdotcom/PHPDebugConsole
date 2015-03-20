@@ -51,6 +51,19 @@ class Test
     }
 
     /**
+     * magic method
+     *
+     * @return array
+     */
+    public function __debugInfo()
+    {
+        $return = get_object_vars($this);
+        $return['propPrivate'] .= ' (alternate value via __debugInfo)';
+        $return['debugValue'] = 'This property is debug only';
+        return $return;
+    }
+
+    /**
      * This is a static method
      *
      * @return void Nothing is returned

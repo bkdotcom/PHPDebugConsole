@@ -8,6 +8,7 @@
 
 	var classExpand = 'fa-plus-square-o',
 		classCollapse = 'fa-minus-square-o',
+		classEmpty = 'fa-square-o',
 		fontAwesomeCss = '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css',
 		jQuerySrc = '//code.jquery.com/jquery-1.11.2.min.js',
 		icons = {
@@ -24,6 +25,7 @@
 			'.toggle-protected' :	'<i class="fa fa-shield"></i>',
 			'.toggle-private' :		'<i class="fa fa-user-secret"></i>'
 		},
+		initialized = false,
 		intervalCounter = 0,
 		checkInterval;
 
@@ -88,6 +90,7 @@
 			$('<link/>', { rel: 'stylesheet', href: fontAwesomeCss }).appendTo('head');
 			$().debugEnhance('addCss', '.debug');
 			$('.debug').debugEnhance();
+			initialized = true;
 		});
 	}
 
@@ -104,28 +107,31 @@
 	function addCss(scope) {
 		console.log('addCss');
 		var css = ''+
-			'.debug i.fa, .debug .m_assert i { margin-right: .33em; }'+
-			'.debug .group-header i.fa-plus-square-o, .debug .group-header i.fa-minus-square-o { vertical-align: middle; }'+
-			'.debug i.fa-plus-circle { opacity: 0.42 }'+
-			'.debug i.fa-calendar { font-size: 1.1em; }'+
-			'.debug i.fa-eye { color: #00529b; font-size: 1.1em; border-bottom: 0; }'+
-			'.debug i.fa-eye[title] { border-bottom: inherit; }'+
-			'.debug .fa-lg { font-size: 1.33em; }'+
+			'.debug i.fa, .debug .m_assert i { margin-right:.33em; }'+
+			//'.debug .group-header i.fa-plus-square-o,'+
+			//	'.debug .group-header i.fa-minus-square-o { vertical-align:middle; }'+
+			'.debug i.fa-plus-circle { opacity:0.42; }'+
+			'.debug i.fa-calendar { font-size:1.1em; }'+
+			'.debug i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }'+
+			'.debug i.fa-eye[title] { border-bottom:inherit; }'+
+			'.debug i.fa-lg { font-size:1.33em; }'+
 
-			'.debug .hasIssue.expanded i.fa-warning, .debug .hasIssue.expanded i.fa-times-circle { display: none; }'+
-			'.debug .hasIssue i.fa-warning { color: #cdcb06; }'+		// warning
-			'.debug .hasIssue i.fa-times-circle { color: #D8000C; }'+	// error
+			'.debug .hasIssue.expanded i.fa-warning, .debug .hasIssue.expanded i.fa-times-circle { display:none; }'+
+			'.debug .hasIssue i.fa-warning { color:#cdcb06; margin-left:.33em}'+		// warning
+			'.debug .hasIssue i.fa-times-circle { color:#D8000C; margin-left:.33em;}'+	// error
 
-			//'.debug .assert i { font-size: 1.3em; line-height: 1; margin-right: .33em; }'+
-			'.debug a.expand-all { color: inherit; text-decoration: none; }'+
-			'.debug a.expand-all { font-size:1.25em; }'+
-			'.debug .group-header { cursor: pointer; }'+
-			'.debug .t_object-class { cursor: pointer; }'+
-			'.debug .vis-toggles span { cursor: pointer; }'+
-			'.debug .vis-toggles span:hover { background-color: rgba(0,0,0,0.1); }'+
-			'.debug .vis-toggles span.toggle-off { opacity: 0.42 }'+
-			'.debug .t_array-collapse, .debug .t_array-expand { cursor: pointer; }'+
-			'.debug .t_array-collapse i.fa, .debug .t_array-expand i.fa, .debug .t_object-class i.fa { font-size: inherit; }';
+			//'.debug .assert i { font-size:1.3em; line-height:1; margin-right:.33em; }'+
+			'.debug a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; }'+
+			'.debug .t_array-collapse,'+
+				'.debug .t_array-expand,'+
+				'.debug .group-header,'+
+				'.debug .t_object-class,'+
+				'.debug .vis-toggles span { cursor:pointer; }'+
+			'.debug .group-header.empty { cursor:auto; }'+
+			'.debug .vis-toggles span:hover { background-color:rgba(0,0,0,0.1); }'+
+			'.debug .vis-toggles span.toggle-off { opacity:0.42 }'+
+			//'.debug .t_array-collapse i.fa, .debug .t_array-expand i.fa, .debug .t_object-class i.fa { font-size:inherit; }'+
+			'';
 		if ( scope ) {
 			css = css.replace(new RegExp(/\.debug\s/g), scope+' ');
 		}
@@ -159,32 +165,77 @@
 		}
 	}
 
+	function changeGroupErrorIcon($toggle, icon) {
+		var selector = '.fa-times-circle, .fa-warning';
+		if (icon) {
+			$toggle.addClass('hasIssue');
+			if ($toggle.find(selector).length) {
+				$toggle.find(selector).replaceWith(icon);
+			} else {
+				$toggle.append(icon);
+			}
+		} else if (initialized) {
+			$toggle.find(selector).remove();
+		}
+	}
+
+	function changeToggleIcon($toggle, classNameNew) {
+		var $toggleIcon = $toggle.children('i').eq(0),
+			classes = [classEmpty, classCollapse, classExpand];
+		$toggleIcon.addClass(classNameNew);
+		$.each(classes, function(i,className){
+			if (className != classNameNew) {
+				$toggleIcon.removeClass(className);
+			}
+		});
+	}
+
+	/**
+	 * Collapse groups leaving errors visible
+	 */
 	function collapseGroups(root) {
-		console.log('collapseGroups');
+		console.group('collapseGroups');
+		if (!initialized) {
+			$('.m_error, .m_warn', root).addClass('show');
+		}
 		$('.group-header', root).each( function(){
 			var $toggle = $(this),
 				$target = $toggle.next(),
-				icon = getHiddenErrorIcon($target);
-				// selectorKeepVis = '.m_error:visible, .m_warn:visible';	// , .m_group.expanded
-			if ( $target.is(':empty') || !$.trim($target.html()).length ) {
+				toggleIconClass = classEmpty,
+				errorIcon = getHiddenErrorIcon($target),
+				selectorKeepVis = '.m_error:visible, .m_warn:visible';	// , .m_group.expanded
+			if (!$.trim($target.html()).length) {
+				console.log('empty group');
+				$toggle.addClass('empty');
+				changeToggleIcon($toggle, classEmpty);
 				return;
 			}
+			console.log('errorIcon', errorIcon);
 			$toggle.attr('data-toggle', 'group');
-			if (icon) {
-				$toggle.addClass('hasIssue');
-				$toggle.append(' ' + icon);
-			}
 			// if ( !$target.hasClass('expanded') && !$target.find(selectorKeepVis).length ) {
-			if ( !$target.hasClass('expanded') && !icon ) {
-				$toggle.removeClass('expanded');
-				$toggle.children('i').eq(0).addClass(classExpand).removeClass(classCollapse);
+			if ( !$toggle.hasClass('expanded') && !$target.find(selectorKeepVis).length ) {
+				// $toggle.removeClass('expanded');
+				toggleIconClass = classExpand;
 				$target.hide();
 			} else {
 				$toggle.addClass('expanded');
-				$toggle.children('i').eq(0).addClass(classCollapse).removeClass(classExpand);
+				toggleIconClass = classCollapse;
 			}
-			$target.removeClass('collapsed expanded');
+			if (!initialized) {
+				// collapsed class is never used
+				$toggle.removeClass('collapsed');
+			} else {
+				$toggle.removeClass('empty hasIssue');
+				if (!errorIcon && !$target.children().not('.m_warn, .m_error').length) {
+					console.warn('group is effectively empty');
+					$toggle.addClass('empty');
+					toggleIconClass = classEmpty;
+				}
+			}
+			changeToggleIcon($toggle, toggleIconClass);
+			changeGroupErrorIcon($toggle, errorIcon);
 		});
+		console.groupEnd();
 	}
 
 	function enhanceArrays(root) {
@@ -271,10 +322,11 @@
 				console.log('this', this);
 				if ( $(this).is(':checked') ) {
 					console.log('show', className);
-					$('.debug-content .' + className, root).show();
+					$('.debug-content .' + className, root).show().addClass('show').removeClass('hide');
+					collapseGroups(root);
 				} else {
 					console.log('hide', className);
-					$('.debug-content .' + className, root).hide();
+					$('.debug-content .' + className, root).hide().addClass('hide').removeClass('show');
 					collapseGroups(root);
 				}
 			});
@@ -321,25 +373,28 @@
 	function toggleGroup(toggle) {
 		var $toggle = $(toggle),
 			$target = $toggle.next();
+		if ($toggle.hasClass('empty')) {
+			return;
+		}
 		if ( $target.is(':visible') ) {
 			$toggle.removeClass('expanded');
 			$target.slideUp('fast', function() {
-				$toggle.children('i').eq(0).addClass(classExpand).removeClass(classCollapse);
+				changeToggleIcon($toggle, classExpand);
 			});
 		} else {
 			$target.slideDown('fast', function(){
 				$toggle.addClass('expanded');
-				$toggle.children('i').eq(0).addClass(classCollapse).removeClass(classExpand);
+				changeToggleIcon($toggle, classCollapse);
 			});
 		}
 	}
 
 	function getHiddenErrorIcon($container) {
 		var icon = '';
-		if ($container.find('.m_error').length) {
-			icon = icons['.m_error']
-		} else if ($container.find('.m_warn').length) {
-			icon = icons['.m_warn']
+		if ($container.find('.m_error.show').length) {
+			icon = icons['.m_error'];
+		} else if ($container.find('.m_warn.show').length) {
+			icon = icons['.m_warn'];
 		}
 		return icon;
 	}

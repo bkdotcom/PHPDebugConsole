@@ -261,7 +261,7 @@ class Utilities
     {
         $objKeys = array(
             'varDump' => array(
-                'addBR', 'useDebugInfo',
+                'addBR', 'propertySort', 'useDebugInfo',
                 'collectConstants', 'outputConstants', 'collectMethods', 'outputMethods',
             ),
             'errorHandler' => array('lastError', 'onError'),

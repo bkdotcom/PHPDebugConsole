@@ -474,7 +474,7 @@ class Output
                 $collapsed_class = $method == 'groupCollapsed'
                     ? 'collapsed'
                     : 'expanded';
-                $str .= '<div class="group-header">'
+                $str .= '<div class="group-header '.$collapsed_class.'">'
                         .'<span class="group-label">'
                             .$label
                             .( !empty($arg_str)
@@ -483,7 +483,7 @@ class Output
                         .'</span>'
                     .'</div>'."\n";
             }
-            $str .= '<div class="m_group '.$collapsed_class.'">';
+            $str .= '<div class="m_group">';
         } elseif ($method == 'groupEnd') {
             if ($this->data['groupDepth'] > 0) {
                 $this->data['groupDepth']--;

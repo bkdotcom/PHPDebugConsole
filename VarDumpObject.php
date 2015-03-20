@@ -167,7 +167,7 @@ class VarDumpObject
     protected function dumpAsText($abs, $path = array())
     {
         $dump = $this->dumpAsArray($abs, 'text', $path);
-        if (!empty($dump['info']) ** $dump['info'] == 'recursion') {
+        if (!empty($dump['info']) && $dump['info'] == 'recursion') {
             $str = '(object) '.$dump['class'].' *RECURSION*';
         } elseif (!empty($dump['info']) && $dump['info'] == 'excluded') {
             $str = '(object) '.$dump['class'].' (not inspected)';

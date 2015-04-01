@@ -19,7 +19,7 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
 ```json
 {
     "require": {
-        "bdk/debug": "~1.2",
+        "bdk/debug": "~1.3",
     }
 }
 ```

@@ -164,11 +164,11 @@ class Output
     /**
      * returns summary for errors that were logged to console (while this->collect = true)
      *
-     * @param array $errorStats stats as returned from errorStats()
+     * @param array $stats stats as returned from errorStats()
      *
      * @return string
      */
-    protected function errorSummaryInConsole($errorStats)
+    protected function errorSummaryInConsole($stats)
     {
         if ($stats['inConsoleCategories'] == 1) {
             // all same category of error

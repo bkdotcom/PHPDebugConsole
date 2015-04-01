@@ -1,7 +1,7 @@
 {
 	"name": "bdk/debug",
 	"description": "Browser/javascript like console class for PHP",
-	"keywords": ["debug", "debugging", "var_dump", "inspect", "errorhandler"],
+	"keywords": ["debug", "debugging", "var_dump", "inspect", "errorhandler", "phpdebugconsole"],
 	"homepage": "http://github.com/bkdotcom/PHPDebugConsole",
 	"license": "MIT",
 	"authors": [

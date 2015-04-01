@@ -40,11 +40,13 @@ class Debug
      */
     public function __construct($cfg = array(), $errorHandler = null)
     {
-        $this->cfg = array(
-            'collect'   => false,
+        $cfg = array_merge_recursive(array(
             'objectsExclude' => array(
                 __CLASS__,                  // don't inspect the debug object when encountered
             ),
+        ), $cfg);
+        $this->cfg = array(
+            'collect'   => false,
             'file'      => null,            // if a filepath, will receive log data
             'key'       => null,
             'output'    => false,           // should output() actually output to browser (either as html or firephp)

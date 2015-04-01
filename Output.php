@@ -87,6 +87,47 @@ class Output
     }
 
     /**
+     * get error statistics from errorHandler
+     * how many errors were captured in/out of console
+     * breakdown per error category
+     *
+     * @return array
+     */
+    protected function errorStats()
+    {
+        $errors = $this->debug->errorHandler->get('errors');
+        $stats = array(
+            'inConsole' => 0,
+            'inConsoleCategories' => 0,
+            'notInConsole' => 0,
+            'counts' => array(),
+        );
+        foreach ($errors as $error) {
+            if ($error['suppressed']) {
+                continue;
+            }
+            $category = $error['category'];
+            if (!isset($stats['counts'][$category])) {
+                $stats['counts'][$category] = array(
+                    'inConsole' => 0,
+                    'notInConsole' => 0,
+                );
+            }
+            $k = $error['inConsole'] ? 'inConsole' : 'notInConsole';
+            $stats['counts'][$category][$k]++;
+        }
+        foreach ($stats['counts'] as $a) {
+            $stats['inConsole'] += $a['inConsole'];
+            $stats['notInConsole'] += $a['notInConsole'];
+            if ($a['inConsole']) {
+                $stats['inConsoleCategories']++;
+            }
+        }
+        ksort($stats['counts']);
+        return $stats;
+    }
+
+    /**
      * Returns an error summary
      *
      * @return string html
@@ -94,44 +135,13 @@ class Output
     public function errorSummary()
     {
         $html = '';
-        $errors = $this->debug->errorHandler->get('errors');
-        $counts = array();
-        $totals = array(
-            'inConsole' => 0,
-            'inConsoleCategories' => 0,
-            'notInConsole' => 0,
-        );
-        foreach ($errors as $error) {
-            if ($error['suppressed']) {
-                continue;
-            }
-            $category = $error['category'];
-            if (!isset($counts[$category])) {
-                $counts[$category] = array(
-                    'inConsole' => 0,
-                    'notInConsole' => 0,
-                );
-            }
-            $k = $error['inConsole'] ? 'inConsole' : 'notInConsole';
-            $counts[$category][$k]++;
+        $errorStats = $this->errorStats();
+        if ($errorStats['inConsole']) {
+            $html .= $this->errorSummaryInConsole($errorStats);
         }
-        foreach ($counts as $a) {
-            $totals['inConsole'] += $a['inConsole'];
-            $totals['notInConsole'] += $a['notInConsole'];
-            if ($a['inConsole']) {
-                $totals['inConsoleCategories']++;
-            }
-        }
-        ksort($counts);
-        /*
-            first show logged counts
-            then show not-logged counts
-        */
-        if ($totals['inConsole']) {
-            $html .= $this->errorSummaryInConsole($totals, $counts);
-        }
-        if ($totals['notInConsole']) {
+        if ($errorStats['notInConsole']) {
             $count = 0;
+            $errors = $this->debug->errorHandler->get('errors');
             $htmlNotIn = '<ul class="list-unstyled indent">';
             foreach ($errors as $err) {
                 if ($err['suppressed'] || $err['inConsole']) {
@@ -144,7 +154,7 @@ class Output
             $count = $count == 1
                 ? 'was 1 error'
                 : 'were '.$count.' errors';
-            $html .= '<h3>'.($totals['inConsole'] ? 'Additionally, there ' : 'There ')
+            $html .= '<h3>'.($stats['inConsole'] ? 'Additionally, there ' : 'There ')
                 .$count.' captured while not collecting debug info</h3>'
                 .$htmlNotIn;
         }
@@ -154,18 +164,17 @@ class Output
     /**
      * returns summary for errors that were logged to console (while this->collect = true)
      *
-     * @param array $totals totals
-     * @param array $counts category counts
+     * @param array $errorStats stats as returned from errorStats()
      *
      * @return string
      */
-    protected function errorSummaryInConsole($totals, $counts)
+    protected function errorSummaryInConsole($errorStats)
     {
-        if ($totals['inConsoleCategories'] == 1) {
+        if ($stats['inConsoleCategories'] == 1) {
             // all same category of error
-            reset($counts);
-            $category = key($counts);
-            if ($totals['inConsole'] == 1) {
+            reset($stats['counts']);
+            $category = key($stats['counts']);
+            if ($stats['inConsole'] == 1) {
                 $html = 'There was 1 error';
                 if ($category == 'fatal') {
                     $html = ''; // don't bother with this alert..
@@ -174,7 +183,7 @@ class Output
                     $html .= ' ('.$category.')';
                 }
             } else {
-                $html = 'There were '.$totals['inConsole'].' errors';
+                $html = 'There were '.$stats['inConsole'].' errors';
                 if ($category != 'error') {
                     $html .= ' of type '.$category;
                 }
@@ -184,9 +193,9 @@ class Output
             }
         } else {
             // multiple error categories
-            $html = '<h3>There were '.$totals['inConsole'].' errors:</h3>'."\n";
+            $html = '<h3>There were '.$stats['inConsole'].' errors:</h3>'."\n";
             $html .= '<ul class="list-unstyled indent">';
-            foreach ($counts as $category => $a) {
+            foreach ($stats['counts'] as $category => $a) {
                 if (!$a['inConsole']) {
                     continue;
                 }
@@ -287,7 +296,6 @@ class Output
             call_user_func($this->cfg['onOutput'], $outputAs);
         }
         $outputAs = $this->get('outputAs');
-        $this->data['alert'] = $this->errorSummary();
         $this->data['groupDepth'] = 0;
         if ($outputAs == 'html') {
             $return = $this->outputAsHtml();
@@ -350,6 +358,7 @@ class Output
      */
     protected function outputAsHtml()
     {
+        $this->data['alert'] = $this->errorSummary();
         $str = '<div class="debug">'."\n";
         if ($this->cfg['outputCss']) {
             $str .= '<style type="text/css">'."\n"
@@ -501,8 +510,18 @@ class Output
      */
     protected function outputAsScript()
     {
+        $label = 'PHP';
+        $errorStats = $this->errorStats();
+        if ($errorStats['inConsole']) {
+            $label .= ' - Errors (';
+            foreach ($errorStats['counts'] as $category => $vals) {
+                $label .= $vals['inConsole'].' '.$category.', ';
+            }
+            $label = substr($label, 0, -2);
+            $label .= ')';
+        }
         $str = '<script type="text/javascript">'."\n";
-        $str .= 'console.groupCollapsed("PHP");'."\n";
+        $str .= 'console.groupCollapsed("'.$label.'");'."\n";
         foreach ($this->data['log'] as $args) {
             $method = array_shift($args);
             if ($method == 'assert') {

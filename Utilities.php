@@ -261,7 +261,7 @@ class Utilities
     {
         $objKeys = array(
             'varDump' => array(
-                'addBR', 'objectSort', 'useDebugInfo',
+                'addBR', 'objectSort', 'objectsExclude', 'useDebugInfo',
                 'collectConstants', 'outputConstants', 'collectMethods', 'outputMethods',
             ),
             'errorHandler' => array('lastError', 'onError'),
@@ -284,12 +284,12 @@ class Utilities
             $mixed = implode('/', $path);
         } elseif (is_array($mixed)) {
             foreach ($mixed as $k => $v) {
-                if (is_array($v)) {
-                    continue;
-                }
                 $translated = false;
                 foreach ($objKeys as $objKey => $keys) {
-                    if (in_array($k, $keys)) {
+                    if ($k == $objKey && is_array($v)) {
+                        $translated = true;
+                        break;
+                    } elseif (in_array($k, $keys)) {
                         unset($mixed[$k]);
                         $mixed[$objKey][$k] = $v;
                         $translated = true;

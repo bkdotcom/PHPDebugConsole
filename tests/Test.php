@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Debug;
+namespace bdk\DebugTest;
 
 define('SOMECONSTANT', 'Constant value');
 
@@ -38,6 +38,8 @@ class Test
     public function __construct()
     {
         // $this->someArray['obj'] = new Utilities();
+        $this->debug = \bdk\Debug\Debug::getInstance();
+        $this->instance = $this;
     }
 
     /**

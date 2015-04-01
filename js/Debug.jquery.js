@@ -127,7 +127,7 @@
 				'.debug .group-header,'+
 				'.debug .t_object-class,'+
 				'.debug .vis-toggles span { cursor:pointer; }'+
-			'.debug .group-header.empty { cursor:auto; }'+
+			'.debug .group-header.empty, .debug .t_object-class.empty { cursor:auto; }'+
 			'.debug .vis-toggles span:hover { background-color:rgba(0,0,0,0.1); }'+
 			'.debug .vis-toggles span.toggle-off { opacity:0.42 }'+
 			//'.debug .t_array-collapse i.fa, .debug .t_array-expand i.fa, .debug .t_object-class i.fa { font-size:inherit; }'+
@@ -293,6 +293,7 @@
 					: 'hide',
 				visToggles = '';
 			if ($target.is('.t_recursion, .excluded')) {
+				$toggle.addClass('empty');
 				return;
 			}
 			$toggle.append(' <i class="fa '+classExpand+'"></i>');

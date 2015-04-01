@@ -389,7 +389,7 @@ class VarDumpObject
         $return = array(
             'debug' => VarDump::ABSTRACTION,
             'type' => 'object',
-            'excluded' => $hist && in_array(get_class($obj), $this->debug->get('objectsExclude')),
+            'excluded' => $hist && in_array(get_class($obj), $this->debug->varDump->get('objectsExclude')),
             'collectMethods' => $this->debug->varDump->get('collectMethods'),
             'viaDebugInfo' => $this->debug->varDump->get('useDebugInfo') && method_exists($obj, '__debugInfo'),
             'isRecursion' => in_array($obj, $hist, true),
@@ -404,6 +404,9 @@ class VarDumpObject
             $return['properties'] = $this->getProperties($obj, $hist);
             if ($this->debug->varDump->get('collectConstants')) {
                 $return['constants'] = $reflectionClass->getConstants();
+                if ($this->debug->varDump->get('objectSort') == 'name') {
+                    ksort($return['constants']);
+                }
             }
             if ($return['collectMethods']) {
                 $return['methods'] = $this->getMethods($obj);
@@ -563,13 +566,14 @@ class VarDumpObject
         $hist[] = $obj;
         $propArray = array();
         $objClassName = get_class($obj);
+        $objNamespace = substr($objClassName, 0, strrpos($objClassName, '\\'));
         $reflectionObject = new \ReflectionObject($obj);
         $useDebugInfo = $reflectionObject->hasMethod('__debugInfo') && $this->debug->varDump->get('useDebugInfo');
         $properties = $reflectionObject->getProperties();
         $debugInfo = $useDebugInfo
             ? call_user_func(array($obj, '__debugInfo'))
             : array();
-        $isDebugObj = strpos($objClassName, __NAMESPACE__) === 0;
+        $isDebugObj = $objNamespace == __NAMESPACE__;
         unset($reflectionObject);
         while ($properties) {
             $prop = array_shift($properties);

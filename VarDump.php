@@ -56,7 +56,7 @@ class VarDump
      * Returns string representation of value
      *
      * @param mixed  $val      value
-     * @param string $outputAs options
+     * @param string $outputAs 'html', 'text', or 'script'
      * @param array  $path     {@internal - used to check for recursion}
      *
      * @return string
@@ -123,7 +123,7 @@ class VarDump
      * array (recursion), object, or resource
      *
      * @param array  $val      abstracted value
-     * @param string $outputAs options
+     * @param string $outputAs 'html', 'text', or 'script'
      * @param array  $path     {@internal - used to check for recursion}
      *
      * @return array [string $type, mixed $value]

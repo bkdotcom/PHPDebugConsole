@@ -62,7 +62,9 @@ class Debug
         );
         $this->data = array(
             'alert'         => '',
-            'counts'        => array(),    // count method
+            'collectToggleCount' => 0,  // used to guess if collection was turned on to collect "environment" info
+                                        //    then turned off..  log will no be emailed in this condition
+            'counts'        => array(), // count method
             'fileHandle'    => null,
             'groupDepth'    => 0,
             'groupDepthFile'=> 0,
@@ -447,6 +449,9 @@ class Debug
             $this->data = array_merge($this->data, $new['data']);
         }
         if (isset($new['debug'])) {
+            if (isset($new['debug']['collect']) && $new['debug']['collect'] !== $this->collect) {
+                $this->data['collectToggleCount']++;
+            }
             $this->cfg = $this->utilities->arrayMergeDeep($this->cfg, $new['debug']);
         }
         foreach ($new as $k => $v) {
@@ -790,7 +795,9 @@ class Debug
     {
         $email = false;
         // data['log']  will likely be non-empty... initial debug info is always collected
-        if ($this->cfg['emailTo'] && !$this->cfg['output'] && $this->data['log']) {
+        $toggledOnOff = $this->data['collectToggleCount'] == 2 && !$this->collect;
+        $haveLog = !empty($this->data['log']) && !$toggledOnOff;
+        if ($this->cfg['emailTo'] && !$this->cfg['output'] && $haveLog) {
             if ($this->cfg['emailLog'] === 'always') {
                 $email = true;
             } elseif ($this->cfg['emailLog'] === 'onError') {

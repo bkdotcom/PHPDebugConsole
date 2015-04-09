@@ -20,6 +20,12 @@
 	text-indent: 0;
 }
 
+.debug-header {
+	padding: 5px;
+	font-size: 10px;
+	background-color: rgba(0, 0, 0, 0.2);
+	margin-bottom: 10px;
+}
 .debug-content {
 	margin-top: 0.75em;
 }
@@ -27,8 +33,9 @@
 .debug dl { margin-top: 0; margin-bottom: 0;}
 .debug dt { font-weight: bold; }
 .debug dd { margin-left: 20px; }
-.debug h3 { margin-top: 0; font-size: 1.25em; font-weight: bold; }
+.debug h3 { margin: 0; font-size: 1.15em; font-weight: bold; }
 .debug img { border:0px; }
+.debug label { cursor: pointer; font-weight: bold; }
 .debug pre {
 	padding: 0;
 	border: 0;

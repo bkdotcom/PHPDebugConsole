@@ -27,7 +27,8 @@
 		},
 		initialized = false,
 		intervalCounter = 0,
-		checkInterval;
+		checkInterval,
+		debugKey = getDebugKey();
 
 	if ( !$ ) {
 		console.warn('jQuery not yet defined');
@@ -50,7 +51,7 @@
 
 	function init() {
 
-		jQuery.fn.debugEnhance = function(method) {
+		$.fn.debugEnhance = function(method) {
 			if ( method ) {
 				if ( method === 'addCss' ) {
 					addCss(arguments[1]);
@@ -63,25 +64,16 @@
 					console.warn('already enhanced');
 					return;
 				}
+				addPersistOption(this);
 				addExpandAll(this);
-				enhanceSummary(this);
 				enhanceArrays(this);
+				enhanceGroups(this);
 				enhanceObjects(this);
+				enhanceSummary(this);
+				// now that everything's been enhanced, class names added, etc
 				addIcons(this);
-				collapseGroups(this); // needs to come after adding icons
+				collapseGroups(this);
 				console.groupEnd();
-			});
-			this.on('click', '[data-toggle=group], [data-toggle=object]', function(){
-				toggleGroup(this);
-				return false;
-			});
-			this.on('click', '.toggle-protected, .toggle-private', function(){
-				toggleObjectVis(this);
-				return false;
-			});
-			this.on('click', '[data-toggle=array]', function(){
-				toggleArray(this);
-				return false;
 			});
 			return this;
 		};
@@ -107,20 +99,17 @@
 	function addCss(scope) {
 		console.log('addCss');
 		var css = ''+
+			'.debug .debug-cookie { color: #666; }'+
+			'.debug .debug-cookie input { vertical-align:sub; }'+
 			'.debug i.fa, .debug .m_assert i { margin-right:.33em; }'+
-			//'.debug .group-header i.fa-plus-square-o,'+
-			//	'.debug .group-header i.fa-minus-square-o { vertical-align:middle; }'+
 			'.debug i.fa-plus-circle { opacity:0.42; }'+
 			'.debug i.fa-calendar { font-size:1.1em; }'+
 			'.debug i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }'+
 			'.debug i.fa-eye[title] { border-bottom:inherit; }'+
 			'.debug i.fa-lg { font-size:1.33em; }'+
-
 			'.debug .hasIssue.expanded i.fa-warning, .debug .hasIssue.expanded i.fa-times-circle { display:none; }'+
 			'.debug .hasIssue i.fa-warning { color:#cdcb06; margin-left:.33em}'+		// warning
 			'.debug .hasIssue i.fa-times-circle { color:#D8000C; margin-left:.33em;}'+	// error
-
-			//'.debug .assert i { font-size:1.3em; line-height:1; margin-right:.33em; }'+
 			'.debug a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; }'+
 			'.debug .t_array-collapse,'+
 				'.debug .t_array-expand,'+
@@ -138,15 +127,6 @@
 		$('<style>'+css+'</style>').appendTo('head');
 	}
 
-	function addIcons(root) {
-		console.log('addIcons');
-		$.each(icons, function(k,v){
-			$(k, root).each(function(){
-				$(this).prepend(v);
-			});
-		});
-	}
-
 	function addExpandAll(root) {
 		console.log('addExpandAll');
 		var $expand_all = $('<a>').prop({
@@ -156,13 +136,59 @@
 			$expand_all.on('click', function() {
 				$('.group-header', root).each( function() {
 					if ( !$(this).nextAll('.m_group').eq(0).is(':visible') ) {
-						toggleGroup(this);
+						toggleGroupOrObject(this);
 					}
 				});
 				return false;
 			});
 			$(root).find('.debug-content').before($expand_all);
 		}
+	}
+
+	function addIcons(root) {
+		console.log('addIcons');
+		$.each(icons, function(k,v){
+			$(k, root).each(function(){
+				$(this).prepend(v);
+			});
+		});
+	}
+
+	function addPersistOption(root) {
+		console.log('addPersistOption', debugKey);
+		var $node;
+		if (debugKey) {
+			$node = $('<label class="debug-cookie"><input type="checkbox"> Keep debug on</label>').css({'float':'right'});
+			if (cookieGet('debug') == debugKey) {
+				$node.find('input').prop('checked', true);
+			}
+			$('input', $node).on('change', function() {
+				var checked = $(this).is(':checked');
+				console.log('debug persist checkbox changed', checked);
+				if (checked) {
+					console.log('debugKey', debugKey);
+					cookieSave('debug', debugKey, 7);
+				} else {
+					cookieRemove('debug');
+				}
+			});
+			$(root).find('.debug-header').eq(0).prepend($node);
+		}
+	}
+
+	function getDebugKey() {
+		var key = null,
+			queryParams = queryDecode(),
+			cookieValue = cookieGet('debug');
+		console.log('queryParams', queryParams);
+		console.log('cookieValue', cookieValue);
+		if (typeof queryParams.debug !== "undefined") {
+			key = queryParams.debug;
+		} else if (cookieValue) {
+			key = cookieValue;
+		}
+		console.info('key', key);
+		return key;
 	}
 
 	function changeGroupErrorIcon($toggle, icon) {
@@ -188,6 +214,34 @@
 				$toggleIcon.removeClass(className);
 			}
 		});
+	}
+
+	function cookieGet(name) {
+		var nameEQ = name + "=",
+			ca = document.cookie.split(';'),
+			c = null,
+			i = 0;
+		for ( i = 0; i < ca.length; i++ ) {
+			c = ca[i];
+			while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+			if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+		}
+		return null;
+	}
+
+	function cookieRemove(name) {
+		cookieSave(name, "", -1);
+	}
+
+	function cookieSave(name, value, days) {
+		console.log('cookieSave', name, value, days);
+		var expires = '',
+			date = new Date();
+		if ( days ) {
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+			expires = "; expires=" + date.toGMTString();
+		}
+		document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
 	}
 
 	/**
@@ -274,6 +328,21 @@
 				'<span class="t_punct">]</span>';
 			$(this).replaceWith(html);
 		});
+		$(root).on('click', '[data-toggle=array]', function(){
+			toggleArray(this);
+			return false;
+		});
+	}
+
+	function enhanceGroups(root) {
+		$(root).on('click', '[data-toggle=group]', function(){
+			toggleGroupOrObject(this);
+			return false;
+		});
+		$(root).on('click', '.toggle-protected, .toggle-private', function(){
+			toggleObjectVis(this);
+			return false;
+		});
 	}
 
 	function enhanceObjects(root) {
@@ -310,6 +379,10 @@
 			}
 			$target.prepend('<span class="vis-toggles">' + visToggles + '</span>');
 		});
+		$(root).on('click', '[data-toggle=object]', function(){
+			toggleGroupOrObject(this);
+			return false;
+		});
 	}
 
 	function enhanceSummary(root) {
@@ -320,7 +393,7 @@
 				className = $(this).attr('class');
 			$(this).html(htmlNew);
 			$(this).find('input').on('change', function(){
-				console.log('this', this);
+				console.log('onChange', this);
 				if ( $(this).is(':checked') ) {
 					console.log('show', className);
 					$('.debug-content .' + className, root).show().addClass('show').removeClass('hide');
@@ -332,6 +405,24 @@
 				}
 			});
 		});
+	}
+
+	function queryDecode(qs) {
+		var params = {},
+			tokens,
+			re = /[?&]?([^&=]+)=?([^&]*)/g;
+		if ( qs === undefined ) {
+			qs = document.location.search;
+		}
+		qs = qs.split("+").join(" ");	// replace + with ' '
+		while ( true ) {
+			tokens = re.exec(qs);
+			if ( !tokens ) {
+				break;
+			}
+			params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+		}
+		return params;
 	}
 
 	function toggleArray(toggle) {
@@ -371,7 +462,7 @@
 		}
 	}
 
-	function toggleGroup(toggle) {
+	function toggleGroupOrObject(toggle) {
 		var $toggle = $(toggle),
 			$target = $toggle.next();
 		if ($toggle.hasClass('empty')) {

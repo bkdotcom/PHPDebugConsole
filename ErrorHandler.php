@@ -177,10 +177,16 @@ class ErrorHandler
             $backtrace = debug_backtrace();
             $backtrace = array_slice($backtrace, 3);
             $backtrace[0]['vars'] = $error['vars'];
-            $str = print_r($backtrace, true);
-            $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
-            $str = str_replace($search, $replace, $str);
-            $str = substr($str, 0, -1);
+            $debug = __NAMESPACE__.'\\Debug';
+            if (class_exists($debug)) {
+                $debug = $debug::getInstance();
+                $str = $debug->varDump->dump($backtrace, 'text');
+            } else {
+                $str = print_r($backtrace, true);
+                $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
+                $str = str_replace($search, $replace, $str);
+                $str = substr($str, 0, -1);
+            }
             $emailBody .= "\n".'backtrace: '.$str;
         }
         $this->email($this->cfg['emailTo'], $subject, $emailBody);

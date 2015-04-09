@@ -154,7 +154,7 @@ class Output
             $count = $count == 1
                 ? 'was 1 error'
                 : 'were '.$count.' errors';
-            $html .= '<h3>'.($stats['inConsole'] ? 'Additionally, there ' : 'There ')
+            $html .= '<h3>'.($errorStats['inConsole'] ? 'Additionally, there ' : 'There ')
                 .$count.' captured while not collecting debug info</h3>'
                 .$htmlNotIn;
         }
@@ -379,7 +379,7 @@ class Output
             }
             array_unshift($this->data['log'], array('error error-fatal',$lastError));
         }
-        $str .= '<h3>Debug Log:</h3>'."\n";
+        $str .= '<div class="debug-header"><h3>Debug Log</h3></div>'."\n";
         if (!empty($this->data['alert'])) {
             $str .= '<div class="alert alert-danger">'.$this->data['alert'].'</div>';
         }

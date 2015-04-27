@@ -34,8 +34,9 @@
 .debug dt { font-weight: bold; }
 .debug dd { margin-left: 20px; }
 .debug h3 { margin: 0; font-size: 1.15em; font-weight: bold; }
-.debug img { border:0px; }
-.debug label { cursor: pointer; font-weight: bold; }
+.debug img { border: 0; }
+.debug input[type=checkbox] { margin: 0; vertical-align: sub; }
+.debug label { cursor: pointer; font-weight: bold; margin: 0; }
 .debug pre {
 	padding: 0;
 	border: 0;
@@ -183,7 +184,7 @@
 .debug .t_key { opacity: .75; }
 .debug .t_keyword { color: #07A; }
 .debug .t_null { opacity: 0.3; }
-.debug .t_toStringValue { text-shadow: 0px 0px 2px rgba(0, 200, 200, 1.0); }
+.debug .t_toStringValue { text-shadow: 0 0 2px rgba(0, 200, 200, 1.0); }
 .debug .t_object-class { color: inherit; font-weight: bold; text-decoration: underline; }
 .debug .t_operator { color: #A67F59; }
 .debug .t_punct { color: #999; }

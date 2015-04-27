@@ -100,7 +100,7 @@
 		console.log('addCss');
 		var css = ''+
 			'.debug .debug-cookie { color: #666; }'+
-			'.debug .debug-cookie input { vertical-align:sub; }'+
+			//'.debug .debug-cookie input { vertical-align:sub; }'+
 			'.debug i.fa, .debug .m_assert i { margin-right:.33em; }'+
 			'.debug i.fa-plus-circle { opacity:0.42; }'+
 			'.debug i.fa-calendar { font-size:1.1em; }'+

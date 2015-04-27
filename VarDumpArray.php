@@ -58,6 +58,7 @@ class VarDumpArray
             // dump as is.. will get json_encoded
         } elseif ($outputAs == 'text') {
             $val = trim(print_r($val, true));
+            $val = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $val); // single-lineify empty arrays
             $val = str_replace("Array\n(", 'Array(', $val);
             if (count($path) > 1) {
                 $val = str_replace("\n", "\n    ", $val);

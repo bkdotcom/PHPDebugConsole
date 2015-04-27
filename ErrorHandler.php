@@ -509,14 +509,14 @@ class ErrorHandler
     {
         if ($caller === 'notPassed') {
             $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
-                ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 1)
+                ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 2)
                 : debug_backtrace(false);   // don't provide object
             $i = isset($backtrace[$offset])
                 ? $offset
                 : $offset-1;
             $caller = isset($backtrace[$i]['file'])
                 ? $backtrace[$i]
-                : $backtrace[$i+1];
+                : $backtrace[$i+1]; // likely called via call_user_func.. need to go one more to get calling file & line
             $caller = array(
                 'file' => $caller['file'],
                 'line' => $caller['line'],

@@ -264,7 +264,7 @@ class Utilities
                 'addBR', 'objectSort', 'objectsExclude', 'useDebugInfo',
                 'collectConstants', 'outputConstants', 'collectMethods', 'outputMethods',
             ),
-            'errorHandler' => array('lastError', 'onError'),
+            'errorHandler' => array('emailThrottledSummary', 'lastError', 'onError'),
             'output' => array(
                 'css', 'filepathCss', 'filepathScript', 'firephpInc', 'firephpOptions',
                 'onOutput', 'outputAs', 'outputCss', 'outputScript',

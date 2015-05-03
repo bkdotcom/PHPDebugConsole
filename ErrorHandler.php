@@ -81,8 +81,10 @@ class ErrorHandler
                 : null,
             'emailMask'         => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
             'emailTraceMask'    => E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-            'continueToPrevHandler' => true,    // if there was a prev error handler
+            'emailThrottledSummary' => true,    // if errors have been throttled, should we email a summary email of throttled errors?
+                                                //    (first occurance of error is never throttled)
             'emailThrottleFile' => __DIR__.'/error_emails.json',
+            'continueToPrevHandler' => true,    // if there was a prev error handler
             // set onError to something callable, will receive error array
             //     shortcut for registerOnErrorFunction()
             'onError' => null,
@@ -647,7 +649,7 @@ class ErrorHandler
                         .'Has occured '.$err['countSince'].' times since '.$dateLastEmailed."\n\n";
                 }
             }
-            if ($emailBody) {
+            if ($emailBody && $this->cfg['emailThrottledSummary']) {
                 $this->email($this->cfg['emailTo'], 'Website Errors: '.$_SERVER['SERVER_NAME'], $emailBody);
             }
         }

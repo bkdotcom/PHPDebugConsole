@@ -220,11 +220,15 @@ class Utilities
     public static function parseAttribString($html)
     {
         $regEx = '#^<span class="([^"]+)">(.*)</span>$#s';
-        preg_match($regEx, $html, $matches);
-        return array(
-            'class' => $matches[1],
-            'innerhtml' => $matches[2],
-        );
+        return preg_match($regEx, $html, $matches)
+            ? array(
+                'class' => $matches[1],
+                'innerhtml' => $matches[2],
+            )
+            : array(
+                'class' => null,
+                'innerhtml' => $html,
+            );
     }
 
     /**

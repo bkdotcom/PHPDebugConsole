@@ -691,7 +691,7 @@ class Debug
         if ($this->data['fileHandle']) {
             $method = array_shift($args);
             if ($args) {
-                $str = $this->output->outputFileLogEntry($method, $args, $this->data['groupDepthFile']);
+                $str = $this->output->getLogEntryAsText($method, $args, $this->data['groupDepthFile']);
                 fwrite($this->data['fileHandle'], $str."\n");
             }
             if (in_array($method, array('group','groupCollapsed'))) {

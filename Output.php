@@ -228,6 +228,9 @@ class Output
                 $isAjax = $requestedWith == 'XMLHttpRequest';
                 if ($isAjax) {
                     $ret = 'firephp';
+                } elseif (php_sapi_name() == 'cli') {
+                    // console
+                    $ret = 'text';
                 } else {
                     $contentType = $this->debug->utilities->getResponseHeader();
                     if ($contentType && $contentType !== 'text/html') {
@@ -307,6 +310,8 @@ class Output
         } elseif ($outputAs == 'script') {
             $this->uncollapseErrors();
             $return = $this->outputAsScript();
+        } else {
+            $return = $this->outputAsText();
         }
         return $return;
     }
@@ -320,7 +325,7 @@ class Output
      *
      * @return string
      */
-    public function outputFileLogEntry($method, $args, $depth)
+    public function getLogEntryAsText($method, $args, $depth)
     {
         if ($method == 'table' && count($args) == 2) {
             $caption = array_pop($args);
@@ -551,6 +556,27 @@ class Output
         }
         $str .= 'console.groupEnd();';
         $str .= '</script>';
+        return $str;
+    }
+
+    /**
+     * output the log as text
+     *
+     * @return string
+     */
+    protected function outputAsText()
+    {
+        $str = '';
+        $depth = 0;
+        foreach ($this->data['log'] as $args) {
+            $method = array_shift($args);
+            $str .= $this->getLogEntryAsText($method, $args, $depth)."\n";
+            if (in_array($method, array('group','groupCollapsed'))) {
+                $depth ++;
+            } elseif ($method == 'groupEnd' && $depth > 0) {
+                $depth --;
+            }
+        }
         return $str;
     }
 

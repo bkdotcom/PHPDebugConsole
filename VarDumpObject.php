@@ -689,18 +689,24 @@ class VarDumpObject
      */
     public function parseDocComment($docComment)
     {
+        // remove openining /** and closing */
         $docComment = preg_replace('#^/\*\*(.+)\*/$#s', '$1', $docComment);
-        $docComment = preg_replace('#^[ \t]*\*[ \t]*#m', '', $docComment);
+        // remove leading "*"s
+        $docComment = preg_replace('#^[ \t]*\*[ ]?#m', '', $docComment);
         $docComment = trim($docComment);
         $tags = array(
-            'comment' => array(),
+            'comment' => array( !empty($docComment) ? $docComment : '' ),
         );
-        $regexNotTag = '(?P<value>(?:(?!^@).)*)';
+        $regexNotTag = '(?P<value>(?:(?!^@).)*)';    // potential pcre backtrack segfault
         $regexTags = '#^@(?P<tag>\w+)[ \t]*'.$regexNotTag.'#sim';
         // get general comment
-        preg_match('#^'.$regexNotTag.'#sim', $docComment, $matches);
-        if ($matches) {
-            $tags['comment'][] = trim($matches[1]);
+        // go through each line rather than using regexNotTag... which caused segfault on larger comments
+        $lines = explode("\n", $docComment);
+        foreach ($lines as $i => $line) {
+            if (!empty($line) && $line{0} == '@') {
+                $tags['comment'][0] = implode("\n", array_slice($lines, 0, $i));
+                break;
+            }
         }
         preg_match_all($regexTags, $docComment, $matches, PREG_SET_ORDER);
         foreach ($matches as $match) {

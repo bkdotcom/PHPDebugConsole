@@ -287,6 +287,7 @@ class Utilities
             }
             $mixed = implode('/', $path);
         } elseif (is_array($mixed)) {
+            $mixedNew = array();
             foreach ($mixed as $k => $v) {
                 $translated = false;
                 foreach ($objKeys as $objKey => $keys) {
@@ -294,17 +295,16 @@ class Utilities
                         $translated = true;
                         break;
                     } elseif (in_array($k, $keys)) {
-                        unset($mixed[$k]);
-                        $mixed[$objKey][$k] = $v;
+                        $mixedNew[$objKey][$k] = $v;
                         $translated = true;
                         break;
                     }
                 }
                 if (!$translated) {
-                    unset($mixed[$k]);
-                    $mixed['debug'][$k] = $v;
+                    $mixedNew['debug'][$k] = $v;
                 }
             }
+            $mixed = $mixedNew;
         }
         return $mixed;
     }

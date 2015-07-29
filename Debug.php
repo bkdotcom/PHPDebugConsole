@@ -119,7 +119,7 @@ class Debug
         if (preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches) && $matches[1] === __NAMESPACE__) {
             $filePath = __DIR__.'/'.$matches[2].'.php';
             if (file_exists($filePath)) {
-                require_once $filePath;
+                require $filePath;
             }
         }
     }
@@ -551,15 +551,16 @@ class Debug
      *    If label is passed, timer is "paused"
      *    If label is not passed, timer is removed from no-label stack
      *
-     * @param string  $label  unique label
-     * @param boolean $return = false. If true, only return time, rather than log it
+     * @param string         $label            unique label
+     * @param string|boolean $returnOrTemplate string: "%label: %time"
+     *                                         boolean:  If true, only return time, rather than log it
      *
      * @return float
      */
-    public function timeEnd($label = null, $return = false)
+    public function timeEnd($label = null, $returnOrTemplate = false)
     {
         if (is_bool($label)) {
-            $return = $label;
+            $returnOrTemplate = $label;
             $label = null;
         }
         $ret = $this->timeGet($label, true, null); // get not-rounded running time
@@ -575,8 +576,15 @@ class Debug
             array_pop($this->data['timers']['stack']);
         }
         $ret = round($ret, 4);
-        if (!$return) {
-            $this->appendLog('time', array($label, $ret.' sec'));
+        if (!is_string($returnOrTemplate)) {
+            if (!$returnOrTemplate) {
+                $this->appendLog('time', array($label.': '.$ret.' sec'));
+            }
+        } else {
+            $str = $returnOrTemplate;
+            $str = str_replace('%label', $label, $str);
+            $str = str_replace('%time', $ret, $str);
+            $this->appendLog('time', array($str));
         }
         return $ret;
     }
@@ -584,17 +592,18 @@ class Debug
     /**
      * Get the running time without stopping/pausing the timer
      *
-     * @param string  $label     unique label
-     * @param boolean $return    = false. If true, only return time, rather than log it
-     * @param integer $precision rounding precision (pass null for no rounding)
+     * @param string         $label            unique label
+     * @param string|boolean $returnOrTemplate string: "%label: %time"
+     *                                         boolean:  If true, only return time, rather than log it
+     * @param integer        $precision        rounding precision (pass null for no rounding)
      *
      * @return float
      */
-    public function timeGet($label = null, $return = false, $precision = 4)
+    public function timeGet($label = null, $returnOrTemplate = false, $precision = 4)
     {
         if (is_bool($label)) {
-            $precision = $return;
-            $return = $label;
+            $precision = $returnOrTemplate;
+            $returnOrTemplate = $label;
             $label = null;
         }
         $microT = 0;
@@ -617,8 +626,15 @@ class Debug
         if (is_int($precision)) {
             $ret = round($ret, $precision);
         }
-        if (!$return) {
-            $this->appendLog('time', array($label, $ret.' sec'));
+        if (!is_string($returnOrTemplate)) {
+            if (!$returnOrTemplate) {
+                $this->appendLog('time', array($label.': '.$ret.' sec'));
+            }
+        } else {
+            $str = $returnOrTemplate;
+            $str = str_replace('%label', $label, $str);
+            $str = str_replace('%time', $ret, $str);
+            $this->appendLog('time', array($str));
         }
         return $ret;
     }

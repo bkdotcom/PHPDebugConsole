@@ -340,15 +340,11 @@ class Output
             }
         }
         $num_args = count($args);
-        if ($method == 'time') {
-            $glue = ': ';
-        } else {
-            $glue = ', ';
-            if ($num_args == 2) {
-                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                    ? ''
-                    : ' = ';
-            }
+        $glue = ', ';
+        if ($num_args == 2) {
+            $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                ? ''
+                : ' = ';
         }
         $strIndent = str_repeat('    ', $depth);
         $str = implode($glue, $args);
@@ -434,15 +430,11 @@ class Output
                 }
             }
             $num_args = count($args);
-            if ($method == 'time') {
-                $glue = ': ';
-            } else {
-                $glue = ', ';
-                if ($num_args == 2) {
-                    $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                        ? ''
-                        : ' = ';
-                }
+            $glue = ', ';
+            if ($num_args == 2) {
+                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                    ? ''
+                    : ' = ';
             }
             foreach ($args as $k => $v) {
                 /*

@@ -133,11 +133,29 @@ class VarDumpObject
             if (isset($abs['methods']['__toString']['returnValue'])) {
                 $toStringDump = $this->debug->varDump->dump($abs['methods']['__toString']['returnValue']);
                 $classAndValue = $this->debug->utilities->parseAttribString($toStringDump);
-                $objToString = '<span class="'.$classAndValue['class'].' t_toStringValue" title="__toString()">'.$classAndValue['innerhtml'].'</span> ';
+                $objToString = '<span class="'.$classAndValue['class'].' t_toStringValue" title="__toString()">'
+                    .$classAndValue['innerhtml']
+                    .'</span> ';
+            }
+            $misc = '';
+            foreach ($abs['misc'] as $k => $v) {
+                $misc .= $k.': '.$v.'<br />';
             }
             $html = $objToString
                 .$strClassName
                 .'<dl class="object-inner">'
+                    .($abs['extends']
+                        ? '<dt>extends</dt><dd>'.implode('<br />', $abs['extends']).'</dd>'
+                        : ''
+                    )
+                    .($abs['implements']
+                        ? '<dt>implements</dt><dd>'.implode('<br />', $abs['implements']).'</dd>'
+                        : ''
+                    )
+                    .($misc
+                        ? '<dt>misc</dt><dd>'.$misc.'</dd>'
+                        : ''
+                    )
                     .($this->debug->varDump->get('outputConstants')
                         ? $this->dumpConstantsAsHtml($abs['constants'])
                         : ''
@@ -395,13 +413,18 @@ class VarDumpObject
             'isRecursion' => in_array($obj, $hist, true),
             'className' => get_class($obj),
             'extends' => $extends,
+            'implements' => $reflectionClass->getInterfaceNames(),
             'constants' => array(),
             'properties' => array(),
             'methods' => array(),
             'scopeClass' => $this->getScopeClass($hist),
+            'misc' => array(),
         );
         if (!$return['isRecursion'] && !$return['excluded']) {
             $return['properties'] = $this->getProperties($obj, $hist);
+            if (in_array('Traversable', $return['implements'])) {
+                $return['misc']['count'] = iterator_count($obj);
+            }
             if ($this->debug->varDump->get('collectConstants')) {
                 $return['constants'] = $reflectionClass->getConstants();
                 if ($this->debug->varDump->get('objectSort') == 'name') {
@@ -556,7 +579,7 @@ class VarDumpObject
     /**
      * Returns array of objects properties
      *
-     * @param string $obj  object
+     * @param object $obj  object
      * @param array  $hist (@internal) object history
      *
      * @return array

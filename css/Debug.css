@@ -185,7 +185,7 @@
 .debug .t_keyword { color: #07A; }
 .debug .t_null { opacity: 0.3; }
 .debug .t_toStringValue { text-shadow: 0 0 2px rgba(0, 200, 200, 1.0); }
-.debug .t_object-class { color: inherit; font-weight: bold; text-decoration: underline; }
+.debug .t_object-class { color: inherit; text-decoration: underline; }
 .debug .t_operator { color: #A67F59; }
 .debug .t_punct { color: #999; }
 .debug .t_recursion { font-weight: bold; color:#F00; }

@@ -154,6 +154,8 @@
 .debug .m_error { background-color: #FFBABA; color: #D8000C; }
 .debug .m_info  { background-color: #BDE5F8; color: #00529B; }
 .debug .m_warn  { background-color: #FEEFB3; color: #9F6000; }
+.debug .m_error { white-space: pre-wrap; }
+.debug .m_error * { white-space: normal; }
 .debug-content .error-fatal:before {
 	display: block;
 	padding-left: 10px;

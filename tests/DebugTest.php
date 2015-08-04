@@ -9,7 +9,7 @@ require_once dirname(__FILE__).'/Test.php';
 /**
  * PHPUnit tests for Debug class
  */
-class DebugTests extends PHPUnit_Framework_TestCase
+class DebugTests extends PHPUnit_Framework_DOMTestCase
 {
 
     /**
@@ -24,6 +24,7 @@ class DebugTests extends PHPUnit_Framework_TestCase
             'output' => true,
             'outputCss' => false,
             'outputScript' => false,
+            'outputAs' => 'html',
         ));
     }
 
@@ -103,9 +104,7 @@ class DebugTests extends PHPUnit_Framework_TestCase
         $test_b = array('foo', &$test_a, 'bar');
         $this->debug->log('test_b', $test_b);
         $output = $this->debug->output();
-        $xml = new DomDocument;
-        $xml->loadXML($output);
-        $this->assertSelectCount('.t_recursion', 2, $xml, 'Does not contain two recursion types');
+        $this->assertSelectCount('.t_recursion', 2, $output, 'Does not contain two recursion types');
     }
 
     /**
@@ -147,15 +146,14 @@ class DebugTests extends PHPUnit_Framework_TestCase
             'Did not find expected recursion'
         );
         $output = $this->debug->output();
-        $xml = new DomDocument;
-        $xml->loadXML($output);
         $select = '.m_log
             > .t_object > .object-inner
             > .property
             > .t_array .array-inner > .key-value
             > .t_array
             > .t_recursion';
-        $this->assertSelectCount($select, 1, $xml);
+        $found = \bdk\CssSelect::select($output, $select);
+        $this->assertSelectCount($select, 1, $output);
     }
 
     /**

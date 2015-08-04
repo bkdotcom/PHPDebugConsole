@@ -576,16 +576,7 @@ class Debug
             array_pop($this->data['timers']['stack']);
         }
         $ret = round($ret, 4);
-        if (!is_string($returnOrTemplate)) {
-            if (!$returnOrTemplate) {
-                $this->appendLog('time', array($label.': '.$ret.' sec'));
-            }
-        } else {
-            $str = $returnOrTemplate;
-            $str = str_replace('%label', $label, $str);
-            $str = str_replace('%time', $ret, $str);
-            $this->appendLog('time', array($str));
-        }
+        $this->timeLog($ret, $returnOrTemplate, $label);
         return $ret;
     }
 
@@ -626,17 +617,31 @@ class Debug
         if (is_int($precision)) {
             $ret = round($ret, $precision);
         }
+        $this->timeLog($ret, $returnOrTemplate, $label);
+        return $ret;
+    }
+
+    /**
+     * Log time
+     *
+     * @param float  $seconds          [description]
+     * @param mixed  $returnOrTemplate [description]
+     * @param string $label            [description]
+     *
+     * @return void
+     */
+    protected function timeLog($seconds, $returnOrTemplate = false, $label = null)
+    {
         if (!is_string($returnOrTemplate)) {
             if (!$returnOrTemplate) {
-                $this->appendLog('time', array($label.': '.$ret.' sec'));
+                $this->appendLog('time', array($label.': '.$seconds.' sec'));
             }
         } else {
             $str = $returnOrTemplate;
             $str = str_replace('%label', $label, $str);
-            $str = str_replace('%time', $ret, $str);
+            $str = str_replace('%time', $seconds, $str);
             $this->appendLog('time', array($str));
         }
-        return $ret;
     }
 
     /**

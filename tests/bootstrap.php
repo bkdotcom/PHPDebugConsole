@@ -1,4 +1,4 @@
 <?php
 
-require __DIR__.'/DomTest/DOMTestCase.php';
-require __DIR__.'/DomTest/CssSelect.php';
+require __DIR__.'/DOMTest/DOMTestCase.php';
+require __DIR__.'/DOMTest/CssSelect.php';

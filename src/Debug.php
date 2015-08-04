@@ -619,7 +619,8 @@ class Debug
             }
         }
         array_unshift($args, $method);
-        if (!empty($this->get('file'))) {
+        $file = $this->get('file');
+        if (!empty($file)) {
             $this->appendLogFile($args);
         }
         /*

@@ -3,9 +3,6 @@
  * Run with --process-isolation option
  */
 
-require_once dirname(__FILE__).'/../Debug.php';
-require_once dirname(__FILE__).'/Test.php';
-
 /**
  * PHPUnit tests for Debug class
  */

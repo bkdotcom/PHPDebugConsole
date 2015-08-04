@@ -20,11 +20,10 @@ class Debug
 {
 
     private static $instance;
-    protected $state = null;  // 'output' while in output()
-    protected $cfg = array();
+    protected $config;
     protected $data = array();
-    protected $collect;
     protected $outputSent = false;
+    protected $state = null;  // 'output' while in output()
     public $errorHandler;
     public $output;
     public $utilities;
@@ -45,21 +44,6 @@ class Debug
                 __CLASS__,                  // don't inspect the debug object when encountered
             ),
         ), $cfg);
-        $this->cfg = array(
-            'collect'   => false,
-            'file'      => null,            // if a filepath, will receive log data
-            'key'       => null,
-            'output'    => false,           // should output() actually output to browser (either as html or firephp)
-            // errorMask = errors that appear as "error" in debug console... all other errors are "warn"
-            'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
-                            | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
-            'emailLog'  => false,           // whether to email a debug log. false, 'onError' (true), or 'always'
-                                            //   requires 'collect' to also be true
-            'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
-                ? $_SERVER['SERVER_ADMIN']
-                : null,
-            'emailFunc' => 'mail',          // callable
-        );
         $this->data = array(
             'alert'         => '',
             'collectToggleCount' => 0,  // used to guess if collection was turned on to collect "environment" info
@@ -91,6 +75,7 @@ class Debug
             self::$instance = $this;
         }
         spl_autoload_register(array($this, 'autoloader'));
+        $this->config = new Config($this);
         $this->utilities = new Utilities();
         $this->output = new Output(array(), $this->data);
         $this->varDump = new VarDump(array(), $this->utilities);
@@ -101,7 +86,6 @@ class Debug
         }
         $this->errorHandler->registerOnErrorFunction(array($this,'onError'));
         $this->set($cfg);
-        $this->collect = &$this->cfg['collect'];
         register_shutdown_function(array($this, 'shutdownFunction'));
         return;
     }
@@ -131,7 +115,7 @@ class Debug
      */
     public function assert()
     {
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = func_get_args();
             $test = array_shift($args);
             if (!$test) {
@@ -150,7 +134,7 @@ class Debug
     public function count($label = null)
     {
         $return = 0;
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = array();
             if (isset($label)) {
                 $args[] = $label;
@@ -184,7 +168,7 @@ class Debug
      */
     public function email($emailTo, $subject, $body)
     {
-        call_user_func($this->cfg['emailFunc'], $emailTo, $subject, $body);
+        call_user_func($this->get('emailFunc'), $emailTo, $subject, $body);
     }
 
     /**
@@ -196,7 +180,7 @@ class Debug
      */
     public function error()
     {
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = func_get_args();
             $this->appendLog('error', $args);
         }
@@ -211,32 +195,7 @@ class Debug
      */
     public function get($path)
     {
-        $path = $this->utilities->translateCfgKeys($path);
-        $path = preg_split('#[\./]#', $path);
-        if (isset($this->{$path[0]}) && is_object($this->{$path[0]}) && isset($path[1])) {
-            // child class config value
-            $path_rel = implode('/', array_slice($path, 1));
-            $ret = $this->{$path[0]}->get($path_rel);
-        } else {
-            if ($path[0] == 'data') {
-                $ret = $this->data;
-                array_shift($path);
-            } else {
-                if ($path[0] == 'debug') {
-                    array_shift($path);
-                }
-                $ret = $this->cfg;
-            }
-            foreach ($path as $k) {
-                if (isset($ret[$k])) {
-                    $ret = $ret[$k];
-                } else {
-                    $ret = null;
-                    break;
-                }
-            }
-        }
-        return $ret;
+        return $this->config->get($path);
     }
 
     /**
@@ -266,7 +225,7 @@ class Debug
     public function group()
     {
         $this->data['groupDepth']++;
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = func_get_args();
             if (empty($args)) {
                 $args[] = 'group';
@@ -283,7 +242,7 @@ class Debug
     public function groupCollapsed()
     {
         $this->data['groupDepth']++;
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = func_get_args();
             if (empty($args)) {
                 $args[] = 'group';
@@ -332,7 +291,7 @@ class Debug
         if ($errorCaller && isset($errorCaller['depth']) && $this->data['groupDepth'] < $errorCaller['depth']) {
             $this->errorHandler->setErrorCaller(null);
         }
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = func_get_args();
             $this->appendLog('groupEnd', $args);
         }
@@ -345,7 +304,7 @@ class Debug
      */
     public function info()
     {
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = func_get_args();
             $this->appendLog('info', $args);
         }
@@ -358,7 +317,7 @@ class Debug
      */
     public function log()
     {
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = func_get_args();
             $this->appendLog('log', $args);
         }
@@ -377,7 +336,7 @@ class Debug
     {
         $return = null;
         $this->state = 'output';
-        if ($this->cfg['output']) {
+        if ($this->get('output')) {
             array_unshift($this->data['log'], array('info','Built In '.$this->timeEnd('debugInit', true).' sec'));
             $return = $this->output->output();
             $this->outputSent = true;
@@ -398,69 +357,51 @@ class Debug
      *    set('level1.level2', 'value')
      *    set(array('k1'=>'v1', 'k2'=>'v2'))
      *
-     * @param string $path   path
-     * @param mixed  $newVal value
+     * @param string|array $path   path
+     * @param mixed        $newVal value
      *
      * @return mixed
      */
     public function set($path, $newVal = null)
     {
-        $ret = null;
-        $new = array();
-        $path = $this->utilities->translateCfgKeys($path);
-        if (is_string($path)) {
-            $ret = $this->get($path);
-            // build $new array from the passed string
-            $path = preg_split('#[\./]#', $path);
-            $ref = &$new;
-            foreach ($path as $k) {
-                $ref[$k] = array(); // initialize this level
-                $ref = &$ref[$k];
-            }
-            $ref = $newVal;
-        } elseif (is_array($path)) {
-            $new = $path;
-        }
-        if (isset($new['debug']['key'])) {
-            // update 'collect and output'
-            $requestKey = null;
-            if (isset($_REQUEST['debug'])) {
-                $requestKey = $_REQUEST['debug'];
-            } elseif (isset($_COOKIE['debug'])) {
-                $requestKey = $_COOKIE['debug'];
-            }
-            $validKey = $requestKey == $new['debug']['key'];
-            if ($validKey) {
-                // only enable collect / don't disable it
-                $new['debug']['collect'] = true;
-            }
-            $new['debug']['output'] = $validKey;
-        }
-        if (isset($new['debug']['emailLog']) && $new['debug']['emailLog'] === true) {
-            $new['debug']['emailLog'] = 'onError';
-        }
-        foreach (array('emailFunc','emailTo') as $key) {
-            if (isset($new['debug'][$key]) && !isset($new['errorHandler'][$key])) {
-                // also set for errorHandler
-                $new['errorHandler'][$key] = $new['debug'][$key];
-            }
-        }
-        if (isset($new['data'])) {
-            $this->data = array_merge($this->data, $new['data']);
-        }
-        if (isset($new['debug'])) {
-            if (isset($new['debug']['collect']) && $new['debug']['collect'] !== $this->collect) {
-                $this->data['collectToggleCount']++;
-            }
-            $this->cfg = $this->utilities->arrayMergeDeep($this->cfg, $new['debug']);
-        }
-        foreach ($new as $k => $v) {
-            if (is_array($v) && isset($this->{$k}) && is_object($this->{$k})) {
-                $ret = $this->{$k}->set($v);
-                unset($new[$k]);
+        return $this->config->set($path, $newVal);
+    }
+
+    /**
+     * Advanced usage
+     *
+     * @param string $path path
+     *
+     * @return mixed
+     */
+    public function dataGet($path)
+    {
+        $path = preg_split('#[\./]#', $path);
+        $ret = $this->data;
+        foreach ($path as $k) {
+            if (isset($ret[$k])) {
+                $ret = $ret[$k];
+            } else {
+                $ret = null;
+                break;
             }
         }
         return $ret;
+    }
+
+    /**
+     * Advanced usage
+     *
+     * @param array $merge array to merge with $this->data
+     *
+     * @return void
+     */
+    public function dataSet($data)
+    {
+        if ($data['collectToggleCount'] && is_bool($data['collectToggleCount'])) {
+            $data['collectToggleCount'] = $data['collectToggleCount'] + 1;
+        }
+        $this->data = array_merge($this->data, $data);
     }
 
     /**
@@ -488,7 +429,7 @@ class Debug
      */
     public function table()
     {
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = func_get_args();
             $args_not_array = array();
             $have_array = false;
@@ -651,7 +592,7 @@ class Debug
      */
     public function warn()
     {
-        if ($this->collect) {
+        if ($this->config->collect) {
             $args = func_get_args();
             $this->appendLog('warn', $args);
         }
@@ -678,7 +619,7 @@ class Debug
             }
         }
         array_unshift($args, $method);
-        if (!empty($this->cfg['file'])) {
+        if (!empty($this->get('file'))) {
             $this->appendLogFile($args);
         }
         /*
@@ -701,12 +642,12 @@ class Debug
     protected function appendLogFile($args)
     {
         if (!isset($this->data['fileHandle'])) {
-            $this->data['fileHandle'] = fopen($this->cfg['file'], 'a');
+            $this->data['fileHandle'] = fopen($this->get('file'), 'a');
             if ($this->data['fileHandle']) {
                 fwrite($this->data['fileHandle'], '***** '.date('Y-m-d H:i:s').' *****'."\n");
             } else {
                 // failed to open file
-                $this->cfg['file'] = null;
+                $this->set('file', null);
             }
         }
         if ($this->data['fileHandle']) {
@@ -787,16 +728,16 @@ class Debug
     public function onError($error)
     {
         $return = null;
-        if ($this->collect) {
+        if ($this->config->collect) {
             $return = false;    // no need to error_log or email this error
             $errStr = $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message'];
-            if ($error['type'] & $this->cfg['errorMask']) {
+            if ($error['type'] & $this->get('errorMask')) {
                 $this->error($errStr);
             } else {
                 $this->warn($errStr);
             }
             $this->errorHandler->set('data/errors/'.$error['hash'].'/inConsole', true);
-            if (in_array($this->cfg['emailLog'], array('always','onError'))) {
+            if (in_array($this->get('emailLog'), array('always','onError'))) {
                 // Don't let errorHandler email error.  our shutdownFunction will email log
                 $this->errorHandler->set('data/currentError/allowEmail', false);
             }
@@ -816,12 +757,12 @@ class Debug
     {
         $email = false;
         // data['log']  will likely be non-empty... initial debug info is always collected
-        $toggledOnOff = $this->data['collectToggleCount'] == 2 && !$this->collect;
+        $toggledOnOff = $this->data['collectToggleCount'] == 2 && !$this->config->collect;
         $haveLog = !empty($this->data['log']) && !$toggledOnOff;
-        if ($this->cfg['emailTo'] && !$this->cfg['output'] && $haveLog) {
-            if ($this->cfg['emailLog'] === 'always') {
+        if ($this->get('emailTo') && !$this->get('output') && $haveLog) {
+            if ($this->get('emailLog') === 'always') {
                 $email = true;
-            } elseif ($this->cfg['emailLog'] === 'onError') {
+            } elseif ($this->get('emailLog') === 'onError') {
                 $unsuppressedError = false;
                 $emailableError = false;
                 $errors = $this->errorHandler->get('errors');

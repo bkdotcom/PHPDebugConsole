@@ -79,7 +79,7 @@ class Output
             "attach" "serialized" log
         */
         $body .= 'Request: '.$_SERVER['REQUEST_METHOD'].': '.$_SERVER['REQUEST_URI']."\n\n";
-        $body .= $this->debug->utilities->serializeLog($this->debug->get('data/log'));
+        $body .= $this->debug->utilities->serializeLog($this->data['log']);
         /*
             Now email
         */

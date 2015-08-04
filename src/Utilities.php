@@ -255,61 +255,6 @@ class Utilities
     }
 
     /**
-     * translate configuration keys
-     *
-     * @param mixed $mixed string key or config array
-     *
-     * @return mixed
-     */
-    public static function translateCfgKeys($mixed)
-    {
-        $objKeys = array(
-            'varDump' => array(
-                'addBR', 'objectSort', 'objectsExclude', 'useDebugInfo',
-                'collectConstants', 'outputConstants', 'collectMethods', 'outputMethods',
-            ),
-            'errorHandler' => array('emailThrottledSummary', 'lastError', 'onError'),
-            'output' => array(
-                'css', 'filepathCss', 'filepathScript', 'firephpInc', 'firephpOptions',
-                'onOutput', 'outputAs', 'outputCss', 'outputScript',
-            ),
-        );
-        if (is_string($mixed)) {
-            $path = preg_split('#[\./]#', $mixed);
-            foreach ($objKeys as $objKey => $keys) {
-                if (in_array($path[0], $keys)) {
-                    array_unshift($path, $objKey);
-                    break;
-                }
-            }
-            if (count($path)==1) {
-                array_unshift($path, 'debug');
-            }
-            $mixed = implode('/', $path);
-        } elseif (is_array($mixed)) {
-            $mixedNew = array();
-            foreach ($mixed as $k => $v) {
-                $translated = false;
-                foreach ($objKeys as $objKey => $keys) {
-                    if ($k == $objKey && is_array($v)) {
-                        $translated = true;
-                        break;
-                    } elseif (in_array($k, $keys)) {
-                        $mixedNew[$objKey][$k] = $v;
-                        $translated = true;
-                        break;
-                    }
-                }
-                if (!$translated) {
-                    $mixedNew['debug'][$k] = $v;
-                }
-            }
-            $mixed = $mixedNew;
-        }
-        return $mixed;
-    }
-
-    /**
      * serialize log for emailing
      *
      * @param string $str string

@@ -3,9 +3,6 @@
  * Run with --process-isolation option
  */
 
-require_once dirname(__FILE__).'/../Debug.php';
-require_once dirname(__FILE__).'/Test.php';
-
 /**
  * PHPUnit tests for Debug class
  */
@@ -74,14 +71,13 @@ class DebugTests extends PHPUnit_Framework_DOMTestCase
         $array = array();
         $array[] = &$array;
         $this->debug->log('array', $array);
-        $abstraction = $this->debug->get('data/log/0/2');
+        $abstraction = $this->debug->dataGet('log/0/2');
         $this->assertEquals(
             true,
             $abstraction['values'][0]['isRecursion'],
             'Did not find expected recursion'
         );
         $output = $this->debug->output();
-
         $test_a = array( 'foo' => 'bar' );
         $test_a['val'] = &$test_a;
         $this->debug->log('test_a', $test_a);
@@ -108,9 +104,9 @@ class DebugTests extends PHPUnit_Framework_DOMTestCase
     }
 
     /**
-     * @return void
-     *
      * v 1.0 = fatal error
+     *
+     * @return void
      */
     public function testDereferenceObject()
     {
@@ -139,7 +135,7 @@ class DebugTests extends PHPUnit_Framework_DOMTestCase
         $test->prop = array();
         $test->prop[] = &$test->prop;
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->get('data/log/0/2');
+        $abstraction = $this->debug->dataGet('log/0/2');
         $this->assertEquals(
             true,
             $abstraction['properties']['prop']['value']['values'][0]['isRecursion'],
@@ -152,7 +148,6 @@ class DebugTests extends PHPUnit_Framework_DOMTestCase
             > .t_array .array-inner > .key-value
             > .t_array
             > .t_recursion';
-        $found = \bdk\CssSelect::select($output, $select);
         $this->assertSelectCount($select, 1, $output);
     }
 
@@ -174,7 +169,7 @@ class DebugTests extends PHPUnit_Framework_DOMTestCase
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
         */
-        $abstraction = $this->debug->get('data/log/0/2');
+        $abstraction = $this->debug->dataGet('log/0/2');
         $this->assertEquals(
             true,
             $abstraction['properties']['prop']['value']['isRecursion'],
@@ -202,7 +197,7 @@ class DebugTests extends PHPUnit_Framework_DOMTestCase
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
         */
-        $abstraction = $this->debug->get('data/log/0/2');
+        $abstraction = $this->debug->dataGet('log/0/2');
         $this->assertEquals(
             true,
             $abstraction['properties']['prop']['value']['values'][0]['isRecursion'],
@@ -253,7 +248,7 @@ class DebugTests extends PHPUnit_Framework_DOMTestCase
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
         */
-        $abstraction = $this->debug->get('data/log/0/2');
+        $abstraction = $this->debug->dataGet('log/0/2');
         $this->assertEquals(
             true,
             $abstraction['properties']['ob']['value']['properties']['oa']['value']['isRecursion'],

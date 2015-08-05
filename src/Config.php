@@ -18,7 +18,6 @@ class Config
 
 	protected $cfg = array();
 	protected $debug;
-	public $collect;
 
 	/**
 	 * Constructor
@@ -26,24 +25,9 @@ class Config
 	 * @param object $debug debug object
 	 * @param array  $cfg   configuration
 	 */
-	public function __construct($debug)
+	public function __construct($debug, &$cfg)
 	{
-        $this->cfg = array(
-            'collect'   => false,
-            'file'      => null,            // if a filepath, will receive log data
-            'key'       => null,
-            'output'    => false,           // should output() actually output to browser (either as html or firephp)
-            // errorMask = errors that appear as "error" in debug console... all other errors are "warn"
-            'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
-                            | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
-            'emailLog'  => false,           // whether to email a debug log. false, 'onError' (true), or 'always'
-                                            //   requires 'collect' to also be true
-            'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
-                ? $_SERVER['SERVER_ADMIN']
-                : null,
-            'emailFunc' => 'mail',          // callable
-        );
-        $this->collect = &$this->cfg['collect'];
+        $this->cfg = &$cfg;
         $this->debug = $debug;
 	}
 
@@ -113,7 +97,7 @@ class Config
                 $this->setGetKeyValues($new['cfg']['key'])
             );
         }
-        if (isset($new['cfg']['collect']) && $new['cfg']['collect'] !== $this->collect) {
+        if (isset($new['cfg']['collect']) && $new['cfg']['collect'] !== $this->cfg['collect']) {
             $new['data']['collectToggleCount'] = true;
         }
         foreach ($new as $k => $v) {

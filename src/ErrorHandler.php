@@ -203,7 +203,7 @@ class ErrorHandler
      *
      * @return integer|boolean number of bytes written or false on error
      */
-    public function fileWrite($file, $str)
+    protected function fileWrite($file, $str)
     {
         $return = false;
         if (!file_exists($file)) {

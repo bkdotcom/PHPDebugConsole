@@ -152,7 +152,13 @@ class CssSelect
         foreach ($element->childNodes as $child) {
             $innerHTML .= $element->ownerDocument->saveHTML($child);
         }
-        return $innerHTML;
+        /*
+            saveHTML doesn't close "void" tags  :(
+        */
+        $voidTags = array('area','base','br','col','command','embed','hr','img','input','keygen','link','meta','param','source','track','wbr');
+        $regEx = '#<('.implode('|', $voidTags).')(\b[^>]*)>#';
+        $innerHTML = preg_replace($regEx, '<\\1\\2 />', $innerHTML);
+        return trim($innerHTML);
     }
 
     /**

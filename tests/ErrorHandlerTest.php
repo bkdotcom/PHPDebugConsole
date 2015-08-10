@@ -6,24 +6,12 @@
 /**
  * PHPUnit tests for Debug class
  */
-class ErrorHandlerTests extends PHPUnit_Framework_TestCase
+class ErrorHandlerTest extends PHPUnit_Framework_TestCase
 {
 
     /**
-     * @return void
-     */
-    public function testEmailErr()
-    {
-    }
-
-    /**
-     * @return void
-     */
-    public function testFileWrite()
-    {
-    }
-
-    /**
+     * Test
+     *
      * @return void
      */
     public function testGet()
@@ -31,6 +19,8 @@ class ErrorHandlerTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testGetInstance()
@@ -38,6 +28,8 @@ class ErrorHandlerTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testHandler()
@@ -45,6 +37,8 @@ class ErrorHandlerTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testRegister()
@@ -52,6 +46,8 @@ class ErrorHandlerTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testRegisterOnErrorFunction()
@@ -59,6 +55,8 @@ class ErrorHandlerTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testSet()
@@ -66,6 +64,8 @@ class ErrorHandlerTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testSetErrorCaller()
@@ -73,6 +73,8 @@ class ErrorHandlerTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testShutdownFunction()
@@ -80,6 +82,8 @@ class ErrorHandlerTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testUnregister()
@@ -87,10 +91,11 @@ class ErrorHandlerTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testUnregisterOnErrorFunction()
     {
     }
-
 }

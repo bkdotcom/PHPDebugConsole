@@ -408,7 +408,7 @@ class Debug
     /**
      * Advanced usage
      *
-     * @param array $merge array to merge with $this->data
+     * @param array $data array to merge with $this->data
      *
      * @return void
      */
@@ -447,11 +447,13 @@ class Debug
     {
         if ($this->cfg['collect']) {
             $args = func_get_args();
-            $args_not_array = array();
+            $args_label = array();
             $have_array = false;
             foreach ($args as $k => $v) {
                 if (!is_array($v) || $have_array) {
-                    $args_not_array[] = $v;
+                    if (!is_array($v)) {
+                        $args_label[] = (string) $v;
+                    }
                     unset($args[$k]);
                 } else {
                     $have_array = true;
@@ -459,12 +461,12 @@ class Debug
             }
             $method = 'table';
             if ($have_array) {
-                if (!empty($args_not_array)) {
-                    $args[] = implode(' ', $args_not_array);
+                if (!empty($args_label)) {
+                    $args[] = implode(' ', $args_label);
                 }
             } else {
                 $method = 'log';
-                $args = $args_not_array;
+                $args = $args_label;
                 if (count($args) == 2 && !is_string($args[0])) {
                     $args[] = array_shift($args);
                 }

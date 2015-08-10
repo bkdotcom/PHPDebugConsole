@@ -12,9 +12,9 @@ class Test
 
     const MY_CONSTANT = 'constant value';
 
-	/**
-	 * Public Property.
-	 */
+    /**
+     * Public Property.
+     */
     public $propPublic = 'iAmPublic';
     /**
      * Private Property.
@@ -87,7 +87,7 @@ class Test
      * @deprecated
      */
     public function methodPublic(\SomeClass $param1, $param2 = SOMECONSTANT, array $param3 = array())
-	{
+    {
 
     }
 
@@ -97,7 +97,7 @@ class Test
      * @param mixed   $param1     first param (passed by ref)
      * @param mixed   $param2     second param (passed by ref)
      * @param boolean $moreParams variadic param (PHP 5.6)
-	 *
+     *
      * @return void
      */
     private function methodPrivate(\SomeClass &$param1, &$param2)    // , ...$moreParams

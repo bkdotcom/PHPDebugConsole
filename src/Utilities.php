@@ -119,14 +119,11 @@ class Utilities
     public static function getResponseHeader($key = 'Content-Type')
     {
         $value = null;
-        if (function_exists('headers_list')) {
-            $headers = headers_list();
-            $key = 'Content-Type';
-            foreach ($headers as $header) {
-                if (preg_match('/^'.$key.':\s*([^;]*)/i', $header, $matches)) {
-                    $value = $matches[1];
-                    break;
-                }
+        $headers = headers_list();
+        foreach ($headers as $header) {
+            if (preg_match('/^'.$key.':\s*([^;]*)/i', $header, $matches)) {
+                $value = $matches[1];
+                break;
             }
         }
         return $value;
@@ -141,11 +138,11 @@ class Utilities
      */
     public static function isBase64Encoded($str)
     {
-        return preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', trim($str));
+        return (boolean) preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', trim($str));
     }
 
     /**
-     * Intent is to check if a given string is "binary" data or readable text
+     * Intent is to check if a given string contains non-readable "binary" text
      *
      * @param string $str string to check
      *
@@ -242,12 +239,21 @@ class Utilities
     {
         if (extension_loaded('mbstring') && function_exists('iconv')) {
             $encoding = mb_detect_encoding($str, mb_detect_order(), true);
-            if ($encoding && !in_array($encoding, array('ASCII','UTF-8'))) {
+            if (!$encoding) {
+                $str_conv = false;
+                if (function_exists('iconv')) {
+                    $str_conv = @iconv('cp1252', 'UTF-8', $str);
+                }
+                if ($str_conv === false) {
+                    fwrite(STDOUT, 'Desperation'. "\n");
+                    $str_conv = htmlentities($str, ENT_COMPAT);
+                    $str_conv = html_entity_decode($str_conv, ENT_COMPAT, 'UTF-8');
+                }
+                $str = $str_conv;
+            } elseif (!in_array($encoding, array('ASCII','UTF-8'))) {
                 $str_new = iconv($encoding, 'UTF-8', $str);
                 if ($str_new !== false) {
                     $str = $str_new;
-                } else {
-                    // iconv error?
                 }
             }
         }
@@ -257,7 +263,7 @@ class Utilities
     /**
      * serialize log for emailing
      *
-     * @param string $str string
+     * @param array $log string
      *
      * @return string
      */

@@ -6,10 +6,12 @@
 /**
  * PHPUnit tests for Debug class
  */
-class OutputTests extends PHPUnit_Framework_TestCase
+class OutputTest extends PHPUnit_Framework_TestCase
 {
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testEmailLog()
@@ -17,6 +19,8 @@ class OutputTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testErrorSummary()
@@ -24,6 +28,8 @@ class OutputTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testGet()
@@ -31,6 +37,8 @@ class OutputTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
      * @return void
      */
     public function testGetCss()
@@ -38,6 +46,17 @@ class OutputTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
+     * @return void
+     */
+    public function testGetMetaArg()
+    {
+    }
+
+    /**
+     * Test
+     *
      * @return void
      */
     public function testOutput()
@@ -45,6 +64,18 @@ class OutputTests extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test
+     *
+     * @return void
+     */
+    public function testGetLogEntryAsText()
+    {
+    }
+
+
+    /**
+     * Test
+     *
      * @return void
      */
     public function testSet()

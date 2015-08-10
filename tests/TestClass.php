@@ -7,7 +7,7 @@ define('SOMECONSTANT', 'Constant value');
 /**
  * Test
  */
-class Test
+class TestClass
 {
 
     const MY_CONSTANT = 'constant value';
@@ -94,13 +94,12 @@ class Test
     /**
      * This method is private
      *
-     * @param mixed   $param1     first param (passed by ref)
-     * @param mixed   $param2     second param (passed by ref)
-     * @param boolean $moreParams variadic param (PHP 5.6)
+     * @param mixed $param1 first param (passed by ref)
+     * @param mixed $param2 second param (passed by ref)
      *
      * @return void
      */
-    private function methodPrivate(\SomeClass &$param1, &$param2)    // , ...$moreParams
+    private function methodPrivate(\SomeClass &$param1, &$param2)
     {
 
     }
@@ -108,12 +107,11 @@ class Test
     /**
      * This method is protected
      *
-     * @param mixed $param1     first param
-     * @param mixed $moreParams variadic param by reference (PHP 5.6)
+     * @param mixed $param1 first param
      *
      * @return void
      */
-    protected function methodProtected($param1) // , &...$moreParams
+    protected function methodProtected($param1)
     {
 
     }

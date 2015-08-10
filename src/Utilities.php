@@ -242,7 +242,7 @@ class Utilities
             if (!$encoding) {
                 $str_conv = false;
                 if (function_exists('iconv')) {
-                    $str_conv = @iconv('cp1252', 'UTF-8', $str);
+                    $str_conv = iconv('cp1252', 'UTF-8', $str);
                 }
                 if ($str_conv === false) {
                     fwrite(STDOUT, 'Desperation'. "\n");

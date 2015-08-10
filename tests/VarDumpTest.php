@@ -187,7 +187,7 @@ class VarDumpTest extends PHPUnit_Framework_DOMTestCase
     public function testDereferenceObject()
     {
         $test_val = 'success A';
-        $test_o = new \bdk\DebugTest\Test();
+        $test_o = new \bdk\DebugTest\TestClass();
         $test_o->prop = &$test_val;
         $this->debug->log('test_o', $test_o);
         $test_val = 'success B';
@@ -207,7 +207,7 @@ class VarDumpTest extends PHPUnit_Framework_DOMTestCase
      */
     public function testRecursiveObjectProp1()
     {
-        $test = new \bdk\DebugTest\Test();
+        $test = new \bdk\DebugTest\TestClass();
         $test->prop = array();
         $test->prop[] = &$test->prop;
         $this->debug->log('test', $test);
@@ -234,7 +234,7 @@ class VarDumpTest extends PHPUnit_Framework_DOMTestCase
      */
     public function testRecursiveObjectProp2()
     {
-        $test = new \bdk\DebugTest\Test();
+        $test = new \bdk\DebugTest\TestClass();
         $test->prop = &$test;
         $this->debug->log('test', $test);
         /*
@@ -263,7 +263,7 @@ class VarDumpTest extends PHPUnit_Framework_DOMTestCase
      */
     public function testRecursiveObjectProp3()
     {
-        $test = new \bdk\DebugTest\Test();
+        $test = new \bdk\DebugTest\TestClass();
         $test->prop = array( &$test );
         $this->debug->log('test', $test);
         /*
@@ -313,8 +313,8 @@ class VarDumpTest extends PHPUnit_Framework_DOMTestCase
      */
     public function testCrossRefObjects()
     {
-        $test_oa = new \bdk\DebugTest\Test();
-        $test_ob = new \bdk\DebugTest\Test();
+        $test_oa = new \bdk\DebugTest\TestClass();
+        $test_ob = new \bdk\DebugTest\TestClass();
         $test_oa->prop = 'this is object a';
         $test_ob->prop = 'this is object b';
         $test_oa->ob = $test_ob;

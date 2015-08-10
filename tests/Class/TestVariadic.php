@@ -7,7 +7,7 @@ namespace bdk\DebugTest;
  *
  * Variadic: PHP >= 5.6
  */
-class TestClassVariadic extends TestClass
+class TestVariadic extends Test
 {
 
     /**

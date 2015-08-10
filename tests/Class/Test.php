@@ -7,7 +7,7 @@ define('SOMECONSTANT', 'Constant value');
 /**
  * Test
  */
-class TestClass
+class Test
 {
 
     const MY_CONSTANT = 'constant value';
@@ -37,7 +37,6 @@ class TestClass
      */
     public function __construct()
     {
-        // $this->someArray['obj'] = new Utilities();
         $this->debug = \bdk\Debug\Debug::getInstance();
         $this->instance = $this;
     }

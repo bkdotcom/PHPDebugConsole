@@ -8,7 +8,7 @@ namespace bdk\DebugTest;
  * Variadic: PHP >= 5.6
  * HHVM does not support Variadic by reference
  */
-class TestClassVariadicByReference extends TestClassVariadic
+class TestVariadicByReference extends TestVariadic
 {
 
     /**

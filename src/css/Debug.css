@@ -181,6 +181,7 @@
 	font-family: Courier New,monospace,Ariel;
 	color: #009;
 	font-size: 1.15em;
+	line-height: 1.15em;
 }
 /*.debug .t_object + br { display: none; }*/
 .debug .t_key { opacity: .75; }

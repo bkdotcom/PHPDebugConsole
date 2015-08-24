@@ -157,6 +157,7 @@ class ErrorHandler
             .'line: '.$error['line']."\n"
             .'remote_addr: '.$_SERVER['REMOTE_ADDR']."\n"
             .'http_host: '.$_SERVER['HTTP_HOST']."\n"
+            .'referer: '.$_SERVER['HTTP_REFERER']."\n"
             .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
             .'';
         if (!empty($_POST)) {

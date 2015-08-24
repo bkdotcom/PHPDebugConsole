@@ -423,7 +423,7 @@ class VarDumpObject
         if (!$return['isRecursion'] && !$return['excluded']) {
             $return['properties'] = $this->getProperties($obj, $hist);
             if (in_array('Traversable', $return['implements'])) {
-                $return['misc']['count'] = iterator_count($obj);
+                // iterator_count() alters the state of the object!
             }
             if ($this->debug->varDump->get('collectConstants')) {
                 $return['constants'] = $reflectionClass->getConstants();
@@ -598,6 +598,16 @@ class VarDumpObject
             : array();
         $isDebugObj = $objNamespace == __NAMESPACE__;
         unset($reflectionObject);
+        if ($obj instanceof \DOMNodeList) {
+            // for reasons unknown, DOMNodeList's properties are invisible to reflection
+            $propArray['length'] = array(
+                'visibility' => 'public',
+                'isStatic' => false,
+                'type' => 'integer',
+                'value' => $obj->length,
+                'desc' => VarDump::UNDEFINED,
+            );
+        }
         while ($properties) {
             $prop = array_shift($properties);
             $name = $prop->getName();

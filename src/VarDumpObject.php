@@ -422,9 +422,6 @@ class VarDumpObject
         );
         if (!$return['isRecursion'] && !$return['excluded']) {
             $return['properties'] = $this->getProperties($obj, $hist);
-            if (in_array('Traversable', $return['implements'])) {
-                // iterator_count() alters the state of the object!
-            }
             if ($this->debug->varDump->get('collectConstants')) {
                 $return['constants'] = $reflectionClass->getConstants();
                 if ($this->debug->varDump->get('objectSort') == 'name') {

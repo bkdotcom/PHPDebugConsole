@@ -114,7 +114,7 @@ class Config
 	}
 
     /**
-     * [setCopyValues description]
+     * some config values exist in multiple modules
      *
      * @param array $values values
      *
@@ -226,6 +226,7 @@ class Config
                 $translated = false;
                 foreach ($objKeys as $objKey => $keys) {
                     if ($k == $objKey && is_array($v)) {
+                        $mixedNew[$objKey] = $v;
                         $translated = true;
                         break;
                     } elseif (in_array($k, $keys)) {

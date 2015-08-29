@@ -366,6 +366,7 @@ class ErrorHandler
     {
         $data = &$this->data;
         $onErrorReturnedFalse = false;
+        $error['stats'] = $this->throttleDataGet($error);
         foreach ($this->onErrorFunctions as $callable) {
             $response = call_user_func($callable, $error);
             if ($response === false) {
@@ -550,6 +551,51 @@ class ErrorHandler
     }
 
     /**
+     * Load throttle data
+     *
+     * @return void
+     */
+    protected function throttleDataLoad()
+    {
+        if (!$this->throttleData) {
+            $dataStr = is_readable($this->cfg['emailThrottleFile'])
+                            ? file_get_contents($this->cfg['emailThrottleFile'])
+                            : '';
+            $throttleData = json_decode($dataStr, true);
+            if (!is_array($throttleData)) {
+                $tsNow = time();
+                $throttleData = array(
+                    'tsTrashCollection' => $tsNow,
+                    'errors' => array(),
+                );
+            }
+            $this->throttleData = $throttleData;
+        }
+    }
+
+    /**
+     * load throttle stats for passed error
+     *
+     * @param array $error error array
+     *
+     * @return aarray
+     */
+    protected function throttleDataGet($error)
+    {
+        $return = $this->data['lastError']['stats']; // initialize
+        if ($this->cfg['emailThrottleFile']) {
+            $this->throttleDataLoad();
+            $hash = $error['hash'];
+            if (isset($this->throttleData['errors'][$hash])) {
+                foreach (array_keys($return) as $k) {
+                    $return[$k] = $this->throttleData['errors'][$hash][$k];
+                }
+            }
+        }
+        return $return;
+    }
+
+    /**
      * Returns associative array containing
      *    tsEmailed     // previously emailed ts
      *    countSince    // times error has occured since being emailed
@@ -557,34 +603,20 @@ class ErrorHandler
      *
      * @param array $error error array
      *
-     * @return array
+     * @return array error's throttle stats
      */
     protected function throttleDataUpdate($error)
     {
-        $return = $this->data['lastError']['stats']; // initialize
+        $return = $error['stats'];
         $cfg = &$this->cfg;
         if ($cfg['emailThrottleFile']) {
-            $tsNow = time();
-            $tsCutoff = $tsNow - $cfg['emailMin'] * 60;
-            $hash = $this->getErrorHash($error);
             $throttleData = &$this->throttleData;
-            if (!$throttleData) {
-                $dataStr = is_readable($cfg['emailThrottleFile'])
-                                ? file_get_contents($cfg['emailThrottleFile'])
-                                : '';
-                $throttleData = json_decode($dataStr, true);
-                if (!is_array($throttleData)) {
-                    $throttleData = array(
-                        'tsTrashCollection' => $tsNow,
-                        'errors' => array(),
-                    );
-                }
-            }
-            $init = true;
-            if (isset($throttleData['errors'][$hash])) {
-                foreach (array_keys($return) as $k) {
-                    $return[$k] = $throttleData['errors'][$hash][$k];
-                }
+            $hash = $error['hash'];
+            $init = true;   // initialize this errors throttleData
+            $tsNow = time();
+            if ($return['tsEmailed']) {
+                // error has been emailed at some point
+                $tsCutoff = $tsNow - $cfg['emailMin'] * 60;
                 if ($throttleData['errors'][$hash]['tsEmailed'] > $tsCutoff) {
                     // This error was recently emailed
                     $init = false;

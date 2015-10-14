@@ -77,13 +77,10 @@ class Debug
                 'stack' => array(),
             ),
         );
-        if (isset($_SERVER['REQUEST_TIME_FLOAT'])) {
-            list($whole, $dec) = explode('.', $_SERVER['REQUEST_TIME_FLOAT']);
-            $microT = '.'.$dec.' '.$whole;
-            $this->data['timers']['labels']['debugInit'] = array(0, $microT);
-        } else {
-            $this->data['timers']['labels']['debugInit'] = array(0, microtime());
-        }
+        $microT = isset($_SERVER['REQUEST_TIME_FLOAT'])
+            ? $_SERVER['REQUEST_TIME_FLOAT']
+            : microtime(true);
+        $this->data['timers']['labels']['debugInit'] = array(0, $microT);
         // Initialize self::$instance if not set
         //    so that self::getInstance() will always return original instance
         //    as opposed the the last instance created with new Debug()
@@ -118,9 +115,7 @@ class Debug
         $className = ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
         if (preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches) && $matches[1] === __NAMESPACE__) {
             $filePath = __DIR__.'/'.$matches[2].'.php';
-            if (file_exists($filePath)) {
-                require $filePath;
-            }
+            require $filePath;
         }
     }
 
@@ -494,13 +489,13 @@ class Debug
             $timers = &$this->data['timers']['labels'];
             if (!isset($timers[$label])) {
                 // new label
-                $timers[$label] = array(0, microtime());
+                $timers[$label] = array(0, microtime(true));
             } elseif (!isset($timers[$label][1])) {
                 // no microtime -> the timer is currently paused -> unpause
-                $timers[$label][1] = microtime();
+                $timers[$label][1] = microtime(true);
             }
         } else {
-            $this->data['timers']['stack'][] = microtime();
+            $this->data['timers']['stack'][] = microtime(true);
         }
         return;
     }
@@ -518,11 +513,11 @@ class Debug
      */
     public function timeEnd($label = null, $returnOrTemplate = false)
     {
-        if (is_bool($label)) {
+        if (is_bool($label) || strpos($label, '%time') !== false) {
             $returnOrTemplate = $label;
             $label = null;
         }
-        $ret = $this->timeGet($label, true, null); // get not-rounded running time
+        $ret = $this->timeGet($label, true, null); // get non-rounded running time
         if (isset($label)) {
             if (isset($this->data['timers']['labels'][$label])) {
                 $this->data['timers']['labels'][$label] = array(
@@ -542,7 +537,7 @@ class Debug
     /**
      * Get the running time without stopping/pausing the timer
      *
-     * @param string         $label            unique label
+     * @param string         $label            (optional) unique label
      * @param string|boolean $returnOrTemplate string: "%label: %time"
      *                                         boolean:  If true, only return time, rather than log it
      * @param integer        $precision        rounding precision (pass null for no rounding)
@@ -551,45 +546,45 @@ class Debug
      */
     public function timeGet($label = null, $returnOrTemplate = false, $precision = 4)
     {
-        if (is_bool($label)) {
+        if (is_bool($label) || strpos($label, '%time') !== false) {
             $precision = $returnOrTemplate;
             $returnOrTemplate = $label;
             $label = null;
         }
         $microT = 0;
-        $ret = 0;
-        if (isset($label)) {
-            if (isset($this->data['timers']['labels'][$label])) {
-                list($ret, $microT) = $this->data['timers']['labels'][$label];
-            }
-        } else {
+        $ellapsed = 0;
+        if (!isset($label)) {
             $label = 'time';
-            $microT = end($this->data['timers']['stack']);
+            if (empty($this->data['timers']['stack'])) {
+                list($ellapsed, $microT) = $this->data['timers']['labels']['debugInit'];
+            } else {
+                $microT = end($this->data['timers']['stack']);
+            }
+        } elseif (isset($this->data['timers']['labels'][$label])) {
+            list($ellapsed, $microT) = $this->data['timers']['labels'][$label];
         }
         if ($microT) {
-            // compute time ellapsed since started
-            list($a_dec, $a_sec) = explode(' ', $microT);
-            list($b_dec, $b_sec) = explode(' ', microtime());
-            $ellapsed = (float)$b_sec - (float)$a_sec + (float)$b_dec - (float)$a_dec;
-            $ret += $ellapsed;
+            $ellapsed += microtime(true) - $microT;
         }
         if (is_int($precision)) {
-            $ret = round($ret, $precision);
+            $ellapsed = round($ellapsed, $precision);
         }
-        $this->timeLog($ret, $returnOrTemplate, $label);
-        return $ret;
+        $this->timeLog($ellapsed, $returnOrTemplate, $label);
+        return $ellapsed;
     }
 
     /**
      * Log time
      *
-     * @param float  $seconds          [description]
-     * @param mixed  $returnOrTemplate [description]
-     * @param string $label            [description]
+     * @param float  $seconds          seconds
+     * @param mixed  $returnOrTemplate false: log the time (default)
+     *                                 true: do not log
+     *                                 string: log using passed template
+     * @param string $label            label
      *
      * @return void
      */
-    protected function timeLog($seconds, $returnOrTemplate = false, $label = null)
+    protected function timeLog($seconds, $returnOrTemplate = false, $label = 'time')
     {
         if (!is_string($returnOrTemplate)) {
             if (!$returnOrTemplate) {

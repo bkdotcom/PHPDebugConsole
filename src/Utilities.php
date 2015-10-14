@@ -109,6 +109,24 @@ class Utilities
     }
 
     /**
+     * returns required/included files sorted by directory
+     *
+     * @return array
+     */
+    public static function getIncludedFiles()
+    {
+        $includedFiles = get_included_files();
+        usort($includedFiles, function ($a, $b) {
+            $adir = dirname($a);
+            $bdir = dirname($b);
+            return $adir == $bdir
+                ? strnatcasecmp($a, $b)
+                : ( $adir < $bdir ? -1 : 1 );
+        });
+        return $includedFiles;
+    }
+
+    /**
      * Returns a sent/pending response header value
      * only works with php >= 5
      *

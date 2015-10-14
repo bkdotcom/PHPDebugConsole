@@ -242,7 +242,7 @@ class ErrorHandler
     }
 
     /**
-     * generate hash
+     * generate hash used to uniquely identify this error
      *
      * @param array $error error array
      *
@@ -251,9 +251,14 @@ class ErrorHandler
     protected function getErrorHash($error)
     {
         $errMsg = $error['message'];
+        // (\(.*?)\d+(.*?\))    "(tried to allocate 16384 bytes)" -> "(tried to allocate xxx bytes)"
         $errMsg = preg_replace('/(\(.*?)\d+(.*?\))/', '\1x\2', $errMsg);
+        // "blah123" -> "blahxxx"
         $errMsg = preg_replace('/\b([a-z]+\d+)+\b/', 'xxx', $errMsg);
+        // "-123.123" -> "xxx"
         $errMsg = preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errMsg);
+        // remove "comments"..  this allows throttling email, while still adding unique info to user errors
+        $errMsg = preg_replace('/\s*##.+$/', '', $errMsg);
         $hash = md5($error['file'].$error['line'].$error['type'].$errMsg);
         return $hash;
     }

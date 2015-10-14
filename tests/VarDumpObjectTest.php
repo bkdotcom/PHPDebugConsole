@@ -6,7 +6,7 @@
 /**
  * PHPUnit tests for Debug class
  */
-class VarDumpObjectTest extends PHPUnit_Framework_TestCase
+class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
 {
 
     /**

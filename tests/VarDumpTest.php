@@ -162,7 +162,15 @@ EOD;
      */
     public function testGetAbstraction()
     {
-        // alrady tested via logTest, infoTest, warnTest, errorTest....
+        // mostly alrady tested via logTest, infoTest, warnTest, errorTest....
+        // test object inheritance
+        $test = new \bdk\DebugTest\Test();
+        $abs = $this->debug->varDump->getAbstraction($test);
+        $this->assertArrayHasKey('inheritedProp', $abs['properties']);
+        $this->assertSame(array(
+            'INHERITED' => 'hello world',
+            'MY_CONSTANT' => 'constant value',
+        ), $abs['constants']);
     }
 
     /**

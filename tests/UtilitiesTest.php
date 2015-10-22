@@ -195,7 +195,7 @@ class UtilitiesTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Data provider
+     * Test
      *
      * @return array of serialized logs
      */

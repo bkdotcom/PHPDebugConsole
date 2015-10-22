@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3b
+ * @version v1.3.3
  */
 
 namespace bdk\Debug;
@@ -133,6 +133,8 @@ class VarDump
         $type = $val['type'];
         if ($type == 'array') {
             $val = $this->varDumpArray->dump($val, $outputAs, $path);
+        } elseif ($type == 'callable') {
+            $val = $this->varDumpArray->dumpCallable($val, $outputAs, $path);
         } elseif ($type == 'object') {
             $val = $this->varDumpObject->dump($val, $outputAs, $path);
         } else {

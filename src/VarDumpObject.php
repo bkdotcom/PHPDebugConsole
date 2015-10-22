@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3b
+ * @version v1.3.3
  */
 
 namespace bdk\Debug;
@@ -400,10 +400,6 @@ class VarDumpObject
     {
         $reflectionClass = new \reflectionClass($obj);
         $extends = array();
-        while ($parent = $reflectionClass->getParentClass()) {
-            $extends[] = $parent->getName();
-            $reflectionClass = $parent;
-        }
         $return = array(
             'debug' => VarDump::ABSTRACTION,
             'type' => 'object',
@@ -412,7 +408,7 @@ class VarDumpObject
             'viaDebugInfo' => $this->debug->varDump->get('useDebugInfo') && method_exists($obj, '__debugInfo'),
             'isRecursion' => in_array($obj, $hist, true),
             'className' => get_class($obj),
-            'extends' => $extends,
+            'extends' => array(),
             'implements' => $reflectionClass->getInterfaceNames(),
             'constants' => array(),
             'properties' => array(),
@@ -421,12 +417,19 @@ class VarDumpObject
             'misc' => array(),
         );
         if (!$return['isRecursion'] && !$return['excluded']) {
+            $collectConstants = $this->debug->varDump->get('collectConstants');
             $return['properties'] = $this->getProperties($obj, $hist);
-            if ($this->debug->varDump->get('collectConstants')) {
+            if ($collectConstants) {
                 $return['constants'] = $reflectionClass->getConstants();
-                if ($this->debug->varDump->get('objectSort') == 'name') {
-                    ksort($return['constants']);
+            }
+            while ($reflectionClass = $reflectionClass->getParentClass()) {
+                $return['extends'][] = $reflectionClass->getName();
+                if ($collectConstants) {
+                    $return['constants'] = array_merge($reflectionClass->getConstants(), $return['constants']);
                 }
+            }
+            if ($this->debug->varDump->get('objectSort') == 'name') {
+                ksort($return['constants']);
             }
             if ($return['collectMethods']) {
                 $return['methods'] = $this->getMethods($obj);
@@ -585,16 +588,12 @@ class VarDumpObject
     {
         $hist[] = $obj;
         $propArray = array();
-        $objClassName = get_class($obj);
-        $objNamespace = substr($objClassName, 0, strrpos($objClassName, '\\'));
         $reflectionObject = new \ReflectionObject($obj);
         $useDebugInfo = $reflectionObject->hasMethod('__debugInfo') && $this->debug->varDump->get('useDebugInfo');
         $properties = $reflectionObject->getProperties();
         $debugInfo = $useDebugInfo
             ? call_user_func(array($obj, '__debugInfo'))
             : array();
-        $isDebugObj = $objNamespace == __NAMESPACE__;
-        unset($reflectionObject);
         if ($obj instanceof \DOMNodeList) {
             // for reasons unknown, DOMNodeList's properties are invisible to reflection
             $propArray['length'] = array(
@@ -605,61 +604,55 @@ class VarDumpObject
                 'desc' => VarDump::UNDEFINED,
             );
         }
-        while ($properties) {
-            $prop = array_shift($properties);
-            $name = $prop->getName();
-            if ($useDebugInfo && !array_key_exists($name, $debugInfo)) {
-                continue;
-            }
-            if ($isDebugObj && in_array($name, array('data','debug','instance'))) {
-                continue;
-            }
-            $propDeclared = property_exists($objClassName, $name);
-            $prop->setAccessible(true); // only accessible via reflection
-            $docComment = $propDeclared
-                ? $prop->getDocComment()
-                : '';
-            $commentParts = $this->parseDocComment($docComment);
-            $propInfo = array(
-                'visibility' => 'public',
-                'isStatic' => $prop->isStatic(),
-                'type' => VarDump::UNDEFINED,
-                'value' => null,
-                'desc' => VarDump::UNDEFINED,
-                // viaDebugInfo
-            );
-            if ($prop->isPrivate()) {
-                $propInfo['visibility'] = 'private';
-            } elseif ($prop->isProtected()) {
-                $propInfo['visibility'] = 'protected';
-            }
-            if (isset($commentParts['var'])) {
-                $type = $commentParts['var'][0];
-                if (preg_match('/^(\w+)\s(.+)$/', $type, $matches)) {
-                    $type = $matches[1];
-                    $commentParts['comment'][0] = $matches[1];
+        while (true) {
+            $objClassName = $reflectionObject->getName();
+            $objNamespace = substr($objClassName, 0, strrpos($objClassName, '\\'));
+            $isDebugObj = $objNamespace == __NAMESPACE__;
+            while ($properties) {
+                $prop = array_shift($properties);
+                $name = $prop->getName();
+                if (isset($propArray[$name])) {
+                    continue;
                 }
-                $propInfo['type'] = $type;
+                if ($useDebugInfo && !array_key_exists($name, $debugInfo)) {
+                    continue;
+                }
+                if ($isDebugObj && in_array($name, array('data','debug','instance'))) {
+                    continue;
+                }
+                $prop->setAccessible(true); // only accessible via reflection
+                // get type and comment from phpdoc
+                $commentInfo = $this->getPropCommentInfo($prop, $objClassName, $name);
+                $propInfo = array(
+                    'visibility' => 'public',
+                    'isStatic' => $prop->isStatic(),
+                    'type' => $commentInfo['type'],
+                    'value' => null,
+                    'desc' => $commentInfo['comment'],
+                    // viaDebugInfo
+                );
+                if ($prop->isPrivate()) {
+                    $propInfo['visibility'] = 'private';
+                } elseif ($prop->isProtected()) {
+                    $propInfo['visibility'] = 'protected';
+                }
+                $value = $prop->getValue($obj);
+                if ($useDebugInfo) {
+                    $debugValue = $debugInfo[$name];
+                    $propInfo['viaDebugInfo'] = $debugValue != $value;
+                    $value = $debugValue;
+                }
+                if (is_array($value) || is_object($value) || is_resource($value)) {
+                    $value = $this->debug->varDump->getAbstraction($value, $hist);
+                }
+                $propInfo['value'] = $value;
+                $propArray[$name] = $propInfo;
             }
-            if (trim($commentParts['comment'][0])) {
-                $propInfo['desc'] = $commentParts['comment'][0];
+            if ($reflectionObject = $reflectionObject->getParentClass()) {
+                $properties = $reflectionObject->getProperties();
+            } else {
+                break;
             }
-            $value = $prop->getValue($obj);
-            if ($useDebugInfo) {
-                $debugValue = $debugInfo[$name];
-                $propInfo['viaDebugInfo'] = $debugValue != $value;
-                $value = $debugValue;
-                unset($debugValue);
-                unset($debugInfo[$name]);
-            }
-            unset($prop);
-            unset($docComment);
-            unset($commentParts);
-            if (is_array($value) || is_object($value) || is_resource($value)) {
-                $value = $this->debug->varDump->getAbstraction($value, $hist);
-            }
-            $propInfo['value'] = $value;
-            $propArray[$name] = $propInfo;
         }
         foreach ($debugInfo as $name => $value) {
             if (is_array($value) || is_object($value) || is_resource($value)) {
@@ -676,6 +669,45 @@ class VarDumpObject
         }
         $this->sort($propArray);
         return $propArray;
+    }
+
+    /**
+     * [getPropCommentData description]
+     *
+     * @param \ReflectionProperty $prop         property reflection object
+     * @param string              $objClassName classname
+     * @param string              $name         property name
+     *
+     * @return array
+     */
+    protected function getPropCommentInfo($prop, $objClassName, $name)
+    {
+        $propDeclared = property_exists($objClassName, $name);
+        $info = array(
+            'comment' => VarDump::UNDEFINED,
+            'type' => VarDump::UNDEFINED,
+        );
+        $docComment = $propDeclared
+            ? $prop->getDocComment()
+            : '';
+        if ($docComment) {
+            $commentParts = $this->parseDocComment($docComment);
+            if ($commentParts['comment'][0]) {
+                $info['comment'] =  $commentParts['comment'][0];
+            }
+            if (isset($commentParts['var'])) {
+                $type = $commentParts['var'][0];
+                if (preg_match('/^(\w+)\s(.+)$/', $type, $matches)) {
+                    // type and comment @var string some comment
+                    $type = $matches[1];
+                    $info['comment'] = $info['comment']
+                        ? $info['comment'].': '.$matches[2]
+                        : $matches[2];
+                }
+                $info['type'] = $type;
+            }
+        }
+        return $info;
     }
 
     /**
@@ -734,7 +766,7 @@ class VarDumpObject
         $lines = explode("\n", $docComment);
         foreach ($lines as $i => $line) {
             if (!empty($line) && $line{0} == '@') {
-                $tags['comment'][0] = implode("\n", array_slice($lines, 0, $i));
+                $tags['comment'][0] = trim(implode("\n", array_slice($lines, 0, $i)));
                 break;
             }
         }

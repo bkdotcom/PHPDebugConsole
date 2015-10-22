@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3b
+ * @version v1.3.3
  */
 
 namespace bdk\Debug;

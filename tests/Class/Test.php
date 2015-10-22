@@ -5,9 +5,28 @@ namespace bdk\DebugTest;
 define('SOMECONSTANT', 'Constant value');
 
 /**
+ * TestBase gets extended to test that inherited properties / methods get debugged
+ */
+class TestBase
+{
+
+    const INHERITED = 'hello world';
+    const MY_CONSTANT = 'defined in TestBase';
+
+    public $inheritedProp = 'Inherited via TestBase';
+
+    public function inheritedFunction()
+    {
+
+    }
+
+}
+
+
+/**
  * Test
  */
-class Test
+class Test extends TestBase
 {
 
     const MY_CONSTANT = 'constant value';

@@ -399,7 +399,6 @@ class VarDumpObject
     public function getAbstraction($obj, &$hist = array())
     {
         $reflectionClass = new \reflectionClass($obj);
-        $extends = array();
         $return = array(
             'debug' => VarDump::ABSTRACTION,
             'type' => 'object',
@@ -680,7 +679,7 @@ class VarDumpObject
      *
      * @return array
      */
-    protected function getPropCommentInfo($prop, $objClassName, $name)
+    protected function getPropCommentInfo(\ReflectionProperty $prop, $objClassName, $name)
     {
         $propDeclared = property_exists($objClassName, $name);
         $info = array(

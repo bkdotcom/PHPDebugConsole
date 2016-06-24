@@ -7,6 +7,7 @@
  */
 
 .debug {
+	position: relative;
 	clear: both;
 	font-family: Verdana;
 	font-size: 9px;
@@ -17,6 +18,7 @@
 .debug * {
 	/*background-color: transparent;*/
 	font-size: inherit;
+	line-height: normal;
 	text-indent: 0;
 }
 
@@ -32,10 +34,10 @@
 
 .debug dl { margin-top: 0; margin-bottom: 0;}
 .debug dt { font-weight: bold; }
-.debug dd { margin-left: 20px; }
+.debug dl:not(.dl-horizontal) dd { margin-left: 20px; }
 .debug h3 { margin: 0; font-size: 1.15em; font-weight: bold; }
 .debug img { border: 0; }
-.debug input[type=checkbox] { margin: 0; vertical-align: sub; }
+.debug input[type=checkbox] { margin: 0; }
 .debug label { cursor: pointer; font-weight: bold; margin: 0; }
 .debug pre {
 	padding: 0;
@@ -62,7 +64,7 @@
 .debug [title] {
 	cursor: help;
 }
-.debug .t_object [title] {
+.debug .t_object [title]:not(.t_toStringValue) {
 	border-bottom: 1px solid rgba(0, 0, 0, 0.33);
 }
 .debug .t_object [title]:hover {
@@ -187,7 +189,7 @@
 .debug .t_key { opacity: .75; }
 .debug .t_keyword { color: #07A; }
 .debug .t_null { opacity: 0.3; }
-.debug .t_toStringValue { text-shadow: 0 0 2px rgba(0, 200, 200, 1.0); }
+.debug .t_toStringValue { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
 .debug .t_object-class { color: inherit; text-decoration: underline; }
 .debug .t_operator { color: #A67F59; }
 .debug .t_punct { color: #999; }
@@ -204,7 +206,7 @@
 }
 .debug .t_string .binary {
 	margin: 0 .1em;
-	padding: .1em .5em;
+	padding: 0 .3em;
 	background-color: #c0c0c0;
 	color: #003;
 	font-weight: bold;

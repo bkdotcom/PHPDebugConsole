@@ -311,8 +311,8 @@ class DebugTest extends PHPUnit_Framework_TestCase
     {
         $this->debug->time();
         $this->debug->time('some label');
-        $this->assertStringMatchesFormat('%f %d', $this->debug->dataGet('timers/stack/0'));
-        $this->assertStringMatchesFormat('%f %d', $this->debug->dataGet('timers/labels/some label/1'));
+        $this->assertInternalType('float', $this->debug->dataGet('timers/stack/0'));
+        $this->assertInternalType('float', $this->debug->dataGet('timers/labels/some label/1'));
     }
 
     /**

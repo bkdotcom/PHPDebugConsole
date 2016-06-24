@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3b
+ * @version v1.3.3
  */
 
 namespace bdk\Debug;
@@ -23,12 +23,13 @@ class Output
     /**
      * Constructor
      *
-     * @param array $cfg  configuration
-     * @param array $data data
+     * @param object $debug debug instance
+     * @param array  $cfg   configuration
+     * @param array  $data  data
      */
-    public function __construct($cfg = array(), &$data = array())
+    public function __construct($debug, $cfg = array(), &$data = array())
     {
-        $this->debug = Debug::getInstance();
+        $this->debug = $debug;
         $this->cfg = array(
             'css' => '',                    // additional "override" css
             'filepathCss' => __DIR__.'/css/Debug.css',
@@ -297,7 +298,7 @@ class Output
     {
         $outputAs = $this->get('outputAs');
         if (is_callable($this->cfg['onOutput'])) {
-            call_user_func($this->cfg['onOutput'], $outputAs);
+            call_user_func($this->cfg['onOutput'], $this->debug);
         }
         $outputAs = $this->get('outputAs');
         $this->data['groupDepth'] = 0;
@@ -305,8 +306,12 @@ class Output
             $return = $this->outputAsHtml();
         } elseif ($outputAs == 'firephp') {
             $this->uncollapseErrors();
-            $outputFirephp = new OutputFirephp($this->data);
-            $outputFirephp->output();
+            if (headers_sent($file, $line)) {
+                trigger_error('Unable to FirePHP: headers already sent. ('.$file.' line '.$line.')');
+            } else {
+                $outputFirephp = new OutputFirephp($this->debug, $this->data);
+                $outputFirephp->output();
+            }
             $return = null;
         } elseif ($outputAs == 'script') {
             $this->uncollapseErrors();
@@ -440,12 +445,12 @@ class Output
             foreach ($args as $k => $v) {
                 /*
                     first arg, if string will be left untouched
-                    unless it is only arg, which will be visualWhiteSpaced'd
+                    unless it is only arg, which will be visualWhiteSpaced'd while html tags are preserved
                 */
                 if ($k > 0 || !is_string($v)) {
                     $args[$k] = $this->debug->varDump->dump($v, 'html');
                 } elseif ($num_args == 1) {
-                    $args[$k] = $this->debug->varDump->visualWhiteSpace($v);
+                    $args[$k] = $this->debug->varDump->dump($v, 'htmlKeepTags');
                 }
             }
             $args = implode($glue, $args);

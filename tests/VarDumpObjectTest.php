@@ -6,8 +6,16 @@
 /**
  * PHPUnit tests for Debug class
  */
-class VarDumpObjectTest extends PHPUnit_Framework_TestCase
+class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
 {
+
+    /**
+     * Util to output to console / help in creation of tests
+     */
+    public function output($label, $var)
+    {
+        fwrite(STDOUT, $label.' = '.print_r($var, true) . "\n");
+    }
 
     /**
      * setUp is executed before each test

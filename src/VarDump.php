@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3b
+ * @version v1.3.3
  */
 
 namespace bdk\Debug;
@@ -20,6 +20,8 @@ class VarDump
     protected $utilities;
     protected $varDumpArray;
     protected $varDumpObject;
+    private   $htmlBinary = true;
+    private   $htmlNonBinary = true; // htmlspecialchars non-binary
 
     const ABSTRACTION = "\x00debug\x00";
     const UNDEFINED = "\x00undefined\x00";
@@ -27,10 +29,11 @@ class VarDump
     /**
      * Constructor
      *
+     * @param object $debug     debug instance
      * @param array  $cfg       config options
      * @param object $utilities optional utilities object
      */
-    public function __construct($cfg = array(), $utilities = null)
+    public function __construct($debug, $cfg = array(), $utilities = null)
     {
         $this->cfg = array(
             'addBR' => false,
@@ -48,15 +51,15 @@ class VarDump
         } else {
             $this->utilities = new Utilities();
         }
-        $this->varDumpArray = new VarDumpArray();
-        $this->varDumpObject = new VarDumpObject();
+        $this->varDumpArray = new VarDumpArray($debug);
+        $this->varDumpObject = new VarDumpObject($debug);
     }
 
     /**
      * Returns string representation of value
      *
      * @param mixed  $val      value
-     * @param string $outputAs 'html', 'text', or 'script'
+     * @param string $outputAs 'html', 'htmlKeepTags', 'text', or 'script'
      * @param array  $path     {@internal - used to check for recursion}
      *
      * @return string
@@ -88,7 +91,9 @@ class VarDump
             } elseif ($this->utilities->isBinary($val)) {
                 // all or partially binary data
                 $typeMore = 'binary';
-                $val = $this->dumpBinary($val, $outputAs == 'html');
+                $htmlBinaryChars = in_array($outputAs, array('html', 'htmlKeepTags'));
+                $htmlOtherChars = in_array($outputAs, array('html'));
+                $val = $this->dumpBinary($val, $htmlBinaryChars, $htmlOtherChars);
             }
             if ($outputAs == 'text') {
                 $val = '"'.$val.'"';
@@ -99,18 +104,18 @@ class VarDump
             $type = 'float';
         } elseif (is_bool($val)) {
             $type = 'bool';
-            if (in_array($outputAs, array('html', 'text'))) {
+            if (in_array($outputAs, array('html', 'htmlKeepTags', 'text'))) {
                 $val = $val ? 'true' : 'false';
             }
         } elseif (is_null($val)) {
             $type = 'null';
-            if (in_array($outputAs, array('html', 'text'))) {
+            if (in_array($outputAs, array('html', 'htmlKeepTags', 'text'))) {
                 $val = 'null';
             }
         }
-        if ($outputAs == 'html') {
+        if (in_array($outputAs, array('html', 'htmlKeepTags'))) {
             if (!in_array($type, array('array','object'))) {
-                $val = $this->dumpAsHtml($val, $type, $typeMore);
+                $val = $this->dumpAsHtml($val, $type, $typeMore, $outputAs == 'html');
             }
         } elseif ($outputAs == 'script' && empty($path)) {
             $val = json_encode($val);
@@ -133,6 +138,8 @@ class VarDump
         $type = $val['type'];
         if ($type == 'array') {
             $val = $this->varDumpArray->dump($val, $outputAs, $path);
+        } elseif ($type == 'callable') {
+            $val = $this->varDumpArray->dumpCallable($val, $outputAs, $path);
         } elseif ($type == 'object') {
             $val = $this->varDumpObject->dump($val, $outputAs, $path);
         } else {
@@ -144,20 +151,21 @@ class VarDump
     /**
      * Add markup to value
      *
-     * @param mixed  $val      value
-     * @param string $type     type
-     * @param string $typeMore numeric, binary, true, or false
+     * @param mixed  $val          value
+     * @param string $type         type
+     * @param string $typeMore     numeric, binary, true, or false
+     * @param string $specialChars apply htmlspecialchars?
      *
      * @return string html
      */
-    protected function dumpAsHtml($val, $type = null, $typeMore = null)
+    protected function dumpAsHtml($val, $type = null, $typeMore = null, $specialChars = true)
     {
         $attribs = array(
             'class' => 't_'.$type,
             'title' => null,
         );
         if ($type == 'string') {
-            if ($typeMore != 'binary') {
+            if ($typeMore != 'binary' && $specialChars) {
                 $val = htmlspecialchars($this->utilities->toUtf8($val), ENT_COMPAT, 'UTF-8');
             }
             $val = $this->visualWhiteSpace($val);
@@ -182,14 +190,16 @@ class VarDump
     /**
      * Display non-printable characters as hex
      *
-     * @param string  $str     string containing binary
-     * @param boolean $htmlout add html markup?
+     * @param string  $str           string containing binary
+     * @param boolean $htmlBinary    add html markup to binary chars?
+     * @param boolean $htmlNonBinary htmlspecialchar non binary chars?
      *
      * @return string
      */
-    public function dumpBinary($str, $htmlout)
+    public function dumpBinary($str, $htmlBinary, $htmlNonBinary)
     {
-        $this->htmlout = $htmlout;
+        $this->htmlBinary = $htmlBinary;
+        $this->htmlNonBinary = $htmlNonBinary;
         $this->binaryStats = array(
             'ascii' => 0,
             'utf8'  => 0,   // bytes, not "chars"
@@ -224,7 +234,7 @@ EOD;
             // treat it all as binary
             $str = bin2hex($str_orig);
             $str = trim(chunk_split($str, 2, ' '));
-            if ($htmlout) {
+            if ($htmlBinary) {
                 $str = '<span class="binary">'.$str.'</span>';
             }
         } else {
@@ -257,7 +267,7 @@ EOD;
                 $stats['ascii']++;
                 $stats['cur_text_len']++;
             }
-            if ($this->htmlout) {
+            if ($this->htmlNonBinary) {
                 $str = htmlspecialchars($str);
             }
         } elseif ($matches[2] !== '') {
@@ -265,8 +275,11 @@ EOD;
             $str = $matches[2];
             $stats['utf8'] += strlen($str);
             $stats['cur_text_len'] += strlen($str);
-            if ($str === "\xef\xbb\xbf") {
-                // BOM
+            $sequences = array(
+                "\xef\xbb\xbf", // BOM
+                "\xEF\xBF\xBD",     // "Replacement Character"
+            );
+            if (in_array($str, $sequences, true) || preg_match('#\p{Z}#u', $str)) {
                 $showHex = true;
             }
         } elseif ($matches[3] !== '' || $matches[4] !== '') {
@@ -309,7 +322,7 @@ EOD;
             $chars[$i] = '\x'.bin2hex($c);
         }
         $str = implode('', $chars);
-        if ($this->htmlout) {
+        if ($this->htmlBinary) {
             $str = '<span class="binary">'.$str.'</span>';
         }
         return $str;

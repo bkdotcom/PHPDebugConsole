@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3b
+ * @version v1.3.3
  */
 
 namespace bdk\Debug;
@@ -18,10 +18,12 @@ class VarDumpArray
 
     /**
      * Constructor
+     *
+     * @param object $debug debug instance
      */
-    public function __construct()
+    public function __construct($debug)
     {
-        $this->debug = Debug::getInstance();
+        $this->debug = $debug;
     }
 
     /**
@@ -63,6 +65,28 @@ class VarDumpArray
             if (count($path) > 1) {
                 $val = str_replace("\n", "\n    ", $val);
             }
+        }
+        return $val;
+    }
+
+    /**
+     * output callable "abstraction"
+     *
+     * @param array  $abs      abstraction
+     * @param string $outputAs ['html']
+     *
+     * @return string|array depends on $outputAs
+     */
+    public function dumpCallable($abs, $outputAs = 'html')
+    {
+        $val = '';
+        if ($outputAs == 'html') {
+            $val = '<span class="t_type">callable</span>'
+                .' '.$abs['values'][0].'::'.$abs['values'][1];
+        } elseif ($outputAs == 'script') {
+            $val = $abs['values'][0].'::'.$abs['values'][1];
+        } elseif ($outputAs == 'text') {
+            $val = 'callable: '.$abs['values'][0].'::'.$abs['values'][1];
         }
         return $val;
     }
@@ -116,7 +140,11 @@ class VarDumpArray
             'values' => array(),
             'isRecursion' => in_array($array, $hist, true),
         );
-        if (!$return['isRecursion']) {
+        if (array_keys($array) == array(0,1) && is_object($array[0]) && is_string($array[1]) && method_exists($array[0], $array[1])) {
+            // this appears to be a "callable"
+            $return['type'] = 'callable';
+            $return['values'] = array(get_class($array[0]), $array[1]);
+        } elseif (!$return['isRecursion']) {
             $lastHistI = count($hist) - 1;
             $isNestedArray = isset($hist[$lastHistI]) && is_array($hist[$lastHistI]);
             $hist[] = $array;

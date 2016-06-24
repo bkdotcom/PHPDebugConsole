@@ -9,8 +9,8 @@
 	var classExpand = 'fa-plus-square-o',
 		classCollapse = 'fa-minus-square-o',
 		classEmpty = 'fa-square-o',
-		fontAwesomeCss = '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css',
-		jQuerySrc = '//code.jquery.com/jquery-1.11.2.min.js',
+		fontAwesomeCss = '//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css',
+		jQuerySrc = '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
 		icons = {
 			'.debug-value' : '<i class="fa fa-eye" title="via __debugInfo()"></i>',
 			'.expand-all' : '<i class="fa fa-lg fa-plus"></i>',

@@ -5,7 +5,7 @@
  * @package PHPDebugConsole
  * @author  Brad Kent <bkfake-github@yahoo.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3b
+ * @version v1.3.3
  */
 
 namespace bdk\Debug;
@@ -109,6 +109,24 @@ class Utilities
     }
 
     /**
+     * returns required/included files sorted by directory
+     *
+     * @return array
+     */
+    public static function getIncludedFiles()
+    {
+        $includedFiles = get_included_files();
+        usort($includedFiles, function ($a, $b) {
+            $adir = dirname($a);
+            $bdir = dirname($b);
+            return $adir == $bdir
+                ? strnatcasecmp($a, $b)
+                : strnatcasecmp($adir, $bdir);
+        });
+        return $includedFiles;
+    }
+
+    /**
      * Returns a sent/pending response header value
      * only works with php >= 5
      *
@@ -164,7 +182,7 @@ class Utilities
      * Determine if string is UTF-8 encoded
      *
      * @param string  $str  string to check
-     * @param boolean $ctrl does string contain a "non-printable" control char?
+     * @param boolean $ctrl does string contain an invisible or non-printable char
      *
      * @return boolean
      */
@@ -177,15 +195,15 @@ class Utilities
             if ($char < 0x80) {                 # 0bbbbbbb
                 $bytes = 0;
             } elseif (($char & 0xE0) == 0xC0) { # 110bbbbb
-                $bytes=1;
+                $bytes = 1;
             } elseif (($char & 0xF0) == 0xE0) { # 1110bbbb
-                $bytes=2;
+                $bytes = 2;
             } elseif (($char & 0xF8) == 0xF0) { # 11110bbb
-                $bytes=3;
+                $bytes = 3;
             } elseif (($char & 0xFC) == 0xF8) { # 111110bb
-                $bytes=4;
+                $bytes = 4;
             } elseif (($char & 0xFE) == 0xFC) { # 1111110b
-                $bytes=5;
+                $bytes = 5;
             } else {                            # Does not match any model
                 return false;
             }
@@ -200,8 +218,24 @@ class Utilities
                 }
             }
         }
-        if (strpos($str, "\xef\xbb\xbf") !== false) {
-            $ctrl = true;   // treat BOM as ctrl char
+        if (preg_match('#\p{Z}#u', $str)) {
+            // matches characters such as:
+            //   "\xc2\xa0",     // no-break space
+            //   "\xE2\x80\x89", // thin space
+            //   "\xE2\x80\xAF", // narrow no-break space
+            $ctrl = true;
+        } else {
+            // byte sequences we want to display as hex
+            $sequences = array(
+                "\xef\xbb\xbf",  // BOM
+                "\xEF\xBF\xBD",  // "Replacement Character"
+            );
+            foreach ($sequences as $sequence) {
+                if (strpos($str, $sequence) !== false) {
+                    $ctrl = true;
+                    break;
+                }
+            }
         }
         return true;
     }

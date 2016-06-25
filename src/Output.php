@@ -443,13 +443,10 @@ class Output
                     : ' = ';
             }
             foreach ($args as $k => $v) {
-                /*
-                    first arg, if string will be left untouched
-                    unless it is only arg, which will be visualWhiteSpaced'd while html tags are preserved
-                */
                 if ($k > 0 || !is_string($v)) {
                     $args[$k] = $this->debug->varDump->dump($v, 'html');
-                } elseif ($num_args == 1) {
+                } else {
+                    // first arg && string -> don't apply htmlspecialchars()
                     $args[$k] = $this->debug->varDump->dump($v, 'htmlKeepTags');
                 }
             }

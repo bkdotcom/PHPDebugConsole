@@ -168,7 +168,9 @@ class VarDump
             if ($typeMore != 'binary' && $specialChars) {
                 $val = htmlspecialchars($this->utilities->toUtf8($val), ENT_COMPAT, 'UTF-8');
             }
-            $val = $this->visualWhiteSpace($val);
+            if (strpos($val, '<') === false) {
+                $val = $this->visualWhiteSpace($val);
+            }
         } elseif ($type == 'bool') {
             $typeMore = $val;
         }

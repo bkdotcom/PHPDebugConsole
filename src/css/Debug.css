@@ -55,10 +55,11 @@
 .debug table caption { font-weight:bold; font-style:italic; padding-bottom:0; padding-top:2px; text-align: left; }
 .debug table th { font-weight:bold; background-color: rgba(0,0,0,0.1); }
 .debug table th, .debug table td { border:1px solid #000; padding:1px .25em; vertical-align:top; }
-.debug td.t_string { display: table-cell; }
 /* also right-align float? */
 .debug td.numeric,
 .debug td.t_int { text-align: right; }
+.debug td.t_key:before { content: none; }
+.debug td.t_key:after { content: none; }
 .debug ul { margin-top: 0; margin-bottom: 0; }
 
 .debug [title] {
@@ -187,6 +188,8 @@
 }
 /*.debug .t_object + br { display: none; }*/
 .debug .t_key { opacity: .75; }
+.debug .t_key:before { content: '['; color: #999; }
+.debug .t_key:after { content: ']'; color: #999; }
 .debug .t_keyword { color: #07A; }
 .debug .t_null { opacity: 0.3; }
 .debug .t_toStringValue { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
@@ -204,6 +207,9 @@
 	content: close-quote;
 	opacity: 0.33;
 }
+.debug .no-pseudo:before { content: none }
+.debug .no-pseudo:after { content: none }
+
 .debug .t_string .binary {
 	margin: 0 .1em;
 	padding: 0 .3em;

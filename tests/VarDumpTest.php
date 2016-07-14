@@ -48,9 +48,9 @@ class VarDumpTest extends PHPUnit_Framework_DOMTestCase
         $arrayDumpHtml = <<<'EOD'
 <span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">(</span>
 <span class="array-inner">
-	<span class="key-value"><span class="t_key">[0]</span> <span class="t_operator">=&gt;</span> <span class="t_string">a</span></span>
-	<span class="key-value"><span class="t_key">[foo]</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
-	<span class="key-value"><span class="t_key">[1]</span> <span class="t_operator">=&gt;</span> <span class="t_string">c</span></span>
+	<span class="key-value"><span class="t_key t_int">0</span> <span class="t_operator">=&gt;</span> <span class="t_string">a</span></span>
+	<span class="key-value"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
+	<span class="key-value"><span class="t_key t_int">1</span> <span class="t_operator">=&gt;</span> <span class="t_string">c</span></span>
 </span><span class="t_punct">)</span></span>
 EOD;
 		// indented with 4 spaces
@@ -133,8 +133,8 @@ EOD;
 <thead><tr><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
 </thead>
 <tbody>
-<tr><td class="t_int">0</td><td class="t_string">Bob</td><td class="t_string numeric">12</td><td class="t_string">M</td><td class="t_bool false">false</td><td class="t_undefined"></td></tr>
-<tr><td class="t_int">1</td><td class="t_string">Sally</td><td class="t_string numeric">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
+<tr><td class="t_key t_int">0</td><td class="t_string">Bob</td><td class="t_string numeric">12</td><td class="t_string">M</td><td class="t_bool false">false</td><td class="t_undefined"></td></tr>
+<tr><td class="t_key t_int">1</td><td class="t_string">Sally</td><td class="t_string numeric">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
 </tbody>
 </table>
 EOD;

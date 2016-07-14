@@ -347,7 +347,9 @@ class VarDumpObject
                 ).'>'.htmlspecialchars($info['name']).'</span>';
             if ($info['defaultValue'] != VarDump::UNDEFINED) {
                 $defaultValue = $info['defaultValue'];
-                $defaultValue = str_replace("\n", ' ', $defaultValue);
+                if (is_string($defaultValue)) {
+                    $defaultValue = str_replace("\n", ' ', $defaultValue);
+                }
                 $paramStr .= ' <span class="t_operator">=</span> ';
                 $paramStr .= '<span class="t_parameter-default">'.$this->debug->varDump->dump($defaultValue).'</span>';
             }

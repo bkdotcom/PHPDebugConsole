@@ -110,9 +110,9 @@ class VarDumpArray
             $html = '<span class="t_keyword">Array</span>'
                 .'<span class="t_punct">(</span>'."\n"
                 .'<span class="array-inner">'."\n";
-            foreach ($val as $k => $val2) {
+            foreach ($val as $key => $val2) {
                 $html .= "\t".'<span class="key-value">'
-                        .'<span class="t_key">['.$k.']</span> '
+                        .'<span class="t_key'.(is_int($key) ? ' t_int' : '').'">'.$key.'</span> '
                         .'<span class="t_operator">=&gt;</span> '
                         .$val2
                     .'</span>'."\n";

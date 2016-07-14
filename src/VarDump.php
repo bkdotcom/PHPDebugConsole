@@ -165,7 +165,9 @@ class VarDump
             'title' => null,
         );
         if ($type == 'string') {
-            if ($typeMore != 'binary' && $specialChars) {
+            if (!$specialChars) {
+                $attribs['class'] .= ' no-pseudo';
+            } elseif ($typeMore != 'binary') {
                 $val = htmlspecialchars($this->utilities->toUtf8($val), ENT_COMPAT, 'UTF-8');
             }
             if (strpos($val, '<') === false) {
@@ -413,6 +415,7 @@ EOD;
             $values[] = $value;
         }
         $classAndInner = $this->utilities->parseAttribString($this->dump($rowKey));
+        $classAndInner['class'] = trim('t_key '.$classAndInner['class']);
         $str .= '<tr><td class="'.$classAndInner['class'].'">'.$classAndInner['innerhtml'].'</td>';
         foreach ($values as $v) {
             // remove the span wrapper.. add span's class to TD

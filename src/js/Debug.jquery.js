@@ -58,21 +58,30 @@
 				}
 				return;
 			}
-			this.each( function() {
-				console.group('enhancing',this);
-				if ( $('.expand-all', this).length ) {
+			this.each(function(){
+				var self = this;
+				if ($(this).hasClass('enhanced')) {
 					console.warn('already enhanced');
 					return;
 				}
-				addPersistOption(this);
-				addExpandAll(this);
-				enhanceArrays(this);
-				enhanceGroups(this);
-				enhanceObjects(this);
-				enhanceSummary(this);
-				// now that everything's been enhanced, class names added, etc
-				addIcons(this);
-				collapseGroups(this);
+				console.group('enhancing',this);
+				$(this).addClass('enhanced');
+				if ($(this).hasClass('debug')) {
+					addPersistOption(this);
+					addExpandAll(this);
+					enhanceSummary(this);
+					enhanceListeners(this);
+				}
+				// use a separate/new thread
+				setTimeout(function(){
+					enhanceArrays(self);
+					enhanceGroups(self);
+					enhanceObjects(self);
+					// enhanceSummary(this);
+					// now that everything's been enhanced, class names added, etc
+					addIcons(self);
+					collapseGroups(self);
+				}, 0);
 				console.groupEnd();
 			});
 			return this;
@@ -259,14 +268,13 @@
 				errorIcon = getHiddenErrorIcon($target),
 				selectorKeepVis = '.m_error:visible, .m_warn:visible';	// , .m_group.expanded
 			if (!$.trim($target.html()).length) {
-				console.log('empty group');
+				// console.log('empty group');
 				$toggle.addClass('empty');
 				changeToggleIcon($toggle, classEmpty);
 				return;
 			}
-			console.log('errorIcon', errorIcon);
+			// console.log('errorIcon', errorIcon);
 			$toggle.attr('data-toggle', 'group');
-			// if ( !$target.hasClass('expanded') && !$target.find(selectorKeepVis).length ) {
 			if ( !$toggle.hasClass('expanded') && !$target.find(selectorKeepVis).length ) {
 				// $toggle.removeClass('expanded');
 				toggleIconClass = classExpand;
@@ -294,29 +302,32 @@
 
 	function enhanceArrays(root) {
 		console.log('enhanceArrays');
+		console.time('enhanceArrays');
 		$('.t_array', root).each( function() {
-			var $expander = $('<span class="t_array-expand" data-toggle="array">'+
-					'<span class="t_keyword">Array</span><span class="t_punct">(</span>' +
-					'<i class="fa '+classExpand+'"></i>&middot;&middot;&middot;' +
-					'<span class="t_punct">)</span>' +
-				'</span>');
-			if ( !$.trim( $(this).find('.array-inner').html() ).length ) {
+			var $expander = $('<span class="t_array-expand" data-toggle="array">' +
+						'<span class="t_keyword">Array</span><span class="t_punct">(</span>' +
+						'<i class="fa '+classExpand+'"></i>&middot;&middot;&middot;' +
+						'<span class="t_punct">)</span>' +
+					'</span>'),
+				$self = $(this);
+			if ( !$.trim( $self.find('.array-inner').html() ).length ) {
 				// empty array -> don't add expand/collapse
 				$(this).find('br').hide();
 				$(this).find('.array-inner').hide();
 				return;
 			}
-			$(this).find('.t_keyword').first().
+			$self.find('.t_keyword').first().
 				wrap('<span class="t_array-collapse" data-toggle="array">').
 				after('<span class="t_punct">(</span> <i class="fa '+classCollapse+'"></i>').
 				parent().next().remove();
-			if ( !$(this).parents('.t_array, .property').length ) {
+			if ( !$self.parents('.t_array, .property').length ) {
 				// outermost array -> leave open
-				$(this).before($expander.hide());
+				$self.before($expander.hide());
 			} else {
-				$(this).hide().before($expander);
+				$self.hide().before($expander);
 			}
 		});
+		/*
 		$('.t_key', root).each( function(){
 			var html = $(this).html(),
 				matches = html.match(/\[(.*)\]/),
@@ -328,14 +339,23 @@
 				'<span class="t_punct">]</span>';
 			$(this).replaceWith(html);
 		});
+		*/
+		console.timeEnd('enhanceArrays');
+	}
+
+	function enhanceGroups(root) {
+	}
+
+	function enhanceListeners(root) {
 		$(root).on('click', '[data-toggle=array]', function(){
 			toggleArray(this);
 			return false;
 		});
-	}
-
-	function enhanceGroups(root) {
 		$(root).on('click', '[data-toggle=group]', function(){
+			toggleGroupOrObject(this);
+			return false;
+		});
+		$(root).on('click', '[data-toggle=object]', function(){
 			toggleGroupOrObject(this);
 			return false;
 		});
@@ -347,6 +367,7 @@
 
 	function enhanceObjects(root) {
 		console.log('enhanceObjects');
+		console.time('enhanceObjects');
 		$('.t_object-class', root).each( function() {
 			var $toggle = $(this),
 				$target = $toggle.next(),
@@ -379,10 +400,7 @@
 			}
 			$target.prepend('<span class="vis-toggles">' + visToggles + '</span>');
 		});
-		$(root).on('click', '[data-toggle=object]', function(){
-			toggleGroupOrObject(this);
-			return false;
-		});
+		console.timeEnd('enhanceObjects');
 	}
 
 	function enhanceSummary(root) {

@@ -159,7 +159,7 @@ class VarDumpObject
                         : ''
                     )
                     .($abs['implements']
-                        ? '<dt>implements</dt><dd>'.implode('<br />', $abs['implements']).'</dd>'
+                        ? '<dt>implements</dt><dd class="interfaces">'.implode('<br />', $abs['implements']).'</dd>'
                         : ''
                     )
                     .($misc
@@ -306,7 +306,7 @@ class VarDumpObject
                     )
                     .'>'.$info['returnType'].'</span>';
             }
-            $str .= '<dd class="method visibility-'.$info['visibility'].'">'
+            $str .= '<dd class="method visibility-'.$info['visibility'].'" '.($info['implements'] ? 'data-implements="'.$info['implements'].'"' : '').'>'
                 .implode(' ', $modifiers)
                 .$returnType
                 .' <span class="method-name"'
@@ -467,6 +467,22 @@ class VarDumpObject
         $methodArray = array();
         $reflectionObject = new \ReflectionObject($obj);
         $methods = $reflectionObject->getMethods();
+
+        $reflectionClass = new \reflectionClass($obj);
+        $interfaces = $reflectionClass->getInterfaceNames();
+        $interfaceMethods = array(
+            'ArrayAccess' => array('offsetExists','offsetGet','offsetSet','offsetUnset'),
+            'Countable' => array('count'),
+            'Iterator' => array('current','key','next','rewind','void'),
+            'IteratorAggregate' => array('getIterator'),
+            // 'Throwable' => array('getMessage','getCode','getFile','getLine','getTrace','getTraceAsString','getPrevious','__toString'),
+        );
+        $interfacesHide = array_intersect($interfaces, array_keys($interfaceMethods));
+        $methodsHide = array();
+        foreach ($interfacesHide as $interface) {
+            $methodsHide = array_merge($methodsHide, $interfaceMethods[$interface]);
+        }
+
         foreach ($methods as $reflectionMethod) {
             $vis = 'public';
             if ($reflectionMethod->isPrivate()) {
@@ -488,7 +504,7 @@ class VarDumpObject
                     $returnDesc = $matches['desc'];
                 }
             }
-            $methodArray[$methodName] = array(
+            $info = array(
                 'visibility' => $vis,
                 'isFinal' => $reflectionMethod->isFinal(),
                 'isStatic' => $reflectionMethod->isStatic(),
@@ -499,10 +515,20 @@ class VarDumpObject
                     ? $commentParts['comment'][0]
                     : VarDump::UNDEFINED,
                 'returnDesc' => $returnDesc,
+                'implements' => in_array($methodName, $methodsHide),
             );
-            if ($methodName == '__toString') {
-                $methodArray[$methodName]['returnValue'] = $reflectionMethod->invoke($obj);
+            if ($info['implements']) {
+                foreach ($interfacesHide as $interface) {
+                    if (in_array($methodName, $interfaceMethods[$interface])) {
+                        $info['implements'] = $interface;
+                        break;
+                    }
+                }
             }
+            if ($methodName == '__toString') {
+                $info['returnValue'] = $reflectionMethod->invoke($obj);
+            }
+            $methodArray[$methodName] = $info;
         }
         $this->sort($methodArray);
         return $methodArray;
@@ -649,7 +675,15 @@ class VarDumpObject
                 } elseif ($prop->isProtected()) {
                     $propInfo['visibility'] = 'protected';
                 }
-                $value = $prop->getValue($obj);
+                if ($objClassName == 'mysqli' && $obj->connect_errno) {
+                    // avoid "Property access is not allowed yet"
+                    $propsAlwaysAvail = array('client_info','client_version','connect_errno','connect_error','errno','error','stat');
+                    $value = in_array($name, $propsAlwaysAvail)
+                        ? $prop->getValue($obj)
+                        : null;
+                } else {
+                    $value = $prop->getValue($obj);
+                }
                 if ($useDebugInfo) {
                     $debugValue = $debugInfo[$name];
                     $propInfo['viaDebugInfo'] = $debugValue != $value;

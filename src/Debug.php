@@ -59,6 +59,7 @@ class Debug
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
             'emailFunc' => 'mail',          // callable
+            'onLog' => null,
         );
         $this->data = array(
             'alert'         => '',
@@ -309,6 +310,7 @@ class Debug
                 $curDepth++;
             }
         }
+        $this->appendLog('groupUncollapse', array());
     }
 
     /**
@@ -355,6 +357,8 @@ class Debug
             $return = $this->output->output();
             $this->outputSent = true;
             $this->data['log'] = array();
+        } elseif ($this->get('output/onOutput')) {
+            call_user_func($this->get('output/onOutput'), $this);
         }
         $this->state = null;
         return $return;
@@ -635,14 +639,20 @@ class Debug
             }
         }
         array_unshift($args, $method);
-        if (!empty($this->cfg['file'])) {
-            $this->appendLogFile($args);
-        }
         /*
             if logging an error or warn, also log originating file/line
         */
         if (in_array($method, array('error','warn'))) {
             $args[] = $this->getErrorCaller();
+        }
+        if (isset($this->cfg['onLog'])) {
+            $return = call_user_func($this->cfg['onLog'], $args);
+            if ($return === false) {
+                return;
+            }
+        }
+        if (!empty($this->cfg['file']) && $method !== 'groupUncollapse') {
+            $this->appendLogFile($args);
         }
         $this->data['log'][] = $args;
         return;

@@ -62,7 +62,7 @@ class Debug
             'onLog' => null,
         );
         $this->data = array(
-            'alert'         => '',
+            'alerts'         => array(),    // array of alerts.  alerts will be shown at top of output when possible
             'collectToggleCount' => 0,  // used to guess if collection was turned on to collect "environment" info
                                         //    then turned off..  log will no be emailed in this condition
             'counts'        => array(), // count method
@@ -117,6 +117,26 @@ class Debug
         if (preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches) && $matches[1] === __NAMESPACE__) {
             $filePath = __DIR__.'/'.$matches[2].'.php';
             require $filePath;
+        }
+    }
+
+    /**
+     * Add an alert to top of log
+     *
+     * @param string  $message     message
+     * @param string  $class       (danger), info, success, warning
+     * @param boolean $dismissible (false)
+     *
+     * @return void
+     */
+    public function alert($message, $class = 'danger', $dismissible = false)
+    {
+        if ($this->cfg['collect']) {
+            $this->appendLog('alert', array(
+                'message' => $message,
+                'class' => $class,
+                'dismissible' => $dismissible,
+            ));
         }
     }
 
@@ -357,6 +377,7 @@ class Debug
             $return = $this->output->output();
             $this->outputSent = true;
             $this->data['log'] = array();
+            $this->data['alerts'] = array();
         } elseif ($this->get('output/onOutput')) {
             call_user_func($this->get('output/onOutput'), $this);
         }
@@ -654,7 +675,12 @@ class Debug
         if (!empty($this->cfg['file']) && $method !== 'groupUncollapse') {
             $this->appendLogFile($args);
         }
-        $this->data['log'][] = $args;
+        if ($method == 'alert') {
+            unset($args[0]);
+            $this->data['alerts'][] = $args;
+        } else {
+            $this->data['log'][] = $args;
+        }
         return;
     }
 

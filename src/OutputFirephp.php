@@ -50,9 +50,18 @@ class OutputFirephp
         if (!$this->firephp) {
         	return;
         }
-        if (!empty($this->data['alert'])) {
-            $alert = str_replace('<br />', ", \n", $this->data['alert']);
-            array_unshift($this->data['log'], array('error', $alert));
+        foreach ($this->data['alerts'] as $alert) {
+            $str = str_replace('<br />', ", \n", $alert['message']);
+            $method = $alert['class'];
+            $trans = array(
+                'danger' => 'error',
+                'success' => 'info',
+                'warning' => 'warn',
+            );
+            if (isset($trans[$method])) {
+                $method = $trans[$method];
+            }
+            array_unshift($this->data['log'], array($method, $str));
         }
         foreach ($this->data['log'] as $args) {
             $method = array_shift($args);

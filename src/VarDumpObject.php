@@ -159,7 +159,7 @@ class VarDumpObject
                         : ''
                     )
                     .($abs['implements']
-                        ? '<dt>implements</dt><dd class="interfaces">'.implode('<br />', $abs['implements']).'</dd>'
+                        ? '<dt>implements</dt><dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'
                         : ''
                     )
                     .($misc

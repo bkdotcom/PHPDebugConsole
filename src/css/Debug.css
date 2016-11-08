@@ -31,6 +31,9 @@
 	margin-top: 0.75em;
 }
 
+.debug a { text-decoration: none; }
+.debug a:focus, .debug a:hover { text-decoration: underline; }
+.debug a:active, .debug a:hover { outline: 0; }
 .debug dl { margin-top: 0; margin-bottom: 0;}
 .debug dt { font-weight: bold; }
 .debug dl:not(.dl-horizontal) dd { margin-left: 20px; }
@@ -56,7 +59,7 @@
 .debug table th, .debug table td { border:1px solid #000; padding:1px .25em; vertical-align:top; }
 /* also right-align float? */
 .debug td.numeric,
-.debug td.t_int { text-align: right; }
+	.debug td.t_int { text-align: right; }
 .debug td.t_key:before { content: none; }
 .debug td.t_key:after { content: none; }
 .debug ul { margin-top: 0; margin-bottom: 0; }
@@ -64,28 +67,90 @@
 .debug [title] {
 	cursor: help;
 }
-.debug .t_object [title]:not(.t_toStringValue) {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.33);
-}
-.debug .t_object [title]:hover {
-	background-color: rgba(0,0,0,0.2);
-}
+.debug .t_object .property_name[title],
+	.debug .t_object .method [title],
+	.debug .t_object .t_toStringValue {
+		border-bottom: 1px solid rgba(0, 0, 0, 0.33);
+	}
+.debug .t_object .property_name[title]:hover,
+	.debug .t_object .method [title]:hover {
+		background-color: rgba(0,0,0,0.2);
+	}
 
 /* alerts */
 .debug .alert {
+	font-size: 11px;
 	padding: 10px;
 	margin-bottom: 10px;
 	border: 1px solid transparent;
 	border-radius: 4px;
 }
+.debug .alert .alert-link {
+	font-weight: bold;
+}
 .debug .alert-danger {
-	background-color: #FFBABA;
-	color: #D8000C;
-	border-color: #D8000C;
+	background-color: #ffbaba;
+	border-color: #d8000c;
+	color: #d8000c;
+}
+.debug .alert-danger .alert-link {
+	color: #843534;
+}
+.debug .alert-info {
+	background-color: #d9edf7;
+	border-color: #bce8f1;
+	color: #31708f;
+}
+.debug .alert-info .alert-link {
+	color: #245269;
+}
+.debug .alert-success {
+	background-color: #dff0d8;
+	border-color: #d6e9c6;
+	color: #3c763d;
+}
+.debug .alert-success .alert-link {
+	color: #2b542c;
+}
+.debug .alert-warning {
+	background-color: #fcf8e3;
+	border-color: #faebcc;
+	color: #8a6d3b;
+}
+.debug .alert-warning .alert-link {
+	color: #66512c;
+}
+.debug .alert-dismissible {
+	padding-right: 35px;
+}
+.debug .alert-dismissible .close {
+	position: relative;
+	top: -7px;
+	right: -21px;
+	color: inherit;
+}
+.debug .close {
+	float: right;
+	font-size: 21px;
+	font-weight: 700;
+	line-height: 1;
+	color: #000;
+	text-shadow: 0 1px 0 #fff;
+	filter: alpha(opacity=20);
+	opacity: 0.2;
+}
+.debug button.close {
+	padding: 0;
+	cursor: pointer;
+	background: none;
+	border: 0;
+}
+.debug button.close:hover {
+	text-decoration: none;
+	opacity: 0.5;
 }
 .debug .alert h3 { margin-bottom: 4px; }
 .debug .alert h3:last-child { margin-bottom: 0; }
-
 
 .debug .list-unstyled{
 	list-style: none outside none;
@@ -101,7 +166,7 @@
 
 /* array & objects */
 .debug .array-inner,
-.debug .object-inner { display: block; margin-left: 1.5em; }
+	.debug .object-inner { display: block; margin-left: 1.5em; }
 .debug .key-value {
 	display: block;
 	padding-left: 10px;
@@ -120,23 +185,23 @@
 
 /* methods */
 .debug .m_assert,
-.debug .m_count,
-.debug .m_log,
+	.debug .m_count,
+	.debug .m_log,
+	.debug .m_error,
+	.debug .m_info,
+	.debug .m_time,
+	.debug .m_warn,
+	.debug table {
+		float:left;
+		clear:left;
+	}
 .debug .m_error,
-.debug .m_info,
-.debug .m_time,
-.debug .m_warn,
-.debug table {
-	float:left;
-	clear:left;
-}
-.debug .m_error,
-.debug .m_info,
-.debug .m_log,
-.debug .m_warn {
-	padding-left: 10px;
-	text-indent: -10px;
-}
+	.debug .m_info,
+	.debug .m_log,
+	.debug .m_warn {
+		padding-left: 10px;
+		text-indent: -10px;
+	}
 .debug .m_group {
 	clear: left;
 	margin-left: 1em;
@@ -145,10 +210,10 @@
 }
 /* clearfix group */
 .debug .m_group:before,
-.debug .m_group:after {
-	content: " ";
-	display: table;
-}
+	.debug .m_group:after {
+		content: " ";
+		display: table;
+	}
 .debug .m_group:after {
 	clear: both;
 }

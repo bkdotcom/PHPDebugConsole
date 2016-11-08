@@ -49,9 +49,9 @@ class VarDumpArray
                 ? $abs['values']
                 : $abs;
             $pathCount = count($path);
-            foreach ($val as $k => $val2) {
-                $path[$pathCount] = $k;
-                $val[$k] = $this->debug->varDump->dump($val2, $outputAs, $path);
+            foreach ($val as $key => $val2) {
+                $path[$pathCount] = $key;
+                $val[$key] = $this->debug->varDump->dump($val2, $outputAs, $path);
             }
         }
         if ($outputAs == 'html') {

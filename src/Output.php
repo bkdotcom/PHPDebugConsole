@@ -365,7 +365,7 @@ class Output
      */
     protected function outputAsHtml()
     {
-        $this->data['alert'] = $this->errorSummary();
+        array_unshift($this->data['alerts'], $this->errorSummary());
         $str = '<div class="debug">'."\n";
         if ($this->cfg['outputCss']) {
             $str .= '<style type="text/css">'."\n"
@@ -387,10 +387,32 @@ class Output
             array_unshift($this->data['log'], array('error error-fatal',$lastError));
         }
         $str .= '<div class="debug-header"><h3>Debug Log</h3></div>'."\n";
-        if (!empty($this->data['alert'])) {
-            $str .= '<div class="alert alert-danger">'.$this->data['alert'].'</div>';
+        foreach ($this->data['alerts'] as $alert) {
+            if (is_string($alert)) {
+                // errorSummary
+                $alert = array(
+                    'message' => $alert,
+                    'class' => 'danger',
+                    'dismissible' => false,
+                );
+            }
+            if ($alert['message']) {
+                if ($alert['dismissible']) {
+                    $alert['message'] = '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>'
+                        .$alert['message'];
+                    $alert['class'] .= ' alert-dismissible';
+                }
+                $str .= '<div class="alert alert-'.$alert['class'].'" role="alert">'.$alert['message'].'</div>';
+            }
         }
-        $str .= '<div class="debug-content clearfix">'."\n";
+        /*
+            If outputing script, initially hide the output..
+            this will help page load performance (fewer redraws)... by magnitudes
+        */
+        if ($this->cfg['outputScript']) {
+            $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>';
+        }
+        $str .= '<div class="debug-content clearfix" '.($this->cfg['outputScript'] ? 'style="display:none;"' : '').'>'."\n";
         foreach ($this->data['log'] as $args) {
             $method = array_shift($args);
             $str .= $this->outputHtmlLogEntry($method, $args);

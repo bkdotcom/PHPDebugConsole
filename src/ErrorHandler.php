@@ -177,8 +177,14 @@ class ErrorHandler
             $replace = array(
                 ")\n",
             );
-            $backtrace = debug_backtrace();
+            $backtrace = debug_backtrace(null);	// no object info
             $backtrace = array_slice($backtrace, 3);
+            foreach ($backtrace as $k => $frame) {
+                if ($frame['file'] == $error['file'] && $frame['line'] == $error['line']) {
+                    $backtrace = array_slice($backtrace, $k);
+                    break;
+                }
+            }
             $backtrace[0]['vars'] = $error['vars'];
             $debug = __NAMESPACE__.'\\Debug';
             if (class_exists($debug)) {

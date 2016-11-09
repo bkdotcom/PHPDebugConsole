@@ -670,7 +670,7 @@ class VarDumpObject
         $name = $prop->name;
         $objClassName = $prop->class;
         // get type and comment from phpdoc
-        $commentInfo = $this->getPropCommentInfo($prop, $objClassName, $name);
+        $commentInfo = $this->getPropCommentInfo($prop);
         $propInfo = array(
             'visibility' => 'public',
             'isStatic' => $prop->isStatic(),
@@ -698,16 +698,16 @@ class VarDumpObject
     }
 
     /**
-     * [getPropCommentData description]
+     * Get property type and description from phpDoc comment
      *
-     * @param \ReflectionProperty $prop         property reflection object
-     * @param string              $objClassName classname
-     * @param string              $name         property name
+     * @param \ReflectionProperty $prop property reflection object
      *
      * @return array
      */
-    protected function getPropCommentInfo(\ReflectionProperty $prop, $objClassName, $name)
+    protected function getPropCommentInfo(\ReflectionProperty $prop)
     {
+        $objClassName = $prop->class;
+        $name = $prop->name;
         $info = array(
             'type' => VarDump::UNDEFINED,
             'desc' => VarDump::UNDEFINED,

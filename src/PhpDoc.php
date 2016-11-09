@@ -71,27 +71,27 @@ class PhpDoc
     {
         $parsed = array();
         $info = array(
-        	'param' => array(
-        		'parts' => array('type','name','desc'),
-        		'regex' => '/^(?P<type>.*?)'
-		            .'(?:\s+&?\$?(?P<name>\S+))?'
-		            .'(?:\s+(?P<desc>.*))?$/s',
-           	),
-        	'default' => array(
-        		'parts' => array('type','desc'),
-        		'regex' => '/(?P<type>.*?)\s+'
-		            .'(?P<desc>.*)?/s',
-        	),
+            'param' => array(
+                'parts' => array('type','name','desc'),
+                'regex' => '/^(?P<type>.*?)'
+                    .'(?:\s+&?\$?(?P<name>\S+))?'
+                    .'(?:\s+(?P<desc>.*))?$/s',
+            ),
+            'default' => array(
+                'parts' => array('type','desc'),
+                'regex' => '/(?P<type>.*?)\s+'
+                    .'(?P<desc>.*)?/s',
+            ),
         );
         $info = isset($info[$tag])
-        	? $info[$tag]
-        	: $info['default'];
+            ? $info[$tag]
+            : $info['default'];
         preg_match($info['regex'], $tagStr, $matches);
-		foreach ($info['parts'] as $i => $part) {
-			$parsed[$part] = isset($matches[$i]) && $matches[$i] !== ''
-				? trim($matches[$i])
-				: null; // VarDump::UNDEFINED;
-		}
+        foreach ($info['parts'] as $i => $part) {
+            $parsed[$part] = isset($matches[$i]) && $matches[$i] !== ''
+                ? trim($matches[$i])
+                : null;
+        }
         return $parsed;
     }
 }

@@ -108,8 +108,6 @@
 
 	/**
 	 * add font-awsome icons
-	 *
-	 * @todo find a way to add icons "on demand" / only where visible
 	 */
 	function addIcons($root, types) {
 		if (!$.isArray(types)) {

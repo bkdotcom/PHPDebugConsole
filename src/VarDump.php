@@ -68,13 +68,8 @@ class VarDump
     {
         $type = null;
         $typeMore = null;
-        if (empty($path)) {
-            if (is_array($val) && !in_array(self::ABSTRACTION, $val, true)) {
-                // array hasn't been prepped / could contain recursion
-                $val = $this->getAbstraction($val);
-            } elseif (is_object($val) || is_resource($val)) {
-                $val = $this->getAbstraction($val);
-            }
+        if (empty($path) && static::needsAbstraction($val)) {
+            $val = $this->getAbstraction($val);
         }
         if (is_array($val)) {
             if (in_array(self::ABSTRACTION, $val, true)) {
@@ -474,6 +469,24 @@ EOD;
                 'value' => print_r($mixed, true).': '.get_resource_type($mixed),
             );
         }
+    }
+
+    /**
+     * Is the passed value an array, object, or resource that needs abstracted?
+     *
+     * @param mixed $val value to check
+     *
+     * @return boolean
+     */
+    public static function needsAbstraction($val)
+    {
+        $return = false;
+        if (is_array($val) && !in_array(self::ABSTRACTION, $val, true)) {
+            $return = true;
+        } elseif (is_object($val) || is_resource($val)) {
+            $return = true;
+        }
+        return $return;
     }
 
     /**

@@ -43,6 +43,8 @@ class Test extends TestBase
     private $propPrivate = 'iAmPrivate';
     protected $propProtected = 'iAmProtected';
 
+    private $propHidden = 'hidden via __debugInfo';
+
     public $someArray = array(
         'int' => 123,
         'numeric' => '123',
@@ -80,6 +82,7 @@ class Test extends TestBase
         $return = get_object_vars($this);
         $return['propPrivate'] .= ' (alternate value via __debugInfo)';
         $return['debugValue'] = 'This property is debug only';
+        unset($return['propHidden']);
         return $return;
     }
 

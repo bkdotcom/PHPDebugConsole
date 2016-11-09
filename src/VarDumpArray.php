@@ -149,7 +149,7 @@ class VarDumpArray
             $isNestedArray = isset($hist[$lastHistI]) && is_array($hist[$lastHistI]);
             $hist[] = $array;
             foreach ($array as $k => $v) {
-                if (is_array($v) || is_object($v) || is_resource($v)) {
+                if ($this->debug->varDump->needsAbstraction($v)) {
                     $v = $this->debug->varDump->getAbstraction($array[$k], $hist);
                 }
                 $return['values'][$k] = $v;

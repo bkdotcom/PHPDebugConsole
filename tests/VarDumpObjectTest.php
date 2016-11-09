@@ -107,6 +107,26 @@ class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
     }
 
     /**
+     * test handling __debugInfo magic method
+     *
+     * @return void
+     */
+    public function testDebugInfo()
+    {
+        $test = new \bdk\DebugTest\Test();
+        $this->debug->log('test', $test);
+        $abstraction = $this->debug->dataGet('log/0/2');
+        $props = $abstraction['properties'];
+        $this->assertArrayNotHasKey('propHidden', $props, 'propHidden shouldn\'t be debugged');
+        // debugValue
+        $this->assertSame('This property is debug only', $props['debugValue']['value']);
+        $this->assertEquals('debug', $props['debugValue']['visibility']);
+        // propPrivate
+        $this->assertStringEndsWith('(alternate value via __debugInfo)', $props['propPrivate']['value']);
+        $this->assertSame(true, $props['propPrivate']['viaDebugInfo']);
+    }
+
+    /**
      * v 1.0 = fatal error
      *
      * @return void

@@ -2,10 +2,11 @@
 /**
  * Methods used to display objects
  *
- * @package PHPDebugConsole
- * @author  Brad Kent <bkfake-github@yahoo.com>
- * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3.3
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2016 Brad Kent
+ * @version   v1.3.3
  */
 
 namespace bdk\Debug;
@@ -24,6 +25,7 @@ class VarDumpObject
     public function __construct($debug)
     {
         $this->debug = $debug;
+        $this->phpDoc = new PhpDoc();
     }
 
     /**
@@ -154,28 +156,18 @@ class VarDumpObject
             $html = $objToString
                 .$strClassName
                 .'<dl class="object-inner">'
-                    .($abs['extends']
-                        ? '<dt>extends</dt><dd>'.implode('<br />', $abs['extends']).'</dd>'
-                        : ''
-                    )
-                    .($abs['implements']
-                        ? '<dt>implements</dt><dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'
-                        : ''
-                    )
-                    .($misc
-                        ? '<dt>misc</dt><dd>'.$misc.'</dd>'
-                        : ''
-                    )
-                    .($this->debug->varDump->get('outputConstants')
-                        ? $this->dumpConstantsAsHtml($abs['constants'])
-                        : ''
-                    )
+                    .'<dt>extends</dt><dd>'.implode('<br />', $abs['extends']).'</dd>'
+                    .'<dt>implements</dt><dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'
+                    .'<dt>misc</dt><dd>'.$misc.'</dd>'
+                    .$this->dumpConstantsAsHtml($abs['constants'])
                     .$this->dumpPropertiesAsHtml($abs['properties'], $path, array('viaDebugInfo'=>$abs['viaDebugInfo']))
                     .($abs['collectMethods'] && $this->debug->varDump->get('outputMethods')
                         ? $this->dumpMethodsAsHtml($abs['methods'])
                         : ''
                     )
                 .'</dl>';
+            // remove empty <dt>s
+            $html = preg_replace('#<dt[^>]*>\w+</dt><dd[^>]*></dd>#', '', $html);
         }
         $accessible = $abs['scopeClass'] == $abs['className']
             ? 'private'
@@ -261,15 +253,16 @@ class VarDumpObject
      */
     protected function dumpConstantsAsHtml($constants)
     {
-        $str = $constants
-            ? '<dt class="constants">constants</dt>'
-            : '';
-        foreach ($constants as $k => $value) {
-            $str .= '<dd class="constant">'
-                .'<span class="constant-name">'.$k.'</span>'
-                .' <span class="t_operator">=</span> '
-                .$this->debug->varDump->dump($value, 'html')
-                .'</dd>';
+        $str = '';
+        if ($constants && $this->debug->varDump->get('outputConstants')) {
+            $str = '<dt class="constants">constants</dt>';
+            foreach ($constants as $k => $value) {
+                $str .= '<dd class="constant">'
+                    .'<span class="constant-name">'.$k.'</span>'
+                    .' <span class="t_operator">=</span> '
+                    .$this->debug->varDump->dump($value, 'html')
+                    .'</dd>';
+            }
         }
         return $str;
     }
@@ -287,41 +280,34 @@ class VarDumpObject
             ? 'methods'
             : 'no methods';
         $str = '<dt class="methods">'.$label.'</dt>';
-        foreach ($methods as $k => $info) {
+        foreach ($methods as $methodName => $info) {
             $paramStr = $this->dumpParamsAsHtml($info['params']);
-            $modifiers = array();
-            if ($info['isFinal']) {
-                $modifiers[] = '<span class="t_modifier">final</span>';
+            $modifiers = array_keys(array_filter(array(
+                'final' => $info['isFinal'],
+                $info['visibility'] => true,
+                'static' => $info['isStatic'],
+            )));
+            foreach ($modifiers as $i => $modifier) {
+                $modifiers[$i] = '<span class="t_modifier">'.$modifier.'</span>';
             }
-            $modifiers[] = '<span class="t_modifier">'.$info['visibility'].'</span>';
-            if ($info['isStatic']) {
-                $modifiers[] = '<span class="t_modifier">static</span>';
-            }
-            $returnType = '';
-            if ($info['returnType'] !== VarDump::UNDEFINED) {
-                $returnType = ' <span class="t_type"'
-                    .($info['returnDesc'] !== VarDump::UNDEFINED
-                        ? ' title="'.htmlspecialchars($info['returnDesc']).'"'
-                        : ''
-                    )
-                    .'>'.$info['returnType'].'</span>';
-            }
-            $str .= '<dd class="method visibility-'.$info['visibility'].'" '.($info['implements'] ? 'data-implements="'.$info['implements'].'"' : '').'>'
+            $str .= '<dd class="method visibility-'.$info['visibility'].'" data-implements="'.$info['implements'].'">'
                 .implode(' ', $modifiers)
-                .$returnType
+                .' <span class="t_type"'
+                        .' title="'.htmlspecialchars($info['returnDesc']).'"'
+                    .'>'.$info['returnType'].'</span>'
                 .' <span class="method-name"'
-                    .($info['desc'] !== VarDump::UNDEFINED
-                        ? ' title="'.htmlspecialchars($info['desc']).'"'
-                        : ''
-                    )
-                    .'>'.$k.'</span>'
+                        .' title="'.htmlspecialchars($info['desc']).'"'
+                    .'>'.$methodName.'</span>'
                 .'<span class="t_punct">(</span>'.$paramStr.'<span class="t_punct">)</span>'
-                .($k == '__toString'
+                .($methodName == '__toString'
                     ? '<br /><span class="indent">'.$this->debug->varDump->dump($info['returnValue']).'</span>'
                     : ''
                 )
                 .'</dd>'."\n";
         }
+        $str = str_replace(' title="'.VarDump::UNDEFINED.'"', '', $str);  // t_type && method-name
+        $str = str_replace(' data-implements=""', '', $str);
+        $str = preg_replace('#<span[^>]*>('.VarDump::UNDEFINED.')?</span>#', '', $str); // returnType
         return $str;
     }
 
@@ -467,7 +453,6 @@ class VarDumpObject
         $methodArray = array();
         $reflectionObject = new \ReflectionObject($obj);
         $methods = $reflectionObject->getMethods();
-
         $reflectionClass = new \reflectionClass($obj);
         $interfaces = $reflectionClass->getInterfaceNames();
         $interfaceMethods = array(
@@ -478,11 +463,6 @@ class VarDumpObject
             // 'Throwable' => array('getMessage','getCode','getFile','getLine','getTrace','getTraceAsString','getPrevious','__toString'),
         );
         $interfacesHide = array_intersect($interfaces, array_keys($interfaceMethods));
-        $methodsHide = array();
-        foreach ($interfacesHide as $interface) {
-            $methodsHide = array_merge($methodsHide, $interfaceMethods[$interface]);
-        }
-
         foreach ($methods as $reflectionMethod) {
             $vis = 'public';
             if ($reflectionMethod->isPrivate()) {
@@ -491,38 +471,31 @@ class VarDumpObject
                 $vis = 'protected';
             }
             $docComment = $reflectionMethod->getDocComment();
-            $commentParts = $this->parseDocComment($docComment);
+            $phpDocParts = $this->phpDoc->parse($docComment);
             $methodName = $reflectionMethod->getName();
-            $returnType = VarDump::UNDEFINED;
-            $returnDesc = VarDump::UNDEFINED;
-            if (isset($commentParts['return'][0])) {
-                $returnType = $commentParts['return'][0];
-                $regex = '/(?P<type>.*?)\s+'
-                    .'(?P<desc>.*)?/s';
-                if (preg_match($regex, $returnType, $matches)) {
-                    $returnType = $matches['type'];
-                    $returnDesc = $matches['desc'];
-                }
-            }
+            $parsedReturnTag = isset($phpDocParts['return'][0])
+                ? $this->phpDoc->parseTag('return', $phpDocParts['return'][0])
+                : $this->phpDoc->parseTag('return', '');
             $info = array(
                 'visibility' => $vis,
                 'isFinal' => $reflectionMethod->isFinal(),
                 'isStatic' => $reflectionMethod->isStatic(),
                 'isAbstract' => $reflectionMethod->isAbstract(),
-                'returnType' => $returnType,
-                'params' => $this->getParams($reflectionMethod, $commentParts),
-                'desc' => trim($commentParts['comment'][0])
-                    ? $commentParts['comment'][0]
-                    : VarDump::UNDEFINED,
-                'returnDesc' => $returnDesc,
-                'implements' => in_array($methodName, $methodsHide),
+                'params' => $this->getParams($reflectionMethod, $phpDocParts),
+                'desc' => $phpDocParts['comment'][0],
+                'returnType' => $parsedReturnTag['type'],
+                'returnDesc' => $parsedReturnTag['desc'],
+                'implements' => null,
             );
-            if ($info['implements']) {
-                foreach ($interfacesHide as $interface) {
-                    if (in_array($methodName, $interfaceMethods[$interface])) {
-                        $info['implements'] = $interface;
-                        break;
-                    }
+            foreach (array('desc','returnType','returnDesc') as $key) {
+                if ($info[$key] === null) {
+                    $info[$key] = VarDump::UNDEFINED;
+                }
+            }
+            foreach ($interfacesHide as $interface) {
+                if (in_array($methodName, $interfaceMethods[$interface])) {
+                    $info['implements'] = $interface;
+                    break;
                 }
             }
             if ($methodName == '__toString') {
@@ -538,20 +511,20 @@ class VarDumpObject
      * get parameter details
      *
      * @param \ReflectionMethod $reflectionMethod method object
-     * @param array             $commentParts     parsedDocComment
+     * @param array             $phpDocParts      parsedDocComment
      *
      * @return array
      */
-    public function getParams(\ReflectionMethod $reflectionMethod, $commentParts = array())
+    public function getParams(\ReflectionMethod $reflectionMethod, $phpDocParts = array())
     {
         $paramArray = array();
         $params = $reflectionMethod->getParameters();
-        if (empty($commentParts)) {
+        if (empty($phpDocParts)) {
             $docComment = $reflectionMethod->getDocComment();
-            $commentParts = $this->parseDocComment($docComment);
+            $phpDocParts = $this->phpDoc->parse($docComment);
         }
-        if (empty($commentParts['param'])) {
-            $commentParts['param'] = array();
+        if (empty($phpDocParts['param'])) {
+            $phpDocParts['param'] = array();
         }
         foreach ($params as $reflectionParameter) {
             $hasDefaultValue = $reflectionParameter->isDefaultValueAvailable();
@@ -572,26 +545,18 @@ class VarDumpObject
                 'desc' => VarDump::UNDEFINED,
             );
         }
-        $regex = '/^(?P<type>.*?)'
-            .'(?:\s+&?\$?(?P<varName>\S+))?'
-            .'(?:\s+(?P<desc>.*))?$/s';
         $paramKeys = array_keys($paramArray);
-        foreach ($commentParts['param'] as $i => $paramValue) {
-            // now parse the value
-            preg_match($regex, $paramValue, $matches);
-            if (!isset($matches['varName'])) {
-                $matches['varName'] = isset($paramKeys[$i])
-                    ? $paramKeys[$i]
-                    : '';
+        foreach ($phpDocParts['param'] as $i => $paramValue) {
+            $parsed = $this->phpDoc->parseTag('param', $paramValue);
+            if ($parsed['name'] === null && isset($paramKeys[$i])) {
+                $parsed['name'] = $paramKeys[$i];
             }
-            if (isset($paramArray[ $matches['varName'] ])) {
-                $param = &$paramArray[ $matches['varName'] ];
+            if (isset($paramArray[ $parsed['name'] ])) {
+                $param = &$paramArray[ $parsed['name'] ];
                 if (!isset($param['type'])) {
-                    $param['type'] = $matches['type'];
+                    $param['type'] = $parsed['type'];
                 }
-                $param['desc'] = isset($matches['desc']) && trim($matches['desc'])
-                    ? trim($matches['desc'])
-                    : VarDump::UNDEFINED;
+                $param['desc'] = $parsed['desc'];
             }
         }
         return $paramArray;
@@ -629,7 +594,6 @@ class VarDumpObject
         $propArray = array();
         $reflectionObject = new \ReflectionObject($obj);
         $useDebugInfo = $reflectionObject->hasMethod('__debugInfo') && $this->debug->varDump->get('useDebugInfo');
-        $properties = $reflectionObject->getProperties();
         $debugInfo = $useDebugInfo
             ? call_user_func(array($obj, '__debugInfo'))
             : array();
@@ -643,8 +607,9 @@ class VarDumpObject
                 'desc' => VarDump::UNDEFINED,
             );
         }
-        while (true) {
+        while ($reflectionObject) {
             $objClassName = $reflectionObject->getName();
+            $properties = $reflectionObject->getProperties();
             $objNamespace = substr($objClassName, 0, strrpos($objClassName, '\\'));
             $isDebugObj = $objNamespace == __NAMESPACE__;
             while ($properties) {
@@ -652,57 +617,30 @@ class VarDumpObject
                 $name = $prop->getName();
                 if (isset($propArray[$name])) {
                     continue;
-                }
-                if ($useDebugInfo && !array_key_exists($name, $debugInfo)) {
+                } elseif ($useDebugInfo && !array_key_exists($name, $debugInfo)) {
+                    continue;
+                } elseif ($isDebugObj && in_array($name, array('data','debug','instance'))) {
                     continue;
                 }
-                if ($isDebugObj && in_array($name, array('data','debug','instance'))) {
-                    continue;
-                }
-                $prop->setAccessible(true); // only accessible via reflection
-                // get type and comment from phpdoc
-                $commentInfo = $this->getPropCommentInfo($prop, $objClassName, $name);
-                $propInfo = array(
-                    'visibility' => 'public',
-                    'isStatic' => $prop->isStatic(),
-                    'type' => $commentInfo['type'],
-                    'value' => null,
-                    'desc' => $commentInfo['comment'],
-                    // viaDebugInfo
-                );
-                if ($prop->isPrivate()) {
-                    $propInfo['visibility'] = 'private';
-                } elseif ($prop->isProtected()) {
-                    $propInfo['visibility'] = 'protected';
-                }
-                if ($objClassName == 'mysqli' && $obj->connect_errno) {
-                    // avoid "Property access is not allowed yet"
-                    $propsAlwaysAvail = array('client_info','client_version','connect_errno','connect_error','errno','error','stat');
-                    $value = in_array($name, $propsAlwaysAvail)
-                        ? $prop->getValue($obj)
-                        : null;
-                } else {
-                    $value = $prop->getValue($obj);
-                }
+                $propInfo = $this->getPropInfo($obj, $prop);
                 if ($useDebugInfo) {
                     $debugValue = $debugInfo[$name];
-                    $propInfo['viaDebugInfo'] = $debugValue != $value;
-                    $value = $debugValue;
+                    $propInfo['viaDebugInfo'] = $debugValue != $propInfo['value'];
+                    $propInfo['value'] = $debugValue;
+                    unset($debugInfo[$name]);
                 }
-                if (is_array($value) || is_object($value) || is_resource($value)) {
-                    $value = $this->debug->varDump->getAbstraction($value, $hist);
+                if ($this->debug->varDump->needsAbstraction($propInfo['value'])) {
+                    $propInfo['value'] = $this->debug->varDump->getAbstraction($propInfo['value'], $hist);
                 }
-                $propInfo['value'] = $value;
                 $propArray[$name] = $propInfo;
             }
-            if ($reflectionObject = $reflectionObject->getParentClass()) {
-                $properties = $reflectionObject->getProperties();
-            } else {
-                break;
-            }
+            $reflectionObject = $reflectionObject->getParentClass();
         }
+        /*
+            Any values left in $debugInfo are only defined via __debugInfo
+        */
         foreach ($debugInfo as $name => $value) {
-            if (is_array($value) || is_object($value) || is_resource($value)) {
+            if ($this->debug->varDump->needsAbstraction($value)) {
                 $value = $this->debug->varDump->getAbstraction($value, $hist);
             }
             $propArray[$name] = array(
@@ -719,6 +657,47 @@ class VarDumpObject
     }
 
     /**
+     * Get property info
+     *
+     * @param object              $obj  object
+     * @param \ReflectionProperty $prop reflection property
+     *
+     * @return array
+     */
+    protected function getPropInfo($obj, \ReflectionProperty $prop)
+    {
+        $prop->setAccessible(true); // only accessible via reflection
+        $name = $prop->name;
+        $objClassName = $prop->class;
+        // get type and comment from phpdoc
+        $commentInfo = $this->getPropCommentInfo($prop, $objClassName, $name);
+        $propInfo = array(
+            'visibility' => 'public',
+            'isStatic' => $prop->isStatic(),
+            'type' => $commentInfo['type'],
+            'value' => null,
+            'desc' => $commentInfo['desc'],
+            // viaDebugInfo
+        );
+        if ($prop->isPrivate()) {
+            $propInfo['visibility'] = 'private';
+        } elseif ($prop->isProtected()) {
+            $propInfo['visibility'] = 'protected';
+        }
+        if ($objClassName == 'mysqli' && $obj->connect_errno) {
+            // avoid "Property access is not allowed yet"
+            $propsAlwaysAvail = array('client_info','client_version','connect_errno','connect_error','errno','error','stat');
+            $value = in_array($name, $propsAlwaysAvail)
+                ? $prop->getValue($obj)
+                : null;
+        } else {
+            $value = $prop->getValue($obj);
+        }
+        $propInfo['value'] = $value;
+        return $propInfo;
+    }
+
+    /**
      * [getPropCommentData description]
      *
      * @param \ReflectionProperty $prop         property reflection object
@@ -730,28 +709,23 @@ class VarDumpObject
     protected function getPropCommentInfo(\ReflectionProperty $prop, $objClassName, $name)
     {
         $info = array(
-            'comment' => VarDump::UNDEFINED,
             'type' => VarDump::UNDEFINED,
+            'desc' => VarDump::UNDEFINED,
         );
-        $propDeclared = property_exists($objClassName, $name);
-        $docComment = $propDeclared
+        $docComment = property_exists($objClassName, $name)
             ? $prop->getDocComment()
             : '';
         if ($docComment) {
-            $commentParts = $this->parseDocComment($docComment);
-            if ($commentParts['comment'][0]) {
-                $info['comment'] =  $commentParts['comment'][0];
+            $phpDocParts = $this->phpDoc->parse($docComment);
+            if ($phpDocParts['comment'][0]) {
+                $info['desc'] = $phpDocParts['comment'][0];
             }
-            if (isset($commentParts['var'])) {
-                $type = $commentParts['var'][0];
-                if (preg_match('/^(\w+)\s(.+)$/', $type, $matches)) {
-                    // type and comment : @var string some comment
-                    $type = $matches[1];
-                    $info['comment'] = $info['comment']
-                        ? $info['comment'].': '.$matches[2]
-                        : $matches[2];
-                }
-                $info['type'] = $type;
+            if (isset($phpDocParts['var'])) {
+                $parsed = $this->phpDoc->parseTag('var', $phpDocParts['var'][0]);
+                $info['type'] = $parsed['type'];
+                $info['desc'] = $info['desc'] && $parsed['desc'] !== VarDump::UNDEFINED
+                    ? $info['desc'].': '.$parsed['desc']
+                    : $parsed['desc'];
             }
         }
         return $info;
@@ -787,44 +761,6 @@ class VarDumpObject
                 : null;
         }
         return $className;
-    }
-
-    /**
-     * Rudimentary doc-comment parsing
-     *
-     * @param string $docComment doc-comment string
-     *
-     * @return array
-     */
-    public function parseDocComment($docComment)
-    {
-        // remove openining /** and closing */
-        $docComment = preg_replace('#^/\*\*(.+)\*/$#s', '$1', $docComment);
-        // remove leading "*"s
-        $docComment = preg_replace('#^[ \t]*\*[ ]?#m', '', $docComment);
-        $docComment = trim($docComment);
-        $tags = array(
-            'comment' => array( !empty($docComment) ? $docComment : '' ),
-        );
-        $regexNotTag = '(?P<value>(?:(?!^@).)*)';    // potential pcre backtrack segfault
-        $regexTags = '#^@(?P<tag>\w+)[ \t]*'.$regexNotTag.'#sim';
-        // get general comment
-        // go through each line rather than using regexNotTag... which caused segfault on larger comments
-        $lines = explode("\n", $docComment);
-        foreach ($lines as $i => $line) {
-            if (!empty($line) && $line{0} == '@') {
-                $tags['comment'][0] = trim(implode("\n", array_slice($lines, 0, $i)));
-                break;
-            }
-        }
-        preg_match_all($regexTags, $docComment, $matches, PREG_SET_ORDER);
-        foreach ($matches as $match) {
-            $value = $match['value'];
-            $value = preg_replace('/\n\s*\*\s*/', "\n", $value);
-            $value = trim($value);
-            $tags[ $match['tag'] ][] = $value;
-        }
-        return $tags;
     }
 
     /**

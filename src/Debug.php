@@ -655,7 +655,7 @@ class Debug
     protected function appendLog($method, $args)
     {
         foreach ($args as $i => $v) {
-            if (is_array($v) || is_object($v) || is_resource($v)) {
+            if ($this->varDump->needsAbstraction($v)) {
                 $args[$i] = $this->varDump->getAbstraction($v);
             }
         }

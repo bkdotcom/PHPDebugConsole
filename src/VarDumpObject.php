@@ -133,9 +133,14 @@ class VarDumpObject
             $html = $strClassName
                 .' <span class="excluded">(not inspected)</span>';
         } else {
-            $objToString = null;
-            if (isset($abs['methods']['__toString']['returnValue'])) {
+            $toStringVal = null;
+            if ($abs['stringified']) {
+                $toStringVal = $abs['stringified'];
+            } elseif (isset($abs['methods']['__toString']['returnValue'])) {
                 $toStringVal = $abs['methods']['__toString']['returnValue'];
+            }
+            if ($toStringVal) {
+                // $toStringVal = $abs['methods']['__toString']['returnValue'];
                 $toStringValAppend = '';
                 if (strlen($toStringVal) > 100) {
                     $toStringLen = strlen($toStringVal);
@@ -144,21 +149,16 @@ class VarDumpObject
                 }
                 $toStringDump = $this->debug->varDump->dump($toStringVal);
                 $classAndValue = $this->debug->utilities->parseAttribString($toStringDump);
-                $objToString = '<span class="'.$classAndValue['class'].' t_toStringValue" title="__toString()">'
+                $objToString = '<span class="'.$classAndValue['class'].' t_stringified" '.(!$abs['stringified'] ? 'title="__toString()"' : '').'>'
                     .$classAndValue['innerhtml']
                     .$toStringValAppend
                     .'</span> ';
-            }
-            $misc = '';
-            foreach ($abs['misc'] as $k => $v) {
-                $misc .= $k.': '.$v.'<br />';
             }
             $html = $objToString
                 .$strClassName
                 .'<dl class="object-inner">'
                     .'<dt>extends</dt><dd>'.implode('<br />', $abs['extends']).'</dd>'
                     .'<dt>implements</dt><dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'
-                    .'<dt>misc</dt><dd>'.$misc.'</dd>'
                     .$this->dumpConstantsAsHtml($abs['constants'])
                     .$this->dumpPropertiesAsHtml($abs['properties'], $path, array('viaDebugInfo'=>$abs['viaDebugInfo']))
                     .($abs['collectMethods'] && $this->debug->varDump->get('outputMethods')
@@ -307,7 +307,7 @@ class VarDumpObject
         }
         $str = str_replace(' title="'.VarDump::UNDEFINED.'"', '', $str);  // t_type && method-name
         $str = str_replace(' data-implements=""', '', $str);
-        $str = preg_replace('#<span[^>]*>('.VarDump::UNDEFINED.')?</span>#', '', $str); // returnType
+        $str = preg_replace('#<span[^>]*>('.str_replace("\0", '\\x00', VarDump::UNDEFINED).')?</span>#', '', $str); // returnType
         return $str;
     }
 
@@ -411,7 +411,7 @@ class VarDumpObject
             'properties' => array(),
             'methods' => array(),
             'scopeClass' => $this->getScopeClass($hist),
-            'misc' => array(),
+            'stringified' => null,
         );
         if (!$return['isRecursion'] && !$return['excluded']) {
             $collectConstants = $this->debug->varDump->get('collectConstants');
@@ -436,6 +436,9 @@ class VarDumpObject
                         'returnValue' => call_user_func(array($obj, '__toString')),
                     ),
                 );
+            }
+            if ($obj instanceof \DateTimeInterface) {
+                $return['stringified'] = $obj->format(\DateTime::ISO8601);
             }
         }
         return $return;

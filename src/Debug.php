@@ -689,11 +689,12 @@ class Debug
      *
      * @param array $args args
      *
-     * @return void
+     * @return boolean
      */
     protected function appendLogFile($args)
     {
-        if (!isset($this->data['fileHandle'])) {
+        $success = false;
+        if (!isset($this->data['fileHandle']) && !empty($this->cfg['file'])) {
             $fileExists = file_exists($this->cfg['file']);
             $this->data['fileHandle'] = fopen($this->cfg['file'], 'a');
             if ($this->data['fileHandle']) {
@@ -708,9 +709,11 @@ class Debug
         }
         if ($this->data['fileHandle']) {
             $method = array_shift($args);
+            $success = true;
             if ($args) {
                 $str = $this->output->getLogEntryAsText($method, $args, $this->data['groupDepthFile']);
-                fwrite($this->data['fileHandle'], $str."\n");
+                $wrote = fwrite($this->data['fileHandle'], $str."\n");
+                $success = $wrote !== false;
             }
             if (in_array($method, array('group','groupCollapsed'))) {
                 $this->data['groupDepthFile']++;
@@ -718,7 +721,7 @@ class Debug
                 $this->data['groupDepthFile']--;
             }
         }
-        return;
+        return $success;
     }
 
     /**

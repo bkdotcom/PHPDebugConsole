@@ -69,7 +69,7 @@
 }
 .debug .t_object .property_name[title],
 	.debug .t_object .method [title],
-	.debug .t_object .t_toStringValue {
+	.debug .t_object .t_stringified {
 		border-bottom: 1px solid rgba(0, 0, 0, 0.33);
 	}
 .debug .t_object .property_name[title]:hover,
@@ -256,7 +256,7 @@
 .debug .t_key:after { content: ']'; color: #999; }
 .debug .t_keyword { color: #07A; }
 .debug .t_null { opacity: 0.3; }
-.debug .t_toStringValue { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
+.debug .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
 .debug .t_object-class { color: inherit; text-decoration: underline; }
 .debug .t_operator { color: #A67F59; }
 .debug .t_punct { color: #999; }

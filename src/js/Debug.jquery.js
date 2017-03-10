@@ -36,6 +36,22 @@
 		loading = false,
 		debugKey = getDebugKey();
 
+	(function(){
+		var i,
+			links = document.head.getElementsByTagName("link"),
+			count = links.length,
+			haveFa = false;
+		for (i = 0; i < count; i++) {
+			if (links[i].outerHTML.indexOf("font-awesome") > -1) {
+				haveFa = true;
+				break;
+			}
+		}
+		if (!haveFa) {
+			loadStylesheet(fontAwesomeCss);
+		}
+	}());
+
 	if ( !$ ) {
 		console.warn("jQuery not yet defined");
 		if (document.getElementsByTagName('body')[0].childElementCount == 1) {
@@ -101,7 +117,7 @@
 		};
 
 		$(function() {
-			$("<link/>", { rel: "stylesheet", href: fontAwesomeCss }).appendTo("head");
+			// loadStylesheet(fontAwesomeCss);
 			$(".debug").debugEnhance();
 		});
 	}
@@ -545,6 +561,14 @@
 		loading = true;
 		jsNode.src = src;
 		first.parentNode.insertBefore(jsNode, first);
+	}
+
+	function loadStylesheet(src) {
+		var link = document.createElement("link");
+		link.type = "text/css";
+		link.rel = "stylesheet";
+		link.href = src;
+		document.head.appendChild(link);
 	}
 
 	function getDebugKey() {

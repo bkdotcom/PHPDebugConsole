@@ -50,7 +50,7 @@ class DebugTest extends PHPUnit_Framework_TestCase
                 && isset($var['isRecursion']);
         } elseif ($type == 'object') {
             $keys = array('excluded','collectMethods','viaDebugInfo','isRecursion',
-                    'extends','implements','constants','properties','methods','scopeClass','misc');
+                    'extends','implements','constants','properties','methods','scopeClass','stringified');
             $keysMissing = array_diff($keys, array_keys($var));
             $return = $var['debug'] === \bdk\Debug\VarDump::ABSTRACTION
                 && $var['type'] === 'object'
@@ -124,9 +124,9 @@ class DebugTest extends PHPUnit_Framework_TestCase
         $isArray = $this->checkAbstractionType($logEntry[2], 'array');
         $isObject = $this->checkAbstractionType($logEntry[3], 'object');
         $isResource = $this->checkAbstractionType($logEntry[4], 'resource');
-        $this->assertTrue($isArray);
-        $this->assertTrue($isObject);
-        $this->assertTrue($isResource);
+        $this->assertTrue($isArray, 'is Array');
+        $this->assertTrue($isObject, 'is Object');
+        $this->assertTrue($isResource, 'is Resource');
     }
 
     /**

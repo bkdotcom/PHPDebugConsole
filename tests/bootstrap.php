@@ -2,8 +2,9 @@
 require __DIR__.'/../src/Debug.php';
 require __DIR__.'/DOMTest/DOMTestCase.php';
 require __DIR__.'/DOMTest/CssSelect.php';
+require __DIR__.'/DebugTestFramework.php';
 
-\bdk\Debug\Debug::getInstance();	// invoke autoloader
+\bdk\Debug::getInstance();	// invoke autoloader
 
 require __DIR__.'/Class/Test.php';
 if (version_compare(PHP_VERSION, '5.6', '>=')) {

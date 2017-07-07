@@ -13,9 +13,10 @@
 		}
 	],
 	"autoload": {
+		"classmap": ["src/Debug.php"],
 		"psr-4": { "bdk\\Debug\\": "src/" }
 	},
 	"require": {
-		"php": ">=5.3.0"
+		"php": ">=5.4.0"
 	}
 }

@@ -3,7 +3,7 @@
  *
  * not recommended to modify
  *
- * use set('css', 'more css'); to add rules / override default
+ * use setCfg('css', 'more css'); to add rules / override default
  */
 
 .debug {
@@ -20,14 +20,20 @@
 	line-height: normal;
 	text-indent: 0;
 }
+.debug .clearfix:after {
+  content: "";
+  display: table;
+  clear: both;
+}
 
-.debug-header {
+.debug-bar {
 	padding: 5px;
 	font-size: 10px;
 	background-color: rgba(0, 0, 0, 0.2);
 	margin-bottom: 10px;
 }
-.debug-content {
+
+.debug-summary, .debug-content {
 	margin-top: 0.75em;
 }
 
@@ -55,27 +61,39 @@
 /*.debug pre br { display:none; }*/
 .debug table { border-collapse:collapse; font-size:inherit; }
 .debug table caption { font-weight:bold; font-style:italic; padding-bottom:0; padding-top:2px; text-align: left; }
-.debug table th { font-weight:bold; background-color: rgba(0,0,0,0.1); }
+.debug table th { font-weight:bold; text-align: center; background-color: rgba(0,0,0,0.1); }
 .debug table th, .debug table td { border:1px solid #000; padding:1px .25em; vertical-align:top; }
 /* also right-align float? */
 .debug td.numeric,
 	.debug td.t_int { text-align: right; }
-.debug td.t_key:before { content: none; }
-.debug td.t_key:after { content: none; }
+.debug td.t_key:before,
+.debug th.t_key:before { content: none; }
+.debug td.t_key:after,
+.debug th.t_key:after { content: none; }
 .debug ul { margin-top: 0; margin-bottom: 0; }
 
 .debug [title] {
 	cursor: help;
+}
+.debug [title]:hover {
+	background-color: rgba(0,0,0,0.2);
 }
 .debug .t_object .property_name[title],
 	.debug .t_object .method [title],
 	.debug .t_object .t_stringified {
 		border-bottom: 1px solid rgba(0, 0, 0, 0.33);
 	}
-.debug .t_object .property_name[title]:hover,
-	.debug .t_object .method [title]:hover {
-		background-color: rgba(0,0,0,0.2);
-	}
+
+.debug .deprecated {
+	opacity: .66;
+}
+.debug .deprecated i {
+	opacity: .66;
+	color: #D8000C;
+}
+.debug .t_object .method.deprecated i {
+	border-bottom: 0;
+}
 
 /* alerts */
 .debug .alert {
@@ -182,6 +200,13 @@
 	font-weight: bold;
 	color: inherit;
 }
+.debug .property.private-ancestor {
+	color: #F39;
+}
+.debug .property.private-ancestor:hover {
+	color: inherit;
+}
+
 
 /* methods */
 .debug .m_assert,
@@ -201,7 +226,7 @@
 	.debug .m_warn {
 		padding-left: 10px;
 		text-indent: -10px;
-	}
+}
 .debug .m_group {
 	clear: left;
 	margin-left: 1em;
@@ -213,7 +238,7 @@
 	.debug .m_group:after {
 		content: " ";
 		display: table;
-	}
+}
 .debug .m_group:after {
 	clear: both;
 }
@@ -223,7 +248,8 @@
 .debug .m_warn  { background-color: #FEEFB3; color: #9F6000; }
 .debug .m_error { white-space: pre-wrap; }
 .debug .m_error * { white-space: normal; }
-.debug-content .error-fatal:before {
+.debug .debug-header .error-fatal:before,
+	.debug .debug-content .error-fatal:before {
 	display: block;
 	padding-left: 10px;
 	margin-bottom: 5px;
@@ -231,7 +257,8 @@
 	font-size: 1.2em;
 	font-weight: bold;
 }
-.debug-content .error-fatal {
+.debug .debug-header .error-fatal,
+	.debug .debug-content .error-fatal {
 	padding: 10px;
 	margin-bottom: 11px;
 	border-left: solid 2px #D8000C;
@@ -257,7 +284,7 @@
 .debug .t_keyword { color: #07A; }
 .debug .t_null { opacity: 0.3; }
 .debug .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
-.debug .t_object-class { color: inherit; text-decoration: underline; }
+.debug .t_object-class { font-weight: bold; color: inherit; text-decoration: underline; }
 .debug .t_operator { color: #A67F59; }
 .debug .t_punct { color: #999; }
 .debug .t_recursion { font-weight: bold; color:#F00; }
@@ -274,10 +301,26 @@
 .debug .no-pseudo:before { content: none }
 .debug .no-pseudo:after { content: none }
 
-.debug .t_string .binary {
+.debug .binary {
 	margin: 0 .1em;
 	padding: 0 .3em;
 	background-color: #c0c0c0;
+	color: #003;
+	font-weight: bold;
+}
+.debug .c1-control {
+    font-size: 3em;
+    line-height: 0;
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    /*margin-top: -.12em;*/
+    margin: -.12em -.12em 0 -.12em;
+}
+.debug .unicode {
+	margin: 0 .1em;
+	padding: 0 .3em;
+	background-color: #c0c0ff;
 	color: #003;
 	font-weight: bold;
 }

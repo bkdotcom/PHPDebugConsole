@@ -58,7 +58,7 @@ class Test extends TestBase
      */
     public function __construct()
     {
-        $this->debug = \bdk\Debug\Debug::getInstance();
+        $this->debug = \bdk\Debug::getInstance();
         $this->instance = $this;
     }
 

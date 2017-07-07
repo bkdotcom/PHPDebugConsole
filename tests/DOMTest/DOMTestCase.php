@@ -74,6 +74,8 @@ abstract class PHPUnit_Framework_DOMTestCase extends PHPUnit_Framework_TestCase
     public static function assertSelectEquals($selector, $content, $count, $actual, $message = '', $isHtml = true)
     {
         $found =  \bdk\CssSelect::select($actual, $selector);
+        // fwrite(STDOUT, 'selector = '.print_r($selector, true) . "\n");
+        // fwrite(STDOUT, 'found = '.print_r($found, true) . "\n");
         if (is_string($content)) {
             /*
             $crawler = $crawler->reduce(function (Crawler $node, $i) use ($content) {
@@ -106,14 +108,14 @@ abstract class PHPUnit_Framework_DOMTestCase extends PHPUnit_Framework_TestCase
         } elseif (is_bool($count)) {
             $found = $found > 0;
             if ($count) {
-                self::assertTrue($countFound, $message);
+                self::assertTrue($found, $message);
             } else {
-                self::assertFalse($countFound, $message);
+                self::assertFalse($found, $message);
             }
-        } elseif (
-            is_array($count) &&
+        } elseif (is_array($count) &&
             (isset($count['>']) || isset($count['<']) ||
-            isset($count['>=']) || isset($count['<=']))) {
+            isset($count['>=']) || isset($count['<=']))
+        ) {
             if (isset($count['>'])) {
                 self::assertTrue($countFound > $count['>'], $message);
             }

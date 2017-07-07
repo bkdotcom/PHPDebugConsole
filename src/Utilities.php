@@ -2,10 +2,11 @@
 /**
  * General-purpose utilities
  *
- * @package PHPDebugConsole
- * @author  Brad Kent <bkfake-github@yahoo.com>
- * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3.3
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2017 Brad Kent
+ * @version   v1.4.0
  */
 
 namespace bdk\Debug;
@@ -25,38 +26,53 @@ class Utilities
      */
     public static function arrayColKeys($rows)
     {
-        $last_stack = array();
-        $new_stack = array();
-        $current_stack = array();
-        if (is_array($rows)) {
-            foreach ($rows as $row) {
-                $current_stack = is_array($row)
-                    ? array_keys($row)
-                    : array('');
-                if (empty($last_stack)) {
-                    $last_stack = $current_stack;
-                } elseif ($current_stack != $last_stack) {
-                    $new_stack = array();
-                    while (!empty($current_stack)) {
-                        $current_key = array_shift($current_stack);
-                        if (!empty($last_stack) && $current_key === $last_stack[0]) {
-                            array_push($new_stack, $current_key);
-                            array_shift($last_stack);
-                        } elseif (false !== $position = array_search($current_key, $last_stack, true)) {
-                            $segment = array_splice($last_stack, 0, $position+1);
-                            array_splice($new_stack, count($new_stack), 0, $segment);
-                        } elseif (!in_array($current_key, $new_stack, true)) {
-                            array_push($new_stack, $current_key);
-                        }
+        $lastStack = array();
+        $newStack = array();
+        $currentStack = array();
+        if (!is_array($rows)) {
+            return array();
+        }
+        foreach ($rows as $row) {
+            if (is_array($row) && in_array(Abstracter::ABSTRACTION, $row, true)) {
+                // abstraction
+                if ($row['type'] == 'object') {
+                    if (in_array('Traversable', $row['implements'])) {
+                        $row = $row['values'];
+                    } else {
+                        $row = array_filter($row['properties'], function ($prop) {
+                            return $prop['visibility'] === 'public';
+                        });
                     }
-                    // put on remaining from last_stack
-                    array_splice($new_stack, count($new_stack), 0, $last_stack);
-                    $new_stack = array_unique($new_stack);
-                    $last_stack = $new_stack;
+                } else {
+                    $row = null;
                 }
             }
+            $currentStack = is_array($row)
+                ? array_keys($row)
+                : array('');
+            if (empty($lastStack)) {
+                $lastStack = $currentStack;
+            } elseif ($currentStack != $lastStack) {
+                $newStack = array();
+                while (!empty($currentStack)) {
+                    $currentKey = array_shift($currentStack);
+                    if (!empty($lastStack) && $currentKey === $lastStack[0]) {
+                        array_push($newStack, $currentKey);
+                        array_shift($lastStack);
+                    } elseif (false !== $position = array_search($currentKey, $lastStack, true)) {
+                        $segment = array_splice($lastStack, 0, $position+1);
+                        array_splice($newStack, count($newStack), 0, $segment);
+                    } elseif (!in_array($currentKey, $newStack, true)) {
+                        array_push($newStack, $currentKey);
+                    }
+                }
+                // put on remaining from last_stack
+                array_splice($newStack, count($newStack), 0, $lastStack);
+                $newStack = array_unique($newStack);
+                $lastStack = $newStack;
+            }
         }
-        $keys = $last_stack;
+        $keys = $lastStack;
         return $keys;
     }
 
@@ -109,6 +125,42 @@ class Utilities
     }
 
     /**
+     * Convert size int into "1.23 kB"
+     *
+     * @param integer|string $size bytes or similar to "1.23M"
+     *
+     * @return string
+     */
+    public static function getBytes($size)
+    {
+        if (is_string($size) && preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
+            $size = str_replace(',', '', $matches[1]);
+            switch (strtolower($matches[2])) {
+                case 'p':
+                    $size *= 1024;
+                    // no break
+                case 't':
+                    $size *= 1024;
+                    // no break
+                case 'g':
+                    $size *= 1024;
+                    // no break
+                case 'm':
+                    $size *= 1024;
+                    // no break
+                case 'k':
+                    $size *= 1024;
+            }
+        }
+        $units = array('B','kB','MB','GB','TB','PB');
+        $pow = pow(1024, ($i=floor(log($size, 1024))));
+        $size = $pow == 0
+            ? '0 B'
+            : round($size/$pow, 2).' '.$units[$i];
+        return $size;
+    }
+
+    /**
      * returns required/included files sorted by directory
      *
      * @return array
@@ -127,12 +179,31 @@ class Utilities
     }
 
     /**
+     * Returns cli, cron, ajax, or http
+     *
+     * @return string cli | cron | ajax | http
+     */
+    public static function getInterface()
+    {
+        $return = 'http';
+        if (http_response_code() === false) {
+            // TERM is a linux/unix thing
+            $return = isset($_SERVER['TERM']) || function_exists('posix_isatty') && posix_isatty(STDOUT)
+                ? 'cli'
+                : 'cron';
+        } elseif (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+            $return = 'ajax';
+        }
+        return $return;
+    }
+
+    /**
      * Returns a sent/pending response header value
-     * only works with php >= 5
      *
      * @param string $key default = 'Content-Type', header to return
      *
      * @return string
+     * @req    php >= 5
      */
     public static function getResponseHeader($key = 'Content-Type')
     {
@@ -160,84 +231,19 @@ class Utilities
     }
 
     /**
-     * Intent is to check if a given string contains non-readable "binary" text
+     * Determine PHP's MemoryLimit
      *
-     * @param string $str string to check
+     * default
+     *    php > 5.2.0: 128M
+     *    php = 5.2.0: 16M
+     *    php < 5.2.0: 8M
      *
-     * @return boolean
+     * @return string
      */
-    public static function isBinary($str)
+    public static function memoryLimit()
     {
-        $isBinary = false;
-        if (is_string($str)) {
-            $isUtf8 = self::isUtf8($str, $ctrl);
-            if (!$isUtf8 || $ctrl) {
-                $isBinary = true;
-            }
-        }
-        return $isBinary;
-    }
-
-    /**
-     * Determine if string is UTF-8 encoded
-     *
-     * @param string  $str  string to check
-     * @param boolean $ctrl does string contain an invisible or non-printable char
-     *
-     * @return boolean
-     */
-    public static function isUtf8($str, &$ctrl = false)
-    {
-        $length = strlen($str);
-        $ctrl = false;
-        for ($i=0; $i < $length; $i++) {
-            $char = ord($str[$i]);
-            if ($char < 0x80) {                 # 0bbbbbbb
-                $bytes = 0;
-            } elseif (($char & 0xE0) == 0xC0) { # 110bbbbb
-                $bytes = 1;
-            } elseif (($char & 0xF0) == 0xE0) { # 1110bbbb
-                $bytes = 2;
-            } elseif (($char & 0xF8) == 0xF0) { # 11110bbb
-                $bytes = 3;
-            } elseif (($char & 0xFC) == 0xF8) { # 111110bb
-                $bytes = 4;
-            } elseif (($char & 0xFE) == 0xFC) { # 1111110b
-                $bytes = 5;
-            } else {                            # Does not match any model
-                return false;
-            }
-            for ($j=0; $j<$bytes; $j++) { # n bytes matching 10bbbbbb follow ?
-                if (++$i == $length || (ord($str[$i]) & 0xC0) != 0x80) {
-                    return false;
-                }
-            }
-            if ($bytes == 0 && ( $char < 32 || $char == 127 )) {
-                if (!in_array($str[$i], array("\t","\n","\r"))) {
-                    $ctrl = true;
-                }
-            }
-        }
-        if (preg_match('#\p{Z}#u', $str)) {
-            // matches characters such as:
-            //   "\xc2\xa0",     // no-break space
-            //   "\xE2\x80\x89", // thin space
-            //   "\xE2\x80\xAF", // narrow no-break space
-            $ctrl = true;
-        } else {
-            // byte sequences we want to display as hex
-            $sequences = array(
-                "\xef\xbb\xbf",  // BOM
-                "\xEF\xBF\xBD",  // "Replacement Character"
-            );
-            foreach ($sequences as $sequence) {
-                if (strpos($str, $sequence) !== false) {
-                    $ctrl = true;
-                    break;
-                }
-            }
-        }
-        return true;
+        $iniVal = ini_get('memory_limit');
+        return $iniVal ?: '128M';
     }
 
     /**
@@ -263,35 +269,18 @@ class Utilities
     }
 
     /**
-     * Attempt to convert string to UTF-8 encoding
-     *
-     * @param string $str string to convert
+     * Generate a unique request id
      *
      * @return string
      */
-    public static function toUtf8($str)
+    public static function requestId()
     {
-        if (extension_loaded('mbstring') && function_exists('iconv')) {
-            $encoding = mb_detect_encoding($str, mb_detect_order(), true);
-            if (!$encoding) {
-                $str_conv = false;
-                if (function_exists('iconv')) {
-                    $str_conv = iconv('cp1252', 'UTF-8', $str);
-                }
-                if ($str_conv === false) {
-                    fwrite(STDOUT, 'Desperation'. "\n");
-                    $str_conv = htmlentities($str, ENT_COMPAT);
-                    $str_conv = html_entity_decode($str_conv, ENT_COMPAT, 'UTF-8');
-                }
-                $str = $str_conv;
-            } elseif (!in_array($encoding, array('ASCII','UTF-8'))) {
-                $str_new = iconv($encoding, 'UTF-8', $str);
-                if ($str_new !== false) {
-                    $str = $str_new;
-                }
-            }
-        }
-        return $str;
+        return hash(
+            'crc32b',
+            (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'terminal')
+                .(isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : $_SERVER['REQUEST_TIME'])
+                .(isset($_SERVER['REMOTE_PORT']) ? $_SERVER['REMOTE_PORT'] : '')
+        );
     }
 
     /**

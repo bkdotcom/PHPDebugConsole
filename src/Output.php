@@ -2,13 +2,16 @@
 /**
  * Output log as html or to FirePHP
  *
- * @package PHPDebugConsole
- * @author  Brad Kent <bkfake-github@yahoo.com>
- * @license http://opensource.org/licenses/MIT MIT
- * @version v1.3.3
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2017 Brad Kent
+ * @version   v1.4.0
  */
 
 namespace bdk\Debug;
+
+use \bdk\Debug;
 
 /**
  * Output methods
@@ -25,27 +28,42 @@ class Output
      *
      * @param object $debug debug instance
      * @param array  $cfg   configuration
-     * @param array  $data  data
      */
-    public function __construct($debug, $cfg = array(), &$data = array())
+    public function __construct($debug, $cfg = array())
     {
         $this->debug = $debug;
         $this->cfg = array(
+            'addBR' => false,
             'css' => '',                    // additional "override" css
             'filepathCss' => __DIR__.'/css/Debug.css',
             'filepathScript' => __DIR__.'/js/Debug.jquery.min.js',
-            'firephpInc' => __DIR__.'/FirePHP.class.php',
-            'firephpOptions' => array(
-                'useNativeJsonEncode'   => true,
-                'includeLineNumbers'    => false,
-            ),
             'onOutput'  => null,            // set to something callable
-            'outputAs'  => null,            // 'html', 'script', 'text', or 'firephp', if null, will be determined automatically
-            'outputCss' => true,
-            'outputScript' => true,
+            'outputAs'  => null,            // 'chromeLogger', 'html', 'script', 'text', or Object, if null, will be determined automatically
+            'outputAsDefaultNonHtml' => 'chromeLogger',
+            'outputConstants' => true,
+            'outputCss' => true,            // applies when outputAs = 'html'
+            'outputMethodDescription' => true, // (or just summary)
+            'outputMethods' => true,
+            'outputScript' => true,         // applies when outputAs = 'html'
         );
-        $this->set($cfg);
-        $this->data = &$data;
+        $this->setCfg($cfg);
+        // $this->data = &$data;
+    }
+
+    /**
+     * Magic getter
+     *
+     * @param string $prop property to get
+     *
+     * @return mixed
+     */
+    public function __get($prop)
+    {
+        if (strpos($prop, 'output') === 0 && file_exists(__DIR__.'/'.ucfirst($prop).'.php')) {
+            $classname = __NAMESPACE__.'\\'.ucfirst($prop);
+            $this->{$prop} = new $classname($this->debug);
+            return $this->{$prop};
+        }
     }
 
     /**
@@ -61,8 +79,9 @@ class Output
             List errors that occured
         */
         $errors = $this->debug->errorHandler->get('errors');
-        $cmp = create_function('$a1, $a2', 'return strcmp($a1["file"].$a1["line"], $a2["file"].$a2["line"]);');
-        uasort($errors, $cmp);
+        uasort($errors, function ($a1, $a2) {
+            return strcmp($a1['file'].$a1['line'], $a2['file'].$a2['line']);
+        });
         $lastFile = '';
         foreach ($errors as $error) {
             if ($error['suppressed']) {
@@ -84,7 +103,7 @@ class Output
         /*
             Now email
         */
-        $this->debug->email($this->debug->get('emailTo'), $subject, $body);
+        $this->debug->email($this->debug->getCfg('emailTo'), $subject, $body);
         return;
     }
 
@@ -95,7 +114,7 @@ class Output
      *
      * @return array
      */
-    protected function errorStats()
+    public function errorStats()
     {
         $errors = $this->debug->errorHandler->get('errors');
         $stats = array(
@@ -130,120 +149,27 @@ class Output
     }
 
     /**
-     * Returns an error summary
-     *
-     * @return string html
-     */
-    public function errorSummary()
-    {
-        $html = '';
-        $errorStats = $this->errorStats();
-        if ($errorStats['inConsole']) {
-            $html .= $this->errorSummaryInConsole($errorStats);
-        }
-        if ($errorStats['notInConsole']) {
-            $count = 0;
-            $errors = $this->debug->errorHandler->get('errors');
-            $htmlNotIn = '<ul class="list-unstyled indent">';
-            foreach ($errors as $err) {
-                if ($err['suppressed'] || $err['inConsole']) {
-                    continue;
-                }
-                $count ++;
-                $htmlNotIn .= '<li>'.$err['typeStr'].': '.$err['file'].' (line '.$err['line'].'): '.$err['message'].'</li>';
-            }
-            $htmlNotIn .= '</ul>';
-            $count = $count == 1
-                ? 'was 1 error'
-                : 'were '.$count.' errors';
-            $html .= '<h3>'.($errorStats['inConsole'] ? 'Additionally, there ' : 'There ')
-                .$count.' captured while not collecting debug info</h3>'
-                .$htmlNotIn;
-        }
-        return $html;
-    }
-
-    /**
-     * returns summary for errors that were logged to console (while this->collect = true)
-     *
-     * @param array $stats stats as returned from errorStats()
-     *
-     * @return string
-     */
-    protected function errorSummaryInConsole($stats)
-    {
-        if ($stats['inConsoleCategories'] == 1) {
-            // all same category of error
-            reset($stats['counts']);
-            $category = key($stats['counts']);
-            if ($stats['inConsole'] == 1) {
-                $html = 'There was 1 error';
-                if ($category == 'fatal') {
-                    $html = ''; // don't bother with this alert..
-                                // fatal are still prominently displayed
-                } elseif ($category != 'error') {
-                    $html .= ' ('.$category.')';
-                }
-            } else {
-                $html = 'There were '.$stats['inConsole'].' errors';
-                if ($category != 'error') {
-                    $html .= ' of type '.$category;
-                }
-            }
-            if ($html) {
-                $html = '<h3 class="error-'.$category.'">'.$html.'</h3>'."\n";
-            }
-        } else {
-            // multiple error categories
-            $html = '<h3>There were '.$stats['inConsole'].' errors:</h3>'."\n";
-            $html .= '<ul class="list-unstyled indent">';
-            foreach ($stats['counts'] as $category => $a) {
-                if (!$a['inConsole']) {
-                    continue;
-                }
-                $html .= '<li class="error-'.$category.'">'.$category.': '.$a['inConsole'].'</li>';
-            }
-            $html .= '</ul>';
-        }
-        return $html;
-    }
-
-    /**
      * Get config val
      *
      * @param string $path what to get
      *
      * @return mixed
      */
-    public function get($path)
+    public function getCfg($path)
     {
         if ($path == 'outputAs') {
             $ret = $this->cfg['outputAs'];
             if (empty($ret)) {
-                /*
-                    determine outputAs automatically
-                */
-                $ret = 'html';
-                $requestedWith = isset($_SERVER['HTTP_X_REQUESTED_WITH'])
-                    ? $_SERVER['HTTP_X_REQUESTED_WITH']
-                    : null;
-                $isAjax = $requestedWith == 'XMLHttpRequest';
-                if ($isAjax) {
-                    $ret = 'firephp';
-                } elseif (php_sapi_name() == 'cli') {
-                    // console
-                    $ret = 'text';
-                } else {
-                    $contentType = $this->debug->utilities->getResponseHeader();
-                    if ($contentType && $contentType !== 'text/html') {
-                        $ret = 'firephp';
-                    }
-                }
+                $ret = $this->getDefaultOutputAs();
+            } elseif (is_object($ret)) {
+                $ret = get_class($ret);
+                $ret = preg_replace('/^'.preg_quote(__NAMESPACE__.'\\Output').'/', '', $ret);
+                $ret = lcfirst($ret);
             }
         } elseif ($path == 'css') {
             $ret = $this->getCss();
         } else {
-            $path = preg_split('#[\./]#', $path);
+            $path = array_filter(preg_split('#[\./]#', $path), 'strlen');
             $ret = $this->cfg;
             foreach ($path as $k) {
                 if (isset($ret[$k])) {
@@ -272,21 +198,43 @@ class Output
     }
 
     /**
+     * Determine default outputAs
+     *
+     * @return string
+     */
+    protected function getDefaultOutputAs()
+    {
+        $ret = 'html';
+        $interface = $this->debug->utilities->getInterface();
+        if ($interface == 'ajax') {
+            $ret = $this->cfg['outputAsDefaultNonHtml'];
+        } elseif ($interface == 'http') {
+            $contentType = $this->debug->utilities->getResponseHeader();
+            if ($contentType && $contentType !== 'text/html') {
+                $ret = $this->cfg['outputAsDefaultNonHtml'];
+            }
+        } else {
+            $ret = 'text';
+        }
+        return $ret;
+    }
+
+    /**
      * Returns meta-data and removes it from the passed arguments
      *
      * @param array $args args to check
      *
-     * @return array|false meta array or false
+     * @return array meta information
      */
-    public function getMetaArg(&$args)
+    public static function getMetaArg(&$args)
     {
-        $return = false;
         $end = end($args);
-        if (is_array($end) && in_array(Debug::META, $end)) {
+        if (is_array($end) && ($key = array_search(Debug::META, $end, true)) !== false) {
             array_pop($args);
-            $return = $end;
+            unset($end[$key]);
+            return $end;
         }
-        return $return;
+        return array();
     }
 
     /**
@@ -294,348 +242,49 @@ class Output
      *
      * @return mixed
      */
+    /*
     public function output()
     {
-        $outputAs = $this->get('outputAs');
-        if (is_callable($this->cfg['onOutput'])) {
-            call_user_func($this->cfg['onOutput'], $this->debug);
-        }
-        $outputAs = $this->get('outputAs');
-        $this->data['groupDepth'] = 0;
-        if ($outputAs == 'html') {
-            $return = $this->outputAsHtml();
-        } elseif ($outputAs == 'firephp') {
-            $this->uncollapseErrors();
-            if (headers_sent($file, $line)) {
-                trigger_error('Unable to FirePHP: headers already sent. ('.$file.' line '.$line.')');
-            } else {
-                $outputFirephp = new OutputFirephp($this->debug, $this->data);
-                $outputFirephp->output();
-            }
-            $return = null;
-        } elseif ($outputAs == 'script') {
-            $this->uncollapseErrors();
-            $return = $this->outputAsScript();
-        } else {
-            $return = $this->outputAsText();
-        }
-        return $return;
-    }
-
-    /**
-     * return log entry for writing to file
-     *
-     * @param string  $method method
-     * @param array   $args   arguments
-     * @param integer $depth  group depth (for indentation)
-     *
-     * @return string
-     */
-    public function getLogEntryAsText($method, $args, $depth)
-    {
-        if ($method == 'table' && count($args) == 2) {
-            $caption = array_pop($args);
-            array_unshift($args, $caption);
-        }
-        if (count($args) == 1 && is_string($args[0])) {
-            $args[0] = strip_tags($args[0]);
-        }
-        foreach ($args as $k => $v) {
-            if ($k > 0 || !is_string($v)) {
-                $args[$k] = $this->debug->varDump->dump($v, 'text');
-            }
-        }
-        $num_args = count($args);
-        $glue = ', ';
-        if ($num_args == 2) {
-            $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                ? ''
-                : ' = ';
-        }
-        $strIndent = str_repeat('    ', $depth);
-        $str = implode($glue, $args);
-        $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
-        return $str;
-    }
-
-    /**
-     * Return the log as HTML
-     *
-     * @return string
-     */
-    protected function outputAsHtml()
-    {
-        array_unshift($this->data['alerts'], $this->errorSummary());
-        $str = '<div class="debug">'."\n";
-        if ($this->cfg['outputCss']) {
-            $str .= '<style type="text/css">'."\n"
-                    .$this->getCss()."\n"
-                .'</style>'."\n";
-        }
-        if ($this->cfg['outputScript']) {
-            $str .= '<script type="text/javascript">'
-                .file_get_contents($this->cfg['filepathScript'])
-                .'</script>';
-        }
-        $lastError = $this->debug->errorHandler->get('lastError');
-        if ($lastError && $lastError['category'] === 'fatal') {
-            $keysKeep = array('typeStr','message','file','line');
-            $keysRemove = array_diff(array_keys($lastError), $keysKeep);
-            foreach ($keysRemove as $k) {
-                unset($lastError[$k]);
-            }
-            array_unshift($this->data['log'], array('error error-fatal',$lastError));
-        }
-        $str .= '<div class="debug-header"><h3>Debug Log</h3></div>'."\n";
-        foreach ($this->data['alerts'] as $alert) {
-            if (is_string($alert)) {
-                // errorSummary
-                $alert = array(
-                    'message' => $alert,
-                    'class' => 'danger',
-                    'dismissible' => false,
-                );
-            }
-            if ($alert['message']) {
-                if ($alert['dismissible']) {
-                    $alert['message'] = '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>'
-                        .$alert['message'];
-                    $alert['class'] .= ' alert-dismissible';
-                }
-                $str .= '<div class="alert alert-'.$alert['class'].'" role="alert">'.$alert['message'].'</div>';
-            }
-        }
-        /*
-            If outputing script, initially hide the output..
-            this will help page load performance (fewer redraws)... by magnitudes
-        */
-        if ($this->cfg['outputScript']) {
-            $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>';
-        }
-        $str .= '<div class="debug-content clearfix" '.($this->cfg['outputScript'] ? 'style="display:none;"' : '').'>'."\n";
-        foreach ($this->data['log'] as $args) {
-            $method = array_shift($args);
-            $str .= $this->outputHtmlLogEntry($method, $args);
-        }
         while ($this->data['groupDepth'] > 0) {
             $this->data['groupDepth']--;
-            $str .='</div><!--unclosed group-->'."\n";
+            $this->data['log'][] = array('groupEnd');
         }
-        $str .= '</div>'."\n";  // close debug-content
-        $str .= '</div>';       // close debug
-        return $str;
-    }
-
-    /**
-     * output a log entry as HTML
-     *
-     * @param string $method method
-     * @param array  $args   args
-     *
-     * @return string
-     */
-    protected function outputHtmlLogEntry($method, $args)
-    {
-        $str = '';
-        if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $str = $this->outputHtmlGroupMethod($method, $args);
-        } elseif ($method == 'table') {
-            $str = call_user_func_array(array($this->debug->varDump,'dumpTable'), $args);
-        } else {
-            $attribs = array(
-                'class' => 'm_'.$method,
-                'title' => null,
-            );
-            if (in_array($method, array('error','warn'))) {
-                $meta = $this->getMetaArg($args);
-                if ($meta) {
-                    if (isset($meta['file'])) {
-                        $attribs['title'] = $meta['file'].': line '.$meta['line'];
-                    }
-                    if (isset($meta['errorCat'])) {
-                        $attribs['class'] .= ' error-'.$meta['errorCat'];
-                    }
-                }
-            }
-            $num_args = count($args);
-            $glue = ', ';
-            if ($num_args == 2) {
-                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                    ? ''
-                    : ' = ';
-            }
-            foreach ($args as $k => $v) {
-                if ($k > 0 || !is_string($v)) {
-                    $args[$k] = $this->debug->varDump->dump($v, 'html');
-                } else {
-                    // first arg && string -> don't apply htmlspecialchars()
-                    $args[$k] = $this->debug->varDump->dump($v, 'htmlKeepTags');
-                }
-            }
-            $args = implode($glue, $args);
-            $str = '<div '.$this->debug->utilities->buildAttribString($attribs).'>'.$args.'</div>';
+        $this->debug->eventManager->dispatch('debug.output', $this->debug);
+        $outputAs = $this->getCfg('outputAs');
+        if ($outputAs === 'chromeLogger') {
+            $outputAs = new OutputChromeLogger($this->debug, $this->cfg);
+        } elseif ($outputAs === 'html') {
+            $outputAs = new OutputHtml($this->debug, $this->cfg);
+        } elseif ($outputAs === 'script') {
+            $outputAs = new OutputScript($this->debug, $this->cfg);
+        } elseif (!is_object($outputAs)) {
+            // fall back to text
+            $outputAs = new OutputText($this->debug, $this->cfg);
         }
-        $str .= "\n";
-        return $str;
-    }
-
-    /**
-     * handle html output of group, groupCollapsed, & groupEnd
-     *
-     * @param string $method method
-     * @param array  $args   args passed to method
-     *
-     * @return string
-     */
-    protected function outputHtmlGroupMethod($method, $args = array())
-    {
-        $str = '';
-        if (in_array($method, array('group','groupCollapsed'))) {
-            $this->data['groupDepth']++;
-            $collapsed_class = '';
-            if (!empty($args)) {
-                $label = array_shift($args);
-                $arg_str = '';
-                if ($args) {
-                    foreach ($args as $k => $v) {
-                        $args[$k] = $this->debug->varDump->dump($v);
-                    }
-                    $arg_str = implode(', ', $args);
-                }
-                $collapsed_class = $method == 'groupCollapsed'
-                    ? 'collapsed'
-                    : 'expanded';
-                $str .= '<div class="group-header '.$collapsed_class.'">'
-                        .'<span class="group-label">'
-                            .$label
-                            .( !empty($arg_str)
-                                ? '(</span>'.$arg_str.'<span class="group-label">)'
-                                : '' )
-                        .'</span>'
-                    .'</div>'."\n";
-            }
-            $str .= '<div class="m_group">';
-        } elseif ($method == 'groupEnd') {
-            if ($this->data['groupDepth'] > 0) {
-                $this->data['groupDepth']--;
-                $str .= '</div>';
-            }
-        }
-        return $str;
-    }
-
-    /**
-     * output the log as javascript
-     *    which outputs the log to the console
-     *
-     * @return string
-     */
-    protected function outputAsScript()
-    {
-        $label = 'PHP';
-        $errorStats = $this->errorStats();
-        if ($errorStats['inConsole']) {
-            $label .= ' - Errors (';
-            foreach ($errorStats['counts'] as $category => $vals) {
-                $label .= $vals['inConsole'].' '.$category.', ';
-            }
-            $label = substr($label, 0, -2);
-            $label .= ')';
-        }
-        $str = '<script type="text/javascript">'."\n";
-        $str .= 'console.groupCollapsed("'.$label.'");'."\n";
-        foreach ($this->data['log'] as $args) {
-            $method = array_shift($args);
-            if ($method == 'assert') {
-                array_unshift($args, false);
-            } elseif ($method == 'count' || $method == 'time') {
-                $method = 'log';
-            } elseif ($method == 'table') {
-                foreach ($args as $i => $v) {
-                    if (!is_array($v)) {
-                        unset($args[$i]);
-                    }
-                }
-            } elseif (in_array($method, array('error','warn'))) {
-                $meta = $this->getMetaArg($args);
-                if ($meta && isset($meta['file'])) {
-                    $args[] = $meta['file'].': line '.$meta['line'];
-                }
-            }
-            foreach ($args as $k => $arg) {
-                $args[$k] = $this->debug->varDump->dump($arg, 'script');
-            }
-            $str .= 'console.'.$method.'('.implode(',', $args).");\n";
-        }
-        while ($this->data['groupDepth'] > 0) {
-            $this->data['groupDepth']--;
-            $str .='groupEnd();';
-        }
-        $str .= 'console.groupEnd();';
-        $str .= '</script>';
-        return $str;
-    }
-
-    /**
-     * output the log as text
-     *
-     * @return string
-     */
-    protected function outputAsText()
-    {
-        $str = '';
-        $depth = 0;
-        foreach ($this->data['log'] as $args) {
-            $method = array_shift($args);
-            $str .= $this->getLogEntryAsText($method, $args, $depth)."\n";
-            if (in_array($method, array('group','groupCollapsed'))) {
-                $depth ++;
-            } elseif ($method == 'groupEnd' && $depth > 0) {
-                $depth --;
-            }
-        }
-        return $str;
-    }
-
-    /**
-     * when outputting to script and firephp make sure all nested errors are in uncollapsed groups
-     *
-     * @return void
-     */
-    protected function uncollapseErrors()
-    {
-        $groupStack = array();
-        for ($i = 0, $count = count($this->data['log']); $i < $count; $i++) {
-            $method = $this->data['log'][$i][0];
-            if (in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[] = $i;
-            } elseif ($method == 'groupEnd') {
-                array_pop($groupStack);
-            } elseif (in_array($method, array('error', 'warn'))) {
-                foreach ($groupStack as $i2) {
-                    $this->data['log'][$i2][0] = 'group';
-                }
-            }
+        if (is_object($outputAs)) {
+            return $outputAs->output($this->data);
         }
     }
+    */
 
     /**
      * Set one or more config values
      *
-     * If setting a single value via method a or b, old value is returned
+     * If setting a single value, old value is returned
      *
-     * @param string $path   key
+     * @param string $mixed  key=>value array or key
      * @param mixed  $newVal value
      *
      * @return mixed returns previous value
      */
-    public function set($path, $newVal = null)
+    public function setCfg($mixed, $newVal = null)
     {
         $ret = null;
-        $new = array();
-        if (is_string($path)) {
-            $path = preg_split('#[\./]#', $path);
-            $ref = &$new;
+        $values = array();
+        if (is_string($mixed)) {
+            /*
+            $path = preg_split('#[\./]#', $mixed);
+            $ref = &$values;
             $ret = $this->cfg;
             foreach ($path as $k) {
                 $ret = isset($ret[$k])
@@ -645,10 +294,34 @@ class Output
                 $ref = &$ref[$k];
             }
             $ref = $newVal;
-        } elseif (is_array($path)) {
-            $new = $path;
+            */
+            $key = $mixed;
+            $ret = isset($this->cfg[$key])
+                ? $this->cfg[$key]
+                : null;
+            $values = array(
+                $key => $newVal,
+            );
+        } elseif (is_array($mixed)) {
+            $values = $mixed;
         }
-        $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $new);
+        if (isset($values['outputAs']) && is_string($values['outputAs'])) {
+            $prop = 'output'.ucfirst($values['outputAs']);
+            if (!property_exists($this, $prop) && file_exists(__DIR__.'/'.ucfirst($prop).'.php')) {
+                $classname = __NAMESPACE__.'\\'.ucfirst($prop);
+                $this->{$prop} = new $classname($this->debug);
+            }
+            if (property_exists($this, $prop)) {
+                // $obj = $this->{$prop};
+                // $this->debug->eventManager->addListener('debug.output', array($obj, 'output'));
+                $this->debug->addPlugin($this->{$prop});
+            }
+        }
+        if (isset($values['onOutput'])) {
+            $this->debug->eventManager->addListener('debug.output', $values['onOutput']);
+            unset($values['onOutput']);
+        }
+        $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $values);
         return $ret;
     }
 }

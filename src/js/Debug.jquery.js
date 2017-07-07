@@ -19,9 +19,12 @@
 		},
 		iconsObject = {
 			".debug-value" :		'<i class="fa fa-eye" title="via __debugInfo()"></i>',
-			".toggle-protected" :	'<i class="fa fa-shield"></i>',
-			".toggle-private" :		'<i class="fa fa-user-secret"></i>'
+			".deprecated" :			'<i class="fa fa-arrow-down" title="Deprecated"></i>',
+			".private-ancestor":    '<i class="fa fa-lock"></i>',
+			".toggle-private" :		'<i class="fa fa-user-secret"></i>',
+			".toggle-protected" :	'<i class="fa fa-shield"></i>'
 		},
+		// debug methods (not object methods)
 		iconsMethods = {
 			".group-header" :		'<i class="fa fa-lg ' + classes.collapse + '"></i>',
 			".m_assert" :			'<i class="fa-lg"><b>&ne;</b></i>',
@@ -78,6 +81,7 @@
 	function init() {
 
 		$.fn.debugEnhance = function(method) {
+			// console.warn('debugEnhance', this);
 			var $self = this;
 			if (method) {
 				if (method === "addCss") {
@@ -98,17 +102,17 @@
 				}
 				if ($self.hasClass("debug")) {
 					console.warn('enhancing debug');
-					$self.addClass("enhanced");
-					addCss(".debug");
+					addCss(this.selector);
 					addPersistOption($self);
 					addExpandAll($self);
-					enhanceSummary($self);
+					enhanceErrorSummary($self);
 					registerListeners($self);
 					// only enhance root log entries
 					// enhance collapsed/hidden entries when expanded
-					enhanceEntries($self.find("> .debug-content"));
+					enhanceEntries($self.find("> .debug-header, > .debug-content"));
 					// expandErrors($self); // handled by enhanceGroupHeader()
 					$self.find(".loading").hide();
+					$self.addClass("enhanced");
 				} else {
 					enhanceEntry($self);
 				}
@@ -117,7 +121,6 @@
 		};
 
 		$(function() {
-			// loadStylesheet(fontAwesomeCss);
 			$(".debug").debugEnhance();
 		});
 	}
@@ -258,18 +261,30 @@
 		});
 	}
 
+	function enhanceErrorSummary($root) {
+		// console.log("enhanceSummary");
+		$root.find(".alert [class*=error-]").each( function() {
+			var html = $(this).html(),
+				htmlNew = '<label><input type="checkbox" checked data-toggle="error"/> ' + html + "</label>";
+			$(this).html(htmlNew);
+		});
+	}
+
 	function enhanceEntry($root) {
-		console.log("enhanceEntry", $root);
+		// console.log("enhanceEntry", $root);
 		if ($root.hasClass("group-header")) {
 			// minimal enhancement... just adds data-toggle attr and hides target
 			// target will not be enhanced until expanded
 			addIcons($root, ["methods"]);
 			enhanceGroupHeader($root);
+		} else if ($root.hasClass("m_groupSummary")) {
+			// groupSummary has no toggle.. and is uncollapsed -> enhance
+			enhanceEntries($root);
 		} else if ($root.hasClass("m_group")) {
 			/*
 				group contents will get enhanced when expanded
 			*/
-			console.warn("enhanceEntry() m_group?!?!");
+			// console.warn("enhanceEntry()");
 		} else {
 			// console.log("enhance", $root);
 			$root.addClass("enhanced");
@@ -310,7 +325,7 @@
 	 * Minimal DOM manipulation -> apply to all descendants
 	 */
 	function enhanceObjects($root) {
-		$root.find(".t_object-class").each( function() {
+		$root.find(".t_object > .t_object-class").each( function() {
 			var $toggle = $(this),
 				$target = $toggle.next();
 			if ($toggle.hasClass("enhanced")) {
@@ -374,17 +389,18 @@
 		addIcons($inner, ["object"]);
 	}
 
-	function enhanceSummary($root) {
-		console.log("enhanceSummary");
-		$root.find(".alert [class*=error-]").each( function() {
-			var html = $(this).html(),
-				htmlNew = '<label><input type="checkbox" checked data-toggle="error"/> ' + html + "</label>";
-			$(this).html(htmlNew);
-		});
-	}
-
-	function expand($toggle) {
-		var $target = $toggle.next();
+	function expand($toggleOrTarget) {
+		var isToggle = $toggleOrTarget.is("[data-toggle]"),
+			$toggle = isToggle
+				? $toggleOrTarget
+				: $(),
+			$target = isToggle
+				? $toggleOrTarget.next()
+				: $toggleOrTarget;
+		if (!isToggle) {
+			enhanceEntries($target);
+			return;
+		}
 		if (!$target.hasClass("enhanced")) {
 			$target.addClass("enhanced");
 			if ($toggle.is("[data-toggle=group]")) {
@@ -495,7 +511,7 @@
 			".debug .group-header.expanded i.fa-warning, .debug .group-header.expanded i.fa-times-circle { display:none; }" +
 			".debug .group-header i.fa-warning { color:#cdcb06; margin-left:.33em}" +		// warning
 			".debug .group-header i.fa-times-circle { color:#D8000C; margin-left:.33em;}" +	// error
-			".debug a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; }" +
+			".debug a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; display:block; clear:left; }" +
 			// ".debug .t_array-collapse," +
 				// ".debug .t_array-expand," +
 				// ".debug .group-header," +
@@ -518,11 +534,11 @@
 
 	function addExpandAll($root) {
 		// console.log("addExpandAll");
-		var $expand_all = $("<a>", {
+		var $expandAll = $("<a>", {
 				"href":"#"
 			}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups').addClass("expand-all");
 		if ( $root.find(".group-header").length ) {
-			$expand_all.on("click", function() {
+			$expandAll.on("click", function() {
 				$root.find(".group-header").not(".expanded").each( function() {
 					// if ( !$(this).nextAll(".m_group").eq(0).is(":visible") ) {
 					// }
@@ -530,7 +546,7 @@
 				});
 				return false;
 			});
-			$root.find(".debug-content").before($expand_all);
+			$root.find(".debug-header").before($expandAll);
 		}
 	}
 
@@ -551,7 +567,7 @@
 					cookieRemove("debug");
 				}
 			});
-			$root.find(".debug-header").eq(0).prepend($node);
+			$root.find(".debug-bar").eq(0).prepend($node);
 		}
 	}
 
@@ -610,12 +626,9 @@
 		});
 
 		$root.on("change", "input[data-toggle=error]", function(){
-			var className = $(this).closest("h3").attr("class");
-			if ( $(this).is(":checked") ) {
-				$root.find(".debug-content ." + className).show().removeClass("hide");
-			} else {
-				$root.find(".debug-content ." + className).hide().addClass("hide");
-			}
+			var className = $(this).closest("li").attr("class"),
+				selector = ".debug-header ." + className +", .debug-content ."+className;
+			$root.find(selector).toggle( $(this).is(":checked") );
 			// update icon for all groups having nested error
 			// groups containing only hidden erros will loose +/-
 			$root.find(".m_error, .m_warn").parents(".m_group").prev().each(function(){

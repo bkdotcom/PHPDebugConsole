@@ -1,55 +1,58 @@
 <?php
-/**
- * Run with --process-isolation option
- */
 
 /**
  * PHPUnit tests for Debug class
  */
-class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
+class TypeObjectTest extends DebugTestFramework
 {
 
-    /**
-     * Util to output to console / help in creation of tests
-     */
-    public function output($label, $var)
+    public function dumpProvider()
     {
-        fwrite(STDOUT, $label.' = '.print_r($var, true) . "\n");
+        // @todo
+        // val, html, text, script
+        return array(
+            array(null, '<span class="t_null">null</span>', 'null', 'null'),
+        );
     }
 
     /**
-     * setUp is executed before each test
+     * v 1.0 = fatal error
      *
      * @return void
      */
-    public function setUp()
+    public function testDereferenceObject()
     {
-        $this->debug = new \bdk\Debug\Debug(array(
-            'collect' => true,
-            'output' => true,
-            'outputCss' => false,
-            'outputScript' => false,
-            'outputAs' => 'html',
-        ));
+        $test_val = 'success A';
+        $test_o = new \bdk\DebugTest\Test();
+        $test_o->prop = &$test_val;
+        $this->debug->log('test_o', $test_o);
+        $test_val = 'success B';
+        $this->debug->log('test_o', $test_o);
+        $test_val = 'fail';
+        $output = $this->debug->output();
+        $this->assertContains('success A', $output);
+        $this->assertContains('success B', $output);
+        $this->assertNotContains('fail', $output);
+        $this->assertSame('fail', $test_o->prop);   // prop should be 'fail' at this point
     }
 
-    /**
-     * tearDown is executed after each test
-     *
-     * @return void
-     */
-    public function tearDown()
-    {
-        $this->debug->set('output', false);
-    }
 
     /**
      * Test
      *
      * @return void
      */
-    public function testDump()
+    public function testAbstraction()
     {
+        // mostly tested via logTest, infoTest, warnTest, errorTest....
+        // test object inheritance
+        $test = new \bdk\DebugTest\Test();
+        $abs = $this->debug->abstracter->getAbstraction($test);
+        $this->assertArrayHasKey('inheritedProp', $abs['properties']);
+        $this->assertSame(array(
+            'INHERITED' => 'hello world',
+            'MY_CONSTANT' => 'constant value',
+        ), $abs['constants']);
     }
 
     /**
@@ -115,7 +118,7 @@ class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
     {
         $test = new \bdk\DebugTest\Test();
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->dataGet('log/0/2');
+        $abstraction = $this->debug->getData('log/0/2');
         $props = $abstraction['properties'];
         $this->assertArrayNotHasKey('propHidden', $props, 'propHidden shouldn\'t be debugged');
         // debugValue
@@ -137,19 +140,20 @@ class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
         $test->prop = array();
         $test->prop[] = &$test->prop;
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->dataGet('log/0/2');
+        $abstraction = $this->debug->getData('log/0/2');
         $this->assertEquals(
-            true,
-            $abstraction['properties']['prop']['value']['values'][0]['isRecursion'],
+            \bdk\Debug\Abstracter::RECURSION,
+            $abstraction['properties']['prop']['value'][0],
             'Did not find expected recursion'
         );
         $output = $this->debug->output();
+        // $this->output('output', $output);
         $select = '.m_log
             > .t_object > .object-inner
             > .property
-            > .t_array .array-inner > .key-value
-            > .t_array
-            > .t_recursion';
+            > .t_array .array-inner > .key-value'
+            // > .t_array
+            .'> .t_recursion';
         $this->assertSelectCount($select, 1, $output);
     }
 
@@ -173,7 +177,7 @@ class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
         */
-        $abstraction = $this->debug->dataGet('log/0/2');
+        $abstraction = $this->debug->getData('log/0/2');
         $this->assertEquals(
             true,
             $abstraction['properties']['prop']['value']['isRecursion'],
@@ -203,10 +207,10 @@ class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
         */
-        $abstraction = $this->debug->dataGet('log/0/2');
+        $abstraction = $this->debug->getData('log/0/2');
         $this->assertEquals(
             true,
-            $abstraction['properties']['prop']['value']['values'][0]['isRecursion'],
+            $abstraction['properties']['prop']['value'][0]['isRecursion'],
             'Did not find expected recursion'
         );
         $this->debug->output();
@@ -238,7 +242,7 @@ class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
         */
-        $abstraction = $this->debug->dataGet('log/0/2');
+        $abstraction = $this->debug->getData('log/0/2');
         $this->assertEquals(
             true,
             $abstraction['properties']['ob']['value']['properties']['oa']['value']['isRecursion'],
@@ -246,6 +250,4 @@ class VarDumpObjectTest extends PHPUnit_Framework_DOMTestCase
         );
         $this->debug->output();
     }
-
-
 }

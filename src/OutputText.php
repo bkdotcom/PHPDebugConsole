@@ -184,7 +184,6 @@ class OutputText extends OutputBase
         if (count($path) > 1) {
             $str = str_replace("\n", "\n    ", $str);
         }
-        // $str = trim($str);
         return $str;
     }
 

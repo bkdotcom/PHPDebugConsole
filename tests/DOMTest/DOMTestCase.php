@@ -8,7 +8,7 @@
 /**
  *
  */
-abstract class PHPUnit_Framework_DOMTestCase extends PHPUnit_Framework_TestCase
+abstract class PHPUnit_Framework_DOMTestCase extends \PHPUnit\Framework\TestCase
 {
     /**
      * Assert the presence, absence, or count of elements in a document matching

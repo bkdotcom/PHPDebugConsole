@@ -8,7 +8,7 @@ use \bdk\Debug\Utf8;
 /**
  * PHPUnit tests for Debug class
  */
-class Utf8Test extends PHPUnit_Framework_TestCase
+class Utf8Test extends \PHPUnit\Framework\TestCase
 {
 
     /**

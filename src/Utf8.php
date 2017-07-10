@@ -1,6 +1,6 @@
 <?php
 /**
- * Validate Utf8 / "highlight" non-utf8 characters
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -12,7 +12,7 @@
 namespace bdk\Debug;
 
 /**
- * convert non-utf8, control, & whitespace chars to hex
+ * Validate Utf8 / "highlight" non-utf8, control, & whitespace characters
  */
 class Utf8
 {

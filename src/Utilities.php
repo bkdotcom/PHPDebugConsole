@@ -1,6 +1,6 @@
 <?php
 /**
- * General-purpose utilities
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -115,13 +115,16 @@ class Utilities
      */
     public static function buildAttribString($attribs)
     {
-        $attrib_pairs = array();
+        $attribPairs = array();
         foreach ($attribs as $k => $v) {
+            if (is_array($v)) {
+                $v = implode(' ', array_unique($v));
+            }
             if (isset($v)) {
-                $attrib_pairs[] = $k.'="'.htmlspecialchars($v).'"';
+                $attribPairs[] = $k.'="'.htmlspecialchars($v).'"';
             }
         }
-        return implode(' ', $attrib_pairs);
+        return implode(' ', $attribPairs);
     }
 
     /**

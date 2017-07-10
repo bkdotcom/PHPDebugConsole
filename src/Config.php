@@ -1,6 +1,6 @@
 <?php
 /**
- * Handle setting configuration values
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -229,10 +229,10 @@ class Config
                 'useDebugInfo',         // bool
             ),
             'errorEmailer' => array(
-                // 'emailFunc',            // callable
+                // 'emailFunc',         // callable
                 'emailMask',            // int
                 'emailMin',             // int
-                // 'emailTo',              // string
+                // 'emailTo',           // string
                 'emailThrottleFile',    // string
                 'emailThrottledSummary', // bool
                 'emailTraceMask',       // int
@@ -247,8 +247,6 @@ class Config
                 'css',                  // string
                 'filepathCss',          // string
                 'filepathScript',       // string
-                // 'firephpInc',
-                // 'firephpOptions',
                 'onOutput',             // callable
                 'outputAs',             // string
                 'outputAsDefaultNonHtml', // string

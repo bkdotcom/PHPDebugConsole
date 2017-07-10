@@ -1,6 +1,6 @@
 <?php
 /**
- * Output log as plain-text
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -14,85 +14,10 @@ namespace bdk\Debug;
 use bdk\Debug\Utf8;
 
 /**
- * Output methods
+ * Output log as plain-text
  */
-class OutputText implements PluginInterface
+class OutputText extends OutputBase
 {
-
-    private $debug;
-
-    /**
-     * Constructor
-     *
-     * @param object $debug debug instance
-     * @param array  $cfg   config
-     */
-    public function __construct($debug)
-    {
-        $this->debug = $debug;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function debugListeners(\bdk\Debug $debug)
-    {
-        return array(
-            'debug.output' => 'output',
-        );
-    }
-
-    /**
-     * Dump value as text
-     *
-     * @param mixed $val  value to dump
-     * @param array $path {@internal}
-     *
-     * @return string
-     */
-    public function dump($val, $path = array())
-    {
-        $typeMore = null;
-        $type = $this->debug->abstracter->getType($val, $typeMore);
-        if ($typeMore == 'raw') {
-            $val = $this->debug->abstracter->getAbstraction($val);
-            $typeMore = 'abstraction';
-        }
-        if ($type == 'array') {
-            $val = $this->dumpArray($val, $path);
-        } elseif ($type == 'callable') {
-            $val = $this->dumpCallable($val);
-        } elseif ($type == 'object') {
-            $val = $this->dumpObject($val, $path);
-        } elseif ($typeMore == 'abstraction') {
-            // resource
-            $val = $val['value'];
-        } elseif ($type == 'bool') {
-            $val = $typeMore;   // 'true' or 'false'
-        } elseif ($type == 'null') {
-            $val = 'null';
-        } elseif ($type == 'recursion') {
-            $val = 'Array *RECURSION*';
-        } elseif ($type == 'string') {
-            if ($typeMore !== 'numeric') {
-                $val = $this->debug->utf8->dump($val);
-            }
-            $val = '"'.$val.'"';
-        } elseif ($type == 'undefined') {
-            $val = 'undefined';
-        }
-        // float, int,: no modification required
-        if (in_array($type, array('float','int')) || $typeMore == 'numeric') {
-            $tsNow = time();
-            $secs = 86400 * 90; // 90 days worth o seconds
-            $num = trim($val, '"'); // remove quotes that were added to string
-            if ($num > $tsNow - $secs && $num < $tsNow + $secs) {
-                $date = date('Y-m-d H:i:s', $num);
-                return $val.' ('.$date.')';
-            }
-        }
-        return $val;
-    }
 
     /**
      * Output the log as text
@@ -119,7 +44,7 @@ class OutputText implements PluginInterface
     }
 
     /**
-     * Return log entry for writing to file
+     * Return log entry as text
      *
      * @param string  $method method
      * @param array   $args   arguments
@@ -155,42 +80,16 @@ class OutputText implements PluginInterface
     }
 
     /**
-     * Dump an abstracted value
-     *
-     * @param array $abs  abstracted value
-     * @param array $path path
-     *
-     * @return string
-     */
-    /*
-    protected function dumpAbstraction($abs, $path)
-    {
-        $type = $abs['type'];
-        if ($type == 'callable') {
-            return $this->dumpCallable($abs);
-        } elseif ($type == 'object') {
-            return $this->dumpObject($abs, $path);
-        } else {
-            return $abs['value'];
-        }
-    }
-    */
-
-    /**
      * Dump array as text
      *
      * @param array $array array
-     * @param array $path  {@internal} path to array... for proper indentation
+     * @param array $path  {@internal}
      *
      * @return string
      */
     protected function dumpArray($array, $path = array())
     {
-        $pathCount = count($path);
-        foreach ($array as $key => $val) {
-            $path[$pathCount] = $key;
-            $array[$key] = $this->dump($val, $path);
-        }
+        $array = parent::dumpArray($array, $path);
         $str = trim(print_r($array, true));
         $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
         $str = str_replace("Array\n(", 'Array(', $str);
@@ -201,22 +100,32 @@ class OutputText implements PluginInterface
     }
 
     /**
-     * Dump "Callable" as html
+     * Dump boolean
      *
-     * @param array $abs array/callable abstraction
+     * @param boolean $val boolean value
      *
      * @return string
      */
-    protected function dumpCallable($abs)
+    protected function dumpBool($val)
     {
-        return 'callable: '.$abs['values'][0].'::'.$abs['values'][1];
+        return $val ? 'true' : 'false';
+    }
+
+    /**
+     * Dump null value
+     *
+     * @return string
+     */
+    protected function dumpNull()
+    {
+        return 'null';
     }
 
     /**
      * Dump object as text
      *
      * @param array $abs  object "abstraction"
-     * @param array $path (@internal)
+     * @param array $path {@internal}
      *
      * @return string
      */
@@ -275,7 +184,36 @@ class OutputText implements PluginInterface
         if (count($path) > 1) {
             $str = str_replace("\n", "\n    ", $str);
         }
-        $str = trim($str);
+        // $str = trim($str);
         return $str;
+    }
+
+    /**
+     * Dump string
+     *
+     * @param string $val string value
+     *
+     * @return string
+     */
+    protected function dumpString($val)
+    {
+        if (is_numeric($val)) {
+            $date = $this->checkTimestamp($val);
+            return $date
+                ? '"'.$val.'" ('.$date.')'
+                : '"'.$val.'"';
+        } else {
+            return '"'.$this->debug->utf8->dump($val).'"';
+        }
+    }
+
+    /**
+     * Dump undefined
+     *
+     * @return null
+     */
+    protected function dumpUndefined()
+    {
+        return 'undefined';
     }
 }

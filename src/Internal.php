@@ -1,6 +1,6 @@
 <?php
 /**
- * Web-browser/javascript like console class for PHP
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -237,31 +237,4 @@ class Internal
             }
         }
     }
-
-    /**
-     * Does backtrace contain error handler?
-     *
-     * @param array $backtrace debug_backtrace
-     *
-     * @return boolean
-     */
-    /*
-    private function backtraceHasErrorHandler($backtrace)
-    {
-        // path if via ErrorHandler :
-        //    0: here we are (getErrorCaller)
-        //    1: self::appendLog
-        //    2: self::error
-        //    3: self::onError
-        //    4: call_user_function
-        //    5: EventManager::doDispatch
-        //    6: EventManager::dispatch
-        //    7: ErrorHandler::handleUnsuppressed
-        return true
-            && isset($backtrace[7]) && $backtrace[7]['function'] == 'handleUnsuppressed'
-            && isset($backtrace[7]['class']) && $backtrace[7]['class'] == get_class($this->debug->errorHandler)
-            && $backtrace[4]['function'] == 'call_user_func'
-            && isset($backtrace[4]['args'][0][1]) && $backtrace[4]['args'][0][1] === 'onError';
-    }
-    */
 }

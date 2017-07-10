@@ -1,6 +1,6 @@
 <?php
 /**
- * Methods used to display and format values
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -221,17 +221,6 @@ class Abstracter
             } elseif ($key === '') {
                 $value = $row;
             }
-            /*
-            if (is_array($value)) {
-                $value = in_array(self::ABSTRACTION, $value, true) && $value['isRecursion']
-                    ? '<span class="t_recursion">*RECURSION*</span>'
-                    : $this->dumpTable($value);
-            } elseif ($value === self::UNDEFINED) {
-                $value = '<span class="t_undefined"></span>';
-            } else {
-                $value = $this->dump($value);
-            }
-            */
             $values[] = $value;
         }
         return $values;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Methods used to display and format values
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -12,7 +12,7 @@
 namespace bdk\Debug;
 
 /**
- * Abstracter:  Methods used store array/object/resource info
+ * Abstracter:  Methods used to abstract objects
  */
 class AbstractObject
 {
@@ -220,7 +220,6 @@ class AbstractObject
         $paramArray = array();
         $params = $reflectionMethod->getParameters();
         if (empty($phpDoc)) {
-            // $docComment = $reflectionMethod->getDocComment();
             $phpDoc = $this->phpDoc->getParsed($reflectionMethod);
         }
         if (empty($phpDoc['param'])) {
@@ -311,7 +310,6 @@ class AbstractObject
         /*
             We trace our ancestory to learn where properties are inherited from
         */
-        $isAncestor = false;
         while ($reflectionObject) {
             $className = $reflectionObject->getName();
             $properties = $reflectionObject->getProperties();
@@ -348,7 +346,6 @@ class AbstractObject
                 }
                 $propArray[$name] = $propInfo;
             }
-            $isAncestor = true;
             $reflectionObject = $reflectionObject->getParentClass();
         }
         /*

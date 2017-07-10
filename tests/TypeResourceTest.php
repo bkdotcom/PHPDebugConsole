@@ -14,7 +14,7 @@ class TypeResourceTest extends DebugTestFramework
             array($fh,
                 '<span class="t_resource">Resource id #'.(int) $fh.': stream</span>',
                 'Resource id #'.(int) $fh.': stream',
-                '"Resource id #'.(int) $fh.': stream"'
+                'Resource id #'.(int) $fh.': stream'
             ),
         );
         fclose($fh);

@@ -1,6 +1,6 @@
 <?php
 /**
- * Output log as html or to FirePHP
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -14,7 +14,7 @@ namespace bdk\Debug;
 use \bdk\Debug;
 
 /**
- * Output methods
+ * General Output methods
  */
 class Output
 {
@@ -47,7 +47,6 @@ class Output
             'outputScript' => true,         // applies when outputAs = 'html'
         );
         $this->setCfg($cfg);
-        // $this->data = &$data;
     }
 
     /**
@@ -198,28 +197,6 @@ class Output
     }
 
     /**
-     * Determine default outputAs
-     *
-     * @return string
-     */
-    protected function getDefaultOutputAs()
-    {
-        $ret = 'html';
-        $interface = $this->debug->utilities->getInterface();
-        if ($interface == 'ajax') {
-            $ret = $this->cfg['outputAsDefaultNonHtml'];
-        } elseif ($interface == 'http') {
-            $contentType = $this->debug->utilities->getResponseHeader();
-            if ($contentType && $contentType !== 'text/html') {
-                $ret = $this->cfg['outputAsDefaultNonHtml'];
-            }
-        } else {
-            $ret = 'text';
-        }
-        return $ret;
-    }
-
-    /**
      * Returns meta-data and removes it from the passed arguments
      *
      * @param array $args args to check
@@ -238,36 +215,6 @@ class Output
     }
 
     /**
-     * Returns output
-     *
-     * @return mixed
-     */
-    /*
-    public function output()
-    {
-        while ($this->data['groupDepth'] > 0) {
-            $this->data['groupDepth']--;
-            $this->data['log'][] = array('groupEnd');
-        }
-        $this->debug->eventManager->dispatch('debug.output', $this->debug);
-        $outputAs = $this->getCfg('outputAs');
-        if ($outputAs === 'chromeLogger') {
-            $outputAs = new OutputChromeLogger($this->debug, $this->cfg);
-        } elseif ($outputAs === 'html') {
-            $outputAs = new OutputHtml($this->debug, $this->cfg);
-        } elseif ($outputAs === 'script') {
-            $outputAs = new OutputScript($this->debug, $this->cfg);
-        } elseif (!is_object($outputAs)) {
-            // fall back to text
-            $outputAs = new OutputText($this->debug, $this->cfg);
-        }
-        if (is_object($outputAs)) {
-            return $outputAs->output($this->data);
-        }
-    }
-    */
-
-    /**
      * Set one or more config values
      *
      * If setting a single value, old value is returned
@@ -282,19 +229,6 @@ class Output
         $ret = null;
         $values = array();
         if (is_string($mixed)) {
-            /*
-            $path = preg_split('#[\./]#', $mixed);
-            $ref = &$values;
-            $ret = $this->cfg;
-            foreach ($path as $k) {
-                $ret = isset($ret[$k])
-                    ? $ret[$k]
-                    : null;
-                $ref[$k] = array(); // initialize this level
-                $ref = &$ref[$k];
-            }
-            $ref = $newVal;
-            */
             $key = $mixed;
             $ret = isset($this->cfg[$key])
                 ? $this->cfg[$key]
@@ -312,8 +246,6 @@ class Output
                 $this->{$prop} = new $classname($this->debug);
             }
             if (property_exists($this, $prop)) {
-                // $obj = $this->{$prop};
-                // $this->debug->eventManager->addListener('debug.output', array($obj, 'output'));
                 $this->debug->addPlugin($this->{$prop});
             }
         }
@@ -322,6 +254,28 @@ class Output
             unset($values['onOutput']);
         }
         $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $values);
+        return $ret;
+    }
+
+    /**
+     * Determine default outputAs
+     *
+     * @return string
+     */
+    protected function getDefaultOutputAs()
+    {
+        $ret = 'html';
+        $interface = $this->debug->utilities->getInterface();
+        if ($interface == 'ajax') {
+            $ret = $this->cfg['outputAsDefaultNonHtml'];
+        } elseif ($interface == 'http') {
+            $contentType = $this->debug->utilities->getResponseHeader();
+            if ($contentType && $contentType !== 'text/html') {
+                $ret = $this->cfg['outputAsDefaultNonHtml'];
+            }
+        } else {
+            $ret = 'text';
+        }
         return $ret;
     }
 }

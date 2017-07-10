@@ -1,6 +1,6 @@
 <?php
 /**
- * Stand-alone, general-purpose error handler
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>

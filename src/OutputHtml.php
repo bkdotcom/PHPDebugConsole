@@ -1,6 +1,6 @@
 <?php
 /**
- * Output log as HTML
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -12,22 +12,10 @@
 namespace bdk\Debug;
 
 /**
- * Output methods
+ * Output log as HTML
  */
-class OutputHtml implements PluginInterface
+class OutputHtml extends OutputBase
 {
-
-    private $debug = null;
-
-    /**
-     * Constructor
-     *
-     * @param object $debug debug instance
-     */
-    public function __construct($debug)
-    {
-        $this->debug = $debug;
-    }
 
     /**
      * Formats an array as a table
@@ -89,16 +77,6 @@ class OutputHtml implements PluginInterface
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function debugListeners(\bdk\Debug $debug)
-    {
-        return array(
-            'debug.output' => 'output',
-        );
-    }
-
-    /**
      * Dump value as html
      *
      * @param mixed   $val      value to dump
@@ -109,61 +87,22 @@ class OutputHtml implements PluginInterface
      */
     public function dump($val, $sanitize = true, $wrap = true)
     {
-        $typeMore = null;
-        $type = $this->debug->abstracter->getType($val, $typeMore);
         $wrapAttribs = array(
-            'class' => 't_'.$type,
+            'class' => array(),
             'title' => null,
         );
-        if ($typeMore == 'raw') {
-            $val = $this->debug->abstracter->getAbstraction($val);
-            $typeMore = 'abstraction';
-        }
-        if ($type == 'array') {
-            $val = $this->dumpArray($val);
-        } elseif ($type == 'callable') {
-            $val = $this->dumpCallable($val);
-        } elseif ($type == 'object') {
-            $val = $this->dumpObject($val);
+        $this->sanitize = $sanitize;
+        $this->wrapAttribs = array();
+        $val = parent::dump($val);
+        if (in_array($this->dumpType, array('object', 'recursion'))) {
             $wrap = false;
-        } elseif ($typeMore == 'abstraction') {
-            // resource
-            $val = $val['value'];
-        } elseif ($type == 'bool') {
-            $val = $typeMore; // 'true' or 'false'
-        } elseif ($type == 'null') {
-            $val = 'null';
-        } elseif ($type == 'recursion') {
-            $val = '<span class="t_keyword">Array</span> <span class="t_recursion">*RECURSION*</span>';
-            $wrap = false;
-        // } elseif ($type == 'resource') {
-            // $val = $val['value'];
-        } elseif ($type == 'string') {
-            if ($typeMore != 'numeric') {
-                if ($sanitize) {
-                    $val = $this->debug->utf8->dump($val, true, true);
-                    $val = $this->visualWhiteSpace($val);
-                } else {
-                    $wrapAttribs['class'] .= ' no-pseudo';
-                    $val = $this->debug->utf8->dump($val, true, false);
-                }
-            }
-        } elseif ($type == 'undefined') {
-            $val = '';
-        }
-        // no modification necessary for float & int
-        if (in_array($type, array('float','int')) || $typeMore == 'numeric') {
-            $ts_now = time();
-            $secs = 86400 * 90; // 90 days worth o seconds
-            if ($val > $ts_now  - $secs && $val < $ts_now + $secs) {
-                $wrapAttribs['class'] .= ' timestamp';
-                $wrapAttribs['title'] = date('Y-m-d H:i:s', $val);
-            }
         }
         if ($wrap) {
-            if ($typeMore && $typeMore != 'abstraction') {
-                $wrapAttribs['class'] .= ' '.$typeMore;
+            $wrapAttribs['class'][] = 't_'.$this->dumpType;
+            if ($this->dumpTypeMore) {
+                $wrapAttribs['class'][] = $this->dumpTypeMore;
             }
+            $wrapAttribs = $this->debug->utilities->arrayMergeDeep($wrapAttribs, $this->wrapAttribs);
             $val = '<span '.$this->debug->utilities->buildAttribString($wrapAttribs).'>'.$val.'</span>';
         }
         return $val;
@@ -178,8 +117,6 @@ class OutputHtml implements PluginInterface
      */
     public function output(Event $event = null)
     {
-        // $this->data = &$data;
-        // $debug = $event->getSubject();
         $data = $this->debug->getData();
         array_unshift($data['alerts'], $this->errorSummary());
         $str = '<div class="debug">'."\n";
@@ -194,7 +131,6 @@ class OutputHtml implements PluginInterface
                 .'</script>';
         }
         $str .= '<div class="debug-bar"><h3>Debug Log</h3></div>'."\n";
-
         $str .= $this->processAlerts($data['alerts']);
 
         /*
@@ -223,7 +159,6 @@ class OutputHtml implements PluginInterface
         $str .= '</div>'."\n";  // close debug-content
         $str .= '</div>';       // close debug
         if ($event) {
-            // \bdk\Debug::_log('str', $str);
             $event['output'] .= $str;
         } else {
             return $str;
@@ -242,7 +177,6 @@ class OutputHtml implements PluginInterface
     {
         $str = '';
         if (in_array($method, array('group','groupCollapsed'))) {
-            // $this->data['groupDepth']++;
             $collapsedClass = '';
             if (!empty($args)) {
                 $label = array_shift($args);
@@ -317,36 +251,14 @@ class OutputHtml implements PluginInterface
     }
 
     /**
-     * Dump an abstracted value
-     * array (recursion), object, or resource
-     *
-     * @param array $val abstracted value
-     *
-     * @return string
-     */
-    /*
-    protected function dumpAbstraction($val)
-    {
-        $type = $val['type'];
-        if ($type == 'callable') {
-            $val = $this->dumpCallable($val);
-        } elseif ($type == 'object') {
-            $val = $this->dumpObject($val);
-        } else {
-            $val = $val['value'];
-        }
-        return $val;
-    }
-    */
-
-    /**
      * Dump array as html
      *
      * @param array $array array
+     * @param array $path  {@internal}
      *
      * @return string html
      */
-    protected function dumpArray($array)
+    protected function dumpArray($array, $path = array())
     {
         if (empty($array)) {
             $html = '<span class="t_keyword">Array</span>'
@@ -357,8 +269,8 @@ class OutputHtml implements PluginInterface
                 .'<span class="array-inner">'."\n";
             foreach ($array as $key => $val) {
                 $html .= "\t".'<span class="key-value">'
-                        .'<span class="t_key'.(is_int($key) ? ' t_int' : '').'">'.
-                            $this->dump($key, true, false) // don't wrap it
+                        .'<span class="t_key'.(is_int($key) ? ' t_int' : '').'">'
+                            .$this->dump($key, true, false) // don't wrap it
                         .'</span> '
                         .'<span class="t_operator">=&gt;</span> '
                         .$this->dump($val)
@@ -367,9 +279,19 @@ class OutputHtml implements PluginInterface
             $html .= '</span>'
                 .'<span class="t_punct">)</span>';
         }
-        // $val = '<span class="t_array">'.$html.'</span>';
-        // return $val;
         return $html;
+    }
+
+    /**
+     * Dump boolean
+     *
+     * @param boolean $val boolean value
+     *
+     * @return string
+     */
+    protected function dumpBool($val)
+    {
+        return $val ? 'true' : 'false';
     }
 
     /**
@@ -386,13 +308,53 @@ class OutputHtml implements PluginInterface
     }
 
     /**
-     * Dump object as html
+     * Dump float value
      *
-     * @param array $abs object abstraction
+     * @param integer $val float value
+     *
+     * @return float
+     */
+    protected function dumpFloat($val)
+    {
+        $date = $this->checkTimestamp($val);
+        if ($date) {
+            $this->wrapAttribs['class'][] = 'timestamp';
+            $this->wrapAttribs['title'] = $date;
+        }
+        return $val;
+    }
+
+    /**
+     * Dump integer value
+     *
+     * @param integer $val integer value
+     *
+     * @return integer
+     */
+    protected function dumpInt($val)
+    {
+        return $this->dumpFloat($val);
+    }
+
+    /**
+     * Dump null value
      *
      * @return string
      */
-    protected function dumpObject($abs)
+    protected function dumpNull()
+    {
+        return 'null';
+    }
+
+    /**
+     * Dump object as html
+     *
+     * @param array $abs  object abstraction
+     * @param array $path {@internal}
+     *
+     * @return string
+     */
+    protected function dumpObject($abs, $path = array())
     {
         $title = trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
         $strClassName = '<span class="t_object-class"'.($title ? ' title="'.htmlspecialchars($title).'"' : '').'>'.$abs['className'].'</span>';
@@ -411,7 +373,6 @@ class OutputHtml implements PluginInterface
                 $toStringVal = $abs['methods']['__toString']['returnValue'];
             }
             if ($toStringVal) {
-                // $toStringVal = $abs['methods']['__toString']['returnValue'];
                 $toStringValAppend = '';
                 if (strlen($toStringVal) > 100) {
                     $toStringLen = strlen($toStringVal);
@@ -451,6 +412,53 @@ class OutputHtml implements PluginInterface
         $html = '<span class="t_object" data-accessible="'.$accessible.'">'.$html.'</span>';
         $html = str_replace(' title=""', '', $html);
         return $html;
+    }
+
+    /**
+     * Dump recursion (array recursion)
+     *
+     * @return string
+     */
+    protected function dumpRecursion()
+    {
+        return '<span class="t_keyword">Array</span> <span class="t_recursion">*RECURSION*</span>';
+    }
+
+    /**
+     * Dump string
+     *
+     * @param string $val string value
+     *
+     * @return string
+     */
+    protected function dumpString($val)
+    {
+        if (is_numeric($val)) {
+            $date = $this->checkTimestamp($val);
+            if ($date) {
+                $this->wrapAttribs['class'][] = 'timestamp';
+                $this->wrapAttribs['title'] = $date;
+            }
+        } else {
+            if ($this->sanitize) {
+                $val = $this->debug->utf8->dump($val, true, true);
+                $val = $this->visualWhiteSpace($val);
+            } else {
+                $this->wrapAttribs['class'][] = 'no-pseudo';
+                $val = $this->debug->utf8->dump($val, true, false);
+            }
+        }
+        return $val;
+    }
+
+    /**
+     * Dump undefined
+     *
+     * @return string
+     */
+    protected function dumpUndefined()
+    {
+        return '';
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Methods used to display objects
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -12,7 +12,7 @@
 namespace bdk\Debug;
 
 /**
- * Use reflection to get dump object info
+ * Get and parse phpDoc block
  */
 class PhpDoc
 {
@@ -26,12 +26,6 @@ class PhpDoc
      */
     public static function getParsed($what)
     {
-        /*
-        return array(
-            'summary' => null,
-            'description' => null,
-        );
-        */
         $reflector = null;
         if (is_object($what)) {
             if ($what instanceof \Reflector) {

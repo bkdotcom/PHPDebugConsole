@@ -1,6 +1,6 @@
 <?php
 /**
- * Web-browser/javascript like console class for PHP
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -674,15 +674,6 @@ class Debug
                 $this->data['groupDepth']--;
                 $this->data['log'][] = array('groupEnd');
             }
-            // sort and flatten logSummary
-            // krsort($this->data['logSummary']);
-            // $this->data['logSummary'] = call_user_func_array('array_merge', $this->data['logSummary']);
-            /*
-            while ($this->data['groupDepthSummary'] > 0) {
-                $this->data['groupDepthSummary']--;
-                $this->data['logSummary'][] = array('groupEnd');
-            }
-            */
             $outputAs = $this->output->getCfg('outputAs');
             $this->output->setCfg('outputAs', $outputAs);
             $return = $this->eventManager->dispatch('debug.output', $this, array('output'=>''))['output'];
@@ -727,24 +718,16 @@ class Debug
      */
     public function setData($path, $value)
     {
-        /*
-        if (isset($data['collectToggleCount']) && is_bool($data['collectToggleCount'])) {
-            $data['collectToggleCount'] = $data['collectToggleCount'] + 1;
-        }
-        */
         if (is_string($path)) {
             $path = preg_split('#[\./]#', $path);
             $ref = &$this->data;
             foreach ($path as $k) {
-                // $ref[$k] = array(); // initialize this level
                 $ref = &$ref[$k];
             }
             $ref = $value;
-            // $this->data = $this->utilities->arrayMergeDeep($this->data, $new);
         } else {
             $this->data = $this->utilities->arrayMergeDeep($this->data, $path);
         }
-        // $this->data = array_merge($this->data, $data);
     }
 
     /**
@@ -757,7 +740,6 @@ class Debug
     public function setErrorCaller($caller = 'notPassed')
     {
         if (!empty($caller) && $caller != 'notPassed') {
-            // $this->errorHandler->setData('errorCaller/depth', $this->data['groupDepth']);
             $caller['depth'] = $this->data['groupDepth'];
         }
         $this->errorHandler->setErrorCaller($caller, 2);
@@ -888,7 +870,7 @@ class Debug
     protected function setPublicMethods()
     {
         $refObj = new \ReflectionObject($this);
-        self::$publicMethods = array_map(function ($refMethod) {
+        self::$publicMethods = array_map(function (\ReflectionMethod $refMethod) {
             return $refMethod->name;
         }, $refObj->getMethods(\ReflectionMethod::IS_PUBLIC));
     }

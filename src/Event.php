@@ -1,6 +1,6 @@
 <?php
 /**
- * Web-browser/javascript like console class for PHP
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>

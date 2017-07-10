@@ -1,6 +1,6 @@
 <?php
 /**
- * Methods used to de-reference and store arrays
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -12,7 +12,7 @@
 namespace bdk\Debug;
 
 /**
- * Abstracter:  Methods used store arrays
+ * Abstracter:  Methods used de=refrence and store arrays
  */
 class AbstractArray
 {

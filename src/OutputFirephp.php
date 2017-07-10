@@ -1,6 +1,6 @@
 <?php
 /**
- * Output log via FirePHP
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -12,12 +12,11 @@
 namespace bdk\Debug;
 
 /**
- * Output methods
+ * Output log via FirePHP
  */
-class OutputFirephp implements PluginInterface
+class OutputFirephp extends OutputBase
 {
 
-    private $debug;
     protected $firephpMethods = array(
         'log' => 'LOG',
         'info' => 'INFO',
@@ -32,26 +31,6 @@ class OutputFirephp implements PluginInterface
 
     const FIREPHP_PROTO_VER = '0.3';
     const MESSAGE_LIMIT = 99999;
-
-    /**
-     * Constructor
-     *
-     * @param object $debug debug instance
-     */
-    public function __construct($debug)
-    {
-        $this->debug = $debug;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function debugListeners(\bdk\Debug $debug)
-    {
-        return array(
-            'debug.output' => 'output',
-        );
-    }
 
     /**
      * Output the log via FirePHP headers
@@ -81,113 +60,43 @@ class OutputFirephp implements PluginInterface
     }
 
     /**
-     * Dump a value
+     * Build table rows
      *
-     * @param mixed $val value
-     *
-     * @return mixed
-     */
-    protected function dump($val)
-    {
-        $typeMore = null;
-        $type = $this->debug->abstracter->getType($val, $typeMore);
-        if ($type == 'array') {
-            $val = $this->dumpArray($val);
-        } elseif ($type == 'callable') {
-            $val = $this->dumpCallable($val);
-        } elseif ($type == 'object') {
-            $val = $this->dumpObject($val);
-        } elseif ($typeMore == 'abstraction') {
-            // resource
-            $val = $val['value'];
-        } elseif ($type == 'recursion') {
-            $val = 'Array *RECURSION*';
-        } elseif ($type == 'string') {
-            if ($typeMore !== 'numeric') {
-                $val = $this->debug->utf8->dump($val);
-            }
-        } elseif ($type == 'undefined') {
-            $val = 'undefined';
-        }
-        // bool, float, int, null : no modification required
-        if (in_array($type, array('float','int')) || $typeMore == 'numeric') {
-            $tsNow = time();
-            $secs = 86400 * 90; // 90 days worth o seconds
-            if ($val > $tsNow - $secs && $val < $tsNow + $secs) {
-                $val = $val.' ('.date('Y-m-d H:i:s', $val).')';
-            }
-        }
-        return $val;
-    }
-
-    /**
-     * [dumpAbstraction description]
-     *
-     * @param array $abs abstraction array
-     *
-     * @return string
-     */
-    /*
-    protected function dumpAbstraction($abs)
-    {
-        $type = $abs['type'];
-        if ($type == 'callable') {
-            return $this->dumpCallable($abs);
-        } elseif ($type == 'object') {
-            return $this->dumpObject($abs);
-        } else {
-            return $abs['value'];
-        }
-    }
-    */
-
-    /**
-     * dump array
-     *
-     * @param array $array array to dump
+     * @param array $array array to debug
      *
      * @return array
      */
-    protected function dumpArray($array)
+    protected function methodTable($array)
     {
-        foreach ($array as $key => $val) {
-            $array[$key] = $this->dump($val);
+        $keys = $this->debug->utilities->arrayColkeys($array);
+        $table = array();
+        $table[] = $keys;
+        $classNames = array();
+        array_unshift($table[0], '');
+        foreach ($array as $k => $row) {
+            $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
+            $values = array_map(function ($val) {
+                return $val === $this->debug->abstracter->UNDEFINED
+                    ? null
+                    : $val;
+            }, $values);
+            $classNames[] = $objInfo
+                ? $objInfo['className']
+                : '';
+            array_unshift($values, $k);
+            $table[] = $values;
         }
-        return $array;
-    }
-
-    /**
-     * [dumpCallable description]
-     *
-     * @param array $abs abstraction
-     *
-     * @return string
-     */
-    protected function dumpCallable($abs)
-    {
-        return 'callable: '.$abs['values'][0].'::'.$abs['values'][1];
-    }
-
-    /**
-     * Get the minimal amount of object info to be useful
-     *
-     * @param array $abs object abstraction
-     *
-     * @return array
-     */
-    protected function dumpObject($abs)
-    {
-        $return = array(
-            '___class_name' => $abs['className'],   // we'll just borrow this from chromelogger
-        );
-        foreach ($abs['properties'] as $name => $info) {
-            $return[$name] = $this->dump($info['value']);
+        if (array_filter($classNames)) {
+            array_unshift($table[0], '');
+            foreach ($classNames as $i => $className) {
+                array_splice($table[$i+1], 1, 0, $className);
+            }
         }
-        return $return;
+        return $table;
     }
 
     /**
-     * process alerts
+     * Process alerts
      *
      * @param array $alerts alerts data
      *
@@ -220,7 +129,6 @@ class OutputFirephp implements PluginInterface
      */
     protected function processEntry($method, $args)
     {
-        // $opts = array();
         $meta = array(
             'Type' => isset($this->firephpMethods[$method])
                 ? $this->firephpMethods[$method]
@@ -247,7 +155,7 @@ class OutputFirephp implements PluginInterface
                 $meta['Collapsed'] = 'true'; // yes, a string
             }
         } elseif ($method == 'table') {
-            $value = $this->processTable($args[0]);
+            $value = $this->methodTable($args[0]);
             if (isset($args[1])) {
                 $meta['Label'] = $args[1];
             }
@@ -274,43 +182,7 @@ class OutputFirephp implements PluginInterface
     }
 
     /**
-     * Build table rows
-     *
-     * @param array $array array to debug
-     *
-     * @return array
-     */
-    protected function processTable($array)
-    {
-        $keys = $this->debug->utilities->arrayColkeys($array);
-        $table = array();
-        $table[] = $keys;
-        $classNames = array();
-        array_unshift($table[0], '');
-        foreach ($array as $k => $row) {
-            $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
-            $values = array_map(function ($val) {
-                return $val === $this->debug->abstracter->UNDEFINED
-                    ? null
-                    : $val;
-            }, $values);
-            $classNames[] = $objInfo
-                ? $objInfo['className']
-                : '';
-            array_unshift($values, $k);
-            $table[] = $values;
-        }
-        if (array_filter($classNames)) {
-            array_unshift($table[0], '');
-            foreach ($classNames as $i => $className) {
-                array_splice($table[$i+1], 1, 0, $className);
-            }
-        }
-        return $table;
-    }
-
-    /**
-     * [setFirephpHeader description]
+     * "output" FirePHP header for log entry
      *
      * @param array $meta  meta information
      * @param mixed $value value

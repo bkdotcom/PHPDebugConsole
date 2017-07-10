@@ -11,7 +11,7 @@ class TypeObjectTest extends DebugTestFramework
         // @todo
         // val, html, text, script
         return array(
-            array(null, '<span class="t_null">null</span>', 'null', 'null'),
+            array(null, '<span class="t_null">null</span>', 'null', null),
         );
     }
 

@@ -25,9 +25,14 @@ Array(
     [1] => "c"
 )
 EOD;
+        $arrayDumpScript = array(
+            'a',
+            'foo' => 'bar',
+            'c',
+        );
         // val, html, text script
         return array(
-            array(array('a','foo'=>'bar','c'), $arrayDumpHtml, $arrayDumpText, '{"0":"a","foo":"bar","1":"c"}'),
+            array(array('a','foo'=>'bar','c'), $arrayDumpHtml, $arrayDumpText, $arrayDumpScript),
         );
     }
 
@@ -82,7 +87,8 @@ EOD;
                 $this->assertSelectEquals('.key-value > .t_recursion', '*RECURSION*', true, $strHtml);
             },
             array('contains' => '    [val] => Array *RECURSION*'),
-            '{"foo":"bar","val":"Array *RECURSION*"}'
+            // '{"foo":"bar","val":"Array *RECURSION*"}'
+            array('foo'=>'bar', 'val'=>'Array *RECURSION*')
         );
     }
 

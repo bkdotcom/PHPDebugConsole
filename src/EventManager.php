@@ -1,6 +1,6 @@
 <?php
 /**
- * Super basic event manager
+ * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -147,7 +147,7 @@ class EventManager
      *
      * @return void
      */
-    protected function doDispatch($eventName, $listeners, $event)
+    protected function doDispatch($eventName, $listeners, Event $event)
     {
         foreach ($listeners as $callable) {
             if ($event->isPropagationStopped()) {

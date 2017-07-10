@@ -55,7 +55,7 @@ class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
     {
         return array(
             // val, html, text, script
-            array(null, '<span class="t_null">null</span>', 'null', 'null'),
+            array(null, '<span class="t_null">null</span>', 'null', null),
         );
     }
 

@@ -26,7 +26,7 @@ class AbstractObject
         'inheritedFrom' => null,        // populated only if inherited
         'overrides' => null,            // populated only if we're overriding
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
-        // viaDebugInfo
+        'viaDebugInfo' => false,        // true if __debugInfo && __debugInfo value differs
     );
 	protected $abstracter;
 	protected $phpDoc;
@@ -310,6 +310,7 @@ class AbstractObject
         /*
             We trace our ancestory to learn where properties are inherited from
         */
+        $isAncestor = false;
         while ($reflectionObject) {
             $className = $reflectionObject->getName();
             $properties = $reflectionObject->getProperties();
@@ -330,12 +331,16 @@ class AbstractObject
                     continue;
                 } elseif ($useDebugInfo && !array_key_exists($name, $debugInfo)) {
                     // useDebugInfo option && obj has __debugInfo() method && this prop isn't returned by __debugInfo()
-                    continue;
+                    // we'll still grab private ancestors
+                    if (!($isAncestor && $reflectionProperty->isPrivate())) {
+                        continue;
+                    }
                 } elseif ($isDebugObj && in_array($name, array('data','debug','instance'))) {
                     continue;
                 }
                 $propInfo = $this->getPropInfo($obj, $reflectionProperty);
-                if ($useDebugInfo) {
+                if ($useDebugInfo && array_key_exists($name, $debugInfo)) {
+                    // ancestor privates won't exist in debugInfo
                     $debugValue = $debugInfo[$name];
                     $propInfo['viaDebugInfo'] = $debugValue != $propInfo['value'];
                     $propInfo['value'] = $debugValue;
@@ -346,6 +351,7 @@ class AbstractObject
                 }
                 $propArray[$name] = $propInfo;
             }
+            $isAncestor = true;
             $reflectionObject = $reflectionObject->getParentClass();
         }
         /*

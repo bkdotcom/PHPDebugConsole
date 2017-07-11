@@ -18,9 +18,9 @@
 			".timestamp" :			'<i class="fa fa-calendar"></i>'
 		},
 		iconsObject = {
-			".debug-value" :		'<i class="fa fa-eye" title="via __debugInfo()"></i>',
+			".debug-value" :		'<i class="fa fa-fw fa-eye" title="via __debugInfo()"></i>',
 			".deprecated" :			'<i class="fa fa-arrow-down" title="Deprecated"></i>',
-			".private-ancestor":    '<i class="fa fa-lock"></i>',
+			".private-ancestor":    '<i class="fa fa-fw fa-lock"></i>',
 			".toggle-private" :		'<i class="fa fa-user-secret"></i>',
 			".toggle-protected" :	'<i class="fa fa-shield"></i>'
 		},
@@ -136,16 +136,12 @@
 		}
 		if ($.inArray("misc", types) >= 0) {
 			$.each(iconsMisc, function(selector,v){
-				$root.find(selector).each(function(){
-					$(this).prepend(v);
-				});
+				$root.find(selector).prepend(v);
 			});
 		}
 		if ($.inArray("object", types) >= 0) {
 			$.each(iconsObject, function(selector,v){
-				$root.find(selector).each(function(){
-					$(this).prepend(v);
-				});
+				$root.find(selector).prepend(v);
 			});
 		}
 		if ($.inArray("methods", types) >= 0) {
@@ -291,6 +287,18 @@
 			enhanceArrays($root);
 			enhanceObjects($root);
 			addIcons($root, ["misc","methods"]);
+			$root.find(".timestamp").each(function(){
+				var $i = $(this).find("i"),
+					text = $(this).text(),
+					$span = $('<span>'+text+'</span>');
+				if ($(this).hasClass("t_string")) {
+					$span.addClass("t_string numeric");
+				} else {
+					$span.addClass("t_int");
+				}
+				$(this).removeClass("t_int t_string numeric");
+				$(this).html($i).append($span);
+			});
 		}
 	}
 

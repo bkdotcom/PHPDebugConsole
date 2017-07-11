@@ -48,11 +48,103 @@ class TypeObjectTest extends DebugTestFramework
         // test object inheritance
         $test = new \bdk\DebugTest\Test();
         $abs = $this->debug->abstracter->getAbstraction($test);
-        $this->assertArrayHasKey('inheritedProp', $abs['properties']);
-        $this->assertSame(array(
-            'INHERITED' => 'hello world',
-            'MY_CONSTANT' => 'constant value',
-        ), $abs['constants']);
+
+        $this->assertSame('object', $abs['type']);
+        $this->assertSame('bdk\DebugTest\Test', $abs['className']);
+        $this->assertSame(
+            array('bdk\DebugTest\TestBase'),
+            $abs['extends']
+        );
+        $this->assertSame(
+            array(),
+            $abs['implements']
+        );
+        $this->assertSame(
+            array(
+                'INHERITED' => 'defined in TestBase',
+                'MY_CONSTANT' => 'redefined in Test',
+            ),
+            $abs['constants']
+        );
+        $this->assertArraySubset(
+            array(
+                'summary' => 'Test',
+                'description' => null,
+            ),
+            $abs['phpDoc']
+        );
+        $this->assertTrue($abs['viaDebugInfo']);
+
+        /*
+            Properties
+        */
+        $this->assertArrayNotHasKey('propNoDebug', $abs['properties']);
+        $this->assertTrue($abs['properties']['debug']['value']['excluded']);
+        $this->assertTrue($abs['properties']['instance']['value']['isRecursion']);
+        $this->assertArraySubset(
+            array(
+                'visibility' => 'public',
+                'value' => 'redefined in Test (public)',
+                'viaDebugInfo' => false,
+                'overrides' => 'bdk\DebugTest\TestBase',
+                'originallyDeclared' => 'bdk\DebugTest\TestBase',
+            ),
+            $abs['properties']['propPublic']
+        );
+        $this->assertArraySubset(
+            array(
+                'visibility' => 'public',
+                // 'value' => 'This property is debug only',
+                'viaDebugInfo' => false,
+            ),
+            $abs['properties']['someArray']
+        );
+        $this->assertArraySubset(
+            array(
+                'visibility' => 'protected',
+                'value' => 'redefined in Test (protected)',
+                'inheritedFrom' => null,
+                'overrides' => 'bdk\DebugTest\TestBase',
+                'originallyDeclared' => 'bdk\DebugTest\TestBase',
+                'viaDebugInfo' => false,
+            ),
+            $abs['properties']['propProtected']
+        );
+        $this->assertArraySubset(
+            array(
+                'visibility' => 'private',
+                'value' => 'redefined in Test (private) (alternate value via __debugInfo)',
+                'inheritedFrom' => null,
+                'overrides' => 'bdk\DebugTest\TestBase',
+                'originallyDeclared' => 'bdk\DebugTest\TestBase',
+                'viaDebugInfo' => true,
+            ),
+            $abs['properties']['propPrivate']
+        );
+        $this->assertArraySubset(
+            array(
+                'visibility' => 'private',
+                'value' => 'defined in TestBase (private)',
+                'inheritedFrom' => 'bdk\DebugTest\TestBase',
+                'overrides' => null,
+                'originallyDeclared' => null,
+                'viaDebugInfo' => false,
+            ),
+            $abs['properties']['testBasePrivate']
+        );
+        $this->assertArraySubset(
+            array(
+                'value' => 'This property is debug only',
+                'viaDebugInfo' => true,
+            ),
+            $abs['properties']['debugValue']
+        );
+
+        /*
+            Methods
+        */
+        $this->assertArrayNotHasKey('testBasePrivate', $abs['methods']);
+        $this->assertTrue($abs['methods']['methodPublic']['isDeprecated']);
     }
 
     /**

@@ -10,16 +10,23 @@ define('SOMECONSTANT', 'Constant value');
 class TestBase
 {
 
-    const INHERITED = 'hello world';
+    const INHERITED = 'defined in TestBase';
     const MY_CONSTANT = 'defined in TestBase';
 
-    public $inheritedProp = 'Inherited via TestBase';
+    private $testBasePrivate = 'defined in TestBase (private)';
+    private $propPrivate = 'defined in TestBase (private)';
+    protected $propProtected = 'defined in TestBase (protected)';
+    public $propPublic = 'defined in TestBase (public)';
 
-    public function inheritedFunction()
+    private function testBasePrivate()
     {
 
     }
 
+    public function testBasePublic()
+    {
+
+    }
 }
 
 
@@ -29,21 +36,23 @@ class TestBase
 class Test extends TestBase
 {
 
-    const MY_CONSTANT = 'constant value';
+    const MY_CONSTANT = 'redefined in Test';
 
-    /**
-     * Public Property.
-     */
-    public $propPublic = 'iAmPublic';
     /**
      * Private Property.
      *
      * @var string
      */
-    private $propPrivate = 'iAmPrivate';
-    protected $propProtected = 'iAmProtected';
+    private $propPrivate = 'redefined in Test (private)';
 
-    private $propHidden = 'hidden via __debugInfo';
+    protected $propProtected = 'redefined in Test (protected)';
+
+    /**
+     * Public Property.
+     */
+    public $propPublic = 'redefined in Test (public)';
+
+    private $propNoDebug = 'hidden via __debugInfo';
 
     public $someArray = array(
         'int' => 123,
@@ -82,7 +91,7 @@ class Test extends TestBase
         $return = get_object_vars($this);
         $return['propPrivate'] .= ' (alternate value via __debugInfo)';
         $return['debugValue'] = 'This property is debug only';
-        unset($return['propHidden']);
+        unset($return['propNoDebug']);
         return $return;
     }
 
@@ -104,7 +113,7 @@ class Test extends TestBase
      *                      two-line description!
      * @param array     $param3 third param
      *
-     * @return void
+     * @return     void
      * @deprecated
      */
     public function methodPublic(\SomeClass $param1, $param2 = SOMECONSTANT, array $param3 = array())

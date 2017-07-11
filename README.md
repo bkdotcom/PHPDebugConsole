@@ -50,8 +50,8 @@ See http://www.bradkent.com/?page=php/debug for more information
 * *&hellip; [more](http://www.bradkent.com/?page=php/debug#docs-methods)*
 
 ### Tests / Quality
-[![Build Status](https://travis-ci.org/bkdotcom/PHPDebugConsole.svg?branch=master)](https://travis-ci.org/bkdotcom/PHPDebugConsole)
-[![SensioLabsInsight](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c/big.png)](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c)
+[![Build Status](https://travis-ci.org/bkdotcom/PHPDebugConsole.svg?branch=master)](https://travis-ci.org/bkdotcom/PHPDebugConsole)  
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c/mini.png)](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c)
 
 ### Changelog
 http://www.bradkent.com/?page=php/debug#docs-changelog

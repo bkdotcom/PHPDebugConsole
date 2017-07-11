@@ -390,8 +390,10 @@ class OutputHtml extends OutputBase
             $html = $toStringMarkup
                 .$strClassName
                 .'<dl class="object-inner">'
-                    .'<dt>extends</dt><dd>'.implode('<br />', $abs['extends']).'</dd>'
-                    .'<dt>implements</dt><dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'
+                    .'<dt>extends</dt>'
+                        .'<dd class="extends">'.implode('</dd><dd class="extends">', $abs['extends']).'</dd>'
+                    .'<dt>implements</dt>'
+                        .'<dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'
                     .$this->dumpConstants($abs['constants'])
                     .$this->dumpProperties($abs['properties'], array('viaDebugInfo'=>$abs['viaDebugInfo']))
                     .($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')

@@ -26,7 +26,7 @@ class DebugTest extends DebugTestFramework
         } else
         */
         if ($type == 'object') {
-            $keys = array('excluded','collectMethods','viaDebugInfo','isRecursion',
+            $keys = array('collectMethods','viaDebugInfo','isExcluded','isRecursion',
                     'extends','implements','constants','properties','methods','scopeClass','stringified');
             $keysMissing = array_diff($keys, array_keys($var));
             $return = $var['debug'] === \bdk\Debug\Abstracter::ABSTRACTION

@@ -39,7 +39,7 @@ class OutputFirephp extends OutputBase
      *
      * @return void
      */
-    public function output(Event $event = null)
+    public function onOutput(Event $event = null)
     {
         if (headers_sent($file, $line)) {
             trigger_error('Unable to FirePHP: headers already sent. ('.$file.' line '.$line.')', E_USER_NOTICE);
@@ -68,11 +68,11 @@ class OutputFirephp extends OutputBase
      */
     protected function methodTable($array)
     {
-        $keys = $this->debug->utilities->arrayColkeys($array);
+        $keys = $this->debug->utilities->arrayColKeys($array);
         $table = array();
         $table[] = $keys;
-        $classNames = array();
         array_unshift($table[0], '');
+        $classNames = array();
         foreach ($array as $k => $row) {
             $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
             $values = array_map(function ($val) {
@@ -146,14 +146,9 @@ class OutputFirephp extends OutputBase
                 $meta['Line'] = $argsMeta['line'];
             }
         }
-        foreach ($args as $i => $arg) {
-            $args[$i] = $this->dump($arg);
-        }
         if (in_array($method, array('group','groupCollapsed'))) {
             $meta['Label'] = $args[0];
-            if ($method == 'groupCollapsed') {
-                $meta['Collapsed'] = 'true'; // yes, a string
-            }
+            $meta['Collapsed'] = $method == 'groupCollapsed' ? 'true' : 'false';    // yes, a string
         } elseif ($method == 'table') {
             $value = $this->methodTable($args[0]);
             if (isset($args[1])) {
@@ -170,6 +165,7 @@ class OutputFirephp extends OutputBase
                     : $args[0];
             }
         }
+        $value = $this->dump($value);
         if ($this->messageIndex < self::MESSAGE_LIMIT) {
             $this->setFirephpHeader($meta, $value);
         } elseif ($this->messageIndex === self::MESSAGE_LIMIT) {

@@ -28,13 +28,10 @@ class PhpDoc
     {
         $reflector = null;
         if (is_object($what)) {
-            if ($what instanceof \Reflector) {
-                $reflector = $what;
-                $docComment = $what->getDocComment();
-            } else {
-                $reflector = new \ReflectionObject($what);
-                $docComment = $reflector->getDocComment();
-            }
+            $reflector = $what instanceof \Reflector
+                ? $what
+                : new \ReflectionObject($what);
+            $docComment = $reflector->getDocComment();
         } else {
             $docComment = $what;
         }

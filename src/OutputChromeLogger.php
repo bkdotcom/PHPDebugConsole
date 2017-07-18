@@ -40,7 +40,7 @@ class OutputChromeLogger extends OutputBase
      *
      * @return void
      */
-    public function output(Event $event)
+    public function onOutput(Event $event)
     {
         $data = $this->debug->getData();
         foreach ($data['log'] as $args) {
@@ -67,46 +67,6 @@ class OutputChromeLogger extends OutputBase
     protected function encode($data)
     {
         return base64_encode(utf8_encode(json_encode($data)));
-    }
-
-    /**
-     * Build table rows
-     *
-     * @param array $array array to debug
-     *
-     * @return array
-     */
-    protected function methodTable($array)
-    {
-        $keys = $this->debug->utilities->arrayColkeys($array);
-        $table = array();
-        $classnames = array();
-        foreach ($array as $k => $row) {
-            $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
-            $values = array_map(function ($val) {
-                if ($val === $this->debug->abstracter->UNDEFINED) {
-                    return null;
-                } elseif (is_array($val)) {
-                    return $this->debug->output->outputText->dump($val, false);
-                } else {
-                    return $val;
-                }
-            }, $values);
-            $values = array_combine($keys, $values);
-            $classnames[$k] = $objInfo
-                ? $objInfo['className']
-                : '';
-            $table[$k] = $values;
-        }
-        if (array_filter($classnames)) {
-            foreach ($classnames as $k => $classname) {
-                $table[$k] = array_merge(
-                    array('___class_name' => $classname),
-                    $table[$k]
-                );
-            }
-        }
-        return $table;
     }
 
     /**

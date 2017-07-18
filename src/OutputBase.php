@@ -34,16 +34,16 @@ class OutputBase implements PluginInterface
     /**
      * {@inheritdoc}
      */
-    public function debugListeners(\bdk\Debug $debug)
+    public function debugSubscribers(\bdk\Debug $debug)
     {
         return array(
-            'debug.output' => 'output',
+            'debug.output' => 'onOutput',
         );
     }
 
     /**
      * Dump value
-     *
+
      * @param mixed $val  value to dump
      * @param array $path {@internal}
      *
@@ -55,6 +55,8 @@ class OutputBase implements PluginInterface
         $type = $this->debug->abstracter->getType($val, $typeMore);
         if ($typeMore == 'raw') {
             $val = $this->debug->abstracter->getAbstraction($val);
+            $typeMore = null;
+        } elseif ($typeMore == 'abstraction') {
             $typeMore = null;
         }
         $method = 'dump'.ucfirst($type);
@@ -168,17 +170,28 @@ class OutputBase implements PluginInterface
      * @param array $abs  object abstraction
      * @param array $path {@internal}
      *
-     * @return array
+     * @return mixed
      */
     protected function dumpObject($abs, $path = array())
     {
-        $return = array(
-            '___class_name' => $abs['className'],
-        );
-        $pathCount = count($path);
-        foreach ($abs['properties'] as $name => $info) {
-            $path[$pathCount] = $name;
-            $return[$name] = $this->dump($info['value'], $path);
+        if ($abs['isRecursion']) {
+            $return = '(object) '.$abs['className'].' *RECURSION*';
+        } elseif ($abs['isExcluded']) {
+            $return = '(object) '.$abs['className'].' (not inspected)';
+        } else {
+            $return = array(
+                '___class_name' => $abs['className'],
+            );
+            $pathCount = count($path);
+            foreach ($abs['properties'] as $name => $info) {
+                $path[$pathCount] = $name;
+                $vis = $info['visibility'];
+                if ($vis == 'private' && $info['inheritedFrom']) {
+                    $vis = '🔒 '.$vis;
+                }
+                $name = '('.$vis.') '.$name;
+                $return[$name] = $this->dump($info['value'], $path);
+            }
         }
         return $return;
     }
@@ -232,5 +245,49 @@ class OutputBase implements PluginInterface
     protected function dumpUndefined()
     {
         return null;
+    }
+
+    /**
+     * Build table rows
+     *
+     * This builds table rows usable by ChromeLogger and <script>
+     *
+     * @param array $array array to debug
+     *
+     * @return array
+     */
+    protected function methodTable($array)
+    {
+        $keys = $this->debug->utilities->arrayColKeys($array);
+        $table = array();
+        $classnames = array();
+        foreach ($array as $k => $row) {
+            $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
+            $values = array_map(function ($val) {
+                if ($val === $this->debug->abstracter->UNDEFINED) {
+                    return get_class($this) == __NAMESPACE__.'\\OutputScript'
+                        ? $val
+                        : null;
+                } elseif (is_array($val)) {
+                    return $this->debug->output->outputText->dump($val, false);
+                } else {
+                    return $val;
+                }
+            }, $values);
+            $values = array_combine($keys, $values);
+            $classnames[$k] = $objInfo
+                ? $objInfo['className']
+                : '';
+            $table[$k] = $values;
+        }
+        if (array_filter($classnames)) {
+            foreach ($classnames as $k => $classname) {
+                $table[$k] = array_merge(
+                    array('___class_name' => $classname),
+                    $table[$k]
+                );
+            }
+        }
+        return $table;
     }
 }

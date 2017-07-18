@@ -18,9 +18,9 @@ interface PluginInterface
 {
 
 	/**
-	 * Return a list of listeners
+	 * Return a list of event subscribers
 	 *
-     * Returns an array of event names this plugin listens to.
+     * Returns an array of event names this plugin subscribes to.
      *
      * The array keys are event names and the value can be:
      *
@@ -30,7 +30,7 @@ interface PluginInterface
      *
 	 * @param \bdk\Debug $debug Debug instance
      *
-     * @return array The event names to listen to
+     * @return array The event names to subscribe to
 	 */
-	public function debugListeners(\bdk\Debug $debug);
+	public function debugSubscribers(\bdk\Debug $debug);
 }

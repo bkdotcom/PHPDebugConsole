@@ -250,7 +250,7 @@ class Output
             }
         }
         if (isset($values['onOutput'])) {
-            $this->debug->eventManager->addListener('debug.output', $values['onOutput']);
+            $this->debug->eventManager->subscribe('debug.output', $values['onOutput']);
             unset($values['onOutput']);
         }
         $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $values);

@@ -17,12 +17,12 @@ namespace bdk\Debug;
 /**
  * Event
  *
- * Events are passed to event listener/subscribres
+ * Events are passed to event subscribres/listeners
  */
 class Event implements \ArrayAccess, \IteratorAggregate
 {
     /**
-     * @var boolean Whether no further event listeners should be triggered
+     * @var boolean Whether event subscribers should be called
      */
     private $propagationStopped = false;
 
@@ -67,10 +67,7 @@ class Event implements \ArrayAccess, \IteratorAggregate
      */
     public function getValue($key)
     {
-        if ($this->hasValue($key)) {
-            return $this->values[$key];
-        }
-        return null;
+        return $this->offsetGet($key);
     }
 
     /**
@@ -96,7 +93,7 @@ class Event implements \ArrayAccess, \IteratorAggregate
     }
 
     /**
-     * Returns whether further event listeners should be triggered.
+     * Returns whether further event subscribers should be called
      *
      * @see Event::stopPropagation()
      *
@@ -135,11 +132,9 @@ class Event implements \ArrayAccess, \IteratorAggregate
     }
 
     /**
-     * Stops the propagation of the event to further event listeners.
+     * Stops the propagation of the event
      *
-     * If multiple event listeners are connected to the same event, no
-     * further event listener will be triggered once any trigger calls
-     * stopPropagation().
+     * No further event subscribers will be called after stopPropagation is called
      *
      * @return void
      */
@@ -167,9 +162,13 @@ class Event implements \ArrayAccess, \IteratorAggregate
      *
      * @return mixed
      */
-    public function offsetGet($key)
+    public function &offsetGet($key)
     {
-        return $this->getValue($key);
+        if ($this->hasValue($key)) {
+            return $this->values[$key];
+        }
+        $null = null;
+        return $null;
     }
 
     /**

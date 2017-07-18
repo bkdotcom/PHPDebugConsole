@@ -98,13 +98,13 @@ class Config
         }
         foreach ($new as $k => $v) {
             if ($k == 'debug') {
-                if (isset($v['onLog'])) {
-                    $this->debug->eventManager->addListener('debug.log', $v['onLog']);
-                    unset($v['onLog']);
+                if (isset($v['onConstruct'])) {
+                    $this->debug->eventManager->subscribe('debug.construct', $v['onConstruct']);
+                    unset($v['onConstruct']);
                 }
-                if (isset($v['onInit'])) {
-                    $this->debug->eventManager->addListener('debug.init', $v['onInit']);
-                    unset($v['onInit']);
+                if (isset($v['onLog'])) {
+                    $this->debug->eventManager->subscribe('debug.log', $v['onLog']);
+                    unset($v['onLog']);
                 }
                 if (isset($v['logServerKeys'])) {
                     // don't append, replace

@@ -76,7 +76,7 @@ class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
         foreach ($dumps as $outputAs => $dumpExpect) {
             $dump = $this->debug->output->{$outputAs}->dump($val);
             if (is_callable($dumpExpect)) {
-                $html($dump);
+                $dumpExpect($dump);
             } elseif (is_array($dumpExpect) && isset($dumpExpect['contains'])) {
                 $this->assertContains($dumpExpect['contains'], $dump, $outputAs.' doesn\'t contain');
             } else {

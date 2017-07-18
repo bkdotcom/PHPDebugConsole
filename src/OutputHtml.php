@@ -94,7 +94,7 @@ class OutputHtml extends OutputBase
         $this->sanitize = $sanitize;
         $this->wrapAttribs = array();
         $val = parent::dump($val);
-        if (in_array($this->dumpType, array('object', 'recursion'))) {
+        if (in_array($this->dumpType, array('recursion'))) {
             $wrap = false;
         }
         if ($wrap) {
@@ -113,9 +113,9 @@ class OutputHtml extends OutputBase
      *
      * @param Event $event event object
      *
-     * @return mixed
+     * @return string|void
      */
-    public function output(Event $event = null)
+    public function onOutput(Event $event = null)
     {
         $data = $this->debug->getData();
         array_unshift($data['alerts'], $this->errorSummary());
@@ -150,7 +150,6 @@ class OutputHtml extends OutputBase
         }
         $str .= $this->processFatalError();
         $str .= '</div>';
-
         $str .= '<div class="debug-content clearfix" '.($this->debug->getCfg('outputScript') ? 'style="display:none;"' : '').'>'."\n";
         foreach ($data['log'] as $row) {
             $method = array_shift($row);
@@ -357,11 +356,13 @@ class OutputHtml extends OutputBase
     protected function dumpObject($abs, $path = array())
     {
         $title = trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
-        $strClassName = '<span class="t_object-class"'.($title ? ' title="'.htmlspecialchars($title).'"' : '').'>'.$abs['className'].'</span>';
+        $strClassName = '<span class="t_object-class"'.($title ? ' title="'.htmlspecialchars($title).'"' : '').'>'
+            .$abs['className']
+            .'</span>';
         if ($abs['isRecursion']) {
             $html = $strClassName
                 .' <span class="t_recursion">*RECURSION*</span>';
-        } elseif ($abs['excluded']) {
+        } elseif ($abs['isExcluded']) {
             $html = $strClassName
                 .' <span class="excluded">(not inspected)</span>';
         } else {
@@ -385,15 +386,15 @@ class OutputHtml extends OutputBase
                     .(!$abs['stringified'] ? ' title="__toString()"' : '').'>'
                     .$classAndInner['innerhtml']
                     .$toStringValAppend
-                    .'</span> ';
+                    .'</span>'."\n";
             }
             $html = $toStringMarkup
-                .$strClassName
-                .'<dl class="object-inner">'
-                    .'<dt>extends</dt>'
-                        .'<dd class="extends">'.implode('</dd><dd class="extends">', $abs['extends']).'</dd>'
-                    .'<dt>implements</dt>'
-                        .'<dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'
+                .$strClassName."\n"
+                .'<dl class="object-inner">'."\n"
+                    .'<dt>extends</dt>'."\n"
+                        .'<dd class="extends">'.implode('</dd><dd class="extends">', $abs['extends']).'</dd>'."\n"
+                    .'<dt>implements</dt>'."\n"
+                        .'<dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'."\n"
                     .$this->dumpConstants($abs['constants'])
                     .$this->dumpProperties($abs['properties'], array('viaDebugInfo'=>$abs['viaDebugInfo']))
                     .($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')
@@ -401,9 +402,9 @@ class OutputHtml extends OutputBase
                         : ''
                     )
                     .$this->dumpPhpDoc($abs['phpDoc'])
-                .'</dl>';
-            // remove empty <dt>s
-            $html = preg_replace('#<dt[^>]*>\w+</dt><dd[^>]*></dd>#', '', $html);
+                .'</dl>'."\n";
+            // remove <dt>'s with empty <dd>'
+            $html = preg_replace('#<dt[^>]*>\w+</dt>\s*<dd[^>]*></dd>\s*#', '', $html);
         }
         /*
             Were we debugged from inside or outside of the object?
@@ -411,7 +412,8 @@ class OutputHtml extends OutputBase
         $accessible = $abs['scopeClass'] == $abs['className']
             ? 'private'
             : 'public';
-        $html = '<span class="t_object" data-accessible="'.$accessible.'">'.$html.'</span>';
+        // $html = '<span class="t_object" data-accessible="'.$accessible.'">'."\n".$html.'</span>';
+        $this->wrapAttribs['data-accessible'] = $accessible;
         $html = str_replace(' title=""', '', $html);
         return $html;
     }
@@ -474,13 +476,13 @@ class OutputHtml extends OutputBase
     {
         $str = '';
         if ($constants && $this->debug->output->getCfg('outputConstants')) {
-            $str = '<dt class="constants">constants</dt>';
+            $str = '<dt class="constants">constants</dt>'."\n";
             foreach ($constants as $k => $value) {
                 $str .= '<dd class="constant">'
                     .'<span class="constant-name">'.$k.'</span>'
                     .' <span class="t_operator">=</span> '
                     .$this->dump($value)
-                    .'</dd>';
+                    .'</dd>'."\n";
             }
         }
         return $str;
@@ -498,7 +500,7 @@ class OutputHtml extends OutputBase
         $label = count($methods)
             ? 'methods'
             : 'no methods';
-        $str = '<dt class="methods">'.$label.'</dt>';
+        $str = '<dt class="methods">'.$label.'</dt>'."\n";
         foreach ($methods as $methodName => $info) {
             $paramStr = $this->dumpParams($info['params']);
             $modifiers = array_keys(array_filter(array(
@@ -614,7 +616,7 @@ class OutputHtml extends OutputBase
         if ($meta['viaDebugInfo']) {
             $label .= ' <span class="text-muted">(via __debugInfo)</span>';
         }
-        $str = '<dt class="properties">'.$label.'</dt>';
+        $str = '<dt class="properties">'.$label.'</dt>'."\n";
         foreach ($properties as $k => $info) {
             $viaDebugInfo = !empty($info['viaDebugInfo']);
             $isPrivateAncestor = $info['visibility'] == 'private' && $info['inheritedFrom'];

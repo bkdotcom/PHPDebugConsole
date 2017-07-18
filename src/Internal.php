@@ -34,6 +34,10 @@ class Internal
     {
         $this->debug = $debug;
         $this->data = $data;
+        $this->debug->eventManager->subscribe('debug.construct', array($this, 'onConstruct'));
+        $this->debug->eventManager->subscribe('debug.output', array($this, 'onOutput'));
+        $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
+        register_shutdown_function(array($this, 'onShutdown'));
     }
 
     /**
@@ -90,7 +94,42 @@ class Internal
     }
 
     /**
-     * errorHandler.error event listener
+     * debug.init subscriber
+     *
+     * @return void
+     */
+    public function onConstruct()
+    {
+        if ($this->debug->getCfg('logEnvInfo')) {
+            $collectWas = $this->debug->setCfg('collect', true);
+            $this->debug->group('environment');
+            $this->debug->groupUncollapse();
+            foreach ($this->debug->getCfg('logServerKeys') as $k) {
+                if ($k == 'REQUEST_TIME') {
+                    $this->debug->info($k, date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
+                } elseif (isset($_SERVER[$k])) {
+                    $this->debug->info($k, $_SERVER[$k]);
+                }
+            }
+            $this->debug->info('PHP Version', PHP_VERSION);
+            $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
+            $this->debug->info('session.cache_limiter', ini_get('session.cache_limiter'));
+            if (!empty($_COOKIE)) {
+                $this->debug->info('$_COOKIE', $_COOKIE);
+            }
+            if (!empty($_POST)) {
+                $this->debug->info('$_POST', $_POST);
+            }
+            if (!empty($_FILES)) {
+                $this->debug->info('$_FILES', $_FILES);
+            }
+            $this->debug->groupEnd();
+            $this->debug->setCfg('collect', $collectWas);
+        }
+    }
+
+    /**
+     * errorHandler.error event subscriber
      * adds error to console as error or warn
      *
      * @param Event $error error/event object
@@ -124,42 +163,7 @@ class Internal
     }
 
     /**
-     * debug.init listener
-     *
-     * @return void
-     */
-    public function onInit()
-    {
-        if ($this->debug->getCfg('logEnvInfo')) {
-            $collectWas = $this->debug->setCfg('collect', true);
-            $this->debug->group('environment');
-            $this->debug->groupUncollapse();
-            foreach ($this->debug->getCfg('logServerKeys') as $k) {
-                if ($k == 'REQUEST_TIME') {
-                    $this->debug->info($k, date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
-                } elseif (isset($_SERVER[$k])) {
-                    $this->debug->info($k, $_SERVER[$k]);
-                }
-            }
-            $this->debug->info('PHP Version', PHP_VERSION);
-            $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
-            $this->debug->info('session.cache_limiter', ini_get('session.cache_limiter'));
-            if (!empty($_COOKIE)) {
-                $this->debug->info('$_COOKIE', $_COOKIE);
-            }
-            if (!empty($_POST)) {
-                $this->debug->info('$_POST', $_POST);
-            }
-            if (!empty($_FILES)) {
-                $this->debug->info('$_FILES', $_FILES);
-            }
-            $this->debug->groupEnd();
-            $this->debug->setCfg('collect', $collectWas);
-        }
-    }
-
-    /**
-     * debug.output event listener
+     * debug.output event subscriber
      *
      * @return void
      */

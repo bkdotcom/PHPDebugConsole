@@ -8,10 +8,109 @@ class TypeObjectTest extends DebugTestFramework
 
     public function dumpProvider()
     {
-        // @todo
         // val, html, text, script
+
+        $text = <<<'EOD'
+(object) bdk\DebugTest\Test
+  Properties:
+    (public) debug = (object) bdk\Debug (not inspected)
+    (public) instance = (object) bdk\DebugTest\Test *RECURSION*
+    (public) propPublic = "redefined in Test (public)"
+    (public) someArray = Array(
+        [int] => 123
+        [numeric] => "123"
+        [string] => "cheese"
+        [bool] => true
+        [obj] => null
+    )
+    (protected) propProtected = "defined only in TestBase (protected)"
+    (private) propPrivate = "redefined in Test (private) (alternate value via __debugInfo)"
+    (🔒 private) testBasePrivate = "defined in TestBase (private)"
+    (debug) debugValue = "This property is debug only"
+  Methods:
+    public: 6
+    protected: 1
+    private: 1
+EOD;
+        $script = array(
+            '___class_name' => 'bdk\DebugTest\Test',
+            '(public) debug' => '(object) bdk\Debug (not inspected)',
+            '(public) instance' => '(object) bdk\DebugTest\Test *RECURSION*',
+            '(public) propPublic' => 'redefined in Test (public)',
+            '(public) someArray' => array(
+                'int' => 123,
+                'numeric' => '123',
+                'string' => 'cheese',
+                'bool' => true,
+                'obj' => null,
+            ),
+            '(protected) propProtected' => 'defined only in TestBase (protected)',
+            '(private) propPrivate' => 'redefined in Test (private) (alternate value via __debugInfo)',
+            '(🔒 private) testBasePrivate' => 'defined in TestBase (private)',
+            '(debug) debugValue' => 'This property is debug only',
+        );
         return array(
-            array(null, '<span class="t_null">null</span>', 'null', null),
+            array(
+                new \bdk\DebugTest\Test(),
+                function ($str) {
+                    $this->assertStringStartsWith(
+                        '<span class="t_object" data-accessible="public">'
+                        .'<span class="t_string t_stringified" title="__toString()">abracadabra</span>'."\n"
+                        .'<span class="t_object-class" title="Test">bdk\DebugTest\Test</span>',
+                        $str
+                    );
+                    $this->assertSelectCount('dl.object-inner', 1, $str);
+
+                    // extends
+                    $this->assertContains('<dt>extends</dt>'."\n".'<dd class="extends">bdk\DebugTest\TestBase</dd>', $str);
+
+                    // implements
+                    $this->assertNotContains('<dt>implements</dt>', $str);
+
+                    // constants
+                    $this->assertContains(
+                        '<dt class="constants">constants</dt>'."\n"
+                        .'<dd class="constant"><span class="constant-name">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>'."\n"
+                        .'<dd class="constant"><span class="constant-name">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>',
+                        $str
+                    );
+
+                    // properties
+                    $this->assertContains(implode("\n", array(
+                        '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
+                        '<dd class="property visibility-public"><span class="t_modifier">public</span> <span class="property-name">debug</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="public"><span class="t_object-class">bdk\Debug</span> <span class="excluded">(not inspected)</span></span></dd>',
+                        '<dd class="property visibility-public"><span class="t_modifier">public</span> <span class="property-name">instance</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="private"><span class="t_object-class">bdk\DebugTest\Test</span> <span class="t_recursion">*RECURSION*</span></span></dd>',
+                        '<dd class="property visibility-public"><span class="t_modifier">public</span> <span class="property-name" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
+                        '<dd class="property visibility-public"><span class="t_modifier">public</span> <span class="property-name">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">(</span>',
+                        '<span class="array-inner">',
+                        "\t".'<span class="key-value"><span class="t_key">int</span> <span class="t_operator">=&gt;</span> <span class="t_int">123</span></span>',
+                        "\t".'<span class="key-value"><span class="t_key">numeric</span> <span class="t_operator">=&gt;</span> <span class="t_string numeric">123</span></span>',
+                        "\t".'<span class="key-value"><span class="t_key">string</span> <span class="t_operator">=&gt;</span> <span class="t_string">cheese</span></span>',
+                        "\t".'<span class="key-value"><span class="t_key">bool</span> <span class="t_operator">=&gt;</span> <span class="t_bool true">true</span></span>',
+                        "\t".'<span class="key-value"><span class="t_key">obj</span> <span class="t_operator">=&gt;</span> <span class="t_null">null</span></span>',
+                        '</span><span class="t_punct">)</span></span></dd>',
+                        '<dd class="property visibility-protected"><span class="t_modifier">protected</span> <span class="property-name">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
+                        '<dd class="property visibility-private debug-value"><span class="t_modifier">private</span> <span class="t_type">string</span> <span class="property-name" title="Private Property.: ">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
+                        '<dd class="property visibility-private private-ancestor"><span class="t_modifier">private</span> (<i>bdk\DebugTest\TestBase</i>) <span class="property-name">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                        '<dd class="property visibility-debug debug-value"><span class="t_modifier">debug</span> <span class="property-name">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
+                    )), $str);
+
+                    // methods
+                    $this->assertContains(implode("\n", array(
+                        '<dt class="methods">methods</dt>',
+                        '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="method-name" title="Constructor">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
+                        '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="t_type">array</span> <span class="method-name" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
+                        '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="t_type">string</span> <span class="method-name" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><br /><span class="indent"><span class="t_string">abracadabra</span></span></dd>',
+                        '<dd class="method visibility-public deprecated"><span class="t_modifier">public</span> <span class="t_type">void</span> <span class="method-name" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">SomeClass</span> <span class="t_parameter-name" title="first param">$param1</span></span>, <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="second param                      two-line description!">$param2</span> <span class="t_operator">=</span> <span class="t_parameter-default"><span class="t_string">Constant value</span></span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="third param">$param3</span> <span class="t_operator">=</span> <span class="t_parameter-default"><span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">()</span></span></span></span><span class="t_punct">)</span></dd>',
+                        '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="t_modifier">static</span> <span class="t_type" title="Nothing is returned">void</span> <span class="method-name" title="This is a static method">methodStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
+                        '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="method-name">testBasePublic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
+                        '<dd class="method visibility-protected"><span class="t_modifier">protected</span> <span class="t_type">void</span> <span class="method-name" title="This method is protected">methodProtected</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param">$param1</span></span><span class="t_punct">)</span></dd>',
+                        '<dd class="method visibility-private"><span class="t_modifier">private</span> <span class="t_type">void</span> <span class="method-name" title="This method is private">methodPrivate</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">SomeClass</span> <span class="t_parameter-name" title="first param (passed by ref)">&amp;$param1</span></span>, <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="second param (passed by ref)">&amp;$param2</span></span><span class="t_punct">)</span></dd>',
+                    )), $str);
+                },
+                $text,
+                $script
+            ),
         );
     }
 
@@ -66,6 +165,7 @@ class TypeObjectTest extends DebugTestFramework
             ),
             $abs['constants']
         );
+        $this->stdout('phpdoc', $abs['phpDoc']);
         $this->assertArraySubset(
             array(
                 'summary' => 'Test',
@@ -79,7 +179,7 @@ class TypeObjectTest extends DebugTestFramework
             Properties
         */
         $this->assertArrayNotHasKey('propNoDebug', $abs['properties']);
-        $this->assertTrue($abs['properties']['debug']['value']['excluded']);
+        $this->assertTrue($abs['properties']['debug']['value']['isExcluded']);
         $this->assertTrue($abs['properties']['instance']['value']['isRecursion']);
         $this->assertArraySubset(
             array(
@@ -102,9 +202,9 @@ class TypeObjectTest extends DebugTestFramework
         $this->assertArraySubset(
             array(
                 'visibility' => 'protected',
-                'value' => 'redefined in Test (protected)',
-                'inheritedFrom' => null,
-                'overrides' => 'bdk\DebugTest\TestBase',
+                'value' => 'defined only in TestBase (protected)',
+                'inheritedFrom' => 'bdk\DebugTest\TestBase',
+                'overrides' => null,
                 'originallyDeclared' => 'bdk\DebugTest\TestBase',
                 'viaDebugInfo' => false,
             ),

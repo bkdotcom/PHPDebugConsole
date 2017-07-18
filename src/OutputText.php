@@ -24,9 +24,9 @@ class OutputText extends OutputBase
      *
      * @param Event $event event object
      *
-     * @return string
+     * @return string|void
      */
-    public function output(Event $event = null)
+    public function onOutput(Event $event = null)
     {
         $data = $this->debug->getData();
         $str = '';
@@ -40,7 +40,11 @@ class OutputText extends OutputBase
                 $depth --;
             }
         }
-        return $str;
+        if ($event) {
+            $event['output'] .= $str;
+        } else {
+            return $str;
+        }
     }
 
     /**
@@ -93,7 +97,7 @@ class OutputText extends OutputBase
         $str = trim(print_r($array, true));
         $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
         $str = str_replace("Array\n(", 'Array(', $str);
-        if (count($path) > 1) {
+        if (count($path)) {
             $str = str_replace("\n", "\n    ", $str);
         }
         return $str;
@@ -131,58 +135,99 @@ class OutputText extends OutputBase
      */
     protected function dumpObject($abs, $path = array())
     {
-        if (!empty($abs['info']) && $abs['info'] == 'recursion') {
-            $str = '(object) '.$abs['class'].' *RECURSION*';
-        } elseif (!empty($abs['info']) && $abs['info'] == 'excluded') {
-            $str = '(object) '.$abs['class'].' (not inspected)';
+        $pathCount = count($path);
+        if ($abs['isRecursion']) {
+            $str = '(object) '.$abs['className'].' *RECURSION*';
+        } elseif ($abs['isExcluded']) {
+            $str = '(object) '.$abs['className'].' (not inspected)';
         } else {
-            $accessible = $abs['scopeClass'] == $abs['className']
-                ? 'private'
-                : 'public';
-            $str = '(object) '.$abs['class']."\n";
-            $propHeader = '';
-            $properties = '';
-            foreach ($abs['properties'] as $property => $info) {
-                if ($accessible == 'public') {
-                    if ($info['visibility'] != 'public') {
-                        continue;
-                    }
-                    $properties .= '    '.$property.' = '.$info['value']."\n";
-                } else {
-                    $properties .= '    '.$info['visibility'].' '.$property.' = '.$info['value']."\n";
-                }
-            }
-            if ($accessible == 'public') {
-                $propHeader = $properties
-                    ? 'Properties (only listing public)'
-                    : 'No public properties';
-            } else {
-                $propHeader = $properties
-                    ? 'Properties'
-                    : 'No Properties';
-            }
-            $str .= '  '.$propHeader.':'."\n".$properties;
-            $methodCount = 0;
+            $meta = array(
+                'viaDebugInfo'=>$abs['viaDebugInfo'],
+                'accessible' => $abs['scopeClass'] == $abs['className']
+                    ? 'private'
+                    : 'public',
+            );
+            $str = '(object) '.$abs['className']."\n";
+            $str .= $this->dumpProperties($abs['properties'], $path);
             if ($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')) {
-                if (!empty($abs['methods'])) {
-                    foreach ($abs['methods'] as $info) {
-                        if ($accessible == 'public' && $info['visibility'] !== 'public') {
-                            continue;
-                        }
-                        $methodCount++;
-                    }
-                    if ($accessible == 'public') {
-                        $str .= '  '.$methodCount.' Public Methods (not listed)'."\n";
-                    } else {
-                        $str .= '  '.$methodCount.' Methods (not listed)'."\n";
-                    }
-                } else {
-                    $str .= '  No Methods'."\n";
-                }
+                $str .= $this->dumpMethods($abs['methods'], $meta);
             }
         }
-        if (count($path) > 1) {
+        $str = trim($str);
+        if ($pathCount) {
             $str = str_replace("\n", "\n    ", $str);
+        }
+        return $str;
+    }
+
+    /**
+     * Dump object properties as text
+     *
+     * @param array $properties properties as returned from getProperties()
+     * @param array $path       {@internal}
+     *
+     * @return string
+     */
+    protected function dumpProperties($properties, $path = array())
+    {
+        $str = '';
+        $propHeader = '';
+        $pathCount = count($path);
+        foreach ($properties as $name => $info) {
+            $path[$pathCount] = $name;
+            $vis = $info['visibility'];
+            if ($vis == 'private' && $info['inheritedFrom']) {
+                $vis = '🔒 '.$vis;
+            }
+            $str .= '    ('.$vis.') '.$name.' = '.$this->dump($info['value'], $path)."\n";
+        }
+        $propHeader = $str
+            ? 'Properties:'
+            : 'Properties: none!';
+        $str = '  '.$propHeader."\n".$str;
+        return $str;
+    }
+
+    /**
+     * Dump object methods as text
+     *
+     * @param array $methods methods as returned from getMethods
+     * @param array $meta    meta information (viaDebugInfo & accessible)
+     *
+     * @return string html
+     */
+    protected function dumpMethods($methods, $meta)
+    {
+        $str = '';
+        if (!empty($methods)) {
+            $counts = array(
+                'public' => 0,
+                'protected' => 0,
+                'private' => 0,
+            );
+            foreach ($methods as $info) {
+                /*
+                if ($meta['accessible'] == 'public' && $info['visibility'] !== 'public') {
+                    continue;
+                }
+                */
+                $counts[ $info['visibility'] ] ++;
+            }
+            $str .= '  Methods:'."\n";
+            foreach ($counts as $vis => $count) {
+                if ($count) {
+                    $str .= '    '.$vis.': '.$count."\n";
+                }
+            }
+            /*
+            if ($meta['accessible'] == 'public') {
+                $str .= '  '.$methodCount.' Public Methods (not listed)'."\n";
+            } else {
+                $str .= '  '.$methodCount.' Methods (not listed)'."\n";
+            }
+            */
+        } else {
+            $str .= '  Methods: none!'."\n";
         }
         return $str;
     }

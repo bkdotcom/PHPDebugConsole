@@ -53,7 +53,7 @@ class Debug
             'collect'   => false,
             'file'      => null,            // if a filepath, will receive log data
             'key'       => null,
-            'output'    => false,           // should debug.output listeners output?
+            'output'    => false,           // output the log?
             // errorMask = errors that appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
                             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
@@ -116,21 +116,17 @@ class Debug
         $this->setPublicMethods();
         $this->logRef = &$this->data['log'];
         $this->groupDepthRef = &$this->data['groupDepth'];
-        $this->abstracter = new Debug\Abstracter(array());
+        $this->abstracter = new Debug\Abstracter($this->eventManager);
         $this->config = new Debug\Config($this, $this->cfg);
         $this->errorEmailer = new Debug\ErrorEmailer();
         $this->internal = new Debug\Internal($this, $this->data);
-        $this->output = new Debug\Output($this, array());
+        $this->output = new Debug\Output($this);
         $this->utf8 = new Debug\Utf8();
         $this->config->setCfg($cfg);
-        $this->eventManager->addListener('debug.init', array($this->internal, 'onInit'));
-        $this->eventManager->addListener('debug.output', array($this->internal, 'onOutput'));
-        $this->errorHandler->eventManager->addListener('errorHandler.error', array($this->errorEmailer, 'onErrorAddEmailData'), 1);
-        $this->errorHandler->eventManager->addListener('errorHandler.error', array($this->errorEmailer, 'onErrorEmail'), -1);
-        $this->errorHandler->eventManager->addListener('errorHandler.error', array($this->internal, 'onError'));
-        $this->eventManager->dispatch('debug.init', $this);
+        $this->errorHandler->eventManager->subscribe('errorHandler.error', array($this->errorEmailer, 'onErrorAddEmailData'), 1);
+        $this->errorHandler->eventManager->subscribe('errorHandler.error', array($this->errorEmailer, 'onErrorEmail'), -1);
+        $this->eventManager->publish('debug.construct', $this);
         $this->data['entryCountInitial'] = count($this->data['log']);
-        register_shutdown_function(array($this->internal, 'onShutdown'));
         return;
     }
 
@@ -429,7 +425,7 @@ class Debug
                     $args[] = array_shift($args);
                 }
             }
-            $this->appendLog($method, $args);
+            $this->appendLog($method, array_values($args));
         }
     }
 
@@ -564,13 +560,13 @@ class Debug
      */
     public function addPlugin(PluginInterface $plugin)
     {
-        foreach ($plugin->debugListeners($this) as $eventName => $mixed) {
+        foreach ($plugin->debugSubscribers($this) as $eventName => $mixed) {
             if (is_string($mixed)) {
-                $this->eventManager->addListener($eventName, array($plugin, $mixed));
+                $this->eventManager->subscribe($eventName, array($plugin, $mixed));
             } else {
                 if (count($mixed) == 2 && is_int($mixed[1])) {
                     // eventName => array('methodName', priority);
-                    $this->eventManager->addListener($eventName, array($plugin, $mixed[0]), $mixed[1]);
+                    $this->eventManager->subscribe($eventName, array($plugin, $mixed[0]), $mixed[1]);
                     continue;
                 }
                 // eventName => array(
@@ -585,7 +581,7 @@ class Debug
                         $methodName = $mixed2[0];
                         $priority = isset($mixed2[1]) ? $mixed2[1] : 0;
                     }
-                    $this->eventManager->addListener($eventName, array($plugin, $methodName), $priority);
+                    $this->eventManager->subscribe($eventName, array($plugin, $methodName), $priority);
                 }
             }
         }
@@ -662,7 +658,7 @@ class Debug
     }
 
     /**
-     * Dispatches debug.output event and returns result
+     * Publishes debug.output event and returns result
      *
      * @return string or void
      */
@@ -676,13 +672,13 @@ class Debug
             }
             $outputAs = $this->output->getCfg('outputAs');
             $this->output->setCfg('outputAs', $outputAs);
-            $return = $this->eventManager->dispatch('debug.output', $this, array('output'=>''))['output'];
+            $return = $this->eventManager->publish('debug.output', $this, array('output'=>''))['output'];
             $this->data['outputSent'] = true;
             $this->data['log'] = array();
             $this->data['logSummary'] = array();
             $this->data['alerts'] = array();
         } else {
-            $this->eventManager->dispatch('debug.output', $this, array('output'=>''));
+            $this->eventManager->publish('debug.output', $this, array('output'=>''));
         }
         return $return;
     }
@@ -786,19 +782,32 @@ class Debug
                 }
             }
         }
-        array_unshift($args, $method);
         /*
             if logging an error or warn, also log originating file/line
         */
+        $meta = array();
         if (in_array($method, array('error','warn'))) {
-            $args[] = $this->internal->getErrorCaller();
+            $meta = $this->internal->getErrorCaller();
         }
-        if ($this->eventManager->dispatch('debug.log', $this, $args)->isPropagationStopped()) {
+        $event = $this->eventManager->publish(
+            'debug.log',
+            $this,
+            array(
+                'method' => $method,
+                'args' => $args,
+                'meta' => $meta,
+            )
+        );
+        if ($event->isPropagationStopped()) {
             return;
         }
         if ($method == 'groupUncollapse') {
-            // don't log this method (we wanted to dispatch event)
+            // don't log this method (we just needed to publish event)
             return;
+        }
+        array_unshift($args, $method);
+        if ($meta) {
+            $args[] = $meta;
         }
         if ($method == 'alert') {
             $this->data['alerts'][] = array_slice($args, 1);

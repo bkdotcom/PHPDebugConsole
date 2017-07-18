@@ -193,7 +193,7 @@ class ErrorHandler
         $this->data['lastError'] = $error;
         if (!$error['suppressed']) {
             $error['errorLog'] = $error['firstOccur'];
-            $this->eventManager->dispatch('errorHandler.error', $error);
+            $this->eventManager->publish('errorHandler.error', $error);
             // suppressed error should not clear error caller
             $this->data['errorCaller'] = array();
         }
@@ -251,7 +251,7 @@ class ErrorHandler
             $values = $mixed;
         }
         if (isset($values['onError'])) {
-            $this->eventManager->addListener('errorHandler.error', $values['onError']);
+            $this->eventManager->subscribe('errorHandler.error', $values['onError']);
             unset($values['onError']);
         }
         $this->cfg = array_merge($this->cfg, $values);
@@ -364,7 +364,7 @@ class ErrorHandler
      * @param string  $line    the line the error was raised in
      * @param array   $vars    active symbol table at point error occured
      *
-     * @return boolean
+     * @return Event
      */
     protected function buildError($errType, $errMsg, $file, $line, $vars)
     {
@@ -386,14 +386,6 @@ class ErrorHandler
             'firstOccur' => true,
             'hash'      => null,
             'suppressed' => $category != 'fatal' && error_reporting() === 0,
-            /*
-            'email' => false,
-            'stats' => array(
-                'tsEmailed'  => 0,
-                'countSince' => 0,
-                'emailedTo'  => '',
-            ),
-            */
         );
         $hash = $this->errorHash($errorValues);
         $firstOccur = !isset($this->data['errors'][$hash]);

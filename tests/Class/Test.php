@@ -15,7 +15,7 @@ class TestBase
 
     private $testBasePrivate = 'defined in TestBase (private)';
     private $propPrivate = 'defined in TestBase (private)';
-    protected $propProtected = 'defined in TestBase (protected)';
+    protected $propProtected = 'defined only in TestBase (protected)';
     public $propPublic = 'defined in TestBase (public)';
 
     private function testBasePrivate()
@@ -45,7 +45,7 @@ class Test extends TestBase
      */
     private $propPrivate = 'redefined in Test (private)';
 
-    protected $propProtected = 'redefined in Test (protected)';
+    // protected $propProtected = 'redefined in Test (protected)';
 
     /**
      * Public Property.

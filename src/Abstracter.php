@@ -17,6 +17,7 @@ namespace bdk\Debug;
 class Abstracter
 {
 
+    public $eventManager;
     protected $cfg = array();
     protected $abstractArray;
     protected $abstractObject;
@@ -28,10 +29,12 @@ class Abstracter
     /**
      * Constructor
      *
-     * @param array $cfg config options
+     * @param EventManager $eventManager event manager
+     * @param array        $cfg          config options
      */
-    public function __construct($cfg = array())
+    public function __construct(EventManager $eventManager, $cfg = array())
     {
+        $this->eventManager = $eventManager;
         $this->cfg = array(
             'collectConstants' => true,
             'collectMethods' => true,

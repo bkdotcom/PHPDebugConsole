@@ -23,9 +23,9 @@ class OutputScript extends OutputBase
      *
      * @param Event $event event object
      *
-     * @return string
+     * @return string|void
      */
-    public function output(Event $event = null)
+    public function onOutput(Event $event = null)
     {
         $data = $this->debug->getData();
         $this->debug->internal->uncollapseErrors();
@@ -47,7 +47,11 @@ class OutputScript extends OutputBase
         }
         $str .= 'console.groupEnd();';
         $str .= '</script>';
-        return $str;
+        if ($event) {
+            $event['output'] .= $str;
+        } else {
+            return $str;
+        }
     }
 
     /**
@@ -65,11 +69,7 @@ class OutputScript extends OutputBase
         } elseif ($method == 'count' || $method == 'time') {
             $method = 'log';
         } elseif ($method == 'table') {
-            foreach ($args as $i => $v) {
-                if (!is_array($v)) {
-                    unset($args[$i]);
-                }
-            }
+            $args = array($this->methodTable($args[0]));
         } elseif (in_array($method, array('error','warn'))) {
             $meta = $this->debug->output->getMetaArg($args);
             if (isset($meta['file'])) {

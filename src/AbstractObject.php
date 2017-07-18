@@ -18,15 +18,15 @@ class AbstractObject
 {
 
     static private $basePropInfo = array(
-        'visibility' => 'public',
-        'isStatic' => false,
-        'value' => null,
-        'type' => null,
         'desc' => null,
         'inheritedFrom' => null,        // populated only if inherited
-        'overrides' => null,            // populated only if we're overriding
+        'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
+        'overrides' => null,            // populated only if we're overriding
+        'type' => null,
+        'value' => null,
         'viaDebugInfo' => false,        // true if __debugInfo && __debugInfo value differs
+        'visibility' => 'public',
     );
 	protected $abstracter;
 	protected $phpDoc;
@@ -41,6 +41,8 @@ class AbstractObject
     {
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
+        $abstracter->eventManager->subscribe('debug.objAbstractStart', array($this, 'onStart'));
+        $abstracter->eventManager->subscribe('debug.objAbstractEnd', array($this, 'onEnd'));
     }
 
     /**
@@ -54,56 +56,69 @@ class AbstractObject
     public function getAbstraction($obj, &$hist = array())
     {
         $reflector = new \ReflectionObject($obj);
-        $return = array(
-            'debug' => $this->abstracter->ABSTRACTION,
-            'type' => 'object',
-            'excluded' => $hist && in_array(get_class($obj), $this->abstracter->getCfg('objectsExclude')),
-            'collectMethods' => $this->abstracter->getCfg('collectMethods'),
-            'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && method_exists($obj, '__debugInfo'),
-            'isRecursion' => in_array($obj, $hist, true),
+        $abs = new Event($obj, array(
             'className' => get_class($obj),
+            'collectMethods' => $this->abstracter->getCfg('collectMethods'),
+            'collectPropertyValues' => true,
+            'constants' => array(),
+            'debug' => $this->abstracter->ABSTRACTION,
+            'definition' => array(
+                'fileName' => $reflector->getFileName(),
+                'startLine' => $reflector->getStartLine(),
+                'extensionName' => $reflector->getExtensionName(),
+            ),
             'extends' => array(),
             'implements' => $reflector->getInterfaceNames(),
-            'constants' => array(),
-            'properties' => array(),
+            'isExcluded' => $hist && in_array(get_class($obj), $this->abstracter->getCfg('objectsExclude')),
+            'isRecursion' => in_array($obj, $hist, true),
             'methods' => array(),
-            'scopeClass' => $this->getScopeClass($hist),
-            'stringified' => null,
             'phpDoc' => array(
                 'summary' => null,
                 'description' => null,
                 // additional tags
             ),
-        );
-        if (!$return['isRecursion'] && !$return['excluded']) {
-            $collectConstants = $this->abstracter->getCfg('collectConstants');
-            $return['phpDoc'] = $this->phpDoc->getParsed($reflector);
-            $return['properties'] = $this->getProperties($obj, $hist);
-            if ($collectConstants) {
-                $return['constants'] = $reflector->getConstants();
-            }
-            while ($reflector = $reflector->getParentClass()) {
-                $return['extends'][] = $reflector->getName();
-                if ($collectConstants) {
-                    $return['constants'] = array_merge($reflector->getConstants(), $return['constants']);
-                }
-            }
-            if ($this->abstracter->getCfg('objectSort') == 'name') {
-                ksort($return['constants']);
-            }
-            if ($return['collectMethods']) {
-                $return['methods'] = $this->getMethods($obj);
-            } elseif (method_exists($obj, '__toString')) {
-                $return['methods'] = array(
-                    '__toString' => array(
-                        'returnValue' => call_user_func(array($obj, '__toString')),
-                    ),
-                );
-            }
-            if ($obj instanceof \DateTimeInterface) {
-                $return['stringified'] = $obj->format(\DateTime::ISO8601);
-            }
+            'properties' => array(),
+            'scopeClass' => $this->getScopeClass($hist),
+            'stringified' => null,
+            'type' => 'object',
+            'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && method_exists($obj, '__debugInfo'),
+        ));
+        if (array_filter(array($abs['isRecursion'], $abs['isExcluded']))) {
+            return $abs->getValues();
         }
+        /*
+            debug.objAbstractStart subscriber may
+            set isExcluded to true (but not to false)
+            set collectPropertyValues (boolean)
+            set collectMethods (boolean)
+            set stringified
+        */
+        $abs = $this->abstracter->eventManager->publish('debug.objAbstractStart', $abs);
+        if ($abs['isExcluded']) {
+            return $abs->getValues();
+        }
+        $abs['phpDoc'] = $this->phpDoc->getParsed($reflector);
+        $abs['constants'] = $this->getConstants($reflector);
+        while ($reflector = $reflector->getParentClass()) {
+            $abs['extends'][] = $reflector->getName();
+        }
+        $abs['properties'] = $this->getProperties($abs, $hist);
+        if ($abs['collectMethods']) {
+            $abs['methods'] = $this->getMethods($abs);
+        } elseif (method_exists($obj, '__toString')) {
+            $abs['methods'] = array(
+                '__toString' => array(
+                    'returnValue' => call_user_func(array($obj, '__toString')),
+                ),
+            );
+        }
+        /*
+            debug.objAbstractEnd subscriber has free reign to modify abtraction array
+        */
+        $return = $this->abstracter->eventManager->publish('debug.objAbstractEnd', $abs)->getValues();
+        $this->sort($return['properties']);
+        $this->sort($return['methods']);
+        unset($return['collectPropertyValues']);
         return $return;
     }
 
@@ -119,35 +134,62 @@ class AbstractObject
     public function getAbstractionTable($obj, &$hist = array())
     {
         $reflector = new \ReflectionObject($obj);
-        $return = array(
-            'debug' => $this->abstracter->ABSTRACTION,
-            'type' => 'object',
+        $abs = new Event($obj, array(
             'className' => get_class($obj),
+            'collectPropertyValues' => true,
+            'debug' => $this->abstracter->ABSTRACTION,
             'implements' => $reflector->getInterfaceNames(),
-            'properties' => array(),
             'phpDoc' => $this->phpDoc->getParsed($reflector),
+            'properties' => array(),
+            'type' => 'object',
             'values' => array(),        // this is unique to getAbstractionTable
                                         //  will be populated if traversable
-        );
+        ));
         if (is_object($obj) && $obj instanceof \Traversable) {
+            $values = array();
             foreach ($obj as $k => $v) {
-                $return['values'][$k] = $v;
+                $values[$k] = $v;
             }
+            $abs['values'] = $values;
         } elseif (is_object($obj)) {
-            $return['properties'] = $this->getProperties($obj, $hist);
+            $abs['properties'] = $this->getProperties($abs, $hist);
         }
-        return $return;
+        unset($abs['collectPropertyValues']);
+        return $abs->getValues();
     }
 
     /**
-     * Returns array of objects methods
+     * Get object's constants
      *
-     * @param object $obj object
+     * @param \ReflectionObject $reflector reflectionObject instance
      *
      * @return array
      */
-    public function getMethods($obj)
+    public function getConstants(\ReflectionObject $reflector)
     {
+        if (!$this->abstracter->getCfg('collectConstants')) {
+            return array();
+        }
+        $constants = $reflector->getConstants();
+        while ($reflector = $reflector->getParentClass()) {
+            $constants = array_merge($reflector->getConstants(), $constants);
+        }
+        if ($this->abstracter->getCfg('objectSort') == 'name') {
+            ksort($constants);
+        }
+        return $constants;
+    }
+
+    /**
+     * Returns array of object's methods
+     *
+     * @param Event $abs Abstraction event object
+     *
+     * @return array
+     */
+    public function getMethods($abs)
+    {
+        $obj = $abs->getSubject();
         $methodArray = array();
         $reflectionObject = new \ReflectionObject($obj);
         $className = $reflectionObject->getName();
@@ -173,7 +215,7 @@ class AbstractObject
             // getDeclaringClass() returns LAST-declared/overridden
             $declaringClassName = $reflectionMethod->getDeclaringClass()->getName();
             $info = array(
-                'visibility' => $vis,
+                'implements' => null,
                 'inheritedFrom' => $declaringClassName != $className
                     ? $declaringClassName
                     : null,
@@ -182,8 +224,8 @@ class AbstractObject
                 'isFinal' => $reflectionMethod->isFinal(),
                 'isStatic' => $reflectionMethod->isStatic(),
                 'params' => $this->getParams($reflectionMethod, $phpDoc),
-                'implements' => null,
                 'phpDoc' => $phpDoc,
+                'visibility' => $vis,
             );
             if ($info['visibility'] === 'private' && $info['inheritedFrom']) {
                 /*
@@ -203,8 +245,127 @@ class AbstractObject
             }
             $methodArray[$methodName] = $info;
         }
-        $this->sort($methodArray);
         return $methodArray;
+    }
+
+    /**
+     * Returns array of objects properties
+     *
+     * @param Event $abs  Abstraction event object
+     * @param array $hist (@internal) object history
+     *
+     * @return array
+     */
+    public function getProperties(Event $abs, &$hist = array())
+    {
+        $obj = $abs->getSubject();
+        $hist[] = $obj;
+        $propArray = array();
+        $reflectionObject = new \ReflectionObject($obj);
+        $useDebugInfo = $reflectionObject->hasMethod('__debugInfo') && $this->abstracter->getCfg('useDebugInfo');
+        $debugInfo = $useDebugInfo
+            ? call_user_func(array($obj, '__debugInfo'))
+            : array();
+        /*
+            We trace our ancestory to learn where properties are inherited from
+        */
+        $isAncestor = false;
+        while ($reflectionObject) {
+            $className = $reflectionObject->getName();
+            $properties = $reflectionObject->getProperties();
+            $objNamespace = substr($className, 0, strrpos($className, '\\'));
+            $isDebugObj = $objNamespace == __NAMESPACE__;
+            while ($properties) {
+                $reflectionProperty = array_shift($properties);
+                $name = $reflectionProperty->getName();
+                if (isset($propArray[$name])) {
+                    // already have info... we're in an ancestor
+                    $propArray[$name]['overrides'] = $this->propOverrides(
+                        $reflectionProperty,
+                        $propArray[$name],
+                        $className
+                    );
+                    $propArray[$name]['originallyDeclared'] = $className;
+                    continue;
+                } elseif (!($isAncestor && $reflectionProperty->isPrivate())) {
+                    // always collect ancestor private props!
+                    if ($useDebugInfo && !array_key_exists($name, $debugInfo)) {
+                        // this prop isn't returned by __debugInfo, so skip it
+                        continue;
+                    } elseif ($isDebugObj && in_array($name, array('data','debug','instance'))) {
+                        continue;
+                    }
+                }
+                $propInfo = $this->getPropInfo($abs, $reflectionProperty);
+                if (array_key_exists($name, $debugInfo)) {
+                    // array_key_exists because debug value could be null
+                    // ancestor privates (almost certainly) won't exist in debugInfo
+                    $debugValue = $debugInfo[$name];
+                    $propInfo['viaDebugInfo'] = $debugValue != $propInfo['value'];
+                    $propInfo['value'] = $debugValue;
+                    unset($debugInfo[$name]);
+                }
+                if ($this->abstracter->needsAbstraction($propInfo['value'])) {
+                    $propInfo['value'] = $this->abstracter->getAbstraction($propInfo['value'], $hist);
+                }
+                $propArray[$name] = $propInfo;
+            }
+            $isAncestor = true;
+            $reflectionObject = $reflectionObject->getParentClass();
+        }
+        /*
+            Any values left in $debugInfo are only defined via __debugInfo
+            $debugInfo now only contains key/value that don't exist as properties
+        */
+        $propArray = array_merge($propArray, $this->getPropertiesDebug($debugInfo, $hist));
+        // $this->sort($propArray);
+        return $propArray;
+    }
+
+    /**
+     * debug.objAbstractStart event subscriber
+     *
+     * @param Event $event event object
+     *
+     * @return void
+     */
+    public function onStart(Event $event)
+    {
+        $obj = $event->getSubject();
+        if ($obj instanceof \mysqli && ($obj->connect_errno || !$obj->stat)) {
+            // avoid "Property access is not allowed yet"
+            $event['collectPropertyValues'] = false;
+        }
+    }
+
+    /**
+     * debug.objAbstractEnd event subscriber
+     *
+     * @param Event $event event object
+     *
+     * @return void
+     */
+    public function onEnd(Event $event)
+    {
+        $obj = $event->getSubject();
+        if ($obj instanceof \DateTimeInterface) {
+            $event['stringified'] = $obj->format(\DateTime::ISO8601);
+        } elseif ($obj instanceof \DOMNodeList) {
+            // for reasons unknown, DOMNodeList's properties are invisible to reflection
+            $event['properties']['length'] = array_merge(static::$basePropInfo, array(
+                'type' => 'integer',
+                'value' => $obj->length,
+            ));
+        } elseif ($obj instanceof \mysqli && !$event['collectPropertyValues']) {
+            $propsAlwaysAvail = array(
+                'client_info','client_version','connect_errno','connect_error','errno','error','stat'
+            );
+            $reflectionObject = new \ReflectionObject($obj);
+            foreach ($propsAlwaysAvail as $name) {
+                $reflectionProperty = $reflectionObject->getProperty($name);
+                $event['properties'][$name]['value'] = $reflectionProperty->getValue($obj);
+            }
+        }
     }
 
     /**
@@ -215,7 +376,7 @@ class AbstractObject
      *
      * @return array
      */
-    public function getParams(\ReflectionMethod $reflectionMethod, $phpDoc = array())
+    protected function getParams(\ReflectionMethod $reflectionMethod, $phpDoc = array())
     {
         $paramArray = array();
         $params = $reflectionMethod->getParameters();
@@ -235,17 +396,17 @@ class AbstractObject
                 $name = '&'.$name;
             }
             $paramArray[$reflectionParameter->getName()] = array(
-                'name' => $name,
-                'optional' => $reflectionParameter->isOptional(),
                 'defaultValue' =>  $hasDefaultValue
                     ? $reflectionParameter->getDefaultValue()
                     : $this->abstracter->UNDEFINED,
+                'desc' => null,
+                'name' => $name,
+                'optional' => $reflectionParameter->isOptional(),
                 /*
                     Try to get param type from reflectionParameter
                     If unsuccessfull, the, type specified in phpDoc will end up getting used
                 */
                 'type' => $this->getParamTypeHint($reflectionParameter),
-                'desc' => null,
             );
         }
         $paramKeys = array_keys($paramArray);
@@ -272,7 +433,7 @@ class AbstractObject
      *
      * @return string|null
      */
-    public function getParamTypeHint(\ReflectionParameter $reflectionParameter)
+    protected function getParamTypeHint(\ReflectionParameter $reflectionParameter)
     {
         $return = null;
         if ($reflectionParameter->isArray()) {
@@ -284,105 +445,40 @@ class AbstractObject
     }
 
     /**
-     * Returns array of objects properties
+     * Returns array of propInfo for debugInfo values
      *
-     * @param object $obj  object
-     * @param array  $hist (@internal) object history
+     * @param array $debugInfo key/values as returned by __debugInfo()
+     * @param array $hist      {@internal}
      *
      * @return array
      */
-    public function getProperties($obj, &$hist = array())
+    protected function getPropertiesDebug($debugInfo, $hist = array())
     {
-        $hist[] = $obj;
         $propArray = array();
-        $reflectionObject = new \ReflectionObject($obj);
-        $useDebugInfo = $reflectionObject->hasMethod('__debugInfo') && $this->abstracter->getCfg('useDebugInfo');
-        $debugInfo = $useDebugInfo
-            ? call_user_func(array($obj, '__debugInfo'))
-            : array();
-        if ($obj instanceof \DOMNodeList) {
-            // for reasons unknown, DOMNodeList's properties are invisible to reflection
-            $propArray['length'] = array_merge(static::$basePropInfo, array(
-                'type' => 'integer',
-                'value' => $obj->length,
-            ));
-        }
-        /*
-            We trace our ancestory to learn where properties are inherited from
-        */
-        $isAncestor = false;
-        while ($reflectionObject) {
-            $className = $reflectionObject->getName();
-            $properties = $reflectionObject->getProperties();
-            $objNamespace = substr($className, 0, strrpos($className, '\\'));
-            $isDebugObj = $objNamespace == __NAMESPACE__;
-            while ($properties) {
-                $reflectionProperty = array_shift($properties);
-                $name = $reflectionProperty->getName();
-                if (isset($propArray[$name])) {
-                    // already have info... we're in an ancestor
-                    if (empty($propArray[$name]['overrides'])
-                        && empty($propArray[$name]['inheritedFrom'])
-                        && $reflectionProperty->getDeclaringClass()->getName() == $className
-                    ) {
-                        $propArray[$name]['overrides'] = $className;
-                    }
-                    $propArray[$name]['originallyDeclared'] = $className;
-                    continue;
-                } elseif ($useDebugInfo && !array_key_exists($name, $debugInfo)) {
-                    // useDebugInfo option && obj has __debugInfo() method && this prop isn't returned by __debugInfo()
-                    // we'll still grab private ancestors
-                    if (!($isAncestor && $reflectionProperty->isPrivate())) {
-                        continue;
-                    }
-                } elseif ($isDebugObj && in_array($name, array('data','debug','instance'))) {
-                    continue;
-                }
-                $propInfo = $this->getPropInfo($obj, $reflectionProperty);
-                if ($useDebugInfo && array_key_exists($name, $debugInfo)) {
-                    // ancestor privates won't exist in debugInfo
-                    $debugValue = $debugInfo[$name];
-                    $propInfo['viaDebugInfo'] = $debugValue != $propInfo['value'];
-                    $propInfo['value'] = $debugValue;
-                    unset($debugInfo[$name]);
-                }
-                if ($this->abstracter->needsAbstraction($propInfo['value'])) {
-                    $propInfo['value'] = $this->abstracter->getAbstraction($propInfo['value'], $hist);
-                }
-                $propArray[$name] = $propInfo;
-            }
-            $isAncestor = true;
-            $reflectionObject = $reflectionObject->getParentClass();
-        }
-        /*
-            Any values left in $debugInfo are only defined via __debugInfo
-        */
         foreach ($debugInfo as $name => $value) {
-            if ($this->abstracter->needsAbstraction($value)) {
-                $value = $this->abstracter->getAbstraction($value, $hist);
-            }
             $propArray[$name] = array_merge(static::$basePropInfo, array(
-                'visibility' => 'debug',
-                'value' => $value,
+                'value' => $this->abstracter->needsAbstraction($value)
+                    ? $this->abstracter->getAbstraction($value, $hist)
+                    : $value,
                 'viaDebugInfo' => true,
+                'visibility' => 'debug',
             ));
         }
-        $this->sort($propArray);
         return $propArray;
     }
 
     /**
      * Get property info
      *
-     * @param object              $obj                object
+     * @param Event               $abs                Abstraction event object
      * @param \ReflectionProperty $reflectionProperty reflection property
      *
      * @return array
      */
-    protected function getPropInfo($obj, \ReflectionProperty $reflectionProperty)
+    protected function getPropInfo(Event $abs, \ReflectionProperty $reflectionProperty)
     {
+        $obj = $abs->getSubject();
         $reflectionProperty->setAccessible(true); // only accessible via reflection
-        $name = $reflectionProperty->name;
         $className = get_class($obj); // prop->class is equiv to getDeclaringClass
         // get type and comment from phpdoc
         $commentInfo = $this->getPropCommentInfo($reflectionProperty);
@@ -391,28 +487,21 @@ class AbstractObject
         */
         $declaringClassName = $reflectionProperty->getDeclaringClass()->getName();
         $propInfo = array_merge(static::$basePropInfo, array(
-            'isStatic' => $reflectionProperty->isStatic(),
-            'type' => $commentInfo['type'],
             'desc' => $commentInfo['desc'],
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName
                 : null,
+            'isStatic' => $reflectionProperty->isStatic(),
+            'type' => $commentInfo['type'],
         ));
         if ($reflectionProperty->isPrivate()) {
             $propInfo['visibility'] = 'private';
         } elseif ($reflectionProperty->isProtected()) {
             $propInfo['visibility'] = 'protected';
         }
-        if ($className == 'mysqli' && $obj->connect_errno) {
-            // avoid "Property access is not allowed yet"
-            $propsAlwaysAvail = array('client_info','client_version','connect_errno','connect_error','errno','error','stat');
-            $value = in_array($name, $propsAlwaysAvail)
-                ? $reflectionProperty->getValue($obj)
-                : null;
-        } else {
-            $value = $reflectionProperty->getValue($obj);
+        if ($abs['collectPropertyValues']) {
+            $propInfo['value'] = $reflectionProperty->getValue($obj);
         }
-        $propInfo['value'] = $value;
         return $propInfo;
     }
 
@@ -486,6 +575,26 @@ class AbstractObject
                 : null;
         }
         return $className;
+    }
+
+    /**
+     * determine propInfo['overrides'] value
+     *
+     * @param \ReflectionProperty $reflectionProperty Reflection Property
+     * @param array               $propInfo           Property Info
+     * @param string              $className          classname of object being inspected
+     *
+     * @return string|null
+     */
+    protected function propOverrides(\ReflectionProperty $reflectionProperty, $propInfo, $className)
+    {
+        if (empty($propInfo['overrides'])
+            && empty($propInfo['inheritedFrom'])
+            && $reflectionProperty->getDeclaringClass()->getName() == $className
+        ) {
+            return $className;
+        }
+        return null;
     }
 
     /**

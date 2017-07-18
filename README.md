@@ -14,6 +14,10 @@ Browser/javascript like console class for PHP
     * &lt;script&gt;
     * "plugin"
 * custom error handler
+	* errors (even fatal) are captured / logged / displayed
+	* send error notices via email (throttled as to not to send out a flood of emails)
+* password protected
+* send debug log via email
 
 ![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/bradkent.com/php/screenshot_1.3.png)
 

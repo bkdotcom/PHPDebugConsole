@@ -22,9 +22,9 @@ class AbstractArray
     /**
      * Constructor
      *
-     * @param object $abstracter abstracter obj
+     * @param Abstracter $abstracter abstracter obj
      */
-    public function __construct($abstracter)
+    public function __construct(Abstracter $abstracter)
     {
         $this->abstracter = $abstracter;
     }

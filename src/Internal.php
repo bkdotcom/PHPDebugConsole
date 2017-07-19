@@ -34,7 +34,7 @@ class Internal
     {
         $this->debug = $debug;
         $this->data = $data;
-        $this->debug->eventManager->subscribe('debug.construct', array($this, 'onConstruct'));
+        $this->debug->eventManager->subscribe('debug.construct', array($this, 'onConstruct'), -1);
         $this->debug->eventManager->subscribe('debug.output', array($this, 'onOutput'));
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
         register_shutdown_function(array($this, 'onShutdown'));

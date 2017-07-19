@@ -34,10 +34,10 @@ class AbstractObject
     /**
      * Constructor
      *
-     * @param object $abstracter abstracter obj
-     * @param objedt $phpDoc     phpDoc obj
+     * @param Abstracter $abstracter abstracter obj
+     * @param PhpDoc     $phpDoc     phpDoc obj
      */
-    public function __construct($abstracter, $phpDoc)
+    public function __construct(Abstracter $abstracter, PhpDoc $phpDoc)
     {
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
@@ -187,7 +187,7 @@ class AbstractObject
      *
      * @return array
      */
-    public function getMethods($abs)
+    public function getMethods(Event $abs)
     {
         $obj = $abs->getSubject();
         $methodArray = array();
@@ -318,7 +318,6 @@ class AbstractObject
             $debugInfo now only contains key/value that don't exist as properties
         */
         $propArray = array_merge($propArray, $this->getPropertiesDebug($debugInfo, $hist));
-        // $this->sort($propArray);
         return $propArray;
     }
 

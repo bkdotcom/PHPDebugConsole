@@ -19,7 +19,7 @@ Browser/javascript like console class for PHP
 * password protected
 * send debug log via email
 
-![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/bradkent.com/php/screenshot_1.3.png)
+![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/bradkent.com/php/screenshot_1.4.png)
 
 ### Installation
 This library requires PHP 5.4 (function array dereferencing, closure $this support) or later and has no userland dependencies.

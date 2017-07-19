@@ -206,11 +206,6 @@ class OutputText extends OutputBase
                 'private' => 0,
             );
             foreach ($methods as $info) {
-                /*
-                if ($meta['accessible'] == 'public' && $info['visibility'] !== 'public') {
-                    continue;
-                }
-                */
                 $counts[ $info['visibility'] ] ++;
             }
             $str .= '  Methods:'."\n";
@@ -219,13 +214,6 @@ class OutputText extends OutputBase
                     $str .= '    '.$vis.': '.$count."\n";
                 }
             }
-            /*
-            if ($meta['accessible'] == 'public') {
-                $str .= '  '.$methodCount.' Public Methods (not listed)'."\n";
-            } else {
-                $str .= '  '.$methodCount.' Methods (not listed)'."\n";
-            }
-            */
         } else {
             $str .= '  Methods: none!'."\n";
         }

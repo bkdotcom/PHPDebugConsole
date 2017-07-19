@@ -412,7 +412,6 @@ class OutputHtml extends OutputBase
         $accessible = $abs['scopeClass'] == $abs['className']
             ? 'private'
             : 'public';
-        // $html = '<span class="t_object" data-accessible="'.$accessible.'">'."\n".$html.'</span>';
         $this->wrapAttribs['data-accessible'] = $accessible;
         $html = str_replace(' title=""', '', $html);
         return $html;

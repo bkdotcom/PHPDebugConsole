@@ -290,4 +290,49 @@ class OutputBase implements PluginInterface
         }
         return $table;
     }
+
+    /**
+     * Process alerts
+     *
+     * @param array $alerts alerts data
+     *
+     * @return string
+     */
+    protected function processAlerts($alerts = array())
+    {
+        $str = '';
+        $trans = array(
+            'danger' => 'error',
+            'success' => 'info',
+            'warning' => 'warn',
+        );
+        foreach ($alerts as $alert) {
+            $msg = str_replace('<br />', ", \n", $alert['message']);
+            $method = $alert['class'];
+            if (isset($trans[$method])) {
+                $method = $trans[$method];
+            }
+            $str .= $this->processEntry($method, array($msg));
+        }
+        return trim($str);
+    }
+
+    /**
+     * Process summary
+     *
+     * @param array $summaryData summary data
+     *
+     * @return string
+     */
+    protected function processSummary($summaryData)
+    {
+        $str = '';
+        krsort($summaryData);
+        $summaryData = call_user_func_array('array_merge', $summaryData);
+        foreach ($summaryData as $args) {
+            $method = array_shift($args);
+            $str .= $this->processEntry($method, $args);
+        }
+        return trim($str);
+    }
 }

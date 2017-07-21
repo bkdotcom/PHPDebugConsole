@@ -29,7 +29,6 @@ class OutputScript extends OutputBase
     {
         $data = $this->debug->getData();
         $this->debug->internal->uncollapseErrors();
-        $label = 'PHP';
         $errorStats = $this->debug->output->errorStats();
         if ($errorStats['inConsole']) {
             $label .= ' - Errors (';
@@ -39,14 +38,17 @@ class OutputScript extends OutputBase
             $label = substr($label, 0, -2);
             $label .= ')';
         }
-        $str = '<script type="text/javascript">'."\n";
-        $str .= 'console.groupCollapsed("'.$label.'");'."\n";
+        $str = '';
+        $str .= '<script type="text/javascript">'."\n";
+        $str .= 'console.groupCollapsed("PHP", "'.$_SERVER['REQUEST_URI'].'");'."\n";
+        $str .= $this->processAlerts($data['alerts']);
+        $str .= $this->processSummary($data['logSummary']);
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
             $str .= $this->processEntry($method, $args)."\n";
         }
-        $str .= 'console.groupEnd();';
-        $str .= '</script>';
+        $str .= 'console.groupEnd();'."\n";
+        $str .= '</script>'."\n";
         if ($event) {
             $event['output'] .= $str;
         } else {
@@ -71,7 +73,7 @@ class OutputScript extends OutputBase
         } elseif ($method == 'table') {
             $args = array($this->methodTable($args[0]));
         } elseif (in_array($method, array('error','warn'))) {
-            $meta = $this->debug->output->getMetaArg($args);
+            $meta = $this->debug->internal->getMetaArg($args);
             if (isset($meta['file'])) {
                 $args[] = $meta['file'].': line '.$meta['line'];
             }
@@ -79,7 +81,7 @@ class OutputScript extends OutputBase
         foreach ($args as $k => $arg) {
             $args[$k] = json_encode($this->dump($arg));
         }
-        $str = 'console.'.$method.'('.implode(',', $args).");\n";
+        $str = 'console.'.$method.'('.implode(',', $args).');';
         $str = str_replace(json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
         return $str;
     }

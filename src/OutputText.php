@@ -19,6 +19,8 @@ use bdk\Debug\Utf8;
 class OutputText extends OutputBase
 {
 
+    protected $depth = 0;   // for keeping track of indentation
+
     /**
      * Output the log as text
      *
@@ -30,15 +32,11 @@ class OutputText extends OutputBase
     {
         $data = $this->debug->getData();
         $str = '';
-        $depth = 0;
+        $str .= $this->processAlerts($data['alerts']);
+        $str .= $this->processSummary();
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
-            $str .= $this->processEntry($method, $args, $depth)."\n";
-            if (in_array($method, array('group','groupCollapsed'))) {
-                $depth ++;
-            } elseif ($method == 'groupEnd' && $depth > 0) {
-                $depth --;
-            }
+            $str .= $this->processEntry($method, $args)."\n";
         }
         if ($event) {
             $event['output'] .= $str;
@@ -50,13 +48,12 @@ class OutputText extends OutputBase
     /**
      * Return log entry as text
      *
-     * @param string  $method method
-     * @param array   $args   arguments
-     * @param integer $depth  group depth (for indentation)
+     * @param string $method method
+     * @param array  $args   arguments
      *
      * @return string
      */
-    public function processEntry($method, $args = array(), $depth = 0)
+    public function processEntry($method, $args = array())
     {
         if ($method == 'table' && count($args) == 2) {
             $caption = array_pop($args);
@@ -77,9 +74,14 @@ class OutputText extends OutputBase
                 ? ''
                 : ' = ';
         }
-        $strIndent = str_repeat('    ', $depth);
+        $strIndent = str_repeat('    ', $this->depth);
         $str = implode($glue, $args);
         $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
+        if (in_array($method, array('group','groupCollapsed'))) {
+            $this->depth ++;
+        } elseif ($method == 'groupEnd' && $this->depth > 0) {
+            $this->depth --;
+        }
         return $str;
     }
 

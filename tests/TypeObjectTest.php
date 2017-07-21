@@ -165,7 +165,6 @@ EOD;
             ),
             $abs['constants']
         );
-        $this->stdout('phpdoc', $abs['phpDoc']);
         $this->assertArraySubset(
             array(
                 'summary' => 'Test',

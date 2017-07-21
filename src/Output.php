@@ -11,8 +11,6 @@
 
 namespace bdk\Debug;
 
-use \bdk\Debug;
-
 /**
  * General Output methods
  */
@@ -194,24 +192,6 @@ class Output
             $return .=  "\n".$this->cfg['css']."\n";
         }
         return $return;
-    }
-
-    /**
-     * Returns meta-data and removes it from the passed arguments
-     *
-     * @param array $args args to check
-     *
-     * @return array meta information
-     */
-    public static function getMetaArg(&$args)
-    {
-        $end = end($args);
-        if (is_array($end) && ($key = array_search(Debug::META, $end, true)) !== false) {
-            array_pop($args);
-            unset($end[$key]);
-            return $end;
-        }
-        return array();
     }
 
     /**

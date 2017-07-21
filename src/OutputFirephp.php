@@ -35,7 +35,7 @@ class OutputFirephp extends OutputBase
     /**
      * Output the log via FirePHP headers
      *
-     * @param Event $event debug.log event object
+     * @param Event $event debug.output event object
      *
      * @return void
      */
@@ -51,6 +51,7 @@ class OutputFirephp extends OutputBase
         $this->setHeader('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
         $this->setHeader('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
         $this->processAlerts($data['alerts']);
+        $this->processSummary($data['logSummary']);
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
             $this->processEntry($method, $args);
@@ -96,30 +97,6 @@ class OutputFirephp extends OutputBase
     }
 
     /**
-     * Process alerts
-     *
-     * @param array $alerts alerts data
-     *
-     * @return void
-     */
-    protected function processAlerts($alerts = array())
-    {
-        $trans = array(
-            'danger' => 'error',
-            'success' => 'info',
-            'warning' => 'warn',
-        );
-        foreach ($alerts as $alert) {
-            $str = str_replace('<br />', ", \n", $alert['message']);
-            $method = $alert['class'];
-            if (isset($trans[$method])) {
-                $method = $trans[$method];
-            }
-            $this->processEntry($method, array($str));
-        }
-    }
-
-    /**
      * output a log entry to Firephp
      *
      * @param string $method method
@@ -140,7 +117,7 @@ class OutputFirephp extends OutputBase
         );
         $value = null;
         if (in_array($method, array('error','warn'))) {
-            $argsMeta = $this->debug->output->getMetaArg($args);
+            $argsMeta = $this->debug->internal->getMetaArg($args);
             if (isset($argsMeta['file'])) {
                 $meta['File'] = $argsMeta['file'];
                 $meta['Line'] = $argsMeta['line'];

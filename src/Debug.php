@@ -26,9 +26,9 @@ class Debug
     private static $publicMethods = array();
     protected $cfg = array();
     protected $data = array();
-    protected $groupDepthRef;
-    protected $logRef;
-    protected $config;      // config class
+    protected $groupDepthRef;   // points to groupDepth or groupDepthSummary
+    protected $logRef;          // points to either log or logSummary
+    protected $config;          // config class
     public $abstracter;
     public $errorHandler;
     public $internal;
@@ -119,7 +119,7 @@ class Debug
         $this->abstracter = new Debug\Abstracter($this->eventManager);
         $this->config = new Debug\Config($this, $this->cfg);
         $this->errorEmailer = new Debug\ErrorEmailer();
-        $this->internal = new Debug\Internal($this, $this->data);
+        $this->internal = new Debug\Internal($this, $this->cfg, $this->data);
         $this->output = new Debug\Output($this);
         $this->utf8 = new Debug\Utf8();
         $this->config->setCfg($cfg);
@@ -166,7 +166,7 @@ class Debug
     public function alert($message, $class = 'danger', $dismissible = false)
     {
         if ($this->cfg['collect']) {
-            $this->appendLog('alert', array(
+            $this->appendLog('alert', array(), array(
                 'message' => $message,
                 'class' => $class,
                 'dismissible' => $dismissible,
@@ -187,7 +187,7 @@ class Debug
             $args = func_get_args();
             $test = array_shift($args);
             if (!$test) {
-                $this->appendLog('assert', $args);
+                $this->appendLog('assert', array(), $args);
             }
         }
     }
@@ -220,7 +220,7 @@ class Debug
                 $this->data['counts'][$label]++;
             }
             $args[] = $this->data['counts'][$label];
-            $this->appendLog('count', $args);
+            $this->appendLog('count', array(), $args);
             $return = $this->data['counts'][$label];
         }
         return $return;
@@ -236,8 +236,9 @@ class Debug
     public function error()
     {
         if ($this->cfg['collect']) {
+            $meta = $this->internal->getErrorCaller();
             $args = func_get_args();
-            $this->appendLog('error', $args);
+            $this->appendLog('error', $meta, $args);
         }
     }
 
@@ -255,7 +256,7 @@ class Debug
                 // give a default label
                 $args[] = 'group';
             }
-            $this->appendLog('group', $args);
+            $this->appendLog('group', array(), $args);
         }
     }
 
@@ -273,7 +274,7 @@ class Debug
                 // give a default label
                 $args[] = 'group';
             }
-            $this->appendLog('groupCollapsed', $args);
+            $this->appendLog('groupCollapsed', array(), $args);
         }
     }
 
@@ -284,11 +285,18 @@ class Debug
      */
     public function groupEnd()
     {
-        $closingSummary = false;
+        $closesSummary = false;
+        $args = func_get_args();
+        $meta = array();
         if ($this->data['groupDepthSummary'] > 0) {
             // currently in summaryGroup
             $this->data['groupDepthSummary']--;
-            $closingSummary = $this->data['groupDepthSummary'] == 0;
+            $closesSummary = $this->data['groupDepthSummary'] == 0;
+            if ($closesSummary) {
+                $meta = array(
+                    'closesSummary' => true,
+                );
+            }
         } elseif ($this->data['groupDepth'] > 0) {
             $this->data['groupDepth']--;
         }
@@ -297,9 +305,9 @@ class Debug
             $this->errorHandler->setErrorCaller(null);
         }
         if ($this->cfg['collect']) {
-            $this->appendLog('groupEnd', func_get_args());
+            $this->appendLog('groupEnd', $meta, $args);
         }
-        if ($closingSummary) {
+        if ($closesSummary) {
             $this->logRef = &$this->data['log'];
             $this->groupDepthRef = &$this->data['groupDepth'];
             $this->cfg['collect'] = json_decode(str_replace('summary:', '', $this->cfg['collect']), true);
@@ -330,7 +338,7 @@ class Debug
         }
         $this->logRef = &$this->data['logSummary'][$priority];
         $this->groupDepthRef = &$this->data['groupDepthSummary'];
-        $this->appendLog('groupSummary', array($priority));
+        $this->appendLog('groupSummary', array(), array($priority));
     }
 
     /**
@@ -360,7 +368,7 @@ class Debug
                 $curDepth++;
             }
         }
-        $this->appendLog('groupUncollapse', array());   // want to dispath event, but not actually log
+        $this->appendLog('groupUncollapse', array(), array());   // want to dispath event, but not actually log
     }
 
     /**
@@ -372,7 +380,7 @@ class Debug
     {
         if ($this->cfg['collect']) {
             $args = func_get_args();
-            $this->appendLog('info', $args);
+            $this->appendLog('info', array(), $args);
         }
     }
 
@@ -385,7 +393,7 @@ class Debug
     {
         if ($this->cfg['collect']) {
             $args = func_get_args();
-            $this->appendLog('log', $args);
+            $this->appendLog('log', array(), $args);
         }
     }
 
@@ -425,7 +433,7 @@ class Debug
                     $args[] = array_shift($args);
                 }
             }
-            $this->appendLog($method, array_values($args));
+            $this->appendLog($method, array(), array_values($args));
         }
     }
 
@@ -542,8 +550,9 @@ class Debug
     public function warn()
     {
         if ($this->cfg['collect']) {
+            $meta = $this->internal->getErrorCaller();
             $args = func_get_args();
-            $this->appendLog('warn', $args);
+            $this->appendLog('warn', $meta, $args);
         }
     }
 
@@ -766,11 +775,12 @@ class Debug
      * will be output when output method is called
      *
      * @param string $method error, info, log, warn
+     * @param array  $meta   meta data
      * @param array  $args   arguments passed to method
      *
      * @return void
      */
-    protected function appendLog($method, $args)
+    protected function appendLog($method, $meta, $args)
     {
         foreach ($args as $i => $v) {
             if ($this->abstracter->needsAbstraction($v)) {
@@ -781,13 +791,6 @@ class Debug
                     $args[$i] = $this->abstracter->getAbstraction($v);
                 }
             }
-        }
-        /*
-            if logging an error or warn, also log originating file/line
-        */
-        $meta = array();
-        if (in_array($method, array('error','warn'))) {
-            $meta = $this->internal->getErrorCaller();
         }
         $event = $this->eventManager->publish(
             'debug.log',
@@ -801,74 +804,17 @@ class Debug
         if ($event->isPropagationStopped()) {
             return;
         }
-        if ($method == 'groupUncollapse') {
-            // don't log this method (we just needed to publish event)
-            return;
-        }
-        array_unshift($args, $method);
-        if ($meta) {
-            $args[] = $meta;
-        }
         if ($method == 'alert') {
-            $this->data['alerts'][] = array_slice($args, 1);
+            $this->data['alerts'][] = $args;
         } else {
+            array_unshift($args, $method);
+            if ($meta) {
+                $meta['debug'] = \bdk\Debug::META;
+                $args[] = $meta;
+            }
             $this->logRef[] = $args;
         }
-        if ($this->cfg['file']) {
-            $this->appendLogFile($args);
-        }
         return;
-    }
-
-    /**
-     * Appends log entry to $this->cfg['file']
-     *
-     * @param array $args args
-     *
-     * @return boolean
-     */
-    protected function appendLogFile($args)
-    {
-        $success = false;
-        $method = array_shift($args);
-        $fileHandle = $this->getFileHandle();
-        if ($fileHandle) {
-            $success = true;
-            if ($args) {
-                $str = $this->output->outputText->processEntry($method, $args, $this->data['groupDepthFile']);
-                $wrote = fwrite($fileHandle, $str."\n");
-                $success = $wrote !== false;
-            }
-            if (in_array($method, array('group','groupCollapsed'))) {
-                $this->data['groupDepthFile']++;
-            } elseif ($method == 'groupEnd' && $this->data['groupDepthFile'] > 0) {
-                $this->data['groupDepthFile']--;
-            }
-        }
-        return $success;
-    }
-
-    /**
-     * Get logfile's file handle
-     *
-     * @return resource
-     */
-    private function getFileHandle()
-    {
-        if (!isset($this->data['fileHandle']) && !empty($this->cfg['file'])) {
-            $fileExists = file_exists($this->cfg['file']);
-            $this->data['fileHandle'] = fopen($this->cfg['file'], 'a');
-            if ($this->data['fileHandle']) {
-                fwrite($this->data['fileHandle'], '***** '.date('Y-m-d H:i:s').' *****'."\n");
-                if (!$fileExists) {
-                    chmod($this->cfg['file'], 0660);
-                }
-            } else {
-                // failed to open file
-                $this->setCfg('file', null);
-            }
-        }
-        return $this->data['fileHandle'];
     }
 
     /**
@@ -899,13 +845,13 @@ class Debug
     {
         if (!is_string($returnOrTemplate)) {
             if (!$returnOrTemplate) {
-                $this->appendLog('time', array($label.': '.$seconds.' sec'));
+                $this->appendLog('time', array(), array($label.': '.$seconds.' sec'));
             }
         } else {
             $str = $returnOrTemplate;
             $str = str_replace('%label', $label, $str);
             $str = str_replace('%time', $seconds, $str);
-            $this->appendLog('time', array($str));
+            $this->appendLog('time', array(), array($str));
         }
     }
 }

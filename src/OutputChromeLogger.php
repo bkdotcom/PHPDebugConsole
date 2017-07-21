@@ -43,6 +43,10 @@ class OutputChromeLogger extends OutputBase
     public function onOutput(Event $event)
     {
         $data = $this->debug->getData();
+
+        $this->processAlerts($data['alerts']);
+        $this->processSummary($data['logSummary']);
+
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
             $this->processEntry($method, $args);
@@ -83,7 +87,7 @@ class OutputChromeLogger extends OutputBase
     {
         $metaStr = null;
         if (in_array($method, array('error','warn'))) {
-            $meta = $this->debug->output->getMetaArg($args);
+            $meta = $this->debug->internal->getMetaArg($args);
             if (isset($meta['file'])) {
                 $metaStr = $meta['file'].': '.$meta['line'];
             }

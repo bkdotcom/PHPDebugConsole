@@ -16,25 +16,35 @@ namespace bdk\Debug;
 
 /**
  * Methods that are internal to the debug class
+ *
+ * a) Don't want to clutter the debug class
+ * b) avoiding a base class as would need to require the base or have
+ *       and autoloader in place to bootstrap the debug class
+ * c) a trait for code not meant to be "reusable" seems like an anti-pattern
+ *       still have the bootstrap/autoload issue
  */
 class Internal
 {
 
-    private $debug;
+    private $cfg;
     private $data;
+    private $debug;
     private $error;     // store error object when logging an error
 
     /**
      * Constructor
      *
      * @param object $debug debug instance
+     * @param array  $cfg   config
      * @param array  $data  data
      */
-    public function __construct($debug, &$data = array())
+    public function __construct($debug, &$cfg, &$data)
     {
-        $this->debug = $debug;
+        $this->cfg = $cfg;
         $this->data = $data;
+        $this->debug = $debug;
         $this->debug->eventManager->subscribe('debug.construct', array($this, 'onConstruct'), -1);
+        $this->debug->eventManager->subscribe('debug.log', array($this, 'onLog'), -1);
         $this->debug->eventManager->subscribe('debug.output', array($this, 'onOutput'));
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
         register_shutdown_function(array($this, 'onShutdown'));
@@ -51,7 +61,6 @@ class Internal
         if ($this->error) {
             // no need to store originating file/line... it's part of error message
             $meta = array(
-                'debug' => \bdk\Debug::META,
                 'errorType' => $this->error['type'],
                 'errorCat' => $this->error['category'],
             );
@@ -65,7 +74,6 @@ class Internal
                 }
                 if (isset($frame['file']) && strpos($frame['file'], __DIR__) !== 0) {
                     $meta = array(
-                        'debug' => \bdk\Debug::META,
                         'file' => $frame['file'],
                         'line' => $frame['line'],
                     );
@@ -77,17 +85,30 @@ class Internal
     }
 
     /**
+     * Returns meta-data and removes it from the passed arguments
+     *
+     * @param array $args args to check
+     *
+     * @return array meta information
+     */
+    public static function getMetaArg(&$args)
+    {
+        $end = end($args);
+        if (is_array($end) && ($key = array_search(\bdk\Debug::META, $end, true)) !== false) {
+            array_pop($args);
+            unset($end[$key]);
+            return $end;
+        }
+        return array();
+    }
+
+    /**
      * Do we have log entries?
      *
      * @return boolean
      */
     public function haveLog()
     {
-        /*
-        $toggledOnOff = $this->debug->getData('collectToggleCount') == 2 && !$this->debug->getCfg('collect');
-        $haveLog = !empty($this->debug->getData('log')) && !$toggledOnOff;
-        return $have$log
-        */
         $entryCountInitial = $this->debug->getData('entryCountInitial');
         $entryCountCurrent = $this->debug->getData('entryCount');
         return $entryCountCurrent > $entryCountInitial;
@@ -159,6 +180,33 @@ class Internal
             $this->error = null;
         } else {
             $error['inConsole'] = false;
+        }
+    }
+
+    /**
+     * errorHandler.error event subscriber
+     * adds error to console as error or warn
+     *
+     * @param Event $event debug.log event
+     *
+     * @return void
+     */
+    public function onLog(Event $event)
+    {
+        $method = $event['method'];
+        $args = $event['args'];
+        $meta = $event['meta'];
+        if ($method == 'groupUncollapse') {
+            // don't append to log
+            $event->stopPropagation();
+            return;
+        }
+        $isSummaryBookend = $method == 'groupSummary' || !empty($meta['closesSummary']);
+        if ($isSummaryBookend) {
+            $event->stopPropagation();
+        }
+        if ($this->cfg['file']) {
+            $this->appendLogFile($method, $meta, $args);
         }
     }
 
@@ -240,5 +288,60 @@ class Internal
                 }
             }
         }
+    }
+
+    /**
+     * Appends log entry to $this->cfg['file']
+     *
+     * @param string $method method
+     * @param array  $meta   meta info
+     * @param array  $args   args
+     *
+     * @return boolean
+     */
+    protected function appendLogFile($method, $meta, $args)
+    {
+        $success = false;
+        $fileHandle = $this->getFileHandle();
+        if ($fileHandle) {
+            $success = true;
+            if ($args) {
+                if ($meta) {
+                    $args[] = $meta;
+                }
+                $str = $this->output->outputText->processEntry($method, $args, $this->data['groupDepthFile']);
+                $wrote = fwrite($fileHandle, $str."\n");
+                $success = $wrote !== false;
+            }
+            if (in_array($method, array('group','groupCollapsed'))) {
+                $this->data['groupDepthFile']++;
+            } elseif ($method == 'groupEnd' && $this->data['groupDepthFile'] > 0) {
+                $this->data['groupDepthFile']--;
+            }
+        }
+        return $success;
+    }
+
+    /**
+     * Get logfile's file handle
+     *
+     * @return resource
+     */
+    private function getFileHandle()
+    {
+        if (!isset($this->data['fileHandle']) && !empty($this->cfg['file'])) {
+            $fileExists = file_exists($this->cfg['file']);
+            $this->data['fileHandle'] = fopen($this->cfg['file'], 'a');
+            if ($this->data['fileHandle']) {
+                fwrite($this->data['fileHandle'], '***** '.date('Y-m-d H:i:s').' *****'."\n");
+                if (!$fileExists) {
+                    chmod($this->cfg['file'], 0660);
+                }
+            } else {
+                // failed to open file
+                $this->cfg['file'] = null;
+            }
+        }
+        return $this->data['fileHandle'];
     }
 }

@@ -48,12 +48,13 @@ class OutputText extends OutputBase
     /**
      * Return log entry as text
      *
-     * @param string $method method
-     * @param array  $args   arguments
+     * @param string  $method method
+     * @param array   $args   arguments
+     * @param integer $depth  specify nested depth (otherwise depth maintained internally)
      *
      * @return string
      */
-    public function processEntry($method, $args = array())
+    public function processEntry($method, $args = array(), $depth = null)
     {
         if ($method == 'table' && count($args) == 2) {
             $caption = array_pop($args);
@@ -74,13 +75,15 @@ class OutputText extends OutputBase
                 ? ''
                 : ' = ';
         }
-        $strIndent = str_repeat('    ', $this->depth);
+        $strIndent = str_repeat('    ', $depth === null ? $this->depth : $depth);
         $str = implode($glue, $args);
         $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
-        if (in_array($method, array('group','groupCollapsed'))) {
-            $this->depth ++;
-        } elseif ($method == 'groupEnd' && $this->depth > 0) {
-            $this->depth --;
+        if ($depth === null) {
+            if (in_array($method, array('group','groupCollapsed'))) {
+                $this->depth ++;
+            } elseif ($method == 'groupEnd' && $this->depth > 0) {
+                $this->depth --;
+            }
         }
         return $str;
     }
@@ -143,16 +146,10 @@ class OutputText extends OutputBase
         } elseif ($abs['isExcluded']) {
             $str = '(object) '.$abs['className'].' (not inspected)';
         } else {
-            $meta = array(
-                'viaDebugInfo'=>$abs['viaDebugInfo'],
-                'accessible' => $abs['scopeClass'] == $abs['className']
-                    ? 'private'
-                    : 'public',
-            );
             $str = '(object) '.$abs['className']."\n";
             $str .= $this->dumpProperties($abs['properties'], $path);
             if ($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')) {
-                $str .= $this->dumpMethods($abs['methods'], $meta);
+                $str .= $this->dumpMethods($abs['methods']);
             }
         }
         $str = trim($str);
@@ -194,11 +191,10 @@ class OutputText extends OutputBase
      * Dump object methods as text
      *
      * @param array $methods methods as returned from getMethods
-     * @param array $meta    meta information (viaDebugInfo & accessible)
      *
      * @return string html
      */
-    protected function dumpMethods($methods, $meta)
+    protected function dumpMethods($methods)
     {
         $str = '';
         if (!empty($methods)) {

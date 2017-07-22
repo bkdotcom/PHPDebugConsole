@@ -136,9 +136,12 @@ class AbstractObject
         $reflector = new \ReflectionObject($obj);
         $abs = new Event($obj, array(
             'className' => get_class($obj),
+            'collectMethods' => false,
             'collectPropertyValues' => true,
             'debug' => $this->abstracter->ABSTRACTION,
             'implements' => $reflector->getInterfaceNames(),
+            'isExcluded' => $hist && in_array(get_class($obj), $this->abstracter->getCfg('objectsExclude')),
+            'isRecursion' => in_array($obj, $hist, true),
             'phpDoc' => $this->phpDoc->getParsed($reflector),
             'properties' => array(),
             'type' => 'object',

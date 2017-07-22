@@ -156,7 +156,7 @@ class ErrorEmailer
             2: errorHandler
             3: where error occured
         */
-        $backtrace = debug_backtrace(null); // no object info
+        $backtrace = debug_backtrace(false); // no object info
         $backtrace = array_slice($backtrace, 3);
         foreach ($backtrace as $k => $frame) {
             if ($frame['file'] == $error['file'] && $frame['line'] == $error['line']) {

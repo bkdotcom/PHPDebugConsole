@@ -36,7 +36,7 @@ class OutputText extends OutputBase
         $str .= $this->processSummary();
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
-            $str .= $this->processEntry($method, $args)."\n";
+            $str .= $this->processEntry($method, $args);
         }
         if ($event) {
             $event['output'] .= $str;
@@ -85,6 +85,7 @@ class OutputText extends OutputBase
                 $this->depth --;
             }
         }
+        $str .= "\n";
         return $str;
     }
 

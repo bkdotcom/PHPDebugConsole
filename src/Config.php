@@ -110,11 +110,15 @@ class Config
                     // don't append, replace
                     $this->cfg['logServerKeys'] = array();
                 }
+                if (isset($v['file'])) {
+                    $this->debug->addPlugin($this->debug->output->outputFile);
+                }
                 $this->cfg =  $this->debug->utilities->arrayMergeDeep($this->cfg, $v);
             } elseif (isset($this->debug->{$k}) && is_object($this->debug->{$k})) {
                 $this->debug->{$k}->setCfg($v);
             }
         }
+        $this->debug->eventManager->publish('debug.config', $this->debug);
         return $return;
 	}
 

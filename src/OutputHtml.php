@@ -148,7 +148,7 @@ class OutputHtml extends OutputBase
         $str .= '<div class="debug-content clearfix" '.($this->debug->getCfg('outputScript') ? 'style="display:none;"' : '').'>'."\n";
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
-            $str .= $this->processEntry($method, $args)."\n";
+            $str .= $this->processEntry($method, $args);
         }
         $str .= '</div>'."\n";  // close debug-content
         $str .= '</div>'."\n";  // close debug
@@ -794,6 +794,7 @@ class OutputHtml extends OutputBase
             $args = implode($glue, $args);
             $str = '<div '.$this->debug->utilities->buildAttribString($attribs).'>'.$args.'</div>';
         }
+        $str .= "\n";
         return $str;
     }
 

@@ -66,7 +66,7 @@ class Internal
             );
         } else {
             $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
-                ? debug_backtrace(0, 8)
+                ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8)
                 : debug_backtrace(false);   // don't provide object
             foreach ($backtrace as $frame) {
                 if (in_array($frame['function'], array('call_user_func','call_user_func_array'))) {
@@ -187,6 +187,8 @@ class Internal
      * errorHandler.error event subscriber
      * adds error to console as error or warn
      *
+     * given low priority so this will be ran after other subscribers
+     *
      * @param Event $event debug.log event
      *
      * @return void
@@ -194,7 +196,6 @@ class Internal
     public function onLog(Event $event)
     {
         $method = $event['method'];
-        $args = $event['args'];
         $meta = $event['meta'];
         if ($method == 'groupUncollapse') {
             // don't append to log
@@ -204,9 +205,6 @@ class Internal
         $isSummaryBookend = $method == 'groupSummary' || !empty($meta['closesSummary']);
         if ($isSummaryBookend) {
             $event->stopPropagation();
-        }
-        if ($this->cfg['file']) {
-            $this->appendLogFile($method, $meta, $args);
         }
     }
 
@@ -288,60 +286,5 @@ class Internal
                 }
             }
         }
-    }
-
-    /**
-     * Appends log entry to $this->cfg['file']
-     *
-     * @param string $method method
-     * @param array  $meta   meta info
-     * @param array  $args   args
-     *
-     * @return boolean
-     */
-    protected function appendLogFile($method, $meta, $args)
-    {
-        $success = false;
-        $fileHandle = $this->getFileHandle();
-        if ($fileHandle) {
-            $success = true;
-            if ($args) {
-                if ($meta) {
-                    $args[] = $meta;
-                }
-                $str = $this->output->outputText->processEntry($method, $args, $this->data['groupDepthFile']);
-                $wrote = fwrite($fileHandle, $str."\n");
-                $success = $wrote !== false;
-            }
-            if (in_array($method, array('group','groupCollapsed'))) {
-                $this->data['groupDepthFile']++;
-            } elseif ($method == 'groupEnd' && $this->data['groupDepthFile'] > 0) {
-                $this->data['groupDepthFile']--;
-            }
-        }
-        return $success;
-    }
-
-    /**
-     * Get logfile's file handle
-     *
-     * @return resource
-     */
-    private function getFileHandle()
-    {
-        if (!isset($this->data['fileHandle']) && !empty($this->cfg['file'])) {
-            $fileExists = file_exists($this->cfg['file']);
-            $this->data['fileHandle'] = fopen($this->cfg['file'], 'a');
-            if ($this->data['fileHandle']) {
-                fwrite($this->data['fileHandle'], '***** '.date('Y-m-d H:i:s').' *****'."\n");
-                if (!$fileExists) {
-                    chmod($this->cfg['file'], 0660);
-                }
-            } else {
-                // failed to open file
-                $this->cfg['file'] = null;
-            }
-        }
-        return $this->data['fileHandle'];
     }
 }

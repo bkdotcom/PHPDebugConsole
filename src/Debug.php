@@ -86,9 +86,7 @@ class Debug
             'alerts'        => array(),    // array of alerts.  alerts will be shown at top of output when possible
             'counts'        => array(), // count method
             'entryCountInitial' => 0,   // store number of log entries created during init
-            'fileHandle'    => null,
             'groupDepth'    => 0,
-            'groupDepthFile'=> 0,
             'groupDepthSummary' => 0,
             'log'           => array(),
             'logSummary'    => array(),
@@ -572,12 +570,10 @@ class Debug
         foreach ($plugin->debugSubscribers($this) as $eventName => $mixed) {
             if (is_string($mixed)) {
                 $this->eventManager->subscribe($eventName, array($plugin, $mixed));
+            } elseif (count($mixed) == 2 && is_int($mixed[1])) {
+                // eventName => array('methodName', priority);
+                $this->eventManager->subscribe($eventName, array($plugin, $mixed[0]), $mixed[1]);
             } else {
-                if (count($mixed) == 2 && is_int($mixed[1])) {
-                    // eventName => array('methodName', priority);
-                    $this->eventManager->subscribe($eventName, array($plugin, $mixed[0]), $mixed[1]);
-                    continue;
-                }
                 // eventName => array(
                 //     methodName || array(methodName) || array(methodName, priority)
                 //     ...

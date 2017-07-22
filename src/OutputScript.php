@@ -30,22 +30,22 @@ class OutputScript extends OutputBase
         $data = $this->debug->getData();
         $this->debug->internal->uncollapseErrors();
         $errorStats = $this->debug->output->errorStats();
+        $errorStr = '';
         if ($errorStats['inConsole']) {
-            $label .= ' - Errors (';
+            $errorStr = 'Errors: ';
             foreach ($errorStats['counts'] as $category => $vals) {
-                $label .= $vals['inConsole'].' '.$category.', ';
+                $errorStr .= $vals['inConsole'].' '.$category.', ';
             }
-            $label = substr($label, 0, -2);
-            $label .= ')';
+            $errorStr = substr($errorStr, 0, -2);
         }
         $str = '';
         $str .= '<script type="text/javascript">'."\n";
-        $str .= 'console.groupCollapsed("PHP", "'.$_SERVER['REQUEST_URI'].'");'."\n";
+        $str .= 'console.groupCollapsed("PHP", "'.$_SERVER['REQUEST_URI'].'", "'.$errorStr.'");'."\n";
         $str .= $this->processAlerts($data['alerts']);
         $str .= $this->processSummary($data['logSummary']);
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
-            $str .= $this->processEntry($method, $args)."\n";
+            $str .= $this->processEntry($method, $args);
         }
         $str .= 'console.groupEnd();'."\n";
         $str .= '</script>'."\n";
@@ -81,7 +81,7 @@ class OutputScript extends OutputBase
         foreach ($args as $k => $arg) {
             $args[$k] = json_encode($this->dump($arg));
         }
-        $str = 'console.'.$method.'('.implode(',', $args).');';
+        $str = 'console.'.$method.'('.implode(',', $args).');'."\n";
         $str = str_replace(json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
         return $str;
     }

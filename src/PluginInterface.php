@@ -17,9 +17,9 @@ namespace bdk\Debug;
 interface PluginInterface
 {
 
-	/**
-	 * Return a list of event subscribers
-	 *
+    /**
+     * Return a list of event subscribers
+     *
      * Returns an array of event names this plugin subscribes to.
      *
      * The array keys are event names and the value can be:
@@ -28,9 +28,9 @@ interface PluginInterface
      *  array(string methodName, int priority)
      *  array of methodName and/or array(methodName, priority)
      *
-	 * @param \bdk\Debug $debug Debug instance
+     * @param \bdk\Debug $debug Debug instance
      *
      * @return array The event names to subscribe to
-	 */
-	public function debugSubscribers(\bdk\Debug $debug);
+     */
+    public function debugSubscribers(\bdk\Debug $debug);
 }

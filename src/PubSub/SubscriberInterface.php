@@ -12,9 +12,9 @@
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
  */
 
-namespace bdk\Debug;
+namespace bdk\PubSub;
 
-interface PluginInterface
+interface SubscriberInterface
 {
 
     /**
@@ -28,9 +28,7 @@ interface PluginInterface
      *  array(string methodName, int priority)
      *  array of methodName and/or array(methodName, priority)
      *
-     * @param \bdk\Debug $debug Debug instance
-     *
      * @return array The event names to subscribe to
      */
-    public function debugSubscribers(\bdk\Debug $debug);
+    public function getSubscriptions();
 }

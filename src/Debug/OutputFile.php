@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Event;
+
 /**
  * Output log to file
  */
@@ -24,9 +26,9 @@ class OutputFile extends OutputText
     /**
      * {@inheritdoc}
      */
-    public function debugSubscribers(\bdk\Debug $debug)
+    public function getSubscriptions()
     {
-        $file = $debug->getCfg('file');
+        $file = $this->debug->getCfg('file');
         $this->setFile($file);
         return array(
             'debug.config' => 'onConfig',

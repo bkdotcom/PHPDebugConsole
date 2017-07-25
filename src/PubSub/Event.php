@@ -12,7 +12,7 @@
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
  */
 
-namespace bdk\Debug;
+namespace bdk\PubSub;
 
 /**
  * Event

@@ -100,7 +100,7 @@ class Output
         /*
             Now email
         */
-        $this->debug->email($this->debug->getCfg('emailTo'), $subject, $body);
+        $this->debug->internal->email($this->debug->getCfg('emailTo'), $subject, $body);
         return;
     }
 

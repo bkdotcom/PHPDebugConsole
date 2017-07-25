@@ -14,7 +14,8 @@
 
 namespace bdk;
 
-use \bdk\Debug\PluginInterface;
+use bdk\pubSub\SubscriberInterface;
+use bdk\PubSub\Manager as EventManager;
 
 /**
  * Web-browser/javascript like console class for PHP
@@ -43,11 +44,11 @@ class Debug
     /**
      * Constructor
      *
-     * @param array  $cfg          config
-     * @param object $errorHandler optional - uses \bdk\Debug\ErrorHandler if not passed
-     * @param object $eventManager optional - uses \bdk\Debug\EventManager if not passed
+     * @param array        $cfg          config
+     * @param ErrorHandler $errorHandler optional - uses \bdk\PubSub\Manager if not passed
+     * @param EventManager $eventManager optional - uses \bdk\Debug\EventManager if not passed
      */
-    public function __construct($cfg = array(), $errorHandler = null, $eventManager = null)
+    public function __construct($cfg = array(), ErrorHandler $errorHandler = null, EventManager $eventManager = null)
     {
         $this->cfg = array(
             'collect'   => false,
@@ -74,7 +75,7 @@ class Debug
         $this->utilities = new Debug\Utilities();
         $this->eventManager = $eventManager
             ? $eventManager
-            : new Debug\EventManager();
+            : new EventManager();
         if ($errorHandler) {
             $this->errorHandler = $errorHandler;
         } elseif (Debug\ErrorHandler::getInstance()) {
@@ -117,7 +118,7 @@ class Debug
         $this->abstracter = new Debug\Abstracter($this->eventManager);
         $this->config = new Debug\Config($this, $this->cfg);
         $this->errorEmailer = new Debug\ErrorEmailer();
-        $this->internal = new Debug\Internal($this, $this->cfg, $this->data);
+        $this->internal = new Debug\Internal($this, $this->data);
         $this->output = new Debug\Output($this);
         $this->utf8 = new Debug\Utf8();
         $this->config->setCfg($cfg);
@@ -131,7 +132,7 @@ class Debug
     /**
      * Magic method to allow us to call instance methods statically
      *
-     * prefix the method with an underscore ie
+     * Prefix the method with an underscore ie
      *    \bdk\Debug::_log('logged via static method');
      *
      * @param string $methodName Inaccessible method name
@@ -555,55 +556,19 @@ class Debug
     }
 
     /*
-        "Non-Methods"
+        "Non-Debug Methods"
     */
 
     /**
      * Extend debug with a plugin
      *
-     * @param PluginInterface $plugin object implementing PluginInterface
+     * @param SubscriberInterface $plugin object implementing SubscriberInterface
      *
      * @return void
      */
-    public function addPlugin(PluginInterface $plugin)
+    public function addPlugin(SubscriberInterface $plugin)
     {
-        foreach ($plugin->debugSubscribers($this) as $eventName => $mixed) {
-            if (is_string($mixed)) {
-                $this->eventManager->subscribe($eventName, array($plugin, $mixed));
-            } elseif (count($mixed) == 2 && is_int($mixed[1])) {
-                // eventName => array('methodName', priority);
-                $this->eventManager->subscribe($eventName, array($plugin, $mixed[0]), $mixed[1]);
-            } else {
-                // eventName => array(
-                //     methodName || array(methodName) || array(methodName, priority)
-                //     ...
-                // )
-                foreach ($mixed as $mixed2) {
-                    if (is_string($mixed2)) {
-                        $methodName = $mixed2;
-                        $priority = 0;
-                    } else {
-                        $methodName = $mixed2[0];
-                        $priority = isset($mixed2[1]) ? $mixed2[1] : 0;
-                    }
-                    $this->eventManager->subscribe($eventName, array($plugin, $methodName), $priority);
-                }
-            }
-        }
-    }
-
-    /**
-     * Send an email
-     *
-     * @param string $emailTo to
-     * @param string $subject subject
-     * @param string $body    body
-     *
-     * @return void
-     */
-    public function email($emailTo, $subject, $body)
-    {
-        call_user_func($this->cfg['emailFunc'], $emailTo, $subject, $body);
+        $this->eventManager->addSubscriberInterface($plugin);
     }
 
     /**
@@ -760,9 +725,16 @@ class Debug
     protected function autoloader($className)
     {
         $className = ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
-        if (preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches) && $matches[1] === __NAMESPACE__.'\\Debug') {
-            $filePath = __DIR__.'/'.$matches[2].'.php';
-            require $filePath;
+        if (preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches)) {
+            $namespace = $matches[1];
+            if ($namespace === 'bdk\\Debug') {
+                $filePath = __DIR__.'/'.$matches[2].'.php';
+                require $filePath;
+            }
+            if ($namespace === 'bdk\\PubSub') {
+                $filePath = __DIR__.'/../PubSub/'.$matches[2].'.php';
+                require $filePath;
+            }
         }
     }
 

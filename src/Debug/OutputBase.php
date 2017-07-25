@@ -11,10 +11,12 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\SubscriberInterface;
+
 /**
  * Base output plugin
  */
-class OutputBase implements PluginInterface
+class OutputBase implements SubscriberInterface
 {
 
     protected $debug;
@@ -34,7 +36,7 @@ class OutputBase implements PluginInterface
     /**
      * {@inheritdoc}
      */
-    public function debugSubscribers(\bdk\Debug $debug)
+    public function getSubscriptions()
     {
         return array(
             'debug.output' => 'onOutput',

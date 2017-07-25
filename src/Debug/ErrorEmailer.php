@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Event;
+
 /**
  * Email error details on error
  *
@@ -147,7 +149,7 @@ class ErrorEmailer
      *
      * @return string
      */
-    protected function backtraceStr($error)
+    protected function backtraceStr(Event $error)
     {
         /*
             backtrace:

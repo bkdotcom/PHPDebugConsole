@@ -13,8 +13,11 @@
 		}
 	],
 	"autoload": {
-		"classmap": ["src/Debug.php"],
-		"psr-4": { "bdk\\Debug\\": "src/" }
+		"classmap": ["src/Debug/Debug.php"],
+		"psr-4": {
+			"bdk\\Debug\\": "src/Debug/",
+			"bdk\\PubSub\\": "src/PubSub/"
+		}
 	},
 	"require": {
 		"php": ">=5.4.0"

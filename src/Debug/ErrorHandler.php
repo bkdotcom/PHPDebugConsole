@@ -11,6 +11,9 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Event;
+use bdk\PubSub\Manager as EventManager;
+
 /*
     These should all be defined...  we're using namespaces which require php >= 5.3.0
 */
@@ -72,10 +75,10 @@ class ErrorHandler
     /**
      * Constructor
      *
-     * @param array $eventManager event manager
-     * @param array $cfg          config
+     * @param EventManager $eventManager event manager
+     * @param array        $cfg          config
      */
-    public function __construct($eventManager, $cfg = array())
+    public function __construct(EventManager $eventManager, $cfg = array())
     {
         $this->eventManager = $eventManager;
         $this->cfg = array(

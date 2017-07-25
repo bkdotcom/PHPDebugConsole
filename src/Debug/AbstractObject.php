@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Event;
+
 /**
  * Abstracter:  Methods used to abstract objects
  */

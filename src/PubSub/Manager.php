@@ -12,16 +12,31 @@
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
  */
 
-namespace bdk\Debug;
+namespace bdk\PubSub;
 
 /**
  * Event publish/subscribe event manager
  */
-class EventManager
+class Manager
 {
 
     private $subscribers = array();
     private $sorted = array();
+
+    /**
+     * [addSubscriberInterface description]
+     *
+     * @param SubscriberInterface $interface object implementing subscriber interface
+     *
+     * @return void
+     */
+    public function addSubscriberInterface(SubscriberInterface $interface)
+    {
+        $subscribers = $this->getInterfaceSubscribers($interface);
+        foreach ($subscribers as $row) {
+            $this->subscribe($row[0], array($interface, $row[1]), $row[2]);
+        }
+    }
 
     /**
      * Gets the subscribers of a specific event or all subscribers sorted by descending priority.
@@ -153,6 +168,42 @@ class EventManager
             }
             call_user_func($callable, $event, $eventName, $this);
         }
+    }
+
+    /**
+     * Calls the passed object's getSubscriptions() method and returns a normalized list of subscriptions
+     *
+     * @param SubscriberInterface $interface [description]
+     *
+     * @return array
+     */
+    private function getInterfaceSubscribers(SubscriberInterface $interface)
+    {
+        $subscribers = array();
+        foreach ($interface->getSubscriptions() as $eventName => $mixed) {
+            if (is_string($mixed)) {
+                $subscribers[] = array($eventName, $mixed, 0);
+            } elseif (count($mixed) == 2 && is_int($mixed[1])) {
+                // eventName => array('methodName', priority);
+                $subscribers[] = array($eventName, $mixed[0], $mixed[1]);
+            } else {
+                // eventName => array(
+                //     methodName || array(methodName) || array(methodName, priority)
+                //     ...
+                // )
+                foreach ($mixed as $mixed2) {
+                    if (is_string($mixed2)) {
+                        $methodName = $mixed2;
+                        $priority = 0;
+                    } else {
+                        $methodName = $mixed2[0];
+                        $priority = isset($mixed2[1]) ? $mixed2[1] : 0;
+                    }
+                    $subscribers[] = array($eventName, $methodName, $priority);
+                }
+            }
+        }
+        return $subscribers;
     }
 
     /**

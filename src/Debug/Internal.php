@@ -14,6 +14,8 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Event;
+
 /**
  * Methods that are internal to the debug class
  *
@@ -26,7 +28,6 @@ namespace bdk\Debug;
 class Internal
 {
 
-    private $cfg;
     private $data;
     private $debug;
     private $error;     // store error object when logging an error
@@ -34,13 +35,11 @@ class Internal
     /**
      * Constructor
      *
-     * @param object $debug debug instance
-     * @param array  $cfg   config
-     * @param array  $data  data
+     * @param \bdk\Debug $debug debug instance
+     * @param array      $data  data
      */
-    public function __construct($debug, &$cfg, &$data)
+    public function __construct(\bdk\Debug $debug, &$data)
     {
-        $this->cfg = $cfg;
         $this->data = $data;
         $this->debug = $debug;
         $this->debug->eventManager->subscribe('debug.construct', array($this, 'onConstruct'), -1);
@@ -48,6 +47,20 @@ class Internal
         $this->debug->eventManager->subscribe('debug.output', array($this, 'onOutput'));
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
         register_shutdown_function(array($this, 'onShutdown'));
+    }
+
+    /**
+     * Send an email
+     *
+     * @param string $emailTo to
+     * @param string $subject subject
+     * @param string $body    body
+     *
+     * @return void
+     */
+    public function email($emailTo, $subject, $body)
+    {
+        call_user_func($this->debug->getCfg('emailFunc'), $emailTo, $subject, $body);
     }
 
     /**

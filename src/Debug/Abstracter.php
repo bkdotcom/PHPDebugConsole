@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Manager as EventManager;
+
 /**
  * Methods used store array/object/resource info
  */

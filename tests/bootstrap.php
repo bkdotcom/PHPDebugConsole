@@ -7,7 +7,7 @@ if (!class_exists('\PHPUnit\Framework\TestCase') &&
     class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
 }
 
-require __DIR__.'/../src/Debug.php';
+require __DIR__.'/../src/Debug/Debug.php';
 require __DIR__.'/DOMTest/DOMTestCase.php';
 require __DIR__.'/DOMTest/CssSelect.php';
 require __DIR__.'/DebugTestFramework.php';

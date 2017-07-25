@@ -14,7 +14,8 @@
 
 namespace bdk;
 
-use bdk\pubSub\SubscriberInterface;
+use bdk\Debug\ErrorHandler;
+use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Manager as EventManager;
 
 /**

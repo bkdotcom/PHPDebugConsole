@@ -120,7 +120,7 @@ class Internal
      *
      * @return boolean
      */
-    public function haveLog()
+    public function hasLog()
     {
         $entryCountInitial = $this->debug->getData('entryCountInitial');
         $entryCountCurrent = $this->debug->getData('entryCount');
@@ -143,6 +143,8 @@ class Internal
                     $this->debug->info($k, date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
                 } elseif (isset($_SERVER[$k])) {
                     $this->debug->info($k, $_SERVER[$k]);
+                } else {
+                    $this->debug->info($k, null);
                 }
             }
             $this->debug->info('PHP Version', PHP_VERSION);
@@ -251,7 +253,7 @@ class Internal
      */
     public function onShutdown()
     {
-        if ($this->haveLog() && !$this->debug->getCfg('output') && $this->debug->getCfg('emailTo')) {
+        if ($this->hasLog() && !$this->debug->getCfg('output') && $this->debug->getCfg('emailTo')) {
             /*
                 We have log data, it's not being output and we have an emailTo addr
             */

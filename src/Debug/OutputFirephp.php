@@ -52,12 +52,14 @@ class OutputFirephp extends OutputBase
         $this->setHeader('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $this->setHeader('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
         $this->setHeader('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
+        $this->processEntry('groupCollapsed', array('PHP: '.$_SERVER['REQUEST_URI']));
         $this->processAlerts($data['alerts']);
         $this->processSummary($data['logSummary']);
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
             $this->processEntry($method, $args);
         }
+        $this->processEntry('groupEnd', array());
         $this->setHeader('X-Wf-1-Index', $this->messageIndex);
         return;
     }
@@ -65,13 +67,14 @@ class OutputFirephp extends OutputBase
     /**
      * Build table rows
      *
-     * @param array $array array to debug
+     * @param array $array   array to debug
+     * @param array $columns columns to display
      *
      * @return array
      */
-    protected function methodTable($array)
+    protected function methodTable($array, $columns = array())
     {
-        $keys = $this->debug->utilities->arrayColKeys($array);
+        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
         $table = array();
         $table[] = $keys;
         array_unshift($table[0], '');
@@ -129,10 +132,14 @@ class OutputFirephp extends OutputBase
             $meta['Label'] = $args[0];
             $meta['Collapsed'] = $method == 'groupCollapsed' ? 'true' : 'false';    // yes, a string
         } elseif ($method == 'table') {
-            $value = $this->methodTable($args[0]);
+            $value = $this->methodTable($args[0], $args[2]);
             if (isset($args[1])) {
                 $meta['Label'] = $args[1];
             }
+        } elseif ($method == 'trace') {
+            $meta['Type'] = $this->firephpMethods['table'];
+            $value = $this->methodTable($args[0], array('function','file','line'));
+            $meta['Label'] = 'trace';
         } elseif (count($args)) {
             if (count($args) == 1) {
                 $value = $args[0];

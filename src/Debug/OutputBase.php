@@ -254,13 +254,14 @@ class OutputBase implements SubscriberInterface
      *
      * This builds table rows usable by ChromeLogger and <script>
      *
-     * @param array $array array to debug
+     * @param array $array   array to debug
+     * @param array $columns columns to output
      *
      * @return array
      */
-    protected function methodTable($array)
+    protected function methodTable($array, $columns = array())
     {
-        $keys = $this->debug->utilities->arrayColKeys($array);
+        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
         $table = array();
         $classnames = array();
         foreach ($array as $k => $row) {

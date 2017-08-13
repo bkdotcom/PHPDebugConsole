@@ -118,7 +118,7 @@ class Utilities
         $attribPairs = array();
         foreach ($attribs as $k => $v) {
             if (is_array($v)) {
-                $v = implode(' ', array_unique($v));
+                $v = implode(' ', array_filter(array_unique($v)));
             }
             if (isset($v)) {
                 $attribPairs[] = $k.'="'.htmlspecialchars($v).'"';

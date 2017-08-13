@@ -24,10 +24,11 @@ class OutputHtml extends OutputBase
      *
      * @param array  $array   array of \Traversable
      * @param string $caption optional caption
+     * @param array  $columns columns to display
      *
      * @return string
      */
-    public function buildTable($array, $caption = null)
+    public function buildTable($array, $caption = null, $columns = array())
     {
         $str = '';
         if (!is_array($array)) {
@@ -36,45 +37,45 @@ class OutputHtml extends OutputBase
                 $str = $caption.' = ';
             }
             $str .= $this->dump($array);
-            $str = '<div class="m_log">'.$str.'</div>';
-        } elseif (empty($array)) {
+            return '<div class="m_log">'.$str.'</div>';
+        }
+        if (empty($array)) {
             // empty array/value
             if (isset($caption)) {
                 $str = $caption.' = ';
             }
             $str .= $this->dump($array);
-            $str = '<div class="m_log">'.$str.'</div>';
-        } else {
-            $keys = $this->debug->utilities->arrayColKeys($array);
-            $headers = array();
-            foreach ($keys as $key) {
-                $headers[] = $key === ''
-                    ? 'value'
-                    : htmlspecialchars($key);
-            }
-            $haveObj = false;
-            foreach ($array as $k => $row) {
-                $str .= $this->buildTableRow($row, $keys, $k, $isObj);
-                if ($isObj) {
-                    $haveObj = true;
-                }
-            }
-            if (!$haveObj) {
-                $str = str_replace('<td class="t_object-class"></td>', '', $str);
-            }
-            $str = '<table>'."\n"
-                .'<caption>'.$caption.'</caption>'."\n"
-                .'<thead>'
-                .'<tr><th>&nbsp;</th>'
-                    .($haveObj ? '<th>&nbsp;</th>' : '')
-                    .'<th>'.implode('</th><th scope="col">', $headers).'</th>'
-                .'</tr>'."\n"
-                .'</thead>'."\n"
-                .'<tbody>'."\n"
-                .$str
-                .'</tbody>'."\n"
-                .'</table>';
+            return '<div class="m_log">'.$str.'</div>';
         }
+        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
+        $headers = array();
+        foreach ($keys as $key) {
+            $headers[] = $key === ''
+                ? 'value'
+                : htmlspecialchars($key);
+        }
+        $haveObj = false;
+        foreach ($array as $k => $row) {
+            $str .= $this->buildTableRow($row, $keys, $k, $isObj);
+            if ($isObj) {
+                $haveObj = true;
+            }
+        }
+        if (!$haveObj) {
+            $str = str_replace('<td class="t_object-class"></td>', '', $str);
+        }
+        $str = '<table>'."\n"
+            .'<caption>'.$caption.'</caption>'."\n"
+            .'<thead>'
+            .'<tr><th>&nbsp;</th>'
+                .($haveObj ? '<th>&nbsp;</th>' : '')
+                .'<th>'.implode('</th><th scope="col">', $headers).'</th>'
+            .'</tr>'."\n"
+            .'</thead>'."\n"
+            .'<tbody>'."\n"
+            .$str
+            .'</tbody>'."\n"
+            .'</table>';
         return $str;
     }
 
@@ -89,24 +90,30 @@ class OutputHtml extends OutputBase
      */
     public function dump($val, $sanitize = true, $wrap = true)
     {
-        $wrapAttribs = array(
+        $this->wrapAttribs = array(
             'class' => array(),
             'title' => null,
         );
         $this->sanitize = $sanitize;
-        $this->wrapAttribs = array();
         $val = parent::dump($val);
         if (in_array($this->dumpType, array('recursion'))) {
             $wrap = false;
         }
         if ($wrap) {
-            $wrapAttribs['class'][] = 't_'.$this->dumpType;
-            if ($this->dumpTypeMore) {
-                $wrapAttribs['class'][] = $this->dumpTypeMore;
-            }
+            // $this->wrapAttribs = array();
+            $wrapAttribs = array(
+                'class' => array(
+                    't_'.$this->dumpType,
+                    $this->dumpTypeMore,
+                ),
+            );
             $wrapAttribs = $this->debug->utilities->arrayMergeDeep($wrapAttribs, $this->wrapAttribs);
             $val = '<span '.$this->debug->utilities->buildAttribString($wrapAttribs).'>'.$val.'</span>';
         }
+        $this->wrapAttribs = array(
+            'class' => array(),
+            'title' => null,
+        );
         return $val;
     }
 
@@ -764,6 +771,9 @@ class OutputHtml extends OutputBase
             $str = $this->buildGroupMethod($method, $args);
         } elseif ($method == 'table') {
             $str = call_user_func_array(array($this,'buildTable'), $args);
+        } elseif ($method == 'trace') {
+            $str = $this->buildTable($args[0], 'trace', array('function','file','line'));
+            $str = str_replace('<table>', '<table class="trace no-sort">', $str);
         } else {
             $attribs = array(
                 'class' => 'm_'.$method,
@@ -779,18 +789,26 @@ class OutputHtml extends OutputBase
                 }
             }
             $numArgs = count($args);
-            $glue = ', ';
-            if ($numArgs == 2) {
-                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                    ? ''
-                    : ' = ';
+            $hasSubs = false;
+            if (in_array($method, array('error','info','log','warn')) && is_string($args[0]) && $numArgs > 1) {
+                $args = $this->processSubstitutions($args, $hasSubs);
             }
-            foreach ($args as $k => $v) {
-                if ($k > 0 || !is_string($v)) {
-                    $args[$k] = $this->dump($v);
-                } else {
-                    // first arg && string -> don't apply htmlspecialchars()
-                    $args[$k] = $this->dump($v, false);
+            if ($hasSubs) {
+                $glue = '';
+            } else {
+                $glue = ', ';
+                if ($numArgs == 2 && is_string($args[0])) {
+                    $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                        ? ''
+                        : ' = ';
+                }
+                foreach ($args as $i => $v) {
+                    if ($i > 0) {
+                        $args[$i] = $this->dump($v, true);
+                    } else {
+                        // don't apply htmlspecialchars()
+                        $args[$i] = $this->dump($v, false);
+                    }
                 }
             }
             $args = implode($glue, $args);
@@ -824,6 +842,95 @@ class OutputHtml extends OutputBase
             ));
         }
         return $str;
+    }
+
+    /**
+     * Handle the not-well documented substitutions
+     *
+     * @param array   $args    arguments
+     * @param boolean $hasSubs set to true if substitutions/formatting applied
+     *
+     * @return array
+     *
+     * @see https://console.spec.whatwg.org/#formatting-specifiers
+     */
+    protected function processSubstitutions($args, &$hasSubs)
+    {
+        $subRegex = '/%'
+            .'(?:'
+            .'[coO]|'               // c: css, o: obj with max info, O: obj w generic info
+            .'[+-]?'                // sign specifier
+            .'(?:[ 0]|\'.{1})?'     // padding specifier
+            .'-?'                   // alignment specifier
+            .'\d*'                  // width specifier
+            .'(?:\.\d+)?'           // precision specifier
+            .'[difs]'
+            .')'
+            .'/';
+        if (!is_string($args[0])) {
+            return $args;
+        }
+        $index = 0;
+        $indexes = array(
+            'c' => array(),
+            'o' => array(),
+        );
+        $hasSubs = false;
+        $args[0] = preg_replace_callback($subRegex, function ($matches) use (
+            &$args,
+            &$hasSubs,
+            &$index,
+            &$indexes
+        ) {
+            $hasSubs = true;
+            $index++;
+            $replacement = $matches[0];
+            $type = substr($matches[0], -1);
+            if (strpos('difs', $type) !== false) {
+                $format = $matches[0];
+                if ($type == 'i') {
+                    $format = substr_replace($format, 'd', -1, 1);
+                }
+                $replacement = sprintf($format, htmlspecialchars($args[$index]));
+            } elseif ($type === 'c') {
+                $replacement = '';
+                if ($indexes['c']) {
+                    // close off prev
+                    $replacement = '</span>';
+                }
+                $replacement .= '<span style="'.$args[$index].'">';
+                $indexes['c'][] = $index;
+            } else {
+                $indexes[strtolower($type)][] = $index;
+            }
+            return $replacement;
+        }, $args[0]);
+        if ($indexes['c']) {
+            $args[0] .= '</span>';
+        }
+        /*
+            now handle %o & %O
+        */
+        if ($indexes['o']) {
+            $segments = preg_split('#%[oO]#', $args[0]);
+            $argsNew = array();
+            foreach ($indexes['o'] as $index) {
+                $segment = array_shift($segments);
+                if (trim($segment)) {
+                    $argsNew[] = $segment;
+                }
+                if (isset($args[$index])) {
+                    $argsNew[] = $this->dump($args[$index]);
+                    unset($args[$index]);
+                }
+            }
+            $argsNew[] = array_shift($segments);
+            $args = $argsNew;   // unused args are tossed
+        } elseif ($hasSubs) {
+            // toss unused args
+            $args = array($args[0]);
+        }
+        return $args;
     }
 
     /**

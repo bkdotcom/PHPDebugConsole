@@ -73,7 +73,10 @@ class OutputScript extends OutputBase
         } elseif ($method == 'count' || $method == 'time') {
             $method = 'log';
         } elseif ($method == 'table') {
-            $args = array($this->methodTable($args[0]));
+            $args = array($this->methodTable($args[0], $args[2]));
+        } elseif ($method == 'trace') {
+            $method = 'table';
+            $args = array($this->methodTable($args[0], array('function','file','line')));
         } elseif (in_array($method, array('error','warn'))) {
             $meta = $this->debug->internal->getMetaArg($args);
             if (isset($meta['file'])) {

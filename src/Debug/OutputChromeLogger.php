@@ -45,15 +45,23 @@ class OutputChromeLogger extends OutputBase
     public function onOutput(Event $event)
     {
         $data = $this->debug->getData();
-
         $this->processAlerts($data['alerts']);
         $this->processSummary($data['logSummary']);
-
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
             $this->processEntry($method, $args);
         }
         if ($this->json['rows']) {
+            array_unshift($this->json['rows'], array(
+                array('PHP', $_SERVER['REQUEST_URI']),
+                null,
+                'groupCollapsed',
+            ));
+            array_push($this->json['rows'], array(
+                array(),
+                null,
+                'groupEnd',
+            ));
             $encoded = $this->encode($this->json);
             if (headers_sent($file, $line)) {
             } elseif (strlen($encoded) > 250000) {
@@ -85,7 +93,7 @@ class OutputChromeLogger extends OutputBase
      *
      * @return void
      */
-    protected function processEntry($method, $args)
+    protected function processEntry($method, $args = array())
     {
         $metaStr = null;
         if (in_array($method, array('error','warn'))) {
@@ -94,7 +102,10 @@ class OutputChromeLogger extends OutputBase
                 $metaStr = $meta['file'].': '.$meta['line'];
             }
         } elseif ($method == 'table') {
-            $args = array($this->methodTable($args[0]));
+            $args = array($this->methodTable($args[0], $args[2]));
+        } elseif ($method == 'trace') {
+            $method = 'table';
+            $args = array($this->methodTable($args[0], array('function','file','line')));
         }
         foreach ($args as $i => $arg) {
             $args[$i] = $this->dump($arg);

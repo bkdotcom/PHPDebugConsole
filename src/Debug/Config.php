@@ -118,7 +118,9 @@ class Config
                 $this->debug->{$k}->setCfg($v);
             }
         }
-        $this->debug->eventManager->publish('debug.config', $this->debug);
+        if ($new) {
+            $this->debug->eventManager->publish('debug.config', $this->debug);
+        }
         return $return;
 	}
 

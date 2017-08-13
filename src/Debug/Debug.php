@@ -407,33 +407,45 @@ class Debug
      */
     public function table()
     {
-        if ($this->cfg['collect']) {
-            $args = func_get_args();
-            $argsLabel = array();
-            $haveArray = false;
-            foreach ($args as $k => $v) {
-                if (!is_array($v) || $haveArray) {
-                    if (!is_array($v)) {
-                        $argsLabel[] = (string) $v;
-                    }
-                    unset($args[$k]);
-                } else {
-                    $haveArray = true;
+        if (!$this->cfg['collect']) {
+            return;
+        }
+        $args = func_get_args();
+        $argCount = count($args);
+        $data = null;
+        $caption = $this->abstracter->UNDEFINED;
+        $columns = array();
+        /*
+            find first array in args
+            find caption arg
+            find columns arg
+        */
+        for ($i = 0; $i < $argCount; $i++) {
+            if (is_array($args[$i])) {
+                if ($data === null) {
+                    $data = $args[$i];
+                } elseif (empty($columns)) {
+                    $columns = $args[$i];
                 }
+            } elseif ($caption === $this->abstracter->UNDEFINED) {
+                $caption = $args[$i];
             }
-            $method = 'table';
-            if ($haveArray) {
-                if (!empty($argsLabel)) {
-                    $args[] = implode(' ', $argsLabel);
-                }
+            unset($args[$i]);
+        }
+        if (is_array($data)) {
+            if ($caption === $this->abstracter->UNDEFINED) {
+                $caption = null;
+            }
+            if (empty($data)) {
+                $args = $caption !== null
+                    ? array($caption, $data)
+                    : array($data);
+                $this->appendLog('log', array(), $args);
             } else {
-                $method = 'log';
-                $args = $argsLabel;
-                if (count($args) == 2 && !is_string($args[0])) {
-                    $args[] = array_shift($args);
-                }
+                $this->appendLog('table', array(), array($data, $caption, $columns));
             }
-            $this->appendLog($method, array(), array_values($args));
+        } else {
+            $this->appendLog('log', array(), func_get_args());
         }
     }
 
@@ -540,6 +552,44 @@ class Debug
         }
         $this->timeLog($ellapsed, $returnOrTemplate, $label);
         return $ellapsed;
+    }
+
+    /**
+     * Log a stack trace
+     *
+     * @return void
+     */
+    public function trace()
+    {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $backtraceNew = array();
+        $isInternal = true;
+        $keysShift = array_flip(array('class','function','type'));
+        $funcsSkip = array('call_user_func','call_user_func_array');
+        for ($i = 0, $count=count($backtrace); $i < $count; $i++) {
+            $frame = $backtrace[$i];
+            if ($i+1 < $count) {
+                $frameNext = $backtrace[$i+1];
+                $isInternal = $isInternal
+                    && (
+                        isset($frameNext['function']) && in_array($frameNext['function'], $funcsSkip)
+                        || isset($frameNext['class']) && $frameNext['class'] == __CLASS__
+                    );
+                if ($isInternal) {
+                    continue;
+                }
+                $isInternal = false;
+                $frame = array_diff_key($frame, $keysShift);
+                $frame = array_merge($frame, array_intersect_key($frameNext, $keysShift));
+                if (in_array($frame['function'], $funcsSkip)) {
+                    continue;
+                }
+            } else {
+                $frame = array_diff_key($frame, $keysShift);
+            }
+            $backtraceNew[] = $frame;
+        }
+        $this->appendLog('trace', array(), array($backtraceNew));
     }
 
     /**
@@ -773,6 +823,9 @@ class Debug
         if ($event->isPropagationStopped()) {
             return;
         }
+        $method = $event->getValue('method');
+        $args = $event->getValue('args');
+        $meta = $event->getValue('meta');
         if ($method == 'alert') {
             $this->data['alerts'][] = $args;
         } else {

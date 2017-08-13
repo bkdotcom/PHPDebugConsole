@@ -245,39 +245,6 @@ class DebugTest extends DebugTestFramework
      *
      * @return void
      */
-    public function testTable()
-    {
-        $list = array(
-            // note different order of keys / not all rows have all cols
-            array('name'=>'Bob', 'age'=>'12', 'sex'=>'M', 'Naughty'=>false),
-            array('Naughty'=>true, 'name'=>'Sally', 'extracol' => 'yes', 'sex'=>'F', 'age'=>'10'),
-        );
-        $this->debug->table('list', 'blah', $list, 'blah');
-        $this->debug->table($list);
-        $this->debug->table($list, 'list', array('ignored arg'), 'blah');
-        $this->debug->table('empty array', array());
-        $this->debug->table('no array', 'here');
-        /*
-        $isArray1 = $this->checkAbstractionType($this->debug->getData('log/0/1'), 'array');
-        $isArray2 = $this->checkAbstractionType($this->debug->getData('log/1/1'), 'array');
-        $isArray3 = $this->checkAbstractionType($this->debug->getData('log/2/1'), 'array');
-        $isArray4 = $this->checkAbstractionType($this->debug->getData('log/3/1'), 'array');
-        $this->assertTrue($isArray1);
-        $this->assertTrue($isArray2);
-        $this->assertTrue($isArray3);
-        $this->assertTrue($isArray4);
-        */
-        $this->assertSame(array('log','no array','here'), $this->debug->getData('log/4'));
-        // test labels
-        $this->assertSame('list blah blah', $this->debug->getData('log/0/2'));
-        $this->assertSame('list blah', $this->debug->getData('log/2/2'));
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
     public function testTime()
     {
         $this->debug->time();
@@ -333,6 +300,21 @@ class DebugTest extends DebugTestFramework
         $this->assertNotNull($timers['labels']['my label'][1]);
         $this->debug->timeGet('my label', 'blah%labelblah%timeblah');
         $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1'));
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTrace()
+    {
+        $this->debug->trace();
+        $trace = $this->debug->getData('log/0/1');
+        $this->assertSame(__FILE__, $trace[0]['file']);
+        $this->assertSame(__LINE__ - 3, $trace[0]['line']);
+        $this->assertSame(__FUNCTION__, $trace[0]['function']);
+        $this->assertSame(__CLASS__, $trace[0]['class']);
     }
 
     /**

@@ -11,7 +11,32 @@ class MethodTableTest extends DebugTestFramework
      *
      * @return void
      */
-    public function testDumpTable()
+    public function testTableLog()
+    {
+        $list = array(
+            // note different order of keys / not all rows have all cols
+            array('name'=>'Bob', 'age'=>'12', 'sex'=>'M', 'Naughty'=>false),
+            array('Naughty'=>true, 'name'=>'Sally', 'extracol' => 'yes', 'sex'=>'F', 'age'=>'10'),
+        );
+        $this->debug->table($list);
+        $this->debug->table('arg1', array());
+        $this->debug->table('arg1', 'arg2', $list, 'arg4');
+        $this->debug->table($list, 'arg2', array('arg3 is array'), 'arg4');
+        $this->debug->table('arg1', 'arg2');
+        // test stored args
+        $this->assertSame(array('table', $list, null, array()), $this->debug->getData('log/0'));
+        $this->assertSame(array('log', 'arg1', array()), $this->debug->getData('log/1'));
+        $this->assertSame(array('table', $list, 'arg1', array()), $this->debug->getData('log/2'));
+        $this->assertSame(array('table', $list, 'arg2', array('arg3 is array')), $this->debug->getData('log/3'));
+        $this->assertSame(array('log', 'arg1', 'arg2'), $this->debug->getData('log/4'));
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTableDump()
     {
         $list = array(
             // note different order of keys / not all rows have all cols

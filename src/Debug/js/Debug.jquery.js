@@ -289,15 +289,19 @@
 			enhanceTables($root);
 			addIcons($root, ["misc","methods"]);
 			$root.find(".timestamp").each(function(){
-				var $i = $(this).find("i"),
-					text = $(this).text(),
+				var $this = $(this),
+					$i = $this.find("i"),
+					text = $this.text(),
 					$span = $('<span>'+text+'</span>');
-				if ($(this).hasClass("t_string")) {
+				if ($this.hasClass("t_string")) {
 					$span.addClass("t_string numeric");
 				} else {
 					$span.addClass("t_int");
 				}
-				$(this).removeClass("t_int t_string numeric");
+				if ($this.hasClass("no-pseudo")) {
+					$span.addClass("no-pseudo");
+				}
+				$(this).removeClass("t_int t_string numeric no-pseudo");
 				$(this).html($i).append($span);
 			});
 		}

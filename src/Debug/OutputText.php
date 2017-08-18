@@ -57,24 +57,36 @@ class OutputText extends OutputBase
      */
     public function processEntry($method, $args = array(), $depth = null)
     {
-        if ($method == 'table' && count($args) == 2) {
-            $caption = array_pop($args);
-            array_unshift($args, $caption);
-        }
-        if (count($args) == 1 && is_string($args[0])) {
-            $args[0] = strip_tags($args[0]);
-        }
-        foreach ($args as $k => $v) {
-            if ($k > 0 || !is_string($v)) {
-                $args[$k] = $this->dump($v);
+        if ($method == 'table') {
+            $caption = $args[1];
+            $args = array($this->methodTable($args[0], $args[2]));
+            if ($caption) {
+                array_unshift($args, $caption);
             }
         }
-        $num_args = count($args);
-        $glue = ', ';
-        if ($num_args == 2) {
-            $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                ? ''
-                : ' = ';
+        $numArgs = count($args);
+        $hasSubs = false;
+        if (in_array($method, array('error','info','log','warn')) && is_string($args[0]) && $numArgs > 1) {
+            $args = $this->processSubstitutions($args, $hasSubs);
+        }
+        if ($hasSubs) {
+            $glue = '';
+        } else {
+            if (count($args) == 1 && is_string($args[0])) {
+                $args[0] = strip_tags($args[0]);
+            }
+            foreach ($args as $k => $v) {
+                if ($k > 0 || !is_string($v)) {
+                    $args[$k] = $this->dump($v);
+                }
+            }
+            $glue = ', ';
+            if ($numArgs == 2) {
+                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                    ? ''
+                    : ' = ';
+            }
+
         }
         $strIndent = str_repeat('    ', $depth === null ? $this->depth : $depth);
         $str = implode($glue, $args);

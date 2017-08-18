@@ -83,12 +83,13 @@ class OutputHtml extends OutputBase
      * Dump value as html
      *
      * @param mixed   $val      value to dump
+     * @param array   $path     {@internal}
      * @param boolean $sanitize (true) apply htmlspecialchars?
      * @param boolean $wrap     (true) whether to wrap in a <span>
      *
      * @return string
      */
-    public function dump($val, $sanitize = true, $wrap = true)
+    public function dump($val, $path = array(), $sanitize = true, $wrap = true)
     {
         $this->wrapAttribs = array(
             'class' => array(),
@@ -100,14 +101,15 @@ class OutputHtml extends OutputBase
             $wrap = false;
         }
         if ($wrap) {
-            // $this->wrapAttribs = array();
-            $wrapAttribs = array(
-                'class' => array(
-                    't_'.$this->dumpType,
-                    $this->dumpTypeMore,
+            $wrapAttribs = $this->debug->utilities->arrayMergeDeep(
+                array(
+                    'class' => array(
+                        't_'.$this->dumpType,
+                        $this->dumpTypeMore,
+                    ),
                 ),
+                $this->wrapAttribs
             );
-            $wrapAttribs = $this->debug->utilities->arrayMergeDeep($wrapAttribs, $this->wrapAttribs);
             $val = '<span '.$this->debug->utilities->buildAttribString($wrapAttribs).'>'.$val.'</span>';
         }
         $this->wrapAttribs = array(
@@ -271,7 +273,7 @@ class OutputHtml extends OutputBase
             foreach ($array as $key => $val) {
                 $html .= "\t".'<span class="key-value">'
                         .'<span class="t_key'.(is_int($key) ? ' t_int' : '').'">'
-                            .$this->dump($key, true, false) // don't wrap it
+                            .$this->dump($key, $path, true, false) // don't wrap it
                         .'</span> '
                         .'<span class="t_operator">=&gt;</span> '
                         .$this->dump($val)
@@ -804,10 +806,10 @@ class OutputHtml extends OutputBase
                 }
                 foreach ($args as $i => $v) {
                     if ($i > 0) {
-                        $args[$i] = $this->dump($v, true);
+                        $args[$i] = $this->dump($v, array(), true);
                     } else {
                         // don't apply htmlspecialchars()
-                        $args[$i] = $this->dump($v, false);
+                        $args[$i] = $this->dump($v, array(), false);
                     }
                 }
             }
@@ -845,92 +847,28 @@ class OutputHtml extends OutputBase
     }
 
     /**
-     * Handle the not-well documented substitutions
+     * Cooerce value to string
      *
-     * @param array   $args    arguments
-     * @param boolean $hasSubs set to true if substitutions/formatting applied
+     * @param mixed $val value
      *
-     * @return array
-     *
-     * @see https://console.spec.whatwg.org/#formatting-specifiers
+     * @return string
      */
-    protected function processSubstitutions($args, &$hasSubs)
+    protected function substitutionAsString($val)
     {
-        $subRegex = '/%'
-            .'(?:'
-            .'[coO]|'               // c: css, o: obj with max info, O: obj w generic info
-            .'[+-]?'                // sign specifier
-            .'(?:[ 0]|\'.{1})?'     // padding specifier
-            .'-?'                   // alignment specifier
-            .'\d*'                  // width specifier
-            .'(?:\.\d+)?'           // precision specifier
-            .'[difs]'
-            .')'
-            .'/';
-        if (!is_string($args[0])) {
-            return $args;
+        $type = $this->debug->abstracter->getType($val);
+        if ($type == 'string') {
+            $val = $this->dump($val);
+            $val = str_replace('class="t_', 'class="no-pseudo t_', $val);
+        } elseif ($type == 'array') {
+            $count = count($val);
+            $val = '<span class="t_keyword">Array</span>'
+                .'<span class="t_punct">(</span>'.$count.'<span class="t_punct">)</span>';
+        } elseif ($type == 'object') {
+            $val = '<span class="t_object-class">'.$val['className'].'</span>';
+        } else {
+            $val = $this->dump($val);
         }
-        $index = 0;
-        $indexes = array(
-            'c' => array(),
-            'o' => array(),
-        );
-        $hasSubs = false;
-        $args[0] = preg_replace_callback($subRegex, function ($matches) use (
-            &$args,
-            &$hasSubs,
-            &$index,
-            &$indexes
-        ) {
-            $hasSubs = true;
-            $index++;
-            $replacement = $matches[0];
-            $type = substr($matches[0], -1);
-            if (strpos('difs', $type) !== false) {
-                $format = $matches[0];
-                if ($type == 'i') {
-                    $format = substr_replace($format, 'd', -1, 1);
-                }
-                $replacement = sprintf($format, htmlspecialchars($args[$index]));
-            } elseif ($type === 'c') {
-                $replacement = '';
-                if ($indexes['c']) {
-                    // close off prev
-                    $replacement = '</span>';
-                }
-                $replacement .= '<span style="'.$args[$index].'">';
-                $indexes['c'][] = $index;
-            } else {
-                $indexes[strtolower($type)][] = $index;
-            }
-            return $replacement;
-        }, $args[0]);
-        if ($indexes['c']) {
-            $args[0] .= '</span>';
-        }
-        /*
-            now handle %o & %O
-        */
-        if ($indexes['o']) {
-            $segments = preg_split('#%[oO]#', $args[0]);
-            $argsNew = array();
-            foreach ($indexes['o'] as $index) {
-                $segment = array_shift($segments);
-                if (trim($segment)) {
-                    $argsNew[] = $segment;
-                }
-                if (isset($args[$index])) {
-                    $argsNew[] = $this->dump($args[$index]);
-                    unset($args[$index]);
-                }
-            }
-            $argsNew[] = array_shift($segments);
-            $args = $argsNew;   // unused args are tossed
-        } elseif ($hasSubs) {
-            // toss unused args
-            $args = array($args[0]);
-        }
-        return $args;
+        return $val;
     }
 
     /**

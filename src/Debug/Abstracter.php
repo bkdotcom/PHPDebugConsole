@@ -107,7 +107,7 @@ class Abstracter
             return $this->abstractArray->getAbstraction($mixed, $hist);
         } elseif (is_object($mixed)) {
             return $this->abstractObject->getAbstraction($mixed, $hist);
-        } elseif (is_resource($mixed)) {
+        } elseif (is_resource($mixed) || strpos(print_r($mixed, true), 'Resource') === 0) {
             return array(
                 'debug' => self::ABSTRACTION,
                 'type' => 'resource',
@@ -146,15 +146,7 @@ class Abstracter
      */
     public static function getType($val, &$typeMore = null)
     {
-        if (is_array($val)) {
-            if (in_array(self::ABSTRACTION, $val, true)) {
-                $type = $val['type'];
-                $typeMore = 'abstraction';
-            } else {
-                $type = 'array';
-                $typeMore = 'raw';  // ie. needs abstracted
-            }
-        } elseif (is_string($val)) {
+        if (is_string($val)) {
             $type = 'string';
             if (is_numeric($val)) {
                 $typeMore = 'numeric';
@@ -163,19 +155,27 @@ class Abstracter
             } elseif ($val === self::RECURSION) {
                 $type = 'recursion';    // not a native php type!
             }
-        } elseif (is_int($val)) {
-            $type = 'int';
-        } elseif (is_float($val)) {
-            $type = 'float';
+        } elseif (is_array($val)) {
+            if (in_array(self::ABSTRACTION, $val, true)) {
+                $type = $val['type'];
+                $typeMore = 'abstraction';
+            } else {
+                $type = 'array';
+                $typeMore = 'raw';  // ie. needs abstracted
+            }
         } elseif (is_bool($val)) {
             $type = 'bool';
             $typeMore = $val ? 'true' : 'false';
+        } elseif (is_float($val)) {
+            $type = 'float';
+        } elseif (is_int($val)) {
+            $type = 'int';
         } elseif (is_null($val)) {
             $type = 'null';
         } elseif (is_object($val)) {
             $type = 'object';
             $typeMore = 'raw';  // ie. needs abstracted
-        } elseif (is_resource($val)) {
+        } elseif (is_resource($val) || strpos(print_r($val, true), 'Resource') === 0) {
             $type = 'resource';
             $typeMore = 'raw';  // ie. needs abstracted
         }
@@ -252,13 +252,8 @@ class Abstracter
      */
     public static function needsAbstraction($val)
     {
-        $return = false;
-        if (is_array($val) && !in_array(self::ABSTRACTION, $val, true)) {
-            $return = true;
-        } elseif (is_object($val) || is_resource($val)) {
-            $return = true;
-        }
-        return $return;
+        self::getType($val, $typeMore);
+        return $typeMore === 'raw';
     }
 
     /**

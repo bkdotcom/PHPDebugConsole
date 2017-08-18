@@ -321,6 +321,105 @@ class OutputBase implements SubscriberInterface
     }
 
     /**
+     * Handle the not-well documented substitutions
+     *
+     * @param array   $args    arguments
+     * @param boolean $hasSubs set to true if substitutions/formatting applied
+     *
+     * @return array
+     *
+     * @see https://console.spec.whatwg.org/#formatter
+     */
+    protected function processSubstitutions($args, &$hasSubs)
+    {
+        $subRegex = '/%'
+            .'(?:'
+            .'[coO]|'               // c: css, o: obj with max info, O: obj w generic info
+            .'[+-]?'                // sign specifier
+            .'(?:[ 0]|\'.{1})?'     // padding specifier
+            .'-?'                   // alignment specifier
+            .'\d*'                  // width specifier
+            .'(?:\.\d+)?'           // precision specifier
+            .'[difs]'
+            .')'
+            .'/';
+        if (!is_string($args[0])) {
+            return $args;
+        }
+        $index = 0;
+        $indexes = array(
+            'c' => array(),
+        );
+        $hasSubs = false;
+        $args[0] = preg_replace_callback($subRegex, function ($matches) use (
+            &$args,
+            &$hasSubs,
+            &$index,
+            &$indexes
+        ) {
+            $hasSubs = true;
+            $index++;
+            $replacement = $matches[0];
+            $type = substr($matches[0], -1);
+            if (strpos('difs', $type) !== false) {
+                $format = $matches[0];
+                $sub = $args[$index];
+                if ($type == 'i') {
+                    $format = substr_replace($format, 'd', -1, 1);
+                } elseif ($type === 's') {
+                    $sub = $this->substitutionAsString($sub);
+                }
+                $replacement = sprintf($format, $sub);
+            } elseif ($type === 'c') {
+                $asHtml = get_called_class() == __NAMESPACE__.'\\OutputHtml';
+                if (!$asHtml) {
+                    return '';
+                }
+                $replacement = '';
+                if ($indexes['c']) {
+                    // close prev
+                    $replacement = '</span>';
+                }
+                $replacement .= '<span '.$this->debug->utilities->buildAttribString(array(
+                    'style' => $args[$index],
+                )).'>';
+                $indexes['c'][] = $index;
+            } elseif (strpos('oO', $type) !== false) {
+                $replacement = $this->dump($args[$index]);
+            }
+            return $replacement;
+        }, $args[0]);
+        if ($indexes['c']) {
+            $args[0] .= '</span>';
+        }
+        if ($hasSubs) {
+            $args = array($args[0]);
+        }
+        return $args;
+    }
+
+    /**
+     * Cooerce value to string
+     *
+     * @param mixed $val value
+     *
+     * @return string
+     */
+    protected function substitutionAsString($val)
+    {
+        $type = $this->debug->abstracter->getType($val);
+        if ($type == 'array') {
+            $count = count($val);
+            $val = 'Array('.$count.')';
+        } elseif ($type == 'object') {
+            $val = $val['className'];
+        } else {
+            $val = $this->dump($val);
+        }
+        return $val;
+    }
+
+    /**
      * Process summary
      *
      * @param array $summaryData summary data

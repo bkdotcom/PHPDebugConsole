@@ -22,6 +22,7 @@ class OutputBase implements SubscriberInterface
     protected $debug;
     protected $dumpType;
     protected $dumpTypeMore;
+    protected $data = array();
 
     /**
      * Constructor
@@ -297,11 +298,9 @@ class OutputBase implements SubscriberInterface
     /**
      * Process alerts
      *
-     * @param array $alerts alerts data
-     *
      * @return string
      */
-    protected function processAlerts($alerts = array())
+    protected function processAlerts()
     {
         $str = '';
         $trans = array(
@@ -309,7 +308,7 @@ class OutputBase implements SubscriberInterface
             'success' => 'info',
             'warning' => 'warn',
         );
-        foreach ($alerts as $alert) {
+        foreach ($this->data['alerts'] as $alert) {
             $msg = str_replace('<br />', ", \n", $alert['message']);
             $method = $alert['class'];
             if (isset($trans[$method])) {
@@ -318,6 +317,22 @@ class OutputBase implements SubscriberInterface
             $str .= $this->processEntry($method, array($msg));
         }
         return trim($str);
+    }
+
+    /**
+     * Process log entries
+     *
+     * @return string
+     */
+    protected function processLog()
+    {
+        $str = '';
+        foreach ($this->data['log'] as $args) {
+            $method = array_shift($args);
+            $meta = $this->debug->internal->getMetaArg($args);
+            $str .= $this->processEntry($method, $args, $meta);
+        }
+        return $str;
     }
 
     /**
@@ -399,6 +414,63 @@ class OutputBase implements SubscriberInterface
     }
 
     /**
+     * Process summary
+     *
+     * @return string
+     */
+    protected function processSummary()
+    {
+        $str = '';
+        $summaryData = $this->data['logSummary'];
+        krsort($summaryData);
+        $summaryData = call_user_func_array('array_merge', $summaryData);
+        foreach ($summaryData as $args) {
+            $method = array_shift($args);
+            $str .= $this->processEntry($method, $args);
+        }
+        return trim($str);
+    }
+
+    /**
+     * Remove empty groups with 'hideIfEmpty' meta value
+     *
+     * @return void
+     */
+    public function removeHideIfEmptyGroups()
+    {
+        $groupStack = array();
+        $groupStackCount = 0;
+        $removed = false;
+        for ($i = 0, $count = count($this->data['log']); $i < $count; $i++) {
+            $method = $this->data['log'][$i][0];
+            if (in_array($method, array('group', 'groupCollapsed'))) {
+                $args = array_slice($this->data['log'][$i], 1);
+                $groupStack[] = array(
+                    'i' => $i,
+                    'meta' => $this->debug->internal->getMetaArg($args),
+                    'hasEntries' => false,
+                );
+                $groupStackCount ++;
+            } elseif ($method == 'groupEnd') {
+                $group = end($groupStack);
+                if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
+                    // make it go away
+                    unset($this->data['log'][$group['i']]);
+                    unset($this->data['log'][$i]);
+                    $removed = true;
+                }
+                array_pop($groupStack);
+                $groupStackCount--;
+            } elseif ($groupStack) {
+                $groupStack[$groupStackCount - 1]['hasEntries'] = true;
+            }
+        }
+        if ($removed) {
+            $this->data['log'] = array_values($this->data['log']);
+        }
+    }
+
+    /**
      * Cooerce value to string
      *
      * @param mixed $val value
@@ -420,21 +492,24 @@ class OutputBase implements SubscriberInterface
     }
 
     /**
-     * Process summary
+     * Uncollapse groups containing errors.
      *
-     * @param array $summaryData summary data
-     *
-     * @return string
+     * @return void
      */
-    protected function processSummary($summaryData)
+    public function uncollapseErrors()
     {
-        $str = '';
-        krsort($summaryData);
-        $summaryData = call_user_func_array('array_merge', $summaryData);
-        foreach ($summaryData as $args) {
-            $method = array_shift($args);
-            $str .= $this->processEntry($method, $args);
+        $groupStack = array();
+        for ($i = 0, $count = count($this->data['log']); $i < $count; $i++) {
+            $method = $this->data['log'][$i][0];
+            if (in_array($method, array('group', 'groupCollapsed'))) {
+                $groupStack[] = $i;
+            } elseif ($method == 'groupEnd') {
+                array_pop($groupStack);
+            } elseif (in_array($method, array('error', 'warn'))) {
+                foreach ($groupStack as $i2) {
+                    $this->data['log'][$i2][0] = 'group';
+                }
+            }
         }
-        return trim($str);
     }
 }

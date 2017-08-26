@@ -31,75 +31,17 @@ class OutputText extends OutputBase
      */
     public function onOutput(Event $event = null)
     {
-        $data = $this->debug->getData();
+        $this->data = $this->debug->getData();
         $str = '';
-        $str .= $this->processAlerts($data['alerts']);
+        $str .= $this->processAlerts();
         $str .= $this->processSummary();
-        foreach ($data['log'] as $args) {
-            $method = array_shift($args);
-            $str .= $this->processEntry($method, $args);
-        }
+        $str .= $this->processLog();
+        $this->data = array();
         if ($event) {
             $event['output'] .= $str;
         } else {
             return $str;
         }
-    }
-
-    /**
-     * Return log entry as text
-     *
-     * @param string  $method method
-     * @param array   $args   arguments
-     * @param integer $depth  specify nested depth (otherwise depth maintained internally)
-     *
-     * @return string
-     */
-    public function processEntry($method, $args = array(), $depth = null)
-    {
-        if ($method == 'table') {
-            $caption = $args[1];
-            $args = array($this->methodTable($args[0], $args[2]));
-            if ($caption) {
-                array_unshift($args, $caption);
-            }
-        }
-        $numArgs = count($args);
-        $hasSubs = false;
-        if (in_array($method, array('error','info','log','warn')) && is_string($args[0]) && $numArgs > 1) {
-            $args = $this->processSubstitutions($args, $hasSubs);
-        }
-        if ($hasSubs) {
-            $glue = '';
-        } else {
-            if (count($args) == 1 && is_string($args[0])) {
-                $args[0] = strip_tags($args[0]);
-            }
-            foreach ($args as $k => $v) {
-                if ($k > 0 || !is_string($v)) {
-                    $args[$k] = $this->dump($v);
-                }
-            }
-            $glue = ', ';
-            if ($numArgs == 2) {
-                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                    ? ''
-                    : ' = ';
-            }
-
-        }
-        $strIndent = str_repeat('    ', $depth === null ? $this->depth : $depth);
-        $str = implode($glue, $args);
-        $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
-        if ($depth === null) {
-            if (in_array($method, array('group','groupCollapsed'))) {
-                $this->depth ++;
-            } elseif ($method == 'groupEnd' && $this->depth > 0) {
-                $this->depth --;
-            }
-        }
-        $str .= "\n";
-        return $str;
     }
 
     /**
@@ -132,6 +74,21 @@ class OutputText extends OutputBase
     protected function dumpBool($val)
     {
         return $val ? 'true' : 'false';
+    }
+
+    /**
+     * Dump float value
+     *
+     * @param float $val float value
+     *
+     * @return float|string
+     */
+    protected function dumpFloat($val)
+    {
+        $date = $this->checkTimestamp($val);
+        return $date
+            ? '📅 '.$val.' ('.$date.')'
+            : $val;
     }
 
     /**
@@ -244,7 +201,7 @@ class OutputText extends OutputBase
         if (is_numeric($val)) {
             $date = $this->checkTimestamp($val);
             return $date
-                ? '"'.$val.'" ('.$date.')'
+                ? '📅 "'.$val.'" ('.$date.')'
                 : '"'.$val.'"';
         } else {
             return '"'.$this->debug->utf8->dump($val).'"';
@@ -259,5 +216,78 @@ class OutputText extends OutputBase
     protected function dumpUndefined()
     {
         return 'undefined';
+    }
+
+    /**
+     * Return log entry as text
+     *
+     * @param string $method method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return string
+     */
+    protected function processEntry($method, $args = array(), $meta = array())
+    {
+        $numArgs = count($args);
+        $hasSubs = false;
+        $prefixes = array(
+            'error' => '⦻ ',
+            'info' => 'ℹ ',
+            'log' => '',
+            'warn' => '⚠ ',
+            'assert' => '≠ ',
+            'count' => '✚ ',
+            'time' => '⏲ ',
+            'group' => '▸ ',
+            'groupCollapsed' => '▸ ',
+        );
+        $prefix = isset($prefixes[$method])
+            ? $prefixes[$method]
+            : '';
+        if (in_array($method, array('error','info','log','warn'))) {
+            if (is_string($args[0]) && $numArgs > 1) {
+                $args = $this->processSubstitutions($args, $hasSubs);
+            }
+        } elseif ($method == 'alert') {
+            $class = $args['class'];
+            $prefix = '[Alert '.$class.'] ';
+            $args = array($args['message']);
+        } elseif ($method == 'table') {
+            $caption = $args[1];
+            $args = array($this->methodTable($args[0], $args[2]));
+            if ($caption) {
+                array_unshift($args, $caption);
+            }
+            $numArgs = count($args);
+        }
+        if ($hasSubs) {
+            $glue = '';
+        } else {
+            if (count($args) == 1 && is_string($args[0])) {
+                $args[0] = strip_tags($args[0]);
+            }
+            foreach ($args as $k => $v) {
+                if ($k > 0 || !is_string($v)) {
+                    $args[$k] = $this->dump($v);
+                }
+            }
+            $glue = ', ';
+            if ($numArgs == 2) {
+                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                    ? ''
+                    : ' = ';
+            }
+        }
+        $strIndent = str_repeat('    ', $this->depth);
+        $str = $prefix.implode($glue, $args);
+        $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
+        if (in_array($method, array('group','groupCollapsed'))) {
+            $this->depth ++;
+        } elseif ($method == 'groupEnd' && $this->depth > 0) {
+            $this->depth --;
+        }
+        $str .= "\n";
+        return $str;
     }
 }

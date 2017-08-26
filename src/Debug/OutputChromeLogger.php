@@ -14,6 +14,7 @@
 namespace bdk\Debug;
 
 use bdk\PubSub\Event;
+use bdk\Debug;
 
 /**
  * Output log as via ChromeLogger headers
@@ -30,7 +31,7 @@ class OutputChromeLogger extends OutputBase
      * @var array header data
      */
     protected $json = array(
-        'version' => \bdk\Debug::VERSION,
+        'version' => Debug::VERSION,
         'columns' => array('log', 'backtrace', 'type'),
         'rows' => array()
     );
@@ -44,16 +45,15 @@ class OutputChromeLogger extends OutputBase
      */
     public function onOutput(Event $event)
     {
-        $data = $this->debug->getData();
-        $this->processAlerts($data['alerts']);
-        $this->processSummary($data['logSummary']);
-        foreach ($data['log'] as $args) {
-            $method = array_shift($args);
-            $this->processEntry($method, $args);
-        }
+        $this->data = $this->debug->getData();
+        $this->removeHideIfEmptyGroups();
+        $this->uncollapseErrors();
+        $this->processAlerts();
+        $this->processSummary();
+        $this->processLog();
         if ($this->json['rows']) {
             array_unshift($this->json['rows'], array(
-                array('PHP', $_SERVER['REQUEST_URI']),
+                array('PHP', $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']),
                 null,
                 'groupCollapsed',
             ));
@@ -69,6 +69,7 @@ class OutputChromeLogger extends OutputBase
                 header(self::HEADER_NAME . ': ' . $encoded);
             }
         }
+        $this->data = array();
     }
 
     /**
@@ -90,18 +91,16 @@ class OutputChromeLogger extends OutputBase
      *
      * @param string $method method
      * @param array  $args   arguments
+     * @param array  $meta   meta values
      *
      * @return void
      */
-    protected function processEntry($method, $args = array())
+    protected function processEntry($method, $args = array(), $meta = array())
     {
-        $metaStr = null;
-        if (in_array($method, array('error','warn'))) {
-            $meta = $this->debug->internal->getMetaArg($args);
-            if (isset($meta['file'])) {
-                $metaStr = $meta['file'].': '.$meta['line'];
-            }
-        } elseif ($method == 'table') {
+        $metaStr = isset($meta['file'])
+            ? $meta['file'].': '.$meta['line']
+            : null;
+        if ($method == 'table') {
             $args = array($this->methodTable($args[0], $args[2]));
         } elseif ($method == 'trace') {
             $method = 'table';

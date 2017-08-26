@@ -29,8 +29,9 @@ class OutputScript extends OutputBase
      */
     public function onOutput(Event $event = null)
     {
-        $data = $this->debug->getData();
-        $this->debug->internal->uncollapseErrors();
+        $this->data = $this->debug->getData();
+        $this->removeHideIfEmptyGroups();
+        $this->uncollapseErrors();
         $errorStats = $this->debug->output->errorStats();
         $errorStr = '';
         if ($errorStats['inConsole']) {
@@ -42,53 +43,22 @@ class OutputScript extends OutputBase
         }
         $str = '';
         $str .= '<script type="text/javascript">'."\n";
-        $str .= 'console.groupCollapsed("PHP", "'.$_SERVER['REQUEST_URI'].'", "'.$errorStr.'");'."\n";
-        $str .= $this->processAlerts($data['alerts']);
-        $str .= $this->processSummary($data['logSummary']);
-        foreach ($data['log'] as $args) {
-            $method = array_shift($args);
-            $str .= $this->processEntry($method, $args);
-        }
-        $str .= 'console.groupEnd();'."\n";
+        $str .= $this->processEntry('groupCollapsed', array(
+            'PHP',
+            $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI'],
+            $errorStr,
+        ));
+        $str .= $this->processAlerts();
+        $str .= $this->processSummary();
+        $str .= $this->processLog();
+        $str .= $this->processEntry('groupEnd');
         $str .= '</script>'."\n";
+        $this->data = array();
         if ($event) {
             $event['output'] .= $str;
         } else {
             return $str;
         }
-    }
-
-    /**
-     * Return log entry as text
-     *
-     * @param string $method method
-     * @param array  $args   arguments
-     *
-     * @return string
-     */
-    public function processEntry($method, $args = array())
-    {
-        if ($method == 'assert') {
-            array_unshift($args, false);
-        } elseif ($method == 'count' || $method == 'time') {
-            $method = 'log';
-        } elseif ($method == 'table') {
-            $args = array($this->methodTable($args[0], $args[2]));
-        } elseif ($method == 'trace') {
-            $method = 'table';
-            $args = array($this->methodTable($args[0], array('function','file','line')));
-        } elseif (in_array($method, array('error','warn'))) {
-            $meta = $this->debug->internal->getMetaArg($args);
-            if (isset($meta['file'])) {
-                $args[] = $meta['file'].': line '.$meta['line'];
-            }
-        }
-        foreach ($args as $k => $arg) {
-            $args[$k] = json_encode($this->dump($arg));
-        }
-        $str = 'console.'.$method.'('.implode(',', $args).');'."\n";
-        $str = str_replace(json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
-        return $str;
     }
 
     /**
@@ -101,5 +71,38 @@ class OutputScript extends OutputBase
     protected function dumpUndefined()
     {
         return $this->debug->abstracter->UNDEFINED;
+    }
+
+    /**
+     * Return log entry as text
+     *
+     * @param string $method method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return string
+     */
+    protected function processEntry($method, $args = array(), $meta = array())
+    {
+        if ($method == 'assert') {
+            array_unshift($args, false);
+        } elseif ($method == 'count' || $method == 'time') {
+            $method = 'log';
+        } elseif ($method == 'table') {
+            $args = array($this->methodTable($args[0], $args[2]));
+        } elseif ($method == 'trace') {
+            $method = 'table';
+            $args = array($this->methodTable($args[0], array('function','file','line')));
+        } elseif (in_array($method, array('error','warn'))) {
+            if (isset($meta['file'])) {
+                $args[] = $meta['file'].': line '.$meta['line'];
+            }
+        }
+        foreach ($args as $k => $arg) {
+            $args[$k] = json_encode($this->dump($arg));
+        }
+        $str = 'console.'.$method.'('.implode(',', $args).');'."\n";
+        $str = str_replace(json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
+        return $str;
     }
 }

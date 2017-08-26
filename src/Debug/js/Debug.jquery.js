@@ -6,38 +6,40 @@
 
 (function($) {
 
-	var fontAwesomeCss = "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
-		jQuerySrc = "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
-		classes = {
-			expand : "fa-plus-square-o",
-			collapse : "fa-minus-square-o",
-			empty : "fa-square-o"
-		},
-		iconsMisc = {
-			// ".expand-all" :		'<i class="fa fa-lg fa-plus"></i>',
-			".timestamp" :			'<i class="fa fa-calendar"></i>'
-		},
-		iconsObject = {
-			".debug-value" :		'<i class="fa fa-fw fa-eye" title="via __debugInfo()"></i>',
-			".deprecated" :			'<i class="fa fa-arrow-down" title="Deprecated"></i>',
-			".private-ancestor":    '<i class="fa fa-fw fa-lock"></i>',
-			".toggle-private" :		'<i class="fa fa-user-secret"></i>',
-			".toggle-protected" :	'<i class="fa fa-shield"></i>'
-		},
-		// debug methods (not object methods)
-		iconsMethods = {
-			".group-header" :		'<i class="fa fa-lg ' + classes.collapse + '"></i>',
-			".m_assert" :			'<i class="fa-lg"><b>&ne;</b></i>',
-			".m_count" :			'<i class="fa fa-lg fa-plus-circle"></i>',
-			".m_error" :			'<i class="fa fa-lg fa-times-circle"></i>',
-			".m_info" :				'<i class="fa fa-lg fa-info-circle"></i>',
-			".m_warn" :				'<i class="fa fa-lg fa-warning"></i>',
-			".m_time" :				'<i class="fa fa-lg fa-clock-o"></i>'
+	var options = {
+			fontAwesomeCss: "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
+			jQuerySrc: "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
+			classes: {
+				expand : "fa-plus-square-o",
+				collapse : "fa-minus-square-o",
+				empty : "fa-square-o"
+			},
+			iconsMisc: {
+				// ".expand-all" :		'<i class="fa fa-lg fa-plus"></i>',
+				".timestamp" :			'<i class="fa fa-calendar"></i>'
+			},
+			iconsObject: {
+				".debug-value" :		'<i class="fa fa-fw fa-eye" title="via __debugInfo()"></i>',
+				".deprecated" :			'<i class="fa fa-arrow-down" title="Deprecated"></i>',
+				".private-ancestor":    '<i class="fa fa-fw fa-lock"></i>',
+				".toggle-private" :		'<i class="fa fa-user-secret"></i>',
+				".toggle-protected" :	'<i class="fa fa-shield"></i>'
+			},
+			// debug methods (not object methods)
+			iconsMethods: {
+				".group-header" :		'<i class="fa fa-lg fa-minus-square-o"></i>',
+				".m_assert" :			'<i class="fa-lg"><b>&ne;</b></i>',
+				".m_count" :			'<i class="fa fa-lg fa-plus-circle"></i>',
+				".m_error" :			'<i class="fa fa-lg fa-times-circle"></i>',
+				".m_info" :				'<i class="fa fa-lg fa-info-circle"></i>',
+				".m_warn" :				'<i class="fa fa-lg fa-warning"></i>',
+				".m_time" :				'<i class="fa fa-lg fa-clock-o"></i>'
+			},
+			debugKey: getDebugKey()
 		},
 		intervalCounter = 0,
 		checkInterval,
-		loading = false,
-		debugKey = getDebugKey();
+		loading = false;
 
 	(function(){
 		var i,
@@ -51,7 +53,7 @@
 			}
 		}
 		if (!haveFa) {
-			loadStylesheet(fontAwesomeCss);
+			loadStylesheet(options.fontAwesomeCss);
 		}
 	}());
 
@@ -59,7 +61,7 @@
 		console.warn("jQuery not yet defined");
 		if (document.getElementsByTagName('body')[0].childElementCount == 1) {
 			// output only contains debug
-			loadScript(jQuerySrc);
+			loadScript(options.jQuerySrc);
 		}
 		checkInterval = setInterval(function() {
 			intervalCounter++;
@@ -68,7 +70,7 @@
 				$ = window.jQuery;
 				init();
 			} else if (intervalCounter === 10 && !loading) {
-				loadScript(jQuerySrc);
+				loadScript(options.jQuerySrc);
 			} else if (intervalCounter === 20) {
 				clearInterval(checkInterval);
 			}
@@ -80,10 +82,14 @@
 
 	function init() {
 
+		console.info('init');
+
 		$.fn.debugEnhance = function(method) {
 			// console.warn('debugEnhance', this);
 			var $self = this;
-			if (method) {
+			if (typeof method == "object") {
+				$.extend(options, method);
+			} else if (method) {
 				if (method === "addCss") {
 					addCss(arguments[1]);
 				} else if (method === "expand") {
@@ -135,17 +141,17 @@
 				[types];
 		}
 		if ($.inArray("misc", types) >= 0) {
-			$.each(iconsMisc, function(selector,v){
+			$.each(options.iconsMisc, function(selector,v){
 				$root.find(selector).prepend(v);
 			});
 		}
 		if ($.inArray("object", types) >= 0) {
-			$.each(iconsObject, function(selector,v){
+			$.each(options.iconsObject, function(selector,v){
 				$root.find(selector).prepend(v);
 			});
 		}
 		if ($.inArray("methods", types) >= 0) {
-			$.each(iconsMethods, function(selector,v){
+			$.each(options.iconsMethods, function(selector,v){
 				if ($root.is(selector)) {
 					$root.prepend(v);
 					return false;
@@ -167,14 +173,14 @@
 				$toggle.append(icon);
 			}
 			if (!isExpanded) {
-				toggleIconChange($toggle, classes.expand);
+				toggleIconChange($toggle, options.classes.expand);
 			}
 		} else {
 			$toggle.find(selector).remove();
 			if ($target.children().not(".m_warn, .m_error").length < 1) {
 				// group only contains errors & they're now hidden
 				$toggle.addClass("empty");
-				toggleIconChange($toggle, classes.empty);
+				toggleIconChange($toggle, options.classes.empty);
 			}
 		}
 	}
@@ -182,9 +188,9 @@
 	function groupErrorIconGet($container) {
 		var icon = "";
 		if ($container.find(".m_error").not(".hide").length) {
-			icon = iconsMethods[".m_error"];
+			icon = options.iconsMethods[".m_error"];
 		} else if ($container.find(".m_warn").not(".hide").length) {
-			icon = iconsMethods[".m_warn"];
+			icon = options.iconsMethods[".m_warn"];
 		}
 		return icon;
 	}
@@ -209,10 +215,10 @@
 			$toggle.removeClass("expanded");
 			if (immediate) {
 				$toggle.next().hide();
-				toggleIconChange($toggle, classes.expand);
+				toggleIconChange($toggle, options.classes.expand);
 			} else {
 				$toggle.next().slideUp("fast", function() {
-					toggleIconChange($toggle, classes.expand);
+					toggleIconChange($toggle, options.classes.expand);
 				});
 			}
 		}
@@ -225,7 +231,7 @@
 			var $self = $(this),
 				$expander = $('<span class="t_array-expand" data-toggle="array">' +
 						'<span class="t_keyword">Array</span><span class="t_punct">(</span>' +
-						'<i class="fa ' + classes.expand + '"></i>&middot;&middot;&middot;' +
+						'<i class="fa ' + options.classes.expand + '"></i>&middot;&middot;&middot;' +
 						'<span class="t_punct">)</span>' +
 					"</span>"),
 				$parents = $self.parentsUntil($root, ".t_object, .t_array"),
@@ -246,7 +252,7 @@
 			// add collapse link
 			$self.find(".t_keyword").first().
 				wrap('<span class="t_array-collapse expanded" data-toggle="array">').
-				after('<span class="t_punct">(</span> <i class="fa ' + classes.collapse + '"></i>').
+				after('<span class="t_punct">(</span> <i class="fa ' + options.classes.collapse + '"></i>').
 				parent().next().remove();	// remove original "("
 			if ( !isDirect && $self.parents(".t_array, .t_object").length < 1 ) {
 				// outermost array -> leave open
@@ -318,12 +324,36 @@
 
 	function enhanceGroupHeader($toggle) {
 		var $target = $toggle.next();
-		// console.warn('enhanceGroupHeader');
+			// $toggles;	// this and all parent toggles
+		// console.warn('enhanceGroupHeader', $toggle.text());
 		$toggle.attr("data-toggle", "group");
 		$toggle.removeClass("collapsed"); // collapsed class is never used
 		if ($.trim($target.html()).length < 1) {
+			/*
+			$toggles = options.liveMode
+				? $toggle
+				: $($toggle.parents('.m_group').prev().add($toggle).get().reverse());
+			// console.log('toggles', $toggle.text(), $toggles.length, $toggles);
+			$toggles.each(function(){
+				var $toggle = $(this),
+					$target = $toggle.next();
+				if ($.trim($target.html()).length < 1 && $toggle.hasClass("hide-if-empty")) {
+					$target.remove();
+					$toggle.remove();
+				} else {
+					return false;	// break;
+				}
+			});
+			*/
+			/*
+			if ($toggle.hasClass("hide-if-empty")) {
+				$target.remove();
+				$toggle.remove();
+			}
+			*/
+			// console.log('adding empty class');
 			$toggle.addClass("empty");
-			toggleIconChange($toggle, classes.empty);
+			toggleIconChange($toggle, options.classes.empty);
 			return;
 		}
 		if ($toggle.hasClass("expanded") || $target.find(".m_error, .m_warn").not(".hide").length) {
@@ -349,14 +379,13 @@
 				$toggle.addClass("empty");
 				return;
 			}
-			$toggle.append(' <i class="fa ' + classes.expand + '"></i>');
+			$toggle.append(' <i class="fa ' + options.classes.expand + '"></i>');
 			$toggle.attr("data-toggle", "object");
 			$target.hide();
 		});
 	}
 
-	function enhanceObjectInner($inner)
-	{
+	function enhanceObjectInner($inner) {
 		// console.info("enhanceObjectInner", $inner);
 		var $wrapper = $inner.parent(),
 			hasProtected = $inner.children(".visibility-protected").length > 0,
@@ -442,7 +471,7 @@
 		} else {
 			$target.slideDown("fast", function(){
 				$toggle.addClass("expanded");
-				toggleIconChange($toggle, classes.collapse);
+				toggleIconChange($toggle, options.classes.collapse);
 			});
 		}
 	}
@@ -468,7 +497,7 @@
 	function toggleIconChange($toggle, classNameNew) {
 		var $icon = $toggle.children("i").eq(0);
 		$icon.addClass(classNameNew);
-		$.each(classes, function(i,className) {
+		$.each(options.classes, function(i,className) {
 			if (className !== classNameNew) {
 				$icon.removeClass(className);
 			}
@@ -571,17 +600,17 @@
 
 	function addPersistOption($root) {
 		var $node;
-		if (debugKey) {
+		if (options.debugKey) {
 			$node = $('<label class="debug-cookie"><input type="checkbox"> Keep debug on</label>').css({"float":"right"});
-			if (cookieGet("debug") === debugKey) {
+			if (cookieGet("debug") === options.debugKey) {
 				$node.find("input").prop("checked", true);
 			}
 			$("input", $node).on("change", function() {
 				var checked = $(this).is(":checked");
 				console.log("debug persist checkbox changed", checked);
 				if (checked) {
-					console.log("debugKey", debugKey);
-					cookieSave("debug", debugKey, 7);
+					console.log("debugKey", options.debugKey);
+					cookieSave("debug", options.debugKey, 7);
 				} else {
 					cookieRemove("debug");
 				}

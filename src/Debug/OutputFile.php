@@ -21,7 +21,6 @@ class OutputFile extends OutputText
 
     protected $file;
     protected $fileHandle;
-    protected $groupDepth = 0;
 
     /**
      * {@inheritdoc}
@@ -69,16 +68,15 @@ class OutputFile extends OutputText
         $args = $event['args'];
         $isSummaryBookend = $method == 'groupSummary' || !empty($meta['closesSummary']);
         if ($isSummaryBookend) {
+            fwrite($this->fileHandle, "=========\n");
             return;
         }
         if ($args) {
-            if ($meta) {
-                $args[] = $meta;
-            }
-            $str = $this->processEntry($method, $args, $this->groupDepth);
+            $str = $this->processEntry($method, $args, $meta);
             fwrite($this->fileHandle, $str);
+        } elseif ($method == 'groupEnd' && $this->depth > 0) {
+            $this->depth --;
         }
-        $this->updateDepth($method);
     }
 
     /**
@@ -109,22 +107,6 @@ class OutputFile extends OutputText
                 // we just created file
                 chmod($file, 0660);
             }
-        }
-    }
-
-    /**
-     * Update groupDepth
-     *
-     * @param string $method method
-     *
-     * @return void
-     */
-    protected function updateDepth($method)
-    {
-        if (in_array($method, array('group','groupCollapsed'))) {
-            $this->groupDepth++;
-        } elseif ($method == 'groupEnd' && $this->groupDepth > 0) {
-            $this->groupDepth--;
         }
     }
 }

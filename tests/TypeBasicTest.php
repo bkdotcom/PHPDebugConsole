@@ -22,7 +22,7 @@ class TypeBasicTest extends DebugTestFramework
             array(
                 $ts,
                 '<span class="t_int timestamp" title="'.date('Y-m-d H:i:s', $ts).'">'.$ts.'</span>',
-                $ts.' ('.date('Y-m-d H:i:s').')',
+                '📅 '.$ts.' ('.date('Y-m-d H:i:s').')',
                 $ts.' ('.date('Y-m-d H:i:s').')'
             ),
             array(\bdk\Debug\Abstracter::UNDEFINED,

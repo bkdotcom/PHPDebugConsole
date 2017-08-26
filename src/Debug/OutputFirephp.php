@@ -47,20 +47,19 @@ class OutputFirephp extends OutputBase
             trigger_error('Unable to FirePHP: headers already sent. ('.$file.' line '.$line.')', E_USER_NOTICE);
             return;
         }
-        $this->debug->internal->uncollapseErrors();
-        $data = $this->debug->getData();
+        $this->data = $this->debug->getData();
+        $this->removeHideIfEmptyGroups();
+        $this->uncollapseErrors();
         $this->setHeader('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $this->setHeader('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
         $this->setHeader('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
-        $this->processEntry('groupCollapsed', array('PHP: '.$_SERVER['REQUEST_URI']));
-        $this->processAlerts($data['alerts']);
-        $this->processSummary($data['logSummary']);
-        foreach ($data['log'] as $args) {
-            $method = array_shift($args);
-            $this->processEntry($method, $args);
-        }
-        $this->processEntry('groupEnd', array());
+        $this->processEntry('groupCollapsed', array('PHP: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']));
+        $this->processAlerts();
+        $this->processSummary();
+        $this->processLog();
+        $this->processEntry('groupEnd');
         $this->setHeader('X-Wf-1-Index', $this->messageIndex);
+        $this->data = array();
         return;
     }
 
@@ -106,12 +105,13 @@ class OutputFirephp extends OutputBase
      *
      * @param string $method method
      * @param array  $args   args
+     * @param array  $meta   meta values
      *
      * @return void
      */
-    protected function processEntry($method, $args)
+    protected function processEntry($method, $args = array(), $meta = array())
     {
-        $meta = array(
+        $firePhpMeta = array(
             'Type' => isset($this->firephpMethods[$method])
                 ? $this->firephpMethods[$method]
                 : $this->firephpMethods['log'],
@@ -121,31 +121,31 @@ class OutputFirephp extends OutputBase
             // Collapsed  (for group)
         );
         $value = null;
-        if (in_array($method, array('error','warn'))) {
-            $argsMeta = $this->debug->internal->getMetaArg($args);
-            if (isset($argsMeta['file'])) {
-                $meta['File'] = $argsMeta['file'];
-                $meta['Line'] = $argsMeta['line'];
-            }
+        if (isset($meta['file'])) {
+            $firePhpMeta['File'] = $meta['file'];
+            $firePhpMeta['Line'] = $meta['line'];
         }
         if (in_array($method, array('group','groupCollapsed'))) {
-            $meta['Label'] = $args[0];
-            $meta['Collapsed'] = $method == 'groupCollapsed' ? 'true' : 'false';    // yes, a string
+            $firePhpMeta['Label'] = $args[0];
+            $firePhpMeta['Collapsed'] = $method == 'groupCollapsed'
+                // yes, strings
+                ? 'true'
+                : 'false';
         } elseif ($method == 'table') {
             $value = $this->methodTable($args[0], $args[2]);
             if (isset($args[1])) {
-                $meta['Label'] = $args[1];
+                $firePhpMeta['Label'] = $args[1];
             }
         } elseif ($method == 'trace') {
-            $meta['Type'] = $this->firephpMethods['table'];
+            $firePhpMeta['Type'] = $this->firephpMethods['table'];
             $value = $this->methodTable($args[0], array('function','file','line'));
-            $meta['Label'] = 'trace';
+            $firePhpMeta['Label'] = 'trace';
         } elseif (count($args)) {
             if (count($args) == 1) {
                 $value = $args[0];
                 // no label;
             } else {
-                $meta['Label'] = array_shift($args);
+                $firePhpMeta['Label'] = array_shift($args);
                 $value = count($args) > 1
                     ? $args // firephp only supports label/value...  we'll pass multiple values as an array
                     : $args[0];
@@ -153,7 +153,7 @@ class OutputFirephp extends OutputBase
         }
         $value = $this->dump($value);
         if ($this->messageIndex < self::MESSAGE_LIMIT) {
-            $this->setFirephpHeader($meta, $value);
+            $this->setFirephpHeader($firePhpMeta, $value);
         } elseif ($this->messageIndex === self::MESSAGE_LIMIT) {
             $this->setFirephpHeader(
                 array('Type'=>$this->firephpMethods['warn']),

@@ -26,7 +26,7 @@ class TypeStringTest extends DebugTestFramework
             array('10.10', '<span class="t_string numeric">10.10</span>', '"10.10"', '10.10'),
             array((string) $ts,
                 '<span class="t_string numeric timestamp" title="'.date('Y-m-d H:i:s', $ts).'">'.$ts.'</span>',
-                '"'.$ts.'" ('.date('Y-m-d H:i:s').')',
+                '📅 "'.$ts.'" ('.date('Y-m-d H:i:s').')',
                 $ts.' ('.date('Y-m-d H:i:s').')'
             ),
         );

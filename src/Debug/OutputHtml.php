@@ -12,6 +12,7 @@
 namespace bdk\Debug;
 
 use bdk\PubSub\Event;
+use bdk\Debug;
 
 /**
  * Output log as HTML
@@ -128,8 +129,9 @@ class OutputHtml extends OutputBase
      */
     public function onOutput(Event $event = null)
     {
-        $data = $this->debug->getData();
-        array_unshift($data['alerts'], $this->errorSummary());
+        $this->data = $this->debug->getData();
+        $this->removeHideIfEmptyGroups();
+        array_unshift($this->data['alerts'], $this->errorSummary());
         $str = '<div class="debug">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
@@ -142,8 +144,7 @@ class OutputHtml extends OutputBase
                 .'</script>'."\n";
         }
         $str .= '<div class="debug-bar"><h3>Debug Log</h3></div>'."\n";
-        $str .= $this->processAlerts($data['alerts']);
-
+        $str .= $this->processAlerts();
         /*
             If outputing script, initially hide the output..
             this will help page load performance (fewer redraws)... by magnitudes
@@ -152,17 +153,15 @@ class OutputHtml extends OutputBase
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>'."\n";
         }
 
-        $str .= '<div class="debug-header clearfix" '.($this->debug->getCfg('outputScript') ? 'style="display:none;"' : '').'>'."\n";
-        $str .= $this->processSummary($data['logSummary']);
+        $str .= '<div class="debug-header clearfix"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
+        $str .= $this->processSummary();
         $str .= $this->processFatalError();
         $str .= '</div>'."\n";
-        $str .= '<div class="debug-content clearfix" '.($this->debug->getCfg('outputScript') ? 'style="display:none;"' : '').'>'."\n";
-        foreach ($data['log'] as $args) {
-            $method = array_shift($args);
-            $str .= $this->processEntry($method, $args);
-        }
+        $str .= '<div class="debug-content clearfix"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
+        $str .= $this->processLog();
         $str .= '</div>'."\n";  // close debug-content
         $str .= '</div>'."\n";  // close debug
+        $this->data = array();
         if ($event) {
             $event['output'] .= $str;
         } else {
@@ -173,7 +172,7 @@ class OutputHtml extends OutputBase
     /**
      * handle html output of group, groupCollapsed, & groupEnd
      *
-     * @param string $method method
+     * @param string $method group|groupCollapsed|groupEnd
      * @param array  $args   args passed to method
      *
      * @return string
@@ -182,27 +181,27 @@ class OutputHtml extends OutputBase
     {
         $str = '';
         if (in_array($method, array('group','groupCollapsed'))) {
-            $collapsedClass = '';
             if (!empty($args)) {
                 $label = array_shift($args);
-                $argStr = '';
-                if ($args) {
-                    foreach ($args as $k => $v) {
-                        $args[$k] = $this->dump($v);
-                    }
-                    $argStr = implode(', ', $args);
+                foreach ($args as $k => $v) {
+                    $args[$k] = $this->dump($v);
                 }
-                $collapsedClass = $method == 'groupCollapsed'
-                    ? 'collapsed'
-                    : 'expanded';
-                $str .= '<div class="group-header '.$collapsedClass.'">'
-                        .'<span class="group-label">'
-                            .$label
-                            .( !empty($argStr)
-                                ? '(</span>'.$argStr.'<span class="group-label">)'
-                                : '' )
-                        .'</span>'
-                    .'</div>'."\n";
+                $argStr = implode(', ', $args);
+                $str .= '<div '.$this->debug->utilities->buildAttribString(array(
+                    'class' => array(
+                        'group-header',
+                        $method == 'groupCollapsed'
+                            ? 'collapsed'
+                            : 'expanded',
+                    ),
+                )).'>'
+                    .'<span class="group-label">'
+                        .$label
+                        .( !empty($argStr)
+                            ? '(</span>'.$argStr.'<span class="group-label">)'
+                            : '' )
+                    .'</span>'
+                .'</div>'."\n";
             }
             $str .= '<div class="m_group">';
         } elseif ($method == 'groupEnd') {
@@ -728,14 +727,12 @@ class OutputHtml extends OutputBase
     /**
      * process alerts
      *
-     * @param array $alerts alerts data
-     *
      * @return string
      */
-    protected function processAlerts($alerts = array())
+    protected function processAlerts()
     {
         $str = '';
-        foreach ($alerts as $alert) {
+        foreach ($this->data['alerts'] as $alert) {
             if (is_string($alert)) {
                 // errorSummary
                 $alert = array(
@@ -763,16 +760,17 @@ class OutputHtml extends OutputBase
      *
      * @param string $method method
      * @param array  $args   args
+     * @param array  $meta   meta values
      *
      * @return string
      */
-    protected function processEntry($method, $args)
+    protected function processEntry($method, $args = array(), $meta = array())
     {
         $str = '';
         if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->buildGroupMethod($method, $args);
         } elseif ($method == 'table') {
-            $str = call_user_func_array(array($this,'buildTable'), $args);
+            $str = $this->buildTable($args[0], $args[1], $args[2]);
         } elseif ($method == 'trace') {
             $str = $this->buildTable($args[0], 'trace', array('function','file','line'));
             $str = str_replace('<table>', '<table class="trace no-sort">', $str);
@@ -782,7 +780,6 @@ class OutputHtml extends OutputBase
                 'title' => null,
             );
             if (in_array($method, array('error','warn'))) {
-                $meta = $this->debug->internal->getMetaArg($args);
                 if (isset($meta['file'])) {
                     $attribs['title'] = $meta['file'].': line '.$meta['line'];
                 }
@@ -838,7 +835,7 @@ class OutputHtml extends OutputBase
             $str = $this->processEntry('error', array(
                 $lastError,
                 array(
-                    'debug' => \bdk\Debug::META,
+                    'debug' => Debug::META,
                     'errorCat' => 'fatal',
                 ),
             ));

@@ -15,6 +15,7 @@
 namespace bdk\Debug;
 
 use bdk\PubSub\Event;
+use bdk\Debug;
 
 /**
  * Methods that are internal to the debug class
@@ -28,19 +29,16 @@ use bdk\PubSub\Event;
 class Internal
 {
 
-    private $data;
     private $debug;
     private $error;     // store error object when logging an error
 
     /**
      * Constructor
      *
-     * @param \bdk\Debug $debug debug instance
-     * @param array      $data  data
+     * @param Debug $debug debug instance
      */
-    public function __construct(\bdk\Debug $debug, &$data)
+    public function __construct(Debug $debug)
     {
-        $this->data = $data;
         $this->debug = $debug;
         $this->debug->eventManager->subscribe('debug.construct', array($this, 'onConstruct'), -1);
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onLog'), -1);
@@ -107,7 +105,7 @@ class Internal
     public static function getMetaArg(&$args)
     {
         $end = end($args);
-        if (is_array($end) && ($key = array_search(\bdk\Debug::META, $end, true)) !== false) {
+        if (is_array($end) && ($key = array_search(Debug::META, $end, true)) !== false) {
             array_pop($args);
             unset($end[$key]);
             return $end;
@@ -279,27 +277,5 @@ class Internal
             echo $this->debug->output();
         }
         return;
-    }
-
-    /**
-     * Uncollapse groups containing errors.
-     *
-     * @return void
-     */
-    public function uncollapseErrors()
-    {
-        $groupStack = array();
-        for ($i = 0, $count = count($this->data['log']); $i < $count; $i++) {
-            $method = $this->data['log'][$i][0];
-            if (in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[] = $i;
-            } elseif ($method == 'groupEnd') {
-                array_pop($groupStack);
-            } elseif (in_array($method, array('error', 'warn'))) {
-                foreach ($groupStack as $i2) {
-                    $this->data['log'][$i2][0] = 'group';
-                }
-            }
-        }
     }
 }

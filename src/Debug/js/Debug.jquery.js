@@ -59,7 +59,7 @@
 
 	if ( !$ ) {
 		console.warn("jQuery not yet defined");
-		if (document.getElementsByTagName('body')[0].childElementCount == 1) {
+		if (document.getElementsByTagName("body")[0].childElementCount == 1) {
 			// output only contains debug
 			loadScript(options.jQuerySrc);
 		}
@@ -82,10 +82,10 @@
 
 	function init() {
 
-		console.info('init');
+		console.info("init");
 
 		$.fn.debugEnhance = function(method) {
-			// console.warn('debugEnhance', this);
+			// console.warn("debugEnhance", this);
 			var $self = this;
 			if (typeof method == "object") {
 				$.extend(options, method);
@@ -104,10 +104,11 @@
 			this.each(function(){
 				var $self = $(this);
 				if ($self.hasClass("enhanced")) {
+					// console.log("enhanced");
 					return;
 				}
 				if ($self.hasClass("debug")) {
-					console.warn('enhancing debug');
+					console.warn("enhancing debug");
 					addCss(this.selector);
 					addPersistOption($self);
 					addExpandAll($self);
@@ -120,6 +121,7 @@
 					$self.find(".loading").hide();
 					$self.addClass("enhanced");
 				} else {
+					// console.log("enhancing node");
 					enhanceEntry($self);
 				}
 			});
@@ -272,13 +274,26 @@
 		});
 	}
 
+	function enhanceEntries($root) {
+		// console.log("enhanceEntries", $root);
+		$root.hide();
+		$root.children().not(".m_group").each(function(){
+			enhanceEntry($(this));
+		});
+		$root.show();
+	}
+
 	function enhanceEntry($root) {
 		// console.log("enhanceEntry", $root);
+		if ($root.hasClass("enhanced")) {
+			return;
+		}
 		if ($root.hasClass("group-header")) {
 			// minimal enhancement... just adds data-toggle attr and hides target
 			// target will not be enhanced until expanded
 			addIcons($root, ["methods"]);
 			enhanceGroupHeader($root);
+			$root.addClass("enhanced");
 		} else if ($root.hasClass("m_groupSummary")) {
 			// groupSummary has no toggle.. and is uncollapsed -> enhance
 			enhanceEntries($root);
@@ -286,7 +301,7 @@
 			/*
 				group contents will get enhanced when expanded
 			*/
-			// console.warn("enhanceEntry()");
+			// console.warn("enhanceEntry() -> m_group");
 		} else {
 			// console.log("enhance", $root);
 			$root.addClass("enhanced");
@@ -298,7 +313,7 @@
 				var $this = $(this),
 					$i = $this.find("i"),
 					text = $this.text(),
-					$span = $('<span>'+text+'</span>');
+					$span = $("<span>"+text+"</span>");
 				if ($this.hasClass("t_string")) {
 					$span.addClass("t_string numeric");
 				} else {
@@ -313,45 +328,14 @@
 		}
 	}
 
-	function enhanceEntries($root) {
-		// console.log("enhanceEntries", $root);
-		$root.hide();
-		$root.children().not(".m_group").each(function(){
-			enhanceEntry($(this));
-		});
-		$root.show();
-	}
-
 	function enhanceGroupHeader($toggle) {
 		var $target = $toggle.next();
 			// $toggles;	// this and all parent toggles
-		// console.warn('enhanceGroupHeader', $toggle.text());
+		// console.warn("enhanceGroupHeader", $toggle.text(), $toggle.attr("class"));
 		$toggle.attr("data-toggle", "group");
 		$toggle.removeClass("collapsed"); // collapsed class is never used
 		if ($.trim($target.html()).length < 1) {
-			/*
-			$toggles = options.liveMode
-				? $toggle
-				: $($toggle.parents('.m_group').prev().add($toggle).get().reverse());
-			// console.log('toggles', $toggle.text(), $toggles.length, $toggles);
-			$toggles.each(function(){
-				var $toggle = $(this),
-					$target = $toggle.next();
-				if ($.trim($target.html()).length < 1 && $toggle.hasClass("hide-if-empty")) {
-					$target.remove();
-					$toggle.remove();
-				} else {
-					return false;	// break;
-				}
-			});
-			*/
-			/*
-			if ($toggle.hasClass("hide-if-empty")) {
-				$target.remove();
-				$toggle.remove();
-			}
-			*/
-			// console.log('adding empty class');
+			// console.log("adding empty class");
 			$toggle.addClass("empty");
 			toggleIconChange($toggle, options.classes.empty);
 			return;
@@ -371,9 +355,11 @@
 		$root.find(".t_object > .t_object-class").each( function() {
 			var $toggle = $(this),
 				$target = $toggle.next();
+			/*
 			if ($toggle.hasClass("enhanced")) {
 				return;
 			}
+			*/
 			$toggle.addClass("enhanced");
 			if ($target.is(".t_recursion, .excluded")) {
 				$toggle.addClass("empty");
@@ -495,6 +481,7 @@
 	}
 
 	function toggleIconChange($toggle, classNameNew) {
+		// console.log("toggleIconChange", $toggle.text(), classNameNew);
 		var $icon = $toggle.children("i").eq(0);
 		$icon.addClass(classNameNew);
 		$.each(options.classes, function(i,className) {
@@ -648,7 +635,7 @@
 	}
 
 	function registerListeners($root) {
-		console.warn('registerListeners');
+		console.warn("registerListeners");
 		$root.on("click", "[data-toggle=array]", function(){
 			toggleCollapse(this);
 			return false;
@@ -753,14 +740,14 @@
 				curDir = $th.hasClass("sort-asc") ? "asc" : "desc",
 				newDir = curDir === "desc" ? "asc" : "desc";
 			$cells.removeClass("sort-asc sort-desc");
-			$th.addClass('sort-'+newDir);
+			$th.addClass("sort-"+newDir);
 			if (!$th.find(".sort-arrows").length) {
 				// this th needs the arrow markup
 				$cells.find(".sort-arrows").remove();
 				$th.append('<span class="fa fa-stack sort-arrows pull-right">' +
 						'<i class="fa fa-caret-up" aria-hidden="true"></i>' +
 						'<i class="fa fa-caret-down" aria-hidden="true"></i>' +
-					'</span>');
+					"</span>");
 			}
 			sortTable(table, i, newDir);
 		});

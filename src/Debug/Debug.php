@@ -30,7 +30,7 @@ class Debug
     protected $data = array();
     protected $groupDepthRef;   // points to groupDepth or groupDepthSummary
     protected $logRef;          // points to either log or logSummary
-    protected $config;          // config class
+    protected $config;          // config instance
     public $abstracter;
     public $errorHandler;
     public $internal;
@@ -125,7 +125,7 @@ class Debug
         $this->config->setCfg($cfg);
         $this->errorHandler->eventManager->subscribe('errorHandler.error', array($this->errorEmailer, 'onErrorAddEmailData'), 1);
         $this->errorHandler->eventManager->subscribe('errorHandler.error', array($this->errorEmailer, 'onErrorEmail'), -1);
-        $this->eventManager->publish('debug.construct', $this);
+        $this->eventManager->publish('debug.bootstrap', $this);
         $this->data['entryCountInitial'] = count($this->data['log']);
         return;
     }

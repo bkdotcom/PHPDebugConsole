@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Event;
+
 /**
  * Config
  */
@@ -90,30 +92,9 @@ class Config
             : null;
         $new = $this->normalizeValues($path, $newVal);
         $new = $this->setCopyValues($new);
-        if (isset($new['debug']['key'])) {
-            $new['debug'] = array_merge(
-                $new['debug'],
-                $this->setGetKeyValues($new['debug']['key'])
-            );
-        }
         foreach ($new as $k => $v) {
             if ($k == 'debug') {
-                if (isset($v['onConstruct'])) {
-                    $this->debug->eventManager->subscribe('debug.construct', $v['onConstruct']);
-                    unset($v['onConstruct']);
-                }
-                if (isset($v['onLog'])) {
-                    $this->debug->eventManager->subscribe('debug.log', $v['onLog']);
-                    unset($v['onLog']);
-                }
-                if (isset($v['logServerKeys'])) {
-                    // don't append, replace
-                    $this->cfg['logServerKeys'] = array();
-                }
-                if (isset($v['file'])) {
-                    $this->debug->addPlugin($this->debug->output->outputFile);
-                }
-                $this->cfg =  $this->debug->utilities->arrayMergeDeep($this->cfg, $v);
+                $this->setDebugCfg($v);
             } elseif (isset($this->debug->{$k}) && is_object($this->debug->{$k})) {
                 $this->debug->{$k}->setCfg($v);
             }
@@ -170,6 +151,43 @@ class Config
             }
         }
         return $values;
+    }
+
+    /**
+     * Set Debug config
+     *
+     * @param array $cfg Debug config values
+     *
+     * @return void
+     */
+    protected function setDebugCfg($cfg)
+    {
+        if (isset($cfg['key'])) {
+            $cfg = array_merge($cfg, $this->setGetKeyValues($cfg['key']));
+        }
+        if (isset($cfg['logServerKeys'])) {
+            // don't append, replace
+            $this->cfg['logServerKeys'] = array();
+        }
+        $this->cfg =  $this->debug->utilities->arrayMergeDeep($this->cfg, $cfg);
+        if (isset($cfg['onBootstrap'])) {
+            $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+            if ($backtrace[2]['function'] == '__construct') {
+                // we're being called from construct... treat this "normal"
+                $this->debug->eventManager->subscribe('debug.bootstrap', $cfg['onBootstrap']);
+            } else {
+                // boostrap has already occured
+                call_user_func($cfg['onBootstrap'], new Event($this->debug));
+            }
+            unset($this->cfg['onBootstrap']);
+        }
+        if (isset($cfg['onLog'])) {
+            $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
+            unset($this->cfg['onLog']);
+        }
+        if (isset($cfg['file'])) {
+            $this->debug->addPlugin($this->debug->output->outputFile);
+        }
     }
 
     /**

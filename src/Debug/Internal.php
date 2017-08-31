@@ -40,7 +40,7 @@ class Internal
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->debug->eventManager->subscribe('debug.construct', array($this, 'onConstruct'), -1);
+        $this->debug->eventManager->subscribe('debug.bootstrap', array($this, 'onBootstrap'), -1);
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onLog'), -1);
         $this->debug->eventManager->subscribe('debug.output', array($this, 'onOutput'));
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
@@ -130,7 +130,7 @@ class Internal
      *
      * @return void
      */
-    public function onConstruct()
+    public function onBootstrap()
     {
         if ($this->debug->getCfg('logEnvInfo')) {
             $collectWas = $this->debug->setCfg('collect', true);

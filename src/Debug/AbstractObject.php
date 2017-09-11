@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v1.4.0
+ * @version   v2.0.0
  */
 
 namespace bdk\Debug;
@@ -619,7 +619,12 @@ class AbstractObject
                 $sortData = array();
                 foreach ($array as $name => $info) {
                     $sortData['name'][$name] = strtolower($name);
-                    $sortData['vis'][$name] = array_search($info['visibility'], $sortVisOrder);
+                    /*
+                        visibility may not be set on methods... if methods weren't collected, but still collected __toString/returnValue
+                    */
+                    $sortData['vis'][$name] = isset($info['visibility'])
+                        ? array_search($info['visibility'], $sortVisOrder)
+                        : count($sortVisOrder);
                 }
                 array_multisort($sortData['vis'], $sortData['name'], $array);
             }

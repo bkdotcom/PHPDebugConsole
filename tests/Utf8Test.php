@@ -3,7 +3,7 @@
  * Run with --process-isolation option
  */
 
-use \bdk\Debug\Utf8;
+use bdk\Debug\Utf8;
 
 /**
  * PHPUnit tests for Debug class

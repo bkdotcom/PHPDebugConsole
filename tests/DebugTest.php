@@ -329,9 +329,8 @@ EOD;
         $trace = $this->debug->getData('log/0/1');
         $this->assertSame(__FILE__, $trace[0]['file']);
         $this->assertSame(__LINE__ - 3, $trace[0]['line']);
-        $this->assertSame(__CLASS__.'->'.__FUNCTION__, $trace[0]['function']);
-        // $this->assertSame(__FUNCTION__, $trace[0]['function']);
-        // $this->assertSame(__CLASS__, $trace[0]['class']);
+        $this->assertSame('bdk\\Debug->trace', $trace[0]['function']);
+        $this->assertSame(__CLASS__.'->'.__FUNCTION__, $trace[1]['function']);
     }
 
     /**

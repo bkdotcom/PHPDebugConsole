@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v1.4.0
+ * @version   v2.0.0
  */
 
 namespace bdk\Debug;
@@ -19,6 +19,19 @@ use bdk\Debug;
  */
 class OutputHtml extends OutputBase
 {
+
+    protected $errorSummary;
+
+    /**
+     * Constructor
+     *
+     * @param object $debug debug instance
+     */
+    public function __construct($debug)
+    {
+        $this->errorSummary = new OutputHtmlErrorSummary($this, $debug->errorHandler);
+        parent::__construct($debug);
+    }
 
     /**
      * Formats an array as a table
@@ -131,7 +144,7 @@ class OutputHtml extends OutputBase
     {
         $this->data = $this->debug->getData();
         $this->removeHideIfEmptyGroups();
-        array_unshift($this->data['alerts'], $this->errorSummary());
+        array_unshift($this->data['alerts'], $this->errorSummary->build($this->debug->output->errorStats()));
         $str = '<div class="debug">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
@@ -153,11 +166,10 @@ class OutputHtml extends OutputBase
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>'."\n";
         }
 
-        $str .= '<div class="debug-header clearfix"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
+        $str .= '<div class="debug-header m_group"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
         $str .= $this->processSummary();
-        $str .= $this->processFatalError();
         $str .= '</div>'."\n";
-        $str .= '<div class="debug-content clearfix"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
+        $str .= '<div class="debug-content m_group"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
         $str .= $this->processLog();
         $str .= '</div>'."\n";  // close debug-content
         $str .= '</div>'."\n";  // close debug
@@ -646,85 +658,6 @@ class OutputHtml extends OutputBase
     }
 
     /**
-     * Returns an error summary
-     *
-     * @return string html
-     */
-    protected function errorSummary()
-    {
-        $html = '';
-        $errorStats = $this->debug->output->errorStats();
-        if ($errorStats['inConsole']) {
-            $html .= $this->errorSummaryInConsole($errorStats);
-        }
-        if ($errorStats['notInConsole']) {
-            $count = 0;
-            $errors = $this->debug->errorHandler->get('errors');
-            $htmlNotIn = '<ul class="list-unstyled indent">';
-            foreach ($errors as $err) {
-                if ($err['suppressed'] || $err['inConsole']) {
-                    continue;
-                }
-                $count ++;
-                $htmlNotIn .= '<li>'.$err['typeStr'].': '.$err['file'].' (line '.$err['line'].'): '.$err['message'].'</li>';
-            }
-            $htmlNotIn .= '</ul>';
-            $count = $count == 1
-                ? 'was 1 error'
-                : 'were '.$count.' errors';
-            $html .= '<h3>'.($errorStats['inConsole'] ? 'Additionally, there ' : 'There ')
-                .$count.' captured while not collecting debug info</h3>'
-                .$htmlNotIn;
-        }
-        return $html;
-    }
-
-    /**
-     * returns summary for errors that were logged to console (while this->collect = true)
-     *
-     * @param array $stats stats as returned from errorStats()
-     *
-     * @return string
-     */
-    protected function errorSummaryInConsole($stats)
-    {
-        if ($stats['inConsoleCategories'] == 1) {
-            // all same category of error
-            reset($stats['counts']);
-            $category = key($stats['counts']);
-            if ($stats['inConsole'] == 1) {
-                $html = 'There was 1 error';
-                if ($category == 'fatal') {
-                    $html = ''; // don't bother with this alert..
-                                // fatal are still prominently displayed
-                } elseif ($category != 'error') {
-                    $html .= ' ('.$category.')';
-                }
-            } else {
-                $html = 'There were '.$stats['inConsole'].' errors';
-                if ($category != 'error') {
-                    $html .= ' of type '.$category;
-                }
-            }
-            if ($html) {
-                $html = '<h3 class="error-'.$category.'">'.$html.'</h3>'."\n";
-            }
-        } else {
-            // multiple error categories
-            $html = '<h3>There were '.$stats['inConsole'].' errors:</h3>'."\n";
-            $html .= '<ul class="list-unstyled indent">';
-            foreach ($stats['counts'] as $category => $a) {
-                if (!$a['inConsole']) {
-                    continue;
-                }
-                $html .= '<li class="error-'.$category.'">'.$category.': '.$a['inConsole'].'</li>';
-            }
-            $html .= '</ul>';
-        }
-        return $html;
-    }
-
-    /**
      * process alerts
      *
      * @return string
@@ -737,7 +670,7 @@ class OutputHtml extends OutputBase
                 // errorSummary
                 $alert = array(
                     'message' => $alert,
-                    'class' => 'danger',
+                    'class' => 'danger error-summary',
                     'dismissible' => false,
                 );
             }
@@ -772,7 +705,7 @@ class OutputHtml extends OutputBase
         } elseif ($method == 'table') {
             $str = $this->buildTable($args[0], $args[1], $args[2]);
         } elseif ($method == 'trace') {
-            $str = $this->buildTable($args[0], 'trace', array('function','file','line'));
+            $str = $this->buildTable($args[0], 'trace', array('file','line','function'));
             $str = str_replace('<table>', '<table class="trace no-sort">', $str);
         } else {
             $attribs = array(
@@ -814,32 +747,6 @@ class OutputHtml extends OutputBase
             $str = '<div '.$this->debug->utilities->buildAttribString($attribs).'>'.$args.'</div>';
         }
         $str .= "\n";
-        return $str;
-    }
-
-    /**
-     * If lastError was fatal, output the error
-     *
-     * @return string
-     */
-    protected function processFatalError()
-    {
-        $str = '';
-        $lastError = $this->debug->errorHandler->get('lastError');
-        if ($lastError && $lastError['category'] === 'fatal') { // && ($lastErrorValues = $lastError->getValues())
-            $keysKeep = array('typeStr','message','file','line');
-            $keysRemove = array_diff(array_keys($lastError), $keysKeep);
-            foreach ($keysRemove as $k) {
-                unset($lastError[$k]);
-            }
-            $str = $this->processEntry('error', array(
-                $lastError,
-                array(
-                    'debug' => Debug::META,
-                    'errorCat' => 'fatal',
-                ),
-            ));
-        }
         return $str;
     }
 

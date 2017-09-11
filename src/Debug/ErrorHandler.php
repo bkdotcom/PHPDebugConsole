@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v1.4.0
+ * @version   v2.0.0
  */
 
 namespace bdk\Debug;
@@ -105,6 +105,39 @@ class ErrorHandler
         //    so, always register, and have shutdownFunction check if "registered"
         register_shutdown_function(array($this,'shutdownFunction'));
         return;
+    }
+
+    /**
+     * Get backtrace
+     *
+     * To get trace from within shutdown function utilizes xdebug_get_function_stack() if available
+     *
+     * @return array
+     */
+    public function backtrace()
+    {
+        $error = error_get_last();
+        if ($error && in_array($error['type'], $this->errCategories['fatal']) && extension_loaded('xdebug')) {
+            unset($error['type']);
+            $backtrace = xdebug_get_function_stack();
+            $backtrace = array_reverse($backtrace);
+            array_pop($backtrace);
+            foreach ($backtrace as &$frame) {
+                if (isset($frame['class'])) {
+                    $frame['type'] = $frame['type'] === 'dynamic' ? '->' : '::';
+                }
+                if (isset($frame['include_filename'])) {
+                    $frame['function'] = 'include or require';
+                }
+            }
+            unset($frame);
+            $backtrace = $this->backtraceRemoveInternal($backtrace);
+            $backtrace[0] = $error;
+        } else {
+            $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            $backtrace = $this->backtraceRemoveInternal($backtrace);
+        }
+        return $this->normalizeTrace($backtrace);
     }
 
     /**
@@ -357,6 +390,62 @@ class ErrorHandler
     }
 
     /**
+     * Remove internal frames from backtrace
+     *
+     * @param array $backtrace backtrace
+     *
+     * @return array
+     */
+    protected function backtraceRemoveInternal($backtrace)
+    {
+        for ($i = count($backtrace) - 1; $i >= 0; $i--) {
+            $frame = $backtrace[$i];
+            if (isset($frame['class']) && strpos($frame['class'], __NAMESPACE__.'\\') === 0) {
+                break;
+            }
+        }
+        return array_slice($backtrace, $i);
+    }
+
+    /**
+     * "Normalize" backtrace from debug_backtrace() or xdebug_get_function_stack();
+     *
+     * @param array $backtrace trace/stack from debug_backtrace() or xdebug_Get_function_stack()
+     *
+     * @return array
+     */
+    protected function normalizeTrace($backtrace)
+    {
+        $backtraceNew = array();
+        $frameDefault = array(
+            'file' => null,
+            'line' => null,
+            'function' => null,
+            'class' => null,
+            'type' => null,
+        );
+        $funcsSkip = array('call_user_func','call_user_func_array');
+        for ($i = 0, $count=count($backtrace); $i < $count; $i++) {
+            $frame = array_merge($frameDefault, $backtrace[$i]);
+            $frame = array_intersect_key($frame, $frameDefault);
+            if (in_array($frame['function'], $funcsSkip)) {
+                $backtraceNew[count($backtraceNew) - 1]['file'] = $frame['file'];
+                $backtraceNew[count($backtraceNew) - 1]['line'] = $frame['line'];
+                continue;
+            }
+            $frame['function'] = preg_match('/\{closure\}$/', $frame['function'])
+                ? $frame['function']
+                : $frame['class'].$frame['type'].$frame['function'];
+            if (!$frame['function']) {
+                unset($frame['function']);
+            }
+            unset($frame['class'], $frame['type']);
+            $backtraceNew[] = $frame;
+        }
+        return $backtraceNew;
+    }
+
+    /**
      * Build error object
      *
      * Error object is simply an event object
@@ -385,6 +474,7 @@ class ErrorHandler
             'file'      => $file,
             'line'      => $line,
             'vars'      => $vars,
+            'backtrace' => array(), // only for fatal type errors, and only if xdebug is enabled
             'errorLog'  => false,
             'firstOccur' => true,
             'hash'      => null,
@@ -396,6 +486,9 @@ class ErrorHandler
             $errorValues['file'] = $this->data['errorCaller']['file'];
             $errorValues['line'] = $this->data['errorCaller']['line'];
         }
+        if (in_array($errType, array(E_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR)) && extension_loaded('xdebug')) {
+            $errorValues['backtrace'] = $this->backtrace();
+        }
         $errorValues = array_merge($errorValues, array(
             'hash' => $hash,
             'firstOccur' => $firstOccur,
@@ -404,7 +497,7 @@ class ErrorHandler
                 ? false
                 : $errorValues['suppressed'],
         ));
-        return new Event(null, $errorValues);
+        return new Event($this, $errorValues);
     }
 
     /**

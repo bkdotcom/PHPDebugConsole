@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v1.4.0
+ * @version   v2.0.0
  *
  * @see https://craig.is/writing/chrome-logger/techspecs
  */

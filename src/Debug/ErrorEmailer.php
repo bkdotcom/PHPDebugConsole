@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v1.4.0
+ * @version   v2.0.0
  */
 
 namespace bdk\Debug;
@@ -23,6 +23,7 @@ class ErrorEmailer
 
     protected $cfg = array();
     protected $throttleData = array();
+    protected $errTypes = array();  // populated onError
 
     /**
      * Constructor
@@ -34,14 +35,14 @@ class ErrorEmailer
         $this->cfg = array(
             'emailFunc' => 'mail',
             'emailMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-            'emailMin' => 15,
+            'emailMin' => 15,       // 0 = no throttle
             'emailThrottleFile' => __DIR__.'/error_emails.json',
             'emailThrottledSummary' => true,    // if errors have been throttled, should we email a summary email of throttled errors?
                                                 //    (first occurance of error is never throttled)
             'emailTo' => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
-            'emailTraceMask' => E_WARNING | E_USER_ERROR | E_USER_NOTICE,
+            'emailTraceMask' => E_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
         );
         $this->setCfg($cfg);
         return;
@@ -151,22 +152,18 @@ class ErrorEmailer
      */
     protected function backtraceStr(Event $error)
     {
-        /*
-            backtrace:
-            0: here
-            1: call_user_func_array
-            2: errorHandler
-            3: where error occured
-        */
-        $backtrace = debug_backtrace(false); // no object info
-        $backtrace = array_slice($backtrace, 3);
-        foreach ($backtrace as $k => $frame) {
-            if ($frame['file'] == $error['file'] && $frame['line'] == $error['line']) {
-                $backtrace = array_slice($backtrace, $k);
-                break;
-            }
+        if ($error['backtrace']) {
+            // backtrace provided
+            $backtrace = $error['backtrace'];
+        } else {
+            $backtrace = $error->getSubject()->backtrace();
         }
-        $backtrace[0]['vars'] = $error['vars'];
+        if (count($backtrace) < 2) {
+            return '';
+        }
+        if ($backtrace && $error['vars']) {
+            $backtrace[0]['vars'] = $error['vars'];
+        }
         $debug = __NAMESPACE__;
         if (class_exists($debug)) {
             $debug = $debug::getInstance();
@@ -226,7 +223,7 @@ class ErrorEmailer
             .'line: '.$error['line']."\n"
             .'remote_addr: '.$_SERVER['REMOTE_ADDR']."\n"
             .'http_host: '.$_SERVER['HTTP_HOST']."\n"
-            .'referer: '.$_SERVER['HTTP_REFERER']."\n"
+            .'referer: '.(isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'null')."\n"
             .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
             .'';
         if (!empty($_POST)) {
@@ -326,6 +323,9 @@ class ErrorEmailer
                 'emailedTo'  => $this->cfg['emailTo'],
                 'countSince' => 0,
             );
+        }
+        if (empty($this->errTypes)) {
+            $this->errTypes = $error->getSubject()->get('errTypes');
         }
         $this->throttleDataExport();
         return;

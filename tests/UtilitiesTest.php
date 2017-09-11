@@ -3,7 +3,7 @@
  * Run with --process-isolation option
  */
 
-use \bdk\Debug\Utilities;
+use bdk\Debug\Utilities;
 
 /**
  * PHPUnit tests for Debug class

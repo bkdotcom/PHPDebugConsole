@@ -267,7 +267,9 @@
 
 	function enhanceErrorSummary($root) {
 		// console.log("enhanceSummary");
-		$root.find(".alert [class*=error-]").each( function() {
+		var $errorSummary = $root.find(".alert.error-summary");
+		$errorSummary.find("h3:first-child").prepend(options.iconsMethods[".m_error"]);
+		$errorSummary.find("li[class*=error-]").each( function() {
 			var html = $(this).html(),
 				htmlNew = '<label><input type="checkbox" checked data-toggle="error"/> ' + html + "</label>";
 			$(this).html(htmlNew);
@@ -534,7 +536,9 @@
 	 * Adds CSS to head of page
 	 */
 	function addCss(scope) {
-		var css = ""+
+		var css = "" +
+			".debug .error-fatal i.fa-times-circle { position:absolute; top:10px; }" +
+			".debug .error-fatal:before { margin-left:14px; }" +
 			".debug .debug-cookie { color: #666; }" +
 			//".debug .debug-cookie input { vertical-align:sub; }" +
 			".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
@@ -666,7 +670,7 @@
 			$root.find(selector).toggle( $(this).is(":checked") );
 			// update icon for all groups having nested error
 			// groups containing only hidden erros will loose +/-
-			$root.find(".m_error, .m_warn").parents(".m_group").prev().each(function(){
+			$root.find(".m_error, .m_warn").parents(".m_group").prev(".group-header").each(function(){
 				groupErrorIconChange($(this));
 			});
 		});

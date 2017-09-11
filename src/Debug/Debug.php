@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v1.4.0
+ * @version   v2.0.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -40,7 +40,7 @@ class Debug
     public $eventManager;
 
     const META = "\x00meta\x00";
-    const VERSION = "1.4.0";
+    const VERSION = "2.0.0";
 
     /**
      * Constructor
@@ -505,10 +505,11 @@ class Debug
      * @param string         $label            unique label
      * @param string|boolean $returnOrTemplate string: "%label: %time"
      *                                         boolean:  If true, only return time, rather than log it
+     * @param integer        $precision        rounding precision (pass null for no rounding)
      *
      * @return float
      */
-    public function timeEnd($label = null, $returnOrTemplate = false)
+    public function timeEnd($label = null, $returnOrTemplate = false, $precision = 4)
     {
         if (is_bool($label) || strpos($label, '%time') !== false) {
             $returnOrTemplate = $label;
@@ -526,7 +527,9 @@ class Debug
             $label = 'time';
             array_pop($this->data['timers']['stack']);
         }
-        $ret = round($ret, 4);
+        if (is_int($precision)) {
+            $ret = number_format($ret, $precision);
+        }
         $this->timeLog($ret, $returnOrTemplate, $label);
         return $ret;
     }
@@ -564,7 +567,7 @@ class Debug
             $ellapsed += microtime(true) - $microT;
         }
         if (is_int($precision)) {
-            $ellapsed = round($ellapsed, $precision);
+            $ellapsed = number_format($ellapsed, $precision);
         }
         $this->timeLog($ellapsed, $returnOrTemplate, $label);
         return $ellapsed;
@@ -577,32 +580,17 @@ class Debug
      */
     public function trace()
     {
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-        $backtraceNew = array();
-        $keysShiftDefault = array_fill_keys(array('class','function','type'), $this->abstracter->UNDEFINED);
-        $funcsSkip = array('call_user_func','call_user_func_array');
-        for ($i = 0, $count=count($backtrace); $i < $count; $i++) {
-            $frameNext = $i+1 < $count
-                ? $backtrace[$i+1]
-                : array();
-            $keysShift = array_intersect_key($frameNext, $keysShiftDefault);    // toss non-keysShift
-            $frame = array_merge($backtrace[$i], $keysShiftDefault, $keysShift);
-            $skip = $frame['class'] == __CLASS__ || in_array($frame['function'], $funcsSkip);
-            if ($skip) {
-                continue;
+        $backtrace = $this->errorHandler->backtrace();
+        // toss "internal" frames
+        for ($i = 1, $count=count($backtrace)-1; $i < $count; $i++) {
+            $frame = $backtrace[$i];
+            $function = isset($frame['function']) ? $frame['function'] : '';
+            if (!preg_match('/^'.preg_quote(__CLASS__).'(::|->)/', $function)) {
+                break;
             }
-            $frame['function'] = str_replace(
-                $this->abstracter->UNDEFINED,
-                '',
-                $frame['class'].$frame['type'].$frame['function']
-            );
-            if (!$frame['function']) {
-                unset($frame['function']);
-            }
-            unset($frame['class'], $frame['type']);
-            $backtraceNew[] = $frame;
         }
-        $this->appendLog('trace', array($backtraceNew));
+        $backtrace = array_slice($backtrace, $i-1);
+        $this->appendLog('trace', array($backtrace));
     }
 
     /**

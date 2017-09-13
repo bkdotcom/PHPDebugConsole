@@ -507,7 +507,7 @@ class Debug
      *                                         boolean:  If true, only return time, rather than log it
      * @param integer        $precision        rounding precision (pass null for no rounding)
      *
-     * @return float
+     * @return float|string (numeric)
      */
     public function timeEnd($label = null, $returnOrTemplate = false, $precision = 4)
     {
@@ -528,7 +528,8 @@ class Debug
             array_pop($this->data['timers']['stack']);
         }
         if (is_int($precision)) {
-            $ret = number_format($ret, $precision);
+            // use number_format rather than round(), which may still run decimals-a-plenty
+            $ret = number_format($ret, $precision, '.', '');
         }
         $this->timeLog($ret, $returnOrTemplate, $label);
         return $ret;
@@ -542,7 +543,7 @@ class Debug
      *                                         boolean:  If true, only return time, rather than log it
      * @param integer        $precision        rounding precision (pass null for no rounding)
      *
-     * @return float
+     * @return float|string (numeric)
      */
     public function timeGet($label = null, $returnOrTemplate = false, $precision = 4)
     {
@@ -567,7 +568,8 @@ class Debug
             $ellapsed += microtime(true) - $microT;
         }
         if (is_int($precision)) {
-            $ellapsed = number_format($ellapsed, $precision);
+            // use number_format rather than round(), which may still run decimals-a-plenty
+            $ellapsed = number_format($ellapsed, $precision, '.', '');
         }
         $this->timeLog($ellapsed, $returnOrTemplate, $label);
         return $ellapsed;
@@ -875,24 +877,25 @@ class Debug
      * Log time
      *
      * @param float  $seconds          seconds
-     * @param mixed  $returnOrTemplate false: log the time (default)
-     *                                 true: do not log
-     *                                 string: log using passed template
+     * @param mixed  $returnOrTemplate false: log the time with default template (default)
+     *                                  true: do not log
+     *                                  string: log using passed template
      * @param string $label            label
      *
      * @return void
      */
     protected function timeLog($seconds, $returnOrTemplate = false, $label = 'time')
     {
-        if (!is_string($returnOrTemplate)) {
-            if (!$returnOrTemplate) {
-                $this->appendLog('time', array($label.': '.$seconds.' sec'));
-            }
-        } else {
+
+        if (is_string($returnOrTemplate)) {
             $str = $returnOrTemplate;
             $str = str_replace('%label', $label, $str);
             $str = str_replace('%time', $seconds, $str);
-            $this->appendLog('time', array($str));
+        } elseif ($returnOrTemplate === true) {
+            return;
+        } else {
+            $str = $label.': '.$seconds.' sec';
         }
+        $this->appendLog('time', array($str));
     }
 }

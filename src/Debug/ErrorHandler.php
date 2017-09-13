@@ -68,8 +68,10 @@ class ErrorHandler
         'fatal'         => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
     );
     protected $registered = false;
-    protected $prevErrorHandler = null;
     protected $prevDisplayErrors = null;
+    protected $prevErrorHandler = null;
+    protected $prevExceptionHandler = null;
+    protected $uncaughtException;
     private static $instance;
 
     /**
@@ -117,7 +119,13 @@ class ErrorHandler
     public function backtrace()
     {
         $error = error_get_last();
-        if ($error && in_array($error['type'], $this->errCategories['fatal']) && extension_loaded('xdebug')) {
+        if ($this->uncaughtException) {
+            $backtrace = $this->uncaughtException->getTrace();
+            array_unshift($backtrace, array(
+                'file' => $this->uncaughtException->getFile(),
+                'line' => $this->uncaughtException->getLine(),
+            ));
+        } elseif ($error && in_array($error['type'], $this->errCategories['fatal']) && extension_loaded('xdebug')) {
             unset($error['type']);
             $backtrace = xdebug_get_function_stack();
             $backtrace = array_reverse($backtrace);
@@ -210,7 +218,7 @@ class ErrorHandler
      * @return boolean
      * @link   http://www.php.net/manual/en/language.operators.errorcontrol.php
      */
-    public function handler($errType, $errMsg, $file, $line, $vars = array())
+    public function handleError($errType, $errMsg, $file, $line, $vars = array())
     {
         $prevHandler = $this->cfg['continueToPrevHandler'] && $this->prevErrorHandler;
         $errorReporting = $this->cfg['errorReporting'] === 'system'
@@ -244,6 +252,31 @@ class ErrorHandler
     }
 
     /**
+     * Handle uncaught exceptions
+     *
+     * This isn't strictly necesssary...  uncaught exceptions  are a fatal error, which we can handle...
+     * However..  An backtrace sure is nice...
+     *    a) catching backtrace via shutdown function only possible if xdebug installed
+     *    b) xdebug_get_function_stack's magic doesn't seem to powerless for uncaught exceptions!
+     *
+     * @param Exception|Throwable $exception exception to handle
+     *
+     * @return void
+     */
+    public function handleException($exception)
+    {
+        // lets store the exception so we can use the backtrace it provides
+        $this->uncaughtException = $exception;
+        $this->handleError(
+            E_ERROR,
+            'Uncaught exception \''.get_class($exception).'\' with message '.$exception->getMessage(),
+            $exception->getFile(),
+            $exception->getLine()
+        );
+        $this->uncaughtException = null;
+    }
+
+    /**
      * Register this error handler and shutdown function
      *
      * @return void
@@ -252,7 +285,8 @@ class ErrorHandler
     {
         if (!$this->registered) {
             $this->prevDisplayErrors = ini_set('display_errors', 0);
-            $this->prevErrorHandler = set_error_handler(array($this, 'handler'));
+            $this->prevErrorHandler = set_error_handler(array($this, 'handleError'));
+            $this->prevExceptionHandler = set_exception_handler(array($this, 'handleException'));
             $this->registered = true;   // used by this->shutdownFunction()
         }
         return;
@@ -356,7 +390,7 @@ class ErrorHandler
         if ($this->registered && version_compare(PHP_VERSION, '5.2.0', '>=')) {
             $error = error_get_last();
             if (in_array($error['type'], $this->errCategories['fatal'])) {
-                $this->handler($error['type'], $error['message'], $error['file'], $error['line']);
+                $this->handleError($error['type'], $error['message'], $error['file'], $error['line']);
             }
         }
         return;
@@ -375,12 +409,23 @@ class ErrorHandler
     public function unregister()
     {
         if ($this->registered) {
-            // set and restore error handler to determine the current error handler
-            $errHandlerCur = set_error_handler(array($this, 'handler'));
+            /*
+                set and restore error handler to determine the current error handler
+            */
+            $errHandlerCur = set_error_handler(array($this, 'handleError'));
             restore_error_handler();
-            if ($errHandlerCur == array($this, 'handler')) {
+            if ($errHandlerCur == array($this, 'handleError')) {
                 // we are the current error handler
                 restore_error_handler();
+            }
+            /*
+                set and restore exception handler to determine the current error handler
+            */
+            $exHandlerCur = set_exception_handler(array($this, 'handleException'));
+            restore_exception_handler();
+            if ($exHandlerCur == array($this, 'handleException')) {
+                // we are the current exception handler
+                restore_exception_handler();
             }
             ini_set('display_errors', $this->prevDisplayErrors);
             $this->prevErrorHandler = null;
@@ -476,6 +521,7 @@ class ErrorHandler
             'vars'      => $vars,
             'backtrace' => array(), // only for fatal type errors, and only if xdebug is enabled
             'errorLog'  => false,
+            'exception' => $this->uncaughtException,  // non-null if error is uncaught-exception
             'firstOccur' => true,
             'hash'      => null,
             'suppressed' => $category != 'fatal' && error_reporting() === 0,

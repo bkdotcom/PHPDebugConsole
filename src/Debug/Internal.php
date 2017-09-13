@@ -192,6 +192,9 @@ class Internal
             // Since we're collecting log info, we send email on shutdown
             $error['email'] = false;
             $this->error = null;
+        } elseif ($this->debug->getCfg('output')) {
+            $error['email'] = false;
+            $error['inConsole'] = false;
         } else {
             $error['inConsole'] = false;
         }

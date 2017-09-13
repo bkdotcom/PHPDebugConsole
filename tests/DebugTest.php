@@ -283,7 +283,8 @@ EOD;
         $this->assertCount(0, $this->debug->getData('timers/stack'));
         $this->debug->timeEnd('my label');  // appends log
         $ret = $this->debug->timeEnd('my label', true);
-        $this->assertInternalType('float', $ret);
+        // $this->assertInternalType('float', $ret);
+        $this->assertStringMatchesFormat('%f', $ret);
         // test last timeEnd didn't append log
         $this->assertCount(2, $this->debug->getData('log'));
         $timers = $this->debug->getData('timers');
@@ -307,7 +308,8 @@ EOD;
         $this->assertCount(1, $this->debug->getData('timers/stack'));
         $this->debug->timeGet('my label');  // appends log
         $ret = $this->debug->timeGet('my label', true);
-        $this->assertInternalType('float', $ret);
+        // $this->assertInternalType('float', $ret);
+        $this->assertStringMatchesFormat('%f', $ret);
         // test last timeEnd didn't append log
         $this->assertCount(2, $this->debug->getData('log'));
         $timers = $this->debug->getData('timers');

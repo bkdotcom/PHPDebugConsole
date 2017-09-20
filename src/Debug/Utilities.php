@@ -127,7 +127,7 @@ class Utilities
                 $attribPairs[] = $k.'="'.htmlspecialchars($v).'"';
             }
         }
-        return implode(' ', $attribPairs);
+        return rtrim(' '.implode(' ', $attribPairs));
     }
 
     /**

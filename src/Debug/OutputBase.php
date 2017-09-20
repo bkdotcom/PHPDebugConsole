@@ -395,7 +395,7 @@ class OutputBase implements SubscriberInterface
                     // close prev
                     $replacement = '</span>';
                 }
-                $replacement .= '<span '.$this->debug->utilities->buildAttribString(array(
+                $replacement .= '<span'.$this->debug->utilities->buildAttribString(array(
                     'style' => $args[$index],
                 )).'>';
                 $indexes['c'][] = $index;
@@ -487,6 +487,7 @@ class OutputBase implements SubscriberInterface
             $val = $val['className'];
         } else {
             $val = $this->dump($val);
+            // $val - static::dump($val);
         }
         return $val;
     }

@@ -159,7 +159,7 @@ class OutputHtmlErrorSummary
         $count = $this->stats['inConsole'];
         if ($count == 1) {
             $header = ucfirst($category);
-            $msg .= $this->getErrorByCategory($category);
+            $msg = $this->getErrorByCategory($category);
         } else {
             $header = $catStrings[$category]['header'];
             $msg = sprintf($catStrings[$category]['msg'], $count);

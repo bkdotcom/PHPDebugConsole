@@ -124,7 +124,7 @@ class OutputHtml extends OutputBase
                 ),
                 $this->wrapAttribs
             );
-            $val = '<span '.$this->debug->utilities->buildAttribString($wrapAttribs).'>'.$val.'</span>';
+            $val = '<span'.$this->debug->utilities->buildAttribString($wrapAttribs).'>'.$val.'</span>';
         }
         $this->wrapAttribs = array(
             'class' => array(),
@@ -199,7 +199,7 @@ class OutputHtml extends OutputBase
                     $args[$k] = $this->dump($v);
                 }
                 $argStr = implode(', ', $args);
-                $str .= '<div '.$this->debug->utilities->buildAttribString(array(
+                $str .= '<div'.$this->debug->utilities->buildAttribString(array(
                     'class' => array(
                         'group-header',
                         $method == 'groupCollapsed'
@@ -744,7 +744,7 @@ class OutputHtml extends OutputBase
                 }
             }
             $args = implode($glue, $args);
-            $str = '<div '.$this->debug->utilities->buildAttribString($attribs).'>'.$args.'</div>';
+            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'.$args.'</div>';
         }
         $str .= "\n";
         return $str;
@@ -761,8 +761,7 @@ class OutputHtml extends OutputBase
     {
         $type = $this->debug->abstracter->getType($val);
         if ($type == 'string') {
-            $val = $this->dump($val);
-            $val = str_replace('class="t_', 'class="no-pseudo t_', $val);
+            $val = $this->dump($val, array(), true, false);
         } elseif ($type == 'array') {
             $count = count($val);
             $val = '<span class="t_keyword">Array</span>'

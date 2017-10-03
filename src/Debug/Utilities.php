@@ -237,6 +237,28 @@ class Utilities
     }
 
     /**
+     * Is passed argument a simple array with all-integer in sequence from 0 to n?
+     * empty array returns true
+     *
+     * @param [mixed $val value to check
+     *
+     * @return boolean
+     */
+    public static function isList($val)
+    {
+        if (!is_array($val)) {
+            return false;
+        }
+        $keys = array_keys($val);
+        foreach ($keys as $i => $key) {
+            if ($i != $key) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Determine PHP's MemoryLimit
      *
      * default

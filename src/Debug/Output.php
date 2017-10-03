@@ -33,6 +33,7 @@ class Output
         $this->cfg = array(
             'addBR' => false,
             'css' => '',                    // additional "override" css
+            'displayListKeys' => true,
             'filepathCss' => __DIR__.'/css/Debug.css',
             'filepathScript' => __DIR__.'/js/Debug.jquery.min.js',
             'onOutput'  => null,            // set to something callable
@@ -152,7 +153,7 @@ class Output
      *
      * @return mixed
      */
-    public function getCfg($path)
+    public function getCfg($path = null)
     {
         if ($path == 'outputAs') {
             $ret = $this->cfg['outputAs'];

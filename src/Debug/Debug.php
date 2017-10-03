@@ -702,7 +702,7 @@ class Debug
     /**
      * Publishes debug.output event and returns result
      *
-     * @return string or void
+     * @return string or null
      */
     public function output()
     {

@@ -16,9 +16,10 @@
 	color: #111;
 }
 .debug * {
-	/*font-size: inherit;*/
+	font-size: inherit;
 	line-height: normal;
 	text-indent: 0;
+	color: inherit;
 }
 .debug .clearfix:after {
   content: "";
@@ -38,9 +39,14 @@
 	margin-top: 0.75em;
 }
 
-.debug a { text-decoration: none; }
+.debug a { text-decoration: none; color: #00e; }
+.debug a:visited { color: #551a8b; }
 .debug a:focus, .debug a:hover { text-decoration: underline; }
-.debug a:active, .debug a:hover { outline: 0; }
+.debug a:active, .debug a:hover { outline: 0; color: #e00; }
+.debug code { padding: 2px 4px;
+	background-color: transparent;
+	font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+}
 .debug dl { margin-top: 0; margin-bottom: 0;}
 .debug dt { font-weight: bold; }
 .debug dl:not(.dl-horizontal) dd { margin-left: 20px; }
@@ -55,7 +61,6 @@
 	padding: 0;
 	border: 0;
 	margin: 0;
-	color: inherit;
 	font-size: 1.2em;
 	line-height: 1.1em;
 	-moz-tab-size: 3;
@@ -63,10 +68,11 @@
 		-tab-size: 3;
 }
 /*.debug pre br { display:none; }*/
-.debug table { border-collapse:collapse; font-size:inherit; color:inherit; }
+.debug table { border-collapse:collapse; }
 .debug table caption { font-weight:bold; font-style:italic; padding-bottom:0; padding-top:2px; text-align: left; }
 .debug table th { font-weight:bold; text-align:center; background-color:rgba(0,0,0,0.1); }
-.debug table th, .debug table td { border:1px solid #7F7F7F; padding:1px .25em; vertical-align:top; }
+.debug table th, .debug table td { padding:0 .25em; vertical-align:top; }
+.debug .table-bordered th, .debug .table-bordered td { border:1px solid #7F7F7F; padding:1px .25em; }
 /* also right-align float? */
 .debug td.numeric,
 	.debug td.t_int { text-align: right; }
@@ -176,7 +182,6 @@
 	position: relative;
 	top: -7px;
 	right: -21px;
-	color: inherit;
 }
 .debug .close {
 	float: right;
@@ -214,9 +219,9 @@
 .debug .group-label { font-weight:bold; }
 
 /* array & objects */
-.debug .array-inner,
+.debug span.array-inner,
 	.debug .object-inner { display: block; margin-left: 1.5em; }
-.debug .key-value {
+.debug span.key-value {
 	display: block;
 	padding-left: 10px;
 	text-indent: -10px;
@@ -238,24 +243,24 @@
 	color: inherit;
 }
 
-/* methods */
+/* methods that output... sans group methods */
 .debug .m_assert,
 	.debug .m_count,
-	.debug .m_log,
 	.debug .m_error,
 	.debug .m_info,
+	.debug .m_log,
+	.debug .m_table,
 	.debug .m_time,
+	.debug .m_trace,
 	.debug .m_warn {
 		position: relative;
+		/*
 		float: left;
 		clear: left;
+		*/
+		/* float & clear lead to issues when cutting and pasting*/
+		display: table;
 	}
-/*
-	table/trace & trace method
-*/
-.debug .m_group > table {
-	clear: left;
-}
 .debug .m_error,
 	.debug .m_info,
 	.debug .m_log,
@@ -286,10 +291,11 @@
 }
 .debug .m_assert{ background-color: rgba(255,204,204,.75); }
 .debug .m_error { background-color: #FFBABA; color: #D8000C; }
-.debug .m_info  { background-color: #BDE5F8; color: #00529B; }
+.debug .m_info,
+	.debug .info { background-color: #BDE5F8; color: #00529B; }
 .debug .m_warn  { background-color: #FEEFB3; color: #9F6000; }
-.debug .m_error { white-space: pre-wrap; }
-.debug .m_error * { white-space: normal; }
+.debug .info { display: inline-block; }
+
 /*
 	emphasize the fatal error
 */
@@ -329,12 +335,13 @@
 .debug .t_keyword { color: #07A; }
 .debug .t_null { opacity: 0.3; }
 .debug .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
-.debug .t_object-class { font-weight: bold; color: inherit; text-decoration: underline; }
+.debug .t_object-class { font-weight: bold; text-decoration: underline; }
 .debug .t_operator { color: #A67F59; }
 .debug .t_punct { color: #999; }
 .debug .t_recursion { font-weight: bold; color:#F00; }
 .debug .t_resource { font-style: italic; }
 .debug .t_string { white-space: pre-wrap; }
+.debug .t_string * { white-space: normal; }
 .debug .t_string:before {
 	content: open-quote;
 	opacity: 0.33;
@@ -378,3 +385,4 @@
 .debug .ws_n:before { content: "\\n"; }
 
 .debug .text-muted { opacity: 0.5; }
+.debug .text-right { text-align: right; }

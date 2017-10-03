@@ -470,10 +470,11 @@ class ErrorHandler
             'type' => null,
         );
         $funcsSkip = array('call_user_func','call_user_func_array');
+        $funcsSkipRegex = '/^('.implode('|', $funcsSkip).')[:\(\{]/';
         for ($i = 0, $count=count($backtrace); $i < $count; $i++) {
             $frame = array_merge($frameDefault, $backtrace[$i]);
             $frame = array_intersect_key($frame, $frameDefault);
-            if (in_array($frame['function'], $funcsSkip)) {
+            if (in_array($frame['function'], $funcsSkip) || preg_match($funcsSkipRegex, $frame['function'])) {
                 $backtraceNew[count($backtraceNew) - 1]['file'] = $frame['file'];
                 $backtraceNew[count($backtraceNew) - 1]['line'] = $frame['line'];
                 continue;
@@ -532,8 +533,15 @@ class ErrorHandler
             $errorValues['file'] = $this->data['errorCaller']['file'];
             $errorValues['line'] = $this->data['errorCaller']['line'];
         }
-        if (in_array($errType, array(E_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR)) && extension_loaded('xdebug')) {
-            $errorValues['backtrace'] = $this->backtrace();
+        if (in_array($errType, array(E_ERROR, E_USER_ERROR)) && extension_loaded('xdebug')) {
+            $backtrace = $this->backtrace();
+            if (!array_intersect_assoc($backtrace[0], array('file'=>$file, 'line'=>$line))) {
+                array_unshift($backtrace, array(
+                    'file'=>$file,
+                    'line'=>$line,
+                ));
+            }
+            $errorValues['backtrace'] = $backtrace;
         }
         $errorValues = array_merge($errorValues, array(
             'hash' => $hash,

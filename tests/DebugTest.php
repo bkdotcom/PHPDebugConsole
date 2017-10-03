@@ -261,7 +261,7 @@ EOD;
         $location = 'http://localhost/?foo=bar&jim=slim';
         $this->debug->log('%cLocation:%c <a href="%s">%s</a>', 'font-weight:bold;', '', $location, $location);
         $output = $this->debug->output();
-        $outputExpect = '<div class="m_log"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></div>';
+        $outputExpect = '<div class="m_log"><span class="t_string no-pseudo"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></div>';
         $this->assertContains($outputExpect, $output);
     }
 

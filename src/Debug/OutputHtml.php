@@ -39,21 +39,14 @@ class OutputHtml extends OutputBase
      * @param array  $array   array of \Traversable
      * @param string $caption optional caption
      * @param array  $columns columns to display
+     * @param string $class   table's class attribute
      *
      * @return string
      */
-    public function buildTable($array, $caption = null, $columns = array())
+    public function buildTable($array, $caption = null, $columns = array(), $class = '')
     {
         $str = '';
-        if (!is_array($array)) {
-            // trying to table a non-array
-            if (isset($caption)) {
-                $str = $caption.' = ';
-            }
-            $str .= $this->dump($array);
-            return '<div class="m_log">'.$str.'</div>';
-        }
-        if (empty($array)) {
+        if (!is_array($array) || empty($array)) {
             // empty array/value
             if (isset($caption)) {
                 $str = $caption.' = ';
@@ -78,7 +71,10 @@ class OutputHtml extends OutputBase
         if (!$haveObj) {
             $str = str_replace('<td class="t_object-class"></td>', '', $str);
         }
-        $str = '<table>'."\n"
+        $attribs = array(
+            'class' => $class,
+        );
+        $str = '<table'.$this->debug->utilities->buildAttribString($attribs).'>'."\n"
             .'<caption>'.$caption.'</caption>'."\n"
             .'<thead>'
             .'<tr><th>&nbsp;</th>'
@@ -96,14 +92,14 @@ class OutputHtml extends OutputBase
     /**
      * Dump value as html
      *
-     * @param mixed   $val      value to dump
-     * @param array   $path     {@internal}
-     * @param boolean $sanitize (true) apply htmlspecialchars?
-     * @param boolean $wrap     (true) whether to wrap in a <span>
+     * @param mixed        $val      value to dump
+     * @param array        $path     {@internal}
+     * @param boolean      $sanitize (true) apply htmlspecialchars?
+     * @param string|false $wrap     (span) tag to wrap value in (or false)
      *
      * @return string
      */
-    public function dump($val, $path = array(), $sanitize = true, $wrap = true)
+    public function dump($val, $path = array(), $sanitize = true, $wrap = 'span')
     {
         $this->wrapAttribs = array(
             'class' => array(),
@@ -124,7 +120,7 @@ class OutputHtml extends OutputBase
                 ),
                 $this->wrapAttribs
             );
-            $val = '<span'.$this->debug->utilities->buildAttribString($wrapAttribs).'>'.$val.'</span>';
+            $val = '<'.$wrap.$this->debug->utilities->buildAttribString($wrapAttribs).'>'.$val.'</'.$wrap.'>';
         }
         $this->wrapAttribs = array(
             'class' => array(),
@@ -250,14 +246,7 @@ class OutputHtml extends OutputBase
             $str .= '<td class="t_object-class"></td>';
         }
         foreach ($values as $v) {
-            // remove the span wrapper.. add span's class to TD
-            $v = $this->dump($v);
-            $classAndInner = $this->debug->utilities->parseAttribString($v);
-            $str .= $classAndInner['class']
-                ? '<td class="'.$classAndInner['class'].'">'
-                : '<td>';
-            $str .= $classAndInner['innerhtml'];
-            $str .= '</td>';
+            $str .= $this->dump($v, null, true, 'td');
         }
         $str .= '</tr>'."\n";
         $str = str_replace(' title=""', '', $str);
@@ -278,20 +267,30 @@ class OutputHtml extends OutputBase
             $html = '<span class="t_keyword">Array</span>'
                 .'<span class="t_punct">()</span>';
         } else {
+            $displayKeys = $this->debug->getCfg('output.displayListKeys') || !$this->debug->utilities->isList($array);
             $html = '<span class="t_keyword">Array</span>'
-                .'<span class="t_punct">(</span>'."\n"
-                .'<span class="array-inner">'."\n";
-            foreach ($array as $key => $val) {
-                $html .= "\t".'<span class="key-value">'
-                        .'<span class="t_key'.(is_int($key) ? ' t_int' : '').'">'
-                            .$this->dump($key, $path, true, false) // don't wrap it
-                        .'</span> '
-                        .'<span class="t_operator">=&gt;</span> '
-                        .$this->dump($val)
-                    .'</span>'."\n";
+                .'<span class="t_punct">(</span>'."\n";
+            if ($displayKeys) {
+                $html .= '<span class="array-inner">'."\n";
+                foreach ($array as $key => $val) {
+                    $html .= "\t".'<span class="key-value">'
+                            .'<span class="t_key'.(is_int($key) ? ' t_int' : '').'">'
+                                .$this->dump($key, $path, true, false) // don't wrap it
+                            .'</span> '
+                            .'<span class="t_operator">=&gt;</span> '
+                            .$this->dump($val)
+                        .'</span>'."\n";
+                }
+                $html .= '</span>';
+            } else {
+                // display as list
+                $html .= '<ul class="array-inner list-unstyled">'."\n";
+                foreach ($array as $val) {
+                    $html .= $this->dump($val, $path, true, 'li');
+                }
+                $html .= '</ul>';
             }
-            $html .= '</span>'
-                .'<span class="t_punct">)</span>';
+            $html .= '<span class="t_punct">)</span>';
         }
         return $html;
     }
@@ -411,7 +410,7 @@ class OutputHtml extends OutputBase
                     .'<dt>implements</dt>'."\n"
                         .'<dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'."\n"
                     .$this->dumpConstants($abs['constants'])
-                    .$this->dumpProperties($abs['properties'], array('viaDebugInfo'=>$abs['viaDebugInfo']))
+                    .$this->dumpProperties($abs)
                     .($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')
                         ? $this->dumpMethods($abs['methods'])
                         : ''
@@ -617,21 +616,23 @@ class OutputHtml extends OutputBase
     /**
      * Dump object properties as HTML
      *
-     * @param array $properties properties as returned from getProperties()
-     * @param array $meta       meta information (viaDebugInfo)
+     * @param array $abs object abstraction
      *
      * @return string
      */
-    protected function dumpProperties($properties, $meta = array())
+    protected function dumpProperties($abs)
     {
-        $label = count($properties)
+        $label = count($abs['properties'])
             ? 'properties'
             : 'no properties';
-        if ($meta['viaDebugInfo']) {
+        if ($abs['viaDebugInfo']) {
             $label .= ' <span class="text-muted">(via __debugInfo)</span>';
         }
         $str = '<dt class="properties">'.$label.'</dt>'."\n";
-        foreach ($properties as $k => $info) {
+        if (isset($abs['methods']['__get'])) {
+            $str .= '<dd class="magic-method info">This object has a <code>__get()</code> method</dd>'."\n";
+        }
+        foreach ($abs['properties'] as $k => $info) {
             $viaDebugInfo = !empty($info['viaDebugInfo']);
             $isPrivateAncestor = $info['visibility'] == 'private' && $info['inheritedFrom'];
             $str .= '<dd class="property visibility-'.$info['visibility']
@@ -703,10 +704,9 @@ class OutputHtml extends OutputBase
         if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->buildGroupMethod($method, $args);
         } elseif ($method == 'table') {
-            $str = $this->buildTable($args[0], $args[1], $args[2]);
+            $str = $this->buildTable($args[0], $args[1], $args[2], 'm_table table-bordered sortable');
         } elseif ($method == 'trace') {
-            $str = $this->buildTable($args[0], 'trace', array('file','line','function'));
-            $str = str_replace('<table>', '<table class="trace no-sort">', $str);
+            $str = $this->buildTable($args[0], 'trace', array('file','line','function'), 'm_trace table-bordered');
         } else {
             $attribs = array(
                 'class' => 'm_'.$method,
@@ -727,6 +727,8 @@ class OutputHtml extends OutputBase
             }
             if ($hasSubs) {
                 $glue = '';
+                $args = implode($glue, $args);
+                $args = '<span class="t_string no-pseudo">'.$args.'</span>';
             } else {
                 $glue = ', ';
                 if ($numArgs == 2 && is_string($args[0])) {
@@ -742,8 +744,8 @@ class OutputHtml extends OutputBase
                         $args[$i] = $this->dump($v, array(), false);
                     }
                 }
+                $args = implode($glue, $args);
             }
-            $args = implode($glue, $args);
             $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'.$args.'</div>';
         }
         $str .= "\n";

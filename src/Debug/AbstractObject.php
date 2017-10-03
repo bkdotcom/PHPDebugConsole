@@ -107,12 +107,15 @@ class AbstractObject
         $abs['properties'] = $this->getProperties($abs, $hist);
         if ($abs['collectMethods']) {
             $abs['methods'] = $this->getMethods($abs);
-        } elseif (method_exists($obj, '__toString')) {
-            $abs['methods'] = array(
-                '__toString' => array(
+        } else {
+            if (method_exists($obj, '__toString')) {
+                $abs['methods']['__toString'] = array(
                     'returnValue' => call_user_func(array($obj, '__toString')),
-                ),
-            );
+                );
+            }
+            if (method_exists($obj, '__get')) {
+                $abs['methods']['__get'] = true;
+            }
         }
         /*
             debug.objAbstractEnd subscriber has free reign to modify abtraction array

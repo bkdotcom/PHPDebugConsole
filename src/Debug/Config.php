@@ -21,6 +21,7 @@ class Config
 
 	protected $cfg = array();
 	protected $debug;
+    protected $configKeys;
 
 	/**
 	 * Constructor
@@ -104,6 +105,29 @@ class Config
         }
         return $return;
 	}
+
+    /**
+     * get available config keys for objects
+     *
+     * @return array
+     */
+    protected function getConfigKeys()
+    {
+        if (isset($this->configKeys)) {
+            return $this->configKeys;
+        }
+        $this->configKeys = array(
+            'debug' => array(
+                'output',   // any key not found falls under 'debug'...
+                            //  'output' listed to disambiguate from output object
+            ),
+            'abstracter' => array_keys($this->debug->abstracter->getCfg()),
+            'errorEmailer' => array_diff(array_keys($this->debug->errorEmailer->getCfg()), array('emailFunc','emailTo')),
+            'errorHandler' => array_keys($this->debug->errorHandler->getCfg()),
+            'output' => array_keys($this->debug->output->getCfg()),
+        );
+        return $this->configKeys;
+    }
 
     /**
      * normalize values
@@ -238,53 +262,13 @@ class Config
      *
      * @return mixed
      */
-    protected static function translateKeys($mixed)
+    protected function translateKeys($mixed)
     {
-        $subObjs = array(
-            'debug' => array(
-                'output',   // any key not found falls under 'debug'...
-                            //  'output' listed to disambiguate from output object
-            ),
-            'abstracter' => array(
-                'collectConstants',     // bool
-                'collectMethods',       // bool
-                'objectsExclude',       // array
-                'objectSort',           // string
-                'useDebugInfo',         // bool
-            ),
-            'errorEmailer' => array(
-                // 'emailFunc',         // callable
-                'emailMask',            // int
-                'emailMin',             // int
-                // 'emailTo',           // string
-                'emailThrottleFile',    // string
-                'emailThrottledSummary', // bool
-                'emailTraceMask',       // int
-            ),
-            'errorHandler' => array(
-                'continueToPrevHandler', // bool
-                'errorReporting',       // int (mask)
-                'onError',              // callable
-            ),
-            'output' => array(
-                'addBR',                // bool
-                'css',                  // string
-                'filepathCss',          // string
-                'filepathScript',       // string
-                'onOutput',             // callable
-                'outputAs',             // string
-                'outputAsDefaultNonHtml', // string
-                'outputConstants',      // bool
-                'outputCss',            // bool
-                'outputMethodDescription', // bool
-                'outputMethods',        // bool
-                'outputScript',         // bool
-            ),
-        );
+        $configKeys = $this->getConfigKeys();
         if (is_string($mixed)) {
             $path = array_filter(preg_split('#[\./]#', $mixed), 'strlen');
             if (count($path) == 1) {
-                foreach ($subObjs as $objName => $objKeys) {
+                foreach ($configKeys as $objName => $objKeys) {
                     if (in_array($path[0], $objKeys)) {
                         array_unshift($path, $objName);
                         break;
@@ -303,7 +287,7 @@ class Config
             $return = array();
             foreach ($mixed as $k => $v) {
                 $translated = false;
-                foreach ($subObjs as $objName => $objKeys) {
+                foreach ($configKeys as $objName => $objKeys) {
                     if ($k == $objName && is_array($v)) {
                         $return[$objName] = isset($return[$objName])
                             ? array_merge($return[$objName], $v)

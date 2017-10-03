@@ -487,7 +487,6 @@ class OutputBase implements SubscriberInterface
             $val = $val['className'];
         } else {
             $val = $this->dump($val);
-            // $val - static::dump($val);
         }
         return $val;
     }

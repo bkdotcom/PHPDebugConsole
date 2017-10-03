@@ -72,8 +72,7 @@ class OutputHtmlErrorSummary
                 .'</li>';
             // if only 1 frame in backtrace, don't display trace
             if (count($backtrace) > 1) {
-                $table = $this->outputHtml->buildTable($backtrace, 'trace', array('file','line','function'));
-                $table = str_replace('<table>', '<table class="trace no-sort">', $table);
+                $table = $this->outputHtml->buildTable($backtrace, 'trace', array('file','line','function'), 'trace table-bordered');
                 $html .= '<li>'.$table.'</li>';
             } elseif (empty($backtrace)) {
                 $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';

@@ -19,6 +19,7 @@
 				".timestamp" :			'<i class="fa fa-calendar"></i>'
 			},
 			iconsObject: {
+				".magic-method" :		'<i class="fa fa-fw fa-magic" title="magic method"></i>',
 				".debug-value" :		'<i class="fa fa-fw fa-eye" title="via __debugInfo()"></i>',
 				".deprecated" :			'<i class="fa fa-arrow-down" title="Deprecated"></i>',
 				".private-ancestor":    '<i class="fa fa-fw fa-lock"></i>',
@@ -232,8 +233,8 @@
 		$root.find(".t_array").each( function() {
 			var $self = $(this),
 				$expander = $('<span class="t_array-expand" data-toggle="array">' +
-						'<span class="t_keyword">Array</span><span class="t_punct">(</span>' +
-						'<i class="fa ' + options.classes.expand + '"></i>&middot;&middot;&middot;' +
+						'<span class="t_keyword">Array</span><span class="t_punct">(</span> ' +
+						'<i class="fa ' + options.classes.expand + '"></i>&middot;&middot;&middot; ' +
 						'<span class="t_punct">)</span>' +
 					"</span>"),
 				$parents = $self.parentsUntil($root, ".t_object, .t_array"),
@@ -420,7 +421,7 @@
 	}
 
 	function enhanceTables($root) {
-		if ($root.is("table") && !$root.hasClass("no-sort")) {
+		if ($root.is("table.sortable")) {
 			makeSortable($root[0]);
 		}
 	}

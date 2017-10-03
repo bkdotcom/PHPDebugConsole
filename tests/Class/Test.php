@@ -18,14 +18,23 @@ class TestBase
     protected $propProtected = 'defined only in TestBase (protected)';
     public $propPublic = 'defined in TestBase (public)';
 
+    /**
+     * get magic method
+     *
+     * @param string $key what we're getting
+     *
+     * @return mixed
+     */
+    public function __get($key)
+    {
+    }
+
     private function testBasePrivate()
     {
-
     }
 
     public function testBasePublic()
     {
-
     }
 }
 
@@ -72,16 +81,6 @@ class Test extends TestBase
     }
 
     /**
-     * toString magic method
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return 'abracadabra';
-    }
-
-    /**
      * magic method
      *
      * @return array
@@ -96,13 +95,22 @@ class Test extends TestBase
     }
 
     /**
+     * toString magic method
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return 'abracadabra';
+    }
+
+    /**
      * This is a static method
      *
      * @return void Nothing is returned
      */
     public static function methodStatic()
     {
-
     }
 
     /**
@@ -118,7 +126,6 @@ class Test extends TestBase
      */
     public function methodPublic(\SomeClass $param1, $param2 = SOMECONSTANT, array $param3 = array())
     {
-
     }
 
     /**
@@ -131,7 +138,6 @@ class Test extends TestBase
      */
     private function methodPrivate(\SomeClass &$param1, &$param2)
     {
-
     }
 
     /**
@@ -143,6 +149,5 @@ class Test extends TestBase
      */
     protected function methodProtected($param1)
     {
-
     }
 }

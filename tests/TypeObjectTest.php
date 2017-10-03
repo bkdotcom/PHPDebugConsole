@@ -28,7 +28,7 @@ class TypeObjectTest extends DebugTestFramework
     (🔒 private) testBasePrivate = "defined in TestBase (private)"
     (debug) debugValue = "This property is debug only"
   Methods:
-    public: 6
+    public: 7
     protected: 1
     private: 1
 EOD;
@@ -78,6 +78,7 @@ EOD;
                     // properties
                     $this->assertContains(implode("\n", array(
                         '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
+                        '<dd class="magic-method info">This object has a <code>__get()</code> method</dd>',
                         '<dd class="property visibility-public"><span class="t_modifier">public</span> <span class="property-name">debug</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="public"><span class="t_object-class">bdk\Debug</span> <span class="excluded">(not inspected)</span></span></dd>',
                         '<dd class="property visibility-public"><span class="t_modifier">public</span> <span class="property-name">instance</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="private"><span class="t_object-class">bdk\DebugTest\Test</span> <span class="t_recursion">*RECURSION*</span></span></dd>',
                         '<dd class="property visibility-public"><span class="t_modifier">public</span> <span class="property-name" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
@@ -100,6 +101,7 @@ EOD;
                         '<dt class="methods">methods</dt>',
                         '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="method-name" title="Constructor">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                         '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="t_type">array</span> <span class="method-name" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
+                        '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="t_type">mixed</span> <span class="method-name" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
                         '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="t_type">string</span> <span class="method-name" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><br /><span class="indent"><span class="t_string">abracadabra</span></span></dd>',
                         '<dd class="method visibility-public deprecated"><span class="t_modifier">public</span> <span class="t_type">void</span> <span class="method-name" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">SomeClass</span> <span class="t_parameter-name" title="first param">$param1</span></span>, <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="second param                      two-line description!">$param2</span> <span class="t_operator">=</span> <span class="t_parameter-default"><span class="t_string">Constant value</span></span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="third param">$param3</span> <span class="t_operator">=</span> <span class="t_parameter-default"><span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">()</span></span></span></span><span class="t_punct">)</span></dd>',
                         '<dd class="method visibility-public"><span class="t_modifier">public</span> <span class="t_modifier">static</span> <span class="t_type" title="Nothing is returned">void</span> <span class="method-name" title="This is a static method">methodStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
@@ -123,7 +125,7 @@ EOD;
     {
         $test_val = 'success A';
         $test_o = new \bdk\DebugTest\Test();
-        $test_o->prop = &$test_val;
+        $test_o->propPublic = &$test_val;
         $this->debug->log('test_o', $test_o);
         $test_val = 'success B';
         $this->debug->log('test_o', $test_o);
@@ -132,7 +134,7 @@ EOD;
         $this->assertContains('success A', $output);
         $this->assertContains('success B', $output);
         $this->assertNotContains('fail', $output);
-        $this->assertSame('fail', $test_o->prop);   // prop should be 'fail' at this point
+        $this->assertSame('fail', $test_o->propPublic);   // prop should be 'fail' at this point
     }
 
 
@@ -356,7 +358,7 @@ EOD;
     public function testRecursiveObjectProp2()
     {
         $test = new \bdk\DebugTest\Test();
-        $test->prop = &$test;
+        $test->propPublic = &$test;
         $this->debug->log('test', $test);
         /*
         $output = $this->debug->output();
@@ -371,7 +373,7 @@ EOD;
         $abstraction = $this->debug->getData('log/0/2');
         $this->assertEquals(
             true,
-            $abstraction['properties']['prop']['value']['isRecursion'],
+            $abstraction['properties']['propPublic']['value']['isRecursion'],
             'Did not find expected recursion'
         );
         $this->debug->output();

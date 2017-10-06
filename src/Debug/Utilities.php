@@ -123,6 +123,7 @@ class Utilities
             } elseif (is_bool($v)) {
                 $v = $v ? $k : '';
             }
+            $v = trim($v);
             if (strlen($v)) {
                 $attribPairs[] = $k.'="'.htmlspecialchars($v).'"';
             }

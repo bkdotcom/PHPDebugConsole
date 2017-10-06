@@ -7,7 +7,7 @@
 	"authors": [
 		{
 			"name": "Brad Kent",
-			"email": "bkfake-packagist@yahoo.com",
+			"email": "bkfake-github@yahoo.com",
 			"homepage": "http://www.bradkent.com/",
 			"role": "Developer"
 		}
@@ -21,5 +21,10 @@
 	},
 	"require": {
 		"php": ">=5.4.0"
+	},
+	"suggest": {
+		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",
+		"voryx/thruway": "A PHP based WAMP router",
+		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin"
 	}
 }

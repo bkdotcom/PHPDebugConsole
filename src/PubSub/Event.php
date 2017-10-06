@@ -14,12 +14,16 @@
 
 namespace bdk\PubSub;
 
+use ArrayAccess;
+use ArrayIterator;
+use IteratorAggregate;
+
 /**
  * Event
  *
  * Events are passed to event subscribres/listeners
  */
-class Event implements \ArrayAccess, \IteratorAggregate
+class Event implements ArrayAccess, IteratorAggregate
 {
     /**
      * @var boolean Whether event subscribers should be called
@@ -197,12 +201,14 @@ class Event implements \ArrayAccess, \IteratorAggregate
     }
 
     /**
-     * IteratorAggregate for iterating over the object like an array.
+     * IteratorAggregate interface
      *
-     * @return \ArrayIterator
+     * Iterate over the object like an array.
+     *
+     * @return ArrayIterator
      */
     public function getIterator()
     {
-        return new \ArrayIterator($this->values);
+        return new ArrayIterator($this->values);
     }
 }

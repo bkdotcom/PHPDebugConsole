@@ -54,8 +54,8 @@ class OutputHtml extends OutputBase
             $str .= $this->dump($array);
             return '<div class="m_log">'.$str.'</div>';
         }
-        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
         $headers = array();
+        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
         foreach ($keys as $key) {
             $headers[] = $key === ''
                 ? 'value'
@@ -235,7 +235,7 @@ class OutputHtml extends OutputBase
         $classAndInner = $this->debug->utilities->parseAttribString($this->dump($rowKey));
         $classAndInner['class'] = trim('t_key '.$classAndInner['class']);
         $str .= '<tr>';
-        $str .= '<td class="'.$classAndInner['class'].'">'.$classAndInner['innerhtml'].'</td>';
+        $str .= '<th class="'.$classAndInner['class'].'" scope="row">'.$classAndInner['innerhtml'].'</th>';
         if ($objInfo) {
             $rowIsObject = true;
             $str .= '<td class="t_object-class"'

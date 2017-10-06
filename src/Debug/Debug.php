@@ -592,6 +592,8 @@ class Debug
             }
         }
         $backtrace = array_slice($backtrace, $i-1);
+        // keep the calling file & line, but toss ->trace or ::_trace
+        unset($backtrace[0]['function']);
         $this->appendLog('trace', array($backtrace));
     }
 

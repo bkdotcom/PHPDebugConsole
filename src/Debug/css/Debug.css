@@ -224,8 +224,9 @@
 		display: table;
 		padding-left: 10px;
 		text-indent: -10px;
+		padding-right: .33em;
 	}
-.debug .m_assert{ background-color:rgba(255,204,204,.75); }
+.debug .m_assert { background-color:rgba(255,204,204,.75); }
 .debug .m_error { background-color:#FFBABA; color:#D8000C; }
 .debug .m_group {
 	clear: left;
@@ -233,6 +234,7 @@
 	border-left: 1px solid rgba(0, 0, 0, 0.25);
 	padding-left: 1px;
 }
+.debug .group-header { display:table; }
 .debug .group-label { font-weight:bold; }
 .debug .m_group.debug-header,
 	.debug .m_group.debug-content {
@@ -266,16 +268,22 @@
 .debug .t_bool.true { color:#993; text-shadow:1px 1px 2px rgba(153, 153, 51, 0.5); }
 .debug .t_bool.false { color:#C33; text-shadow:1px 1px 2px rgba(204, 51, 51, 0.5); }
 .debug .t_int,
-.debug .t_float,
-.debug .numeric {
-	font-family: Courier New,monospace,Ariel;
-	color: #009;
-	font-size: 1.15em;
-	line-height: 1.15em;
-}
+	.debug .t_float,
+	.debug .numeric {
+		font-family: Courier New,monospace,Ariel;
+		color: #009;
+		font-size: 1.15em;
+		line-height: 1.15em;
+	}
 .debug .t_key { opacity:.75; }
-.debug .t_key:before { content:'['; color:#999; }
-.debug .t_key:after { content:']'; color:#999; }
+.debug .t_key:before,
+	.debug .t_key:after {
+ 		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+ 		color: #999;
+ 		font-size: 9px;
+	}
+.debug .t_key:before { content:'['; margin-right:1px; }
+.debug .t_key:after { content:']'; margin-left:1px; }
 .debug .t_keyword { color:#07A; }
 .debug .t_null { opacity:0.3; }
 .debug .t_object-class { font-weight:bold; text-decoration:underline; }

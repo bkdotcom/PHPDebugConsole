@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\SubscriberInterface;
+
 /**
  * General Output methods
  */
@@ -57,8 +59,8 @@ class Output
      */
     public function __get($prop)
     {
-        if (strpos($prop, 'output') === 0 && file_exists(__DIR__.'/'.ucfirst($prop).'.php')) {
-            $classname = __NAMESPACE__.'\\'.ucfirst($prop);
+        $classname = __NAMESPACE__.'\\'.ucfirst($prop);
+        if (strpos($prop, 'output') === 0 && class_exists($classname)) {
             $this->{$prop} = new $classname($this->debug);
             return $this->{$prop};
         }
@@ -220,14 +222,23 @@ class Output
         } elseif (is_array($mixed)) {
             $values = $mixed;
         }
-        if (isset($values['outputAs']) && is_string($values['outputAs'])) {
-            $prop = 'output'.ucfirst($values['outputAs']);
-            if (!property_exists($this, $prop) && file_exists(__DIR__.'/'.ucfirst($prop).'.php')) {
+        if (isset($values['outputAs'])) {
+            $outputAs = $values['outputAs'];
+            if (is_string($outputAs)) {
+                $prop = 'output'.ucfirst($outputAs);
                 $classname = __NAMESPACE__.'\\'.ucfirst($prop);
-                $this->{$prop} = new $classname($this->debug);
-            }
-            if (property_exists($this, $prop)) {
-                $this->debug->addPlugin($this->{$prop});
+                if (!property_exists($this, $prop) && class_exists($classname)) {
+                    $this->{$prop} = new $classname($this->debug);
+                    $this->debug->addPlugin($this->{$prop});
+                }
+            } elseif ($outputAs instanceof SubscriberInterface) {
+                $classname = get_class($outputAs);
+                $prefix = __NAMESPACE__.'\\Output';
+                if (strpos($classname, $prefix) == 0) {
+                    $prop = 'output'.substr($classname, strlen($prefix));
+                    $this->{$prop} = $outputAs;
+                }
+                $this->debug->addPlugin($outputAs);
             }
         }
         if (isset($values['onOutput'])) {

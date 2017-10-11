@@ -89,7 +89,7 @@ class OutputFirephp extends OutputBase
                 ? $objInfo['className']
                 : '';
             array_unshift($values, $k);
-            $table[] = $values;
+            $table[] = array_values($values);
         }
         if (array_filter($classNames)) {
             array_unshift($table[0], '');

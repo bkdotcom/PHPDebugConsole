@@ -3,6 +3,8 @@
  * Route PHPDebugConsole method calls to
  * WAMP (Web Application Messaging Protocol) router
  *
+ * This plugin requires bdk/wamp-publisher (not included)
+ *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
@@ -18,7 +20,7 @@ use bdk\PubSub\Event;
 use bdk\WampPublisher;
 
 /**
- * \bdk\Debug plugin for routing debug messsages thru WAMP server
+ * PHPDebugConsole plugin for routing debug messages thru WAMP router
  */
 class OutputWamp implements SubscriberInterface
 {
@@ -43,34 +45,33 @@ class OutputWamp implements SubscriberInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Return a list of event subscribers
+     *
+     * @return array The event names to subscribe to
      */
     public function getSubscriptions()
     {
-        $metaVals = array();
-        foreach (array('HTTP_HOST','REMOTE_ADDR','REQUEST_METHOD','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME') as $k) {
-            $metaVals[$k] = isset($_SERVER[$k])
-                ? $_SERVER[$k]
-                : null;
+        if (!$this->isConnected()) {
+            $this->debug->alert('WAMP publisher not connected to WAMP router');
+            return array();
         }
-        if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
-        	$metaVals['REQUEST_URI'] = '$: '. implode(' ', $_SERVER['argv']);
-        }
-        $this->publish('meta', $metaVals);
-        /*
-            Publish anything that's already been logged
-        */
-        $data = $this->debug->getData();
-        foreach ($data['log'] as $args) {
-            $method = array_shift($args);
-            $meta = $this->debug->internal->getMetaArg($args);
-            $this->publish($method, $args, $meta);
-        }
+        $this->publishMeta();
+        $this->publishExistingData();
         return array(
             'debug.log' => 'onLog',
             'debug.output' => 'onOutput',
             'errorHandler.error' => 'onError',    // assumes errorhandler is using same dispatcher.. as should be
         );
+    }
+
+    /**
+     * Is WAMP publisher connected?
+     *
+     * @return boolean
+     */
+    public function isConnected()
+    {
+        return $this->wamp->connected;
     }
 
     /**
@@ -143,6 +144,40 @@ class OutputWamp implements SubscriberInterface
             $meta['backtrace'] = $this->crateValues($meta['backtrace']);
         }
         $this->wamp->publish($this->topic, array($method, $args, $meta));
+    }
+
+    /**
+     * Publish anything that's already been logged
+     *
+     * @return void
+     */
+    private function publishExistingData()
+    {
+        $data = $this->debug->getData();
+        foreach ($data['log'] as $args) {
+            $method = array_shift($args);
+            $meta = $this->debug->internal->getMetaArg($args);
+            $this->publish($method, $args, $meta);
+        }
+    }
+
+    /**
+     * Send initial meta data to client
+     *
+     * @return void
+     */
+    private function publishMeta()
+    {
+        $metaVals = array();
+        foreach (array('HTTP_HOST','REMOTE_ADDR','REQUEST_METHOD','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME') as $k) {
+            $metaVals[$k] = isset($_SERVER[$k])
+                ? $_SERVER[$k]
+                : null;
+        }
+        if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
+            $metaVals['REQUEST_URI'] = '$: '. implode(' ', $_SERVER['argv']);
+        }
+        $this->publish('meta', $metaVals);
     }
 
     /**

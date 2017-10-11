@@ -192,7 +192,7 @@ class Manager
     /**
      * Calls the passed object's getSubscriptions() method and returns a normalized list of subscriptions
      *
-     * @param SubscriberInterface $interface [description]
+     * @param SubscriberInterface $interface object implementing subscriber interface
      *
      * @return array
      */

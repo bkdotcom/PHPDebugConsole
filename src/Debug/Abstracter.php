@@ -226,7 +226,7 @@ class Abstracter
             } elseif ($key === '') {
                 $value = $row;
             }
-            $values[] = $value;
+            $values[$key] = $value;
         }
         return $values;
     }

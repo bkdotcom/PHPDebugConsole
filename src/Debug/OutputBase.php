@@ -267,18 +267,15 @@ class OutputBase implements SubscriberInterface
         $classnames = array();
         foreach ($array as $k => $row) {
             $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
-            $values = array_map(function ($val) {
+            foreach ($values as $k2 => $val) {
                 if ($val === $this->debug->abstracter->UNDEFINED) {
-                    return get_class($this) == __NAMESPACE__.'\\OutputScript'
-                        ? $val
-                        : null;
+                    unset($values[$k2]);
                 } elseif (is_array($val)) {
-                    return $this->debug->output->outputText->dump($val, false);
+                    $values[$k2] = $this->debug->output->outputText->dump($val, false);
                 } else {
-                    return $val;
+                    $values[$k2] = $val;
                 }
-            }, $values);
-            $values = array_combine($keys, $values);
+            }
             $classnames[$k] = $objInfo
                 ? $objInfo['className']
                 : '';

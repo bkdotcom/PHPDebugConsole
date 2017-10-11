@@ -55,7 +55,7 @@ class ErrorHandler
         E_USER_NOTICE       => 'User Notice',
         E_ALL               => 'E_ALL',             // listed here for completeness
         E_STRICT            => 'Runtime Notice (E_STRICT)',
-        E_RECOVERABLE_ERROR => 'Fatal Error',
+        E_RECOVERABLE_ERROR => 'Recoverable Error',
         E_DEPRECATED        => 'Deprecated',
         E_USER_DEPRECATED   => 'User Deprecated',
     );

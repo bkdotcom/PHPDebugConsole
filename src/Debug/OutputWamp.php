@@ -169,7 +169,17 @@ class OutputWamp implements SubscriberInterface
     private function publishMeta()
     {
         $metaVals = array();
-        foreach (array('HTTP_HOST','REMOTE_ADDR','REQUEST_METHOD','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME') as $k) {
+        $keys = array(
+            'HTTP_HOST',
+            'HTTPS',
+            'REMOTE_ADDR',
+            'REQUEST_METHOD',
+            'REQUEST_TIME',
+            'REQUEST_URI',
+            'SERVER_ADDR',
+            'SERVER_NAME',
+        );
+        foreach ($keys as $k) {
             $metaVals[$k] = isset($_SERVER[$k])
                 ? $_SERVER[$k]
                 : null;

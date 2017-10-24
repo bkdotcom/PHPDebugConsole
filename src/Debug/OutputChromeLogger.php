@@ -64,7 +64,9 @@ class OutputChromeLogger extends OutputBase
             ));
             $encoded = $this->encode($this->json);
             if (headers_sent($file, $line)) {
+                $this->debug->warn('chromeLogger: headers already sent: '.$file.' (line '.$line.')');
             } elseif (strlen($encoded) > 250000) {
+                $this->debug->warn('chromeLogger: output limit exceeded');
             } else {
                 header(self::HEADER_NAME . ': ' . $encoded);
             }

@@ -85,7 +85,7 @@ class Manager
      * Publish/Trigger/Dispatch event
      *
      * @param string $eventName      event name
-     * @param mixed  $eventOrSubject to pass to subscriber
+     * @param mixed  $eventOrSubject passed to subscribers
      * @param array  $values         values to attach to event
      *
      * @return mixed

@@ -77,21 +77,11 @@ class Internal
                 'backtrace' => $this->error['backtrace'] ?: array(),
             );
         } else {
-            $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
-                ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8)
-                : debug_backtrace(false);   // don't provide object
-            foreach ($backtrace as $frame) {
-                if (in_array($frame['function'], array('call_user_func','call_user_func_array'))) {
-                    continue;
-                }
-                if (isset($frame['file']) && strpos($frame['file'], __DIR__) !== 0) {
-                    $meta = array(
-                        'file' => $frame['file'],
-                        'line' => $frame['line'],
-                    );
-                    break;
-                }
-            }
+            $meta = $this->debug->utilities->getCallerInfo();
+            $meta = array(
+                'file' => $meta['file'],
+                'line' => $meta['line'],
+            );
         }
         return $meta;
     }

@@ -201,29 +201,27 @@ class Debug
      */
     public function count($label = null)
     {
-        $return = 0;
-        if ($this->cfg['collect']) {
-            $args = array();
-            if (isset($label)) {
-                $args[] = $label;
-            } else {
-                // determine calling file & line
-                $args[] = 'count';
-                $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
-                    ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)
-                    : debug_backtrace(false);   // don't provide object
-                $label = $backtrace[0]['file'].': '.$backtrace[0]['line'];
-            }
-            if (!isset($this->data['counts'][$label])) {
-                $this->data['counts'][$label] = 1;
-            } else {
-                $this->data['counts'][$label]++;
-            }
-            $args[] = $this->data['counts'][$label];
-            $this->appendLog('count', $args);
-            $return = $this->data['counts'][$label];
+        if (isset($label)) {
+            $dataLabel = $label;
+        } else {
+            // determine calling file & line
+            $label = 'count';
+            $callerInfo = $this->utilities->getCallerInfo();
+            $dataLabel = $callerInfo['file'].': '.$callerInfo['line'];
         }
-        return $return;
+        if (!isset($this->data['counts'][$dataLabel])) {
+            $this->data['counts'][$dataLabel] = 1;
+        } else {
+            $this->data['counts'][$dataLabel]++;
+        }
+        $count = $this->data['counts'][$dataLabel];
+        if ($this->cfg['collect']) {
+            $this->appendLog('count', array(
+                $label,
+                $count,
+            ));
+        }
+        return $count;
     }
 
     /**
@@ -264,7 +262,14 @@ class Debug
             $args = array_values($args);
             if (empty($args)) {
                 // give a default label
-                $args[] = 'group';
+                $caller = $this->utilities->getCallerInfo();
+                if (isset($caller['class'])) {
+                    $args[] = $caller['class'].$caller['type'].$caller['function'];
+                } elseif (isset($caller['function'])) {
+                    $args[] = $caller['function'];
+                } else {
+                    $args[] = 'group';
+                }
             }
             $this->appendLog('group', $args, $meta);
         }
@@ -290,7 +295,14 @@ class Debug
             $args = array_values($args);
             if (empty($args)) {
                 // give a default label
-                $args[] = 'group';
+                $caller = $this->utilities->getCallerInfo();
+                if (isset($caller['class'])) {
+                    $args[] = $caller['class'].$caller['type'].$caller['function'];
+                } elseif (isset($caller['function'])) {
+                    $args[] = $caller['function'];
+                } else {
+                    $args[] = 'group';
+                }
             }
             $this->appendLog('groupCollapsed', $args, $meta);
         }
@@ -320,7 +332,7 @@ class Debug
         }
         $errorCaller = $this->errorHandler->get('errorCaller');
         if ($errorCaller && isset($errorCaller['depth']) && $this->data['groupDepth'] < $errorCaller['depth']) {
-            $this->errorHandler->setErrorCaller(null);
+            $this->errorHandler->setErrorCaller(false);
         }
         if ($this->cfg['collect']) {
             $this->appendLog('groupEnd', $args, $meta);
@@ -773,16 +785,26 @@ class Debug
     /**
      * A wrapper for errorHandler->setErrorCaller
      *
-     * @param array $caller optional. pass null or array() to clear
+     * @param array $caller (optional) null (default) determine automatically
+     *                      empty value (false, "", 0, array()) clear
+     *                      array manually set
      *
      * @return void
      */
-    public function setErrorCaller($caller = 'notPassed')
+    public function setErrorCaller($caller = null)
     {
-        if (!empty($caller) && $caller != 'notPassed') {
+        if ($caller === null) {
+            $caller = $this->utilities->getCallerInfo(1);
+            $caller = array(
+                'file' => $caller['file'],
+                'line' => $caller['line'],
+            );
+        }
+        if (!empty($caller)) {
+            // groupEnd will check depth and potentially clear errorCaller
             $caller['depth'] = $this->data['groupDepth'];
         }
-        $this->errorHandler->setErrorCaller($caller, 2);
+        $this->errorHandler->setErrorCaller($caller);
     }
 
     /*

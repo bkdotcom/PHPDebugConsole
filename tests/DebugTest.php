@@ -66,13 +66,15 @@ class DebugTest extends DebugTestFramework
         for ($i=0; $i<3; $i++) {
             $this->debug->count();
             $this->debug->count('count test');
+            \bdk\Debug::_count();
         }
         $log = $this->debug->getData('log');
-        $last2 = array_slice($log, -2);
+        $log = array_slice($log, -3);
         $this->assertSame(array(
             array('count', 'count', 3),
             array('count', 'count test', 4),
-        ), $last2);
+            array('count', 'count', 3),
+        ), $log);
     }
 
     /**
@@ -83,7 +85,7 @@ class DebugTest extends DebugTestFramework
     public function testError()
     {
         $resource = fopen(__FILE__, 'r');
-        $this->debug->error('a string', array(), new stdClass(), $resource);
+        \bdk\Debug::_error('a string', array(), new stdClass(), $resource);
         fclose($resource);
         $log = $this->debug->getData('log');
         $logEntry = $log[0];
@@ -93,6 +95,12 @@ class DebugTest extends DebugTestFramework
         // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
         $isObject = $this->checkAbstractionType($logEntry[3], 'object');
         $isResource = $this->checkAbstractionType($logEntry[4], 'resource');
+        $this->assertSame(array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 12,
+            'debug' => \bdk\Debug::META,
+        ), $logEntry[5]);
+
         // $this->assertTrue($isArray, 'is Array');
         $this->assertTrue($isObject, 'is Object');
         $this->assertTrue($isResource, 'is Resource');
@@ -254,6 +262,30 @@ EOD;
      */
     public function testSetErrorCaller()
     {
+        $this->setErrorCallerHelper();
+        $errorCaller = $this->debug->errorHandler->get('errorCaller');
+        $this->assertSame(array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 4,
+            'depth' => 0
+        ), $errorCaller);
+
+        $this->setErrorCallerHelper(true);
+        $errorCaller = $this->debug->errorHandler->get('errorCaller');
+        $this->assertSame(array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 4,
+            'depth' => 0
+        ), $errorCaller);
+    }
+
+    private function setErrorCallerHelper($static = false)
+    {
+        if ($static) {
+            \bdk\Debug::_setErrorCaller();
+        } else {
+            $this->debug->setErrorCaller();
+        }
     }
 
     public function testSubstitution()

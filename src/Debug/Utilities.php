@@ -168,6 +168,61 @@ class Utilities
     }
 
     /**
+     * Returns information regarding previous call stack position
+     * call_user_func and call_user_func_array are skipped
+     *
+     * Information returned:
+     *     function : function/method name
+     *     class :    fully qualified classname
+     *     file :     file
+     *     line :     line number
+     *     type :     "->": instance call, "::": static call, null: not object oriented
+     *
+     * @param integer $offset Adjust how far to go back
+     *
+     * @return array
+     */
+    public static function getCallerInfo($offset = 0)
+    {
+        $return = array(
+            'file' => null,
+            'line' => null,
+            'function' => null,
+            'class' => null,
+            'type' => null,
+        );
+        /*
+            The most frames we should ever need is 8
+        */
+        $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
+            ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8)
+            : debug_backtrace(false);   // don't provide object
+        $numFrames = count($backtrace);
+        $regexInternal = '/^'.preg_quote(__NAMESPACE__).'\b/';
+        if (isset($backtrace[1]['class']) && preg_match($regexInternal, $backtrace[1]['class'])) {
+            // called from within
+            // find the frame that called/triggered a debug function
+            for ($i = $numFrames - 1; $i >= 0; $i--) {
+                if (isset($backtrace[$i]['class']) && preg_match($regexInternal, $backtrace[$i]['class'])) {
+                    break;
+                }
+            }
+        } else {
+            $i = 1;
+        }
+        for ($i = $i + $offset; $i < $numFrames - 1; $i++) {
+            if (in_array($backtrace[$i+1]['function'], array('call_user_func', 'call_user_func_array'))) {
+                continue;
+            }
+            $return = array_merge($return, $backtrace[$i+1]);
+            $return['file'] = $backtrace[$i]['file'];
+            $return['line'] = $backtrace[$i]['line'];
+            break;
+        }
+        return $return;
+    }
+
+    /**
      * returns required/included files sorted by directory
      *
      * @return array

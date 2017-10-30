@@ -91,6 +91,51 @@ class UtilitiesTest extends DebugTestFramework
         $this->assertSame($expect, $attribStr);
     }
 
+    public function testGetBytes()
+    {
+
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testGetCallerInfo()
+    {
+        $callerInfo = $this->getCallerInfoHelper();
+        $this->assertSame(array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 3,
+            'function' => __FUNCTION__,
+            'class' => __CLASS__,
+            'type' => '->',
+        ), $callerInfo);
+        $callerInfo = call_user_func(array($this, 'getCallerInfoHelper'));
+        $this->assertSame(array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 3,
+            'function' => __FUNCTION__,
+            'class' => __CLASS__,
+            'type' => '->',
+        ), $callerInfo);
+    }
+
+    private function getCallerInfoHelper()
+    {
+        return Utilities::getCallerInfo();
+    }
+
+    public function testGetIncludedFiles()
+    {
+
+    }
+
+    public function testGetInterface()
+    {
+
+    }
+
     /**
      * Test
      *
@@ -113,6 +158,16 @@ class UtilitiesTest extends DebugTestFramework
         $this->assertFalse(Utilities::isBase64Encoded('I\'m just a bill.'));
     }
 
+    public function testIsList()
+    {
+
+    }
+
+    public function testMemoryLimit()
+    {
+
+    }
+
     /**
      * Test
      *
@@ -126,6 +181,11 @@ class UtilitiesTest extends DebugTestFramework
         $parts = Utilities::parseAttribString($html);
         $this->assertSame($class, $parts['class']);
         $this->assertSame($innerHtml, $parts['innerhtml']);
+    }
+
+    public function testRequestId()
+    {
+
     }
 
     /**

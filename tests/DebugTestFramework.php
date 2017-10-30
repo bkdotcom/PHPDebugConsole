@@ -13,7 +13,7 @@ class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
      */
     public function setUp()
     {
-        $this->debug = new \bdk\Debug(array(
+        $this->debug = \bdk\Debug::getInstance(array(
             'collect' => true,
             'output' => true,
             'outputCss' => false,
@@ -21,6 +21,30 @@ class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
             'outputAs' => 'html',
             'logEnvInfo' => false,
         ));
+        $resetValues = array(
+            'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
+            'counts'        => array(), // count method
+            'entryCountInitial' => 0,   // store number of log entries created during init
+            'groupDepth'    => 0,
+            'groupDepthSummary' => 0,
+            'log'           => array(),
+            'logSummary'    => array(),
+            'outputSent'    => false,
+            'timers' => array(      // timer method
+                'labels' => array(
+                    'debugInit' => array(
+                        0,
+                        isset($_SERVER['REQUEST_TIME_FLOAT']) // php 5.4
+                            ? $_SERVER['REQUEST_TIME_FLOAT']
+                            : microtime(true)
+                    ),
+                ),
+                'stack' => array(),
+            ),
+        );
+        foreach ($resetValues as $k => $v) {
+            $this->debug->setData($k, $v);
+        }
     }
 
     /**

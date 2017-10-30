@@ -349,20 +349,22 @@ class ErrorHandler
      *     Rather than reporting that an error occurred within the wrapper, you can use
      *     setErrorCaller() to report the error originating from the file/line that called the function
      *
-     * @param array   $caller pass null or array() to clear (default)
+     * @param array   $caller (default) null : determine automatically
+     *                        empty value (false, "", 0, array(): clear current value
+     *                        array() : manually set value
      * @param integer $offset if determining automatically : how many fuctions to go back (default = 1)
      *
      * @return void
      */
-    public function setErrorCaller($caller = 'notPassed', $offset = 1)
+    public function setErrorCaller($caller = null, $offset = 1)
     {
-        if ($caller === 'notPassed') {
+        if ($caller === null) {
             $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
                 ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 2)
                 : debug_backtrace(false);   // don't provide object
             $i = isset($backtrace[$offset])
                 ? $offset
-                : $offset-1;
+                : count($backtrace) - 1;
             $caller = isset($backtrace[$i]['file'])
                 ? $backtrace[$i]
                 : $backtrace[$i+1]; // likely called via call_user_func.. need to go one more to get calling file & line

@@ -123,8 +123,8 @@ class DebugTest extends DebugTestFramework
     public function testGroup()
     {
         $this->debug->group('a', 'b', 'c');
-        $log = $this->debug->getData('log');
-        $this->assertSame(array('group','a','b','c'), $log[0]);
+        $logEntry = $this->debug->getData('log/0');
+        $this->assertSame(array('group','a','b','c'), $logEntry);
         $depth = $this->debug->getData('groupDepth');
         $this->assertSame(1, $depth);
         $this->debug->group($this->debug->meta('hideIfEmpty'));
@@ -135,6 +135,50 @@ class DebugTest extends DebugTestFramework
 </div>
 EOD;
         $this->assertContains($outputExpect, $output);
+
+        $test = new \bdk\DebugTest\Test();
+        $testBase = new \bdk\DebugTest\TestBase();
+
+        /*
+            Test default label
+        */
+
+        \bdk\Debug::_group();
+        $this->assertSame(array(
+            'group',
+            __CLASS__.'->'.__FUNCTION__,
+        ), $this->debug->getData('log/0'));
+
+        $this->debug->setData('log', array());
+        $testBase->testBasePublic();
+        $this->assertSame(array(
+            'group',
+            'bdk\DebugTest\TestBase->testBasePublic',
+        ), $this->debug->getData('log/0'));
+
+        $this->debug->setData('log', array());
+        $test->testBasePublic();
+        $this->assertSame(array(
+            'group',
+            'bdk\DebugTest\Test->testBasePublic',
+        ), $this->debug->getData('log/0'));
+
+        // yes, we call Test... but static method is defined in TestBase
+        // .... PHP
+        $this->debug->setData('log', array());
+        \bdk\DebugTest\Test::testBaseStatic();
+        $this->assertSame(array(
+            'group',
+            'bdk\DebugTest\TestBase::testBaseStatic',
+        ), $this->debug->getData('log/0'));
+
+        // even if called with an arrow
+        $this->debug->setData('log', array());
+        $test->testBaseStatic();
+        $this->assertSame(array(
+            'group',
+            'bdk\DebugTest\TestBase::testBaseStatic',
+        ), $this->debug->getData('log/0'));
     }
 
     /**
@@ -270,7 +314,8 @@ EOD;
             'depth' => 0
         ), $errorCaller);
 
-        $this->setErrorCallerHelper(true);
+        // this will use maximum debug_backtrace depth
+        call_user_func(array($this, 'setErrorCallerHelper'), true);
         $errorCaller = $this->debug->errorHandler->get('errorCaller');
         $this->assertSame(array(
             'file' => __FILE__,
@@ -372,7 +417,7 @@ EOD;
         $trace = $this->debug->getData('log/0/1');
         $this->assertSame(__FILE__, $trace[0]['file']);
         $this->assertSame(__LINE__ - 3, $trace[0]['line']);
-        $this->assertSame(null, $trace[0]['function']);
+        $this->assertNotTrue(isset($trace[0]['function']));
         $this->assertSame(__CLASS__.'->'.__FUNCTION__, $trace[1]['function']);
     }
 

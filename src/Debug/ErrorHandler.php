@@ -352,18 +352,18 @@ class ErrorHandler
      * @param array   $caller (default) null : determine automatically
      *                        empty value (false, "", 0, array(): clear current value
      *                        array() : manually set value
-     * @param integer $offset if determining automatically : how many fuctions to go back (default = 1)
+     * @param integer $offset (optional) if determining automatically : adjust how many frames to go back
      *
      * @return void
      */
-    public function setErrorCaller($caller = null, $offset = 1)
+    public function setErrorCaller($caller = null, $offset = 0)
     {
         if ($caller === null) {
             $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
-                ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 2)
+                ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3)
                 : debug_backtrace(false);   // don't provide object
-            $i = isset($backtrace[$offset])
-                ? $offset
+            $i = isset($backtrace[$offset+1])
+                ? $offset + 1
                 : count($backtrace) - 1;
             $caller = isset($backtrace[$i]['file'])
                 ? $backtrace[$i]

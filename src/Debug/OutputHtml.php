@@ -521,13 +521,12 @@ class OutputHtml extends OutputBase
                 $info['visibility'] => true,
                 'static' => $info['isStatic'],
             )));
-            foreach ($modifiers as $i => $modifier) {
-                $modifiers[$i] = '<span class="t_modifier">'.$modifier.'</span>';
-            }
             $str .= '<dd'
-                .' class="method visibility-'.$info['visibility'].($info['isDeprecated'] ? ' deprecated' : '').'"'
+                .' class="method '.implode(' ', $modifiers).($info['isDeprecated'] ? ' deprecated' : '').'"'
                 .' data-implements="'.$info['implements'].'">'
-                .implode(' ', $modifiers)
+                .implode(' ', array_map(function ($modifier) {
+                    return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
+                }, $modifiers))
                 .(isset($info['phpDoc']['return'][0])
                     ? ' <span class="t_type"'
                             .' title="'.htmlspecialchars($info['phpDoc']['return'][0]['desc']).'"'
@@ -633,13 +632,15 @@ class OutputHtml extends OutputBase
             $str .= '<dd class="magic-method info">This object has a <code>__get()</code> method</dd>'."\n";
         }
         foreach ($abs['properties'] as $k => $info) {
-            $viaDebugInfo = !empty($info['viaDebugInfo']);
             $isPrivateAncestor = $info['visibility'] == 'private' && $info['inheritedFrom'];
-            $str .= '<dd class="property visibility-'.$info['visibility']
-                    .($viaDebugInfo ? ' debug-value' : '')
-                    .($isPrivateAncestor ? ' private-ancestor' : '')
-                .'">'
-                .'<span class="t_modifier">'.$info['visibility'].'</span>'
+            $classes = array_keys(array_filter(array(
+                'property' => true,
+                $info['visibility'] => $info['visibility'] != 'debug',
+                'debug-value' => !empty($info['viaDebugInfo']),
+                'private-ancestor' => $isPrivateAncestor,
+            )));
+            $str .= '<dd class="'.implode(' ', $classes).'">'
+                .'<span class="t_modifier_'.$info['visibility'].'">'.$info['visibility'].'</span>'
                 .($isPrivateAncestor
                     ? ' (<i>'.$info['inheritedFrom'].'</i>)'
                     : ''

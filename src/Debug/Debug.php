@@ -252,26 +252,7 @@ class Debug
         $this->groupDepthRef++;
         if ($this->cfg['collect']) {
             $args = func_get_args();
-            $meta = array();
-            foreach ($args as $i => $v) {
-                if (is_array($v) && array_search(self::META, $v, true) !== false) {
-                    $meta = array_merge($meta, $v);
-                    unset($args[$i]);
-                }
-            }
-            $args = array_values($args);
-            if (empty($args)) {
-                // give a default label
-                $caller = $this->utilities->getCallerInfo();
-                if (isset($caller['class'])) {
-                    $args[] = $caller['class'].$caller['type'].$caller['function'];
-                } elseif (isset($caller['function'])) {
-                    $args[] = $caller['function'];
-                } else {
-                    $args[] = 'group';
-                }
-            }
-            $this->appendLog('group', $args, $meta);
+            $this->doGroup('group', $args);
         }
     }
 
@@ -285,26 +266,7 @@ class Debug
         $this->groupDepthRef++;
         if ($this->cfg['collect']) {
             $args = func_get_args();
-            $meta = array();
-            foreach ($args as $i => $v) {
-                if (is_array($v) && array_search(self::META, $v, true) !== false) {
-                    $meta = array_merge($meta, $v);
-                    unset($args[$i]);
-                }
-            }
-            $args = array_values($args);
-            if (empty($args)) {
-                // give a default label
-                $caller = $this->utilities->getCallerInfo();
-                if (isset($caller['class'])) {
-                    $args[] = $caller['class'].$caller['type'].$caller['function'];
-                } elseif (isset($caller['function'])) {
-                    $args[] = $caller['function'];
-                } else {
-                    $args[] = 'group';
-                }
-            }
-            $this->appendLog('groupCollapsed', $args, $meta);
+            $this->doGroup('groupCollapsed', $args);
         }
     }
 
@@ -885,11 +847,43 @@ class Debug
     }
 
     /**
+     * Append group or groupCollapsed to log
+     *
+     * @param string $method 'group' or 'groupCollapsed'
+     * @param array  $args   arguments passed to group or groupCollapsed
+     *
+     * @return void
+     */
+    private function doGroup($method, $args)
+    {
+        $meta = array();
+        foreach ($args as $i => $v) {
+            if (is_array($v) && array_search(self::META, $v, true) !== false) {
+                $meta = array_merge($meta, $v);
+                unset($args[$i]);
+            }
+        }
+        $args = array_values($args);
+        if (empty($args)) {
+            // give a default label
+            $caller = $this->utilities->getCallerInfo();
+            if (isset($caller['class'])) {
+                $args[] = $caller['class'].$caller['type'].$caller['function'];
+            } elseif (isset($caller['function'])) {
+                $args[] = $caller['function'];
+            } else {
+                $args[] = 'group';
+            }
+        }
+        $this->appendLog($method, $args, $meta);
+    }
+
+    /**
      * Set/cache this class' public methods
      *
      * @return void
      */
-    protected function setPublicMethods()
+    private function setPublicMethods()
     {
         $refObj = new \ReflectionObject($this);
         self::$publicMethods = array_map(function (\ReflectionMethod $refMethod) {

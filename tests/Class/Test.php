@@ -36,7 +36,14 @@ class TestBase
     public function testBasePublic()
     {
         \bdk\Debug::_group();
-        \bdk\Debug::_log('this group\'s label should be', __CLASS__.'->'.__FUNCTION__);
+        \bdk\Debug::_log('this group\'s label should be', get_class($this).'->'.__FUNCTION__);
+        \bdk\Debug::_groupEnd();
+    }
+
+    public static function testBaseStatic()
+    {
+        \bdk\Debug::_group();
+        \bdk\Debug::_log('this group\'s label will be '.__CLASS__.'::'.__FUNCTION__.' regardless if called from inherited class :(');
         \bdk\Debug::_groupEnd();
     }
 }
@@ -112,12 +119,14 @@ class Test extends TestBase
      *
      * @return void Nothing is returned
      */
+    /*
     public static function methodStatic()
     {
         \bdk\Debug::_group();
         \bdk\Debug::_log('this group\'s label should be', __CLASS__.'::'.__FUNCTION__);
         \bdk\Debug::_groupEnd();
     }
+    */
 
     /**
      * This method is public

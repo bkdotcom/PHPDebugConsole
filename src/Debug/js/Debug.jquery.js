@@ -377,8 +377,8 @@
 	function enhanceObjectInner($inner) {
 		// console.info("enhanceObjectInner", $inner);
 		var $wrapper = $inner.parent(),
-			hasProtected = $inner.children(".visibility-protected").length > 0,
-			hasPrivate = $inner.children(".visibility-private").length > 0,
+			hasProtected = $inner.children(".protected").length > 0,
+			hasPrivate = $inner.children(".private").length > 0,
 			accessible = $wrapper.data("accessible"),
 			toggleClass = accessible === "public" ?
 				"toggle-off" :
@@ -407,7 +407,7 @@
 			});
 		}
 		if (accessible === "public") {
-			$wrapper.find(".visibility-private, .visibility-protected").hide();
+			$wrapper.find(".private, .protected").hide();
 		}
 		if (hasProtected) {
 			visToggles += ' <span class="toggle-protected '+toggleClass+'">' + toggleVerb + " protected</span>";
@@ -518,14 +518,14 @@
 				html(iconTag + "hide "+vis).
 				addClass("toggle-on").
 				removeClass("toggle-off");
-			$(toggle).closest(".t_object").find(".visibility-"+vis).show();
+			$(toggle).closest(".t_object").find("."+vis).show();
 		} else {
 			// hide for this and all descendants
 			$toggles.
 				html(iconTag + "show "+vis).
 				addClass("toggle-off").
 				removeClass("toggle-on");
-			$(toggle).closest(".t_object").find(".visibility-"+vis).hide();
+			$(toggle).closest(".t_object").find("."+vis).hide();
 		}
 	}
 

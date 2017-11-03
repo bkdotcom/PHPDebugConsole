@@ -1,5 +1,7 @@
 <?php
 
+use bdk\PubSub\Event;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -20,6 +22,9 @@ class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
             'outputScript' => false,
             'outputAs' => 'html',
             'logEnvInfo' => false,
+            'onError' => function (Event $event) {
+                throw new PHPUnit_Framework_Exception($event['message'], 500);
+            }
         ));
         $resetValues = array(
             'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible

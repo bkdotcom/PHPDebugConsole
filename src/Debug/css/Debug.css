@@ -193,6 +193,7 @@
 		border-bottom: 1px solid rgba(0, 0, 0, 0.33);
 	}
 .debug .t_object .method.deprecated i { border-bottom:0; }
+.debug .t_object .t_modifier_static { font-style:italic; color:#00529B; }
 .debug .info { display:inline-block; }
 .debug .deprecated { opacity:.66; }
 .debug .deprecated i { opacity:.66; color:#D8000C; }

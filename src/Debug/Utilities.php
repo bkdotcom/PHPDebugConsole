@@ -178,6 +178,10 @@ class Utilities
      *     line :     line number
      *     type :     "->": instance call, "::": static call, null: not object oriented
      *
+     * If a method is defined as static:
+     *    the class value will always be the class in which the method was defined,
+     *    type will always be "::", even if called with an ->
+     *
      * @param integer $offset Adjust how far to go back
      *
      * @return array
@@ -191,12 +195,7 @@ class Utilities
             'class' => null,
             'type' => null,
         );
-        /*
-            The most frames we should ever need is 8
-        */
-        $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
-            ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 8)
-            : debug_backtrace(false);   // don't provide object
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 7);
         $numFrames = count($backtrace);
         $regexInternal = '/^'.preg_quote(__NAMESPACE__).'\b/';
         if (isset($backtrace[1]['class']) && preg_match($regexInternal, $backtrace[1]['class'])) {
@@ -210,15 +209,21 @@ class Utilities
         } else {
             $i = 1;
         }
-        for ($i = $i + $offset; $i < $numFrames - 1; $i++) {
-            if (in_array($backtrace[$i+1]['function'], array('call_user_func', 'call_user_func_array'))) {
-                continue;
-            }
-            $return = array_merge($return, $backtrace[$i+1]);
-            $return['file'] = $backtrace[$i]['file'];
-            $return['line'] = $backtrace[$i]['line'];
-            break;
+        $i = $i + $offset;
+        $iLine = $i;
+        $iFunc = $i + 1;
+        if (isset($backtrace[$iFunc]) && in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))) {
+            $iLine++;
+            $iFunc++;
         }
+        if (isset($backtrace[$iFunc])) {
+            $return = array_merge($return, array_intersect_key($backtrace[$iFunc], $return));
+            if ($return['type'] == '->') {
+                $return['class'] = get_class($backtrace[$iFunc]['object']);
+            }
+        }
+        $return['file'] = $backtrace[$iLine]['file'];
+        $return['line'] = $backtrace[$iLine]['line'];
         return $return;
     }
 

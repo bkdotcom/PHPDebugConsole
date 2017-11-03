@@ -6,7 +6,7 @@
 /**
  * PHPUnit tests for Debug class
  */
-class ErrorHandlerTest extends \PHPUnit\Framework\TestCase
+class ErrorHandlerTest extends DebugTestFramework
 {
 
     /**
@@ -70,6 +70,25 @@ class ErrorHandlerTest extends \PHPUnit\Framework\TestCase
      */
     public function testSetErrorCaller()
     {
+        $this->setErrorCallerHelper();
+        $errorCaller = $this->debug->errorHandler->get('errorCaller');
+        $this->assertSame(array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 4,
+        ), $errorCaller);
+
+        // this will use maximum debug_backtrace depth
+        call_user_func(array($this, 'setErrorCallerHelper'));
+        $errorCaller = $this->debug->errorHandler->get('errorCaller');
+        $this->assertSame(array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 4,
+        ), $errorCaller);
+    }
+
+    private function setErrorCallerHelper()
+    {
+        $this->debug->errorHandler->setErrorCaller();
     }
 
     /**

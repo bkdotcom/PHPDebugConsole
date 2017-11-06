@@ -181,7 +181,7 @@
 	array & objects
 */
 .debug span.array-inner,
-	.debug .object-inner { display: block; margin-left: 1.5em; }
+	.debug .object-inner { display:block; margin-left:1.5em; }
 .debug span.key-value {
 	display: block;
 	padding-left: 10px;
@@ -199,7 +199,7 @@
 .debug .deprecated i { opacity:.66; color:#D8000C; }
 .debug .constant-name,
 	.debug .property-name,
-	.debug .method-name {
+	.debug .method .method-name {
 		font-weight: bold;
 	}
 .debug .method > .t_punct {
@@ -268,6 +268,17 @@
 */
 .debug .t_bool.true { color:#993; text-shadow:1px 1px 2px rgba(153, 153, 51, 0.5); }
 .debug .t_bool.false { color:#C33; text-shadow:1px 1px 2px rgba(204, 51, 51, 0.5); }
+.debug .t_callable { font-weight:bold; }
+.debug .t_callable .t_type,
+	.debug .t_callable .namespace {
+		font-weight: normal;
+	}
+.debug .t_object .t_classname,
+	.debug td.t_classname {
+		font-weight:bold;
+		text-decoration:underline;
+	}
+.debug .namespace { opacity:0.5; }
 .debug .t_int,
 	.debug .t_float,
 	.debug .numeric {
@@ -287,7 +298,6 @@
 .debug .t_key:after { content:']'; margin-left:1px; }
 .debug .t_keyword { color:#07A; }
 .debug .t_null { opacity:0.3; }
-.debug .t_object-class { font-weight:bold; text-decoration:underline; }
 .debug .t_operator { color:#A67F59; }
 .debug .t_punct { color:#999; }
 .debug .t_recursion { font-weight:bold; color:#F00; }
@@ -339,12 +349,12 @@
   clear: both;
 }
 */
-.debug .indent { padding-left: 10px; }
+.debug .indent { padding-left:10px; }
 .debug .list-unstyled{
 	list-style: none outside none;
 	padding-left: 0;
 }
-.debug .no-pseudo:before { content: none; }
-.debug .no-pseudo:after { content: none; }
-.debug .text-muted { opacity: 0.5; }
-.debug .text-right { text-align: right; }
+.debug .no-pseudo:before { content:none; }
+.debug .no-pseudo:after { content:none; }
+.debug .text-muted { opacity:0.5; }
+.debug .text-right { text-align:right; }

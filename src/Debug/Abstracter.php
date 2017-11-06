@@ -159,9 +159,12 @@ class Abstracter
             if (in_array(self::ABSTRACTION, $val, true)) {
                 $type = $val['type'];
                 $typeMore = 'abstraction';
+            } elseif (AbstractArray::isCallable($val)) {
+                $type = 'callable';
+                $typeMore = 'raw';  // needs abstracted
             } else {
                 $type = 'array';
-                $typeMore = 'raw';  // ie. needs abstracted
+                $typeMore = 'raw';  // needs abstracted
             }
         } elseif (is_bool($val)) {
             $type = 'bool';
@@ -174,10 +177,10 @@ class Abstracter
             $type = 'null';
         } elseif (is_object($val)) {
             $type = 'object';
-            $typeMore = 'raw';  // ie. needs abstracted
+            $typeMore = 'raw';  // needs abstracted
         } elseif (is_resource($val) || strpos(print_r($val, true), 'Resource') === 0) {
             $type = 'resource';
-            $typeMore = 'raw';  // ie. needs abstracted
+            $typeMore = 'raw';  // needs abstracted
         }
         return $type;
     }

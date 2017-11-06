@@ -147,6 +147,10 @@ EOD;
         $this->assertSame(array(
             'group',
             __CLASS__.'->'.__FUNCTION__,
+            array(
+                'isMethodName' => true,
+                'debug' => \bdk\Debug::META,
+            ),
         ), $this->debug->getData('log/0'));
 
         $this->debug->setData('log', array());
@@ -154,6 +158,10 @@ EOD;
         $this->assertSame(array(
             'group',
             'bdk\DebugTest\TestBase->testBasePublic',
+            array(
+                'isMethodName' => true,
+                'debug' => \bdk\Debug::META,
+            ),
         ), $this->debug->getData('log/0'));
 
         $this->debug->setData('log', array());
@@ -161,6 +169,10 @@ EOD;
         $this->assertSame(array(
             'group',
             'bdk\DebugTest\Test->testBasePublic',
+            array(
+                'isMethodName' => true,
+                'debug' => \bdk\Debug::META,
+            ),
         ), $this->debug->getData('log/0'));
 
         // yes, we call Test... but static method is defined in TestBase
@@ -170,6 +182,10 @@ EOD;
         $this->assertSame(array(
             'group',
             'bdk\DebugTest\TestBase::testBaseStatic',
+            array(
+                'isMethodName' => true,
+                'debug' => \bdk\Debug::META,
+            ),
         ), $this->debug->getData('log/0'));
 
         // even if called with an arrow
@@ -178,6 +194,10 @@ EOD;
         $this->assertSame(array(
             'group',
             'bdk\DebugTest\TestBase::testBaseStatic',
+            array(
+                'isMethodName' => true,
+                'debug' => \bdk\Debug::META,
+            ),
         ), $this->debug->getData('log/0'));
     }
 

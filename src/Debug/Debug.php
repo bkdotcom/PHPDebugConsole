@@ -869,6 +869,7 @@ class Debug
             $caller = $this->utilities->getCallerInfo();
             if (isset($caller['class'])) {
                 $args[] = $caller['class'].$caller['type'].$caller['function'];
+                $meta['isMethodName'] = true;
             } elseif (isset($caller['function'])) {
                 $args[] = $caller['function'];
             } else {

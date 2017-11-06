@@ -9,6 +9,7 @@ class TypeBasicTest extends DebugTestFramework
     public function dumpProvider()
     {
         $ts = time();
+        $test = new \bdk\DebugTest\Test();
         // val, html, text, script
         return array(
             // boolean
@@ -23,35 +24,21 @@ class TypeBasicTest extends DebugTestFramework
                 $ts,
                 '<span class="t_int timestamp" title="'.date('Y-m-d H:i:s', $ts).'">'.$ts.'</span>',
                 '📅 '.$ts.' ('.date('Y-m-d H:i:s').')',
-                $ts.' ('.date('Y-m-d H:i:s').')'
+                $ts.' ('.date('Y-m-d H:i:s').')',
             ),
             array(\bdk\Debug\Abstracter::UNDEFINED,
                 '<span class="t_undefined"></span>',
                 'undefined',
-                \bdk\Debug\Abstracter::UNDEFINED
-            )
-
+                \bdk\Debug\Abstracter::UNDEFINED,
+            ),
+            array(
+                array($test,'testBaseStatic'),
+                '<span class="t_callable"><span class="t_type">callable</span> <span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span>',
+                'callable: bdk\DebugTest\Test::testBaseStatic',
+                'callable: bdk\DebugTest\Test::testBaseStatic',
+            ),
         );
     }
-
-    /**
-     * Test
-     *
-     * @dataProvider dumpProvider
-     *
-     * @return void
-     */
-    /*
-    public function testDump($val, $html, $text, $script)
-    {
-        $dump = $this->debug->output->outputHtml->dump($val);
-        $this->assertSame($html, $dump);
-        $dump = $this->debug->output->outputText->dump($val);
-        $this->assertSame($text, $dump);
-        $dump = $this->debug->output->outputScript->dump($val);
-        $this->assertSame($script, $dump);
-    }
-    */
 
     /**
      * Test that scalar reference vals get dereferenced

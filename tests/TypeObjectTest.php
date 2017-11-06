@@ -56,7 +56,7 @@ EOD;
                     $this->assertStringStartsWith(
                         '<span class="t_object" data-accessible="public">'
                         .'<span class="t_string t_stringified" title="__toString()">abracadabra</span>'."\n"
-                        .'<span class="t_object-class" title="Test">bdk\DebugTest\Test</span>',
+                        .'<span class="t_classname" title="Test"><span class="namespace">bdk\DebugTest\</span>Test</span>',
                         $str
                     );
                     $this->assertSelectCount('dl.object-inner', 1, $str);
@@ -79,8 +79,8 @@ EOD;
                     $this->assertContains(implode("\n", array(
                         '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
                         '<dd class="magic-method info">This object has a <code>__get()</code> method</dd>',
-                        '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">debug</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="public"><span class="t_object-class">bdk\Debug</span> <span class="excluded">(not inspected)</span></span></dd>',
-                        '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">instance</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="private"><span class="t_object-class">bdk\DebugTest\Test</span> <span class="t_recursion">*RECURSION*</span></span></dd>',
+                        '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">debug</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="public"><span class="t_classname"><span class="namespace">bdk\</span>Debug</span> <span class="excluded">(not inspected)</span></span></dd>',
+                        '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">instance</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="private"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span> <span class="t_recursion">*RECURSION*</span></span></dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">(</span>',
                         '<span class="array-inner">',

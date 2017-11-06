@@ -42,7 +42,7 @@ class AbstractArray
         if (in_array($array, $hist, true)) {
         	return $this->abstracter->RECURSION;
         }
-        if (array_keys($array) == array(0,1) && is_object($array[0]) && is_string($array[1]) && method_exists($array[0], $array[1])) {
+        if (self::isCallable($array)) {
             // this appears to be a "callable"
 	        return array(
 	            'debug' => $this->abstracter->ABSTRACTION,
@@ -83,5 +83,20 @@ class AbstractArray
             $return[$k] = $v;
         }
         return $return;
+    }
+
+    /**
+     * Is array a callable?
+     *
+     * @param array $array array to check
+     *
+     * @return boolean
+     */
+    public static function isCallable($array)
+    {
+        return array_keys($array) == array(0,1)
+            && is_object($array[0])
+            && is_string($array[1])
+            && method_exists($array[0], $array[1]);
     }
 }

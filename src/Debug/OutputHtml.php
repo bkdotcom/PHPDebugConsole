@@ -69,7 +69,7 @@ class OutputHtml extends OutputBase
             }
         }
         if (!$haveObj) {
-            $str = str_replace('<td class="t_object-class"></td>', '', $str);
+            $str = str_replace('<td class="t_classname"></td>', '', $str);
         }
         $attribs = array(
             'class' => $class,
@@ -182,35 +182,37 @@ class OutputHtml extends OutputBase
      *
      * @param string $method group|groupCollapsed|groupEnd
      * @param array  $args   args passed to method
+     * @param array  $meta   meta values
      *
      * @return string
      */
-    protected function buildGroupMethod($method, $args = array())
+    protected function buildGroupMethod($method, $args = array(), $meta = array())
     {
         $str = '';
         if (in_array($method, array('group','groupCollapsed'))) {
-            if (!empty($args)) {
-                $label = array_shift($args);
-                foreach ($args as $k => $v) {
-                    $args[$k] = $this->dump($v);
-                }
-                $argStr = implode(', ', $args);
-                $str .= '<div'.$this->debug->utilities->buildAttribString(array(
-                    'class' => array(
-                        'group-header',
-                        $method == 'groupCollapsed'
-                            ? 'collapsed'
-                            : 'expanded',
-                    ),
-                )).'>'
-                    .'<span class="group-label">'
-                        .$label
-                        .( !empty($argStr)
-                            ? '(</span>'.$argStr.'<span class="group-label">)'
-                            : '' )
-                    .'</span>'
-                .'</div>'."\n";
+            $label = array_shift($args);
+            if (!empty($meta['isMethodName'])) {
+                $label = $this->markupClassname($label);
             }
+            foreach ($args as $k => $v) {
+                $args[$k] = $this->dump($v);
+            }
+            $argStr = implode(', ', $args);
+            $str .= '<div'.$this->debug->utilities->buildAttribString(array(
+                'class' => array(
+                    'group-header',
+                    $method == 'groupCollapsed'
+                        ? 'collapsed'
+                        : 'expanded',
+                ),
+            )).'>'
+                .'<span class="group-label">'
+                    .$label
+                    .( !empty($argStr)
+                        ? '(</span>'.$argStr.'<span class="group-label">)'
+                        : '' )
+                .'</span>'
+            .'</div>'."\n";
             $str .= '<div class="m_group">';
         } elseif ($method == 'groupEnd') {
             $str = '</div>';
@@ -238,12 +240,12 @@ class OutputHtml extends OutputBase
         $str .= '<th class="'.$classAndInner['class'].'" scope="row">'.$classAndInner['innerhtml'].'</th>';
         if ($objInfo) {
             $rowIsObject = true;
-            $str .= '<td class="t_object-class"'
-                .($objInfo['phpDoc']['summary'] ? ' title="'.htmlspecialchars($objInfo['phpDoc']['summary']).'"' : '')
-                .'>'.$objInfo['className'].'</td>';
+            $str .= $this->markupClassname($objInfo['className'], 'td', array(
+                'title' => $objInfo['phpDoc']['summary'] ?: null,
+            ));
         } else {
             $rowIsObject = false;
-            $str .= '<td class="t_object-class"></td>';
+            $str .= '<td class="t_classname"></td>';
         }
         foreach ($values as $v) {
             $str .= $this->dump($v, null, true, 'td');
@@ -316,8 +318,8 @@ class OutputHtml extends OutputBase
      */
     protected function dumpCallable($abs)
     {
-        return '<span class="t_type">callable</span>'
-                .' '.$abs['values'][0].'::'.$abs['values'][1];
+        return '<span class="t_type">callable</span> '
+            .$this->markupClassname($abs['values'][0].'::'.$abs['values'][1]);
     }
 
     /**
@@ -370,9 +372,9 @@ class OutputHtml extends OutputBase
     protected function dumpObject($abs, $path = array())
     {
         $title = trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
-        $strClassName = '<span class="t_object-class"'.($title ? ' title="'.htmlspecialchars($title).'"' : '').'>'
-            .$abs['className']
-            .'</span>';
+        $strClassName = $this->markupClassname($abs['className'], 'span', array(
+            'title' => $title ?: null,
+        ));
         if ($abs['isRecursion']) {
             $html = $strClassName
                 .' <span class="t_recursion">*RECURSION*</span>';
@@ -660,6 +662,38 @@ class OutputHtml extends OutputBase
     }
 
     /**
+     * Wrap classname in span.t_classname
+     * if namespaced'd additionally wrap namespace in span.namespace
+     * If callable, also wrap .t_operator and .t_method-name
+     *
+     * @param string $str     classname or classname(::|->)methodname
+     * @param string $tag     ("span") html tag to use
+     * @param array  $attribs additional html attributes
+     *
+     * @return string
+     */
+    private function markupClassname($str, $tag = 'span', $attribs = array())
+    {
+        if (preg_match('^(.+)(::|->)(.+)^', $str, $matches)) {
+            $classname = $matches[1];
+            $opMethod = '<span class="t_operator">'.$matches[2].'</span>'
+                    . '<span class="method-name">'.$matches[3].'</span>';
+        } else {
+            $classname = $str;
+            $opMethod = '';
+        }
+        if ($idx = strrpos($classname, '\\')) {
+            $classname = '<span class="namespace">'.substr($classname, 0, $idx + 1).'</span>'
+                . substr($classname, $idx + 1);
+        }
+        $attribs = array_merge(array(
+            'class' => 't_classname',
+        ), $attribs);
+        return '<'.$tag.$this->debug->utilities->buildAttribString($attribs).'>'.$classname.'</'.$tag.'>'
+            .$opMethod;
+    }
+
+    /**
      * process alerts
      *
      * @return string
@@ -703,7 +737,7 @@ class OutputHtml extends OutputBase
     {
         $str = '';
         if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $str = $this->buildGroupMethod($method, $args);
+            $str = $this->buildGroupMethod($method, $args, $meta);
         } elseif ($method == 'table') {
             $str = $this->buildTable($args[0], $args[1], $args[2], 'm_table table-bordered sortable');
         } elseif ($method == 'trace') {
@@ -770,7 +804,7 @@ class OutputHtml extends OutputBase
             $val = '<span class="t_keyword">Array</span>'
                 .'<span class="t_punct">(</span>'.$count.'<span class="t_punct">)</span>';
         } elseif ($type == 'object') {
-            $val = '<span class="t_object-class">'.$val['className'].'</span>';
+            $val = $this->markupClassname($val['className']);
         } else {
             $val = $this->dump($val);
         }

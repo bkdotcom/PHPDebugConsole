@@ -355,7 +355,7 @@
 	 * Minimal DOM manipulation -> apply to all descendants
 	 */
 	function enhanceObjects($root) {
-		$root.find(".t_object > .t_object-class").each( function() {
+		$root.find(".t_object > .t_classname").each( function() {
 			var $toggle = $(this),
 				$target = $toggle.next();
 			/*
@@ -555,16 +555,16 @@
 			// ".debug .t_array-collapse," +
 				// ".debug .t_array-expand," +
 				// ".debug .group-header," +
-				// ".debug .t_object-class," +
+				// ".debug .t_classname," +
 			".debug [data-toggle]," +
 				".debug [data-toggle][title]," +	// override .debug[title]
 				".debug .vis-toggles span { cursor:pointer; }" +
-			".debug .group-header.empty, .debug .t_object-class.empty { cursor:auto; }" +
+			".debug .group-header.empty, .debug .t_classname.empty { cursor:auto; }" +
 			".debug .vis-toggles span:hover," +
 				".debug [data-toggle=interface]:hover { background-color:rgba(0,0,0,0.1); }" +
 			".debug .vis-toggles .toggle-off," +
 				".debug .interface .toggle-off { opacity:0.42 }" +
-			//".debug .t_array-collapse i.fa, .debug .t_array-expand i.fa, .debug .t_object-class i.fa { font-size:inherit; }"+
+			//".debug .t_array-collapse i.fa, .debug .t_array-expand i.fa, .debug .t_classname i.fa { font-size:inherit; }"+
 			"";
 		if ( scope ) {
 			css = css.replace(new RegExp(/\.debug\s/g), scope+" ");

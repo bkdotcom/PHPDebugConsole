@@ -17,6 +17,8 @@ namespace bdk;
 use bdk\Debug\ErrorHandler;
 use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Manager as EventManager;
+use ReflectionObject;
+use ReflectionMethod;
 
 /**
  * Web-browser/javascript like console class for PHP
@@ -46,10 +48,12 @@ class Debug
      * Constructor
      *
      * @param array        $cfg          config
-     * @param ErrorHandler $errorHandler optional - uses \bdk\PubSub\Manager if not passed
-     * @param EventManager $eventManager optional - uses \bdk\Debug\EventManager if not passed
+     * @param EventManager $eventManager optional - specify EventManager instance
+     *                                      will use new instance if not specified
+     * @param ErrorHandler $errorHandler optional - specify ErrorHandler instance
+     *                                      if not specified, will use singleton or new instance
      */
-    public function __construct($cfg = array(), ErrorHandler $errorHandler = null, EventManager $eventManager = null)
+    public function __construct($cfg = array(), EventManager $eventManager = null, ErrorHandler $errorHandler = null)
     {
         $this->cfg = array(
             'collect'   => false,
@@ -72,28 +76,16 @@ class Debug
             'emailFunc' => 'mail',          // callable
             // 'onLog' => null,
         );
-        spl_autoload_register(array($this, 'autoloader'));
-        $this->utilities = new Debug\Utilities();
-        $this->eventManager = $eventManager
-            ? $eventManager
-            : new EventManager();
-        if ($errorHandler) {
-            $this->errorHandler = $errorHandler;
-        } elseif (Debug\ErrorHandler::getInstance()) {
-            $this->errorHandler = Debug\ErrorHandler::getInstance();
-        } else {
-            $this->errorHandler = new Debug\ErrorHandler($this->eventManager);
-        }
         $this->data = array(
             'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
             'counts'        => array(), // count method
             'entryCountInitial' => 0,   // store number of log entries created during init
-            'groupDepth'    => 0,
+            'groupDepth'        => 0,
             'groupDepthSummary' => 0,
             'log'           => array(),
             'logSummary'    => array(),
             'outputSent'    => false,
-            'requestId'     => $this->utilities->requestId(),
+            'requestId'     => null,
             'timers' => array(      // timer method
                 'labels' => array(
                     // label => array(accumulatedTime, lastStartedTime|null)
@@ -107,24 +99,50 @@ class Debug
                 'stack' => array(),
             ),
         );
-        // Initialize self::$instance if not set
-        //    so that self::getInstance() will always return original instance
-        //    as opposed the the last instance created with new Debug()
         if (!isset(self::$instance)) {
+            /*
+               self::getInstance() will always return original instance
+               as opposed the the last instance created with new Debug()
+            */
             self::$instance = $this;
+            /*
+                make sure we only call spl_autoload_register on initial instance
+                even though re-registering function does't register it multiple times
+            */
+            spl_autoload_register(array($this, 'autoloader'));
         }
-        $this->setPublicMethods();
-        $this->logRef = &$this->data['log'];
-        $this->groupDepthRef = &$this->data['groupDepth'];
-        $this->abstracter = new Debug\Abstracter($this->eventManager);
+        /*
+            Set child objects
+        */
+        $this->eventManager = $eventManager
+            ? $eventManager
+            : new EventManager();
+        if ($errorHandler) {
+            $this->errorHandler = $errorHandler;
+        } elseif (Debug\ErrorHandler::getInstance()) {
+            $this->errorHandler = Debug\ErrorHandler::getInstance();
+        } else {
+            $this->errorHandler = new Debug\ErrorHandler($this->eventManager);
+        }
+        $this->utilities = new Debug\Utilities();
+        $this->abstracter = new Debug\Abstracter($this->eventManager);  // configurable
         $this->config = new Debug\Config($this, $this->cfg);
-        $this->errorEmailer = new Debug\ErrorEmailer();
+        $this->errorEmailer = new Debug\ErrorEmailer();                 // configurable
         $this->internal = new Debug\Internal($this);
-        $this->output = new Debug\Output($this);
+        $this->output = new Debug\Output($this);                        // configurable
         $this->utf8 = new Debug\Utf8();
+        $this->errorHandler->eventManager->addSubscriberInterface($this->errorEmailer);
+        /*
+            Init config and properties
+        */
         $this->config->setCfg($cfg);
-        $this->errorHandler->eventManager->subscribe('errorHandler.error', array($this->errorEmailer, 'onErrorAddEmailData'), 1);
-        $this->errorHandler->eventManager->subscribe('errorHandler.error', array($this->errorEmailer, 'onErrorEmail'), -1);
+        $this->setPublicMethods();
+        $this->data['requestId'] = $this->utilities->requestId();
+        $this->groupDepthRef = &$this->data['groupDepth'];
+        $this->logRef = &$this->data['log'];
+        /*
+            Publish our first event
+        */
         $this->eventManager->publish('debug.bootstrap', $this);
         $this->data['entryCountInitial'] = count($this->data['log']);
         return;
@@ -886,10 +904,10 @@ class Debug
      */
     private function setPublicMethods()
     {
-        $refObj = new \ReflectionObject($this);
-        self::$publicMethods = array_map(function (\ReflectionMethod $refMethod) {
+        $refObj = new ReflectionObject($this);
+        self::$publicMethods = array_map(function (ReflectionMethod $refMethod) {
             return $refMethod->name;
-        }, $refObj->getMethods(\ReflectionMethod::IS_PUBLIC));
+        }, $refObj->getMethods(ReflectionMethod::IS_PUBLIC));
     }
 
     /**

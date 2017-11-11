@@ -12,13 +12,14 @@
 namespace bdk\Debug;
 
 use bdk\PubSub\Event;
+use bdk\PubSub\SubscriberInterface;
 
 /**
  * Email error details on error
  *
  * Emails an error report on error and throttles said email so does not excessively send email
  */
-class ErrorEmailer
+class ErrorEmailer implements SubscriberInterface
 {
 
     protected $cfg = array();
@@ -67,6 +68,19 @@ class ErrorEmailer
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            'errorHandler.error' => array(
+                array('onErrorAddEmailData', 1),
+                array('onErrorEmail', -1),
+            ),
+        );
+    }
+
+    /**
      * Email error
      *
      * @param Event $error error event
@@ -97,7 +111,7 @@ class ErrorEmailer
         $this->throttleDataImport();
         $hash = $error['hash'];
         $error['email'] = ( $error['type'] & $this->cfg['emailMask'] )
-            && $error['firstOccur']
+            && $error['isFirstOccur']
             && $this->cfg['emailTo'];
         $error['stats'] = array(
             'tsEmailed'  => 0,

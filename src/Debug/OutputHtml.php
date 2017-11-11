@@ -674,7 +674,7 @@ class OutputHtml extends OutputBase
      */
     private function markupClassname($str, $tag = 'span', $attribs = array())
     {
-        if (preg_match('^(.+)(::|->)(.+)^', $str, $matches)) {
+        if (preg_match('/^(.+)(::|->)(.+)$/', $str, $matches)) {
             $classname = $matches[1];
             $opMethod = '<span class="t_operator">'.$matches[2].'</span>'
                     . '<span class="method-name">'.$matches[3].'</span>';

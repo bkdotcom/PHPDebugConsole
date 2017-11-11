@@ -163,7 +163,10 @@ class Internal
      */
     public function onError(Event $error)
     {
-        if ($this->debug->getCfg('collect')) {
+        if ($error['isSuppressed']) {
+            $error['email'] = false;
+            $error['inConsole'] = false;
+        } elseif ($this->debug->getCfg('collect')) {
             /*
                 temporarily store error so that we can easily determine error/warn
                  a) came via error handler
@@ -176,7 +179,7 @@ class Internal
             } else {
                 $this->debug->warn($errStr);
             }
-            $error['errorLog'] = false; // no need to error_log()..  we've captured it here
+            $error['logError'] = false; // no need to error_log()..  we've captured it here
             $error['inConsole'] = true;
             // Prevent errorEmailer from sending email.
             // Since we're collecting log info, we send email on shutdown
@@ -191,10 +194,9 @@ class Internal
     }
 
     /**
-     * errorHandler.error event subscriber
-     * adds error to console as error or warn
+     * debug.log event subscriber
      *
-     * given low priority so this will be ran after other subscribers
+     * Given low priority so this will be ran after other subscribers
      *
      * @param Event $event debug.log event
      *
@@ -256,7 +258,7 @@ class Internal
                 $errors = $this->debug->errorHandler->get('errors');
                 $emailMask = $this->debug->errorHandler->getCfg('emailMask');
                 $unsuppressedErrors = array_filter($errors, function ($error) {
-                    return !$error['suppressed'];
+                    return !$error['isSuppressed'];
                 });
                 $emailableErrors = array_filter($errors, function ($error) use ($emailMask) {
                     return $error['type'] & $emailMask;

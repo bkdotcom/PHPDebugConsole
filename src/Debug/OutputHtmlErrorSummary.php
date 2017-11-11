@@ -187,9 +187,9 @@ class OutputHtmlErrorSummary
         $lis = array();
         foreach ($errors as $err) {
             if (array_intersect_assoc(array(
-                'suppressed' => true,
+                'category' => 'fatal',
                 'inConsole' => true,
-                'category' => 'fatal'
+                'isSuppressed' => true,
             ), $err->getValues())) {
                 continue;
             }

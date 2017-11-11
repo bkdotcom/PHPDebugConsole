@@ -84,8 +84,9 @@ class ErrorHandler
     {
         $this->eventManager = $eventManager;
         $this->cfg = array(
-            'continueToPrevHandler' => true,    // if there was a prev error handler
-            'errorReporting' => E_ALL | E_STRICT,    // what errors are handled by handler? bitmask or "system" to use runtime value
+            'continueToPrevHandler' => true,    // continue to prev handler (if there is a prev error handler)
+            'errorReporting' => E_ALL | E_STRICT,  // what errors are handled by handler? bitmask or "system" to use runtime value
+                                                   // note that if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
             // set onError to something callable, will receive error array
             //     shortcut for registerOnErrorFunction()
             'onError' => null,
@@ -105,7 +106,7 @@ class ErrorHandler
         $this->register();
         // there's no method to unregister a shutdown function
         //    so, always register, and have shutdownFunction check if "registered"
-        register_shutdown_function(array($this,'shutdownFunction'));
+        register_shutdown_function(array($this,'onShutdown'));
         return;
     }
 
@@ -220,35 +221,36 @@ class ErrorHandler
      */
     public function handleError($errType, $errMsg, $file, $line, $vars = array())
     {
-        $prevHandler = $this->cfg['continueToPrevHandler'] && $this->prevErrorHandler;
+        $error = $this->buildError($errType, $errMsg, $file, $line, $vars);
         $errorReporting = $this->cfg['errorReporting'] === 'system'
-            ? error_reporting()
+            ? error_reporting() // note:  will return 0 if error suppression is active in call stack (via @ operator)
+                                //  our shutdown function unsupresses fatal errors
             : $this->cfg['errorReporting'];
-        if (!($errType & $errorReporting)) {
-            // not handled
-            if ($prevHandler) {
-                call_user_func($this->prevErrorHandler, $errType, $errMsg, $file, $line, $vars);
-            } else {
+        $isPrevHandler = $this->cfg['continueToPrevHandler'] && $this->prevErrorHandler;
+        $isReportedType = $errType & $errorReporting;
+        if (!$error['isSuppressed']) {
+            if (!$isReportedType) {
+                // not handled
+                if ($isPrevHandler) {
+                    call_user_func($this->prevErrorHandler, $errType, $errMsg, $error['file'], $error['line'], $vars);
+                    return true;
+                }
                 return false;   // return false to continue to "normal" error handler
             }
-        }
-        $error = $this->buildError($errType, $errMsg, $file, $line, $vars);
-        $this->data['errors'][ $error['hash'] ] = $error;
-        $this->data['lastError'] = $error;
-        if (!$error['suppressed']) {
-            $error['errorLog'] = $error['firstOccur'];
-            $this->eventManager->publish('errorHandler.error', $error);
+            $error['logError'] = $error['isFirstOccur'];
             // suppressed error should not clear error caller
+            $this->data['lastError'] = $error;
             $this->data['errorCaller'] = array();
         }
-        if ($prevHandler) {
-            call_user_func($this->prevErrorHandler, $errType, $errMsg, $error['file'], $error['line'], $vars);
-        } elseif ($error['errorLog']) {
+        $this->data['errors'][ $error['hash'] ] = $error;
+        $this->eventManager->publish('errorHandler.error', $error);
+        if ($isPrevHandler) {
+            call_user_func($this->prevErrorHandler, $error['type'], $error['message'], $error['file'], $error['line'], $vars);
+        } elseif ($error['logError']) {
             $errStrLog = $error['typeStr'].': '.$error['file'].' : '.$error['message'].' on line '.$error['line'];
             error_log('PHP '.$errStrLog);
         }
-        // return false to continue to "normal" error handler
-        return;
+        return false;   // return false to continue to "normal" error handler
     }
 
     /**
@@ -274,6 +276,30 @@ class ErrorHandler
             $exception->getLine()
         );
         $this->uncaughtException = null;
+    }
+
+    /**
+     * Catch Fatal Error
+     *
+     * @return void
+     */
+    public function onShutdown()
+    {
+        if ($this->registered && version_compare(PHP_VERSION, '5.2.0', '>=')) {
+            $error = error_get_last();
+            if (in_array($error['type'], $this->errCategories['fatal'])) {
+                /*
+                    found in wild:
+                    @include(some_file_with_parse_error)
+                    which will trigger a fatal error (here we are),
+                    but error_reporting() will return 0 due to the @ operator
+                    unsupress fatal error here
+                */
+                error_reporting(E_ALL);
+                $this->handleError($error['type'], $error['message'], $error['file'], $error['line']);
+            }
+        }
+        return;
     }
 
     /**
@@ -377,24 +403,6 @@ class ErrorHandler
             $caller = array();
         }
         $this->data['errorCaller'] = $caller;
-        return;
-    }
-
-    /**
-     * Catch Fatal Error ( if PHP >= 5.2 )
-     *
-     * @return void
-     *
-     * @requires PHP >= 5.2.0 / should be met as class requires PHP >= 5.3.0 (namespaces)
-     */
-    public function shutdownFunction()
-    {
-        if ($this->registered && version_compare(PHP_VERSION, '5.2.0', '>=')) {
-            $error = error_get_last();
-            if (in_array($error['type'], $this->errCategories['fatal'])) {
-                $this->handleError($error['type'], $error['message'], $error['file'], $error['line']);
-            }
-        }
         return;
     }
 
@@ -523,14 +531,14 @@ class ErrorHandler
             'line'      => $line,
             'vars'      => $vars,
             'backtrace' => array(), // only for fatal type errors, and only if xdebug is enabled
-            'errorLog'  => false,
             'exception' => $this->uncaughtException,  // non-null if error is uncaught-exception
-            'firstOccur' => true,
             'hash'      => null,
-            'suppressed' => $category != 'fatal' && error_reporting() === 0,
+            'isFirstOccur'  => true,
+            'isSuppressed'  => error_reporting() === 0,
+            'logError'      => false,
         );
         $hash = $this->errorHash($errorValues);
-        $firstOccur = !isset($this->data['errors'][$hash]);
+        $isFirstOccur = !isset($this->data['errors'][$hash]);
         if (!empty($this->data['errorCaller'])) {
             $errorValues['file'] = $this->data['errorCaller']['file'];
             $errorValues['line'] = $this->data['errorCaller']['line'];
@@ -547,11 +555,11 @@ class ErrorHandler
         }
         $errorValues = array_merge($errorValues, array(
             'hash' => $hash,
-            'firstOccur' => $firstOccur,
+            'isFirstOccur' => $isFirstOccur,
             // if any instance of this error was not supprssed, reflect that
-            'suppressed' => !$firstOccur && !$this->data['errors'][$hash]['suppressed']
+            'isSuppressed' => !$isFirstOccur && !$this->data['errors'][$hash]['isSuppressed']
                 ? false
-                : $errorValues['suppressed'],
+                : $errorValues['isSuppressed'],
         ));
         return new Event($this, $errorValues);
     }

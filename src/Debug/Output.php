@@ -84,7 +84,7 @@ class Output
         });
         $lastFile = '';
         foreach ($errors as $error) {
-            if ($error['suppressed']) {
+            if ($error['isSuppressed']) {
                 continue;
             }
             if ($error['file'] !== $lastFile) {
@@ -124,7 +124,7 @@ class Output
             'counts' => array(),
         );
         foreach ($errors as $error) {
-            if ($error['suppressed']) {
+            if ($error['isSuppressed']) {
                 continue;
             }
             $category = $error['category'];

@@ -78,7 +78,15 @@ class Manager
      */
     public function hasSubscribers($eventName = null)
     {
-        return (bool) $this->getSubscribers($eventName);
+        if ($eventName !== null) {
+            return !empty($this->subscribers[$eventName]);
+        }
+        foreach ($this->subscribers as $subscribers) {
+            if ($subscribers) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -121,10 +129,7 @@ class Manager
     }
 
     /**
-     * Subscribe / listen to event
-     *
-     * If callable is already subscribed to event it will first be removed.
-     * This allows you to reassign priority
+     * Subscribe to event
      *
      * @param string   $eventName event name
      * @param callable $callable  callable
@@ -134,7 +139,6 @@ class Manager
      */
     public function subscribe($eventName, $callable, $priority = 0)
     {
-        $this->unsubscribe($eventName, $callable);  // remove callable if already subscribed
         unset($this->sorted[$eventName]);           // clear the sorted cache
         $this->subscribers[$eventName][$priority][] = $callable;
     }
@@ -152,20 +156,25 @@ class Manager
         if (!isset($this->subscribers[$eventName])) {
             return;
         }
+        if ($this->isClosureFactory($callable)) {
+            // factory / lazy subscriber
+            $callable[0] = $callable[0]();
+        }
         foreach ($this->subscribers[$eventName] as $priority => $subscribers) {
-            $index = array_search($callable, $subscribers, true);
-            if ($index !== false) {
-                unset($this->subscribers[$eventName][$priority][$index]);
-                // and clear cached sorted subscribers
-                unset($this->sorted[$eventName]);
-                // now some trash collection
-                if (empty($this->subscribers[$eventName][$priority])) {
-                    unset($this->subscribers[$eventName][$priority]);
+            foreach ($subscribers as $k => $v) {
+                if ($v !== $callable && $this->isClosureFactory($v)) {
+                    $v[0] = $v[0]();
                 }
-                if (empty($this->subscribers[$eventName])) {
-                    unset($this->subscribers[$eventName]);
+                if ($v === $callable) {
+                    unset($subscribers[$k], $this->sorted[$eventName]);
+                } else {
+                    $subscribers[$k] = $v;
                 }
-                break;
+            }
+            if ($subscribers) {
+                $this->subscribers[$eventName][$priority] = $subscribers;
+            } else {
+                unset($this->subscribers[$eventName][$priority]);
             }
         }
     }
@@ -185,8 +194,21 @@ class Manager
             if ($event->isPropagationStopped()) {
                 break;
             }
-            call_user_func($callable, $event, $eventName, $this);
+            \call_user_func($callable, $event, $eventName, $this);
         }
+    }
+
+    /**
+     * Does val appear to be a "closure factory"?
+     * array & array[0] instanceof Closure
+     *
+     * @param mixed $val value to check
+     *
+     * @return boolean
+     */
+    private function isClosureFactory($val)
+    {
+        return \is_array($val) && isset($val[0]) && $val[0] instanceof \Closure;
     }
 
     /**
@@ -235,6 +257,15 @@ class Manager
     private function sortSubscribers($eventName)
     {
         krsort($this->subscribers[$eventName]);
-        $this->sorted[$eventName] = call_user_func_array('array_merge', $this->subscribers[$eventName]);
+        $this->sorted[$eventName] = array();
+        foreach ($this->subscribers[$eventName] as $priority => $subscribers) {
+            foreach ($subscribers as $k => $subscriber) {
+                if ($this->isClosureFactory($subscriber)) {
+                    $subscriber[0] = $subscriber[0]();
+                    $this->subscribers[$eventName][$priority][$k] = $subscriber;
+                }
+                $this->sorted[$eventName][] = $subscriber;
+            }
+        }
     }
 }

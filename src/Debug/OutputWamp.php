@@ -85,7 +85,7 @@ class OutputWamp implements SubscriberInterface
      */
     public function onError(Event $event)
     {
-        if (!$event['isSuppressed'] && !$event['inConsole'] && $event['isFirstOccur']) {
+        if (!$event['inConsole'] && $event['isFirstOccur']) {
             $this->publish(
                 'errorNotConsoled',
                 array(

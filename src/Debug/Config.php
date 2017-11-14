@@ -19,58 +19,74 @@ use bdk\PubSub\Event;
 class Config
 {
 
-	protected $cfg = array();
-	protected $debug;
+    protected $cfg = array();
+    protected $cfgLazy = array();  // store config for child classes that haven't been loaded yet
+    protected $debug;
     protected $configKeys;
 
-	/**
-	 * Constructor
-	 *
-	 * @param object $debug debug object
-	 * @param array  $cfg   configuration
-	 */
-	public function __construct($debug, &$cfg)
-	{
+    /**
+     * Constructor
+     *
+     * @param object $debug debug object
+     * @param array  $cfg   configuration
+     */
+    public function __construct($debug, &$cfg)
+    {
         $this->cfg = &$cfg;
         $this->debug = $debug;
-	}
+    }
 
-	/**
-	 * [get description]
-	 *
-	 * @param string $path what to get
-	 *
-	 * @return mixed
-	 */
-	public function getCfg($path = '')
-	{
+    /**
+     * Get debug or child configuration value(s)
+     *
+     * @param string $path what to get
+     *
+     * @return mixed
+     */
+    public function getCfg($path = '')
+    {
         $path = $this->translateKeys($path);
         $path = preg_split('#[\./]#', $path);
         if (isset($path[1]) && $path[1] === '*') {
             array_pop($path);
         }
-        if (isset($this->debug->{$path[0]}) && is_object($this->debug->{$path[0]})) {
+        $level1 = isset($path[0]) ? $path[0] : null;
+        if (is_object($this->debug->{$level1})) {
             // child class config value
             $pathRel = implode('/', array_slice($path, 1));
-            $ret = $this->debug->{$path[0]}->getCfg($pathRel);
-        } else {
-            if ($path[0] == 'debug') {
-                array_shift($path);
-            }
-            $ret = $this->cfg;
-            foreach ($path as $k) {
-                if (isset($ret[$k])) {
-                    $ret = $ret[$k];
-                } else {
-                    $ret = null;
-                    break;
-                }
+            return $this->debug->{$level1}->getCfg($pathRel);
+        }
+        if ($level1 == 'debug') {
+            array_shift($path);
+        }
+        $ret = $this->cfg;
+        foreach ($path as $k) {
+            if (isset($ret[$k])) {
+                $ret = $ret[$k];
+            } else {
+                $ret = null;
+                break;
             }
         }
         return $ret;
-	}
+    }
 
-	/**
+
+    /**
+     * Get config for lazy-loaded class
+     *
+     * @param string $lazyPropName name of property
+     *
+     * @return [type] [description]
+     */
+    public function getCfgLazy($lazyPropName)
+    {
+        return isset($this->cfgLazy[$lazyPropName])
+            ? $this->cfgLazy[$lazyPropName]
+            : array();
+    }
+
+    /**
      * Set one or more config values
      *
      * If setting a value via method a or b, old value is returned
@@ -85,9 +101,9 @@ class Config
      * @param mixed        $newVal value
      *
      * @return mixed
-	 */
-	public function setCfg($path, $newVal = null)
-	{
+     */
+    public function setCfg($path, $newVal = null)
+    {
         $return = is_string($path)
             ? $this->getCfg($path)
             : null;
@@ -98,13 +114,15 @@ class Config
                 $this->setDebugCfg($v);
             } elseif (isset($this->debug->{$k}) && is_object($this->debug->{$k})) {
                 $this->debug->{$k}->setCfg($v);
+            } else {
+                $this->cfgLazy[$k] = $v;
             }
         }
         if ($new) {
             $this->debug->eventManager->publish('debug.config', $this->debug);
         }
         return $return;
-	}
+    }
 
     /**
      * get available config keys for objects
@@ -121,10 +139,38 @@ class Config
                 'output',   // any key not found falls under 'debug'...
                             //  'output' listed to disambiguate from output object
             ),
-            'abstracter' => array_keys($this->debug->abstracter->getCfg()),
-            'errorEmailer' => array_diff(array_keys($this->debug->errorEmailer->getCfg()), array('emailFunc','emailTo')),
+            'abstracter' => array(
+                'collectConstants',
+                'collectMethods',
+                'objectsExclude',
+                'objectSort',
+                'useDebugInfo',
+            ),
+            'errorEmailer' => array(
+                // 'emailFunc',
+                'emailMask',
+                'emailMin',
+                'emailThrottleFile',
+                'emailThrottledSummary',
+                // 'emailTo',
+                'emailTraceMask',
+            ),
             'errorHandler' => array_keys($this->debug->errorHandler->getCfg()),
-            'output' => array_keys($this->debug->output->getCfg()),
+            'output' => array(
+                'addBR',
+                'css',
+                'displayListKeys',
+                'filepathCss',
+                'filepathScript',
+                'onOutput',
+                'outputAs',
+                'outputAsDefaultNonHtml',
+                'outputConstants',
+                'outputCss',
+                'outputMethodDescription',
+                'outputMethods',
+                'outputScript',
+            ),
         );
         return $this->configKeys;
     }

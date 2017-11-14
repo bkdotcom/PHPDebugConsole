@@ -228,29 +228,32 @@ class ErrorHandler
             : $this->cfg['errorReporting'];
         $isPrevHandler = $this->cfg['continueToPrevHandler'] && $this->prevErrorHandler;
         $isReportedType = $errType & $errorReporting;
-        if (!$error['isSuppressed']) {
-            if (!$isReportedType) {
-                // not handled
-                if ($isPrevHandler) {
-                    call_user_func($this->prevErrorHandler, $errType, $errMsg, $error['file'], $error['line'], $vars);
-                    return true;
-                }
-                return false;   // return false to continue to "normal" error handler
+        if (!$isReportedType) {
+            // not handled
+            //   if cfg['errorReporting'] == 'system', error could simply be suppressed
+            if ($isPrevHandler) {
+                call_user_func($this->prevErrorHandler, $errType, $errMsg, $error['file'], $error['line'], $vars);
+                return true;
             }
+            return false;   // return false to continue to "normal" error handler
+        }
+        if (!$error['isSuppressed']) {
             $error['logError'] = $error['isFirstOccur'];
             // suppressed error should not clear error caller
             $this->data['lastError'] = $error;
             $this->data['errorCaller'] = array();
+            $this->eventManager->publish('errorHandler.error', $error);
         }
         $this->data['errors'][ $error['hash'] ] = $error;
-        $this->eventManager->publish('errorHandler.error', $error);
         if ($isPrevHandler) {
             call_user_func($this->prevErrorHandler, $error['type'], $error['message'], $error['file'], $error['line'], $vars);
-        } elseif ($error['logError']) {
-            $errStrLog = $error['typeStr'].': '.$error['file'].' : '.$error['message'].' on line '.$error['line'];
-            error_log('PHP '.$errStrLog);
+            return true;
         }
-        return false;   // return false to continue to "normal" error handler
+        if ($error['logError']) {
+            return false;   // return false to continue to "normal" error handler
+                            // PHP will log the error
+        }
+        return;
     }
 
     /**

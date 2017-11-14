@@ -12,14 +12,13 @@
 namespace bdk\Debug;
 
 use bdk\PubSub\Event;
-use bdk\PubSub\SubscriberInterface;
 
 /**
  * Email error details on error
  *
  * Emails an error report on error and throttles said email so does not excessively send email
  */
-class ErrorEmailer implements SubscriberInterface
+class ErrorEmailer
 {
 
     protected $cfg = array();
@@ -65,19 +64,6 @@ class ErrorEmailer implements SubscriberInterface
             return $this->cfg[$key];
         }
         return null;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            'errorHandler.error' => array(
-                array('onErrorAddEmailData', 1),
-                array('onErrorEmail', -1),
-            ),
-        );
     }
 
     /**

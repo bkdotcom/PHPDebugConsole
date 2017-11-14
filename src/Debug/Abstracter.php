@@ -37,16 +37,15 @@ class Abstracter
     public function __construct(EventManager $eventManager, $cfg = array())
     {
         $this->eventManager = $eventManager;
-        $this->cfg = array(
+        $this->cfg = array_merge(array(
             'collectConstants' => true,
             'collectMethods' => true,
             'objectsExclude' => array(
-                __NAMESPACE__
+                __NAMESPACE__,
             ),
             'objectSort' => 'visibility',   // none, visibility, or name
             'useDebugInfo' => true,
-        );
-        $this->cfg = array_merge($this->cfg, $cfg);
+        ), $cfg);
         $this->abstractArray = new AbstractArray($this);
         $this->abstractObject = new AbstractObject($this, new PhpDoc());
     }

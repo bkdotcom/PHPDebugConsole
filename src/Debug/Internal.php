@@ -21,10 +21,10 @@ use bdk\Debug;
  * Methods that are internal to the debug class
  *
  * a) Don't want to clutter the debug class
- * b) avoiding a base class as would need to require the base or have
- *       and autoloader in place to bootstrap the debug class
+ * b) avoiding a base class as it would necessitate we first load the base or have
+ *       an autoloader in place to bootstrap the debug class
  * c) a trait for code not meant to be "reusable" seems like an anti-pattern
- *       still have the bootstrap/autoload issue
+ *       doesn't solve the bootstrap/autoload issue
  */
 class Internal
 {
@@ -43,7 +43,15 @@ class Internal
         $this->debug->eventManager->subscribe('debug.bootstrap', array($this, 'onBootstrap'), -1);
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onLog'), -1);
         $this->debug->eventManager->subscribe('debug.output', array($this, 'onOutput'));
+        $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
+            // this closure lazy-loads the subscriber object
+            return $this->debug->errorEmailer;
+        }, 'onErrorAddEmailData'), 1);
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
+        $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
+            // this closure lazy-loads the subscriber object
+            return $this->debug->errorEmailer;
+        }, 'onErrorEmail'), -1);
         register_shutdown_function(array($this, 'onShutdown'));
     }
 
@@ -163,10 +171,7 @@ class Internal
      */
     public function onError(Event $error)
     {
-        if ($error['isSuppressed']) {
-            $error['email'] = false;
-            $error['inConsole'] = false;
-        } elseif ($this->debug->getCfg('collect')) {
+        if ($this->debug->getCfg('collect')) {
             /*
                 temporarily store error so that we can easily determine error/warn
                  a) came via error handler
@@ -257,13 +262,10 @@ class Internal
             } elseif ($this->debug->getCfg('emailLog') === 'onError') {
                 $errors = $this->debug->errorHandler->get('errors');
                 $emailMask = $this->debug->errorHandler->getCfg('emailMask');
-                $unsuppressedErrors = array_filter($errors, function ($error) {
-                    return !$error['isSuppressed'];
-                });
                 $emailableErrors = array_filter($errors, function ($error) use ($emailMask) {
-                    return $error['type'] & $emailMask;
+                    return !$error['isSuppressed'] && ($error['type'] & $emailMask);
                 });
-                $email = $unsuppressedErrors && $emailableErrors;
+                $email = !empty($emailableErrors);
             }
             if ($email) {
                 $this->debug->output->emailLog();

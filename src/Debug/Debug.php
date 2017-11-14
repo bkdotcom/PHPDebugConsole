@@ -22,6 +22,11 @@ use ReflectionMethod;
 
 /**
  * Web-browser/javascript like console class for PHP
+ *
+ * @property Abstracter   $abstracter   lazy-loaded abstracter obj
+ * @property ErrorEmailer $errorEmailer lazy-loaded errorEmailer obj
+ * @property Output       $output       lazy-loaded output obj
+ * @property utf8         $utf8         lazy-loaded utf8 obj
  */
 class Debug
 {
@@ -33,13 +38,10 @@ class Debug
     protected $groupDepthRef;   // points to groupDepth or groupDepthSummary
     protected $logRef;          // points to either log or logSummary
     protected $config;          // config instance
-    public $abstracter;
     public $errorHandler;
-    public $internal;
-    public $output;
-    public $utf8;
-    public $utilities;
     public $eventManager;
+    public $internal;
+    public $utilities;
 
     const META = "\x00meta\x00";
     const VERSION = "2.0.0";
@@ -60,9 +62,10 @@ class Debug
             'file'      => null,            // if a filepath, will receive log data
             'key'       => null,
             'output'    => false,           // output the log?
-            // errorMask = errors that appear as "error" in debug console... all other errors are "warn"
+            // which error types appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
                             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
+            'emailFunc' => 'mail',          // callable
             'emailLog'  => false,   // Whether to email a debug log.  (requires 'collect' to also be true)
                                     //
                                     //   false:   email will not be sent
@@ -73,25 +76,24 @@ class Debug
                 : null,
             'logEnvInfo' => true,
             'logServerKeys' => array('REQUEST_URI','REQUEST_TIME','HTTP_HOST','SERVER_NAME','SERVER_ADDR','REMOTE_ADDR'),
-            'emailFunc' => 'mail',          // callable
-            // 'onLog' => null,
+            'onLog' => null,
         );
         $this->data = array(
-            'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
-            'counts'        => array(), // count method
+            'alerts'            => array(), // array of alerts.  alerts will be shown at top of output when possible
+            'counts'            => array(), // count method
             'entryCountInitial' => 0,   // store number of log entries created during init
             'groupDepth'        => 0,
             'groupDepthSummary' => 0,
-            'log'           => array(),
-            'logSummary'    => array(),
-            'outputSent'    => false,
-            'requestId'     => null,
+            'log'               => array(),
+            'logSummary'        => array(),
+            'outputSent'        => false,
+            'requestId'         => null,
             'timers' => array(      // timer method
                 'labels' => array(
                     // label => array(accumulatedTime, lastStartedTime|null)
                     'debugInit' => array(
                         0,
-                        isset($_SERVER['REQUEST_TIME_FLOAT']) // php 5.4
+                        isset($_SERVER['REQUEST_TIME_FLOAT'])
                             ? $_SERVER['REQUEST_TIME_FLOAT']
                             : microtime(true)
                     ),
@@ -101,18 +103,18 @@ class Debug
         );
         if (!isset(self::$instance)) {
             /*
-               self::getInstance() will always return original instance
-               as opposed the the last instance created with new Debug()
+               self::getInstance() will always return initial/first instance
             */
             self::$instance = $this;
             /*
-                make sure we only call spl_autoload_register on initial instance
-                even though re-registering function does't register it multiple times
+                Only call spl_autoload_register on initial instance
+                (even though re-registering function does't re-register)
             */
             spl_autoload_register(array($this, 'autoloader'));
         }
         /*
-            Set child objects
+            Initialize child objects
+            (abstracter, errorEmailer, output, & utf8 are lazyloaded)
         */
         $this->eventManager = $eventManager
             ? $eventManager
@@ -125,23 +127,18 @@ class Debug
             $this->errorHandler = new Debug\ErrorHandler($this->eventManager);
         }
         $this->utilities = new Debug\Utilities();
-        $this->abstracter = new Debug\Abstracter($this->eventManager);  // configurable
         $this->config = new Debug\Config($this, $this->cfg);
-        $this->errorEmailer = new Debug\ErrorEmailer();                 // configurable
         $this->internal = new Debug\Internal($this);
-        $this->output = new Debug\Output($this);                        // configurable
-        $this->utf8 = new Debug\Utf8();
-        $this->errorHandler->eventManager->addSubscriberInterface($this->errorEmailer);
         /*
             Init config and properties
         */
         $this->config->setCfg($cfg);
-        $this->setPublicMethods();
         $this->data['requestId'] = $this->utilities->requestId();
         $this->groupDepthRef = &$this->data['groupDepth'];
         $this->logRef = &$this->data['log'];
+        $this->setPublicMethods();
         /*
-            Publish our first event
+            Publish bootstrap event
         */
         $this->eventManager->publish('debug.bootstrap', $this);
         $this->data['entryCountInitial'] = count($this->data['log']);
@@ -151,7 +148,7 @@ class Debug
     /**
      * Magic method to allow us to call instance methods statically
      *
-     * Prefix the method with an underscore ie
+     * Prefix the instance method with an underscore ie
      *    \bdk\Debug::_log('logged via static method');
      *
      * @param string $methodName Inaccessible method name
@@ -161,11 +158,43 @@ class Debug
      */
     public static function __callStatic($methodName, $args)
     {
-        $instance = self::getInstance();
         $methodName = ltrim($methodName, '_');
         if (in_array($methodName, self::$publicMethods)) {
+            $instance = self::getInstance();
             return call_user_func_array(array($instance, $methodName), $args);
         }
+    }
+
+    /**
+     * Magic method to get inaccessible / undefined properties
+     * Lazy load child classes
+     *
+     * @param string $property property name
+     *
+     * @return property value
+     */
+    public function __get($property)
+    {
+        switch ($property) {
+            case 'abstracter':
+                $val = new Debug\Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
+                break;
+            case 'errorEmailer':
+                $val = new Debug\ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
+                break;
+            case 'output':
+                $val = new Debug\Output($this, $this->config->getCfgLazy('output'));
+                break;
+            case 'utf8':
+                $val = new Debug\Utf8;
+                break;
+            default:
+                return null;
+        }
+        if ($val) {
+            $this->{$property} = $val;
+        }
+        return $val;
     }
 
     /*
@@ -243,7 +272,7 @@ class Debug
     }
 
     /**
-     * Outputs an error message.
+     * Log an error message.
      *
      * @param mixed $label,... label
      *
@@ -261,7 +290,7 @@ class Debug
     }
 
     /**
-     * Creates a new inline group
+     * Create a new inline group
      *
      * @return void
      */
@@ -275,7 +304,7 @@ class Debug
     }
 
     /**
-     * Creates a new inline group
+     * Create a new inline group
      *
      * @return void
      */
@@ -352,7 +381,7 @@ class Debug
     }
 
     /**
-     * Sets ancestor groups to uncollapsed
+     * Set ancestor groups to uncollapsed
      *
      * @return void
      */
@@ -382,7 +411,7 @@ class Debug
     }
 
     /**
-     * Informative logging information
+     * Log some informative information
      *
      * @return void
      */
@@ -394,7 +423,7 @@ class Debug
     }
 
     /**
-     * For logging general information
+     * Log general information
      *
      * @return void
      */
@@ -407,9 +436,13 @@ class Debug
 
     /**
      * Output array as a table
-     * accepts
-     *    array[, string]
-     *    string, array
+     *
+     * Accepts array of arrays or array of objects
+     *
+     * Arguments:
+     *   1st encountered array is the data
+     *   2nd encountered array (optional) specifies columns to output
+     *   1st encountered string is a label/caption
      *
      * @return void
      */
@@ -684,7 +717,7 @@ class Debug
      *
      * @return array
      */
-    public static function meta($values = array())
+    public function meta($values = array())
     {
         if (!is_array($values)) {
             $values = array($values=>true);
@@ -908,6 +941,11 @@ class Debug
         self::$publicMethods = array_map(function (ReflectionMethod $refMethod) {
             return $refMethod->name;
         }, $refObj->getMethods(ReflectionMethod::IS_PUBLIC));
+        self::$publicMethods = array_diff(self::$publicMethods, array(
+            '__construct',
+            '__callStatic',
+            '__get',
+        ));
     }
 
     /**

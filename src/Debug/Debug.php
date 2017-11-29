@@ -234,6 +234,10 @@ class Debug
             $args = func_get_args();
             $test = array_shift($args);
             if (!$test) {
+                if (!$args) {
+                    $callerInfo = $this->utilities->getCallerInfo();
+                    $args[] = 'assertation failed in '.$callerInfo['file'].' on line '.$callerInfo['line'];
+                }
                 $this->appendLog('assert', $args);
             }
         }

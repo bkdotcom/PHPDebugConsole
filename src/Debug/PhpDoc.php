@@ -35,7 +35,7 @@ class PhpDoc
         } else {
             $docComment = $what;
         }
-        // remove openining "/**" and closing "*/"
+        // remove opening "/**" and closing "*/"
         $docComment = preg_replace('#^/\*\*(.+)\*/$#s', '$1', $docComment);
         // remove leading "*"s
         $docComment = preg_replace('#^[ \t]*\*[ ]?#m', '', $docComment);
@@ -140,6 +140,7 @@ class PhpDoc
                 ? trim($matches[$i+1])
                 : null;
         }
+        $parsed['desc'] = self::trimDesc($parsed['desc']);
         return $parsed;
     }
 
@@ -166,5 +167,37 @@ class PhpDoc
                 return static::getParsed($reflectionClass->getMethod($name));
             }
         }
+    }
+
+    /**
+     * Trim leading spaces from each description line
+     *
+     * @param string $desc string to trim
+     *
+     * @return string
+     */
+    private static function trimDesc($desc)
+    {
+        $lines = explode("\n", $desc);
+        $leadingSpaces = array();
+        foreach ($lines as $line) {
+            if (strlen($line)) {
+                $leadingSpaces[] = strspn($line, ' ');
+            }
+        }
+        array_shift($leadingSpaces);    // first line will always have zero leading spaces
+        $trimLen = $leadingSpaces
+            ? min($leadingSpaces)
+            : 0;
+        if (!$trimLen) {
+            return $desc;
+        }
+        foreach ($lines as $i => $line) {
+            $lines[$i] = $i > 0 && strlen($line)
+                ? substr($line, $trimLen)
+                : $line;
+        }
+        $desc = implode("\n", $lines);
+        return $desc;
     }
 }

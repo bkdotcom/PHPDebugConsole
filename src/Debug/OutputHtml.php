@@ -536,11 +536,11 @@ class OutputHtml extends OutputBase
                     : ''
                 )
                 .' <span class="method-name"'
-                        .' title="'.htmlspecialchars($info['phpDoc']['summary'])
+                        .' title="'.trim(htmlspecialchars($info['phpDoc']['summary']
                             .($this->debug->output->getCfg('outputMethodDescription')
-                                ? trim("\n\n". htmlspecialchars($info['phpDoc']['description']))
+                                ? "\n\n".$info['phpDoc']['description']
                                 : ''
-                            ).'"'
+                            ))).'"'
                     .'>'.$methodName.'</span>'
                 .'<span class="t_punct">(</span>'.$paramStr.'<span class="t_punct">)</span>'
                 .($methodName == '__toString'
@@ -570,7 +570,7 @@ class OutputHtml extends OutputBase
                 $paramStr .= '<span class="t_type">'.$info['type'].'</span> ';
             }
             $paramStr .= '<span class="t_parameter-name"'
-                .' title="'.htmlspecialchars(str_replace("\n", ' ', $info['desc'])).'"'
+                .' title="'.htmlspecialchars($info['desc']).'"'
                 .'>'.htmlspecialchars($info['name']).'</span>';
             if ($info['defaultValue'] != $this->debug->abstracter->UNDEFINED) {
                 $defaultValue = $info['defaultValue'];

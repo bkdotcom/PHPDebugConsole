@@ -178,11 +178,12 @@ class Internal
                  b) calling info
             */
             $this->error = $error;
-            $errStr = $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message'];
+            $errInfo = $error['typeStr'].': '.$error['file'].' (line '.$error['line'].')';
+            $errMsg = $error['message'];
             if ($error['type'] & $this->debug->getCfg('errorMask')) {
-                $this->debug->error($errStr);
+                $this->debug->error($errInfo.': ', $errMsg);
             } else {
-                $this->debug->warn($errStr);
+                $this->debug->warn($errInfo.': ', $errMsg);
             }
             $error['logError'] = false; // no need to error_log()..  we've captured it here
             $error['inConsole'] = true;

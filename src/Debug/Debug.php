@@ -26,7 +26,7 @@ use ReflectionMethod;
  * @property Abstracter   $abstracter   lazy-loaded abstracter obj
  * @property ErrorEmailer $errorEmailer lazy-loaded errorEmailer obj
  * @property Output       $output       lazy-loaded output obj
- * @property utf8         $utf8         lazy-loaded utf8 obj
+ * @property Utf8         $utf8         lazy-loaded utf8 obj
  */
 class Debug
 {

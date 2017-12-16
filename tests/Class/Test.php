@@ -51,6 +51,8 @@ class TestBase
 
 /**
  * Test
+ *
+ * @property boolean $magicProp I'm avail via __get()
  */
 class Test extends TestBase
 {

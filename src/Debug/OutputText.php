@@ -118,7 +118,7 @@ class OutputText extends OutputBase
             $str = '(object) '.$abs['className'].' (not inspected)';
         } else {
             $str = '(object) '.$abs['className']."\n";
-            $str .= $this->dumpProperties($abs['properties'], $path);
+            $str .= $this->dumpProperties($abs, $path);
             if ($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')) {
                 $str .= $this->dumpMethods($abs['methods']);
             }
@@ -133,19 +133,25 @@ class OutputText extends OutputBase
     /**
      * Dump object properties as text
      *
-     * @param array $properties properties as returned from getProperties()
-     * @param array $path       {@internal}
+     * @param array $abs  object abstraction
+     * @param array $path {@internal}
      *
      * @return string
      */
-    protected function dumpProperties($properties, $path = array())
+    protected function dumpProperties($abs, $path = array())
     {
         $str = '';
         $propHeader = '';
         $pathCount = count($path);
-        foreach ($properties as $name => $info) {
+        if (isset($abs['methods']['__get'])) {
+            $str .= '    ✨ This object has a __get() method'."\n";
+        }
+        foreach ($abs['properties'] as $name => $info) {
             $path[$pathCount] = $name;
             $vis = $info['visibility'];
+            if ($info['isMagic']) {
+                $vis = '✨ '.$vis;    // "sparkles" there is no magic-want unicode char
+            }
             if ($vis == 'private' && $info['inheritedFrom']) {
                 $vis = '🔒 '.$vis;
             }

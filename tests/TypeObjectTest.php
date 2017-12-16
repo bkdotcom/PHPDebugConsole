@@ -13,8 +13,10 @@ class TypeObjectTest extends DebugTestFramework
         $text = <<<'EOD'
 (object) bdk\DebugTest\Test
   Properties:
+    ✨ This object has a __get() method
     (public) debug = (object) bdk\Debug (not inspected)
     (public) instance = (object) bdk\DebugTest\Test *RECURSION*
+    (✨ public) magicProp = null
     (public) propPublic = "redefined in Test (public)"
     (public) someArray = Array(
         [int] => 123
@@ -36,6 +38,7 @@ EOD;
             '___class_name' => 'bdk\DebugTest\Test',
             '(public) debug' => '(object) bdk\Debug (not inspected)',
             '(public) instance' => '(object) bdk\DebugTest\Test *RECURSION*',
+            '(✨ public) magicProp' => null,
             '(public) propPublic' => 'redefined in Test (public)',
             '(public) someArray' => array(
                 'int' => 123,
@@ -81,6 +84,7 @@ EOD;
                         '<dd class="magic-method info">This object has a <code>__get()</code> method</dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">debug</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="public"><span class="t_classname"><span class="namespace">bdk\</span>Debug</span> <span class="excluded">(not inspected)</span></span></dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">instance</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="private"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span> <span class="t_recursion">*RECURSION*</span></span></dd>',
+                        '<dd class="property public magic-property"><span class="t_modifier_public">public</span> <span class="t_type">boolean</span> <span class="property-name" title="I\'m avail via __get()">magicProp</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">(</span>',
                         '<span class="array-inner">',

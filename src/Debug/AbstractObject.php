@@ -22,6 +22,8 @@ class AbstractObject
     static private $basePropInfo = array(
         'desc' => null,
         'inheritedFrom' => null,        // populated only if inherited
+        'isMagic' => false,             // "magic" property that's only defined via phpDoc @property tag
+                                        //    usually obtained via __get() magic method
         'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
         'overrides' => null,            // populated only if we're overriding
@@ -326,6 +328,7 @@ class AbstractObject
             $debugInfo now only contains key/value that don't exist as properties
         */
         $propArray = array_merge($propArray, $this->getPropertiesDebug($debugInfo, $hist));
+        $propArray = $this->mergePhpDocProperties($abs, $propArray);
         return $propArray;
     }
 
@@ -582,6 +585,38 @@ class AbstractObject
                 : null;
         }
         return $className;
+    }
+
+    /**
+     * "Magic" properties may be defined in a class' doc-block
+     * If so... move this information to the properties array
+     *
+     * @param Event $abs       Abstraction event object
+     * @param array $propArray properties
+     *
+     * @return array
+     *
+     * @see http://docs.phpdoc.org/references/phpdoc/tags/property.html
+     */
+    private function mergePhpDocProperties(Event $abs, $propArray)
+    {
+        if (empty($abs['phpDoc']['property'])) {
+            return $propArray;
+        }
+        foreach ($abs['phpDoc']['property'] as $phpDocProp) {
+            $vals = array(
+                'desc' => $phpDocProp['desc'],
+                'isMagic' => true,
+                'type' => $phpDocProp['type'],
+            );
+            if (isset($propArray[ $phpDocProp['name'] ])) {
+                $propArray[ $phpDocProp['name'] ] = array_merge($propArray[ $phpDocProp['name'] ], $vals);
+            } else {
+                $propArray[ $phpDocProp['name'] ] = array_merge(self::$basePropInfo, $vals);
+            }
+        }
+        unset($abs['phpDoc']['property']);
+        return $propArray;
     }
 
     /**

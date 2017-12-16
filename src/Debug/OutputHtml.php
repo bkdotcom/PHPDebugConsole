@@ -640,6 +640,7 @@ class OutputHtml extends OutputBase
                 $info['visibility'] => $info['visibility'] != 'debug',
                 'debug-value' => !empty($info['viaDebugInfo']),
                 'private-ancestor' => $isPrivateAncestor,
+                'magic-property' => $info['isMagic'],
             )));
             $str .= '<dd class="'.implode(' ', $classes).'">'
                 .'<span class="t_modifier_'.$info['visibility'].'">'.$info['visibility'].'</span>'

@@ -20,6 +20,7 @@
 			},
 			iconsObject: {
 				"> .magic-method" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
+				"> .magic-property" :			'<i class="fa fa-fw fa-magic" title="magic property"></i>',
 				"> .method.deprecated" :		'<i class="fa fa-arrow-down" title="Deprecated"></i>',
 				"> .property.debug-value" :		'<i class="fa fa-fw fa-eye" title="via __debugInfo()"></i>',
 				"> .property.private-ancestor" :'<i class="fa fa-fw fa-lock"></i>',

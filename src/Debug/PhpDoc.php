@@ -103,7 +103,7 @@ class PhpDoc
         $parsed = array();
         $tagParsers = array(
             array(
-                'tags' => array('param'),
+                'tags' => array('param','property','var'),
                 'parts' => array('type','name','desc'),
                 'regex' => '/^(?P<type>.*?)'
                     .'(?:\s+&?\$?(?P<name>\S+))?'
@@ -113,13 +113,6 @@ class PhpDoc
                 'tags' => array('return'),
                 'parts' => array('type','desc'),
                 'regex' => '/^(?P<type>.*?)'
-                    .'(?:\s+(?P<desc>.*))?$/s',
-            ),
-            array(
-                'tags' => array('var'),
-                'parts' => array('type','name','desc'),
-                'regex' => '/^(?P<type>.*?)'
-                    .'(?:\s+&?\$(?P<name>\S+))?'
                     .'(?:\s+(?P<desc>.*))?$/s',
             ),
             array(

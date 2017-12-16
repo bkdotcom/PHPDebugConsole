@@ -14,7 +14,7 @@ namespace bdk\Debug;
 use bdk\PubSub\Event;
 
 /**
- * Config
+ * Configuration manager
  */
 class Config
 {

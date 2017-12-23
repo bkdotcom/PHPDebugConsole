@@ -188,9 +188,10 @@
 	text-indent: -10px;
 }
 .debug .t_object .property_name[title],
-	.debug .t_object .method [title],
+	.debug .t_object .method-name[title],
+	.debug .t_object .method .parameter [title],
 	.debug .t_object .t_stringified {
-		border-bottom: 1px solid rgba(0, 0, 0, 0.33);
+		text-decoration: underline;
 	}
 .debug .t_object .method.deprecated i { border-bottom:0; }
 .debug .t_object .t_modifier_static { font-style:italic; color:#00529B; }
@@ -273,6 +274,7 @@
 	.debug .t_callable .namespace {
 		font-weight: normal;
 	}
+.debug .t_const { color:#039; font-family:monospace; }
 .debug .t_object .t_classname,
 	.debug td.t_classname {
 		font-weight:bold;

@@ -19,10 +19,13 @@
 				".timestamp" :		'<i class="fa fa-calendar"></i>'
 			},
 			iconsObject: {
-				"> .magic-method" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
-				"> .magic-property" :			'<i class="fa fa-fw fa-magic" title="magic property"></i>',
-				"> .method.deprecated" :		'<i class="fa fa-arrow-down" title="Deprecated"></i>',
+				"> .info.magic" :				'<i class="fa fa-fw fa-magic"></i>',
+				"> .method.magic" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
+				"> .method.deprecated" :		'<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
 				"> .property.debug-value" :		'<i class="fa fa-fw fa-eye" title="via __debugInfo()"></i>',
+				"> .property.magic" :			'<i class="fa fa-fw fa-magic" title="magic property"></i>',
+				"> .property.magic-read" :		'<i class="fa fa-fw fa-magic" title="magic property"></i>',
+				"> .property.magic-write" :		'<i class="fa fa-fw fa-magic" title="magic property"></i>',
 				"> .property.private-ancestor" :'<i class="fa fa-fw fa-lock"></i>',
 				".toggle-private" :				'<i class="fa fa-user-secret"></i>',
 				".toggle-protected" :			'<i class="fa fa-shield"></i>'

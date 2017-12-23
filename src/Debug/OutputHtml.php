@@ -516,23 +516,27 @@ class OutputHtml extends OutputBase
             ? 'methods'
             : 'no methods';
         $str = '<dt class="methods">'.$label.'</dt>'."\n";
+        $magicMethods = array_intersect(array('__call','__callStatic'), array_keys($methods));
+        $str .= $this->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {
-            $paramStr = $this->dumpParams($info['params']);
+            $classes = array_keys(array_filter(array(
+                'method' => true,
+                'deprecated' => $info['isDeprecated'],
+            )));
             $modifiers = array_keys(array_filter(array(
                 'final' => $info['isFinal'],
                 $info['visibility'] => true,
                 'static' => $info['isStatic'],
             )));
-            $str .= '<dd'
-                .' class="method '.implode(' ', $modifiers).($info['isDeprecated'] ? ' deprecated' : '').'"'
-                .' data-implements="'.$info['implements'].'">'
+            $classes = array_merge($classes, $modifiers);
+            $str .= '<dd class="'.implode(' ', $classes).'" data-implements="'.$info['implements'].'">'
                 .implode(' ', array_map(function ($modifier) {
                     return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
                 }, $modifiers))
-                .(isset($info['phpDoc']['return'][0])
+                .(isset($info['phpDoc']['return'])
                     ? ' <span class="t_type"'
-                            .' title="'.htmlspecialchars($info['phpDoc']['return'][0]['desc']).'"'
-                        .'>'.$info['phpDoc']['return'][0]['type'].'</span>'
+                            .' title="'.htmlspecialchars($info['phpDoc']['return']['desc']).'"'
+                        .'>'.$info['phpDoc']['return']['type'].'</span>'
                     : ''
                 )
                 .' <span class="method-name"'
@@ -542,7 +546,9 @@ class OutputHtml extends OutputBase
                                 : ''
                             ))).'"'
                     .'>'.$methodName.'</span>'
-                .'<span class="t_punct">(</span>'.$paramStr.'<span class="t_punct">)</span>'
+                .'<span class="t_punct">(</span>'
+                    .$this->dumpParams($info['params'])
+                    .'<span class="t_punct">)</span>'
                 .($methodName == '__toString'
                     ? '<br /><span class="indent">'.$this->dump($info['returnValue']).'</span>'
                     : ''
@@ -572,13 +578,36 @@ class OutputHtml extends OutputBase
             $paramStr .= '<span class="t_parameter-name"'
                 .' title="'.htmlspecialchars($info['desc']).'"'
                 .'>'.htmlspecialchars($info['name']).'</span>';
-            if ($info['defaultValue'] != $this->debug->abstracter->UNDEFINED) {
+            if ($info['defaultValue'] !== $this->debug->abstracter->UNDEFINED) {
                 $defaultValue = $info['defaultValue'];
-                if (is_string($defaultValue)) {
-                    $defaultValue = str_replace("\n", ' ', $defaultValue);
-                }
                 $paramStr .= ' <span class="t_operator">=</span> ';
-                $paramStr .= '<span class="t_parameter-default">'.$this->dump($defaultValue).'</span>';
+                if ($info['constantName']) {
+                    /*
+                        only php >= 5.4.6 supports this...
+                        or via @method phpDoc
+
+                        show the constant name / hover for value
+                    */
+                    $title = '';
+                    $type = $this->debug->abstracter->getType($defaultValue);
+                    if (!in_array($type, array('array','resource'))) {
+                        $title = $this->debug->output->outputText->dump($defaultValue);
+                        $title = htmlspecialchars('value: '.$title);
+                    }
+                    $paramStr .= '<span class="t_parameter-default t_const"'
+                        .' title="'.$title.'"'
+                        .'>'.$info['constantName'].'</span>';
+                } else {
+                    /*
+                        The constant's value is shown
+                    */
+                    if (is_string($defaultValue)) {
+                        $defaultValue = str_replace("\n", ' ', $defaultValue);
+                    }
+                    $classAndInner = $this->debug->utilities->parseAttribString($this->dump($defaultValue));
+                    $classAndInner['class'] = trim('t_parameter-default '.$classAndInner['class']);
+                    $paramStr .= '<span class="'.$classAndInner['class'].'">'.$classAndInner['innerhtml'].'</span>';
+                }
             }
             $paramStr .= '</span>, '; // end .parameter
         }
@@ -587,7 +616,7 @@ class OutputHtml extends OutputBase
     }
 
     /**
-     * Dump phpDoc info as html
+     * Dump object's phpDoc info as html
      *
      * @param array $phpDoc parsed phpDoc
      *
@@ -601,15 +630,27 @@ class OutputHtml extends OutputBase
                 continue;
             }
             foreach ($values as $value) {
-                $str .= '<dd class="constant">'
+                if ($k == 'link') {
+                    $value = '<a href="'.$value['uri'].'" target="_blank">'
+                        .htmlspecialchars($value['desc'] ?: $value['uri'])
+                        .'</a>';
+                } elseif ($k == 'see' && $value['uri']) {
+                    $value = '<a href="'.$value['uri'].'" target="_blank">'
+                        .htmlspecialchars($value['desc'] ?: $value['uri'])
+                        .'</a>';
+                } else {
+                    $value = htmlspecialchars(implode(' ', $value));
+                }
+                $str .= '<dd class="phpdoc phpdoc-'.$k.'">'
                     .'<span class="phpdoc-tag">'.$k.'</span>'
-                    .' <span class="t_operator">=</span> '
-                    .implode(' ', array_map('htmlspecialchars', $value))
-                    .'</dd>';
+                    .'<span class="t_operator">:</span> '
+                    .$value
+                    .'</dd>'."\n";
             }
         }
         if ($str) {
-            $str = '<dt class="phpDoc">phpDoc</dt>'.$str;
+            $str = '<dt class="phpDoc">phpDoc</dt>'."\n"
+                .$str;
         }
         return $str;
     }
@@ -630,17 +671,15 @@ class OutputHtml extends OutputBase
             $label .= ' <span class="text-muted">(via __debugInfo)</span>';
         }
         $str = '<dt class="properties">'.$label.'</dt>'."\n";
-        if (isset($abs['methods']['__get'])) {
-            $str .= '<dd class="magic-method info">This object has a <code>__get()</code> method</dd>'."\n";
-        }
+        $magicMethods = array_intersect(array('__get','__set'), array_keys($abs['methods']));
+        $str .= $this->magicMethodInfo($magicMethods);
         foreach ($abs['properties'] as $k => $info) {
             $isPrivateAncestor = $info['visibility'] == 'private' && $info['inheritedFrom'];
             $classes = array_keys(array_filter(array(
-                'property' => true,
-                $info['visibility'] => $info['visibility'] != 'debug',
                 'debug-value' => !empty($info['viaDebugInfo']),
                 'private-ancestor' => $isPrivateAncestor,
-                'magic-property' => $info['isMagic'],
+                'property' => true,
+                $info['visibility'] => $info['visibility'] != 'debug',
             )));
             $str .= '<dd class="'.implode(' ', $classes).'">'
                 .'<span class="t_modifier_'.$info['visibility'].'">'.$info['visibility'].'</span>'
@@ -660,6 +699,28 @@ class OutputHtml extends OutputBase
                 .'</dd>'."\n";
         }
         return $str;
+    }
+
+    /**
+     * Generate some info regarding the given method names
+     *
+     * @param string[] $methods method names
+     *
+     * @return string
+     */
+    private function magicMethodInfo($methods)
+    {
+        if (!$methods) {
+            return '';
+        }
+        foreach ($methods as $i => $method) {
+            $methods[$i] = '<code>'.$method.'</code>';
+        }
+        $methods = implode(' and ', $methods);
+        $methods = $i == 0
+            ? 'a '.$methods.' method'
+            : $methods.' methods';
+        return '<dd class="magic info">This object has '.$methods.'</dd>'."\n";
     }
 
     /**

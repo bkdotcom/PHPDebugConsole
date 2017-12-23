@@ -6,6 +6,14 @@ define('SOMECONSTANT', 'Constant value');
 
 /**
  * TestBase gets extended to test that inherited properties / methods get debugged
+ *
+ * Note that @property phpDoc tags will not be incorporated if useDebugInfo && __debugInfo magic mehod
+ *
+ * @property      boolean $magicProp     I'm avail via __get()
+ * @property-read boolean $magicReadProp Read Only!
+ *
+ * @method void presto($foo, integer $int = 1, $bool = true, $null = null) I'm a magic method
+ * @method static void prestoStatic(string $noDefault, $arr = array(), $opts=array('a'=>'ay','b'=>'bee')) I'm a static magic method
  */
 class TestBase
 {
@@ -26,6 +34,18 @@ class TestBase
      * @return mixed
      */
     public function __get($key)
+    {
+    }
+
+    /**
+     * call magic method
+     *
+     * @param string $name Method being called
+     * @param array  $args Arguments passed
+     *
+     * @return mixed
+     */
+    public function __call($name, $args)
     {
     }
 
@@ -52,12 +72,14 @@ class TestBase
 /**
  * Test
  *
- * @property boolean $magicProp I'm avail via __get()
+ * @link http://www.bradkent.com/php/debug PHPDebugConsole Homepage
  */
 class Test extends TestBase
 {
 
     const MY_CONSTANT = 'redefined in Test';
+
+    public static $propStatic = 'I\'m Static';
 
     /**
      * Private Property.
@@ -99,7 +121,8 @@ class Test extends TestBase
      */
     public function __debugInfo()
     {
-        $return = get_object_vars($this);
+        $className = get_class($this);
+        $return = array_merge(get_class_vars($className), get_object_vars($this));
         $return['propPrivate'] .= ' (alternate value via __debugInfo)';
         $return['debugValue'] = 'This property is debug only';
         unset($return['propNoDebug']);
@@ -134,14 +157,13 @@ class Test extends TestBase
      * This method is public
      *
      * @param SomeClass $param1 first param
-     * @param mixed     $param2 second param
      *                      two-line description!
-     * @param array     $param3 third param
+     * @param array     $param2 third param
      *
      * @return     void
      * @deprecated
      */
-    public function methodPublic(\SomeClass $param1, $param2 = SOMECONSTANT, array $param3 = array())
+    public function methodPublic(\SomeClass $param1, array $param2 = array())
     {
     }
 

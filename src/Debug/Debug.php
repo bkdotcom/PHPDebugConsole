@@ -360,8 +360,8 @@ class Debug
     /**
      * Initiate the beginning of "summary" log entries
      *
-     * When possible summary entries will be displayed at the beginning of the log
-     * call groupEnd() (at matching group depth) to end summary
+     * Debug methods called while a groupSummary is open will appear at the top of the log
+     * call groupEnd()  to close summary
      *
      * groupSummary can be used multiple times
      * All groupSummary groups will appear together in a single group

@@ -16,6 +16,7 @@ require __DIR__.'/DebugTestFramework.php';
 \bdk\Debug::getInstance();	// invoke autoloader
 
 require __DIR__.'/Class/Test.php';
+require __DIR__.'/Class/Test2.php';
 if (version_compare(PHP_VERSION, '5.6', '>=')) {
     require __DIR__.'/Class/TestVariadic.php';
     if (!defined('HHVM_VERSION')) {

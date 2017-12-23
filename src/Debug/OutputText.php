@@ -149,8 +149,8 @@ class OutputText extends OutputBase
         foreach ($abs['properties'] as $name => $info) {
             $path[$pathCount] = $name;
             $vis = $info['visibility'];
-            if ($info['isMagic']) {
-                $vis = '✨ '.$vis;    // "sparkles" there is no magic-want unicode char
+            if (in_array($vis, array('magic','magic-read','magic-write'))) {
+                $vis = '✨ '.$vis;    // "sparkles" there is no magic-wand unicode char
             }
             if ($vis == 'private' && $info['inheritedFrom']) {
                 $vis = '🔒 '.$vis;
@@ -179,6 +179,7 @@ class OutputText extends OutputBase
                 'public' => 0,
                 'protected' => 0,
                 'private' => 0,
+                'magic' => 0,
             );
             foreach ($methods as $info) {
                 $counts[ $info['visibility'] ] ++;

@@ -189,7 +189,7 @@ class OutputBase implements SubscriberInterface
             foreach ($abs['properties'] as $name => $info) {
                 $path[$pathCount] = $name;
                 $vis = $info['visibility'];
-                if ($info['isMagic']) {
+                if (in_array($vis, array('magic','magic-read','magic-write'))) {
                     $vis = '✨ '.$vis;    // "sparkles": there is no magic-want unicode char
                 }
                 if ($vis == 'private' && $info['inheritedFrom']) {

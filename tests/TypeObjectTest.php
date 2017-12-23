@@ -16,8 +16,8 @@ class TypeObjectTest extends DebugTestFramework
     ✨ This object has a __get() method
     (public) debug = (object) bdk\Debug (not inspected)
     (public) instance = (object) bdk\DebugTest\Test *RECURSION*
-    (✨ public) magicProp = null
     (public) propPublic = "redefined in Test (public)"
+    (public) propStatic = "I'm Static"
     (public) someArray = Array(
         [int] => 123
         [numeric] => "123"
@@ -30,16 +30,29 @@ class TypeObjectTest extends DebugTestFramework
     (🔒 private) testBasePrivate = "defined in TestBase (private)"
     (debug) debugValue = "This property is debug only"
   Methods:
-    public: 7
+    public: 8
     protected: 1
     private: 1
+    magic: 2
 EOD;
+
+        $text2 = <<<'EOD'
+(object) bdk\DebugTest\Test2
+  Properties:
+    ✨ This object has a __get() method
+    (✨ magic) magicProp = null
+    (✨ magic-read) magicReadProp = null
+  Methods:
+    public: 3
+    magic: 1
+EOD;
+
         $script = array(
             '___class_name' => 'bdk\DebugTest\Test',
             '(public) debug' => '(object) bdk\Debug (not inspected)',
             '(public) instance' => '(object) bdk\DebugTest\Test *RECURSION*',
-            '(✨ public) magicProp' => null,
             '(public) propPublic' => 'redefined in Test (public)',
+            '(public) propStatic' => 'I\'m Static',
             '(public) someArray' => array(
                 'int' => 123,
                 'numeric' => '123',
@@ -81,11 +94,11 @@ EOD;
                     // properties
                     $this->assertContains(implode("\n", array(
                         '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
-                        '<dd class="magic-method info">This object has a <code>__get()</code> method</dd>',
+                        '<dd class="magic info">This object has a <code>__get</code> method</dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">debug</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="public"><span class="t_classname"><span class="namespace">bdk\</span>Debug</span> <span class="excluded">(not inspected)</span></span></dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">instance</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="private"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span> <span class="t_recursion">*RECURSION*</span></span></dd>',
-                        '<dd class="property public magic-property"><span class="t_modifier_public">public</span> <span class="t_type">boolean</span> <span class="property-name" title="I\'m avail via __get()">magicProp</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
+                        '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
                         '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">(</span>',
                         '<span class="array-inner">',
                         "\t".'<span class="key-value"><span class="t_key">int</span> <span class="t_operator">=&gt;</span> <span class="t_int">123</span></span>',
@@ -95,28 +108,72 @@ EOD;
                         "\t".'<span class="key-value"><span class="t_key">obj</span> <span class="t_operator">=&gt;</span> <span class="t_null">null</span></span>',
                         '</span><span class="t_punct">)</span></span></dd>',
                         '<dd class="property protected"><span class="t_modifier_protected">protected</span> <span class="property-name">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
-                        '<dd class="property private debug-value"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="property-name" title="Private Property.: ">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
-                        '<dd class="property private private-ancestor"><span class="t_modifier_private">private</span> (<i>bdk\DebugTest\TestBase</i>) <span class="property-name">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
-                        '<dd class="property debug-value"><span class="t_modifier_debug">debug</span> <span class="property-name">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
+                        '<dd class="debug-value property private"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="property-name" title="Private Property.: ">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
+                        '<dd class="private-ancestor property private"><span class="t_modifier_private">private</span> (<i>bdk\DebugTest\TestBase</i>) <span class="property-name">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                        '<dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="property-name">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
+                        '<dt class="methods">methods</dt>'
                     )), $str);
 
                     // methods
                     $this->assertContains(implode("\n", array(
                         '<dt class="methods">methods</dt>',
+                        '<dd class="magic info">This object has a <code>__call</code> method</dd>',
                         '<dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name" title="Constructor">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
+                        '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="method-name" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
                         '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">array</span> <span class="method-name" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                         '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="method-name" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
                         '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="method-name" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><br /><span class="indent"><span class="t_string">abracadabra</span></span></dd>',
-                        '<dd class="method public deprecated"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="method-name" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">SomeClass</span> <span class="t_parameter-name" title="first param">$param1</span></span>, <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="second param'."\n".'two-line description!">$param2</span> <span class="t_operator">=</span> <span class="t_parameter-default"><span class="t_string">Constant value</span></span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="third param">$param3</span> <span class="t_operator">=</span> <span class="t_parameter-default"><span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">()</span></span></span></span><span class="t_punct">)</span></dd>',
-                        // '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_type" title="Nothing is returned">void</span> <span class="method-name" title="This is a static method">methodStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
+                        '<dd class="method deprecated public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="method-name" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">SomeClass</span> <span class="t_parameter-name" title="first param',
+                            'two-line description!">$param1</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="third param">$param2</span> <span class="t_operator">=</span> <span class="t_parameter-default t_array"><span class="t_keyword">Array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span></dd>',
                         '<dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">testBasePublic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                         '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="method-name">testBaseStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                         '<dd class="method protected"><span class="t_modifier_protected">protected</span> <span class="t_type">void</span> <span class="method-name" title="This method is protected">methodProtected</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param">$param1</span></span><span class="t_punct">)</span></dd>',
                         '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_type">void</span> <span class="method-name" title="This method is private">methodPrivate</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">SomeClass</span> <span class="t_parameter-name" title="first param (passed by ref)">&amp;$param1</span></span>, <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="second param (passed by ref)">&amp;$param2</span></span><span class="t_punct">)</span></dd>',
+                        '<dd class="method magic"><span class="t_modifier_magic">magic</span> <span class="t_type">void</span> <span class="method-name" title="I\'m a magic method">presto</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span>, <span class="parameter"><span class="t_type">integer</span> <span class="t_parameter-name">$int</span> <span class="t_operator">=</span> <span class="t_parameter-default t_int">1</span></span>, <span class="parameter"><span class="t_parameter-name">$bool</span> <span class="t_operator">=</span> <span class="t_parameter-default t_bool true">true</span></span>, <span class="parameter"><span class="t_parameter-name">$null</span> <span class="t_operator">=</span> <span class="t_parameter-default t_null">null</span></span><span class="t_punct">)</span></dd>',
+                        '<dd class="method magic static"><span class="t_modifier_magic">magic</span> <span class="t_modifier_static">static</span> <span class="t_type">void</span> <span class="method-name" title="I\'m a static magic method">prestoStatic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name">$noDefault</span></span>, <span class="parameter"><span class="t_parameter-name">$arr</span> <span class="t_operator">=</span> <span class="t_parameter-default t_array"><span class="t_keyword">Array</span><span class="t_punct">()</span></span></span>, <span class="parameter"><span class="t_parameter-name">$opts</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">array(\'a\'=&gt;\'ay\',\'b\'=&gt;\'bee\')</span></span><span class="t_punct">)</span></dd>',
+                        '<dt class="phpDoc">',
+                    )), $str);
+
+                    // phpdoc
+                    $this->assertContains(implode("\n", array(
+                        '<dt class="phpDoc">phpDoc</dt>',
+                        '<dd class="phpdoc phpdoc-link"><span class="phpdoc-tag">link</span><span class="t_operator">:</span> <a href="http://www.bradkent.com/php/debug" target="_blank">PHPDebugConsole Homepage</a></dd>',
+                        '</dl>',
                     )), $str);
                 },
                 $text,
-                $script
+                $script,
+            ),
+            array(
+                new \bdk\DebugTest\Test2(),
+                function ($str) {
+                    // properties
+                    $this->assertContains(implode("\n", array(
+                        '<dt class="properties">properties</dt>',
+                        '<dd class="magic info">This object has a <code>__get</code> method</dd>',
+                        '<dd class="property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">boolean</span> <span class="property-name" title="I\'m avail via __get()">magicProp</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>',
+                        '<dd class="property magic-read"><span class="t_modifier_magic-read">magic-read</span> <span class="t_type">boolean</span> <span class="property-name" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>',
+                    )), $str);
+
+                    // methods
+                    $this->assertContains(implode("\n", array(
+                        '<dt class="methods">methods</dt>',
+                        '<dd class="magic info">This object has a <code>__call</code> method</dd>',
+                        '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="method-name" title="magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
+                        '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="method-name" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
+                        version_compare(PHP_VERSION, '5.4.6', '>=')
+                            ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="method-name" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_const" title="value: &quot;bird&quot;">self::WORD</span></span><span class="t_punct">)</span></dd>'
+                            : '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="method-name" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">bird</span></span><span class="t_punct">)</span></dd>',
+                        '<dd class="method magic"><span class="t_modifier_magic">magic</span> <span class="t_type"></span> <span class="method-name" title="test constant as param">methConstTest</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$mode</span> <span class="t_operator">=</span> <span class="t_parameter-default t_const" title="value: &quot;bird&quot;">self::WORD</span></span><span class="t_punct">)</span></dd>',
+                        '</dl>',
+                    )), $str);
+                },
+                $text2,
+                array(
+                    '___class_name' => 'bdk\DebugTest\Test2',
+                    '(✨ magic) magicProp' => null,
+                    '(✨ magic-read) magicReadProp' => null,
+                ),
             ),
         );
     }

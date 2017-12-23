@@ -22,8 +22,6 @@ class AbstractObject
     static private $basePropInfo = array(
         'desc' => null,
         'inheritedFrom' => null,        // populated only if inherited
-        'isMagic' => false,             // "magic" property that's only defined via phpDoc @property tag
-                                        //    usually obtained via __get() magic method
         'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
         'overrides' => null,            // populated only if we're overriding
@@ -106,9 +104,9 @@ class AbstractObject
         while ($reflector = $reflector->getParentClass()) {
             $abs['extends'][] = $reflector->getName();
         }
-        $abs['properties'] = $this->getProperties($abs, $hist);
+        $this->addProperties($abs, $hist);
         if ($abs['collectMethods']) {
-            $abs['methods'] = $this->getMethods($abs);
+            $this->addMethods($abs);
         } else {
             if (method_exists($obj, '__toString')) {
                 $abs['methods']['__toString'] = array(
@@ -117,6 +115,9 @@ class AbstractObject
             }
             if (method_exists($obj, '__get')) {
                 $abs['methods']['__get'] = true;
+            }
+            if (method_exists($obj, '__set')) {
+                $abs['methods']['__set'] = true;
             }
         }
         /*
@@ -133,8 +134,8 @@ class AbstractObject
      * Special minimal abstraction for array of Traversable's being logged via table()
      * Rather than regular abstraction
      *
-     * @param object $obj  object
-     * @param array  $hist (@internal) array & object history
+     * @param object $obj  Object being inspected
+     * @param array  $hist (@internal) Array & object history
      *
      * @return array
      */
@@ -162,7 +163,7 @@ class AbstractObject
             }
             $abs['values'] = $values;
         } elseif (is_object($obj)) {
-            $abs['properties'] = $this->getProperties($abs, $hist);
+            $this->addProperties($abs, $hist);
         }
         unset($abs['collectPropertyValues']);
         return $abs->getValues();
@@ -191,13 +192,13 @@ class AbstractObject
     }
 
     /**
-     * Returns array of object's methods
+     * Adds methods to abstraction
      *
      * @param Event $abs Abstraction event object
      *
-     * @return array
+     * @return void
      */
-    public function getMethods(Event $abs)
+    public function addMethods(Event $abs)
     {
         $obj = $abs->getSubject();
         $methodArray = array();
@@ -235,11 +236,11 @@ class AbstractObject
                 'isStatic' => $reflectionMethod->isStatic(),
                 'params' => $this->getParams($reflectionMethod, $phpDoc),
                 'phpDoc' => $phpDoc,
-                'visibility' => $vis,
+                'visibility' => $vis,   // public | private | protected | debug | magic
             );
             if ($info['visibility'] === 'private' && $info['inheritedFrom']) {
                 /*
-                    odd: getMethods() returns parent's private methods
+                    getMethods() returns parent's private methods (must be a reason... but we'll skip it)
                 */
                 continue;
             }
@@ -255,27 +256,23 @@ class AbstractObject
             }
             $methodArray[$methodName] = $info;
         }
-        return $methodArray;
+        $abs['methods'] = $methodArray;
+        $this->addMethodsPhpDoc($abs);
+        return;
     }
 
     /**
-     * Returns array of objects properties
+     * Adds properties to abstraction
      *
      * @param Event $abs  Abstraction event object
      * @param array $hist (@internal) object history
      *
-     * @return array
+     * @return void
      */
-    public function getProperties(Event $abs, &$hist = array())
+    public function addProperties(Event $abs, &$hist = array())
     {
         $obj = $abs->getSubject();
-        $hist[] = $obj;
-        $propArray = array();
         $reflectionObject = new \ReflectionObject($obj);
-        $useDebugInfo = $reflectionObject->hasMethod('__debugInfo') && $this->abstracter->getCfg('useDebugInfo');
-        $debugInfo = $useDebugInfo
-            ? call_user_func(array($obj, '__debugInfo'))
-            : array();
         /*
             We trace our ancestory to learn where properties are inherited from
         */
@@ -283,53 +280,43 @@ class AbstractObject
         while ($reflectionObject) {
             $className = $reflectionObject->getName();
             $properties = $reflectionObject->getProperties();
-            $objNamespace = substr($className, 0, strrpos($className, '\\'));
-            $isDebugObj = $objNamespace == __NAMESPACE__;
+            $isDebugObj = $className == __NAMESPACE__;
             while ($properties) {
                 $reflectionProperty = array_shift($properties);
                 $name = $reflectionProperty->getName();
-                if (isset($propArray[$name])) {
+                if (isset($abs['properties'][$name])) {
                     // already have info... we're in an ancestor
-                    $propArray[$name]['overrides'] = $this->propOverrides(
+                    $abs['properties'][$name]['overrides'] = $this->propOverrides(
                         $reflectionProperty,
-                        $propArray[$name],
+                        $abs['properties'][$name],
                         $className
                     );
-                    $propArray[$name]['originallyDeclared'] = $className;
+                    $abs['properties'][$name]['originallyDeclared'] = $className;
                     continue;
-                } elseif (!($isAncestor && $reflectionProperty->isPrivate())) {
-                    // always collect ancestor private props!
-                    if ($useDebugInfo && !array_key_exists($name, $debugInfo)) {
-                        // this prop isn't returned by __debugInfo, so skip it
-                        continue;
-                    } elseif ($isDebugObj && in_array($name, array('data','debug','instance'))) {
-                        continue;
-                    }
                 }
-                $propInfo = $this->getPropInfo($abs, $reflectionProperty);
-                if (array_key_exists($name, $debugInfo)) {
-                    // array_key_exists because debug value could be null
-                    // ancestor privates (almost certainly) won't exist in debugInfo
-                    $debugValue = $debugInfo[$name];
-                    $propInfo['viaDebugInfo'] = $debugValue != $propInfo['value'];
-                    $propInfo['value'] = $debugValue;
-                    unset($debugInfo[$name]);
+                if ($isDebugObj && $name == 'data') {
+                    $abs['properties']['data'] = array_merge(self::$basePropInfo, array(
+                        'value' => array('NOT INSPECTED'),
+                        'visibility' => 'protected',
+                    ));
+                    continue;
                 }
-                if ($this->abstracter->needsAbstraction($propInfo['value'])) {
-                    $propInfo['value'] = $this->abstracter->getAbstraction($propInfo['value'], $hist);
-                }
-                $propArray[$name] = $propInfo;
+                $abs['properties'][$name] = $this->getPropInfo($abs, $reflectionProperty);
             }
             $isAncestor = true;
             $reflectionObject = $reflectionObject->getParentClass();
         }
-        /*
-            Any values left in $debugInfo are only defined via __debugInfo
-            $debugInfo now only contains key/value that don't exist as properties
-        */
-        $propArray = array_merge($propArray, $this->getPropertiesDebug($debugInfo, $hist));
-        $propArray = $this->mergePhpDocProperties($abs, $propArray);
-        return $propArray;
+        $this->addPropertiesPhpDoc($abs);   // magic properties documented via phpDoc
+        $this->addPropertiesDebug($abs);    // use __debugInfo() values if useDebugInfo' && method exists
+        $properties = $abs['properties'];
+        $hist[] = $obj;
+        foreach ($properties as $name => $info) {
+            if ($this->abstracter->needsAbstraction($info['value'])) {
+                $properties[$name]['value'] = $this->abstracter->getAbstraction($info['value'], $hist);
+            }
+        }
+        $abs['properties'] = $properties;
+        return;
     }
 
     /**
@@ -381,6 +368,16 @@ class AbstractObject
     /**
      * Get parameter details
      *
+     * returns array of
+     *     [
+     *         'constantName'   populated only if php >= 5.4.6 & default is a constant
+     *         'defaultValue'   value or UNDEFINED
+     *         'desc'           description (from phpDoc)
+     *         'isOptional'
+     *         'name'           name
+     *         'type'           type hint
+     *     ]
+     *
      * @param \ReflectionMethod $reflectionMethod method object
      * @param array             $phpDoc           method's parsed phpDoc comment
      *
@@ -393,45 +390,41 @@ class AbstractObject
         if (empty($phpDoc)) {
             $phpDoc = $this->phpDoc->getParsed($reflectionMethod);
         }
-        if (empty($phpDoc['param'])) {
-            $phpDoc['param'] = array();
-        }
-        foreach ($params as $reflectionParameter) {
-            $hasDefaultValue = $reflectionParameter->isDefaultValueAvailable();
-            $name = '$'.$reflectionParameter->getName();
+        foreach ($params as $i => $reflectionParameter) {
+            $nameNoPrefix = $reflectionParameter->getName();
+            $name = '$'.$nameNoPrefix;
             if (method_exists($reflectionParameter, 'isVariadic') && $reflectionParameter->isVariadic()) {
                 $name = '...'.$name;
             }
             if ($reflectionParameter->isPassedByReference()) {
                 $name = '&'.$name;
             }
-            $paramArray[$reflectionParameter->getName()] = array(
-                'defaultValue' =>  $hasDefaultValue
-                    ? $reflectionParameter->getDefaultValue()
-                    : $this->abstracter->UNDEFINED,
+            $constantName = null;
+            $defaultValue = $this->abstracter->UNDEFINED;
+            if ($reflectionParameter->isDefaultValueAvailable()) {
+                $defaultValue = $reflectionParameter->getDefaultValue();
+                if (version_compare(PHP_VERSION, '5.4.6', '>=') && $reflectionParameter->isDefaultValueConstant()) {
+                    $constantName = $reflectionParameter->getDefaultValueConstantName();
+                }
+            }
+            $paramInfo = array(
+                'constantName' => $constantName,
+                'defaultValue' => $defaultValue,
                 'desc' => null,
+                'isOptional' => $reflectionParameter->isOptional(),
                 'name' => $name,
-                'optional' => $reflectionParameter->isOptional(),
-                /*
-                    Try to get param type from reflectionParameter
-                    If unsuccessfull, the, type specified in phpDoc will end up getting used
-                */
                 'type' => $this->getParamTypeHint($reflectionParameter),
             );
-        }
-        $paramKeys = array_keys($paramArray);
-        foreach ($phpDoc['param'] as $i => $phpDocParam) {
-            $name = $phpDocParam['name'];
-            if ($name === null && isset($paramKeys[$i])) {
-                $name = $paramKeys[$i];
-            }
-            if (isset($paramArray[$name])) {
-                $param = &$paramArray[$name];
-                if (!isset($param['type'])) {
-                    $param['type'] = $phpDocParam['type'];
+            /*
+                Incorporate phpDoc info
+            */
+            if (isset($phpDoc['param'][$i])) {
+                $paramInfo['desc'] = $phpDoc['param'][$i]['desc'];
+                if (!isset($paramInfo['type'])) {
+                    $paramInfo['type'] = $phpDoc['param'][$i]['type'];
                 }
-                $param['desc'] = $phpDocParam['desc'];
             }
+            $paramArray[$nameNoPrefix] = $paramInfo;
         }
         return $paramArray;
     }
@@ -452,29 +445,6 @@ class AbstractObject
             $return = $matches[1];
         }
         return $return;
-    }
-
-    /**
-     * Returns array of propInfo for debugInfo values
-     *
-     * @param array $debugInfo key/values as returned by __debugInfo()
-     * @param array $hist      {@internal}
-     *
-     * @return array
-     */
-    protected function getPropertiesDebug($debugInfo, $hist = array())
-    {
-        $propArray = array();
-        foreach ($debugInfo as $name => $value) {
-            $propArray[$name] = array_merge(static::$basePropInfo, array(
-                'value' => $this->abstracter->needsAbstraction($value)
-                    ? $this->abstracter->getAbstraction($value, $hist)
-                    : $value,
-                'viaDebugInfo' => true,
-                'visibility' => 'debug',
-            ));
-        }
-        return $propArray;
     }
 
     /**
@@ -558,7 +528,7 @@ class AbstractObject
     /**
      * for nested objects (ie object is a property of an object), returns the parent class
      *
-     * @param array $hist (@internal) array & object history
+     * @param array $hist Array & object history
      *
      * @return null|string
      */
@@ -588,47 +558,244 @@ class AbstractObject
     }
 
     /**
-     * "Magic" properties may be defined in a class' doc-block
+     * "Magic" methods may be defined in a class' doc-block
      * If so... move this information to the properties array
      *
-     * @param Event $abs       Abstraction event object
-     * @param array $propArray properties
+     * @param Event $abs Abstraction event object
      *
-     * @return array
+     * @return void
      *
-     * @see http://docs.phpdoc.org/references/phpdoc/tags/property.html
+     * @see http://docs.phpdoc.org/references/phpdoc/tags/method.html
      */
-    private function mergePhpDocProperties(Event $abs, $propArray)
+    private function addMethodsPhpDoc(Event $abs)
     {
-        if (empty($abs['phpDoc']['property'])) {
-            return $propArray;
-        }
-        foreach ($abs['phpDoc']['property'] as $phpDocProp) {
-            $vals = array(
-                'desc' => $phpDocProp['desc'],
-                'isMagic' => true,
-                'type' => $phpDocProp['type'],
-            );
-            if (isset($propArray[ $phpDocProp['name'] ])) {
-                $propArray[ $phpDocProp['name'] ] = array_merge($propArray[ $phpDocProp['name'] ], $vals);
-            } else {
-                $propArray[ $phpDocProp['name'] ] = array_merge(self::$basePropInfo, $vals);
+        $inheritedFrom = null;
+        if (empty($abs['phpDoc']['method'])) {
+            // phpDoc doesn't contain any @method tags,
+            if (array_intersect_key($abs['methods'], array_flip(array('__call', '__callStatic')))) {
+                // we've got __call and/or __callStatic method:  check if parent classes have @method tags
+                $obj = $abs->getSubject();
+                $reflector = new \ReflectionObject($obj);
+                while ($reflector = $reflector->getParentClass()) {
+                    $parsed = $this->phpDoc->getParsed($reflector);
+                    if (isset($parsed['method'])) {
+                        $inheritedFrom = $reflector->getName();
+                        $abs['phpDoc']['method'] = $parsed['method'];
+                        break;
+                    }
+                }
+            }
+            if (empty($abs['phpDoc']['method'])) {
+                // still empty
+                return;
             }
         }
-        unset($abs['phpDoc']['property']);
-        return $propArray;
+        foreach ($abs['phpDoc']['method'] as $phpDocMethod) {
+            $className = $inheritedFrom ? $inheritedFrom : $abs['className'];
+            $abs['methods'][$phpDocMethod['name']] = array(
+                'implements' => null,
+                'inheritedFrom' => $inheritedFrom,
+                'isAbstract' => false,
+                'isDeprecated' => false,
+                'isFinal' => false,
+                'isStatic' => $phpDocMethod['static'],
+                'params' => array_map(function ($param) use ($className) {
+                    $info = $this->phpDocParam($param, $className);
+                    return array(
+                        'constantName' => $info['constantName'],
+                        'defaultValue' => $info['defaultValue'],
+                        'desc' => null,
+                        'name' => $param['name'],
+                        'optional' => false,
+                        'type' => $param['type'],
+                    );
+                }, $phpDocMethod['param']),
+                'phpDoc' => array(
+                    'summary' => $phpDocMethod['desc'],
+                    'description' => null,
+                    'return' => array(
+                        'type' => $phpDocMethod['type'],
+                        'desc' => null,
+                    )
+                ),
+                'visibility' => 'magic',
+            );
+        }
+        unset($abs['phpDoc']['method']);
+        return;
     }
 
     /**
-     * determine propInfo['overrides'] value
+     * Add/Update properties with info from __debugInfo method
+     *
+     * @param Event $abs Abstraction event object
+     *
+     * @return void
+     */
+    private function addPropertiesDebug(Event $abs)
+    {
+        if (!$abs['viaDebugInfo']) {
+            return;
+        }
+        $obj = $abs->getSubject();
+        $debugInfo = call_user_func(array($obj, '__debugInfo'));
+        $properties = $abs['properties'];
+        foreach ($properties as $name => $info) {
+            if (array_key_exists($name, $debugInfo)) {
+                if ($debugInfo[$name] !== $info['value']) {
+                    $properties[$name]['viaDebugInfo'] = true;
+                    $properties[$name]['value'] = $debugInfo[$name];
+                }
+                unset($debugInfo[$name]);
+                continue;
+            }
+            if (in_array($info['visibility'], array('private','protected')) && $info['inheritedFrom']) {
+                // keep the non-public ancestor regardless of inclusion in __debugInfo
+                // (this doesn't include "magic" properties, which we don't want to keep)
+                continue;
+            }
+            unset($properties[$name]);
+        }
+        foreach ($debugInfo as $name => $value) {
+            $properties[$name] = array_merge(
+                static::$basePropInfo,
+                array(
+                    'value' => $value,
+                    'viaDebugInfo' => true,
+                    'visibility' => 'debug',    // indicates this property is exclusive to debugInfo
+                )
+            );
+        }
+        $abs['properties'] = $properties;
+    }
+
+    /**
+     * "Magic" properties may be defined in a class' doc-block
+     * If so... move this information to the properties array
+     *
+     * @param Event $abs Abstraction event object
+     *
+     * @return void
+     *
+     * @see http://docs.phpdoc.org/references/phpdoc/tags/property.html
+     */
+    private function addPropertiesPhpDoc(Event $abs)
+    {
+        // tag => visibility
+        $tags = array(
+            'property' => 'magic',
+            'property-read' => 'magic-read',
+            'property-write' => 'magic-write',
+        );
+        $inheritedFrom = null;
+        if (!array_intersect_key($abs['phpDoc'], $tags)) {
+            // phpDoc doesn't contain any @property tags
+            $found = false;
+            $obj = $abs->getSubject();
+            if (!method_exists($obj, '__get')) {
+                // don't have magic getter... don't bother searching ancestor phpDocs
+                return;
+            }
+            // we've got __get method:  check if parent classes have @property tags
+            $reflector = new \ReflectionObject($obj);
+            while ($reflector = $reflector->getParentClass()) {
+                $parsed = $this->phpDoc->getParsed($reflector);
+                $tagIntersect = array_intersect_key($parsed, $tags);
+                if (!$tagIntersect) {
+                    continue;
+                }
+                $found = true;
+                $inheritedFrom = $reflector->getName();
+                $abs['phpDoc'] = array_merge(
+                    $abs['phpDoc'],
+                    $tagIntersect
+                );
+                break;
+            }
+            if (!$found) {
+                return;
+            }
+        }
+        $properties = $abs['properties'];
+        foreach ($tags as $tag => $vis) {
+            if (!isset($abs['phpDoc'][$tag])) {
+                continue;
+            }
+            foreach ($abs['phpDoc'][$tag] as $phpDocProp) {
+                $properties[ $phpDocProp['name'] ] = array_merge(
+                    self::$basePropInfo,
+                    array(
+                        'desc' => $phpDocProp['desc'],
+                        'type' => $phpDocProp['type'],
+                        'inheritedFrom' => $inheritedFrom,
+                        'visibility' => $vis,
+                    )
+                );
+            }
+            unset($abs['phpDoc'][$tag]);
+        }
+        $abs['properties'] = $properties;
+        return;
+    }
+
+    /**
+     * Get defaultValue and constantName info from phpDoc param
+     *
+     * Converts the defaultValue string to php scalar
+     *
+     * @param array  $param     parsed param in from @method tag
+     * @param string $className className where phpDoc was found
+     *
+     * @return array
+     */
+    private function phpDocParam($param, $className)
+    {
+        $constantName = null;
+        $defaultValue = $this->abstracter->UNDEFINED;
+        if (array_key_exists('defaultValue', $param)) {
+            $defaultValue = $param['defaultValue'];
+            if (in_array($defaultValue, array('true','false','null'))) {
+                $defaultValue = json_decode($defaultValue);
+            } elseif (is_numeric($defaultValue)) {
+                // there are no quotes around value
+                $defaultValue = $defaultValue * 1;
+            } elseif (preg_match('/^array\(\s*\)|\[\s*\]$/i', $defaultValue)) {
+                // empty array...
+                // we're not going to eval non-empty arrays...
+                //    non empty array will appear as a string
+                $defaultValue = array();
+            } elseif (preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
+                // appears to be a constant
+                if ($matches[1]) {
+                    // self
+                    if (defined($className.'::'.$matches[2])) {
+                        $constantName = $matches[0];
+                        $defaultValue = constant($className.'::'.$matches[2]);
+                    }
+                } elseif (defined($defaultValue)) {
+                    $constantName = $defaultValue;
+                    $defaultValue = constant($defaultValue);
+                }
+            } else {
+                $defaultValue = trim($defaultValue, '\'"');
+            }
+        }
+        return array(
+            'constantName' => $constantName,
+            'defaultValue' => $defaultValue,
+        );
+    }
+
+    /**
+     * Determine propInfo['overrides'] value
      *
      * @param \ReflectionProperty $reflectionProperty Reflection Property
      * @param array               $propInfo           Property Info
-     * @param string              $className          classname of object being inspected
+     * @param string              $className          className of object being inspected
      *
      * @return string|null
      */
-    protected function propOverrides(\ReflectionProperty $reflectionProperty, $propInfo, $className)
+    private function propOverrides(\ReflectionProperty $reflectionProperty, $propInfo, $className)
     {
         if (empty($propInfo['overrides'])
             && empty($propInfo['inheritedFrom'])
@@ -648,24 +815,34 @@ class AbstractObject
      */
     protected function sort(&$array)
     {
-        if ($array) {
-            $sort = $this->abstracter->getCfg('objectSort');
-            if ($sort == 'name') {
-                ksort($array);
-            } elseif ($sort == 'visibility') {
-                $sortVisOrder = array('public', 'protected', 'private', 'debug');
-                $sortData = array();
-                foreach ($array as $name => $info) {
-                    $sortData['name'][$name] = strtolower($name);
-                    /*
-                        visibility may not be set on methods... if methods weren't collected, but still collected __toString/returnValue
-                    */
-                    $sortData['vis'][$name] = isset($info['visibility'])
-                        ? array_search($info['visibility'], $sortVisOrder)
-                        : count($sortVisOrder);
-                }
-                array_multisort($sortData['vis'], $sortData['name'], $array);
+        if (!$array) {
+            return;
+        }
+        $sort = $this->abstracter->getCfg('objectSort');
+        if ($sort == 'name') {
+            // rather than a simple key sort, use array_multisort so that __construct is always first
+            $sortData = array();
+            foreach (array_keys($array) as $name) {
+                $sortData[$name] = $name == '__construct'
+                    ? 0
+                    : $name;
             }
+            array_multisort($sortData, $array);
+        } elseif ($sort == 'visibility') {
+            $sortVisOrder = array('public', 'protected', 'private', 'magic', 'magic-read', 'magic-write', 'debug');
+            $sortData = array();
+            foreach ($array as $name => $info) {
+                $sortData['name'][$name] = $name == '__construct'
+                    ? 0     // always place __construct at the top
+                    : $name;
+                /*
+                    visibility may not be set on methods... if methods weren't collected, but still collected __toString/returnValue
+                */
+                $sortData['vis'][$name] = isset($info['visibility'])
+                    ? array_search($info['visibility'], $sortVisOrder)
+                    : count($sortVisOrder);
+            }
+            array_multisort($sortData['vis'], $sortData['name'], $array);
         }
     }
 }

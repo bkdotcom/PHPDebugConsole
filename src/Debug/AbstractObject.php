@@ -276,7 +276,6 @@ class AbstractObject
         /*
             We trace our ancestory to learn where properties are inherited from
         */
-        $isAncestor = false;
         while ($reflectionObject) {
             $className = $reflectionObject->getName();
             $properties = $reflectionObject->getProperties();
@@ -303,7 +302,6 @@ class AbstractObject
                 }
                 $abs['properties'][$name] = $this->getPropInfo($abs, $reflectionProperty);
             }
-            $isAncestor = true;
             $reflectionObject = $reflectionObject->getParentClass();
         }
         $this->addPropertiesPhpDoc($abs);   // magic properties documented via phpDoc

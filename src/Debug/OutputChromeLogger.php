@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  *
  * @see https://craig.is/writing/chrome-logger/techspecs
  */
@@ -75,18 +75,6 @@ class OutputChromeLogger extends OutputBase
     }
 
     /**
-     * Encode data for header
-     *
-     * @param array $data log data
-     *
-     * @return string encoded data for header
-     */
-    protected function encode($data)
-    {
-        return base64_encode(utf8_encode(json_encode($data)));
-    }
-
-    /**
      * Process log entry
      *
      * Transmogrify log entry to chromlogger format
@@ -97,7 +85,7 @@ class OutputChromeLogger extends OutputBase
      *
      * @return void
      */
-    protected function processEntry($method, $args = array(), $meta = array())
+    public function processLogEntry($method, $args = array(), $meta = array())
     {
         $metaStr = isset($meta['file'])
             ? $meta['file'].': '.$meta['line']
@@ -115,5 +103,17 @@ class OutputChromeLogger extends OutputBase
             $method = '';
         }
         $this->json['rows'][] = array($args, $metaStr, $method);
+    }
+
+    /**
+     * Encode data for header
+     *
+     * @param array $data log data
+     *
+     * @return string encoded data for header
+     */
+    protected function encode($data)
+    {
+        return base64_encode(utf8_encode(json_encode($data)));
     }
 }

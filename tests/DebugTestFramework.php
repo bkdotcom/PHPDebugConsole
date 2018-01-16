@@ -8,6 +8,8 @@ use bdk\PubSub\Event;
 class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
 {
 
+    public static $allowError = false;
+
     /**
      * setUp is executed before each test
      *
@@ -15,14 +17,21 @@ class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
      */
     public function setUp()
     {
+        self::$allowError = false;
         $this->debug = \bdk\Debug::getInstance(array(
             'collect' => true,
+            'emailLog' => false,
+            'emailTo' => null,
+            'logEnvInfo' => false,
             'output' => true,
             'outputCss' => false,
             'outputScript' => false,
             'outputAs' => 'html',
-            'logEnvInfo' => false,
             'onError' => function (Event $event) {
+                if (self::$allowError) {
+                    $event['logError'] = false;
+                    return;
+                }
                 throw new PHPUnit_Framework_Exception($event['message'], 500);
             }
         ));
@@ -50,6 +59,9 @@ class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
         foreach ($resetValues as $k => $v) {
             $this->debug->setData($k, $v);
         }
+        $this->debug->errorHandler->setData('errors', array());
+        $this->debug->errorHandler->setData('errorCaller', array());
+        $this->debug->errorHandler->setData('lastError', null);
     }
 
     /**

@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -15,6 +15,7 @@
 namespace bdk\Debug;
 
 use bdk\PubSub\Event;
+use bdk\PubSub\SubscriberInterface;
 use bdk\Debug;
 
 /**
@@ -26,7 +27,7 @@ use bdk\Debug;
  * c) a trait for code not meant to be "reusable" seems like an anti-pattern
  *       doesn't solve the bootstrap/autoload issue
  */
-class Internal
+class Internal implements SubscriberInterface
 {
 
     private $debug;
@@ -40,19 +41,15 @@ class Internal
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->debug->eventManager->subscribe('debug.bootstrap', array($this, 'onBootstrap'), -1);
-        $this->debug->eventManager->subscribe('debug.log', array($this, 'onLog'), -1);
-        $this->debug->eventManager->subscribe('debug.output', array($this, 'onOutput'));
+        $this->debug->eventManager->addSubscriberInterface($this);
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
         }, 'onErrorAddEmailData'), 1);
-        $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
         }, 'onErrorEmail'), -1);
-        register_shutdown_function(array($this, 'onShutdown'));
     }
 
     /**
@@ -67,6 +64,99 @@ class Internal
     public function email($emailTo, $subject, $body)
     {
         call_user_func($this->debug->getCfg('emailFunc'), $emailTo, $subject, $body);
+    }
+
+    /**
+     * Serializes and emails log
+     *
+     * @return void
+     */
+    public function emailLog()
+    {
+        $body = '';
+        $unsuppressedError = false;
+        /*
+            List errors that occured
+        */
+        $errors = $this->debug->errorHandler->get('errors');
+        uasort($errors, function ($a1, $a2) {
+            return strcmp($a1['file'].$a1['line'], $a2['file'].$a2['line']);
+        });
+        $lastFile = '';
+        foreach ($errors as $error) {
+            if ($error['isSuppressed']) {
+                continue;
+            }
+            if ($error['file'] !== $lastFile) {
+                $body .= $error['file'].':'."\n";
+                $lastFile = $error['file'];
+            }
+            $body .= '  Line '.$error['line'].': '.$error['message']."\n";
+            $unsuppressedError = true;
+        }
+        $subject = 'Debug Log';
+        $subjectMore = '';
+        if (!empty($_SERVER['HTTP_HOST'])) {
+            $subjectMore .= ' '.$_SERVER['HTTP_HOST'];
+        }
+        if ($unsuppressedError) {
+            $subjectMore .= ' '.($subjectMore ? '(Error)' : 'Error');
+        }
+        $subject = rtrim($subject.':'.$subjectMore, ':');
+        /*
+            "attach" "serialized" log
+        */
+        $body .= (!isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv'])
+            ? 'Command: '. implode(' ', $_SERVER['argv'])
+            : 'Request: '.$_SERVER['REQUEST_METHOD'].': '.$_SERVER['REQUEST_URI']
+        )."\n\n";
+        $body .= $this->debug->utilities->serializeLog($this->debug->getData('log'));
+        /*
+            Now email
+        */
+        $this->email($this->debug->getCfg('emailTo'), $subject, $body);
+        return;
+    }
+
+    /**
+     * get error statistics from errorHandler
+     * how many errors were captured in/out of console
+     * breakdown per error category
+     *
+     * @return array
+     */
+    public function errorStats()
+    {
+        $errors = $this->debug->errorHandler->get('errors');
+        $stats = array(
+            'inConsole' => 0,
+            'inConsoleCategories' => 0,
+            'notInConsole' => 0,
+            'counts' => array(),
+        );
+        foreach ($errors as $error) {
+            if ($error['isSuppressed']) {
+                continue;
+            }
+            $category = $error['category'];
+            if (!isset($stats['counts'][$category])) {
+                $stats['counts'][$category] = array(
+                    'inConsole' => 0,
+                    'notInConsole' => 0,
+                );
+            }
+            $k = $error['inConsole'] ? 'inConsole' : 'notInConsole';
+            $stats['counts'][$category][$k]++;
+        }
+        foreach ($stats['counts'] as $a) {
+            $stats['inConsole'] += $a['inConsole'];
+            $stats['notInConsole'] += $a['notInConsole'];
+            if ($a['inConsole']) {
+                $stats['inConsoleCategories']++;
+            }
+        }
+        ksort($stats['counts']);
+        return $stats;
     }
 
     /**
@@ -110,6 +200,20 @@ class Internal
             return $end;
         }
         return array();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            'debug.bootstrap' => array('onBootstrap', -1),
+            'debug.log' => array('onLog', -1),
+            'debug.output' => 'onOutput',
+            'errorHandler.error' => 'onError',
+            'php.shutdown' => 'onShutdown',
+        );
     }
 
     /**
@@ -253,28 +357,43 @@ class Internal
      */
     public function onShutdown()
     {
-        if ($this->hasLog() && !$this->debug->getCfg('output') && $this->debug->getCfg('emailTo')) {
-            /*
-                We have log data, it's not being output and we have an emailTo addr
-            */
-            $email = false;
-            if ($this->debug->getCfg('emailLog') === 'always') {
-                $email = true;
-            } elseif ($this->debug->getCfg('emailLog') === 'onError') {
-                $errors = $this->debug->errorHandler->get('errors');
-                $emailMask = $this->debug->errorHandler->getCfg('emailMask');
-                $emailableErrors = array_filter($errors, function ($error) use ($emailMask) {
-                    return !$error['isSuppressed'] && ($error['type'] & $emailMask);
-                });
-                $email = !empty($emailableErrors);
-            }
-            if ($email) {
-                $this->debug->output->emailLog();
-            }
+        if ($this->testEmailLog()) {
+            $this->emailLog();
         }
         if (!$this->debug->getData('outputSent')) {
             echo $this->debug->output();
         }
         return;
+    }
+
+    /**
+     * Test if conditions are met to email the log
+     *
+     * @return boolean
+     */
+    private function testEmailLog()
+    {
+        if (!$this->debug->getCfg('emailTo')) {
+            return false;
+        }
+        if ($this->debug->getCfg('output')) {
+            // don't email log if we're outputing it
+            return false;
+        }
+        if (!$this->hasLog()) {
+            return false;
+        }
+        if ($this->debug->getCfg('emailLog') === 'always') {
+            return true;
+        }
+        if ($this->debug->getCfg('emailLog') === 'onError') {
+            $errors = $this->debug->errorHandler->get('errors');
+            $emailMask = $this->debug->errorEmailer->getCfg('emailMask');
+            $emailableErrors = array_filter($errors, function ($error) use ($emailMask) {
+                return !$error['isSuppressed'] && ($error['type'] & $emailMask);
+            });
+            return !empty($emailableErrors);
+        }
+        return false;
     }
 }

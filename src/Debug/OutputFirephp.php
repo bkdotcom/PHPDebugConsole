@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -53,51 +53,14 @@ class OutputFirephp extends OutputBase
         $this->setHeader('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $this->setHeader('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
         $this->setHeader('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
-        $this->processEntry('groupCollapsed', array('PHP: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']));
+        $this->processLogEntry('groupCollapsed', array('PHP: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']));
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $this->processEntry('groupEnd');
+        $this->processLogEntry('groupEnd');
         $this->setHeader('X-Wf-1-Index', $this->messageIndex);
         $this->data = array();
         return;
-    }
-
-    /**
-     * Build table rows
-     *
-     * @param array $array   array to debug
-     * @param array $columns columns to display
-     *
-     * @return array
-     */
-    protected function methodTable($array, $columns = array())
-    {
-        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
-        $table = array();
-        $table[] = $keys;
-        array_unshift($table[0], '');
-        $classNames = array();
-        foreach ($array as $k => $row) {
-            $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
-            $values = array_map(function ($val) {
-                return $val === $this->debug->abstracter->UNDEFINED
-                    ? null
-                    : $val;
-            }, $values);
-            $classNames[] = $objInfo
-                ? $objInfo['className']
-                : '';
-            array_unshift($values, $k);
-            $table[] = array_values($values);
-        }
-        if (array_filter($classNames)) {
-            array_unshift($table[0], '');
-            foreach ($classNames as $i => $className) {
-                array_splice($table[$i+1], 1, 0, $className);
-            }
-        }
-        return $table;
     }
 
     /**
@@ -109,7 +72,7 @@ class OutputFirephp extends OutputBase
      *
      * @return void
      */
-    protected function processEntry($method, $args = array(), $meta = array())
+    public function processLogEntry($method, $args = array(), $meta = array())
     {
         $firePhpMeta = array(
             'Type' => isset($this->firephpMethods[$method])
@@ -161,6 +124,43 @@ class OutputFirephp extends OutputBase
             );
         }
         return;
+    }
+
+    /**
+     * Build table rows
+     *
+     * @param array $array   array to debug
+     * @param array $columns columns to display
+     *
+     * @return array
+     */
+    protected function methodTable($array, $columns = array())
+    {
+        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
+        $table = array();
+        $table[] = $keys;
+        array_unshift($table[0], '');
+        $classNames = array();
+        foreach ($array as $k => $row) {
+            $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
+            $values = array_map(function ($val) {
+                return $val === $this->debug->abstracter->UNDEFINED
+                    ? null
+                    : $val;
+            }, $values);
+            $classNames[] = $objInfo
+                ? $objInfo['className']
+                : '';
+            array_unshift($values, $k);
+            $table[] = array_values($values);
+        }
+        if (array_filter($classNames)) {
+            array_unshift($table[0], '');
+            foreach ($classNames as $i => $className) {
+                array_splice($table[$i+1], 1, 0, $className);
+            }
+        }
+        return $table;
     }
 
     /**

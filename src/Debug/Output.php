@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -20,8 +20,8 @@ class Output
 {
 
     private $cfg = array();
-    private $data = array();
     private $debug;
+    private $subscribers = array();
 
     /**
      * Constructor
@@ -62,90 +62,9 @@ class Output
         $classname = __NAMESPACE__.'\\'.ucfirst($prop);
         if (strpos($prop, 'output') === 0 && class_exists($classname)) {
             $this->{$prop} = new $classname($this->debug);
+            // note: we don't add as plugin / subscriberInterface here
             return $this->{$prop};
         }
-    }
-
-    /**
-     * Serializes and emails log
-     *
-     * @return void
-     */
-    public function emailLog()
-    {
-        $body = '';
-        $unsuppressedError = false;
-        /*
-            List errors that occured
-        */
-        $errors = $this->debug->errorHandler->get('errors');
-        uasort($errors, function ($a1, $a2) {
-            return strcmp($a1['file'].$a1['line'], $a2['file'].$a2['line']);
-        });
-        $lastFile = '';
-        foreach ($errors as $error) {
-            if ($error['isSuppressed']) {
-                continue;
-            }
-            if ($error['file'] !== $lastFile) {
-                $body .= $error['file'].':'."\n";
-                $lastFile = $error['file'];
-            }
-            $body .= '  Line '.$error['line'].': '.$error['message']."\n";
-            $unsuppressedError = true;
-        }
-        $subject = 'Debug Log: '.$_SERVER['HTTP_HOST'].( $unsuppressedError ? ' (Error)' : '' );
-        /*
-            "attach" "serialized" log
-        */
-        $body .= 'Request: '.$_SERVER['REQUEST_METHOD'].': '.$_SERVER['REQUEST_URI']."\n\n";
-        $body .= $this->debug->utilities->serializeLog($this->data['log']);
-        /*
-            Now email
-        */
-        $this->debug->internal->email($this->debug->getCfg('emailTo'), $subject, $body);
-        return;
-    }
-
-    /**
-     * get error statistics from errorHandler
-     * how many errors were captured in/out of console
-     * breakdown per error category
-     *
-     * @return array
-     */
-    public function errorStats()
-    {
-        $errors = $this->debug->errorHandler->get('errors');
-        $stats = array(
-            'inConsole' => 0,
-            'inConsoleCategories' => 0,
-            'notInConsole' => 0,
-            'counts' => array(),
-        );
-        foreach ($errors as $error) {
-            if ($error['isSuppressed']) {
-                continue;
-            }
-            $category = $error['category'];
-            if (!isset($stats['counts'][$category])) {
-                $stats['counts'][$category] = array(
-                    'inConsole' => 0,
-                    'notInConsole' => 0,
-                );
-            }
-            $k = $error['inConsole'] ? 'inConsole' : 'notInConsole';
-            $stats['counts'][$category][$k]++;
-        }
-        foreach ($stats['counts'] as $a) {
-            $stats['inConsole'] += $a['inConsole'];
-            $stats['notInConsole'] += $a['notInConsole'];
-            if ($a['inConsole']) {
-                $stats['inConsoleCategories']++;
-            }
-        }
-        ksort($stats['counts']);
-        return $stats;
     }
 
     /**
@@ -191,8 +110,9 @@ class Output
     public function getCss()
     {
         $return = file_get_contents($this->cfg['filepathCss']);
+        $return .= "\n";
         if (!empty($this->cfg['css'])) {
-            $return .=  "\n".$this->cfg['css']."\n";
+            $return .= $this->cfg['css']."\n";
         }
         return $return;
     }
@@ -227,9 +147,14 @@ class Output
             if (is_string($outputAs)) {
                 $prop = 'output'.ucfirst($outputAs);
                 $classname = __NAMESPACE__.'\\'.ucfirst($prop);
-                if (!property_exists($this, $prop) && class_exists($classname)) {
-                    $this->{$prop} = new $classname($this->debug);
-                    $this->debug->addPlugin($this->{$prop});
+                if (class_exists($classname)) {
+                    if (!property_exists($this, $prop)) {
+                        $this->{$prop} = new $classname($this->debug);
+                    }
+                    if (!in_array($prop, $this->subscribers)) {
+                        $this->subscribers[] = $prop;
+                        $this->debug->addPlugin($this->{$prop});
+                    }
                 }
             } elseif ($outputAs instanceof SubscriberInterface) {
                 $classname = get_class($outputAs);
@@ -242,8 +167,13 @@ class Output
             }
         }
         if (isset($values['onOutput'])) {
+            /*
+                Replace - not append - subscriber set via setCfg
+            */
+            if (isset($this->cfg['onOutput'])) {
+                $this->debug->eventManager->unsubscribe('debug.output', $this->cfg['onOutput']);
+            }
             $this->debug->eventManager->subscribe('debug.output', $values['onOutput']);
-            unset($values['onOutput']);
         }
         $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $values);
         return $ret;

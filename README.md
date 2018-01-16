@@ -51,11 +51,13 @@ See http://www.bradkent.com/php/debug for more information
 * table
 * time
 * timeEnd
+* trace
 * *&hellip; [more](http://www.bradkent.com/php/debug#methods)*
 
 ### Tests / Quality
-[![Build Status](https://travis-ci.org/bkdotcom/PHPDebugConsole.svg?branch=master)](https://travis-ci.org/bkdotcom/PHPDebugConsole)
-[![SensioLabsInsight](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c/mini.png)](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c)
+![No Dependencies](https://img.shields.io/badge/dependencies-none-333333.svg)
+[![Build Status](https://img.shields.io/travis/bkdotcom/PHPDebugConsole.svg)](https://travis-ci.org/bkdotcom/PHPDebugConsole)
+[![SensioLabsInsight](https://img.shields.io/sensiolabs/i/789295b4-6040-4367-8fd5-b04a6f0d7a0c.svg)](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c)
 
 ### Changelog
 http://www.bradkent.com/php/debug#changelog

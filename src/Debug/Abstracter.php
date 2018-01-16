@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -37,7 +37,7 @@ class Abstracter
     public function __construct(EventManager $eventManager, $cfg = array())
     {
         $this->eventManager = $eventManager;
-        $this->cfg = array_merge(array(
+        $this->cfg = array(
             'collectConstants' => true,
             'collectMethods' => true,
             'objectsExclude' => array(
@@ -45,7 +45,8 @@ class Abstracter
             ),
             'objectSort' => 'visibility',   // none, visibility, or name
             'useDebugInfo' => true,
-        ), $cfg);
+        );
+        $this->setCfg($cfg);
         $this->abstractArray = new AbstractArray($this);
         $this->abstractObject = new AbstractObject($this, new PhpDoc());
     }

@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -72,7 +72,7 @@ class OutputFile extends OutputText
             return;
         }
         if ($args) {
-            $str = $this->processEntry($method, $args, $meta);
+            $str = $this->processLogEntry($method, $args, $meta);
             fwrite($this->fileHandle, $str);
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
             $this->depth --;

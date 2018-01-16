@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -239,7 +239,13 @@ class Config
             // don't append, replace
             $this->cfg['logServerKeys'] = array();
         }
-        $this->cfg =  $this->debug->utilities->arrayMergeDeep($this->cfg, $cfg);
+        /*
+            Replace - not append - subscriber set via setCfg
+        */
+        if (isset($cfg['onLog']) && isset($this->cfg['onLog'])) {
+            $this->debug->eventManager->unsubscribe('debug.log', $this->cfg['onLog']);
+        }
+        $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $cfg);
         if (isset($cfg['onBootstrap'])) {
             $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
             if ($backtrace[2]['function'] == '__construct') {
@@ -253,7 +259,6 @@ class Config
         }
         if (isset($cfg['onLog'])) {
             $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
-            unset($this->cfg['onLog']);
         }
         if (isset($cfg['file'])) {
             $this->debug->addPlugin($this->debug->output->outputFile);

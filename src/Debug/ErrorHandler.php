@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -226,12 +226,12 @@ class ErrorHandler
             ? error_reporting() // note:  will return 0 if error suppression is active in call stack (via @ operator)
                                 //  our shutdown function unsupresses fatal errors
             : $this->cfg['errorReporting'];
-        $isPrevHandler = $this->cfg['continueToPrevHandler'] && $this->prevErrorHandler;
-        $isReportedType = $errType & $errorReporting;
-        if (!$isReportedType) {
+        $continueToPrev = $this->cfg['continueToPrevHandler'] && $this->prevErrorHandler;
+        $isHandledType = $errType & $errorReporting;
+        if (!$isHandledType) {
             // not handled
             //   if cfg['errorReporting'] == 'system', error could simply be suppressed
-            if ($isPrevHandler) {
+            if ($continueToPrev) {
                 call_user_func($this->prevErrorHandler, $errType, $errMsg, $error['file'], $error['line'], $vars);
                 return true;
             }
@@ -245,7 +245,7 @@ class ErrorHandler
             $this->eventManager->publish('errorHandler.error', $error);
         }
         $this->data['errors'][ $error['hash'] ] = $error;
-        if ($isPrevHandler) {
+        if ($continueToPrev) {
             call_user_func($this->prevErrorHandler, $error['type'], $error['message'], $error['file'], $error['line'], $vars);
             return true;
         }
@@ -350,8 +350,13 @@ class ErrorHandler
             $values = $mixed;
         }
         if (isset($values['onError'])) {
+            /*
+                Replace - not append - subscriber set via setCfg
+            */
+            if (isset($this->cfg['onError'])) {
+                $this->eventManager->unsubscribe('errorHandler.error', $this->cfg['onError']);
+            }
             $this->eventManager->subscribe('errorHandler.error', $values['onError']);
-            unset($values['onError']);
         }
         $this->cfg = array_merge($this->cfg, $values);
         return $ret;

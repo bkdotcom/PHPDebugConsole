@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -22,6 +22,19 @@ class Manager
 
     private $subscribers = array();
     private $sorted = array();
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        /*
+            As a convenience, make shutdown subscribeable
+        */
+        register_shutdown_function(function () {
+            $this->publish('php.shutdown');
+        });
+    }
 
     /**
      * Subscribe to all of the event subscribers defined in passed obj
@@ -231,8 +244,7 @@ class Manager
             } else {
                 foreach ($mixed as $mixed2) {
                     // methodName
-                    // or array(methodName)
-                    // or array(methodName, priority)
+                    // or array(methodName[, priority])
                     if (is_string($mixed2)) {
                         $callable = array($interface, $mixed2);
                         $priority = 0;

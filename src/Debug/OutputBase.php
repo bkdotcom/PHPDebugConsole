@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -16,7 +16,7 @@ use bdk\PubSub\SubscriberInterface;
 /**
  * Base output plugin
  */
-class OutputBase implements SubscriberInterface
+abstract class OutputBase implements SubscriberInterface
 {
 
     protected $debug;
@@ -46,7 +46,7 @@ class OutputBase implements SubscriberInterface
 
     /**
      * Dump value
-
+     *
      * @param mixed $val  value to dump
      * @param array $path {@internal}
      *
@@ -314,7 +314,7 @@ class OutputBase implements SubscriberInterface
             if (isset($trans[$method])) {
                 $method = $trans[$method];
             }
-            $str .= $this->processEntry($method, array($msg));
+            $str .= $this->processLogEntry($method, array($msg));
         }
         return trim($str);
     }
@@ -330,10 +330,21 @@ class OutputBase implements SubscriberInterface
         foreach ($this->data['log'] as $args) {
             $method = array_shift($args);
             $meta = $this->debug->internal->getMetaArg($args);
-            $str .= $this->processEntry($method, $args, $meta);
+            $str .= $this->processLogEntry($method, $args, $meta);
         }
         return $str;
     }
+
+    /**
+     * Return a log entry
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return string
+     */
+    abstract public function processLogEntry($method, $args = array(), $meta = array());
 
     /**
      * Handle the not-well documented substitutions
@@ -426,7 +437,7 @@ class OutputBase implements SubscriberInterface
         $summaryData = call_user_func_array('array_merge', $summaryData);
         foreach ($summaryData as $args) {
             $method = array_shift($args);
-            $str .= $this->processEntry($method, $args);
+            $str .= $this->processLogEntry($method, $args);
         }
         return trim($str);
     }

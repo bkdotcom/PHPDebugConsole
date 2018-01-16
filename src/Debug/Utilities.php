@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -87,6 +87,9 @@ class Utilities
     public static function arrayMergeDeep($arrayDef, $array2)
     {
         if (!is_array($arrayDef) || !is_array($array2)) {
+            $arrayDef = $array2;
+        } elseif (array_keys($array2) == array(0,1) && is_object($array2[0]) && is_string($array2[1])) {
+            // appears to be a callable
             $arrayDef = $array2;
         } else {
             foreach ($array2 as $k2 => $v2) {
@@ -375,35 +378,37 @@ class Utilities
     /**
      * serialize log for emailing
      *
-     * @param array $log string
+     * @param array $data log data to serialize
      *
      * @return string
      */
-    public static function serializeLog($log)
+    public static function serializeLog($data)
     {
-        $str = serialize($log);
+        $str = serialize($data);
         if (function_exists('gzdeflate')) {
             $str = gzdeflate($str);
         }
         $str = chunk_split(base64_encode($str), 1024);
-        $str = "\nSTART DEBUG:\n"
+        return "\nSTART DEBUG:\n"
             .$str;
-        return $str;
     }
 
     /**
      * Use to unserialize the log serialized by emailLog
      *
-     * @param string $str serialized log
+     * @param string $str serialized log data
      *
      * @return array
      */
     public static function unserializeLog($str)
     {
-        $pos = strpos($str, 'START DEBUG');
+        $strStart = 'START DEBUG:';
+        $pos = strpos($str, $strStart);
         if ($pos !== false) {
-            $str = substr($str, $pos+11);
-            $str = preg_replace('/^[^\r\n]*[\r\n]+/', '', $str);
+            $str = substr($str, $pos+strlen($strStart));
+            $str = trim($str);
+        } else {
+            $str = false;
         }
         $str = self::isBase64Encoded($str)
             ? base64_decode($str)

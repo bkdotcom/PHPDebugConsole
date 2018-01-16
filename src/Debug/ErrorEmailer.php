@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -49,6 +49,20 @@ class ErrorEmailer
     }
 
     /**
+     * Clear throttle data
+     *
+     * @return void
+     */
+    public function clearThrottleData()
+    {
+        $this->throttleData = array(
+            'tsTrashCollection' => time(),
+            'errors' => array(),
+        );
+        $this->throttleDataExport();
+    }
+
+    /**
      * Retrieve a configuration value
      *
      * @param string $key what to get
@@ -64,25 +78,6 @@ class ErrorEmailer
             return $this->cfg[$key];
         }
         return null;
-    }
-
-    /**
-     * Email error
-     *
-     * @param Event $error error event
-     *
-     * @return void
-     */
-    public function onErrorEmail(Event $error)
-    {
-        if ($error['email'] && $this->cfg['emailMin'] > 0) {
-            $this->throttleDataSet($error);
-            $tsCutoff = time() - $this->cfg['emailMin'] * 60;
-            $error['email'] = $error['stats']['tsEmailed'] <= $tsCutoff;
-        }
-        if ($error['email']) {
-            $this->emailErr($error);
-        }
     }
 
     /**
@@ -109,6 +104,25 @@ class ErrorEmailer
             $error['stats'] = array_merge($error['stats'], $stats);
         }
         return;
+    }
+
+    /**
+     * Email error
+     *
+     * @param Event $error error event
+     *
+     * @return void
+     */
+    public function onErrorEmail(Event $error)
+    {
+        if ($error['email'] && $this->cfg['emailMin'] > 0) {
+            $this->throttleDataSet($error);
+            $tsCutoff = time() - $this->cfg['emailMin'] * 60;
+            $error['email'] = $error['stats']['tsEmailed'] <= $tsCutoff;
+        }
+        if ($error['email']) {
+            $this->emailErr($error);
+        }
     }
 
     /**
@@ -209,8 +223,12 @@ class ErrorEmailer
         $dateTimeFmt = 'Y-m-d H:i:s (T)';
         $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $error['message']);   // remove links from errMsg
         $countSince = $error['stats']['countSince'];
-        $subject    = 'Website Error: '.$_SERVER['SERVER_NAME'].': '.$errMsg.($countSince ? ' ('.$countSince.'x)' : '');
-        $emailBody  = '';
+        $isCli = !isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv']);
+        $subject = $isCli
+            ? 'Error: '.implode(' ', $_SERVER['argv'])
+            : 'Website Error: '.$_SERVER['SERVER_NAME'];
+        $subject .= ': '.$errMsg.($countSince ? ' ('.$countSince.'x)' : '');
+        $emailBody = '';
         if (!empty($countSince)) {
             $dateTimePrev = date($dateTimeFmt, $error['stats']['tsEmailed']);
             $emailBody .= 'Error has occurred '.$countSince.' times since last email ('.$dateTimePrev.').'."\n\n";
@@ -221,11 +239,15 @@ class ErrorEmailer
             .'errortype: '.$error['type'].' ('.$error['typeStr'].')'."\n"
             .'file: '.$error['file']."\n"
             .'line: '.$error['line']."\n"
-            .'remote_addr: '.$_SERVER['REMOTE_ADDR']."\n"
-            .'http_host: '.$_SERVER['HTTP_HOST']."\n"
-            .'referer: '.(isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'null')."\n"
-            .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
             .'';
+        if (!$isCli) {
+            $emailBody .= ''
+                .'remote_addr: '.$_SERVER['REMOTE_ADDR']."\n"
+                .'http_host: '.$_SERVER['HTTP_HOST']."\n"
+                .'referer: '.(isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'null')."\n"
+                .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
+                .'';
+        }
         if (!empty($_POST)) {
             $emailBody .= 'post params: '.var_export($_POST, true)."\n";
         }
@@ -249,11 +271,13 @@ class ErrorEmailer
         $return = false;
         if (!file_exists($file)) {
             $dir = dirname($file);
-            if (!is_dir($dir)) {
+            if (!is_dir($dir) && is_writable($dir)) {
                 mkdir($dir, 0755, true);    // 3rd param is php 5
             }
         }
-        file_put_contents($file, $str);
+        if (is_writable($file)) {
+            file_put_contents($file, $str);
+        }
         return $return;
     }
 
@@ -278,22 +302,21 @@ class ErrorEmailer
      */
     protected function throttleDataImport()
     {
-        if (!$this->throttleData && $this->cfg['emailThrottleFile']) {
-            $throttleData = false;
-            if (is_readable($this->cfg['emailThrottleFile'])) {
-                $throttleData = json_decode(
-                    file_get_contents($this->cfg['emailThrottleFile']),
-                    true
-                );
-            }
-            if (!is_array($throttleData)) {
-                $throttleData = array(
-                    'tsTrashCollection' => time(),
-                    'errors' => array(),
-                );
-            }
-            $this->throttleData = $throttleData;
+        if ($this->throttleData) {
+            // already imported
+            return;
         }
+        if ($this->cfg['emailThrottleFile'] && is_readable($this->cfg['emailThrottleFile'])) {
+            $throttleData = file_get_contents($this->cfg['emailThrottleFile']);
+            $throttleData = json_decode($throttleData, true);
+            if (!is_array($throttleData)) {
+                $throttleData = array();
+            }
+        }
+        $this->throttleData = array_merge(array(
+            'tsTrashCollection' => time(),
+            'errors' => array(),
+        ), $throttleData);
         return;
     }
 

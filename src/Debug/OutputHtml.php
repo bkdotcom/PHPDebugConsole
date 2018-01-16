@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -140,7 +140,7 @@ class OutputHtml extends OutputBase
     {
         $this->data = $this->debug->getData();
         $this->removeHideIfEmptyGroups();
-        array_unshift($this->data['alerts'], $this->errorSummary->build($this->debug->output->errorStats()));
+        array_unshift($this->data['alerts'], $this->errorSummary->build($this->debug->internal->errorStats()));
         $str = '<div class="debug">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
@@ -175,6 +175,69 @@ class OutputHtml extends OutputBase
         } else {
             return $str;
         }
+    }
+
+    /**
+     * Return a log entry as HTML
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return string
+     */
+    public function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $str = '';
+        if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+            $str = $this->buildGroupMethod($method, $args, $meta);
+        } elseif ($method == 'table') {
+            $str = $this->buildTable($args[0], $args[1], $args[2], 'm_table table-bordered sortable');
+        } elseif ($method == 'trace') {
+            $str = $this->buildTable($args[0], 'trace', array('file','line','function'), 'm_trace table-bordered');
+        } else {
+            $attribs = array(
+                'class' => 'm_'.$method,
+                'title' => null,
+            );
+            if (in_array($method, array('error','warn'))) {
+                if (isset($meta['file'])) {
+                    $attribs['title'] = $meta['file'].': line '.$meta['line'];
+                }
+                if (isset($meta['errorCat'])) {
+                    $attribs['class'] .= ' error-'.$meta['errorCat'];
+                }
+            }
+            $numArgs = count($args);
+            $hasSubs = false;
+            if (in_array($method, array('error','info','log','warn')) && is_string($args[0]) && $numArgs > 1) {
+                $args = $this->processSubstitutions($args, $hasSubs);
+            }
+            if ($hasSubs) {
+                $glue = '';
+                $args = implode($glue, $args);
+                $args = '<span class="t_string no-pseudo">'.$args.'</span>';
+            } else {
+                $glue = ', ';
+                if ($numArgs == 2 && is_string($args[0])) {
+                    $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                        ? ''
+                        : ' = ';
+                }
+                foreach ($args as $i => $v) {
+                    if ($i > 0) {
+                        $args[$i] = $this->dump($v, array(), true);
+                    } else {
+                        // don't apply htmlspecialchars()
+                        $args[$i] = $this->dump($v, array(), false);
+                    }
+                }
+                $args = implode($glue, $args);
+            }
+            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'.$args.'</div>';
+        }
+        $str .= "\n";
+        return $str;
     }
 
     /**
@@ -783,69 +846,6 @@ class OutputHtml extends OutputBase
                 $str .= '<div class="alert alert-'.$alert['class'].'" role="alert">'.$alert['message'].'</div>';
             }
         }
-        return $str;
-    }
-
-    /**
-     * output a log entry as HTML
-     *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
-     *
-     * @return string
-     */
-    protected function processEntry($method, $args = array(), $meta = array())
-    {
-        $str = '';
-        if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $str = $this->buildGroupMethod($method, $args, $meta);
-        } elseif ($method == 'table') {
-            $str = $this->buildTable($args[0], $args[1], $args[2], 'm_table table-bordered sortable');
-        } elseif ($method == 'trace') {
-            $str = $this->buildTable($args[0], 'trace', array('file','line','function'), 'm_trace table-bordered');
-        } else {
-            $attribs = array(
-                'class' => 'm_'.$method,
-                'title' => null,
-            );
-            if (in_array($method, array('error','warn'))) {
-                if (isset($meta['file'])) {
-                    $attribs['title'] = $meta['file'].': line '.$meta['line'];
-                }
-                if (isset($meta['errorCat'])) {
-                    $attribs['class'] .= ' error-'.$meta['errorCat'];
-                }
-            }
-            $numArgs = count($args);
-            $hasSubs = false;
-            if (in_array($method, array('error','info','log','warn')) && is_string($args[0]) && $numArgs > 1) {
-                $args = $this->processSubstitutions($args, $hasSubs);
-            }
-            if ($hasSubs) {
-                $glue = '';
-                $args = implode($glue, $args);
-                $args = '<span class="t_string no-pseudo">'.$args.'</span>';
-            } else {
-                $glue = ', ';
-                if ($numArgs == 2 && is_string($args[0])) {
-                    $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                        ? ''
-                        : ' = ';
-                }
-                foreach ($args as $i => $v) {
-                    if ($i > 0) {
-                        $args[$i] = $this->dump($v, array(), true);
-                    } else {
-                        // don't apply htmlspecialchars()
-                        $args[$i] = $this->dump($v, array(), false);
-                    }
-                }
-                $args = implode($glue, $args);
-            }
-            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'.$args.'</div>';
-        }
-        $str .= "\n";
         return $str;
     }
 

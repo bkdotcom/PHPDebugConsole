@@ -9,7 +9,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -29,7 +29,6 @@ class OutputWamp implements SubscriberInterface
     protected $topic = 'bdk.debug';
     private $requestId;
     private $wamp;
-
 
     /**
      * Constructor
@@ -56,7 +55,7 @@ class OutputWamp implements SubscriberInterface
             return array();
         }
         $this->publishMeta();
-        $this->publishExistingData();
+        $this->processExistingData();
         return array(
             'debug.log' => 'onLog',
             'debug.output' => 'onOutput',
@@ -109,7 +108,7 @@ class OutputWamp implements SubscriberInterface
      */
     public function onLog(Event $event)
     {
-        $this->publish($event['method'], $event['args'], $event['meta']);
+        $this->processLogEntry($event['method'], $event['args'], $event['meta']);
     }
 
     /**
@@ -119,14 +118,28 @@ class OutputWamp implements SubscriberInterface
      */
     public function onOutput()
     {
-        // Send a "we're done" message
+        // publish a "we're done" message
         $this->publish('endOutput', array(
             'responseCode' => http_response_code(),
         ));
     }
 
     /**
-     * Publish
+     * Process/publish a log entry
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return void
+     */
+    protected function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $this->publish($method, $args, $meta);
+    }
+
+    /**
+     * Publish WAMP message to topic
      *
      * @param string $method debug method
      * @param array  $args   arguments
@@ -138,6 +151,7 @@ class OutputWamp implements SubscriberInterface
     {
         $args = $this->crateValues($args);
         $meta = array_merge(array(
+            'format' => 'raw',
             'requestId' => $this->requestId,
         ), $meta);
         if (!empty($meta['backtrace'])) {
@@ -147,28 +161,31 @@ class OutputWamp implements SubscriberInterface
     }
 
     /**
-     * Publish anything that's already been logged
+     * Publish pre-existing log entries
      *
      * @return void
      */
-    private function publishExistingData()
+    private function processExistingData()
     {
         $data = $this->debug->getData();
         foreach ($data['log'] as $args) {
             $method = array_shift($args);
             $meta = $this->debug->internal->getMetaArg($args);
-            $this->publish($method, $args, $meta);
+            $this->processLogEntry($method, $args, $meta);
         }
     }
 
     /**
-     * Send initial meta data to client
+     * Publish initial meta data
      *
      * @return void
      */
     private function publishMeta()
     {
-        $metaVals = array();
+        $debugClass = get_class($this->debug);
+        $metaVals = array(
+            'debug_version' => $debugClass::VERSION,
+        );
         $keys = array(
             'HTTP_HOST',
             'HTTPS',
@@ -198,7 +215,7 @@ class OutputWamp implements SubscriberInterface
      *
      * Associative arrays get JSON encoded to js objects...
      *     Javascript doesn't maintain order for object properties
-     *     in practice this seems to only be an issue with int/numberic keys
+     *     in practice this seems to only be an issue with int/numeric keys
      *     store property order
      *
      * @param array $values array structure
@@ -208,11 +225,11 @@ class OutputWamp implements SubscriberInterface
     private function crateValues($values)
     {
         $prevIntK = null;
-        $storeValues = false;
+        $storeKeyOrder = false;
         foreach ($values as $k => $v) {
-            if (!$storeValues && is_int($k)) {
+            if (!$storeKeyOrder && is_int($k)) {
                 if ($k < $prevIntK) {
-                    $storeValues = true;
+                    $storeKeyOrder = true;
                 }
                 $prevIntK = $k;
             }
@@ -222,7 +239,7 @@ class OutputWamp implements SubscriberInterface
                 $values[$k] = base64_encode($v);
             }
         }
-        if ($storeValues) {
+        if ($storeKeyOrder) {
             $values['__debug_key_order__'] = array_keys($values);
         }
         return $values;

@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  */
 
 namespace bdk\Debug;
@@ -32,7 +32,7 @@ class OutputScript extends OutputBase
         $this->data = $this->debug->getData();
         $this->removeHideIfEmptyGroups();
         $this->uncollapseErrors();
-        $errorStats = $this->debug->output->errorStats();
+        $errorStats = $this->debug->internal->errorStats();
         $errorStr = '';
         if ($errorStats['inConsole']) {
             $errorStr = 'Errors: ';
@@ -43,7 +43,7 @@ class OutputScript extends OutputBase
         }
         $str = '';
         $str .= '<script type="text/javascript">'."\n";
-        $str .= $this->processEntry('groupCollapsed', array(
+        $str .= $this->processLogEntry('groupCollapsed', array(
             'PHP',
             $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI'],
             $errorStr,
@@ -51,7 +51,7 @@ class OutputScript extends OutputBase
         $str .= $this->processAlerts();
         $str .= $this->processSummary();
         $str .= $this->processLog();
-        $str .= $this->processEntry('groupEnd');
+        $str .= $this->processLogEntry('groupEnd');
         $str .= '</script>'."\n";
         $this->data = array();
         if ($event) {
@@ -62,19 +62,7 @@ class OutputScript extends OutputBase
     }
 
     /**
-     * Dump undefined
-     *
-     * Returns the undefined constant, which we can replace with "undefined" after json_encoding
-     *
-     * @return string
-     */
-    protected function dumpUndefined()
-    {
-        return $this->debug->abstracter->UNDEFINED;
-    }
-
-    /**
-     * Return log entry as text
+     * Return log entry as javascript console.xxxx
      *
      * @param string $method method
      * @param array  $args   arguments
@@ -82,7 +70,7 @@ class OutputScript extends OutputBase
      *
      * @return string
      */
-    protected function processEntry($method, $args = array(), $meta = array())
+    public function processLogEntry($method, $args = array(), $meta = array())
     {
         if ($method == 'assert') {
             array_unshift($args, false);
@@ -104,5 +92,17 @@ class OutputScript extends OutputBase
         $str = 'console.'.$method.'('.implode(',', $args).');'."\n";
         $str = str_replace(json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
         return $str;
+    }
+
+    /**
+     * Dump undefined
+     *
+     * Returns the undefined constant, which we can replace with "undefined" after json_encoding
+     *
+     * @return string
+     */
+    protected function dumpUndefined()
+    {
+        return $this->debug->abstracter->UNDEFINED;
     }
 }

@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2017 Brad Kent
- * @version   v2.0.0
+ * @version   v2.0.1
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -44,7 +44,7 @@ class Debug
     public $utilities;
 
     const META = "\x00meta\x00";
-    const VERSION = "2.0.0";
+    const VERSION = "2.0.1";
 
     /**
      * Constructor
@@ -411,7 +411,8 @@ class Debug
                 $curDepth++;
             }
         }
-        $this->appendLog('groupUncollapse');   // want to dispatch event, but not actually log
+        $this->appendLog('groupUncollapse');    // want to dispatch event, but not actually log
+                                                // (Internal::onLog stops propagation)
     }
 
     /**

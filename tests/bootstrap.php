@@ -13,7 +13,9 @@ require __DIR__.'/DOMTest/DOMTestCase.php';
 require __DIR__.'/DOMTest/CssSelect.php';
 require __DIR__.'/DebugTestFramework.php';
 
-\bdk\Debug::getInstance();	// invoke autoloader
+\bdk\Debug::getInstance(array(
+	'objectsExclude' => array('PHPUnit_Framework_TestSuite'),
+));
 
 require __DIR__.'/Class/Test.php';
 require __DIR__.'/Class/Test2.php';

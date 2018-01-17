@@ -315,54 +315,66 @@ EOD;
      *
      * @return void
      */
+    /*
     public function testGetAbstraction()
     {
     }
+    */
 
     /**
      * Test
      *
      * @return void
      */
+    /*
     public function testGetMethods()
     {
     }
+    */
 
     /**
      * Test
      *
      * @return void
      */
+    /*
     public function testGetParams()
     {
     }
+    */
 
     /**
      * Test
      *
      * @return void
      */
+    /*
     public function testParamTypeHint()
     {
     }
+    */
 
     /**
      * Test
      *
      * @return void
      */
+    /*
     public function testGetProperties()
     {
     }
+    */
 
     /**
      * Test
      *
      * @return void
      */
+    /*
     public function testParseDocComment()
     {
     }
+    */
 
     /**
      * test handling __debugInfo magic method

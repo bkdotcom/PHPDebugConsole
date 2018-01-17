@@ -56,7 +56,8 @@ class InternalTest extends DebugTestFramework
         /*
             Test that not emailed for notice
         */
-        $notice[bar] = 'undefined constant';
+        // $notice[bar] = 'undefined constant';    // this is a warning in PHP 7.2
+        $notice = $undefinedVar;
         $this->debug->internal->onShutdown();
         $this->assertFalse($this->emailCalled);
 

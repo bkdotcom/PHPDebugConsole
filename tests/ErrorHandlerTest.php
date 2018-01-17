@@ -132,13 +132,4 @@ class ErrorHandlerTest extends DebugTestFramework
     public function testUnregister()
     {
     }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testUnregisterOnErrorFunction()
-    {
-    }
 }

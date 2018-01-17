@@ -58,13 +58,4 @@ class ErrorEmailerTest extends DebugTestFramework
             $body
         );
     }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testErrorStats()
-    {
-    }
 }

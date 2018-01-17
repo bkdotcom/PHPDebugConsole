@@ -32,7 +32,7 @@ class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
                     $event['logError'] = false;
                     return;
                 }
-                throw new PHPUnit_Framework_Exception($event['message'], 500);
+                throw new \PHPUnit\Framework\Exception($event['message'], 500);
             }
         ));
         $resetValues = array(

@@ -93,7 +93,9 @@ class UtilitiesTest extends DebugTestFramework
 
     public function testGetBytes()
     {
-
+        $this->assertSame('1 kB', Utilities::getBytes('1kb'));
+        $this->assertSame('1 kB', Utilities::getBytes('1024'));
+        $this->assertSame('1 kB', Utilities::getBytes(1024));
     }
 
     /**
@@ -128,22 +130,28 @@ class UtilitiesTest extends DebugTestFramework
 
     public function testGetIncludedFiles()
     {
-
+        $filesA = get_included_files();
+        $filesB = Utilities::getIncludedFiles();
+        sort($filesA);
+        sort($filesB);
+        $this->assertArraySubset($filesA, $filesB);
     }
 
     public function testGetInterface()
     {
-
+        $this->assertSame('cli', Utilities::getInterface());
     }
 
     /**
      * Test
      *
      * @return void
-     * @todo headers not sent from cli... could test header parsing, but it'll be a protected method...
+     *
+     * @todo better test from cli
      */
     public function testGetResponseHeader()
     {
+        $this->assertNull(Utilities::getResponseHeader());
     }
 
     /**
@@ -160,12 +168,22 @@ class UtilitiesTest extends DebugTestFramework
 
     public function testIsList()
     {
-
+        $this->assertFalse(Utilities::isList("string"));
+        $this->assertTrue(Utilities::isList(array()));     // empty array = "list"
+        $this->assertFalse(Utilities::isList(array(3=>'foo',2=>'bar',1=>'baz',0=>'nope')));
+        $this->assertTrue(Utilities::isList(array(0=>'nope',1=>'baz',2=>'bar',3=>'foo')));
     }
 
+    /**
+     * Test
+     *
+     * @return void
+     *
+     * @todo better test
+     */
     public function testMemoryLimit()
     {
-
+        $this->assertNotNull(Utilities::memoryLimit());
     }
 
     /**
@@ -185,7 +203,7 @@ class UtilitiesTest extends DebugTestFramework
 
     public function testRequestId()
     {
-
+        $this->assertStringMatchesFormat('%x', Utilities::requestId());
     }
 
     /**
@@ -213,6 +231,7 @@ class UtilitiesTest extends DebugTestFramework
      * @param array  $unserialized the unserialized array
      *
      * @return void
+     *
      * @dataProvider testSerializeLog
      */
     public function testUnserializeLog($serialized, $unserialized)

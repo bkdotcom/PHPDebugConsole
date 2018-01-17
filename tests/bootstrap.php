@@ -4,8 +4,9 @@
 if (!class_exists('\PHPUnit\Framework\TestCase') &&
     class_exists('\PHPUnit_Framework_TestCase')
 ) {
-    class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
     class_alias('\PHPUnit_Framework_Exception', '\PHPUnit\Framework\Exception');
+    class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
+    class_alias('\PHPUnit_Framework_TestSuite', '\PHPUnit\Framework\TestSuite');
 }
 
 require __DIR__.'/../src/Debug/Debug.php';
@@ -14,7 +15,7 @@ require __DIR__.'/DOMTest/CssSelect.php';
 require __DIR__.'/DebugTestFramework.php';
 
 \bdk\Debug::getInstance(array(
-	'objectsExclude' => array('PHPUnit_Framework_TestSuite'),
+	'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
 ));
 
 require __DIR__.'/Class/Test.php';

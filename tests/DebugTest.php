@@ -111,7 +111,7 @@ class DebugTest extends DebugTestFramework
      *
      * @return void
      */
-    public function testGet()
+    public function testGetCfg()
     {
     }
 
@@ -315,7 +315,7 @@ EOD;
      *
      * @return void
      */
-    public function testSet()
+    public function testSetCfg()
     {
     }
 

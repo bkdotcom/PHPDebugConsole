@@ -24,7 +24,6 @@
 	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",
-		"voryx/thruway": "A PHP based WAMP router",
 		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin"
 	}
 }

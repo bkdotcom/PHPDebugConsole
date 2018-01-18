@@ -1,12 +1,15 @@
 <?php
 
 // backward compatibility
-if (!class_exists('\PHPUnit\Framework\TestCase') &&
-    class_exists('\PHPUnit_Framework_TestCase')
-) {
-    class_alias('\PHPUnit_Framework_Exception', '\PHPUnit\Framework\Exception');
-    class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
-    class_alias('\PHPUnit_Framework_TestSuite', '\PHPUnit\Framework\TestSuite');
+$classMap = array(
+    '\PHPUnit_Framework_Exception' => '\PHPUnit\Framework\Exception',
+    '\PHPUnit_Framework_TestCase' => '\PHPUnit\Framework\TestCase',
+    '\PHPUnit_Framework_TestSuite' => '\PHPUnit\Framework\TestSuite',
+);
+foreach ($classMap as $old => $new) {
+    if (!class_exists($new)) {
+        class_alias($old, $new);
+    }
 }
 
 require __DIR__.'/../src/Debug/Debug.php';

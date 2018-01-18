@@ -291,7 +291,7 @@ class ErrorHandler
         }
         /*
             error_get_last() is php >= 5.2
-            we're using namespaces (5.3), so we this requiement is met
+            we're using namespaces (5.3), so this requiement is met
         */
         $error = error_get_last();
         if (in_array($error['type'], $this->errCategories['fatal'])) {

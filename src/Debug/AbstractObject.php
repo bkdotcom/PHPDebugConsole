@@ -402,6 +402,10 @@ class AbstractObject
             if ($reflectionParameter->isDefaultValueAvailable()) {
                 $defaultValue = $reflectionParameter->getDefaultValue();
                 if (version_compare(PHP_VERSION, '5.4.6', '>=') && $reflectionParameter->isDefaultValueConstant()) {
+                    /*
+                        php may return something like self::CONSTANT_NAME
+                        hhvm will return WhateverTheClassNameIs::CONSTANT_NAME
+                    */
                     $constantName = $reflectionParameter->getDefaultValueConstantName();
                 }
             }

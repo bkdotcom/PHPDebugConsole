@@ -81,7 +81,11 @@ EOD;
                     $this->assertContains('<dt>extends</dt>'."\n".'<dd class="extends">bdk\DebugTest\TestBase</dd>', $str);
 
                     // implements
-                    $this->assertNotContains('<dt>implements</dt>', $str);
+                    if (defined('HHVM_VERSION')) {
+                        $this->assertContains('<dt>implements</dt>'."\n".'<dd class="interface">Stringish</dd>', $str);
+                    } else {
+                        $this->assertNotContains('<dt>implements</dt>', $str);
+                    }
 
                     // constants
                     $this->assertContains(
@@ -156,13 +160,16 @@ EOD;
                     )), $str);
 
                     // methods
+                    $constName = defined('HHVM_VERSION')
+                        ? '\\bdk\\DebugTest\\Test2Base::WORD'
+                        : 'self::WORD';
                     $this->assertContains(implode("\n", array(
                         '<dt class="methods">methods</dt>',
                         '<dd class="magic info">This object has a <code>__call</code> method</dd>',
                         '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="method-name" title="magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
                         '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="method-name" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
                         version_compare(PHP_VERSION, '5.4.6', '>=')
-                            ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="method-name" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_const" title="value: &quot;bird&quot;">self::WORD</span></span><span class="t_punct">)</span></dd>'
+                            ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="method-name" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_const" title="value: &quot;bird&quot;">'.$constName.'</span></span><span class="t_punct">)</span></dd>'
                             : '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="method-name" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">bird</span></span><span class="t_punct">)</span></dd>',
                         '<dd class="method magic"><span class="t_modifier_magic">magic</span> <span class="t_type"></span> <span class="method-name" title="test constant as param">methConstTest</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$mode</span> <span class="t_operator">=</span> <span class="t_parameter-default t_const" title="value: &quot;bird&quot;">self::WORD</span></span><span class="t_punct">)</span></dd>',
                         '</dl>',
@@ -219,7 +226,9 @@ EOD;
             $abs['extends']
         );
         $this->assertSame(
-            array(),
+            defined('HHVM_VERSION')
+                ? array('Stringish')
+                : array(),
             $abs['implements']
         );
         $this->assertSame(

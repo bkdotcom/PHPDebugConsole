@@ -6,10 +6,10 @@ Browser/javascript like console class for PHP
 **Website/Usage/Examples:** http://www.bradkent.com/php/debug
 
 * PHP port of the [javascript web console api](https://developer.mozilla.org/en-US/docs/Web/API/console)
-* multiple output paths
+* multiple simultaneous output options
     * [ChromeLogger](https://craig.is/writing/chrome-logger/techspecs)
-    * HTML
     * [FirePHP](http://www.firephp.org/)  (no FirePHP dependency!)
+    * HTML
     * Plain text / file
     * &lt;script&gt;
     * "plugin"
@@ -33,7 +33,7 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
     }
 }
 ```
-Alternatively, [download a release](https://github.com/bkdotcom/debug/releases) or clone this repository, then require or include its `Debug.php` file
+Alternatively, [download a release](https://github.com/bkdotcom/debug/releases) or clone this repository, then require `src/Debug/Debug.php`
 
 See http://www.bradkent.com/php/debug for more information
 

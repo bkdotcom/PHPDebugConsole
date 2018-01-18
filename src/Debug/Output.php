@@ -162,6 +162,7 @@ class Output
                 if (strpos($classname, $prefix) == 0) {
                     $prop = 'output'.substr($classname, strlen($prefix));
                     $this->{$prop} = $outputAs;
+                    $this->subscribers[] = $prop;
                 }
                 $this->debug->addPlugin($outputAs);
             }

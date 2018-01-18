@@ -84,19 +84,20 @@ class OutputWamp implements SubscriberInterface
      */
     public function onError(Event $event)
     {
-        if (!$event['inConsole'] && $event['isFirstOccur']) {
-            $this->publish(
-                'errorNotConsoled',
-                array(
-                    $event['typeStr'].': '.$event['file'].' (line '.$event['line'].'): '.$event['message']
-                ),
-                array(
-                    'class' => $event['type'] & $this->debug->getCfg('errorMask')
-                        ? 'danger'
-                        : 'warning',
-                )
-            );
+        if ($event['inConsole'] || !$event['isFirstOccur']) {
+            return;
         }
+        $this->publish(
+            'errorNotConsoled',
+            array(
+                $event['typeStr'].': '.$event['file'].' (line '.$event['line'].'): '.$event['message']
+            ),
+            array(
+                'class' => $event['type'] & $this->debug->getCfg('errorMask')
+                    ? 'danger'
+                    : 'warning',
+            )
+        );
     }
 
     /**

@@ -286,19 +286,24 @@ class ErrorHandler
      */
     public function onShutdown()
     {
-        if ($this->registered && version_compare(PHP_VERSION, '5.2.0', '>=')) {
-            $error = error_get_last();
-            if (in_array($error['type'], $this->errCategories['fatal'])) {
-                /*
-                    found in wild:
-                    @include(some_file_with_parse_error)
-                    which will trigger a fatal error (here we are),
-                    but error_reporting() will return 0 due to the @ operator
-                    unsupress fatal error here
-                */
-                error_reporting(E_ALL);
-                $this->handleError($error['type'], $error['message'], $error['file'], $error['line']);
-            }
+        if (!$this->registered) {
+            return;
+        }
+        /*
+            error_get_last() is php >= 5.2
+            we're using namespaces (5.3), so we this requiement is met
+        */
+        $error = error_get_last();
+        if (in_array($error['type'], $this->errCategories['fatal'])) {
+            /*
+                found in wild:
+                @include(some_file_with_parse_error)
+                which will trigger a fatal error (here we are),
+                but error_reporting() will return 0 due to the @ operator
+                unsupress fatal error here
+            */
+            error_reporting(E_ALL);
+            $this->handleError($error['type'], $error['message'], $error['file'], $error['line']);
         }
         return;
     }

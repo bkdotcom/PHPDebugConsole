@@ -82,7 +82,11 @@ EOD;
 
                     // implements
                     if (defined('HHVM_VERSION')) {
-                        $this->assertContains('<dt>implements</dt>'."\n".'<dd class="interface">Stringish</dd>', $str);
+                        $this->assertContains(implode("\n", array(
+                            '<dt>implements</dt>',
+                            '<dd class="interface">Stringish</dd>',
+                            '<dd class="interface">XHPChild</dd>',
+                        )), $str);
                     } else {
                         $this->assertNotContains('<dt>implements</dt>', $str);
                     }
@@ -227,7 +231,7 @@ EOD;
         );
         $this->assertSame(
             defined('HHVM_VERSION')
-                ? array('Stringish')
+                ? array('Stringish','XHPChild') // hhvm-3.25 has XHPChild
                 : array(),
             $abs['implements']
         );

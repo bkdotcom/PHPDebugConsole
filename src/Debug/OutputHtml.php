@@ -471,9 +471,9 @@ class OutputHtml extends OutputBase
                 .$strClassName."\n"
                 .'<dl class="object-inner">'."\n"
                     .'<dt>extends</dt>'."\n"
-                        .'<dd class="extends">'.implode('</dd><dd class="extends">', $abs['extends']).'</dd>'."\n"
+                        .'<dd class="extends">'.implode('</dd>'."\n".'<dd class="extends">', $abs['extends']).'</dd>'."\n"
                     .'<dt>implements</dt>'."\n"
-                        .'<dd class="interface">'.implode('</dd><dd class="interface">', $abs['implements']).'</dd>'."\n"
+                        .'<dd class="interface">'.implode('</dd>'."\n".'<dd class="interface">', $abs['implements']).'</dd>'."\n"
                     .$this->dumpConstants($abs['constants'])
                     .$this->dumpProperties($abs)
                     .($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')

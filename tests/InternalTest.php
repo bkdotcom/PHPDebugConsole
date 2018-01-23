@@ -84,7 +84,13 @@ class InternalTest extends DebugTestFramework
         $this->assertSame($this->debug->getCfg('emailTo'), $toAddr);
         $this->assertSame($this->expectedSubject, $subject);
         $unserialized = $this->debug->utilities->unserializeLog($body);
-        $this->assertSame($this->debug->getData('log'), $unserialized);
+        $this->assertSame(array(
+            'alerts' => $this->debug->getData('alerts'),
+            'log' => $this->debug->getData('log'),
+            'logSummary' => $this->debug->getData('logSummary'),
+            'requestId' => $this->debug->getData('requestId'),
+            'runtime' => $this->debug->getData('runtime'),
+        ), $unserialized);
     }
 
     /**

@@ -37,6 +37,10 @@ Alternatively, [download a release](https://github.com/bkdotcom/debug/releases) 
 
 See http://www.bradkent.com/php/debug for more information
 
+### Usage
+
+See http://www.bradkent.com/php/debug
+
 ### Methods
 
 * log

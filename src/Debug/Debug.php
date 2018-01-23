@@ -88,6 +88,7 @@ class Debug
             'logSummary'        => array(),
             'outputSent'        => false,
             'requestId'         => null,
+            'runtime'           => array(),
             'timers' => array(      // timer method
                 'labels' => array(
                     // label => array(accumulatedTime, lastStartedTime|null)
@@ -781,12 +782,16 @@ class Debug
     /**
      * Advanced usage
      *
+     *    setCfg('key', 'value')
+     *    setCfg('level1.level2', 'value')
+     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *
      * @param string|array $path  path
      * @param mixed        $value value
      *
      * @return void
      */
-    public function setData($path, $value)
+    public function setData($path, $value = null)
     {
         if (is_string($path)) {
             $path = preg_split('#[\./]#', $path);
@@ -796,7 +801,7 @@ class Debug
             }
             $ref = $value;
         } else {
-            $this->data = $this->utilities->arrayMergeDeep($this->data, $path);
+            $this->data = array_merge($this->data, $path);
         }
     }
 

@@ -389,8 +389,9 @@ class Utilities
             $str = gzdeflate($str);
         }
         $str = chunk_split(base64_encode($str), 1024);
-        return "\nSTART DEBUG:\n"
-            .$str;
+        return "START DEBUG\n"
+            .$str    // chunk_split appends a "\r\n"
+            .'END DEBUG';
     }
 
     /**
@@ -398,17 +399,14 @@ class Utilities
      *
      * @param string $str serialized log data
      *
-     * @return array
+     * @return array | false
      */
     public static function unserializeLog($str)
     {
-        $strStart = 'START DEBUG:';
-        $pos = strpos($str, $strStart);
-        if ($pos !== false) {
-            $str = substr($str, $pos+strlen($strStart));
-            $str = trim($str);
-        } else {
-            $str = false;
+        $strStart = 'START DEBUG';
+        $strEnd = 'END DEBUG';
+        if (preg_match('/'.$strStart.'[\r\n]+(.+)[\r\n]+'.$strEnd.'/s', $str, $matches)) {
+            $str = $matches[1];
         }
         $str = self::isBase64Encoded($str)
             ? base64_decode($str)

@@ -73,44 +73,43 @@ class Internal implements SubscriberInterface
      */
     public function emailLog()
     {
-        $body = '';
-        $unsuppressedError = false;
         /*
             List errors that occured
         */
-        $errors = $this->debug->errorHandler->get('errors');
-        uasort($errors, function ($a1, $a2) {
-            return strcmp($a1['file'].$a1['line'], $a2['file'].$a2['line']);
-        });
-        $lastFile = '';
-        foreach ($errors as $error) {
-            if ($error['isSuppressed']) {
-                continue;
-            }
-            if ($error['file'] !== $lastFile) {
-                $body .= $error['file'].':'."\n";
-                $lastFile = $error['file'];
-            }
-            $body .= '  Line '.$error['line'].': '.$error['message']."\n";
-            $unsuppressedError = true;
-        }
+        $errorStr = $this->buildErrorList();
+        /*
+            Build Subject
+        */
         $subject = 'Debug Log';
         $subjectMore = '';
         if (!empty($_SERVER['HTTP_HOST'])) {
             $subjectMore .= ' '.$_SERVER['HTTP_HOST'];
         }
-        if ($unsuppressedError) {
+        if ($errorStr) {
             $subjectMore .= ' '.($subjectMore ? '(Error)' : 'Error');
         }
         $subject = rtrim($subject.':'.$subjectMore, ':');
         /*
-            "attach" "serialized" log
+            Build body
         */
-        $body .= (!isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv'])
+        $body = (!isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv'])
             ? 'Command: '. implode(' ', $_SERVER['argv'])
-            : 'Request: '.$_SERVER['REQUEST_METHOD'].': '.$_SERVER['REQUEST_URI']
+            : 'Request: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
         )."\n\n";
-        $body .= $this->debug->utilities->serializeLog($this->debug->getData('log'));
+        if ($errorStr) {
+            $body .= 'Error(s):'."\n"
+                .$errorStr."\n";
+        }
+        /*
+            "attach" serialized log to body
+        */
+        $body .= $this->debug->utilities->serializeLog(array(
+            'alerts' => $this->debug->getData('alerts'),
+            'log' => $this->debug->getData('log'),
+            'logSummary' => $this->debug->getData('logSummary'),
+            'requestId' => $this->debug->getData('requestId'),
+            'runtime' => $this->debug->getData('runtime'),
+        ));
         /*
             Now email
         */
@@ -334,8 +333,9 @@ class Internal implements SubscriberInterface
      */
     public function onOutput()
     {
+        $vals = $this->runtimeVals();
         $this->debug->groupSummary(1);
-        $this->debug->info('Built In '.$this->debug->timeEnd('debugInit', true).' sec');
+        $this->debug->info('Built In '.$vals['runtime'].' sec');
         $this->debug->info(
             'Peak Memory Usage'
                 .($this->debug->getCfg('output/outputAs') == 'html'
@@ -343,8 +343,8 @@ class Internal implements SubscriberInterface
                     : ''
                 )
                 .': '
-                .$this->debug->utilities->getBytes(memory_get_peak_usage(true)).' / '
-                .$this->debug->utilities->getBytes($this->debug->utilities->memoryLimit())
+                .$this->debug->utilities->getBytes($vals['memoryPeakUsage']).' / '
+                .$this->debug->utilities->getBytes($vals['memoryLimit'])
         );
         $this->debug->groupEnd();
     }
@@ -357,6 +357,7 @@ class Internal implements SubscriberInterface
      */
     public function onShutdown()
     {
+        $this->runtimeVals();
         if ($this->testEmailLog()) {
             $this->emailLog();
         }
@@ -364,6 +365,54 @@ class Internal implements SubscriberInterface
             echo $this->debug->output();
         }
         return;
+    }
+
+    /**
+     * Build list of errors for email
+     *
+     * @return string
+     */
+    private function buildErrorList()
+    {
+        $errorStr = '';
+        $errors = $this->debug->errorHandler->get('errors');
+        uasort($errors, function ($a1, $a2) {
+            return strcmp($a1['file'].$a1['line'], $a2['file'].$a2['line']);
+        });
+        $lastFile = '';
+        foreach ($errors as $error) {
+            if ($error['isSuppressed']) {
+                continue;
+            }
+            if ($error['file'] !== $lastFile) {
+                $errorStr .= $error['file'].':'."\n";
+                $lastFile = $error['file'];
+            }
+            $typeStr = $error['type'] === E_STRICT
+                ? 'Strict'
+                : $error['typeStr'];
+            $errorStr .= '  Line '.$error['line'].': ('.$typeStr.') '.$error['message']."\n";
+        }
+        return $errorStr;
+    }
+
+    /**
+     * Get/store values such as runtime & peak memory usage
+     *
+     * @return array
+     */
+    private function runtimeVals()
+    {
+        $vals = $this->debug->getData('runtime');
+        if (!$vals) {
+            $vals = array(
+                'memoryPeakUsage' => memory_get_peak_usage(true),
+                'memoryLimit' => $this->debug->utilities->memoryLimit(),
+                'runtime' => $this->debug->timeEnd('debugInit', true),
+            );
+            $this->debug->setData('runtime', $vals);
+        }
+        return $vals;
     }
 
     /**

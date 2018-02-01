@@ -335,6 +335,9 @@ EOD;
 
     public function testVariadicByReference()
     {
+        if (version_compare(PHP_VERSION, '5.6', '<')) {
+            return;
+        }
         if (defined('HHVM_VERSION')) {
             return;
         }

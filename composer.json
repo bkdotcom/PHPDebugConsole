@@ -19,8 +19,14 @@
 			"bdk\\PubSub\\": "src/PubSub/"
 		}
 	},
+	"autoload-dev": {
+		"classmap": ["tests"]
+	},
 	"require": {
 		"php": ">=5.4.0"
+	},
+	"require-dev": {
+		"bdk/css-xpath": "^1.0"
 	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",

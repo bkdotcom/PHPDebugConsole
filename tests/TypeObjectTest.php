@@ -323,6 +323,26 @@ EOD;
         $this->assertTrue($abs['methods']['methodPublic']['isDeprecated']);
     }
 
+    public function testVariadic()
+    {
+        if (version_compare(PHP_VERSION, '5.6', '<')) {
+            return;
+        }
+        $testVar = new \bdk\DebugTest\TestVariadic();
+        $abs = $this->debug->abstracter->getAbstraction($testVar);
+        $this->assertSame('...$moreParams', $abs['methods']['methodVariadic']['params']['moreParams']['name']);
+    }
+
+    public function testVariadicByReference()
+    {
+        if (defined('HHVM_VERSION')) {
+            return;
+        }
+        $testVarByRef = new \bdk\DebugTest\TestVariadicByReference();
+        $abs = $this->debug->abstracter->getAbstraction($testVarByRef);
+        $this->assertSame('&...$moreParams', $abs['methods']['methodVariadicByReference']['params']['moreParams']['name']);
+    }
+
     /**
      * Test
      *

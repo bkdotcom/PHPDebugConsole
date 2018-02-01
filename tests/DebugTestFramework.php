@@ -1,11 +1,12 @@
 <?php
 
 use bdk\PubSub\Event;
+use bdk\CssXpath\DOMTestCase;
 
 /**
  * PHPUnit tests for Debug class
  */
-class DebugTestFramework extends PHPUnit_Framework_DOMTestCase
+class DebugTestFramework extends DOMTestCase
 {
 
     public static $allowError = false;

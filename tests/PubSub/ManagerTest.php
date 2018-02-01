@@ -7,7 +7,7 @@ use bdk\PubSub\SubscriberInterface;
 /**
  * PHPUnit tests for Debug class
  */
-class ManagerTest extends PHPUnit_Framework_DOMTestCase
+class ManagerTest extends \PHPUnit\Framework\TestCase
 {
     /* Some pseudo events */
     const preFoo = 'pre.foo';
@@ -22,13 +22,13 @@ class ManagerTest extends PHPUnit_Framework_DOMTestCase
 
     private $subscriber;
 
-    protected function setUp()
+    public function setUp()
     {
         $this->manager = $this->createManager();
         $this->subscriber = new TestSubscriber();
     }
 
-    protected function tearDown()
+    public function tearDown()
     {
         $this->manager = null;
         $this->subscriber = null;

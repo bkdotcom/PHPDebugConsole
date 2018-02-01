@@ -17,7 +17,7 @@ namespace bdk;
 use bdk\Debug\ErrorHandler;
 use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Manager as EventManager;
-use ReflectionObject;
+use ReflectionClass;
 use ReflectionMethod;
 
 /**
@@ -137,7 +137,7 @@ class Debug
         $this->data['requestId'] = $this->utilities->requestId();
         $this->groupDepthRef = &$this->data['groupDepth'];
         $this->logRef = &$this->data['log'];
-        $this->setPublicMethods();
+        self::setPublicMethods();
         /*
             Publish bootstrap event
         */
@@ -163,6 +163,12 @@ class Debug
         if (in_array($methodName, self::$publicMethods)) {
             $instance = self::getInstance();
             return call_user_func_array(array($instance, $methodName), $args);
+        } elseif (empty(self::$publicMethods)) {
+            /*
+                Initializing debug with \bdk\Debug::_setCfg()?
+            */
+            self::setPublicMethods();
+            return self::__callStatic($methodName, $args);
         }
     }
 
@@ -945,12 +951,12 @@ class Debug
      *
      * @return void
      */
-    private function setPublicMethods()
+    private static function setPublicMethods()
     {
-        $refObj = new ReflectionObject($this);
+        $reflection = new ReflectionClass(get_called_class());
         self::$publicMethods = array_map(function (ReflectionMethod $refMethod) {
             return $refMethod->name;
-        }, $refObj->getMethods(ReflectionMethod::IS_PUBLIC));
+        }, $reflection->getMethods(ReflectionMethod::IS_PUBLIC));
         self::$publicMethods = array_diff(self::$publicMethods, array(
             '__construct',
             '__callStatic',

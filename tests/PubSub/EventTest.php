@@ -5,7 +5,7 @@ use bdk\PubSub\Event;
 /**
  * PHPUnit tests for Debug class
  */
-class EventTest extends PHPUnit_Framework_DOMTestCase
+class EventTest extends \PHPUnit\Framework\TestCase
 {
 
     /**
@@ -16,7 +16,7 @@ class EventTest extends PHPUnit_Framework_DOMTestCase
     /**
      * This method is called before a test is executed.
      */
-    protected function setUp()
+    public function setUp()
     {
         $this->event = new Event($this, array('foo'=>'bar'));
         $this->event->setValue('ding', 'dong');
@@ -26,7 +26,7 @@ class EventTest extends PHPUnit_Framework_DOMTestCase
     /**
      * This method is called after a test is executed.
      */
-    protected function tearDown()
+    public function tearDown()
     {
         $this->event = null;
     }

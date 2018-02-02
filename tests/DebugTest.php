@@ -42,6 +42,20 @@ class DebugTest extends DebugTestFramework
     }
 
     /**
+     * Test that errorHandler onShutdown occurs before internal onShutdown
+     *
+     * @return void
+     */
+    public function testShutDownSubscribers()
+    {
+        $subscribers = $this->debug->eventManager->getSubscribers('php.shutdown');
+        $this->assertSame($this->debug->errorHandler, $subscribers[0][0]);
+        $this->assertSame('onShutdown', $subscribers[0][1]);
+        $this->assertSame($this->debug->internal, $subscribers[1][0]);
+        $this->assertSame('onShutdown', $subscribers[1][1]);
+    }
+
+    /**
      * Test
      *
      * @return void

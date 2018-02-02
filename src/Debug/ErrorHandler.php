@@ -102,9 +102,9 @@ class ErrorHandler
         }
         $this->setCfg($cfg);
         $this->register();
-        // there's no method to unregister a shutdown function
-        //    so, always register, and have shutdownFunction check if "registered"
-        register_shutdown_function(array($this,'onShutdown'));
+        // easier to maintain subscription to php.shutdown event and check this->registered value
+        // than to subscribe with register() and unsub with unRegister()
+        $this->eventManager->subscribe('php.shutdown', array($this, 'onShutdown'), 1);
         return;
     }
 

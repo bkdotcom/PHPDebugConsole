@@ -9,6 +9,26 @@
 class ErrorHandlerTest extends DebugTestFramework
 {
 
+    private $onErrorEvent;
+
+    /**
+     * tearDown is executed after each test
+     *
+     * @return void
+     */
+    public function tearDown()
+    {
+        $this->onErrorEvent = null;
+        $this->debug->eventManager->unsubscribe('errorHandler.error', array($this, 'onError'));
+        parent::tearDown();
+    }
+
+
+    public function onError(\bdk\PubSub\Event $event)
+    {
+        $this->onErrorEvent = $event;
+    }
+
     /**
      * Test
      *
@@ -38,6 +58,46 @@ class ErrorHandlerTest extends DebugTestFramework
     }
 
     /**
+     * Test fatal error handling as well as can be tested...
+     *
+     * @return void
+     */
+    public function testFatal()
+    {
+        self::$allowError = true;
+        $this->debug->setCfg('output', false);
+        $error = array(
+            'type' => E_ERROR,
+            'file' => __FILE__,
+            'line' => __LINE__,
+            'message' => 'This is a bogus fatal error',
+        );
+        $errorValues = array(
+            'type'      => $error['type'],                    // int
+            'typeStr'   => 'Fatal Error',       // friendly string version of 'type'
+            'category'  => 'fatal',
+            'message'   => $error['message'],
+            'file'      => $error['file'],
+            'line'      => $error['line'],
+            'vars'      => array(),
+            // 'backtrace' => array(), // only if xdebug is enabled
+            'exception' => null,  // non-null if error is uncaught-exception
+            // 'hash'      => null,
+            'isFirstOccur'  => true,
+            'isSuppressed'  => false,
+            'logError'      => false,   // set to false via DebugTestFramework error subscriber
+        );
+        $this->debug->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
+        $this->debug->eventManager->publish('php.shutdown', null, array('error'=>$error));
+        $lastError = $this->debug->errorHandler->get('lastError');
+        $this->assertArraySubset($errorValues, $lastError);
+        // test subscriber
+        $this->assertInstanceOf('bdk\\PubSub\\Event', $this->onErrorEvent);
+        $this->assertSame($this->debug->errorHandler, $this->onErrorEvent->getSubject());
+        $this->assertArraySubset($errorValues, $this->onErrorEvent->getValues());
+    }
+
+    /**
      * Test
      *
      * @return void
@@ -45,28 +105,44 @@ class ErrorHandlerTest extends DebugTestFramework
     public function testHandler()
     {
         parent::$allowError = true;
-
-        $file = __FILE__;
-        $line = __LINE__;
-        $vars = array('foo'=>'bar');
-        $return = $this->debug->errorHandler->handleError(E_WARNING, 'test warning', $file, $line, $vars);
-        $this->assertTrue($return);
-        $lastError = $this->debug->errorHandler->get('lastError');
-        $this->assertArraySubset(array(
+        $error = array(
+            'type' => E_WARNING,
+            'file' => __FILE__,
+            'line' => __LINE__,
+            'vars' => array('foo'=>'bar'),
+            'message' => 'test warmomg',
+        );
+        $errorValues = array(
             'type'      => E_WARNING,                    // int
             'typeStr'   => 'Warning',   // friendly string version of 'type'
             'category'  => 'warning',
-            'message'   => 'test warning',
-            'file'      => $file,
-            'line'      => $line,
-            'vars'      => $vars,
+            'message'   => $error['message'],
+            'file'      => $error['file'],
+            'line'      => $error['line'],
+            'vars'      => $error['vars'],
             'backtrace' => array(), // only for fatal type errors, and only if xdebug is enabled
             'exception' => null,  // non-null if error is uncaught-exception
             // 'hash'      => null,
             'isFirstOccur'  => true,
             'isSuppressed'  => false,
-            'logError'      => false,
-        ), $lastError);
+            'logError'      => false,   // set to false via DebugTestFramework error subscriber
+        );
+
+        $this->debug->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
+        $return = $this->debug->errorHandler->handleError(
+            $error['type'],
+            $error['message'],
+            $error['file'],
+            $error['line'],
+            $error['vars']
+        );
+        $this->assertTrue($return);
+        $lastError = $this->debug->errorHandler->get('lastError');
+        $this->assertArraySubset($errorValues, $lastError);
+        // test subscriber
+        $this->assertInstanceOf('bdk\\PubSub\\Event', $this->onErrorEvent);
+        $this->assertSame($this->debug->errorHandler, $this->onErrorEvent->getSubject());
+        $this->assertArraySubset($errorValues, $this->onErrorEvent->getValues());
     }
 
     /**
@@ -113,15 +189,6 @@ class ErrorHandlerTest extends DebugTestFramework
     private function setErrorCallerHelper()
     {
         $this->debug->errorHandler->setErrorCaller();
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testShutdownFunction()
-    {
     }
 
     /**

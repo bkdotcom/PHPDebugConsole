@@ -13,6 +13,7 @@ namespace bdk\Debug;
 
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
+use ReflectionObject;
 
 /*
     These should all be defined...  we're using namespaces which require php >= 5.3.0
@@ -113,33 +114,33 @@ class ErrorHandler
      *
      * To get trace from within shutdown function utilizes xdebug_get_function_stack() if available
      *
+     * @param array $error (optional) error details if getting error backtrace
+     *
      * @return array
      */
-    public function backtrace()
+    public function backtrace($error = null)
     {
-        $error = error_get_last();
+        $isFatalError = $error && in_array($error['type'], $this->errCategories['fatal']);
         if ($this->uncaughtException) {
             $backtrace = $this->uncaughtException->getTrace();
             array_unshift($backtrace, array(
                 'file' => $this->uncaughtException->getFile(),
                 'line' => $this->uncaughtException->getLine(),
             ));
-        } elseif ($error && in_array($error['type'], $this->errCategories['fatal']) && extension_loaded('xdebug')) {
-            unset($error['type']);
+        } elseif ($isFatalError && extension_loaded('xdebug')) {
             $backtrace = xdebug_get_function_stack();
             $backtrace = array_reverse($backtrace);
-            array_pop($backtrace);
-            foreach ($backtrace as &$frame) {
-                if (isset($frame['class'])) {
-                    $frame['type'] = $frame['type'] === 'dynamic' ? '->' : '::';
-                }
-                if (isset($frame['include_filename'])) {
-                    $frame['function'] = 'include or require';
-                }
-            }
-            unset($frame);
+            array_pop($backtrace);   // pointless entry that xdebug_get_function_stack() includes
             $backtrace = $this->backtraceRemoveInternal($backtrace);
-            $backtrace[0] = $error;
+            $errorFileLine = array(
+                'file'=>$error['file'],
+                'line'=>$error['line'],
+            );
+            if (count(array_intersect_assoc($backtrace[0], $errorFileLine)) < 2) {
+                array_unshift($backtrace, $errorFileLine);
+            }
+        } elseif ($isFatalError) {
+            $backtrace = array();
         } else {
             $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
@@ -280,20 +281,22 @@ class ErrorHandler
     }
 
     /**
-     * Catch Fatal Error
+     * php.shutdown event subscriber
+     *
+     * Used to handle fatal errors
+     *
+     * Test fatal error handling by publishing 'php.shutdown' event with error value
+     *
+     * @param Event $event php.shutdown event
      *
      * @return void
      */
-    public function onShutdown()
+    public function onShutdown(Event $event)
     {
         if (!$this->registered) {
             return;
         }
-        /*
-            error_get_last() is php >= 5.2
-            we're using namespaces (5.3), so this requiement is met
-        */
-        $error = error_get_last();
+        $error = $event['error'] ?: error_get_last();
         if (in_array($error['type'], $this->errCategories['fatal'])) {
             /*
                 found in wild:
@@ -321,7 +324,7 @@ class ErrorHandler
         $this->prevDisplayErrors = ini_set('display_errors', 0);
         $this->prevErrorHandler = set_error_handler(array($this, 'handleError'));
         $this->prevExceptionHandler = set_exception_handler(array($this, 'handleException'));
-        $this->registered = true;   // used by this->shutdownFunction()
+        $this->registered = true;   // used by this->onShutdown()
         return;
     }
 
@@ -454,7 +457,7 @@ class ErrorHandler
         ini_set('display_errors', $this->prevDisplayErrors);
         $this->prevErrorHandler = null;
         $this->prevExceptionHandler = null;
-        $this->registered = false;  // used by shutdownFunction()
+        $this->registered = false;  // used by $this->onShutdown()
         return;
     }
 
@@ -473,6 +476,19 @@ class ErrorHandler
                 break;
             }
         }
+        if ($backtrace[$i]['function'] == 'onShutdown') {
+            /*
+                We got here via php.shutdown event (fatal error)
+                skip over PubSub internals
+                probably i += 4, but don't want to rely on implementation detail
+            */
+            $refObj = new ReflectionObject($this->eventManager);
+            $filepath = $refObj->getFilename();
+            while (isset($backtrace[$i+1]['file']) && $backtrace[$i+1]['file'] == $filepath) {
+                $i++;
+            }
+        }
+        $i++;
         return array_slice($backtrace, $i);
     }
 
@@ -503,9 +519,18 @@ class ErrorHandler
                 $backtraceNew[count($backtraceNew) - 1]['line'] = $frame['line'];
                 continue;
             }
-            $frame['function'] = preg_match('/\{closure\}$/', $frame['function'])
-                ? $frame['function']
-                : $frame['class'].$frame['type'].$frame['function'];
+            if (in_array($frame['type'], array('dynamic','static'))) {
+                // xdebug_get_function_stack
+                $frame['type'] = $frame['type'] === 'dynamic' ? '->' : '::';
+            }
+            if (isset($backtrace[$i]['include_filename'])) {
+                // xdebug_get_function_stack
+                $frame['function'] = 'include or require';
+            } else {
+                $frame['function'] = preg_match('/\{closure\}$/', $frame['function'])
+                    ? $frame['function']
+                    : $frame['class'].$frame['type'].$frame['function'];
+            }
             if (!$frame['function']) {
                 unset($frame['function']);
             }
@@ -546,34 +571,30 @@ class ErrorHandler
             'vars'      => $vars,
             'backtrace' => array(), // only for fatal type errors, and only if xdebug is enabled
             'exception' => $this->uncaughtException,  // non-null if error is uncaught-exception
-            'hash'      => null,
+            'hash'          => null,
             'isFirstOccur'  => true,
-            'isSuppressed'  => error_reporting() === 0,
+            'isSuppressed'  => false,
             'logError'      => false,
         );
         $hash = $this->errorHash($errorValues);
         $isFirstOccur = !isset($this->data['errors'][$hash]);
+        // if any instance of this error was not supprssed, reflect that
+        $isSuppressed = !$isFirstOccur && !$this->data['errors'][$hash]['isSuppressed']
+            ? false
+            : error_reporting() === 0;
         if (!empty($this->data['errorCaller'])) {
             $errorValues['file'] = $this->data['errorCaller']['file'];
             $errorValues['line'] = $this->data['errorCaller']['line'];
         }
-        if (in_array($errType, array(E_ERROR, E_USER_ERROR)) && extension_loaded('xdebug')) {
-            $backtrace = $this->backtrace();
-            if (!array_intersect_assoc($backtrace[0], array('file'=>$file, 'line'=>$line))) {
-                array_unshift($backtrace, array(
-                    'file'=>$file,
-                    'line'=>$line,
-                ));
-            }
-            $errorValues['backtrace'] = $backtrace;
+        if (in_array($errType, array(E_ERROR, E_USER_ERROR))) {
+            // will return empty unless xdebug extension installed/enabled
+            $errorValues['backtrace'] = $this->backtrace($errorValues);
         }
         $errorValues = array_merge($errorValues, array(
             'hash' => $hash,
             'isFirstOccur' => $isFirstOccur,
-            // if any instance of this error was not supprssed, reflect that
-            'isSuppressed' => !$isFirstOccur && !$this->data['errors'][$hash]['isSuppressed']
-                ? false
-                : $errorValues['isSuppressed'],
+            'isSuppressed' => $isSuppressed,
+            'logError' => !$isSuppressed && $isFirstOccur,
         ));
         return new Event($this, $errorValues);
     }

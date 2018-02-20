@@ -5,7 +5,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2017 Brad Kent
+ * @copyright 2014-2018 Brad Kent
  * @version   v2.0.1
  */
 

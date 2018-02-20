@@ -88,6 +88,7 @@ class ErrorHandlerTest extends DebugTestFramework
             'logError'      => false,   // set to false via DebugTestFramework error subscriber
         );
         $this->debug->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
+        $callLine = __LINE__ + 1;
         $this->debug->eventManager->publish('php.shutdown', null, array('error'=>$error));
         $lastError = $this->debug->errorHandler->get('lastError');
         $this->assertArraySubset($errorValues, $lastError);
@@ -95,6 +96,19 @@ class ErrorHandlerTest extends DebugTestFramework
         $this->assertInstanceOf('bdk\\PubSub\\Event', $this->onErrorEvent);
         $this->assertSame($this->debug->errorHandler, $this->onErrorEvent->getSubject());
         $this->assertArraySubset($errorValues, $this->onErrorEvent->getValues());
+        if (extension_loaded('xdebug')) {
+            $backtrace = $this->onErrorEvent['backtrace'];
+            $this->assertSame(array(
+                'file' => $error['file'],
+                'line' => $error['line'],
+            ), $backtrace[0]);
+            $this->assertSame(array(
+                'file' => $error['file'],
+                'line' => $callLine,
+                'function' => 'bdk\PubSub\Manager->publish',
+            ), $backtrace[1]);
+            $this->assertSame(__CLASS__.'->'.__FUNCTION__, $backtrace[2]['function']);
+        }
     }
 
     /**

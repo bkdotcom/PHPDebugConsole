@@ -5,8 +5,8 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2017 Brad Kent
- * @version   v2.0.1
+ * @copyright 2014-2018 Brad Kent
+ * @version   v2.0.2
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -44,7 +44,7 @@ class Debug
     public $utilities;
 
     const META = "\x00meta\x00";
-    const VERSION = "2.0.1";
+    const VERSION = "2.0.2";
 
     /**
      * Constructor

@@ -66,7 +66,7 @@ class DebugTest extends DebugTestFramework
         $this->debug->assert(true, 'this is true... not logged');
         $log = $this->debug->getData('log');
         $this->assertCount(1, $log);
-        $this->assertSame(array('assert','this is false'), $log[0]);
+        $this->assertSame(array('assert',array('this is false')), $log[0]);
     }
 
     /**
@@ -85,9 +85,9 @@ class DebugTest extends DebugTestFramework
         $log = $this->debug->getData('log');
         $log = array_slice($log, -3);
         $this->assertSame(array(
-            array('count', 'count', 3),
-            array('count', 'count test', 4),
-            array('count', 'count', 3),
+            array('count', array('count', 3)),
+            array('count', array('count test', 4)),
+            array('count', array('count', 3)),
         ), $log);
     }
 
@@ -104,16 +104,16 @@ class DebugTest extends DebugTestFramework
         $log = $this->debug->getData('log');
         $logEntry = $log[0];
         $this->assertSame('error', $logEntry[0]);
-        $this->assertSame('a string', $logEntry[1]);
+        $this->assertSame('a string', $logEntry[1][0]);
         // check array abstraction
         // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-        $isObject = $this->checkAbstractionType($logEntry[3], 'object');
-        $isResource = $this->checkAbstractionType($logEntry[4], 'resource');
+        $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
+        $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
         $this->assertSame(array(
             'file' => __FILE__,
             'line' => __LINE__ - 12,
-            'debug' => \bdk\Debug::META,
-        ), $logEntry[5]);
+            // 'debug' => \bdk\Debug::META,
+        ), $logEntry[2]);
 
         // $this->assertTrue($isArray, 'is Array');
         $this->assertTrue($isObject, 'is Object');
@@ -138,7 +138,7 @@ class DebugTest extends DebugTestFramework
     {
         $this->debug->group('a', 'b', 'c');
         $logEntry = $this->debug->getData('log/0');
-        $this->assertSame(array('group','a','b','c'), $logEntry);
+        $this->assertSame(array('group',array('a','b','c')), $logEntry);
         $depth = $this->debug->getData('groupDepth');
         $this->assertSame(1, $depth);
         $this->debug->group($this->debug->meta('hideIfEmpty'));
@@ -160,10 +160,11 @@ EOD;
         \bdk\Debug::_group();
         $this->assertSame(array(
             'group',
-            __CLASS__.'->'.__FUNCTION__,
+            array(
+                __CLASS__.'->'.__FUNCTION__
+            ),
             array(
                 'isMethodName' => true,
-                'debug' => \bdk\Debug::META,
             ),
         ), $this->debug->getData('log/0'));
 
@@ -171,10 +172,11 @@ EOD;
         $testBase->testBasePublic();
         $this->assertSame(array(
             'group',
-            'bdk\DebugTest\TestBase->testBasePublic',
+            array(
+                'bdk\DebugTest\TestBase->testBasePublic'
+            ),
             array(
                 'isMethodName' => true,
-                'debug' => \bdk\Debug::META,
             ),
         ), $this->debug->getData('log/0'));
 
@@ -182,10 +184,11 @@ EOD;
         $test->testBasePublic();
         $this->assertSame(array(
             'group',
-            'bdk\DebugTest\Test->testBasePublic',
+            array(
+                'bdk\DebugTest\Test->testBasePublic'
+            ),
             array(
                 'isMethodName' => true,
-                'debug' => \bdk\Debug::META,
             ),
         ), $this->debug->getData('log/0'));
 
@@ -195,10 +198,11 @@ EOD;
         \bdk\DebugTest\Test::testBaseStatic();
         $this->assertSame(array(
             'group',
-            'bdk\DebugTest\TestBase::testBaseStatic',
+            array(
+                'bdk\DebugTest\TestBase::testBaseStatic'
+            ),
             array(
                 'isMethodName' => true,
-                'debug' => \bdk\Debug::META,
             ),
         ), $this->debug->getData('log/0'));
 
@@ -207,10 +211,11 @@ EOD;
         $test->testBaseStatic();
         $this->assertSame(array(
             'group',
-            'bdk\DebugTest\TestBase::testBaseStatic',
+            array(
+                'bdk\DebugTest\TestBase::testBaseStatic'
+            ),
             array(
                 'isMethodName' => true,
-                'debug' => \bdk\Debug::META,
             ),
         ), $this->debug->getData('log/0'));
     }
@@ -224,7 +229,7 @@ EOD;
     {
         $this->debug->groupCollapsed('a', 'b', 'c');
         $log = $this->debug->getData('log');
-        $this->assertSame(array('groupCollapsed', 'a','b','c'), $log[0]);
+        $this->assertSame(array('groupCollapsed', array('a','b','c')), $log[0]);
         $depth = $this->debug->getData('groupDepth');
         $this->assertSame(1, $depth);
         $this->debug->groupCollapsed($this->debug->meta('hideIfEmpty'));
@@ -282,11 +287,11 @@ EOD;
         $log = $this->debug->getData('log');
         $logEntry = $log[0];
         $this->assertSame('info', $logEntry[0]);
-        $this->assertSame('a string', $logEntry[1]);
+        $this->assertSame('a string', $logEntry[1][0]);
         // check array abstraction
         // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-        $isObject = $this->checkAbstractionType($logEntry[3], 'object');
-        $isResource = $this->checkAbstractionType($logEntry[4], 'resource');
+        $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
+        $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
         // $this->assertTrue($isArray);
         $this->assertTrue($isObject);
         $this->assertTrue($isResource);
@@ -305,11 +310,11 @@ EOD;
         $log = $this->debug->getData('log');
         $logEntry = $log[0];
         $this->assertSame('log', $logEntry[0]);
-        $this->assertSame('a string', $logEntry[1]);
+        $this->assertSame('a string', $logEntry[1][0]);
         // check array abstraction
         // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-        $isObject = $this->checkAbstractionType($logEntry[3], 'object');
-        $isResource = $this->checkAbstractionType($logEntry[4], 'resource');
+        $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
+        $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
         // $this->assertTrue($isArray);
         $this->assertTrue($isObject);
         $this->assertTrue($isResource);
@@ -411,7 +416,7 @@ EOD;
         $this->assertInternalType('float', $timers['labels']['my label'][0]);
         $this->assertNull($timers['labels']['my label'][1]);
         $this->debug->timeEnd('my label', 'blah%labelblah%timeblah');
-        $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1'));
+        $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1/0'));
     }
 
     /**
@@ -437,7 +442,7 @@ EOD;
         // test not paused
         $this->assertNotNull($timers['labels']['my label'][1]);
         $this->debug->timeGet('my label', 'blah%labelblah%timeblah');
-        $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1'));
+        $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1/0'));
     }
 
     /**
@@ -448,7 +453,7 @@ EOD;
     public function testTrace()
     {
         $this->debug->trace();
-        $trace = $this->debug->getData('log/0/1');
+        $trace = $this->debug->getData('log/0/1/0');
         $this->assertSame(__FILE__, $trace[0]['file']);
         $this->assertSame(__LINE__ - 3, $trace[0]['line']);
         $this->assertNotTrue(isset($trace[0]['function']));
@@ -468,11 +473,11 @@ EOD;
         $log = $this->debug->getData('log');
         $logEntry = $log[0];
         $this->assertSame('warn', $logEntry[0]);
-        $this->assertSame('a string', $logEntry[1]);
+        $this->assertSame('a string', $logEntry[1][0]);
         // check array abstraction
         // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-        $isObject = $this->checkAbstractionType($logEntry[3], 'object');
-        $isResource = $this->checkAbstractionType($logEntry[4], 'resource');
+        $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
+        $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
         // $this->assertTrue($isArray);
         $this->assertTrue($isObject);
         $this->assertTrue($isResource);

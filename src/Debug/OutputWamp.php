@@ -9,7 +9,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -169,10 +169,12 @@ class OutputWamp implements SubscriberInterface
     private function processExistingData()
     {
         $data = $this->debug->getData();
-        foreach ($data['log'] as $args) {
-            $method = array_shift($args);
-            $meta = $this->debug->internal->getMetaArg($args);
-            $this->processLogEntry($method, $args, $meta);
+        foreach ($data['log'] as $entry) {
+            $this->processLogEntry(
+                $entry[0],
+                $entry[1],
+                !empty($entry[2]) ? $entry[2] : array()
+            );
         }
     }
 

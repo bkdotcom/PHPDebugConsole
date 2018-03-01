@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  *
  * @see https://craig.is/writing/chrome-logger/techspecs
  */
@@ -90,9 +90,9 @@ class OutputChromeLogger extends OutputBase
         $metaStr = isset($meta['file'])
             ? $meta['file'].': '.$meta['line']
             : null;
-        if ($method == 'table') {
+        if ($method === 'table') {
             $args = array($this->methodTable($args[0], $args[2]));
-        } elseif ($method == 'trace') {
+        } elseif ($method === 'trace') {
             $method = 'table';
             $args = array($this->methodTable($args[0], array('function','file','line')));
         }

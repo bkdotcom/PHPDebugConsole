@@ -421,7 +421,7 @@ EOD;
     {
         $test = new \bdk\DebugTest\Test();
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/2');
+        $abstraction = $this->debug->getData('log/0/1/1');
         $props = $abstraction['properties'];
         $this->assertArrayNotHasKey('propHidden', $props, 'propHidden shouldn\'t be debugged');
         // debugValue
@@ -443,7 +443,7 @@ EOD;
         $test->prop = array();
         $test->prop[] = &$test->prop;
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/2');
+        $abstraction = $this->debug->getData('log/0/1/1');
         $this->assertEquals(
             \bdk\Debug\Abstracter::RECURSION,
             $abstraction['properties']['prop']['value'][0],
@@ -480,7 +480,7 @@ EOD;
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
         */
-        $abstraction = $this->debug->getData('log/0/2');
+        $abstraction = $this->debug->getData('log/0/1/1');
         $this->assertEquals(
             true,
             $abstraction['properties']['propPublic']['value']['isRecursion'],
@@ -510,7 +510,7 @@ EOD;
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
         */
-        $abstraction = $this->debug->getData('log/0/2');
+        $abstraction = $this->debug->getData('log/0/1/1');
         $this->assertEquals(
             true,
             $abstraction['properties']['prop']['value'][0]['isRecursion'],
@@ -545,7 +545,7 @@ EOD;
             > .t_object > .t_recursion';
         $this->assertSelectCount($select, 1, $xml);
         */
-        $abstraction = $this->debug->getData('log/0/2');
+        $abstraction = $this->debug->getData('log/0/1/1');
         $this->assertEquals(
             true,
             $abstraction['properties']['ob']['value']['properties']['oa']['value']['isRecursion'],

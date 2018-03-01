@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -308,9 +308,9 @@ abstract class OutputBase implements SubscriberInterface
             'success' => 'info',
             'warning' => 'warn',
         );
-        foreach ($this->data['alerts'] as $alert) {
-            $msg = str_replace('<br />', ", \n", $alert['message']);
-            $method = $alert['class'];
+        foreach ($this->data['alerts'] as $entry) {
+            $msg = str_replace('<br />', ", \n", $entry[0]);
+            $method = $entry[1]['class'];
             if (isset($trans[$method])) {
                 $method = $trans[$method];
             }
@@ -327,10 +327,12 @@ abstract class OutputBase implements SubscriberInterface
     protected function processLog()
     {
         $str = '';
-        foreach ($this->data['log'] as $args) {
-            $method = array_shift($args);
-            $meta = $this->debug->internal->getMetaArg($args);
-            $str .= $this->processLogEntry($method, $args, $meta);
+        foreach ($this->data['log'] as $entry) {
+            $str .= $this->processLogEntry(
+                $entry[0],
+                $entry[1],
+                !empty($entry[2]) ? $entry[2] : array()
+            );
         }
         return $str;
     }
@@ -435,9 +437,12 @@ abstract class OutputBase implements SubscriberInterface
         $summaryData = $this->data['logSummary'];
         krsort($summaryData);
         $summaryData = call_user_func_array('array_merge', $summaryData);
-        foreach ($summaryData as $args) {
-            $method = array_shift($args);
-            $str .= $this->processLogEntry($method, $args);
+        foreach ($summaryData as $entry) {
+            $str .= $this->processLogEntry(
+                $entry[0],
+                $entry[1],
+                !empty($entry[2]) ? $entry[2] : array()
+            );
         }
         return trim($str);
     }
@@ -455,10 +460,10 @@ abstract class OutputBase implements SubscriberInterface
         for ($i = 0, $count = count($this->data['log']); $i < $count; $i++) {
             $method = $this->data['log'][$i][0];
             if (in_array($method, array('group', 'groupCollapsed'))) {
-                $args = array_slice($this->data['log'][$i], 1);
+                $entry = $this->data['log'][$i];
                 $groupStack[] = array(
                     'i' => $i,
-                    'meta' => $this->debug->internal->getMetaArg($args),
+                    'meta' => !empty($entry[2]) ? $entry[2] : array(),
                     'hasEntries' => false,
                 );
                 $groupStackCount ++;

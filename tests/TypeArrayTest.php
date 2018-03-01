@@ -67,7 +67,7 @@ EOD;
         $array = array();
         $array[] = &$array;
         $this->debug->log('array', $array);
-        $abstraction = $this->debug->getData('log/0/2');
+        $abstraction = $this->debug->getData('log/0/1/1');
         $this->assertEquals(
             \bdk\Debug\Abstracter::RECURSION,
             $abstraction[0],

@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -140,7 +140,16 @@ class OutputHtml extends OutputBase
     {
         $this->data = $this->debug->getData();
         $this->removeHideIfEmptyGroups();
-        array_unshift($this->data['alerts'], $this->errorSummary->build($this->debug->internal->errorStats()));
+        $errorSummary = $this->errorSummary->build($this->debug->internal->errorStats());
+        if ($errorSummary) {
+            array_unshift($this->data['alerts'], array(
+                $errorSummary,
+                array(
+                    'class' => 'danger error-summary',
+                    'dismissible' => false,
+                )
+            ));
+        }
         $str = '<div class="debug">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
@@ -826,25 +835,17 @@ class OutputHtml extends OutputBase
     protected function processAlerts()
     {
         $str = '';
-        foreach ($this->data['alerts'] as $alert) {
-            if (is_string($alert)) {
-                // errorSummary
-                $alert = array(
-                    'message' => $alert,
-                    'class' => 'danger error-summary',
-                    'dismissible' => false,
-                );
+        foreach ($this->data['alerts'] as $entry) {
+            $message = $entry[0];
+            $meta = $entry[1];
+            if ($meta['dismissible']) {
+                $message = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
+                    .'<span aria-hidden="true">&times;</span>'
+                    .'</button>'
+                    .$message;
+                $meta['class'] .= ' alert-dismissible';
             }
-            if ($alert['message']) {
-                if ($alert['dismissible']) {
-                    $alert['message'] = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
-                        .'<span aria-hidden="true">&times;</span>'
-                        .'</button>'
-                        .$alert['message'];
-                    $alert['class'] .= ' alert-dismissible';
-                }
-                $str .= '<div class="alert alert-'.$alert['class'].'" role="alert">'.$alert['message'].'</div>';
-            }
+            $str .= '<div class="alert alert-'.$meta['class'].'" role="alert">'.$message.'</div>';
         }
         return $str;
     }

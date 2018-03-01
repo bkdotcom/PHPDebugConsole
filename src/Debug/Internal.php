@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -181,24 +181,6 @@ class Internal implements SubscriberInterface
             );
         }
         return $meta;
-    }
-
-    /**
-     * Returns meta-data and removes it from the passed arguments
-     *
-     * @param array $args args to check
-     *
-     * @return array meta information
-     */
-    public static function getMetaArg(&$args)
-    {
-        $end = end($args);
-        if (is_array($end) && ($key = array_search(Debug::META, $end, true)) !== false) {
-            array_pop($args);
-            unset($end[$key]);
-            return $end;
-        }
-        return array();
     }
 
     /**

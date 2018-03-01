@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.2
+ * @version   v2.1.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -44,7 +44,7 @@ class Debug
     public $utilities;
 
     const META = "\x00meta\x00";
-    const VERSION = "2.0.2";
+    const VERSION = "2.1.0";
 
     /**
      * Constructor
@@ -220,11 +220,14 @@ class Debug
     public function alert($message, $class = 'danger', $dismissible = false)
     {
         if ($this->cfg['collect']) {
-            $this->appendLog('alert', array(
-                'message' => $message,
-                'class' => $class,
-                'dismissible' => $dismissible,
-            ));
+            $this->appendLog(
+                'alert',
+                array($message),
+                array(
+                    'class' => $class,
+                    'dismissible' => $dismissible,
+                )
+            );
         }
     }
 
@@ -749,7 +752,7 @@ class Debug
         if ($this->cfg['output']) {
             while ($this->data['groupDepth'] > 0) {
                 $this->data['groupDepth']--;
-                $this->data['log'][] = array('groupEnd');
+                $this->data['log'][] = array('groupEnd', array());
             }
             $outputAs = $this->output->getCfg('outputAs');
             $this->output->setCfg('outputAs', $outputAs);
@@ -901,14 +904,14 @@ class Debug
         $args = $event->getValue('args');
         $meta = $event->getValue('meta');
         if ($method == 'alert') {
-            $this->data['alerts'][] = $args;
+            $this->data['alerts'][] = array($args[0], $meta);
         } else {
-            array_unshift($args, $method);
+            $this->logRef[] = array($method, $args);
             if ($meta) {
-                $meta['debug'] = self::META;
-                $args[] = $meta;
+                end($this->logRef);
+                $key = key($this->logRef);
+                $this->logRef[$key][2] = $meta;
             }
-            $this->logRef[] = $args;
         }
         return;
     }
@@ -925,7 +928,8 @@ class Debug
     {
         $meta = array();
         foreach ($args as $i => $v) {
-            if (is_array($v) && array_search(self::META, $v, true) !== false) {
+            if (is_array($v) && ($k = array_search(self::META, $v, true)) !== false) {
+                unset($v[$k]);
                 $meta = array_merge($meta, $v);
                 unset($args[$i]);
             }

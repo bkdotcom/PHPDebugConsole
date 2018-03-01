@@ -298,21 +298,24 @@ abstract class OutputBase implements SubscriberInterface
     /**
      * Process alerts
      *
+     * By default we just treat alerts like error(), info(), and warn() calls
+     *
      * @return string
      */
     protected function processAlerts()
     {
         $str = '';
-        $trans = array(
+        $classToMethod = array(
             'danger' => 'error',
+            'info' => 'info',
             'success' => 'info',
             'warning' => 'warn',
         );
         foreach ($this->data['alerts'] as $entry) {
             $msg = str_replace('<br />', ", \n", $entry[0]);
             $method = $entry[1]['class'];
-            if (isset($trans[$method])) {
-                $method = $trans[$method];
+            if (isset($classToMethod[$method])) {
+                $method = $classToMethod[$method];
             }
             $str .= $this->processLogEntry($method, array($msg));
         }

@@ -75,6 +75,58 @@ class OutputChromeLogger extends OutputBase
     }
 
     /**
+     * process alerts
+     *
+     * @return string
+     */
+    protected function processAlerts()
+    {
+        $str = '';
+        foreach ($this->data['alerts'] as $entry) {
+            $args = array('%c'.$entry[0], '');
+            $method = $entry[1]['class'];
+            $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
+            switch ($method) {
+                case 'danger':
+                    // Just use log method... Chrome adds backtrace to error(), which we don't want
+                    $method = 'log';
+                    $args[1] = $styleCommon
+                        .'background-color: #ffbaba;'
+                        .'border: 1px solid #d8000c;'
+                        .'color: #d8000c;';
+                    break;
+                case 'info':
+                    $args[1] = $styleCommon
+                        .'background-color: #d9edf7;'
+                        .'border: 1px solid #bce8f1;'
+                        .'color: #31708f;';
+                    break;
+                case 'success':
+                    $method = 'info';
+                    $args[1] = $styleCommon
+                        .'background-color: #dff0d8;'
+                        .'border: 1px solid #d6e9c6;'
+                        .'color: #3c763d;';
+                    break;
+                case 'warning':
+                    // Just use log method... Chrome adds backtrace to warn(), which we don't want
+                    $method = 'log';
+                    $args[1] = $styleCommon
+                        .'background-color: #fcf8e3;'
+                        .'border: 1px solid #faebcc;'
+                        .'color: #8a6d3b;';
+                    break;
+            }
+            array_push($this->json['rows'], array(
+                $args,
+                null,
+                $method,
+            ));
+        }
+        return $str;
+    }
+
+    /**
      * Process log entry
      *
      * Transmogrify log entry to chromlogger format

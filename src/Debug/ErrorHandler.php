@@ -130,15 +130,15 @@ class ErrorHandler
         } elseif ($isFatalError && extension_loaded('xdebug')) {
             $backtrace = xdebug_get_function_stack();
             $backtrace = array_reverse($backtrace);
-            array_pop($backtrace);   // pointless entry that xdebug_get_function_stack() includes
             $backtrace = $this->backtraceRemoveInternal($backtrace);
             $errorFileLine = array(
                 'file'=>$error['file'],
                 'line'=>$error['line'],
             );
-            if (count(array_intersect_assoc($backtrace[0], $errorFileLine)) < 2) {
+            if (array_intersect_assoc($errorFileLine, $backtrace[0]) !== $errorFileLine) {
                 array_unshift($backtrace, $errorFileLine);
             }
+            array_pop($backtrace);   // pointless entry that xdebug_get_function_stack() includes
         } elseif ($isFatalError) {
             $backtrace = array();
         } else {

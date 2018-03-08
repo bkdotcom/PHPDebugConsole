@@ -37,9 +37,9 @@ class OutputChromeLogger extends OutputBase
     );
 
     /**
-     * Output the log as text
+     * Output the log as chromelogger headers
      *
-     * @param Event $event event object
+     * @param Event $event debug.output event object
      *
      * @return void
      */
@@ -129,7 +129,7 @@ class OutputChromeLogger extends OutputBase
     /**
      * Process log entry
      *
-     * Transmogrify log entry to chromlogger format
+     * Transmogrify log entry to chromelogger format
      *
      * @param string $method method
      * @param array  $args   arguments
@@ -137,13 +137,10 @@ class OutputChromeLogger extends OutputBase
      *
      * @return void
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    protected function doProcessLogEntry($method, $args = array(), $meta = array())
     {
-        $metaStr = isset($meta['file'])
-            ? $meta['file'].': '.$meta['line']
-            : null;
         if ($method === 'table') {
-            $args = array($this->methodTable($args[0], $args[2]));
+            $args = array($this->methodTable($args[0], $meta['columns']));
         } elseif ($method === 'trace') {
             $method = 'table';
             $args = array($this->methodTable($args[0], array('function','file','line')));
@@ -151,10 +148,11 @@ class OutputChromeLogger extends OutputBase
         foreach ($args as $i => $arg) {
             $args[$i] = $this->dump($arg);
         }
-        if ($method === 'log') {
-            $method = '';
-        }
-        $this->json['rows'][] = array($args, $metaStr, $method);
+        $this->json['rows'][] = array(
+            $args,
+            isset($meta['file']) ? $meta['file'].': '.$meta['line'] : null,
+            $method === 'log' ? '' : $method,
+        );
     }
 
     /**

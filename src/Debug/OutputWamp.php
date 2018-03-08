@@ -126,91 +126,6 @@ class OutputWamp implements SubscriberInterface
     }
 
     /**
-     * Process/publish a log entry
-     *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
-     *
-     * @return void
-     */
-    protected function processLogEntry($method, $args = array(), $meta = array())
-    {
-        $this->publish($method, $args, $meta);
-    }
-
-    /**
-     * Publish WAMP message to topic
-     *
-     * @param string $method debug method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
-     *
-     * @return void
-     */
-    private function publish($method, $args = array(), $meta = array())
-    {
-        $args = $this->crateValues($args);
-        $meta = array_merge(array(
-            'format' => 'raw',
-            'requestId' => $this->requestId,
-        ), $meta);
-        if (!empty($meta['backtrace'])) {
-            $meta['backtrace'] = $this->crateValues($meta['backtrace']);
-        }
-        $this->wamp->publish($this->topic, array($method, $args, $meta));
-    }
-
-    /**
-     * Publish pre-existing log entries
-     *
-     * @return void
-     */
-    private function processExistingData()
-    {
-        $data = $this->debug->getData();
-        foreach ($data['log'] as $entry) {
-            $this->processLogEntry(
-                $entry[0],
-                $entry[1],
-                !empty($entry[2]) ? $entry[2] : array()
-            );
-        }
-    }
-
-    /**
-     * Publish initial meta data
-     *
-     * @return void
-     */
-    private function publishMeta()
-    {
-        $debugClass = get_class($this->debug);
-        $metaVals = array(
-            'debug_version' => $debugClass::VERSION,
-        );
-        $keys = array(
-            'HTTP_HOST',
-            'HTTPS',
-            'REMOTE_ADDR',
-            'REQUEST_METHOD',
-            'REQUEST_TIME',
-            'REQUEST_URI',
-            'SERVER_ADDR',
-            'SERVER_NAME',
-        );
-        foreach ($keys as $k) {
-            $metaVals[$k] = isset($_SERVER[$k])
-                ? $_SERVER[$k]
-                : null;
-        }
-        if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
-            $metaVals['REQUEST_URI'] = '$: '. implode(' ', $_SERVER['argv']);
-        }
-        $this->publish('meta', $metaVals);
-    }
-
-    /**
      * JSON doesn't handle binary well (at all)
      *     a) strings with invalid utf-8 can't be json_encoded
      *     b) "javascript has a unicode problem" / will munge strings
@@ -246,5 +161,97 @@ class OutputWamp implements SubscriberInterface
             $values['__debug_key_order__'] = array_keys($values);
         }
         return $values;
+    }
+
+    /**
+     * Publish pre-existing log entries
+     *
+     * @return void
+     */
+    private function processExistingData()
+    {
+        $data = $this->debug->getData();
+        foreach ($data['log'] as $entry) {
+            $this->processLogEntry($entry[0], $entry[1], $entry[2]);
+        }
+    }
+
+    /**
+     * Process/publish a log entry
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return void
+     */
+    protected function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $event = $this->debug->eventManager->publish(
+            'debug.outputLogEntry',
+            $this,
+            array(
+                'method' => $method,
+                'args' => $args,
+                'meta' => $meta,
+            )
+        );
+        if (!$event->isPropagationStopped()) {
+            $this->publish($event['method'], $event['args'], $event['meta']);
+        }
+    }
+
+    /**
+     * Publish WAMP message to topic
+     *
+     * @param string $method debug method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return void
+     */
+    private function publish($method, $args = array(), $meta = array())
+    {
+        $args = $this->crateValues($args);
+        $meta = array_merge(array(
+            'format' => 'raw',
+            'requestId' => $this->requestId,
+        ), $meta);
+        if (!empty($meta['backtrace'])) {
+            $meta['backtrace'] = $this->crateValues($meta['backtrace']);
+        }
+        $this->wamp->publish($this->topic, array($method, $args, $meta));
+    }
+
+    /**
+     * Publish initial meta data
+     *
+     * @return void
+     */
+    private function publishMeta()
+    {
+        $debugClass = get_class($this->debug);
+        $metaVals = array(
+            'debug_version' => $debugClass::VERSION,
+        );
+        $keys = array(
+            'HTTP_HOST',
+            'HTTPS',
+            'REMOTE_ADDR',
+            'REQUEST_METHOD',
+            'REQUEST_TIME',
+            'REQUEST_URI',
+            'SERVER_ADDR',
+            'SERVER_NAME',
+        );
+        foreach ($keys as $k) {
+            $metaVals[$k] = isset($_SERVER[$k])
+                ? $_SERVER[$k]
+                : null;
+        }
+        if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
+            $metaVals['REQUEST_URI'] = '$: '. implode(' ', $_SERVER['argv']);
+        }
+        $this->publish('meta', $metaVals);
     }
 }

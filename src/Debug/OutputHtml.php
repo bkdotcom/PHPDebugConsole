@@ -36,33 +36,33 @@ class OutputHtml extends OutputBase
     /**
      * Formats an array as a table
      *
-     * @param array  $array   array of \Traversable
+     * @param array  $rows    array of \Traversable
      * @param string $caption optional caption
      * @param array  $columns columns to display
      * @param string $class   table's class attribute
      *
      * @return string
      */
-    public function buildTable($array, $caption = null, $columns = array(), $class = '')
+    public function buildTable($rows, $caption = null, $columns = array(), $class = '')
     {
         $str = '';
-        if (!is_array($array) || empty($array)) {
+        if (!is_array($rows) || empty($rows)) {
             // empty array/value
             if (isset($caption)) {
                 $str = $caption.' = ';
             }
-            $str .= $this->dump($array);
+            $str .= $this->dump($rows);
             return '<div class="m_log">'.$str.'</div>';
         }
         $headers = array();
-        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
+        $keys = $columns ?: $this->debug->utilities->arrayColKeys($rows);
         foreach ($keys as $key) {
             $headers[] = $key === ''
                 ? 'value'
                 : htmlspecialchars($key);
         }
         $haveObj = false;
-        foreach ($array as $k => $row) {
+        foreach ($rows as $k => $row) {
             $str .= $this->buildTableRow($row, $keys, $k, $isObj);
             if ($isObj) {
                 $haveObj = true;
@@ -136,7 +136,7 @@ class OutputHtml extends OutputBase
      *
      * @return string|void
      */
-    public function onOutput(Event $event = null)
+    public function onOutput(Event $event)
     {
         $this->data = $this->debug->getData();
         $this->removeHideIfEmptyGroups();
@@ -179,74 +179,33 @@ class OutputHtml extends OutputBase
         $str .= '</div>'."\n";  // close debug-content
         $str .= '</div>'."\n";  // close debug
         $this->data = array();
-        if ($event) {
-            $event['output'] .= $str;
-        } else {
-            return $str;
-        }
+        $event['return'] .= $str;
     }
 
     /**
-     * Return a log entry as HTML
+     * Convert all arguments to html and join them together.
      *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
+     * @param array $args arguments
      *
-     * @return string
+     * @return string html
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    protected function buildArgString($args)
     {
-        $str = '';
-        if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $str = $this->buildGroupMethod($method, $args, $meta);
-        } elseif ($method == 'table') {
-            $str = $this->buildTable($args[0], $args[1], $args[2], 'm_table table-bordered sortable');
-        } elseif ($method == 'trace') {
-            $str = $this->buildTable($args[0], 'trace', array('file','line','function'), 'm_trace table-bordered');
-        } else {
-            $attribs = array(
-                'class' => 'm_'.$method,
-                'title' => null,
-            );
-            if (in_array($method, array('error','warn'))) {
-                if (isset($meta['file'])) {
-                    $attribs['title'] = $meta['file'].': line '.$meta['line'];
-                }
-                if (isset($meta['errorCat'])) {
-                    $attribs['class'] .= ' error-'.$meta['errorCat'];
-                }
-            }
-            $numArgs = count($args);
-            $hasSubs = false;
-            if (in_array($method, array('error','info','log','warn')) && is_string($args[0]) && $numArgs > 1) {
-                $args = $this->processSubstitutions($args, $hasSubs);
-            }
-            if ($hasSubs) {
-                $glue = '';
-                $args = implode($glue, $args);
-                $args = '<span class="t_string no-pseudo">'.$args.'</span>';
-            } else {
-                $glue = ', ';
-                if ($numArgs == 2 && is_string($args[0])) {
-                    $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                        ? ''
-                        : ' = ';
-                }
-                foreach ($args as $i => $v) {
-                    if ($i > 0) {
-                        $args[$i] = $this->dump($v, array(), true);
-                    } else {
-                        // don't apply htmlspecialchars()
-                        $args[$i] = $this->dump($v, array(), false);
-                    }
-                }
-                $args = implode($glue, $args);
-            }
-            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'.$args.'</div>';
+        $glue = ', ';
+        if (count($args) == 2 && is_string($args[0])) {
+            $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                ? ''
+                : ' = ';
         }
-        $str .= "\n";
-        return $str;
+        foreach ($args as $i => $v) {
+            if ($i > 0) {
+                $args[$i] = $this->dump($v, array(), true);
+            } else {
+                // don't apply htmlspecialchars()
+                $args[$i] = $this->dump($v, array(), false);
+            }
+        }
+        return implode($glue, $args);
     }
 
     /**
@@ -324,6 +283,53 @@ class OutputHtml extends OutputBase
         }
         $str .= '</tr>'."\n";
         $str = str_replace(' title=""', '', $str);
+        return $str;
+    }
+
+    /**
+     * Return a log entry as HTML
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return string|void
+     */
+    protected function doProcessLogEntry($method, $args = array(), $meta = array())
+    {
+        $str = '';
+        if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+            $str = $this->buildGroupMethod($method, $args, $meta);
+        } elseif ($method == 'table') {
+            $str = $this->buildTable($args[0], $meta['caption'], $meta['columns'], 'm_table table-bordered sortable');
+        } elseif ($method == 'trace') {
+            $str = $this->buildTable($args[0], 'trace', array('file','line','function'), 'm_trace table-bordered');
+        } else {
+            $attribs = array(
+                'class' => 'm_'.$method,
+            );
+            if (in_array($method, array('error','info','log','warn'))) {
+                if (in_array($method, array('error','warn'))) {
+                    if (isset($meta['file'])) {
+                        $attribs['title'] = $meta['file'].': line '.$meta['line'];
+                    }
+                    if (isset($meta['errorCat'])) {
+                        $attribs['class'] .= ' error-'.$meta['errorCat'];
+                    }
+                }
+                if (count($args) > 1 && is_string($args[0])) {
+                    $hasSubs = false;
+                    $args = $this->processSubstitutions($args, $hasSubs);
+                    if ($hasSubs) {
+                        $args = array( implode('', $args) );
+                    }
+                }
+            }
+            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
+                .$this->buildArgString($args)
+                .'</div>';
+        }
+        $str .= "\n";
         return $str;
     }
 

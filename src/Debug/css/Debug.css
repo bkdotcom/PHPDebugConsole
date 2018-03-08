@@ -54,6 +54,7 @@
 .debug table caption { font-weight:bold; font-style:italic; padding-bottom:0; padding-top:2px; text-align:left; }
 .debug table th { font-weight:bold; background-color:rgba(0,0,0,0.1); }
 .debug table thead th { text-align: center; }
+.debug table tbody th { text-align: right; }
 .debug table th, .debug table td { padding:0 .25em; vertical-align:top; }
 .debug .table-bordered th, .debug .table-bordered td { border:1px solid #7F7F7F; padding:1px .25em; }
 .debug tbody th.t_int,
@@ -236,7 +237,7 @@
 	border-left: 1px solid rgba(0, 0, 0, 0.25);
 	padding-left: 1px;
 }
-.debug .group-header { display:table; }
+.debug .group-header { display:table; white-space:nowrap; }
 .debug .group-label { font-weight:bold; }
 .debug .m_group.debug-header,
 	.debug .m_group.debug-content {

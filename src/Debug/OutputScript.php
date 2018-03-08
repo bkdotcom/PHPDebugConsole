@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -27,7 +27,7 @@ class OutputScript extends OutputBase
      *
      * @return string|void
      */
-    public function onOutput(Event $event = null)
+    public function onOutput(Event $event)
     {
         $this->data = $this->debug->getData();
         $this->removeHideIfEmptyGroups();
@@ -54,15 +54,56 @@ class OutputScript extends OutputBase
         $str .= $this->processLogEntry('groupEnd');
         $str .= '</script>'."\n";
         $this->data = array();
-        if ($event) {
-            $event['output'] .= $str;
-        } else {
-            return $str;
-        }
+        $event['return'] .= $str;
     }
 
     /**
-     * process alerts
+     * Return log entry as javascript console.xxxx
+     *
+     * @param string $method method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return string
+     */
+    protected function doProcessLogEntry($method, $args = array(), $meta = array())
+    {
+        if ($method == 'assert') {
+            array_unshift($args, false);
+        } elseif (in_array($method, array('count','time'))) {
+            $method = 'log';
+        } elseif ($method == 'table') {
+            $args = array($this->methodTable($args[0], $meta['columns']));
+        } elseif ($method == 'trace') {
+            $method = 'table';
+            $args = array($this->methodTable($args[0], array('function','file','line')));
+        } elseif (in_array($method, array('error','warn'))) {
+            if (isset($meta['file'])) {
+                $args[] = $meta['file'].': line '.$meta['line'];
+            }
+        }
+        foreach ($args as $k => $arg) {
+            $args[$k] = json_encode($this->dump($arg));
+        }
+        $str = 'console.'.$method.'('.implode(',', $args).');'."\n";
+        $str = str_replace(json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
+        return $str;
+    }
+
+    /**
+     * Dump undefined
+     *
+     * Returns the undefined constant, which we can replace with "undefined" after json_encoding
+     *
+     * @return string
+     */
+    protected function dumpUndefined()
+    {
+        return $this->debug->abstracter->UNDEFINED;
+    }
+
+    /**
+     * Process alerts
      *
      * @return string
      */
@@ -107,50 +148,5 @@ class OutputScript extends OutputBase
             $str .= $this->processLogEntry($method, $args);
         }
         return $str;
-    }
-
-    /**
-     * Return log entry as javascript console.xxxx
-     *
-     * @param string $method method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
-     *
-     * @return string
-     */
-    public function processLogEntry($method, $args = array(), $meta = array())
-    {
-        if ($method == 'assert') {
-            array_unshift($args, false);
-        } elseif ($method == 'count' || $method == 'time') {
-            $method = 'log';
-        } elseif ($method == 'table') {
-            $args = array($this->methodTable($args[0], $args[2]));
-        } elseif ($method == 'trace') {
-            $method = 'table';
-            $args = array($this->methodTable($args[0], array('function','file','line')));
-        } elseif (in_array($method, array('error','warn'))) {
-            if (isset($meta['file'])) {
-                $args[] = $meta['file'].': line '.$meta['line'];
-            }
-        }
-        foreach ($args as $k => $arg) {
-            $args[$k] = json_encode($this->dump($arg));
-        }
-        $str = 'console.'.$method.'('.implode(',', $args).');'."\n";
-        $str = str_replace(json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
-        return $str;
-    }
-
-    /**
-     * Dump undefined
-     *
-     * Returns the undefined constant, which we can replace with "undefined" after json_encoding
-     *
-     * @return string
-     */
-    protected function dumpUndefined()
-    {
-        return $this->debug->abstracter->UNDEFINED;
     }
 }

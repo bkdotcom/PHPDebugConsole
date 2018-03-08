@@ -66,7 +66,7 @@ class DebugTest extends DebugTestFramework
         $this->debug->assert(true, 'this is true... not logged');
         $log = $this->debug->getData('log');
         $this->assertCount(1, $log);
-        $this->assertSame(array('assert',array('this is false')), $log[0]);
+        $this->assertSame(array('assert',array('this is false'), array()), $log[0]);
     }
 
     /**
@@ -85,9 +85,9 @@ class DebugTest extends DebugTestFramework
         $log = $this->debug->getData('log');
         $log = array_slice($log, -3);
         $this->assertSame(array(
-            array('count', array('count', 3)),
-            array('count', array('count test', 4)),
-            array('count', array('count', 3)),
+            array('count', array('count', 3), array()),
+            array('count', array('count test', 4), array()),
+            array('count', array('count', 3), array()),
         ), $log);
     }
 
@@ -138,7 +138,7 @@ class DebugTest extends DebugTestFramework
     {
         $this->debug->group('a', 'b', 'c');
         $logEntry = $this->debug->getData('log/0');
-        $this->assertSame(array('group',array('a','b','c')), $logEntry);
+        $this->assertSame(array('group',array('a','b','c'), array()), $logEntry);
         $depth = $this->debug->getData('groupDepth');
         $this->assertSame(1, $depth);
         $this->debug->group($this->debug->meta('hideIfEmpty'));
@@ -229,7 +229,7 @@ EOD;
     {
         $this->debug->groupCollapsed('a', 'b', 'c');
         $log = $this->debug->getData('log');
-        $this->assertSame(array('groupCollapsed', array('a','b','c')), $log[0]);
+        $this->assertSame(array('groupCollapsed', array('a','b','c'), array()), $log[0]);
         $depth = $this->debug->getData('groupDepth');
         $this->assertSame(1, $depth);
         $this->debug->groupCollapsed($this->debug->meta('hideIfEmpty'));

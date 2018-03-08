@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -29,7 +29,7 @@ class OutputText extends OutputBase
      *
      * @return string|void
      */
-    public function onOutput(Event $event = null)
+    public function onOutput(Event $event)
     {
         $this->data = $this->debug->getData();
         $str = '';
@@ -37,11 +37,34 @@ class OutputText extends OutputBase
         $str .= $this->processSummary();
         $str .= $this->processLog();
         $this->data = array();
-        if ($event) {
-            $event['output'] .= $str;
-        } else {
-            return $str;
+        $event['return'] .= $str;
+    }
+
+    /**
+     * Convert all arguments to text and join them together.
+     *
+     * @param array $args arguments
+     *
+     * @return string
+     */
+    protected function buildArgString($args)
+    {
+        $numArgs = count($args);
+        if ($numArgs == 1 && is_string($args[0])) {
+            $args[0] = strip_tags($args[0]);
         }
+        foreach ($args as $k => $v) {
+            if ($k > 0 || !is_string($v)) {
+                $args[$k] = $this->dump($v);
+            }
+        }
+        $glue = ', ';
+        if ($numArgs == 2) {
+            $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                ? ''
+                : ' = ';
+        }
+        return implode($glue, $args);
     }
 
     /**
@@ -53,10 +76,8 @@ class OutputText extends OutputBase
      *
      * @return string
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    protected function doProcessLogEntry($method, $args = array(), $meta = array())
     {
-        $numArgs = count($args);
-        $hasSubs = false;
         $prefixes = array(
             'error' => '⦻ ',
             'info' => 'ℹ ',
@@ -71,50 +92,33 @@ class OutputText extends OutputBase
         $prefix = isset($prefixes[$method])
             ? $prefixes[$method]
             : '';
+        $strIndent = str_repeat('    ', $this->depth);
         if (in_array($method, array('error','info','log','warn'))) {
-            if (is_string($args[0]) && $numArgs > 1) {
+            if (count($args) > 1 && is_string($args[0])) {
+                $hasSubs = false;
                 $args = $this->processSubstitutions($args, $hasSubs);
+                if ($hasSubs) {
+                    $args = array( implode('', $args) );
+                }
             }
         } elseif ($method == 'alert') {
             $class = $args['class'];
             $prefix = '[Alert '.$class.'] ';
             $args = array($args['message']);
         } elseif ($method == 'table') {
-            $caption = $args[1];
-            $args = array($this->methodTable($args[0], $args[2]));
-            if ($caption) {
-                array_unshift($args, $caption);
+            $args = array($this->methodTable($args[0], $meta['columns']));
+            if ($meta['caption']) {
+                array_unshift($args, $meta['caption']);
             }
-            $numArgs = count($args);
-        }
-        if ($hasSubs) {
-            $glue = '';
-        } else {
-            if (count($args) == 1 && is_string($args[0])) {
-                $args[0] = strip_tags($args[0]);
-            }
-            foreach ($args as $k => $v) {
-                if ($k > 0 || !is_string($v)) {
-                    $args[$k] = $this->dump($v);
-                }
-            }
-            $glue = ', ';
-            if ($numArgs == 2) {
-                $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                    ? ''
-                    : ' = ';
-            }
-        }
-        $strIndent = str_repeat('    ', $this->depth);
-        $str = $prefix.implode($glue, $args);
-        $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
-        if (in_array($method, array('group','groupCollapsed'))) {
+        } elseif (in_array($method, array('group','groupCollapsed'))) {
             $this->depth ++;
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
             $this->depth --;
         }
+        $str = $prefix.$this->buildArgString($args);
+        $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
         $str .= "\n";
-        return $str;
+        return rtrim($str);
     }
 
     /**

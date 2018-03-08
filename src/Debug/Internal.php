@@ -184,6 +184,31 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Extracts meta-data from args
+     *
+     * Extract meta-data added via meta() method..
+     * all meta args are merged together and returned
+     * meta args are removed from passed args
+     *
+     * @param array $args args to check
+     *
+     * @return array meta information
+     */
+    public static function getMetaVals(&$args)
+    {
+        $meta = array();
+        foreach ($args as $i => $v) {
+            if (is_array($v) && array_intersect_assoc(array('debug'=>Debug::META), $v)) {
+                unset($v['debug']);
+                $meta = array_merge($meta, $v);
+                unset($args[$i]);
+            }
+        }
+        $args = array_values($args);
+        return $meta;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getSubscriptions()

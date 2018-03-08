@@ -147,6 +147,27 @@ class Debug
     }
 
     /**
+     * Magic method... inaccessible method called.
+     *
+     * Treat as a custom method
+     *
+     * @param string $methodName Inaccessible method name
+     * @param array  $args       Arguments passed to method
+     *
+     * @return void
+     */
+    public function __call($methodName, $args)
+    {
+        if ($this->cfg['collect']) {
+            $this->appendLog(
+                $methodName,
+                $args,
+                array('isCustomMethod' => true)
+            );
+        }
+    }
+
+    /**
      * Magic method to allow us to call instance methods statically
      *
      * Prefix the instance method with an underscore ie
@@ -161,14 +182,19 @@ class Debug
     {
         $methodName = ltrim($methodName, '_');
         if (in_array($methodName, self::$publicMethods)) {
-            $instance = self::getInstance();
-            return call_user_func_array(array($instance, $methodName), $args);
+            return call_user_func_array(array(self::$instance, $methodName), $args);
         } elseif (empty(self::$publicMethods)) {
             /*
                 Initializing debug with \bdk\Debug::_setCfg()?
             */
             self::setPublicMethods();
             return self::__callStatic($methodName, $args);
+        } elseif (self::$instance->cfg['collect']) {
+            self::$instance->appendLog(
+                $methodName,
+                $args,
+                array('isCustomMethod' => true)
+            );
         }
     }
 
@@ -469,36 +495,34 @@ class Debug
         $args = func_get_args();
         $argCount = count($args);
         $data = null;
-        $caption = $this->abstracter->UNDEFINED;
-        $columns = array();
-        /*
-            find first array in args
-            find caption arg
-            find columns arg
-        */
+        $meta = array(
+            'caption' => null,
+            'columns' => array(),
+        );
         for ($i = 0; $i < $argCount; $i++) {
             if (is_array($args[$i])) {
                 if ($data === null) {
                     $data = $args[$i];
-                } elseif (empty($columns)) {
-                    $columns = $args[$i];
+                } elseif (empty($meta['columns'])) {
+                    $meta['columns'] = $args[$i];
                 }
-            } elseif ($caption === $this->abstracter->UNDEFINED) {
-                $caption = $args[$i];
+            } elseif (is_string($args[$i]) && !$meta['caption']) {
+                $meta['caption'] = $args[$i];
             }
             unset($args[$i]);
         }
         if (is_array($data)) {
-            if ($caption === $this->abstracter->UNDEFINED) {
-                $caption = null;
-            }
             if (empty($data)) {
-                $args = $caption !== null
-                    ? array($caption, $data)
+                $args = $meta['caption']
+                    ? array($meta['caption'], $data)
                     : array($data);
                 $this->appendLog('log', $args);
             } else {
-                $this->appendLog('table', array($data, $caption, $columns));
+                $this->appendLog(
+                    'table',
+                    array($data),
+                    $meta
+                );
             }
         } else {
             $this->appendLog('log', func_get_args());
@@ -622,6 +646,9 @@ class Debug
      */
     public function trace()
     {
+        if (!$this->cfg['collect']) {
+            return;
+        }
         $backtrace = $this->errorHandler->backtrace();
         // toss "internal" frames
         for ($i = 1, $count=count($backtrace)-1; $i < $count; $i++) {
@@ -752,17 +779,25 @@ class Debug
         if ($this->cfg['output']) {
             while ($this->data['groupDepth'] > 0) {
                 $this->data['groupDepth']--;
-                $this->data['log'][] = array('groupEnd', array());
+                $this->data['log'][] = array('groupEnd', array(), array());
             }
             $outputAs = $this->output->getCfg('outputAs');
             $this->output->setCfg('outputAs', $outputAs);
-            $return = $this->eventManager->publish('debug.output', $this, array('output'=>''))['output'];
+            $return = $this->eventManager->publish(
+                'debug.output',
+                $this,
+                array('return'=>'')
+            )['return'];
             $this->data['outputSent'] = true;
             $this->data['log'] = array();
             $this->data['logSummary'] = array();
             $this->data['alerts'] = array();
         } else {
-            $this->eventManager->publish('debug.output', $this, array('output'=>''));
+            $this->eventManager->publish(
+                'debug.output',
+                $this,
+                array('return'=>'')
+            );
         }
         return $return;
     }
@@ -878,12 +913,11 @@ class Debug
      */
     protected function appendLog($method, $args = array(), $meta = array())
     {
-        foreach ($args as $i => $v) {
-            if ($this->abstracter->needsAbstraction($v)) {
-                if ($method == 'table' && is_array($v)) {
-                    // handle separately... could be an array of \Traversable objects
-                    $args[$i] = $this->abstracter->getAbstractionTable($v);
-                } else {
+        if ($method == 'table') {
+            $args[0] = $this->abstracter->getAbstractionTable($args[0]);
+        } else {
+            foreach ($args as $i => $v) {
+                if ($this->abstracter->needsAbstraction($v)) {
                     $args[$i] = $this->abstracter->getAbstraction($v);
                 }
             }
@@ -906,12 +940,7 @@ class Debug
         if ($method == 'alert') {
             $this->data['alerts'][] = array($args[0], $meta);
         } else {
-            $this->logRef[] = array($method, $args);
-            if ($meta) {
-                end($this->logRef);
-                $key = key($this->logRef);
-                $this->logRef[$key][2] = $meta;
-            }
+            $this->logRef[] = array($method, $args, $meta);
         }
         return;
     }
@@ -926,15 +955,7 @@ class Debug
      */
     private function doGroup($method, $args)
     {
-        $meta = array();
-        foreach ($args as $i => $v) {
-            if (is_array($v) && ($k = array_search(self::META, $v, true)) !== false) {
-                unset($v[$k]);
-                $meta = array_merge($meta, $v);
-                unset($args[$i]);
-            }
-        }
-        $args = array_values($args);
+        $meta = $this->internal->getMetaVals($args);
         if (empty($args)) {
             // give a default label
             $caller = $this->utilities->getCallerInfo();
@@ -953,6 +974,8 @@ class Debug
     /**
      * Set/cache this class' public methods
      *
+     * Generated list is used when calling methods statically
+     *
      * @return void
      */
     private static function setPublicMethods()
@@ -963,6 +986,7 @@ class Debug
         }, $reflection->getMethods(ReflectionMethod::IS_PUBLIC));
         self::$publicMethods = array_diff(self::$publicMethods, array(
             '__construct',
+            '__call',
             '__callStatic',
             '__get',
         ));
@@ -981,7 +1005,9 @@ class Debug
      */
     protected function timeLog($seconds, $returnOrTemplate = false, $label = 'time')
     {
-
+        if (!$this->cfg['collect']) {
+            return;
+        }
         if (is_string($returnOrTemplate)) {
             $str = $returnOrTemplate;
             $str = str_replace('%label', $label, $str);

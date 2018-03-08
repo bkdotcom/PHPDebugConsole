@@ -11,6 +11,7 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -32,16 +33,6 @@ abstract class OutputBase implements SubscriberInterface
     public function __construct($debug)
     {
         $this->debug = $debug;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            'debug.output' => 'onOutput',
-        );
     }
 
     /**
@@ -72,6 +63,25 @@ abstract class OutputBase implements SubscriberInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            'debug.output' => 'onOutput',
+        );
+    }
+
+    /**
+     * debug.output subscriber
+     *
+     * @param Event $event debug.output event object
+     *
+     * @return void
+     */
+    abstract public function onOutput(Event $event);
+
+    /**
      * Is value a timestamp?
      *
      * @param mixed $val value to check
@@ -87,6 +97,17 @@ abstract class OutputBase implements SubscriberInterface
         }
         return false;
     }
+
+    /**
+     * Called by processLogEntry
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return mixed
+     */
+    abstract protected function doProcessLogEntry($method, $args = array(), $meta = array());
 
     /**
      * Dump array
@@ -298,7 +319,7 @@ abstract class OutputBase implements SubscriberInterface
     /**
      * Process alerts
      *
-     * By default we just treat alerts like error(), info(), and warn() calls
+     * By default we just ouptut alerts like error(), info(), and warn() calls
      *
      * @return string
      */
@@ -331,11 +352,7 @@ abstract class OutputBase implements SubscriberInterface
     {
         $str = '';
         foreach ($this->data['log'] as $entry) {
-            $str .= $this->processLogEntry(
-                $entry[0],
-                $entry[1],
-                !empty($entry[2]) ? $entry[2] : array()
-            );
+            $str .= $this->processLogEntry($entry[0], $entry[1], $entry[2]);
         }
         return $str;
     }
@@ -347,9 +364,23 @@ abstract class OutputBase implements SubscriberInterface
      * @param array  $args   args
      * @param array  $meta   meta values
      *
-     * @return string
+     * @return mixed
      */
-    abstract public function processLogEntry($method, $args = array(), $meta = array());
+    protected function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $event = $this->debug->eventManager->publish(
+            'debug.outputLogEntry',
+            $this,
+            array(
+                'method' => $method,
+                'args' => $args,
+                'meta' => $meta,
+            )
+        );
+        if (!$event->isPropagationStopped()) {
+            return $this->doProcessLogEntry($event['method'], $event['args'], $event['meta']);
+        }
+    }
 
     /**
      * Handle the not-well documented substitutions
@@ -441,11 +472,7 @@ abstract class OutputBase implements SubscriberInterface
         krsort($summaryData);
         $summaryData = call_user_func_array('array_merge', $summaryData);
         foreach ($summaryData as $entry) {
-            $str .= $this->processLogEntry(
-                $entry[0],
-                $entry[1],
-                !empty($entry[2]) ? $entry[2] : array()
-            );
+            $str .= $this->processLogEntry($entry[0], $entry[1], $entry[2]);
         }
         return trim($str);
     }
@@ -455,7 +482,7 @@ abstract class OutputBase implements SubscriberInterface
      *
      * @return void
      */
-    public function removeHideIfEmptyGroups()
+    protected function removeHideIfEmptyGroups()
     {
         $groupStack = array();
         $groupStackCount = 0;
@@ -515,7 +542,7 @@ abstract class OutputBase implements SubscriberInterface
      *
      * @return void
      */
-    public function uncollapseErrors()
+    protected function uncollapseErrors()
     {
         $groupStack = array();
         for ($i = 0, $count = count($this->data['log']); $i < $count; $i++) {

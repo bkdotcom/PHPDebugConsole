@@ -20,15 +20,37 @@ class MethodTableTest extends DebugTestFramework
         );
         $this->debug->table($list);
         $this->debug->table('arg1', array());
-        $this->debug->table('arg1', 'arg2', $list, 'arg4');
-        $this->debug->table($list, 'arg2', array('arg3 is array'), 'arg4');
+        $this->debug->table('arg1', 'arg2 is not logged', $list, 'arg4 is not logged');
+        $this->debug->table($list, 'arg2', array('arg3 is array'), 'arg4 is not logged');
         $this->debug->table('arg1', 'arg2');
         // test stored args
-        $this->assertSame(array('table', array($list, null, array())), $this->debug->getData('log/0'));
-        $this->assertSame(array('log', array('arg1', array())), $this->debug->getData('log/1'));
-        $this->assertSame(array('table', array($list, 'arg1', array())), $this->debug->getData('log/2'));
-        $this->assertSame(array('table', array($list, 'arg2', array('arg3 is array'))), $this->debug->getData('log/3'));
-        $this->assertSame(array('log', array('arg1', 'arg2')), $this->debug->getData('log/4'));
+        $this->assertSame(array(
+            'table',
+            array($list),
+            array('caption'=>null,'columns'=>array()),
+        ), $this->debug->getData('log/0'));
+        $this->assertSame(array(
+            'log',
+            array('arg1', array()),
+            array(),
+        ), $this->debug->getData('log/1'));
+        $this->assertSame(array(
+            'table',
+            array($list),
+            array(
+                'caption'=>'arg1',
+                'columns'=>array(),
+            ),
+        ), $this->debug->getData('log/2'));
+        $this->assertSame(array(
+            'table',
+            array($list),
+            array(
+                'caption'=>'arg2',
+                'columns'=>array('arg3 is array'),
+            ),
+        ), $this->debug->getData('log/3'));
+        $this->assertSame(array('log', array('arg1', 'arg2'), array()), $this->debug->getData('log/4'));
     }
 
     /**

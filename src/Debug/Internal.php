@@ -45,11 +45,11 @@ class Internal implements SubscriberInterface
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
-        }, 'onErrorAddEmailData'), 1);
+        }, 'onErrorAddEmailData'), Debug::PRIORITY_HIGH);
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
-        }, 'onErrorEmail'), -1);
+        }, 'onErrorEmail'), Debug::PRIORITY_LOW);
     }
 
     /**
@@ -214,8 +214,7 @@ class Internal implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            'debug.bootstrap' => array('onBootstrap', -1),
-            'debug.log' => array('onLog', -1),
+            'debug.bootstrap' => array('onBootstrap', Debug::PRIORITY_LOW),
             'debug.output' => 'onOutput',
             'errorHandler.error' => 'onError',
             'php.shutdown' => 'onShutdown',
@@ -306,30 +305,6 @@ class Internal implements SubscriberInterface
             $error['inConsole'] = false;
         } else {
             $error['inConsole'] = false;
-        }
-    }
-
-    /**
-     * debug.log event subscriber
-     *
-     * Given low priority so this will be ran after other subscribers
-     *
-     * @param Event $event debug.log event
-     *
-     * @return void
-     */
-    public function onLog(Event $event)
-    {
-        $method = $event['method'];
-        $meta = $event['meta'];
-        if ($method == 'groupUncollapse') {
-            // don't append to log
-            $event->stopPropagation();
-            return;
-        }
-        $isSummaryBookend = $method == 'groupSummary' || !empty($meta['closesSummary']);
-        if ($isSummaryBookend) {
-            $event->stopPropagation();
         }
     }
 

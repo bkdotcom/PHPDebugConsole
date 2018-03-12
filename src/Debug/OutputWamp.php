@@ -58,8 +58,8 @@ class OutputWamp implements SubscriberInterface
         $this->processExistingData();
         return array(
             'debug.log' => 'onLog',
-            'debug.output' => 'onOutput',
             'errorHandler.error' => 'onError',    // assumes errorhandler is using same dispatcher.. as should be
+            'php.shutdown' => 'onShutdown',
         );
     }
 
@@ -113,11 +113,11 @@ class OutputWamp implements SubscriberInterface
     }
 
     /**
-     * debug.output event subscriber
+     * php.shutdown event subscriber
      *
      * @return void
      */
-    public function onOutput()
+    public function onShutdown()
     {
         // publish a "we're done" message
         $this->publish('endOutput', array(

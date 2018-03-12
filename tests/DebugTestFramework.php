@@ -40,8 +40,8 @@ class DebugTestFramework extends DOMTestCase
             'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
             'counts'        => array(), // count method
             'entryCountInitial' => 0,   // store number of log entries created during init
-            'groupDepth'    => 0,
-            'groupDepthSummary' => 0,
+            'groupDepth'    => array(0, 0),
+            'groupSummaryStack' => array(),
             'log'           => array(),
             'logSummary'    => array(),
             'outputSent'    => false,

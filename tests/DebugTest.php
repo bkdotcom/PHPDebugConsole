@@ -60,6 +60,25 @@ class DebugTest extends DebugTestFramework
      *
      * @return void
      */
+    public function testAlert()
+    {
+        $message = 'Ballistic missle threat inbound to Hawaii.  Seek immediate shelter.  This is not a drill.';
+        $this->debug->alert($message);
+        $alerts = $this->debug->getData('alerts');
+        $this->assertCount(1, $alerts);
+        $this->assertSame(array($message, array('class'=>'danger','dismissible'=>false)), $alerts[0]);
+
+        $this->debug->setCfg('collect', false);
+        $this->debug->alert($message);
+        $alerts = $this->debug->getData('alerts');
+        $this->assertCount(1, $alerts, 'Alert() logged although collect=false');
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
     public function testAssert()
     {
         $this->debug->assert(false, 'this is false');
@@ -67,6 +86,11 @@ class DebugTest extends DebugTestFramework
         $log = $this->debug->getData('log');
         $this->assertCount(1, $log);
         $this->assertSame(array('assert',array('this is false'), array()), $log[0]);
+
+        $this->debug->setCfg('collect', false);
+        $this->debug->assert(false, 'this is false');
+        $log = $this->debug->getData('log');
+        $this->assertCount(1, $log, 'Assert() logged although collect=false');
     }
 
     /**
@@ -83,12 +107,19 @@ class DebugTest extends DebugTestFramework
             \bdk\Debug::_count();
         }
         $log = $this->debug->getData('log');
+        $count = count($log);
         $log = array_slice($log, -3);
         $this->assertSame(array(
             array('count', array('count', 3), array()),
             array('count', array('count test', 4), array()),
             array('count', array('count', 3), array()),
         ), $log);
+
+        $this->debug->setCfg('collect', false);
+        $ret = $this->debug->count('count test');
+        $this->assertSame(5, $ret, 'count() return incorrect');
+        $log = $this->debug->getData('log');
+        $this->assertCount($count, $log, 'Count() logged although collect=false');
     }
 
     /**
@@ -118,15 +149,11 @@ class DebugTest extends DebugTestFramework
         // $this->assertTrue($isArray, 'is Array');
         $this->assertTrue($isObject, 'is Object');
         $this->assertTrue($isResource, 'is Resource');
-    }
 
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testGetCfg()
-    {
+        $this->debug->setCfg('collect', false);
+        $this->debug->error('error message');
+        $log = $this->debug->getData('log');
+        $this->assertCount(1, $log, 'Error() logged although collect=false');
     }
 
     /**
@@ -139,8 +166,7 @@ class DebugTest extends DebugTestFramework
         $this->debug->group('a', 'b', 'c');
         $logEntry = $this->debug->getData('log/0');
         $this->assertSame(array('group',array('a','b','c'), array()), $logEntry);
-        $depth = $this->debug->getData('groupDepth');
-        $this->assertSame(1, $depth);
+        $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
         $this->debug->group($this->debug->meta('hideIfEmpty'));
         $output = $this->debug->output();
         $outputExpect = <<<EOD
@@ -218,6 +244,12 @@ EOD;
                 'isMethodName' => true,
             ),
         ), $this->debug->getData('log/0'));
+
+        $logBefore = $this->debug->getData('log');
+        $this->debug->setCfg('collect', false);
+        $this->debug->group('not logged');
+        $logAfter = $this->debug->getData('log');
+        $this->assertCount(count($logBefore), $logAfter, 'Group() logged although collect=false');
     }
 
     /**
@@ -230,8 +262,7 @@ EOD;
         $this->debug->groupCollapsed('a', 'b', 'c');
         $log = $this->debug->getData('log');
         $this->assertSame(array('groupCollapsed', array('a','b','c'), array()), $log[0]);
-        $depth = $this->debug->getData('groupDepth');
-        $this->assertSame(1, $depth);
+        $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
         $this->debug->groupCollapsed($this->debug->meta('hideIfEmpty'));
         $output = $this->debug->output();
         $outputExpect = <<<EOD
@@ -240,6 +271,88 @@ EOD;
 </div>
 EOD;
         $this->assertContains($outputExpect, $output);
+
+        $logBefore = $this->debug->getData('log');
+        $this->debug->setCfg('collect', false);
+        $this->debug->groupCollapsed('not logged');
+        $logAfter = $this->debug->getData('log');
+        $this->assertCount(count($logBefore), $logAfter, 'GroupCollapsed() logged although collect=false');
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testGroupEnd()
+    {
+        /*
+            Create & close a group
+        */
+        $this->debug->group('a', 'b', 'c');
+        $this->debug->groupEnd();
+        $this->assertSame(array(0,0), $this->debug->getData('groupDepth'));
+        $log = $this->debug->getData('log');
+        $this->assertCount(2, $log);
+        $this->assertSame(array(
+            array('group',array('a','b','c'),array()),
+            array('groupEnd',array(),array()),
+        ), $log);
+
+        // reset log
+        $this->debug->setData('log', array());
+
+        // create a group, turn off collect, close
+        // (group should remain open)
+        $this->debug->group('new group');
+        $logBefore = $this->debug->getData('log');
+        $this->debug->setCfg('collect', false);
+        $this->debug->groupEnd();
+        $logAfter = $this->debug->getData('log');
+        $this->assertSame($logBefore, $logAfter, 'GroupEnd() logged although collect=false');
+
+        // turn collect back on and close the group
+        $this->debug->setCfg('collect', true);
+        $this->debug->groupEnd(); // close the open group
+        $this->assertCount(2, $this->debug->getData('log'));
+
+        // nothing to close!
+        $this->debug->groupEnd(); // close the open group
+        $this->assertCount(2, $this->debug->getData('log'));
+    }
+
+    public function testGroupSummary()
+    {
+        $this->debug->groupSummary();
+        $this->debug->group('group inside summary');
+        $this->debug->log('I\'m in the summary!');
+        $this->debug->groupEnd();
+        $this->debug->log('I\'m still in the summary!');
+        $this->debug->groupEnd();
+        $this->debug->log('I\'m not in the summary');
+        $this->debug->setCfg('collect', false);
+        $this->debug->groupSummary();   // even though collection is off, we're still start a summary group
+        $this->debug->log('I\'m not logged');
+        $this->debug->setCfg('collect', true);
+        $this->debug->log('I\'m staying in the summary!');
+        $this->debug->setCfg('collect', false);
+        $this->debug->groupEnd();   // even though collection is off, we're still closing summary
+        $this->debug->setCfg('collect', true);
+        $this->debug->log('the end');
+
+        $logSummary = $this->debug->getData('logSummary/0');
+        $this->assertSame(array(
+            array('group',array('group inside summary'), array()),
+            array('log',array('I\'m in the summary!'), array()),
+            array('groupEnd',array(), array()),
+            array('log',array('I\'m still in the summary!'), array()),
+            array('log',array('I\'m staying in the summary!'), array()),
+        ), $logSummary);
+        $log = $this->debug->getData('log');
+        $this->assertSame(array(
+            array('log',array('I\'m not in the summary'), array()),
+            array('log',array('the end'), array()),
+        ), $log);
     }
 
     /**
@@ -266,19 +379,6 @@ EOD;
      *
      * @return void
      */
-    public function testGroupEnd()
-    {
-        $this->debug->group('a', 'b', 'c');
-        $this->debug->groupEnd();
-        $depth = $this->debug->getData('groupDepth');
-        $this->assertSame(0, $depth);
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
     public function testInfo()
     {
         $resource = fopen(__FILE__, 'r');
@@ -295,6 +395,12 @@ EOD;
         // $this->assertTrue($isArray);
         $this->assertTrue($isObject);
         $this->assertTrue($isResource);
+
+        $logBefore = $this->debug->getData('log');
+        $this->debug->setCfg('collect', false);
+        $this->debug->info('info message');
+        $logAfter = $this->debug->getData('log');
+        $this->assertCount(count($logBefore), $logAfter, 'Info() logged although collect=false');
     }
 
     /**
@@ -318,6 +424,155 @@ EOD;
         // $this->assertTrue($isArray);
         $this->assertTrue($isObject);
         $this->assertTrue($isResource);
+
+        $logBefore = $this->debug->getData('log');
+        $this->debug->setCfg('collect', false);
+        $this->debug->log('log message');
+        $logAfter = $this->debug->getData('log');
+        $this->assertCount(count($logBefore), $logAfter, 'Log() logged although collect=false');
+    }
+
+    /*
+        table() method tested in MethodTableTest
+    */
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTrace()
+    {
+        $this->debug->trace();
+        $trace = $this->debug->getData('log/0/1/0');
+        $this->assertSame(__FILE__, $trace[0]['file']);
+        $this->assertSame(__LINE__ - 3, $trace[0]['line']);
+        $this->assertNotTrue(isset($trace[0]['function']));
+        $this->assertSame(__CLASS__.'->'.__FUNCTION__, $trace[1]['function']);
+
+        $logBefore = $this->debug->getData('log');
+        $this->debug->setCfg('collect', false);
+        $this->debug->trace();
+        $logAfter = $this->debug->getData('log');
+        $this->assertCount(count($logBefore), $logAfter, 'Trace() logged although collect=false');
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTime()
+    {
+        $this->debug->time();
+        $this->debug->time('some label');
+        $this->assertInternalType('float', $this->debug->getData('timers/stack/0'));
+        $this->assertInternalType('float', $this->debug->getData('timers/labels/some label/1'));
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTimeEnd()
+    {
+        $this->debug->time();
+        $this->debug->time('my label');
+        $this->debug->timeEnd();            // appends log
+        // test stack is now empty
+        $this->assertCount(0, $this->debug->getData('timers/stack'));
+        $this->debug->timeEnd('my label');  // appends log
+        $ret = $this->debug->timeEnd('my label', true);
+        $this->assertStringMatchesFormat('%f', $ret);
+        // test last timeEnd didn't append log
+        $this->assertCount(2, $this->debug->getData('log'));
+        $timers = $this->debug->getData('timers');
+        $this->assertInternalType('float', $timers['labels']['my label'][0]);
+        $this->assertNull($timers['labels']['my label'][1]);
+        $this->debug->timeEnd('my label', 'blah%labelblah%timeblah');
+        $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1/0'));
+
+        $logBefore = $this->debug->getData('log');
+        $this->debug->setCfg('collect', false);
+        $this->debug->timeEnd('my label');
+        $logAfter = $this->debug->getData('log');
+        $this->assertCount(count($logBefore), $logAfter, 'TimeEnd() logged although collect=false');
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTimeGet()
+    {
+        $this->debug->time();
+        $this->debug->time('my label');
+        $this->debug->timeGet();            // appends log
+        // test stack is still 1
+        $this->assertCount(1, $this->debug->getData('timers/stack'));
+        $this->debug->timeGet('my label');  // appends log
+        $ret = $this->debug->timeGet('my label', true);
+        // $this->assertInternalType('float', $ret);
+        $this->assertStringMatchesFormat('%f', $ret);
+        // test last timeEnd didn't append log
+        $this->assertCount(2, $this->debug->getData('log'));
+        $timers = $this->debug->getData('timers');
+        $this->assertSame(0, $timers['labels']['my label'][0]);
+        // test not paused
+        $this->assertNotNull($timers['labels']['my label'][1]);
+        $this->debug->timeGet('my label', 'blah%labelblah%timeblah');
+        $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1/0'));
+
+        $logBefore = $this->debug->getData('log');
+        $this->debug->setCfg('collect', false);
+        $this->debug->timeGet('my label');
+        $logAfter = $this->debug->getData('log');
+        $this->assertCount(count($logBefore), $logAfter, 'TimeGet() logged although collect=false');
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testWarn()
+    {
+        $resource = fopen(__FILE__, 'r');
+        $this->debug->warn('a string', array(), new stdClass(), $resource);
+        fclose($resource);
+        $log = $this->debug->getData('log');
+        $logEntry = $log[0];
+        $this->assertSame('warn', $logEntry[0]);
+        $this->assertSame('a string', $logEntry[1][0]);
+        // check array abstraction
+        // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
+        $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
+        $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+        // $this->assertTrue($isArray);
+        $this->assertTrue($isObject);
+        $this->assertTrue($isResource);
+
+        $logBefore = $this->debug->getData('log');
+        $this->debug->setCfg('collect', false);
+        $this->debug->warn('warn message');
+        $logAfter = $this->debug->getData('log');
+        $this->assertCount(count($logBefore), $logAfter, 'Warn() logged although collect=false');
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testGetCfg()
+    {
+    }
+
+    public function testMeta()
+    {
+
     }
 
     /**
@@ -350,7 +605,7 @@ EOD;
         $this->assertSame(array(
             'file' => __FILE__,
             'line' => __LINE__ - 4,
-            'depth' => 0
+            'groupDepth' => 0,
         ), $errorCaller);
 
         // this will use maximum debug_backtrace depth
@@ -359,8 +614,21 @@ EOD;
         $this->assertSame(array(
             'file' => __FILE__,
             'line' => __LINE__ - 4,
-            'depth' => 0
+            'groupDepth' => 0,
         ), $errorCaller);
+    }
+
+    public function testErrorCallerCleared()
+    {
+        $this->debug->group('test');
+        $this->debug->setErrorCaller(array('file'=>'test','line'=>42));
+        $this->debug->groupEnd();
+        $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
+
+        $this->debug->groupSummary();
+        $this->debug->setErrorCaller(array('file'=>'test','line'=>42));
+        $this->debug->groupEnd();
+        $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
     }
 
     private function setErrorCallerHelper($static = false)
@@ -379,107 +647,5 @@ EOD;
         $output = $this->debug->output();
         $outputExpect = '<div class="m_log"><span class="t_string no-pseudo"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></div>';
         $this->assertContains($outputExpect, $output);
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testTime()
-    {
-        $this->debug->time();
-        $this->debug->time('some label');
-        $this->assertInternalType('float', $this->debug->getData('timers/stack/0'));
-        $this->assertInternalType('float', $this->debug->getData('timers/labels/some label/1'));
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testTimeEnd()
-    {
-        $this->debug->time();
-        $this->debug->time('my label');
-        $this->debug->timeEnd();            // appends log
-        // test stack is now empty
-        $this->assertCount(0, $this->debug->getData('timers/stack'));
-        $this->debug->timeEnd('my label');  // appends log
-        $ret = $this->debug->timeEnd('my label', true);
-        // $this->assertInternalType('float', $ret);
-        $this->assertStringMatchesFormat('%f', $ret);
-        // test last timeEnd didn't append log
-        $this->assertCount(2, $this->debug->getData('log'));
-        $timers = $this->debug->getData('timers');
-        $this->assertInternalType('float', $timers['labels']['my label'][0]);
-        $this->assertNull($timers['labels']['my label'][1]);
-        $this->debug->timeEnd('my label', 'blah%labelblah%timeblah');
-        $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1/0'));
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testTimeGet()
-    {
-        $this->debug->time();
-        $this->debug->time('my label');
-        $this->debug->timeGet();            // appends log
-        // test stack is still 1
-        $this->assertCount(1, $this->debug->getData('timers/stack'));
-        $this->debug->timeGet('my label');  // appends log
-        $ret = $this->debug->timeGet('my label', true);
-        // $this->assertInternalType('float', $ret);
-        $this->assertStringMatchesFormat('%f', $ret);
-        // test last timeEnd didn't append log
-        $this->assertCount(2, $this->debug->getData('log'));
-        $timers = $this->debug->getData('timers');
-        $this->assertSame(0, $timers['labels']['my label'][0]);
-        // test not paused
-        $this->assertNotNull($timers['labels']['my label'][1]);
-        $this->debug->timeGet('my label', 'blah%labelblah%timeblah');
-        $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1/0'));
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testTrace()
-    {
-        $this->debug->trace();
-        $trace = $this->debug->getData('log/0/1/0');
-        $this->assertSame(__FILE__, $trace[0]['file']);
-        $this->assertSame(__LINE__ - 3, $trace[0]['line']);
-        $this->assertNotTrue(isset($trace[0]['function']));
-        $this->assertSame(__CLASS__.'->'.__FUNCTION__, $trace[1]['function']);
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testWarn()
-    {
-        $resource = fopen(__FILE__, 'r');
-        $this->debug->warn('a string', array(), new stdClass(), $resource);
-        fclose($resource);
-        $log = $this->debug->getData('log');
-        $logEntry = $log[0];
-        $this->assertSame('warn', $logEntry[0]);
-        $this->assertSame('a string', $logEntry[1][0]);
-        // check array abstraction
-        // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-        $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-        $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
-        // $this->assertTrue($isArray);
-        $this->assertTrue($isObject);
-        $this->assertTrue($isResource);
     }
 }

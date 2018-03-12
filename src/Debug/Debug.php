@@ -14,7 +14,14 @@
 
 namespace bdk;
 
+use bdk\Debug\Abstracter;
+use bdk\Debug\Config;
+use bdk\Debug\ErrorEmailer;
 use bdk\Debug\ErrorHandler;
+use bdk\Debug\Internal;
+use bdk\Debug\Output;
+use bdk\Debug\Utf8;
+use bdk\Debug\Utilities;
 use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Manager as EventManager;
 use ReflectionClass;
@@ -35,7 +42,7 @@ class Debug
     private static $publicMethods = array();
     protected $cfg = array();
     protected $data = array();
-    protected $groupDepthRef;   // points to groupDepth or groupDepthSummary
+    protected $groupDepthRef;   // points to groupDepth or groupSummaryStack[x]['groupDepth']
     protected $logRef;          // points to either log or logSummary
     protected $config;          // config instance
     public $errorHandler;
@@ -45,6 +52,8 @@ class Debug
 
     const META = "\x00meta\x00";
     const VERSION = "2.1.0";
+    const PRIORITY_HIGH = PHP_INT_MAX;
+    const PRIORITY_LOW = -PHP_INT_MAX;
 
     /**
      * Constructor
@@ -82,10 +91,18 @@ class Debug
             'alerts'            => array(), // array of alerts.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method
             'entryCountInitial' => 0,   // store number of log entries created during init
-            'groupDepth'        => 0,
-            'groupDepthSummary' => 0,
+            'groupDepth'        => array(0, 0),     // 1st: ignores cfg['collect'], 2nd: when cfg['collect']
+            'groupSummaryStack' => array(
+                /*
+                    this stack is used to return to the previous summary when groupEnd()ing out of a summary
+                    this allows calling groupSummary() while in a groupSummary
+                    when opening a groupSummary, we start with a new groupDepth (1, x)
+
+                    array( 'groupDepth' => array(x,x), 'priority' => x ),
+                */
+            ),
             'log'               => array(),
-            'logSummary'        => array(),
+            'logSummary'        => array(), // summary log entries subgrouped by priority
             'outputSent'        => false,
             'requestId'         => null,
             'runtime'           => array(),
@@ -122,14 +139,14 @@ class Debug
             : new EventManager();
         if ($errorHandler) {
             $this->errorHandler = $errorHandler;
-        } elseif (Debug\ErrorHandler::getInstance()) {
-            $this->errorHandler = Debug\ErrorHandler::getInstance();
+        } elseif (ErrorHandler::getInstance()) {
+            $this->errorHandler = ErrorHandler::getInstance();
         } else {
-            $this->errorHandler = new Debug\ErrorHandler($this->eventManager);
+            $this->errorHandler = new ErrorHandler($this->eventManager);
         }
-        $this->utilities = new Debug\Utilities();
-        $this->config = new Debug\Config($this, $this->cfg);
-        $this->internal = new Debug\Internal($this);
+        $this->utilities = new Utilities();
+        $this->config = new Config($this, $this->cfg);
+        $this->internal = new Internal($this);
         /*
             Init config and properties
         */
@@ -158,13 +175,11 @@ class Debug
      */
     public function __call($methodName, $args)
     {
-        if ($this->cfg['collect']) {
-            $this->appendLog(
-                $methodName,
-                $args,
-                array('isCustomMethod' => true)
-            );
-        }
+        $this->appendLog(
+            $methodName,
+            $args,
+            array('isCustomMethod' => true)
+        );
     }
 
     /**
@@ -183,19 +198,19 @@ class Debug
         $methodName = ltrim($methodName, '_');
         if (in_array($methodName, self::$publicMethods)) {
             return call_user_func_array(array(self::$instance, $methodName), $args);
-        } elseif (empty(self::$publicMethods)) {
+        }
+        if (empty(self::$publicMethods)) {
             /*
                 Initializing debug with \bdk\Debug::_setCfg()?
             */
             self::setPublicMethods();
             return self::__callStatic($methodName, $args);
-        } elseif (self::$instance->cfg['collect']) {
-            self::$instance->appendLog(
-                $methodName,
-                $args,
-                array('isCustomMethod' => true)
-            );
         }
+        self::$instance->appendLog(
+            $methodName,
+            $args,
+            array('isCustomMethod' => true)
+        );
     }
 
     /**
@@ -210,17 +225,24 @@ class Debug
     {
         switch ($property) {
             case 'abstracter':
-                $val = new Debug\Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
+                $val = new Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
                 break;
             case 'errorEmailer':
-                $val = new Debug\ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
+                $val = new ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
                 break;
             case 'output':
-                $val = new Debug\Output($this, $this->config->getCfgLazy('output'));
+                $val = new Output($this, $this->config->getCfgLazy('output'));
                 break;
             case 'utf8':
-                $val = new Debug\Utf8;
+                $val = new Utf8();
                 break;
+            case 'groupDepth':
+                // calculate the total group depth
+                $depth = $this->data['groupDepth'][0];
+                foreach ($this->data['groupSummaryStack'] as $group) {
+                    $depth += $group['groupDepth'][0];
+                }
+                return $depth;
             default:
                 return null;
         }
@@ -245,16 +267,14 @@ class Debug
      */
     public function alert($message, $class = 'danger', $dismissible = false)
     {
-        if ($this->cfg['collect']) {
-            $this->appendLog(
-                'alert',
-                array($message),
-                array(
-                    'class' => $class,
-                    'dismissible' => $dismissible,
-                )
-            );
-        }
+        $this->appendLog(
+            'alert',
+            array($message),
+            array(
+                'class' => $class,
+                'dismissible' => $dismissible,
+            )
+        );
     }
 
     /**
@@ -266,16 +286,14 @@ class Debug
      */
     public function assert()
     {
-        if ($this->cfg['collect']) {
-            $args = func_get_args();
-            $test = array_shift($args);
-            if (!$test) {
-                if (!$args) {
-                    $callerInfo = $this->utilities->getCallerInfo();
-                    $args[] = 'assertation failed in '.$callerInfo['file'].' on line '.$callerInfo['line'];
-                }
-                $this->appendLog('assert', $args);
+        $args = func_get_args();
+        $test = array_shift($args);
+        if (!$test) {
+            if (!$args) {
+                $callerInfo = $this->utilities->getCallerInfo();
+                $args[] = 'assertation failed in '.$callerInfo['file'].' on line '.$callerInfo['line'];
             }
+            $this->appendLog('assert', $args);
         }
     }
 
@@ -302,12 +320,10 @@ class Debug
             $this->data['counts'][$dataLabel]++;
         }
         $count = $this->data['counts'][$dataLabel];
-        if ($this->cfg['collect']) {
-            $this->appendLog('count', array(
-                $label,
-                $count,
-            ));
-        }
+        $this->appendLog('count', array(
+            $label,
+            $count,
+        ));
         return $count;
     }
 
@@ -320,13 +336,11 @@ class Debug
      */
     public function error()
     {
-        if ($this->cfg['collect']) {
-            $this->appendLog(
-                'error',
-                func_get_args(),
-                $this->internal->getErrorCaller()
-            );
-        }
+        $this->appendLog(
+            'error',
+            func_get_args(),
+            $this->internal->getErrorCaller()
+        );
     }
 
     /**
@@ -336,11 +350,7 @@ class Debug
      */
     public function group()
     {
-        $this->groupDepthRef++;
-        if ($this->cfg['collect']) {
-            $args = func_get_args();
-            $this->doGroup('group', $args);
-        }
+        $this->doGroup('group', func_get_args());
     }
 
     /**
@@ -350,11 +360,7 @@ class Debug
      */
     public function groupCollapsed()
     {
-        $this->groupDepthRef++;
-        if ($this->cfg['collect']) {
-            $args = func_get_args();
-            $this->doGroup('groupCollapsed', $args);
-        }
+        $this->doGroup('groupCollapsed', func_get_args());
     }
 
     /**
@@ -364,32 +370,49 @@ class Debug
      */
     public function groupEnd()
     {
-        $closesSummary = false;
         $args = func_get_args();
         $meta = array();
-        if ($this->data['groupDepthSummary'] > 0) {
-            // currently in summaryGroup
-            $this->data['groupDepthSummary']--;
-            $closesSummary = $this->data['groupDepthSummary'] == 0;
-            if ($closesSummary) {
-                $meta = array(
-                    'closesSummary' => true,
-                );
+        $this->groupDepthRef[0] = max(0, --$this->groupDepthRef[0]);
+        if ($this->cfg['collect']) {
+            if ($this->groupDepthRef[1] === 0) {
+                // nothing to end
+                return;
             }
-        } elseif ($this->data['groupDepth'] > 0) {
-            $this->data['groupDepth']--;
+            $this->groupDepthRef[1]--;
         }
         $errorCaller = $this->errorHandler->get('errorCaller');
-        if ($errorCaller && isset($errorCaller['depth']) && $this->data['groupDepth'] < $errorCaller['depth']) {
+        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->groupDepth < $errorCaller['groupDepth']) {
             $this->errorHandler->setErrorCaller(false);
         }
-        if ($this->cfg['collect']) {
+        if ($this->data['groupSummaryStack'] && $this->groupDepthRef[0] === 0) {
+            array_pop($this->data['groupSummaryStack']);
+            $count = count($this->data['groupSummaryStack']);
+            if ($count) {
+                // still in a group
+                $curPriority = $this->data['groupSummaryStack'][$count-1]['priority'];
+                $this->logRef = &$this->data['logSummary'][$curPriority];
+                $this->groupDepthRef = &$this->data['groupSummaryStack'][$count-1]['groupDepth'];
+            } else {
+                // we've popped out of all the summary groups
+                $this->logRef = &$this->data['log'];
+                $this->groupDepthRef = &$this->data['groupDepth'];
+            }
+            $meta['closesSummary'] = true;
+            /*
+                Publish the debug.log event (regardless of cfg.collect)
+                don't actually log
+            */
+            $this->eventManager->publish(
+                'debug.log',
+                $this,
+                array(
+                    'method' => 'groupEnd',
+                    'args' => array(),
+                    'meta' => $meta,
+                )
+            );
+        } else {
             $this->appendLog('groupEnd', $args, $meta);
-        }
-        if ($closesSummary) {
-            $this->logRef = &$this->data['log'];
-            $this->groupDepthRef = &$this->data['groupDepth'];
-            $this->cfg['collect'] = json_decode(str_replace('summary:', '', $this->cfg['collect']), true);
         }
     }
 
@@ -397,7 +420,7 @@ class Debug
      * Initiate the beginning of "summary" log entries
      *
      * Debug methods called while a groupSummary is open will appear at the top of the log
-     * call groupEnd()  to close summary
+     * call groupEnd() to close summary
      *
      * groupSummary can be used multiple times
      * All groupSummary groups will appear together in a single group
@@ -408,20 +431,37 @@ class Debug
      */
     public function groupSummary($priority = 0)
     {
-        if (!is_string($this->cfg['collect']) || strpos($this->cfg['collect'], 'summary') === false) {
-            $this->cfg['collect'] = 'summary:'.json_encode($this->cfg['collect']);
-            $this->data['groupDepthSummary']++;
-        }
+        $this->data['groupSummaryStack'][] = array(
+            'groupDepth' => array(1, $this->cfg['collect'] ? 1 : 0),
+            'priority' => $priority
+        );
+        $stackCount = count($this->data['groupSummaryStack']);
         if (!isset($this->data['logSummary'][$priority])) {
             $this->data['logSummary'][$priority] = array();
         }
         $this->logRef = &$this->data['logSummary'][$priority];
-        $this->groupDepthRef = &$this->data['groupDepthSummary'];
-        $this->appendLog('groupSummary', array($priority));
+        $this->groupDepthRef = &$this->data['groupSummaryStack'][$stackCount-1]['groupDepth'];
+        /*
+            Publish the debug.log event (regardless of cfg.collect)
+            don't actually log
+        */
+        $this->eventManager->publish(
+            'debug.log',
+            $this,
+            array(
+                'method' => 'groupSummary',
+                'args' => array(),
+                'meta' => array(
+                    'priority' => $priority,
+                ),
+            )
+        );
     }
 
     /**
      * Set ancestor groups to uncollapsed
+     *
+     * This will only occur if `cfg['collect']` is currently true
      *
      * @return void
      */
@@ -430,8 +470,8 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        $curDepth = $this->groupDepthRef;   // will fluctuate as we go through log
-        $minDepth = $this->groupDepthRef;   // decrease as we work our way down
+        $curDepth = $this->groupDepthRef[1];   // will fluctuate as we go through log
+        $minDepth = $this->groupDepthRef[1];   // decrease as we work our way down
         for ($i = count($this->logRef) - 1; $i >=0; $i--) {
             if ($curDepth < 1) {
                 break;
@@ -447,8 +487,19 @@ class Debug
                 $curDepth++;
             }
         }
-        $this->appendLog('groupUncollapse');    // want to dispatch event, but not actually log
-                                                // (Internal::onLog stops propagation)
+        /*
+            Publish the debug.log event (regardless of cfg.collect)
+            don't actually log
+        */
+        $this->eventManager->publish(
+            'debug.log',
+            $this,
+            array(
+                'method' => 'groupUncollapse',
+                'args' => array(),
+                'meta' => array(),
+            )
+        );
     }
 
     /**
@@ -458,9 +509,7 @@ class Debug
      */
     public function info()
     {
-        if ($this->cfg['collect']) {
-            $this->appendLog('info', func_get_args());
-        }
+        $this->appendLog('info', func_get_args());
     }
 
     /**
@@ -470,9 +519,7 @@ class Debug
      */
     public function log()
     {
-        if ($this->cfg['collect']) {
-            $this->appendLog('log', func_get_args());
-        }
+        $this->appendLog('log', func_get_args());
     }
 
     /**
@@ -511,21 +558,13 @@ class Debug
             }
             unset($args[$i]);
         }
-        if (is_array($data)) {
-            if (empty($data)) {
-                $args = $meta['caption']
-                    ? array($meta['caption'], $data)
-                    : array($data);
-                $this->appendLog('log', $args);
-            } else {
-                $this->appendLog(
-                    'table',
-                    array($data),
-                    $meta
-                );
-            }
+        if ($data) {
+            $this->appendLog('table', array($data), $meta);
         } else {
-            $this->appendLog('log', func_get_args());
+            $args = is_array($data) && $meta['caption']
+                ? array($meta['caption'], $data)    // empty array()
+                : func_get_args();                  // no array passed
+            $this->appendLog('log', $args);
         }
     }
 
@@ -538,7 +577,7 @@ class Debug
      * Label not passed
      *    timer will be added to a no-label stack
      *
-     * Does not append log.   use timeEnd or timeGet to get time
+     * Does not append log.  Use timeEnd or timeGet to get time
      *
      * @param string $label unique label
      *
@@ -671,13 +710,11 @@ class Debug
      */
     public function warn()
     {
-        if ($this->cfg['collect']) {
-            $this->appendLog(
-                'warn',
-                func_get_args(),
-                $this->internal->getErrorCaller()
-            );
-        }
+        $this->appendLog(
+            'warn',
+            func_get_args(),
+            $this->internal->getErrorCaller()
+        );
     }
 
     /*
@@ -743,9 +780,8 @@ class Debug
     public static function getInstance($cfg = array())
     {
         if (!isset(self::$instance)) {
-            $className = __CLASS__;
             // self::$instance set in __construct
-            new $className($cfg);
+            new static($cfg);
         } elseif ($cfg) {
             self::$instance->setCfg($cfg);
         }
@@ -771,34 +807,27 @@ class Debug
     /**
      * Publishes debug.output event and returns result
      *
-     * @return string or null
+     * @return string|null
      */
     public function output()
     {
-        $return = null;
-        if ($this->cfg['output']) {
-            while ($this->data['groupDepth'] > 0) {
-                $this->data['groupDepth']--;
-                $this->data['log'][] = array('groupEnd', array(), array());
-            }
-            $outputAs = $this->output->getCfg('outputAs');
-            $this->output->setCfg('outputAs', $outputAs);
-            $return = $this->eventManager->publish(
-                'debug.output',
-                $this,
-                array('return'=>'')
-            )['return'];
-            $this->data['outputSent'] = true;
-            $this->data['log'] = array();
-            $this->data['logSummary'] = array();
-            $this->data['alerts'] = array();
-        } else {
-            $this->eventManager->publish(
-                'debug.output',
-                $this,
-                array('return'=>'')
-            );
+        if (!$this->cfg['output']) {
+            return null;
         }
+        $outputAs = $this->output->getCfg('outputAs');
+        $this->output->setCfg('outputAs', $outputAs);
+        $this->closeOpenGroups();
+        $return = $this->eventManager->publish(
+            'debug.output',
+            $this,
+            array('return'=>'')
+        )['return'];
+        $this->data['alerts'] = array();
+        $this->data['counts'] = array();
+        $this->data['groupDepth'][0] = 0;
+        $this->data['log'] = array();
+        $this->data['logSummary'] = array();
+        $this->data['outputSent'] = true;
         return $return;
     }
 
@@ -869,7 +898,7 @@ class Debug
         }
         if (!empty($caller)) {
             // groupEnd will check depth and potentially clear errorCaller
-            $caller['depth'] = $this->data['groupDepth'];
+            $caller['groupDepth'] = $this->groupDepth;
         }
         $this->errorHandler->setErrorCaller($caller);
     }
@@ -905,7 +934,7 @@ class Debug
      * Store the arguments
      * will be output when output method is called
      *
-     * @param string $method error, info, log, warn
+     * @param string $method error, info, log, warn, etc
      * @param array  $args   arguments passed to method
      * @param array  $meta   meta data
      *
@@ -913,6 +942,9 @@ class Debug
      */
     protected function appendLog($method, $args = array(), $meta = array())
     {
+        if (!$this->cfg['collect']) {
+            return;
+        }
         if ($method == 'table') {
             $args[0] = $this->abstracter->getAbstractionTable($args[0]);
         } else {
@@ -934,15 +966,40 @@ class Debug
         if ($event->isPropagationStopped()) {
             return;
         }
-        $method = $event->getValue('method');
-        $args = $event->getValue('args');
-        $meta = $event->getValue('meta');
         if ($method == 'alert') {
-            $this->data['alerts'][] = array($args[0], $meta);
+            $this->data['alerts'][] = array(
+                $event->getValue('args'),
+                $event->getValue('meta')
+            );
         } else {
-            $this->logRef[] = array($method, $args, $meta);
+            $this->logRef[] = array(
+                $event->getValue('method'),
+                $event->getValue('args'),
+                $event->getValue('meta')
+            );
         }
         return;
+    }
+
+    /**
+     * Close any unclosed groups
+     *
+     * We may have forgotten to end a group or the script may have exited
+     *
+     * @return void
+     */
+    protected function closeOpenGroups()
+    {
+        foreach ($this->data['groupSummaryStack'] as $i => $group) {
+            for ($i = 0; $i < $group['groupDepth'][1]; $i++) {
+                $this->data['logSummary'][$group['priority']][] = array('groupEnd', array(), array());
+            }
+            unset($this->data['groupSummaryStack'][$i]);
+        }
+        while ($this->data['groupDepth'][1] > 0) {
+            $this->data['groupDepth'][1]--;
+            $this->data['log'][] = array('groupEnd', array(), array());
+        }
     }
 
     /**
@@ -955,6 +1012,11 @@ class Debug
      */
     private function doGroup($method, $args)
     {
+        $this->groupDepthRef[0]++;
+        if (!$this->cfg['collect']) {
+            return;
+        }
+        $this->groupDepthRef[1]++;
         $meta = $this->internal->getMetaVals($args);
         if (empty($args)) {
             // give a default label
@@ -1005,9 +1067,6 @@ class Debug
      */
     protected function timeLog($seconds, $returnOrTemplate = false, $label = 'time')
     {
-        if (!$this->cfg['collect']) {
-            return;
-        }
         if (is_string($returnOrTemplate)) {
             $str = $returnOrTemplate;
             $str = str_replace('%label', $label, $str);

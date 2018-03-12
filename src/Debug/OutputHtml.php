@@ -140,16 +140,6 @@ class OutputHtml extends OutputBase
     {
         $this->data = $this->debug->getData();
         $this->removeHideIfEmptyGroups();
-        $errorSummary = $this->errorSummary->build($this->debug->internal->errorStats());
-        if ($errorSummary) {
-            array_unshift($this->data['alerts'], array(
-                $errorSummary,
-                array(
-                    'class' => 'danger error-summary',
-                    'dismissible' => false,
-                )
-            ));
-        }
         $str = '<div class="debug">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
@@ -170,14 +160,13 @@ class OutputHtml extends OutputBase
         if ($this->debug->getCfg('outputScript')) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>'."\n";
         }
-
         $str .= '<div class="debug-header m_group"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
         $str .= $this->processSummary();
         $str .= '</div>'."\n";
         $str .= '<div class="debug-content m_group"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
         $str .= $this->processLog();
-        $str .= '</div>'."\n";  // close debug-content
-        $str .= '</div>'."\n";  // close debug
+        $str .= '</div>'."\n";  // close .debug-content
+        $str .= '</div>'."\n";  // close .debug
         $this->data = array();
         $event['return'] .= $str;
     }
@@ -841,6 +830,16 @@ class OutputHtml extends OutputBase
     protected function processAlerts()
     {
         $str = '';
+        $errorSummary = $this->errorSummary->build($this->debug->internal->errorStats());
+        if ($errorSummary) {
+            array_unshift($this->data['alerts'], array(
+                $errorSummary,
+                array(
+                    'class' => 'danger error-summary',
+                    'dismissible' => false,
+                )
+            ));
+        }
         foreach ($this->data['alerts'] as $entry) {
             $message = $entry[0];
             $meta = $entry[1];

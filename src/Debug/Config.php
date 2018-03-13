@@ -45,7 +45,7 @@ class Config
      */
     public function getCfg($path = '')
     {
-        $path = $this->translateKeys($path);
+        $path = $this->expandPath($path);
         $path = preg_split('#[\./]#', $path);
         if (isset($path[1]) && $path[1] === '*') {
             array_pop($path);
@@ -71,13 +71,12 @@ class Config
         return $ret;
     }
 
-
     /**
      * Get config for lazy-loaded class
      *
      * @param string $lazyPropName name of property
      *
-     * @return [type] [description]
+     * @return array
      */
     public function getCfgLazy($lazyPropName)
     {
@@ -97,19 +96,24 @@ class Config
      *    setCfg('level1.level2', 'value')
      *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
-     * @param string|array $path   path
-     * @param mixed        $newVal value
+     * @param string|array $pathOrVals key/path or cfg array
+     * @param mixed        $val        (optional) value
      *
      * @return mixed
      */
-    public function setCfg($path, $newVal = null)
+    public function setCfg($pathOrVals, $val = null)
     {
-        $return = is_string($path)
-            ? $this->getCfg($path)
+        $return = is_string($pathOrVals)
+            ? $this->getCfg($pathOrVals)
             : null;
-        $new = $this->normalizeValues($path, $newVal);
-        $new = $this->setCopyValues($new);
-        foreach ($new as $k => $v) {
+        if (is_string($pathOrVals)) {
+            $path = $this->expandPath($pathOrVals);
+            $cfg = $this->keyValToArray($path, $val);
+        } elseif (is_array($pathOrVals)) {
+            $cfg = $this->normalizeCfgArray($pathOrVals);
+        }
+        $cfg = $this->setCopyValues($cfg);
+        foreach ($cfg as $k => $v) {
             if ($k == 'debug') {
                 $this->setDebugCfg($v);
             } elseif (isset($this->debug->{$k}) && is_object($this->debug->{$k})) {
@@ -118,10 +122,70 @@ class Config
                 $this->cfgLazy[$k] = $v;
             }
         }
-        if ($new) {
-            $this->debug->eventManager->publish('debug.config', $this->debug);
+        if ($cfg) {
+            $this->debug->eventManager->publish(
+                'debug.config',
+                $this->debug,
+                array('config'=>$cfg)
+            );
         }
         return $return;
+    }
+
+    /**
+     * Test $_REQUEST['debug'] against passed key
+     * return collect & output values
+     *
+     * @param string $key secret key
+     *
+     * @return array
+     */
+    private function debugKeyValues($key)
+    {
+        $values = array();
+        // update 'collect and output'
+        $requestKey = null;
+        if (isset($_REQUEST['debug'])) {
+            $requestKey = $_REQUEST['debug'];
+        } elseif (isset($_COOKIE['debug'])) {
+            $requestKey = $_COOKIE['debug'];
+        }
+        $isValidKey = $requestKey == $key;
+        if ($isValidKey) {
+            // only enable collect / don't disable it
+            $values['collect'] = true;
+        }
+        $values['output'] = $isValidKey;
+        return $values;
+    }
+
+    /**
+     * [expandPath description]
+     *
+     * @param string $path string path
+     *
+     * @return string
+     */
+    private function expandPath($path)
+    {
+        $path = array_filter(preg_split('#[\./]#', $path), 'strlen');
+        if (count($path) == 1) {
+            $configKeys = $this->getConfigKeys();
+            foreach ($configKeys as $objName => $objKeys) {
+                if (in_array($path[0], $objKeys)) {
+                    array_unshift($path, $objName);
+                    break;
+                }
+                if ($path[0] == $objName) {
+                    $path[] = '*';
+                    break;
+                }
+            }
+        }
+        if (count($path) <= 1) {
+            array_unshift($path, 'debug');
+        }
+        return implode('/', $path);
     }
 
     /**
@@ -129,7 +193,7 @@ class Config
      *
      * @return array
      */
-    protected function getConfigKeys()
+    private function getConfigKeys()
     {
         if (isset($this->configKeys)) {
             return $this->configKeys;
@@ -176,30 +240,71 @@ class Config
     }
 
     /**
-     * normalize values
+     * Convert key/path & val to array
      *
-     * @param string|array $path   [description]
-     * @param mixed        $newVal [description]
+     * @param string $key key or path
+     * @param mixed  $val value
      *
      * @return array
      */
-    protected function normalizeValues($path, $newVal = null)
+    private function keyValToArray($key, $val)
     {
         $new = array();
-        $path = $this->translateKeys($path);
-        if (is_string($path)) {
-            // build $new array from the passed string
-            $path = preg_split('#[\./]#', $path);
-            $ref = &$new;
-            foreach ($path as $k) {
-                $ref[$k] = array(); // initialize this level
-                $ref = &$ref[$k];
-            }
-            $ref = $newVal;
-        } elseif (is_array($path)) {
-            $new = $path;
+        $path = preg_split('#[\./]#', $key);
+        $ref = &$new;
+        foreach ($path as $k) {
+            $ref[$k] = array(); // initialize this level
+            $ref = &$ref[$k];
         }
+        $ref = $val;
         return $new;
+    }
+
+    /**
+     * translate configuration keys
+     *
+     * most / common configuration values may be passed in a flat array structure, or without
+     *    the leading child prefix
+     *    for example, abstracter.collectMethods can be get/set in 4 different ways
+     *         setCfg('collectMethods', false);
+     *         setCfg('abtracter.collectMethods', false);
+     *         setCfg(array(
+     *           'collectMethods'=>false
+     *         ));
+     *         setCfg(array(
+     *           'abstracter'=>array(
+     *              'collectMethods'=>false,
+     *           )
+     *         ));
+     *
+     * @param array $cfg string key-path or config array
+     *
+     * @return mixed
+     */
+    private function normalizeCfgArray($cfg)
+    {
+        $return = array();
+        $configKeys = $this->getConfigKeys();
+        foreach ($cfg as $k => $v) {
+            $translated = false;
+            foreach ($configKeys as $objName => $objKeys) {
+                if ($k == $objName && is_array($v)) {
+                    $return[$objName] = isset($return[$objName])
+                        ? array_merge($return[$objName], $v)
+                        : $v;
+                    $translated = true;
+                    break;
+                } elseif (in_array($k, $objKeys)) {
+                    $return[$objName][$k] = $v;
+                    $translated = true;
+                    break;
+                }
+            }
+            if (!$translated) {
+                $return['debug'][$k] = $v;
+            }
+        }
+        return $return;
     }
 
     /**
@@ -209,7 +314,7 @@ class Config
      *
      * @return array
      */
-    protected function setCopyValues($values)
+    private function setCopyValues($values)
     {
         if (isset($values['debug']['emailLog']) && $values['debug']['emailLog'] === true) {
             $values['debug']['emailLog'] = 'onError';
@@ -230,10 +335,10 @@ class Config
      *
      * @return void
      */
-    protected function setDebugCfg($cfg)
+    private function setDebugCfg($cfg)
     {
         if (isset($cfg['key'])) {
-            $cfg = array_merge($cfg, $this->setGetKeyValues($cfg['key']));
+            $cfg = array_merge($cfg, $this->debugKeyValues($cfg['key']));
         }
         if (isset($cfg['logServerKeys'])) {
             // don't append, replace
@@ -263,100 +368,5 @@ class Config
         if (isset($cfg['file'])) {
             $this->debug->addPlugin($this->debug->output->outputFile);
         }
-    }
-
-    /**
-     * Test $_REQUEST['debug'] against passed key
-     * return collect/output values
-     *
-     * @param string $key secret key
-     *
-     * @return array
-     */
-    protected function setGetKeyValues($key)
-    {
-        $values = array();
-        // update 'collect and output'
-        $requestKey = null;
-        if (isset($_REQUEST['debug'])) {
-            $requestKey = $_REQUEST['debug'];
-        } elseif (isset($_COOKIE['debug'])) {
-            $requestKey = $_COOKIE['debug'];
-        }
-        $isValidKey = $requestKey == $key;
-        if ($isValidKey) {
-            // only enable collect / don't disable it
-            $values['collect'] = true;
-        }
-        $values['output'] = $isValidKey;
-        return $values;
-    }
-
-    /**
-     * translate configuration keys
-     *
-     * most / common configuration values may be passed in a flat array structure, or without
-     *    the leading child prefix
-     *    for example, abstracter.collectMethods can be get/set in 4 different ways
-     *         setCfg('collectMethods', false);
-     *         setCfg('abtracter.collectMethods', false);
-     *         setCfg(array(
-     *           'collectMethods'=>false
-     *         ));
-     *         setCfg(array(
-     *           'abstracter'=>array(
-     *              'collectMethods'=>false,
-     *           )
-     *         ));
-     *
-     * @param mixed $mixed string key-path or config array
-     *
-     * @return mixed
-     */
-    protected function translateKeys($mixed)
-    {
-        $configKeys = $this->getConfigKeys();
-        if (is_string($mixed)) {
-            $path = array_filter(preg_split('#[\./]#', $mixed), 'strlen');
-            if (count($path) == 1) {
-                foreach ($configKeys as $objName => $objKeys) {
-                    if (in_array($path[0], $objKeys)) {
-                        array_unshift($path, $objName);
-                        break;
-                    }
-                    if ($path[0] == $objName) {
-                        $path[] = '*';
-                        break;
-                    }
-                }
-            }
-            if (count($path) <= 1) {
-                array_unshift($path, 'debug');
-            }
-            return implode('/', $path);
-        } elseif (is_array($mixed)) {
-            $return = array();
-            foreach ($mixed as $k => $v) {
-                $translated = false;
-                foreach ($configKeys as $objName => $objKeys) {
-                    if ($k == $objName && is_array($v)) {
-                        $return[$objName] = isset($return[$objName])
-                            ? array_merge($return[$objName], $v)
-                            : $v;
-                        $translated = true;
-                        break;
-                    } elseif (in_array($k, $objKeys)) {
-                        $return[$objName][$k] = $v;
-                        $translated = true;
-                        break;
-                    }
-                }
-                if (!$translated) {
-                    $return['debug'][$k] = $v;
-                }
-            }
-            return $return;
-        }
-        return $mixed;
     }
 }

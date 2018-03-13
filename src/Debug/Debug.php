@@ -300,9 +300,11 @@ class Debug
     /**
      * Log the number of times this has been called with the given label.
      *
+     * If `label` is omitted, logs the number of times `count()` has been called at this particular line.
+     *
      * @param mixed $label label
      *
-     * @return integer
+     * @return integer The count
      */
     public function count($label = null)
     {
@@ -540,12 +542,12 @@ class Debug
             return;
         }
         $args = func_get_args();
-        $argCount = count($args);
-        $data = null;
-        $meta = array(
+        $meta = array_merge(array(
             'caption' => null,
             'columns' => array(),
-        );
+        ), $this->internal->getMetaVals($args));
+        $argCount = count($args);
+        $data = null;
         for ($i = 0; $i < $argCount; $i++) {
             if (is_array($args[$i])) {
                 if ($data === null) {
@@ -948,6 +950,7 @@ class Debug
         if ($method == 'table') {
             $args[0] = $this->abstracter->getAbstractionTable($args[0]);
         } else {
+            $meta = array_merge($meta, $this->internal->getMetaVals($args));
             foreach ($args as $i => $v) {
                 if ($this->abstracter->needsAbstraction($v)) {
                     $args[$i] = $this->abstracter->getAbstraction($v);
@@ -968,7 +971,7 @@ class Debug
         }
         if ($method == 'alert') {
             $this->data['alerts'][] = array(
-                $event->getValue('args'),
+                $event->getValue('args')[0],
                 $event->getValue('meta')
             );
         } else {
@@ -1017,6 +1020,9 @@ class Debug
             return;
         }
         $this->groupDepthRef[1]++;
+        /*
+            Extract/remove meta so we can check if args are empty after extracting
+        */
         $meta = $this->internal->getMetaVals($args);
         if (empty($args)) {
             // give a default label

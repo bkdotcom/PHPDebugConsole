@@ -14,14 +14,7 @@
 
 namespace bdk;
 
-use bdk\Debug\Abstracter;
-use bdk\Debug\Config;
-use bdk\Debug\ErrorEmailer;
 use bdk\Debug\ErrorHandler;
-use bdk\Debug\Internal;
-use bdk\Debug\Output;
-use bdk\Debug\Utf8;
-use bdk\Debug\Utilities;
 use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Manager as EventManager;
 use ReflectionClass;
@@ -144,9 +137,9 @@ class Debug
         } else {
             $this->errorHandler = new ErrorHandler($this->eventManager);
         }
-        $this->utilities = new Utilities();
-        $this->config = new Config($this, $this->cfg);
-        $this->internal = new Internal($this);
+        $this->utilities = new Debug\Utilities();
+        $this->config = new Debug\Config($this, $this->cfg);
+        $this->internal = new Debug\Internal($this);
         /*
             Init config and properties
         */
@@ -225,16 +218,16 @@ class Debug
     {
         switch ($property) {
             case 'abstracter':
-                $val = new Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
+                $val = new Debug\Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
                 break;
             case 'errorEmailer':
-                $val = new ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
+                $val = new Debug\ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
                 break;
             case 'output':
-                $val = new Output($this, $this->config->getCfgLazy('output'));
+                $val = new Debug\Output($this, $this->config->getCfgLazy('output'));
                 break;
             case 'utf8':
-                $val = new Utf8();
+                $val = new Debug\Utf8();
                 break;
             case 'groupDepth':
                 // calculate the total group depth

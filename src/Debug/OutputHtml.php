@@ -12,7 +12,6 @@
 namespace bdk\Debug;
 
 use bdk\PubSub\Event;
-use bdk\Debug;
 
 /**
  * Output log as HTML

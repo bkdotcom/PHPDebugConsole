@@ -11,7 +11,6 @@
 
 namespace bdk\Debug;
 
-use bdk\Debug\Utf8;
 use bdk\PubSub\Event;
 
 /**

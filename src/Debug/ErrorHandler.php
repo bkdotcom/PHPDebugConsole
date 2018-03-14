@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.2
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -105,7 +105,7 @@ class ErrorHandler
         $this->register();
         // easier to maintain subscription to php.shutdown event and check this->registered value
         // than to subscribe with register() and unsub with unRegister()
-        $this->eventManager->subscribe('php.shutdown', array($this, 'onShutdown'), 1);
+        $this->eventManager->subscribe('php.shutdown', array($this, 'onShutdown'), PHP_INT_MAX);
         return;
     }
 

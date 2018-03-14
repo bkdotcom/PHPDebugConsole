@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -45,19 +45,20 @@ class Config
      */
     public function getCfg($path = '')
     {
-        $path = $this->expandPath($path);
+        $path = $this->normalizePath($path);
         $path = preg_split('#[\./]#', $path);
         if (isset($path[1]) && $path[1] === '*') {
             array_pop($path);
         }
         $level1 = isset($path[0]) ? $path[0] : null;
-        if (is_object($this->debug->{$level1})) {
-            // child class config value
-            $pathRel = implode('/', array_slice($path, 1));
-            return $this->debug->{$level1}->getCfg($pathRel);
-        }
         if ($level1 == 'debug') {
             array_shift($path);
+        } elseif (is_object($this->debug->{$level1})) {
+            // child class config value
+            $pathRel = count($path) > 1
+                ? implode('/', array_slice($path, 1))
+                : null;
+            return $this->debug->{$level1}->getCfg($pathRel);
         }
         $ret = $this->cfg;
         foreach ($path as $k) {
@@ -88,13 +89,11 @@ class Config
     /**
      * Set one or more config values
      *
-     * If setting a value via method a or b, old value is returned
-     *
-     * Setting/updating 'key' will also set 'collect' and 'output'
-     *
      *    setCfg('key', 'value')
      *    setCfg('level1.level2', 'value')
      *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *
+     * Setting/updating 'key' will also set 'collect' and 'output'
      *
      * @param string|array $pathOrVals key/path or cfg array
      * @param mixed        $val        (optional) value
@@ -103,24 +102,31 @@ class Config
      */
     public function setCfg($pathOrVals, $val = null)
     {
-        $return = is_string($pathOrVals)
-            ? $this->getCfg($pathOrVals)
-            : null;
-        if (is_string($pathOrVals)) {
-            $path = $this->expandPath($pathOrVals);
-            $cfg = $this->keyValToArray($path, $val);
-        } elseif (is_array($pathOrVals)) {
+        if (is_array($pathOrVals)) {
             $cfg = $this->normalizeCfgArray($pathOrVals);
+        } else {
+            $path = $this->normalizePath($pathOrVals);
+            $cfg = $this->keyValToArray($path, $val);
         }
         $cfg = $this->setCopyValues($cfg);
+        $return = array();
         foreach ($cfg as $k => $v) {
             if ($k == 'debug') {
+                $return[$k] = array_intersect_key($this->cfg, $v);
                 $this->setDebugCfg($v);
             } elseif (isset($this->debug->{$k}) && is_object($this->debug->{$k})) {
+                $return[$k] = array_intersect_key($this->getCfg($k.'/*'), $v);
                 $this->debug->{$k}->setCfg($v);
+            } elseif (isset($this->cfgLazy[$k])) {
+                $return[$k] = $this->cfgLazy[$k];
+                $this->cfgLazy[$k] = array_merge($this->cfgLazy[$k], $v);
             } else {
+                $return[$k] = array();
                 $this->cfgLazy[$k] = $v;
             }
+        }
+        if (is_string($pathOrVals)) {
+            $return = $this->getCfg($path);
         }
         if ($cfg) {
             $this->debug->eventManager->publish(
@@ -157,35 +163,6 @@ class Config
         }
         $values['output'] = $isValidKey;
         return $values;
-    }
-
-    /**
-     * [expandPath description]
-     *
-     * @param string $path string path
-     *
-     * @return string
-     */
-    private function expandPath($path)
-    {
-        $path = array_filter(preg_split('#[\./]#', $path), 'strlen');
-        if (count($path) == 1) {
-            $configKeys = $this->getConfigKeys();
-            foreach ($configKeys as $objName => $objKeys) {
-                if (in_array($path[0], $objKeys)) {
-                    array_unshift($path, $objName);
-                    break;
-                }
-                if ($path[0] == $objName) {
-                    $path[] = '*';
-                    break;
-                }
-            }
-        }
-        if (count($path) <= 1) {
-            array_unshift($path, 'debug');
-        }
-        return implode('/', $path);
     }
 
     /**
@@ -261,25 +238,22 @@ class Config
     }
 
     /**
-     * translate configuration keys
+     * Normalizes paths..  groups values by class
      *
-     * most / common configuration values may be passed in a flat array structure, or without
-     *    the leading child prefix
-     *    for example, abstracter.collectMethods can be get/set in 4 different ways
-     *         setCfg('collectMethods', false);
-     *         setCfg('abtracter.collectMethods', false);
-     *         setCfg(array(
-     *           'collectMethods'=>false
-     *         ));
-     *         setCfg(array(
-     *           'abstracter'=>array(
-     *              'collectMethods'=>false,
-     *           )
-     *         ));
+     * converts
+     *   array(
+     *      'collectMethods' => false,
+     *   )
+     * to
+     *   array(
+     *       'abstracter' => array(
+     *           'collectMethods' => false,
+     *       )
+     *   )
      *
-     * @param array $cfg string key-path or config array
+     * @param array $cfg config array
      *
-     * @return mixed
+     * @return array
      */
     private function normalizeCfgArray($cfg)
     {
@@ -305,6 +279,35 @@ class Config
             }
         }
         return $return;
+    }
+
+    /**
+     * [expandPath description]
+     *
+     * @param string $path string path
+     *
+     * @return string
+     */
+    private function normalizePath($path)
+    {
+        $path = array_filter(preg_split('#[\./]#', $path), 'strlen');
+        if (count($path) == 1) {
+            $configKeys = $this->getConfigKeys();
+            foreach ($configKeys as $objName => $objKeys) {
+                if (in_array($path[0], $objKeys)) {
+                    array_unshift($path, $objName);
+                    break;
+                }
+                if ($path[0] == $objName) {
+                    $path[] = '*';
+                    break;
+                }
+            }
+        }
+        if (count($path) <= 1) {
+            array_unshift($path, 'debug');
+        }
+        return implode('/', $path);
     }
 
     /**
@@ -347,23 +350,23 @@ class Config
         /*
             Replace - not append - subscriber set via setCfg
         */
-        if (isset($cfg['onLog']) && isset($this->cfg['onLog'])) {
-            $this->debug->eventManager->unsubscribe('debug.log', $this->cfg['onLog']);
+        if (isset($cfg['onLog'])) {
+            if (isset($this->cfg['onLog'])) {
+                $this->debug->eventManager->unsubscribe('debug.log', $this->cfg['onLog']);
+            }
+            $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
         }
         $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $cfg);
         if (isset($cfg['onBootstrap'])) {
             $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
             if ($backtrace[2]['function'] == '__construct') {
-                // we're being called from construct... treat this "normal"
+                // we're being called from construct... subscribe
                 $this->debug->eventManager->subscribe('debug.bootstrap', $cfg['onBootstrap']);
             } else {
                 // boostrap has already occured
                 call_user_func($cfg['onBootstrap'], new Event($this->debug));
             }
             unset($this->cfg['onBootstrap']);
-        }
-        if (isset($cfg['onLog'])) {
-            $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
         }
         if (isset($cfg['file'])) {
             $this->debug->addPlugin($this->debug->output->outputFile);

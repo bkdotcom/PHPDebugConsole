@@ -27,7 +27,7 @@ class MethodTableTest extends DebugTestFramework
         $this->assertSame(array(
             'table',
             array($list),
-            array('caption'=>null,'columns'=>array()),
+            array('caption'=>null, 'columns'=>array()),
         ), $this->debug->getData('log/0'));
         $this->assertSame(array(
             'log',

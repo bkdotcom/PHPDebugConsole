@@ -45,11 +45,11 @@ class Internal implements SubscriberInterface
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
-        }, 'onErrorAddEmailData'), Debug::PRIORITY_HIGH);
+        }, 'onErrorAddEmailData'), PHP_INT_MAX);
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
-        }, 'onErrorEmail'), Debug::PRIORITY_LOW);
+        }, 'onErrorEmail'), PHP_INT_MAX * -1);
     }
 
     /**
@@ -214,7 +214,7 @@ class Internal implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            'debug.bootstrap' => array('onBootstrap', Debug::PRIORITY_LOW),
+            'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
             'debug.output' => 'onOutput',
             'errorHandler.error' => 'onError',
             'php.shutdown' => 'onShutdown',

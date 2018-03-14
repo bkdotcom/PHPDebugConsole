@@ -45,8 +45,6 @@ class Debug
 
     const META = "\x00meta\x00";
     const VERSION = "2.1.0";
-    const PRIORITY_HIGH = PHP_INT_MAX;
-    const PRIORITY_LOW = -PHP_INT_MAX;
 
     /**
      * Constructor

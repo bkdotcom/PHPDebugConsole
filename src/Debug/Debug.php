@@ -151,7 +151,6 @@ class Debug
         */
         $this->eventManager->publish('debug.bootstrap', $this);
         $this->data['entryCountInitial'] = count($this->data['log']);
-        return;
     }
 
     /**
@@ -323,7 +322,7 @@ class Debug
     /**
      * Log an error message.
      *
-     * @param mixed $label,... label
+     * @param mixed $label,... error message / values
      *
      * @return void
      */
@@ -339,6 +338,8 @@ class Debug
     /**
      * Create a new inline group
      *
+     * @param mixed $label,... label / values
+     *
      * @return void
      */
     public function group()
@@ -348,6 +349,8 @@ class Debug
 
     /**
      * Create a new inline group
+     *
+     * @param mixed $label,... label / values
      *
      * @return void
      */
@@ -363,8 +366,6 @@ class Debug
      */
     public function groupEnd()
     {
-        $args = func_get_args();
-        $meta = array();
         $this->groupDepthRef[0] = max(0, --$this->groupDepthRef[0]);
         if ($this->cfg['collect']) {
             if ($this->groupDepthRef[1] === 0) {
@@ -390,7 +391,6 @@ class Debug
                 $this->logRef = &$this->data['log'];
                 $this->groupDepthRef = &$this->data['groupDepth'];
             }
-            $meta['closesSummary'] = true;
             /*
                 Publish the debug.log event (regardless of cfg.collect)
                 don't actually log
@@ -401,11 +401,11 @@ class Debug
                 array(
                     'method' => 'groupEnd',
                     'args' => array(),
-                    'meta' => $meta,
+                    'meta' => array('closesSummary'=>true),
                 )
             );
         } else {
-            $this->appendLog('groupEnd', $args, $meta);
+            $this->appendLog('groupEnd');
         }
     }
 
@@ -590,7 +590,6 @@ class Debug
         } else {
             $this->data['timers']['stack'][] = microtime(true);
         }
-        return;
     }
 
     /**
@@ -627,7 +626,7 @@ class Debug
             // use number_format rather than round(), which may still run decimals-a-plenty
             $ret = number_format($ret, $precision, '.', '');
         }
-        $this->timeLog($ret, $returnOrTemplate, $label);
+        $this->doTime($ret, $returnOrTemplate, $label);
         return $ret;
     }
 
@@ -667,7 +666,7 @@ class Debug
             // use number_format rather than round(), which may still run decimals-a-plenty
             $ellapsed = number_format($ellapsed, $precision, '.', '');
         }
-        $this->timeLog($ellapsed, $returnOrTemplate, $label);
+        $this->doTime($ellapsed, $returnOrTemplate, $label);
         return $ellapsed;
     }
 
@@ -784,17 +783,54 @@ class Debug
     /**
      * "metafy" value/values
      *
-     * @param array|string $values value or values
+     * accepts
+     *   array()
+     *   'cfg', option, value  (shortcut for setting single config value)
+     *   key, value
+     *   key                   (value defaults to true)
+     *
+     * @param mixed $args,... arguments
      *
      * @return array
      */
-    public function meta($values = array())
+    public function meta()
     {
-        if (!is_array($values)) {
-            $values = array($values=>true);
+        $args = func_get_args();
+        $count = count($args);
+        $args = array_merge($args, array(null, null, null));
+        if (is_array($args[0])) {
+            $args[0]['debug'] = self::META;
+            return $args[0];
         }
-        $values['debug'] = self::META;
-        return $values;
+        if (!is_string($args[0])) {
+            return array('debug' => self::META);
+        }
+        if ($args[0] === 'cfg') {
+            if (is_array($args[1])) {
+                return array(
+                    'cfg' => $args[1],
+                    'debug' => self::META,
+                );
+            }
+            if (!is_string($args[1])) {
+                // invalid cfg key
+                return array('debug' => self::META);
+            }
+            return array(
+                'cfg' => array(
+                    $args[1] => $count > 2
+                        ? $args[2]
+                        : true,
+                ),
+                'debug' => self::META,
+            );
+        }
+        return array(
+            $args[0] => $count > 1
+                ? $args[1]
+                : true,
+            'debug' => self::META,
+        );
     }
 
     /**
@@ -938,10 +974,15 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
+        $cfgRestore = array();
         if ($method == 'table') {
             $args[0] = $this->abstracter->getAbstractionTable($args[0]);
         } else {
             $meta = array_merge($meta, $this->internal->getMetaVals($args));
+            if (isset($meta['cfg'])) {
+                $cfgRestore = $this->config->setCfg($meta['cfg']);
+                unset($meta['cfg']);
+            }
             foreach ($args as $i => $v) {
                 if ($this->abstracter->needsAbstraction($v)) {
                     $args[$i] = $this->abstracter->getAbstraction($v);
@@ -957,6 +998,9 @@ class Debug
                 'meta' => $meta,
             )
         );
+        if ($cfgRestore) {
+            $this->config->setCfg($cfgRestore);
+        }
         if ($event->isPropagationStopped()) {
             return;
         }
@@ -972,7 +1016,6 @@ class Debug
                 $event->getValue('meta')
             );
         }
-        return;
     }
 
     /**
@@ -1031,6 +1074,31 @@ class Debug
     }
 
     /**
+     * Log timeEnd() and timeGet()
+     *
+     * @param float  $seconds          seconds
+     * @param mixed  $returnOrTemplate false: log the time with default template (default)
+     *                                  true: do not log
+     *                                  string: log using passed template
+     * @param string $label            label
+     *
+     * @return void
+     */
+    protected function doTime($seconds, $returnOrTemplate = false, $label = 'time')
+    {
+        if (is_string($returnOrTemplate)) {
+            $str = $returnOrTemplate;
+            $str = str_replace('%label', $label, $str);
+            $str = str_replace('%time', $seconds, $str);
+        } elseif ($returnOrTemplate === true) {
+            return;
+        } else {
+            $str = $label.': '.$seconds.' sec';
+        }
+        $this->appendLog('time', array($str));
+    }
+
+    /**
      * Set/cache this class' public methods
      *
      * Generated list is used when calling methods statically
@@ -1049,30 +1117,5 @@ class Debug
             '__callStatic',
             '__get',
         ));
-    }
-
-    /**
-     * Log time
-     *
-     * @param float  $seconds          seconds
-     * @param mixed  $returnOrTemplate false: log the time with default template (default)
-     *                                  true: do not log
-     *                                  string: log using passed template
-     * @param string $label            label
-     *
-     * @return void
-     */
-    protected function timeLog($seconds, $returnOrTemplate = false, $label = 'time')
-    {
-        if (is_string($returnOrTemplate)) {
-            $str = $returnOrTemplate;
-            $str = str_replace('%label', $label, $str);
-            $str = str_replace('%time', $seconds, $str);
-        } elseif ($returnOrTemplate === true) {
-            return;
-        } else {
-            $str = $label.': '.$seconds.' sec';
-        }
-        $this->appendLog('time', array($str));
     }
 }

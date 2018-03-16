@@ -89,14 +89,16 @@ class OutputFile extends OutputText
     protected function setFile($file)
     {
         if ($file == $this->file) {
+            // no change
             return;
+        }
+        if ($this->fileHandle) {
+            // close existing file
+            fclose($this->fileHandle);
+            $this->fileHandle = null;
         }
         $this->file = $file;
         if (empty($file)) {
-            if ($this->fileHandle) {
-                fclose($this->fileHandle);
-            }
-            $this->fileHandle = null;
             return;
         }
         $fileExists = file_exists($file);

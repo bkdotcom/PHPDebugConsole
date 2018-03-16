@@ -572,7 +572,40 @@ EOD;
 
     public function testMeta()
     {
-
+        /*
+            Test cfg shortcut...
+        */
+        $this->assertSame(array(
+            'cfg'=>array('foo'=>'bar'),
+            'debug'=>\bdk\Debug::META,
+        ), $this->debug->meta('cfg', array('foo'=>'bar')));
+        $this->assertSame(array(
+            'cfg'=>array('foo'=>'bar'),
+            'debug'=>\bdk\Debug::META,
+        ), $this->debug->meta('cfg', 'foo', 'bar'));
+        $this->assertSame(array(
+            'cfg'=>array('foo'=>true),
+            'debug'=>\bdk\Debug::META,
+        ), $this->debug->meta('cfg', 'foo'));
+        // invalid cfg val... empty meta
+        $this->assertSame(array(
+            'debug'=>\bdk\Debug::META,
+        ), $this->debug->meta('cfg'));
+        /*
+            non cfg shortcut
+        */
+        $this->assertSame(array(
+            'foo' => 'bar',
+            'debug'=>\bdk\Debug::META,
+        ), $this->debug->meta(array('foo'=>'bar')));
+        $this->assertSame(array(
+            'foo' => 'bar',
+            'debug'=>\bdk\Debug::META,
+        ), $this->debug->meta('foo', 'bar'));
+        $this->assertSame(array(
+            'foo' => true,
+            'debug'=>\bdk\Debug::META,
+        ), $this->debug->meta('foo'));
     }
 
     /**

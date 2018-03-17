@@ -135,10 +135,13 @@ class ErrorHandler
                 'file'=>$error['file'],
                 'line'=>$error['line'],
             );
+            array_pop($backtrace);   // pointless entry that xdebug_get_function_stack() includes
+            if (empty($backtrace)) {
+                return array();
+            }
             if (array_intersect_assoc($errorFileLine, $backtrace[0]) !== $errorFileLine) {
                 array_unshift($backtrace, $errorFileLine);
             }
-            array_pop($backtrace);   // pointless entry that xdebug_get_function_stack() includes
         } elseif ($isFatalError) {
             $backtrace = array();
         } else {
@@ -271,6 +274,7 @@ class ErrorHandler
     {
         // lets store the exception so we can use the backtrace it provides
         $this->uncaughtException = $exception;
+        http_response_code(500);
         $this->handleError(
             E_ERROR,
             'Uncaught exception \''.get_class($exception).'\' with message '.$exception->getMessage(),
@@ -278,6 +282,9 @@ class ErrorHandler
             $exception->getLine()
         );
         $this->uncaughtException = null;
+        if ($this->cfg['continueToPrevHandler'] && $this->prevExceptionHandler) {
+            call_user_func($this->prevErrorHandler, $exception);
+        }
     }
 
     /**

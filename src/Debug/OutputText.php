@@ -48,22 +48,22 @@ class OutputText extends OutputBase
      */
     protected function buildArgString($args)
     {
-        $numArgs = count($args);
-        if ($numArgs == 1 && is_string($args[0])) {
-            $args[0] = strip_tags($args[0]);
+        $numArgs = \count($args);
+        if ($numArgs == 1 && \is_string($args[0])) {
+            $args[0] = \strip_tags($args[0]);
         }
         foreach ($args as $k => $v) {
-            if ($k > 0 || !is_string($v)) {
+            if ($k > 0 || !\is_string($v)) {
                 $args[$k] = $this->dump($v);
             }
         }
         $glue = ', ';
         if ($numArgs == 2) {
-            $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+            $glue = \preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
                 ? ''
                 : ' = ';
         }
-        return implode($glue, $args);
+        return \implode($glue, $args);
     }
 
     /**
@@ -91,13 +91,13 @@ class OutputText extends OutputBase
         $prefix = isset($prefixes[$method])
             ? $prefixes[$method]
             : '';
-        $strIndent = str_repeat('    ', $this->depth);
-        if (in_array($method, array('error','info','log','warn'))) {
-            if (count($args) > 1 && is_string($args[0])) {
+        $strIndent = \str_repeat('    ', $this->depth);
+        if (\in_array($method, array('error','info','log','warn'))) {
+            if (\count($args) > 1 && \is_string($args[0])) {
                 $hasSubs = false;
                 $args = $this->processSubstitutions($args, $hasSubs);
                 if ($hasSubs) {
-                    $args = array( implode('', $args) );
+                    $args = array( \implode('', $args) );
                 }
             }
         } elseif ($method == 'alert') {
@@ -107,17 +107,17 @@ class OutputText extends OutputBase
         } elseif ($method == 'table') {
             $args = array($this->methodTable($args[0], $meta['columns']));
             if ($meta['caption']) {
-                array_unshift($args, $meta['caption']);
+                \array_unshift($args, $meta['caption']);
             }
-        } elseif (in_array($method, array('group','groupCollapsed'))) {
+        } elseif (\in_array($method, array('group','groupCollapsed'))) {
             $this->depth ++;
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
             $this->depth --;
         }
         $str = $prefix.$this->buildArgString($args);
-        $str = $strIndent.str_replace("\n", "\n".$strIndent, $str);
+        $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str);
         $str .= "\n";
-        return rtrim($str);
+        return \rtrim($str);
     }
 
     /**
@@ -131,11 +131,11 @@ class OutputText extends OutputBase
     protected function dumpArray($array, $path = array())
     {
         $array = parent::dumpArray($array, $path);
-        $str = trim(print_r($array, true));
-        $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
-        $str = str_replace("Array\n(", 'Array(', $str);
-        if (count($path)) {
-            $str = str_replace("\n", "\n    ", $str);
+        $str = \trim(\print_r($array, true));
+        $str = \preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
+        $str = \str_replace("Array\n(", 'Array(', $str);
+        if (\count($path)) {
+            $str = \str_replace("\n", "\n    ", $str);
         }
         return $str;
     }
@@ -187,7 +187,7 @@ class OutputText extends OutputBase
      */
     protected function dumpObject($abs, $path = array())
     {
-        $pathCount = count($path);
+        $pathCount = \count($path);
         if ($abs['isRecursion']) {
             $str = '(object) '.$abs['className'].' *RECURSION*';
         } elseif ($abs['isExcluded']) {
@@ -199,9 +199,9 @@ class OutputText extends OutputBase
                 $str .= $this->dumpMethods($abs['methods']);
             }
         }
-        $str = trim($str);
+        $str = \trim($str);
         if ($pathCount) {
-            $str = str_replace("\n", "\n    ", $str);
+            $str = \str_replace("\n", "\n    ", $str);
         }
         return $str;
     }
@@ -218,14 +218,14 @@ class OutputText extends OutputBase
     {
         $str = '';
         $propHeader = '';
-        $pathCount = count($path);
+        $pathCount = \count($path);
         if (isset($abs['methods']['__get'])) {
             $str .= '    ✨ This object has a __get() method'."\n";
         }
         foreach ($abs['properties'] as $name => $info) {
             $path[$pathCount] = $name;
             $vis = $info['visibility'];
-            if (in_array($vis, array('magic','magic-read','magic-write'))) {
+            if (\in_array($vis, array('magic','magic-read','magic-write'))) {
                 $vis = '✨ '.$vis;    // "sparkles" there is no magic-wand unicode char
             }
             if ($vis == 'private' && $info['inheritedFrom']) {
@@ -281,7 +281,7 @@ class OutputText extends OutputBase
      */
     protected function dumpString($val)
     {
-        if (is_numeric($val)) {
+        if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
             return $date
                 ? '📅 "'.$val.'" ('.$date.')'

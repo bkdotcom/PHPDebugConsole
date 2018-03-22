@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -59,8 +59,8 @@ class Output
      */
     public function __get($prop)
     {
-        $classname = __NAMESPACE__.'\\'.ucfirst($prop);
-        if (strpos($prop, 'output') === 0 && class_exists($classname)) {
+        $classname = __NAMESPACE__.'\\'.\ucfirst($prop);
+        if (\strpos($prop, 'output') === 0 && \class_exists($classname)) {
             $this->{$prop} = new $classname($this->debug);
             // note: we don't add as plugin / subscriberInterface here
             return $this->{$prop};
@@ -80,15 +80,15 @@ class Output
             $ret = $this->cfg['outputAs'];
             if (empty($ret)) {
                 $ret = $this->getDefaultOutputAs();
-            } elseif (is_object($ret)) {
-                $ret = get_class($ret);
-                $ret = preg_replace('/^'.preg_quote(__NAMESPACE__.'\\Output').'/', '', $ret);
-                $ret = lcfirst($ret);
+            } elseif (\is_object($ret)) {
+                $ret = \get_class($ret);
+                $ret = \preg_replace('/^'.\preg_quote(__NAMESPACE__.'\\Output').'/', '', $ret);
+                $ret = \lcfirst($ret);
             }
         } elseif ($path == 'css') {
             $ret = $this->getCss();
         } else {
-            $path = array_filter(preg_split('#[\./]#', $path), 'strlen');
+            $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
             $ret = $this->cfg;
             foreach ($path as $k) {
                 if (isset($ret[$k])) {
@@ -109,7 +109,7 @@ class Output
      */
     public function getCss()
     {
-        $return = file_get_contents($this->cfg['filepathCss']);
+        $return = \file_get_contents($this->cfg['filepathCss']);
         $return .= "\n";
         if (!empty($this->cfg['css'])) {
             $return .= $this->cfg['css']."\n";
@@ -131,7 +131,7 @@ class Output
     {
         $ret = null;
         $values = array();
-        if (is_string($mixed)) {
+        if (\is_string($mixed)) {
             $key = $mixed;
             $ret = isset($this->cfg[$key])
                 ? $this->cfg[$key]
@@ -139,28 +139,28 @@ class Output
             $values = array(
                 $key => $newVal,
             );
-        } elseif (is_array($mixed)) {
+        } elseif (\is_array($mixed)) {
             $values = $mixed;
         }
         if (isset($values['outputAs'])) {
             $outputAs = $values['outputAs'];
-            if (is_string($outputAs)) {
-                $prop = 'output'.ucfirst($outputAs);
-                $classname = __NAMESPACE__.'\\'.ucfirst($prop);
-                if (class_exists($classname)) {
-                    if (!property_exists($this, $prop)) {
+            if (\is_string($outputAs)) {
+                $prop = 'output'.\ucfirst($outputAs);
+                $classname = __NAMESPACE__.'\\'.\ucfirst($prop);
+                if (\class_exists($classname)) {
+                    if (!\property_exists($this, $prop)) {
                         $this->{$prop} = new $classname($this->debug);
                     }
-                    if (!in_array($prop, $this->subscribers)) {
+                    if (!\in_array($prop, $this->subscribers)) {
                         $this->subscribers[] = $prop;
                         $this->debug->addPlugin($this->{$prop});
                     }
                 }
             } elseif ($outputAs instanceof SubscriberInterface) {
-                $classname = get_class($outputAs);
+                $classname = \get_class($outputAs);
                 $prefix = __NAMESPACE__.'\\Output';
-                if (strpos($classname, $prefix) == 0) {
-                    $prop = 'output'.substr($classname, strlen($prefix));
+                if (\strpos($classname, $prefix) == 0) {
+                    $prop = 'output'.\substr($classname, \strlen($prefix));
                     $this->{$prop} = $outputAs;
                     $this->subscribers[] = $prop;
                 }

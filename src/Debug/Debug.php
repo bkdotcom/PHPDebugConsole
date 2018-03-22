@@ -104,7 +104,7 @@ class Debug
                         0,
                         isset($_SERVER['REQUEST_TIME_FLOAT'])
                             ? $_SERVER['REQUEST_TIME_FLOAT']
-                            : microtime(true)
+                            : \microtime(true)
                     ),
                 ),
                 'stack' => array(),
@@ -119,7 +119,7 @@ class Debug
                 Only call spl_autoload_register on initial instance
                 (even though re-registering function does't re-register)
             */
-            spl_autoload_register(array($this, 'autoloader'));
+            \spl_autoload_register(array($this, 'autoloader'));
         }
         /*
             Initialize child objects
@@ -150,7 +150,7 @@ class Debug
             Publish bootstrap event
         */
         $this->eventManager->publish('debug.bootstrap', $this);
-        $this->data['entryCountInitial'] = count($this->data['log']);
+        $this->data['entryCountInitial'] = \count($this->data['log']);
     }
 
     /**
@@ -185,11 +185,11 @@ class Debug
      */
     public static function __callStatic($methodName, $args)
     {
-        $methodName = ltrim($methodName, '_');
-        if (in_array($methodName, self::$publicMethods)) {
-            return call_user_func_array(array(self::$instance, $methodName), $args);
+        $methodName = \ltrim($methodName, '_');
+        if (\in_array($methodName, self::$publicMethods)) {
+            return \call_user_func_array(array(self::$instance, $methodName), $args);
         }
-        if (empty(self::$publicMethods)) {
+        if (!self::$publicMethods) {
             /*
                 Initializing debug with \bdk\Debug::_setCfg()?
             */
@@ -276,8 +276,8 @@ class Debug
      */
     public function assert()
     {
-        $args = func_get_args();
-        $test = array_shift($args);
+        $args = \func_get_args();
+        $test = \array_shift($args);
         if (!$test) {
             if (!$args) {
                 $callerInfo = $this->utilities->getCallerInfo();
@@ -330,7 +330,7 @@ class Debug
     {
         $this->appendLog(
             'error',
-            func_get_args(),
+            \func_get_args(),
             $this->internal->getErrorCaller()
         );
     }
@@ -344,7 +344,7 @@ class Debug
      */
     public function group()
     {
-        $this->doGroup('group', func_get_args());
+        $this->doGroup('group', \func_get_args());
     }
 
     /**
@@ -356,7 +356,7 @@ class Debug
      */
     public function groupCollapsed()
     {
-        $this->doGroup('groupCollapsed', func_get_args());
+        $this->doGroup('groupCollapsed', \func_get_args());
     }
 
     /**
@@ -366,7 +366,7 @@ class Debug
      */
     public function groupEnd()
     {
-        $this->groupDepthRef[0] = max(0, --$this->groupDepthRef[0]);
+        $this->groupDepthRef[0] = \max(0, --$this->groupDepthRef[0]);
         if ($this->cfg['collect']) {
             if ($this->groupDepthRef[1] === 0) {
                 // nothing to end
@@ -379,8 +379,8 @@ class Debug
             $this->errorHandler->setErrorCaller(false);
         }
         if ($this->data['groupSummaryStack'] && $this->groupDepthRef[0] === 0) {
-            array_pop($this->data['groupSummaryStack']);
-            $count = count($this->data['groupSummaryStack']);
+            \array_pop($this->data['groupSummaryStack']);
+            $count = \count($this->data['groupSummaryStack']);
             if ($count) {
                 // still in a group
                 $curPriority = $this->data['groupSummaryStack'][$count-1]['priority'];
@@ -428,7 +428,7 @@ class Debug
             'groupDepth' => array(1, $this->cfg['collect'] ? 1 : 0),
             'priority' => $priority
         );
-        $stackCount = count($this->data['groupSummaryStack']);
+        $stackCount = \count($this->data['groupSummaryStack']);
         if (!isset($this->data['logSummary'][$priority])) {
             $this->data['logSummary'][$priority] = array();
         }
@@ -465,12 +465,12 @@ class Debug
         }
         $curDepth = $this->groupDepthRef[1];   // will fluctuate as we go through log
         $minDepth = $this->groupDepthRef[1];   // decrease as we work our way down
-        for ($i = count($this->logRef) - 1; $i >=0; $i--) {
+        for ($i = \count($this->logRef) - 1; $i >=0; $i--) {
             if ($curDepth < 1) {
                 break;
             }
             $method = $this->logRef[$i][0];
-            if (in_array($method, array('group', 'groupCollapsed'))) {
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $curDepth--;
                 if ($curDepth < $minDepth) {
                     $minDepth--;
@@ -502,7 +502,7 @@ class Debug
      */
     public function info()
     {
-        $this->appendLog('info', func_get_args());
+        $this->appendLog('info', \func_get_args());
     }
 
     /**
@@ -512,7 +512,7 @@ class Debug
      */
     public function log()
     {
-        $this->appendLog('log', func_get_args());
+        $this->appendLog('log', \func_get_args());
     }
 
     /**
@@ -532,21 +532,21 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        $args = func_get_args();
-        $meta = array_merge(array(
+        $args = \func_get_args();
+        $meta = \array_merge(array(
             'caption' => null,
             'columns' => array(),
         ), $this->internal->getMetaVals($args));
-        $argCount = count($args);
+        $argCount = \count($args);
         $data = null;
         for ($i = 0; $i < $argCount; $i++) {
-            if (is_array($args[$i])) {
+            if (\is_array($args[$i])) {
                 if ($data === null) {
                     $data = $args[$i];
-                } elseif (empty($meta['columns'])) {
+                } elseif (!$meta['columns']) {
                     $meta['columns'] = $args[$i];
                 }
-            } elseif (is_string($args[$i]) && !$meta['caption']) {
+            } elseif (\is_string($args[$i]) && !$meta['caption']) {
                 $meta['caption'] = $args[$i];
             }
             unset($args[$i]);
@@ -554,9 +554,9 @@ class Debug
         if ($data) {
             $this->appendLog('table', array($data), $meta);
         } else {
-            $args = is_array($data) && $meta['caption']
+            $args = \is_array($data) && $meta['caption']
                 ? array($meta['caption'], $data)    // empty array()
-                : func_get_args();                  // no array passed
+                : \func_get_args();                  // no array passed
             $this->appendLog('log', $args);
         }
     }
@@ -582,13 +582,13 @@ class Debug
             $timers = &$this->data['timers']['labels'];
             if (!isset($timers[$label])) {
                 // new label
-                $timers[$label] = array(0, microtime(true));
+                $timers[$label] = array(0, \microtime(true));
             } elseif (!isset($timers[$label][1])) {
                 // no microtime -> the timer is currently paused -> unpause
-                $timers[$label][1] = microtime(true);
+                $timers[$label][1] = \microtime(true);
             }
         } else {
-            $this->data['timers']['stack'][] = microtime(true);
+            $this->data['timers']['stack'][] = \microtime(true);
         }
     }
 
@@ -606,7 +606,7 @@ class Debug
      */
     public function timeEnd($label = null, $returnOrTemplate = false, $precision = 4)
     {
-        if (is_bool($label) || strpos($label, '%time') !== false) {
+        if (\is_bool($label) || \strpos($label, '%time') !== false) {
             $returnOrTemplate = $label;
             $label = null;
         }
@@ -620,11 +620,11 @@ class Debug
             }
         } else {
             $label = 'time';
-            array_pop($this->data['timers']['stack']);
+            \array_pop($this->data['timers']['stack']);
         }
-        if (is_int($precision)) {
+        if (\is_int($precision)) {
             // use number_format rather than round(), which may still run decimals-a-plenty
-            $ret = number_format($ret, $precision, '.', '');
+            $ret = \number_format($ret, $precision, '.', '');
         }
         $this->doTime($ret, $returnOrTemplate, $label);
         return $ret;
@@ -642,7 +642,7 @@ class Debug
      */
     public function timeGet($label = null, $returnOrTemplate = false, $precision = 4)
     {
-        if (is_bool($label) || strpos($label, '%time') !== false) {
+        if (\is_bool($label) || \strpos($label, '%time') !== false) {
             $precision = $returnOrTemplate;
             $returnOrTemplate = $label;
             $label = null;
@@ -651,20 +651,20 @@ class Debug
         $ellapsed = 0;
         if (!isset($label)) {
             $label = 'time';
-            if (empty($this->data['timers']['stack'])) {
+            if (!$this->data['timers']['stack']) {
                 list($ellapsed, $microT) = $this->data['timers']['labels']['debugInit'];
             } else {
-                $microT = end($this->data['timers']['stack']);
+                $microT = \end($this->data['timers']['stack']);
             }
         } elseif (isset($this->data['timers']['labels'][$label])) {
             list($ellapsed, $microT) = $this->data['timers']['labels'][$label];
         }
         if ($microT) {
-            $ellapsed += microtime(true) - $microT;
+            $ellapsed += \microtime(true) - $microT;
         }
-        if (is_int($precision)) {
+        if (\is_int($precision)) {
             // use number_format rather than round(), which may still run decimals-a-plenty
-            $ellapsed = number_format($ellapsed, $precision, '.', '');
+            $ellapsed = \number_format($ellapsed, $precision, '.', '');
         }
         $this->doTime($ellapsed, $returnOrTemplate, $label);
         return $ellapsed;
@@ -682,14 +682,14 @@ class Debug
         }
         $backtrace = $this->errorHandler->backtrace();
         // toss "internal" frames
-        for ($i = 1, $count=count($backtrace)-1; $i < $count; $i++) {
+        for ($i = 1, $count = \count($backtrace)-1; $i < $count; $i++) {
             $frame = $backtrace[$i];
             $function = isset($frame['function']) ? $frame['function'] : '';
-            if (!preg_match('/^'.preg_quote(__CLASS__).'(::|->)/', $function)) {
+            if (!\preg_match('/^'.\preg_quote(__CLASS__).'(::|->)/', $function)) {
                 break;
             }
         }
-        $backtrace = array_slice($backtrace, $i-1);
+        $backtrace = \array_slice($backtrace, $i-1);
         // keep the calling file & line, but toss ->trace or ::_trace
         unset($backtrace[0]['function']);
         $this->appendLog('trace', array($backtrace));
@@ -704,7 +704,7 @@ class Debug
     {
         $this->appendLog(
             'warn',
-            func_get_args(),
+            \func_get_args(),
             $this->internal->getErrorCaller()
         );
     }
@@ -747,9 +747,9 @@ class Debug
     public function getData($path = null)
     {
         if ($path == 'entryCount') {
-            return count($this->data['log']);
+            return \count($this->data['log']);
         }
-        $path = array_filter(preg_split('#[\./]#', $path), 'strlen');
+        $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
         $ret = $this->data;
         foreach ($path as $k) {
             if (isset($ret[$k])) {
@@ -795,24 +795,24 @@ class Debug
      */
     public function meta()
     {
-        $args = func_get_args();
-        $count = count($args);
-        $args = array_merge($args, array(null, null, null));
-        if (is_array($args[0])) {
+        $args = \func_get_args();
+        $count = \count($args);
+        $args = \array_merge($args, array(null, null, null));
+        if (\is_array($args[0])) {
             $args[0]['debug'] = self::META;
             return $args[0];
         }
-        if (!is_string($args[0])) {
+        if (!\is_string($args[0])) {
             return array('debug' => self::META);
         }
         if ($args[0] === 'cfg') {
-            if (is_array($args[1])) {
+            if (\is_array($args[1])) {
                 return array(
                     'cfg' => $args[1],
                     'debug' => self::META,
                 );
             }
-            if (!is_string($args[1])) {
+            if (!\is_string($args[1])) {
                 // invalid cfg key
                 return array('debug' => self::META);
             }
@@ -895,15 +895,15 @@ class Debug
      */
     public function setData($path, $value = null)
     {
-        if (is_string($path)) {
-            $path = preg_split('#[\./]#', $path);
+        if (\is_string($path)) {
+            $path = \preg_split('#[\./]#', $path);
             $ref = &$this->data;
             foreach ($path as $k) {
                 $ref = &$ref[$k];
             }
             $ref = $value;
         } else {
-            $this->data = array_merge($this->data, $path);
+            $this->data = \array_merge($this->data, $path);
         }
     }
 
@@ -925,7 +925,7 @@ class Debug
                 'line' => $caller['line'],
             );
         }
-        if (!empty($caller)) {
+        if ($caller) {
             // groupEnd will check depth and potentially clear errorCaller
             $caller['groupDepth'] = $this->groupDepth;
         }
@@ -945,8 +945,8 @@ class Debug
      */
     protected function autoloader($className)
     {
-        $className = ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
-        if (preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches)) {
+        $className = \ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
+        if (\preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches)) {
             $namespace = $matches[1];
             if ($namespace === 'bdk\\Debug') {
                 $filePath = __DIR__.'/'.$matches[2].'.php';
@@ -978,7 +978,7 @@ class Debug
         if ($method == 'table') {
             $args[0] = $this->abstracter->getAbstractionTable($args[0]);
         } else {
-            $meta = array_merge($meta, $this->internal->getMetaVals($args));
+            $meta = \array_merge($meta, $this->internal->getMetaVals($args));
             if (isset($meta['cfg'])) {
                 $cfgRestore = $this->config->setCfg($meta['cfg']);
                 unset($meta['cfg']);
@@ -1086,10 +1086,10 @@ class Debug
      */
     protected function doTime($seconds, $returnOrTemplate = false, $label = 'time')
     {
-        if (is_string($returnOrTemplate)) {
+        if (\is_string($returnOrTemplate)) {
             $str = $returnOrTemplate;
-            $str = str_replace('%label', $label, $str);
-            $str = str_replace('%time', $seconds, $str);
+            $str = \str_replace('%label', $label, $str);
+            $str = \str_replace('%time', $seconds, $str);
         } elseif ($returnOrTemplate === true) {
             return;
         } else {
@@ -1107,7 +1107,7 @@ class Debug
      */
     private static function setPublicMethods()
     {
-        $reflection = new ReflectionClass(get_called_class());
+        $reflection = new ReflectionClass(\get_called_class());
         self::$publicMethods = array_map(function (ReflectionMethod $refMethod) {
             return $refMethod->name;
         }, $reflection->getMethods(ReflectionMethod::IS_PUBLIC));

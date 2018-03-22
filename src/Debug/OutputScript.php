@@ -39,7 +39,7 @@ class OutputScript extends OutputBase
             foreach ($errorStats['counts'] as $category => $vals) {
                 $errorStr .= $vals['inConsole'].' '.$category.', ';
             }
-            $errorStr = substr($errorStr, 0, -2);
+            $errorStr = \substr($errorStr, 0, -2);
         }
         $str = '';
         $str .= '<script type="text/javascript">'."\n";
@@ -69,24 +69,24 @@ class OutputScript extends OutputBase
     protected function doProcessLogEntry($method, $args = array(), $meta = array())
     {
         if ($method == 'assert') {
-            array_unshift($args, false);
-        } elseif (in_array($method, array('count','time'))) {
+            \array_unshift($args, false);
+        } elseif (\in_array($method, array('count','time'))) {
             $method = 'log';
         } elseif ($method == 'table') {
             $args = array($this->methodTable($args[0], $meta['columns']));
         } elseif ($method == 'trace') {
             $method = 'table';
             $args = array($this->methodTable($args[0], array('function','file','line')));
-        } elseif (in_array($method, array('error','warn'))) {
+        } elseif (\in_array($method, array('error','warn'))) {
             if (isset($meta['file'])) {
                 $args[] = $meta['file'].': line '.$meta['line'];
             }
         }
         foreach ($args as $k => $arg) {
-            $args[$k] = json_encode($this->dump($arg));
+            $args[$k] = \json_encode($this->dump($arg));
         }
-        $str = 'console.'.$method.'('.implode(',', $args).');'."\n";
-        $str = str_replace(json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
+        $str = 'console.'.$method.'('.\implode(',', $args).');'."\n";
+        $str = \str_replace(\json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
         return $str;
     }
 

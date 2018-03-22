@@ -43,8 +43,8 @@ class OutputFirephp extends OutputBase
      */
     public function onOutput(Event $event)
     {
-        if (headers_sent($file, $line)) {
-            trigger_error('Unable to FirePHP: headers already sent. ('.$file.' line '.$line.')', E_USER_NOTICE);
+        if (\headers_sent($file, $line)) {
+            \trigger_error('Unable to FirePHP: headers already sent. ('.$file.' line '.$line.')', E_USER_NOTICE);
             return;
         }
         $this->data = $this->debug->getData();
@@ -76,11 +76,11 @@ class OutputFirephp extends OutputBase
         $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
         $table = array();
         $table[] = $keys;
-        array_unshift($table[0], '');
+        \array_unshift($table[0], '');
         $classNames = array();
         foreach ($array as $k => $row) {
             $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
-            $values = array_map(function ($val) {
+            $values = \array_map(function ($val) {
                 return $val === $this->debug->abstracter->UNDEFINED
                     ? null
                     : $val;
@@ -88,13 +88,13 @@ class OutputFirephp extends OutputBase
             $classNames[] = $objInfo
                 ? $objInfo['className']
                 : '';
-            array_unshift($values, $k);
-            $table[] = array_values($values);
+            \array_unshift($values, $k);
+            $table[] = \array_values($values);
         }
-        if (array_filter($classNames)) {
-            array_unshift($table[0], '');
+        if (\array_filter($classNames)) {
+            \array_unshift($table[0], '');
             foreach ($classNames as $i => $className) {
-                array_splice($table[$i+1], 1, 0, $className);
+                \array_splice($table[$i+1], 1, 0, $className);
             }
         }
         return $table;
@@ -125,7 +125,7 @@ class OutputFirephp extends OutputBase
             $firePhpMeta['File'] = $meta['file'];
             $firePhpMeta['Line'] = $meta['line'];
         }
-        if (in_array($method, array('group','groupCollapsed'))) {
+        if (\in_array($method, array('group','groupCollapsed'))) {
             $firePhpMeta['Label'] = $args[0];
             $firePhpMeta['Collapsed'] = $method == 'groupCollapsed'
                 // yes, strings
@@ -140,13 +140,13 @@ class OutputFirephp extends OutputBase
             $firePhpMeta['Type'] = $this->firephpMethods['table'];
             $value = $this->methodTable($args[0], array('function','file','line'));
             $firePhpMeta['Label'] = 'trace';
-        } elseif (count($args)) {
-            if (count($args) == 1) {
+        } elseif (\count($args)) {
+            if (\count($args) == 1) {
                 $value = $args[0];
                 // no label;
             } else {
-                $firePhpMeta['Label'] = array_shift($args);
-                $value = count($args) > 1
+                $firePhpMeta['Label'] = \array_shift($args);
+                $value = \count($args) > 1
                     ? $args // firephp only supports label/value...  we'll pass multiple values as an array
                     : $args[0];
             }
@@ -157,7 +157,7 @@ class OutputFirephp extends OutputBase
         } elseif ($this->messageIndex === self::MESSAGE_LIMIT) {
             $this->setFirephpHeader(
                 array('Type'=>$this->firephpMethods['warn']),
-                'Limit of '.number_format(self::MESSAGE_LIMIT).' firePhp messages reached!'
+                'Limit of '.\number_format(self::MESSAGE_LIMIT).' firePhp messages reached!'
             );
         }
         return;
@@ -173,18 +173,18 @@ class OutputFirephp extends OutputBase
      */
     private function setFirephpHeader($meta, $value = null)
     {
-        $msg = json_encode(array(
+        $msg = \json_encode(array(
             $meta,
             $value,
         ));
         $structureIndex = 1;    // refers to X-Wf-1-Structure-1
-        $parts = explode("\n", rtrim(chunk_split($msg, 5000, "\n")));
-        $numParts = count($parts);
+        $parts = \explode("\n", \rtrim(\chunk_split($msg, 5000, "\n")));
+        $numParts = \count($parts);
         for ($i=0; $i<$numParts; $i++) {
             $part = $parts[$i];
             $this->messageIndex++;
             $headerName = 'X-Wf-1-'.$structureIndex.'-1-'.$this->messageIndex;
-            $headerValue = ( $i==0 ? strlen($msg) : '')
+            $headerValue = ( $i==0 ? \strlen($msg) : '')
                 . '|' . $part . '|'
                 . ( $i<$numParts-1 ? '\\' : '' );
             $this->setHeader($headerName, $headerValue);
@@ -201,6 +201,6 @@ class OutputFirephp extends OutputBase
      */
     private function setHeader($name, $value)
     {
-        header($name.': '.$value);
+        \header($name.': '.$value);
     }
 }

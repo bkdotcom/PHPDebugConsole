@@ -45,7 +45,7 @@ class OutputHtml extends OutputBase
     public function buildTable($rows, $caption = null, $columns = array(), $class = '')
     {
         $str = '';
-        if (!is_array($rows) || empty($rows)) {
+        if (!\is_array($rows) || empty($rows)) {
             // empty array/value
             if (isset($caption)) {
                 $str = $caption.' = ';
@@ -58,7 +58,7 @@ class OutputHtml extends OutputBase
         foreach ($keys as $key) {
             $headers[] = $key === ''
                 ? 'value'
-                : htmlspecialchars($key);
+                : \htmlspecialchars($key);
         }
         $haveObj = false;
         foreach ($rows as $k => $row) {
@@ -68,7 +68,7 @@ class OutputHtml extends OutputBase
             }
         }
         if (!$haveObj) {
-            $str = str_replace('<td class="t_classname"></td>', '', $str);
+            $str = \str_replace('<td class="t_classname"></td>', '', $str);
         }
         $attribs = array(
             'class' => $class,
@@ -78,7 +78,7 @@ class OutputHtml extends OutputBase
             .'<thead>'
             .'<tr><th>&nbsp;</th>'
                 .($haveObj ? '<th>&nbsp;</th>' : '')
-                .'<th>'.implode('</th><th scope="col">', $headers).'</th>'
+                .'<th>'.\implode('</th><th scope="col">', $headers).'</th>'
             .'</tr>'."\n"
             .'</thead>'."\n"
             .'<tbody>'."\n"
@@ -106,7 +106,7 @@ class OutputHtml extends OutputBase
         );
         $this->sanitize = $sanitize;
         $val = parent::dump($val);
-        if (in_array($this->dumpType, array('recursion'))) {
+        if (\in_array($this->dumpType, array('recursion'))) {
             $wrap = false;
         }
         if ($wrap) {
@@ -147,7 +147,7 @@ class OutputHtml extends OutputBase
         }
         if ($this->debug->getCfg('output.outputScript')) {
             $str .= '<script type="text/javascript">'
-                .file_get_contents($this->debug->getCfg('filepathScript'))
+                .\file_get_contents($this->debug->getCfg('filepathScript'))
                 .'</script>'."\n";
         }
         $str .= '<div class="debug-bar"><h3>Debug Log</h3></div>'."\n";
@@ -180,8 +180,8 @@ class OutputHtml extends OutputBase
     protected function buildArgString($args)
     {
         $glue = ', ';
-        if (count($args) == 2 && is_string($args[0])) {
-            $glue = preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+        if (\count($args) == 2 && \is_string($args[0])) {
+            $glue = \preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
                 ? ''
                 : ' = ';
         }
@@ -193,7 +193,7 @@ class OutputHtml extends OutputBase
                 $args[$i] = $this->dump($v, array(), false);
             }
         }
-        return implode($glue, $args);
+        return \implode($glue, $args);
     }
 
     /**
@@ -208,15 +208,15 @@ class OutputHtml extends OutputBase
     protected function buildGroupMethod($method, $args = array(), $meta = array())
     {
         $str = '';
-        if (in_array($method, array('group','groupCollapsed'))) {
-            $label = array_shift($args);
+        if (\in_array($method, array('group','groupCollapsed'))) {
+            $label = \array_shift($args);
             if (!empty($meta['isMethodName'])) {
                 $label = $this->markupClassname($label);
             }
             foreach ($args as $k => $v) {
                 $args[$k] = $this->dump($v);
             }
-            $argStr = implode(', ', $args);
+            $argStr = \implode(', ', $args);
             $str .= '<div'.$this->debug->utilities->buildAttribString(array(
                 'class' => array(
                     'group-header',
@@ -254,7 +254,7 @@ class OutputHtml extends OutputBase
         $str = '';
         $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
         $classAndInner = $this->debug->utilities->parseAttribString($this->dump($rowKey));
-        $classAndInner['class'] = trim('t_key '.$classAndInner['class']);
+        $classAndInner['class'] = \trim('t_key '.$classAndInner['class']);
         $str .= '<tr>';
         $str .= '<th class="'.$classAndInner['class'].'" scope="row">'.$classAndInner['innerhtml'].'</th>';
         if ($objInfo) {
@@ -270,7 +270,7 @@ class OutputHtml extends OutputBase
             $str .= $this->dump($v, null, true, 'td');
         }
         $str .= '</tr>'."\n";
-        $str = str_replace(' title=""', '', $str);
+        $str = \str_replace(' title=""', '', $str);
         return $str;
     }
 
@@ -286,7 +286,7 @@ class OutputHtml extends OutputBase
     protected function doProcessLogEntry($method, $args = array(), $meta = array())
     {
         $str = '';
-        if (in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->buildGroupMethod($method, $args, $meta);
         } elseif ($method == 'table') {
             $str = $this->buildTable($args[0], $meta['caption'], $meta['columns'], 'm_table table-bordered sortable');
@@ -296,8 +296,8 @@ class OutputHtml extends OutputBase
             $attribs = array(
                 'class' => 'm_'.$method,
             );
-            if (in_array($method, array('error','info','log','warn'))) {
-                if (in_array($method, array('error','warn'))) {
+            if (\in_array($method, array('error','info','log','warn'))) {
+                if (\in_array($method, array('error','warn'))) {
                     if (isset($meta['file'])) {
                         $attribs['title'] = $meta['file'].': line '.$meta['line'];
                     }
@@ -305,11 +305,11 @@ class OutputHtml extends OutputBase
                         $attribs['class'] .= ' error-'.$meta['errorCat'];
                     }
                 }
-                if (count($args) > 1 && is_string($args[0])) {
+                if (\count($args) > 1 && \is_string($args[0])) {
                     $hasSubs = false;
                     $args = $this->processSubstitutions($args, $hasSubs);
                     if ($hasSubs) {
-                        $args = array( implode('', $args) );
+                        $args = array( \implode('', $args) );
                     }
                 }
             }
@@ -342,7 +342,7 @@ class OutputHtml extends OutputBase
                 $html .= '<span class="array-inner">'."\n";
                 foreach ($array as $key => $val) {
                     $html .= "\t".'<span class="key-value">'
-                            .'<span class="t_key'.(is_int($key) ? ' t_int' : '').'">'
+                            .'<span class="t_key'.(\is_int($key) ? ' t_int' : '').'">'
                                 .$this->dump($key, $path, true, false) // don't wrap it
                             .'</span> '
                             .'<span class="t_operator">=&gt;</span> '
@@ -437,7 +437,7 @@ class OutputHtml extends OutputBase
      */
     protected function dumpObject($abs, $path = array())
     {
-        $title = trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
+        $title = \trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
         $strClassName = $this->markupClassname($abs['className'], 'span', array(
             'title' => $title ?: null,
         ));
@@ -457,9 +457,9 @@ class OutputHtml extends OutputBase
             }
             if ($toStringVal) {
                 $toStringValAppend = '';
-                if (strlen($toStringVal) > 100) {
-                    $toStringLen = strlen($toStringVal);
-                    $toStringVal = substr($toStringVal, 0, 100);
+                if (\strlen($toStringVal) > 100) {
+                    $toStringLen = \strlen($toStringVal);
+                    $toStringVal = \substr($toStringVal, 0, 100);
                     $toStringValAppend = '&hellip; <i>('.($toStringLen - 100).' more chars)</i>';
                 }
                 $toStringDump = $this->dump($toStringVal);
@@ -474,9 +474,9 @@ class OutputHtml extends OutputBase
                 .$strClassName."\n"
                 .'<dl class="object-inner">'."\n"
                     .'<dt>extends</dt>'."\n"
-                        .'<dd class="extends">'.implode('</dd>'."\n".'<dd class="extends">', $abs['extends']).'</dd>'."\n"
+                        .'<dd class="extends">'.\implode('</dd>'."\n".'<dd class="extends">', $abs['extends']).'</dd>'."\n"
                     .'<dt>implements</dt>'."\n"
-                        .'<dd class="interface">'.implode('</dd>'."\n".'<dd class="interface">', $abs['implements']).'</dd>'."\n"
+                        .'<dd class="interface">'.\implode('</dd>'."\n".'<dd class="interface">', $abs['implements']).'</dd>'."\n"
                     .$this->dumpConstants($abs['constants'])
                     .$this->dumpProperties($abs)
                     .($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')
@@ -486,7 +486,7 @@ class OutputHtml extends OutputBase
                     .$this->dumpPhpDoc($abs['phpDoc'])
                 .'</dl>'."\n";
             // remove <dt>'s with empty <dd>'
-            $html = preg_replace('#<dt[^>]*>\w+</dt>\s*<dd[^>]*></dd>\s*#', '', $html);
+            $html = \preg_replace('#<dt[^>]*>\w+</dt>\s*<dd[^>]*></dd>\s*#', '', $html);
         }
         /*
             Were we debugged from inside or outside of the object?
@@ -495,7 +495,7 @@ class OutputHtml extends OutputBase
             ? 'private'
             : 'public';
         $this->wrapAttribs['data-accessible'] = $accessible;
-        $html = str_replace(' title=""', '', $html);
+        $html = \str_replace(' title=""', '', $html);
         return $html;
     }
 
@@ -518,7 +518,7 @@ class OutputHtml extends OutputBase
      */
     protected function dumpString($val)
     {
-        if (is_numeric($val)) {
+        if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
             if ($date) {
                 $this->wrapAttribs['class'][] = 'timestamp';
@@ -578,35 +578,35 @@ class OutputHtml extends OutputBase
      */
     protected function dumpMethods($methods)
     {
-        $label = count($methods)
+        $label = \count($methods)
             ? 'methods'
             : 'no methods';
         $str = '<dt class="methods">'.$label.'</dt>'."\n";
-        $magicMethods = array_intersect(array('__call','__callStatic'), array_keys($methods));
+        $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
         $str .= $this->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {
-            $classes = array_keys(array_filter(array(
+            $classes = \array_keys(\array_filter(array(
                 'method' => true,
                 'deprecated' => $info['isDeprecated'],
             )));
-            $modifiers = array_keys(array_filter(array(
+            $modifiers = \array_keys(\array_filter(array(
                 'final' => $info['isFinal'],
                 $info['visibility'] => true,
                 'static' => $info['isStatic'],
             )));
-            $classes = array_merge($classes, $modifiers);
-            $str .= '<dd class="'.implode(' ', $classes).'" data-implements="'.$info['implements'].'">'
-                .implode(' ', array_map(function ($modifier) {
+            $classes = \array_merge($classes, $modifiers);
+            $str .= '<dd class="'.\implode(' ', $classes).'" data-implements="'.$info['implements'].'">'
+                .\implode(' ', \array_map(function ($modifier) {
                     return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
                 }, $modifiers))
                 .(isset($info['phpDoc']['return'])
                     ? ' <span class="t_type"'
-                            .' title="'.htmlspecialchars($info['phpDoc']['return']['desc']).'"'
+                            .' title="'.\htmlspecialchars($info['phpDoc']['return']['desc']).'"'
                         .'>'.$info['phpDoc']['return']['type'].'</span>'
                     : ''
                 )
                 .' <span class="method-name"'
-                        .' title="'.trim(htmlspecialchars($info['phpDoc']['summary']
+                        .' title="'.\trim(\htmlspecialchars($info['phpDoc']['summary']
                             .($this->debug->output->getCfg('outputMethodDescription')
                                 ? "\n\n".$info['phpDoc']['description']
                                 : ''
@@ -621,8 +621,8 @@ class OutputHtml extends OutputBase
                 )
                 .'</dd>'."\n";
         }
-        $str = str_replace(' title=""', '', $str);  // t_type && method-name
-        $str = str_replace(' data-implements=""', '', $str);
+        $str = \str_replace(' title=""', '', $str);  // t_type && method-name
+        $str = \str_replace(' data-implements=""', '', $str);
         return $str;
     }
 
@@ -642,8 +642,8 @@ class OutputHtml extends OutputBase
                 $paramStr .= '<span class="t_type">'.$info['type'].'</span> ';
             }
             $paramStr .= '<span class="t_parameter-name"'
-                .' title="'.htmlspecialchars($info['desc']).'"'
-                .'>'.htmlspecialchars($info['name']).'</span>';
+                .' title="'.\htmlspecialchars($info['desc']).'"'
+                .'>'.\htmlspecialchars($info['name']).'</span>';
             if ($info['defaultValue'] !== $this->debug->abstracter->UNDEFINED) {
                 $defaultValue = $info['defaultValue'];
                 $paramStr .= ' <span class="t_operator">=</span> ';
@@ -656,9 +656,9 @@ class OutputHtml extends OutputBase
                     */
                     $title = '';
                     $type = $this->debug->abstracter->getType($defaultValue);
-                    if (!in_array($type, array('array','resource'))) {
+                    if (!\in_array($type, array('array','resource'))) {
                         $title = $this->debug->output->outputText->dump($defaultValue);
-                        $title = htmlspecialchars('value: '.$title);
+                        $title = \htmlspecialchars('value: '.$title);
                     }
                     $paramStr .= '<span class="t_parameter-default t_const"'
                         .' title="'.$title.'"'
@@ -667,17 +667,17 @@ class OutputHtml extends OutputBase
                     /*
                         The constant's value is shown
                     */
-                    if (is_string($defaultValue)) {
-                        $defaultValue = str_replace("\n", ' ', $defaultValue);
+                    if (\is_string($defaultValue)) {
+                        $defaultValue = \str_replace("\n", ' ', $defaultValue);
                     }
                     $classAndInner = $this->debug->utilities->parseAttribString($this->dump($defaultValue));
-                    $classAndInner['class'] = trim('t_parameter-default '.$classAndInner['class']);
+                    $classAndInner['class'] = \trim('t_parameter-default '.$classAndInner['class']);
                     $paramStr .= '<span class="'.$classAndInner['class'].'">'.$classAndInner['innerhtml'].'</span>';
                 }
             }
             $paramStr .= '</span>, '; // end .parameter
         }
-        $paramStr = trim($paramStr, ', ');
+        $paramStr = \trim($paramStr, ', ');
         return $paramStr;
     }
 
@@ -692,20 +692,20 @@ class OutputHtml extends OutputBase
     {
         $str = '';
         foreach ($phpDoc as $k => $values) {
-            if (!is_array($values)) {
+            if (!\is_array($values)) {
                 continue;
             }
             foreach ($values as $value) {
                 if ($k == 'link') {
                     $value = '<a href="'.$value['uri'].'" target="_blank">'
-                        .htmlspecialchars($value['desc'] ?: $value['uri'])
+                        .\htmlspecialchars($value['desc'] ?: $value['uri'])
                         .'</a>';
                 } elseif ($k == 'see' && $value['uri']) {
                     $value = '<a href="'.$value['uri'].'" target="_blank">'
-                        .htmlspecialchars($value['desc'] ?: $value['uri'])
+                        .\htmlspecialchars($value['desc'] ?: $value['uri'])
                         .'</a>';
                 } else {
-                    $value = htmlspecialchars(implode(' ', $value));
+                    $value = \htmlspecialchars(\implode(' ', $value));
                 }
                 $str .= '<dd class="phpdoc phpdoc-'.$k.'">'
                     .'<span class="phpdoc-tag">'.$k.'</span>'
@@ -730,24 +730,24 @@ class OutputHtml extends OutputBase
      */
     protected function dumpProperties($abs)
     {
-        $label = count($abs['properties'])
+        $label = \count($abs['properties'])
             ? 'properties'
             : 'no properties';
         if ($abs['viaDebugInfo']) {
             $label .= ' <span class="text-muted">(via __debugInfo)</span>';
         }
         $str = '<dt class="properties">'.$label.'</dt>'."\n";
-        $magicMethods = array_intersect(array('__get','__set'), array_keys($abs['methods']));
+        $magicMethods = \array_intersect(array('__get','__set'), \array_keys($abs['methods']));
         $str .= $this->magicMethodInfo($magicMethods);
         foreach ($abs['properties'] as $k => $info) {
             $isPrivateAncestor = $info['visibility'] == 'private' && $info['inheritedFrom'];
-            $classes = array_keys(array_filter(array(
+            $classes = \array_keys(\array_filter(array(
                 'debug-value' => !empty($info['viaDebugInfo']),
                 'private-ancestor' => $isPrivateAncestor,
                 'property' => true,
                 $info['visibility'] => $info['visibility'] != 'debug',
             )));
-            $str .= '<dd class="'.implode(' ', $classes).'">'
+            $str .= '<dd class="'.\implode(' ', $classes).'">'
                 .'<span class="t_modifier_'.$info['visibility'].'">'.$info['visibility'].'</span>'
                 .($isPrivateAncestor
                     ? ' (<i>'.$info['inheritedFrom'].'</i>)'
@@ -758,7 +758,7 @@ class OutputHtml extends OutputBase
                     : ''
                 )
                 .' <span class="property-name"'
-                    .' title="'.htmlspecialchars($info['desc']).'"'
+                    .' title="'.\htmlspecialchars($info['desc']).'"'
                     .'>'.$k.'</span>'
                 .' <span class="t_operator">=</span> '
                 .$this->dump($info['value'])
@@ -782,7 +782,7 @@ class OutputHtml extends OutputBase
         foreach ($methods as $i => $method) {
             $methods[$i] = '<code>'.$method.'</code>';
         }
-        $methods = implode(' and ', $methods);
+        $methods = \implode(' and ', $methods);
         $methods = $i == 0
             ? 'a '.$methods.' method'
             : $methods.' methods';
@@ -802,7 +802,7 @@ class OutputHtml extends OutputBase
      */
     private function markupClassname($str, $tag = 'span', $attribs = array())
     {
-        if (preg_match('/^(.+)(::|->)(.+)$/', $str, $matches)) {
+        if (\preg_match('/^(.+)(::|->)(.+)$/', $str, $matches)) {
             $classname = $matches[1];
             $opMethod = '<span class="t_operator">'.$matches[2].'</span>'
                     . '<span class="method-name">'.$matches[3].'</span>';
@@ -810,11 +810,11 @@ class OutputHtml extends OutputBase
             $classname = $str;
             $opMethod = '';
         }
-        if ($idx = strrpos($classname, '\\')) {
-            $classname = '<span class="namespace">'.substr($classname, 0, $idx + 1).'</span>'
-                . substr($classname, $idx + 1);
+        if ($idx = \strrpos($classname, '\\')) {
+            $classname = '<span class="namespace">'.\substr($classname, 0, $idx + 1).'</span>'
+                . \substr($classname, $idx + 1);
         }
-        $attribs = array_merge(array(
+        $attribs = \array_merge(array(
             'class' => 't_classname',
         ), $attribs);
         return '<'.$tag.$this->debug->utilities->buildAttribString($attribs).'>'.$classname.'</'.$tag.'>'
@@ -831,7 +831,7 @@ class OutputHtml extends OutputBase
         $str = '';
         $errorSummary = $this->errorSummary->build($this->debug->internal->errorStats());
         if ($errorSummary) {
-            array_unshift($this->data['alerts'], array(
+            \array_unshift($this->data['alerts'], array(
                 $errorSummary,
                 array(
                     'class' => 'danger error-summary',
@@ -867,7 +867,7 @@ class OutputHtml extends OutputBase
         if ($type == 'string') {
             $val = $this->dump($val, array(), true, false);
         } elseif ($type == 'array') {
-            $count = count($val);
+            $count = \count($val);
             $val = '<span class="t_keyword">Array</span>'
                 .'<span class="t_punct">(</span>'.$count.'<span class="t_punct">)</span>';
         } elseif ($type == 'object') {
@@ -888,9 +888,9 @@ class OutputHtml extends OutputBase
     protected function visualWhiteSpace($str)
     {
         // display \r, \n, & \t
-        $str = preg_replace_callback('/(\r\n|\r|\n)/', array($this, 'visualWhiteSpaceCallback'), $str);
-        $str = preg_replace('#(<br />)?\n$#', '', $str);
-        $str = str_replace("\t", '<span class="ws_t">'."\t".'</span>', $str);
+        $str = \preg_replace_callback('/(\r\n|\r|\n)/', array($this, 'visualWhiteSpaceCallback'), $str);
+        $str = \preg_replace('#(<br />)?\n$#', '', $str);
+        $str = \str_replace("\t", '<span class="ws_t">'."\t".'</span>', $str);
         return $str;
     }
 
@@ -906,6 +906,6 @@ class OutputHtml extends OutputBase
         $strBr = $this->debug->getCfg('addBR') ? '<br />' : '';
         $search = array("\r","\n");
         $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>'.$strBr."\n");
-        return str_replace($search, $replace, $matches[1]);
+        return \str_replace($search, $replace, $matches[1]);
     }
 }

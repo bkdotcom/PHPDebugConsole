@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -31,7 +31,7 @@ class Manager
         /*
             As a convenience, make shutdown subscribeable
         */
-        register_shutdown_function(function () {
+        \register_shutdown_function(function () {
             $this->publish('php.shutdown');
         });
     }
@@ -74,12 +74,12 @@ class Manager
             return $this->sorted[$eventName];
         }
         // return all subscribers
-        foreach (array_keys($this->subscribers) as $eventName) {
+        foreach (\array_keys($this->subscribers) as $eventName) {
             if (!isset($this->sorted[$eventName])) {
                 $this->sortSubscribers($eventName);
             }
         }
-        return array_filter($this->sorted);
+        return \array_filter($this->sorted);
     }
 
     /**
@@ -235,17 +235,17 @@ class Manager
     {
         $subscribers = array();
         foreach ($interface->getSubscriptions() as $eventName => $mixed) {
-            if (is_string($mixed)) {
+            if (\is_string($mixed)) {
                 // methodName
                 $subscribers[] = array($eventName, array($interface, $mixed), 0);
-            } elseif (count($mixed) == 2 && is_int($mixed[1])) {
+            } elseif (\count($mixed) == 2 && \is_int($mixed[1])) {
                 // array('methodName', priority)
                 $subscribers[] = array($eventName, array($interface, $mixed[0]), $mixed[1]);
             } else {
                 foreach ($mixed as $mixed2) {
                     // methodName
                     // or array(methodName[, priority])
-                    if (is_string($mixed2)) {
+                    if (\is_string($mixed2)) {
                         $callable = array($interface, $mixed2);
                         $priority = 0;
                     } else {
@@ -268,7 +268,7 @@ class Manager
      */
     private function sortSubscribers($eventName)
     {
-        krsort($this->subscribers[$eventName]);
+        \krsort($this->subscribers[$eventName]);
         $this->sorted[$eventName] = array();
         foreach ($this->subscribers[$eventName] as $priority => $subscribers) {
             foreach ($subscribers as $k => $subscriber) {

@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -56,7 +56,7 @@ class ErrorEmailer
     public function clearThrottleData()
     {
         $this->throttleData = array(
-            'tsTrashCollection' => time(),
+            'tsTrashCollection' => \time(),
             'errors' => array(),
         );
         $this->throttleDataExport();
@@ -100,8 +100,8 @@ class ErrorEmailer
             'emailedTo'  => '',
         );
         if (isset($this->throttleData['errors'][$hash])) {
-            $stats = array_intersect_key($this->throttleData['errors'][$hash], $error['stats']);
-            $error['stats'] = array_merge($error['stats'], $stats);
+            $stats = \array_intersect_key($this->throttleData['errors'][$hash], $error['stats']);
+            $error['stats'] = \array_merge($error['stats'], $stats);
         }
         return;
     }
@@ -117,7 +117,7 @@ class ErrorEmailer
     {
         if ($error['email'] && $this->cfg['emailMin'] > 0) {
             $this->throttleDataSet($error);
-            $tsCutoff = time() - $this->cfg['emailMin'] * 60;
+            $tsCutoff = \time() - $this->cfg['emailMin'] * 60;
             $error['email'] = $error['stats']['tsEmailed'] <= $tsCutoff;
         }
         if ($error['email']) {
@@ -142,7 +142,7 @@ class ErrorEmailer
     {
         $ret = null;
         $values = array();
-        if (is_string($mixed)) {
+        if (\is_string($mixed)) {
             $key = $mixed;
             $ret = isset($this->cfg[$key])
                 ? $this->cfg[$key]
@@ -150,10 +150,10 @@ class ErrorEmailer
             $values = array(
                 $key => $newVal,
             );
-        } elseif (is_array($mixed)) {
+        } elseif (\is_array($mixed)) {
             $values = $mixed;
         }
-        $this->cfg = array_merge($this->cfg, $values);
+        $this->cfg = \array_merge($this->cfg, $values);
         return $ret;
     }
 
@@ -172,14 +172,14 @@ class ErrorEmailer
         } else {
             $backtrace = $error->getSubject()->backtrace();
         }
-        if (count($backtrace) < 2) {
+        if (\count($backtrace) < 2) {
             return '';
         }
         if ($backtrace && $error['vars']) {
             $backtrace[0]['vars'] = $error['vars'];
         }
         $debug = __NAMESPACE__;
-        if (class_exists($debug)) {
+        if (\class_exists($debug)) {
             $debug = $debug::getInstance();
             $str = $debug->output->outputText->dump($backtrace);
         } else {
@@ -189,10 +189,10 @@ class ErrorEmailer
             $replace = array(
                 ")\n",
             );
-            $str = print_r($backtrace, true);
-            $str = preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
-            $str = str_replace($search, $replace, $str);
-            $str = substr($str, 0, -1);
+            $str = \print_r($backtrace, true);
+            $str = \preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
+            $str = \str_replace($search, $replace, $str);
+            $str = \substr($str, 0, -1);
         }
         return $str;
     }
@@ -208,7 +208,7 @@ class ErrorEmailer
      */
     protected function email($toAddr, $subject, $body)
     {
-        call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body);
+        \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body);
     }
 
     /**
@@ -221,20 +221,20 @@ class ErrorEmailer
     protected function emailErr(Event $error)
     {
         $dateTimeFmt = 'Y-m-d H:i:s (T)';
-        $errMsg     = preg_replace('/ \[<a.*?\/a>\]/i', '', $error['message']);   // remove links from errMsg
+        $errMsg     = \preg_replace('/ \[<a.*?\/a>\]/i', '', $error['message']);   // remove links from errMsg
         $countSince = $error['stats']['countSince'];
         $isCli = !isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv']);
         $subject = $isCli
-            ? 'Error: '.implode(' ', $_SERVER['argv'])
+            ? 'Error: '.\implode(' ', $_SERVER['argv'])
             : 'Website Error: '.$_SERVER['SERVER_NAME'];
         $subject .= ': '.$errMsg.($countSince ? ' ('.$countSince.'x)' : '');
         $emailBody = '';
         if (!empty($countSince)) {
-            $dateTimePrev = date($dateTimeFmt, $error['stats']['tsEmailed']);
+            $dateTimePrev = \date($dateTimeFmt, $error['stats']['tsEmailed']);
             $emailBody .= 'Error has occurred '.$countSince.' times since last email ('.$dateTimePrev.').'."\n\n";
         }
         $emailBody .= ''
-            .'datetime: '.date($dateTimeFmt)."\n"
+            .'datetime: '.\date($dateTimeFmt)."\n"
             .'errormsg: '.$errMsg."\n"
             .'errortype: '.$error['type'].' ('.$error['typeStr'].')'."\n"
             .'file: '.$error['file']."\n"
@@ -249,7 +249,7 @@ class ErrorEmailer
                 .'';
         }
         if (!empty($_POST)) {
-            $emailBody .= 'post params: '.var_export($_POST, true)."\n";
+            $emailBody .= 'post params: '.\var_export($_POST, true)."\n";
         }
         if ($error['type'] & $this->cfg['emailTraceMask']) {
             $emailBody .= "\n".'backtrace: '.$this->backtraceStr($error);
@@ -269,14 +269,14 @@ class ErrorEmailer
     protected function fileWrite($file, $str)
     {
         $return = false;
-        if (!file_exists($file)) {
-            $dir = dirname($file);
-            if (!is_dir($dir) && is_writable($dir)) {
-                mkdir($dir, 0755, true);    // 3rd param is php 5
+        if (!\file_exists($file)) {
+            $dir = \dirname($file);
+            if (!\is_dir($dir) && \is_writable($dir)) {
+                \mkdir($dir, 0755, true);    // 3rd param is php 5
             }
         }
-        if (is_writable($file)) {
-            file_put_contents($file, $str);
+        if (\is_writable($file)) {
+            \file_put_contents($file, $str);
         }
         return $return;
     }
@@ -290,7 +290,7 @@ class ErrorEmailer
     {
         if ($this->cfg['emailThrottleFile']) {
             $this->throttleTrashCollection();
-            $this->fileWrite($this->cfg['emailThrottleFile'], json_encode($this->throttleData));
+            $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData));
         }
         return;
     }
@@ -306,15 +306,15 @@ class ErrorEmailer
             // already imported
             return;
         }
-        if ($this->cfg['emailThrottleFile'] && is_readable($this->cfg['emailThrottleFile'])) {
-            $throttleData = file_get_contents($this->cfg['emailThrottleFile']);
-            $throttleData = json_decode($throttleData, true);
-            if (!is_array($throttleData)) {
+        if ($this->cfg['emailThrottleFile'] && \is_readable($this->cfg['emailThrottleFile'])) {
+            $throttleData = \file_get_contents($this->cfg['emailThrottleFile']);
+            $throttleData = \json_decode($throttleData, true);
+            if (!\is_array($throttleData)) {
                 $throttleData = array();
             }
         }
-        $this->throttleData = array_merge(array(
-            'tsTrashCollection' => time(),
+        $this->throttleData = \array_merge(array(
+            'tsTrashCollection' => \time(),
             'errors' => array(),
         ), $throttleData);
         return;
@@ -329,7 +329,7 @@ class ErrorEmailer
      */
     protected function throttleDataSet(Event $error)
     {
-        $tsNow = time();
+        $tsNow = \time();
         $hash = $error['hash'];
         $tsCutoff = $tsNow - $this->cfg['emailMin'] * 60;
         if ($error['stats']['tsEmailed'] > $tsCutoff) {
@@ -362,7 +362,7 @@ class ErrorEmailer
      */
     protected function throttleTrashCollection()
     {
-        $tsNow     = time();
+        $tsNow     = \time();
         $tsCutoff  = $tsNow - $this->cfg['emailMin'] * 60;
         if ($this->throttleData['tsTrashCollection'] > $tsCutoff) {
             // we've recently performed trash collection
@@ -386,7 +386,7 @@ class ErrorEmailer
             }
             unset($this->throttleData['errors'][$k]);
             if ($err['countSince'] > 0) {
-                $dateLastEmailed = date('Y-m-d H:i:s', $err['tsEmailed']);
+                $dateLastEmailed = \date('Y-m-d H:i:s', $err['tsEmailed']);
                 $emailBody .= ''
                     .'File: '.$err['file']."\n"
                     .'Line: '.$err['line']."\n"

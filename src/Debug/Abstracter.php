@@ -63,8 +63,8 @@ class Abstracter
      */
     public function __get($name)
     {
-        if (defined(__CLASS__.'::'.$name)) {
-            return constant(__CLASS__.'::'.$name);
+        if (\defined(__CLASS__.'::'.$name)) {
+            return \constant(__CLASS__.'::'.$name);
         }
     }
 
@@ -77,7 +77,7 @@ class Abstracter
      */
     public function getCfg($path = null)
     {
-        if (!strlen($path)) {
+        if (!\strlen($path)) {
             return $this->cfg;
         }
         if (isset($this->cfg[$path])) {
@@ -103,15 +103,15 @@ class Abstracter
      */
     public function getAbstraction(&$mixed, $hist = array())
     {
-        if (is_array($mixed)) {
+        if (\is_array($mixed)) {
             return $this->abstractArray->getAbstraction($mixed, $hist);
-        } elseif (is_object($mixed)) {
+        } elseif (\is_object($mixed)) {
             return $this->abstractObject->getAbstraction($mixed, $hist);
-        } elseif (is_resource($mixed) || strpos(print_r($mixed, true), 'Resource') === 0) {
+        } elseif (\is_resource($mixed) || \strpos(\print_r($mixed, true), 'Resource') === 0) {
             return array(
                 'debug' => self::ABSTRACTION,
                 'type' => 'resource',
-                'value' => print_r($mixed, true).': '.get_resource_type($mixed),
+                'value' => \print_r($mixed, true).': '.\get_resource_type($mixed),
             );
         }
     }
@@ -129,9 +129,9 @@ class Abstracter
     public function getAbstractionTable(&$mixed, $hist = array())
     {
         // first pass
-        if (is_array($mixed)) {
+        if (\is_array($mixed)) {
             return $this->abstractArray->getAbstractionTable($mixed);
-        } elseif (is_object($mixed)) {
+        } elseif (\is_object($mixed)) {
             return $this->abstractObject->getAbstractionTable($mixed, $hist);
         }
     }
@@ -146,17 +146,17 @@ class Abstracter
      */
     public static function getType($val, &$typeMore = null)
     {
-        if (is_string($val)) {
+        if (\is_string($val)) {
             $type = 'string';
-            if (is_numeric($val)) {
+            if (\is_numeric($val)) {
                 $typeMore = 'numeric';
             } elseif ($val === self::UNDEFINED) {
                 $type = 'undefined';    // not a native php type!
             } elseif ($val === self::RECURSION) {
                 $type = 'recursion';    // not a native php type!
             }
-        } elseif (is_array($val)) {
-            if (in_array(self::ABSTRACTION, $val, true)) {
+        } elseif (\is_array($val)) {
+            if (\in_array(self::ABSTRACTION, $val, true)) {
                 $type = $val['type'];
                 $typeMore = 'abstraction';
             } elseif (AbstractArray::isCallable($val)) {
@@ -166,19 +166,19 @@ class Abstracter
                 $type = 'array';
                 $typeMore = 'raw';  // needs abstracted
             }
-        } elseif (is_bool($val)) {
+        } elseif (\is_bool($val)) {
             $type = 'bool';
             $typeMore = $val ? 'true' : 'false';
-        } elseif (is_float($val)) {
+        } elseif (\is_float($val)) {
             $type = 'float';
-        } elseif (is_int($val)) {
+        } elseif (\is_int($val)) {
             $type = 'int';
-        } elseif (is_null($val)) {
+        } elseif (\is_null($val)) {
             $type = 'null';
-        } elseif (is_object($val)) {
+        } elseif (\is_object($val)) {
             $type = 'object';
             $typeMore = 'raw';  // needs abstracted
-        } elseif (is_resource($val) || strpos(print_r($val, true), 'Resource') === 0) {
+        } elseif (\is_resource($val) || \strpos(\print_r($val, true), 'Resource') === 0) {
             $type = 'resource';
             $typeMore = 'raw';  // needs abstracted
         }
@@ -199,9 +199,9 @@ class Abstracter
     {
         $values = array();
         $objInfo = false;
-        $rowIsAbstraction = is_array($row) && in_array(self::ABSTRACTION, $row, true);
+        $rowIsAbstraction = \is_array($row) && \in_array(self::ABSTRACTION, $row, true);
         $rowIsObject = $rowIsAbstraction && $row['type'] == 'object';
-        $rowIsTraversable = $rowIsObject && in_array('Traversable', $row['implements']) && isset($row['values']);
+        $rowIsTraversable = $rowIsObject && \in_array('Traversable', $row['implements']) && isset($row['values']);
         if ($rowIsObject) {
             $objInfo = array(
                 'className' => $row['className'],
@@ -222,8 +222,8 @@ class Abstracter
         }
         foreach ($keys as $key) {
             $value = self::UNDEFINED;
-            if (is_array($row)) {
-                if (array_key_exists($key, $row)) {
+            if (\is_array($row)) {
+                if (\array_key_exists($key, $row)) {
                     $value = $row[$key];
                 }
             } elseif ($key === '') {
@@ -243,7 +243,7 @@ class Abstracter
      */
     public static function isAbstraction($mixed)
     {
-        return is_array($mixed) && in_array(self::ABSTRACTION, $mixed, true);
+        return \is_array($mixed) && \in_array(self::ABSTRACTION, $mixed, true);
     }
 
     /**
@@ -270,13 +270,13 @@ class Abstracter
     public function setCfg($path, $newVal = null)
     {
         $ret = null;
-        if (is_string($path)) {
+        if (\is_string($path)) {
             $ret = $this->cfg[$path];
             $this->cfg[$path] = $newVal;
-        } elseif (is_array($path)) {
-            $this->cfg = array_merge($this->cfg, $path);
+        } elseif (\is_array($path)) {
+            $this->cfg = \array_merge($this->cfg, $path);
         }
-        if (!in_array(__NAMESPACE__, $this->cfg['objectsExclude'])) {
+        if (!\in_array(__NAMESPACE__, $this->cfg['objectsExclude'])) {
             $this->cfg['objectsExclude'][] = __NAMESPACE__;
         }
         return $ret;

@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.0
+ * @version   v2.1.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -93,7 +93,7 @@ class Event implements ArrayAccess, IteratorAggregate
      */
     public function hasValue($key)
     {
-        return array_key_exists($key, $this->values);
+        return \array_key_exists($key, $this->values);
     }
 
     /**

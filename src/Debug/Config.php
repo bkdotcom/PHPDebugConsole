@@ -46,17 +46,17 @@ class Config
     public function getCfg($path = '')
     {
         $path = $this->normalizePath($path);
-        $path = preg_split('#[\./]#', $path);
+        $path = \preg_split('#[\./]#', $path);
         if (isset($path[1]) && $path[1] === '*') {
-            array_pop($path);
+            \array_pop($path);
         }
         $level1 = isset($path[0]) ? $path[0] : null;
         if ($level1 == 'debug') {
-            array_shift($path);
-        } elseif (is_object($this->debug->{$level1})) {
+            \array_shift($path);
+        } elseif (\is_object($this->debug->{$level1})) {
             // child class config value
-            $pathRel = count($path) > 1
-                ? implode('/', array_slice($path, 1))
+            $pathRel = \count($path) > 1
+                ? \implode('/', \array_slice($path, 1))
                 : null;
             return $this->debug->{$level1}->getCfg($pathRel);
         }
@@ -102,7 +102,7 @@ class Config
      */
     public function setCfg($pathOrVals, $val = null)
     {
-        if (is_array($pathOrVals)) {
+        if (\is_array($pathOrVals)) {
             $cfg = $this->normalizeCfgArray($pathOrVals);
         } else {
             $path = $this->normalizePath($pathOrVals);
@@ -112,20 +112,20 @@ class Config
         $return = array();
         foreach ($cfg as $k => $v) {
             if ($k == 'debug') {
-                $return[$k] = array_intersect_key($this->cfg, $v);
+                $return[$k] = \array_intersect_key($this->cfg, $v);
                 $this->setDebugCfg($v);
-            } elseif (isset($this->debug->{$k}) && is_object($this->debug->{$k})) {
-                $return[$k] = array_intersect_key($this->getCfg($k.'/*'), $v);
+            } elseif (isset($this->debug->{$k}) && \is_object($this->debug->{$k})) {
+                $return[$k] = \array_intersect_key($this->getCfg($k.'/*'), $v);
                 $this->debug->{$k}->setCfg($v);
             } elseif (isset($this->cfgLazy[$k])) {
                 $return[$k] = $this->cfgLazy[$k];
-                $this->cfgLazy[$k] = array_merge($this->cfgLazy[$k], $v);
+                $this->cfgLazy[$k] = \array_merge($this->cfgLazy[$k], $v);
             } else {
                 $return[$k] = array();
                 $this->cfgLazy[$k] = $v;
             }
         }
-        if (is_string($pathOrVals)) {
+        if (\is_string($pathOrVals)) {
             $return = $this->getCfg($path);
         }
         if ($cfg) {
@@ -196,7 +196,7 @@ class Config
                 // 'emailTo',
                 'emailTraceMask',
             ),
-            'errorHandler' => array_keys($this->debug->errorHandler->getCfg()),
+            'errorHandler' => \array_keys($this->debug->errorHandler->getCfg()),
             'output' => array(
                 'addBR',
                 'css',
@@ -227,7 +227,7 @@ class Config
     private function keyValToArray($key, $val)
     {
         $new = array();
-        $path = preg_split('#[\./]#', $key);
+        $path = \preg_split('#[\./]#', $key);
         $ref = &$new;
         foreach ($path as $k) {
             $ref[$k] = array(); // initialize this level
@@ -262,13 +262,13 @@ class Config
         foreach ($cfg as $k => $v) {
             $translated = false;
             foreach ($configKeys as $objName => $objKeys) {
-                if ($k == $objName && is_array($v)) {
+                if ($k == $objName && \is_array($v)) {
                     $return[$objName] = isset($return[$objName])
-                        ? array_merge($return[$objName], $v)
+                        ? \array_merge($return[$objName], $v)
                         : $v;
                     $translated = true;
                     break;
-                } elseif (in_array($k, $objKeys)) {
+                } elseif (\in_array($k, $objKeys)) {
                     $return[$objName][$k] = $v;
                     $translated = true;
                     break;
@@ -290,12 +290,12 @@ class Config
      */
     private function normalizePath($path)
     {
-        $path = array_filter(preg_split('#[\./]#', $path), 'strlen');
-        if (count($path) == 1) {
+        $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
+        if (\count($path) == 1) {
             $configKeys = $this->getConfigKeys();
             foreach ($configKeys as $objName => $objKeys) {
-                if (in_array($path[0], $objKeys)) {
-                    array_unshift($path, $objName);
+                if (\in_array($path[0], $objKeys)) {
+                    \array_unshift($path, $objName);
                     break;
                 }
                 if ($path[0] == $objName) {
@@ -304,10 +304,10 @@ class Config
                 }
             }
         }
-        if (count($path) <= 1) {
-            array_unshift($path, 'debug');
+        if (\count($path) <= 1) {
+            \array_unshift($path, 'debug');
         }
-        return implode('/', $path);
+        return \implode('/', $path);
     }
 
     /**
@@ -341,7 +341,7 @@ class Config
     private function setDebugCfg($cfg)
     {
         if (isset($cfg['key'])) {
-            $cfg = array_merge($cfg, $this->debugKeyValues($cfg['key']));
+            $cfg = \array_merge($cfg, $this->debugKeyValues($cfg['key']));
         }
         if (isset($cfg['logServerKeys'])) {
             // don't append, replace
@@ -358,13 +358,13 @@ class Config
         }
         $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $cfg);
         if (isset($cfg['onBootstrap'])) {
-            $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+            $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
             if ($backtrace[2]['function'] == '__construct') {
                 // we're being called from construct... subscribe
                 $this->debug->eventManager->subscribe('debug.bootstrap', $cfg['onBootstrap']);
             } else {
                 // boostrap has already occured
-                call_user_func($cfg['onBootstrap'], new Event($this->debug));
+                \call_user_func($cfg['onBootstrap'], new Event($this->debug));
             }
             unset($this->cfg['onBootstrap']);
         }

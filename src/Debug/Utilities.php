@@ -29,17 +29,17 @@ class Utilities
         $lastStack = array();
         $newStack = array();
         $currentStack = array();
-        if (!is_array($rows)) {
+        if (!\is_array($rows)) {
             return array();
         }
         foreach ($rows as $row) {
-            if (is_array($row) && in_array(Abstracter::ABSTRACTION, $row, true)) {
+            if (\is_array($row) && \in_array(Abstracter::ABSTRACTION, $row, true)) {
                 // abstraction
                 if ($row['type'] == 'object') {
-                    if (in_array('Traversable', $row['implements'])) {
+                    if (\in_array('Traversable', $row['implements'])) {
                         $row = $row['values'];
                     } else {
-                        $row = array_filter($row['properties'], function ($prop) {
+                        $row = \array_filter($row['properties'], function ($prop) {
                             return $prop['visibility'] === 'public';
                         });
                     }
@@ -47,28 +47,28 @@ class Utilities
                     $row = null;
                 }
             }
-            $currentStack = is_array($row)
-                ? array_keys($row)
+            $currentStack = \is_array($row)
+                ? \array_keys($row)
                 : array('');
             if (empty($lastStack)) {
                 $lastStack = $currentStack;
             } elseif ($currentStack != $lastStack) {
                 $newStack = array();
                 while (!empty($currentStack)) {
-                    $currentKey = array_shift($currentStack);
+                    $currentKey = \array_shift($currentStack);
                     if (!empty($lastStack) && $currentKey === $lastStack[0]) {
-                        array_push($newStack, $currentKey);
-                        array_shift($lastStack);
-                    } elseif (false !== $position = array_search($currentKey, $lastStack, true)) {
-                        $segment = array_splice($lastStack, 0, $position+1);
-                        array_splice($newStack, count($newStack), 0, $segment);
-                    } elseif (!in_array($currentKey, $newStack, true)) {
-                        array_push($newStack, $currentKey);
+                        \array_push($newStack, $currentKey);
+                        \array_shift($lastStack);
+                    } elseif (false !== $position = \array_search($currentKey, $lastStack, true)) {
+                        $segment = \array_splice($lastStack, 0, $position+1);
+                        \array_splice($newStack, \count($newStack), 0, $segment);
+                    } elseif (!\in_array($currentKey, $newStack, true)) {
+                        \array_push($newStack, $currentKey);
                     }
                 }
                 // put on remaining from last_stack
-                array_splice($newStack, count($newStack), 0, $lastStack);
-                $newStack = array_unique($newStack);
+                \array_splice($newStack, \count($newStack), 0, $lastStack);
+                $newStack = \array_unique($newStack);
                 $lastStack = $newStack;
             }
         }
@@ -86,20 +86,20 @@ class Utilities
      */
     public static function arrayMergeDeep($arrayDef, $array2)
     {
-        if (!is_array($arrayDef) || !is_array($array2)) {
+        if (!\is_array($arrayDef) || !\is_array($array2)) {
             $arrayDef = $array2;
-        } elseif (array_keys($array2) == array(0,1) && is_object($array2[0]) && is_string($array2[1])) {
+        } elseif (\array_keys($array2) == array(0,1) && \is_object($array2[0]) && \is_string($array2[1])) {
             // appears to be a callable
             $arrayDef = $array2;
         } else {
             foreach ($array2 as $k2 => $v2) {
-                if (is_int($k2)) {
-                    if (!in_array($v2, $arrayDef)) {
+                if (\is_int($k2)) {
+                    if (!\in_array($v2, $arrayDef)) {
                         $arrayDef[] = $v2;
                     }
                 } elseif (!isset($arrayDef[$k2])) {
                     $arrayDef[$k2] = $v2;
-                } elseif (!is_array($v2)) {
+                } elseif (!\is_array($v2)) {
                     $arrayDef[$k2] = $v2;
                 } else {
                     $arrayDef[$k2] = self::arrayMergeDeep($arrayDef[$k2], $v2);
@@ -120,18 +120,18 @@ class Utilities
     {
         $attribPairs = array();
         foreach ($attribs as $k => $v) {
-            if (is_array($v)) {
+            if (\is_array($v)) {
                 // ie an array of classnames
-                $v = implode(' ', array_filter(array_unique($v)));
-            } elseif (is_bool($v)) {
+                $v = \implode(' ', \array_filter(\array_unique($v)));
+            } elseif (\is_bool($v)) {
                 $v = $v ? $k : '';
             }
-            $v = trim($v);
-            if (strlen($v)) {
-                $attribPairs[] = $k.'="'.htmlspecialchars($v).'"';
+            $v = \trim($v);
+            if (\strlen($v)) {
+                $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
             }
         }
-        return rtrim(' '.implode(' ', $attribPairs));
+        return \rtrim(' '.\implode(' ', $attribPairs));
     }
 
     /**
@@ -143,9 +143,9 @@ class Utilities
      */
     public static function getBytes($size)
     {
-        if (is_string($size) && preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
-            $size = str_replace(',', '', $matches[1]);
-            switch (strtolower($matches[2])) {
+        if (\is_string($size) && \preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
+            $size = \str_replace(',', '', $matches[1]);
+            switch (\strtolower($matches[2])) {
                 case 'p':
                     $size *= 1024;
                     // no break
@@ -163,10 +163,10 @@ class Utilities
             }
         }
         $units = array('B','kB','MB','GB','TB','PB');
-        $pow = pow(1024, ($i=floor(log($size, 1024))));
+        $pow = \pow(1024, ($i=\floor(\log($size, 1024))));
         $size = $pow == 0
             ? '0 B'
-            : round($size/$pow, 2).' '.$units[$i];
+            : \round($size/$pow, 2).' '.$units[$i];
         return $size;
     }
 
@@ -198,14 +198,14 @@ class Utilities
             'class' => null,
             'type' => null,
         );
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 7);
-        $numFrames = count($backtrace);
-        $regexInternal = '/^'.preg_quote(__NAMESPACE__).'\b/';
-        if (isset($backtrace[1]['class']) && preg_match($regexInternal, $backtrace[1]['class'])) {
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 7);
+        $numFrames = \count($backtrace);
+        $regexInternal = '/^'.\preg_quote(__NAMESPACE__).'\b/';
+        if (isset($backtrace[1]['class']) && \preg_match($regexInternal, $backtrace[1]['class'])) {
             // called from within
             // find the frame that called/triggered a debug function
             for ($i = $numFrames - 1; $i >= 0; $i--) {
-                if (isset($backtrace[$i]['class']) && preg_match($regexInternal, $backtrace[$i]['class'])) {
+                if (isset($backtrace[$i]['class']) && \preg_match($regexInternal, $backtrace[$i]['class'])) {
                     break;
                 }
             }
@@ -215,14 +215,14 @@ class Utilities
         $i = $i + $offset;
         $iLine = $i;
         $iFunc = $i + 1;
-        if (isset($backtrace[$iFunc]) && in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))) {
+        if (isset($backtrace[$iFunc]) && \in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))) {
             $iLine++;
             $iFunc++;
         }
         if (isset($backtrace[$iFunc])) {
-            $return = array_merge($return, array_intersect_key($backtrace[$iFunc], $return));
+            $return = \array_merge($return, \array_intersect_key($backtrace[$iFunc], $return));
             if ($return['type'] == '->') {
-                $return['class'] = get_class($backtrace[$iFunc]['object']);
+                $return['class'] = \get_class($backtrace[$iFunc]['object']);
             }
         }
         $return['file'] = $backtrace[$iLine]['file'];
@@ -237,13 +237,13 @@ class Utilities
      */
     public static function getIncludedFiles()
     {
-        $includedFiles = get_included_files();
-        usort($includedFiles, function ($a, $b) {
-            $adir = dirname($a);
-            $bdir = dirname($b);
+        $includedFiles = \get_included_files();
+        \usort($includedFiles, function ($a, $b) {
+            $adir = \dirname($a);
+            $bdir = \dirname($b);
             return $adir == $bdir
-                ? strnatcasecmp($a, $b)
-                : strnatcasecmp($adir, $bdir);
+                ? \strnatcasecmp($a, $b)
+                : \strnatcasecmp($adir, $bdir);
         });
         return $includedFiles;
     }
@@ -256,9 +256,9 @@ class Utilities
     public static function getInterface()
     {
         $return = 'http';
-        if (http_response_code() === false) {
+        if (\http_response_code() === false) {
             // TERM is a linux/unix thing
-            $return = isset($_SERVER['TERM']) || function_exists('posix_isatty') && posix_isatty(STDOUT)
+            $return = isset($_SERVER['TERM']) || \function_exists('posix_isatty') && \posix_isatty(STDOUT)
                 ? 'cli'
                 : 'cron';
         } elseif (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
@@ -278,9 +278,9 @@ class Utilities
     public static function getResponseHeader($key = 'Content-Type')
     {
         $value = null;
-        $headers = headers_list();
+        $headers = \headers_list();
         foreach ($headers as $header) {
-            if (preg_match('/^'.$key.':\s*([^;]*)/i', $header, $matches)) {
+            if (\preg_match('/^'.$key.':\s*([^;]*)/i', $header, $matches)) {
                 $value = $matches[1];
                 break;
             }
@@ -297,7 +297,7 @@ class Utilities
      */
     public static function isBase64Encoded($str)
     {
-        return (boolean) preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', trim($str));
+        return (boolean) \preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', \trim($str));
     }
 
     /**
@@ -310,10 +310,10 @@ class Utilities
      */
     public static function isList($val)
     {
-        if (!is_array($val)) {
+        if (!\is_array($val)) {
             return false;
         }
-        $keys = array_keys($val);
+        $keys = \array_keys($val);
         foreach ($keys as $i => $key) {
             if ($i != $key) {
                 return false;
@@ -334,7 +334,7 @@ class Utilities
      */
     public static function memoryLimit()
     {
-        $iniVal = ini_get('memory_limit');
+        $iniVal = \ini_get('memory_limit');
         return $iniVal ?: '128M';
     }
 
@@ -349,7 +349,7 @@ class Utilities
     public static function parseAttribString($html)
     {
         $regEx = '#^<span class="([^"]+)">(.*)</span>$#s';
-        return preg_match($regEx, $html, $matches)
+        return \preg_match($regEx, $html, $matches)
             ? array(
                 'class' => $matches[1],
                 'innerhtml' => $matches[2],
@@ -367,7 +367,7 @@ class Utilities
      */
     public static function requestId()
     {
-        return hash(
+        return \hash(
             'crc32b',
             (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'terminal')
                 .(isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : $_SERVER['REQUEST_TIME'])
@@ -384,11 +384,11 @@ class Utilities
      */
     public static function serializeLog($data)
     {
-        $str = serialize($data);
-        if (function_exists('gzdeflate')) {
-            $str = gzdeflate($str);
+        $str = \serialize($data);
+        if (\function_exists('gzdeflate')) {
+            $str = \gzdeflate($str);
         }
-        $str = chunk_split(base64_encode($str), 124);
+        $str = \chunk_split(\base64_encode($str), 124);
         return "START DEBUG\n"
             .$str    // chunk_split appends a "\r\n"
             .'END DEBUG';
@@ -405,19 +405,19 @@ class Utilities
     {
         $strStart = 'START DEBUG';
         $strEnd = 'END DEBUG';
-        if (preg_match('/'.$strStart.'[\r\n]+(.+)[\r\n]+'.$strEnd.'/s', $str, $matches)) {
+        if (\preg_match('/'.$strStart.'[\r\n]+(.+)[\r\n]+'.$strEnd.'/s', $str, $matches)) {
             $str = $matches[1];
         }
         $str = self::isBase64Encoded($str)
-            ? base64_decode($str)
+            ? \base64_decode($str)
             : false;
-        if ($str && function_exists('gzinflate')) {
-            $strInflated = gzinflate($str);
+        if ($str && \function_exists('gzinflate')) {
+            $strInflated = \gzinflate($str);
             if ($strInflated) {
                 $str = $strInflated;
             }
         }
-        $log = unserialize($str);
+        $log = \unserialize($str);
         return $log;
     }
 }

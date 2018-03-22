@@ -63,7 +63,7 @@ class Internal implements SubscriberInterface
      */
     public function email($emailTo, $subject, $body)
     {
-        call_user_func($this->debug->getCfg('emailFunc'), $emailTo, $subject, $body);
+        \call_user_func($this->debug->getCfg('emailFunc'), $emailTo, $subject, $body);
     }
 
     /**
@@ -88,12 +88,12 @@ class Internal implements SubscriberInterface
         if ($errorStr) {
             $subjectMore .= ' '.($subjectMore ? '(Error)' : 'Error');
         }
-        $subject = rtrim($subject.':'.$subjectMore, ':');
+        $subject = \rtrim($subject.':'.$subjectMore, ':');
         /*
             Build body
         */
         $body = (!isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv'])
-            ? 'Command: '. implode(' ', $_SERVER['argv'])
+            ? 'Command: '. \implode(' ', $_SERVER['argv'])
             : 'Request: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
         )."\n\n";
         if ($errorStr) {
@@ -154,7 +154,7 @@ class Internal implements SubscriberInterface
                 $stats['inConsoleCategories']++;
             }
         }
-        ksort($stats['counts']);
+        \ksort($stats['counts']);
         return $stats;
     }
 
@@ -198,13 +198,13 @@ class Internal implements SubscriberInterface
     {
         $meta = array();
         foreach ($args as $i => $v) {
-            if (is_array($v) && array_intersect_assoc(array('debug'=>Debug::META), $v)) {
+            if (\is_array($v) && \array_intersect_assoc(array('debug'=>Debug::META), $v)) {
                 unset($v['debug']);
-                $meta = array_merge($meta, $v);
+                $meta = \array_merge($meta, $v);
                 unset($args[$i]);
             }
         }
-        $args = array_values($args);
+        $args = \array_values($args);
         return $meta;
     }
 
@@ -246,7 +246,7 @@ class Internal implements SubscriberInterface
             $this->debug->groupUncollapse();
             foreach ($this->debug->getCfg('logServerKeys') as $k) {
                 if ($k == 'REQUEST_TIME') {
-                    $this->debug->info($k, date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
+                    $this->debug->info($k, \date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
                 } elseif (isset($_SERVER[$k])) {
                     $this->debug->info($k, $_SERVER[$k]);
                 } else {
@@ -255,7 +255,7 @@ class Internal implements SubscriberInterface
             }
             $this->debug->info('PHP Version', PHP_VERSION);
             $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
-            $this->debug->info('session.cache_limiter', ini_get('session.cache_limiter'));
+            $this->debug->info('session.cache_limiter', \ini_get('session.cache_limiter'));
             if (!empty($_COOKIE)) {
                 $this->debug->info('$_COOKIE', $_COOKIE);
             }
@@ -358,8 +358,8 @@ class Internal implements SubscriberInterface
     {
         $errorStr = '';
         $errors = $this->debug->errorHandler->get('errors');
-        uasort($errors, function ($a1, $a2) {
-            return strcmp($a1['file'].$a1['line'], $a2['file'].$a2['line']);
+        \uasort($errors, function ($a1, $a2) {
+            return \strcmp($a1['file'].$a1['line'], $a2['file'].$a2['line']);
         });
         $lastFile = '';
         foreach ($errors as $error) {
@@ -388,7 +388,7 @@ class Internal implements SubscriberInterface
         $vals = $this->debug->getData('runtime');
         if (!$vals) {
             $vals = array(
-                'memoryPeakUsage' => memory_get_peak_usage(true),
+                'memoryPeakUsage' => \memory_get_peak_usage(true),
                 'memoryLimit' => $this->debug->utilities->memoryLimit(),
                 'runtime' => $this->debug->timeEnd('debugInit', true),
             );
@@ -420,7 +420,7 @@ class Internal implements SubscriberInterface
         if ($this->debug->getCfg('emailLog') === 'onError') {
             $errors = $this->debug->errorHandler->get('errors');
             $emailMask = $this->debug->errorEmailer->getCfg('emailMask');
-            $emailableErrors = array_filter($errors, function ($error) use ($emailMask) {
+            $emailableErrors = \array_filter($errors, function ($error) use ($emailMask) {
                 return !$error['isSuppressed'] && ($error['type'] & $emailMask);
             });
             return !empty($emailableErrors);

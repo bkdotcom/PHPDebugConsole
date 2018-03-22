@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.0
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -62,16 +62,16 @@ class OutputHtmlErrorSummary
         if ($lastError && $lastError['category'] === 'fatal') {
             $backtrace = $lastError['backtrace'];
             $keysKeep = array('typeStr','message','file','line');
-            $lastError = array_intersect_key($lastError, array_flip($keysKeep));
+            $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
             $html .= '<h3>Fatal Error</h3>';
             $html .= '<ul class="list-unstyled indent">';
-            $html .= '<li>'.(count($backtrace) > 1
+            $html .= '<li>'.(\count($backtrace) > 1
                     ? $lastError['message']
                     : $this->outputHtml->dump($lastError) // no trace, or just one frame
                     )
                 .'</li>';
             // if only 1 frame in backtrace, don't display trace
-            if (count($backtrace) > 1) {
+            if (\count($backtrace) > 1) {
                 $table = $this->outputHtml->buildTable($backtrace, 'trace', array('file','line','function'), 'trace table-bordered');
                 $html .= '<li>'.$table.'</li>';
             } elseif (empty($backtrace)) {
@@ -157,11 +157,11 @@ class OutputHtmlErrorSummary
         );
         $count = $this->stats['inConsole'];
         if ($count == 1) {
-            $header = ucfirst($category);
+            $header = \ucfirst($category);
             $msg = $this->getErrorByCategory($category);
         } else {
             $header = $catStrings[$category]['header'];
-            $msg = sprintf($catStrings[$category]['msg'], $count);
+            $msg = \sprintf($catStrings[$category]['msg'], $count);
         }
         $html = '<h3>'.$header.'</h3>'
             .'<ul class="list-unstyled indent">'
@@ -186,7 +186,7 @@ class OutputHtmlErrorSummary
         $count = 0;
         $lis = array();
         foreach ($errors as $err) {
-            if (array_intersect_assoc(array(
+            if (\array_intersect_assoc(array(
                 'category' => 'fatal',
                 'inConsole' => true,
                 'isSuppressed' => true,
@@ -204,7 +204,7 @@ class OutputHtmlErrorSummary
                 .($count == 1 ? 'was 1 error' : 'were '.$count.' errors').' captured while not collecting debug log'
             .'</h3>'
             .'<ul class="list-unstyled indent">'
-            .implode("\n", $lis)
+            .\implode("\n", $lis)
             .'</ul>';
         return $html;
     }

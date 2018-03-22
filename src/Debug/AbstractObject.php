@@ -59,7 +59,7 @@ class AbstractObject
     {
         $reflector = new \ReflectionObject($obj);
         $abs = new Event($obj, array(
-            'className' => get_class($obj),
+            'className' => \get_class($obj),
             'collectMethods' => $this->abstracter->getCfg('collectMethods'),
             'collectPropertyValues' => true,
             'constants' => array(),
@@ -71,8 +71,8 @@ class AbstractObject
             ),
             'extends' => array(),
             'implements' => $reflector->getInterfaceNames(),
-            'isExcluded' => $hist && in_array(get_class($obj), $this->abstracter->getCfg('objectsExclude')),
-            'isRecursion' => in_array($obj, $hist, true),
+            'isExcluded' => $hist && \in_array(\get_class($obj), $this->abstracter->getCfg('objectsExclude')),
+            'isRecursion' => \in_array($obj, $hist, true),
             'methods' => array(),
             'phpDoc' => array(
                 'summary' => null,
@@ -83,9 +83,9 @@ class AbstractObject
             'scopeClass' => $this->getScopeClass($hist),
             'stringified' => null,
             'type' => 'object',
-            'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && method_exists($obj, '__debugInfo'),
+            'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && \method_exists($obj, '__debugInfo'),
         ));
-        if (array_filter(array($abs['isRecursion'], $abs['isExcluded']))) {
+        if (\array_filter(array($abs['isRecursion'], $abs['isExcluded']))) {
             return $abs->getValues();
         }
         /*
@@ -108,15 +108,15 @@ class AbstractObject
         if ($abs['collectMethods']) {
             $this->addMethods($abs);
         } else {
-            if (method_exists($obj, '__toString')) {
+            if (\method_exists($obj, '__toString')) {
                 $abs['methods']['__toString'] = array(
-                    'returnValue' => call_user_func(array($obj, '__toString')),
+                    'returnValue' => \call_user_func(array($obj, '__toString')),
                 );
             }
-            if (method_exists($obj, '__get')) {
+            if (\method_exists($obj, '__get')) {
                 $abs['methods']['__get'] = true;
             }
-            if (method_exists($obj, '__set')) {
+            if (\method_exists($obj, '__set')) {
                 $abs['methods']['__set'] = true;
             }
         }
@@ -143,26 +143,26 @@ class AbstractObject
     {
         $reflector = new \ReflectionObject($obj);
         $abs = new Event($obj, array(
-            'className' => get_class($obj),
+            'className' => \get_class($obj),
             'collectMethods' => false,
             'collectPropertyValues' => true,
             'debug' => $this->abstracter->ABSTRACTION,
             'implements' => $reflector->getInterfaceNames(),
-            'isExcluded' => $hist && in_array(get_class($obj), $this->abstracter->getCfg('objectsExclude')),
-            'isRecursion' => in_array($obj, $hist, true),
+            'isExcluded' => $hist && \in_array(\get_class($obj), $this->abstracter->getCfg('objectsExclude')),
+            'isRecursion' => \in_array($obj, $hist, true),
             'phpDoc' => $this->phpDoc->getParsed($reflector),
             'properties' => array(),
             'type' => 'object',
             'values' => array(),        // this is unique to getAbstractionTable
                                         //  will be populated if traversable
         ));
-        if (is_object($obj) && $obj instanceof \Traversable) {
+        if (\is_object($obj) && $obj instanceof \Traversable) {
             $values = array();
             foreach ($obj as $k => $v) {
                 $values[$k] = $v;
             }
             $abs['values'] = $values;
-        } elseif (is_object($obj)) {
+        } elseif (\is_object($obj)) {
             $this->addProperties($abs, $hist);
         }
         unset($abs['collectPropertyValues']);
@@ -183,10 +183,10 @@ class AbstractObject
         }
         $constants = $reflector->getConstants();
         while ($reflector = $reflector->getParentClass()) {
-            $constants = array_merge($reflector->getConstants(), $constants);
+            $constants = \array_merge($reflector->getConstants(), $constants);
         }
         if ($this->abstracter->getCfg('objectSort') == 'name') {
-            ksort($constants);
+            \ksort($constants);
         }
         return $constants;
     }
@@ -213,7 +213,7 @@ class AbstractObject
             'IteratorAggregate' => array('getIterator'),
             // 'Throwable' => array('getMessage','getCode','getFile','getLine','getTrace','getTraceAsString','getPrevious','__toString'),
         );
-        $interfacesHide = array_intersect($interfaces, array_keys($interfaceMethods));
+        $interfacesHide = \array_intersect($interfaces, \array_keys($interfaceMethods));
         foreach ($methods as $reflectionMethod) {
             $methodName = $reflectionMethod->getName();
             $vis = 'public';
@@ -246,7 +246,7 @@ class AbstractObject
             }
             unset($info['phpDoc']['param']);
             foreach ($interfacesHide as $interface) {
-                if (in_array($methodName, $interfaceMethods[$interface])) {
+                if (\in_array($methodName, $interfaceMethods[$interface])) {
                     $info['implements'] = $interface;
                     break;
                 }
@@ -281,7 +281,7 @@ class AbstractObject
             $properties = $reflectionObject->getProperties();
             $isDebugObj = $className == __NAMESPACE__;
             while ($properties) {
-                $reflectionProperty = array_shift($properties);
+                $reflectionProperty = \array_shift($properties);
                 $name = $reflectionProperty->getName();
                 if (isset($abs['properties'][$name])) {
                     // already have info... we're in an ancestor
@@ -294,7 +294,7 @@ class AbstractObject
                     continue;
                 }
                 if ($isDebugObj && $name == 'data') {
-                    $abs['properties']['data'] = array_merge(self::$basePropInfo, array(
+                    $abs['properties']['data'] = \array_merge(self::$basePropInfo, array(
                         'value' => array('NOT INSPECTED'),
                         'visibility' => 'protected',
                     ));
@@ -347,7 +347,7 @@ class AbstractObject
             $event['stringified'] = $obj->format(\DateTime::ISO8601);
         } elseif ($obj instanceof \DOMNodeList) {
             // for reasons unknown, DOMNodeList's properties are invisible to reflection
-            $event['properties']['length'] = array_merge(static::$basePropInfo, array(
+            $event['properties']['length'] = \array_merge(static::$basePropInfo, array(
                 'type' => 'integer',
                 'value' => $obj->length,
             ));
@@ -391,7 +391,7 @@ class AbstractObject
         foreach ($params as $i => $reflectionParameter) {
             $nameNoPrefix = $reflectionParameter->getName();
             $name = '$'.$nameNoPrefix;
-            if (method_exists($reflectionParameter, 'isVariadic') && $reflectionParameter->isVariadic()) {
+            if (\method_exists($reflectionParameter, 'isVariadic') && $reflectionParameter->isVariadic()) {
                 $name = '...'.$name;
             }
             if ($reflectionParameter->isPassedByReference()) {
@@ -401,7 +401,7 @@ class AbstractObject
             $defaultValue = $this->abstracter->UNDEFINED;
             if ($reflectionParameter->isDefaultValueAvailable()) {
                 $defaultValue = $reflectionParameter->getDefaultValue();
-                if (version_compare(PHP_VERSION, '5.4.6', '>=') && $reflectionParameter->isDefaultValueConstant()) {
+                if (\version_compare(PHP_VERSION, '5.4.6', '>=') && $reflectionParameter->isDefaultValueConstant()) {
                     /*
                         php may return something like self::CONSTANT_NAME
                         hhvm will return WhateverTheClassNameIs::CONSTANT_NAME
@@ -443,7 +443,7 @@ class AbstractObject
         $return = null;
         if ($reflectionParameter->isArray()) {
             $return = 'array';
-        } elseif (preg_match('/\[\s\<\w+?>\s([\w\\\\]+)/s', $reflectionParameter->__toString(), $matches)) {
+        } elseif (\preg_match('/\[\s\<\w+?>\s([\w\\\\]+)/s', $reflectionParameter->__toString(), $matches)) {
             $return = $matches[1];
         }
         return $return;
@@ -461,14 +461,14 @@ class AbstractObject
     {
         $obj = $abs->getSubject();
         $reflectionProperty->setAccessible(true); // only accessible via reflection
-        $className = get_class($obj); // prop->class is equiv to getDeclaringClass
+        $className = \get_class($obj); // prop->class is equiv to getDeclaringClass
         // get type and comment from phpdoc
         $commentInfo = $this->getPropCommentInfo($reflectionProperty);
         /*
             getDeclaringClass returns "LAST-declared/overriden"
         */
         $declaringClassName = $reflectionProperty->getDeclaringClass()->getName();
-        $propInfo = array_merge(static::$basePropInfo, array(
+        $propInfo = \array_merge(static::$basePropInfo, array(
             'desc' => $commentInfo['desc'],
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName
@@ -506,7 +506,7 @@ class AbstractObject
             $info['desc'] = $phpDoc['summary'];
         }
         if (isset($phpDoc['var'])) {
-            if (count($phpDoc['var']) == 1) {
+            if (\count($phpDoc['var']) == 1) {
                 $var = $phpDoc['var'][0];
             } else {
                 /*
@@ -537,18 +537,18 @@ class AbstractObject
     protected function getScopeClass(&$hist)
     {
         $className = null;
-        for ($i = count($hist) - 1; $i >= 0; $i--) {
-            if (is_object($hist[$i])) {
-                $className = get_class($hist[$i]);
+        for ($i = \count($hist) - 1; $i >= 0; $i--) {
+            if (\is_object($hist[$i])) {
+                $className = \get_class($hist[$i]);
                 break;
             }
         }
         if ($i < 0) {
-            $backtrace = version_compare(PHP_VERSION, '5.4.0', '>=')
-                ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
-                : debug_backtrace(false);   // don't provide object
+            $backtrace = \version_compare(PHP_VERSION, '5.4.0', '>=')
+                ? \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
+                : \debug_backtrace(false);   // don't provide object
             foreach ($backtrace as $i => $frame) {
-                if (!isset($frame['class']) || strpos($frame['class'], __NAMESPACE__) !== 0) {
+                if (!isset($frame['class']) || \strpos($frame['class'], __NAMESPACE__) !== 0) {
                     break;
                 }
             }
@@ -574,7 +574,7 @@ class AbstractObject
         $inheritedFrom = null;
         if (empty($abs['phpDoc']['method'])) {
             // phpDoc doesn't contain any @method tags,
-            if (array_intersect_key($abs['methods'], array_flip(array('__call', '__callStatic')))) {
+            if (\array_intersect_key($abs['methods'], \array_flip(array('__call', '__callStatic')))) {
                 // we've got __call and/or __callStatic method:  check if parent classes have @method tags
                 $obj = $abs->getSubject();
                 $reflector = new \ReflectionObject($obj);
@@ -601,7 +601,7 @@ class AbstractObject
                 'isDeprecated' => false,
                 'isFinal' => false,
                 'isStatic' => $phpDocMethod['static'],
-                'params' => array_map(function ($param) use ($className) {
+                'params' => \array_map(function ($param) use ($className) {
                     $info = $this->phpDocParam($param, $className);
                     return array(
                         'constantName' => $info['constantName'],
@@ -640,10 +640,10 @@ class AbstractObject
             return;
         }
         $obj = $abs->getSubject();
-        $debugInfo = call_user_func(array($obj, '__debugInfo'));
+        $debugInfo = \call_user_func(array($obj, '__debugInfo'));
         $properties = $abs['properties'];
         foreach ($properties as $name => $info) {
-            if (array_key_exists($name, $debugInfo)) {
+            if (\array_key_exists($name, $debugInfo)) {
                 if ($debugInfo[$name] !== $info['value']) {
                     $properties[$name]['viaDebugInfo'] = true;
                     $properties[$name]['value'] = $debugInfo[$name];
@@ -651,7 +651,7 @@ class AbstractObject
                 unset($debugInfo[$name]);
                 continue;
             }
-            if (in_array($info['visibility'], array('private','protected')) && $info['inheritedFrom']) {
+            if (\in_array($info['visibility'], array('private','protected')) && $info['inheritedFrom']) {
                 // keep the non-public ancestor regardless of inclusion in __debugInfo
                 // (this doesn't include "magic" properties, which we don't want to keep)
                 continue;
@@ -659,7 +659,7 @@ class AbstractObject
             unset($properties[$name]);
         }
         foreach ($debugInfo as $name => $value) {
-            $properties[$name] = array_merge(
+            $properties[$name] = \array_merge(
                 static::$basePropInfo,
                 array(
                     'value' => $value,
@@ -690,11 +690,11 @@ class AbstractObject
             'property-write' => 'magic-write',
         );
         $inheritedFrom = null;
-        if (!array_intersect_key($abs['phpDoc'], $tags)) {
+        if (!\array_intersect_key($abs['phpDoc'], $tags)) {
             // phpDoc doesn't contain any @property tags
             $found = false;
             $obj = $abs->getSubject();
-            if (!method_exists($obj, '__get')) {
+            if (!\method_exists($obj, '__get')) {
                 // don't have magic getter... don't bother searching ancestor phpDocs
                 return;
             }
@@ -702,13 +702,13 @@ class AbstractObject
             $reflector = new \ReflectionObject($obj);
             while ($reflector = $reflector->getParentClass()) {
                 $parsed = $this->phpDoc->getParsed($reflector);
-                $tagIntersect = array_intersect_key($parsed, $tags);
+                $tagIntersect = \array_intersect_key($parsed, $tags);
                 if (!$tagIntersect) {
                     continue;
                 }
                 $found = true;
                 $inheritedFrom = $reflector->getName();
-                $abs['phpDoc'] = array_merge(
+                $abs['phpDoc'] = \array_merge(
                     $abs['phpDoc'],
                     $tagIntersect
                 );
@@ -724,7 +724,7 @@ class AbstractObject
                 continue;
             }
             foreach ($abs['phpDoc'][$tag] as $phpDocProp) {
-                $properties[ $phpDocProp['name'] ] = array_merge(
+                $properties[ $phpDocProp['name'] ] = \array_merge(
                     self::$basePropInfo,
                     array(
                         'desc' => $phpDocProp['desc'],
@@ -754,32 +754,32 @@ class AbstractObject
     {
         $constantName = null;
         $defaultValue = $this->abstracter->UNDEFINED;
-        if (array_key_exists('defaultValue', $param)) {
+        if (\array_key_exists('defaultValue', $param)) {
             $defaultValue = $param['defaultValue'];
-            if (in_array($defaultValue, array('true','false','null'))) {
-                $defaultValue = json_decode($defaultValue);
-            } elseif (is_numeric($defaultValue)) {
+            if (\in_array($defaultValue, array('true','false','null'))) {
+                $defaultValue = \json_decode($defaultValue);
+            } elseif (\is_numeric($defaultValue)) {
                 // there are no quotes around value
                 $defaultValue = $defaultValue * 1;
-            } elseif (preg_match('/^array\(\s*\)|\[\s*\]$/i', $defaultValue)) {
+            } elseif (\preg_match('/^array\(\s*\)|\[\s*\]$/i', $defaultValue)) {
                 // empty array...
                 // we're not going to eval non-empty arrays...
                 //    non empty array will appear as a string
                 $defaultValue = array();
-            } elseif (preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
+            } elseif (\preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
                 // appears to be a constant
                 if ($matches[1]) {
                     // self
-                    if (defined($className.'::'.$matches[2])) {
+                    if (\defined($className.'::'.$matches[2])) {
                         $constantName = $matches[0];
-                        $defaultValue = constant($className.'::'.$matches[2]);
+                        $defaultValue = \constant($className.'::'.$matches[2]);
                     }
-                } elseif (defined($defaultValue)) {
+                } elseif (\defined($defaultValue)) {
                     $constantName = $defaultValue;
-                    $defaultValue = constant($defaultValue);
+                    $defaultValue = \constant($defaultValue);
                 }
             } else {
-                $defaultValue = trim($defaultValue, '\'"');
+                $defaultValue = \trim($defaultValue, '\'"');
             }
         }
         return array(
@@ -824,12 +824,12 @@ class AbstractObject
         if ($sort == 'name') {
             // rather than a simple key sort, use array_multisort so that __construct is always first
             $sortData = array();
-            foreach (array_keys($array) as $name) {
+            foreach (\array_keys($array) as $name) {
                 $sortData[$name] = $name == '__construct'
                     ? 0
                     : $name;
             }
-            array_multisort($sortData, $array);
+            \array_multisort($sortData, $array);
         } elseif ($sort == 'visibility') {
             $sortVisOrder = array('public', 'protected', 'private', 'magic', 'magic-read', 'magic-write', 'debug');
             $sortData = array();
@@ -841,10 +841,10 @@ class AbstractObject
                     visibility may not be set on methods... if methods weren't collected, but still collected __toString/returnValue
                 */
                 $sortData['vis'][$name] = isset($info['visibility'])
-                    ? array_search($info['visibility'], $sortVisOrder)
-                    : count($sortVisOrder);
+                    ? \array_search($info['visibility'], $sortVisOrder)
+                    : \count($sortVisOrder);
             }
-            array_multisort($sortData['vis'], $sortData['name'], $array);
+            \array_multisort($sortData['vis'], $sortData['name'], $array);
         }
     }
 }

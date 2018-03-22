@@ -53,8 +53,8 @@ abstract class OutputBase implements SubscriberInterface
         } elseif ($typeMore == 'abstraction') {
             $typeMore = null;
         }
-        $method = 'dump'.ucfirst($type);
-        $return = in_array($type, array('array', 'object'))
+        $method = 'dump'.\ucfirst($type);
+        $return = \in_array($type, array('array', 'object'))
             ? $this->{$method}($val, $path)
             : $this->{$method}($val);
         $this->dumpType = $type;
@@ -91,9 +91,9 @@ abstract class OutputBase implements SubscriberInterface
     protected function checkTimestamp($val)
     {
         $secs = 86400 * 90; // 90 days worth o seconds
-        $tsNow = time();
+        $tsNow = \time();
         if ($val > $tsNow - $secs && $val < $tsNow + $secs) {
-            return date('Y-m-d H:i:s', $val);
+            return \date('Y-m-d H:i:s', $val);
         }
         return false;
     }
@@ -119,7 +119,7 @@ abstract class OutputBase implements SubscriberInterface
      */
     protected function dumpArray($array, $path = array())
     {
-        $pathCount = count($path);
+        $pathCount = \count($path);
         foreach ($array as $key => $val) {
             $path[$pathCount] = $key;
             $array[$key] = $this->dump($val, $path);
@@ -206,11 +206,11 @@ abstract class OutputBase implements SubscriberInterface
             $return = array(
                 '___class_name' => $abs['className'],
             );
-            $pathCount = count($path);
+            $pathCount = \count($path);
             foreach ($abs['properties'] as $name => $info) {
                 $path[$pathCount] = $name;
                 $vis = $info['visibility'];
-                if (in_array($vis, array('magic','magic-read','magic-write'))) {
+                if (\in_array($vis, array('magic','magic-read','magic-write'))) {
                     $vis = '✨ '.$vis;    // "sparkles": there is no magic-want unicode char
                 }
                 if ($vis == 'private' && $info['inheritedFrom']) {
@@ -254,7 +254,7 @@ abstract class OutputBase implements SubscriberInterface
      */
     protected function dumpString($val)
     {
-        if (is_numeric($val)) {
+        if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
             return $date
                 ? $val.' ('.$date.')'
@@ -294,7 +294,7 @@ abstract class OutputBase implements SubscriberInterface
             foreach ($values as $k2 => $val) {
                 if ($val === $this->debug->abstracter->UNDEFINED) {
                     unset($values[$k2]);
-                } elseif (is_array($val)) {
+                } elseif (\is_array($val)) {
                     $values[$k2] = $this->debug->output->outputText->dump($val, false);
                 } else {
                     $values[$k2] = $val;
@@ -305,9 +305,9 @@ abstract class OutputBase implements SubscriberInterface
                 : '';
             $table[$k] = $values;
         }
-        if (array_filter($classnames)) {
+        if (\array_filter($classnames)) {
             foreach ($classnames as $k => $classname) {
-                $table[$k] = array_merge(
+                $table[$k] = \array_merge(
                     array('___class_name' => $classname),
                     $table[$k]
                 );
@@ -333,14 +333,14 @@ abstract class OutputBase implements SubscriberInterface
             'warning' => 'warn',
         );
         foreach ($this->data['alerts'] as $entry) {
-            $msg = str_replace('<br />', ", \n", $entry[0]);
+            $msg = \str_replace('<br />', ", \n", $entry[0]);
             $method = $entry[1]['class'];
             if (isset($classToMethod[$method])) {
                 $method = $classToMethod[$method];
             }
             $str .= $this->processLogEntry($method, array($msg));
         }
-        return trim($str);
+        return \trim($str);
     }
 
     /**
@@ -405,7 +405,7 @@ abstract class OutputBase implements SubscriberInterface
             .'[difs]'
             .')'
             .'/';
-        if (!is_string($args[0])) {
+        if (!\is_string($args[0])) {
             return $args;
         }
         $index = 0;
@@ -413,7 +413,7 @@ abstract class OutputBase implements SubscriberInterface
             'c' => array(),
         );
         $hasSubs = false;
-        $args[0] = preg_replace_callback($subRegex, function ($matches) use (
+        $args[0] = \preg_replace_callback($subRegex, function ($matches) use (
             &$args,
             &$hasSubs,
             &$index,
@@ -422,18 +422,18 @@ abstract class OutputBase implements SubscriberInterface
             $hasSubs = true;
             $index++;
             $replacement = $matches[0];
-            $type = substr($matches[0], -1);
-            if (strpos('difs', $type) !== false) {
+            $type = \substr($matches[0], -1);
+            if (\strpos('difs', $type) !== false) {
                 $format = $matches[0];
                 $sub = $args[$index];
                 if ($type == 'i') {
-                    $format = substr_replace($format, 'd', -1, 1);
+                    $format = \substr_replace($format, 'd', -1, 1);
                 } elseif ($type === 's') {
                     $sub = $this->substitutionAsString($sub);
                 }
-                $replacement = sprintf($format, $sub);
+                $replacement = \sprintf($format, $sub);
             } elseif ($type === 'c') {
-                $asHtml = get_called_class() == __NAMESPACE__.'\\OutputHtml';
+                $asHtml = \get_called_class() == __NAMESPACE__.'\\OutputHtml';
                 if (!$asHtml) {
                     return '';
                 }
@@ -446,7 +446,7 @@ abstract class OutputBase implements SubscriberInterface
                     'style' => $args[$index],
                 )).'>';
                 $indexes['c'][] = $index;
-            } elseif (strpos('oO', $type) !== false) {
+            } elseif (\strpos('oO', $type) !== false) {
                 $replacement = $this->dump($args[$index]);
             }
             return $replacement;
@@ -469,12 +469,12 @@ abstract class OutputBase implements SubscriberInterface
     {
         $str = '';
         $summaryData = $this->data['logSummary'];
-        krsort($summaryData);
-        $summaryData = call_user_func_array('array_merge', $summaryData);
+        \krsort($summaryData);
+        $summaryData = \call_user_func_array('array_merge', $summaryData);
         foreach ($summaryData as $entry) {
             $str .= $this->processLogEntry($entry[0], $entry[1], $entry[2]);
         }
-        return trim($str);
+        return \trim($str);
     }
 
     /**
@@ -487,9 +487,9 @@ abstract class OutputBase implements SubscriberInterface
         $groupStack = array();
         $groupStackCount = 0;
         $removed = false;
-        for ($i = 0, $count = count($this->data['log']); $i < $count; $i++) {
+        for ($i = 0, $count = \count($this->data['log']); $i < $count; $i++) {
             $method = $this->data['log'][$i][0];
-            if (in_array($method, array('group', 'groupCollapsed'))) {
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $entry = $this->data['log'][$i];
                 $groupStack[] = array(
                     'i' => $i,
@@ -498,21 +498,21 @@ abstract class OutputBase implements SubscriberInterface
                 );
                 $groupStackCount ++;
             } elseif ($method == 'groupEnd') {
-                $group = end($groupStack);
+                $group = \end($groupStack);
                 if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
                     // make it go away
                     unset($this->data['log'][$group['i']]);
                     unset($this->data['log'][$i]);
                     $removed = true;
                 }
-                array_pop($groupStack);
+                \array_pop($groupStack);
                 $groupStackCount--;
             } elseif ($groupStack) {
                 $groupStack[$groupStackCount - 1]['hasEntries'] = true;
             }
         }
         if ($removed) {
-            $this->data['log'] = array_values($this->data['log']);
+            $this->data['log'] = \array_values($this->data['log']);
         }
     }
 
@@ -527,7 +527,7 @@ abstract class OutputBase implements SubscriberInterface
     {
         $type = $this->debug->abstracter->getType($val);
         if ($type == 'array') {
-            $count = count($val);
+            $count = \count($val);
             $val = 'Array('.$count.')';
         } elseif ($type == 'object') {
             $val = $val['className'];
@@ -545,13 +545,13 @@ abstract class OutputBase implements SubscriberInterface
     protected function uncollapseErrors()
     {
         $groupStack = array();
-        for ($i = 0, $count = count($this->data['log']); $i < $count; $i++) {
+        for ($i = 0, $count = \count($this->data['log']); $i < $count; $i++) {
             $method = $this->data['log'][$i][0];
-            if (in_array($method, array('group', 'groupCollapsed'))) {
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $groupStack[] = $i;
             } elseif ($method == 'groupEnd') {
-                array_pop($groupStack);
-            } elseif (in_array($method, array('error', 'warn'))) {
+                \array_pop($groupStack);
+            } elseif (\in_array($method, array('error', 'warn'))) {
                 foreach ($groupStack as $i2) {
                     $this->data['log'][$i2][0] = 'group';
                 }

@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.0
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -30,7 +30,7 @@ class PhpDoc
     {
         $reflector = null;
         $hash = null;
-        if (is_object($what)) {
+        if (\is_object($what)) {
             $hash = self::getHash($what);
             if (isset(self::$cache[$hash])) {
                 return self::$cache[$hash];
@@ -44,14 +44,14 @@ class PhpDoc
             $docComment = $what;
         }
         // remove opening "/**" and closing "*/"
-        $docComment = preg_replace('#^/\*\*(.+)\*/$#s', '$1', $docComment);
+        $docComment = \preg_replace('#^/\*\*(.+)\*/$#s', '$1', $docComment);
         // remove leading "*"s
-        $docComment = preg_replace('#^[ \t]*\*[ ]?#m', '', $docComment);
-        $docComment = trim($docComment);
-        if (strtolower($docComment) == '{@inheritdoc}' && $reflector) {
+        $docComment = \preg_replace('#^[ \t]*\*[ ]?#m', '', $docComment);
+        $docComment = \trim($docComment);
+        if (\strtolower($docComment) == '{@inheritdoc}' && $reflector) {
             return static::findInheritedDoc($reflector);
         } else {
-            $docComment = preg_replace_callback(
+            $docComment = \preg_replace_callback(
                 '/{@inheritDoc}/i',
                 function () use ($reflector) {
                     $phpDoc =  static::findInheritedDoc($reflector);
@@ -62,28 +62,28 @@ class PhpDoc
         }
         $desc = $docComment;
         $strTags = '';
-        if (preg_match('/^@/m', $docComment, $matches, PREG_OFFSET_CAPTURE)) {
+        if (\preg_match('/^@/m', $docComment, $matches, PREG_OFFSET_CAPTURE)) {
             // we have tags
             $pos = $matches[0][1];
             $desc = $pos
-                ? substr($docComment, 0, $pos-1)
+                ? \substr($docComment, 0, $pos-1)
                 : '';
-            $strTags = substr($docComment, $pos);
+            $strTags = \substr($docComment, $pos);
         }
         /*
             Do some string replacement on summary/description
         */
-        $desc = preg_replace('/^\\\@/m', '@', $desc);
-        $desc = str_replace('{@*}', '*/', $desc);
+        $desc = \preg_replace('/^\\\@/m', '@', $desc);
+        $desc = \str_replace('{@*}', '*/', $desc);
         /*
             split desc into summary & description
             summary ends with empty whiteline or "." followed by \n
         */
-        $split = preg_split('/(\.[\r\n]+|[\r\n]{2})/', $desc, 2, PREG_SPLIT_DELIM_CAPTURE);
-        $split = array_replace(array('','',''), $split);
+        $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $desc, 2, PREG_SPLIT_DELIM_CAPTURE);
+        $split = \array_replace(array('','',''), $split);
         $return = array(
-            'summary' => trim($split[0].$split[1]),
-            'description' => trim($split[2]),
+            'summary' => \trim($split[0].$split[1]),
+            'description' => \trim($split[2]),
         );
         foreach (array('summary','description') as $k) {
             if ($return[$k] === '') {
@@ -93,14 +93,14 @@ class PhpDoc
         // now find tags
         $regexNotTag = '(?P<value>(?:(?!^@).)*)';
         $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*'.$regexNotTag.'#sim';
-        preg_match_all($regexTags, $strTags, $matches, PREG_SET_ORDER);
+        \preg_match_all($regexTags, $strTags, $matches, PREG_SET_ORDER);
         $singleTags = array('return');
         foreach ($matches as $match) {
             $value = $match['value'];
-            $value = preg_replace('/\n\s*\*\s*/', "\n", $value);
-            $value = trim($value);
+            $value = \preg_replace('/\n\s*\*\s*/', "\n", $value);
+            $value = \trim($value);
             $value = static::parseTag($match['tag'], $value);
-            if (in_array($match['tag'], $singleTags)) {
+            if (\in_array($match['tag'], $singleTags)) {
                 $return[ $match['tag'] ] = $value;
             } else {
                 $return[ $match['tag'] ][] = $value;
@@ -177,14 +177,14 @@ class PhpDoc
             ),
         );
         foreach ($tagParsers as $parser) {
-            if (in_array($tag, $parser['tags'])) {
+            if (\in_array($tag, $parser['tags'])) {
                 break;
             }
         }
-        preg_match($parser['regex'], $tagStr, $matches);
+        \preg_match($parser['regex'], $tagStr, $matches);
         foreach ($parser['parts'] as $part) {
             $parsed[$part] = isset($matches[$part]) && $matches[$part] !== ''
-                ? trim($matches[$part])
+                ? \trim($matches[$part])
                 : null;
         }
         if ($tag == 'method') {
@@ -233,7 +233,7 @@ class PhpDoc
     {
         $str = null;
         if (!($what instanceof \Reflector)) {
-            $str = get_class($what);
+            $str = \get_class($what);
         } elseif ($what instanceof \ReflectionClass) {
             $str = $what->getName();
         } elseif ($what instanceof \ReflectionMethod) {
@@ -244,7 +244,7 @@ class PhpDoc
             $str = $what->getDeclaringClass()->getName().'::'.$what->getName();
         }
         return $str
-            ? md5($str)
+            ? \md5($str)
             : null;
     }
 
@@ -259,7 +259,7 @@ class PhpDoc
     {
         $params = self::splitParams($paramStr);
         foreach ($params as $i => $str) {
-            preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(\S+))?$/', $str, $matches);
+            \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(\S+))?$/', $str, $matches);
             $info = array(
                 'type' => $matches[1] ?: null,
                 'name' => $matches[2],
@@ -283,13 +283,13 @@ class PhpDoc
     {
         $depth = 0;
         $startPos = 0;
-        $chars = str_split($paramStr);
+        $chars = \str_split($paramStr);
         $params = array();
         foreach ($chars as $pos => $char) {
             switch ($char) {
                 case ',':
                     if ($depth === 0) {
-                        $params[] = trim(substr($paramStr, $startPos, $pos-$startPos));
+                        $params[] = \trim(\substr($paramStr, $startPos, $pos-$startPos));
                         $startPos = $pos + 1;
                     }
                     break;
@@ -303,7 +303,7 @@ class PhpDoc
                     break;
             }
         }
-        $params[] = trim(substr($paramStr, $startPos, $pos+1-$startPos));
+        $params[] = \trim(\substr($paramStr, $startPos, $pos+1-$startPos));
         return $params;
     }
 
@@ -316,26 +316,26 @@ class PhpDoc
      */
     private static function trimDesc($desc)
     {
-        $lines = explode("\n", $desc);
+        $lines = \explode("\n", $desc);
         $leadingSpaces = array();
         foreach ($lines as $line) {
-            if (strlen($line)) {
-                $leadingSpaces[] = strspn($line, ' ');
+            if (\strlen($line)) {
+                $leadingSpaces[] = \strspn($line, ' ');
             }
         }
-        array_shift($leadingSpaces);    // first line will always have zero leading spaces
+        \array_shift($leadingSpaces);    // first line will always have zero leading spaces
         $trimLen = $leadingSpaces
-            ? min($leadingSpaces)
+            ? \min($leadingSpaces)
             : 0;
         if (!$trimLen) {
             return $desc;
         }
         foreach ($lines as $i => $line) {
-            $lines[$i] = $i > 0 && strlen($line)
-                ? substr($line, $trimLen)
+            $lines[$i] = $i > 0 && \strlen($line)
+                ? \substr($line, $trimLen)
                 : $line;
         }
-        $desc = implode("\n", $lines);
+        $desc = \implode("\n", $lines);
         return $desc;
     }
 }

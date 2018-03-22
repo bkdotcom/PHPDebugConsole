@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.1
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -68,12 +68,12 @@ class OutputFile extends OutputText
         $args = $event['args'];
         $isSummaryBookend = $method == 'groupSummary' || !empty($meta['closesSummary']);
         if ($isSummaryBookend) {
-            fwrite($this->fileHandle, "=========\n");
+            \fwrite($this->fileHandle, "=========\n");
             return;
         }
         if ($args) {
             $str = $this->processLogEntry($method, $args, $meta);
-            fwrite($this->fileHandle, $str);
+            \fwrite($this->fileHandle, $str);
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
             $this->depth --;
         }
@@ -94,20 +94,20 @@ class OutputFile extends OutputText
         }
         if ($this->fileHandle) {
             // close existing file
-            fclose($this->fileHandle);
+            \fclose($this->fileHandle);
             $this->fileHandle = null;
         }
         $this->file = $file;
         if (empty($file)) {
             return;
         }
-        $fileExists = file_exists($file);
-        $this->fileHandle = fopen($file, 'a');
+        $fileExists = \file_exists($file);
+        $this->fileHandle = \fopen($file, 'a');
         if ($this->fileHandle) {
-            fwrite($this->fileHandle, '***** '.date('Y-m-d H:i:s').' *****'."\n");
+            \fwrite($this->fileHandle, '***** '.\date('Y-m-d H:i:s').' *****'."\n");
             if (!$fileExists) {
                 // we just created file
-                chmod($file, 0660);
+                \chmod($file, 0660);
             }
         }
     }

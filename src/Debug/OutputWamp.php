@@ -121,7 +121,7 @@ class OutputWamp implements SubscriberInterface
     {
         // publish a "we're done" message
         $this->publish('endOutput', array(
-            'responseCode' => http_response_code(),
+            'responseCode' => \http_response_code(),
         ));
     }
 
@@ -145,20 +145,20 @@ class OutputWamp implements SubscriberInterface
         $prevIntK = null;
         $storeKeyOrder = false;
         foreach ($values as $k => $v) {
-            if (!$storeKeyOrder && is_int($k)) {
+            if (!$storeKeyOrder && \is_int($k)) {
                 if ($k < $prevIntK) {
                     $storeKeyOrder = true;
                 }
                 $prevIntK = $k;
             }
-            if (is_array($v)) {
+            if (\is_array($v)) {
                 $values[$k] = self::crateValues($v);
-            } elseif (is_string($v)) {
-                $values[$k] = base64_encode($v);
+            } elseif (\is_string($v)) {
+                $values[$k] = \base64_encode($v);
             }
         }
         if ($storeKeyOrder) {
-            $values['__debug_key_order__'] = array_keys($values);
+            $values['__debug_key_order__'] = \array_keys($values);
         }
         return $values;
     }
@@ -213,7 +213,7 @@ class OutputWamp implements SubscriberInterface
     private function publish($method, $args = array(), $meta = array())
     {
         $args = $this->crateValues($args);
-        $meta = array_merge(array(
+        $meta = \array_merge(array(
             'format' => 'raw',
             'requestId' => $this->requestId,
         ), $meta);
@@ -230,7 +230,7 @@ class OutputWamp implements SubscriberInterface
      */
     private function publishMeta()
     {
-        $debugClass = get_class($this->debug);
+        $debugClass = \get_class($this->debug);
         $metaVals = array(
             'debug_version' => $debugClass::VERSION,
         );
@@ -250,7 +250,7 @@ class OutputWamp implements SubscriberInterface
                 : null;
         }
         if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
-            $metaVals['REQUEST_URI'] = '$: '. implode(' ', $_SERVER['argv']);
+            $metaVals['REQUEST_URI'] = '$: '. \implode(' ', $_SERVER['argv']);
         }
         $this->publish('meta', $metaVals);
     }

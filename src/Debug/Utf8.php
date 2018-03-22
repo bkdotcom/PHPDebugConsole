@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.0
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -111,11 +111,11 @@ class Utf8
     public static function hasSpecial($str)
     {
         foreach (self::$special as $special) {
-            if (strpos($special, 'regex:') === 0) {
-                if (preg_match(substr($special, 6), $str) > 0) {
+            if (\strpos($special, 'regex:') === 0) {
+                if (\preg_match(\substr($special, 6), $str) > 0) {
                     return true;
                 }
-            } elseif (strpos($str, $special) !== false) {
+            } elseif (\strpos($str, $special) !== false) {
                 return true;
             }
         }
@@ -146,7 +146,7 @@ class Utf8
         while (self::$curI < self::$stats['strLen']) {
             $curI = self::$curI;
             $isUtf8 = self::isOffsetUtf8($isSpecial, true);
-            if ($isUtf8 && $isSpecial && $controlCharAs !== 'utf8special' && ord($str[$curI]) < 0x80) {
+            if ($isUtf8 && $isSpecial && $controlCharAs !== 'utf8special' && \ord($str[$curI]) < 0x80) {
                 if ($controlCharAs == 'other') {
                     $isUtf8 = false;
                 } elseif ($controlCharAs == 'utf8') {
@@ -174,7 +174,7 @@ class Utf8
             if ($newBlockType) {
                 $len = $curI - $curBlockStart;
                 self::incStat($curBlockType, $len);
-                $subStr = substr(self::$str, $curBlockStart, $len);
+                $subStr = \substr(self::$str, $curBlockStart, $len);
                 $strNew .= self::dumpBlock($subStr, $curBlockType);
                 $curBlockStart = $curI;
                 $curBlockType = $newBlockType;
@@ -188,7 +188,7 @@ class Utf8
             if ($percentOther > 33) {
                 $strNew = self::dumpBlock($str, 'other', array('prefix'=>false));
             } else {
-                $subStr = substr(self::$str, $curBlockStart, $len);
+                $subStr = \substr(self::$str, $curBlockStart, $len);
                 $strNew .= self::dumpBlock($subStr, $curBlockType);
             }
         }
@@ -236,7 +236,7 @@ class Utf8
      */
     public static function ordUtf8($str, &$offset = 0, &$char = null)
     {
-        $code = ord($str[$offset]);
+        $code = \ord($str[$offset]);
         $numBytes = 1;
         if ($code >= 0x80) {            // otherwise 0xxxxxxx
             if ($code < 0xe0) {         // 110xxxxx
@@ -250,11 +250,11 @@ class Utf8
                 $code -= 0xF0;
             }
             for ($i = 1; $i < $numBytes; $i++) {
-                $code2 = ord($str[$offset + $i]) - 0x80;        // 10xxxxxx
+                $code2 = \ord($str[$offset + $i]) - 0x80;        // 10xxxxxx
                 $code = $code * 64 + $code2;
             }
         }
-        $char = substr($str, $offset, $numBytes);
+        $char = \substr($str, $offset, $numBytes);
         $offset = $offset + $numBytes;
         return $code;
     }
@@ -268,20 +268,20 @@ class Utf8
      */
     public static function toUtf8($str)
     {
-        if (extension_loaded('mbstring') && function_exists('iconv')) {
-            $encoding = mb_detect_encoding($str, mb_detect_order(), true);
+        if (\extension_loaded('mbstring') && \function_exists('iconv')) {
+            $encoding = \mb_detect_encoding($str, \mb_detect_order(), true);
             if (!$encoding) {
                 $str_conv = false;
-                if (function_exists('iconv')) {
-                    $str_conv = iconv('cp1252', 'UTF-8', $str);
+                if (\function_exists('iconv')) {
+                    $str_conv = \iconv('cp1252', 'UTF-8', $str);
                 }
                 if ($str_conv === false) {
-                    $str_conv = htmlentities($str, ENT_COMPAT);
-                    $str_conv = html_entity_decode($str_conv, ENT_COMPAT, 'UTF-8');
+                    $str_conv = \htmlentities($str, ENT_COMPAT);
+                    $str_conv = \html_entity_decode($str_conv, ENT_COMPAT, 'UTF-8');
                 }
                 $str = $str_conv;
-            } elseif (!in_array($encoding, array('ASCII','UTF-8'))) {
-                $str_new = iconv($encoding, 'UTF-8', $str);
+            } elseif (!\in_array($encoding, array('ASCII','UTF-8'))) {
+                $str_new = \iconv($encoding, 'UTF-8', $str);
                 if ($str_new !== false) {
                     $str = $str_new;
                 }
@@ -304,23 +304,23 @@ class Utf8
         if ($str === '') {
             return '';
         }
-        $options = array_merge(array(
+        $options = \array_merge(array(
             'prefix' => true,
         ), $options);
         if ($blockType == 'utf8' && self::$sanitizeNonBinary) {
-            $str = htmlspecialchars($str);
+            $str = \htmlspecialchars($str);
         } elseif ($blockType == 'utf8special') {
             $strNew = '';
             $i = 0;
-            $length = strlen($str);
+            $length = \strlen($str);
             while ($i < $length) {
                 $ord = self::ordUtf8($str, $i, $char);
-                $ordHex = dechex($ord);
-                $ordHex = str_pad($ordHex, 4, "0", STR_PAD_LEFT);
+                $ordHex = \dechex($ord);
+                $ordHex = \str_pad($ordHex, 4, "0", STR_PAD_LEFT);
                 if (self::$useHtml) {
-                    $chars = str_split($char);
-                    $utf8Hex = array_map('bin2hex', $chars);
-                    $utf8Hex = '\x'.implode(' \x', $utf8Hex);
+                    $chars = \str_split($char);
+                    $utf8Hex = \array_map('bin2hex', $chars);
+                    $utf8Hex = '\x'.\implode(' \x', $utf8Hex);
                     $title = $utf8Hex;
                     if (isset(self::$charDesc[$ord])) {
                         $title = self::$charDesc[$ord].': '.$utf8Hex;
@@ -333,19 +333,19 @@ class Utf8
             $str = $strNew;
         } elseif ($blockType == 'other') {
             if (!$options['prefix']) {
-                $str = bin2hex($str);
-                $str = trim(chunk_split($str, 2, ' '));
+                $str = \bin2hex($str);
+                $str = \trim(\chunk_split($str, 2, ' '));
             } else {
-                $chars = str_split($str);
+                $chars = \str_split($str);
                 foreach ($chars as $i => $char) {
-                    $ord = ord($char);
-                    $hex = bin2hex($char); // could use dechex($ord), but would require padding
+                    $ord = \ord($char);
+                    $hex = \bin2hex($char); // could use dechex($ord), but would require padding
                     if (self::$useHtml && isset(self::$charDesc[$ord])) {
                         if ($ord < 0x20 || $ord == 0x7f) {
                             // lets use the control pictures
                             $chr = $ord == 0x7f
                                 ? "\xe2\x90\xa1"            // "del" char
-                                : "\xe2\x90".chr($ord+128); // chars for 0x00 - 0x1F
+                                : "\xe2\x90".\chr($ord+128); // chars for 0x00 - 0x1F
                             $chars[$i] = '<span class="c1-control" title="'.self::$charDesc[$ord].': \x'.$hex.'">'.$chr.'</span>';
                         } else {
                             $chars[$i] = '<span title="'.self::$charDesc[$ord].'">\x'.$hex.'</span>';
@@ -354,7 +354,7 @@ class Utf8
                         $chars[$i] = '\x'.$hex;
                     }
                 }
-                $str = implode(' ', $chars);
+                $str = \implode(' ', $chars);
             }
             if (self::$useHtml) {
                 $str = '<span class="binary">'.$str.'</span>';
@@ -376,7 +376,7 @@ class Utf8
         if ($stat == 'utf8special') {
             $stat = 'bytesSpecial';
         } else {
-            $stat = 'bytes'.ucfirst($stat);
+            $stat = 'bytes'.\ucfirst($stat);
         }
         self::$stats[$stat] += $inc;
     }
@@ -395,12 +395,12 @@ class Utf8
     {
         $i = self::$curI;
         $special = false;
-        $byte1 = ord(self::$str[$i]);
-        $byte2 = $i + 1 < self::$stats['strLen'] ? ord(self::$str[$i+1]) : null;
-        $byte3 = $i + 2 < self::$stats['strLen'] ? ord(self::$str[$i+2]) : null;
-        $byte4 = $i + 3 < self::$stats['strLen'] ? ord(self::$str[$i+3]) : null;
+        $byte1 = \ord(self::$str[$i]);
+        $byte2 = $i + 1 < self::$stats['strLen'] ? \ord(self::$str[$i+1]) : null;
+        $byte3 = $i + 2 < self::$stats['strLen'] ? \ord(self::$str[$i+2]) : null;
+        $byte4 = $i + 3 < self::$stats['strLen'] ? \ord(self::$str[$i+3]) : null;
         if ($byte1 < 0x80) {                 # 0bbbbbbb
-            if (($byte1 < 0x20 || $byte1 == 0x7f) && !in_array($byte1, array(0x09,0x0a,0x0d))) {
+            if (($byte1 < 0x20 || $byte1 == 0x7f) && !\in_array($byte1, array(0x09,0x0a,0x0d))) {
                 $special = true;
             }
             self::$curI += 1;    // advance to next byte
@@ -441,7 +441,7 @@ class Utf8
             return false;
         }
         if ($checkSpecial) {
-            $subStr = substr(self::$str, $i, self::$curI-$i);
+            $subStr = \substr(self::$str, $i, self::$curI-$i);
             $special = $special || self::hasSpecial($subStr);
         }
         return true;
@@ -462,7 +462,7 @@ class Utf8
             'bytesOther' => 0,
             'bytesSpecial' => 0,        // special UTF-8
             'bytesUtf8' => 0,           // includes ASCII
-            'strLen' => strlen($str),
+            'strLen' => \strlen($str),
         );
     }
 }

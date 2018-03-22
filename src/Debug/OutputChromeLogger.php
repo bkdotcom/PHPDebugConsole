@@ -52,23 +52,23 @@ class OutputChromeLogger extends OutputBase
         $this->processSummary();
         $this->processLog();
         if ($this->json['rows']) {
-            array_unshift($this->json['rows'], array(
+            \array_unshift($this->json['rows'], array(
                 array('PHP', $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']),
                 null,
                 'groupCollapsed',
             ));
-            array_push($this->json['rows'], array(
+            \array_push($this->json['rows'], array(
                 array(),
                 null,
                 'groupEnd',
             ));
             $encoded = $this->encode($this->json);
-            if (headers_sent($file, $line)) {
+            if (\headers_sent($file, $line)) {
                 $this->debug->warn('chromeLogger: headers already sent: '.$file.' (line '.$line.')');
-            } elseif (strlen($encoded) > 250000) {
+            } elseif (\strlen($encoded) > 250000) {
                 $this->debug->warn('chromeLogger: output limit exceeded');
             } else {
-                header(self::HEADER_NAME . ': ' . $encoded);
+                \header(self::HEADER_NAME . ': ' . $encoded);
             }
         }
         $this->data = array();
@@ -117,7 +117,7 @@ class OutputChromeLogger extends OutputBase
                         .'color: #8a6d3b;';
                     break;
             }
-            array_push($this->json['rows'], array(
+            \array_push($this->json['rows'], array(
                 $args,
                 null,
                 $method,
@@ -164,6 +164,6 @@ class OutputChromeLogger extends OutputBase
      */
     protected function encode($data)
     {
-        return base64_encode(utf8_encode(json_encode($data)));
+        return \base64_encode(\utf8_encode(\json_encode($data)));
     }
 }

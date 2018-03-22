@@ -39,7 +39,7 @@ class AbstractArray
      */
     public function getAbstraction(&$array, &$hist = array())
     {
-        if (in_array($array, $hist, true)) {
+        if (\in_array($array, $hist, true)) {
         	return $this->abstracter->RECURSION;
         }
         if (self::isCallable($array)) {
@@ -47,7 +47,7 @@ class AbstractArray
 	        return array(
 	            'debug' => $this->abstracter->ABSTRACTION,
 	            'type' => 'callable',
-	            'values' => array(get_class($array[0]), $array[1]),
+	            'values' => array(\get_class($array[0]), $array[1]),
 	        );
         }
         $return = array();
@@ -75,7 +75,7 @@ class AbstractArray
         $return = array();
         $hist[] = $array;
         foreach ($array as $k => $v) {
-            if (is_object($v)) {
+            if (\is_object($v)) {
                 $v = $this->abstracter->getAbstractionTable($v, $hist);
             } elseif ($this->abstracter->needsAbstraction($v)) {
                 $v = $this->abstracter->getAbstraction($array[$k], $hist);
@@ -94,9 +94,9 @@ class AbstractArray
      */
     public static function isCallable($array)
     {
-        return array_keys($array) == array(0,1)
-            && is_object($array[0])
-            && is_string($array[1])
-            && method_exists($array[0], $array[1]);
+        return \array_keys($array) == array(0,1)
+            && \is_object($array[0])
+            && \is_string($array[1])
+            && \method_exists($array[0], $array[1]);
     }
 }

@@ -1,15 +1,10 @@
 <?php
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk\PubSub
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
  * @version   v2.1.0
- *
- * @link http://www.github.com/bkdotcom/PHPDebugConsole
- * @link https://developer.mozilla.org/en-US/docs/Web/API/console
  */
 
 namespace bdk\PubSub;

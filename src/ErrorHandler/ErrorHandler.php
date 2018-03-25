@@ -9,7 +9,7 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk;
 
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;

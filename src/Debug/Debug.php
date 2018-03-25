@@ -14,7 +14,7 @@
 
 namespace bdk;
 
-use bdk\Debug\ErrorHandler;
+use bdk\ErrorHandler;
 use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Manager as EventManager;
 use ReflectionClass;
@@ -952,12 +952,17 @@ class Debug
         $className = \ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
         if (\preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches)) {
             $namespace = $matches[1];
+            $class = $matches[2];
             if ($namespace === 'bdk\\Debug') {
-                $filePath = __DIR__.'/'.$matches[2].'.php';
+                $filePath = __DIR__.'/'.$class.'.php';
                 require $filePath;
             }
             if ($namespace === 'bdk\\PubSub') {
-                $filePath = __DIR__.'/../PubSub/'.$matches[2].'.php';
+                $filePath = __DIR__.'/../PubSub/'.$class.'.php';
+                require $filePath;
+            }
+            if ($className === 'bdk\\ErrorHandler') {
+                $filePath = __DIR__.'/../ErrorHandler/'.$class.'.php';
                 require $filePath;
             }
         }

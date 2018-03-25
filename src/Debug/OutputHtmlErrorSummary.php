@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use bdk\ErrorHandler;
+
 /**
  * Output a summary of errors
  */

@@ -13,7 +13,10 @@
 		}
 	],
 	"autoload": {
-		"classmap": ["src/Debug/Debug.php"],
+		"classmap": [
+			"src/Debug/Debug.php",
+			"src/ErrorHandler/ErrorHandler.php"
+		],
 		"psr-4": {
 			"bdk\\Debug\\": "src/Debug/",
 			"bdk\\PubSub\\": "src/PubSub/"

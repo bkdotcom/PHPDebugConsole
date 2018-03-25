@@ -42,12 +42,11 @@ class OutputHtmlErrorSummary
      */
     public function build($stats)
     {
-        $html = '';
         $this->stats = $stats;
-        $html .= $this->buildFatal();
-        $html .= $this->buildInConsole();
-        $html .= $this->buildNotInConsole();
-        return $html;
+        return ''
+            .$this->buildFatal()
+            .$this->buildInConsole()
+            .$this->buildNotInConsole();
     }
 
     /**
@@ -57,28 +56,33 @@ class OutputHtmlErrorSummary
      */
     protected function buildFatal()
     {
-        $html = '';
-        $lastError = $this->errorHandler->get('lastError');
-        if ($lastError && $lastError['category'] === 'fatal') {
-            $backtrace = $lastError['backtrace'];
-            $keysKeep = array('typeStr','message','file','line');
-            $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
-            $html .= '<h3>Fatal Error</h3>';
-            $html .= '<ul class="list-unstyled indent">';
-            $html .= '<li>'.(\count($backtrace) > 1
-                    ? $lastError['message']
-                    : $this->outputHtml->dump($lastError) // no trace, or just one frame
-                    )
-                .'</li>';
-            // if only 1 frame in backtrace, don't display trace
-            if (\count($backtrace) > 1) {
-                $table = $this->outputHtml->buildTable($backtrace, 'trace', array('file','line','function'), 'trace table-bordered');
-                $html .= '<li>'.$table.'</li>';
-            } elseif (empty($backtrace)) {
-                $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
-            }
-            $html .= '</ul>';
+        $haveFatal = isset($this->stats['counts']['fatal']);
+        if (!$haveFatal) {
+            return '';
         }
+        $lastError = $this->errorHandler->get('lastError');
+        $backtrace = $lastError['backtrace'];
+        $keysKeep = array('typeStr','message','file','line');
+        $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
+        $html = '<h3>Fatal Error</h3>';
+        $html .= '<ul class="list-unstyled indent">';
+        if (\count($backtrace) > 1) {
+            // more than one trace frame
+            $table = $this->outputHtml->buildTable(
+                $backtrace,
+                'trace',
+                array('file','line','function'),
+                'trace table-bordered'
+            );
+            $html .= '<li>'.$lastError['message'].'</li>';
+            $html .= '<li>'.$table.'</li>';
+        } else {
+            $html .= '<li>'.$this->outputHtml->dump($lastError).'</li>';
+        }
+        if (!\extension_loaded('xdebug')) {
+            $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
+        }
+        $html .= '</ul>';
         return $html;
     }
 
@@ -93,15 +97,16 @@ class OutputHtmlErrorSummary
             return '';
         }
         $haveFatal = isset($this->stats['counts']['fatal']);
-        if ($this->stats['inConsoleCategories'] == 1) {
+        if ($haveFatal) {
+            $countNonFatal = $this->stats['inConsole'] - $this->stats['counts']['fatal']['inConsole'];
+            $header = \sprintf(
+                'There %s %d additional %s',
+                $countNonFatal === 1 ? 'was' : 'were',
+                $countNonFatal,
+                $countNonFatal === 1 ? 'error' : 'errors'
+            );
+        } elseif ($this->stats['inConsoleCategories'] === 1) {
             return $this->buildInConsoleOneCat();
-        } elseif ($haveFatal) {
-            $count = $this->stats['counts']['fatal']['inConsole']
-                ? $this->stats['inConsole'] - 1
-                : $this->stats['inConsole'];
-            $header = $count == 1
-                ? 'There was 1 additional error'
-                : 'There were '.$count.' additional errors';
         } else {
             $header = 'There were '.$this->stats['inConsole'].' errors';
         }
@@ -118,7 +123,10 @@ class OutputHtmlErrorSummary
     }
 
     /**
-     * Returns summary for errors that occurred while log collect = false
+     * Returns summary for errors that were logged to console (while collect = true)
+     *
+     * Assumes only 1 category of error was logged
+     * However, multiple errors in this category may have been logged
      *
      * @return string
      */
@@ -140,28 +148,29 @@ class OutputHtmlErrorSummary
             ),
             'strict' => array(
                 'header' => 'Strict',
-                'msg' => 'There were %s strict errors',
+                'msg' => 'There were %d strict errors',
             ),
             'error' => array(
                 'header' => 'Errors',
-                'msg' => 'There were %s errors',
+                'msg' => 'There were %d errors',
             ),
             'notice' => array(
                 'header' => 'Notices',
-                'msg' => 'There were %s notices',
+                'msg' => 'There were %d notices',
             ),
             'warning' => array(
                 'header' => 'Warnings',
-                'msg' => 'There were %s warnings',
+                'msg' => 'There were %d warnings',
             ),
         );
-        $count = $this->stats['inConsole'];
-        if ($count == 1) {
+        $countInCat = $catStats['inConsole'];
+        if ($countInCat == 1) {
             $header = \ucfirst($category);
-            $msg = $this->getErrorByCategory($category);
+            $error = $this->getErrorsInCategory($category)[0];
+            $msg = $error['file']. '(line '.$error['line'].'): '.$error['message'];
         } else {
             $header = $catStrings[$category]['header'];
-            $msg = \sprintf($catStrings[$category]['msg'], $count);
+            $msg = \sprintf($catStrings[$category]['msg'], $countInCat);
         }
         $html = '<h3>'.$header.'</h3>'
             .'<ul class="list-unstyled indent">'
@@ -180,31 +189,35 @@ class OutputHtmlErrorSummary
         if (!$this->stats['notInConsole']) {
             return '';
         }
-        $html = '';
         $errors = $this->errorHandler->get('errors');
-        $haveFatal = isset($this->stats['counts']['fatal']);
-        $count = 0;
         $lis = array();
         foreach ($errors as $err) {
             if (\array_intersect_assoc(array(
+                // at least one of these is true
                 'category' => 'fatal',
                 'inConsole' => true,
                 'isSuppressed' => true,
             ), $err->getValues())) {
                 continue;
             }
-            $count ++;
             $lis[] = '<li>'.$err['typeStr'].': '.$err['file'].' (line '.$err['line'].'): '.$err['message'].'</li>';
         }
-        if ($count == 0) {
+        if (!$lis) {
             return '';
         }
-        $html .= '<h3>'
-                .($this->stats['inConsole'] || $haveFatal ? 'Additionally, there' : 'There').' '
-                .($count == 1 ? 'was 1 error' : 'were '.$count.' errors').' captured while not collecting debug log'
-            .'</h3>'
-            .'<ul class="list-unstyled indent">'
-            .\implode("\n", $lis)
+        $count = \count($lis);
+        $header = \sprintf(
+            '%s %s captured while not collecting debug log',
+            $this->stats['inConsole'] || isset($this->stats['counts']['fatal'])
+                ? 'Additionally, there'
+                : 'There',
+            $count === 1
+                ? 'was 1 error'
+                : 'were '.$count.' errors'
+        );
+        $html = '<h3>'.$header.'</h3>'
+            .'<ul class="list-unstyled indent">'."\n"
+            .\implode("\n", $lis)."\n"
             .'</ul>';
         return $html;
     }
@@ -214,16 +227,17 @@ class OutputHtmlErrorSummary
      *
      * @param string $category error category
      *
-     * @return string|null
+     * @return Event[]
      */
-    protected function getErrorByCategory($category)
+    protected function getErrorsInCategory($category)
     {
         $errors = $this->errorHandler->get('errors');
+        $errorsInCat = array();
         foreach ($errors as $err) {
             if ($err['category'] == $category && $err['inConsole']) {
-                return $err['file']. '(line '.$err['line'].'): '.$err['message'];
+                $errorsInCat[] = $err;
             }
         }
-        return null;
+        return $errorsInCat;
     }
 }

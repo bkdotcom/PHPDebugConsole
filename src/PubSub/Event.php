@@ -123,7 +123,7 @@ class Event implements ArrayAccess, IteratorAggregate
     }
 
     /**
-     * Set event values (overwritting existing)
+     * Clears existing values and sets new values
      *
      * @param array $values values
      *

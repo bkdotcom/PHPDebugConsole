@@ -30,7 +30,7 @@ class DebugTestFramework extends DOMTestCase
             'outputAs' => 'html',
             'onError' => function (Event $event) {
                 if (self::$allowError) {
-                    $event['logError'] = false;
+                    $event['continueToNormal'] = false;
                     return;
                 }
                 throw new \PHPUnit\Framework\Exception($event['message'], 500);

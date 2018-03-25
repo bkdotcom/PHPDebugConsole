@@ -135,6 +135,10 @@ class Debug
         } else {
             $this->errorHandler = new ErrorHandler($this->eventManager);
         }
+        /*
+            When collect=false, E_USER_ERROR will be sent to system_log without halting script
+        */
+        $this->errorHandler->setCfg('onEUserError', 'log');
         $this->utilities = new Debug\Utilities();
         $this->config = new Debug\Config($this, $this->cfg);
         $this->internal = new Debug\Internal($this);

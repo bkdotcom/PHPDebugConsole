@@ -73,11 +73,20 @@ class ErrorHandler
     {
         $this->eventManager = $eventManager;
         $this->cfg = array(
-            'continueToPrevHandler' => true,    // continue to prev handler (if there is a prev error handler)
+            'continueToPrevHandler' => true,    // whether to continue to previously defined handler (if there is/was a prev error handler)
+                                                //   will not continue if error event propagation stopped
             'errorReporting' => E_ALL | E_STRICT,  // what errors are handled by handler? bitmask or "system" to use runtime value
                                                    // note that if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
-            // set onError to something callable, will receive error array
+            // shortcut for subscribing to errorHandler.error Event
+            //   will receive error Event object
             'onError' => null,
+            'onEUserError' => 'normal', // only applicable if we're not continuing to a prev error handler
+                                    // (continueToPrevHandler = false, there's no previous handler, or propagation stopped)
+                                    //   'continue' : forces continueToNormal = false (script will continue)
+                                    //   'log' : if propagation not stopped, call error_log()
+                                    //         continue script execution
+                                    //   'normal' : forces continueToNormal = true;
+                                    //   null : use error's continueToNormal value
         );
         // Initialize self::$instance if not set
         //    so that self::getInstance() will always return original instance
@@ -203,7 +212,8 @@ class ErrorHandler
      * @param array   $vars    active symbol table at point error occured
      *
      * @return boolean
-     * @link   http://www.php.net/manual/en/language.operators.errorcontrol.php
+     * @link   http://php.net/manual/en/function.set-error-handler.php
+     * @link   http://php.net/manual/en/language.operators.errorcontrol.php
      */
     public function handleError($errType, $errMsg, $file, $line, $vars = array())
     {
@@ -218,26 +228,27 @@ class ErrorHandler
             // not handled
             //   if cfg['errorReporting'] == 'system', error could simply be suppressed
             if ($continueToPrev) {
-                \call_user_func($this->prevErrorHandler, $errType, $errMsg, $error['file'], $error['line'], $vars);
-                return true;
+                return \call_user_func($this->prevErrorHandler, $errType, $errMsg, $error['file'], $error['line'], $vars);
             }
             return false;   // return false to continue to "normal" error handler
         }
         if (!$error['isSuppressed']) {
-            $error['logError'] = $error['isFirstOccur'];
             // suppressed error should not clear error caller
             $this->data['lastError'] = $error;
             $this->data['errorCaller'] = array();
             $this->eventManager->publish('errorHandler.error', $error);
         }
         $this->data['errors'][ $error['hash'] ] = $error;
-        if ($continueToPrev) {
-            \call_user_func($this->prevErrorHandler, $error['type'], $error['message'], $error['file'], $error['line'], $vars);
-            return true;
+        if ($continueToPrev && !$error->isPropagationStopped()) {
+            return \call_user_func($this->prevErrorHandler, $error['type'], $error['message'], $error['file'], $error['line'], $vars);
         }
-        if ($error['logError']) {
-            return false;   // return false to continue to "normal" error handler
-                            // PHP will log the error
+        if ($error['type'] === E_USER_ERROR) {
+            $this->onEUserError($error);
+        }
+        if ($error['continueToNormal']) {
+            // PHP will log the error
+            // if E_USER_ERROR, php will exit()
+            return false;
         }
         return true;
     }
@@ -269,6 +280,19 @@ class ErrorHandler
         if ($this->cfg['continueToPrevHandler'] && $this->prevExceptionHandler) {
             \call_user_func($this->prevErrorHandler, $exception);
         }
+    }
+
+    /**
+     * Send string to error_log()
+     *
+     * @param Event $error Error event to log
+     *
+     * @return boolean
+     */
+    public function log($error)
+    {
+        $str = 'PHP User Error:  '.$error['message'].' in '.$error['file'].' on line '.$error['line'];
+        return \error_log($str);
     }
 
     /**
@@ -561,11 +585,11 @@ class ErrorHandler
             'line'      => $line,
             'vars'      => $vars,
             'backtrace' => array(), // only for fatal type errors, and only if xdebug is enabled
+            'continueToNormal' => false,    // aka, let PHP do its thing (log error)
             'exception' => $this->uncaughtException,  // non-null if error is uncaught-exception
             'hash'          => null,
             'isFirstOccur'  => true,
             'isSuppressed'  => false,
-            'logError'      => false,
         );
         $hash = $this->errorHash($errorValues);
         $isFirstOccur = !isset($this->data['errors'][$hash]);
@@ -582,10 +606,10 @@ class ErrorHandler
             $errorValues['backtrace'] = $this->backtrace($errorValues);
         }
         $errorValues = \array_merge($errorValues, array(
+            'continueToNormal' => !$isSuppressed && $isFirstOccur,
             'hash' => $hash,
             'isFirstOccur' => $isFirstOccur,
             'isSuppressed' => $isSuppressed,
-            'logError' => !$isSuppressed && $isFirstOccur,
         ));
         return new Event($this, $errorValues);
     }
@@ -593,13 +617,13 @@ class ErrorHandler
     /**
      * Generate hash used to uniquely identify this error
      *
-     * @param array $error error array
+     * @param array $errorValues error array
      *
      * @return string hash
      */
-    protected function errorHash($error)
+    protected function errorHash($errorValues)
     {
-        $errMsg = $error['message'];
+        $errMsg = $errorValues['message'];
         // (\(.*?)\d+(.*?\))    "(tried to allocate 16384 bytes)" -> "(tried to allocate xxx bytes)"
         $errMsg = \preg_replace('/(\(.*?)\d+(.*?\))/', '\1x\2', $errMsg);
         // "blah123" -> "blahxxx"
@@ -608,7 +632,42 @@ class ErrorHandler
         $errMsg = \preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errMsg);
         // remove "comments"..  this allows throttling email, while still adding unique info to user errors
         $errMsg = \preg_replace('/\s*##.+$/', '', $errMsg);
-        $hash = \md5($error['file'].$error['line'].$error['type'].$errMsg);
+        $hash = \md5($errorValues['file'].$errorValues['line'].$errorValues['type'].$errMsg);
         return $hash;
+    }
+
+    /**
+     * Handle E_USER_ERROR
+     *
+     * Should script terminate, or continue?
+     *
+     * @param Event $error errorHandler.error event
+     *
+     * @return void
+     */
+    protected function onEUserError(Event $error)
+    {
+        switch ($this->cfg['onEUserError']) {
+            case 'continue':
+                $error['continueToNormal'] = false;
+                break;
+            case 'log':
+                // log the error, but continue script
+                if (!$error->isPropagationStopped() && $error['continueToNormal']) {
+                    $this->log($error);
+                }
+                $error['continueToNormal'] = false;
+                break;
+            case 'normal':
+                // force continueToNormal
+                $error['continueToNormal'] = true;
+                break;
+            default:
+                /*
+                    no special consideration
+                    unless errorHandler.error subscriber changes `continueToNormal` value,
+                    script will be halted
+                */
+        }
     }
 }

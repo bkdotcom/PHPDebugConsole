@@ -294,7 +294,7 @@ class Internal implements SubscriberInterface
             } else {
                 $this->debug->warn($errInfo.': ', $errMsg);
             }
-            $error['logError'] = false; // no need to error_log()..  we've captured it here
+            $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
             $error['inConsole'] = true;
             // Prevent errorEmailer from sending email.
             // Since we're collecting log info, we send email on shutdown

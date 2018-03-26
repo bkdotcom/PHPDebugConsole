@@ -11,7 +11,7 @@
  * @see https://craig.is/writing/chrome-logger/techspecs
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Output;
 
 use bdk\PubSub\Event;
 use bdk\Debug;
@@ -22,7 +22,7 @@ use bdk\Debug;
  * ChromeLogger supports the following methods/log-types:
  * log, warn, error, info, group, groupEnd, groupCollapsed, and table
  */
-class OutputChromeLogger extends OutputBase
+class ChromeLogger extends Base
 {
 
     const HEADER_NAME = 'X-ChromeLogger-Data';

@@ -9,14 +9,14 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Output;
 
 use bdk\PubSub\Event;
 
 /**
  * Output log as HTML
  */
-class OutputHtml extends OutputBase
+class Html extends Base
 {
 
     protected $errorSummary;
@@ -28,7 +28,7 @@ class OutputHtml extends OutputBase
      */
     public function __construct($debug)
     {
-        $this->errorSummary = new OutputHtmlErrorSummary($this, $debug->errorHandler);
+        $this->errorSummary = new HtmlErrorSummary($this, $debug->errorHandler);
         parent::__construct($debug);
     }
 

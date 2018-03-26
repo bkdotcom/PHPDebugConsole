@@ -9,7 +9,7 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Output;
 
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -17,7 +17,7 @@ use bdk\PubSub\SubscriberInterface;
 /**
  * Base output plugin
  */
-abstract class OutputBase implements SubscriberInterface
+abstract class Base implements SubscriberInterface
 {
 
     protected $debug;
@@ -433,7 +433,7 @@ abstract class OutputBase implements SubscriberInterface
                 }
                 $replacement = \sprintf($format, $sub);
             } elseif ($type === 'c') {
-                $asHtml = \get_called_class() == __NAMESPACE__.'\\OutputHtml';
+                $asHtml = \get_called_class() == __NAMESPACE__.'\\Html';
                 if (!$asHtml) {
                     return '';
                 }

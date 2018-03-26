@@ -9,14 +9,15 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Output;
 
 use bdk\ErrorHandler;
+use bdk\Debug\Output\Html as OutputHtml;
 
 /**
  * Output a summary of errors
  */
-class OutputHtmlErrorSummary
+class HtmlErrorSummary
 {
 
     protected $outputHtml;

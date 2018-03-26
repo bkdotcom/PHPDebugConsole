@@ -9,14 +9,14 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Output;
 
 use bdk\PubSub\Event;
 
 /**
  * Output log via FirePHP
  */
-class OutputFirephp extends OutputBase
+class Firephp extends Base
 {
 
     protected $firephpMethods = array(

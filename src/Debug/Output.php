@@ -59,11 +59,13 @@ class Output
      */
     public function __get($prop)
     {
-        $classname = __NAMESPACE__.'\\'.\ucfirst($prop);
-        if (\strpos($prop, 'output') === 0 && \class_exists($classname)) {
-            $this->{$prop} = new $classname($this->debug);
-            // note: we don't add as plugin / subscriberInterface here
-            return $this->{$prop};
+        if (\strpos($prop, 'output') === 0) {
+            $classname = __NAMESPACE__.'\\Output\\'.\substr($prop, 6);
+            if (\class_exists($classname)) {
+                $this->{$prop} = new $classname($this->debug);
+                // note: we don't add as plugin / subscriberInterface here
+                return $this->{$prop};
+            }
         }
     }
 
@@ -82,7 +84,7 @@ class Output
                 $ret = $this->getDefaultOutputAs();
             } elseif (\is_object($ret)) {
                 $ret = \get_class($ret);
-                $ret = \preg_replace('/^'.\preg_quote(__NAMESPACE__.'\\Output').'/', '', $ret);
+                $ret = \preg_replace('/^'.\preg_quote(__NAMESPACE__.'\\Output\\').'/', '', $ret);
                 $ret = \lcfirst($ret);
             }
         } elseif ($path == 'css') {
@@ -146,7 +148,7 @@ class Output
             $outputAs = $values['outputAs'];
             if (\is_string($outputAs)) {
                 $prop = 'output'.\ucfirst($outputAs);
-                $classname = __NAMESPACE__.'\\'.\ucfirst($prop);
+                $classname = __NAMESPACE__.'\\Output\\'.\ucfirst($outputAs);
                 if (\class_exists($classname)) {
                     if (!\property_exists($this, $prop)) {
                         $this->{$prop} = new $classname($this->debug);
@@ -158,7 +160,7 @@ class Output
                 }
             } elseif ($outputAs instanceof SubscriberInterface) {
                 $classname = \get_class($outputAs);
-                $prefix = __NAMESPACE__.'\\Output';
+                $prefix = __NAMESPACE__.'\\Output\\';
                 if (\strpos($classname, $prefix) == 0) {
                     $prop = 'output'.\substr($classname, \strlen($prefix));
                     $this->{$prop} = $outputAs;

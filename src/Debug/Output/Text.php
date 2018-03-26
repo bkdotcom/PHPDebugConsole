@@ -9,14 +9,14 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Output;
 
 use bdk\PubSub\Event;
 
 /**
  * Output log as plain-text
  */
-class OutputText extends OutputBase
+class Text extends Base
 {
 
     protected $depth = 0;   // for keeping track of indentation

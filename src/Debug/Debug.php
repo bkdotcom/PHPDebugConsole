@@ -951,22 +951,29 @@ class Debug
     protected function autoloader($className)
     {
         $className = \ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
-        $strpos = \strrpos($className, '\\');
-        if ($strpos) {
-            $namespace = \substr($className, 0, $strpos);
-            $shortname = \substr($className, $strpos + 1);
-            if ($namespace === 'bdk\\Debug') {
-                $filePath = __DIR__.'/'.$shortname.'.php';
-                require $filePath;
+        if (!\strpos($className, '\\')) {
+            // className is not namespaced
+            return;
+        }
+        $psr4Map = array(
+            'bdk\\Debug\\' => __DIR__,
+            'bdk\\PubSub\\' => __DIR__.'/../PubSub',
+            'bdk\\ErrorHandler\\' => __DIR__.'/../ErrorHandler',
+        );
+        foreach ($psr4Map as $namespace => $dir) {
+            if (\strpos($className, $namespace) === 0) {
+                $rel = \substr($className, \strlen($namespace));
+                $rel = \str_replace('\\', '/', $rel);
+                $filepath = $dir.'/'.$rel.'.php';
+                require $filepath;
+                return;
             }
-            if ($namespace === 'bdk\\PubSub') {
-                $filePath = __DIR__.'/../PubSub/'.$shortname.'.php';
-                require $filePath;
-            }
-            if ($namespace === 'bdk\\ErrorHandler' || $className === 'bdk\\ErrorHandler') {
-                $filePath = __DIR__.'/../ErrorHandler/'.$shortname.'.php';
-                require $filePath;
-            }
+        }
+        $classMap = array(
+            'bdk\\ErrorHandler' => __DIR__.'/../ErrorHandler/ErrorHandler.php',
+        );
+        if (isset($classMap[$className])) {
+            require $classMap[$className];
         }
     }
 

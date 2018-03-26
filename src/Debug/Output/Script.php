@@ -9,14 +9,14 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Output;
 
 use bdk\PubSub\Event;
 
 /**
  * Output log as <script> tag
  */
-class OutputScript extends OutputBase
+class Script extends Base
 {
 
     /**

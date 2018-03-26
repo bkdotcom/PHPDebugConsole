@@ -12,7 +12,7 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Output;
 
 use bdk\Debug;
 use bdk\PubSub\SubscriberInterface;
@@ -22,7 +22,7 @@ use bdk\WampPublisher;
 /**
  * PHPDebugConsole plugin for routing debug messages thru WAMP router
  */
-class OutputWamp implements SubscriberInterface
+class Wamp implements SubscriberInterface
 {
 
     protected $debug;

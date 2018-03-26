@@ -187,7 +187,7 @@ class ErrorEmailer implements SubscriberInterface
             $backtrace[0]['vars'] = $error['vars'];
         }
         if ($this->cfg['emailBacktraceDumper']) {
-            $str = call_user_func($this->cfg['backtraceDumper'], $backtrace);
+            $str = \call_user_func($this->cfg['emailBacktraceDumper'], $backtrace);
         } else {
             $search = array(
                 ")\n\n",

@@ -34,7 +34,9 @@ class Config
     {
         $this->cfg = &$cfg;
         $this->debug = $debug;
-        $this->cfgLazy['errorEmailer']['emailBacktraceDumper'] = array($debug->output->outputText, 'dump');
+        $this->cfgLazy['errorEmailer']['emailBacktraceDumper'] = function ($backtrace) use ($debug) {
+            return $debug->output->outputText->dump($backtrace);
+        };
     }
 
     /**

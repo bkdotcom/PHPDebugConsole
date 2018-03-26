@@ -1119,10 +1119,10 @@ class Debug
     private static function setPublicMethods()
     {
         $reflection = new ReflectionClass(\get_called_class());
-        self::$publicMethods = array_map(function (ReflectionMethod $refMethod) {
+        self::$publicMethods = \array_map(function (ReflectionMethod $refMethod) {
             return $refMethod->name;
         }, $reflection->getMethods(ReflectionMethod::IS_PUBLIC));
-        self::$publicMethods = array_diff(self::$publicMethods, array(
+        self::$publicMethods = \array_diff(self::$publicMethods, array(
             '__construct',
             '__call',
             '__callStatic',

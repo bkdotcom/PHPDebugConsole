@@ -332,11 +332,11 @@ class OutputHtml extends OutputBase
     protected function dumpArray($array, $path = array())
     {
         if (empty($array)) {
-            $html = '<span class="t_keyword">Array</span>'
+            $html = '<span class="t_keyword">array</span>'
                 .'<span class="t_punct">()</span>';
         } else {
             $displayKeys = $this->debug->getCfg('output.displayListKeys') || !$this->debug->utilities->isList($array);
-            $html = '<span class="t_keyword">Array</span>'
+            $html = '<span class="t_keyword">array</span>'
                 .'<span class="t_punct">(</span>'."\n";
             if ($displayKeys) {
                 $html .= '<span class="array-inner">'."\n";
@@ -506,7 +506,7 @@ class OutputHtml extends OutputBase
      */
     protected function dumpRecursion()
     {
-        return '<span class="t_keyword">Array</span> <span class="t_recursion">*RECURSION*</span>';
+        return '<span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span>';
     }
 
     /**
@@ -868,7 +868,7 @@ class OutputHtml extends OutputBase
             $val = $this->dump($val, array(), true, false);
         } elseif ($type == 'array') {
             $count = \count($val);
-            $val = '<span class="t_keyword">Array</span>'
+            $val = '<span class="t_keyword">array</span>'
                 .'<span class="t_punct">(</span>'.$count.'<span class="t_punct">)</span>';
         } elseif ($type == 'object') {
             $val = $this->markupClassname($val['className']);

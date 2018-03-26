@@ -80,7 +80,7 @@ EOD;
         // $this->output('table', $html);
         $this->assertSame($expect, $html);
         $html = $this->debug->output->outputHtml->buildTable(array(), 'caption');
-        $this->assertSame('<div class="m_log">caption = <span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">()</span></span></div>', $html);
+        $this->assertSame('<div class="m_log">caption = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span></div>', $html);
         $html = $this->debug->output->outputHtml->buildTable('blah', 'caption');
         $this->assertSame('<div class="m_log">caption = <span class="t_string">blah</span></div>', $html);
     }

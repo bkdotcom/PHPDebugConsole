@@ -132,8 +132,8 @@ class OutputText extends OutputBase
     {
         $array = parent::dumpArray($array, $path);
         $str = \trim(\print_r($array, true));
-        $str = \preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
-        $str = \str_replace("Array\n(", 'Array(', $str);
+        $str = \preg_replace('#^Array\n\(#', 'array(', $str);
+        $str = \preg_replace('#^array\s*\(\s+\)#', 'array()', $str); // single-lineify empty array
         if (\count($path)) {
             $str = \str_replace("\n", "\n    ", $str);
         }

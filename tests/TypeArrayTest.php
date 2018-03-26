@@ -10,7 +10,7 @@ class TypeArrayTest extends DebugTestFramework
     {
 		// indented with tab
         $arrayDumpHtml = <<<'EOD'
-<span class="t_array"><span class="t_keyword">Array</span><span class="t_punct">(</span>
+<span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <span class="array-inner">
 	<span class="key-value"><span class="t_key t_int">0</span> <span class="t_operator">=&gt;</span> <span class="t_string">a</span></span>
 	<span class="key-value"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
@@ -19,7 +19,7 @@ class TypeArrayTest extends DebugTestFramework
 EOD;
 		// indented with 4 spaces
 		$arrayDumpText = <<<'EOD'
-Array(
+array(
     [0] => "a"
     [foo] => "bar"
     [1] => "c"
@@ -83,12 +83,12 @@ EOD;
             $test_a,
             function ($strHtml) {
                 // $this->stdOut('strHtml', $strHtml);
-                $this->assertSelectEquals('.key-value > .t_keyword', 'Array', true, $strHtml);
+                $this->assertSelectEquals('.key-value > .t_keyword', 'array', true, $strHtml);
                 $this->assertSelectEquals('.key-value > .t_recursion', '*RECURSION*', true, $strHtml);
             },
-            array('contains' => '    [val] => Array *RECURSION*'),
-            // '{"foo":"bar","val":"Array *RECURSION*"}'
-            array('foo'=>'bar', 'val'=>'Array *RECURSION*')
+            array('contains' => '    [val] => array *RECURSION*'),
+            // '{"foo":"bar","val":"array *RECURSION*"}'
+            array('foo'=>'bar', 'val'=>'array *RECURSION*')
         );
     }
 

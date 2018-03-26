@@ -230,7 +230,7 @@ abstract class OutputBase implements SubscriberInterface
      */
     protected function dumpRecursion()
     {
-        return 'Array *RECURSION*';
+        return 'array *RECURSION*';
     }
 
     /**
@@ -528,7 +528,7 @@ abstract class OutputBase implements SubscriberInterface
         $type = $this->debug->abstracter->getType($val);
         if ($type == 'array') {
             $count = \count($val);
-            $val = 'Array('.$count.')';
+            $val = 'array('.$count.')';
         } elseif ($type == 'object') {
             $val = $val['className'];
         } else {

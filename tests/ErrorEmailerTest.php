@@ -52,7 +52,7 @@ class ErrorEmailerTest extends DebugTestFramework
             .'file: %s/tests/'.basename(__FILE__)."\n"
             .'line: %d'."\n"
             ."\n"
-            .'backtrace: Array('."\n"
+            .'backtrace: array('."\n"
             .'%a'
             .')',
             $body

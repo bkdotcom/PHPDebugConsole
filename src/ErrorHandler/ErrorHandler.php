@@ -485,9 +485,9 @@ class ErrorHandler
      */
     protected function backtraceRemoveInternal($backtrace)
     {
-        for ($i = \count($backtrace) - 1; $i >= 0; $i--) {
+        for ($i = \count($backtrace) - 1; $i > 0; $i--) {
             $frame = $backtrace[$i];
-            if (isset($frame['class']) && \strpos($frame['class'], __NAMESPACE__.'\\') === 0) {
+            if (isset($frame['class']) && $frame['class'] === __CLASS__) {
                 break;
             }
         }
@@ -495,7 +495,6 @@ class ErrorHandler
             /*
                 We got here via php.shutdown event (fatal error)
                 skip over PubSub internals
-                probably i += 4, but don't want to rely on implementation detail
             */
             $refObj = new ReflectionObject($this->eventManager);
             $filepath = $refObj->getFilename();

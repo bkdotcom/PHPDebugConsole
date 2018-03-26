@@ -12,19 +12,6 @@ class ErrorHandlerTest extends DebugTestFramework
     private $onErrorEvent;
     private $onErrorUpdate = array();
 
-    /*
-    public static function setUpBeforeClass()
-    {
-    }
-    */
-
-    /*
-    public static function tearDownAfterClass()
-    {
-        self::$errorHandler->unregister();
-    }
-    */
-
     public function setUp()
     {
         parent::setup();
@@ -82,8 +69,9 @@ class ErrorHandlerTest extends DebugTestFramework
      */
     public function testGetInstance()
     {
-        $instance = \bdk\Debug\ErrorHandler::getInstance();
-        $this->assertInstanceOf('\\bdk\\Debug\\ErrorHandler', $instance);
+        $class = get_class($this->debug->errorHandler);
+        $instance = $class::getInstance();
+        $this->assertInstanceOf($class, $instance);
         $this->assertSame($this->debug->errorHandler, $instance);
     }
 
@@ -240,11 +228,6 @@ class ErrorHandlerTest extends DebugTestFramework
      */
     public function testUnregister()
     {
-    }
-
-    protected function getMockErrorHandler()
-    {
-
     }
 
     public function testUserError()

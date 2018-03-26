@@ -950,9 +950,10 @@ class Debug
     protected function autoloader($className)
     {
         $className = \ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
-        if (\preg_match('/^(.*?)\\\\([^\\\\]+)$/', $className, $matches)) {
-            $namespace = $matches[1];
-            $class = $matches[2];
+        $strpos = \strrpos($className, '\\');
+        if ($strpos) {
+            $namespace = \substr($className, 0, $strpos);
+            $class = \substr($className, $strpos + 1);
             if ($namespace === 'bdk\\Debug') {
                 $filePath = __DIR__.'/'.$class.'.php';
                 require $filePath;

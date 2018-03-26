@@ -15,6 +15,7 @@
 namespace bdk;
 
 use bdk\ErrorHandler;
+use bdk\ErrorHandler\ErrorEmailer;
 use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Manager as EventManager;
 use ReflectionClass;
@@ -23,10 +24,10 @@ use ReflectionMethod;
 /**
  * Web-browser/javascript like console class for PHP
  *
- * @property Abstracter   $abstracter   lazy-loaded abstracter obj
- * @property ErrorEmailer $errorEmailer lazy-loaded errorEmailer obj
- * @property Output       $output       lazy-loaded output obj
- * @property Utf8         $utf8         lazy-loaded utf8 obj
+ * @property Abstracter   $abstracter   lazy-loaded Abstracter obj
+ * @property ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer obj
+ * @property Output       $output       lazy-loaded Output obj
+ * @property Utf8         $utf8         lazy-loaded Utf8 obj
  */
 class Debug
 {
@@ -65,7 +66,7 @@ class Debug
             // which error types appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
                             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
-            'emailFunc' => 'mail',          // callable
+            'emailFunc' => 'mail',  // callable
             'emailLog'  => false,   // Whether to email a debug log.  (requires 'collect' to also be true)
                                     //
                                     //   false:   email will not be sent
@@ -76,7 +77,7 @@ class Debug
                 : null,
             'logEnvInfo' => true,
             'logServerKeys' => array('REQUEST_URI','REQUEST_TIME','HTTP_HOST','SERVER_NAME','SERVER_ADDR','REMOTE_ADDR'),
-            'onLog' => null,
+            'onLog' => null,    // callable
         );
         $this->data = array(
             'alerts'            => array(), // array of alerts.  alerts will be shown at top of output when possible
@@ -140,7 +141,7 @@ class Debug
         */
         $this->errorHandler->setCfg('onEUserError', 'log');
         $this->utilities = new Debug\Utilities();
-        $this->config = new Debug\Config($this, $this->cfg);
+        $this->config = new Debug\Config($this, $this->cfg);    // cfg is passed by reference
         $this->internal = new Debug\Internal($this);
         /*
             Init config and properties
@@ -222,7 +223,7 @@ class Debug
                 $val = new Debug\Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
                 break;
             case 'errorEmailer':
-                $val = new Debug\ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
+                $val = new ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
                 break;
             case 'output':
                 $val = new Debug\Output($this, $this->config->getCfgLazy('output'));
@@ -953,17 +954,17 @@ class Debug
         $strpos = \strrpos($className, '\\');
         if ($strpos) {
             $namespace = \substr($className, 0, $strpos);
-            $class = \substr($className, $strpos + 1);
+            $shortname = \substr($className, $strpos + 1);
             if ($namespace === 'bdk\\Debug') {
-                $filePath = __DIR__.'/'.$class.'.php';
+                $filePath = __DIR__.'/'.$shortname.'.php';
                 require $filePath;
             }
             if ($namespace === 'bdk\\PubSub') {
-                $filePath = __DIR__.'/../PubSub/'.$class.'.php';
+                $filePath = __DIR__.'/../PubSub/'.$shortname.'.php';
                 require $filePath;
             }
-            if ($className === 'bdk\\ErrorHandler') {
-                $filePath = __DIR__.'/../ErrorHandler/'.$class.'.php';
+            if ($namespace === 'bdk\\ErrorHandler' || $className === 'bdk\\ErrorHandler') {
+                $filePath = __DIR__.'/../ErrorHandler/'.$shortname.'.php';
                 require $filePath;
             }
         }

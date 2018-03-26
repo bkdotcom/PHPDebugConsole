@@ -45,11 +45,11 @@ class Internal implements SubscriberInterface
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
-        }, 'onErrorAddEmailData'), PHP_INT_MAX);
+        }, 'onErrorHighPri'), PHP_INT_MAX);
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
-        }, 'onErrorEmail'), PHP_INT_MAX * -1);
+        }, 'onErrorLowPri'), PHP_INT_MAX * -1);
     }
 
     /**
@@ -296,7 +296,7 @@ class Internal implements SubscriberInterface
             }
             $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
             $error['inConsole'] = true;
-            // Prevent errorEmailer from sending email.
+            // Prevent ErrorHandler\ErrorEmailer from sending email.
             // Since we're collecting log info, we send email on shutdown
             $error['email'] = false;
             $this->error = null;

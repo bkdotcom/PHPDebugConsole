@@ -1,24 +1,23 @@
 <?php
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\ErrorHandler;
 
 use bdk\PubSub\Event;
+use bdk\PubSub\SubscriberInterface;
 
 /**
  * Email error details on error
  *
  * Emails an error report on error and throttles said email so does not excessively send email
  */
-class ErrorEmailer
+class ErrorEmailer implements SubscriberInterface
 {
 
     protected $cfg = array();
@@ -33,6 +32,7 @@ class ErrorEmailer
     public function __construct($cfg = array())
     {
         $this->cfg = array(
+            'emailBacktraceDumper' => null, // callable that receives backtrace array & returns string
             'emailFunc' => 'mail',
             'emailMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
             'emailMin' => 15,       // 0 = no throttle
@@ -81,13 +81,24 @@ class ErrorEmailer
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            'errorHandler.error' => array('onErrorHighPri', PHP_INT_MAX),
+            'errorHandler.error' => array('onErrorLowPri', PHP_INT_MAX * -1),
+        );
+    }
+
+    /**
      * load throttle stats for passed error
      *
      * @param Event $error error event
      *
      * @return void
      */
-    public function onErrorAddEmailData(Event $error)
+    public function onErrorHighPri(Event $error)
     {
         $this->throttleDataImport();
         $hash = $error['hash'];
@@ -113,7 +124,7 @@ class ErrorEmailer
      *
      * @return void
      */
-    public function onErrorEmail(Event $error)
+    public function onErrorLowPri(Event $error)
     {
         if ($error['email'] && $this->cfg['emailMin'] > 0) {
             $this->throttleDataSet($error);
@@ -166,22 +177,17 @@ class ErrorEmailer
      */
     protected function backtraceStr(Event $error)
     {
-        if ($error['backtrace']) {
-            // backtrace provided
-            $backtrace = $error['backtrace'];
-        } else {
-            $backtrace = $error->getSubject()->backtrace();
-        }
+        $backtrace = $error['backtrace']
+            ? $error['backtrace'] // backtrace provided
+            : $error->getSubject()->backtrace();
         if (\count($backtrace) < 2) {
             return '';
         }
         if ($backtrace && $error['vars']) {
             $backtrace[0]['vars'] = $error['vars'];
         }
-        $debug = __NAMESPACE__;
-        if (\class_exists($debug)) {
-            $debug = $debug::getInstance();
-            $str = $debug->output->outputText->dump($backtrace);
+        if ($this->cfg['emailBacktraceDumper']) {
+            $str = call_user_func($this->cfg['backtraceDumper'], $backtrace);
         } else {
             $search = array(
                 ")\n\n",
@@ -190,7 +196,8 @@ class ErrorEmailer
                 ")\n",
             );
             $str = \print_r($backtrace, true);
-            $str = \preg_replace('/Array\s+\(\s+\)/s', 'Array()', $str); // single-lineify empty arrays
+            $str = \preg_replace('#\bArray\n\(#', 'array(', $str);
+            $str = \preg_replace('/\barray\s+\(\s+\)/s', 'array()', $str); // single-lineify empty arrays
             $str = \str_replace($search, $replace, $str);
             $str = \substr($str, 0, -1);
         }

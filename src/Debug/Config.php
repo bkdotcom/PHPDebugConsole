@@ -34,6 +34,7 @@ class Config
     {
         $this->cfg = &$cfg;
         $this->debug = $debug;
+        $this->cfgLazy['errorEmailer']['emailBacktraceDumper'] = array($debug->output->outputText, 'dump');
     }
 
     /**
@@ -75,14 +76,14 @@ class Config
     /**
      * Get config for lazy-loaded class
      *
-     * @param string $lazyPropName name of property
+     * @param string $name name of property being lazy loaded
      *
      * @return array
      */
-    public function getCfgLazy($lazyPropName)
+    public function getCfgLazy($name)
     {
-        return isset($this->cfgLazy[$lazyPropName])
-            ? $this->cfgLazy[$lazyPropName]
+        return isset($this->cfgLazy[$name])
+            ? $this->cfgLazy[$name]
             : array();
     }
 
@@ -189,6 +190,7 @@ class Config
             ),
             'errorEmailer' => array(
                 // 'emailFunc',
+                'emailBacktraceDumper',
                 'emailMask',
                 'emailMin',
                 'emailThrottleFile',

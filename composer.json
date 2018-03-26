@@ -19,6 +19,7 @@
 		],
 		"psr-4": {
 			"bdk\\Debug\\": "src/Debug/",
+			"bdk\\ErrorHandler\\": "src/ErrorHandler/",
 			"bdk\\PubSub\\": "src/PubSub/"
 		}
 	},

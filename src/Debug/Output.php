@@ -60,12 +60,18 @@ class Output
     public function __get($prop)
     {
         if (\strpos($prop, 'output') === 0) {
-            $classname = __NAMESPACE__.'\\Output\\'.\substr($prop, 6);
-            if (\class_exists($classname)) {
-                $this->{$prop} = new $classname($this->debug);
-                // note: we don't add as plugin / subscriberInterface here
+            $this->debug->errorHandler->setErrorCaller();
+            trigger_error('output->'.$prop.' is deprecated, use output->'.\strtolower(\substr($prop, 6)).' instead', E_USER_DEPRECATED);
+            $prop = \strtolower(\substr($prop, 6));
+            if ($this->{$prop}) {
                 return $this->{$prop};
             }
+        }
+        $classname = __NAMESPACE__.'\\Output\\'.\ucfirst($prop);
+        if (\class_exists($classname)) {
+            $this->{$prop} = new $classname($this->debug);
+            // note: we don't add as plugin / subscriberInterface here
+            return $this->{$prop};
         }
     }
 

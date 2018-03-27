@@ -657,7 +657,7 @@ class Html extends Base
                     $title = '';
                     $type = $this->debug->abstracter->getType($defaultValue);
                     if (!\in_array($type, array('array','resource'))) {
-                        $title = $this->debug->output->outputText->dump($defaultValue);
+                        $title = $this->debug->output->text->dump($defaultValue);
                         $title = \htmlspecialchars('value: '.$title);
                     }
                     $paramStr .= '<span class="t_parameter-default t_const"'

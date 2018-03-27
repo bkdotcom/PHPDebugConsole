@@ -964,8 +964,7 @@ class Debug
             if (\strpos($className, $namespace) === 0) {
                 $rel = \substr($className, \strlen($namespace));
                 $rel = \str_replace('\\', '/', $rel);
-                $filepath = $dir.'/'.$rel.'.php';
-                require $filepath;
+                require $dir.'/'.$rel.'.php';
                 return;
             }
         }

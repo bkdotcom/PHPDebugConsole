@@ -35,7 +35,7 @@ class Config
         $this->cfg = &$cfg;
         $this->debug = $debug;
         $this->cfgLazy['errorEmailer']['emailBacktraceDumper'] = function ($backtrace) use ($debug) {
-            return $debug->output->outputText->dump($backtrace);
+            return $debug->output->text->dump($backtrace);
         };
     }
 
@@ -373,7 +373,7 @@ class Config
             unset($this->cfg['onBootstrap']);
         }
         if (isset($cfg['file'])) {
-            $this->debug->addPlugin($this->debug->output->outputFile);
+            $this->debug->addPlugin($this->debug->output->file);
         }
     }
 }

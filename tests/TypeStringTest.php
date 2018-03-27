@@ -31,23 +31,4 @@ class TypeStringTest extends DebugTestFramework
             ),
         );
     }
-
-    /**
-     * Test
-     *
-     * @dataProvider dumpProvider
-     *
-     * @return void
-     */
-    /*
-    public function testDump($val, $html, $text, $script)
-    {
-        $dump = $this->debug->output->outputHtml->dump($val);
-        $this->assertSame($html, $dump);
-        $dump = $this->debug->output->outputText->dump($val);
-        $this->assertSame($text, $dump);
-        $dump = $this->debug->output->outputScript->dump($val);
-        $this->assertSame($script, $dump);
-    }
-    */
 }

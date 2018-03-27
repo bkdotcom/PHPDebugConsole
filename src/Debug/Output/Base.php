@@ -295,7 +295,7 @@ abstract class Base implements SubscriberInterface
                 if ($val === $this->debug->abstracter->UNDEFINED) {
                     unset($values[$k2]);
                 } elseif (\is_array($val)) {
-                    $values[$k2] = $this->debug->output->outputText->dump($val, false);
+                    $values[$k2] = $this->debug->output->text->dump($val, false);
                 } else {
                     $values[$k2] = $val;
                 }

@@ -111,9 +111,9 @@ class DebugTestFramework extends DOMTestCase
     public function testDump($val, $html, $text, $script)
     {
         $dumps = array(
-            'outputHtml' => $html,
-            'outputText' => $text,
-            'outputScript' => $script,
+            'html' => $html,
+            'text' => $text,
+            'script' => $script,
         );
         foreach ($dumps as $outputAs => $dumpExpect) {
             $dump = $this->debug->output->{$outputAs}->dump($val);

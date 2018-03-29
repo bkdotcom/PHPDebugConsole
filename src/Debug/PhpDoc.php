@@ -28,85 +28,50 @@ class PhpDoc
      */
     public static function getParsed($what)
     {
-        $reflector = null;
         $hash = null;
         if (\is_object($what)) {
             $hash = self::getHash($what);
             if (isset(self::$cache[$hash])) {
                 return self::$cache[$hash];
             }
-            $reflector = $what instanceof \Reflector
-                ? $what
-                : new \ReflectionObject($what);
-            $docComment = $reflector->getDocComment();
-        } else {
-            // assume string
-            $docComment = $what;
         }
-        // remove opening "/**" and closing "*/"
-        $docComment = \preg_replace('#^/\*\*(.+)\*/$#s', '$1', $docComment);
-        // remove leading "*"s
-        $docComment = \preg_replace('#^[ \t]*\*[ ]?#m', '', $docComment);
-        $docComment = \trim($docComment);
-        if (\strtolower($docComment) == '{@inheritdoc}' && $reflector) {
-            return static::findInheritedDoc($reflector);
-        } else {
-            $docComment = \preg_replace_callback(
-                '/{@inheritDoc}/i',
-                function () use ($reflector) {
-                    $phpDoc =  static::findInheritedDoc($reflector);
-                    return $phpDoc['description'];
-                },
-                $docComment
-            );
+        $comment = self::getCommentContent($what);
+        if (\is_array($comment)) {
+            return $comment;
         }
-        $desc = $docComment;
-        $strTags = '';
-        if (\preg_match('/^@/m', $docComment, $matches, PREG_OFFSET_CAPTURE)) {
+        $return = array(
+            'summary' => null,
+            'description' => null,
+        );
+        if (\preg_match('/^@/m', $comment, $matches, PREG_OFFSET_CAPTURE)) {
             // we have tags
             $pos = $matches[0][1];
-            $desc = $pos
-                ? \substr($docComment, 0, $pos-1)
+            $strTags = \substr($comment, $pos);
+            $return = \array_merge($return, self::parseTags($strTags));
+            // remove tags from comment
+            $comment = $pos > 0
+                ? \substr($comment, 0, $pos-1)
                 : '';
-            $strTags = \substr($docComment, $pos);
         }
         /*
-            Do some string replacement on summary/description
+            Do some string replacement
         */
-        $desc = \preg_replace('/^\\\@/m', '@', $desc);
-        $desc = \str_replace('{@*}', '*/', $desc);
+        $comment = \preg_replace('/^\\\@/m', '@', $comment);
+        $comment = \str_replace('{@*}', '*/', $comment);
         /*
-            split desc into summary & description
+            split into summary & description
             summary ends with empty whiteline or "." followed by \n
         */
-        $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $desc, 2, PREG_SPLIT_DELIM_CAPTURE);
+        $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $comment, 2, PREG_SPLIT_DELIM_CAPTURE);
         $split = \array_replace(array('','',''), $split);
-        $return = array(
+        $summDesc = array(
             'summary' => \trim($split[0].$split[1]),
-            'description' => \trim($split[2]),
+            'desc' => \trim($split[2]),
         );
-        foreach (array('summary','description') as $k) {
-            if ($return[$k] === '') {
-                $return[$k] = null;
-            }
-        }
-        // now find tags
-        $regexNotTag = '(?P<value>(?:(?!^@).)*)';
-        $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*'.$regexNotTag.'#sim';
-        \preg_match_all($regexTags, $strTags, $matches, PREG_SET_ORDER);
-        $singleTags = array('return');
-        foreach ($matches as $match) {
-            $value = $match['value'];
-            $value = \preg_replace('/\n\s*\*\s*/', "\n", $value);
-            $value = \trim($value);
-            $value = static::parseTag($match['tag'], $value);
-            if (\in_array($match['tag'], $singleTags)) {
-                $return[ $match['tag'] ] = $value;
-            } else {
-                $return[ $match['tag'] ][] = $value;
-            }
-        }
+        // assume that summary and desc won't be "0"..  remove empty value and merge
+        $return = array_merge($return, array_filter($summDesc));
         if ($hash) {
+            // cache it
             self::$cache[$hash] = $return;
         }
         return $return;
@@ -210,14 +175,54 @@ class PhpDoc
         foreach ($interfaces as $className) {
             $reflectionClass2 = new \ReflectionClass($className);
             if ($reflectionClass2->hasMethod($name)) {
-                return static::getParsed($reflectionClass2->getMethod($name));
+                return self::getParsed($reflectionClass2->getMethod($name));
             }
         }
-        if ($reflectionClass = $reflectionClass->getParentClass()) {
-            if ($reflectionClass->hasMethod($name)) {
-                return static::getParsed($reflectionClass->getMethod($name));
+        $reflectionClass = $reflectionClass->getParentClass();
+        if ($reflectionClass && $reflectionClass->hasMethod($name)) {
+            return self::getParsed($reflectionClass->getMethod($name));
+        }
+    }
+
+    /**
+     * Get comment contents
+     *
+     * @param string|object|\Reflector $what doc-block string, object, or reflector object
+     *
+     * @return string|array may return array if comment contains an cached inheritdoc
+     */
+    private static function getCommentContent($what)
+    {
+        $reflector = null;
+        if (\is_object($what)) {
+            $reflector = $what instanceof \Reflector
+                ? $what
+                : new \ReflectionObject($what);
+            $docComment = $reflector->getDocComment();
+        } else {
+            // assume string
+            $docComment = $what;
+        }
+        // remove opening "/**" and closing "*/"
+        $docComment = \preg_replace('#^/\*\*(.+)\*/$#s', '$1', $docComment);
+        // remove leading "*"s
+        $docComment = \preg_replace('#^[ \t]*\*[ ]?#m', '', $docComment);
+        $docComment = \trim($docComment);
+        if ($reflector) {
+            if (\strtolower($docComment) == '{@inheritdoc}') {
+                return self::findInheritedDoc($reflector);
+            } else {
+                $docComment = \preg_replace_callback(
+                    '/{@inheritDoc}/i',
+                    function () use ($reflector) {
+                        $phpDoc =  self::findInheritedDoc($reflector);
+                        return $phpDoc['description'];
+                    },
+                    $docComment
+                );
             }
         }
+        return $docComment;
     }
 
     /**
@@ -270,6 +275,33 @@ class PhpDoc
             $params[$i] = $info;
         }
         return $params;
+    }
+
+    /**
+     * Parse tags
+     *
+     * @param string $str portion of phpdoc content that contains tags
+     *
+     * @return array
+     */
+    private static function parseTags($str)
+    {
+        $regexNotTag = '(?P<value>(?:(?!^@).)*)';
+        $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*'.$regexNotTag.'#sim';
+        \preg_match_all($regexTags, $str, $matches, PREG_SET_ORDER);
+        $singleTags = array('return');
+        foreach ($matches as $match) {
+            $value = $match['value'];
+            $value = \preg_replace('/\n\s*\*\s*/', "\n", $value);
+            $value = \trim($value);
+            $value = self::parseTag($match['tag'], $value);
+            if (\in_array($match['tag'], $singleTags)) {
+                $return[ $match['tag'] ] = $value;
+            } else {
+                $return[ $match['tag'] ][] = $value;
+            }
+        }
+        return $return;
     }
 
     /**

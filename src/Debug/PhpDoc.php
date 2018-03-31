@@ -64,12 +64,11 @@ class PhpDoc
         */
         $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $comment, 2, PREG_SPLIT_DELIM_CAPTURE);
         $split = \array_replace(array('','',''), $split);
-        $summDesc = array(
-            'summary' => \trim($split[0].$split[1]),
-            'desc' => \trim($split[2]),
-        );
         // assume that summary and desc won't be "0"..  remove empty value and merge
-        $return = array_merge($return, array_filter($summDesc));
+        $return = \array_merge($return, \array_filter(array(
+            'summary' => \trim($split[0].$split[1]),    // split[1] is the ".\n"
+            'desc' => \trim($split[2]),
+        )));
         if ($hash) {
             // cache it
             self::$cache[$hash] = $return;

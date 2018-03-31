@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.0
+ * @version   v2.1.0
  */
 
 namespace bdk\Debug;
@@ -826,7 +826,7 @@ class AbstractObject
             $sortData = array();
             foreach (\array_keys($array) as $name) {
                 $sortData[$name] = $name == '__construct'
-                    ? 0
+                    ? '0'
                     : $name;
             }
             \array_multisort($sortData, $array);
@@ -835,7 +835,7 @@ class AbstractObject
             $sortData = array();
             foreach ($array as $name => $info) {
                 $sortData['name'][$name] = $name == '__construct'
-                    ? 0     // always place __construct at the top
+                    ? '0'     // always place __construct at the top
                     : $name;
                 /*
                     visibility may not be set on methods... if methods weren't collected, but still collected __toString/returnValue

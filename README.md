@@ -12,6 +12,7 @@ Browser/javascript like console class for PHP
     * HTML
     * Plain text / file
     * &lt;script&gt;
+    * WebSocket
     * "plugin"
 * custom error handler
 	* errors (even fatal) are captured / logged / displayed

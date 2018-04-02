@@ -78,7 +78,7 @@ class AbstractArray
             if (\is_object($v)) {
                 $v = $this->abstracter->getAbstractionTable($v, $hist);
             } elseif ($this->abstracter->needsAbstraction($v)) {
-                $v = $this->abstracter->getAbstraction($array[$k], $hist);
+                $v = $this->abstracter->getAbstractionTable($array[$k], $hist);
             }
             $return[$k] = $v;
         }

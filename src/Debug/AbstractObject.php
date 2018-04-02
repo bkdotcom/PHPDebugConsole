@@ -141,6 +141,9 @@ class AbstractObject
      */
     public function getAbstractionTable($obj, &$hist = array())
     {
+        if (!\is_object($obj)) {
+            return $obj;
+        }
         $reflector = new \ReflectionObject($obj);
         $abs = new Event($obj, array(
             'className' => \get_class($obj),
@@ -150,21 +153,28 @@ class AbstractObject
             'implements' => $reflector->getInterfaceNames(),
             'isExcluded' => $hist && \in_array(\get_class($obj), $this->abstracter->getCfg('objectsExclude')),
             'isRecursion' => \in_array($obj, $hist, true),
+            'methods' => array(),   // not populated for abstractionTable, but may get ['__toString']['returnValue']
             'phpDoc' => $this->phpDoc->getParsed($reflector),
             'properties' => array(),
+            'stringified' => null,
             'type' => 'object',
             'values' => array(),        // this is unique to getAbstractionTable
                                         //  will be populated if traversable
         ));
-        if (\is_object($obj) && $obj instanceof \Traversable) {
-            $values = array();
+        $abs = $this->abstracter->eventManager->publish('debug.objAbstractStart', $abs);
+        if (\method_exists($obj, '__toString')) {
+            $abs['methods']['__toString'] = array(
+                'returnValue' => \call_user_func(array($obj, '__toString')),
+            );
+        }
+        if ($obj instanceof \Traversable) {
             foreach ($obj as $k => $v) {
-                $values[$k] = $v;
+                $abs['values'][$k] = $v;
             }
-            $abs['values'] = $values;
-        } elseif (\is_object($obj)) {
+        } else {
             $this->addProperties($abs, $hist);
         }
+        $abs = $this->abstracter->eventManager->publish('debug.objAbstractEnd', $abs);
         unset($abs['collectPropertyValues']);
         return $abs->getValues();
     }

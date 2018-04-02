@@ -132,6 +132,7 @@ class Abstracter
         if (\is_array($mixed)) {
             return $this->abstractArray->getAbstractionTable($mixed);
         } elseif (\is_object($mixed)) {
+            // ie, a traversable table
             return $this->abstractObject->getAbstractionTable($mixed, $hist);
         }
     }
@@ -188,7 +189,9 @@ class Abstracter
     /**
      * Get values for passed keys
      *
-     * @param mixed $row     should be array or abstraction
+     * Used by table method
+     *
+     * @param array $row     should be array or abstraction
      * @param array $keys    column keys
      * @param array $objInfo if row is an object, this will be populated with className and phpDoc
      *                         Otherwise, this will be false
@@ -197,9 +200,8 @@ class Abstracter
      */
     public static function keyValues($row, $keys, &$objInfo)
     {
-        $values = array();
         $objInfo = false;
-        $rowIsAbstraction = \is_array($row) && \in_array(self::ABSTRACTION, $row, true);
+        $rowIsAbstraction = self::isAbstraction($row);
         $rowIsObject = $rowIsAbstraction && $row['type'] == 'object';
         $rowIsTraversable = $rowIsObject && \in_array('Traversable', $row['implements']) && isset($row['values']);
         if ($rowIsObject) {
@@ -207,30 +209,20 @@ class Abstracter
                 'className' => $row['className'],
                 'phpDoc' => $row['phpDoc'],
             );
-        }
-        if ($rowIsTraversable) {
-            $row = $row['values'];
-        } elseif ($rowIsObject) {
-            foreach ($row['properties'] as $k => $info) {
-                if ($info['visibility'] !== 'public') {
-                    unset($row['properties'][$k]);
-                } else {
-                    $row['properties'][$k] = $info['value'];
+            if ($rowIsTraversable) {
+                $row = $row['values'];
+            } else {
+                $row = $row['properties'];
+                foreach ($row as $k => $info) {
+                    if ($info['visibility'] !== 'public') {
+                        unset($row[$k]);
+                    } else {
+                        $row[$k] = $info['value'];
+                    }
                 }
             }
-            $row = $row['properties'];
         }
-        foreach ($keys as $key) {
-            $value = self::UNDEFINED;
-            if (\is_array($row)) {
-                if (\array_key_exists($key, $row)) {
-                    $value = $row[$key];
-                }
-            } elseif ($key === '') {
-                $value = $row;
-            }
-            $values[$key] = $value;
-        }
+        $values = self::keyValuesGetValues($row, $keys);
         return $values;
     }
 
@@ -243,7 +235,7 @@ class Abstracter
      */
     public static function isAbstraction($mixed)
     {
-        return \is_array($mixed) && \in_array(self::ABSTRACTION, $mixed, true);
+        return \is_array($mixed) && isset($mixed['debug']) && $mixed['debug'] === self::ABSTRACTION;
     }
 
     /**
@@ -280,5 +272,38 @@ class Abstracter
             $this->cfg['objectsExclude'][] = __NAMESPACE__;
         }
         return $ret;
+    }
+
+    /**
+     * For the given row, and keys, get the corresponding values
+     *
+     * @param array $row  row of key => values
+     * @param array $keys list of keys
+     *
+     * @return array
+     */
+    private static function keyValuesGetValues($row, $keys)
+    {
+        $values = array();
+        foreach ($keys as $key) {
+            $value = self::UNDEFINED;
+            if (\is_array($row)) {
+                if (\array_key_exists($key, $row)) {
+                    $value = $row[$key];
+                }
+            } elseif ($key === '') {
+                $value = $row;
+            }
+            if (self::isAbstraction($value)) {
+                // just output the stringified / __toString value in a table
+                if ($value['stringified']) {
+                    $value = $value['stringified'];
+                } elseif (isset($value['__toString']['returnValue'])) {
+                    $value = $value['__toString']['returnValue'];
+                }
+            }
+            $values[$key] = $value;
+        }
+        return $values;
     }
 }

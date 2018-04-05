@@ -286,11 +286,11 @@ abstract class Base implements SubscriberInterface
      */
     protected function methodTable($array, $columns = array())
     {
-        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
+        $keys = $columns ?: $this->debug->table->colKeys($array);
         $table = array();
         $classnames = array();
         foreach ($array as $k => $row) {
-            $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
+            $values = $this->debug->table->keyValues($row, $keys, $objInfo);
             foreach ($values as $k2 => $val) {
                 if ($val === $this->debug->abstracter->UNDEFINED) {
                     unset($values[$k2]);

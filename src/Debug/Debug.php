@@ -27,6 +27,7 @@ use ReflectionMethod;
  * @property Abstracter   $abstracter   lazy-loaded Abstracter obj
  * @property ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer obj
  * @property Output       $output       lazy-loaded Output obj
+ * @property Table        $table        lazy-loaded Table obj
  * @property Utf8         $utf8         lazy-loaded Utf8 obj
  */
 class Debug
@@ -225,12 +226,6 @@ class Debug
             case 'errorEmailer':
                 $val = new ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
                 break;
-            case 'output':
-                $val = new Debug\Output($this, $this->config->getCfgLazy('output'));
-                break;
-            case 'utf8':
-                $val = new Debug\Utf8();
-                break;
             case 'groupDepth':
                 // calculate the total group depth
                 $depth = $this->data['groupDepth'][0];
@@ -238,6 +233,15 @@ class Debug
                     $depth += $group['groupDepth'][0];
                 }
                 return $depth;
+            case 'output':
+                $val = new Debug\Output($this, $this->config->getCfgLazy('output'));
+                break;
+            case 'table':
+                $val = new Debug\Table();
+                break;
+            case 'utf8':
+                $val = new Debug\Utf8();
+                break;
             default:
                 return null;
         }
@@ -526,7 +530,7 @@ class Debug
      * Accepts array of arrays or array of objects
      *
      * Arguments:
-     *   1st encountered array is the data
+     *   1st encountered array (or traversable) is the data
      *   2nd encountered array (optional) specifies columns to output
      *   1st encountered string is a label/caption
      *
@@ -550,6 +554,10 @@ class Debug
                     $data = $args[$i];
                 } elseif (!$meta['columns']) {
                     $meta['columns'] = $args[$i];
+                }
+            } elseif ($args[$i] instanceof \Traversable) {
+                if ($data === null) {
+                    $data = $args[$i];
                 }
             } elseif (\is_string($args[$i]) && !$meta['caption']) {
                 $meta['caption'] = $args[$i];
@@ -993,7 +1001,7 @@ class Debug
         }
         $cfgRestore = array();
         if ($method == 'table') {
-            $args[0] = $this->abstracter->getAbstractionTable($args[0]);
+            $args[0] = $this->abstracter->getAbstraction($args[0], 'table');
         } else {
             $meta = \array_merge($meta, $this->internal->getMetaVals($args));
             if (isset($meta['cfg'])) {

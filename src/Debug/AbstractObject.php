@@ -50,17 +50,21 @@ class AbstractObject
     /**
      * returns information about an object
      *
-     * @param object $obj  object to inspect
-     * @param array  $hist (@internal) array & object history
+     * @param object $obj    Object to inspect
+     * @param string $method Method requesting abstraction
+     * @param array  $hist   (@internal) array & object history
      *
      * @return array
      */
-    public function getAbstraction($obj, &$hist = array())
+    public function getAbstraction($obj, $method = null, &$hist = array())
     {
+        if (!\is_object($obj)) {
+            return $obj;
+        }
         $reflector = new \ReflectionObject($obj);
         $abs = new Event($obj, array(
             'className' => \get_class($obj),
-            'collectMethods' => $this->abstracter->getCfg('collectMethods'),
+            'collectMethods' => $method !== 'table' && $this->abstracter->getCfg('collectMethods'),
             'collectPropertyValues' => true,
             'constants' => array(),
             'debug' => $this->abstracter->ABSTRACTION,
@@ -73,7 +77,7 @@ class AbstractObject
             'implements' => $reflector->getInterfaceNames(),
             'isExcluded' => $hist && \in_array(\get_class($obj), $this->abstracter->getCfg('objectsExclude')),
             'isRecursion' => \in_array($obj, $hist, true),
-            'methods' => array(),
+            'methods' => array(),   // not populated for abstractionTable, but may get ['__toString']['returnValue']
             'phpDoc' => array(
                 'summary' => null,
                 'description' => null,
@@ -83,6 +87,7 @@ class AbstractObject
             'scopeClass' => $this->getScopeClass($hist),
             'stringified' => null,
             'type' => 'object',
+            'traverseValues' => array(),    // populated if method is table && traversable
             'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && \method_exists($obj, '__debugInfo'),
         ));
         if (\array_filter(array($abs['isRecursion'], $abs['isExcluded']))) {
@@ -100,11 +105,24 @@ class AbstractObject
             return $abs->getValues();
         }
         $abs['phpDoc'] = $this->phpDoc->getParsed($reflector);
-        $abs['constants'] = $this->getConstants($reflector);
-        while ($reflector = $reflector->getParentClass()) {
-            $abs['extends'][] = $reflector->getName();
+        if ($method === 'table') {
+            if ($obj instanceof \Traversable) {
+                $hist[] = $obj;
+                foreach ($obj as $k => $v) {
+                    $abs['traverseValues'][$k] = $this->abstracter->needsAbstraction($v)
+                        ? $this->abstracter->getAbstraction($v, $method, $hist)
+                        : $v;
+                }
+            } else {
+                $this->addProperties($abs, $method, $hist);
+            }
+        } else {
+            $abs['constants'] = $this->getConstants($reflector);
+            while ($reflector = $reflector->getParentClass()) {
+                $abs['extends'][] = $reflector->getName();
+            }
+            $this->addProperties($abs, $method, $hist);
         }
-        $this->addProperties($abs, $hist);
         if ($abs['collectMethods']) {
             $this->addMethods($abs);
         } else {
@@ -128,55 +146,6 @@ class AbstractObject
         $this->sort($return['methods']);
         unset($return['collectPropertyValues']);
         return $return;
-    }
-
-    /**
-     * Special minimal abstraction for array of Traversable's being logged via table()
-     * Rather than regular abstraction
-     *
-     * @param object $obj  Object being inspected
-     * @param array  $hist (@internal) Array & object history
-     *
-     * @return array
-     */
-    public function getAbstractionTable($obj, &$hist = array())
-    {
-        if (!\is_object($obj)) {
-            return $obj;
-        }
-        $reflector = new \ReflectionObject($obj);
-        $abs = new Event($obj, array(
-            'className' => \get_class($obj),
-            'collectMethods' => false,
-            'collectPropertyValues' => true,
-            'debug' => $this->abstracter->ABSTRACTION,
-            'implements' => $reflector->getInterfaceNames(),
-            'isExcluded' => $hist && \in_array(\get_class($obj), $this->abstracter->getCfg('objectsExclude')),
-            'isRecursion' => \in_array($obj, $hist, true),
-            'methods' => array(),   // not populated for abstractionTable, but may get ['__toString']['returnValue']
-            'phpDoc' => $this->phpDoc->getParsed($reflector),
-            'properties' => array(),
-            'stringified' => null,
-            'type' => 'object',
-            'values' => array(),        // this is unique to getAbstractionTable
-                                        //  will be populated if traversable
-        ));
-        $abs = $this->abstracter->eventManager->publish('debug.objAbstractStart', $abs);
-        if (\method_exists($obj, '__toString')) {
-            $abs['methods']['__toString'] = array(
-                'returnValue' => \call_user_func(array($obj, '__toString')),
-            );
-        }
-        if ($obj instanceof \Traversable) {
-            foreach ($obj as $k => $v) {
-                $abs['values'][$k] = $v;
-            }
-        } else {
-            $this->addProperties($abs, $hist);
-        }
-        $abs = $this->abstracter->eventManager->publish('debug.objAbstractEnd', $abs);
-        unset($abs['collectPropertyValues']);
-        return $abs->getValues();
     }
 
     /**
@@ -274,12 +243,13 @@ class AbstractObject
     /**
      * Adds properties to abstraction
      *
-     * @param Event $abs  Abstraction event object
-     * @param array $hist (@internal) object history
+     * @param Event  $abs    Abstraction event object
+     * @param string $method Method requesting abstraction
+     * @param array  $hist   (@internal) object history
      *
      * @return void
      */
-    public function addProperties(Event $abs, &$hist = array())
+    public function addProperties(Event $abs, $method = null, &$hist = array())
     {
         $obj = $abs->getSubject();
         $reflectionObject = new \ReflectionObject($obj);
@@ -320,7 +290,7 @@ class AbstractObject
         $hist[] = $obj;
         foreach ($properties as $name => $info) {
             if ($this->abstracter->needsAbstraction($info['value'])) {
-                $properties[$name]['value'] = $this->abstracter->getAbstraction($info['value'], $hist);
+                $properties[$name]['value'] = $this->abstracter->getAbstraction($info['value'], $method, $hist);
             }
         }
         $abs['properties'] = $properties;

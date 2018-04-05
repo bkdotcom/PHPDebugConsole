@@ -96,44 +96,35 @@ class Abstracter
      * Instead of storing objects in log, store "abstraction" array containing
      *     type, methods, & properties
      *
-     * @param mixed $mixed array, object, or resource to prep
-     * @param array $hist  (@internal) array/object history (used to test for recursion)
+     * @param mixed  $mixed  array, object, or resource to prep
+     * @param string $method Method requesting abstraction
+     * @param array  $hist   (@internal) array/object history (used to test for recursion)
      *
      * @return array
      */
-    public function getAbstraction(&$mixed, $hist = array())
+    public function getAbstraction(&$mixed, $method = null, $hist = array())
     {
         if (\is_array($mixed)) {
-            return $this->abstractArray->getAbstraction($mixed, $hist);
+            return $this->abstractArray->getAbstraction($mixed, $method, $hist);
         } elseif (\is_object($mixed)) {
-            return $this->abstractObject->getAbstraction($mixed, $hist);
+            // ie, a traversable table
+            $histCount = \count($hist);
+            if ($method === 'table' && $histCount < 2) {
+                $return = $this->abstractObject->getAbstraction($mixed, $method, $hist);
+                if ($histCount === 0 && $return['type'] == 'object' && $return['traverseValues']) {
+                    // Traversable or traversValyes provided
+                    return $return['traverseValues'];
+                }
+                return $return;
+            } else {
+                return $this->abstractObject->getAbstraction($mixed, $method, $hist);
+            }
         } elseif (\is_resource($mixed) || \strpos(\print_r($mixed, true), 'Resource') === 0) {
             return array(
                 'debug' => self::ABSTRACTION,
                 'type' => 'resource',
                 'value' => \print_r($mixed, true).': '.\get_resource_type($mixed),
             );
-        }
-    }
-
-    /**
-     * Special abstraction for arrays being logged via table() method.
-     *
-     * Array may be an array of objects
-     *
-     * @param array $mixed 1st level array or nested traversable object
-     * @param array $hist  (@internal) array/object history (used to test for recursion)
-     *
-     * @return array
-     */
-    public function getAbstractionTable(&$mixed, $hist = array())
-    {
-        // first pass
-        if (\is_array($mixed)) {
-            return $this->abstractArray->getAbstractionTable($mixed);
-        } elseif (\is_object($mixed)) {
-            // ie, a traversable table
-            return $this->abstractObject->getAbstractionTable($mixed, $hist);
         }
     }
 
@@ -187,46 +178,6 @@ class Abstracter
     }
 
     /**
-     * Get values for passed keys
-     *
-     * Used by table method
-     *
-     * @param array $row     should be array or abstraction
-     * @param array $keys    column keys
-     * @param array $objInfo if row is an object, this will be populated with className and phpDoc
-     *                         Otherwise, this will be false
-     *
-     * @return array
-     */
-    public static function keyValues($row, $keys, &$objInfo)
-    {
-        $objInfo = false;
-        $rowIsAbstraction = self::isAbstraction($row);
-        $rowIsObject = $rowIsAbstraction && $row['type'] == 'object';
-        $rowIsTraversable = $rowIsObject && \in_array('Traversable', $row['implements']) && isset($row['values']);
-        if ($rowIsObject) {
-            $objInfo = array(
-                'className' => $row['className'],
-                'phpDoc' => $row['phpDoc'],
-            );
-            if ($rowIsTraversable) {
-                $row = $row['values'];
-            } else {
-                $row = $row['properties'];
-                foreach ($row as $k => $info) {
-                    if ($info['visibility'] !== 'public') {
-                        unset($row[$k]);
-                    } else {
-                        $row[$k] = $info['value'];
-                    }
-                }
-            }
-        }
-        $values = self::keyValuesGetValues($row, $keys);
-        return $values;
-    }
-
-    /**
      * * Is the passed value an abstraction
      *
      * @param mixed $mixed value to check
@@ -272,38 +223,5 @@ class Abstracter
             $this->cfg['objectsExclude'][] = __NAMESPACE__;
         }
         return $ret;
-    }
-
-    /**
-     * For the given row, and keys, get the corresponding values
-     *
-     * @param array $row  row of key => values
-     * @param array $keys list of keys
-     *
-     * @return array
-     */
-    private static function keyValuesGetValues($row, $keys)
-    {
-        $values = array();
-        foreach ($keys as $key) {
-            $value = self::UNDEFINED;
-            if (\is_array($row)) {
-                if (\array_key_exists($key, $row)) {
-                    $value = $row[$key];
-                }
-            } elseif ($key === '') {
-                $value = $row;
-            }
-            if (self::isAbstraction($value)) {
-                // just output the stringified / __toString value in a table
-                if ($value['stringified']) {
-                    $value = $value['stringified'];
-                } elseif (isset($value['__toString']['returnValue'])) {
-                    $value = $value['__toString']['returnValue'];
-                }
-            }
-            $values[$key] = $value;
-        }
-        return $values;
     }
 }

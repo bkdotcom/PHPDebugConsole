@@ -73,13 +73,13 @@ class Firephp extends Base
      */
     protected function methodTable($array, $columns = array())
     {
-        $keys = $columns ?: $this->debug->utilities->arrayColKeys($array);
+        $keys = $columns ?: $this->debug->table->colKeys($array);
         $table = array();
         $table[] = $keys;
         \array_unshift($table[0], '');
         $classNames = array();
         foreach ($array as $k => $row) {
-            $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
+            $values = $this->debug->table->keyValues($row, $keys, $objInfo);
             $values = \array_map(function ($val) {
                 return $val === $this->debug->abstracter->UNDEFINED
                     ? null

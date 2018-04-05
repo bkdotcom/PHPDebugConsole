@@ -18,65 +18,6 @@ class Utilities
 {
 
     /**
-     * Go through all the "rows" of array to determine what the keys are and their order
-     *
-     * @param array $rows array
-     *
-     * @return array
-     */
-    public static function arrayColKeys($rows)
-    {
-        $lastStack = array();
-        $newStack = array();
-        $currentStack = array();
-        if (!\is_array($rows)) {
-            return array();
-        }
-        foreach ($rows as $row) {
-            if (\is_array($row) && \in_array(Abstracter::ABSTRACTION, $row, true)) {
-                // abstraction
-                if ($row['type'] == 'object') {
-                    if (\in_array('Traversable', $row['implements'])) {
-                        $row = $row['values'];
-                    } else {
-                        $row = \array_filter($row['properties'], function ($prop) {
-                            return $prop['visibility'] === 'public';
-                        });
-                    }
-                } else {
-                    $row = null;
-                }
-            }
-            $currentStack = \is_array($row)
-                ? \array_keys($row)
-                : array('');
-            if (empty($lastStack)) {
-                $lastStack = $currentStack;
-            } elseif ($currentStack != $lastStack) {
-                $newStack = array();
-                while (!empty($currentStack)) {
-                    $currentKey = \array_shift($currentStack);
-                    if (!empty($lastStack) && $currentKey === $lastStack[0]) {
-                        \array_push($newStack, $currentKey);
-                        \array_shift($lastStack);
-                    } elseif (false !== $position = \array_search($currentKey, $lastStack, true)) {
-                        $segment = \array_splice($lastStack, 0, $position+1);
-                        \array_splice($newStack, \count($newStack), 0, $segment);
-                    } elseif (!\in_array($currentKey, $newStack, true)) {
-                        \array_push($newStack, $currentKey);
-                    }
-                }
-                // put on remaining from last_stack
-                \array_splice($newStack, \count($newStack), 0, $lastStack);
-                $newStack = \array_unique($newStack);
-                $lastStack = $newStack;
-            }
-        }
-        $keys = $lastStack;
-        return $keys;
-    }
-
-    /**
      * Recursively merge two arrays
      *
      * @param array $arrayDef default array

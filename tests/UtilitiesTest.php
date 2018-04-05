@@ -16,29 +16,6 @@ class UtilitiesTest extends DebugTestFramework
      *
      * @return void
      */
-    public function testArrayColKeys()
-    {
-        $array = array(
-            array('col1'=>'', 'col2'=>'', 'col4'=>''),
-            array('col1'=>'', 'col2'=>'', 'col3'=>''),
-            array('col1'=>'', 'col2'=>'', 'col3'=>''),
-        );
-        $colKeys = Utilities::arrayColKeys($array);
-        $this->assertSame(array('col1','col2','col3','col4'), $colKeys);
-        $array = array(
-            array('a','b','c'),
-            array('d','e','f','g'),
-            array('h','i'),
-        );
-        $colKeys = Utilities::arrayColKeys($array);
-        $this->assertSame(array(0,1,2,3), $colKeys);
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
     public function testArrayMergeDeep()
     {
         $array1 = array(

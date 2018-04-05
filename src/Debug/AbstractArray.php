@@ -32,12 +32,13 @@ class AbstractArray
     /**
      * returns information about an array
      *
-     * @param array $array array to inspect
-     * @param array $hist  (@internal) array/object history
+     * @param array  $array  Array to inspect
+     * @param string $method Method requesting abstraction
+     * @param array  $hist   (@internal) array/object history
      *
      * @return array
      */
-    public function getAbstraction(&$array, &$hist = array())
+    public function getAbstraction(&$array, $method = null, &$hist = array())
     {
         if (\in_array($array, $hist, true)) {
         	return $this->abstracter->RECURSION;
@@ -54,31 +55,7 @@ class AbstractArray
         $hist[] = $array;
         foreach ($array as $k => $v) {
             if ($this->abstracter->needsAbstraction($v)) {
-                $v = $this->abstracter->getAbstraction($array[$k], $hist);
-            }
-            $return[$k] = $v;
-        }
-        return $return;
-    }
-
-    /**
-     * Special abstraction for arrays being logged via table()
-     *
-     * Could be an array of objects
-     *
-     * @param array $array array
-     *
-     * @return array
-     */
-    public function getAbstractionTable(&$array)
-    {
-        $return = array();
-        $hist[] = $array;
-        foreach ($array as $k => $v) {
-            if (\is_object($v)) {
-                $v = $this->abstracter->getAbstractionTable($v, $hist);
-            } elseif ($this->abstracter->needsAbstraction($v)) {
-                $v = $this->abstracter->getAbstractionTable($array[$k], $hist);
+                $v = $this->abstracter->getAbstraction($array[$k], $method, $hist);
             }
             $return[$k] = $v;
         }

@@ -54,7 +54,7 @@ class Html extends Base
             return '<div class="m_log">'.$str.'</div>';
         }
         $headers = array();
-        $keys = $columns ?: $this->debug->utilities->arrayColKeys($rows);
+        $keys = $columns ?: $this->debug->table->colKeys($rows);
         foreach ($keys as $key) {
             $headers[] = $key === ''
                 ? 'value'
@@ -74,7 +74,7 @@ class Html extends Base
             'class' => $class,
         );
         $str = '<table'.$this->debug->utilities->buildAttribString($attribs).'>'."\n"
-            .'<caption>'.$caption.'</caption>'."\n"
+            .($caption ? '<caption>'.$caption.'</caption>'."\n" : '')
             .'<thead>'
             .'<tr><th>&nbsp;</th>'
                 .($haveObj ? '<th>&nbsp;</th>' : '')
@@ -252,7 +252,7 @@ class Html extends Base
     protected function buildTableRow($row, $keys, $rowKey, &$rowIsObject)
     {
         $str = '';
-        $values = $this->debug->abstracter->keyValues($row, $keys, $objInfo);
+        $values = $this->debug->table->keyValues($row, $keys, $objInfo);
         $classAndInner = $this->debug->utilities->parseAttribString($this->dump($rowKey));
         $classAndInner['class'] = \trim('t_key '.$classAndInner['class']);
         $str .= '<tr>';

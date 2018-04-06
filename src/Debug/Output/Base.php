@@ -300,8 +300,8 @@ abstract class Base implements SubscriberInterface
                     $values[$k2] = $val;
                 }
             }
-            $classnames[$k] = $objInfo
-                ? $objInfo['className']
+            $classnames[$k] = $objInfo['row']
+                ? $objInfo['row']['className']
                 : '';
             $table[$k] = $values;
         }

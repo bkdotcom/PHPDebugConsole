@@ -41,7 +41,7 @@ class Table
                 $count = \count($curKeys);
                 for ($i = 0; $i < $count; $i++) {
                     $curKey = $curKeys[$i];
-                    if (!empty($lastKeys) && $curKey === $lastKeys[0]) {
+                    if ($lastKeys && $curKey === $lastKeys[0]) {
                         \array_push($newKeys, $curKey);
                         \array_shift($lastKeys);
                     } elseif (false !== $position = \array_search($curKey, $lastKeys, true)) {
@@ -66,36 +66,44 @@ class Table
      *
      * @param array $row     should be array or abstraction
      * @param array $keys    column keys
-     * @param array $objInfo if row is an object, this will be populated with className and phpDoc
-     *                         Otherwise, this will be false
+     * @param array $objInfo Will be populated with className and phpDoc
+     *                           if row is an objects, $objInfo['row'] will be populated
+     *                           if a value is an object being displayed as a string,
+     *                               $objInfo['cols'][key] will be populated
      *
      * @return array
      */
     public static function keyValues($row, $keys, &$objInfo)
     {
-        $objInfo = false;
+        $objInfo = array(
+            'row' => false,
+            'cols' => array(),
+        );
         $rowIsAbstraction = Abstracter::isAbstraction($row);
         if ($rowIsAbstraction) {
             if ($row['type'] == 'object') {
-                $objInfo = array(
+                $objInfo['row'] = array(
                     'className' => $row['className'],
                     'phpDoc' => $row['phpDoc'],
                 );
                 $row = self::objectValues($row);
-            } elseif ($row['type'] == 'resource') {
-                $objInfo = array(
-                    'className' => 'resource',
-                    'phpDoc' => null,
-                );
-                $row = array('' => $row);
+                if (!\is_array($row)) {
+                    // ie stringified value
+                    $objInfo['row'] = false;
+                    $row = array('' => $row);
+                } elseif (Abstracter::isAbstraction($row)) {
+                    // still an abstraction (ie closure)
+                    $objInfo['row'] = false;
+                    $row = array('' => $row);
+                }
             } else {
+                // resource & callable
                 $row = array('' => $row);
             }
         }
         if (!\is_array($row)) {
             $row = array('' =>  $row);
         }
-        // return self::keyValuesGetValues($row, $keys);
         $values = array();
         foreach ($keys as $key) {
             $value = \array_key_exists($key, $row)
@@ -104,8 +112,10 @@ class Table
             if (Abstracter::isAbstraction($value)) {
                 // just output the stringified / __toString value in a table
                 if (isset($value['stringified'])) {
+                    $objInfo['cols'][$key] = $value['className'];
                     $value = $value['stringified'];
                 } elseif (isset($value['__toString']['returnValue'])) {
+                    $objInfo['cols'][$key] = $value['className'];
                     $value = $value['__toString']['returnValue'];
                 }
             }
@@ -126,7 +136,8 @@ class Table
         if (Abstracter::isAbstraction($val)) {
             // abstraction
             if ($val['type'] == 'object') {
-                if (\in_array('Traversable', $val['implements'])) {
+                if ($val['traverseValues']) {
+                    // probably Traversable
                     $val = $val['traverseValues'];
                 } elseif ($val['stringified']) {
                     $val = null;
@@ -136,8 +147,14 @@ class Table
                     $val = \array_filter($val['properties'], function ($prop) {
                         return $prop['visibility'] === 'public';
                     });
+                    /*
+                        Reflection doesn't return properties in any given order
+                        so, we'll sort for consistency
+                    */
+                    \ksort($val, SORT_NATURAL | SORT_FLAG_CASE);
                 }
             } else {
+                // ie callable or resource
                 $val = null;
             }
         }
@@ -167,7 +184,7 @@ class Table
             return $abs['methods']['__toString']['returnValue'];
         }
         if ($abs['className'] === 'Closure') {
-            return array('' => $abs);
+            return $abs;
         }
         $values = $abs['properties'];
         foreach ($values as $k => $info) {

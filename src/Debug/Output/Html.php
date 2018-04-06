@@ -44,48 +44,37 @@ class Html extends Base
      */
     public function buildTable($rows, $caption = null, $columns = array(), $class = '')
     {
-        $str = '';
         if (!\is_array($rows) || empty($rows)) {
             // empty array/value
-            if (isset($caption)) {
-                $str = $caption.' = ';
-            }
-            $str .= $this->dump($rows);
-            return '<div class="m_log">'.$str.'</div>';
+            return '<div class="m_log">'
+                .(isset($caption) ? $caption.' = ' : '')
+                .$this->dump($rows)
+                .'</div>';
         }
-        $headers = array();
         $keys = $columns ?: $this->debug->table->colKeys($rows);
-        foreach ($keys as $key) {
-            $headers[] = $key === ''
-                ? 'value'
-                : \htmlspecialchars($key);
-        }
-        $haveObj = false;
+        $this->tableInfo = array(
+            'haveObjRow' => false,
+            'colClasses' => array_fill_keys($keys, null),
+        );
+        $tBody = '';
         foreach ($rows as $k => $row) {
-            $str .= $this->buildTableRow($row, $keys, $k, $isObj);
-            if ($isObj) {
-                $haveObj = true;
-            }
+            $tBody .= $this->buildTableRow($row, $keys, $k);
         }
-        if (!$haveObj) {
-            $str = \str_replace('<td class="t_classname"></td>', '', $str);
+        if (!$this->tableInfo['haveObjRow']) {
+            $tBody = \str_replace('<td class="t_classname"></td>', '', $tBody);
         }
         $attribs = array(
             'class' => $class,
         );
-        $str = '<table'.$this->debug->utilities->buildAttribString($attribs).'>'."\n"
+        return '<table'.$this->debug->utilities->buildAttribString($attribs).'>'."\n"
             .($caption ? '<caption>'.$caption.'</caption>'."\n" : '')
             .'<thead>'
-            .'<tr><th>&nbsp;</th>'
-                .($haveObj ? '<th>&nbsp;</th>' : '')
-                .'<th>'.\implode('</th><th scope="col">', $headers).'</th>'
-            .'</tr>'."\n"
+            .$this->buildTableHeader($keys)
             .'</thead>'."\n"
             .'<tbody>'."\n"
-            .$str
+            .$tBody
             .'</tbody>'."\n"
             .'</table>';
-        return $str;
     }
 
     /**
@@ -240,16 +229,39 @@ class Html extends Base
     }
 
     /**
-     * Returns table row
+     * Returns table's thead row
      *
-     * @param mixed $row         should be array or abstraction
-     * @param array $keys        column keys
-     * @param array $rowKey      row key
-     * @param array $rowIsObject will get set to true|false
+     * @param array $keys column header values (keys of array or property names)
      *
      * @return string
      */
-    protected function buildTableRow($row, $keys, $rowKey, &$rowIsObject)
+    protected function buildTableHeader($keys)
+    {
+        $headers = array();
+        foreach ($keys as $key) {
+            $headers[$key] = $key === ''
+                ? 'value'
+                : \htmlspecialchars($key);
+            if ($this->tableInfo['colClasses'][$key]) {
+                $headers[$key] .= ' '.$this->markupClassname($this->tableInfo['colClasses'][$key]);
+            }
+        }
+        return '<tr><th>&nbsp;</th>'
+                .($this->tableInfo['haveObjRow'] ? '<th>&nbsp;</th>' : '')
+                .'<th>'.\implode('</th><th scope="col">', $headers).'</th>'
+            .'</tr>'."\n";
+    }
+
+    /**
+     * Returns table row
+     *
+     * @param mixed $row    should be array or abstraction
+     * @param array $keys   column keys
+     * @param array $rowKey row key
+     *
+     * @return string
+     */
+    protected function buildTableRow($row, $keys, $rowKey)
     {
         $str = '';
         $values = $this->debug->table->keyValues($row, $keys, $objInfo);
@@ -257,13 +269,12 @@ class Html extends Base
         $classAndInner['class'] = \trim('t_key '.$classAndInner['class']);
         $str .= '<tr>';
         $str .= '<th class="'.$classAndInner['class'].'" scope="row">'.$classAndInner['innerhtml'].'</th>';
-        if ($objInfo) {
-            $rowIsObject = true;
-            $str .= $this->markupClassname($objInfo['className'], 'td', array(
-                'title' => $objInfo['phpDoc']['summary'] ?: null,
+        if ($objInfo['row']) {
+            $str .= $this->markupClassname($objInfo['row']['className'], 'td', array(
+                'title' => $objInfo['row']['phpDoc']['summary'] ?: null,
             ));
+            $this->tableInfo['haveObjRow'] = true;
         } else {
-            $rowIsObject = false;
             $str .= '<td class="t_classname"></td>';
         }
         foreach ($values as $v) {
@@ -271,6 +282,18 @@ class Html extends Base
         }
         $str .= '</tr>'."\n";
         $str = \str_replace(' title=""', '', $str);
+        foreach ($objInfo['cols'] as $k2 => $classname) {
+            if ($this->tableInfo['colClasses'][$k2] === false) {
+                // column values not of the same type
+                continue;
+            }
+            if ($this->tableInfo['colClasses'][$k2] === null) {
+                $this->tableInfo['colClasses'][$k2] = $classname;
+            }
+            if ($this->tableInfo['colClasses'][$k2] !== $classname) {
+                $this->tableInfo['colClasses'][$k2] = false;
+            }
+        }
         return $str;
     }
 
@@ -810,7 +833,8 @@ class Html extends Base
             $classname = $str;
             $opMethod = '';
         }
-        if ($idx = \strrpos($classname, '\\')) {
+        $idx = \strrpos($classname, '\\');
+        if ($idx) {
             $classname = '<span class="namespace">'.\substr($classname, 0, $idx + 1).'</span>'
                 . \substr($classname, $idx + 1);
         }

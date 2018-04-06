@@ -241,31 +241,31 @@ EOD;
                 array('caption' => 'array -o- objects'),
                 '<table class="m_table table-bordered sortable">
                 <caption>array -o- objects</caption>
-                <thead><tr><th>&nbsp;</th><th>&nbsp;</th><th>Naughty</th><th scope="col">age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">sex</th></tr>
+                <thead><tr><th>&nbsp;</th><th>&nbsp;</th><th>age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
                 </thead>
                 <tbody>
-                <tr><th class="t_key t_int" scope="row">4</th><td class="t_classname">stdClass</td><td class="t_bool false">false</td><td class="t_string numeric">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="t_string">M</td></tr>
-                <tr><th class="t_key t_int" scope="row">2</th><td class="t_classname">stdClass</td><td class="t_bool true">true</td><td class="t_string numeric">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_string">F</td></tr>
+                <tr><th class="t_key t_int" scope="row">4</th><td class="t_classname">stdClass</td><td class="t_string numeric">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="t_bool false">false</td><td class="t_string">M</td></tr>
+                <tr><th class="t_key t_int" scope="row">2</th><td class="t_classname">stdClass</td><td class="t_string numeric">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool true">true</td><td class="t_string">F</td></tr>
                 </tbody>
                 </table>',
                 'array -o- objects = array(
                     [4] => array(
                         [___class_name] => "stdClass"
-                        [Naughty] => false
                         [age] => "12"
                         [name] => "Bob"
+                        [Naughty] => false
                         [sex] => "M"
-                    )
+                        )
                     [2] => array(
                         [___class_name] => "stdClass"
-                        [Naughty] => true
                         [age] => "10"
                         [extracol] => "yes"
                         [name] => "Sally"
+                        [Naughty] => true
                         [sex] => "F"
                     )
                 )',
-                'console.table({"4":{"___class_name":"stdClass","Naughty":false,"age":"12","name":"Bob","sex":"M"},"2":{"___class_name":"stdClass","Naughty":true,"age":"10","extracol":"yes","name":"Sally","sex":"F"}});',
+                'console.table({"4":{"___class_name":"stdClass","age":"12","name":"Bob","Naughty":false,"sex":"M"},"2":{"___class_name":"stdClass","age":"10","extracol":"yes","name":"Sally","Naughty":true,"sex":"F"}});',
             ),
             // @todo resource & callable
         );

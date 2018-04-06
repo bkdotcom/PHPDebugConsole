@@ -171,6 +171,7 @@ class Abstracter
             $type = 'object';
             $typeMore = 'raw';  // needs abstracted
         } elseif (\is_resource($val) || \strpos(\print_r($val, true), 'Resource') === 0) {
+            // is_resource() returns false for a closed resource
             $type = 'resource';
             $typeMore = 'raw';  // needs abstracted
         }

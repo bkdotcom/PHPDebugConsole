@@ -85,8 +85,8 @@ class Firephp extends Base
                     ? null
                     : $val;
             }, $values);
-            $classNames[] = $objInfo
-                ? $objInfo['className']
+            $classNames[] = $objInfo['row']
+                ? $objInfo['row']['className']
                 : '';
             \array_unshift($values, $k);
             $table[] = \array_values($values);

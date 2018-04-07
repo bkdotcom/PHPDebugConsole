@@ -240,34 +240,19 @@ class Internal implements SubscriberInterface
      */
     public function onBootstrap()
     {
-        if ($this->debug->getCfg('logEnvInfo')) {
-            $collectWas = $this->debug->setCfg('collect', true);
-            $this->debug->group('environment');
-            $this->debug->groupUncollapse();
-            foreach ($this->debug->getCfg('logServerKeys') as $k) {
-                if ($k == 'REQUEST_TIME') {
-                    $this->debug->info($k, \date('Y-m-d H:i:s', $_SERVER['REQUEST_TIME']));
-                } elseif (isset($_SERVER[$k])) {
-                    $this->debug->info($k, $_SERVER[$k]);
-                } else {
-                    $this->debug->info($k, null);
-                }
-            }
-            $this->debug->info('PHP Version', PHP_VERSION);
-            $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
-            $this->debug->info('session.cache_limiter', \ini_get('session.cache_limiter'));
-            if (!empty($_COOKIE)) {
-                $this->debug->info('$_COOKIE', $_COOKIE);
-            }
-            if (!empty($_POST)) {
-                $this->debug->info('$_POST', $_POST);
-            }
-            if (!empty($_FILES)) {
-                $this->debug->info('$_FILES', $_FILES);
-            }
-            $this->debug->groupEnd();
-            $this->debug->setCfg('collect', $collectWas);
+        if (!$this->debug->getCfg('logEnvInfo')) {
+            return;
         }
+        $collectWas = $this->debug->setCfg('collect', true);
+        $this->debug->group('environment');
+        $this->debug->groupUncollapse();
+        $this->logServerKeys();
+        $this->debug->info('PHP Version', PHP_VERSION);
+        $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
+        $this->debug->info('session.cache_limiter', \ini_get('session.cache_limiter'));
+        $this->logRequest();
+        $this->debug->groupEnd();
+        $this->debug->setCfg('collect', $collectWas);
     }
 
     /**
@@ -376,6 +361,58 @@ class Internal implements SubscriberInterface
             $errorStr .= '  Line '.$error['line'].': ('.$typeStr.') '.$error['message']."\n";
         }
         return $errorStr;
+    }
+
+    /**
+     * Log Cookie, Post, & Files data
+     *
+     * @return void
+     */
+    private function logRequest()
+    {
+        if (!empty($_COOKIE)) {
+            $this->debug->info('$_COOKIE', $_COOKIE);
+        }
+        $isPost = isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST';
+        if ($isPost) {
+            if ($_POST) {
+                $this->debug->info('$_POST', $_POST);
+            } else {
+                $input = \file_get_contents('php://input');
+                if ($input) {
+                    $this->debug->info('php://input', $input);
+                } else {
+                    $this->debug->warn('POST, but no data');
+                }
+            }
+            if (!empty($_FILES)) {
+                $this->debug->info('$_FILES', $_FILES);
+            }
+        }
+    }
+
+    /**
+     * Log $_SERVER values specified by `logServerKeys` config option
+     *
+     * @return void
+     */
+    private function logServerKeys()
+    {
+        $isPost = isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST';
+        $logServerKeys = $this->debug->getCfg('logServerKeys');
+        if ($isPost) {
+            $logServerKeys = \array_merge($logServerKeys, array('REQUEST_METHOD','CONTENT_TYPE'));
+        }
+        $logServerKeys = \array_unique($logServerKeys);
+        foreach ($logServerKeys as $k) {
+            if ($k == 'REQUEST_TIME') {
+                $this->debug->info($k, \date('Y-m-d H:i:s T', $_SERVER['REQUEST_TIME']));
+            } elseif (isset($_SERVER[$k])) {
+                $this->debug->info($k, $_SERVER[$k]);
+            } else {
+                $this->debug->info($k, $this->debug->abstracter->UNDEFINED);
+            }
+        }
     }
 
     /**

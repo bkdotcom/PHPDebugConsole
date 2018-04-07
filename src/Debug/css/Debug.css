@@ -314,7 +314,9 @@
 .debug .t_string:after { content:close-quote; opacity:0.33; }
 .debug .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
 .debug .t_type { color:#693; }
-.debug .t_undefined { background-color: rgba(0, 0, 0, 0.1); }
+.debug .t_undefined:after { content:"undefined"; opacity:0.3; }
+.debug table .t_undefined { background-color: rgba(0, 0, 0, 0.1); }
+.debug table .t_undefined:after { content:none; }
 
 .debug .binary {
 	margin: 0 .1em;

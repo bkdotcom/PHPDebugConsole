@@ -39,32 +39,6 @@ class Text extends Base
         $event['return'] .= $str;
     }
 
-    /**
-     * Convert all arguments to text and join them together.
-     *
-     * @param array $args arguments
-     *
-     * @return string
-     */
-    protected function buildArgString($args)
-    {
-        $numArgs = \count($args);
-        if ($numArgs == 1 && \is_string($args[0])) {
-            $args[0] = \strip_tags($args[0]);
-        }
-        foreach ($args as $k => $v) {
-            if ($k > 0 || !\is_string($v)) {
-                $args[$k] = $this->dump($v);
-            }
-        }
-        $glue = ', ';
-        if ($numArgs == 2) {
-            $glue = \preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                ? ''
-                : ' = ';
-        }
-        return \implode($glue, $args);
-    }
 
     /**
      * Return log entry as text
@@ -75,7 +49,7 @@ class Text extends Base
      *
      * @return string
      */
-    protected function doProcessLogEntry($method, $args = array(), $meta = array())
+    public function processLogEntry($method, $args = array(), $meta = array())
     {
         $prefixes = array(
             'error' => '⦻ ',
@@ -118,6 +92,33 @@ class Text extends Base
         $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str);
         $str .= "\n";
         return \rtrim($str);
+    }
+
+    /**
+     * Convert all arguments to text and join them together.
+     *
+     * @param array $args arguments
+     *
+     * @return string
+     */
+    protected function buildArgString($args)
+    {
+        $numArgs = \count($args);
+        if ($numArgs == 1 && \is_string($args[0])) {
+            $args[0] = \strip_tags($args[0]);
+        }
+        foreach ($args as $k => $v) {
+            if ($k > 0 || !\is_string($v)) {
+                $args[$k] = $this->dump($v);
+            }
+        }
+        $glue = ', ';
+        if ($numArgs == 2) {
+            $glue = \preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
+                ? ''
+                : ' = ';
+        }
+        return \implode($glue, $args);
     }
 
     /**

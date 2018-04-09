@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\Table;
 use bdk\PubSub\Event;
 
 /**
@@ -54,7 +55,7 @@ class Html extends Base
         $keys = $columns ?: $this->debug->table->colKeys($rows);
         $this->tableInfo = array(
             'haveObjRow' => false,
-            'colClasses' => array_fill_keys($keys, null),
+            'colClasses' => \array_fill_keys($keys, null),
         );
         $tBody = '';
         foreach ($rows as $k => $row) {
@@ -160,6 +161,53 @@ class Html extends Base
     }
 
     /**
+     * Return a log entry as HTML
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return string|void
+     */
+    public function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $str = '';
+        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+            $str = $this->buildGroupMethod($method, $args, $meta);
+        } elseif ($method == 'table') {
+            $str = $this->buildTable($args[0], $meta['caption'], $meta['columns'], 'm_table table-bordered sortable');
+        } elseif ($method == 'trace') {
+            $str = $this->buildTable($args[0], 'trace', array('file','line','function'), 'm_trace table-bordered');
+        } else {
+            $attribs = array(
+                'class' => 'm_'.$method,
+            );
+            if (\in_array($method, array('error','info','log','warn'))) {
+                if (\in_array($method, array('error','warn'))) {
+                    if (isset($meta['file'])) {
+                        $attribs['title'] = $meta['file'].': line '.$meta['line'];
+                    }
+                    if (isset($meta['errorCat'])) {
+                        $attribs['class'] .= ' error-'.$meta['errorCat'];
+                    }
+                }
+                if (\count($args) > 1 && \is_string($args[0])) {
+                    $hasSubs = false;
+                    $args = $this->processSubstitutions($args, $hasSubs);
+                    if ($hasSubs) {
+                        $args = array( \implode('', $args) );
+                    }
+                }
+            }
+            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
+                .$this->buildArgString($args)
+                .'</div>';
+        }
+        $str .= "\n";
+        return $str;
+    }
+
+    /**
      * Convert all arguments to html and join them together.
      *
      * @param array $args arguments
@@ -239,7 +287,7 @@ class Html extends Base
     {
         $headers = array();
         foreach ($keys as $key) {
-            $headers[$key] = $key === ''
+            $headers[$key] = $key === Table::SCALAR
                 ? 'value'
                 : \htmlspecialchars($key);
             if ($this->tableInfo['colClasses'][$key]) {
@@ -294,53 +342,6 @@ class Html extends Base
                 $this->tableInfo['colClasses'][$k2] = false;
             }
         }
-        return $str;
-    }
-
-    /**
-     * Return a log entry as HTML
-     *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
-     *
-     * @return string|void
-     */
-    protected function doProcessLogEntry($method, $args = array(), $meta = array())
-    {
-        $str = '';
-        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $str = $this->buildGroupMethod($method, $args, $meta);
-        } elseif ($method == 'table') {
-            $str = $this->buildTable($args[0], $meta['caption'], $meta['columns'], 'm_table table-bordered sortable');
-        } elseif ($method == 'trace') {
-            $str = $this->buildTable($args[0], 'trace', array('file','line','function'), 'm_trace table-bordered');
-        } else {
-            $attribs = array(
-                'class' => 'm_'.$method,
-            );
-            if (\in_array($method, array('error','info','log','warn'))) {
-                if (\in_array($method, array('error','warn'))) {
-                    if (isset($meta['file'])) {
-                        $attribs['title'] = $meta['file'].': line '.$meta['line'];
-                    }
-                    if (isset($meta['errorCat'])) {
-                        $attribs['class'] .= ' error-'.$meta['errorCat'];
-                    }
-                }
-                if (\count($args) > 1 && \is_string($args[0])) {
-                    $hasSubs = false;
-                    $args = $this->processSubstitutions($args, $hasSubs);
-                    if ($hasSubs) {
-                        $args = array( \implode('', $args) );
-                    }
-                }
-            }
-            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
-                .$this->buildArgString($args)
-                .'</div>';
-        }
-        $str .= "\n";
         return $str;
     }
 

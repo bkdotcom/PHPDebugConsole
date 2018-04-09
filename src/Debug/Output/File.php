@@ -72,7 +72,7 @@ class File extends Text
             return;
         }
         if ($args) {
-            $str = $this->processLogEntry($method, $args, $meta);
+            $str = $this->processLogEntryWEvent($method, $args, $meta);
             \fwrite($this->fileHandle, $str);
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
             $this->depth --;

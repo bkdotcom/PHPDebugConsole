@@ -43,7 +43,7 @@ class Script extends Base
         }
         $str = '';
         $str .= '<script type="text/javascript">'."\n";
-        $str .= $this->processLogEntry('groupCollapsed', array(
+        $str .= $this->processLogEntryWEvent('groupCollapsed', array(
             'PHP',
             $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI'],
             $errorStr,
@@ -51,7 +51,7 @@ class Script extends Base
         $str .= $this->processAlerts();
         $str .= $this->processSummary();
         $str .= $this->processLog();
-        $str .= $this->processLogEntry('groupEnd');
+        $str .= $this->processLogEntryWEvent('groupEnd');
         $str .= '</script>'."\n";
         $this->data = array();
         $event['return'] .= $str;
@@ -66,7 +66,7 @@ class Script extends Base
      *
      * @return string
      */
-    protected function doProcessLogEntry($method, $args = array(), $meta = array())
+    public function processLogEntry($method, $args = array(), $meta = array())
     {
         if ($method == 'assert') {
             \array_unshift($args, false);
@@ -145,7 +145,7 @@ class Script extends Base
                         .'color: #8a6d3b;';
                     break;
             }
-            $str .= $this->processLogEntry($method, $args);
+            $str .= $this->processLogEntryWEvent($method, $args);
         }
         return $str;
     }

@@ -87,7 +87,7 @@ class Wamp implements SubscriberInterface
         if ($event['inConsole'] || !$event['isFirstOccur']) {
             return;
         }
-        $this->publish(
+        $this->processLogEntry(
             'errorNotConsoled',
             array(
                 $event['typeStr'].': '.$event['file'].' (line '.$event['line'].'): '.$event['message']
@@ -109,7 +109,7 @@ class Wamp implements SubscriberInterface
      */
     public function onLog(Event $event)
     {
-        $this->processLogEntry($event['method'], $event['args'], $event['meta']);
+        $this->processLogEntryWEvent($event['method'], $event['args'], $event['meta']);
     }
 
     /**
@@ -120,9 +120,31 @@ class Wamp implements SubscriberInterface
     public function onShutdown()
     {
         // publish a "we're done" message
-        $this->publish('endOutput', array(
+        $this->processLogEntry('endOutput', array(
             'responseCode' => \http_response_code(),
         ));
+    }
+
+    /**
+     * Publish WAMP message to topic
+     *
+     * @param string $method debug method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return void
+     */
+    public function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $args = $this->crateValues($args);
+        $meta = \array_merge(array(
+            'format' => 'raw',
+            'requestId' => $this->requestId,
+        ), $meta);
+        if (!empty($meta['backtrace'])) {
+            $meta['backtrace'] = $this->crateValues($meta['backtrace']);
+        }
+        $this->wamp->publish($this->topic, array($method, $args, $meta));
     }
 
     /**
@@ -172,7 +194,7 @@ class Wamp implements SubscriberInterface
     {
         $data = $this->debug->getData();
         foreach ($data['log'] as $entry) {
-            $this->processLogEntry($entry[0], $entry[1], $entry[2]);
+            $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
     }
 
@@ -185,7 +207,7 @@ class Wamp implements SubscriberInterface
      *
      * @return void
      */
-    protected function processLogEntry($method, $args = array(), $meta = array())
+    protected function processLogEntryWEvent($method, $args = array(), $meta = array())
     {
         $event = $this->debug->eventManager->publish(
             'debug.outputLogEntry',
@@ -197,30 +219,8 @@ class Wamp implements SubscriberInterface
             )
         );
         if (!$event->isPropagationStopped()) {
-            $this->publish($event['method'], $event['args'], $event['meta']);
+            $this->processLogEntry($event['method'], $event['args'], $event['meta']);
         }
-    }
-
-    /**
-     * Publish WAMP message to topic
-     *
-     * @param string $method debug method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
-     *
-     * @return void
-     */
-    private function publish($method, $args = array(), $meta = array())
-    {
-        $args = $this->crateValues($args);
-        $meta = \array_merge(array(
-            'format' => 'raw',
-            'requestId' => $this->requestId,
-        ), $meta);
-        if (!empty($meta['backtrace'])) {
-            $meta['backtrace'] = $this->crateValues($meta['backtrace']);
-        }
-        $this->wamp->publish($this->topic, array($method, $args, $meta));
     }
 
     /**
@@ -252,6 +252,6 @@ class Wamp implements SubscriberInterface
         if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
             $metaVals['REQUEST_URI'] = '$: '. \implode(' ', $_SERVER['argv']);
         }
-        $this->publish('meta', $metaVals);
+        $this->processLogEntry('meta', $metaVals);
     }
 }

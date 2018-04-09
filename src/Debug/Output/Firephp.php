@@ -53,51 +53,14 @@ class Firephp extends Base
         $this->setHeader('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $this->setHeader('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
         $this->setHeader('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
-        $this->processLogEntry('groupCollapsed', array('PHP: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']));
+        $this->processLogEntryWEvent('groupCollapsed', array('PHP: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']));
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $this->processLogEntry('groupEnd');
+        $this->processLogEntryWEvent('groupEnd');
         $this->setHeader('X-Wf-1-Index', $this->messageIndex);
         $this->data = array();
         return;
-    }
-
-    /**
-     * Build table rows
-     *
-     * @param array $array   array to debug
-     * @param array $columns columns to display
-     *
-     * @return array
-     */
-    protected function methodTable($array, $columns = array())
-    {
-        $keys = $columns ?: $this->debug->table->colKeys($array);
-        $table = array();
-        $table[] = $keys;
-        \array_unshift($table[0], '');
-        $classNames = array();
-        foreach ($array as $k => $row) {
-            $values = $this->debug->table->keyValues($row, $keys, $objInfo);
-            $values = \array_map(function ($val) {
-                return $val === $this->debug->abstracter->UNDEFINED
-                    ? null
-                    : $val;
-            }, $values);
-            $classNames[] = $objInfo['row']
-                ? $objInfo['row']['className']
-                : '';
-            \array_unshift($values, $k);
-            $table[] = \array_values($values);
-        }
-        if (\array_filter($classNames)) {
-            \array_unshift($table[0], '');
-            foreach ($classNames as $i => $className) {
-                \array_splice($table[$i+1], 1, 0, $className);
-            }
-        }
-        return $table;
     }
 
     /**
@@ -109,7 +72,7 @@ class Firephp extends Base
      *
      * @return void
      */
-    protected function doProcessLogEntry($method, $args = array(), $meta = array())
+    public function processLogEntry($method, $args = array(), $meta = array())
     {
         $firePhpMeta = array(
             'Type' => isset($this->firephpMethods[$method])
@@ -161,6 +124,43 @@ class Firephp extends Base
             );
         }
         return;
+    }
+
+    /**
+     * Build table rows
+     *
+     * @param array $array   array to debug
+     * @param array $columns columns to display
+     *
+     * @return array
+     */
+    protected function methodTable($array, $columns = array())
+    {
+        $keys = $columns ?: $this->debug->table->colKeys($array);
+        $table = array();
+        $table[] = $keys;
+        \array_unshift($table[0], '');
+        $classNames = array();
+        foreach ($array as $k => $row) {
+            $values = $this->debug->table->keyValues($row, $keys, $objInfo);
+            $values = \array_map(function ($val) {
+                return $val === $this->debug->abstracter->UNDEFINED
+                    ? null
+                    : $val;
+            }, $values);
+            $classNames[] = $objInfo['row']
+                ? $objInfo['row']['className']
+                : '';
+            \array_unshift($values, $k);
+            $table[] = \array_values($values);
+        }
+        if (\array_filter($classNames)) {
+            \array_unshift($table[0], '');
+            foreach ($classNames as $i => $className) {
+                \array_splice($table[$i+1], 1, 0, $className);
+            }
+        }
+        return $table;
     }
 
     /**

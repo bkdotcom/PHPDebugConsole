@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\Table;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -82,6 +83,17 @@ abstract class Base implements SubscriberInterface
     abstract public function onOutput(Event $event);
 
     /**
+     * Process log entry without publishing `debug.outputLogEntry` event
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return mixed
+     */
+    abstract public function processLogEntry($method, $args = array(), $meta = array());
+
+    /**
      * Is value a timestamp?
      *
      * @param mixed $val value to check
@@ -97,17 +109,6 @@ abstract class Base implements SubscriberInterface
         }
         return false;
     }
-
-    /**
-     * Called by processLogEntry
-     *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
-     *
-     * @return mixed
-     */
-    abstract protected function doProcessLogEntry($method, $args = array(), $meta = array());
 
     /**
      * Dump array
@@ -277,7 +278,7 @@ abstract class Base implements SubscriberInterface
     /**
      * Build table rows
      *
-     * This builds table rows usable by ChromeLogger and <script>
+     * This builds table rows usable by ChromeLogger, Text, and <script>
      *
      * @param array $array   array to debug
      * @param array $columns columns to output
@@ -299,6 +300,9 @@ abstract class Base implements SubscriberInterface
                 } else {
                     $values[$k2] = $val;
                 }
+            }
+            if (\count($values) == 1 && $k2 == Table::SCALAR) {
+                $values = $val;
             }
             $classnames[$k] = $objInfo['row']
                 ? $objInfo['row']['className']
@@ -338,7 +342,7 @@ abstract class Base implements SubscriberInterface
             if (isset($classToMethod[$method])) {
                 $method = $classToMethod[$method];
             }
-            $str .= $this->processLogEntry($method, array($msg));
+            $str .= $this->processLogEntryWEvent($method, array($msg));
         }
         return \trim($str);
     }
@@ -352,13 +356,13 @@ abstract class Base implements SubscriberInterface
     {
         $str = '';
         foreach ($this->data['log'] as $entry) {
-            $str .= $this->processLogEntry($entry[0], $entry[1], $entry[2]);
+            $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
         return $str;
     }
 
     /**
-     * Return a log entry
+     * Publish debug.outputLogEntry.  If still propagating, return result of processLogEntry()
      *
      * @param string $method method
      * @param array  $args   args
@@ -366,7 +370,7 @@ abstract class Base implements SubscriberInterface
      *
      * @return mixed
      */
-    protected function processLogEntry($method, $args = array(), $meta = array())
+    protected function processLogEntryWEvent($method, $args = array(), $meta = array())
     {
         $event = $this->debug->eventManager->publish(
             'debug.outputLogEntry',
@@ -378,7 +382,7 @@ abstract class Base implements SubscriberInterface
             )
         );
         if (!$event->isPropagationStopped()) {
-            return $this->doProcessLogEntry($event['method'], $event['args'], $event['meta']);
+            return $this->processLogEntry($event['method'], $event['args'], $event['meta']);
         }
     }
 
@@ -472,7 +476,7 @@ abstract class Base implements SubscriberInterface
         \krsort($summaryData);
         $summaryData = \call_user_func_array('array_merge', $summaryData);
         foreach ($summaryData as $entry) {
-            $str .= $this->processLogEntry($entry[0], $entry[1], $entry[2]);
+            $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
         return \trim($str);
     }

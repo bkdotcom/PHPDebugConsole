@@ -75,6 +75,35 @@ class ChromeLogger extends Base
     }
 
     /**
+     * Process log entry
+     *
+     * Transmogrify log entry to chromelogger format
+     *
+     * @param string $method method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return void
+     */
+    public function processLogEntry($method, $args = array(), $meta = array())
+    {
+        if ($method === 'table') {
+            $args = array($this->methodTable($args[0], $meta['columns']));
+        } elseif ($method === 'trace') {
+            $method = 'table';
+            $args = array($this->methodTable($args[0], array('function','file','line')));
+        }
+        foreach ($args as $i => $arg) {
+            $args[$i] = $this->dump($arg);
+        }
+        $this->json['rows'][] = array(
+            $args,
+            isset($meta['file']) ? $meta['file'].': '.$meta['line'] : null,
+            $method === 'log' ? '' : $method,
+        );
+    }
+
+    /**
      * process alerts
      *
      * @return string
@@ -124,35 +153,6 @@ class ChromeLogger extends Base
             ));
         }
         return $str;
-    }
-
-    /**
-     * Process log entry
-     *
-     * Transmogrify log entry to chromelogger format
-     *
-     * @param string $method method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
-     *
-     * @return void
-     */
-    protected function doProcessLogEntry($method, $args = array(), $meta = array())
-    {
-        if ($method === 'table') {
-            $args = array($this->methodTable($args[0], $meta['columns']));
-        } elseif ($method === 'trace') {
-            $method = 'table';
-            $args = array($this->methodTable($args[0], array('function','file','line')));
-        }
-        foreach ($args as $i => $arg) {
-            $args[$i] = $this->dump($arg);
-        }
-        $this->json['rows'][] = array(
-            $args,
-            isset($meta['file']) ? $meta['file'].': '.$meta['line'] : null,
-            $method === 'log' ? '' : $method,
-        );
     }
 
     /**

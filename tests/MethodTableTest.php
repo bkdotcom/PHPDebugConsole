@@ -13,14 +13,16 @@ class MethodTableTest extends DebugTestFramework
     public function setUp()
     {
         parent::setUp();
+        /*
         if (!$this->refMethods) {
             foreach (array('html','text','script') as $outputAs) {
                 $obj = $this->debug->output->{$outputAs};
-                $reflectionMethod = new \reflectionMethod(get_class($obj), 'doProcessLogEntry');
+                $reflectionMethod = new \reflectionMethod(get_class($obj), 'processLogEntry');
                 $reflectionMethod->setAccessible(true);
                 $this->refMethods[$outputAs] = $reflectionMethod;
             }
         }
+        */
     }
 
     /**
@@ -116,6 +118,16 @@ class MethodTableTest extends DebugTestFramework
             4 => array('name'=>'Bob', 'age'=>'12', 'sex'=>'M', 'Naughty'=>false),
             2 => array('Naughty'=>true, 'name'=>'Sally', 'extracol' => 'yes', 'sex'=>'F', 'age'=>'10'),
         );
+        $rowsB = array(
+            array(
+                'date' => new DateTime('1955-11-05'),
+                'date2' => 'not a datetime',
+            ),
+            array(
+                'date' => new DateTime('1985-10-26'),
+                'date2' => new DateTime('2015-10-21'),
+            )
+        );
         $rowsAHtml = <<<'EOD'
 <table class="m_table table-bordered sortable">
 <caption>table caption</caption>
@@ -168,29 +180,48 @@ EOD;
                 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
             ),
             array(
-                array('a','b','c'),
-                array(),
+                array(
+                    'a',
+                    new DateTime('2233-03-22'),
+                    fopen(__FILE__, 'r'),
+                    array($this, __FUNCTION__),
+                    function ($foo) {
+                    },
+                ),
+                array('caption' => 'flat'),
                 '<table class="m_table table-bordered sortable">
+                <caption>flat</caption>
                 <thead><tr><th>&nbsp;</th><th>value</th></tr>
                 </thead>
                 <tbody>
                 <tr><th class="t_key t_int" scope="row">0</th><td class="t_string">a</td></tr>
-                <tr><th class="t_key t_int" scope="row">1</th><td class="t_string">b</td></tr>
-                <tr><th class="t_key t_int" scope="row">2</th><td class="t_string">c</td></tr>
+                <tr><th class="t_key t_int" scope="row">1</th><td class="t_string">2233-03-22T00:00:00-0600</td></tr>
+                <tr><th class="t_key t_int" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
+                <tr><th class="t_key t_int" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="t_classname">MethodTableTest</span><span class="t_operator">::</span><span class="method-name">dumpProvider</span></td></tr>
+                <tr><th class="t_key t_int" scope="row">4</th><td class="t_object" data-accessible="public"><span class="t_classname">Closure</span>
+                <dl class="object-inner">
+                <dt class="properties">no properties</dt>
+                <dt class="methods">methods</dt>
+                <dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
+                <dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="method-name">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$closure</span></span>, <span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
+                <dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
+                <dd class="method private"><span class="t_modifier_private">private</span> <span class="method-name">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
+                </dl>
+                </td></tr>
                 </tbody>
                 </table>',
-                'array(
-                    [0] => array(
-                        [] => "a"
-                    )
-                    [1] => array(
-                        [] => "b"
-                    )
-                    [2] => array(
-                        [] => "c"
-                    )
+                'flat = array(
+                    [0] => "a"
+                    [1] => "2233-03-22T00:00:00-0600"
+                    [2] => Resource id #%d: stream
+                    [3] => callable: MethodTableTest::dumpProvider
+                    [4] => (object) Closure
+                        Properties: none!
+                        Methods:
+                            public: 3
+                            private: 1
                 )',
-                'console.table([{"":"a"},{"":"b"},{"":"c"}]);',
+                'console.table(["a","2233-03-22T00:00:00-0600","Resource id #%d: stream","callable: MethodTableTest::dumpProvider",{"___class_name":"Closure"}]);',
             ),
             array(
                 new \bdk\DebugTest\TestTraversable($rowsA),
@@ -267,7 +298,30 @@ EOD;
                 )',
                 'console.table({"4":{"___class_name":"stdClass","age":"12","name":"Bob","Naughty":false,"sex":"M"},"2":{"___class_name":"stdClass","age":"10","extracol":"yes","name":"Sally","Naughty":true,"sex":"F"}});',
             ),
-            // @todo resource & callable
+            array(
+                $rowsB,
+                array('caption' => 'not all col values of same type'),
+                '<table class="m_table table-bordered sortable">
+                <caption>not all col values of same type</caption>
+                <thead><tr><th>&nbsp;</th><th>date <span class="t_classname">DateTime</span></th><th scope="col">date2</th></tr>
+                </thead>
+                <tbody>
+                <tr><th class="t_key t_int" scope="row">0</th><td class="t_string">1955-11-05T00:00:00-0600</td><td class="t_string">not a datetime</td></tr>
+                <tr><th class="t_key t_int" scope="row">1</th><td class="t_string">1985-10-26T00:00:00-0500</td><td class="t_string">2015-10-21T00:00:00-0500</td></tr>
+                </tbody>
+                </table>',
+                'not all col values of same type = array(
+                    [0] => array(
+                        [date] => "1955-11-05T00:00:00-0600"
+                        [date2] => "not a datetime"
+                    )
+                    [1] => array(
+                        [date] => "1985-10-26T00:00:00-0500"
+                        [date2] => "2015-10-21T00:00:00-0500"
+                    )
+                )',
+                'console.table([{"date":"1955-11-05T00:00:00-0600","date2":"not a datetime"},{"date":"1985-10-26T00:00:00-0500","date2":"2015-10-21T00:00:00-0500"}]);',
+            ),
         );
     }
 
@@ -287,18 +341,19 @@ EOD;
         );
         $this->debug->table($val, $this->debug->meta($meta));
         $logEntry = $this->debug->getData('log/0');
-        foreach ($dumps as $outputAs => $dumpExpect) {
-            $obj = $this->debug->output->{$outputAs};
-            $output = $this->refMethods[$outputAs]->invoke($obj, $logEntry[0], $logEntry[1], $logEntry[2]);
+        foreach ($dumps as $outputAs => $outputExpect) {
+            // $obj = $this->debug->output->{$outputAs};
+            // $output = $this->refMethods[$outputAs]->invoke($obj, $logEntry[0], $logEntry[1], $logEntry[2]);
+            $output = $this->debug->output->{$outputAs}->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
             $output = trim($output);
-            if (is_callable($dumpExpect)) {
-                $dumpExpect($output);
-            } elseif (is_array($dumpExpect) && isset($dumpExpect['contains'])) {
-                $this->assertContains($dumpExpect['contains'], $output, $outputAs.' doesn\'t contain');
+            if (is_callable($outputExpect)) {
+                $outputExpect($output);
+            } elseif (is_array($outputExpect) && isset($outputExpect['contains'])) {
+                $this->assertContains($outputExpect['contains'], $output, $outputAs.' doesn\'t contain');
             } else {
                 $output = preg_replace("#^\s+#m", '', $output);
-                $dumpExpect = preg_replace('#^\s+#m', '', $dumpExpect);
-                $this->assertSame($dumpExpect, $output, $outputAs.' not same');
+                $outputExpect = preg_replace('#^\s+#m', '', $outputExpect);
+                $this->assertStringMatchesFormat($outputExpect, $output, $outputAs.' not same');
             }
         }
     }

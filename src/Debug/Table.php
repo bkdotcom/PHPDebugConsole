@@ -17,6 +17,8 @@ namespace bdk\Debug;
 class Table
 {
 
+    const SCALAR = "\x00scalar\x00";
+
     /**
      * Go through all the "rows" of array to determine what the keys are and their order
      *
@@ -90,34 +92,42 @@ class Table
                 if (!\is_array($row)) {
                     // ie stringified value
                     $objInfo['row'] = false;
-                    $row = array('' => $row);
+                    $row = array(self::SCALAR => $row);
                 } elseif (Abstracter::isAbstraction($row)) {
                     // still an abstraction (ie closure)
                     $objInfo['row'] = false;
-                    $row = array('' => $row);
+                    $row = array(self::SCALAR => $row);
                 }
             } else {
                 // resource & callable
-                $row = array('' => $row);
+                $row = array(self::SCALAR => $row);
             }
         }
         if (!\is_array($row)) {
-            $row = array('' =>  $row);
+            $row = array(self::SCALAR =>  $row);
         }
         $values = array();
         foreach ($keys as $key) {
-            $value = \array_key_exists($key, $row)
-                ? $row[$key]
-                : Abstracter::UNDEFINED;
-            if (Abstracter::isAbstraction($value)) {
-                // just output the stringified / __toString value in a table
-                if (isset($value['stringified'])) {
-                    $objInfo['cols'][$key] = $value['className'];
-                    $value = $value['stringified'];
-                } elseif (isset($value['__toString']['returnValue'])) {
-                    $objInfo['cols'][$key] = $value['className'];
-                    $value = $value['__toString']['returnValue'];
+            if (\array_key_exists($key, $row)) {
+                $value = $row[$key];
+                if ($value !== null) {
+                    // by setting to false :
+                    //    indicate that the column is not populated by objs of the same type
+                    //    if stringified abstraction, we'll set cols[key] below
+                    $objInfo['cols'][$key] = false;
                 }
+                if (Abstracter::isAbstraction($value)) {
+                    // just output the stringified / __toString value in a table
+                    if (isset($value['stringified'])) {
+                        $objInfo['cols'][$key] = $value['className'];
+                        $value = $value['stringified'];
+                    } elseif (isset($value['__toString']['returnValue'])) {
+                        $objInfo['cols'][$key] = $value['className'];
+                        $value = $value['__toString']['returnValue'];
+                    }
+                }
+            } else {
+                $value = Abstracter::UNDEFINED;
             }
             $values[$key] = $value;
         }
@@ -160,7 +170,7 @@ class Table
         }
         return \is_array($val)
             ? \array_keys($val)
-            : array('');
+            : array(self::SCALAR);
     }
 
     /**

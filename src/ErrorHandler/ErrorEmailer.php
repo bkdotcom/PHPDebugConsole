@@ -319,11 +319,11 @@ class ErrorEmailer implements SubscriberInterface
             if (!\is_array($throttleData)) {
                 $throttleData = array();
             }
+            $this->throttleData = \array_merge(array(
+                'tsTrashCollection' => \time(),
+                'errors' => array(),
+            ), $throttleData);
         }
-        $this->throttleData = \array_merge(array(
-            'tsTrashCollection' => \time(),
-            'errors' => array(),
-        ), $throttleData);
         return;
     }
 

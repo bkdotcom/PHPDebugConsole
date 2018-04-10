@@ -183,7 +183,7 @@ class AbstractObject
     public function onEnd(Event $event)
     {
         $obj = $event->getSubject();
-        if ($obj instanceof \DateTimeInterface) {
+        if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
             $event['stringified'] = $obj->format(\DateTime::ISO8601);
         } elseif ($obj instanceof \DOMNodeList) {
             // for reasons unknown, DOMNodeList's properties are invisible to reflection

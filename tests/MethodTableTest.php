@@ -195,7 +195,7 @@ EOD;
                 </thead>
                 <tbody>
                 <tr><th class="t_key t_int" scope="row">0</th><td class="t_string">a</td></tr>
-                <tr><th class="t_key t_int" scope="row">1</th><td class="t_string">2233-03-22T00:00:00-0600</td></tr>
+                <tr><th class="t_key t_int" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i</td></tr>
                 <tr><th class="t_key t_int" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
                 <tr><th class="t_key t_int" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="t_classname">MethodTableTest</span><span class="t_operator">::</span><span class="method-name">dumpProvider</span></td></tr>
                 <tr><th class="t_key t_int" scope="row">4</th><td class="t_object" data-accessible="public"><span class="t_classname">Closure</span>
@@ -212,7 +212,7 @@ EOD;
                 </table>',
                 'flat = array(
                     [0] => "a"
-                    [1] => "2233-03-22T00:00:00-0600"
+                    [1] => "2233-03-22T00:00:00%i"
                     [2] => Resource id #%d: stream
                     [3] => callable: MethodTableTest::dumpProvider
                     [4] => (object) Closure
@@ -221,7 +221,7 @@ EOD;
                             public: 3
                             private: 1
                 )',
-                'console.table(["a","2233-03-22T00:00:00-0600","Resource id #%d: stream","callable: MethodTableTest::dumpProvider",{"___class_name":"Closure"}]);',
+                'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::dumpProvider",{"___class_name":"Closure"}]);',
             ),
             array(
                 new \bdk\DebugTest\TestTraversable($rowsA),
@@ -306,21 +306,21 @@ EOD;
                 <thead><tr><th>&nbsp;</th><th>date <span class="t_classname">DateTime</span></th><th scope="col">date2</th></tr>
                 </thead>
                 <tbody>
-                <tr><th class="t_key t_int" scope="row">0</th><td class="t_string">1955-11-05T00:00:00-0600</td><td class="t_string">not a datetime</td></tr>
-                <tr><th class="t_key t_int" scope="row">1</th><td class="t_string">1985-10-26T00:00:00-0500</td><td class="t_string">2015-10-21T00:00:00-0500</td></tr>
+                <tr><th class="t_key t_int" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i</td><td class="t_string">not a datetime</td></tr>
+                <tr><th class="t_key t_int" scope="row">1</th><td class="t_string">1985-10-26T00:00:00%i</td><td class="t_string">2015-10-21T00:00:00%i</td></tr>
                 </tbody>
                 </table>',
                 'not all col values of same type = array(
                     [0] => array(
-                        [date] => "1955-11-05T00:00:00-0600"
+                        [date] => "1955-11-05T00:00:00%i"
                         [date2] => "not a datetime"
                     )
                     [1] => array(
-                        [date] => "1985-10-26T00:00:00-0500"
-                        [date2] => "2015-10-21T00:00:00-0500"
+                        [date] => "1985-10-26T00:00:00%i"
+                        [date2] => "2015-10-21T00:00:00%i"
                     )
                 )',
-                'console.table([{"date":"1955-11-05T00:00:00-0600","date2":"not a datetime"},{"date":"1985-10-26T00:00:00-0500","date2":"2015-10-21T00:00:00-0500"}]);',
+                'console.table([{"date":"1955-11-05T00:00:00%i","date2":"not a datetime"},{"date":"1985-10-26T00:00:00%i","date2":"2015-10-21T00:00:00%i"}]);',
             ),
         );
     }

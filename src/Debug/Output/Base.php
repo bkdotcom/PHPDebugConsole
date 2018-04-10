@@ -25,6 +25,7 @@ abstract class Base implements SubscriberInterface
     protected $dumpType;
     protected $dumpTypeMore;
     protected $data = array();
+    protected $name = '';
 
     /**
      * Constructor
@@ -34,6 +35,15 @@ abstract class Base implements SubscriberInterface
     public function __construct($debug)
     {
         $this->debug = $debug;
+        if (!$this->name) {
+            $name = \get_called_class();
+            $idx = \strrpos($name, '\\');
+            if ($idx) {
+                $name = \substr($name, $idx + 1);
+                $name = \lcfirst($name);
+            }
+            $this->name = $name;
+        }
     }
 
     /**
@@ -379,6 +389,7 @@ abstract class Base implements SubscriberInterface
                 'method' => $method,
                 'args' => $args,
                 'meta' => $meta,
+                'outputAs' => $this->name,
             )
         );
         if (!$event->isPropagationStopped()) {

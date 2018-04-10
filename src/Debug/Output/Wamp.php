@@ -57,7 +57,7 @@ class Wamp implements SubscriberInterface
         $this->publishMeta();
         $this->processExistingData();
         return array(
-            'debug.log' => 'onLog',
+            'debug.log' => array('onLog', -1),
             'errorHandler.error' => 'onError',    // assumes errorhandler is using same dispatcher.. as should be
             'php.shutdown' => 'onShutdown',
         );
@@ -216,6 +216,7 @@ class Wamp implements SubscriberInterface
                 'method' => $method,
                 'args' => $args,
                 'meta' => $meta,
+                'outputAs' => 'wamp',
             )
         );
         if (!$event->isPropagationStopped()) {

@@ -63,9 +63,10 @@ class AbstractObject
         }
         $reflector = new \ReflectionObject($obj);
         $className = $reflector->getName();
+        $isTableTop = $method === 'table' && count($hist) < 2;  // rows (traversable) || row (traversable)
         $abs = new Event($obj, array(
             'className' => $className,
-            'collectMethods' => ($method !== 'table' && $this->abstracter->getCfg('collectMethods')) || $className == 'Closure',
+            'collectMethods' => !$isTableTop && $this->abstracter->getCfg('collectMethods') || $className == 'Closure',
             'constants' => array(),
             'debug' => $this->abstracter->ABSTRACTION,
             'debugMethod' => $method,
@@ -78,7 +79,7 @@ class AbstractObject
             'implements' => $reflector->getInterfaceNames(),
             'isExcluded' => $hist && \in_array($className, $this->abstracter->getCfg('objectsExclude')),
             'isRecursion' => \in_array($obj, $hist, true),
-            'methods' => array(),   // not populated for abstractionTable, but may get ['__toString']['returnValue']
+            'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
             'phpDoc' => array(
                 'summary' => null,
                 'description' => null,
@@ -132,9 +133,12 @@ class AbstractObject
     {
         $reflector = $abs['reflector'];
         $abs['phpDoc'] = $this->phpDoc->getParsed($reflector);
-        if ($abs['debugMethod'] === 'table') {
+        $traversed = false;
+        if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 2) {
+            // this is either rows (traversable), or a row (traversable)
             $obj = $abs->getSubject();
             if ($obj instanceof \Traversable && !$abs['traverseValues']) {
+                $traversed = true;
                 $abs['hist'][] = $obj;
                 foreach ($obj as $k => $v) {
                     $abs['traverseValues'][$k] = $this->abstracter->needsAbstraction($v)
@@ -142,14 +146,15 @@ class AbstractObject
                         : $v;
                 }
             }
-        } else {
+        }
+        if (!$traversed) {
             $this->addConstants($abs);
             while ($reflector = $reflector->getParentClass()) {
                 $abs['extends'][] = $reflector->getName();
             }
+            $this->addProperties($abs);
+            $this->addMethods($abs);
         }
-        $this->addProperties($abs);
-        $this->addMethods($abs);
     }
 
     /**

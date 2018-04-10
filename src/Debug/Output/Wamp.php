@@ -15,20 +15,20 @@
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
-use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Event;
 use bdk\WampPublisher;
 
 /**
  * PHPDebugConsole plugin for routing debug messages thru WAMP router
  */
-class Wamp implements SubscriberInterface
+class Wamp implements OutputInterface
 {
 
     protected $debug;
     protected $topic = 'bdk.debug';
     private $requestId;
     private $wamp;
+    public $name = 'wamp';
 
     /**
      * Constructor
@@ -41,6 +41,13 @@ class Wamp implements SubscriberInterface
         $this->debug = $debug;
         $this->wamp = $wamp;
         $this->requestId = $this->debug->getData('requestId');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function dump($val, $path = array())
+    {
     }
 
     /**
@@ -216,7 +223,6 @@ class Wamp implements SubscriberInterface
                 'method' => $method,
                 'args' => $args,
                 'meta' => $meta,
-                'outputAs' => 'wamp',
             )
         );
         if (!$event->isPropagationStopped()) {

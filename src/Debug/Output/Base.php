@@ -18,7 +18,7 @@ use bdk\PubSub\SubscriberInterface;
 /**
  * Base output plugin
  */
-abstract class Base implements SubscriberInterface
+abstract class Base implements OutputInterface
 {
 
     protected $debug;
@@ -47,12 +47,22 @@ abstract class Base implements SubscriberInterface
     }
 
     /**
-     * Dump value
+     * Magic getter
      *
-     * @param mixed $val  value to dump
-     * @param array $path {@internal}
+     * @param string $prop property to get
      *
-     * @return string
+     * @return mixed
+     */
+    public function __get($prop)
+    {
+        $getter = 'get'.ucfirst($prop);
+        if (method_exists($getter)) {
+            return $this->{$getter}();
+        }
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function dump($val, $path = array())
     {
@@ -93,15 +103,14 @@ abstract class Base implements SubscriberInterface
     abstract public function onOutput(Event $event);
 
     /**
-     * Process log entry without publishing `debug.outputLogEntry` event
+     * Get name property
      *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
-     *
-     * @return mixed
+     * @return string
      */
-    abstract public function processLogEntry($method, $args = array(), $meta = array());
+    protected function getName()
+    {
+        return $this->name;
+    }
 
     /**
      * Is value a timestamp?
@@ -389,7 +398,6 @@ abstract class Base implements SubscriberInterface
                 'method' => $method,
                 'args' => $args,
                 'meta' => $meta,
-                'outputAs' => $this->name,
             )
         );
         if (!$event->isPropagationStopped()) {

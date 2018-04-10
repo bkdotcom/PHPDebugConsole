@@ -11,8 +11,6 @@
 
 namespace bdk\Debug;
 
-use bdk\PubSub\SubscriberInterface;
-
 /**
  * General Output methods
  */
@@ -70,7 +68,7 @@ class Output
         $classname = __NAMESPACE__.'\\Output\\'.\ucfirst($prop);
         if (\class_exists($classname)) {
             $this->{$prop} = new $classname($this->debug);
-            // note: we don't add as plugin / subscriberInterface here
+            // note: we don't add as plugin / OutputInterface here
             return $this->{$prop};
         }
     }
@@ -164,7 +162,7 @@ class Output
                         $this->debug->addPlugin($this->{$prop});
                     }
                 }
-            } elseif ($outputAs instanceof SubscriberInterface) {
+            } elseif ($outputAs instanceof OutputInterface) {
                 $classname = \get_class($outputAs);
                 $prefix = __NAMESPACE__.'\\Output\\';
                 if (\strpos($classname, $prefix) == 0) {

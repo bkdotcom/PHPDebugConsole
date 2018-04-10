@@ -156,6 +156,12 @@ table caption = array(
     )
 )
 EOD;
+        $dateTimePubMethods = 3;
+        if (version_compare(PHP_VERSION, '7.1', '>=')) {
+            $dateTimePubMethods = 5;
+        } elseif (version_compare(PHP_VERSION, '7.0', '>=')) {
+            $dateTimePubMethods = 4;
+        }
         return array(
             // val, html, text, script
             array(
@@ -206,6 +212,7 @@ EOD;
                 <dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="method-name">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$closure</span></span>, <span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
                 <dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
                 '.(version_compare(PHP_VERSION, '7.0', '>=') ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">...$parameters</span></span><span class="t_punct">)</span></dd>'."\n" : '')
+                .(version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="method-name">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>'."\n" : '' )
                 .'<dd class="method private"><span class="t_modifier_private">private</span> <span class="method-name">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
                 </dl>
                 </td></tr>
@@ -219,7 +226,7 @@ EOD;
                     [4] => (object) Closure
                         Properties: none!
                         Methods:
-                            public: '.(version_compare(PHP_VERSION, '7.0', '>=') ? '4' : '3' ).'
+                            public: '.$dateTimePubMethods.'
                             private: 1
                 )',
                 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::dumpProvider",{"___class_name":"Closure"}]);',

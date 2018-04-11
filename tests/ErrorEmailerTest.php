@@ -21,7 +21,7 @@ class ErrorEmailerTest extends DebugTestFramework
     {
         parent::$allowError = true;
 
-        $this->debug->errorEmailer->clearThrottleData();
+        $this->debug->errorEmailer->throttleDataClear();
         $this->debug->setCfg(array(
             'emailTo' => 'test@email.com', // need an email address to email to!
             'collect' => false,     // individual emails only sent if not collecting

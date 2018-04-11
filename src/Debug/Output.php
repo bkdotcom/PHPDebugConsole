@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use bdk\Debug\Output\OutputInterface;
+
 /**
  * General Output methods
  */
@@ -59,7 +61,7 @@ class Output
     {
         if (\strpos($prop, 'output') === 0) {
             $this->debug->errorHandler->setErrorCaller();
-            trigger_error('output->'.$prop.' is deprecated, use output->'.\strtolower(\substr($prop, 6)).' instead', E_USER_DEPRECATED);
+            \trigger_error('output->'.$prop.' is deprecated, use output->'.\strtolower(\substr($prop, 6)).' instead', E_USER_DEPRECATED);
             $prop = \strtolower(\substr($prop, 6));
             if ($this->{$prop}) {
                 return $this->{$prop};
@@ -149,29 +151,7 @@ class Output
             $values = $mixed;
         }
         if (isset($values['outputAs'])) {
-            $outputAs = $values['outputAs'];
-            if (\is_string($outputAs)) {
-                $prop = 'output'.\ucfirst($outputAs);
-                $classname = __NAMESPACE__.'\\Output\\'.\ucfirst($outputAs);
-                if (\class_exists($classname)) {
-                    if (!\property_exists($this, $prop)) {
-                        $this->{$prop} = new $classname($this->debug);
-                    }
-                    if (!\in_array($prop, $this->subscribers)) {
-                        $this->subscribers[] = $prop;
-                        $this->debug->addPlugin($this->{$prop});
-                    }
-                }
-            } elseif ($outputAs instanceof OutputInterface) {
-                $classname = \get_class($outputAs);
-                $prefix = __NAMESPACE__.'\\Output\\';
-                if (\strpos($classname, $prefix) == 0) {
-                    $prop = 'output'.\substr($classname, \strlen($prefix));
-                    $this->{$prop} = $outputAs;
-                    $this->subscribers[] = $prop;
-                }
-                $this->debug->addPlugin($outputAs);
-            }
+            $this->setOutputAs($values['outputAs']);
         }
         if (isset($values['onOutput'])) {
             /*
@@ -191,7 +171,7 @@ class Output
      *
      * @return string
      */
-    protected function getDefaultOutputAs()
+    private function getDefaultOutputAs()
     {
         $ret = 'html';
         $interface = $this->debug->utilities->getInterface();
@@ -206,5 +186,39 @@ class Output
             $ret = 'text';
         }
         return $ret;
+    }
+
+    /**
+     * Set outputAs value
+     * instantiate object if necessary & addPlugin if not already subscribed
+     *
+     * @param OutputInterface|string $outputAs OutputInterface instance, or (short) classname
+     *
+     * @return void
+     */
+    private function setOutputAs($outputAs)
+    {
+        if (\is_string($outputAs)) {
+            $prop = 'output'.\ucfirst($outputAs);
+            $classname = __NAMESPACE__.'\\Output\\'.\ucfirst($outputAs);
+            if (\class_exists($classname)) {
+                if (!\property_exists($this, $prop)) {
+                    $this->{$prop} = new $classname($this->debug);
+                }
+                if (!\in_array($prop, $this->subscribers)) {
+                    $this->subscribers[] = $prop;
+                    $this->debug->addPlugin($this->{$prop});
+                }
+            }
+        } elseif ($outputAs instanceof OutputInterface) {
+            $classname = \get_class($outputAs);
+            $prefix = __NAMESPACE__.'\\Output\\';
+            if (\strpos($classname, $prefix) == 0) {
+                $prop = 'output'.\substr($classname, \strlen($prefix));
+                $this->{$prop} = $outputAs;
+                $this->subscribers[] = $prop;
+            }
+            $this->debug->addPlugin($outputAs);
+        }
     }
 }

@@ -36,9 +36,11 @@ class ErrorEmailer implements SubscriberInterface
             'emailFunc' => 'mail',
             'emailMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
             'emailMin' => 15,       // 0 = no throttle
-            'emailThrottleFile' => __DIR__.'/error_emails.json',
             'emailThrottledSummary' => true,    // if errors have been throttled, should we email a summary email of throttled errors?
                                                 //    (first occurance of error is never throttled)
+            'emailThrottleFile' => __DIR__.'/error_emails.json',
+            'emailThrottleRead' => null,    // callable that returns throttle data
+            'emailThrottleWrite' => null,   // callable that writes throttle data.  receives single array param
             'emailTo' => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
@@ -46,20 +48,6 @@ class ErrorEmailer implements SubscriberInterface
         );
         $this->setCfg($cfg);
         return;
-    }
-
-    /**
-     * Clear throttle data
-     *
-     * @return void
-     */
-    public function clearThrottleData()
-    {
-        $this->throttleData = array(
-            'tsTrashCollection' => \time(),
-            'errors' => array(),
-        );
-        $this->throttleDataExport();
     }
 
     /**
@@ -100,7 +88,7 @@ class ErrorEmailer implements SubscriberInterface
      */
     public function onErrorHighPri(Event $error)
     {
-        $this->throttleDataImport();
+        $this->throttleDataRead();
         $hash = $error['hash'];
         $error['email'] = ( $error['type'] & $this->cfg['emailMask'] )
             && $error['isFirstOccur']
@@ -166,6 +154,20 @@ class ErrorEmailer implements SubscriberInterface
         }
         $this->cfg = \array_merge($this->cfg, $values);
         return $ret;
+    }
+
+    /**
+     * Clear throttle data
+     *
+     * @return void
+     */
+    public function throttleDataClear()
+    {
+        $this->throttleData = array(
+            'tsGarbageCollection' => \time(),
+            'errors' => array(),
+        );
+        $this->throttleDataWrite();
     }
 
     /**
@@ -289,41 +291,77 @@ class ErrorEmailer implements SubscriberInterface
     }
 
     /**
-     * Export throttle data
+     * Remove errors in throttleData that haven't occured recently
+     * If error(s) have occured since they were last emailed, a summary email will be sent
      *
      * @return void
      */
-    protected function throttleDataExport()
+    protected function throttleDataGarbageCollection()
     {
-        if ($this->cfg['emailThrottleFile']) {
-            $this->throttleTrashCollection();
-            $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData));
+        $tsNow     = \time();
+        $tsCutoff  = $tsNow - $this->cfg['emailMin'] * 60;
+        if ($this->throttleData['tsGarbageCollection'] > $tsCutoff) {
+            // we've recently performed garbage collection
+            return;
         }
-        return;
+        // garbage collection time
+        $emailBody = '';
+        $sendEmailSummary = false;
+        $this->throttleData['tsGarbageCollection'] = $tsNow;
+        foreach ($this->throttleData['errors'] as $k => $err) {
+            if ($err['tsEmailed'] > $tsCutoff) {
+                continue;
+            }
+            // it's been a while since this error was emailed
+            if ($err['emailedTo'] != $this->cfg['emailTo']) {
+                // it was emailed to a different address
+                if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60*60*24) {
+                    unset($this->throttleData['errors'][$k]);
+                }
+                continue;
+            }
+            unset($this->throttleData['errors'][$k]);
+            if ($err['countSince'] > 0) {
+                $dateLastEmailed = \date('Y-m-d H:i:s', $err['tsEmailed']);
+                $emailBody .= ''
+                    .'File: '.$err['file']."\n"
+                    .'Line: '.$err['line']."\n"
+                    .'Error: '.$this->errTypes[ $err['errType'] ].': '.$err['errMsg']."\n"
+                    .'Has occured '.$err['countSince'].' times since '.$dateLastEmailed."\n\n";
+                $sendEmailSummary = $this->cfg['emailThrottledSummary'];
+            }
+        }
+        if ($sendEmailSummary) {
+            $this->email($this->cfg['emailTo'], 'Website Errors: '.$_SERVER['SERVER_NAME'], $emailBody);
+        }
     }
 
     /**
      * Load & populate $this->throttleData if not alrady imported
      *
+     * Uses cfg[emailThrottleRead] callable if set, otherwise, reads from cfg['emailThrottleFile']
+     *
      * @return void
      */
-    protected function throttleDataImport()
+    protected function throttleDataRead()
     {
         if ($this->throttleData) {
             // already imported
             return;
         }
-        if ($this->cfg['emailThrottleFile'] && \is_readable($this->cfg['emailThrottleFile'])) {
+        if ($this->cfg['emailThrottleRead'] && \is_callable($this->cfg['emailThrottleRead'])) {
+            $throttleData = \call_user_func($this->cfg['emailThrottleRead']);
+        } elseif ($this->cfg['emailThrottleFile'] && \is_readable($this->cfg['emailThrottleFile'])) {
             $throttleData = \file_get_contents($this->cfg['emailThrottleFile']);
             $throttleData = \json_decode($throttleData, true);
-            if (!\is_array($throttleData)) {
-                $throttleData = array();
-            }
-            $this->throttleData = \array_merge(array(
-                'tsTrashCollection' => \time(),
-                'errors' => array(),
-            ), $throttleData);
         }
+        if (!\is_array($throttleData)) {
+            $throttleData = array();
+        }
+        $this->throttleData = \array_merge(array(
+            'tsGarbageCollection' => \time(),
+            'errors' => array(),
+        ), $throttleData);
         return;
     }
 
@@ -357,53 +395,25 @@ class ErrorEmailer implements SubscriberInterface
         if (empty($this->errTypes)) {
             $this->errTypes = $error->getSubject()->get('errTypes');
         }
-        $this->throttleDataExport();
+        $this->throttleDataWrite();
         return;
     }
 
     /**
-     * Remove errors in throttleData that haven't occured recently
-     * If error(s) have occured since they were last emailed, a summary email will be sent
+     * Export/Save/Write throttle data
+     *
+     * Uses cfg[emailThrottleWrite] callable if set, otherwise, writes to cfg['emailThrottleFile']
      *
      * @return void
      */
-    protected function throttleTrashCollection()
+    protected function throttleDataWrite()
     {
-        $tsNow     = \time();
-        $tsCutoff  = $tsNow - $this->cfg['emailMin'] * 60;
-        if ($this->throttleData['tsTrashCollection'] > $tsCutoff) {
-            // we've recently performed trash collection
-            return;
+        $this->throttleDataGarbageCollection();
+        if ($this->cfg['emailThrottleWrite'] && \is_callable($this->cfg['emailThrottleWrite'])) {
+            \call_user_func($this->cfg['emailThrottleWrite'], $this->throttleData);
+        } elseif ($this->cfg['emailThrottleFile']) {
+            $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData));
         }
-        // trash collection time
-        $emailBody = '';
-        $sendEmailSummary = false;
-        $this->throttleData['tsTrashCollection'] = $tsNow;
-        foreach ($this->throttleData['errors'] as $k => $err) {
-            if ($err['tsEmailed'] > $tsCutoff) {
-                continue;
-            }
-            // it's been a while since this error was emailed
-            if ($err['emailedTo'] != $this->cfg['emailTo']) {
-                // it was emailed to a different address
-                if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60*60*24) {
-                    unset($this->throttleData['errors'][$k]);
-                }
-                continue;
-            }
-            unset($this->throttleData['errors'][$k]);
-            if ($err['countSince'] > 0) {
-                $dateLastEmailed = \date('Y-m-d H:i:s', $err['tsEmailed']);
-                $emailBody .= ''
-                    .'File: '.$err['file']."\n"
-                    .'Line: '.$err['line']."\n"
-                    .'Error: '.$this->errTypes[ $err['errType'] ].': '.$err['errMsg']."\n"
-                    .'Has occured '.$err['countSince'].' times since '.$dateLastEmailed."\n\n";
-                $sendEmailSummary = $this->cfg['emailThrottledSummary'];
-            }
-        }
-        if ($sendEmailSummary) {
-            $this->email($this->cfg['emailTo'], 'Website Errors: '.$_SERVER['SERVER_NAME'], $emailBody);
-        }
+        return;
     }
 }

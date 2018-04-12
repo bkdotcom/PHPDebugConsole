@@ -247,9 +247,7 @@ class Internal implements SubscriberInterface
         $this->debug->group('environment');
         $this->debug->groupUncollapse();
         $this->logServerKeys();
-        $this->debug->info('PHP Version', PHP_VERSION);
-        $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
-        $this->debug->info('session.cache_limiter', \ini_get('session.cache_limiter'));
+        $this->logPhpInfo();
         $this->logRequest();
         $this->debug->groupEnd();
         $this->debug->setCfg('collect', $collectWas);
@@ -361,6 +359,41 @@ class Internal implements SubscriberInterface
             $errorStr .= '  Line '.$error['line'].': ('.$typeStr.') '.$error['message']."\n";
         }
         return $errorStr;
+    }
+
+    /**
+     * Log some PHP info
+     *
+     * @return void
+     */
+    private function logPhpInfo()
+    {
+        $this->debug->info('PHP Version', PHP_VERSION);
+        $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
+        $this->debug->info('session.cache_limiter', \ini_get('session.cache_limiter'));
+        if (error_reporting() !== E_ALL) {
+            $styleMono = 'font-family:monospace;';
+            $styleReset = 'font-family:inherit; white-space:pre-wrap;';
+            $msgLines = array(
+                'PHP\'s %cerror_reporting%c is not set to E_ALL',
+            );
+            $styles = array($styleMono, $styleReset);
+            $errorReporting = $this->debug->getCfg('errorReporting');
+            if ($errorReporting === E_ALL) {
+                $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
+                $styles[] = $styleMono;
+                $styles[] = $styleReset;
+            } elseif ($errorReporting === "system") {
+                $msgLines[] = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
+            } elseif ($errorReporting !== error_reporting()) {
+                $msgLines[] = 'PHPDebugConsole\'s errorHandler is using a errorReporting value that differs from %cerror_reporting%c';
+                $styles[] = $styleMono;
+                $styles[] = $styleReset;
+            }
+            $args = array(implode("\n", $msgLines));
+            $args = array_merge($args, $styles);
+            \call_user_func_array(array($this->debug, 'warn'), $args);
+        }
     }
 
     /**

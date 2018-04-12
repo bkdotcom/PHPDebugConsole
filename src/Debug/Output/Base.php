@@ -309,6 +309,9 @@ abstract class Base implements OutputInterface
         $keys = $columns ?: $this->debug->table->colKeys($array);
         $table = array();
         $classnames = array();
+        if ($this->debug->abstracter->isAbstraction($array) && $array['traverseValues']) {
+            $array = $array['traverseValues'];
+        }
         foreach ($array as $k => $row) {
             $values = $this->debug->table->keyValues($row, $keys, $objInfo);
             foreach ($values as $k2 => $val) {
@@ -316,8 +319,6 @@ abstract class Base implements OutputInterface
                     unset($values[$k2]);
                 } elseif (\is_array($val)) {
                     $values[$k2] = $this->debug->output->text->dump($val);
-                } else {
-                    $values[$k2] = $val;
                 }
             }
             if (\count($values) == 1 && $k2 == Table::SCALAR) {

@@ -52,6 +52,13 @@ class Html extends Base
                 .$this->dump($rows)
                 .'</div>';
         }
+        if ($this->debug->abstracter->isAbstraction($rows) && $rows['traverseValues']) {
+            $caption .= ' ('.$this->markupClassname($rows['className'], 'span', array(
+                    'title' => $rows['phpDoc']['summary'] ?: null,
+                )).')';
+            $caption = \trim($caption);
+            $rows = $rows['traverseValues'];
+        }
         $keys = $columns ?: $this->debug->table->colKeys($rows);
         $this->tableInfo = array(
             'haveObjRow' => false,

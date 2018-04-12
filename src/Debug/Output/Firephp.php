@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\Table;
 use bdk\PubSub\Event;
 
 /**
@@ -18,6 +19,13 @@ use bdk\PubSub\Event;
  */
 class Firephp extends Base
 {
+
+    /**
+     * @var array each method will generate 1 or more headers.
+     *             store those headers here for unit tests
+     */
+    public $lastHeadersSent = array();
+    public $unitTestMode = false;
 
     protected $firephpMethods = array(
         'log' => 'LOG',
@@ -74,26 +82,10 @@ class Firephp extends Base
      */
     public function processLogEntry($method, $args = array(), $meta = array())
     {
-        $firePhpMeta = array(
-            'Type' => isset($this->firephpMethods[$method])
-                ? $this->firephpMethods[$method]
-                : $this->firephpMethods['log'],
-            // Label
-            // File
-            // Line
-            // Collapsed  (for group)
-        );
         $value = null;
-        if (isset($meta['file'])) {
-            $firePhpMeta['File'] = $meta['file'];
-            $firePhpMeta['Line'] = $meta['line'];
-        }
+        $firePhpMeta = $this->getMeta($method, $meta);
         if (\in_array($method, array('group','groupCollapsed'))) {
             $firePhpMeta['Label'] = $args[0];
-            $firePhpMeta['Collapsed'] = $method == 'groupCollapsed'
-                // yes, strings
-                ? 'true'
-                : 'false';
         } elseif ($method == 'table') {
             $value = $this->methodTable($args[0], $meta['columns']);
             if ($meta['caption']) {
@@ -127,6 +119,38 @@ class Firephp extends Base
     }
 
     /**
+     * Initialize firephp's meta array
+     *
+     * @param string $method PHPDebugConsole method
+     * @param array  $meta   PHPDebugConsole meta values
+     *
+     * @return array
+     */
+    private function getMeta($method, $meta)
+    {
+        $firePhpMeta = array(
+            'Type' => isset($this->firephpMethods[$method])
+                ? $this->firephpMethods[$method]
+                : $this->firephpMethods['log'],
+            // Label
+            // File
+            // Line
+            // Collapsed  (for group)
+        );
+        if (isset($meta['file'])) {
+            $firePhpMeta['File'] = $meta['file'];
+            $firePhpMeta['Line'] = $meta['line'];
+        }
+        if (\in_array($method, array('group','groupCollapsed'))) {
+            $firePhpMeta['Collapsed'] = $method == 'groupCollapsed'
+                // yes, strings
+                ? 'true'
+                : 'false';
+        }
+        return $firePhpMeta;
+    }
+
+    /**
      * Build table rows
      *
      * @param array $array   array to debug
@@ -136,18 +160,27 @@ class Firephp extends Base
      */
     protected function methodTable($array, $columns = array())
     {
-        $keys = $columns ?: $this->debug->table->colKeys($array);
         $table = array();
-        $table[] = $keys;
-        \array_unshift($table[0], '');
+        $keys = $columns ?: $this->debug->table->colKeys($array);
+        $headerVals = $keys;
+        foreach ($headerVals as $i => $val) {
+            if ($val === Table::SCALAR) {
+                $headerVals[$i] = 'value';
+            }
+        }
+        \array_unshift($headerVals, '');
+        $table[] = $headerVals;
         $classNames = array();
+        if ($this->debug->abstracter->isAbstraction($array) && $array['traverseValues']) {
+            $array = $array['traverseValues'];
+        }
         foreach ($array as $k => $row) {
             $values = $this->debug->table->keyValues($row, $keys, $objInfo);
-            $values = \array_map(function ($val) {
-                return $val === $this->debug->abstracter->UNDEFINED
-                    ? null
-                    : $val;
-            }, $values);
+            foreach ($values as $k2 => $val) {
+                if ($val === $this->debug->abstracter->UNDEFINED) {
+                    $values[$k2] = null;
+                }
+            }
             $classNames[] = $objInfo['row']
                 ? $objInfo['row']['className']
                 : '';
@@ -156,6 +189,8 @@ class Firephp extends Base
         }
         if (\array_filter($classNames)) {
             \array_unshift($table[0], '');
+            // first col is row key.
+            // insert classname after key
             foreach ($classNames as $i => $className) {
                 \array_splice($table[$i+1], 1, 0, $className);
             }
@@ -164,7 +199,7 @@ class Firephp extends Base
     }
 
     /**
-     * "output" FirePHP header for log entry
+     * "output" FirePHP header(s) for log entry
      *
      * @param array $meta  meta information
      * @param mixed $value value
@@ -173,6 +208,7 @@ class Firephp extends Base
      */
     private function setFirephpHeader($meta, $value = null)
     {
+        $this->lastHeadersSent = array();
         $msg = \json_encode(array(
             $meta,
             $value,
@@ -187,6 +223,7 @@ class Firephp extends Base
             $headerValue = ( $i==0 ? \strlen($msg) : '')
                 . '|' . $part . '|'
                 . ( $i<$numParts-1 ? '\\' : '' );
+            $this->lastHeadersSent[] = $headerName.': '.$headerValue;
             $this->setHeader($headerName, $headerValue);
         }
     }
@@ -201,6 +238,8 @@ class Firephp extends Base
      */
     private function setHeader($name, $value)
     {
-        \header($name.': '.$value);
+        if (!$this->unitTestMode) {
+            \header($name.': '.$value);
+        }
     }
 }

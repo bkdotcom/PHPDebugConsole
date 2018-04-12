@@ -108,6 +108,7 @@ class Abstracter
             return $this->abstractArray->getAbstraction($mixed, $method, $hist);
         } elseif (\is_object($mixed)) {
             // ie, a traversable table
+            /*
             if ($method === 'table' && \count($hist) === 0) {
                 $return = $this->abstractObject->getAbstraction($mixed, $method, $hist);
                 if ($return['type'] == 'object' && $return['traverseValues']) {
@@ -120,6 +121,8 @@ class Abstracter
             } else {
                 return $this->abstractObject->getAbstraction($mixed, $method, $hist);
             }
+            */
+            return $this->abstractObject->getAbstraction($mixed, $method, $hist);
         } elseif (\is_resource($mixed) || \strpos(\print_r($mixed, true), 'Resource') === 0) {
             return array(
                 'debug' => self::ABSTRACTION,

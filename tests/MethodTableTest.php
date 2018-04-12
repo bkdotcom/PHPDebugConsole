@@ -170,6 +170,7 @@ EOD;
                 '<div class="m_log"><span class="t_null">null</span></div>',
                 'null',
                 'console.log(null);',
+                'X-Wf-1-1-1-1: 21|[{"Type":"LOG"},null]|',
             ),
             array(
                 'blah',
@@ -177,6 +178,7 @@ EOD;
                 '<div class="m_log"><span class="t_string no-pseudo">blah</span></div>',
                 'blah',
                 'console.log("blah");',
+                'X-Wf-1-1-1-2: 23|[{"Type":"LOG"},"blah"]|',
             ),
             array(
                 $rowsA,
@@ -184,6 +186,7 @@ EOD;
                 $rowsAHtml,
                 $rowsAText,
                 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
+                'X-Wf-1-1-1-3: 151|[{"Type":"TABLE","Label":"table caption"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
             ),
             array(
                 array(
@@ -230,13 +233,15 @@ EOD;
                             private: 1
                 )',
                 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::dumpProvider",{"___class_name":"Closure"}]);',
+                'X-Wf-1-1-1-4: 197|[{"Type":"TABLE","Label":"flat"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::dumpProvider"],[4,{"___class_name":"Closure"}]]]|',
             ),
             array(
                 new \bdk\DebugTest\TestTraversable($rowsA),
                 array('caption' => 'traversable'),
-                str_replace('table caption', 'traversable', $rowsAHtml),
+                str_replace('table caption', 'traversable (<span class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)', $rowsAHtml),
                 str_replace('table caption', 'traversable', $rowsAText),
                 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
+                'X-Wf-1-1-1-5: 149|[{"Type":"TABLE","Label":"traversable"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
             ),
             array(
                 new \bdk\DebugTest\TestTraversable(array(
@@ -245,7 +250,7 @@ EOD;
                 )),
                 array('caption' => 'traversable -o- traversables'),
                 '<table class="m_table table-bordered sortable">
-                <caption>traversable -o- traversables</caption>
+                <caption>traversable -o- traversables (<span class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)</caption>
                 <thead><tr><th>&nbsp;</th><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                 </thead>
                 <tbody>
@@ -271,6 +276,7 @@ EOD;
                     )
                 )',
                 'console.table({"4":{"___class_name":"bdk\\\DebugTest\\\TestTraversable","name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"___class_name":"bdk\\\DebugTest\\\TestTraversable","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
+                'X-Wf-1-1-1-6: 237|[{"Type":"TABLE","Label":"traversable -o- traversables"},[["","","name","age","sex","Naughty","extracol"],[4,"bdk\\\DebugTest\\\TestTraversable","Bob","12","M",false,null],[2,"bdk\\\DebugTest\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
             ),
             array(
                 array(
@@ -305,6 +311,7 @@ EOD;
                     )
                 )',
                 'console.table({"4":{"___class_name":"stdClass","age":"12","name":"Bob","Naughty":false,"sex":"M"},"2":{"___class_name":"stdClass","age":"10","extracol":"yes","name":"Sally","Naughty":true,"sex":"F"}});',
+                'X-Wf-1-1-1-7: 180|[{"Type":"TABLE","Label":"array -o- objects"},[["","","age","extracol","name","Naughty","sex"],[4,"stdClass","12",null,"Bob",false,"M"],[2,"stdClass","10","yes","Sally",true,"F"]]]|',
             ),
             array(
                 $rowsB,
@@ -329,6 +336,7 @@ EOD;
                     )
                 )',
                 'console.table([{"date":"1955-11-05T00:00:00%i","date2":"not a datetime"},{"date":"1985-10-26T00:00:00%i","date2":"2015-10-21T00:00:00%i"}]);',
+                'X-Wf-1-1-1-8: 188|[{"Type":"TABLE","Label":"not all col values of same type"},[["","date","date2"],[0,"1955-11-05T00:00:00%i","not a datetime"],[1,"1985-10-26T00:00:00%i","2015-10-21T00:00:00%i"]]]|',
             ),
         );
     }
@@ -336,24 +344,45 @@ EOD;
     /**
      * Test
      *
+     * @param mixed  $val     table value
+     * @param array  $meta    meta values
+     * @param string $html    expected html output
+     * @param string $text    expected text output
+     * @param string $script  expected script output
+     * @param string $firephp expected Firephp output
+     *
      * @dataProvider dumpProvider
      *
      * @return void
      */
-    public function testDump($val, $meta, $html, $text, $script)
+    public function testDump($val, $meta, $html, $text, $script, $firephp)
     {
+        /*
         $dumps = array(
             'html' => $html,
             'text' => $text,
             'script' => $script,
+            'firephp' => $firephp,
+        );
+        */
+        $dumps = array_combine(
+            array('html','text','script','firephp'),
+            array_slice(func_get_args(), 2)
         );
         $this->debug->table($val, $this->debug->meta($meta));
         $logEntry = $this->debug->getData('log/0');
         foreach ($dumps as $outputAs => $outputExpect) {
             // $obj = $this->debug->output->{$outputAs};
             // $output = $this->refMethods[$outputAs]->invoke($obj, $logEntry[0], $logEntry[1], $logEntry[2]);
-            $output = $this->debug->output->{$outputAs}->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
+            $outputObj = $this->debug->output->{$outputAs};
+            if ($outputAs == 'firephp') {
+                $outputObj->unitTestMode = true;
+            }
+            $output = $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
             $output = trim($output);
+            if ($outputAs == 'firephp') {
+                $output = implode("\n", $outputObj->lastHeadersSent);
+            }
             if (is_callable($outputExpect)) {
                 $outputExpect($output);
             } elseif (is_array($outputExpect) && isset($outputExpect['contains'])) {

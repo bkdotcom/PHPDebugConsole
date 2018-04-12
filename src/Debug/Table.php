@@ -31,6 +31,9 @@ class Table
         if (!\is_array($rows)) {
             return array();
         }
+        if (Abstracter::isAbstraction($rows) && $rows['traverseValues']) {
+            $rows = $rows['traverseValues'];
+        }
         $lastKeys = array();
         $newKeys = array();
         $curKeys = array();

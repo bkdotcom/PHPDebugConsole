@@ -14,9 +14,9 @@
 
 namespace bdk\Debug;
 
+use bdk\Debug;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
-use bdk\Debug;
 
 /**
  * Methods that are internal to the debug class
@@ -229,7 +229,7 @@ class Internal implements SubscriberInterface
     public function hasLog()
     {
         $entryCountInitial = $this->debug->getData('entryCountInitial');
-        $entryCountCurrent = $this->debug->getData('entryCount');
+        $entryCountCurrent = $this->debug->getData('log/count');
         return $entryCountCurrent > $entryCountInitial;
     }
 

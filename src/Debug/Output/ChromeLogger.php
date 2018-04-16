@@ -46,8 +46,6 @@ class ChromeLogger extends Base
     public function onOutput(Event $event)
     {
         $this->data = $this->debug->getData();
-        $this->removeHideIfEmptyGroups();
-        $this->uncollapseErrors();
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();

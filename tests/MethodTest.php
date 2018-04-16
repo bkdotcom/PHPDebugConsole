@@ -14,7 +14,7 @@ class MethodTest extends DebugTestFramework
     public function testAlert()
     {
         $message = 'Ballistic missle threat inbound to Hawaii.  Seek immediate shelter.  This is not a drill.';
-        $this->testMethod(
+        $this->methodTest(
             'alert',
             array($message),
             array(
@@ -26,7 +26,7 @@ class MethodTest extends DebugTestFramework
         );
 
         $this->debug->setCfg('collect', false);
-        $this->testMethod(
+        $this->methodTest(
             'alert',
             array($message),
             false
@@ -40,7 +40,7 @@ class MethodTest extends DebugTestFramework
      */
     public function testAssert()
     {
-        $this->testMethod(
+        $this->methodTest(
             'assert',
             array(false, 'this is false'),
             array(
@@ -51,14 +51,14 @@ class MethodTest extends DebugTestFramework
             )
         );
 
-        $this->testMethod(
+        $this->methodTest(
             'assert',
             array(true, 'this is true... not logged'),
             false
         );
 
         $this->debug->setCfg('collect', false);
-        $this->testMethod(
+        $this->methodTest(
             'assert',
             array(false, 'falsey'),
             false
@@ -104,7 +104,7 @@ class MethodTest extends DebugTestFramework
     public function testError()
     {
         $resource = fopen(__FILE__, 'r');
-        $this->testMethod(
+        $this->methodTest(
         	'error',
         	array('a string', array(), new stdClass(), $resource),
         	array(
@@ -138,7 +138,7 @@ class MethodTest extends DebugTestFramework
         */
 
         $this->debug->setCfg('collect', false);
-        $this->testMethod(
+        $this->methodTest(
         	'error',
         	array('error message'),
         	false
@@ -152,7 +152,11 @@ class MethodTest extends DebugTestFramework
      */
     public function testGroup()
     {
-        $this->testMethod(
+
+        $test = new \bdk\DebugTest\Test();
+        $testBase = new \bdk\DebugTest\TestBase();
+
+        $this->methodTest(
         	'group',
         	array('a','b','c'),
         	array(
@@ -168,32 +172,29 @@ class MethodTest extends DebugTestFramework
         	)
         );
 
+        $this->debug->setData('log', array());
         $this->debug->group($this->debug->meta('hideIfEmpty'));
-        $output = $this->debug->output();
-        $outputExpect = <<<EOD
-<div class="group-header expanded"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-<div class="m_group">
-</div>
-EOD;
-        $this->assertContains($outputExpect, $output);
-
-        $test = new \bdk\DebugTest\Test();
-        $testBase = new \bdk\DebugTest\TestBase();
+        $this->outputTest(array(
+        	'html' => '<div class="debug-content m_group">
+				</div>',
+        ));
 
         /*
             Test default label
         */
-
-        \bdk\Debug::_group();
-        $this->assertSame(array(
-            'group',
-            array(
-                __CLASS__.'->'.__FUNCTION__
-            ),
-            array(
-                'isMethodName' => true,
-            ),
-        ), $this->debug->getData('log/0'));
+        $this->methodTest(
+        	'group',
+        	array(),
+        	array(
+        		'entry' => array(
+        			'group',
+        			array(__CLASS__.'->methodTest'),
+        			array('isMethodName' => true),
+        		),
+        		'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">methodTest</span></span></div>
+					<div class="m_group">',
+        	)
+        );
 
         $this->debug->setData('log', array());
         $testBase->testBasePublic();
@@ -246,11 +247,12 @@ EOD;
             ),
         ), $this->debug->getData('log/0'));
 
-        $logBefore = $this->debug->getData('log');
         $this->debug->setCfg('collect', false);
-        $this->debug->group('not logged');
-        $logAfter = $this->debug->getData('log');
-        $this->assertCount(count($logBefore), $logAfter, 'Group() logged although collect=false');
+        $this->methodTest(
+        	'group',
+        	array('not logged'),
+        	false
+        );
     }
 
     /**
@@ -260,24 +262,32 @@ EOD;
      */
     public function testGroupCollapsed()
     {
-        $this->debug->groupCollapsed('a', 'b', 'c');
-        $log = $this->debug->getData('log');
-        $this->assertSame(array('groupCollapsed', array('a','b','c'), array()), $log[0]);
-        $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
-        $this->debug->groupCollapsed($this->debug->meta('hideIfEmpty'));
-        $output = $this->debug->output();
-        $outputExpect = <<<EOD
-<div class="group-header collapsed"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-<div class="m_group">
-</div>
-EOD;
-        $this->assertContains($outputExpect, $output);
+        $this->methodTest(
+        	'groupCollapsed',
+        	array('a', 'b', 'c'),
+        	array(
+        		'entry' => array('groupCollapsed', array('a','b','c'), array()),
+        		'custom' => function () {
+			        $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
+        		},
+        	)
+        );
 
-        $logBefore = $this->debug->getData('log');
+        // add a nested gorup that will get removed on output
+        $this->debug->groupCollapsed($this->debug->meta('hideIfEmpty'));
+
+        $this->outputTest(array(
+        	'html' => '<div class="group-header collapsed"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+				<div class="m_group">
+				</div>',
+        ));
+
         $this->debug->setCfg('collect', false);
-        $this->debug->groupCollapsed('not logged');
-        $logAfter = $this->debug->getData('log');
-        $this->assertCount(count($logBefore), $logAfter, 'GroupCollapsed() logged although collect=false');
+		$this->methodTest(
+			'groupCollapsed',
+			array('not logged'),
+			false
+		);
     }
 
     /**
@@ -322,6 +332,11 @@ EOD;
         $this->assertCount(2, $this->debug->getData('log'));
     }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
     public function testGroupSummary()
     {
         $this->debug->groupSummary();

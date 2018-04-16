@@ -135,7 +135,6 @@ class Html extends Base
     public function onOutput(Event $event)
     {
         $this->data = $this->debug->getData();
-        $this->removeHideIfEmptyGroups();
         $str = '<div class="debug">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
@@ -835,7 +834,7 @@ class Html extends Base
     {
         if (\preg_match('/^(.+)(::|->)(.+)$/', $str, $matches)) {
             $classname = $matches[1];
-            $opMethod = '<span class="t_operator">'.$matches[2].'</span>'
+            $opMethod = '<span class="t_operator">'.\htmlspecialchars($matches[2]).'</span>'
                     . '<span class="method-name">'.$matches[3].'</span>';
         } else {
             $classname = $str;

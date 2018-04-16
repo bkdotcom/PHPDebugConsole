@@ -39,7 +39,6 @@ class Text extends Base
         $event['return'] .= $str;
     }
 
-
     /**
      * Return log entry as text
      *
@@ -75,9 +74,16 @@ class Text extends Base
                 }
             }
         } elseif ($method == 'alert') {
-            $class = $args['class'];
-            $prefix = '[Alert '.$class.'] ';
-            $args = array($args['message']);
+            $classToPrefix = array(
+                'danger' => 'error',
+                'info' => 'info',
+                'success' => 'info',
+                'warning' => 'warn',
+            );
+            $class = $meta['class'];
+            $prefix = $prefixes[$classToPrefix[$class]];
+            $prefix = '[Alert '.$prefix.$class.'] ';
+            $args = array($args[0]);
         } elseif ($method == 'table') {
             $args = array($this->methodTable($args[0], $meta['columns']));
             if ($meta['caption']) {
@@ -89,9 +95,12 @@ class Text extends Base
             $this->depth --;
         }
         $str = $prefix.$this->buildArgString($args);
-        $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str);
-        $str .= "\n";
-        return \rtrim($str);
+        $str = rtrim($str);
+        if ($str) {
+            $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str);
+            return $str."\n";
+        }
+        return '';
     }
 
     /**
@@ -300,5 +309,21 @@ class Text extends Base
     protected function dumpUndefined()
     {
         return 'undefined';
+    }
+
+    /**
+     * Process alerts
+     *
+     * By default we just ouptut alerts like error(), info(), and warn() calls
+     *
+     * @return string
+     */
+    protected function processAlerts()
+    {
+        $str = '';
+        foreach ($this->data['alerts'] as $entry) {
+            $str .= $this->processLogEntryWEvent('alert', array($entry[0]), $entry[1]);
+        }
+        return \trim($str);
     }
 }

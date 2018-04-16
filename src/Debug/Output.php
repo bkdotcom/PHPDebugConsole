@@ -12,11 +12,13 @@
 namespace bdk\Debug;
 
 use bdk\Debug\Output\OutputInterface;
+use bdk\PubSub\Event;
+use bdk\PubSub\SubscriberInterface;
 
 /**
  * General Output methods
  */
-class Output
+class Output implements SubscriberInterface
 {
 
     private $cfg = array();
@@ -126,6 +128,32 @@ class Output
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            'debug.output' => array('onOutput', 1),
+        );
+    }
+
+    /**
+     * debug.output subscriber
+     *
+     * @param Event $event debug.output event object
+     *
+     * @return void
+     */
+    public function onOutput(Event $event)
+    {
+        $this->data = $this->debug->getData();
+        $this->closeOpenGroups();
+        $this->removeHideIfEmptyGroups();
+        $this->uncollapseErrors();
+        $this->debug->setData($this->data);
+    }
+
+    /**
      * Set one or more config values
      *
      * If setting a single value, old value is returned
@@ -167,6 +195,27 @@ class Output
     }
 
     /**
+     * Close any unclosed groups
+     *
+     * We may have forgotten to end a group or the script may have exited
+     *
+     * @return void
+     */
+    private function closeOpenGroups()
+    {
+        foreach ($this->data['groupSummaryStack'] as $i => $group) {
+            for ($i = 0; $i < $group['groupDepth'][1]; $i++) {
+                $this->data['logSummary'][$group['priority']][] = array('groupEnd', array(), array());
+            }
+            unset($this->data['groupSummaryStack'][$i]);
+        }
+        while ($this->data['groupDepth'][1] > 0) {
+            $this->data['groupDepth'][1]--;
+            $this->data['log'][] = array('groupEnd', array(), array());
+        }
+    }
+
+    /**
      * Determine default outputAs
      *
      * @return string
@@ -186,6 +235,45 @@ class Output
             $ret = 'text';
         }
         return $ret;
+    }
+
+    /**
+     * Remove empty groups with 'hideIfEmpty' meta value
+     *
+     * @return void
+     */
+    private function removeHideIfEmptyGroups()
+    {
+        $groupStack = array();
+        $groupStackCount = 0;
+        $removed = false;
+        for ($i = 0, $count = \count($this->data['log']); $i < $count; $i++) {
+            $method = $this->data['log'][$i][0];
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $entry = $this->data['log'][$i];
+                $groupStack[] = array(
+                    'i' => $i,
+                    'meta' => !empty($entry[2]) ? $entry[2] : array(),
+                    'hasEntries' => false,
+                );
+                $groupStackCount ++;
+            } elseif ($method == 'groupEnd') {
+                $group = \end($groupStack);
+                if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
+                    // make it go away
+                    unset($this->data['log'][$group['i']]);
+                    unset($this->data['log'][$i]);
+                    $removed = true;
+                }
+                \array_pop($groupStack);
+                $groupStackCount--;
+            } elseif ($groupStack) {
+                $groupStack[$groupStackCount - 1]['hasEntries'] = true;
+            }
+        }
+        if ($removed) {
+            $this->data['log'] = \array_values($this->data['log']);
+        }
     }
 
     /**
@@ -219,6 +307,28 @@ class Output
                 $this->subscribers[] = $prop;
             }
             $this->debug->addPlugin($outputAs);
+        }
+    }
+
+    /**
+     * Uncollapse groups containing errors.
+     *
+     * @return void
+     */
+    private function uncollapseErrors()
+    {
+        $groupStack = array();
+        for ($i = 0, $count = \count($this->data['log']); $i < $count; $i++) {
+            $method = $this->data['log'][$i][0];
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $groupStack[] = $i;
+            } elseif ($method == 'groupEnd') {
+                \array_pop($groupStack);
+            } elseif (\in_array($method, array('error', 'warn'))) {
+                foreach ($groupStack as $i2) {
+                    $this->data['log'][$i2][0] = 'group';
+                }
+            }
         }
     }
 }

@@ -364,7 +364,7 @@ abstract class Base implements OutputInterface
             }
             $str .= $this->processLogEntryWEvent($method, array($msg));
         }
-        return \trim($str);
+        return $str;
     }
 
     /**
@@ -498,46 +498,7 @@ abstract class Base implements OutputInterface
         foreach ($summaryData as $entry) {
             $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
-        return \trim($str);
-    }
-
-    /**
-     * Remove empty groups with 'hideIfEmpty' meta value
-     *
-     * @return void
-     */
-    protected function removeHideIfEmptyGroups()
-    {
-        $groupStack = array();
-        $groupStackCount = 0;
-        $removed = false;
-        for ($i = 0, $count = \count($this->data['log']); $i < $count; $i++) {
-            $method = $this->data['log'][$i][0];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $entry = $this->data['log'][$i];
-                $groupStack[] = array(
-                    'i' => $i,
-                    'meta' => !empty($entry[2]) ? $entry[2] : array(),
-                    'hasEntries' => false,
-                );
-                $groupStackCount ++;
-            } elseif ($method == 'groupEnd') {
-                $group = \end($groupStack);
-                if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
-                    // make it go away
-                    unset($this->data['log'][$group['i']]);
-                    unset($this->data['log'][$i]);
-                    $removed = true;
-                }
-                \array_pop($groupStack);
-                $groupStackCount--;
-            } elseif ($groupStack) {
-                $groupStack[$groupStackCount - 1]['hasEntries'] = true;
-            }
-        }
-        if ($removed) {
-            $this->data['log'] = \array_values($this->data['log']);
-        }
+        return $str;
     }
 
     /**
@@ -559,27 +520,5 @@ abstract class Base implements OutputInterface
             $val = $this->dump($val);
         }
         return $val;
-    }
-
-    /**
-     * Uncollapse groups containing errors.
-     *
-     * @return void
-     */
-    protected function uncollapseErrors()
-    {
-        $groupStack = array();
-        for ($i = 0, $count = \count($this->data['log']); $i < $count; $i++) {
-            $method = $this->data['log'][$i][0];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[] = $i;
-            } elseif ($method == 'groupEnd') {
-                \array_pop($groupStack);
-            } elseif (\in_array($method, array('error', 'warn'))) {
-                foreach ($groupStack as $i2) {
-                    $this->data['log'][$i2][0] = 'group';
-                }
-            }
-        }
     }
 }

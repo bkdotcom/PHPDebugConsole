@@ -30,8 +30,6 @@ class Script extends Base
     public function onOutput(Event $event)
     {
         $this->data = $this->debug->getData();
-        $this->removeHideIfEmptyGroups();
-        $this->uncollapseErrors();
         $errorStats = $this->debug->internal->errorStats();
         $errorStr = '';
         if ($errorStats['inConsole']) {

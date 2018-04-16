@@ -235,6 +235,7 @@ class Debug
                 return $depth;
             case 'output':
                 $val = new Debug\Output($this, $this->config->getCfgLazy('output'));
+                $this->eventManager->addSubscriberInterface($val);
                 break;
             case 'table':
                 $val = new Debug\Table();
@@ -759,18 +760,22 @@ class Debug
      */
     public function getData($path = null)
     {
-        if ($path == 'entryCount') {
-            return \count($this->data['log']);
-        }
         $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
         $ret = $this->data;
-        foreach ($path as $k) {
+        foreach ($path as $i => $k) {
             if (isset($ret[$k])) {
                 $ret = $ret[$k];
-            } else {
-                $ret = null;
-                break;
+                continue;
             }
+            if ($i > 0) {
+                if ($k == 'count') {
+                    return \count($ret);
+                }
+                if ($k == 'end') {
+                    return \end($ret);
+                }
+            }
+            return null;
         }
         return $ret;
     }
@@ -858,7 +863,6 @@ class Debug
         }
         $outputAs = $this->output->getCfg('outputAs');
         $this->output->setCfg('outputAs', $outputAs);
-        $this->closeOpenGroups();
         $return = $this->eventManager->publish(
             'debug.output',
             $this,
@@ -866,7 +870,8 @@ class Debug
         )['return'];
         $this->data['alerts'] = array();
         $this->data['counts'] = array();
-        $this->data['groupDepth'][0] = 0;
+        $this->data['groupDepth'] = array(0, 0);
+        $this->data['groupDepthSummary'] = array();
         $this->data['log'] = array();
         $this->data['logSummary'] = array();
         $this->data['outputSent'] = true;
@@ -917,6 +922,12 @@ class Debug
             $ref = $value;
         } else {
             $this->data = \array_merge($this->data, $path);
+        }
+        if (!$this->data['log']) {
+            $this->groupDepth = array(0,0);
+        }
+        if (!$this->data['logSummary']) {
+            $this->groupDepthSummary = array();
         }
     }
 
@@ -1040,27 +1051,6 @@ class Debug
                 $event->getValue('args'),
                 $event->getValue('meta')
             );
-        }
-    }
-
-    /**
-     * Close any unclosed groups
-     *
-     * We may have forgotten to end a group or the script may have exited
-     *
-     * @return void
-     */
-    protected function closeOpenGroups()
-    {
-        foreach ($this->data['groupSummaryStack'] as $i => $group) {
-            for ($i = 0; $i < $group['groupDepth'][1]; $i++) {
-                $this->data['logSummary'][$group['priority']][] = array('groupEnd', array(), array());
-            }
-            unset($this->data['groupSummaryStack'][$i]);
-        }
-        while ($this->data['groupDepth'][1] > 0) {
-            $this->data['groupDepth'][1]--;
-            $this->data['log'][] = array('groupEnd', array(), array());
         }
     }
 

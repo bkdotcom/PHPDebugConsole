@@ -56,8 +56,6 @@ class Firephp extends Base
             return;
         }
         $this->data = $this->debug->getData();
-        $this->removeHideIfEmptyGroups();
-        $this->uncollapseErrors();
         $this->setHeader('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $this->setHeader('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
         $this->setHeader('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');

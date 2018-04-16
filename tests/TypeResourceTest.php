@@ -11,10 +11,14 @@ class TypeResourceTest extends DebugTestFramework
         $fh = fopen(__FILE__, 'r');
         // val, html, text script
         return array(
-            array($fh,
-                '<span class="t_resource">Resource id #'.(int) $fh.': stream</span>',
-                'Resource id #'.(int) $fh.': stream',
-                'Resource id #'.(int) $fh.': stream'
+            array(
+                'log',
+                array( $fh ),
+                array(
+                    'html' => '<div class="m_log"><span class="t_resource">Resource id #'.(int) $fh.': stream</span></div>',
+                    'text' => 'Resource id #'.(int) $fh.': stream',
+                    'script' => 'console.log("Resource id #'.(int) $fh.': stream");',
+                )
             ),
         );
         fclose($fh);

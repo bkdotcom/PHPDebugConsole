@@ -10,12 +10,12 @@ class TypeArrayTest extends DebugTestFramework
     {
 		// indented with tab
         $arrayDumpHtml = <<<'EOD'
-<span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+<div class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <span class="array-inner">
 	<span class="key-value"><span class="t_key t_int">0</span> <span class="t_operator">=&gt;</span> <span class="t_string">a</span></span>
 	<span class="key-value"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
 	<span class="key-value"><span class="t_key t_int">1</span> <span class="t_operator">=&gt;</span> <span class="t_string">c</span></span>
-</span><span class="t_punct">)</span></span>
+</span><span class="t_punct">)</span></span></div>
 EOD;
 		// indented with 4 spaces
 		$arrayDumpText = <<<'EOD'
@@ -25,14 +25,26 @@ array(
     [1] => "c"
 )
 EOD;
+        /*
         $arrayDumpScript = array(
             'a',
             'foo' => 'bar',
             'c',
         );
+        */
         // val, html, text script
         return array(
-            array(array('a','foo'=>'bar','c'), $arrayDumpHtml, $arrayDumpText, $arrayDumpScript),
+            array(
+                'log',
+                array(
+                    array('a','foo'=>'bar','c')
+                ),
+                array(
+                    'html' => $arrayDumpHtml,
+                    'text' => $arrayDumpText,
+                    'script' => 'console.log({"0":"a","foo":"bar","1":"c"});',
+                ),
+            ),
         );
     }
 
@@ -79,16 +91,20 @@ EOD;
         $this->debug->log('test_a', $test_a);
         $output = $this->debug->output();
         $this->assertContains('t_recursion', $output);
-        $this->testDump(
-            $test_a,
-            function ($strHtml) {
-                // $this->stdOut('strHtml', $strHtml);
-                $this->assertSelectEquals('.key-value > .t_keyword', 'array', true, $strHtml);
-                $this->assertSelectEquals('.key-value > .t_recursion', '*RECURSION*', true, $strHtml);
-            },
-            array('contains' => '    [val] => array *RECURSION*'),
-            // '{"foo":"bar","val":"array *RECURSION*"}'
-            array('foo'=>'bar', 'val'=>'array *RECURSION*')
+        $this->testMethod(
+            'log',
+            array($test_a),
+            array(
+                'html' => function ($strHtml) {
+                    // $this->stdOut('strHtml', $strHtml);
+                    $this->assertSelectEquals('.key-value > .t_keyword', 'array', true, $strHtml);
+                    $this->assertSelectEquals('.key-value > .t_recursion', '*RECURSION*', true, $strHtml);
+                },
+                'text' => array('contains' => '    [val] => array *RECURSION*'),
+                // '{"foo":"bar","val":"array *RECURSION*"}'
+                // 'script' => array('foo'=>'bar', 'val'=>'array *RECURSION*'),
+                'script' => 'console.log({"foo":"bar","val":"array *RECURSION*"});',
+            )
         );
     }
 

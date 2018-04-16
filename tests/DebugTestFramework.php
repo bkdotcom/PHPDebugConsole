@@ -12,6 +12,33 @@ class DebugTestFramework extends DOMTestCase
     public static $allowError = false;
 
     /**
+     * for given $var, check if it's abstraction type is of $type
+     *
+     * @param array  $var  abstracted $var
+     * @param string $type array, object, or resource
+     *
+     * @return boolean
+     */
+    protected function checkAbstractionType($var, $type)
+    {
+        $return = false;
+        if ($type == 'object') {
+            $keys = array('collectMethods','viaDebugInfo','isExcluded','isRecursion',
+                    'extends','implements','constants','properties','methods','scopeClass','stringified');
+            $keysMissing = array_diff($keys, array_keys($var));
+            $return = $var['debug'] === \bdk\Debug\Abstracter::ABSTRACTION
+                && $var['type'] === 'object'
+                && $var['className'] === 'stdClass'
+                && count($keysMissing) == 0;
+        } elseif ($type == 'resource') {
+            $return = $var['debug'] === \bdk\Debug\Abstracter::ABSTRACTION
+                && $var['type'] === 'resource'
+                && isset($var['value']);
+        }
+        return $return;
+    }
+
+    /**
      * setUp is executed before each test
      *
      * @return void
@@ -97,33 +124,110 @@ class DebugTestFramework extends DOMTestCase
     {
         return array(
             // val, html, text, script
-            array(null, '<span class="t_null">null</span>', 'null', null),
+            array(
+                'log',
+                array(null),
+                array(
+                    'html' => '<div class="m_log"><span class="t_null">null</span></div>',
+                    'text' => 'null',
+                    'script' => 'console.log(null);',
+                ),
+            ),
         );
     }
 
     /**
-     * Test
+     * Test Method's output
+     *
+     * @param string $method debug method
+     * @param array  $args   method arguments
+     * @param array  $tests  array of 'outputAs' => 'string
+     *                          ie array('html'=>'expected html')
      *
      * @dataProvider dumpProvider
      *
      * @return void
      */
-    public function testDump($val, $html, $text, $script)
+    public function methodTest($method, $args = array(), $tests = array())
     {
-        $dumps = array(
-            'html' => $html,
-            'text' => $text,
-            'script' => $script,
-        );
-        foreach ($dumps as $outputAs => $dumpExpect) {
-            $dump = $this->debug->output->{$outputAs}->dump($val);
-            if (is_callable($dumpExpect)) {
-                $dumpExpect($dump);
-            } elseif (is_array($dumpExpect) && isset($dumpExpect['contains'])) {
-                $this->assertContains($dumpExpect['contains'], $dump, $outputAs.' doesn\'t contain');
+        if ($tests === false) {
+            /*
+                Assert that nothing gets logged
+            */
+            $path = $method == 'alert'
+                ? 'alerts/count'
+                : 'log/count';
+            $logCountBefore = $this->debug->getData($path);
+            \call_user_func_array(array($this->debug, $method), $args);
+            $logCountAfter = $this->debug->getData($path);
+            $this->assertSame($logCountBefore, $logCountAfter, 'failed asserting nothing logged');
+            return;
+        }
+        \call_user_func_array(array($this->debug, $method), $args);
+        $logEntry = $this->debug->getData('log/end');
+        if ($method == 'alert') {
+            $logEntry = $this->debug->getData('alerts/end');
+            $logEntry = array('alert', array($logEntry[0]), $logEntry[1]);
+        }
+        foreach ($tests as $outputAs => $outputExpect) {
+            if ($outputAs == 'entry') {
+                $this->assertSame($outputExpect, $logEntry);
+                continue;
+            } elseif ($outputAs == 'custom') {
+                \call_user_func($outputExpect, $logEntry);
+                continue;
+            } elseif ($outputAs == 'firephp') {
+                $outputObj = $this->debug->output->{$outputAs};
+                $outputObj->unitTestMode = true;
+                $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
+                $output = \implode("\n", $outputObj->lastHeadersSent);
             } else {
-                $this->assertSame($dumpExpect, $dump, $outputAs.' not same');
+                $outputObj = $this->debug->output->{$outputAs};
+                $output = $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
+            }
+            if (\is_callable($outputExpect)) {
+                $outputExpect($output);
+            } elseif (\is_array($outputExpect) && isset($outputExpect['contains'])) {
+                $this->assertContains($outputExpect['contains'], $output, $outputAs.' doesn\'t contain');
+            } else {
+                $output = \preg_replace("#^\s+#m", '', $output);
+                $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);
+                // @see https://github.com/sebastianbergmann/phpunit/issues/3040
+                $output = \str_replace("\r", '[\\r]', $output);
+                $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
+                $this->assertStringMatchesFormat($outputExpect, $output, $outputAs.' not same');
             }
         }
+    }
+
+    /**
+     * Test output
+     *
+     * @param array $tests array of 'outputAs' => 'string
+     *                         ie array('html'=>'expected html')
+     *
+     * @return void
+     */
+    public function outputTest($tests = array())
+    {
+        $backupData = array(
+            'alerts' => $this->debug->getData('alerts'),
+            'log' => $this->debug->getData('log'),
+            'logSummary' => $this->debug->getData('logSummary'),
+            'requestId' => $this->debug->getData('requestId'),
+            'runtime' => $this->debug->getData('runtime'),
+        );
+        $backupOutputAs = $this->debug->getCfg('outputAs');
+        foreach ($tests as $outputAs => $expectContains) {
+            $this->debug->setCfg('outputAs', $outputAs);
+            $output = $this->debug->output();
+            $output = \preg_replace("#^\s+#m", '', $output);
+            $expectContains = \preg_replace('#^\s+#m', '', $expectContains);
+            $this->assertContains($expectContains, $output);
+            foreach ($backupData as $k => $v) {
+                $this->debug->setData($k, $v);
+            }
+        }
+        $this->debug->setCfg('outputAs', $backupOutputAs);
     }
 }

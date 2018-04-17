@@ -6,7 +6,7 @@
 class TypeObjectTest extends DebugTestFramework
 {
 
-    public function dumpProvider()
+    public function providerTestMethod()
     {
         // val, html, text, script
 

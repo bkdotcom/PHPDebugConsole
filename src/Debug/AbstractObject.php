@@ -63,7 +63,7 @@ class AbstractObject
         }
         $reflector = new \ReflectionObject($obj);
         $className = $reflector->getName();
-        $isTableTop = $method === 'table' && count($hist) < 2;  // rows (traversable) || row (traversable)
+        $isTableTop = $method === 'table' && \count($hist) < 2;  // rows (traversable) || row (traversable)
         $abs = new Event($obj, array(
             'className' => $className,
             'collectMethods' => !$isTableTop && $this->abstracter->getCfg('collectMethods') || $className == 'Closure',
@@ -755,7 +755,7 @@ class AbstractObject
         }
         $info = array(
             'implements' => null,
-            'inheritedFrom' => $declaringClassName != get_class($obj)
+            'inheritedFrom' => $declaringClassName != \get_class($obj)
                 ? $declaringClassName
                 : null,
             'isAbstract' => $reflectionMethod->isAbstract(),

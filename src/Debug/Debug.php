@@ -385,7 +385,7 @@ class Debug
             $this->groupDepthRef[1]--;
         }
         $errorCaller = $this->errorHandler->get('errorCaller');
-        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->groupDepth < $errorCaller['groupDepth']) {
+        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->groupDepthRef[0] < $errorCaller['groupDepth']) {
             $this->errorHandler->setErrorCaller(false);
         }
         if ($this->data['groupSummaryStack'] && $this->groupDepthRef[0] === 0) {
@@ -951,7 +951,7 @@ class Debug
         }
         if ($caller) {
             // groupEnd will check depth and potentially clear errorCaller
-            $caller['groupDepth'] = $this->groupDepth;
+            $caller['groupDepth'] = $this->groupDepthRef[0];
         }
         $this->errorHandler->setErrorCaller($caller);
     }

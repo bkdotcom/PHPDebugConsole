@@ -90,11 +90,9 @@ class MethodTableTest extends DebugTestFramework
     }
 
     /**
-     * Override me
-     *
      * @return array
      */
-    public function dumpProvider()
+    public function providerTestMethod()
     {
         $rowsA = array(
             // note different order of keys / not all rows have all cols
@@ -199,7 +197,7 @@ EOD;
                         <tr><th class="t_key t_int" scope="row">0</th><td class="t_string">a</td></tr>
                         <tr><th class="t_key t_int" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i</td></tr>
                         <tr><th class="t_key t_int" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
-                        <tr><th class="t_key t_int" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="t_classname">MethodTableTest</span><span class="t_operator">::</span><span class="method-name">dumpProvider</span></td></tr>
+                        <tr><th class="t_key t_int" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="t_classname">MethodTableTest</span><span class="t_operator">::</span><span class="method-name">providerTestMethod</span></td></tr>
                         <tr><th class="t_key t_int" scope="row">4</th><td class="t_object" data-accessible="public"><span class="t_classname">Closure</span>
                         <dl class="object-inner">
                         <dt class="properties">no properties</dt>
@@ -218,15 +216,15 @@ EOD;
                         [0] => "a"
                         [1] => "2233-03-22T00:00:00%i"
                         [2] => Resource id #%d: stream
-                        [3] => callable: MethodTableTest::dumpProvider
+                        [3] => callable: MethodTableTest::providerTestMethod
                         [4] => (object) Closure
                             Properties: none!
                             Methods:
                                 public: '.$dateTimePubMethods.'
                                 private: 1
                     )',
-                    'script' => 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::dumpProvider",{"___class_name":"Closure"}]);',
-                    'firephp' => 'X-Wf-1-1-1-4: 197|[{"Type":"TABLE","Label":"flat"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::dumpProvider"],[4,{"___class_name":"Closure"}]]]|',
+                    'script' => 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::providerTestMethod",{"___class_name":"Closure"}]);',
+                    'firephp' => 'X-Wf-1-1-1-4: 203|[{"Type":"TABLE","Label":"flat"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::providerTestMethod"],[4,{"___class_name":"Closure"}]]]|',
                 ),
             ),
             array(

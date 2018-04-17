@@ -6,7 +6,7 @@
 class TypeArrayTest extends DebugTestFramework
 {
 
-    public function dumpProvider()
+    public function providerTestMethod()
     {
 		// indented with tab
         $arrayDumpHtml = <<<'EOD'
@@ -95,14 +95,13 @@ EOD;
             'log',
             array($test_a),
             array(
+                // 'entry' => array(),
                 'html' => function ($strHtml) {
                     // $this->stdOut('strHtml', $strHtml);
                     $this->assertSelectEquals('.key-value > .t_keyword', 'array', true, $strHtml);
                     $this->assertSelectEquals('.key-value > .t_recursion', '*RECURSION*', true, $strHtml);
                 },
                 'text' => array('contains' => '    [val] => array *RECURSION*'),
-                // '{"foo":"bar","val":"array *RECURSION*"}'
-                // 'script' => array('foo'=>'bar', 'val'=>'array *RECURSION*'),
                 'script' => 'console.log({"foo":"bar","val":"array *RECURSION*"});',
             )
         );

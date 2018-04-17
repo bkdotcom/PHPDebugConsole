@@ -6,7 +6,7 @@
 class TypeStringTest extends DebugTestFramework
 {
 
-    public function dumpProvider()
+    public function providerTestMethod()
     {
         $ts = time();
         // val, html, text, script

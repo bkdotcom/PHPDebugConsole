@@ -371,7 +371,7 @@ class Internal implements SubscriberInterface
         $this->debug->info('PHP Version', PHP_VERSION);
         $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
         $this->debug->info('session.cache_limiter', \ini_get('session.cache_limiter'));
-        if (error_reporting() !== E_ALL) {
+        if (\error_reporting() !== E_ALL) {
             $styleMono = 'font-family:monospace;';
             $styleReset = 'font-family:inherit; white-space:pre-wrap;';
             $msgLines = array(
@@ -385,13 +385,13 @@ class Internal implements SubscriberInterface
                 $styles[] = $styleReset;
             } elseif ($errorReporting === "system") {
                 $msgLines[] = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
-            } elseif ($errorReporting !== error_reporting()) {
+            } elseif ($errorReporting !== \error_reporting()) {
                 $msgLines[] = 'PHPDebugConsole\'s errorHandler is using a errorReporting value that differs from %cerror_reporting%c';
                 $styles[] = $styleMono;
                 $styles[] = $styleReset;
             }
-            $args = array(implode("\n", $msgLines));
-            $args = array_merge($args, $styles);
+            $args = array(\implode("\n", $msgLines));
+            $args = \array_merge($args, $styles);
             \call_user_func_array(array($this->debug, 'warn'), $args);
         }
     }

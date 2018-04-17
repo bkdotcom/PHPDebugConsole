@@ -95,7 +95,7 @@ class Text extends Base
             $this->depth --;
         }
         $str = $prefix.$this->buildArgString($args);
-        $str = rtrim($str);
+        $str = \rtrim($str);
         if ($str) {
             $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str);
             return $str."\n";
@@ -324,6 +324,6 @@ class Text extends Base
         foreach ($this->data['alerts'] as $entry) {
             $str .= $this->processLogEntryWEvent('alert', array($entry[0]), $entry[1]);
         }
-        return \trim($str);
+        return $str;
     }
 }

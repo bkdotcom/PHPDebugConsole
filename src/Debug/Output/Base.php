@@ -55,8 +55,8 @@ abstract class Base implements OutputInterface
      */
     public function __get($prop)
     {
-        $getter = 'get'.ucfirst($prop);
-        if (method_exists($getter)) {
+        $getter = 'get'.\ucfirst($prop);
+        if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }
     }

@@ -6,7 +6,7 @@
 class TypeBasicTest extends DebugTestFramework
 {
 
-    public function dumpProvider()
+    public function providerTestMethod()
     {
         $ts = time();
         $test = new \bdk\DebugTest\Test();

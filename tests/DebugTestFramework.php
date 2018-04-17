@@ -120,7 +120,7 @@ class DebugTestFramework extends DOMTestCase
      *
      * @return array
      */
-    public function dumpProvider()
+    public function providerTestMethod()
     {
         return array(
             // val, html, text, script
@@ -139,16 +139,17 @@ class DebugTestFramework extends DOMTestCase
     /**
      * Test Method's output
      *
-     * @param string $method debug method
-     * @param array  $args   method arguments
-     * @param array  $tests  array of 'outputAs' => 'string
+     * @param string|null $method debug method to call or null/false to just test against last log entry
+     * @param array       $args   method arguments
+     * @param array|false $tests  array of 'outputAs' => 'string
      *                          ie array('html'=>'expected html')
+     *                          pass false to test that nothing was logged
      *
-     * @dataProvider dumpProvider
+     * @dataProvider providerTestMethod
      *
      * @return void
      */
-    public function methodTest($method, $args = array(), $tests = array())
+    public function testMethod($method, $args = array(), $tests = array())
     {
         if ($tests === false) {
             /*
@@ -163,8 +164,15 @@ class DebugTestFramework extends DOMTestCase
             $this->assertSame($logCountBefore, $logCountAfter, 'failed asserting nothing logged');
             return;
         }
-        \call_user_func_array(array($this->debug, $method), $args);
-        $logEntry = $this->debug->getData('log/end');
+        $dataPath = 'log/end';
+        if (is_array($method)) {
+            if (isset($method['dataPath'])) {
+                $dataPath = $method['dataPath'];
+            }
+        } elseif ($method) {
+            \call_user_func_array(array($this->debug, $method), $args);
+        }
+        $logEntry = $this->debug->getData($dataPath);
         if ($method == 'alert') {
             $logEntry = $this->debug->getData('alerts/end');
             $logEntry = array('alert', array($logEntry[0]), $logEntry[1]);
@@ -181,6 +189,8 @@ class DebugTestFramework extends DOMTestCase
                 $outputObj->unitTestMode = true;
                 $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
                 $output = \implode("\n", $outputObj->lastHeadersSent);
+                // @todo assert that header integer increments
+                $outputExpect = preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
             } else {
                 $outputObj = $this->debug->output->{$outputAs};
                 $output = $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);

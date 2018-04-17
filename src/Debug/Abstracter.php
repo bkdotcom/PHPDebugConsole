@@ -107,21 +107,6 @@ class Abstracter
         if (\is_array($mixed)) {
             return $this->abstractArray->getAbstraction($mixed, $method, $hist);
         } elseif (\is_object($mixed)) {
-            // ie, a traversable table
-            /*
-            if ($method === 'table' && \count($hist) === 0) {
-                $return = $this->abstractObject->getAbstraction($mixed, $method, $hist);
-                if ($return['type'] == 'object' && $return['traverseValues']) {
-                    // traverseValyes provided
-                    //   rather than return full abstraction for table's rows, just
-                    //   return this array
-                    return $return['traverseValues'];
-                }
-                return $return;
-            } else {
-                return $this->abstractObject->getAbstraction($mixed, $method, $hist);
-            }
-            */
             return $this->abstractObject->getAbstraction($mixed, $method, $hist);
         } elseif (\is_resource($mixed) || \strpos(\print_r($mixed, true), 'Resource') === 0) {
             return array(

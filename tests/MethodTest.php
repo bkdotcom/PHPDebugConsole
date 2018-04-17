@@ -14,7 +14,7 @@ class MethodTest extends DebugTestFramework
     public function testAlert()
     {
         $message = 'Ballistic missle threat inbound to Hawaii.  Seek immediate shelter.  This is not a drill.';
-        $this->methodTest(
+        $this->testMethod(
             'alert',
             array($message),
             array(
@@ -26,7 +26,7 @@ class MethodTest extends DebugTestFramework
         );
 
         $this->debug->setCfg('collect', false);
-        $this->methodTest(
+        $this->testMethod(
             'alert',
             array($message),
             false
@@ -40,7 +40,7 @@ class MethodTest extends DebugTestFramework
      */
     public function testAssert()
     {
-        $this->methodTest(
+        $this->testMethod(
             'assert',
             array(false, 'this is false'),
             array(
@@ -51,14 +51,14 @@ class MethodTest extends DebugTestFramework
             )
         );
 
-        $this->methodTest(
+        $this->testMethod(
             'assert',
             array(true, 'this is true... not logged'),
             false
         );
 
         $this->debug->setCfg('collect', false);
-        $this->methodTest(
+        $this->testMethod(
             'assert',
             array(false, 'falsey'),
             false
@@ -72,10 +72,10 @@ class MethodTest extends DebugTestFramework
      */
     public function testCount()
     {
-        $this->debug->count('count test');			// 1
+        $this->debug->count('count test');          // 1
         for ($i=0; $i<3; $i++) {
             $this->debug->count();
-            $this->debug->count('count test');		// 2,3,4
+            $this->debug->count('count test');      // 2,3,4
             \bdk\Debug::_count();
         }
         $log = $this->debug->getData('log');
@@ -104,29 +104,29 @@ class MethodTest extends DebugTestFramework
     public function testError()
     {
         $resource = fopen(__FILE__, 'r');
-        $this->methodTest(
-        	'error',
-        	array('a string', array(), new stdClass(), $resource),
-        	array(
-        		'custom' => function ($entry) {
-        			$this->assertSame('error', $entry[0]);
-        			$this->assertSame('a string', $entry[1][0]);
-        			$this->assertSame(array(), $entry[1][1]);
-        			$this->assertTrue($this->checkAbstractionType($entry[1][2], 'object'));
-        			$this->assertTrue($this->checkAbstractionType($entry[1][3], 'resource'));
-        		},
-        		'html' => '<div class="m_error" title="%s: line %d"><span class="t_string no-pseudo">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
-					<dl class="object-inner">
-					<dt class="properties">no properties</dt>
-					<dt class="methods">no methods</dt>
-					</dl>
-					</span>, <span class="t_resource">Resource id #%d: stream</span></div>',
-        		'text' => '⦻ a string, array(), (object) stdClass
-					Properties: none!
-					Methods: none!, Resource id #%i: stream',
-        		'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
-        		'firephp' => 'X-Wf-1-1-1-3: 220|[{"Type":"ERROR","File":"%s","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-        	)
+        $this->testMethod(
+            'error',
+            array('a string', array(), new stdClass(), $resource),
+            array(
+                'custom' => function ($entry) {
+                    $this->assertSame('error', $entry[0]);
+                    $this->assertSame('a string', $entry[1][0]);
+                    $this->assertSame(array(), $entry[1][1]);
+                    $this->assertTrue($this->checkAbstractionType($entry[1][2], 'object'));
+                    $this->assertTrue($this->checkAbstractionType($entry[1][3], 'resource'));
+                },
+                'html' => '<div class="m_error" title="%s: line %d"><span class="t_string no-pseudo">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                    <dl class="object-inner">
+                    <dt class="properties">no properties</dt>
+                    <dt class="methods">no methods</dt>
+                    </dl>
+                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
+                'text' => '⦻ a string, array(), (object) stdClass
+                    Properties: none!
+                    Methods: none!, Resource id #%i: stream',
+                'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
+                'firephp' => 'X-Wf-1-1-1-3: 220|[{"Type":"ERROR","File":"%s","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+            )
         );
         fclose($resource);
 
@@ -138,10 +138,10 @@ class MethodTest extends DebugTestFramework
         */
 
         $this->debug->setCfg('collect', false);
-        $this->methodTest(
-        	'error',
-        	array('error message'),
-        	false
+        $this->testMethod(
+            'error',
+            array('error message'),
+            false
         );
     }
 
@@ -156,102 +156,134 @@ class MethodTest extends DebugTestFramework
         $test = new \bdk\DebugTest\Test();
         $testBase = new \bdk\DebugTest\TestBase();
 
-        $this->methodTest(
-        	'group',
-        	array('a','b','c'),
-        	array(
-        		'entry' => array('group',array('a','b','c'), array()),
-        		'custom' => function () {
-			        $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
-    			},
-        		'html' => '<div class="group-header expanded"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-					<div class="m_group">',
-        		'text' => '▸ a, "b", "c"',
-        		'script' => 'console.group("a","b","c");',
-        		'firephp' => 'X-Wf-1-1-1-4: 61|[{"Type":"GROUP_START","Collapsed":"false","Label":"a"},null]|',
-        	)
+        $this->testMethod(
+            'group',
+            array('a','b','c'),
+            array(
+                'entry' => array('group',array('a','b','c'), array()),
+                'custom' => function () {
+                    $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
+                },
+                'html' => '<div class="group-header expanded"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+                    <div class="m_group">',
+                'text' => '▸ a, "b", "c"',
+                'script' => 'console.group("a","b","c");',
+                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Type":"GROUP_START","Collapsed":"false","Label":"a"},null]|',
+            )
         );
 
         $this->debug->setData('log', array());
         $this->debug->group($this->debug->meta('hideIfEmpty'));
         $this->outputTest(array(
-        	'html' => '<div class="debug-content m_group">
-				</div>',
+            'html' => '<div class="debug-content m_group">
+                </div>',
         ));
 
         /*
             Test default label
         */
-        $this->methodTest(
-        	'group',
-        	array(),
-        	array(
-        		'entry' => array(
-        			'group',
-        			array(__CLASS__.'->methodTest'),
-        			array('isMethodName' => true),
-        		),
-        		'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">methodTest</span></span></div>
-					<div class="m_group">',
-        	)
+        $this->testMethod(
+            'group',
+            array(),
+            array(
+                'entry' => array(
+                    'group',
+                    array(__CLASS__.'->testMethod'),
+                    array('isMethodName' => true),
+                ),
+                'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">testMethod</span></span></div>
+                    <div class="m_group">',
+            )
         );
 
         $this->debug->setData('log', array());
         $testBase->testBasePublic();
-        $this->assertSame(array(
-            'group',
+        $this->testMethod(
+            array('dataPath'=>'log/0'),
+            array(),
             array(
-                'bdk\DebugTest\TestBase->testBasePublic'
-            ),
-            array(
-                'isMethodName' => true,
-            ),
-        ), $this->debug->getData('log/0'));
+                'entry' => array(
+                    'group',
+                    array(
+                        'bdk\DebugTest\TestBase->testBasePublic'
+                    ),
+                    array(
+                        'isMethodName' => true,
+                    ),
+                ),
+                'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
+                    <div class="m_group">',
+            )
+        );
 
         $this->debug->setData('log', array());
         $test->testBasePublic();
-        $this->assertSame(array(
-            'group',
+        $this->testMethod(
+            array('dataPath'=>'log/0'),
+            array(),
             array(
-                'bdk\DebugTest\Test->testBasePublic'
-            ),
-            array(
-                'isMethodName' => true,
-            ),
-        ), $this->debug->getData('log/0'));
+                'entry' => array(
+                    'group',
+                    array(
+                        'bdk\DebugTest\Test->testBasePublic'
+                    ),
+                    array(
+                        'isMethodName' => true,
+                    ),
+                ),
+                'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
+                    <div class="m_group">',
+            )
+        );
 
         // yes, we call Test... but static method is defined in TestBase
         // .... PHP
         $this->debug->setData('log', array());
         \bdk\DebugTest\Test::testBaseStatic();
-        $this->assertSame(array(
-            'group',
+        $this->testMethod(
+            array('dataPath'=>'log/0'),
+            array(),
             array(
-                'bdk\DebugTest\TestBase::testBaseStatic'
-            ),
-            array(
-                'isMethodName' => true,
-            ),
-        ), $this->debug->getData('log/0'));
+                'entry' => array(
+                    'group',
+                    array(
+                        'bdk\DebugTest\TestBase::testBaseStatic'
+                    ),
+                    array(
+                        'isMethodName' => true,
+                    ),
+                ),
+                'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
+                    <div class="m_group">',
+            )
+        );
 
         // even if called with an arrow
         $this->debug->setData('log', array());
         $test->testBaseStatic();
-        $this->assertSame(array(
-            'group',
+        $this->testMethod(
+            array('dataPath'=>'log/0'),
+            array(),
             array(
-                'bdk\DebugTest\TestBase::testBaseStatic'
-            ),
-            array(
-                'isMethodName' => true,
-            ),
-        ), $this->debug->getData('log/0'));
+                'entry' => array(
+                    'group',
+                    array(
+                        'bdk\DebugTest\TestBase::testBaseStatic'
+                    ),
+                    array(
+                        'isMethodName' => true,
+                    ),
+                ),
+                'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
+                    <div class="m_group">',
+            )
+        );
 
         $this->debug->setCfg('collect', false);
-        $this->methodTest(
-        	'group',
-        	array('not logged'),
-        	false
+        $this->testMethod(
+            'group',
+            array('not logged'),
+            false
         );
     }
 
@@ -262,32 +294,34 @@ class MethodTest extends DebugTestFramework
      */
     public function testGroupCollapsed()
     {
-        $this->methodTest(
-        	'groupCollapsed',
-        	array('a', 'b', 'c'),
-        	array(
-        		'entry' => array('groupCollapsed', array('a','b','c'), array()),
-        		'custom' => function () {
-			        $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
-        		},
-        	)
+        $this->testMethod(
+            'groupCollapsed',
+            array('a', 'b', 'c'),
+            array(
+                'entry' => array('groupCollapsed', array('a','b','c'), array()),
+                'custom' => function () {
+                    $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
+                },
+                'html' => '<div class="group-header collapsed"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+                    <div class="m_group">',
+            )
         );
 
         // add a nested gorup that will get removed on output
         $this->debug->groupCollapsed($this->debug->meta('hideIfEmpty'));
 
         $this->outputTest(array(
-        	'html' => '<div class="group-header collapsed"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-				<div class="m_group">
-				</div>',
+            'html' => '<div class="group-header collapsed"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+                <div class="m_group">
+                </div>',
         ));
 
         $this->debug->setCfg('collect', false);
-		$this->methodTest(
-			'groupCollapsed',
-			array('not logged'),
-			false
-		);
+        $this->testMethod(
+            'groupCollapsed',
+            array('not logged'),
+            false
+        );
     }
 
     /**
@@ -306,8 +340,8 @@ class MethodTest extends DebugTestFramework
         $log = $this->debug->getData('log');
         $this->assertCount(2, $log);
         $this->assertSame(array(
-            array('group',array('a','b','c'),array()),
-            array('groupEnd',array(),array()),
+            array('group', array('a','b','c'), array()),
+            array('groupEnd', array(), array()),
         ), $log);
 
         // reset log
@@ -398,25 +432,42 @@ class MethodTest extends DebugTestFramework
     public function testInfo()
     {
         $resource = fopen(__FILE__, 'r');
-        $this->debug->info('a string', array(), new stdClass(), $resource);
+        $this->testMethod(
+            'info',
+            array('a string', array(), new stdClass(), $resource),
+            array(
+                'custom' => function ($logEntry) {
+                    $this->assertSame('info', $logEntry[0]);
+                    $this->assertSame('a string', $logEntry[1][0]);
+                    // check array abstraction
+                    // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
+                    $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
+                    $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+                    // $this->assertTrue($isArray);
+                    $this->assertTrue($isObject);
+                    $this->assertTrue($isResource);
+                },
+                'html' => '<div class="m_info"><span class="t_string no-pseudo">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                    <dl class="object-inner">
+                    <dt class="properties">no properties</dt>
+                    <dt class="methods">no methods</dt>
+                    </dl>
+                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
+                'text' => 'ℹ a string, array(), (object) stdClass
+                    Properties: none!
+                    Methods: none!, Resource id #%d: stream',
+                'script' => 'console.info("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
+                'firephp' => 'X-Wf-1-1-1-5: 98|[{"Type":"INFO","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+            )
+        );
         fclose($resource);
-        $log = $this->debug->getData('log');
-        $logEntry = $log[0];
-        $this->assertSame('info', $logEntry[0]);
-        $this->assertSame('a string', $logEntry[1][0]);
-        // check array abstraction
-        // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-        $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-        $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
-        // $this->assertTrue($isArray);
-        $this->assertTrue($isObject);
-        $this->assertTrue($isResource);
 
-        $logBefore = $this->debug->getData('log');
         $this->debug->setCfg('collect', false);
-        $this->debug->info('info message');
-        $logAfter = $this->debug->getData('log');
-        $this->assertCount(count($logBefore), $logAfter, 'Info() logged although collect=false');
+        $this->testMethod(
+            'info',
+            array('info message'),
+            false
+        );
     }
 
     /**
@@ -427,25 +478,42 @@ class MethodTest extends DebugTestFramework
     public function testLog()
     {
         $resource = fopen(__FILE__, 'r');
-        $this->debug->log('a string', array(), new stdClass(), $resource);
+        $this->testMethod(
+            'log',
+            array('a string', array(), new stdClass(), $resource),
+            array(
+                'custom' => function ($logEntry) {
+                    $this->assertSame('log', $logEntry[0]);
+                    $this->assertSame('a string', $logEntry[1][0]);
+                    // check array abstraction
+                    // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
+                    $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
+                    $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+                    // $this->assertTrue($isArray);
+                    $this->assertTrue($isObject);
+                    $this->assertTrue($isResource);
+                },
+                'html' => '<div class="m_log"><span class="t_string no-pseudo">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                    <dl class="object-inner">
+                    <dt class="properties">no properties</dt>
+                    <dt class="methods">no methods</dt>
+                    </dl>
+                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
+                'text' => 'a string, array(), (object) stdClass
+                    Properties: none!
+                    Methods: none!, Resource id #%d: stream',
+                'script' => 'console.log("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
+                'firephp' => 'X-Wf-1-1-1-5: 97|[{"Type":"LOG","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+            )
+        );
         fclose($resource);
-        $log = $this->debug->getData('log');
-        $logEntry = $log[0];
-        $this->assertSame('log', $logEntry[0]);
-        $this->assertSame('a string', $logEntry[1][0]);
-        // check array abstraction
-        // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-        $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-        $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
-        // $this->assertTrue($isArray);
-        $this->assertTrue($isObject);
-        $this->assertTrue($isResource);
 
-        $logBefore = $this->debug->getData('log');
         $this->debug->setCfg('collect', false);
-        $this->debug->log('log message');
-        $logAfter = $this->debug->getData('log');
-        $this->assertCount(count($logBefore), $logAfter, 'Log() logged although collect=false');
+        $this->testMethod(
+            'log',
+            array('log message'),
+            false
+        );
     }
 
     /*
@@ -460,17 +528,19 @@ class MethodTest extends DebugTestFramework
     public function testTrace()
     {
         $this->debug->trace();
-        $trace = $this->debug->getData('log/0/1/0');
+        $logEntry = $this->debug->getData('log/0');
+        $trace = $logEntry[1][0];
         $this->assertSame(__FILE__, $trace[0]['file']);
-        $this->assertSame(__LINE__ - 3, $trace[0]['line']);
+        $this->assertSame(__LINE__ - 4, $trace[0]['line']);
         $this->assertNotTrue(isset($trace[0]['function']));
         $this->assertSame(__CLASS__.'->'.__FUNCTION__, $trace[1]['function']);
 
-        $logBefore = $this->debug->getData('log');
         $this->debug->setCfg('collect', false);
-        $this->debug->trace();
-        $logAfter = $this->debug->getData('log');
-        $this->assertCount(count($logBefore), $logAfter, 'Trace() logged although collect=false');
+        $this->testMethod(
+            'log',
+            array('log message'),
+            false
+        );
     }
 
     /**
@@ -509,11 +579,12 @@ class MethodTest extends DebugTestFramework
         $this->debug->timeEnd('my label', 'blah%labelblah%timeblah');
         $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1/0'));
 
-        $logBefore = $this->debug->getData('log');
         $this->debug->setCfg('collect', false);
-        $this->debug->timeEnd('my label');
-        $logAfter = $this->debug->getData('log');
-        $this->assertCount(count($logBefore), $logAfter, 'TimeEnd() logged although collect=false');
+        $this->testMethod(
+            'timeEnd',
+            array('my label'),
+            false
+        );
     }
 
     /**
@@ -541,11 +612,12 @@ class MethodTest extends DebugTestFramework
         $this->debug->timeGet('my label', 'blah%labelblah%timeblah');
         $this->assertStringMatchesFormat('blahmy labelblah%fblah', $this->debug->getData('log/2/1/0'));
 
-        $logBefore = $this->debug->getData('log');
         $this->debug->setCfg('collect', false);
-        $this->debug->timeGet('my label');
-        $logAfter = $this->debug->getData('log');
-        $this->assertCount(count($logBefore), $logAfter, 'TimeGet() logged although collect=false');
+        $this->testMethod(
+            'timeGet',
+            array('my label'),
+            false
+        );
     }
 
     /**
@@ -556,24 +628,44 @@ class MethodTest extends DebugTestFramework
     public function testWarn()
     {
         $resource = fopen(__FILE__, 'r');
-        $this->debug->warn('a string', array(), new stdClass(), $resource);
-        fclose($resource);
-        $log = $this->debug->getData('log');
-        $logEntry = $log[0];
-        $this->assertSame('warn', $logEntry[0]);
-        $this->assertSame('a string', $logEntry[1][0]);
-        // check array abstraction
-        // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-        $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-        $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
-        // $this->assertTrue($isArray);
-        $this->assertTrue($isObject);
-        $this->assertTrue($isResource);
+        $this->testMethod(
+            'warn',
+            array('a string', array(), new stdClass(), $resource),
+            array(
+                'custom' => function ($logEntry) {
+                    $this->assertSame('warn', $logEntry[0]);
+                    $this->assertSame('a string', $logEntry[1][0]);
+                    // check array abstraction
+                    // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
+                    $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
+                    $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+                    // $this->assertTrue($isArray);
+                    $this->assertTrue($isObject);
+                    $this->assertTrue($isResource);
 
-        $logBefore = $this->debug->getData('log');
+                    $this->assertArrayHasKey('file', $logEntry[2]);
+                    $this->assertArrayHasKey('line', $logEntry[2]);
+                },
+                'html' => '<div class="m_warn" title="'.__DIR__.'/DebugTestFramework.php: line %d"><span class="t_string no-pseudo">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                    <dl class="object-inner">
+                    <dt class="properties">no properties</dt>
+                    <dt class="methods">no methods</dt>
+                    </dl>
+                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
+                'text' => '⚠ a string, array(), (object) stdClass
+                    Properties: none!
+                    Methods: none!, Resource id #%d: stream',
+                'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php: line %d");',
+                'firephp' => 'X-Wf-1-1-1-5: 219|[{"Type":"WARN","File":"'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+            )
+        );
+        fclose($resource);
+
         $this->debug->setCfg('collect', false);
-        $this->debug->warn('warn message');
-        $logAfter = $this->debug->getData('log');
-        $this->assertCount(count($logBefore), $logAfter, 'Warn() logged although collect=false');
+        $this->testMethod(
+            'warn',
+            array('warn message'),
+            false
+        );
     }
 }

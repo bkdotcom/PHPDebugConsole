@@ -23,6 +23,7 @@ class Html extends Base
 {
 
     protected $errorSummary;
+    protected $wrapAttribs = array();
 
     /**
      * Constructor
@@ -120,10 +121,7 @@ class Html extends Base
             );
             $val = '<'.$wrap.$this->debug->utilities->buildAttribString($wrapAttribs).'>'.$val.'</'.$wrap.'>';
         }
-        $this->wrapAttribs = array(
-            'class' => array(),
-            'title' => null,
-        );
+        $this->wrapAttribs = array();
         return $val;
     }
 
@@ -502,7 +500,14 @@ class Html extends Base
      */
     protected function dumpObject($abs, $path = array())
     {
-        return $this->object->dump($abs, $path);
+        /*
+            Were we debugged from inside or outside of the object?
+        */
+        $dump = $this->object->dump($abs, $path);
+        $this->wrapAttribs['data-accessible'] = $abs['scopeClass'] == $abs['className']
+            ? 'private'
+            : 'public';
+        return $dump;
     }
 
     /**

@@ -44,61 +44,65 @@ class HtmlObject
             'title' => $title ?: null,
         ));
         if ($abs['isRecursion']) {
-            $html = $strClassName
+            return $strClassName
                 .' <span class="t_recursion">*RECURSION*</span>';
-        } elseif ($abs['isExcluded']) {
-            $html = $strClassName
-                .' <span class="excluded">(not inspected)</span>';
-        } else {
-            $toStringMarkup = '';
-            $toStringVal = null;
-            if ($abs['stringified']) {
-                $toStringVal = $abs['stringified'];
-            } elseif (isset($abs['methods']['__toString']['returnValue'])) {
-                $toStringVal = $abs['methods']['__toString']['returnValue'];
-            }
-            if ($toStringVal) {
-                $toStringValAppend = '';
-                if (\strlen($toStringVal) > 100) {
-                    $toStringLen = \strlen($toStringVal);
-                    $toStringVal = \substr($toStringVal, 0, 100);
-                    $toStringValAppend = '&hellip; <i>('.($toStringLen - 100).' more chars)</i>';
-                }
-                $toStringDump = $this->debug->output->html->dump($toStringVal);
-                $classAndInner = $this->debug->utilities->parseAttribString($toStringDump);
-                $toStringMarkup = '<span class="'.$classAndInner['class'].' t_stringified"'
-                    .(!$abs['stringified'] ? ' title="__toString()"' : '').'>'
-                    .$classAndInner['innerhtml']
-                    .$toStringValAppend
-                    .'</span>'."\n";
-            }
-            $html = $toStringMarkup
-                .$strClassName."\n"
-                .'<dl class="object-inner">'."\n"
-                    .'<dt>extends</dt>'."\n"
-                        .'<dd class="extends">'.\implode('</dd>'."\n".'<dd class="extends">', $abs['extends']).'</dd>'."\n"
-                    .'<dt>implements</dt>'."\n"
-                        .'<dd class="interface">'.\implode('</dd>'."\n".'<dd class="interface">', $abs['implements']).'</dd>'."\n"
-                    .$this->dumpConstants($abs['constants'])
-                    .$this->dumpProperties($abs)
-                    .($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')
-                        ? $this->dumpMethods($abs['methods'])
-                        : ''
-                    )
-                    .$this->dumpPhpDoc($abs['phpDoc'])
-                .'</dl>'."\n";
-            // remove <dt>'s with empty <dd>'
-            $html = \preg_replace('#<dt[^>]*>\w+</dt>\s*<dd[^>]*></dd>\s*#', '', $html);
         }
-        /*
-            Were we debugged from inside or outside of the object?
-        */
-        $accessible = $abs['scopeClass'] == $abs['className']
-            ? 'private'
-            : 'public';
-        $this->debug->output->html->wrapAttribs['data-accessible'] = $accessible;
+        if ($abs['isExcluded']) {
+            return $strClassName
+                .' <span class="excluded">(not inspected)</span>';
+        }
+        $html = $this->dumpToString($abs)
+            .$strClassName."\n"
+            .'<dl class="object-inner">'."\n"
+                .'<dt>extends</dt>'."\n"
+                    .'<dd class="extends">'.\implode('</dd>'."\n".'<dd class="extends">', $abs['extends']).'</dd>'."\n"
+                .'<dt>implements</dt>'."\n"
+                    .'<dd class="interface">'.\implode('</dd>'."\n".'<dd class="interface">', $abs['implements']).'</dd>'."\n"
+                .$this->dumpConstants($abs['constants'])
+                .$this->dumpProperties($abs)
+                .($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')
+                    ? $this->dumpMethods($abs['methods'])
+                    : ''
+                )
+                .$this->dumpPhpDoc($abs['phpDoc'])
+            .'</dl>'."\n";
+        // remove <dt>'s with empty <dd>'
+        $html = \preg_replace('#<dt[^>]*>\w+</dt>\s*<dd[^>]*></dd>\s*#', '', $html);
         $html = \str_replace(' title=""', '', $html);
         return $html;
+    }
+
+    /**
+     * Dump object's __toString or stringified value
+     *
+     * @param array $abs object abstraction
+     *
+     * @return string html
+     */
+    protected function dumpToString($abs)
+    {
+        $val = '';
+        if ($abs['stringified']) {
+            $val = $abs['stringified'];
+        } elseif (isset($abs['methods']['__toString']['returnValue'])) {
+            $val = $abs['methods']['__toString']['returnValue'];
+        }
+        if (!$val) {
+        	return '';
+        }
+        $valAppend = '';
+        $len = \strlen($val);
+        if ($len > 100) {
+            $val = \substr($val, 0, 100);
+            $valAppend = '&hellip; <i>('.($len - 100).' more chars)</i>';
+        }
+        $toStringDump = $this->debug->output->html->dump($val);
+        $classAndInner = $this->debug->utilities->parseAttribString($toStringDump);
+        return '<span class="'.$classAndInner['class'].' t_stringified"'
+            .(!$abs['stringified'] ? ' title="__toString()"' : '').'>'
+            .$classAndInner['innerhtml']
+            .$valAppend
+            .'</span>'."\n";
     }
 
     /**

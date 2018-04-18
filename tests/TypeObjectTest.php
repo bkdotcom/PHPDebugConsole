@@ -47,26 +47,6 @@ EOD;
     magic: 1
 EOD;
 
-        /*
-        $script = array(
-            '___class_name' => 'bdk\DebugTest\Test',
-            '(public) debug' => '(object) bdk\Debug (not inspected)',
-            '(public) instance' => '(object) bdk\DebugTest\Test *RECURSION*',
-            '(public) propPublic' => 'redefined in Test (public)',
-            '(public) propStatic' => 'I\'m Static',
-            '(public) someArray' => array(
-                'int' => 123,
-                'numeric' => '123',
-                'string' => 'cheese',
-                'bool' => true,
-                'obj' => null,
-            ),
-            '(protected) propProtected' => 'defined only in TestBase (protected)',
-            '(private) propPrivate' => 'redefined in Test (private) (alternate value via __debugInfo)',
-            '(🔒 private) testBasePrivate' => 'defined in TestBase (private)',
-            '(debug) debugValue' => 'This property is debug only',
-        );
-        */
         return array(
             array(
                 'log',
@@ -192,13 +172,6 @@ EOD;
                         )), $str);
                     },
                     'text' => $text2,
-                    /*
-                    'script' => array(
-                        '___class_name' => 'bdk\DebugTest\Test2',
-                        '(✨ magic) magicProp' => null,
-                        '(✨ magic-read) magicReadProp' => null,
-                    ),
-                    */
                     'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test2","(\u2728 magic) magicProp":null,"(\u2728 magic-read) magicReadProp":null});',
                 ),
             ),
@@ -225,7 +198,6 @@ EOD;
         $this->assertNotContains('fail', $output);
         $this->assertSame('fail', $test_o->propPublic);   // prop should be 'fail' at this point
     }
-
 
     /**
      * Test
@@ -267,9 +239,7 @@ EOD;
         );
         $this->assertTrue($abs['viaDebugInfo']);
 
-        /*
-            Properties
-        */
+        //    Properties
         $this->assertArrayNotHasKey('propNoDebug', $abs['properties']);
         $this->assertTrue($abs['properties']['debug']['value']['isExcluded']);
         $this->assertTrue($abs['properties']['instance']['value']['isRecursion']);
@@ -332,9 +302,7 @@ EOD;
             $abs['properties']['debugValue']
         );
 
-        /*
-            Methods
-        */
+        //    Methods
         $this->assertArrayNotHasKey('testBasePrivate', $abs['methods']);
         $this->assertTrue($abs['methods']['methodPublic']['isDeprecated']);
     }
@@ -486,16 +454,6 @@ EOD;
         $test = new \bdk\DebugTest\Test();
         $test->propPublic = &$test;
         $this->debug->log('test', $test);
-        /*
-        $output = $this->debug->output();
-        $xml = new DomDocument;
-        $xml->loadXML($output);
-        $select = '.m_log
-            > .t_object > .object-inner
-            > .t_array > .array-inner > .key-value
-            > .t_object > .t_recursion';
-        $this->assertSelectCount($select, 1, $xml);
-        */
         $abstraction = $this->debug->getData('log/0/1/1');
         $this->assertEquals(
             true,
@@ -515,17 +473,6 @@ EOD;
         $test = new \bdk\DebugTest\Test();
         $test->prop = array( &$test );
         $this->debug->log('test', $test);
-        /*
-        $output = $this->debug->output();
-        $xml = new DomDocument;
-        $xml->loadXML($output);
-        $select = '.m_log
-            > .t_object > .object-inner
-            > .t_array > .array-inner > .key-value
-            > .t_array > .array-inner > .key-value
-            > .t_object > .t_recursion';
-        $this->assertSelectCount($select, 1, $xml);
-        */
         $abstraction = $this->debug->getData('log/0/1/1');
         $this->assertEquals(
             true,
@@ -549,18 +496,6 @@ EOD;
         $test_oa->ob = $test_ob;
         $test_ob->oa = $test_oa;
         $this->debug->log('test_oa', $test_oa);
-        /*
-        $output = $this->debug->output();
-        $xml = new DomDocument;
-        $xml->loadXML($output);
-        $select = '.m_log
-            > .t_object > .object-inner
-            > .t_array > .array-inner > .t_key_value
-            > .t_object > .object-inner
-            > .t_array > .array-inner > .t_key_value
-            > .t_object > .t_recursion';
-        $this->assertSelectCount($select, 1, $xml);
-        */
         $abstraction = $this->debug->getData('log/0/1/1');
         $this->assertEquals(
             true,

@@ -32,12 +32,11 @@ class HtmlObject
     /**
      * Dump object as html
      *
-     * @param array $abs  object abstraction
-     * @param array $path {@internal}
+     * @param array $abs object abstraction
      *
      * @return string
      */
-	public function dump($abs, $path = array())
+	public function dump($abs)
 	{
         $title = \trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
         $strClassName = $this->debug->output->html->markupClassname($abs['className'], 'span', array(

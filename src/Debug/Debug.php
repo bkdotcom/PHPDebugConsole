@@ -317,7 +317,7 @@ class Debug
         $args = \func_get_args();
         if (\count($args) == 1 && \is_int($args[0])) {
             $label = null;
-            $flags = $args[1];
+            $flags = $args[0];
         }
         $meta = array();
         if (isset($label)) {

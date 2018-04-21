@@ -503,7 +503,7 @@ class Html extends Base
         /*
             Were we debugged from inside or outside of the object?
         */
-        $dump = $this->object->dump($abs, $path);
+        $dump = $this->object->dump($abs);
         $this->wrapAttribs['data-accessible'] = $abs['scopeClass'] == $abs['className']
             ? 'private'
             : 'public';

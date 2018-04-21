@@ -129,7 +129,19 @@ class MethodTest extends DebugTestFramework
                 'html' => '<div class="m_count" title="'.__FILE__.': line '.$lines[1].'"><span class="t_string no-pseudo">count</span> = <span class="t_int">1</span></div>',
                 'text' => '✚ count = 1',
                 'script' => 'console.log("count",1);',
-                'firephp' => 'X-Wf-1-1-1-4: 146|[{"Type":"LOG","File":"'.str_replace('/', '\\/', __FILE__).'","Line":'.$lines[1].',"Label":"count"},1]|',
+                'firephp' => 'X-Wf-1-1-1-4: %d|[{"Type":"LOG","File":"'.str_replace('/', '\\/', __FILE__).'","Line":'.$lines[1].',"Label":"count"},1]|',
+            )
+        );
+
+        /*
+            Test passing flags as first param
+        */
+        $this->testMethod(
+            'count',
+            array(\bdk\Debug::COUNT_NO_OUT),
+            array(
+                'notLogged' => true,
+                'return' => 1,
             )
         );
 
@@ -179,7 +191,7 @@ class MethodTest extends DebugTestFramework
                     Properties: none!
                     Methods: none!, Resource id #%i: stream',
                 'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
-                'firephp' => 'X-Wf-1-1-1-3: 220|[{"Type":"ERROR","File":"%s","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-3: %d|[{"Type":"ERROR","File":"%s","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);
@@ -740,7 +752,7 @@ class MethodTest extends DebugTestFramework
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php: line %d");',
-                'firephp' => 'X-Wf-1-1-1-5: 219|[{"Type":"WARN","File":"'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Type":"WARN","File":"'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);

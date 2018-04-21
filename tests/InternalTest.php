@@ -100,5 +100,21 @@ class InternalTest extends DebugTestFramework
      */
     public function testErrorStats()
     {
+
+        parent::$allowError = true;
+
+        1/0;    // warning
+
+        $this->assertSame(array(
+            'inConsole' => 1,
+            'inConsoleCategories' => 1,
+            'notInConsole' => 0,
+            'counts' => array(
+                'warning' => array(
+                    'inConsole' => 1,
+                    'notInConsole' => 0,
+                )
+            ),
+        ), $this->debug->internal->errorStats());
     }
 }

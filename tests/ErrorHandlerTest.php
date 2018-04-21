@@ -14,7 +14,7 @@ class ErrorHandlerTest extends DebugTestFramework
 
     public function setUp()
     {
-        parent::setup();
+        parent::setUp();
         $this->debug->eventManager->subscribe('errorHandler.error', array($this, 'onError'));
     }
 

@@ -43,7 +43,9 @@ class Script extends Base
         $str .= '<script type="text/javascript">'."\n";
         $str .= $this->processLogEntryWEvent('groupCollapsed', array(
             'PHP',
-            $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI'],
+            (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])
+                ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
+                : ''),
             $errorStr,
         ));
         $str .= $this->processAlerts();

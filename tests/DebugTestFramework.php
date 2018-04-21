@@ -123,7 +123,6 @@ class DebugTestFramework extends DOMTestCase
     public function providerTestMethod()
     {
         return array(
-            // val, html, text, script
             array(
                 'log',
                 array(null),
@@ -151,10 +150,9 @@ class DebugTestFramework extends DOMTestCase
      */
     public function testMethod($method, $args = array(), $tests = array())
     {
+        /*
         if ($tests === false) {
-            /*
-                Assert that nothing gets logged
-            */
+            // Assert that nothing gets logged
             $path = $method == 'alert'
                 ? 'alerts/count'
                 : 'log/count';
@@ -164,48 +162,65 @@ class DebugTestFramework extends DOMTestCase
             $this->assertSame($logCountBefore, $logCountAfter, 'failed asserting nothing logged');
             return;
         }
+        */
+        $countPath = $method == 'alert'
+            ? 'alerts/count'
+            : 'log/count';
         $dataPath = 'log/end';
+        $logCountBefore = $this->debug->getData($countPath);
         if (is_array($method)) {
             if (isset($method['dataPath'])) {
                 $dataPath = $method['dataPath'];
             }
         } elseif ($method) {
-            \call_user_func_array(array($this->debug, $method), $args);
+            $return = \call_user_func_array(array($this->debug, $method), $args);
         }
         $logEntry = $this->debug->getData($dataPath);
         if ($method == 'alert') {
             $logEntry = $this->debug->getData('alerts/end');
             $logEntry = array('alert', array($logEntry[0]), $logEntry[1]);
         }
-        foreach ($tests as $outputAs => $outputExpect) {
-            if ($outputAs == 'entry') {
+        if (!$tests) {
+            $tests = array(
+                'notLogged' => true,
+            );
+        }
+        foreach ($tests as $test => $outputExpect) {
+            if ($test == 'entry') {
                 $this->assertSame($outputExpect, $logEntry);
                 continue;
-            } elseif ($outputAs == 'custom') {
+            } elseif ($test == 'custom') {
                 \call_user_func($outputExpect, $logEntry);
                 continue;
-            } elseif ($outputAs == 'firephp') {
-                $outputObj = $this->debug->output->{$outputAs};
+            } elseif ($test == 'notLogged') {
+                $this->assertSame($logCountBefore, $this->debug->getData($countPath), 'failed asserting nothing logged');
+                continue;
+            } elseif ($test == 'return') {
+                $this->assertSame($outputExpect, $return);
+                continue;
+            }
+            if ($test == 'firephp') {
+                $outputObj = $this->debug->output->{$test};
                 $outputObj->unitTestMode = true;
                 $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
                 $output = \implode("\n", $outputObj->lastHeadersSent);
                 // @todo assert that header integer increments
                 $outputExpect = preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
             } else {
-                $outputObj = $this->debug->output->{$outputAs};
+                $outputObj = $this->debug->output->{$test};
                 $output = $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
             }
             if (\is_callable($outputExpect)) {
                 $outputExpect($output);
             } elseif (\is_array($outputExpect) && isset($outputExpect['contains'])) {
-                $this->assertContains($outputExpect['contains'], $output, $outputAs.' doesn\'t contain');
+                $this->assertContains($outputExpect['contains'], $output, $test.' doesn\'t contain');
             } else {
                 $output = \preg_replace("#^\s+#m", '', $output);
                 $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);
                 // @see https://github.com/sebastianbergmann/phpunit/issues/3040
                 $output = \str_replace("\r", '[\\r]', $output);
                 $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
-                $this->assertStringMatchesFormat($outputExpect, $output, $outputAs.' not same');
+                $this->assertStringMatchesFormat(trim($outputExpect), trim($output), $test.' not same');
             }
         }
     }
@@ -228,12 +243,14 @@ class DebugTestFramework extends DOMTestCase
             'runtime' => $this->debug->getData('runtime'),
         );
         $backupOutputAs = $this->debug->getCfg('outputAs');
-        foreach ($tests as $outputAs => $expectContains) {
-            $this->debug->setCfg('outputAs', $outputAs);
+        foreach ($tests as $test => $expectContains) {
+            $this->debug->setCfg('outputAs', $test);
             $output = $this->debug->output();
             $output = \preg_replace("#^\s+#m", '', $output);
             $expectContains = \preg_replace('#^\s+#m', '', $expectContains);
-            $this->assertContains($expectContains, $output);
+            if ($expectContains) {
+                $this->assertContains($expectContains, $output);
+            }
             foreach ($backupData as $k => $v) {
                 $this->debug->setData($k, $v);
             }

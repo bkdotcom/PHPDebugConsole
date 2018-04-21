@@ -84,9 +84,12 @@ class Config
      */
     public function getCfgLazy($name)
     {
-        return isset($this->cfgLazy[$name])
-            ? $this->cfgLazy[$name]
-            : array();
+        if (!isset($this->cfgLazy[$name])) {
+            return array();
+        }
+        $return = $this->cfgLazy[$name];
+        unset($this->cfgLazy[$name]);
+        return $return;
     }
 
     /**
@@ -126,6 +129,13 @@ class Config
             } else {
                 $return[$k] = array();
                 $this->cfgLazy[$k] = $v;
+            }
+        }
+        if (isset($this->cfgLazy['output']['outputAs'])) {
+            $lazyPlugins = array('chromeLogger','firephp','html','script','text');
+            if (\is_object($this->cfgLazy['output']['outputAs']) || !\in_array($this->cfgLazy['output']['outputAs'], $lazyPlugins)) {
+                // output may need to subscribe to events.... go ahead and load
+                $this->debug->output;
             }
         }
         if (\is_string($pathOrVals)) {

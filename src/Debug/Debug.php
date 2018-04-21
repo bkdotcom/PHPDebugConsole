@@ -45,6 +45,8 @@ class Debug
     public $internal;
     public $utilities;
 
+    const COUNT_NO_INC = 1;
+    const COUNT_NO_OUT = 2;
     const META = "\x00meta\x00";
     const VERSION = "2.1.0";
 
@@ -302,30 +304,51 @@ class Debug
      *
      * If `label` is omitted, logs the number of times `count()` has been called at this particular line.
      *
-     * @param mixed $label label
+     * @param mixed   $label label
+     * @param integer $flags (optional)
+     *                          A bitmask of
+     *                          \bdk\Debug::COUNT_NO_INC : don't increment the counter
+     *                          \bdk\Debug::COUNT_NO_OUT : don't output/log
      *
      * @return integer The count
      */
-    public function count($label = null)
+    public function count($label = null, $flags = 0)
     {
+        $args = \func_get_args();
+        if (\count($args) == 1 && \is_int($args[0])) {
+            $label = null;
+            $flags = $args[1];
+        }
+        $meta = array();
         if (isset($label)) {
-            $dataLabel = $label;
+            $dataLabel = (string) $label;
         } else {
             // determine calling file & line
-            $label = 'count';
             $callerInfo = $this->utilities->getCallerInfo();
-            $dataLabel = $callerInfo['file'].': '.$callerInfo['line'];
+            $meta = array(
+                'file' => $callerInfo['file'],
+                'line' => $callerInfo['line'],
+            );
+            $label = 'count';
+            $dataLabel = $meta['file'].': '.$meta['line'];
         }
         if (!isset($this->data['counts'][$dataLabel])) {
-            $this->data['counts'][$dataLabel] = 1;
-        } else {
+            $this->data['counts'][$dataLabel] = 0;
+        }
+        if (!($flags & self::COUNT_NO_INC)) {
             $this->data['counts'][$dataLabel]++;
         }
         $count = $this->data['counts'][$dataLabel];
-        $this->appendLog('count', array(
-            $label,
-            $count,
-        ));
+        if (!($flags & self::COUNT_NO_OUT)) {
+            $this->appendLog(
+                'count',
+                array(
+                    (string) $label,
+                    $count,
+                ),
+                $meta
+            );
+        }
         return $count;
     }
 
@@ -861,8 +884,14 @@ class Debug
         if (!$this->cfg['output']) {
             return null;
         }
+        /*
+            I'd like to put this outputAs setting bit inside Output::onOutput
+            but, adding a debug.output subscriber from within a debug.output subscriber = fail
+        */
         $outputAs = $this->output->getCfg('outputAs');
-        $this->output->setCfg('outputAs', $outputAs);
+        if (\is_string($outputAs)) {
+            $this->output->setCfg('outputAs', $outputAs);
+        }
         $return = $this->eventManager->publish(
             'debug.output',
             $this,
@@ -876,6 +905,18 @@ class Debug
         $this->data['logSummary'] = array();
         $this->data['outputSent'] = true;
         return $return;
+    }
+
+    /**
+     * Remove plugin
+     *
+     * @param SubscriberInterface $plugin object implementing SubscriberInterface
+     *
+     * @return void
+     */
+    public function removePlugin(SubscriberInterface $plugin)
+    {
+        $this->eventManager->RemoveSubscriberInterface($plugin);
     }
 
     /**

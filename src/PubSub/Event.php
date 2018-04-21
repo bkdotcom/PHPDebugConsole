@@ -1,5 +1,7 @@
 <?php
 /**
+ * This file is part of bdk\PubSub
+ *
  * @package   bdk\PubSub
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT

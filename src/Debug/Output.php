@@ -23,7 +23,6 @@ class Output implements SubscriberInterface
 
     private $cfg = array();
     private $debug;
-    private $subscribers = array();
 
     /**
      * Constructor
@@ -63,8 +62,8 @@ class Output implements SubscriberInterface
     {
         if (\strpos($prop, 'output') === 0) {
             $this->debug->errorHandler->setErrorCaller();
-            \trigger_error('output->'.$prop.' is deprecated, use output->'.\strtolower(\substr($prop, 6)).' instead', E_USER_DEPRECATED);
-            $prop = \strtolower(\substr($prop, 6));
+            \trigger_error('output->'.$prop.' is deprecated, use output->'.\lcfirst(\substr($prop, 6)).' instead', E_USER_DEPRECATED);
+            $prop = \lcfirst(\substr($prop, 6));
             if ($this->{$prop}) {
                 return $this->{$prop};
             }
@@ -88,12 +87,8 @@ class Output implements SubscriberInterface
     {
         if ($path == 'outputAs') {
             $ret = $this->cfg['outputAs'];
-            if (empty($ret)) {
+            if (!$ret) {
                 $ret = $this->getDefaultOutputAs();
-            } elseif (\is_object($ret)) {
-                $ret = \get_class($ret);
-                $ret = \preg_replace('/^'.\preg_quote(__NAMESPACE__.'\\Output\\').'/', '', $ret);
-                $ret = \lcfirst($ret);
             }
         } elseif ($path == 'css') {
             $ret = $this->getCss();
@@ -180,6 +175,7 @@ class Output implements SubscriberInterface
         }
         if (isset($values['outputAs'])) {
             $this->setOutputAs($values['outputAs']);
+            unset($values['outputAs']); // setOutputAs does the setting
         }
         if (isset($values['onOutput'])) {
             /*
@@ -286,27 +282,40 @@ class Output implements SubscriberInterface
      */
     private function setOutputAs($outputAs)
     {
+        if (\is_object($this->cfg['outputAs'])) {
+            /*
+                unsubscribe current OutputInterface
+                there can only be one 'outputAs' at a time
+                if multiple output routes are desired, use debug->addPlugin()
+            */
+            $this->debug->removePlugin($this->cfg['outputAs']);
+            $this->cfg['outputAs'] = null;
+        }
+        $prop = null;
+        $obj = null;
         if (\is_string($outputAs)) {
-            $prop = 'output'.\ucfirst($outputAs);
+            $prop = $outputAs;
             $classname = __NAMESPACE__.'\\Output\\'.\ucfirst($outputAs);
-            if (\class_exists($classname)) {
-                if (!\property_exists($this, $prop)) {
-                    $this->{$prop} = new $classname($this->debug);
-                }
-                if (!\in_array($prop, $this->subscribers)) {
-                    $this->subscribers[] = $prop;
-                    $this->debug->addPlugin($this->{$prop});
-                }
+            if (\property_exists($this, $prop)) {
+                $obj = $this->{$prop};
+            } elseif (\class_exists($classname)) {
+                $obj = new $classname($this->debug);
             }
         } elseif ($outputAs instanceof OutputInterface) {
             $classname = \get_class($outputAs);
             $prefix = __NAMESPACE__.'\\Output\\';
             if (\strpos($classname, $prefix) == 0) {
-                $prop = 'output'.\substr($classname, \strlen($prefix));
-                $this->{$prop} = $outputAs;
-                $this->subscribers[] = $prop;
+                $prop = \substr($classname, \strlen($prefix));
+                $prop = \lcfirst($prop);
             }
-            $this->debug->addPlugin($outputAs);
+            $obj = $outputAs;
+        }
+        if ($obj) {
+            $this->debug->addPlugin($obj);
+            $this->cfg['outputAs'] = $obj;
+            if ($prop) {
+                $this->{$prop} = $obj;
+            }
         }
     }
 

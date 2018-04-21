@@ -221,11 +221,11 @@ class Html extends Base
             $attribs = array(
                 'class' => 'm_'.$method,
             );
+            if (isset($meta['file'])) {
+                $attribs['title'] = $meta['file'].': line '.$meta['line'];
+            }
             if (\in_array($method, array('error','info','log','warn'))) {
                 if (\in_array($method, array('error','warn'))) {
-                    if (isset($meta['file'])) {
-                        $attribs['title'] = $meta['file'].': line '.$meta['line'];
-                    }
                     if (isset($meta['errorCat'])) {
                         $attribs['class'] .= ' error-'.$meta['errorCat'];
                     }

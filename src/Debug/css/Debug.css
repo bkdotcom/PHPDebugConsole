@@ -219,6 +219,7 @@
 	Methods
 */
 .debug .m_assert,
+	.debug .m_count,
 	.debug .m_error,
 	.debug .m_info,
 	.debug .m_log,

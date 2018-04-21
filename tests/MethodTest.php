@@ -72,28 +72,82 @@ class MethodTest extends DebugTestFramework
      */
     public function testCount()
     {
-        $this->debug->count('count test');          // 1
+        $lines = array();
+        $this->debug->count('count test');          // 1 (0)
         for ($i=0; $i<3; $i++) {
-            $this->debug->count();
-            $this->debug->count('count test');      // 2,3,4
-            \bdk\Debug::_count();
+            if ($i > 0) {
+                $lines[0] = __LINE__ + 1;
+                $this->debug->count();              // 1,2 (3,6)
+            }
+            $this->debug->count('count test');      // 2,3,4 (1,4,7)
+            $this->debug->count('count_inc test', \bdk\Debug::COUNT_NO_OUT);  //  1,2,3, but not logged
+            $lines[1] = __LINE__ + 1;
+            \bdk\Debug::_count();                   // 1,2,3 (2,5,8)
         }
-        $log = $this->debug->getData('log');
+        $this->debug->log(
+            'count_inc test',
+            $this->debug->count(
+                'count_inc test',
+                \bdk\Debug::COUNT_NO_INC | \bdk\Debug::COUNT_NO_OUT // only return
+            )
+        );
+        $this->debug->count('count_inc test', \bdk\Debug::COUNT_NO_INC);  // (9) //  doesn't increment
+
         $this->assertSame(array(
-            array('count', array('count', 3), array()),
+            array('count', array('count test',1), array()),
+            array('count', array('count test',2), array()),
+            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[1])),
+            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[0])),
+            array('count', array('count test', 3), array()),
+            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[1])),
+            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[0])),
             array('count', array('count test', 4), array()),
-            array('count', array('count', 3), array()),
-        ), array_slice($log, -3));
+            array('count', array('count',3), array('file'=>__FILE__,'line'=>$lines[1])),
+            array('log', array('count_inc test', 3), array()),
+            array('count', array('count_inc test',3), array()),
+        ), $this->debug->getData('log'));
+
+        // test label provided output
+        $this->testMethod(
+            null,
+            array(),
+            array(
+                'html' => '<div class="m_count"><span class="t_string no-pseudo">count_inc test</span> = <span class="t_int">3</span></div>',
+                'text' => '✚ count_inc test = 3',
+                'script' => 'console.log("count_inc test",3);',
+                'firephp' => 'X-Wf-1-1-1-3: 43|[{"Type":"LOG","Label":"count_inc test"},3]|',
+            )
+        );
+
+        // test no label provided output
+        $this->testMethod(
+            array(
+                'dataPath' => 'log/2'
+            ),
+            array(),
+            array(
+                'html' => '<div class="m_count" title="'.__FILE__.': line '.$lines[1].'"><span class="t_string no-pseudo">count</span> = <span class="t_int">1</span></div>',
+                'text' => '✚ count = 1',
+                'script' => 'console.log("count",1);',
+                'firephp' => 'X-Wf-1-1-1-4: 146|[{"Type":"LOG","File":"'.str_replace('/', '\\/', __FILE__).'","Line":'.$lines[1].',"Label":"count"},1]|',
+            )
+        );
 
         /*
-            Count should be maintained even though collect is off
+            Count should still increment and return even though collect is off
         */
-        $countBefore = count($log);
         $this->debug->setCfg('collect', false);
-        $ret = $this->debug->count('count test');   // 5
-        $this->assertSame(5, $ret, 'count() return incorrect');
-        $log = $this->debug->getData('log');
-        $this->assertCount($countBefore, $log, 'Count() logged although collect=false');
+        $this->testMethod(
+            'count',
+            array('count test'),
+            array(
+                'notLogged' => true,
+                'return' => 5,
+                'custom' => function () {
+                    $this->assertSame(5, $this->debug->getData('counts/count test'));
+                },
+            )
+        );
     }
 
     /**
@@ -173,10 +227,18 @@ class MethodTest extends DebugTestFramework
         );
 
         $this->debug->setData('log', array());
+        $this->debug->log('before group');
         $this->debug->group($this->debug->meta('hideIfEmpty'));
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
         $this->outputTest(array(
-            'html' => '<div class="debug-content m_group">
-                </div>',
+            'html' => '<div class="m_log"><span class="t_string no-pseudo">before group</span></div>
+                <div class="m_log"><span class="t_string no-pseudo">after group</span></div>',
+            'text' => 'before group
+                after group',
+            'script' => 'console.log("before group");
+                console.log("after group");',
+            // 'firephp' => '',
         ));
 
         /*
@@ -193,6 +255,9 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">testMethod</span></span></div>
                     <div class="m_group">',
+                'text' => '▸ MethodTest->testMethod',
+                'script' => 'console.group("MethodTest->testMethod");',
+                'firephp' => 'X-Wf-1-1-1-6: 82|[{"Type":"GROUP_START","Collapsed":"false","Label":"MethodTest->testMethod"},null]|',
             )
         );
 
@@ -213,6 +278,9 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
                     <div class="m_group">',
+                'text' => '▸ bdk\DebugTest\TestBase->testBasePublic',
+                'script' => 'console.group("bdk\\\DebugTest\\\TestBase->testBasePublic");',
+                'firephp' => 'X-Wf-1-1-1-7: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase->testBasePublic"},null]|',
             )
         );
 
@@ -233,6 +301,9 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
                     <div class="m_group">',
+                'text' => '▸ bdk\DebugTest\Test->testBasePublic',
+                'script' => 'console.group("bdk\\\DebugTest\\\Test->testBasePublic");',
+                'firephp' => 'X-Wf-1-1-1-8: 96|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\Test->testBasePublic"},null]|',
             )
         );
 
@@ -255,6 +326,9 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
                     <div class="m_group">',
+                'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
+                'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
+                'firephp' => 'X-Wf-1-1-1-9: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
             )
         );
 
@@ -276,6 +350,9 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<div class="group-header expanded"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
                     <div class="m_group">',
+                'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
+                'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
+                'firephp' => 'X-Wf-1-1-1-10: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
             )
         );
 
@@ -309,11 +386,18 @@ class MethodTest extends DebugTestFramework
 
         // add a nested gorup that will get removed on output
         $this->debug->groupCollapsed($this->debug->meta('hideIfEmpty'));
-
+        $this->debug->groupEnd();
+        $this->debug->log('after nested group');
         $this->outputTest(array(
             'html' => '<div class="group-header collapsed"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
                 <div class="m_group">
+                    <div class="m_log"><span class="t_string no-pseudo">after nested group</span></div>
                 </div>',
+            'text' => '▸ a, "b", "c"
+                after nested group',
+            'script' => 'console.groupCollapsed("a","b","c");
+                console.log("after nested group");',
+            // 'firephp' => '',
         ));
 
         $this->debug->setCfg('collect', false);

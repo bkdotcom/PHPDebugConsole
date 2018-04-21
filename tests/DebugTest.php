@@ -27,6 +27,18 @@ class DebugTest extends DebugTestFramework
      */
     public function testGetCfg()
     {
+        $this->assertSame('visibility', $this->debug->getCfg('objectSort'));
+        $this->assertSame('visibility', $this->debug->getCfg('abstracter.objectSort'));
+        $this->assertSame('visibility', $this->debug->getCfg('abstracter/objectSort'));
+
+        $abstracterKeys = array('collectConstants', 'collectMethods', 'objectsExclude', 'objectSort', 'useDebugInfo');
+        $debugKeys = array('collect', 'file', 'key', 'output', 'errorMask', 'emailFunc', 'emailLog', 'emailTo', 'logEnvInfo', 'logServerKeys', 'onLog',);
+
+        $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter')));
+        $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter/*')));
+        $this->assertSame($debugKeys, array_keys($this->debug->getCfg()));
+        $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug')));
+        $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug/*')));
     }
 
     public function testMeta()
@@ -135,9 +147,12 @@ class DebugTest extends DebugTestFramework
     public function testSubstitution()
     {
         $location = 'http://localhost/?foo=bar&jim=slim';
-        $this->debug->log('%cLocation:%c <a href="%s">%s</a>', 'font-weight:bold;', '', $location, $location);
-        $output = $this->debug->output();
-        $outputExpect = '<div class="m_log"><span class="t_string no-pseudo"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></div>';
-        $this->assertContains($outputExpect, $output);
+        $this->testMethod(
+            'log',
+            array('%cLocation:%c <a href="%s">%s</a>', 'font-weight:bold;', '', $location, $location),
+            array(
+                'html' => '<div class="m_log"><span class="t_string no-pseudo"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></div>',
+            )
+        );
     }
 }

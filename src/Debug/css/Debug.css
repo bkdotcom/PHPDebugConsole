@@ -8,7 +8,7 @@
 	position: relative;
 	clear: both;
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 9px;
+	font-size: .6em;
 	line-height: normal;
 	text-shadow: none;
 	color: #111;
@@ -97,7 +97,7 @@
 	alerts
 */
 .debug .alert {
-	font-size: 11px;
+	font-size: 125%;
 	padding: 10px;
 	margin-bottom: 10px;
 	border: 1px solid transparent;
@@ -174,7 +174,7 @@
 */
 .debug .debug-bar {
 	padding: 5px;
-	font-size: 10px;
+	font-size: 115%;
 	background-color: rgba(0, 0, 0, 0.2);
 	margin-bottom: 10px;
 }
@@ -294,15 +294,24 @@
 		font-size: 1.15em;
 		line-height: 1.15em;
 	}
+
 .debug .t_key { opacity:.75; }
 .debug .t_key:before,
 	.debug .t_key:after {
  		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
  		color: #999;
- 		font-size: 9px;
 	}
 .debug .t_key:before { content:'['; margin-right:1px; }
 .debug .t_key:after { content:']'; margin-left:1px; }
+.debug .t_key.t_int:before,
+	.debug .t_key.t_int:after,
+	.debug .t_key.t_float:before,
+	.debug .t_key.t_float:after,
+	.debug .t_key.numeric:before,
+	.debug .t_key.numeric:after {
+		/* undo font-size increase numerics got */
+		font-size: 0.8695em;
+	}
 .debug .t_keyword { color:#07A; }
 .debug .t_null { opacity:0.3; }
 .debug .t_operator { color:#A67F59; }

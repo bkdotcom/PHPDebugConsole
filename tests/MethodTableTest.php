@@ -224,7 +224,7 @@ EOD;
                                 private: 1
                     )',
                     'script' => 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::providerTestMethod",{"___class_name":"Closure"}]);',
-                    'firephp' => 'X-Wf-1-1-1-4: 203|[{"Type":"TABLE","Label":"flat"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::providerTestMethod"],[4,{"___class_name":"Closure"}]]]|',
+                    'firephp' => 'X-Wf-1-1-1-4: %d|[{"Type":"TABLE","Label":"flat"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::providerTestMethod"],[4,{"___class_name":"Closure"}]]]|',
                 ),
             ),
             array(

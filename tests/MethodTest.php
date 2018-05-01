@@ -553,7 +553,7 @@ class MethodTest extends DebugTestFramework
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.info("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
-                'firephp' => 'X-Wf-1-1-1-5: 98|[{"Type":"INFO","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Type":"INFO","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);
@@ -599,7 +599,7 @@ class MethodTest extends DebugTestFramework
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.log("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
-                'firephp' => 'X-Wf-1-1-1-5: 97|[{"Type":"LOG","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Type":"LOG","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);

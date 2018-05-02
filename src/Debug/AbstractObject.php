@@ -77,7 +77,7 @@ class AbstractObject
             ),
             'extends' => array(),
             'implements' => $reflector->getInterfaceNames(),
-            'isExcluded' => $hist && \in_array($className, $this->abstracter->getCfg('objectsExclude')),
+            'isExcluded' => \in_array($className, $this->abstracter->getCfg('objectsExclude')),
             'isRecursion' => \in_array($obj, $hist, true),
             'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
             'phpDoc' => array(
@@ -97,12 +97,12 @@ class AbstractObject
             'hist' => $hist,
         ));
         $keysTemp = \array_flip(array('collectPropertyValues','reflector','hist'));
-        if (\array_filter(array($abs['isRecursion'], $abs['isExcluded']))) {
+        if ($abs['isRecursion']) {
             return \array_diff_key($abs->getValues(), $keysTemp);
         }
         /*
             debug.objAbstractStart subscriber may
-            set isExcluded to true (but not to false)
+            set isExcluded
             set collectPropertyValues (boolean)
             set collectMethods (boolean)
             set stringified
@@ -167,7 +167,9 @@ class AbstractObject
     public function onStart(Event $event)
     {
         $obj = $event->getSubject();
-        if ($obj instanceof \mysqli && ($obj->connect_errno || !$obj->stat)) {
+        if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
+            $event['stringified'] = $obj->format(\DateTime::ISO8601);
+        } elseif ($obj instanceof \mysqli && ($obj->connect_errno || !$obj->stat)) {
             // avoid "Property access is not allowed yet"
             $event['collectPropertyValues'] = false;
         }
@@ -183,9 +185,7 @@ class AbstractObject
     public function onEnd(Event $event)
     {
         $obj = $event->getSubject();
-        if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
-            $event['stringified'] = $obj->format(\DateTime::ISO8601);
-        } elseif ($obj instanceof \DOMNodeList) {
+        if ($obj instanceof \DOMNodeList) {
             // for reasons unknown, DOMNodeList's properties are invisible to reflection
             $event['properties']['length'] = \array_merge(static::$basePropInfo, array(
                 'type' => 'integer',

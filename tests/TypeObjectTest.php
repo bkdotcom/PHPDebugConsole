@@ -89,7 +89,8 @@ EOD;
                         $this->assertContains(implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
                             '<dd class="magic info">This object has a <code>__get</code> method</dd>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">debug</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="public"><span class="t_classname"><span class="namespace">bdk\</span>Debug</span> <span class="excluded">(not inspected)</span></span></dd>',
+                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">debug</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="public"><span class="t_classname"><span class="namespace">bdk\</span>Debug</span>',
+                            '<span class="excluded">(not inspected)</span></span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">instance</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="private"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span> <span class="t_recursion">*RECURSION*</span></span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',

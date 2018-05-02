@@ -47,8 +47,9 @@ class HtmlObject
                 .' <span class="t_recursion">*RECURSION*</span>';
         }
         if ($abs['isExcluded']) {
-            return $strClassName
-                .' <span class="excluded">(not inspected)</span>';
+            return $this->dumpToString($abs)
+                .$strClassName."\n"
+                .'<span class="excluded">(not inspected)</span>';
         }
         $html = $this->dumpToString($abs)
             .$strClassName."\n"

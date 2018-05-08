@@ -7,6 +7,63 @@ class DebugTest extends DebugTestFramework
 {
 
     /**
+     * Assert that calling \bdk\Debug::_setCfg() before an instance has been instantiated creates an instance
+     *
+     * This is a bit tricky to test.. need to clear currant static instance...
+     *    a 2nd instance will get created
+     *    need to remove all the eventListeners created for 2nd instance
+     *
+     * @return void
+     */
+    public function testInitViaStatic()
+    {
+        $debugReflection = new reflectionClass($this->debug);
+        $debugProps = $debugReflection->getProperties(ReflectionProperty::IS_STATIC);
+        $debugBackup = array();
+        foreach ($debugProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $debugBackup[$name] = $prop->getValue();
+            $newVal = is_array($debugBackup[$name])
+                ? array()
+                : null;
+            $prop->setValue($newVal);
+        }
+
+        $eventManagerReflection = new reflectionClass($this->debug->eventManager);
+        $eventManagerProps = $eventManagerReflection->getProperties();
+        $eventManagerBackup = array();
+        foreach ($eventManagerProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $eventManagerBackup[$name] = $prop->getValue($this->debug->eventManager);
+        }
+
+        \bdk\Debug::_setCfg(array('collect'=>true, 'output'=>false, 'initViaSetCfg'=>true));
+        $this->assertSame(true, \bdk\Debug::getInstance()->getCfg('initViaSetCfg'));
+
+        $em = \bdk\Debug::getInstance()->eventManager;
+        foreach ($em->getSubscribers() as $eventName => $subs) {
+            foreach ($subs as $sub) {
+                $em->unsubscribe($eventName, $sub);
+            }
+        }
+
+        /*
+            Restore static properties
+        */
+        foreach ($debugProps as $prop) {
+            // $prop->setAccessible(true);
+            $name = $prop->getName();
+            $prop->setValue($debugBackup[$name]);
+        }
+        foreach ($eventManagerProps as $prop) {
+            $name = $prop->getName();
+            $prop->setValue($this->debug->eventManager, $eventManagerBackup[$name]);
+        }
+    }
+
+    /**
      * Test that errorHandler onShutdown occurs before internal onShutdown
      *
      * @return void

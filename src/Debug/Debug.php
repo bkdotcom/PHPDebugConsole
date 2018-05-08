@@ -153,7 +153,6 @@ class Debug
         $this->data['requestId'] = $this->utilities->requestId();
         $this->groupDepthRef = &$this->data['groupDepth'];
         $this->logRef = &$this->data['log'];
-        self::setPublicMethods();
         /*
             Publish bootstrap event
         */
@@ -197,10 +196,10 @@ class Debug
         if (\in_array($methodName, self::$publicMethods)) {
             return \call_user_func_array(array(self::$instance, $methodName), $args);
         }
+        if (!self::$instance) {
+            new static();
+        }
         if (!self::$publicMethods) {
-            /*
-                Initializing debug with \bdk\Debug::_setCfg()?
-            */
             self::setPublicMethods();
             return self::__callStatic($methodName, $args);
         }

@@ -7,6 +7,71 @@ class MethodTest extends DebugTestFramework
 {
 
     /**
+     * Test overriding a core method
+     */
+    public function testOverrideDefault()
+    {
+        $closure = function ($event) {
+            if ($event['method'] == 'trace') {
+                // $event->getSubject()->warn('shazbot!');
+                $event['return'] = '<div class="m_trace">this was a trace</div>';
+            }
+        };
+        $this->debug->eventManager->subscribe('debug.outputLogEntry', $closure);
+        $this->testMethod(
+            'trace',
+            array(),
+            array(
+                'html' => '<div class="m_trace">this was a trace</div>',
+                // 'text' => 'this was a trace',
+                // 'script' => 'console.log("");',
+                // 'firephp' => 'X-Wf-1-1-1-1: 108|[{"Type":"LOG"},"'.'foo'.'"]|',
+            )
+        );
+    }
+
+    /**
+     * Test custom method
+     */
+    public function testCustom()
+    {
+        $closure = function ($event) {
+            if ($event['method'] == 'myCustom' && $event->getSubject() instanceof \bdk\Debug\Output\Html) {
+                $lis = array();
+                foreach ($event['args'] as $arg) {
+                    $lis[] = '<li>'.htmlspecialchars($arg).'</li>';
+                }
+                $event['return'] = '<div class="m_myCustom"><ul>'.implode('', $lis).'</ul></div>';
+            }
+        };
+        $this->debug->eventManager->subscribe('debug.outputLogEntry', $closure);
+        $this->testMethod(
+            'myCustom',
+            array('How\'s it goin?'),
+            array(
+                'html' => '<div class="m_myCustom"><ul><li>How\'s it goin?</li></ul></div>',
+                'text' => 'How\'s it goin?',
+                'script' => 'console.log("How\'s it goin?");',
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
+            )
+        );
+    }
+
+    public function testCustomDefault()
+    {
+        $this->testMethod(
+            'myCustom',
+            array('How\'s it goin?'),
+            array(
+                'html' => '<div class="m_myCustom"><span class="t_string no-pseudo">How\'s it goin?</span></div>',
+                'text' => 'How\'s it goin?',
+                'script' => 'console.log("How\'s it goin?");',
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
+            )
+        );
+    }
+
+    /**
      * Test
      *
      * @return void
@@ -18,9 +83,9 @@ class MethodTest extends DebugTestFramework
             'alert',
             array($message),
             array(
-                'html' => '<div class="m_alert"><span class="t_string no-pseudo">'.$message.'</span></div>',
+                'html' => '<div class="alert alert-danger" role="alert">'.$message.'</div>',
                 'text' => '[Alert ⦻ danger] '.$message,
-                'script' => 'console.alert("'.$message.'");',
+                'script' => str_replace('%c', '%%c', 'console.log("%c'.$message.'","padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
                 'firephp' => 'X-Wf-1-1-1-1: 108|[{"Type":"LOG"},"'.$message.'"]|',
             )
         );
@@ -174,7 +239,7 @@ class MethodTest extends DebugTestFramework
             'error',
             array('a string', array(), new stdClass(), $resource),
             array(
-                'custom' => function ($entry) {
+                'entry' => function ($entry) {
                     $this->assertSame('error', $entry[0]);
                     $this->assertSame('a string', $entry[1][0]);
                     $this->assertSame(array(), $entry[1][1]);
@@ -532,7 +597,7 @@ class MethodTest extends DebugTestFramework
             'info',
             array('a string', array(), new stdClass(), $resource),
             array(
-                'custom' => function ($logEntry) {
+                'entry' => function ($logEntry) {
                     $this->assertSame('info', $logEntry[0]);
                     $this->assertSame('a string', $logEntry[1][0]);
                     // check array abstraction
@@ -578,7 +643,7 @@ class MethodTest extends DebugTestFramework
             'log',
             array('a string', array(), new stdClass(), $resource),
             array(
-                'custom' => function ($logEntry) {
+                'entry' => function ($logEntry) {
                     $this->assertSame('log', $logEntry[0]);
                     $this->assertSame('a string', $logEntry[1][0]);
                     // check array abstraction
@@ -728,7 +793,7 @@ class MethodTest extends DebugTestFramework
             'warn',
             array('a string', array(), new stdClass(), $resource),
             array(
-                'custom' => function ($logEntry) {
+                'entry' => function ($logEntry) {
                     $this->assertSame('warn', $logEntry[0]);
                     $this->assertSame('a string', $logEntry[1][0]);
                     // check array abstraction

@@ -95,9 +95,7 @@ EOD;
             'log',
             array($test_a),
             array(
-                // 'entry' => array(),
                 'html' => function ($strHtml) {
-                    // $this->stdOut('strHtml', $strHtml);
                     $this->assertSelectEquals('.key-value > .t_keyword', 'array', true, $strHtml);
                     $this->assertSelectEquals('.key-value > .t_recursion', '*RECURSION*', true, $strHtml);
                 },

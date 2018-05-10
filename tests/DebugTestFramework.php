@@ -10,6 +10,7 @@ class DebugTestFramework extends DOMTestCase
 {
 
     public static $allowError = false;
+    private $reflectionMethods = array();
 
     /**
      * for given $var, check if it's abstraction type is of $type
@@ -100,6 +101,10 @@ class DebugTestFramework extends DOMTestCase
     public function tearDown()
     {
         $this->debug->setCfg('output', false);
+        $subscribers = $this->debug->eventManager->getSubscribers('debug.outputLogEntry');
+        foreach ($subscribers as $subscriber) {
+            $this->debug->eventManager->unsubscribe('debug.outputLogEntry', $subscriber);
+        }
     }
 
     /**
@@ -187,7 +192,11 @@ class DebugTestFramework extends DOMTestCase
         }
         foreach ($tests as $test => $outputExpect) {
             if ($test == 'entry') {
-                $this->assertSame($outputExpect, $logEntry);
+                if (\is_callable($outputExpect)) {
+                    \call_user_func($outputExpect, $logEntry);
+                } else {
+                    $this->assertSame($outputExpect, $logEntry);
+                }
                 continue;
             } elseif ($test == 'custom') {
                 \call_user_func($outputExpect, $logEntry);
@@ -199,16 +208,23 @@ class DebugTestFramework extends DOMTestCase
                 $this->assertSame($outputExpect, $return);
                 continue;
             }
+            $outputObj = $this->debug->output->{$test};
             if ($test == 'firephp') {
-                $outputObj = $this->debug->output->{$test};
                 $outputObj->unitTestMode = true;
-                $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
+            }
+            if (!isset($this->reflectionMethods[$test])) {
+                $refMethod = new \ReflectionMethod($outputObj, 'processLogEntryWEvent');
+                $refMethod->setAccessible(true);
+                $this->reflectionMethods[$test] = $refMethod;
+            }
+            $output = $this->reflectionMethods[$test]->invoke($outputObj, $logEntry[0], $logEntry[1], $logEntry[2]);
+            if ($test == 'firephp') {
+                // $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
                 $output = \implode("\n", $outputObj->lastHeadersSent);
                 // @todo assert that header integer increments
                 $outputExpect = preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
             } else {
-                $outputObj = $this->debug->output->{$test};
-                $output = $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
+                // $output = $outputObj->processLogEntryWEvent($logEntry[0], $logEntry[1], $logEntry[2]);
             }
             if (\is_callable($outputExpect)) {
                 $outputExpect($output);

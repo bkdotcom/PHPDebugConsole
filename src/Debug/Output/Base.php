@@ -295,6 +295,30 @@ abstract class Base implements OutputInterface
     }
 
     /**
+     * Handle alert method
+     *
+     * @param array $args arguments
+     * @param array $meta meta info
+     *
+     * @return array array($method, $args)
+     */
+    protected function methodAlert($args, $meta)
+    {
+        $classToMethod = array(
+            'danger' => 'error',
+            'info' => 'info',
+            'success' => 'info',
+            'warning' => 'warn',
+        );
+        $msg = \str_replace('<br />', ", \n", $args[0]);
+        $method = $meta['class'];
+        if (isset($classToMethod[$method])) {
+            $method = $classToMethod[$method];
+        }
+        return array($method, array($msg));
+    }
+
+    /**
      * Build table rows
      *
      * This builds table rows usable by ChromeLogger, Text, and <script>
@@ -343,26 +367,15 @@ abstract class Base implements OutputInterface
     /**
      * Process alerts
      *
-     * By default we just ouptut alerts like error(), info(), and warn() calls
+     * By default we just output alerts like error(), info(), and warn() calls
      *
      * @return string
      */
     protected function processAlerts()
     {
         $str = '';
-        $classToMethod = array(
-            'danger' => 'error',
-            'info' => 'info',
-            'success' => 'info',
-            'warning' => 'warn',
-        );
         foreach ($this->data['alerts'] as $entry) {
-            $msg = \str_replace('<br />', ", \n", $entry[0]);
-            $method = $entry[1]['class'];
-            if (isset($classToMethod[$method])) {
-                $method = $classToMethod[$method];
-            }
-            $str .= $this->processLogEntryWEvent($method, array($msg));
+            $str .= $this->processLogEntryWEvent('alert', array($entry[0]), $entry[1]);
         }
         return $str;
     }
@@ -382,7 +395,9 @@ abstract class Base implements OutputInterface
     }
 
     /**
-     * Publish debug.outputLogEntry.  If still propagating, return result of processLogEntry()
+     * Publish debug.outputLogEntry.
+     * Return event['return'] not not empty
+     * Otherwise, propagation not stopped, return result of processLogEntry()
      *
      * @param string $method method
      * @param array  $args   args
@@ -399,8 +414,12 @@ abstract class Base implements OutputInterface
                 'method' => $method,
                 'args' => $args,
                 'meta' => $meta,
+                'return' => null,
             )
         );
+        if ($event['return']) {
+            return $event['return'];
+        }
         if (!$event->isPropagationStopped()) {
             return $this->processLogEntry($event['method'], $event['args'], $event['meta']);
         }

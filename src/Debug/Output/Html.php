@@ -211,7 +211,9 @@ class Html extends Base
     public function processLogEntry($method, $args = array(), $meta = array())
     {
         $str = '';
-        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+        if ($method == 'alert') {
+            $str = $this->methodAlert($args, $meta);
+        } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->buildGroupMethod($method, $args, $meta);
         } elseif ($method == 'table') {
             $str = $this->buildTable($args[0], $meta['caption'], $meta['columns'], 'm_table table-bordered sortable');
@@ -569,6 +571,31 @@ class Html extends Base
     }
 
     /**
+     * Handle alert method
+     *
+     * @param array $args arguments
+     * @param array $meta meta info
+     *
+     * @return array array($method, $args)
+     */
+    protected function methodAlert($args, $meta)
+    {
+        $class = 'alert alert-'.$meta['class'];
+        if ($meta['dismissible']) {
+            $class .= ' alert-dismissible';
+        }
+        return '<div class="'.$class.'" role="alert">'
+            .($meta['dismissible']
+                ? '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
+                    .'<span aria-hidden="true">&times;</span>'
+                    .'</button>'
+                : ''
+            )
+            .$args[0]
+            .'</div>';
+    }
+
+    /**
      * process alerts
      *
      * @return string
@@ -587,16 +614,7 @@ class Html extends Base
             ));
         }
         foreach ($this->data['alerts'] as $entry) {
-            $message = $entry[0];
-            $meta = $entry[1];
-            if ($meta['dismissible']) {
-                $message = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
-                    .'<span aria-hidden="true">&times;</span>'
-                    .'</button>'
-                    .$message;
-                $meta['class'] .= ' alert-dismissible';
-            }
-            $str .= '<div class="alert alert-'.$meta['class'].'" role="alert">'.$message.'</div>';
+            $str .= $this->processLogEntryWEvent('alert', array($entry[0]), $entry[1]);
         }
         return $str;
     }

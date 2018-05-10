@@ -19,6 +19,22 @@ use bdk\PubSub\Event;
 class Script extends Base
 {
 
+    protected $consoleMethods = array(
+        'assert',
+        'count',    // output as log
+        'error',
+        'group',
+        'groupCollapsed',
+        'groupEnd',
+        'info',
+        'log',
+        'table',
+        'time',     // output as log
+        'timeEnd',  // PHPDebugConsole never generates a timeEnd entry
+        'trace',
+        'warn',
+    );
+
     /**
      * output the log as javascript
      *    which outputs the log to the console
@@ -68,7 +84,9 @@ class Script extends Base
      */
     public function processLogEntry($method, $args = array(), $meta = array())
     {
-        if ($method == 'assert') {
+        if ($method == 'alert') {
+            list($method, $args) = $this->methodAlert($args, $meta);
+        } elseif ($method == 'assert') {
             \array_unshift($args, false);
         } elseif (\in_array($method, array('count','time'))) {
             $method = 'log';
@@ -81,6 +99,9 @@ class Script extends Base
             if (isset($meta['file'])) {
                 $args[] = $meta['file'].': line '.$meta['line'];
             }
+        }
+        if (!\in_array($method, $this->consoleMethods)) {
+            $method = 'log';
         }
         foreach ($args as $k => $arg) {
             $args[$k] = \json_encode($this->dump($arg));
@@ -103,50 +124,49 @@ class Script extends Base
     }
 
     /**
-     * Process alerts
+     * Handle alert method
      *
-     * @return string
+     * @param array $args arguments
+     * @param array $meta meta info
+     *
+     * @return array array($method, $args)
      */
-    protected function processAlerts()
+    protected function methodAlert($args, $meta)
     {
-        $str = '';
-        foreach ($this->data['alerts'] as $entry) {
-            $args = array('%c'.$entry[0], '');
-            $method = $entry[1]['class'];
-            $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
-            switch ($method) {
-                case 'danger':
-                    // Just use log method... Chrome adds backtrace to error(), which we don't want
-                    $method = 'log';
-                    $args[1] = $styleCommon
-                        .'background-color: #ffbaba;'
-                        .'border: 1px solid #d8000c;'
-                        .'color: #d8000c;';
-                    break;
-                case 'info':
-                    $args[1] = $styleCommon
-                        .'background-color: #d9edf7;'
-                        .'border: 1px solid #bce8f1;'
-                        .'color: #31708f;';
-                    break;
-                case 'success':
-                    $method = 'info';
-                    $args[1] = $styleCommon
-                        .'background-color: #dff0d8;'
-                        .'border: 1px solid #d6e9c6;'
-                        .'color: #3c763d;';
-                    break;
-                case 'warning':
-                    // Just use log method... Chrome adds backtrace to warn(), which we don't want
-                    $method = 'log';
-                    $args[1] = $styleCommon
-                        .'background-color: #fcf8e3;'
-                        .'border: 1px solid #faebcc;'
-                        .'color: #8a6d3b;';
-                    break;
-            }
-            $str .= $this->processLogEntryWEvent($method, $args);
+        $args = array('%c'.$args[0], '');
+        $method = $meta['class'];
+        $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
+        switch ($method) {
+            case 'danger':
+                // Just use log method... Chrome adds backtrace to error(), which we don't want
+                $method = 'log';
+                $args[1] = $styleCommon
+                    .'background-color: #ffbaba;'
+                    .'border: 1px solid #d8000c;'
+                    .'color: #d8000c;';
+                break;
+            case 'info':
+                $args[1] = $styleCommon
+                    .'background-color: #d9edf7;'
+                    .'border: 1px solid #bce8f1;'
+                    .'color: #31708f;';
+                break;
+            case 'success':
+                $method = 'info';
+                $args[1] = $styleCommon
+                    .'background-color: #dff0d8;'
+                    .'border: 1px solid #d6e9c6;'
+                    .'color: #3c763d;';
+                break;
+            case 'warning':
+                // Just use log method... Chrome adds backtrace to warn(), which we don't want
+                $method = 'log';
+                $args[1] = $styleCommon
+                    .'background-color: #fcf8e3;'
+                    .'border: 1px solid #faebcc;'
+                    .'color: #8a6d3b;';
+                break;
         }
-        return $str;
+        return array($method, $args);
     }
 }

@@ -6,61 +6,102 @@
 class DebugTest extends DebugTestFramework
 {
 
+    protected $debugBackup = array();
+
+    /**
+     * clear/backup some non-accessible things
+     *
+     * @return void
+     */
+    protected function destroyDebug()
+    {
+
+        $this->debugBackup = array(
+            'debug' => array(),
+            'eventManager' => array(),
+        );
+
+        $debugRef = new reflectionClass($this->debug);
+        $debugProps = $debugRef->getProperties(ReflectionProperty::IS_STATIC);
+        foreach ($debugProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $this->debugBackup['debug'][$name] = $prop->getValue();
+            $newVal = is_array($this->debugBackup['debug'][$name])
+                ? array()
+                : null;
+            $prop->setValue($newVal);
+        }
+
+        /*
+            Backup eventManager data
+        */
+        $eventManagerRef = new reflectionClass($this->debug->eventManager);
+        $eventManagerProps = $eventManagerRef->getProperties();
+        foreach ($eventManagerProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $this->debugBackup['eventManager'][$name] = $prop->getValue($this->debug->eventManager);
+        }
+    }
+
+    /**
+     * Restore non-accessible things
+     *
+     * @return void
+     */
+    protected function restoreDebug()
+    {
+        $debugRef = new reflectionClass($this->debug);
+        $debugProps = $debugRef->getProperties(ReflectionProperty::IS_STATIC);
+        foreach ($debugProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $prop->setValue($this->debugBackup['debug'][$name]);
+        }
+
+        /*
+            Restore eventManager data
+        */
+        $eventManagerRef = new reflectionClass($this->debug->eventManager);
+        $eventManagerProps = $eventManagerRef->getProperties();
+        foreach ($eventManagerProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $prop->setValue($this->debug->eventManager, $this->debugBackup['eventManager'][$name]);
+        }
+    }
+
     /**
      * Assert that calling \bdk\Debug::_setCfg() before an instance has been instantiated creates an instance
      *
      * This is a bit tricky to test.. need to clear currant static instance...
      *    a 2nd instance will get created
      *    need to remove all the eventListeners created for 2nd instance
+     *       errorHandler subscribers will be on the existing eventManager,
+     *       all other subscribers will be on a new eventManager
      *
      * @return void
      */
     public function testInitViaStatic()
     {
-        $debugReflection = new reflectionClass($this->debug);
-        $debugProps = $debugReflection->getProperties(ReflectionProperty::IS_STATIC);
-        $debugBackup = array();
-        foreach ($debugProps as $prop) {
-            $prop->setAccessible(true);
-            $name = $prop->getName();
-            $debugBackup[$name] = $prop->getValue();
-            $newVal = is_array($debugBackup[$name])
-                ? array()
-                : null;
-            $prop->setValue($newVal);
-        }
+        $this->destroyDebug();
 
-        $eventManagerReflection = new reflectionClass($this->debug->eventManager);
-        $eventManagerProps = $eventManagerReflection->getProperties();
-        $eventManagerBackup = array();
-        foreach ($eventManagerProps as $prop) {
-            $prop->setAccessible(true);
-            $name = $prop->getName();
-            $eventManagerBackup[$name] = $prop->getValue($this->debug->eventManager);
-        }
-
-        \bdk\Debug::_setCfg(array('collect'=>true, 'output'=>false, 'initViaSetCfg'=>true));
+        \bdk\Debug::_setCfg(array('collect'=>true, 'output'=>true, 'initViaSetCfg'=>true));
         $this->assertSame(true, \bdk\Debug::getInstance()->getCfg('initViaSetCfg'));
 
-        $em = \bdk\Debug::getInstance()->eventManager;
-        foreach ($em->getSubscribers() as $eventName => $subs) {
+        /*
+            The new debug instance got a new eventManager
+            Lets clear all of its subscribers
+        */
+        $eventManager = \bdk\Debug::getInstance()->eventManager;
+        foreach ($eventManager->getSubscribers() as $eventName => $subs) {
             foreach ($subs as $sub) {
-                $em->unsubscribe($eventName, $sub);
+                $eventManager->unsubscribe($eventName, $sub);
             }
         }
 
-        /*
-            Restore static properties
-        */
-        foreach ($debugProps as $prop) {
-            // $prop->setAccessible(true);
-            $name = $prop->getName();
-            $prop->setValue($debugBackup[$name]);
-        }
-        foreach ($eventManagerProps as $prop) {
-            $name = $prop->getName();
-            $prop->setValue($this->debug->eventManager, $eventManagerBackup[$name]);
-        }
+        $this->restoreDebug();
     }
 
     /**

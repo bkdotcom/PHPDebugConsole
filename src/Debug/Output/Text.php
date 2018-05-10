@@ -310,20 +310,4 @@ class Text extends Base
     {
         return 'undefined';
     }
-
-    /**
-     * Process alerts
-     *
-     * By default we just ouptut alerts like error(), info(), and warn() calls
-     *
-     * @return string
-     */
-    protected function processAlerts()
-    {
-        $str = '';
-        foreach ($this->data['alerts'] as $entry) {
-            $str .= $this->processLogEntryWEvent('alert', array($entry[0]), $entry[1]);
-        }
-        return $str;
-    }
 }

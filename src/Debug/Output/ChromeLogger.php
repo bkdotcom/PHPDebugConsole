@@ -85,7 +85,9 @@ class ChromeLogger extends Base
      */
     public function processLogEntry($method, $args = array(), $meta = array())
     {
-        if ($method === 'table') {
+        if ($method === 'alert') {
+            list($method, $args) = $this->methodAlert($args, $meta);
+        } elseif ($method === 'table') {
             $args = array($this->methodTable($args[0], $meta['columns']));
         } elseif ($method === 'trace') {
             $method = 'table';
@@ -102,55 +104,50 @@ class ChromeLogger extends Base
     }
 
     /**
-     * process alerts
+     * Handle alert method
      *
-     * @return string
+     * @param array $args arguments
+     * @param array $meta meta info
+     *
+     * @return array array($method, $args)
      */
-    protected function processAlerts()
+    protected function methodAlert($args, $meta)
     {
-        $str = '';
-        foreach ($this->data['alerts'] as $entry) {
-            $args = array('%c'.$entry[0], '');
-            $method = $entry[1]['class'];
-            $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
-            switch ($method) {
-                case 'danger':
-                    // Just use log method... Chrome adds backtrace to error(), which we don't want
-                    $method = 'log';
-                    $args[1] = $styleCommon
-                        .'background-color: #ffbaba;'
-                        .'border: 1px solid #d8000c;'
-                        .'color: #d8000c;';
-                    break;
-                case 'info':
-                    $args[1] = $styleCommon
-                        .'background-color: #d9edf7;'
-                        .'border: 1px solid #bce8f1;'
-                        .'color: #31708f;';
-                    break;
-                case 'success':
-                    $method = 'info';
-                    $args[1] = $styleCommon
-                        .'background-color: #dff0d8;'
-                        .'border: 1px solid #d6e9c6;'
-                        .'color: #3c763d;';
-                    break;
-                case 'warning':
-                    // Just use log method... Chrome adds backtrace to warn(), which we don't want
-                    $method = 'log';
-                    $args[1] = $styleCommon
-                        .'background-color: #fcf8e3;'
-                        .'border: 1px solid #faebcc;'
-                        .'color: #8a6d3b;';
-                    break;
-            }
-            \array_push($this->json['rows'], array(
-                $args,
-                null,
-                $method,
-            ));
+        $args = array('%c'.$args[0], '');
+        $method = $meta['class'];
+        $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
+        switch ($method) {
+            case 'danger':
+                // Just use log method... Chrome adds backtrace to error(), which we don't want
+                $method = 'log';
+                $args[1] = $styleCommon
+                    .'background-color: #ffbaba;'
+                    .'border: 1px solid #d8000c;'
+                    .'color: #d8000c;';
+                break;
+            case 'info':
+                $args[1] = $styleCommon
+                    .'background-color: #d9edf7;'
+                    .'border: 1px solid #bce8f1;'
+                    .'color: #31708f;';
+                break;
+            case 'success':
+                $method = 'info';
+                $args[1] = $styleCommon
+                    .'background-color: #dff0d8;'
+                    .'border: 1px solid #d6e9c6;'
+                    .'color: #3c763d;';
+                break;
+            case 'warning':
+                // Just use log method... Chrome adds backtrace to warn(), which we don't want
+                $method = 'log';
+                $args[1] = $styleCommon
+                    .'background-color: #fcf8e3;'
+                    .'border: 1px solid #faebcc;'
+                    .'color: #8a6d3b;';
+                break;
         }
-        return $str;
+        return array($method, $args);
     }
 
     /**

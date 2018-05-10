@@ -82,7 +82,10 @@ class Firephp extends Base
     {
         $value = null;
         $firePhpMeta = $this->getMeta($method, $meta);
-        if (\in_array($method, array('group','groupCollapsed'))) {
+        if ($method == 'alert') {
+            list($method, $args) = $this->methodAlert($args, $meta);
+            $value = $args[0];
+        } elseif (\in_array($method, array('group','groupCollapsed'))) {
             $firePhpMeta['Label'] = $args[0];
         } elseif ($method == 'table') {
             $value = $this->methodTable($args[0], $meta['columns']);

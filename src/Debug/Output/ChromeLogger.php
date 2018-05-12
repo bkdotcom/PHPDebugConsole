@@ -27,6 +27,22 @@ class ChromeLogger extends Base
 
     const HEADER_NAME = 'X-ChromeLogger-Data';
 
+    protected $consoleMethods = array(
+        'assert',
+        'count',    // output as log
+        'error',
+        'group',
+        'groupCollapsed',
+        'groupEnd',
+        'info',
+        'log',
+        'table',
+        'time',     // output as log
+        'timeEnd',  // PHPDebugConsole never generates a timeEnd entry
+        'trace',
+        'warn',
+    );
+
     /**
      * @var array header data
      */
@@ -87,11 +103,18 @@ class ChromeLogger extends Base
     {
         if ($method === 'alert') {
             list($method, $args) = $this->methodAlert($args, $meta);
+        } elseif ($method == 'assert') {
+            \array_unshift($args, false);
+        } elseif (\in_array($method, array('count','time'))) {
+            $method = 'log';
         } elseif ($method === 'table') {
             $args = array($this->methodTable($args[0], $meta['columns']));
         } elseif ($method === 'trace') {
             $method = 'table';
             $args = array($this->methodTable($args[0], array('function','file','line')));
+        }
+        if (!\in_array($method, $this->consoleMethods)) {
+            $method = 'log';
         }
         foreach ($args as $i => $arg) {
             $args[$i] = $this->dump($arg);

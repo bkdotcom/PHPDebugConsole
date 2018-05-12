@@ -144,7 +144,6 @@ EOD;
             $dateTimePubMethods = 4;
         }
         return array(
-            // method, args, html, text, script, firephp
             array(
                 'table',
                 array(null),

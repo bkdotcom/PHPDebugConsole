@@ -95,6 +95,17 @@ EOD;
             'log',
             array($test_a),
             array(
+                'chromeLogger' => array(
+                    array(
+                        array(
+                            'foo' => 'bar',
+                            'val' => 'array *RECURSION*'
+                        ),
+                    ),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-37: 56|[{"Type":"LOG"},{"foo":"bar","val":"array *RECURSION*"}]|',
                 'html' => function ($strHtml) {
                     $this->assertSelectEquals('.key-value > .t_keyword', 'array', true, $strHtml);
                     $this->assertSelectEquals('.key-value > .t_recursion', '*RECURSION*', true, $strHtml);

@@ -89,6 +89,8 @@ class Text extends Base
             if ($meta['caption']) {
                 \array_unshift($args, $meta['caption']);
             }
+        } elseif ($method == 'trace') {
+            \array_unshift($args, 'trace');
         } elseif (\in_array($method, array('group','groupCollapsed'))) {
             $this->depth ++;
         } elseif ($method == 'groupEnd' && $this->depth > 0) {

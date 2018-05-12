@@ -241,16 +241,4 @@ class DebugTest extends DebugTestFramework
             $this->debug->setErrorCaller();
         }
     }
-
-    public function testSubstitution()
-    {
-        $location = 'http://localhost/?foo=bar&jim=slim';
-        $this->testMethod(
-            'log',
-            array('%cLocation:%c <a href="%s">%s</a>', 'font-weight:bold;', '', $location, $location),
-            array(
-                'html' => '<div class="m_log"><span class="t_string no-pseudo"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></div>',
-            )
-        );
-    }
 }

@@ -11,6 +11,7 @@ class DebugTestFramework extends DOMTestCase
 
     public static $allowError = false;
     private $reflectionMethods = array();
+    private $reflectionProperties = array();
 
     /**
      * for given $var, check if it's abstraction type is of $type
@@ -105,6 +106,12 @@ class DebugTestFramework extends DOMTestCase
         foreach ($subscribers as $subscriber) {
             $this->debug->eventManager->unsubscribe('debug.outputLogEntry', $subscriber);
         }
+        if (!isset($this->reflectionProperties['textDepth'])) {
+            $depthRef = new \ReflectionProperty($this->debug->output->text, 'depth');
+            $depthRef->setAccessible(true);
+            $this->reflectionProperties['textDepth'] = $depthRef;
+        }
+        $this->reflectionProperties['textDepth']->setValue($this->debug->output->text, 0);
     }
 
     /**
@@ -155,19 +162,6 @@ class DebugTestFramework extends DOMTestCase
      */
     public function testMethod($method, $args = array(), $tests = array())
     {
-        /*
-        if ($tests === false) {
-            // Assert that nothing gets logged
-            $path = $method == 'alert'
-                ? 'alerts/count'
-                : 'log/count';
-            $logCountBefore = $this->debug->getData($path);
-            \call_user_func_array(array($this->debug, $method), $args);
-            $logCountAfter = $this->debug->getData($path);
-            $this->assertSame($logCountBefore, $logCountAfter, 'failed asserting nothing logged');
-            return;
-        }
-        */
         $countPath = $method == 'alert'
             ? 'alerts/count'
             : 'log/count';
@@ -205,7 +199,11 @@ class DebugTestFramework extends DOMTestCase
                 $this->assertSame($logCountBefore, $this->debug->getData($countPath), 'failed asserting nothing logged');
                 continue;
             } elseif ($test == 'return') {
-                $this->assertSame($outputExpect, $return);
+                if (is_string($outputExpect)) {
+                    $this->assertStringMatchesFormat($outputExpect, $return, 'return value does not match format');
+                } else {
+                    $this->assertSame($outputExpect, $return, 'return value not same');
+                }
                 continue;
             }
             $outputObj = $this->debug->output->{$test};
@@ -218,18 +216,35 @@ class DebugTestFramework extends DOMTestCase
                 $this->reflectionMethods[$test] = $refMethod;
             }
             $output = $this->reflectionMethods[$test]->invoke($outputObj, $logEntry[0], $logEntry[1], $logEntry[2]);
-            if ($test == 'firephp') {
+            if ($test == 'chromeLogger') {
+                if (!isset($this->reflectionProperties['chromeLogger'])) {
+                    $refProperty = new \ReflectionProperty($outputObj, 'json');
+                    $refProperty->setAccessible(true);
+                    $this->reflectionProperties['chromeLogger'] = $refProperty;
+                }
+                $output = end($this->reflectionProperties['chromeLogger']->getValue($outputObj)['rows']);
+                // output is an array
+                if (is_string($outputExpect)) {
+                    $output = json_encode($output);
+                }
+            } elseif ($test == 'firephp') {
                 // $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
                 $output = \implode("\n", $outputObj->lastHeadersSent);
                 // @todo assert that header integer increments
-                $outputExpect = preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
+                if (is_string($outputExpect)) {
+                    $outputExpect = preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
+                }
             } else {
                 // $output = $outputObj->processLogEntryWEvent($logEntry[0], $logEntry[1], $logEntry[2]);
             }
             if (\is_callable($outputExpect)) {
                 $outputExpect($output);
-            } elseif (\is_array($outputExpect) && isset($outputExpect['contains'])) {
-                $this->assertContains($outputExpect['contains'], $output, $test.' doesn\'t contain');
+            } elseif (\is_array($outputExpect)) {
+                if (isset($outputExpect['contains'])) {
+                    $this->assertContains($outputExpect['contains'], $output, $test.' doesn\'t contain');
+                } else {
+                    $this->assertSame($outputExpect, $output, $test.' not same');
+                }
             } else {
                 $output = \preg_replace("#^\s+#m", '', $output);
                 $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);

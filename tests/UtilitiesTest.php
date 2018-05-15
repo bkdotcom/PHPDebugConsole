@@ -61,10 +61,20 @@ class UtilitiesTest extends DebugTestFramework
             'src' => '/path/to/image.png',
             'width' => 80,
             'height' => 100,
+            'class' => array('test','me'),
             'title' => 'Pork & Beans',
+            'value' => '',      // value=""  (we output empty value attrib)
+            'style' => '',      // not output (empty string)
+            'foo' => false,     // not output
+            'bar' => true,      // bar="bar"
+            'autocomplete',     // autocomplete="on"
+            'disabled',         // disabled="disabled"
+            'data-test' => array(
+                'foo' => 'bar',
+            ),
         );
         $attribStr = Utilities::buildAttribString($attribs);
-        $expect = ' height="100" src="/path/to/image.png" title="Pork &amp; Beans" width="80"';
+        $expect = ' autocomplete="on" bar="bar" class="me test" data-test="{&quot;foo&quot;:&quot;bar&quot;}" disabled="disabled" height="100" src="/path/to/image.png" title="Pork &amp; Beans" value="" width="80"';
         $this->assertSame($expect, $attribStr);
     }
 

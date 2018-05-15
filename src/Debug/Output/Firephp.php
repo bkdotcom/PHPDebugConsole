@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.1.1
  */
 
 namespace bdk\Debug\Output;
@@ -113,7 +113,7 @@ class Firephp extends Base
         } elseif ($this->messageIndex === self::MESSAGE_LIMIT) {
             $this->setFirephpHeader(
                 array('Type'=>$this->firephpMethods['warn']),
-                'Limit of '.\number_format(self::MESSAGE_LIMIT).' firePhp messages reached!'
+                'FirePhp\'s limit of '.\number_format(self::MESSAGE_LIMIT).' messages reached!'
             );
         }
         return;

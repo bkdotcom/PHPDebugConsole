@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.1.1
  */
 
 namespace bdk\Debug;
@@ -53,15 +53,22 @@ class Utilities
     /**
      * Basic html attrib builder
      *
+     * Attributes will be sorted by name
+     * If class attribute is provided as an array, classnames will be sorted
+     *
      * @param array $attribs key/pair values
      *
      * @return string
+     * @see    https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#autofilling-form-controls:-the-autocomplete-attribute
      */
     public static function buildAttribString($attribs)
     {
         $attribPairs = array();
-        \ksort($attribs);
         foreach ($attribs as $k => $v) {
+            if (\is_int($k)) {
+                $k = $v;
+                $v = true;
+            }
             $isDataAttrib = \strpos($k, 'data-') === 0;
             if ($isDataAttrib) {
                 $v = \json_encode($v);
@@ -71,14 +78,25 @@ class Utilities
                 $v = \array_filter(\array_unique($v));
                 \sort($v);
                 $v = \implode(' ', $v);
-            } elseif ($v === true) {
-                $v = $k;
+            } elseif (\is_bool($v)) {
+                if ($k == 'autocomplete') {
+                    $v = $v ? 'on' : 'off';
+                } elseif ($v) {
+                    $v = $k;
+                } else {
+                    continue;
+                }
+            } elseif ($v === null) {
+                continue;
+            } elseif ($v === '') {
+                if ($k !== 'value') {
+                    continue;
+                }
             }
             $v = \trim($v);
-            if (\strlen($v) || $isDataAttrib) {
-                $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
-            }
+            $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
         }
+        \sort($attribPairs);
         return \rtrim(' '.\implode(' ', $attribPairs));
     }
 

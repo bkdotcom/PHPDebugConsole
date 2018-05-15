@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.1.1
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -48,7 +48,7 @@ class Debug
     const COUNT_NO_INC = 1;
     const COUNT_NO_OUT = 2;
     const META = "\x00meta\x00";
-    const VERSION = "2.1.0";
+    const VERSION = "2.1.1";
 
     /**
      * Constructor

@@ -115,8 +115,8 @@ class MethodTableTest extends DebugTestFramework
 <thead><tr><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
 </thead>
 <tbody>
-<tr><th class="t_key t_int" scope="row">4</th><td class="t_string">Bob</td><td class="t_string numeric">12</td><td class="t_string">M</td><td class="t_bool false">false</td><td class="t_undefined"></td></tr>
-<tr><th class="t_key t_int" scope="row">2</th><td class="t_string">Sally</td><td class="t_string numeric">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
+<tr><th class="t_key t_int" scope="row">4</th><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
+<tr><th class="t_key t_int" scope="row">2</th><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
 </tbody>
 </table>
 EOD;
@@ -158,7 +158,7 @@ EOD;
                 'table',
                 array('blah'),
                 array(
-                    'html' => '<div class="m_log"><span class="t_string no-pseudo">blah</span></div>',
+                    'html' => '<div class="m_log"><span class="no-pseudo t_string">blah</span></div>',
                     'text' => 'blah',
                     'script' => 'console.log("blah");',
                     'firephp' => 'X-Wf-1-1-1-2: 23|[{"Type":"LOG"},"blah"]|',
@@ -254,8 +254,8 @@ EOD;
                         <thead><tr><th>&nbsp;</th><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_key t_int" scope="row">4</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Bob</td><td class="t_string numeric">12</td><td class="t_string">M</td><td class="t_bool false">false</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_key t_int" scope="row">2</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Sally</td><td class="t_string numeric">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
+                        <tr><th class="t_key t_int" scope="row">4</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
+                        <tr><th class="t_key t_int" scope="row">2</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
                         </tbody>
                         </table>',
                     'text' => 'traversable -o- traversables = array(
@@ -294,8 +294,8 @@ EOD;
                         <thead><tr><th>&nbsp;</th><th>&nbsp;</th><th>age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_key t_int" scope="row">4</th><td class="t_classname">stdClass</td><td class="t_string numeric">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="t_bool false">false</td><td class="t_string">M</td></tr>
-                        <tr><th class="t_key t_int" scope="row">2</th><td class="t_classname">stdClass</td><td class="t_string numeric">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool true">true</td><td class="t_string">F</td></tr>
+                        <tr><th class="t_key t_int" scope="row">4</th><td class="t_classname">stdClass</td><td class="numeric t_string">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="false t_bool">false</td><td class="t_string">M</td></tr>
+                        <tr><th class="t_key t_int" scope="row">2</th><td class="t_classname">stdClass</td><td class="numeric t_string">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool true">true</td><td class="t_string">F</td></tr>
                         </tbody>
                         </table>',
                     'text' => 'array -o- objects = array(

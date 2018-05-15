@@ -64,7 +64,7 @@ class UtilitiesTest extends DebugTestFramework
             'title' => 'Pork & Beans',
         );
         $attribStr = Utilities::buildAttribString($attribs);
-        $expect = ' src="/path/to/image.png" width="80" height="100" title="Pork &amp; Beans"';
+        $expect = ' height="100" src="/path/to/image.png" title="Pork &amp; Beans" width="80"';
         $this->assertSame($expect, $attribStr);
     }
 

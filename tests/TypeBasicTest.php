@@ -29,7 +29,7 @@ class TypeBasicTest extends DebugTestFramework
                 array(false),
                 array(
                     'chromeLogger' => '[[false],null,""]',
-                    'html' => '<div class="m_log"><span class="t_bool false">false</span></div>',
+                    'html' => '<div class="m_log"><span class="false t_bool">false</span></div>',
                     'text' => 'false',
                     'script' => 'console.log(false);',
                 )

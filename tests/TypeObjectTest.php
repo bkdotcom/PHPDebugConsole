@@ -97,7 +97,7 @@ EOD;
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
                             '<span class="array-inner">',
                             "\t".'<span class="key-value"><span class="t_key">int</span> <span class="t_operator">=&gt;</span> <span class="t_int">123</span></span>',
-                            "\t".'<span class="key-value"><span class="t_key">numeric</span> <span class="t_operator">=&gt;</span> <span class="t_string numeric">123</span></span>',
+                            "\t".'<span class="key-value"><span class="t_key">numeric</span> <span class="t_operator">=&gt;</span> <span class="numeric t_string">123</span></span>',
                             "\t".'<span class="key-value"><span class="t_key">string</span> <span class="t_operator">=&gt;</span> <span class="t_string">cheese</span></span>',
                             "\t".'<span class="key-value"><span class="t_key">bool</span> <span class="t_operator">=&gt;</span> <span class="t_bool true">true</span></span>',
                             "\t".'<span class="key-value"><span class="t_key">obj</span> <span class="t_operator">=&gt;</span> <span class="t_null">null</span></span>',

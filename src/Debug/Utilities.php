@@ -60,15 +60,22 @@ class Utilities
     public static function buildAttribString($attribs)
     {
         $attribPairs = array();
+        \ksort($attribs);
         foreach ($attribs as $k => $v) {
-            if (\is_array($v)) {
+            $isDataAttrib = \strpos($k, 'data-') === 0;
+            if ($isDataAttrib) {
+                $v = \json_encode($v);
+                $v = \trim($v, '"');
+            } elseif (\is_array($v)) {
                 // ie an array of classnames
-                $v = \implode(' ', \array_filter(\array_unique($v)));
-            } elseif (\is_bool($v)) {
-                $v = $v ? $k : '';
+                $v = \array_filter(\array_unique($v));
+                \sort($v);
+                $v = \implode(' ', $v);
+            } elseif ($v === true) {
+                $v = $k;
             }
             $v = \trim($v);
-            if (\strlen($v)) {
+            if (\strlen($v) || $isDataAttrib) {
                 $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
             }
         }

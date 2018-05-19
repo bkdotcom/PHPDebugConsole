@@ -51,10 +51,10 @@ class Utilities
     }
 
     /**
-     * Basic html attrib builder
+     * Build attribute string
      *
      * Attributes will be sorted by name
-     * If class attribute is provided as an array, classnames will be sorted
+     * class & style attributes may be provided as arrays
      *
      * @param array $attribs key/pair values
      *
@@ -63,6 +63,9 @@ class Utilities
      */
     public static function buildAttribString($attribs)
     {
+        if (\is_string($attribs)) {
+            return \rtrim(' '.\trim($attribs));
+        }
         $attribPairs = array();
         foreach ($attribs as $k => $v) {
             if (\is_int($k)) {
@@ -74,27 +77,21 @@ class Utilities
                 $v = \json_encode($v);
                 $v = \trim($v, '"');
             } elseif (\is_array($v)) {
-                // ie an array of classnames
-                $v = \array_filter(\array_unique($v));
-                \sort($v);
-                $v = \implode(' ', $v);
+                $v = self::buildAttribArrayVal($k, $v);
             } elseif (\is_bool($v)) {
-                if ($k == 'autocomplete') {
-                    $v = $v ? 'on' : 'off';
-                } elseif ($v) {
-                    $v = $k;
-                } else {
-                    continue;
-                }
+                $v = self::buildAttribBoolVal($k, $v);
             } elseif ($v === null) {
                 continue;
-            } elseif ($v === '') {
-                if ($k !== 'value') {
-                    continue;
-                }
             }
             $v = \trim($v);
-            $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
+            if (\array_filter(array(
+                $v !== '',
+                $k === 'value',
+                $isDataAttrib,
+            ))) {
+                // at least one of the conditions is true
+                $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
+            }
         }
         \sort($attribPairs);
         return \rtrim(' '.\implode(' ', $attribPairs));
@@ -204,12 +201,12 @@ class Utilities
     public static function getIncludedFiles()
     {
         $includedFiles = \get_included_files();
-        \usort($includedFiles, function ($a, $b) {
-            $adir = \dirname($a);
-            $bdir = \dirname($b);
-            return $adir == $bdir
-                ? \strnatcasecmp($a, $b)
-                : \strnatcasecmp($adir, $bdir);
+        \usort($includedFiles, function ($valA, $valB) {
+            $dirA = \dirname($valA);
+            $dirB = \dirname($valB);
+            return $dirA == $dirB
+                ? \strnatcasecmp($valA, $valB)
+                : \strnatcasecmp($dirA, $dirB);
         });
         return $includedFiles;
     }
@@ -385,5 +382,55 @@ class Utilities
         }
         $log = \unserialize($str);
         return $log;
+    }
+
+    /**
+     * Convert array attribute value to string
+     *
+     * Convert class/style array value to string
+     * This function is not meant for data attributs
+     *
+     * @param string $key   attribute name (class|style)
+     * @param array  $value classnames for class, key/value for style
+     *
+     * @return string
+     */
+    private static function buildAttribArrayVal($key, $value = array())
+    {
+        if ($key == 'class') {
+            $value = \array_filter(\array_unique($value));
+            \sort($value);
+            $value = \implode(' ', $value);
+        } elseif ($key == 'style') {
+            $keyValues = array();
+            foreach ($value as $k => $v) {
+                $keyValues[] = $k.':'.$v.';';
+            }
+            \sort($keyValues);
+            $value = \implode('', $keyValues);
+        } else {
+            $value = '';
+        }
+        return $value;
+    }
+
+    /**
+     * Convert boolean attribute value to string
+     *
+     * @param string  $key   attribute name
+     * @param boolean $value true|false
+     *
+     * @return string
+     */
+    private static function buildAttribBoolVal($key, $value = true)
+    {
+        if ($key == 'autocomplete') {
+            $value = $value ? 'on' : 'off';
+        } elseif ($value) {
+            $value = $key;
+        } else {
+            $value = '';
+        }
+        return $value;
     }
 }

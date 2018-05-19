@@ -61,22 +61,52 @@ class UtilitiesTest extends DebugTestFramework
             'src' => '/path/to/image.png',
             'width' => 80,
             'height' => 100,
-            'class' => array('test','me'),
+            'class' => array('test','dupe','dupe'),
             'title' => 'Pork & Beans',
             'value' => '',      // value=""  (we output empty value attrib)
-            'style' => '',      // not output (empty string)
+            'style' => array('position'=>'absolute','display'=>'inline-block'),
+            'dingus' => array('unknown array'),
             'foo' => false,     // not output
             'bar' => true,      // bar="bar"
+            'baz' => '',        // not output (empty string)
             'autocomplete',     // autocomplete="on"
             'disabled',         // disabled="disabled"
-            'data-test' => array(
+            'data-string' => 'wassup?',
+            'data-true' => true,
+            'data-array' => array(
                 'foo' => 'bar',
             ),
         );
         $attribStr = Utilities::buildAttribString($attribs);
-        $expect = ' autocomplete="on" bar="bar" class="me test" data-test="{&quot;foo&quot;:&quot;bar&quot;}" disabled="disabled" height="100" src="/path/to/image.png" title="Pork &amp; Beans" value="" width="80"';
+        $expect = ' autocomplete="on" bar="bar" class="dupe test" data-array="{&quot;foo&quot;:&quot;bar&quot;}" data-string="wassup?" data-true="true" disabled="disabled" height="100" src="/path/to/image.png" style="display:inline-block;position:absolute;" title="Pork &amp; Beans" value="" width="80"';
+        $this->assertSame($expect, $attribStr);
+
+        $attribs = array(
+            'class' => array(),     // not output
+            'style' => array(),     // not output
+            'data-empty-string' => '',
+            'data-empty-array' => array(),
+            'data-empty-obj' => (object) array(),
+            'data-null' => null,
+            'data-false' => false,
+        );
+        $attribStr = Utilities::buildAttribString($attribs);
+        $expect = ' data-empty-array="[]" data-empty-obj="{}" data-empty-string="" data-false="false" data-null="null"';
+        $this->assertSame($expect, $attribStr);
+
+        $attribStr = Utilities::buildAttribString('');
+        $this->assertSame('', $attribStr);
+
+        $attribStr = Utilities::buildAttribString('I\'m a string');
+        $expect = ' I\'m a string';
+        $this->assertSame($expect, $attribStr);
+
+        // don't add more space to existing space... should return a single leading space
+        $attribStr = Utilities::buildAttribString('  leading spaces');
+        $expect = ' leading spaces';
         $this->assertSame($expect, $attribStr);
     }
+
 
     public function testGetBytes()
     {

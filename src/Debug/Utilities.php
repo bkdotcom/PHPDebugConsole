@@ -51,6 +51,30 @@ class Utilities
     }
 
     /**
+     * Get value from array structure
+     *
+     * @param array|string $path  key path
+     * @param array        $array array to navigate
+     *
+     * @return mixed
+     */
+    public static function arrayPathGet($path, $array = array())
+    {
+        if (\is_string($path) || \is_null($path)) {
+            $path = \preg_split('#[\./]#', $path);
+            $path = \array_filter($path, 'strlen');
+        }
+        foreach ($path as $k) {
+            if (isset($array[$k])) {
+                $array = $array[$k];
+            } else {
+                return null;
+            }
+        }
+        return $array;
+    }
+
+    /**
      * Build attribute string
      *
      * Attributes will be sorted by name

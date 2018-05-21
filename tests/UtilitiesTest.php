@@ -55,6 +55,31 @@ class UtilitiesTest extends DebugTestFramework
      *
      * @return void
      */
+    public function testArrayPathGet()
+    {
+        $array = array(
+            'surfaces' => array(
+                'bed' => array(
+                    'comfy' => true,
+                ),
+                'rock' => array(
+                    'comfy' => false,
+                )
+            ),
+        );
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.comfy', $array), true);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.rock.comfy', $array), false);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.comfy.foo', $array), null);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.comfy.0', $array), null);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed', $array), array('comfy'=>true));
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.foo', $array), null);
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
     public function testBuildAttribString()
     {
         $attribs = array(

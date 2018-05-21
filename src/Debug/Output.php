@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.1.1
  */
 
 namespace bdk\Debug;
@@ -93,16 +93,7 @@ class Output implements SubscriberInterface
         } elseif ($path == 'css') {
             $ret = $this->getCss();
         } else {
-            $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
-            $ret = $this->cfg;
-            foreach ($path as $k) {
-                if (isset($ret[$k])) {
-                    $ret = $ret[$k];
-                } else {
-                    $ret = null;
-                    break;
-                }
-            }
+            $ret = $this->debug->utilities->arrayPathGet($path, $this->cfg);
         }
         return $ret;
     }

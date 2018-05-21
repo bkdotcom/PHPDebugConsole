@@ -118,26 +118,9 @@ class DebugTest extends DebugTestFramework
         $this->assertSame('onShutdown', $subscribers[1][1]);
     }
 
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testGetCfg()
-    {
-        $this->assertSame('visibility', $this->debug->getCfg('objectSort'));
-        $this->assertSame('visibility', $this->debug->getCfg('abstracter.objectSort'));
-        $this->assertSame('visibility', $this->debug->getCfg('abstracter/objectSort'));
-
-        $abstracterKeys = array('collectConstants', 'collectMethods', 'objectsExclude', 'objectSort', 'useDebugInfo');
-        $debugKeys = array('collect', 'file', 'key', 'output', 'errorMask', 'emailFunc', 'emailLog', 'emailTo', 'logEnvInfo', 'logServerKeys', 'onLog',);
-
-        $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter')));
-        $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter/*')));
-        $this->assertSame($debugKeys, array_keys($this->debug->getCfg()));
-        $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug')));
-        $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug/*')));
-    }
+    /*
+        getCfg tested in ConfigTest
+    */
 
     public function testMeta()
     {
@@ -186,14 +169,9 @@ class DebugTest extends DebugTestFramework
     {
     }
 
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testSetCfg()
-    {
-    }
+    /*
+        setCfg tested in ConfigTest
+    */
 
     /**
      * Test

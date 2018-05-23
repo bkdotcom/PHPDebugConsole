@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.2
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -244,11 +244,13 @@ class Internal implements SubscriberInterface
             return;
         }
         $collectWas = $this->debug->setCfg('collect', true);
+        $this->debug->groupSummary();
         $this->debug->group('environment');
         $this->debug->groupUncollapse();
         $this->logServerKeys();
         $this->logPhpInfo();
         $this->logRequest();
+        $this->debug->groupEnd();
         $this->debug->groupEnd();
         $this->debug->setCfg('collect', $collectWas);
     }

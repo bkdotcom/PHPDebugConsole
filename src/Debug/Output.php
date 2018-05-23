@@ -190,9 +190,10 @@ class Output implements SubscriberInterface
      */
     private function closeOpenGroups()
     {
-        foreach ($this->data['groupSummaryStack'] as $i => $group) {
-            for ($i = 0; $i < $group['groupDepth'][1]; $i++) {
-                $this->data['logSummary'][$group['priority']][] = array('groupEnd', array(), array());
+        foreach ($this->data['groupSummaryStack'] as $i => $priority) {
+            $groupDepth = $this->data['groupSummaryDepths'][$priority];
+            for ($i = 0; $i < $groupDepth[1]; $i++) {
+                $this->data['logSummary'][$priority][] = array('groupEnd', array(), array());
             }
             unset($this->data['groupSummaryStack'][$i]);
         }

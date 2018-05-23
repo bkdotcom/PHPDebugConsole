@@ -175,6 +175,102 @@ class MethodTest extends DebugTestFramework
      *
      * @return void
      */
+    public function testClear()
+    {
+        $this->clearPrep();
+        $this->debug->clear();
+        $this->assertCount(1, $this->debug->getData('alerts'));
+        $this->assertCount(3, $this->debug->getData('logSummary/0'));
+        $this->assertCount(3, $this->debug->getData('logSummary/1'));
+        $this->assertCount(3, $this->debug->getData('log'));
+
+        $this->clearPrep();
+        $this->debug->clear(\bdk\Debug::CLEAR_LOG);
+        $this->assertCount(1, $this->debug->getData('alerts'));
+        $this->assertCount(3, $this->debug->getData('logSummary/0'));
+        $this->assertCount(3, $this->debug->getData('logSummary/1'));
+        $this->assertCount(3, $this->debug->getData('log'));
+
+        $this->clearPrep();
+        $this->debug->clear(\bdk\Debug::CLEAR_ALERTS);
+        $this->assertCount(0, $this->debug->getData('alerts'));
+        $this->assertCount(3, $this->debug->getData('logSummary/0'));
+        $this->assertCount(3, $this->debug->getData('logSummary/1'));
+        $this->assertCount(5, $this->debug->getData('log'));
+
+        $this->clearPrep();
+        $this->debug->clear(\bdk\Debug::CLEAR_SUMMARY);
+        $this->assertCount(1, $this->debug->getData('alerts'));
+        $this->assertCount(1, $this->debug->getData('logSummary/0'));   // error remains
+        $this->assertCount(2, $this->debug->getData('logSummary/1'));   // group & error remain
+        $this->assertSame(array(
+            0 => array(0, 0),
+            1 => array(2, 2),
+        ), $this->debug->getData('groupSummaryDepths'));
+        $this->assertCount(5, $this->debug->getData('log'));
+
+        $this->clearPrep();
+        $this->debug->clear(\bdk\Debug::CLEAR_ERRORS);
+        $this->assertCount(1, $this->debug->getData('alerts'));
+        $this->assertCount(2, $this->debug->getData('logSummary/0'));
+        $this->assertCount(2, $this->debug->getData('logSummary/1'));
+        $this->assertSame(array(
+            0 => array(2, 2),
+            1 => array(2, 2),
+        ), $this->debug->getData('groupSummaryDepths'));
+        $this->assertCount(4, $this->debug->getData('log'));
+
+        $this->clearPrep();
+        $this->debug->clear(\bdk\Debug::CLEAR_ALL);
+        $this->assertCount(0, $this->debug->getData('alerts'));
+        $this->assertCount(0, $this->debug->getData('logSummary/0'));
+        $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
+        $this->assertSame(array(
+            0 => array(0, 0),
+            1 => array(2, 2),
+        ), $this->debug->getData('groupSummaryDepths'));
+        $this->assertCount(2, $this->debug->getData('log'));    // groups remain
+
+        $this->clearPrep();
+        $this->debug->clear(\bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_ERRORS);
+        $this->assertCount(1, $this->debug->getData('alerts'));
+        $this->assertCount(0, $this->debug->getData('logSummary/0'));
+        $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
+        $this->assertSame(array(
+            0 => array(0, 0),
+            1 => array(2, 2),
+        ), $this->debug->getData('groupSummaryDepths'));
+        $this->assertCount(4, $this->debug->getData('log'));
+    }
+
+    private function clearPrep()
+    {
+        $this->debug->setData(array(
+            'alerts' => array(),
+            'log' => array(),
+            'logSummary' => array(),
+        ));
+        $this->debug->alert('alert');
+        $this->debug->log('log');
+        $this->debug->group('a');
+        $this->debug->group('a1');
+        $this->debug->warn('nested error');
+        $this->debug->log('not an error');
+        $this->debug->groupSummary();
+        $this->debug->log('summary 0 stuff');
+        $this->debug->group('summary 0 group');
+        $this->debug->warn('summary 0 warn');
+        $this->debug->groupSummary(1);
+        $this->debug->log('summary 1 stuff');
+        $this->debug->group('summary 1 group');
+        $this->debug->warn('summary 1 warn');
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
     public function testCount()
     {
         $lines = array();

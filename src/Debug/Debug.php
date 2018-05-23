@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.1
+ * @version   v2.2
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -37,18 +37,23 @@ class Debug
     private static $publicMethods = array();
     protected $cfg = array();
     protected $data = array();
-    protected $groupDepthRef;   // points to groupDepth or groupSummaryStack[x]['groupDepth']
-    protected $logRef;          // points to either log or logSummary
+    protected $groupDepthRef;   // points to groupDepth or groupSummaryDepths[priority]
+    protected $logRef;          // points to either log or logSummary[priority]
     protected $config;          // config instance
     public $errorHandler;
     public $eventManager;
     public $internal;
     public $utilities;
 
+    const CLEAR_LOG = 1;
+    const CLEAR_ALERTS = 2;
+    const CLEAR_SUMMARY = 4;
+    const CLEAR_ERRORS = 8;
+    const CLEAR_ALL = 15;
     const COUNT_NO_INC = 1;
     const COUNT_NO_OUT = 2;
     const META = "\x00meta\x00";
-    const VERSION = "2.1.1";
+    const VERSION = "2.2";
 
     /**
      * Constructor
@@ -85,17 +90,12 @@ class Debug
         $this->data = array(
             'alerts'            => array(), // array of alerts.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method
-            'entryCountInitial' => 0,   // store number of log entries created during init
-            'groupDepth'        => array(0, 0),     // 1st: ignores cfg['collect'], 2nd: when cfg['collect']
-            'groupSummaryStack' => array(
-                /*
-                    this stack is used to return to the previous summary when groupEnd()ing out of a summary
-                    this allows calling groupSummary() while in a groupSummary
-                    when opening a groupSummary, we start with a new groupDepth (1, x)
-
-                    array( 'groupDepth' => array(x,x), 'priority' => x ),
-                */
-            ),
+            'entryCountInitial' => 0,       // store number of log entries created during init
+            'groupDepth'        => array(0, 0), // 1st: ignores cfg['collect'], 2nd: when cfg['collect']
+            'groupSummaryDepths' => array(),    // array(x,x) key'd by priority
+            'groupSummaryStack' => array(), // array of priorities
+                                            //   used to return to the previous summary when groupEnd()ing out of a summary
+                                            //   this allows calling groupSummary() while in a groupSummary
             'log'               => array(),
             'logSummary'        => array(), // summary log entries subgrouped by priority
             'outputSent'        => false,
@@ -230,8 +230,8 @@ class Debug
             case 'groupDepth':
                 // calculate the total group depth
                 $depth = $this->data['groupDepth'][0];
-                foreach ($this->data['groupSummaryStack'] as $group) {
-                    $depth += $group['groupDepth'][0];
+                foreach ($this->data['groupSummaryDepths'] as $groupDepth) {
+                    $depth += $groupDepth[0];
                 }
                 return $depth;
             case 'output':
@@ -295,6 +295,35 @@ class Debug
                 $args[] = 'assertation failed in '.$callerInfo['file'].' on line '.$callerInfo['line'];
             }
             $this->appendLog('assert', $args);
+        }
+    }
+
+    /**
+     * Clear the log
+     *
+     * @param integer $flags specify what to clear (bitmask)
+     *                         CLEAR_LOG      (excluding warn & error) (default)
+     *                         CLEAR_ALERTS
+     *                         CLEAR_SUMMARY  (excluding warn & error)
+     *                         CLEAR_ERRORS
+     *                         CLEAR_ALL
+     *
+     * @return void
+     */
+    public function clear($flags = self::CLEAR_LOG)
+    {
+        $clearErrors = $flags & self::CLEAR_ERRORS;
+        if ($flags & self::CLEAR_ALERTS) {
+            $this->data['alerts'] = array();
+        }
+        if ($flags & self::CLEAR_SUMMARY) {
+            $this->clearSummary($clearErrors);
+        }
+        if ($flags & self::CLEAR_LOG) {
+            $this->clearLog($clearErrors);
+        }
+        if ($flags & self::CLEAR_ERRORS) {
+            $this->clearErrors();
         }
     }
 
@@ -414,10 +443,10 @@ class Debug
             \array_pop($this->data['groupSummaryStack']);
             $count = \count($this->data['groupSummaryStack']);
             if ($count) {
-                // still in a group
-                $curPriority = $this->data['groupSummaryStack'][$count-1]['priority'];
+                // still in a summary group
+                $curPriority = $this->data['groupSummaryStack'][$count-1];
                 $this->logRef = &$this->data['logSummary'][$curPriority];
-                $this->groupDepthRef = &$this->data['groupSummaryStack'][$count-1]['groupDepth'];
+                $this->groupDepthRef = &$this->data['groupSummaryDepths'][$curPriority];
             } else {
                 // we've popped out of all the summary groups
                 $this->logRef = &$this->data['log'];
@@ -456,16 +485,15 @@ class Debug
      */
     public function groupSummary($priority = 0)
     {
-        $this->data['groupSummaryStack'][] = array(
-            'groupDepth' => array(1, $this->cfg['collect'] ? 1 : 0),
-            'priority' => $priority
-        );
-        $stackCount = \count($this->data['groupSummaryStack']);
+        $this->data['groupSummaryStack'][] = $priority;
         if (!isset($this->data['logSummary'][$priority])) {
             $this->data['logSummary'][$priority] = array();
+            $this->data['groupSummaryDepths'][$priority] = array(0, 0);
         }
+        $this->data['groupSummaryDepths'][$priority][0] ++;
+        $this->data['groupSummaryDepths'][$priority][1] += $this->cfg['collect'] ? 1 : 0;
         $this->logRef = &$this->data['logSummary'][$priority];
-        $this->groupDepthRef = &$this->data['groupSummaryStack'][$stackCount-1]['groupDepth'];
+        $this->groupDepthRef = &$this->data['groupSummaryDepths'][$priority];
         /*
             Publish the debug.log event (regardless of cfg.collect)
             don't actually log
@@ -495,22 +523,9 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        $curDepth = $this->groupDepthRef[1];   // will fluctuate as we go through log
-        $minDepth = $this->groupDepthRef[1];   // decrease as we work our way down
-        for ($i = \count($this->logRef) - 1; $i >=0; $i--) {
-            if ($curDepth < 1) {
-                break;
-            }
-            $method = $this->logRef[$i][0];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $curDepth--;
-                if ($curDepth < $minDepth) {
-                    $minDepth--;
-                    $this->logRef[$i][0] = 'group';
-                }
-            } elseif ($method == 'groupEnd') {
-                $curDepth++;
-            }
+        $entryKeys = \array_keys($this->getCurrentGroups($this->logRef, $this->groupDepthRef[1]));
+        foreach ($entryKeys as $key) {
+            $this->logRef[$key][0] = 'group';
         }
         /*
             Publish the debug.log event (regardless of cfg.collect)
@@ -899,7 +914,8 @@ class Debug
         $this->data['alerts'] = array();
         $this->data['counts'] = array();
         $this->data['groupDepth'] = array(0, 0);
-        $this->data['groupDepthSummary'] = array();
+        $this->data['groupSummaryDepths'] = array();
+        $this->data['groupSummaryStack'] = array();
         $this->data['log'] = array();
         $this->data['logSummary'] = array();
         $this->data['outputSent'] = true;
@@ -964,10 +980,13 @@ class Debug
             $this->data = \array_merge($this->data, $path);
         }
         if (!$this->data['log']) {
-            $this->groupDepth = array(0,0);
+            $this->data['groupDepth'] = array(0,0);
         }
         if (!$this->data['logSummary']) {
-            $this->groupDepthSummary = array();
+            $this->data['groupSummaryDepths'] = array();
+            $this->data['groupSummaryStack'] = array();
+            $this->logRef = &$this->data['log'];
+            $this->groupDepthRef = &$this->data['groupDepth'];
         }
     }
 
@@ -1095,6 +1114,85 @@ class Debug
     }
 
     /**
+     * Remove error & warn from summary & log
+     *
+     * @return void
+     */
+    private function clearErrors()
+    {
+        foreach (\array_keys($this->data['logSummary']) as $priority) {
+            foreach ($this->data['logSummary'][$priority] as $k => $entry) {
+                if (\in_array($entry[0], array('error','warn'))) {
+                    unset($this->data['logSummary'][$priority][$k]);
+                }
+            }
+            $this->data['logSummary'][$priority] = \array_values($this->data['logSummary'][$priority]);
+        }
+        foreach ($this->data['log'] as $k => $entry) {
+            if (\in_array($entry[0], array('error','warn'))) {
+                unset($this->data['log'][$k]);
+            }
+        }
+        $this->data['log'] = \array_values($this->data['log']);
+        $errors = $this->errorHandler->get('errors');
+        foreach ($errors as $error) {
+            $error['inConsole'] = false;
+        }
+    }
+
+    /**
+     * Clear log entries
+     *
+     * @param boolean $inclErrors Also clear errors?
+     *
+     * @return void
+     */
+    private function clearLog($inclErrors = false)
+    {
+        $entriesKeep = $this->getCurrentGroups($this->data['log'], $this->data['groupDepth'][1]);
+        if (!$inclErrors) {
+            // keep errors
+            foreach ($this->data['log'] as $k => $entry) {
+                if (\in_array($entry[0], array('error','warn'))) {
+                    $entriesKeep[$k] = $entry;
+                }
+            }
+        }
+        \ksort($entriesKeep);
+        $this->data['log'] = \array_values($entriesKeep);
+    }
+
+    /**
+     * Clear summary entries
+     *
+     * @param boolean $inclErrors Also clear errors?
+     *
+     * @return void
+     */
+    private function clearSummary($inclErrors = false)
+    {
+        $curPriority = \end($this->data['groupSummaryStack']);  // false if empty
+        foreach (\array_keys($this->data['logSummary']) as $priority) {
+            $entriesKeep = array();
+            if ($priority === $curPriority) {
+                $entriesKeep = $this->getCurrentGroups($this->data['logSummary'][$priority], $this->data['groupSummaryDepths'][$priority][1]);
+            } else {
+                $this->data['groupSummaryDepths'][$priority] = array(0, 0);
+            }
+            if (!$inclErrors) {
+                // keep errors
+                foreach ($this->data['logSummary'][$priority] as $k => $entry) {
+                    if (\in_array($entry[0], array('error','warn'))) {
+                        $entriesKeep[$k] = $entry;
+                    }
+                }
+            }
+            \ksort($entriesKeep);
+            $this->data['logSummary'][$priority] = \array_values($entriesKeep);
+        }
+    }
+
+    /**
      * Append group or groupCollapsed to log
      *
      * @param string $method 'group' or 'groupCollapsed'
@@ -1151,6 +1249,40 @@ class Debug
             $str = $label.': '.$seconds.' sec';
         }
         $this->appendLog('time', array($str));
+    }
+
+    /**
+     * Return the group & groupCollapsed ("ancestors")
+     *
+     * @param array   $logEntries log entries
+     * @param integer $curDepth   current group depth
+     *
+     * @return array key => logEntry array
+     */
+    private function getCurrentGroups(&$logEntries, $curDepth)
+    {
+        /*
+            curDepth will fluctuate as we go back through log
+            minDepth will decrease as we work our way down/up the groups
+        */
+        $minDepth = $curDepth;
+        $entries = array();
+        for ($i = \count($logEntries) - 1; $i >= 0; $i--) {
+            if ($curDepth < 1) {
+                break;
+            }
+            $method = $logEntries[$i][0];
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $curDepth--;
+                if ($curDepth < $minDepth) {
+                    $minDepth--;
+                    $entries[$i] = $logEntries[$i];
+                }
+            } elseif ($method == 'groupEnd') {
+                $curDepth++;
+            }
+        }
+        return $entries;
     }
 
     /**

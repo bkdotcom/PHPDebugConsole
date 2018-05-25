@@ -622,8 +622,13 @@ class Debug
             $this->appendLog('table', array($data), $meta);
         } else {
             $args = \is_array($data) && $meta['caption']
-                ? array($meta['caption'], $data)    // empty array()
-                : \func_get_args();                  // no array passed
+                ? array(
+                        // empty array() was passed
+                        $meta['caption'],
+                        $data,
+                        self::meta(\array_diff_key($meta, \array_flip(array('caption','columns'))))
+                    )
+                : \func_get_args();                 // no array passed
             $this->appendLog('log', $args);
         }
     }
@@ -865,11 +870,11 @@ class Debug
      *
      * @return array
      */
-    public function meta()
+    public static function meta()
     {
         $args = \func_get_args();
         $count = \count($args);
-        $args = \array_merge($args, array(null, null, null));
+        $args = \array_replace(array(null, null, null), $args);
         if (\is_array($args[0])) {
             $args[0]['debug'] = self::META;
             return $args[0];
@@ -1086,18 +1091,14 @@ class Debug
             return;
         }
         $cfgRestore = array();
-        if ($method == 'table') {
-            $args[0] = $this->abstracter->getAbstraction($args[0], 'table');
-        } else {
-            $meta = \array_merge($meta, $this->internal->getMetaVals($args));
-            if (isset($meta['cfg'])) {
-                $cfgRestore = $this->config->setCfg($meta['cfg']);
-                unset($meta['cfg']);
-            }
-            foreach ($args as $i => $v) {
-                if ($this->abstracter->needsAbstraction($v)) {
-                    $args[$i] = $this->abstracter->getAbstraction($v);
-                }
+        $meta = \array_merge($meta, $this->internal->getMetaVals($args));
+        if (isset($meta['cfg'])) {
+            $cfgRestore = $this->config->setCfg($meta['cfg']);
+            unset($meta['cfg']);
+        }
+        foreach ($args as $i => $v) {
+            if ($this->abstracter->needsAbstraction($v)) {
+                $args[$i] = $this->abstracter->getAbstraction($v, $method);
             }
         }
         $event = $this->eventManager->publish(

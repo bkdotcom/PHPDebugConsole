@@ -171,6 +171,7 @@ class Internal implements SubscriberInterface
             $meta = array(
                 'errorType' => $this->error['type'],
                 'errorCat' => $this->error['category'],
+                'errorHash' => $this->error['hash'],
                 'backtrace' => $this->error['backtrace'] ?: array(),
             );
         } else {

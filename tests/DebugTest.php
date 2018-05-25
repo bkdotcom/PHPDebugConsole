@@ -122,6 +122,20 @@ class DebugTest extends DebugTestFramework
         getCfg tested in ConfigTest
     */
 
+    public function testGetData()
+    {
+        $this->debug->info('token log entry 1');
+        $this->debug->warn('token log entry 2');
+        $this->assertArrayHasKey('log', $this->debug->getData());
+        $this->assertSame(2, $this->debug->getData('log/count'));
+        $this->assertSame('info', $this->debug->getData('log.0.0'));
+        $this->assertSame('warn', $this->debug->getData('log/1/0'));
+        $this->assertSame('warn', $this->debug->getData('log/end/0'));
+        $this->assertSame(null, $this->debug->getData('log/bogus'));
+        $this->assertSame(null, $this->debug->getData('log/bogus/more'));
+        $this->assertSame(null, $this->debug->getData('log/0/0/notArray'));
+    }
+
     public function testMeta()
     {
         /*
@@ -172,6 +186,21 @@ class DebugTest extends DebugTestFramework
     /*
         setCfg tested in ConfigTest
     */
+
+    public function testSetData()
+    {
+        $this->debug->setData('log/0', array('info', array('foo'), array()));
+        $this->assertSame(1, $this->debug->getData('log/count'));
+        $this->assertSame('foo', $this->debug->getData('log/0/1/0'));
+
+        $this->debug->setData(array(
+            'log' => array(
+                array('info', array('bar'), array()),
+            )
+        ));
+        $this->assertSame(1, $this->debug->getData('log/count'));
+        $this->assertSame('bar', $this->debug->getData('log/0/1/0'));
+    }
 
     /**
      * Test

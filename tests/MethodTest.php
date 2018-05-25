@@ -178,69 +178,248 @@ class MethodTest extends DebugTestFramework
     public function testClear()
     {
         $this->clearPrep();
-        $this->debug->clear();
-        $this->assertCount(1, $this->debug->getData('alerts'));
-        $this->assertCount(3, $this->debug->getData('logSummary/0'));
-        $this->assertCount(3, $this->debug->getData('logSummary/1'));
-        $this->assertCount(3, $this->debug->getData('log'));
+        $this->testMethod(
+            'clear',
+            array(),
+            array(
+                'custom' => function () {
+                    $this->assertCount(1, $this->debug->getData('alerts'));
+                    $this->assertCount(3, $this->debug->getData('logSummary/0'));
+                    $this->assertCount(3, $this->debug->getData('logSummary/1'));
+                    $this->assertCount(4, $this->debug->getData('log'));    // clear-summary gets added
+                },
+                'entry' => array(
+                    'clear',
+                    array('Cleared log (sans errors)'),
+                    array(
+                        'file' => $this->file,
+                        'line' => $this->line,
+                        'flags' => \bdk\Debug::CLEAR_LOG,
+                    ),
+                ),
+                'chromeLogger' => array(
+                    array('Cleared log (sans errors)'),
+                    $this->file.': '.$this->line,
+                    '',
+                ),
+                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared log (sans errors)</span></div>',
+                'text' => '⌦ Cleared log (sans errors)',
+                'script' => 'console.log("Cleared log (sans errors)");',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared log (sans errors)"]|',
+            )
+        );
 
         $this->clearPrep();
-        $this->debug->clear(\bdk\Debug::CLEAR_LOG);
-        $this->assertCount(1, $this->debug->getData('alerts'));
-        $this->assertCount(3, $this->debug->getData('logSummary/0'));
-        $this->assertCount(3, $this->debug->getData('logSummary/1'));
-        $this->assertCount(3, $this->debug->getData('log'));
+        $this->testMethod(
+            'clear',
+            array(\bdk\Debug::CLEAR_LOG | \bdk\Debug::CLEAR_SILENT),
+            array(
+                'custom' => function () {
+                    $this->assertCount(1, $this->debug->getData('alerts'));
+                    $this->assertCount(3, $this->debug->getData('logSummary/0'));
+                    $this->assertCount(3, $this->debug->getData('logSummary/1'));
+                    $this->assertCount(3, $this->debug->getData('log'));
+                    $lastMethod = $this->debug->getData('log/end/0');
+                    $this->assertSame('warn', $lastMethod);
+                },
+            )
+        );
 
         $this->clearPrep();
-        $this->debug->clear(\bdk\Debug::CLEAR_ALERTS);
-        $this->assertCount(0, $this->debug->getData('alerts'));
-        $this->assertCount(3, $this->debug->getData('logSummary/0'));
-        $this->assertCount(3, $this->debug->getData('logSummary/1'));
-        $this->assertCount(5, $this->debug->getData('log'));
+        $this->testMethod(
+            'clear',
+            array(\bdk\Debug::CLEAR_ALERTS),
+            array(
+                'custom' => function () {
+                    $this->assertCount(0, $this->debug->getData('alerts'));
+                    $this->assertCount(3, $this->debug->getData('logSummary/0'));
+                    $this->assertCount(3, $this->debug->getData('logSummary/1'));
+                    $this->assertCount(6, $this->debug->getData('log'));
+                },
+                'entry' => array(
+                    'clear',
+                    array('Cleared alerts'),
+                    array(
+                        'file' => $this->file,
+                        'line' => $this->line,
+                        'flags' => \bdk\Debug::CLEAR_ALERTS,
+                    ),
+                ),
+                'chromeLogger' => array(
+                    array('Cleared alerts'),
+                    $this->file.': '.$this->line,
+                    '',
+                ),
+                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared alerts</span></div>',
+                'text' => '⌦ Cleared alerts',
+                'script' => 'console.log("Cleared alerts");',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared alerts"]|',
+            )
+        );
 
         $this->clearPrep();
-        $this->debug->clear(\bdk\Debug::CLEAR_SUMMARY);
-        $this->assertCount(1, $this->debug->getData('alerts'));
-        $this->assertCount(1, $this->debug->getData('logSummary/0'));   // error remains
-        $this->assertCount(2, $this->debug->getData('logSummary/1'));   // group & error remain
-        $this->assertSame(array(
-            0 => array(0, 0),
-            1 => array(2, 2),
-        ), $this->debug->getData('groupSummaryDepths'));
-        $this->assertCount(5, $this->debug->getData('log'));
+        $this->testMethod(
+            'clear',
+            array(\bdk\Debug::CLEAR_SUMMARY),
+            array(
+                'custom' => function () {
+                    $this->assertCount(1, $this->debug->getData('alerts'));
+                    $this->assertCount(1, $this->debug->getData('logSummary/0'));   // error remains
+                    $this->assertCount(2, $this->debug->getData('logSummary/1'));   // group & error remain
+                    $this->assertCount(6, $this->debug->getData('log'));
+                    $this->assertSame(array(
+                        0 => array(0, 0),
+                        1 => array(2, 2),
+                    ), $this->debug->getData('groupSummaryDepths'));
+                },
+                'entry' => array(
+                    'clear',
+                    array('Cleared summary (sans errors)'),
+                    array(
+                        'file' => $this->file,
+                        'line' => $this->line,
+                        'flags' => \bdk\Debug::CLEAR_SUMMARY,
+                    ),
+                ),
+                'chromeLogger' => array(
+                    array('Cleared summary (sans errors)'),
+                    $this->file.': '.$this->line,
+                    '',
+                ),
+                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared summary (sans errors)</span></div>',
+                'text' => '⌦ Cleared summary (sans errors)',
+                'script' => 'console.log("Cleared summary (sans errors)");',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (sans errors)"]|',
+            )
+        );
 
         $this->clearPrep();
-        $this->debug->clear(\bdk\Debug::CLEAR_ERRORS);
-        $this->assertCount(1, $this->debug->getData('alerts'));
-        $this->assertCount(2, $this->debug->getData('logSummary/0'));
-        $this->assertCount(2, $this->debug->getData('logSummary/1'));
-        $this->assertSame(array(
-            0 => array(2, 2),
-            1 => array(2, 2),
-        ), $this->debug->getData('groupSummaryDepths'));
-        $this->assertCount(4, $this->debug->getData('log'));
+        $this->testMethod(
+            'clear',
+            array(\bdk\Debug::CLEAR_LOG_ERRORS),
+            array(
+                'custom' => function () {
+                    $this->assertCount(1, $this->debug->getData('alerts'));
+                    $this->assertCount(3, $this->debug->getData('logSummary/0'));
+                    $this->assertCount(3, $this->debug->getData('logSummary/1'));
+                    $this->assertCount(5, $this->debug->getData('log'));
+                    $this->assertSame(array(
+                        0 => array(2, 2),
+                        1 => array(2, 2),
+                    ), $this->debug->getData('groupSummaryDepths'));
+                },
+                'entry' => array(
+                    'clear',
+                    array('Cleared errors'),
+                    array(
+                        'file' => $this->file,
+                        'line' => $this->line,
+                        'flags' => \bdk\Debug::CLEAR_LOG_ERRORS,
+                    ),
+                ),
+                'chromeLogger' => array(
+                    array('Cleared errors'),
+                    $this->file.': '.$this->line,
+                    '',
+                ),
+                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared errors</span></div>',
+                'text' => '⌦ Cleared errors',
+                'script' => 'console.log("Cleared errors");',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared errors"]|',
+            )
+        );
 
         $this->clearPrep();
-        $this->debug->clear(\bdk\Debug::CLEAR_ALL);
-        $this->assertCount(0, $this->debug->getData('alerts'));
-        $this->assertCount(0, $this->debug->getData('logSummary/0'));
-        $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
-        $this->assertSame(array(
-            0 => array(0, 0),
-            1 => array(2, 2),
-        ), $this->debug->getData('groupSummaryDepths'));
-        $this->assertCount(2, $this->debug->getData('log'));    // groups remain
+        $this->testMethod(
+            'clear',
+            array(\bdk\Debug::CLEAR_ALL),
+            array(
+                'custom' => function () {
+                    $this->assertCount(0, $this->debug->getData('alerts'));
+                    $this->assertCount(0, $this->debug->getData('logSummary/0'));
+                    $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
+                    $this->assertCount(3, $this->debug->getData('log'));    // groups remain
+                    $this->assertSame(array(
+                        0 => array(0, 0),
+                        1 => array(2, 2),
+                    ), $this->debug->getData('groupSummaryDepths'));
+                },
+                'entry' => array(
+                    'clear',
+                    array('Cleared everything'),
+                    array(
+                        'file' => $this->file,
+                        'line' => $this->line,
+                        'flags' => \bdk\Debug::CLEAR_ALL,
+                    ),
+                ),
+                'chromeLogger' => array(
+                    array('Cleared everything'),
+                    $this->file.': '.$this->line,
+                    '',
+                ),
+                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared everything</span></div>',
+                'text' => '⌦ Cleared everything',
+                'script' => 'console.log("Cleared everything");',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared everything"]|',
+            )
+        );
 
         $this->clearPrep();
-        $this->debug->clear(\bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_ERRORS);
-        $this->assertCount(1, $this->debug->getData('alerts'));
-        $this->assertCount(0, $this->debug->getData('logSummary/0'));
-        $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
-        $this->assertSame(array(
-            0 => array(0, 0),
-            1 => array(2, 2),
-        ), $this->debug->getData('groupSummaryDepths'));
-        $this->assertCount(4, $this->debug->getData('log'));
+        $this->testMethod(
+            'clear',
+            array(\bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_SUMMARY_ERRORS),
+            array(
+                'custom' => function () {
+                    $this->assertCount(1, $this->debug->getData('alerts'));
+                    $this->assertCount(0, $this->debug->getData('logSummary/0'));
+                    $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
+                    $this->assertCount(6, $this->debug->getData('log'));
+                    $this->assertSame(array(
+                        0 => array(0, 0),
+                        1 => array(2, 2),
+                    ), $this->debug->getData('groupSummaryDepths'));
+                },
+                'entry' => array(
+                    'clear',
+                    array('Cleared summary (incl errors)'),
+                    array(
+                        'file' => $this->file,
+                        'line' => $this->line,
+                        'flags' => \bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_SUMMARY_ERRORS,
+                    ),
+                ),
+                'chromeLogger' => array(
+                    array('Cleared summary (incl errors)'),
+                    $this->file.': '.$this->line,
+                    '',
+                ),
+                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared summary (incl errors)</span></div>',
+                'text' => '⌦ Cleared summary (incl errors)',
+                'script' => 'console.log("Cleared summary (incl errors)");',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (incl errors)"]|',
+            )
+        );
+
+        $this->testMethod(
+            'clear',
+            array(\bdk\Debug::CLEAR_LOG | \bdk\Debug::CLEAR_SUMMARY),
+            array(
+                'custom' => function ($logEntry) {
+                    $this->assertSame('Cleared log (sans errors) and summary (sans errors)', $logEntry[1][0]);
+                }
+            )
+        );
+
+        $this->testMethod(
+            'clear',
+            array(\bdk\Debug::CLEAR_ALERTS | \bdk\Debug::CLEAR_LOG | \bdk\Debug::CLEAR_SUMMARY),
+            array(
+                'custom' => function ($logEntry) {
+                    $this->assertSame('Cleared alerts, log (sans errors), and summary (sans errors)', $logEntry[1][0]);
+                }
+            )
+        );
     }
 
     private function clearPrep()
@@ -1120,7 +1299,7 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
                 'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
                 'script' => 'console.log("time: %f sec");',
-                'text' => '⏲ time: %f sec',
+                'text' => '⏱ time: %f sec',
             )
         );
         $this->testMethod(
@@ -1150,7 +1329,7 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
                 'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
                 'script' => 'console.log("my label: %f sec");',
-                'text' => '⏲ my label: %f sec',
+                'text' => '⏱ my label: %f sec',
             )
         );
         $this->testMethod(
@@ -1178,7 +1357,7 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
                 'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
                 'script' => 'console.log("blahmy labelblah%fblah");',
-                'text' => '⏲ blahmy labelblah%fblah',
+                'text' => '⏱ blahmy labelblah%fblah',
             )
         );
 
@@ -1231,7 +1410,7 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
                 'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
                 'script' => 'console.log("time: %f sec");',
-                'text' => '⏲ time: %f sec',
+                'text' => '⏱ time: %f sec',
             )
         );
 
@@ -1249,7 +1428,7 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
                 'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
                 'script' => 'console.log("my label: %f sec");',
-                'text' => '⏲ my label: %f sec',
+                'text' => '⏱ my label: %f sec',
             )
         );
 
@@ -1272,7 +1451,7 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
                 'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
                 'script' => 'console.log("my label: %f sec");',
-                'text' => '⏲ my label: %f sec',
+                'text' => '⏱ my label: %f sec',
             )
         );
 
@@ -1307,7 +1486,7 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
                 'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
                 'script' => 'console.log("blahmy labelblah%fblah");',
-                'text' => '⏲ blahmy labelblah%fblah',
+                'text' => '⏱ blahmy labelblah%fblah',
             )
         );
 

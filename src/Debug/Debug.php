@@ -45,11 +45,13 @@ class Debug
     public $internal;
     public $utilities;
 
-    const CLEAR_LOG = 1;
-    const CLEAR_ALERTS = 2;
-    const CLEAR_SUMMARY = 4;
-    const CLEAR_ERRORS = 8;
-    const CLEAR_ALL = 15;
+    const CLEAR_ALERTS = 1;
+    const CLEAR_LOG = 2;
+    const CLEAR_LOG_ERRORS = 4;
+    const CLEAR_SUMMARY = 8;
+    const CLEAR_SUMMARY_ERRORS = 16;
+    const CLEAR_ALL = 31;
+    const CLEAR_SILENT = 32;
     const COUNT_NO_INC = 1;
     const COUNT_NO_OUT = 2;
     const META = "\x00meta\x00";
@@ -151,8 +153,7 @@ class Debug
         */
         $this->config->setCfg($cfg);
         $this->data['requestId'] = $this->utilities->requestId();
-        $this->groupDepthRef = &$this->data['groupDepth'];
-        $this->logRef = &$this->data['log'];
+        $this->setLogDest('log');
         /*
             Publish bootstrap event
         */
@@ -301,30 +302,72 @@ class Debug
     /**
      * Clear the log
      *
-     * @param integer $flags specify what to clear (bitmask)
-     *                         CLEAR_LOG      (excluding warn & error) (default)
+     * @param integer $flags (self::CLEAR_LOG) specify what to clear (bitmask)
      *                         CLEAR_ALERTS
-     *                         CLEAR_SUMMARY  (excluding warn & error)
-     *                         CLEAR_ERRORS
+     *                         CLEAR_LOG (excluding warn & error)
+     *                         CLEAR_LOG_ERRORS
+     *                         CLEAR_SUMMARY (excluding warn & error)
+     *                         CLEAR_SUMMARY_ERRORS
      *                         CLEAR_ALL
+     *                         CLEAR_SILENT (don't add log entry)
      *
      * @return void
      */
     public function clear($flags = self::CLEAR_LOG)
     {
-        $clearErrors = $flags & self::CLEAR_ERRORS;
+        $callerInfo = $this->utilities->getCallerInfo();
+        $cleared = array();
+        $meta = array(
+            'file' => $callerInfo['file'],
+            'line' => $callerInfo['line'],
+            'flags' => $flags,
+        );
         if ($flags & self::CLEAR_ALERTS) {
             $this->data['alerts'] = array();
+            $cleared[] = 'alerts';
         }
-        if ($flags & self::CLEAR_SUMMARY) {
-            $this->clearSummary($clearErrors);
+        $cleared[] = $this->clearLog($flags);
+        $cleared[] = $this->clearSummary($flags);
+        if (($flags & self::CLEAR_ALL) == self::CLEAR_ALL) {
+            $cleared = array('everything');
         }
-        if ($flags & self::CLEAR_LOG) {
-            $this->clearLog($clearErrors);
+        $this->clearErrors($flags);
+        $cleared = \array_filter($cleared);
+        if (!$cleared) {
+            return;
         }
-        if ($flags & self::CLEAR_ERRORS) {
-            $this->clearErrors();
+        $count = \count($cleared);
+        $glue = $count == 2
+            ? ' and '
+            : ', ';
+        if ($count > 2) {
+            $cleared[$count-1] = 'and '.$cleared[$count-1];
         }
+        $message = 'Cleared '.\implode($glue, $cleared);
+        // even if cleared from within summary, lets's log this in primary log
+        $this->setLogDest('log');
+        if (!($flags & self::CLEAR_SILENT)) {
+            $this->appendLog(
+                'clear',
+                array($message),
+                $meta
+            );
+        } else {
+            /*
+                Publish the debug.log event (regardless of cfg.collect)
+                don't actually log
+            */
+            $this->eventManager->publish(
+                'debug.log',
+                $this,
+                array(
+                    'method' => 'clear',
+                    'args' => array($message),
+                    'meta' => $meta,
+                )
+            );
+        }
+        $this->setLogDest('auto');
     }
 
     /**
@@ -441,17 +484,7 @@ class Debug
         }
         if ($this->data['groupSummaryStack'] && $this->groupDepthRef[0] === 0) {
             \array_pop($this->data['groupSummaryStack']);
-            $count = \count($this->data['groupSummaryStack']);
-            if ($count) {
-                // still in a summary group
-                $curPriority = $this->data['groupSummaryStack'][$count-1];
-                $this->logRef = &$this->data['logSummary'][$curPriority];
-                $this->groupDepthRef = &$this->data['groupSummaryDepths'][$curPriority];
-            } else {
-                // we've popped out of all the summary groups
-                $this->logRef = &$this->data['log'];
-                $this->groupDepthRef = &$this->data['groupDepth'];
-            }
+            $this->setLogDest('auto');
             /*
                 Publish the debug.log event (regardless of cfg.collect)
                 don't actually log
@@ -486,14 +519,9 @@ class Debug
     public function groupSummary($priority = 0)
     {
         $this->data['groupSummaryStack'][] = $priority;
-        if (!isset($this->data['logSummary'][$priority])) {
-            $this->data['logSummary'][$priority] = array();
-            $this->data['groupSummaryDepths'][$priority] = array(0, 0);
-        }
-        $this->data['groupSummaryDepths'][$priority][0] ++;
-        $this->data['groupSummaryDepths'][$priority][1] += $this->cfg['collect'] ? 1 : 0;
-        $this->logRef = &$this->data['logSummary'][$priority];
-        $this->groupDepthRef = &$this->data['groupSummaryDepths'][$priority];
+        $this->setLogDest('summary');
+        $this->groupDepthRef[0] ++;
+        $this->groupDepthRef[1] += $this->cfg['collect'] ? 1 : 0;
         /*
             Publish the debug.log event (regardless of cfg.collect)
             don't actually log
@@ -809,7 +837,8 @@ class Debug
                     return \count($ret);
                 }
                 if ($k == 'end') {
-                    return \end($ret);
+                    $ret = \end($ret);
+                    continue;
                 }
             }
             return null;
@@ -985,8 +1014,7 @@ class Debug
         if (!$this->data['logSummary']) {
             $this->data['groupSummaryDepths'] = array();
             $this->data['groupSummaryStack'] = array();
-            $this->logRef = &$this->data['log'];
-            $this->groupDepthRef = &$this->data['groupDepth'];
+            $this->setLogDest('log');
         }
     }
 
@@ -1116,80 +1144,133 @@ class Debug
     /**
      * Remove error & warn from summary & log
      *
+     * @param integer $flags flags passed to clear()
+     *
      * @return void
      */
-    private function clearErrors()
+    private function clearErrors($flags)
     {
+        $clearErrors = $flags & self::CLEAR_LOG_ERRORS || $flags & self::CLEAR_SUMMARY_ERRORS;
+        if (!$clearErrors) {
+            return;
+        }
+        $errorsNotCleared = array();
+        /*
+            Clear Log Errors
+        */
+        $errorsNotCleared = $this->clearErrorsHelper(
+            $this->data['log'],
+            $flags & self::CLEAR_LOG_ERRORS
+        );
+        /*
+            Clear Summary Errors
+        */
         foreach (\array_keys($this->data['logSummary']) as $priority) {
-            foreach ($this->data['logSummary'][$priority] as $k => $entry) {
-                if (\in_array($entry[0], array('error','warn'))) {
-                    unset($this->data['logSummary'][$priority][$k]);
-                }
-            }
-            $this->data['logSummary'][$priority] = \array_values($this->data['logSummary'][$priority]);
+            $errorsNotCleared = \array_merge($this->clearErrorsHelper(
+                $this->data['logSummary'][$priority],
+                $flags & self::CLEAR_SUMMARY_ERRORS
+            ));
         }
-        foreach ($this->data['log'] as $k => $entry) {
-            if (\in_array($entry[0], array('error','warn'))) {
-                unset($this->data['log'][$k]);
-            }
-        }
-        $this->data['log'] = \array_values($this->data['log']);
+        $errorsNotCleared = \array_unique($errorsNotCleared);
         $errors = $this->errorHandler->get('errors');
         foreach ($errors as $error) {
-            $error['inConsole'] = false;
+            if (!\in_array($error['hash'], $errorsNotCleared)) {
+                $error['inConsole'] = false;
+            }
         }
+    }
+
+    /**
+     * clear errors for given log
+     *
+     * @param array   $log   reference to log to clear of errors
+     * @param boolean $clear clear errors, or return errors?
+     *
+     * @return string[] array of error-hashes not cleared
+     */
+    private function clearErrorsHelper(&$log, $clear = true)
+    {
+        $errorsNotCleared = array();
+        foreach ($log as $k => $entry) {
+            if (\in_array($entry[0], array('error','warn'))) {
+                if ($clear) {
+                    unset($log[$k]);
+                } elseif (isset($entry[2]['errorHash'])) {
+                    $errorsNotCleared[] = $entry[2]['errorHash'];
+                }
+            }
+        }
+        $log = \array_values($log);
+        return $errorsNotCleared;
     }
 
     /**
      * Clear log entries
      *
-     * @param boolean $inclErrors Also clear errors?
+     * @param integer $flags flags passed to clear()
      *
-     * @return void
+     * @return string|null
      */
-    private function clearLog($inclErrors = false)
+    private function clearLog($flags)
     {
-        $entriesKeep = $this->getCurrentGroups($this->data['log'], $this->data['groupDepth'][1]);
-        if (!$inclErrors) {
-            // keep errors
-            foreach ($this->data['log'] as $k => $entry) {
-                if (\in_array($entry[0], array('error','warn'))) {
-                    $entriesKeep[$k] = $entry;
-                }
-            }
-        }
-        \ksort($entriesKeep);
-        $this->data['log'] = \array_values($entriesKeep);
-    }
-
-    /**
-     * Clear summary entries
-     *
-     * @param boolean $inclErrors Also clear errors?
-     *
-     * @return void
-     */
-    private function clearSummary($inclErrors = false)
-    {
-        $curPriority = \end($this->data['groupSummaryStack']);  // false if empty
-        foreach (\array_keys($this->data['logSummary']) as $priority) {
-            $entriesKeep = array();
-            if ($priority === $curPriority) {
-                $entriesKeep = $this->getCurrentGroups($this->data['logSummary'][$priority], $this->data['groupSummaryDepths'][$priority][1]);
-            } else {
-                $this->data['groupSummaryDepths'][$priority] = array(0, 0);
-            }
-            if (!$inclErrors) {
-                // keep errors
-                foreach ($this->data['logSummary'][$priority] as $k => $entry) {
-                    if (\in_array($entry[0], array('error','warn'))) {
+        $return = null;
+        $clearErrors = $flags & self::CLEAR_LOG_ERRORS;
+        if ($flags & self::CLEAR_LOG) {
+            $return = 'log ('.($clearErrors ? 'incl errors' : 'sans errors').')';
+            $entriesKeep = $this->getCurrentGroups($this->data['log'], $this->data['groupDepth'][1]);
+            $keep = $clearErrors
+                ? array()
+                : array('error','warn');
+            if ($keep) {
+                foreach ($this->data['log'] as $k => $entry) {
+                    if (\in_array($entry[0], $keep)) {
                         $entriesKeep[$k] = $entry;
                     }
                 }
             }
             \ksort($entriesKeep);
-            $this->data['logSummary'][$priority] = \array_values($entriesKeep);
+            $this->data['log'] = \array_values($entriesKeep);
+        } elseif ($clearErrors) {
+            $return = 'errors';
         }
+        return $return;
+    }
+
+    /**
+     * Clear summary entries
+     *
+     * @param integer $flags flags passed to clear()
+     *
+     * @return string|null
+     */
+    private function clearSummary($flags)
+    {
+        $return = null;
+        $clearErrors = $flags & self::CLEAR_SUMMARY_ERRORS;
+        if ($flags & self::CLEAR_SUMMARY) {
+            $return = 'summary ('.($clearErrors ? 'incl errors' : 'sans errors').')';
+            $curPriority = \end($this->data['groupSummaryStack']);  // false if empty
+            foreach (\array_keys($this->data['logSummary']) as $priority) {
+                $entriesKeep = array();
+                if ($priority === $curPriority) {
+                    $entriesKeep = $this->getCurrentGroups($this->data['logSummary'][$priority], $this->data['groupSummaryDepths'][$priority][1]);
+                } else {
+                    $this->data['groupSummaryDepths'][$priority] = array(0, 0);
+                }
+                if (!$clearErrors) {
+                    foreach ($this->data['logSummary'][$priority] as $k => $entry) {
+                        if (\in_array($entry[0], array('error','warn'))) {
+                            $entriesKeep[$k] = $entry;
+                        }
+                    }
+                }
+                \ksort($entriesKeep);
+                $this->data['logSummary'][$priority] = \array_values($entriesKeep);
+            }
+        } elseif ($clearErrors) {
+            $return = 'summary errors';
+        }
+        return $return;
     }
 
     /**
@@ -1283,6 +1364,34 @@ class Debug
             }
         }
         return $entries;
+    }
+
+    /**
+     * Set where appendLog appends to
+     *
+     * @param string $where ('auto'), 'log', or 'summary'
+     *
+     * @return void
+     */
+    private function setLogDest($where = 'auto')
+    {
+        if ($where == 'auto') {
+            $where = $this->data['groupSummaryStack']
+                ? 'summary'
+                : 'log';
+        }
+        if ($where == 'log') {
+            $this->logRef = &$this->data['log'];
+            $this->groupDepthRef = &$this->data['groupDepth'];
+        } else {
+            $priority = \end($this->data['groupSummaryStack']);
+            if (!isset($this->data['logSummary'][$priority])) {
+                $this->data['logSummary'][$priority] = array();
+                $this->data['groupSummaryDepths'][$priority] = array(0, 0);
+            }
+            $this->logRef = &$this->data['logSummary'][$priority];
+            $this->groupDepthRef = &$this->data['groupSummaryDepths'][$priority];
+        }
     }
 
     /**

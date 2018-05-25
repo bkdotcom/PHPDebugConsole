@@ -56,8 +56,9 @@ class Text extends Base
             'log' => '',
             'warn' => '⚠ ',
             'assert' => '≠ ',
+            'clear' => '⌦ ',
             'count' => '✚ ',
-            'time' => '⏲ ',
+            'time' => '⏱ ',
             'group' => '▸ ',
             'groupCollapsed' => '▸ ',
         );

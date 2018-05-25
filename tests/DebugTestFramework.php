@@ -84,12 +84,25 @@ class DebugTestFramework extends DOMTestCase
                 'stack' => array(),
             ),
         );
-        foreach ($resetValues as $k => $v) {
-            $this->debug->setData($k, $v);
-        }
+        $this->debug->setData($resetValues);
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastError', null);
+        if (!isset($this->file)) {
+            /*
+            this dummy test won't do any assertions, but will set
+                $this->file
+                $this->line
+            */
+            $this->testMethod(
+                'getCfg',
+                array('collect'),
+                array(
+                    'custom' => function () {
+                    },
+                )
+            );
+        }
     }
 
     /**
@@ -171,6 +184,8 @@ class DebugTestFramework extends DOMTestCase
             }
         } elseif ($method) {
             $return = \call_user_func_array(array($this->debug, $method), $args);
+            $this->file = __FILE__;
+            $this->line = __LINE__ - 2;
         }
         $logEntry = $this->debug->getData($dataPath);
         if ($method == 'alert') {

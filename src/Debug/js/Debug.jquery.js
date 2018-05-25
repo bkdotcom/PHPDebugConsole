@@ -34,6 +34,7 @@
 			iconsMethods: {
 				".group-header" :		'<i class="fa fa-lg fa-minus-square-o"></i>',
 				".m_assert" :			'<i class="fa-lg"><b>&ne;</b></i>',
+				".m_clear" :			'<i class="fa fa-lg fa-ban"></i>',
 				".m_count" :			'<i class="fa fa-lg fa-plus-circle"></i>',
 				".m_error" :			'<i class="fa fa-lg fa-times-circle"></i>',
 				".m_info" :				'<i class="fa fa-lg fa-info-circle"></i>',

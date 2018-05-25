@@ -12,7 +12,7 @@ Browser/javascript like console class for PHP
     * HTML
     * Plain text / file
     * &lt;script&gt;
-    * WebSocket
+    * WebSocket (WAMP)
     * "plugin"
 * custom error handler
 	* errors (even fatal) are captured / logged / displayed
@@ -49,6 +49,7 @@ See http://www.bradkent.com/php/debug
 * warn
 * error
 * assert
+* clear
 * count
 * group
 * groupCollapsed

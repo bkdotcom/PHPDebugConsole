@@ -66,6 +66,11 @@ class MethodTest extends DebugTestFramework
             'myCustom',
             array('How\'s it goin?'),
             array(
+                'entry' => array(
+                    'myCustom',
+                    array('How\'s it goin?'),
+                    array('isCustomMethod' => true),
+                ),
                 'chromeLogger' => array(
                     array('How\'s it goin?'),
                     null,
@@ -75,6 +80,31 @@ class MethodTest extends DebugTestFramework
                 'html' => '<div class="m_myCustom"><ul><li>How\'s it goin?</li></ul></div>',
                 'script' => 'console.log("How\'s it goin?");',
                 'text' => 'How\'s it goin?',
+            )
+        );
+
+        /*
+            Now test it statically
+        */
+        \bdk\Debug::_myCustom('called statically');
+        $this->testMethod(
+            null,
+            array('called statically'),
+            array(
+                'entry' => array(
+                    'myCustom',
+                    array('called statically'),
+                    array('isCustomMethod' => true),
+                ),
+                'chromeLogger' => array(
+                    array('called statically'),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"called statically"]|',
+                'html' => '<div class="m_myCustom"><ul><li>called statically</li></ul></div>',
+                'script' => 'console.log("called statically");',
+                'text' => 'called statically',
             )
         );
     }
@@ -89,6 +119,11 @@ class MethodTest extends DebugTestFramework
                     array('How\'s it goin?'),
                     null,
                     '',
+                ),
+                'entry' => array(
+                    'myCustom',
+                    array('How\'s it goin?'),
+                    array('isCustomMethod' => true),
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
                 'html' => '<div class="m_myCustom"><span class="no-pseudo t_string">How\'s it goin?</span></div>',
@@ -110,6 +145,14 @@ class MethodTest extends DebugTestFramework
             'alert',
             array($message),
             array(
+                'entry' => array(
+                    'alert',
+                    array($message),
+                    array(
+                        'class' => 'danger',
+                        'dismissible' => false,
+                    ),
+                ),
                 'chromeLogger' => array(
                     array(
                         '%c'.$message,
@@ -144,6 +187,11 @@ class MethodTest extends DebugTestFramework
             'assert',
             array(false, 'this is false'),
             array(
+                'entry' => array(
+                    'assert',
+                    array('this is false'),
+                    array(),
+                ),
                 'chromeLogger' => array(
                     array(false, 'this is false'),
                     null,
@@ -976,9 +1024,10 @@ class MethodTest extends DebugTestFramework
         $this->debug->groupCollapsed('level2 (test)');
         $this->debug->groupUncollapse();
         $log = $this->debug->getData('log');
-        $this->assertSame('group', $log[0][0]);
+        $this->assertSame('group', $log[0][0]); // groupCollapsed converted to group
         $this->assertSame('groupCollapsed', $log[1][0]);
-        $this->assertSame('group', $log[4][0]);
+        $this->assertSame('group', $log[4][0]); // groupCollapsed converted to group
+        $this->assertCount(5, $log);    // assert that entry not added
     }
 
     /**
@@ -1116,6 +1165,17 @@ class MethodTest extends DebugTestFramework
             'log',
             $args,
             array(
+                'entry' => array(
+                    'log',
+                    array(
+                        '%cLocation:%c <a href="%s">%s</a>',
+                        'font-weight:bold;',
+                        '',
+                        $location,
+                        $location,
+                    ),
+                    array(),
+                ),
                 'chromeLogger' => array(
                     $args,
                     null,
@@ -1132,6 +1192,257 @@ class MethodTest extends DebugTestFramework
     /*
         table() method tested in MethodTableTest
     */
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTime()
+    {
+        $this->debug->time();
+        $this->debug->time('some label');
+        $this->assertInternalType('float', $this->debug->getData('timers/stack/0'));
+        $this->assertInternalType('float', $this->debug->getData('timers/labels/some label/1'));
+
+        $this->assertEmpty($this->debug->getData('log'));
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTimeEnd()
+    {
+        $this->debug->time();
+        $this->debug->time('my label');
+
+        $this->testMethod(
+            'timeEnd',
+            array(),
+            array(
+                'custom' => function () {
+                    $this->assertCount(0, $this->debug->getData('timers/stack'));
+                },
+                'entry' => json_encode(array(
+                    'time',
+                    array(
+                        'time: %f sec',
+                    ),
+                    array(),
+                )),
+                'chromeLogger' => json_encode(array(
+                    array(
+                        'time: %f sec',
+                    ),
+                    null,
+                    '',
+                )),
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
+                'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
+                'script' => 'console.log("time: %f sec");',
+                'text' => '⏱ time: %f sec',
+            )
+        );
+        $this->testMethod(
+            'timeEnd',
+            array(
+                'my label',
+                true,
+            ),
+            array(
+                'return' => '%f',
+                'notLogged' => true,    // not logged because 2nd param = true
+            )
+        );
+        $this->testMethod(
+            'timeEnd',
+            array(
+                'my label',
+            ),
+            array(
+                'entry' => json_encode(array(
+                    'time',
+                    array(
+                        'my label: %f sec',
+                    ),
+                    array(),
+                )),
+                'chromeLogger' => json_encode(array(
+                    array(
+                        'my label: %f sec',
+                    ),
+                    null,
+                    '',
+                )),
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
+                'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
+                'script' => 'console.log("my label: %f sec");',
+                'text' => '⏱ my label: %f sec',
+            )
+        );
+        $this->testMethod(
+            'timeEnd',
+            array(
+                'my label',
+                'blah%labelblah%timeblah',
+            ),
+            array(
+                'entry' => function ($logEntry) {
+                    $expectFormat = json_encode(array(
+                        'time',
+                        array("blahmy labelblah%fblah"),
+                        array(),
+                    ));
+                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'chromeLogger not same');
+                },
+                'chromeLogger' => json_encode(array(
+                    array(
+                        'blahmy labelblah%fblah',
+                    ),
+                    null,
+                    '',
+                )),
+                'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
+                'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
+                'script' => 'console.log("blahmy labelblah%fblah");',
+                'text' => '⏱ blahmy labelblah%fblah',
+            )
+        );
+
+        $timers = $this->debug->getData('timers');
+        $this->assertInternalType('float', $timers['labels']['my label'][0]);
+        $this->assertNull($timers['labels']['my label'][1]);
+
+        $this->debug->setCfg('collect', false);
+        $this->testMethod(
+            'timeEnd',
+            array('my label'),
+            false
+        );
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTimeGet()
+    {
+
+        $this->debug->time();
+        $this->debug->time('my label');
+
+        $this->testMethod(
+            'timeGet',
+            array(),
+            array(
+                'custom' => function () {
+                    // test stack is still 1
+                    $this->assertCount(1, $this->debug->getData('timers/stack'));
+                },
+                'entry' => function ($logEntry) {
+                    $expectFormat = json_encode(array(
+                        'time',
+                        array('time: %f sec'),
+                        array(),
+                    ));
+                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
+                },
+                'chromeLogger' => json_encode(array(
+                    array(
+                        'time: %f sec',
+                    ),
+                    null,
+                    '',
+                )),
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
+                'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
+                'script' => 'console.log("time: %f sec");',
+                'text' => '⏱ time: %f sec',
+            )
+        );
+
+        $this->testMethod(
+            'timeGet',
+            array('my label'),
+            array(
+                'entry' => json_encode(array(
+                    'time',
+                    array(
+                        'my label: %f sec',
+                    ),
+                    array(),
+                )),
+                'chromeLogger' => json_encode(array(
+                    array(
+                        'my label: %f sec',
+                    ),
+                    null,
+                    '',
+                )),
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
+                'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
+                'script' => 'console.log("my label: %f sec");',
+                'text' => '⏱ my label: %f sec',
+            )
+        );
+
+        $this->testMethod(
+            'timeGet',
+            array(
+                'my label',
+                true,
+            ),
+            array(
+                'notLogged' => true,  // not logged because 2nd param = true
+                'return' => '%f',
+            )
+        );
+
+        $timers = $this->debug->getData('timers');
+        $this->assertSame(0, $timers['labels']['my label'][0]); // timer never paused via timeEnd, accumlated time = 0
+
+        // test not paused
+        $this->assertNotNull($timers['labels']['my label'][1]);
+
+        $this->testMethod(
+            'timeGet',
+            array(
+                'my label',
+                'blah%labelblah%timeblah',
+            ),
+            array(
+                'entry' => function ($logEntry) {
+                    $expectFormat = json_encode(array(
+                        'time',
+                        array("blahmy labelblah%fblah"),
+                        array(),
+                    ));
+                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'entry as expected');
+                },
+                'chromeLogger' => json_encode(array(
+                    array(
+                        'blahmy labelblah%fblah',
+                    ),
+                    null,
+                    '',
+                )),
+                'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
+                'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
+                'script' => 'console.log("blahmy labelblah%fblah");',
+                'text' => '⏱ blahmy labelblah%fblah',
+            )
+        );
+
+        $this->debug->setCfg('collect', false);
+        $this->testMethod(
+            'timeGet',
+            array('my label'),
+            false
+        );
+    }
 
     /**
      * Test
@@ -1253,247 +1564,6 @@ class MethodTest extends DebugTestFramework
         $this->testMethod(
             'log',
             array('log message'),
-            false
-        );
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testTime()
-    {
-        $this->debug->time();
-        $this->debug->time('some label');
-        $this->assertInternalType('float', $this->debug->getData('timers/stack/0'));
-        $this->assertInternalType('float', $this->debug->getData('timers/labels/some label/1'));
-
-        $this->assertEmpty($this->debug->getData('log'));
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testTimeEnd()
-    {
-        $this->debug->time();
-        $this->debug->time('my label');
-
-        $this->testMethod(
-            'timeEnd',
-            array(),
-            array(
-                'custom' => function () {
-                    $this->assertCount(0, $this->debug->getData('timers/stack'));
-                },
-                'chromeLogger' => json_encode(array(
-                    array(
-                        'time: %f sec',
-                    ),
-                    null,
-                    '',
-                )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
-                'script' => 'console.log("time: %f sec");',
-                'text' => '⏱ time: %f sec',
-            )
-        );
-        $this->testMethod(
-            'timeEnd',
-            array(
-                'my label',
-                true,
-            ),
-            array(
-                'return' => '%f',
-                'notLogged' => true,    // not logged because 2nd param = true
-            )
-        );
-        $this->testMethod(
-            'timeEnd',
-            array(
-                'my label',
-            ),
-            array(
-                'chromeLogger' => json_encode(array(
-                    array(
-                        'my label: %f sec',
-                    ),
-                    null,
-                    '',
-                )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
-                'script' => 'console.log("my label: %f sec");',
-                'text' => '⏱ my label: %f sec',
-            )
-        );
-        $this->testMethod(
-            'timeEnd',
-            array(
-                'my label',
-                'blah%labelblah%timeblah',
-            ),
-            array(
-                'entry' => function ($logEntry) {
-                    $expectFormat = json_encode(array(
-                        'time',
-                        array("blahmy labelblah%fblah"),
-                        array(),
-                    ));
-                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'chromeLogger not same');
-                },
-                'chromeLogger' => json_encode(array(
-                    array(
-                        'blahmy labelblah%fblah',
-                    ),
-                    null,
-                    '',
-                )),
-                'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
-                'script' => 'console.log("blahmy labelblah%fblah");',
-                'text' => '⏱ blahmy labelblah%fblah',
-            )
-        );
-
-        $timers = $this->debug->getData('timers');
-        $this->assertInternalType('float', $timers['labels']['my label'][0]);
-        $this->assertNull($timers['labels']['my label'][1]);
-
-        $this->debug->setCfg('collect', false);
-        $this->testMethod(
-            'timeEnd',
-            array('my label'),
-            false
-        );
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testTimeGet()
-    {
-
-        $this->debug->time();
-        $this->debug->time('my label');
-
-        $this->testMethod(
-            'timeGet',
-            array(),
-            array(
-                'custom' => function () {
-                    // test stack is still 1
-                    $this->assertCount(1, $this->debug->getData('timers/stack'));
-                },
-                'entry' => function ($logEntry) {
-                    $expectFormat = json_encode(array(
-                        'time',
-                        array('time: %f sec'),
-                        array(),
-                    ));
-                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
-                },
-                'chromeLogger' => json_encode(array(
-                    array(
-                        'time: %f sec',
-                    ),
-                    null,
-                    '',
-                )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
-                'script' => 'console.log("time: %f sec");',
-                'text' => '⏱ time: %f sec',
-            )
-        );
-
-        $this->testMethod(
-            'timeGet',
-            array('my label'),
-            array(
-                'chromeLogger' => json_encode(array(
-                    array(
-                        'my label: %f sec',
-                    ),
-                    null,
-                    '',
-                )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
-                'script' => 'console.log("my label: %f sec");',
-                'text' => '⏱ my label: %f sec',
-            )
-        );
-
-        $this->testMethod(
-            'timeGet',
-            array(
-                'my label',
-                true,
-            ),
-            array(
-                'notLogged' => true,  // not logged because 2nd param = true
-                'return' => '%f',
-                'chromeLogger' => json_encode(array(
-                    array(
-                        'my label: %f sec',
-                    ),
-                    null,
-                    '',
-                )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
-                'script' => 'console.log("my label: %f sec");',
-                'text' => '⏱ my label: %f sec',
-            )
-        );
-
-        $timers = $this->debug->getData('timers');
-        $this->assertSame(0, $timers['labels']['my label'][0]); // timer never paused via timeEnd, accumlated time = 0
-
-        // test not paused
-        $this->assertNotNull($timers['labels']['my label'][1]);
-
-        $this->testMethod(
-            'timeGet',
-            array(
-                'my label',
-                'blah%labelblah%timeblah',
-            ),
-            array(
-                'entry' => function ($logEntry) {
-                    $expectFormat = json_encode(array(
-                        'time',
-                        array("blahmy labelblah%fblah"),
-                        array(),
-                    ));
-                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'entry as expected');
-                },
-                'chromeLogger' => json_encode(array(
-                    array(
-                        'blahmy labelblah%fblah',
-                    ),
-                    null,
-                    '',
-                )),
-                'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
-                'script' => 'console.log("blahmy labelblah%fblah");',
-                'text' => '⏱ blahmy labelblah%fblah',
-            )
-        );
-
-        $this->debug->setCfg('collect', false);
-        $this->testMethod(
-            'timeGet',
-            array('my label'),
             false
         );
     }

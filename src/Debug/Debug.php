@@ -34,7 +34,6 @@ class Debug
 {
 
     private static $instance;
-    private static $publicMethods = array();
     protected $cfg = array();
     protected $data = array();
     protected $groupDepthRef;   // points to groupDepth or groupSummaryDepths[priority]
@@ -194,21 +193,10 @@ class Debug
     public static function __callStatic($methodName, $args)
     {
         $methodName = \ltrim($methodName, '_');
-        if (\in_array($methodName, self::$publicMethods)) {
-            return \call_user_func_array(array(self::$instance, $methodName), $args);
-        }
         if (!self::$instance) {
             new static();
         }
-        if (!self::$publicMethods) {
-            self::setPublicMethods();
-            return self::__callStatic($methodName, $args);
-        }
-        self::$instance->appendLog(
-            $methodName,
-            $args,
-            array('isCustomMethod' => true)
-        );
+        return \call_user_func_array(array(self::$instance, $methodName), $args);
     }
 
     /**
@@ -1392,26 +1380,5 @@ class Debug
             $this->logRef = &$this->data['logSummary'][$priority];
             $this->groupDepthRef = &$this->data['groupSummaryDepths'][$priority];
         }
-    }
-
-    /**
-     * Set/cache this class' public methods
-     *
-     * Generated list is used when calling methods statically
-     *
-     * @return void
-     */
-    private static function setPublicMethods()
-    {
-        $reflection = new ReflectionClass(\get_called_class());
-        self::$publicMethods = \array_map(function (ReflectionMethod $refMethod) {
-            return $refMethod->name;
-        }, $reflection->getMethods(ReflectionMethod::IS_PUBLIC));
-        self::$publicMethods = \array_diff(self::$publicMethods, array(
-            '__construct',
-            '__call',
-            '__callStatic',
-            '__get',
-        ));
     }
 }

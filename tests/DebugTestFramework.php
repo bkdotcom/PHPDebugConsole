@@ -201,6 +201,8 @@ class DebugTestFramework extends DOMTestCase
             if ($test == 'entry') {
                 if (\is_callable($outputExpect)) {
                     \call_user_func($outputExpect, $logEntry);
+                } elseif (is_string($outputExpect)) {
+                    $this->assertStringMatchesFormat($outputExpect, json_encode($logEntry), 'log entry does not match format');
                 } else {
                     $this->assertSame($outputExpect, $logEntry);
                 }

@@ -449,6 +449,23 @@ class MethodTest extends DebugTestFramework
             )
         );
 
+        /*
+            assert cleared & logged event if collect is false
+        */
+        $this->clearPrep();
+        $this->debug->setCfg('collect', false);
+        $this->testMethod(
+            'clear',
+            array(),
+            array(
+                'custom' => function ($logEntry) {
+                    $this->assertSame('Cleared log (sans errors)', $logEntry[1][0]);
+                    $this->assertCount(4, $this->debug->getData('log'));    // clear-summary gets added
+                }
+            )
+        );
+        $this->debug->setCfg('collect', true);
+
         $this->testMethod(
             'clear',
             array(\bdk\Debug::CLEAR_LOG | \bdk\Debug::CLEAR_SUMMARY),

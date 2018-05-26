@@ -17,6 +17,7 @@ namespace bdk;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\ErrorEmailer;
 use bdk\PubSub\SubscriberInterface;
+use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
 use ReflectionClass;
 use ReflectionMethod;
@@ -209,37 +210,47 @@ class Debug
      */
     public function __get($property)
     {
-        switch ($property) {
-            case 'abstracter':
-                $val = new Debug\Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
-                break;
-            case 'errorEmailer':
-                $val = new ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
-                break;
-            case 'groupDepth':
+        $factories = array(
+            'groupDepth' => function () {
                 // calculate the total group depth
                 $depth = $this->data['groupDepth'][0];
                 foreach ($this->data['groupSummaryDepths'] as $groupDepth) {
                     $depth += $groupDepth[0];
                 }
                 return $depth;
-            case 'output':
-                $val = new Debug\Output($this, $this->config->getCfgLazy('output'));
-                $this->eventManager->addSubscriberInterface($val);
-                break;
-            case 'table':
-                $val = new Debug\Table();
-                break;
-            case 'utf8':
-                $val = new Debug\Utf8();
-                break;
-            default:
-                return null;
+            },
+        );
+        $services = array(
+            'abstracter' => function () {
+                return new Debug\Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
+            },
+            'errorEmailer' => function () {
+                return new ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
+            },
+            'methodClear' => function () {
+                return new Debug\MethodClear($this, $this->data);
+            },
+            'output' => function () {
+                $output = new Debug\Output($this, $this->config->getCfgLazy('output'));
+                $this->eventManager->addSubscriberInterface($output);
+                return $output;
+            },
+            'table' => function () {
+                return new Debug\Table();
+            },
+            'utf8' => function () {
+                return new Debug\Utf8();
+            },
+        );
+        if (isset($factories[$property])) {
+            return \call_user_func($factories[$property]);
         }
-        if ($val) {
+        if (isset($services[$property])) {
+            $val = \call_user_func($services[$property]);
             $this->{$property} = $val;
+            return $val;
         }
-        return $val;
+        return null;
     }
 
     /*
@@ -290,6 +301,8 @@ class Debug
     /**
      * Clear the log
      *
+     * This method executes even if `collect` is false
+     *
      * @param integer $flags (self::CLEAR_LOG) specify what to clear (bitmask)
      *                         CLEAR_ALERTS
      *                         CLEAR_LOG (excluding warn & error)
@@ -303,44 +316,23 @@ class Debug
      */
     public function clear($flags = self::CLEAR_LOG)
     {
-        $callerInfo = $this->utilities->getCallerInfo();
-        $cleared = array();
-        $meta = array(
-            'file' => $callerInfo['file'],
-            'line' => $callerInfo['line'],
-            'flags' => $flags,
-        );
-        if ($flags & self::CLEAR_ALERTS) {
-            $this->data['alerts'] = array();
-            $cleared[] = 'alerts';
-        }
-        $cleared[] = $this->clearLog($flags);
-        $cleared[] = $this->clearSummary($flags);
-        if (($flags & self::CLEAR_ALL) == self::CLEAR_ALL) {
-            $cleared = array('everything');
-        }
-        $this->clearErrors($flags);
-        $cleared = \array_filter($cleared);
-        if (!$cleared) {
-            return;
-        }
-        $count = \count($cleared);
-        $glue = $count == 2
-            ? ' and '
-            : ', ';
-        if ($count > 2) {
-            $cleared[$count-1] = 'and '.$cleared[$count-1];
-        }
-        $message = 'Cleared '.\implode($glue, $cleared);
+        $args = \func_get_args();
+        $event = $this->methodClear->onLog(new Event($this, array(
+            'method' => 'clear',
+            'args' => array($flags),
+            'meta' => $this->internal->getMetaVals($args),
+        )));
         // even if cleared from within summary, lets's log this in primary log
         $this->setLogDest('log');
-        if (!($flags & self::CLEAR_SILENT)) {
+        $collect = $this->cfg['collect'];
+        $this->cfg['collect'] = true;
+        if ($event['log']) {
             $this->appendLog(
-                'clear',
-                array($message),
-                $meta
+                $event['method'],
+                $event['args'],
+                $event['meta']
             );
-        } else {
+        } elseif ($event['publish']) {
             /*
                 Publish the debug.log event (regardless of cfg.collect)
                 don't actually log
@@ -348,13 +340,10 @@ class Debug
             $this->eventManager->publish(
                 'debug.log',
                 $this,
-                array(
-                    'method' => 'clear',
-                    'args' => array($message),
-                    'meta' => $meta,
-                )
+                $event->getValues()
             );
         }
+        $this->cfg['collect'] = $collect;
         $this->setLogDest('auto');
     }
 
@@ -539,7 +528,7 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        $entryKeys = \array_keys($this->getCurrentGroups($this->logRef, $this->groupDepthRef[1]));
+        $entryKeys = \array_keys($this->internal->getCurrentGroups($this->logRef, $this->groupDepthRef[1]));
         foreach ($entryKeys as $key) {
             $this->logRef[$key][0] = 'group';
         }
@@ -1077,7 +1066,11 @@ class Debug
 
     /**
      * Store the arguments
-     * will be output when output method is called
+     * if collect is false -> does nothing
+     * otherwise:
+     *   + abstracts values
+     *   + publishes debug.log event
+     *   + appends log (if event propagation not stopped)
      *
      * @param string $method error, info, log, warn, etc
      * @param array  $args   arguments passed to method
@@ -1128,138 +1121,6 @@ class Debug
                 $event->getValue('meta')
             );
         }
-    }
-
-    /**
-     * Remove error & warn from summary & log
-     *
-     * @param integer $flags flags passed to clear()
-     *
-     * @return void
-     */
-    private function clearErrors($flags)
-    {
-        $clearErrors = $flags & self::CLEAR_LOG_ERRORS || $flags & self::CLEAR_SUMMARY_ERRORS;
-        if (!$clearErrors) {
-            return;
-        }
-        $errorsNotCleared = array();
-        /*
-            Clear Log Errors
-        */
-        $errorsNotCleared = $this->clearErrorsHelper(
-            $this->data['log'],
-            $flags & self::CLEAR_LOG_ERRORS
-        );
-        /*
-            Clear Summary Errors
-        */
-        foreach (\array_keys($this->data['logSummary']) as $priority) {
-            $errorsNotCleared = \array_merge($this->clearErrorsHelper(
-                $this->data['logSummary'][$priority],
-                $flags & self::CLEAR_SUMMARY_ERRORS
-            ));
-        }
-        $errorsNotCleared = \array_unique($errorsNotCleared);
-        $errors = $this->errorHandler->get('errors');
-        foreach ($errors as $error) {
-            if (!\in_array($error['hash'], $errorsNotCleared)) {
-                $error['inConsole'] = false;
-            }
-        }
-    }
-
-    /**
-     * clear errors for given log
-     *
-     * @param array   $log   reference to log to clear of errors
-     * @param boolean $clear clear errors, or return errors?
-     *
-     * @return string[] array of error-hashes not cleared
-     */
-    private function clearErrorsHelper(&$log, $clear = true)
-    {
-        $errorsNotCleared = array();
-        foreach ($log as $k => $entry) {
-            if (\in_array($entry[0], array('error','warn'))) {
-                if ($clear) {
-                    unset($log[$k]);
-                } elseif (isset($entry[2]['errorHash'])) {
-                    $errorsNotCleared[] = $entry[2]['errorHash'];
-                }
-            }
-        }
-        $log = \array_values($log);
-        return $errorsNotCleared;
-    }
-
-    /**
-     * Clear log entries
-     *
-     * @param integer $flags flags passed to clear()
-     *
-     * @return string|null
-     */
-    private function clearLog($flags)
-    {
-        $return = null;
-        $clearErrors = $flags & self::CLEAR_LOG_ERRORS;
-        if ($flags & self::CLEAR_LOG) {
-            $return = 'log ('.($clearErrors ? 'incl errors' : 'sans errors').')';
-            $entriesKeep = $this->getCurrentGroups($this->data['log'], $this->data['groupDepth'][1]);
-            $keep = $clearErrors
-                ? array()
-                : array('error','warn');
-            if ($keep) {
-                foreach ($this->data['log'] as $k => $entry) {
-                    if (\in_array($entry[0], $keep)) {
-                        $entriesKeep[$k] = $entry;
-                    }
-                }
-            }
-            \ksort($entriesKeep);
-            $this->data['log'] = \array_values($entriesKeep);
-        } elseif ($clearErrors) {
-            $return = 'errors';
-        }
-        return $return;
-    }
-
-    /**
-     * Clear summary entries
-     *
-     * @param integer $flags flags passed to clear()
-     *
-     * @return string|null
-     */
-    private function clearSummary($flags)
-    {
-        $return = null;
-        $clearErrors = $flags & self::CLEAR_SUMMARY_ERRORS;
-        if ($flags & self::CLEAR_SUMMARY) {
-            $return = 'summary ('.($clearErrors ? 'incl errors' : 'sans errors').')';
-            $curPriority = \end($this->data['groupSummaryStack']);  // false if empty
-            foreach (\array_keys($this->data['logSummary']) as $priority) {
-                $entriesKeep = array();
-                if ($priority === $curPriority) {
-                    $entriesKeep = $this->getCurrentGroups($this->data['logSummary'][$priority], $this->data['groupSummaryDepths'][$priority][1]);
-                } else {
-                    $this->data['groupSummaryDepths'][$priority] = array(0, 0);
-                }
-                if (!$clearErrors) {
-                    foreach ($this->data['logSummary'][$priority] as $k => $entry) {
-                        if (\in_array($entry[0], array('error','warn'))) {
-                            $entriesKeep[$k] = $entry;
-                        }
-                    }
-                }
-                \ksort($entriesKeep);
-                $this->data['logSummary'][$priority] = \array_values($entriesKeep);
-            }
-        } elseif ($clearErrors) {
-            $return = 'summary errors';
-        }
-        return $return;
     }
 
     /**
@@ -1319,40 +1180,6 @@ class Debug
             $str = $label.': '.$seconds.' sec';
         }
         $this->appendLog('time', array($str));
-    }
-
-    /**
-     * Return the group & groupCollapsed ("ancestors")
-     *
-     * @param array   $logEntries log entries
-     * @param integer $curDepth   current group depth
-     *
-     * @return array key => logEntry array
-     */
-    private function getCurrentGroups(&$logEntries, $curDepth)
-    {
-        /*
-            curDepth will fluctuate as we go back through log
-            minDepth will decrease as we work our way down/up the groups
-        */
-        $minDepth = $curDepth;
-        $entries = array();
-        for ($i = \count($logEntries) - 1; $i >= 0; $i--) {
-            if ($curDepth < 1) {
-                break;
-            }
-            $method = $logEntries[$i][0];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $curDepth--;
-                if ($curDepth < $minDepth) {
-                    $minDepth--;
-                    $entries[$i] = $logEntries[$i];
-                }
-            } elseif ($method == 'groupEnd') {
-                $curDepth++;
-            }
-        }
-        return $entries;
     }
 
     /**

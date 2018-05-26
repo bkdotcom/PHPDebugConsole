@@ -185,6 +185,40 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Return the group & groupCollapsed ("ancestors")
+     *
+     * @param array   $logEntries log entries
+     * @param integer $curDepth   current group depth
+     *
+     * @return array key => logEntry array
+     */
+    public static function getCurrentGroups(&$logEntries, $curDepth)
+    {
+        /*
+            curDepth will fluctuate as we go back through log
+            minDepth will decrease as we work our way down/up the groups
+        */
+        $minDepth = $curDepth;
+        $entries = array();
+        for ($i = \count($logEntries) - 1; $i >= 0; $i--) {
+            if ($curDepth < 1) {
+                break;
+            }
+            $method = $logEntries[$i][0];
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $curDepth--;
+                if ($curDepth < $minDepth) {
+                    $minDepth--;
+                    $entries[$i] = $logEntries[$i];
+                }
+            } elseif ($method == 'groupEnd') {
+                $curDepth++;
+            }
+        }
+        return $entries;
+    }
+
+    /**
      * Extracts meta-data from args
      *
      * Extract meta-data added via meta() method..

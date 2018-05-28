@@ -40,7 +40,7 @@ class MethodClear
 	 *
      * @param Event $event event object
 	 *
-	 * @return array
+	 * @return Event
 	 */
 	public function onLog(Event $event)
 	{

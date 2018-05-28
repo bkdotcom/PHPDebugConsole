@@ -11,7 +11,7 @@
 
 namespace bdk\Debug\Output;
 
-use bdk\Debug\Table;
+use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
 
 /**
@@ -162,10 +162,10 @@ class Firephp extends Base
     protected function methodTable($array, $columns = array())
     {
         $table = array();
-        $keys = $columns ?: $this->debug->table->colKeys($array);
+        $keys = $columns ?: $this->debug->methodTable->colKeys($array);
         $headerVals = $keys;
         foreach ($headerVals as $i => $val) {
-            if ($val === Table::SCALAR) {
+            if ($val === MethodTable::SCALAR) {
                 $headerVals[$i] = 'value';
             }
         }
@@ -176,7 +176,7 @@ class Firephp extends Base
             $array = $array['traverseValues'];
         }
         foreach ($array as $k => $row) {
-            $values = $this->debug->table->keyValues($row, $keys, $objInfo);
+            $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
             foreach ($values as $k2 => $val) {
                 if ($val === $this->debug->abstracter->UNDEFINED) {
                     $values[$k2] = null;

@@ -6,15 +6,17 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.2
  */
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Event;
+
 /**
  * Table helper methods
  */
-class Table
+class MethodTable
 {
 
     const SCALAR = "\x00scalar\x00";
@@ -135,6 +137,58 @@ class Table
             $values[$key] = $value;
         }
         return $values;
+    }
+
+    /**
+     * Handle table() call
+     *
+     * @param Event $event event object
+     *
+     * @return Event
+     */
+    public function onLog(Event $event)
+    {
+        $args = $event['args'];
+        $meta = \array_merge(array(
+            'caption' => null,
+            'columns' => array(),
+        ), $event['meta']);
+        $argCount = \count($args);
+        $data = null;
+        for ($i = 0; $i < $argCount; $i++) {
+            if (\is_array($args[$i])) {
+                if ($data === null) {
+                    $data = $args[$i];
+                } elseif (!$meta['columns']) {
+                    $meta['columns'] = $args[$i];
+                }
+            } elseif ($args[$i] instanceof \Traversable) {
+                if ($data === null) {
+                    $data = $args[$i];
+                }
+            } elseif (\is_string($args[$i]) && !$meta['caption']) {
+                $meta['caption'] = $args[$i];
+            }
+            unset($args[$i]);
+        }
+        if ($data) {
+            $event->setValues(array(
+                'method' => 'table',
+                'args' => array($data),
+                'meta' => $meta,
+            ));
+        } elseif (\is_array($data) && $meta['caption']) {
+            // empty array was passed
+            $event->setValues(array(
+                'method' => 'log',
+                'args' => array($meta['caption'], $data),
+                'meta' => $event['meta'],
+            ));
+        } else {
+            // no array was passed
+            $event['method'] = 'log';
+        }
+        return $event;
     }
 
     /**

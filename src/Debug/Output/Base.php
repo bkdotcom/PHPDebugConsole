@@ -11,7 +11,7 @@
 
 namespace bdk\Debug\Output;
 
-use bdk\Debug\Table;
+use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -330,14 +330,14 @@ abstract class Base implements OutputInterface
      */
     protected function methodTable($array, $columns = array())
     {
-        $keys = $columns ?: $this->debug->table->colKeys($array);
+        $keys = $columns ?: $this->debug->methodTable->colKeys($array);
         $table = array();
         $classnames = array();
         if ($this->debug->abstracter->isAbstraction($array) && $array['traverseValues']) {
             $array = $array['traverseValues'];
         }
         foreach ($array as $k => $row) {
-            $values = $this->debug->table->keyValues($row, $keys, $objInfo);
+            $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
             foreach ($values as $k2 => $val) {
                 if ($val === $this->debug->abstracter->UNDEFINED) {
                     unset($values[$k2]);
@@ -345,7 +345,7 @@ abstract class Base implements OutputInterface
                     $values[$k2] = $this->debug->output->text->dump($val);
                 }
             }
-            if (\count($values) == 1 && $k2 == Table::SCALAR) {
+            if (\count($values) == 1 && $k2 == MethodTable::SCALAR) {
                 $values = $val;
             }
             $classnames[$k] = $objInfo['row']

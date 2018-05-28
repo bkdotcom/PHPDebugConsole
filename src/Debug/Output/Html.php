@@ -11,7 +11,7 @@
 
 namespace bdk\Debug\Output;
 
-use bdk\Debug\Table;
+use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
 
 /**
@@ -62,7 +62,7 @@ class Html extends Base
             $caption = \trim($caption);
             $rows = $rows['traverseValues'];
         }
-        $keys = $columns ?: $this->debug->table->colKeys($rows);
+        $keys = $columns ?: $this->debug->methodTable->colKeys($rows);
         $this->tableInfo = array(
             'haveObjRow' => false,
             'colClasses' => \array_fill_keys($keys, null),
@@ -328,7 +328,7 @@ class Html extends Base
     {
         $headers = array();
         foreach ($keys as $key) {
-            $headers[$key] = $key === Table::SCALAR
+            $headers[$key] = $key === MethodTable::SCALAR
                 ? 'value'
                 : \htmlspecialchars($key);
             if ($this->tableInfo['colClasses'][$key]) {
@@ -353,7 +353,7 @@ class Html extends Base
     protected function buildTableRow($row, $keys, $rowKey)
     {
         $str = '';
-        $values = $this->debug->table->keyValues($row, $keys, $objInfo);
+        $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
         $classAndInner = $this->debug->utilities->parseAttribString($this->dump($rowKey));
         $classAndInner['class'] = \trim('t_key '.$classAndInner['class']);
         $str .= '<tr>';

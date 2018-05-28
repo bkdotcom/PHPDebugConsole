@@ -1,6 +1,6 @@
 <?php
 
-use bdk\Debug\Table;
+use bdk\Debug\MethodTable;
 
 /**
  * PHPUnit tests for Debug class
@@ -20,14 +20,14 @@ class MethodTableTest extends DebugTestFramework
             array('col1'=>'', 'col2'=>'', 'col3'=>''),
             array('col1'=>'', 'col2'=>'', 'col3'=>''),
         );
-        $colKeys = Table::colKeys($array);
+        $colKeys = MethodTable::colKeys($array);
         $this->assertSame(array('col1','col2','col3','col4'), $colKeys);
         $array = array(
             array('a','b','c'),
             array('d','e','f','g'),
             array('h','i'),
         );
-        $colKeys = Table::colKeys($array);
+        $colKeys = MethodTable::colKeys($array);
         $this->assertSame(array(0,1,2,3), $colKeys);
     }
 

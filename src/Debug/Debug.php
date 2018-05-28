@@ -27,8 +27,9 @@ use ReflectionMethod;
  *
  * @property Abstracter   $abstracter   lazy-loaded Abstracter obj
  * @property ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer obj
+ * @property MethodClear  $methodClear  lazy-loaded MethodClear obj
+ * @property MethodTable  $methodTable  lazy-loaded MethodTable obj
  * @property Output       $output       lazy-loaded Output obj
- * @property Table        $table        lazy-loaded Table obj
  * @property Utf8         $utf8         lazy-loaded Utf8 obj
  */
 class Debug
@@ -230,13 +231,13 @@ class Debug
             'methodClear' => function () {
                 return new Debug\MethodClear($this, $this->data);
             },
+            'methodTable' => function () {
+                return new Debug\MethodTable();
+            },
             'output' => function () {
                 $output = new Debug\Output($this, $this->config->getCfgLazy('output'));
                 $this->eventManager->addSubscriberInterface($output);
                 return $output;
-            },
-            'table' => function () {
-                return new Debug\Table();
             },
             'utf8' => function () {
                 return new Debug\Utf8();
@@ -337,11 +338,7 @@ class Debug
                 Publish the debug.log event (regardless of cfg.collect)
                 don't actually log
             */
-            $this->eventManager->publish(
-                'debug.log',
-                $this,
-                $event->getValues()
-            );
+            $this->eventManager->publish('debug.log', $event);
         }
         $this->cfg['collect'] = $collect;
         $this->setLogDest('auto');
@@ -585,41 +582,17 @@ class Debug
             return;
         }
         $args = \func_get_args();
-        $meta = \array_merge(array(
-            'caption' => null,
-            'columns' => array(),
-        ), $this->internal->getMetaVals($args));
-        $argCount = \count($args);
-        $data = null;
-        for ($i = 0; $i < $argCount; $i++) {
-            if (\is_array($args[$i])) {
-                if ($data === null) {
-                    $data = $args[$i];
-                } elseif (!$meta['columns']) {
-                    $meta['columns'] = $args[$i];
-                }
-            } elseif ($args[$i] instanceof \Traversable) {
-                if ($data === null) {
-                    $data = $args[$i];
-                }
-            } elseif (\is_string($args[$i]) && !$meta['caption']) {
-                $meta['caption'] = $args[$i];
-            }
-            unset($args[$i]);
-        }
-        if ($data) {
-            $this->appendLog('table', array($data), $meta);
-        } else {
-            $args = \is_array($data) && $meta['caption']
-                ? array(
-                        // empty array() was passed
-                        $meta['caption'],
-                        $data,
-                        self::meta(\array_diff_key($meta, \array_flip(array('caption','columns'))))
-                    )
-                : \func_get_args();                 // no array passed
-            $this->appendLog('log', $args);
-        }
+        $meta = $this->internal->getMetaVals($args);
+        $event = $this->methodTable->onLog(new Event($this, array(
+            'method' => 'table',
+            'args' => $args,
+            'meta' => $meta,
+        )));
+        $this->appendLog(
+            $event['method'],
+            $event['args'],
+            $event['meta']
+        );
     }
 
     /**

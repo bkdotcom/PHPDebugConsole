@@ -265,7 +265,9 @@ class Internal implements SubscriberInterface
     {
         $entryCountInitial = $this->debug->getData('entryCountInitial');
         $entryCountCurrent = $this->debug->getData('log/count');
-        return $entryCountCurrent > $entryCountInitial;
+        $haveLog = $entryCountCurrent > $entryCountInitial;
+        $lastEntryMethod = $this->debug->getData('log/end/0');
+        return $haveLog && $lastEntryMethod !== 'clear';
     }
 
     /**

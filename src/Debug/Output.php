@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.1
+ * @version   v2.2
  */
 
 namespace bdk\Debug;
@@ -190,12 +190,12 @@ class Output implements SubscriberInterface
      */
     private function closeOpenGroups()
     {
-        foreach ($this->data['groupSummaryStack'] as $i => $priority) {
-            $groupDepth = $this->data['groupSummaryDepths'][$priority];
-            for ($i = 0; $i < $groupDepth[1]; $i++) {
+        while ($this->data['groupSummaryStack']) {
+            $priority = \array_pop($this->data['groupSummaryStack']);
+            while ($this->data['groupSummaryDepths'][$priority][1] > 0) {
+                $this->data['groupSummaryDepths'][$priority][1]--;
                 $this->data['logSummary'][$priority][] = array('groupEnd', array(), array());
             }
-            unset($this->data['groupSummaryStack'][$i]);
         }
         while ($this->data['groupDepth'][1] > 0) {
             $this->data['groupDepth'][1]--;

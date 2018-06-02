@@ -317,7 +317,7 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(6, $this->debug->getData('log'));
                     $this->assertSame(array(
                         0 => array(0, 0),
-                        1 => array(2, 2),
+                        1 => array(1, 1),
                     ), $this->debug->getData('groupSummaryDepths'));
                 },
                 'entry' => array(
@@ -352,8 +352,8 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(3, $this->debug->getData('logSummary/1'));
                     $this->assertCount(5, $this->debug->getData('log'));
                     $this->assertSame(array(
-                        0 => array(2, 2),
-                        1 => array(2, 2),
+                        0 => array(1, 1),
+                        1 => array(1, 1),
                     ), $this->debug->getData('groupSummaryDepths'));
                 },
                 'entry' => array(
@@ -389,7 +389,7 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(3, $this->debug->getData('log'));    // groups remain
                     $this->assertSame(array(
                         0 => array(0, 0),
-                        1 => array(2, 2),
+                        1 => array(1, 1),
                     ), $this->debug->getData('groupSummaryDepths'));
                 },
                 'entry' => array(
@@ -425,7 +425,7 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(6, $this->debug->getData('log'));
                     $this->assertSame(array(
                         0 => array(0, 0),
-                        1 => array(2, 2),
+                        1 => array(1, 1),
                     ), $this->debug->getData('groupSummaryDepths'));
                 },
                 'entry' => array(
@@ -986,6 +986,42 @@ class MethodTest extends DebugTestFramework
                 'text' => '',
             )
         );
+    }
+
+    public function testGroupsLeftOpen()
+    {
+        $this->debug->groupSummary(1);
+            $this->debug->log('in summary');
+            $this->debug->group('inner group opened but not closed');
+                $this->debug->log('in inner');
+        $onOutputVals = array();
+        $this->debug->eventManager->subscribe('debug.output', function (\bdk\PubSub\Event $event) use (&$onOutputVals) {
+            $debug = $event->getSubject();
+            $onOutputVals['groupSummaryStack'] = $debug->getData('groupSummaryStack');
+            $onOutputVals['groupSummaryDepths'] = $debug->getData('groupSummaryDepths');
+        }, -1);
+        // Internal::onOutput opens & closes a groupSummary AFTER closeOpenGroups does its thing
+        $output = $this->debug->output();
+        $this->assertSame(array(1), $onOutputVals['groupSummaryStack']);
+        $this->assertSame(array(1 => array(0,0)), $onOutputVals['groupSummaryDepths']);
+        $outputExpect = <<<'EOD'
+<div class="debug">
+    <div class="debug-bar"><h3>Debug Log</h3></div>
+    <div class="debug-header m_group">
+        <div class="m_log"><span class="no-pseudo t_string">in summary</span></div>
+        <div class="expanded group-header"><span class="group-label">inner group opened but not closed</span></div>
+        <div class="m_group">
+            <div class="m_log"><span class="no-pseudo t_string">in inner</span></div>
+        </div>
+        <div class="m_info"><span class="no-pseudo t_string">Built In %f sec</span></div>
+        <div class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d MB</span></div>
+    </div>
+    <div class="debug-content m_group">
+    </div>
+</div>
+EOD;
+        $outputExpect = preg_replace('#^\s+#m', '', $outputExpect);
+        $this->assertStringMatchesFormat($outputExpect, $output);
     }
 
     /**

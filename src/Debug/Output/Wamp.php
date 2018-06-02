@@ -9,7 +9,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.2
  */
 
 namespace bdk\Debug\Output;
@@ -143,6 +143,17 @@ class Wamp implements OutputInterface
      */
     public function processLogEntry($method, $args = array(), $meta = array())
     {
+        if ($method == 'clear') {
+            $flags = $meta['flags'];
+            $meta['flags'] = array(
+                'alerts' => (bool) ($flags & Debug::CLEAR_ALERTS),
+                'log' => (bool) ($flags & Debug::CLEAR_LOG),
+                'logErrors' => (bool) ($flags & Debug::CLEAR_LOG_ERRORS),
+                'summary' => (bool) ($flags & Debug::CLEAR_SUMMARY),
+                'summaryErrors' => (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS),
+                'silent' =>  (bool) ($flags & Debug::CLEAR_SILENT),
+            );
+        }
         $args = $this->crateValues($args);
         $meta = \array_merge(array(
             'format' => 'raw',

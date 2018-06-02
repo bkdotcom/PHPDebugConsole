@@ -211,16 +211,6 @@ class Debug
      */
     public function __get($property)
     {
-        $factories = array(
-            'groupDepth' => function () {
-                // calculate the total group depth
-                $depth = $this->data['groupDepth'][0];
-                foreach ($this->data['groupSummaryDepths'] as $groupDepth) {
-                    $depth += $groupDepth[0];
-                }
-                return $depth;
-            },
-        );
         $services = array(
             'abstracter' => function () {
                 return new Debug\Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
@@ -243,13 +233,14 @@ class Debug
                 return new Debug\Utf8();
             },
         );
-        if (isset($factories[$property])) {
-            return \call_user_func($factories[$property]);
-        }
         if (isset($services[$property])) {
             $val = \call_user_func($services[$property]);
             $this->{$property} = $val;
             return $val;
+        }
+        $getter = 'get'.\ucfirst($property);
+        if (\method_exists($this, $getter)) {
+            return $this->{$getter}();
         }
         return null;
     }
@@ -444,19 +435,14 @@ class Debug
      */
     public function groupEnd()
     {
-        $this->groupDepthRef[0] = \max(0, --$this->groupDepthRef[0]);
-        if ($this->cfg['collect']) {
-            if ($this->groupDepthRef[1] === 0) {
-                // nothing to end
-                return;
-            }
-            $this->groupDepthRef[1]--;
-        }
-        $errorCaller = $this->errorHandler->get('errorCaller');
-        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->groupDepthRef[0] < $errorCaller['groupDepth']) {
-            $this->errorHandler->setErrorCaller(false);
-        }
-        if ($this->data['groupSummaryStack'] && $this->groupDepthRef[0] === 0) {
+        $groupDepthWas = $this->groupDepthRef;
+        $this->groupDepthRef = array(
+            \max(0, --$this->groupDepthRef[0]),
+            $this->cfg['collect']
+                ? \max(0, --$this->groupDepthRef[1])
+                : $this->groupDepthRef[1],
+        );
+        if ($this->data['groupSummaryStack'] && $groupDepthWas[0] === 0) {
             \array_pop($this->data['groupSummaryStack']);
             $this->setLogDest('auto');
             /*
@@ -472,8 +458,12 @@ class Debug
                     'meta' => array('closesSummary'=>true),
                 )
             );
-        } else {
+        } elseif ($this->cfg['collect'] && $groupDepthWas[1]) {
             $this->appendLog('groupEnd');
+        }
+        $errorCaller = $this->errorHandler->get('errorCaller');
+        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->getGroupDepth() < $errorCaller['groupDepth']) {
+            $this->errorHandler->setErrorCaller(false);
         }
     }
 
@@ -494,8 +484,6 @@ class Debug
     {
         $this->data['groupSummaryStack'][] = $priority;
         $this->setLogDest('summary');
-        $this->groupDepthRef[0] ++;
-        $this->groupDepthRef[1] += $this->cfg['collect'] ? 1 : 0;
         /*
             Publish the debug.log event (regardless of cfg.collect)
             don't actually log
@@ -993,7 +981,7 @@ class Debug
         }
         if ($caller) {
             // groupEnd will check depth and potentially clear errorCaller
-            $caller['groupDepth'] = $this->groupDepthRef[0];
+            $caller['groupDepth'] = $this->getGroupDepth();
         }
         $this->errorHandler->setErrorCaller($caller);
     }
@@ -1153,6 +1141,21 @@ class Debug
             $str = $label.': '.$seconds.' sec';
         }
         $this->appendLog('time', array($str));
+    }
+
+    /**
+     * Calculate total group depth
+     *
+     * @return integer
+     */
+    protected function getGroupDepth()
+    {
+        $depth = $this->data['groupDepth'][0];
+        foreach ($this->data['groupSummaryDepths'] as $groupDepth) {
+            $depth += $groupDepth[0];
+        }
+        $depth += \count($this->data['groupSummaryStack']);
+        return $depth;
     }
 
     /**

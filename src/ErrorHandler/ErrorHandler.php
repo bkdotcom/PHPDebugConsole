@@ -143,24 +143,6 @@ class ErrorHandler
     }
 
     /**
-     * Retrieve a configuration value
-     *
-     * @param string $key what to get
-     *
-     * @return mixed
-     */
-    public function getCfg($key = null)
-    {
-        if ($key === null) {
-            return $this->cfg;
-        }
-        if (isset($this->cfg[$key])) {
-            return $this->cfg[$key];
-        }
-        return null;
-    }
-
-    /**
      * Retrieve a data value or property
      *
      * @param string $key what to get
@@ -179,6 +161,24 @@ class ErrorHandler
         }
         if (isset($this->{$key})) {
             return $this->{$key};
+        }
+        return null;
+    }
+
+    /**
+     * Retrieve a configuration value
+     *
+     * @param string $key what to get
+     *
+     * @return mixed
+     */
+    public function getCfg($key = null)
+    {
+        if ($key === null) {
+            return $this->cfg;
+        }
+        if (isset($this->cfg[$key])) {
+            return $this->cfg[$key];
         }
         return null;
     }

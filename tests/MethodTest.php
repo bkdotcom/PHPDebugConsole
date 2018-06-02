@@ -1014,7 +1014,7 @@ class MethodTest extends DebugTestFramework
             <div class="m_log"><span class="no-pseudo t_string">in inner</span></div>
         </div>
         <div class="m_info"><span class="no-pseudo t_string">Built In %f sec</span></div>
-        <div class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d MB</span></div>
+        <div class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d %cB</span></div>
     </div>
     <div class="debug-content m_group">
     </div>

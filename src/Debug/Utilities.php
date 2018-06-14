@@ -199,7 +199,7 @@ class Utilities
         } else {
             $i = 1;
         }
-        $i = $i + $offset;
+        $i += $offset;
         $iLine = $i;
         $iFunc = $i + 1;
         if (isset($backtrace[$iFunc]) && \in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))) {
@@ -212,8 +212,13 @@ class Utilities
                 $return['class'] = \get_class($backtrace[$iFunc]['object']);
             }
         }
-        $return['file'] = $backtrace[$iLine]['file'];
-        $return['line'] = $backtrace[$iLine]['line'];
+        if (isset($backtrace[$iLine])) {
+            $return['file'] = $backtrace[$iLine]['file'];
+            $return['line'] = $backtrace[$iLine]['line'];
+        } else {
+            $return['file'] = $backtrace[$numFrames-1]['file'];
+            $return['line'] = 0;
+        }
         return $return;
     }
 

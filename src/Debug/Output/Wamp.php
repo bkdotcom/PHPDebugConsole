@@ -24,11 +24,11 @@ use bdk\WampPublisher;
 class Wamp implements OutputInterface
 {
 
-    protected $debug;
-    protected $topic = 'bdk.debug';
-    private $requestId;
-    private $wamp;
+    public $debug;
     public $name = 'wamp';
+    public $requestId;
+    public $topic = 'bdk.debug';
+    public $wamp;
 
     /**
      * Constructor
@@ -154,11 +154,13 @@ class Wamp implements OutputInterface
                 'silent' =>  (bool) ($flags & Debug::CLEAR_SILENT),
             );
         }
-        $args = $this->crateValues($args);
         $meta = \array_merge(array(
             'format' => 'raw',
             'requestId' => $this->requestId,
         ), $meta);
+        if ($meta['format'] == 'raw') {
+            $args = $this->crateValues($args);
+        }
         if (!empty($meta['backtrace'])) {
             $meta['backtrace'] = $this->crateValues($meta['backtrace']);
         }

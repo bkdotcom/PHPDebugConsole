@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.1
+ * @version   v2.2
  */
 
 namespace bdk\Debug\Output;
@@ -21,7 +21,7 @@ use bdk\PubSub\SubscriberInterface;
 abstract class Base implements OutputInterface
 {
 
-    protected $debug;
+    public $debug;
     protected $dumpType;
     protected $dumpTypeMore;
     protected $data = array();

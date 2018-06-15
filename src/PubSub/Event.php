@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.2
  */
 
 namespace bdk\PubSub;
@@ -47,6 +47,22 @@ class Event implements ArrayAccess, IteratorAggregate
     {
         $this->subject = $subject;
         $this->values = $values;
+    }
+
+    /**
+     * Magic Method
+     *
+     * @return array
+     */
+    public function __debugInfo()
+    {
+        return array(
+            'propagationStopped' => $this->propagationStopped,
+            'subject' => \is_object($this->subject)
+                ? get_class($this->subject)
+                : $this->subject,
+            'values' => $this->values,
+        );
     }
 
     /**

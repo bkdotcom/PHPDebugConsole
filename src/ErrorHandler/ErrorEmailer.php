@@ -4,7 +4,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.2
  */
 
 namespace bdk\ErrorHandler;
@@ -261,7 +261,10 @@ class ErrorEmailer implements SubscriberInterface
             $emailBody .= 'post params: '.\var_export($_POST, true)."\n";
         }
         if ($error['type'] & $this->cfg['emailTraceMask']) {
-            $emailBody .= "\n".'backtrace: '.$this->backtraceStr($error);
+            $backtraceStr = $this->backtraceStr($error);
+            $emailBody .= "\n".($backtraceStr
+                ? 'backtrace: '.$backtraceStr
+                : 'no backtrace');
         }
         $this->email($this->cfg['emailTo'], $subject, $emailBody);
         return;
@@ -412,7 +415,7 @@ class ErrorEmailer implements SubscriberInterface
         if ($this->cfg['emailThrottleWrite'] && \is_callable($this->cfg['emailThrottleWrite'])) {
             \call_user_func($this->cfg['emailThrottleWrite'], $this->throttleData);
         } elseif ($this->cfg['emailThrottleFile']) {
-            $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData));
+            $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData, JSON_PRETTY_PRINT));
         }
         return;
     }

@@ -768,25 +768,7 @@ class Debug
      */
     public function getData($path = null)
     {
-        $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
-        $ret = $this->data;
-        foreach ($path as $i => $k) {
-            if (isset($ret[$k])) {
-                $ret = $ret[$k];
-                continue;
-            }
-            if ($i > 0) {
-                if ($k == 'count') {
-                    return \count($ret);
-                }
-                if ($k == 'end') {
-                    $ret = \end($ret);
-                    continue;
-                }
-            }
-            return null;
-        }
-        return $ret;
+        return $this->utilities->arrayPathGet($path, $this->data);
     }
 
     /**

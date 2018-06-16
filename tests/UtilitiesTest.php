@@ -73,6 +73,11 @@ class UtilitiesTest extends DebugTestFramework
         $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.comfy.0', $array), null);
         $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed', $array), array('comfy'=>true));
         $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.foo', $array), null);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.__count__', $array), 2);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.__end__.comfy', $array), false);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.__reset__.comfy', $array), true);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.sofa.comfy', $array), null);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet(array('surfaces','__end__','comfy'), $array), false);
     }
 
     /**

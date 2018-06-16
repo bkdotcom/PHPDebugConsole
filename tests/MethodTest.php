@@ -267,7 +267,7 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(3, $this->debug->getData('logSummary/0'));
                     $this->assertCount(3, $this->debug->getData('logSummary/1'));
                     $this->assertCount(3, $this->debug->getData('log'));
-                    $lastMethod = $this->debug->getData('log/end/0');
+                    $lastMethod = $this->debug->getData('log/__end__/0');
                     $this->assertSame('warn', $lastMethod);
                 },
             )

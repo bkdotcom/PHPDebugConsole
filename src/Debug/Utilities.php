@@ -51,22 +51,37 @@ class Utilities
     }
 
     /**
-     * Get value from array structure
+     * Get value from array
      *
      * @param array|string $path  key path
-     * @param array        $array array to navigate
+     *                               path may contain special keys:
+     *                                 * __count__ : return count() (traversal will cease)
+     *                                 * __end__ : last value
+     *                                 * __reset__ : first value
+     * @param array        $array array to traverse
      *
      * @return mixed
      */
     public static function arrayPathGet($path, $array = array())
     {
-        if (\is_string($path) || \is_null($path)) {
-            $path = \preg_split('#[\./]#', $path);
-            $path = \array_filter($path, 'strlen');
+        if (!\is_array($path)) {
+            $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
         }
-        foreach ($path as $k) {
-            if (isset($array[$k])) {
-                $array = $array[$k];
+        $path = \array_reverse($path);
+        while ($path) {
+            $key = \array_pop($path);
+            if (!\is_array($array)) {
+                return null;
+            } elseif (isset($array[$key])) {
+                $array = $array[$key];
+            } elseif ($key == '__count__') {
+                return \count($array);
+            } elseif ($key == '__end__') {
+                $keys = \array_keys($array);
+                $path[] = \array_pop($keys);
+            } elseif ($key == '__reset__') {
+                $keys = \array_keys($array);
+                $path[] = $keys[0];
             } else {
                 return null;
             }

@@ -264,9 +264,9 @@ class Internal implements SubscriberInterface
     public function hasLog()
     {
         $entryCountInitial = $this->debug->getData('entryCountInitial');
-        $entryCountCurrent = $this->debug->getData('log/count');
+        $entryCountCurrent = $this->debug->getData('log/__count__');
         $haveLog = $entryCountCurrent > $entryCountInitial;
-        $lastEntryMethod = $this->debug->getData('log/end/0');
+        $lastEntryMethod = $this->debug->getData('log/__end__/0');
         return $haveLog && $lastEntryMethod !== 'clear';
     }
 

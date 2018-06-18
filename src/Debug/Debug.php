@@ -123,10 +123,13 @@ class Debug
             */
             self::$instance = $this;
             /*
-                Only call spl_autoload_register on initial instance
-                (even though re-registering function does't re-register)
+                Only register autloader:
+                  a. on initial instance (even though re-registering function does't re-register)
+                  b. if we're unable to to find our Config class (must not be using Composer)
             */
-            \spl_autoload_register(array($this, 'autoloader'));
+            if (!\class_exists('\\bdk\\Debug\\Config')) {
+                \spl_autoload_register(array($this, 'autoloader'));
+            }
         }
         /*
             Initialize child objects

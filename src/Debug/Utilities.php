@@ -27,24 +27,23 @@ class Utilities
      */
     public static function arrayMergeDeep($arrayDef, $array2)
     {
-        if (!\is_array($arrayDef) || !\is_array($array2)) {
-            $arrayDef = $array2;
-        } elseif (\array_keys($array2) == array(0,1) && \is_object($array2[0]) && \is_string($array2[1])) {
-            // appears to be a callable
-            $arrayDef = $array2;
-        } else {
-            foreach ($array2 as $k2 => $v2) {
-                if (\is_int($k2)) {
-                    if (!\in_array($v2, $arrayDef)) {
-                        $arrayDef[] = $v2;
-                    }
-                } elseif (!isset($arrayDef[$k2])) {
-                    $arrayDef[$k2] = $v2;
-                } elseif (!\is_array($v2)) {
-                    $arrayDef[$k2] = $v2;
-                } else {
-                    $arrayDef[$k2] = self::arrayMergeDeep($arrayDef[$k2], $v2);
+        if (!\is_array($arrayDef) || self::isCallable($arrayDef)) {
+            // not array or appears to be a callable
+            return $array2;
+        }
+        if (!\is_array($array2) || self::isCallable($array2)) {
+            // not array or appears to be a callable
+            return $array2;
+        }
+        foreach ($array2 as $k2 => $v2) {
+            if (\is_int($k2)) {
+                if (!\in_array($v2, $arrayDef)) {
+                    $arrayDef[] = $v2;
                 }
+            } elseif (!isset($arrayDef[$k2])) {
+                $arrayDef[$k2] = $v2;
+            } else {
+                $arrayDef[$k2] = self::arrayMergeDeep($arrayDef[$k2], $v2);
             }
         }
         return $arrayDef;
@@ -78,10 +77,10 @@ class Utilities
                 return \count($array);
             } elseif ($key == '__end__') {
                 $keys = \array_keys($array);
-                $path[] = \array_pop($keys);
+                $path[] = \end($keys);
             } elseif ($key == '__reset__') {
                 $keys = \array_keys($array);
-                $path[] = $keys[0];
+                $path[] = \reset($keys);
             } else {
                 return null;
             }
@@ -476,5 +475,18 @@ class Utilities
             $value = '';
         }
         return $value;
+    }
+
+    /**
+     * Syntax-only is_callable() check
+     * Additionally checks that $array[0] is an object
+     *
+     * @param array $array variable to check
+     *
+     * @return boolean [description]
+     */
+    private static function isCallable($array)
+    {
+        return \is_callable($array, true) && \is_object($array[0]);
     }
 }

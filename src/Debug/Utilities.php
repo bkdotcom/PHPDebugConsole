@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.1
+ * @version   v2.2
  */
 
 namespace bdk\Debug;
@@ -52,16 +52,16 @@ class Utilities
     /**
      * Get value from array
      *
+     * @param array        $array array to traverse
      * @param array|string $path  key path
      *                               path may contain special keys:
      *                                 * __count__ : return count() (traversal will cease)
      *                                 * __end__ : last value
      *                                 * __reset__ : first value
-     * @param array        $array array to traverse
      *
      * @return mixed
      */
-    public static function arrayPathGet($path, $array = array())
+    public static function arrayPathGet($array, $path)
     {
         if (!\is_array($path)) {
             $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');

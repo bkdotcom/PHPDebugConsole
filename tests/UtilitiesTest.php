@@ -67,17 +67,17 @@ class UtilitiesTest extends DebugTestFramework
                 )
             ),
         );
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.comfy', $array), true);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.rock.comfy', $array), false);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.comfy.foo', $array), null);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.comfy.0', $array), null);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed', $array), array('comfy'=>true));
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.bed.foo', $array), null);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.__count__', $array), 2);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.__end__.comfy', $array), false);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.__reset__.comfy', $array), true);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet('surfaces.sofa.comfy', $array), null);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet(array('surfaces','__end__','comfy'), $array), false);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.comfy'), true);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.rock.comfy'), false);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.comfy.foo'), null);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.comfy.0'), null);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed'), array('comfy'=>true));
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.foo'), null);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.__count__'), 2);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.__end__.comfy'), false);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.__reset__.comfy'), true);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.sofa.comfy'), null);
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, array('surfaces','__end__','comfy')), false);
     }
 
     /**

@@ -771,7 +771,7 @@ class Debug
      */
     public function getData($path = null)
     {
-        return $this->utilities->arrayPathGet($path, $this->data);
+        return $this->utilities->arrayPathGet($this->data, $path);
     }
 
     /**

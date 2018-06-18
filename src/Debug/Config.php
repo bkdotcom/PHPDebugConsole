@@ -56,7 +56,7 @@ class Config
         $level1 = isset($path[0]) ? $path[0] : null;
         if ($level1 == 'debug') {
             \array_shift($path);
-            return $this->debug->utilities->arrayPathGet($path, $this->cfg);
+            return $this->debug->utilities->arrayPathGet($this->cfg, $path);
         } elseif (\is_object($this->debug->{$level1})) {
             // child class config value
             $pathRel = \count($path) > 1
@@ -130,7 +130,7 @@ class Config
             }
         }
         if (\is_string($pathOrVals)) {
-            $return = $this->debug->utilities->arrayPathGet($path, $return);
+            $return = $this->debug->utilities->arrayPathGet($return, $path);
         }
         if ($cfg) {
             $this->debug->eventManager->publish(

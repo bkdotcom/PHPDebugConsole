@@ -93,7 +93,7 @@ class Output implements SubscriberInterface
         } elseif ($path == 'css') {
             $ret = $this->getCss();
         } else {
-            $ret = $this->debug->utilities->arrayPathGet($path, $this->cfg);
+            $ret = $this->debug->utilities->arrayPathGet($this->cfg, $path);
         }
         return $ret;
     }

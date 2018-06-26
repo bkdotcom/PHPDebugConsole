@@ -6,11 +6,12 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.2
+ * @version   v2.3
  */
 
 namespace bdk\Debug;
 
+use bdk\Debug;
 use bdk\Debug\Output\OutputInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -27,10 +28,10 @@ class Output implements SubscriberInterface
     /**
      * Constructor
      *
-     * @param object $debug debug instance
-     * @param array  $cfg   configuration
+     * @param \bdk\Debug $debug debug instance
+     * @param array      $cfg   configuration
      */
-    public function __construct($debug, $cfg = array())
+    public function __construct(Debug $debug, $cfg = array())
     {
         $this->debug = $debug;
         $this->cfg = array(

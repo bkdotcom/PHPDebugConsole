@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.2
+ * @version   v2.3
  */
 
 namespace bdk\Debug;
@@ -76,11 +76,11 @@ class Utilities
             } elseif ($key == '__count__') {
                 return \count($array);
             } elseif ($key == '__end__') {
-                $keys = \array_keys($array);
-                $path[] = \end($keys);
+                \end($array);
+                $path[] = \key($array);
             } elseif ($key == '__reset__') {
-                $keys = \array_keys($array);
-                $path[] = \reset($keys);
+                \reset($array);
+                $path[] = \key($array);
             } else {
                 return null;
             }

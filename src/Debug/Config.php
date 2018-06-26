@@ -6,11 +6,12 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.3
  */
 
 namespace bdk\Debug;
 
+use bdk\Debug;
 use bdk\PubSub\Event;
 
 /**
@@ -27,10 +28,10 @@ class Config
     /**
      * Constructor
      *
-     * @param object $debug debug object
-     * @param array  $cfg   configuration
+     * @param \bdk\Debug $debug debug object
+     * @param array      $cfg   configuration
      */
-    public function __construct($debug, &$cfg)
+    public function __construct(Debug $debug, &$cfg)
     {
         $this->cfg = &$cfg;
         $this->debug = $debug;

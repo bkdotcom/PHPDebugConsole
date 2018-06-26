@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.2
+ * @version   v2.3
  */
 
 namespace bdk\Debug;
@@ -29,7 +29,7 @@ class MethodClear
 	 * @param \bdk\Debug $debug Debug instance
 	 * @param array      $data  debug data
 	 */
-	public function __construct($debug, &$data)
+	public function __construct(Debug $debug, &$data)
 	{
 		$this->debug = $debug;
 		$this->data = &$data;

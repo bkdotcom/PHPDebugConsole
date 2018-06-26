@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.2
+ * @version   v2.3
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -25,12 +25,13 @@ use ReflectionMethod;
 /**
  * Web-browser/javascript like console class for PHP
  *
- * @property Abstracter   $abstracter   lazy-loaded Abstracter obj
- * @property ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer obj
- * @property MethodClear  $methodClear  lazy-loaded MethodClear obj
- * @property MethodTable  $methodTable  lazy-loaded MethodTable obj
- * @property Output       $output       lazy-loaded Output obj
- * @property Utf8         $utf8         lazy-loaded Utf8 obj
+ * @property Abstracter   $abstracter   lazy-loaded Abstracter instance
+ * @property ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer instance
+ * @property Logger       $logger       lazy-loaded PSR-3 instance
+ * @property MethodClear  $methodClear  lazy-loaded MethodClear instance
+ * @property MethodTable  $methodTable  lazy-loaded MethodTable instance
+ * @property Output       $output       lazy-loaded Output instance
+ * @property Utf8         $utf8         lazy-loaded Utf8 instance
  */
 class Debug
 {
@@ -220,6 +221,9 @@ class Debug
             },
             'errorEmailer' => function () {
                 return new ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
+            },
+            'logger' => function () {
+                return new Debug\Logger($this);
             },
             'methodClear' => function () {
                 return new Debug\MethodClear($this, $this->data);

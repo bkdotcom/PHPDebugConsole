@@ -1,7 +1,7 @@
 {
 	"name": "bdk/debug",
 	"description": "Browser/javascript like console class for PHP",
-	"keywords": ["debug", "chromelogger", "debugging", "firephp", "var_dump", "inspect", "errorhandler", "phpdebugconsole"],
+	"keywords": ["debug", "chromelogger", "debugging", "firephp", "var_dump", "inspect", "errorhandler", "phpdebugconsole", "logger", "PSR-3"],
 	"homepage": "http://github.com/bkdotcom/PHPDebugConsole",
 	"license": "MIT",
 	"authors": [
@@ -34,6 +34,7 @@
 	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",
-		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin"
+		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",
+		"psr/log": "PSR-3 : Common interface for logging libraries"
 	}
 }

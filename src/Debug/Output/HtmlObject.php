@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.3
  */
 
 namespace bdk\Debug\Output;
@@ -22,9 +22,9 @@ class HtmlObject
 	/**
 	 * Constructor
 	 *
-	 * @param Debug $debug Debug instance
+	 * @param \bdk\Debug $debug Debug instance
 	 */
-	public function __construct($debug)
+	public function __construct(Debug $debug)
 	{
 		$this->debug = $debug;
 	}

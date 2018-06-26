@@ -6,11 +6,12 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.2
+ * @version   v2.3
  */
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -30,9 +31,9 @@ abstract class Base implements OutputInterface
     /**
      * Constructor
      *
-     * @param object $debug debug instance
+     * @param \bdk\Debug $debug debug instance
      */
-    public function __construct($debug)
+    public function __construct(Debug $debug)
     {
         $this->debug = $debug;
         if (!$this->name) {

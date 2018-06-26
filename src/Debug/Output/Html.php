@@ -6,11 +6,12 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.1
+ * @version   v2.3
  */
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
 
@@ -28,9 +29,9 @@ class Html extends Base
     /**
      * Constructor
      *
-     * @param object $debug debug instance
+     * @param \bdk\Debug $debug debug instance
      */
-    public function __construct($debug)
+    public function __construct(Debug $debug)
     {
         $this->errorSummary = new HtmlErrorSummary($this, $debug->errorHandler);
         parent::__construct($debug);

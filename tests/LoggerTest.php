@@ -20,18 +20,33 @@ class LoggerTest extends DebugTestFramework
     public function testCritical()
     {
         $this->debug->logger->critical('Critical test');
-        $info = array('file' => __FILE__, 'line' => __LINE__ - 1);
+        $metaExpect = array('file' => __FILE__, 'line' => __LINE__ - 1);
         $this->assertSame(array(
             'error',
             array('Critical test'),
-            $info,
+            $metaExpect,
         ), $this->debug->getData('log/__end__'));
 
-        $this->debug->logger->critical('Make an exception', array('exception' => new Exception()));
-        $info = array('file' => __FILE__, 'line' => __LINE__ - 1);
+        $this->debug->logger->critical('Make an exception', array(
+            'exception' => new Exception(),
+            'file' => 'file',
+            'foo' => 'bar',
+        ));
+        $metaSubset = array('file' => 'file', 'line' => __LINE__ - 4);  // line of Exception
+        $metaActual = $this->debug->getData('log/__end__/2');
         $this->assertSame('error', $this->debug->getData('log/__end__/0'));
-        $this->assertSame(array('Make an exception'), $this->debug->getData('log/__end__/1'));
-        $this->assertArraySubset($info, $this->debug->getData('log/__end__/2'));
+        $this->assertSame('Make an exception', $this->debug->getData('log/__end__/1/0'));
+        // should just contain exception & foo...  file gets moved to meta
+        $this->assertCount(2, $this->debug->getData('log/__end__/1/1'));
+        $this->assertArraySubset(array(
+            'foo'=>'bar',
+        ), $this->debug->getData('log/__end__/1/1'));
+        $this->assertArraySubset(array(
+            'className'=>'Exception',
+            'debug' => \bdk\Debug\Abstracter::ABSTRACTION,
+            'type' => 'object',
+        ), $this->debug->getData('log/__end__/1/1/exception'));
+        $this->assertArraySubset($metaSubset, $metaActual);
         $backtrace = $this->debug->getData('log/__end__/2/backtrace');
         $this->assertInternalType('array', $backtrace);
     }
@@ -93,10 +108,13 @@ class LoggerTest extends DebugTestFramework
 
     public function testDebug()
     {
-        $this->debug->logger->debug('{adj} debug', array('adj'=>'Awesome'));
+        $this->debug->logger->debug('{adj} debugging', array('adj'=>'Awesome','foo'=>'bar'));
         $this->assertSame(array(
             'log',
-            array('Awesome debug'),
+            array(
+                'Awesome debugging',
+                array('foo'=>'bar'),
+            ),
             array(),
         ), $this->debug->getData('log/0'));
     }

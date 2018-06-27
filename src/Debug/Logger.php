@@ -52,16 +52,16 @@ class Logger extends AbstractLogger
         $str = $this->interpolate($message, $context);
         if (\in_array($level, array('emergency','critical','error'))) {
             $meta = $this->getMeta($context);
-            $this->debug->error($str, $meta);
+            $this->debug->error($str, $context, $meta);
         } elseif (\in_array($level, array('warning','notice'))) {
             $meta = $this->getMeta($context);
-            $this->debug->warn($str, $meta);
+            $this->debug->warn($str, $context, $meta);
         } elseif ($level == 'alert') {
             $this->debug->alert($str);
         } elseif ($level == 'info') {
-            $this->debug->info($str);
+            $this->debug->info($str, $context);
         } else {
-            $this->debug->log($str);
+            $this->debug->log($str, $context);
         }
     }
 
@@ -69,10 +69,11 @@ class Logger extends AbstractLogger
      * Exctract potential meta values from $context
      *
      * @param array $context context array
+     *                        meta values get removed
      *
      * @return array meta
      */
-    protected function getMeta($context)
+    protected function getMeta(&$context)
     {
         $haveException = isset($context['exception'])
             && (
@@ -80,23 +81,27 @@ class Logger extends AbstractLogger
                 || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable
             );
         $metaVals = array();
+        foreach (array('file','line') as $key) {
+            if (isset($context[$key])) {
+                $metaVals[$key] = $context[$key];
+                unset($context[$key]);
+            }
+        }
         if ($haveException) {
-            $metaVals = array(
+            $metaVals = \array_merge(array(
                 'backtrace' => $this->debug->errorHandler->backtrace($context['exception']),
                 'file' => $context['exception']->getFile(),
                 'line' => $context['exception']->getLine(),
-            );
-        } else {
+            ), $metaVals);
+        } elseif (\count($metaVals) < 2) {
             $callerInfo = $this->debug->utilities->getCallerInfo(1);
-            $metaVals = array(
+            $metaVals = \array_merge(array(
                 'file' => $callerInfo['file'],
                 'line' => $callerInfo['line'],
-            );
-            foreach (array('file','line') as $key) {
-                if (isset($context[$key])) {
-                    $metaVals[$key] = $context[$key];
-                }
-            }
+            ), $metaVals);
+        }
+        if (!$context) {
+            $context = $this->debug->meta();
         }
         return $this->debug->meta($metaVals);
     }
@@ -106,18 +111,28 @@ class Logger extends AbstractLogger
      *
      * @param string $message message
      * @param array  $context optional array of key/values
+     *                                    interpolated values get removed
      *
      * @return string
      */
-    protected function interpolate($message, array $context = array())
+    protected function interpolate($message, array &$context = array())
     {
         // build a replacement array with braces around the context keys
+        \preg_match_all('/\{([a-z0-9_.]+)\}/', $message, $matches);
+        $placeholders = \array_unique($matches[1]);
         $replace = array();
-        foreach ($context as $key => $val) {
-            // check that the value can be casted to string
+        foreach ($placeholders as $key) {
+            if (!isset($context[$key])) {
+                continue;
+            }
+            $val = $context[$key];
             if (!\is_array($val) && (!\is_object($val) || \method_exists($val, '__toString'))) {
                 $replace['{' . $key . '}'] = $val;
             }
+        }
+        $context = \array_diff_key($context, \array_flip($placeholders));
+        if (!$context) {
+            $context = $this->debug->meta();
         }
         return \strtr($message, $replace);
     }

@@ -51,9 +51,11 @@ class Logger extends AbstractLogger
         }
         $str = $this->interpolate($message, $context);
         if (\in_array($level, array('emergency','critical','error'))) {
-            $this->debug->error($str);
+            $meta = $this->getMeta($context);
+            $this->debug->error($str, $meta);
         } elseif (\in_array($level, array('warning','notice'))) {
-            $this->debug->warn($str);
+            $meta = $this->getMeta($context);
+            $this->debug->warn($str, $meta);
         } elseif ($level == 'alert') {
             $this->debug->alert($str);
         } elseif ($level == 'info') {
@@ -61,6 +63,42 @@ class Logger extends AbstractLogger
         } else {
             $this->debug->log($str);
         }
+    }
+
+    /**
+     * Exctract potential meta values from $context
+     *
+     * @param array $context context array
+     *
+     * @return array meta
+     */
+    protected function getMeta($context)
+    {
+        $haveException = isset($context['exception'])
+            && (
+                $context['exception'] instanceof \Exception
+                || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable
+            );
+        $metaVals = array();
+        if ($haveException) {
+            $metaVals = array(
+                'backtrace' => $this->debug->errorHandler->backtrace($context['exception']),
+                'file' => $context['exception']->getFile(),
+                'line' => $context['exception']->getLine(),
+            );
+        } else {
+            $callerInfo = $this->debug->utilities->getCallerInfo(1);
+            $metaVals = array(
+                'file' => $callerInfo['file'],
+                'line' => $callerInfo['line'],
+            );
+            foreach (array('file','line') as $key) {
+                if (isset($context[$key])) {
+                    $metaVals[$key] = $context[$key];
+                }
+            }
+        }
+        return $this->debug->meta($metaVals);
     }
 
     /**

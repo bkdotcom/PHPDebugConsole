@@ -30,7 +30,8 @@
 		"php": ">=5.4.0"
 	},
 	"require-dev": {
-		"bdk/css-xpath": "^1.0"
+		"bdk/css-xpath": "^1.0",
+		"psr/log": "^1.0"
 	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",

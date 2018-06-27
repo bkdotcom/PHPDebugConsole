@@ -4,7 +4,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.3
  */
 
 namespace bdk;
@@ -105,26 +105,34 @@ class ErrorHandler
      *
      * To get trace from within shutdown function utilizes xdebug_get_function_stack() if available
      *
-     * @param array $error (optional) error details if getting error backtrace
+     * @param array|Event|Exception $error (optional) error details if getting error backtrace
      *
      * @return array
      */
     public function backtrace($error = null)
     {
-        $isFatalError = $error && \in_array($error['type'], $this->errCategories['fatal']);
-        if ($this->uncaughtException) {
-            $backtrace = $this->uncaughtException->getTrace();
+        $exception = null;
+        $isFatalError = false;
+        if ($error instanceof \Exception) {
+            $exception = $error;
+        } elseif ($error) {
+            // array or Event
+            $exception = $error['exception'];
+            $isFatalError = \in_array($error['type'], $this->errCategories['fatal']);
+        }
+        if ($exception) {
+            $backtrace = $exception->getTrace();
             \array_unshift($backtrace, array(
-                'file' => $this->uncaughtException->getFile(),
-                'line' => $this->uncaughtException->getLine(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
             ));
         } elseif ($isFatalError && \extension_loaded('xdebug')) {
             $backtrace = \xdebug_get_function_stack();
             $backtrace = \array_reverse($backtrace);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
             $errorFileLine = array(
-                'file'=>$error['file'],
-                'line'=>$error['line'],
+                'file' => $error['file'],
+                'line' => $error['line'],
             );
             \array_pop($backtrace);   // pointless entry that xdebug_get_function_stack() includes
             if (empty($backtrace)) {
@@ -134,6 +142,7 @@ class ErrorHandler
                 \array_unshift($backtrace, $errorFileLine);
             }
         } elseif ($isFatalError) {
+            // backtrace unavailable
             $backtrace = array();
         } else {
             $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);

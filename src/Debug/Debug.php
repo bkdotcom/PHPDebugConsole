@@ -104,7 +104,9 @@ class Debug
             'logSummary'        => array(), // summary log entries subgrouped by priority
             'outputSent'        => false,
             'requestId'         => null,
-            'runtime'           => array(),
+            'runtime'           => array(
+                // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
+            ),
             'timers' => array(      // timer method
                 'labels' => array(
                     // label => array(accumulatedTime, lastStartedTime|null)

@@ -107,22 +107,7 @@ class Config
             $cfg = $this->keyValToArray($path, $val);
         }
         $cfg = $this->setCopyValues($cfg);
-        $return = array();
-        foreach ($cfg as $k => $v) {
-            if ($k == 'debug') {
-                $return[$k] = \array_intersect_key($this->cfg, $v);
-                $this->setDebugCfg($v);
-            } elseif (isset($this->debug->{$k}) && \is_object($this->debug->{$k})) {
-                $return[$k] = \array_intersect_key($this->getCfg($k.'/*'), $v);
-                $this->debug->{$k}->setCfg($v);
-            } elseif (isset($this->cfgLazy[$k])) {
-                $return[$k] = $this->cfgLazy[$k];
-                $this->cfgLazy[$k] = \array_merge($this->cfgLazy[$k], $v);
-            } else {
-                $return[$k] = array();
-                $this->cfgLazy[$k] = $v;
-            }
-        }
+        $return = $this->doSetCfg($cfg);
         if (isset($this->cfgLazy['output']['outputAs'])) {
             $lazyPlugins = array('chromeLogger','firephp','html','script','text');
             if (\is_object($this->cfgLazy['output']['outputAs']) || !\in_array($this->cfgLazy['output']['outputAs'], $lazyPlugins)) {
@@ -168,6 +153,34 @@ class Config
         }
         $values['output'] = $isValidKey;
         return $values;
+    }
+
+    /**
+     * Set cfg values for Debug and child classes
+     *
+     * @param array $cfg config values grouped by class
+     *
+     * @return array previous values
+     */
+    private function doSetCfg($cfg)
+    {
+        $return = array();
+        foreach ($cfg as $k => $v) {
+            if ($k == 'debug') {
+                $return[$k] = \array_intersect_key($this->cfg, $v);
+                $this->setDebugCfg($v);
+            } elseif (isset($this->debug->{$k}) && \is_object($this->debug->{$k})) {
+                $return[$k] = \array_intersect_key($this->getCfg($k.'/*'), $v);
+                $this->debug->{$k}->setCfg($v);
+            } elseif (isset($this->cfgLazy[$k])) {
+                $return[$k] = $this->cfgLazy[$k];
+                $this->cfgLazy[$k] = \array_merge($this->cfgLazy[$k], $v);
+            } else {
+                $return[$k] = array();
+                $this->cfgLazy[$k] = $v;
+            }
+        }
+        return $return;
     }
 
     /**
@@ -355,29 +368,48 @@ class Config
             // don't append, replace
             $this->cfg['logServerKeys'] = array();
         }
-        /*
-            Replace - not append - subscriber set via setCfg
-        */
+        $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $cfg);
+        if (isset($cfg['file'])) {
+            $this->debug->addPlugin($this->debug->output->file);
+        }
+        if (isset($cfg['onBootstrap'])) {
+            $this->setDebugOnBootstrap($cfg['onBootstrap']);
+        }
         if (isset($cfg['onLog'])) {
+            /*
+                Replace - not append - subscriber set via setCfg
+            */
             if (isset($this->cfg['onLog'])) {
                 $this->debug->eventManager->unsubscribe('debug.log', $this->cfg['onLog']);
             }
             $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
         }
-        $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $cfg);
-        if (isset($cfg['onBootstrap'])) {
-            $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
-            if ($backtrace[2]['function'] == '__construct') {
-                // we're being called from construct... subscribe
-                $this->debug->eventManager->subscribe('debug.bootstrap', $cfg['onBootstrap']);
-            } else {
-                // boostrap has already occured
-                \call_user_func($cfg['onBootstrap'], new Event($this->debug));
+    }
+
+    /**
+     * Handle setting onBootstrap cfg value
+     *
+     * @param callable $onBootstrap onBoostrap cfg value
+     *
+     * @return void
+     */
+    private function setDebugOnBootstrap($onBootstrap)
+    {
+        $callingFunc = null;
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
+        foreach ($backtrace as $i => $frame) {
+            if ($frame['function'] == 'setCfg') {
+                $callingFunc = $backtrace[$i+1]['function'];
+                break;
             }
-            unset($this->cfg['onBootstrap']);
         }
-        if (isset($cfg['file'])) {
-            $this->debug->addPlugin($this->debug->output->file);
+        if ($callingFunc == '__construct') {
+            // we're being called from construct... subscribe
+            $this->debug->eventManager->subscribe('debug.bootstrap', $onBootstrap);
+        } else {
+            // boostrap has already occured, so go ahead and call
+            \call_user_func($onBootstrap, new Event($this->debug));
         }
+        unset($this->cfg['onBootstrap']);
     }
 }

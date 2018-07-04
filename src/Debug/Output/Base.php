@@ -376,7 +376,7 @@ abstract class Base implements OutputInterface
     {
         $str = '';
         foreach ($this->data['alerts'] as $entry) {
-            $str .= $this->processLogEntryWEvent('alert', array($entry[0]), $entry[1]);
+            $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
         return $str;
     }

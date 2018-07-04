@@ -176,7 +176,9 @@ class DebugTestFramework extends DOMTestCase
         $countPath = $method == 'alert'
             ? 'alerts/__count__'
             : 'log/__count__';
-        $dataPath = 'log/__end__';
+        $dataPath = $method == 'alert'
+            ? 'alerts/__end__'
+            : 'log/__end__';
         $logCountBefore = $this->debug->getData($countPath);
         if (is_array($method)) {
             if (isset($method['dataPath'])) {
@@ -188,10 +190,6 @@ class DebugTestFramework extends DOMTestCase
             $this->line = __LINE__ - 2;
         }
         $logEntry = $this->debug->getData($dataPath);
-        if ($method == 'alert') {
-            $logEntry = $this->debug->getData('alerts/__end__');
-            $logEntry = array('alert', array($logEntry[0]), $logEntry[1]);
-        }
         if (!$tests) {
             $tests = array(
                 'notLogged' => true,

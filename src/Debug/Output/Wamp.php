@@ -143,17 +143,6 @@ class Wamp implements OutputInterface
      */
     public function processLogEntry($method, $args = array(), $meta = array())
     {
-        if ($method == 'clear') {
-            $flags = $meta['flags'];
-            $meta['flags'] = array(
-                'alerts' => (bool) ($flags & Debug::CLEAR_ALERTS),
-                'log' => (bool) ($flags & Debug::CLEAR_LOG),
-                'logErrors' => (bool) ($flags & Debug::CLEAR_LOG_ERRORS),
-                'summary' => (bool) ($flags & Debug::CLEAR_SUMMARY),
-                'summaryErrors' => (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS),
-                'silent' =>  (bool) ($flags & Debug::CLEAR_SILENT),
-            );
-        }
         $meta = \array_merge(array(
             'format' => 'raw',
             'requestId' => $this->requestId,

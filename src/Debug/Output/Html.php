@@ -607,7 +607,8 @@ class Html extends Base
         $errorSummary = $this->errorSummary->build($this->debug->internal->errorStats());
         if ($errorSummary) {
             \array_unshift($this->data['alerts'], array(
-                $errorSummary,
+                'alert',
+                array($errorSummary),
                 array(
                     'class' => 'danger error-summary',
                     'dismissible' => false,
@@ -615,7 +616,7 @@ class Html extends Base
             ));
         }
         foreach ($this->data['alerts'] as $entry) {
-            $str .= $this->processLogEntryWEvent('alert', array($entry[0]), $entry[1]);
+            $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
         return $str;
     }

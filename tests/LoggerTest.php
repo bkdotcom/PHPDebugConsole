@@ -88,7 +88,8 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->alert('Alert');
         $this->assertSame(array(
-            'Alert',
+            'alert',
+            array('Alert'),
             array(
                 'class' => 'danger',
                 'dismissible' => false,

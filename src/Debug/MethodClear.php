@@ -46,10 +46,7 @@ class MethodClear
 	{
         $flags = $event['args'][0];
         $cleared = array();
-        if ($flags & Debug::CLEAR_ALERTS) {
-            $this->data['alerts'] = array();
-            $cleared[] = 'alerts';
-        }
+        $cleared[] = $this->clearAlerts($flags);
         $cleared[] = $this->clearLog($flags);
         $cleared[] = $this->clearSummary($flags);
         if (($flags & Debug::CLEAR_ALL) == Debug::CLEAR_ALL) {
@@ -93,6 +90,23 @@ class MethodClear
         	? 'Cleared '.\implode($glue, $cleared)
         	: '';
 	}
+
+    /**
+     * Clear alerts
+     *
+     * @param integer $flags flags passed to clear()
+     *
+     * @return string|null
+     */
+    private function clearAlerts($flags)
+    {
+        $clearAlerts = $flags & Debug::CLEAR_ALERTS;
+        if (!$clearAlerts) {
+            return null;
+        }
+        $this->data['alerts'] = array();
+        return 'alerts';
+    }
 
     /**
      * Remove error & warn from summary & log

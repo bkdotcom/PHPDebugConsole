@@ -92,7 +92,7 @@ class Debug
             'onLog' => null,    // callable
         );
         $this->data = array(
-            'alerts'            => array(), // array of alerts.  alerts will be shown at top of output when possible
+            'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method
             'entryCountInitial' => 0,       // store number of log entries created during init
             'groupDepth'        => array(0, 0), // 1st: ignores cfg['collect'], 2nd: when cfg['collect']
@@ -269,6 +269,7 @@ class Debug
      */
     public function alert($message, $class = 'danger', $dismissible = false)
     {
+        $this->setLogDest('alerts');
         $this->appendLog(
             'alert',
             array($message),
@@ -277,6 +278,7 @@ class Debug
                 'dismissible' => $dismissible,
             )
         );
+        $this->setLogDest('auto');
     }
 
     /**
@@ -318,10 +320,19 @@ class Debug
     public function clear($flags = self::CLEAR_LOG)
     {
         $args = \func_get_args();
+        $meta = $this->internal->getMetaVals($args);
+        $meta['flags'] = array(
+            'alerts' => (bool) ($flags & Debug::CLEAR_ALERTS),
+            'log' => (bool) ($flags & Debug::CLEAR_LOG),
+            'logErrors' => (bool) ($flags & Debug::CLEAR_LOG_ERRORS),
+            'summary' => (bool) ($flags & Debug::CLEAR_SUMMARY),
+            'summaryErrors' => (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS),
+            'silent' =>  (bool) ($flags & Debug::CLEAR_SILENT),
+        );
         $event = $this->methodClear->onLog(new Event($this, array(
             'method' => 'clear',
             'args' => array($flags),
-            'meta' => $this->internal->getMetaVals($args),
+            'meta' => $meta,
         )));
         // even if cleared from within summary, lets's log this in primary log
         $this->setLogDest('log');
@@ -1061,18 +1072,11 @@ class Debug
         if ($event->isPropagationStopped()) {
             return;
         }
-        if ($method == 'alert') {
-            $this->data['alerts'][] = array(
-                $event->getValue('args')[0],
-                $event->getValue('meta')
-            );
-        } else {
-            $this->logRef[] = array(
-                $event->getValue('method'),
-                $event->getValue('args'),
-                $event->getValue('meta')
-            );
-        }
+        $this->logRef[] = array(
+            $event->getValue('method'),
+            $event->getValue('args'),
+            $event->getValue('meta'),
+        );
     }
 
     /**
@@ -1152,7 +1156,7 @@ class Debug
     /**
      * Set where appendLog appends to
      *
-     * @param string $where ('auto'), 'log', or 'summary'
+     * @param string $where ('auto'), 'alerts', log', or 'summary'
      *
      * @return void
      */
@@ -1166,6 +1170,8 @@ class Debug
         if ($where == 'log') {
             $this->logRef = &$this->data['log'];
             $this->groupDepthRef = &$this->data['groupDepth'];
+        } elseif ($where == 'alerts') {
+            $this->logRef = &$this->data['alerts'];
         } else {
             $priority = \end($this->data['groupSummaryStack']);
             if (!isset($this->data['logSummary'][$priority])) {

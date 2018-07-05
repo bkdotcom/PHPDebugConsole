@@ -54,16 +54,13 @@ class Config
         if (isset($path[1]) && $path[1] === '*') {
             \array_pop($path);
         }
-        $level1 = isset($path[0]) ? $path[0] : null;
-        if ($level1 == 'debug') {
-            \array_shift($path);
+        $first = \array_shift($path);
+        if ($first == 'debug') {
             return $this->debug->utilities->arrayPathGet($this->cfg, $path);
-        } elseif (\is_object($this->debug->{$level1})) {
+        } elseif (\is_object($this->debug->{$first})) {
             // child class config value
-            $pathRel = \count($path) > 1
-                ? \implode('/', \array_slice($path, 1))
-                : null;
-            return $this->debug->{$level1}->getCfg($pathRel);
+            $pathRel = \implode('/', $path);
+            return $this->debug->{$first}->getCfg($pathRel);
         }
     }
 
@@ -101,7 +98,7 @@ class Config
     public function setCfg($pathOrVals, $val = null)
     {
         if (\is_array($pathOrVals)) {
-            $cfg = $this->normalizeCfgArray($pathOrVals);
+            $cfg = $this->normalizeArray($pathOrVals);
         } else {
             $path = $this->normalizePath($pathOrVals);
             $cfg = $this->keyValToArray($path, $val);
@@ -259,7 +256,7 @@ class Config
     }
 
     /**
-     * Normalizes paths..  groups values by class
+     * Normalizes cfg..  groups values by class
      *
      * converts
      *   array(
@@ -276,9 +273,11 @@ class Config
      *
      * @return array
      */
-    private function normalizeCfgArray($cfg)
+    private function normalizeArray($cfg)
     {
-        $return = array();
+        $return = array(
+            'debug' => array(),  // initialize with debug... we want debug values first
+        );
         $configKeys = $this->getConfigKeys();
         foreach ($cfg as $k => $v) {
             $translated = false;
@@ -298,6 +297,9 @@ class Config
             if (!$translated) {
                 $return['debug'][$k] = $v;
             }
+        }
+        if (!$return['debug']) {
+            unset($return['debug']);
         }
         return $return;
     }

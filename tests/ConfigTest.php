@@ -17,7 +17,7 @@ class ConfigTest extends DebugTestFramework
     public function testGetCfg()
     {
         $abstracterKeys = array('collectConstants', 'collectMethods', 'objectsExclude', 'objectSort', 'useDebugInfo');
-        $debugKeys = array('collect', 'file', 'key', 'output', 'errorMask', 'emailFunc', 'emailLog', 'emailTo', 'logEnvInfo', 'logServerKeys', 'onLog',);
+        $debugKeys = array('collect', 'file', 'key', 'output', 'errorMask', 'emailFunc', 'emailLog', 'emailTo', 'logEnvInfo', 'logServerKeys', 'onLog','services');
 
         $this->assertSame(true, $this->debug->getCfg('collect'));
         $this->assertSame(true, $this->debug->getCfg('debug.collect'));

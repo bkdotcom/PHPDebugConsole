@@ -27,25 +27,26 @@ use ReflectionMethod;
  *
  * @property Abstracter   $abstracter   lazy-loaded Abstracter instance
  * @property ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer instance
+ * @property ErrorHandler $errorHandler lazy-loaded ErrorHandler instance
+ * @property EventManager $eventManager lazy-loaded EventManager instance
+ * @property Internal     $internal     lazy-loaded Internal instance
  * @property Logger       $logger       lazy-loaded PSR-3 instance
  * @property MethodClear  $methodClear  lazy-loaded MethodClear instance
  * @property MethodTable  $methodTable  lazy-loaded MethodTable instance
  * @property Output       $output       lazy-loaded Output instance
  * @property Utf8         $utf8         lazy-loaded Utf8 instance
+ * @property Utilities    $utilities    lazy-loaded Utilities instance
  */
 class Debug
 {
 
     private static $instance;
+    private $channels = array();
     protected $cfg = array();
     protected $data = array();
     protected $groupDepthRef;   // points to groupDepth or groupSummaryDepths[priority]
     protected $logRef;          // points to either log or logSummary[priority]
     protected $config;          // config instance
-    public $errorHandler;
-    public $eventManager;
-    public $internal;
-    public $utilities;
 
     const CLEAR_ALERTS = 1;
     const CLEAR_LOG = 2;
@@ -90,7 +91,34 @@ class Debug
             'logEnvInfo' => true,
             'logServerKeys' => array('REQUEST_URI','REQUEST_TIME','HTTP_HOST','SERVER_NAME','SERVER_ADDR','REMOTE_ADDR'),
             'onLog' => null,    // callable
+            'services' => $this->getDefaultServices(),
         );
+        if (!isset(self::$instance)) {
+            /*
+               self::getInstance() will always return initial/first instance
+            */
+            self::$instance = $this;
+            /*
+                Only register autloader:
+                  a. on initial instance (even though re-registering function does't re-register)
+                  b. if we're unable to to find our Config class (must not be using Composer)
+            */
+            if (!\class_exists('\\bdk\\Debug\\Config')) {
+                \spl_autoload_register(array($this, 'autoloader'));
+            }
+        }
+        if ($eventManager) {
+            $cfg['services']['eventManager'] = $eventManager;
+        }
+        if ($errorHandler) {
+            $cfg['services']['errorHandler'] = $errorHandler;
+        }
+        $this->__get('config')->setCfg($cfg);
+        /*
+            When collect=false, E_USER_ERROR will be sent to system_log without halting script
+        */
+        $this->errorHandler->setCfg('onEUserError', 'log');
+        $this->internal;
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method
@@ -103,7 +131,7 @@ class Debug
             'log'               => array(),
             'logSummary'        => array(), // summary log entries subgrouped by priority
             'outputSent'        => false,
-            'requestId'         => null,
+            'requestId'         => $this->utilities->requestId(),
             'runtime'           => array(
                 // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
             ),
@@ -120,46 +148,6 @@ class Debug
                 'stack' => array(),
             ),
         );
-        if (!isset(self::$instance)) {
-            /*
-               self::getInstance() will always return initial/first instance
-            */
-            self::$instance = $this;
-            /*
-                Only register autloader:
-                  a. on initial instance (even though re-registering function does't re-register)
-                  b. if we're unable to to find our Config class (must not be using Composer)
-            */
-            if (!\class_exists('\\bdk\\Debug\\Config')) {
-                \spl_autoload_register(array($this, 'autoloader'));
-            }
-        }
-        /*
-            Initialize child objects
-            (abstracter, errorEmailer, output, & utf8 are lazyloaded)
-        */
-        $this->eventManager = $eventManager
-            ? $eventManager
-            : new EventManager();
-        if ($errorHandler) {
-            $this->errorHandler = $errorHandler;
-        } elseif (ErrorHandler::getInstance()) {
-            $this->errorHandler = ErrorHandler::getInstance();
-        } else {
-            $this->errorHandler = new ErrorHandler($this->eventManager);
-        }
-        /*
-            When collect=false, E_USER_ERROR will be sent to system_log without halting script
-        */
-        $this->errorHandler->setCfg('onEUserError', 'log');
-        $this->utilities = new Debug\Utilities();
-        $this->config = new Debug\Config($this, $this->cfg);    // cfg is passed by reference
-        $this->internal = new Debug\Internal($this);
-        /*
-            Init config and properties
-        */
-        $this->config->setCfg($cfg);
-        $this->data['requestId'] = $this->utilities->requestId();
         $this->setLogDest('log');
         /*
             Publish bootstrap event
@@ -217,33 +205,11 @@ class Debug
      */
     public function __get($property)
     {
-        $services = array(
-            'abstracter' => function () {
-                return new Debug\Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
-            },
-            'errorEmailer' => function () {
-                return new ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
-            },
-            'logger' => function () {
-                return new Debug\Logger($this);
-            },
-            'methodClear' => function () {
-                return new Debug\MethodClear($this, $this->data);
-            },
-            'methodTable' => function () {
-                return new Debug\MethodTable();
-            },
-            'output' => function () {
-                $output = new Debug\Output($this, $this->config->getCfgLazy('output'));
-                $this->eventManager->addSubscriberInterface($output);
-                return $output;
-            },
-            'utf8' => function () {
-                return new Debug\Utf8();
-            },
-        );
-        if (isset($services[$property])) {
-            $val = \call_user_func($services[$property]);
+        if (isset($this->cfg['services'][$property])) {
+            $val = $this->cfg['services'][$property];
+            if (\is_object($val) && \method_exists($val, '__invoke')) {
+                $val = $val($this);
+            }
             $this->{$property} = $val;
             return $val;
         }
@@ -1151,6 +1117,61 @@ class Debug
         }
         $depth += \count($this->data['groupSummaryStack']);
         return $depth;
+    }
+
+    /**
+     * Set "container" services
+     *
+     * @return array
+     */
+    private function getDefaultServices()
+    {
+        return array(
+            'abstracter' => function () {
+                return new Debug\Abstracter($this->eventManager, $this->config->getCfgLazy('abstracter'));
+            },
+            'config' => function () {
+                return new Debug\Config($this, $this->cfg);    // cfg is passed by reference
+            },
+            'errorEmailer' => function () {
+                return new ErrorEmailer($this->config->getCfgLazy('errorEmailer'));
+            },
+            'errorHandler' => function () {
+                if (ErrorHandler::getInstance()) {
+                    return ErrorHandler::getInstance();
+                } else {
+                    return new ErrorHandler($this->eventManager);
+                }
+            },
+            'eventManager' => function () {
+                return new EventManager();
+            },
+            'internal' => function () {
+                return new Debug\Internal($this);
+            },
+            'logger' => function () {
+                return new Debug\Logger($this, array(
+                    'channel' => $this->cfg['channel'],
+                ));
+            },
+            'methodClear' => function () {
+                return new Debug\MethodClear($this, $this->data);
+            },
+            'methodTable' => function () {
+                return new Debug\MethodTable();
+            },
+            'output' => function () {
+                $output = new Debug\Output($this, $this->config->getCfgLazy('output'));
+                $this->eventManager->addSubscriberInterface($output);
+                return $output;
+            },
+            'utf8' => function () {
+                return new Debug\Utf8();
+            },
+            'utilities' => function () {
+                return new Debug\Utilities();
+            },
+        );
     }
 
     /**

@@ -183,7 +183,7 @@ class ErrorHandler
      */
     public function getCfg($key = null)
     {
-        if ($key === null) {
+        if (!\strlen($key)) {
             return $this->cfg;
         }
         if (isset($this->cfg[$key])) {

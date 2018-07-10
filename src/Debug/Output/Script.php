@@ -75,6 +75,44 @@ class Script extends Base
     }
 
     /**
+     * Return log entry as javascript console.xxxx
+     *
+     * @param string $method method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return string
+     */
+    public function processLogEntry($method, $args = array(), $meta = array())
+    {
+        if ($method == 'alert') {
+            list($method, $args) = $this->methodAlert($args, $meta);
+        } elseif ($method == 'assert') {
+            \array_unshift($args, false);
+        } elseif (\in_array($method, array('count','time'))) {
+            $method = 'log';
+        } elseif ($method == 'table') {
+            $args = array($this->methodTable($args[0], $meta['columns']));
+        } elseif ($method == 'trace') {
+            $method = 'table';
+            $args = array($this->methodTable($args[0], array('function','file','line')));
+        } elseif (\in_array($method, array('error','warn'))) {
+            if (isset($meta['file'])) {
+                $args[] = $meta['file'].': line '.$meta['line'];
+            }
+        }
+        if (!\in_array($method, $this->consoleMethods)) {
+            $method = 'log';
+        }
+        foreach ($args as $k => $arg) {
+            $args[$k] = \json_encode($this->dump($arg));
+        }
+        $str = 'console.'.$method.'('.\implode(',', $args).');'."\n";
+        $str = \str_replace(\json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
+        return $str;
+    }
+
+    /**
      * Dump undefined
      *
      * Returns the undefined constant, which we can replace with "undefined" after json_encoding
@@ -131,43 +169,5 @@ class Script extends Base
                 break;
         }
         return array($method, $args);
-    }
-
-    /**
-     * Return log entry as javascript console.xxxx
-     *
-     * @param string $method method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
-     *
-     * @return string
-     */
-    protected function processLogEntry($method, $args = array(), $meta = array())
-    {
-        if ($method == 'alert') {
-            list($method, $args) = $this->methodAlert($args, $meta);
-        } elseif ($method == 'assert') {
-            \array_unshift($args, false);
-        } elseif (\in_array($method, array('count','time'))) {
-            $method = 'log';
-        } elseif ($method == 'table') {
-            $args = array($this->methodTable($args[0], $meta['columns']));
-        } elseif ($method == 'trace') {
-            $method = 'table';
-            $args = array($this->methodTable($args[0], array('function','file','line')));
-        } elseif (\in_array($method, array('error','warn'))) {
-            if (isset($meta['file'])) {
-                $args[] = $meta['file'].': line '.$meta['line'];
-            }
-        }
-        if (!\in_array($method, $this->consoleMethods)) {
-            $method = 'log';
-        }
-        foreach ($args as $k => $arg) {
-            $args[$k] = \json_encode($this->dump($arg));
-        }
-        $str = 'console.'.$method.'('.\implode(',', $args).');'."\n";
-        $str = \str_replace(\json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
-        return $str;
     }
 }

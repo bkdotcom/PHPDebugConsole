@@ -105,6 +105,17 @@ abstract class Base implements OutputInterface
     abstract public function onOutput(Event $event);
 
     /**
+     * Process log entry without publishing `debug.outputLogEntry` event
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return mixed
+     */
+    abstract public function processLogEntry($method, $args = array(), $meta = array());
+
+    /**
      * Get name property
      *
      * @return string
@@ -395,17 +406,6 @@ abstract class Base implements OutputInterface
         }
         return $str;
     }
-
-    /**
-     * Process log entry without publishing `debug.outputLogEntry` event
-     *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
-     *
-     * @return mixed
-     */
-    abstract protected function processLogEntry($method, $args = array(), $meta = array());
 
     /**
      * Publish debug.outputLogEntry.

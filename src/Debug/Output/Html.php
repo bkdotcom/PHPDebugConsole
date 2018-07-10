@@ -220,6 +220,78 @@ class Html extends Base
     }
 
     /**
+     * Return a log entry as HTML
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return string|void
+     */
+    public function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $str = '';
+        if (!\in_array($meta['channel'], $this->channels)) {
+            $this->channels[] = $meta['channel'];
+        }
+        if ($meta['channel'] === $this->channelNameNoOutput) {
+            $meta['channel'] = null;
+        }
+        if ($method == 'alert') {
+            $str = $this->methodAlert($args, $meta);
+        } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+            $str = $this->buildGroupMethod($method, $args, $meta);
+        } elseif ($method == 'table') {
+            $str = $this->buildTable(
+                $args[0],
+                $meta['caption'],
+                $meta['columns'],
+                array(
+                    'class' => 'm_table table-bordered sortable',
+                    'data-channel' => $meta['channel'],
+                )
+            );
+        } elseif ($method == 'trace') {
+            $str = $this->buildTable(
+                $args[0],
+                'trace',
+                array('file','line','function'),
+                array(
+                    'class' => 'm_trace table-bordered',
+                    'data-channel' => $meta['channel'],
+                )
+            );
+        } else {
+            $attribs = array(
+                'class' => 'm_'.$method,
+                'data-channel' => $meta['channel'],
+                'title' => isset($meta['file'])
+                    ? $meta['file'].': line '.$meta['line']
+                    : null,
+            );
+            if (\in_array($method, array('assert','error','info','log','warn'))) {
+                if (\in_array($method, array('error','warn'))) {
+                    if (isset($meta['errorCat'])) {
+                        $attribs['class'] .= ' error-'.$meta['errorCat'];
+                    }
+                }
+                if (\count($args) > 1 && \is_string($args[0])) {
+                    $hasSubs = false;
+                    $args = $this->processSubstitutions($args, $hasSubs);
+                    if ($hasSubs) {
+                        $args = array( \implode('', $args) );
+                    }
+                }
+            }
+            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
+                .$this->buildArgString($args)
+                .'</div>';
+        }
+        $str .= "\n";
+        return $str;
+    }
+
+    /**
      * Convert all arguments to html and join them together.
      *
      * @param array $args arguments
@@ -624,78 +696,6 @@ class Html extends Base
         foreach ($this->data['alerts'] as $entry) {
             $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
-        return $str;
-    }
-
-    /**
-     * Return a log entry as HTML
-     *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
-     *
-     * @return string|void
-     */
-    protected function processLogEntry($method, $args = array(), $meta = array())
-    {
-        $str = '';
-        if (!\in_array($meta['channel'], $this->channels)) {
-            $this->channels[] = $meta['channel'];
-        }
-        if ($meta['channel'] === $this->channelNameNoOutput) {
-            $meta['channel'] = null;
-        }
-        if ($method == 'alert') {
-            $str = $this->methodAlert($args, $meta);
-        } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $str = $this->buildGroupMethod($method, $args, $meta);
-        } elseif ($method == 'table') {
-            $str = $this->buildTable(
-                $args[0],
-                $meta['caption'],
-                $meta['columns'],
-                array(
-                    'class' => 'm_table table-bordered sortable',
-                    'data-channel' => $meta['channel'],
-                )
-            );
-        } elseif ($method == 'trace') {
-            $str = $this->buildTable(
-                $args[0],
-                'trace',
-                array('file','line','function'),
-                array(
-                    'class' => 'm_trace table-bordered',
-                    'data-channel' => $meta['channel'],
-                )
-            );
-        } else {
-            $attribs = array(
-                'class' => 'm_'.$method,
-                'data-channel' => $meta['channel'],
-                'title' => isset($meta['file'])
-                    ? $meta['file'].': line '.$meta['line']
-                    : null,
-            );
-            if (\in_array($method, array('assert','error','info','log','warn'))) {
-                if (\in_array($method, array('error','warn'))) {
-                    if (isset($meta['errorCat'])) {
-                        $attribs['class'] .= ' error-'.$meta['errorCat'];
-                    }
-                }
-                if (\count($args) > 1 && \is_string($args[0])) {
-                    $hasSubs = false;
-                    $args = $this->processSubstitutions($args, $hasSubs);
-                    if ($hasSubs) {
-                        $args = array( \implode('', $args) );
-                    }
-                }
-            }
-            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
-                .$this->buildArgString($args)
-                .'</div>';
-        }
-        $str .= "\n";
         return $str;
     }
 

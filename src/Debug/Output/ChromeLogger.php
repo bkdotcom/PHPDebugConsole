@@ -90,6 +90,44 @@ class ChromeLogger extends Base
     }
 
     /**
+     * Process log entry
+     *
+     * Transmogrify log entry to chromelogger format
+     *
+     * @param string $method method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return void
+     */
+    public function processLogEntry($method, $args = array(), $meta = array())
+    {
+        if ($method === 'alert') {
+            list($method, $args) = $this->methodAlert($args, $meta);
+        } elseif ($method == 'assert') {
+            \array_unshift($args, false);
+        } elseif (\in_array($method, array('count','time'))) {
+            $method = 'log';
+        } elseif ($method === 'table') {
+            $args = array($this->methodTable($args[0], $meta['columns']));
+        } elseif ($method === 'trace') {
+            $method = 'table';
+            $args = array($this->methodTable($args[0], array('function','file','line')));
+        }
+        if (!\in_array($method, $this->consoleMethods)) {
+            $method = 'log';
+        }
+        foreach ($args as $i => $arg) {
+            $args[$i] = $this->dump($arg);
+        }
+        $this->json['rows'][] = array(
+            $args,
+            isset($meta['file']) ? $meta['file'].': '.$meta['line'] : null,
+            $method === 'log' ? '' : $method,
+        );
+    }
+
+    /**
      * Encode data for header
      *
      * @param array $data log data
@@ -146,43 +184,5 @@ class ChromeLogger extends Base
                 break;
         }
         return array($method, $args);
-    }
-
-    /**
-     * Process log entry
-     *
-     * Transmogrify log entry to chromelogger format
-     *
-     * @param string $method method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
-     *
-     * @return void
-     */
-    protected function processLogEntry($method, $args = array(), $meta = array())
-    {
-        if ($method === 'alert') {
-            list($method, $args) = $this->methodAlert($args, $meta);
-        } elseif ($method == 'assert') {
-            \array_unshift($args, false);
-        } elseif (\in_array($method, array('count','time'))) {
-            $method = 'log';
-        } elseif ($method === 'table') {
-            $args = array($this->methodTable($args[0], $meta['columns']));
-        } elseif ($method === 'trace') {
-            $method = 'table';
-            $args = array($this->methodTable($args[0], array('function','file','line')));
-        }
-        if (!\in_array($method, $this->consoleMethods)) {
-            $method = 'log';
-        }
-        foreach ($args as $i => $arg) {
-            $args[$i] = $this->dump($arg);
-        }
-        $this->json['rows'][] = array(
-            $args,
-            isset($meta['file']) ? $meta['file'].': '.$meta['line'] : null,
-            $method === 'log' ? '' : $method,
-        );
     }
 }

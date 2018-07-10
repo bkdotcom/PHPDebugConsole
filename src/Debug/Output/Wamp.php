@@ -134,6 +134,30 @@ class Wamp implements OutputInterface
     }
 
     /**
+     * Publish WAMP message to topic
+     *
+     * @param string $method debug method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return void
+     */
+    public function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $meta = \array_merge(array(
+            'format' => 'raw',
+            'requestId' => $this->requestId,
+        ), $meta);
+        if ($meta['format'] == 'raw') {
+            $args = $this->crateValues($args);
+        }
+        if (!empty($meta['backtrace'])) {
+            $meta['backtrace'] = $this->crateValues($meta['backtrace']);
+        }
+        $this->wamp->publish($this->topic, array($method, $args, $meta));
+    }
+
+    /**
      * JSON doesn't handle binary well (at all)
      *     a) strings with invalid utf-8 can't be json_encoded
      *     b) "javascript has a unicode problem" / will munge strings
@@ -182,30 +206,6 @@ class Wamp implements OutputInterface
         foreach ($data['log'] as $entry) {
             $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
-    }
-
-    /**
-     * Publish WAMP message to topic
-     *
-     * @param string $method debug method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
-     *
-     * @return void
-     */
-    protected function processLogEntry($method, $args = array(), $meta = array())
-    {
-        $meta = \array_merge(array(
-            'format' => 'raw',
-            'requestId' => $this->requestId,
-        ), $meta);
-        if ($meta['format'] == 'raw') {
-            $args = $this->crateValues($args);
-        }
-        if (!empty($meta['backtrace'])) {
-            $meta['backtrace'] = $this->crateValues($meta['backtrace']);
-        }
-        $this->wamp->publish($this->topic, array($method, $args, $meta));
     }
 
     /**

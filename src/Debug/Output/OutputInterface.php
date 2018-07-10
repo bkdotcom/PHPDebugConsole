@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @version   v2.1
  */
 
 namespace bdk\Debug\Output;
@@ -28,4 +28,15 @@ interface OutputInterface extends SubscriberInterface
      * @return array|string
      */
 	public function dump($val, $path = array());
+
+    /**
+     * Process log entry without publishing `debug.outputLogEntry` event
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return mixed
+     */
+    public function processLogEntry($method, $args = array(), $meta = array());
 }

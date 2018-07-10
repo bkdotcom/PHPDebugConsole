@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.2
+ * @version   v2.3
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -41,6 +41,9 @@ class Internal implements SubscriberInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
+        if ($debug->getCfg('parent')) {
+            return;
+        }
         $this->debug->eventManager->addSubscriberInterface($this);
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
@@ -225,11 +228,14 @@ class Internal implements SubscriberInterface
      * all meta args are merged together and returned
      * meta args are removed from passed args
      *
-     * @param array $args args to check
+     * @param array $args        args to check
+     * @param array $defaultMeta default meta values
+     * @param array $defaultArgs default arg values
+     * @param array $argsToMeta  args to convert to meta
      *
-     * @return array meta information
+     * @return array meta values
      */
-    public static function getMetaVals(&$args)
+    public static function getMetaVals(&$args, $defaultMeta = array(), $defaultArgs = array(), $argsToMeta = array())
     {
         $meta = array();
         foreach ($args as $i => $v) {
@@ -240,6 +246,21 @@ class Internal implements SubscriberInterface
             }
         }
         $args = \array_values($args);
+        if ($defaultArgs) {
+            $args = \array_slice($args, 0, \count($defaultArgs));
+            $args = \array_combine(
+                \array_keys($defaultArgs),
+                \array_replace(\array_values($defaultArgs), $args)
+            );
+        }
+        foreach ($argsToMeta as $argk => $metak) {
+            if (\is_int($argk)) {
+                $argk = $metak;
+            }
+            $defaultMeta[$metak] = $args[$argk];
+            unset($args[$argk]);
+        }
+        $meta = \array_merge($defaultMeta, $meta);
         return $meta;
     }
 

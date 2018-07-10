@@ -249,7 +249,7 @@ class ErrorHandler
         if ($continueToPrev && !$error->isPropagationStopped()) {
             return \call_user_func($this->prevErrorHandler, $error['type'], $error['message'], $error['file'], $error['line'], $vars);
         }
-        if ($error['type'] === E_USER_ERROR) {
+        if (\in_array($error['type'], array(E_USER_ERROR, E_RECOVERABLE_ERROR))) {
             $this->onEUserError($error);
         }
         if ($error['continueToNormal']) {

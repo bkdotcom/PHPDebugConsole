@@ -9,18 +9,26 @@ class LoggerTest extends DebugTestFramework
     public function testEmergency()
     {
         $this->debug->logger->emergency('Emergency broadcast system');
-        $info = array('file' => __FILE__, 'line' => __LINE__ - 1);
+        $meta = array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 3,
+            'psr3level' => 'emergency',
+        );
         $this->assertSame(array(
             'error',
             array('Emergency broadcast system'),
-            $info,
+            $meta,
         ), $this->debug->getData('log/0'));
     }
 
     public function testCritical()
     {
         $this->debug->logger->critical('Critical test');
-        $metaExpect = array('file' => __FILE__, 'line' => __LINE__ - 1);
+        $metaExpect = array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 3,
+            'psr3level' => 'critical',
+        );
         $this->assertSame(array(
             'error',
             array('Critical test'),
@@ -54,33 +62,45 @@ class LoggerTest extends DebugTestFramework
     public function testError()
     {
         $this->debug->logger->error('Error test');
-        $info = array('file' => __FILE__, 'line' => __LINE__ - 1);
+        $meta = array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 3,
+            'psr3level' => 'error',
+        );
         $this->assertSame(array(
             'error',
             array('Error test'),
-            $info,
+            $meta,
         ), $this->debug->getData('log/0'));
     }
 
     public function testWarning()
     {
         $this->debug->logger->warning('You\'ve been warned');
-        $info = array('file' => __FILE__, 'line' => __LINE__ - 1);
+        $meta = array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 3,
+            'psr3level' => 'warning',
+        );
         $this->assertSame(array(
             'warn',
             array('You\'ve been warned'),
-            $info,
+            $meta,
         ), $this->debug->getData('log/0'));
     }
 
     public function testNotice()
     {
         $this->debug->logger->notice('Final Notice');
-        $info = array('file' => __FILE__, 'line' => __LINE__ - 1);
+        $meta = array(
+            'file' => __FILE__,
+            'line' => __LINE__ - 3,
+            'psr3level' => 'notice',
+        );
         $this->assertSame(array(
             'warn',
             array('Final Notice'),
-            $info,
+            $meta,
         ), $this->debug->getData('log/0'));
     }
 

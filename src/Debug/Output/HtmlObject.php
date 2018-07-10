@@ -14,16 +14,16 @@ namespace bdk\Debug\Output;
 use bdk\Debug;
 
 /**
- * Output log as HTML
+ * Output object as HTML
  */
 class HtmlObject
 {
 
 	/**
-	 * Constructor
-	 *
-	 * @param \bdk\Debug $debug Debug instance
-	 */
+     * Constructor
+     *
+     * @param \bdk\Debug $debug Debug instance
+     */
 	public function __construct(Debug $debug)
 	{
 		$this->debug = $debug;
@@ -88,7 +88,7 @@ class HtmlObject
             $val = $abs['methods']['__toString']['returnValue'];
         }
         if (!$val) {
-        	return '';
+            return '';
         }
         $valAppend = '';
         $len = \strlen($val);

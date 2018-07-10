@@ -23,9 +23,10 @@ abstract class Base implements OutputInterface
 {
 
     public $debug;
+    protected $data = array();
+    protected $channelName = '';    // should be set by onOutput
     protected $dumpType;
     protected $dumpTypeMore;
-    protected $data = array();
     protected $name = '';
 
     /**
@@ -396,6 +397,17 @@ abstract class Base implements OutputInterface
     }
 
     /**
+     * Process log entry without publishing `debug.outputLogEntry` event
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return mixed
+     */
+    abstract protected function processLogEntry($method, $args = array(), $meta = array());
+
+    /**
      * Publish debug.outputLogEntry.
      * Return event['return'] not not empty
      * Otherwise, propagation not stopped, return result of processLogEntry()
@@ -408,6 +420,9 @@ abstract class Base implements OutputInterface
      */
     protected function processLogEntryWEvent($method, $args = array(), $meta = array())
     {
+        if (!isset($meta['channel'])) {
+            $meta['channel'] = $this->channelName;
+        }
         $event = $this->debug->eventManager->publish(
             'debug.outputLogEntry',
             $this,

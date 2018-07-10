@@ -59,7 +59,7 @@ class Event implements ArrayAccess, IteratorAggregate
         return array(
             'propagationStopped' => $this->propagationStopped,
             'subject' => \is_object($this->subject)
-                ? get_class($this->subject)
+                ? \get_class($this->subject)
                 : $this->subject,
             'values' => $this->values,
         );

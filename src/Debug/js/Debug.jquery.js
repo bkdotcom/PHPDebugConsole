@@ -123,8 +123,8 @@
 					// only enhance root log entries
 					// enhance collapsed/hidden entries when expanded
 					enhanceEntries($self.find("> .debug-header, > .debug-content"));
-					// expandErrors($self); // handled by enhanceGroupHeader()
-					$self.find(".loading").hide();
+					$self.find(".channels").show();
+					$self.find(".loading").addClass("hidden");
 					$self.addClass("enhanced");
 				} else {
 					// console.log("enhancing node");
@@ -195,9 +195,9 @@
 
 	function groupErrorIconGet($container) {
 		var icon = "";
-		if ($container.find(".m_error").not(".hide").length) {
+		if ($container.find(".m_error").not(".hidden").length) {
 			icon = options.iconsMethods[".m_error"];
-		} else if ($container.find(".m_warn").not(".hide").length) {
+		} else if ($container.find(".m_warn").not(".hidden").length) {
 			icon = options.iconsMethods[".m_warn"];
 		}
 		return icon;
@@ -214,15 +214,15 @@
 	function collapse($toggle, immediate) {
 		if ($toggle.is("[data-toggle=array]")) {
 			// show and use the "expand it" toggle as reference toggle
-			$toggle = $toggle.closest(".t_array").prev().show();
-			$toggle.next().hide();
+			$toggle = $toggle.closest(".t_array").prev().removeClass("hidden");
+			$toggle.next().addClass("hidden");
 		} else {
 			if ($toggle.is("[data-toggle=group]")) {
 				groupErrorIconChange($toggle);
 			}
 			$toggle.removeClass("expanded");
 			if (immediate) {
-				$toggle.next().hide();
+				$toggle.next().addClass("hidden");
 				toggleIconChange($toggle, options.classes.expand);
 			} else {
 				$toggle.next().slideUp("fast", function() {
@@ -253,8 +253,8 @@
 			$self.addClass("enhanced");
 			if ( $.trim( $self.find(".array-inner").html() ).length < 1 ) {
 				// empty array -> don't add expand/collapse
-				$self.find("br").hide();
-				$self.find(".array-inner").hide();
+				$self.find("br").addClass("hidden");
+				$self.find(".array-inner").addClass("hidden");
 				return;
 			}
 			// add collapse link
@@ -264,9 +264,9 @@
 				parent().next().remove();	// remove original "("
 			if ( !isDirect && $self.parents(".t_array, .t_object").length < 1 ) {
 				// outermost array -> leave open
-				$self.before($expander.hide());
+				$self.before($expander.addClass("hidden"));
 			} else {
-				$self.hide().before($expander);
+				$self.addClass("hidden").before($expander);
 			}
 		});
 	}
@@ -276,19 +276,23 @@
 		var $errorSummary = $root.find(".alert.error-summary");
 		$errorSummary.find("h3:first-child").prepend(options.iconsMethods[".m_error"]);
 		$errorSummary.find("li[class*=error-]").each( function() {
-			var html = $(this).html(),
-				htmlNew = '<label><input type="checkbox" checked data-toggle="error"/> ' + html + "</label>";
-			$(this).html(htmlNew);
+			var classAttr = $(this).attr("class"),
+				html = $(this).html(),
+				htmlNew = '<label>' +
+					'<input type="checkbox" checked data-toggle="error" value="' + classAttr + '" /> ' +
+					html +
+					'</label>';
+			$(this).html(htmlNew).removeAttr("class");
 		});
 	}
 
 	function enhanceEntries($root) {
 		// console.log("enhanceEntries", $root);
-		$root.hide();
+		$root.addClass("hidden");
 		$root.children().not(".m_group").each(function(){
 			enhanceEntry($(this));
 		});
-		$root.show();
+		$root.removeClass("hidden").show();	// also calling show() as display:none set serverside
 	}
 
 	function enhanceEntry($root) {
@@ -348,7 +352,7 @@
 			toggleIconChange($toggle, options.classes.empty);
 			return;
 		}
-		if ($toggle.hasClass("expanded") || $target.find(".m_error, .m_warn").not(".hide").length) {
+		if ($toggle.hasClass("expanded") || $target.find(".m_error, .m_warn").not(".hidden").length) {
 			expand($toggle);
 		} else {
 			collapse($toggle, true);
@@ -375,7 +379,7 @@
 			}
 			$toggle.append(' <i class="fa ' + options.classes.expand + '"></i>');
 			$toggle.attr("data-toggle", "object");
-			$target.hide();
+			$target.addClass("hidden");
 		});
 	}
 
@@ -393,7 +397,7 @@
 				"hide",
 			visToggles = "",
 			hiddenInterfaces = [];
-		if ($inner.find(".method[data-implements]").hide().length) {
+		if ($inner.find(".method[data-implements]").addClass("hidden").length) {
 			// linkify visibility
 			$inner.find(".method[data-implements]").each( function() {
 				var iface = $(this).data("implements");
@@ -412,7 +416,7 @@
 			});
 		}
 		if (accessible === "public") {
-			$wrapper.find(".private, .protected").hide();
+			$wrapper.find(".private, .protected").addClass("hidden");
 		}
 		if (hasProtected) {
 			visToggles += ' <span class="toggle-protected '+toggleClass+'">' + toggleVerb + " protected</span>";
@@ -460,8 +464,8 @@
 		if ($toggle.is("[data-toggle=array]")) {
 			// hide the toggle..  there is a different toggle in the expanded version
 			enhanceArrays($target);
-			$toggle.hide();
-			$target.show();
+			$toggle.addClass("hidden");
+			$target.removeClass("hidden");
 		} else {
 			$target.slideDown("fast", function(){
 				$toggle.addClass("expanded");
@@ -469,12 +473,6 @@
 			});
 		}
 	}
-
-	/*
-	function expandErrors($root) {
-		$root.find(".m_error, .m_warn").not(".hide").parents(".m_group").prev().not(".expanded").debugEnhance("expand");
-	}
-	*/
 
 	function toggleCollapse(toggle) {
 		var $toggle = $(toggle);
@@ -505,10 +503,10 @@
 			$methods = $(toggle).closest(".t_object").find("> .object-inner > dd[data-implements="+iface+"]");
 		if ($(toggle).hasClass("toggle-off")) {
 			$toggle.addClass("toggle-on").removeClass("toggle-off");
-			$methods.show();
+			$methods.removeClass("hidden");
 		} else {
 			$toggle.addClass("toggle-off").removeClass("toggle-on");
-			$methods.hide();
+			$methods.addClass("hidden");
 		}
 	}
 
@@ -523,14 +521,14 @@
 				html(iconTag + "hide "+vis).
 				addClass("toggle-on").
 				removeClass("toggle-off");
-			$(toggle).closest(".t_object").find("."+vis).show();
+			$(toggle).closest(".t_object").find("."+vis).removeClass("hidden");
 		} else {
 			// hide for this and all descendants
 			$toggles.
 				html(iconTag + "show "+vis).
 				addClass("toggle-off").
 				removeClass("toggle-on");
-			$(toggle).closest(".t_object").find("."+vis).hide();
+			$(toggle).closest(".t_object").find("."+vis).addClass("hidden");
 		}
 	}
 
@@ -670,8 +668,18 @@
 			$(this).parent().remove();
 		});
 
+		$root.on("change", "input[data-toggle=channel]", function(){
+			var channel = $(this).val(),
+				$nodes = $root.find(".enhanced[data-channel="+channel+"]");
+			if ($(this).is(":checked")) {
+				$nodes.removeClass("hidden");
+			} else {
+				$nodes.addClass("hidden");
+			}
+		});
+
 		$root.on("change", "input[data-toggle=error]", function(){
-			var className = $(this).closest("li").attr("class"),
+			var className = $(this).val(),
 				selector = ".debug-header ." + className +", .debug-content ."+className;
 			$root.find(selector).toggle( $(this).is(":checked") );
 			// update icon for all groups having nested error

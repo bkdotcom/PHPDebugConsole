@@ -113,6 +113,18 @@ class DebugTestFramework extends DOMTestCase
     public function tearDown()
     {
         $this->debug->setCfg('output', false);
+        $subscribers = $this->debug->eventManager->getSubscribers('debug.output');
+        foreach ($subscribers as $subscriber) {
+            $unsub = false;
+            if ($subscriber instanceof \Closure) {
+                $unsub = true;
+            } elseif (is_array($subscriber) && strpos(get_class($subscriber[0]), 'bdk\\Debug') === false) {
+                $unsub = true;
+            }
+            if ($unsub) {
+                $this->debug->eventManager->unsubscribe('debug.output', $subscriber);
+            }
+        }
         $subscribers = $this->debug->eventManager->getSubscribers('debug.outputLogEntry');
         foreach ($subscribers as $subscriber) {
             $this->debug->eventManager->unsubscribe('debug.outputLogEntry', $subscriber);
@@ -241,14 +253,11 @@ class DebugTestFramework extends DOMTestCase
                     $output = json_encode($output);
                 }
             } elseif ($test == 'firephp') {
-                // $outputObj->processLogEntry($logEntry[0], $logEntry[1], $logEntry[2]);
                 $output = \implode("\n", $outputObj->lastHeadersSent);
                 // @todo assert that header integer increments
                 if (is_string($outputExpect)) {
                     $outputExpect = preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
                 }
-            } else {
-                // $output = $outputObj->processLogEntryWEvent($logEntry[0], $logEntry[1], $logEntry[2]);
             }
             if (\is_callable($outputExpect)) {
                 $outputExpect($output);

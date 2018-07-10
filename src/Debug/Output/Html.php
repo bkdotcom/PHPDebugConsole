@@ -25,6 +25,8 @@ class Html extends Base
 
     protected $errorSummary;
     protected $wrapAttribs = array();
+    protected $channels = array();
+    protected $channelNameNoOutput = '';
 
     /**
      * Constructor
@@ -35,6 +37,13 @@ class Html extends Base
     {
         $this->errorSummary = new HtmlErrorSummary($this, $debug->errorHandler);
         parent::__construct($debug);
+        /*
+            set channelName & channelNameNoOutput here... unit tests don't call onOutput
+        */
+        $this->channelName = $this->debug->getCfg('channel');
+        if (!$this->debug->getCfg('parent')) {
+            $this->channelNameNoOutput = $this->channelName;
+        }
     }
 
     /**
@@ -43,11 +52,11 @@ class Html extends Base
      * @param array  $rows    array of \Traversable
      * @param string $caption optional caption
      * @param array  $columns columns to display
-     * @param string $class   table's class attribute
+     * @param array  $attribs default attributes
      *
      * @return string
      */
-    public function buildTable($rows, $caption = null, $columns = array(), $class = '')
+    public function buildTable($rows, $caption = null, $columns = array(), $attribs = array())
     {
         if (!\is_array($rows) || empty($rows)) {
             // empty array/value
@@ -75,9 +84,11 @@ class Html extends Base
         if (!$this->tableInfo['haveObjRow']) {
             $tBody = \str_replace('<td class="t_classname"></td>', '', $tBody);
         }
-        $attribs = array(
-            'class' => $class,
-        );
+        if (\is_string($attribs)) {
+            $attribs = array(
+                'class' => $attribs,
+            );
+        }
         return '<table'.$this->debug->utilities->buildAttribString($attribs).'>'."\n"
             .($caption ? '<caption>'.$caption.'</caption>'."\n" : '')
             .'<thead>'
@@ -168,6 +179,10 @@ class Html extends Base
      */
     public function onOutput(Event $event)
     {
+        $this->channelName = $this->debug->getCfg('channel');
+        if (!$this->debug->getCfg('parent')) {
+            $this->channelNameNoOutput = $this->channelName;
+        }
         $this->data = $this->debug->getData();
         $str = '<div class="debug">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
@@ -181,12 +196,13 @@ class Html extends Base
                 .'</script>'."\n";
         }
         $str .= '<div class="debug-bar"><h3>Debug Log</h3></div>'."\n";
+        $str .= '{{channelToggles}}'; // initially display:none;
         $str .= $this->processAlerts();
         /*
             If outputing script, initially hide the output..
             this will help page load performance (fewer redraws)... by magnitudes
         */
-        if ($this->debug->getCfg('outputScript')) {
+        if ($this->debug->getCfg('output.outputScript')) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>'."\n";
         }
         $str .= '<div class="debug-header m_group"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
@@ -196,57 +212,11 @@ class Html extends Base
         $str .= $this->processLog();
         $str .= '</div>'."\n";  // close .debug-content
         $str .= '</div>'."\n";  // close .debug
+        $str = \strtr($str, array(
+            '{{channelToggles}}' => $this->getChannelToggles(),
+        ));
         $this->data = array();
         $event['return'] .= $str;
-    }
-
-    /**
-     * Return a log entry as HTML
-     *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
-     *
-     * @return string|void
-     */
-    public function processLogEntry($method, $args = array(), $meta = array())
-    {
-        $str = '';
-        if ($method == 'alert') {
-            $str = $this->methodAlert($args, $meta);
-        } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $str = $this->buildGroupMethod($method, $args, $meta);
-        } elseif ($method == 'table') {
-            $str = $this->buildTable($args[0], $meta['caption'], $meta['columns'], 'm_table table-bordered sortable');
-        } elseif ($method == 'trace') {
-            $str = $this->buildTable($args[0], 'trace', array('file','line','function'), 'm_trace table-bordered');
-        } else {
-            $attribs = array(
-                'class' => 'm_'.$method,
-            );
-            if (isset($meta['file'])) {
-                $attribs['title'] = $meta['file'].': line '.$meta['line'];
-            }
-            if (\in_array($method, array('error','info','log','warn'))) {
-                if (\in_array($method, array('error','warn'))) {
-                    if (isset($meta['errorCat'])) {
-                        $attribs['class'] .= ' error-'.$meta['errorCat'];
-                    }
-                }
-                if (\count($args) > 1 && \is_string($args[0])) {
-                    $hasSubs = false;
-                    $args = $this->processSubstitutions($args, $hasSubs);
-                    if ($hasSubs) {
-                        $args = array( \implode('', $args) );
-                    }
-                }
-            }
-            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
-                .$this->buildArgString($args)
-                .'</div>';
-        }
-        $str .= "\n";
-        return $str;
     }
 
     /**
@@ -303,6 +273,7 @@ class Html extends Base
                         ? 'collapsed'
                         : 'expanded',
                 ),
+                'data-channel' => $meta['channel'],
             )).'>'
                 .'<span class="group-label">'
                     .$label
@@ -561,6 +532,37 @@ class Html extends Base
     }
 
     /**
+     * Display channel checkboxes
+     *
+     * @return string
+     */
+    protected function getChannelToggles()
+    {
+        if (\count($this->channels) < 2) {
+            return '';
+        }
+        \sort($this->channels);
+        $key = \array_search($this->channelName, $this->channels);
+        if ($key !== false) {
+            unset($this->channels[$key]);
+            \array_unshift($this->channels, $this->channelName);
+        }
+        $checkboxes = '';
+        foreach ($this->channels as $channel) {
+            $checkboxes .= '<li><label><input checked data-toggle="channel" type="checkbox" value="'.\htmlspecialchars($channel).'" /> '
+                .\htmlspecialchars($channel)
+                .'</label></li>'."\n";
+        }
+        return '<fieldset class="channels" style="display:none;">'."\n"
+                .'<legend>Channels</legend>'."\n"
+                .'<ul class="list-unstyled">'."\n"
+                .$checkboxes
+                .'</ul>'."\n"
+            .'</fieldset>'."\n";
+        $this->channels = array();
+    }
+
+    /**
      * Getter for this->object
      *
      * @return HtmlObject
@@ -581,11 +583,15 @@ class Html extends Base
      */
     protected function methodAlert($args, $meta)
     {
-        $class = 'alert alert-'.$meta['class'];
+        $attribs = array(
+            'class' => 'alert alert-'.$meta['class'],
+            'data-channel' => $meta['channel'],
+            'role' => 'alert',
+        );
         if ($meta['dismissible']) {
-            $class .= ' alert-dismissible';
+            $attribs['class'] .= ' alert-dismissible';
         }
-        return '<div class="'.$class.'" role="alert">'
+        return '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
             .($meta['dismissible']
                 ? '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
                     .'<span aria-hidden="true">&times;</span>'
@@ -618,6 +624,78 @@ class Html extends Base
         foreach ($this->data['alerts'] as $entry) {
             $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
+        return $str;
+    }
+
+    /**
+     * Return a log entry as HTML
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return string|void
+     */
+    protected function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $str = '';
+        if (!\in_array($meta['channel'], $this->channels)) {
+            $this->channels[] = $meta['channel'];
+        }
+        if ($meta['channel'] === $this->channelNameNoOutput) {
+            $meta['channel'] = null;
+        }
+        if ($method == 'alert') {
+            $str = $this->methodAlert($args, $meta);
+        } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+            $str = $this->buildGroupMethod($method, $args, $meta);
+        } elseif ($method == 'table') {
+            $str = $this->buildTable(
+                $args[0],
+                $meta['caption'],
+                $meta['columns'],
+                array(
+                    'class' => 'm_table table-bordered sortable',
+                    'data-channel' => $meta['channel'],
+                )
+            );
+        } elseif ($method == 'trace') {
+            $str = $this->buildTable(
+                $args[0],
+                'trace',
+                array('file','line','function'),
+                array(
+                    'class' => 'm_trace table-bordered',
+                    'data-channel' => $meta['channel'],
+                )
+            );
+        } else {
+            $attribs = array(
+                'class' => 'm_'.$method,
+                'data-channel' => $meta['channel'],
+                'title' => isset($meta['file'])
+                    ? $meta['file'].': line '.$meta['line']
+                    : null,
+            );
+            if (\in_array($method, array('assert','error','info','log','warn'))) {
+                if (\in_array($method, array('error','warn'))) {
+                    if (isset($meta['errorCat'])) {
+                        $attribs['class'] .= ' error-'.$meta['errorCat'];
+                    }
+                }
+                if (\count($args) > 1 && \is_string($args[0])) {
+                    $hasSubs = false;
+                    $args = $this->processSubstitutions($args, $hasSubs);
+                    if ($hasSubs) {
+                        $args = array( \implode('', $args) );
+                    }
+                }
+            }
+            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
+                .$this->buildArgString($args)
+                .'</div>';
+        }
+        $str .= "\n";
         return $str;
     }
 

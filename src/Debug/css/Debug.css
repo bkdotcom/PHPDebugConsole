@@ -32,6 +32,22 @@
 .debug dl { margin-top:0; margin-bottom:0; }
 .debug dt { font-weight:bold; }
 .debug dl:not(.dl-horizontal) dd { margin-left:20px; }
+.debug fieldset {
+	padding: .66em;
+	margin: 0 0 10px 0;
+	min-width: 0;
+	border: 1px solid black;
+	border-radius: 4px;
+}
+.debug legend {
+	padding: 0;
+	float: left;
+	margin-bottom: .5em;
+	border: 0;
+	width: 100%;
+	font-size: 1.15em;
+	font-weight: bold;
+}
 .debug h3 { margin-top:.66em; margin-bottom:0; font-size:1.15em; font-weight:bold; }
 .debug h3:first-child { margin-top:0; }
 .debug img { border:0; }
@@ -98,7 +114,7 @@
 */
 .debug .alert {
 	font-size: 125%;
-	padding: 10px;
+	padding: .66em;
 	margin-bottom: 10px;
 	border: 1px solid transparent;
 	border-radius: 4px;
@@ -180,6 +196,8 @@
 }
 .debug .debug-bar h3 { margin-top:0; }
 .debug .debug-content { margin-top:0.75em; }
+.debug .channels legend { font-size:144%; }
+.debug .channels ul { font-size:125%; }
 
 /*
 	array & objects
@@ -236,13 +254,19 @@
 	}
 .debug .m_assert { background-color:rgba(255,204,204,.75); }
 .debug .m_error { background-color:#FFBABA; color:#D8000C; }
+.debug .group-header { display:table; white-space:nowrap; }
 .debug .m_group {
 	clear: left;
 	margin-left: 1em;
 	border-left: 1px solid rgba(0, 0, 0, 0.25);
 	padding-left: 1px;
 }
-.debug .group-header { display:table; white-space:nowrap; }
+.debug .group-header.hidden + .m_group {
+	margin-left: 0;
+	border-left: 0;
+	padding-left: 0;
+	display: block !important;
+}
 .debug .group-label { font-weight:bold; }
 .debug .m_group.debug-header,
 	.debug .m_group.debug-content {
@@ -299,8 +323,8 @@
 .debug .t_key { opacity:.75; }
 .debug .t_key:before,
 	.debug .t_key:after {
- 		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
- 		color: #999;
+		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		color: #999;
 	}
 .debug .t_key:before { content:'['; margin-right:1px; }
 .debug .t_key:after { content:']'; margin-left:1px; }
@@ -368,6 +392,7 @@
   clear: both;
 }
 */
+.debug .hidden { display:none !important; }
 .debug .indent { padding-left:10px; }
 .debug .list-unstyled{
 	list-style: none outside none;

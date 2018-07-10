@@ -30,6 +30,7 @@ class Text extends Base
      */
     public function onOutput(Event $event)
     {
+        $this->channelName = $this->debug->getCfg('channel');
         $this->data = $this->debug->getData();
         $str = '';
         $str .= $this->processAlerts();
@@ -37,73 +38,6 @@ class Text extends Base
         $str .= $this->processLog();
         $this->data = array();
         $event['return'] .= $str;
-    }
-
-    /**
-     * Return log entry as text
-     *
-     * @param string $method method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
-     *
-     * @return string
-     */
-    public function processLogEntry($method, $args = array(), $meta = array())
-    {
-        $prefixes = array(
-            'error' => '⦻ ',
-            'info' => 'ℹ ',
-            'log' => '',
-            'warn' => '⚠ ',
-            'assert' => '≠ ',
-            'clear' => '⌦ ',
-            'count' => '✚ ',
-            'time' => '⏱ ',
-            'group' => '▸ ',
-            'groupCollapsed' => '▸ ',
-        );
-        $prefix = isset($prefixes[$method])
-            ? $prefixes[$method]
-            : '';
-        $strIndent = \str_repeat('    ', $this->depth);
-        if (\in_array($method, array('error','info','log','warn'))) {
-            if (\count($args) > 1 && \is_string($args[0])) {
-                $hasSubs = false;
-                $args = $this->processSubstitutions($args, $hasSubs);
-                if ($hasSubs) {
-                    $args = array( \implode('', $args) );
-                }
-            }
-        } elseif ($method == 'alert') {
-            $classToPrefix = array(
-                'danger' => 'error',
-                'info' => 'info',
-                'success' => 'info',
-                'warning' => 'warn',
-            );
-            $class = $meta['class'];
-            $prefix = $prefixes[$classToPrefix[$class]];
-            $prefix = '[Alert '.$prefix.$class.'] ';
-            $args = array($args[0]);
-        } elseif ($method == 'table') {
-            $args = array($this->methodTable($args[0], $meta['columns']));
-            if ($meta['caption']) {
-                \array_unshift($args, $meta['caption']);
-            }
-        } elseif ($method == 'trace') {
-            \array_unshift($args, 'trace');
-        } elseif (\in_array($method, array('group','groupCollapsed'))) {
-            $this->depth ++;
-        } elseif ($method == 'groupEnd' && $this->depth > 0) {
-            $this->depth --;
-        }
-        $str = $prefix.$this->buildArgString($args);
-        $str = \rtrim($str);
-        if ($str) {
-            $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str);
-            return $str."\n";
-        }
-        return '';
     }
 
     /**
@@ -312,5 +246,72 @@ class Text extends Base
     protected function dumpUndefined()
     {
         return 'undefined';
+    }
+
+    /**
+     * Return log entry as text
+     *
+     * @param string $method method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return string
+     */
+    protected function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $prefixes = array(
+            'error' => '⦻ ',
+            'info' => 'ℹ ',
+            'log' => '',
+            'warn' => '⚠ ',
+            'assert' => '≠ ',
+            'clear' => '⌦ ',
+            'count' => '✚ ',
+            'time' => '⏱ ',
+            'group' => '▸ ',
+            'groupCollapsed' => '▸ ',
+        );
+        $prefix = isset($prefixes[$method])
+            ? $prefixes[$method]
+            : '';
+        $strIndent = \str_repeat('    ', $this->depth);
+        if (\in_array($method, array('assert','error','info','log','warn'))) {
+            if (\count($args) > 1 && \is_string($args[0])) {
+                $hasSubs = false;
+                $args = $this->processSubstitutions($args, $hasSubs);
+                if ($hasSubs) {
+                    $args = array( \implode('', $args) );
+                }
+            }
+        } elseif ($method == 'alert') {
+            $classToPrefix = array(
+                'danger' => 'error',
+                'info' => 'info',
+                'success' => 'info',
+                'warning' => 'warn',
+            );
+            $class = $meta['class'];
+            $prefix = $prefixes[$classToPrefix[$class]];
+            $prefix = '[Alert '.$prefix.$class.'] ';
+            $args = array($args[0]);
+        } elseif ($method == 'table') {
+            $args = array($this->methodTable($args[0], $meta['columns']));
+            if ($meta['caption']) {
+                \array_unshift($args, $meta['caption']);
+            }
+        } elseif ($method == 'trace') {
+            \array_unshift($args, 'trace');
+        } elseif (\in_array($method, array('group','groupCollapsed'))) {
+            $this->depth ++;
+        } elseif ($method == 'groupEnd' && $this->depth > 0) {
+            $this->depth --;
+        }
+        $str = $prefix.$this->buildArgString($args);
+        $str = \rtrim($str);
+        if ($str) {
+            $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str);
+            return $str."\n";
+        }
+        return '';
     }
 }

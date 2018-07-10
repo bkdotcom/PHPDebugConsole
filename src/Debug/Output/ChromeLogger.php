@@ -61,6 +61,7 @@ class ChromeLogger extends Base
      */
     public function onOutput(Event $event)
     {
+        $this->channelName = $this->debug->getCfg('channel');
         $this->data = $this->debug->getData();
         $this->processAlerts();
         $this->processSummary();
@@ -89,41 +90,15 @@ class ChromeLogger extends Base
     }
 
     /**
-     * Process log entry
+     * Encode data for header
      *
-     * Transmogrify log entry to chromelogger format
+     * @param array $data log data
      *
-     * @param string $method method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
-     *
-     * @return void
+     * @return string encoded data for header
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    protected function encode($data)
     {
-        if ($method === 'alert') {
-            list($method, $args) = $this->methodAlert($args, $meta);
-        } elseif ($method == 'assert') {
-            \array_unshift($args, false);
-        } elseif (\in_array($method, array('count','time'))) {
-            $method = 'log';
-        } elseif ($method === 'table') {
-            $args = array($this->methodTable($args[0], $meta['columns']));
-        } elseif ($method === 'trace') {
-            $method = 'table';
-            $args = array($this->methodTable($args[0], array('function','file','line')));
-        }
-        if (!\in_array($method, $this->consoleMethods)) {
-            $method = 'log';
-        }
-        foreach ($args as $i => $arg) {
-            $args[$i] = $this->dump($arg);
-        }
-        $this->json['rows'][] = array(
-            $args,
-            isset($meta['file']) ? $meta['file'].': '.$meta['line'] : null,
-            $method === 'log' ? '' : $method,
-        );
+        return \base64_encode(\utf8_encode(\json_encode($data)));
     }
 
     /**
@@ -174,14 +149,40 @@ class ChromeLogger extends Base
     }
 
     /**
-     * Encode data for header
+     * Process log entry
      *
-     * @param array $data log data
+     * Transmogrify log entry to chromelogger format
      *
-     * @return string encoded data for header
+     * @param string $method method
+     * @param array  $args   arguments
+     * @param array  $meta   meta values
+     *
+     * @return void
      */
-    protected function encode($data)
+    protected function processLogEntry($method, $args = array(), $meta = array())
     {
-        return \base64_encode(\utf8_encode(\json_encode($data)));
+        if ($method === 'alert') {
+            list($method, $args) = $this->methodAlert($args, $meta);
+        } elseif ($method == 'assert') {
+            \array_unshift($args, false);
+        } elseif (\in_array($method, array('count','time'))) {
+            $method = 'log';
+        } elseif ($method === 'table') {
+            $args = array($this->methodTable($args[0], $meta['columns']));
+        } elseif ($method === 'trace') {
+            $method = 'table';
+            $args = array($this->methodTable($args[0], array('function','file','line')));
+        }
+        if (!\in_array($method, $this->consoleMethods)) {
+            $method = 'log';
+        }
+        foreach ($args as $i => $arg) {
+            $args[$i] = $this->dump($arg);
+        }
+        $this->json['rows'][] = array(
+            $args,
+            isset($meta['file']) ? $meta['file'].': '.$meta['line'] : null,
+            $method === 'log' ? '' : $method,
+        );
     }
 }

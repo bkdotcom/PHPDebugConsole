@@ -55,6 +55,7 @@ class Firephp extends Base
             \trigger_error('Unable to FirePHP: headers already sent. ('.$file.' line '.$line.')', E_USER_NOTICE);
             return;
         }
+        $this->channelName = $this->debug->getCfg('channel');
         $this->data = $this->debug->getData();
         $this->setHeader('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $this->setHeader('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
@@ -66,56 +67,6 @@ class Firephp extends Base
         $this->processLogEntryWEvent('groupEnd');
         $this->setHeader('X-Wf-1-Index', $this->messageIndex);
         $this->data = array();
-        return;
-    }
-
-    /**
-     * output a log entry to Firephp
-     *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
-     *
-     * @return void
-     */
-    public function processLogEntry($method, $args = array(), $meta = array())
-    {
-        $value = null;
-        $firePhpMeta = $this->getMeta($method, $meta);
-        if ($method == 'alert') {
-            list($method, $args) = $this->methodAlert($args, $meta);
-            $value = $args[0];
-        } elseif (\in_array($method, array('group','groupCollapsed'))) {
-            $firePhpMeta['Label'] = $args[0];
-        } elseif ($method == 'table') {
-            $value = $this->methodTable($args[0], $meta['columns']);
-            if ($meta['caption']) {
-                $firePhpMeta['Label'] = $meta['caption'];
-            }
-        } elseif ($method == 'trace') {
-            $firePhpMeta['Type'] = $this->firephpMethods['table'];
-            $value = $this->methodTable($args[0], array('function','file','line'));
-            $firePhpMeta['Label'] = 'trace';
-        } elseif (\count($args)) {
-            if (\count($args) == 1) {
-                $value = $args[0];
-                // no label;
-            } else {
-                $firePhpMeta['Label'] = \array_shift($args);
-                $value = \count($args) > 1
-                    ? $args // firephp only supports label/value...  we'll pass multiple values as an array
-                    : $args[0];
-            }
-        }
-        $value = $this->dump($value);
-        if ($this->messageIndex < self::MESSAGE_LIMIT) {
-            $this->setFirephpHeader($firePhpMeta, $value);
-        } elseif ($this->messageIndex === self::MESSAGE_LIMIT) {
-            $this->setFirephpHeader(
-                array('Type'=>$this->firephpMethods['warn']),
-                'FirePhp\'s limit of '.\number_format(self::MESSAGE_LIMIT).' messages reached!'
-            );
-        }
         return;
     }
 
@@ -197,6 +148,56 @@ class Firephp extends Base
             }
         }
         return $table;
+    }
+
+    /**
+     * output a log entry to Firephp
+     *
+     * @param string $method method
+     * @param array  $args   args
+     * @param array  $meta   meta values
+     *
+     * @return void
+     */
+    protected function processLogEntry($method, $args = array(), $meta = array())
+    {
+        $value = null;
+        $firePhpMeta = $this->getMeta($method, $meta);
+        if ($method == 'alert') {
+            list($method, $args) = $this->methodAlert($args, $meta);
+            $value = $args[0];
+        } elseif (\in_array($method, array('group','groupCollapsed'))) {
+            $firePhpMeta['Label'] = $args[0];
+        } elseif ($method == 'table') {
+            $value = $this->methodTable($args[0], $meta['columns']);
+            if ($meta['caption']) {
+                $firePhpMeta['Label'] = $meta['caption'];
+            }
+        } elseif ($method == 'trace') {
+            $firePhpMeta['Type'] = $this->firephpMethods['table'];
+            $value = $this->methodTable($args[0], array('function','file','line'));
+            $firePhpMeta['Label'] = 'trace';
+        } elseif (\count($args)) {
+            if (\count($args) == 1) {
+                $value = $args[0];
+                // no label;
+            } else {
+                $firePhpMeta['Label'] = \array_shift($args);
+                $value = \count($args) > 1
+                    ? $args // firephp only supports label/value...  we'll pass multiple values as an array
+                    : $args[0];
+            }
+        }
+        $value = $this->dump($value);
+        if ($this->messageIndex < self::MESSAGE_LIMIT) {
+            $this->setFirephpHeader($firePhpMeta, $value);
+        } elseif ($this->messageIndex === self::MESSAGE_LIMIT) {
+            $this->setFirephpHeader(
+                array('Type'=>$this->firephpMethods['warn']),
+                'FirePhp\'s limit of '.\number_format(self::MESSAGE_LIMIT).' messages reached!'
+            );
+        }
+        return;
     }
 
     /**

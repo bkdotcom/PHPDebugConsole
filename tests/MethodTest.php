@@ -242,7 +242,15 @@ class MethodTest extends DebugTestFramework
                     array(
                         'file' => $this->file,
                         'line' => $this->line,
-                        'flags' => \bdk\Debug::CLEAR_LOG,
+                        'bitmask' => \bdk\Debug::CLEAR_LOG,
+                        'flags' => array(
+                            'alerts' => false,
+                            'log' => true,
+                            'logErrors' => false,
+                            'summary' => false,
+                            'summaryErrors' => false,
+                            'silent' => false,
+                        ),
                     ),
                 ),
                 'chromeLogger' => array(
@@ -290,7 +298,15 @@ class MethodTest extends DebugTestFramework
                     array(
                         'file' => $this->file,
                         'line' => $this->line,
-                        'flags' => \bdk\Debug::CLEAR_ALERTS,
+                        'bitmask' => \bdk\Debug::CLEAR_ALERTS,
+                        'flags' => array(
+                            'alerts' => true,
+                            'log' => false,
+                            'logErrors' => false,
+                            'summary' => false,
+                            'summaryErrors' => false,
+                            'silent' => false,
+                        ),
                     ),
                 ),
                 'chromeLogger' => array(
@@ -316,9 +332,15 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(2, $this->debug->getData('logSummary/1'));   // group & error remain
                     $this->assertCount(6, $this->debug->getData('log'));
                     $this->assertSame(array(
-                        0 => array(0, 0),
-                        1 => array(1, 1),
-                    ), $this->debug->getData('groupSummaryDepths'));
+                        'main' => array(
+                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                        0 => array(),
+                        1 => array(
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                    ), $this->debug->getData('groupStacks'));
                 },
                 'entry' => array(
                     'clear',
@@ -326,7 +348,15 @@ class MethodTest extends DebugTestFramework
                     array(
                         'file' => $this->file,
                         'line' => $this->line,
-                        'flags' => \bdk\Debug::CLEAR_SUMMARY,
+                        'bitmask' => \bdk\Debug::CLEAR_SUMMARY,
+                        'flags' => array(
+                            'alerts' => false,
+                            'log' => false,
+                            'logErrors' => false,
+                            'summary' => true,
+                            'summaryErrors' => false,
+                            'silent' => false,
+                        ),
                     ),
                 ),
                 'chromeLogger' => array(
@@ -352,9 +382,19 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(3, $this->debug->getData('logSummary/1'));
                     $this->assertCount(5, $this->debug->getData('log'));
                     $this->assertSame(array(
-                        0 => array(1, 1),
-                        1 => array(1, 1),
-                    ), $this->debug->getData('groupSummaryDepths'));
+                        // 0 => array(1, 1),
+                        // 1 => array(1, 1),
+                        'main' => array(
+                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                        0 => array(
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                        1 => array(
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                    ), $this->debug->getData('groupStacks'));
                 },
                 'entry' => array(
                     'clear',
@@ -362,7 +402,15 @@ class MethodTest extends DebugTestFramework
                     array(
                         'file' => $this->file,
                         'line' => $this->line,
-                        'flags' => \bdk\Debug::CLEAR_LOG_ERRORS,
+                        'bitmask' => \bdk\Debug::CLEAR_LOG_ERRORS,
+                        'flags' => array(
+                            'alerts' => false,
+                            'log' => false,
+                            'logErrors' => true,
+                            'summary' => false,
+                            'summaryErrors' => false,
+                            'silent' => false,
+                        ),
                     ),
                 ),
                 'chromeLogger' => array(
@@ -388,9 +436,17 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
                     $this->assertCount(3, $this->debug->getData('log'));    // groups remain
                     $this->assertSame(array(
-                        0 => array(0, 0),
-                        1 => array(1, 1),
-                    ), $this->debug->getData('groupSummaryDepths'));
+                        // 0 => array(0, 0),
+                        // 1 => array(1, 1),
+                        'main' => array(
+                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                        0 => array(),
+                        1 => array(
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                    ), $this->debug->getData('groupStacks'));
                 },
                 'entry' => array(
                     'clear',
@@ -398,7 +454,15 @@ class MethodTest extends DebugTestFramework
                     array(
                         'file' => $this->file,
                         'line' => $this->line,
-                        'flags' => \bdk\Debug::CLEAR_ALL,
+                        'bitmask' => \bdk\Debug::CLEAR_ALL,
+                        'flags' => array(
+                            'alerts' => true,
+                            'log' => true,
+                            'logErrors' => true,
+                            'summary' => true,
+                            'summaryErrors' => true,
+                            'silent' => false,
+                        ),
                     ),
                 ),
                 'chromeLogger' => array(
@@ -424,9 +488,17 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
                     $this->assertCount(6, $this->debug->getData('log'));
                     $this->assertSame(array(
-                        0 => array(0, 0),
-                        1 => array(1, 1),
-                    ), $this->debug->getData('groupSummaryDepths'));
+                        // 0 => array(0, 0),
+                        // 1 => array(1, 1),
+                        'main' => array(
+                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                        0 => array(),
+                        1 => array(
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                    ), $this->debug->getData('groupStacks'));
                 },
                 'entry' => array(
                     'clear',
@@ -434,7 +506,15 @@ class MethodTest extends DebugTestFramework
                     array(
                         'file' => $this->file,
                         'line' => $this->line,
-                        'flags' => \bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_SUMMARY_ERRORS,
+                        'bitmask' => \bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_SUMMARY_ERRORS,
+                        'flags' => array(
+                            'alerts' => false,
+                            'log' => false,
+                            'logErrors' => false,
+                            'summary' => true,
+                            'summaryErrors' => true,
+                            'silent' => false,
+                        ),
                     ),
                 ),
                 'chromeLogger' => array(
@@ -695,7 +775,11 @@ class MethodTest extends DebugTestFramework
             array(
                 'entry' => array('group',array('a','b','c'), array()),
                 'custom' => function () {
-                    $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
+                    $this->assertSame(array(
+                        'main' => array(
+                            array('channel' => 'general', 'collect' => true),
+                        ),
+                    ), $this->debug->getData('groupStacks'));
                 },
                 'chromeLogger' => array(
                     array('a','b','c'),
@@ -887,7 +971,11 @@ class MethodTest extends DebugTestFramework
             array(
                 'entry' => array('groupCollapsed', array('a','b','c'), array()),
                 'custom' => function () {
-                    $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
+                    $this->assertSame(array(
+                        'main' => array(
+                            0 => array('channel' => 'general', 'collect' => true),
+                        ),
+                    ), $this->debug->getData('groupStacks'));
                 },
                 'chromeLogger' => array(
                     array('a','b','c'),
@@ -938,7 +1026,9 @@ class MethodTest extends DebugTestFramework
         */
         $this->debug->group('a', 'b', 'c');
         $this->debug->groupEnd();
-        $this->assertSame(array(0,0), $this->debug->getData('groupDepth'));
+        $this->assertSame(array(
+            'main' => array(),
+        ), $this->debug->getData('groupStacks'));
         $log = $this->debug->getData('log');
         $this->assertCount(2, $log);
         $this->assertSame(array(
@@ -997,13 +1087,26 @@ class MethodTest extends DebugTestFramework
         $onOutputVals = array();
         $this->debug->eventManager->subscribe('debug.output', function (\bdk\PubSub\Event $event) use (&$onOutputVals) {
             $debug = $event->getSubject();
-            $onOutputVals['groupSummaryStack'] = $debug->getData('groupSummaryStack');
-            $onOutputVals['groupSummaryDepths'] = $debug->getData('groupSummaryDepths');
+            $onOutputVals['groupPriorityStackA'] = $debug->getData('groupPriorityStack');
+            $onOutputVals['groupStacksA'] = $debug->getData('groupStacks');
+        }, 2);
+        $this->debug->eventManager->subscribe('debug.output', function (\bdk\PubSub\Event $event) use (&$onOutputVals) {
+            $debug = $event->getSubject();
+            $onOutputVals['groupPriorityStackB'] = $debug->getData('groupPriorityStack');
+            $onOutputVals['groupStacksB'] = $debug->getData('groupStacks');
         }, -1);
         // Internal::onOutput opens & closes a groupSummary AFTER closeOpenGroups does its thing
         $output = $this->debug->output();
-        $this->assertSame(array(1), $onOutputVals['groupSummaryStack']);
-        $this->assertSame(array(1 => array(0,0)), $onOutputVals['groupSummaryDepths']);
+        $this->assertSame(array(1), $onOutputVals['groupPriorityStackA']);
+        $this->assertSame(array(
+            'main' => array(),
+            1 => array(),
+        ), $onOutputVals['groupStacksA']);
+        $this->assertSame(array(), $onOutputVals['groupPriorityStackB']);
+        $this->assertSame(array(
+            'main' => array(),
+            1 => array(),
+        ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
 <div class="debug">
     <div class="debug-bar"><h3>Debug Log</h3></div>

@@ -111,15 +111,16 @@ class Utilities
                 $v = true;
             }
             $isDataAttrib = \strpos($k, 'data-') === 0;
-            if ($isDataAttrib) {
+            if ($v === null) {
+                // null valued attribs will not be output... not even data attributes
+                continue;
+            } elseif ($isDataAttrib) {
                 $v = \json_encode($v);
                 $v = \trim($v, '"');
             } elseif (\is_array($v)) {
                 $v = self::buildAttribArrayVal($k, $v);
             } elseif (\is_bool($v)) {
                 $v = self::buildAttribBoolVal($k, $v);
-            } elseif ($v === null) {
-                continue;
             }
             $v = \trim($v);
             if (\array_filter(array(

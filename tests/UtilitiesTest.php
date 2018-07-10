@@ -117,11 +117,11 @@ class UtilitiesTest extends DebugTestFramework
             'data-empty-string' => '',
             'data-empty-array' => array(),
             'data-empty-obj' => (object) array(),
-            'data-null' => null,
             'data-false' => false,
+            'data-null' => null,    // not output
         );
         $attribStr = Utilities::buildAttribString($attribs);
-        $expect = ' data-empty-array="[]" data-empty-obj="{}" data-empty-string="" data-false="false" data-null="null"';
+        $expect = ' data-empty-array="[]" data-empty-obj="{}" data-empty-string="" data-false="false"';
         $this->assertSame($expect, $attribStr);
 
         $attribStr = Utilities::buildAttribString('');

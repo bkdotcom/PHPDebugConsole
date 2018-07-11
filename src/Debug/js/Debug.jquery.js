@@ -214,15 +214,15 @@
 	function collapse($toggle, immediate) {
 		if ($toggle.is("[data-toggle=array]")) {
 			// show and use the "expand it" toggle as reference toggle
-			$toggle = $toggle.closest(".t_array").prev().removeClass("hidden");
-			$toggle.next().addClass("hidden");
+			$toggle = $toggle.closest(".t_array").prev().show();
+			$toggle.next().hide();
 		} else {
 			if ($toggle.is("[data-toggle=group]")) {
 				groupErrorIconChange($toggle);
 			}
 			$toggle.removeClass("expanded");
 			if (immediate) {
-				$toggle.next().addClass("hidden");
+				$toggle.next().hide();
 				toggleIconChange($toggle, options.classes.expand);
 			} else {
 				$toggle.next().slideUp("fast", function() {
@@ -464,10 +464,10 @@
 		if ($toggle.is("[data-toggle=array]")) {
 			// hide the toggle..  there is a different toggle in the expanded version
 			enhanceArrays($target);
-			$toggle.addClass("hidden");
-			$target.removeClass("hidden");
+			$toggle.hide();
+			$target.show();;
 		} else {
-			$target.slideDown("fast", function(){
+			$target.removeClass("hidden").slideDown("fast", function(){
 				$toggle.addClass("expanded");
 				toggleIconChange($toggle, options.classes.collapse);
 			});
@@ -670,7 +670,12 @@
 
 		$root.on("change", "input[data-toggle=channel]", function(){
 			var channel = $(this).val(),
-				$nodes = $root.find(".enhanced[data-channel="+channel+"]");
+				$nodes = $(this).data("isRoot")
+					? $root.find(".m_group > *").not(".m_group").filter(function(){
+							var nodeChannel = $(this).data("channel");
+							return  nodeChannel === channel || nodeChannel === undefined;
+						})
+					: $root.find('.m_group > [data-channel="'+channel+'"]').not(".m_group");
 			if ($(this).is(":checked")) {
 				$nodes.removeClass("hidden");
 			} else {

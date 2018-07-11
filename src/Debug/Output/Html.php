@@ -269,7 +269,7 @@ class Html extends Base
                     ? $meta['file'].': line '.$meta['line']
                     : null,
             );
-            if (\in_array($method, array('assert','error','info','log','warn'))) {
+            if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
                 if (\in_array($method, array('error','warn'))) {
                     if (isset($meta['errorCat'])) {
                         $attribs['class'] .= ' error-'.$meta['errorCat'];
@@ -621,7 +621,14 @@ class Html extends Base
         }
         $checkboxes = '';
         foreach ($this->channels as $channel) {
-            $checkboxes .= '<li><label><input checked data-toggle="channel" type="checkbox" value="'.\htmlspecialchars($channel).'" /> '
+            $checkboxes .= '<li><label>'
+                .'<input'.$this->debug->utilities->buildAttribString(array(
+                        'checked' => true,
+                        'data-is-root' => $channel == $this->channelName,
+                        'data-toggle' => 'channel',
+                        'type' => 'checkbox',
+                        'value' => $channel,
+                    )).' /> '
                 .\htmlspecialchars($channel)
                 .'</label></li>'."\n";
         }

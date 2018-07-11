@@ -67,7 +67,7 @@ class Text extends Base
             ? $prefixes[$method]
             : '';
         $strIndent = \str_repeat('    ', $this->depth);
-        if (\in_array($method, array('assert','error','info','log','warn'))) {
+        if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if (\count($args) > 1 && \is_string($args[0])) {
                 $hasSubs = false;
                 $args = $this->processSubstitutions($args, $hasSubs);

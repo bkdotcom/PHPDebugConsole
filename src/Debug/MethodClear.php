@@ -58,10 +58,10 @@ class MethodClear
         if (($bitmask & Debug::CLEAR_ALL) === Debug::CLEAR_ALL) {
             $cleared = array('everything');
         }
-        $message = $this->buildMessage($cleared);
+        $args = $this->getLogArgs($cleared);
         $event->setValues(array(
             'method' => 'clear',
-            'args' => array($message),
+            'args' => $args,
             'meta' =>  \array_merge(array(
                 'file' => $callerInfo['file'],
                 'line' => $callerInfo['line'],
@@ -75,32 +75,10 @@ class MethodClear
                     'silent' =>  (bool) ($bitmask & Debug::CLEAR_SILENT),
                 ),
             ), $event['meta']),
-            'log' => !($bitmask & Debug::CLEAR_SILENT) && $message,
-            'publish' => (bool) $message,
+            'log' => !($bitmask & Debug::CLEAR_SILENT) && $args[0],
+            'publish' => (bool) $args[0],
         ));
         return $event;
-    }
-
-    /**
-     * Build message that gets appended to log
-     *
-     * @param array $cleared array of things that were cleared
-     *
-     * @return string
-     */
-    private function buildMessage($cleared)
-    {
-        $cleared = \array_filter($cleared);
-        $count = \count($cleared);
-        $glue = $count == 2
-            ? ' and '
-            : ', ';
-        if ($count > 2) {
-            $cleared[$count-1] = 'and '.$cleared[$count-1];
-        }
-        return $cleared
-            ? 'Cleared '.\implode($glue, $cleared)
-            : '';
     }
 
     /**
@@ -280,5 +258,35 @@ class MethodClear
             $return = 'summary errors';
         }
         return $return;
+    }
+
+    /**
+     * Build message that gets appended to log
+     *
+     * @param array $cleared array of things that were cleared
+     *
+     * @return string
+     */
+    private function getLogArgs($cleared)
+    {
+        $cleared = \array_filter($cleared);
+        $count = \count($cleared);
+        $glue = $count == 2
+            ? ' and '
+            : ', ';
+        if ($count > 2) {
+            $cleared[$count-1] = 'and '.$cleared[$count-1];
+        }
+        $msg = $cleared
+            ? 'Cleared '.\implode($glue, $cleared)
+            : '';
+        if ($this->channelName) {
+            return array(
+                $msg.' %c(%s)',
+                'background-color:#c0c0c0; padding:0 .33em;',
+                $this->channelName,
+            );
+        }
+        return array($msg);
     }
 }

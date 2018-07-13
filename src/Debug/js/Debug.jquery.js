@@ -124,7 +124,7 @@
 					// enhance collapsed/hidden entries when expanded
 					enhanceEntries($self.find("> .debug-header, > .debug-content"));
 					$self.find(".channels").show();
-					$self.find(".loading").addClass("hidden");
+					$self.find(".loading").hide();
 					$self.addClass("enhanced");
 				} else {
 					// console.log("enhancing node");
@@ -195,9 +195,9 @@
 
 	function groupErrorIconGet($container) {
 		var icon = "";
-		if ($container.find(".m_error").not(".hidden").length) {
+		if ($container.find(".m_error").not(".hidden-error").length) {
 			icon = options.iconsMethods[".m_error"];
-		} else if ($container.find(".m_warn").not(".hidden").length) {
+		} else if ($container.find(".m_warn").not(".hidden-error").length) {
 			icon = options.iconsMethods[".m_warn"];
 		}
 		return icon;
@@ -253,8 +253,8 @@
 			$self.addClass("enhanced");
 			if ( $.trim( $self.find(".array-inner").html() ).length < 1 ) {
 				// empty array -> don't add expand/collapse
-				$self.find("br").addClass("hidden");
-				$self.find(".array-inner").addClass("hidden");
+				$self.find("br").hide();
+				$self.find(".array-inner").hide();
 				return;
 			}
 			// add collapse link
@@ -264,9 +264,9 @@
 				parent().next().remove();	// remove original "("
 			if ( !isDirect && $self.parents(".t_array, .t_object").length < 1 ) {
 				// outermost array -> leave open
-				$self.before($expander.addClass("hidden"));
+				$self.before($expander.hide());
 			} else {
-				$self.addClass("hidden").before($expander);
+				$self.hide().before($expander);
 			}
 		});
 	}
@@ -288,11 +288,11 @@
 
 	function enhanceEntries($root) {
 		// console.log("enhanceEntries", $root);
-		$root.addClass("hidden");
+		$root.hide();
 		$root.children().not(".m_group").each(function(){
 			enhanceEntry($(this));
 		});
-		$root.removeClass("hidden").show();	// also calling show() as display:none set serverside
+		$root.show();
 	}
 
 	function enhanceEntry($root) {
@@ -313,7 +313,6 @@
 			/*
 				group contents will get enhanced when expanded
 			*/
-			// console.warn("enhanceEntry() -> m_group");
 		} else {
 			// console.log("enhance", $root);
 			$root.addClass("enhanced");
@@ -342,7 +341,6 @@
 
 	function enhanceGroupHeader($toggle) {
 		var $target = $toggle.next();
-			// $toggles;	// this and all parent toggles
 		// console.warn("enhanceGroupHeader", $toggle.text(), $toggle.attr("class"));
 		$toggle.attr("data-toggle", "group");
 		$toggle.removeClass("collapsed"); // collapsed class is never used
@@ -352,7 +350,7 @@
 			toggleIconChange($toggle, options.classes.empty);
 			return;
 		}
-		if ($toggle.hasClass("expanded") || $target.find(".m_error, .m_warn").not(".hidden").length) {
+		if ($toggle.hasClass("expanded") || $target.find(".m_error, .m_warn").not(".hidden-error").length) {
 			expand($toggle);
 		} else {
 			collapse($toggle, true);
@@ -379,7 +377,7 @@
 			}
 			$toggle.append(' <i class="fa ' + options.classes.expand + '"></i>');
 			$toggle.attr("data-toggle", "object");
-			$target.addClass("hidden");
+			$target.hide();
 		});
 	}
 
@@ -397,7 +395,7 @@
 				"hide",
 			visToggles = "",
 			hiddenInterfaces = [];
-		if ($inner.find(".method[data-implements]").addClass("hidden").length) {
+		if ($inner.find(".method[data-implements]").hide().length) {
 			// linkify visibility
 			$inner.find(".method[data-implements]").each( function() {
 				var iface = $(this).data("implements");
@@ -416,7 +414,7 @@
 			});
 		}
 		if (accessible === "public") {
-			$wrapper.find(".private, .protected").addClass("hidden");
+			$wrapper.find(".private, .protected").hide();
 		}
 		if (hasProtected) {
 			visToggles += ' <span class="toggle-protected '+toggleClass+'">' + toggleVerb + " protected</span>";
@@ -465,9 +463,9 @@
 			// hide the toggle..  there is a different toggle in the expanded version
 			enhanceArrays($target);
 			$toggle.hide();
-			$target.show();;
+			$target.show();
 		} else {
-			$target.removeClass("hidden").slideDown("fast", function(){
+			$target.slideDown("fast", function(){
 				$toggle.addClass("expanded");
 				toggleIconChange($toggle, options.classes.collapse);
 			});
@@ -503,10 +501,10 @@
 			$methods = $(toggle).closest(".t_object").find("> .object-inner > dd[data-implements="+iface+"]");
 		if ($(toggle).hasClass("toggle-off")) {
 			$toggle.addClass("toggle-on").removeClass("toggle-off");
-			$methods.removeClass("hidden");
+			$methods.show();
 		} else {
 			$toggle.addClass("toggle-off").removeClass("toggle-on");
-			$methods.addClass("hidden");
+			$methods.hide();
 		}
 	}
 
@@ -521,14 +519,14 @@
 				html(iconTag + "hide "+vis).
 				addClass("toggle-on").
 				removeClass("toggle-off");
-			$(toggle).closest(".t_object").find("."+vis).removeClass("hidden");
+			$(toggle).closest(".t_object").find("."+vis).show();
 		} else {
 			// hide for this and all descendants
 			$toggles.
 				html(iconTag + "show "+vis).
 				addClass("toggle-off").
 				removeClass("toggle-on");
-			$(toggle).closest(".t_object").find("."+vis).addClass("hidden");
+			$(toggle).closest(".t_object").find("."+vis).hide();
 		}
 	}
 
@@ -543,8 +541,8 @@
 		var css = "" +
 			".debug .error-fatal i.fa-times-circle { position:absolute; top:10px; }" +
 			".debug .error-fatal:before { margin-left:14px; }" +
-			".debug .debug-cookie { color: #666; }" +
-			//".debug .debug-cookie input { vertical-align:sub; }" +
+			".debug .debug-cookie { color:#666; }" +
+			".debug .hidden-error { display:none !important; }" +
 			".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
 			".debug i.fa-plus-circle { opacity:0.42; }" +
 			".debug i.fa-calendar { font-size:1.1em; }" +
@@ -555,10 +553,6 @@
 			".debug .group-header i.fa-warning { color:#cdcb06; margin-left:.33em}" +		// warning
 			".debug .group-header i.fa-times-circle { color:#D8000C; margin-left:.33em;}" +	// error
 			".debug a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; display:block; clear:left; }" +
-			// ".debug .t_array-collapse," +
-				// ".debug .t_array-expand," +
-				// ".debug .group-header," +
-				// ".debug .t_classname," +
 			".debug [data-toggle]," +
 				".debug [data-toggle][title]," +	// override .debug[title]
 				".debug .vis-toggles span { cursor:pointer; }" +
@@ -567,7 +561,6 @@
 				".debug [data-toggle=interface]:hover { background-color:rgba(0,0,0,0.1); }" +
 			".debug .vis-toggles .toggle-off," +
 				".debug .interface .toggle-off { opacity:0.42 }" +
-			//".debug .t_array-collapse i.fa, .debug .t_array-expand i.fa, .debug .t_classname i.fa { font-size:inherit; }"+
 			"";
 		if ( scope ) {
 			css = css.replace(new RegExp(/\.debug\s/g), scope+" ");
@@ -583,8 +576,6 @@
 		if ( $root.find(".group-header").length ) {
 			$expandAll.on("click", function() {
 				$root.find(".group-header").not(".expanded").each( function() {
-					// if ( !$(this).nextAll(".m_group").eq(0).is(":visible") ) {
-					// }
 					toggleCollapse(this);
 				});
 				return false;
@@ -676,17 +667,13 @@
 							return  nodeChannel === channel || nodeChannel === undefined;
 						})
 					: $root.find('.m_group > [data-channel="'+channel+'"]').not(".m_group");
-			if ($(this).is(":checked")) {
-				$nodes.removeClass("hidden");
-			} else {
-				$nodes.addClass("hidden");
-			}
+			$nodes.toggleClass("hidden", !$(this).is(":checked"));
 		});
 
 		$root.on("change", "input[data-toggle=error]", function(){
 			var className = $(this).val(),
 				selector = ".debug-header ." + className +", .debug-content ."+className;
-			$root.find(selector).toggle( $(this).is(":checked") );
+			$root.find(selector).toggleClass("hidden-error", !$(this).is(":checked"));
 			// update icon for all groups having nested error
 			// groups containing only hidden erros will loose +/-
 			$root.find(".m_error, .m_warn").parents(".m_group").prev(".group-header").each(function(){

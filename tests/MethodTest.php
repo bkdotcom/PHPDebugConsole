@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPUnit tests for Debug class
+ * PHPUnit tests for Debug Methods
  */
 class MethodTest extends DebugTestFramework
 {

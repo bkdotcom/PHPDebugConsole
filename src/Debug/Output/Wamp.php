@@ -203,8 +203,13 @@ class Wamp implements OutputInterface
     private function processExistingData()
     {
         $data = $this->debug->getData();
+        $channel = $this->debug->getCfg('channel');
         foreach ($data['log'] as $entry) {
-            $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+            $this->processLogEntryWEvent(
+                $entry[0],
+                $entry[1],
+                array_merge(array('channel'=>$channel), $entry[2])
+            );
         }
     }
 

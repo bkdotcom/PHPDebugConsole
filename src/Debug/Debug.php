@@ -1156,22 +1156,19 @@ class Debug
             return;
         }
         if ($this->cfg['parent']) {
-            /*
-                Objects of the same type will have access to each others private
-                    and protected members even though they are not the same instances.
-                This is because the implementation specific details
-                    are already known when inside those objects.
-            */
-            $this->cfg['parent']->appendLog($method, $args, $meta);
+            $this->cfg['parent']->appendLog(
+                $event->getValue('method'),
+                $event->getValue('args'),
+                $event->getValue('meta')
+            );
             return;
         }
-        $meta = \array_diff_assoc($meta, array(
-            'channel' => $this->cfg['channel'],
-        ));
         $this->logRef[] = array(
             $event->getValue('method'),
             $event->getValue('args'),
-            $meta,
+            \array_diff_assoc($event->getValue('meta'), array(
+                'channel' => $this->cfg['channel'],
+            )),
         );
     }
 
@@ -1319,24 +1316,28 @@ class Debug
      */
     private function setLogDest($where = 'auto')
     {
+        $debug = $this;
+        while ($debug->cfg['parent']) {
+            $debug = $debug->cfg['parent'];
+        }
         if ($where == 'auto') {
-            $where = $this->data['groupPriorityStack']
+            $where = $debug->data['groupPriorityStack']
                 ? 'summary'
                 : 'log';
         }
         if ($where == 'log') {
-            $this->logRef = &$this->data['log'];
-            $this->groupStackRef = &$this->data['groupStacks']['main'];
+            $debug->logRef = &$debug->data['log'];
+            $debug->groupStackRef = &$debug->data['groupStacks']['main'];
         } elseif ($where == 'alerts') {
-            $this->logRef = &$this->data['alerts'];
+            $debug->logRef = &$debug->data['alerts'];
         } else {
-            $priority = \end($this->data['groupPriorityStack']);
-            if (!isset($this->data['logSummary'][$priority])) {
-                $this->data['logSummary'][$priority] = array();
-                $this->data['groupStacks'][$priority] = array();
+            $priority = \end($debug->data['groupPriorityStack']);
+            if (!isset($debug->data['logSummary'][$priority])) {
+                $debug->data['logSummary'][$priority] = array();
+                $debug->data['groupStacks'][$priority] = array();
             }
-            $this->logRef = &$this->data['logSummary'][$priority];
-            $this->groupStackRef = &$this->data['groupStacks'][$priority];
+            $debug->logRef = &$debug->data['logSummary'][$priority];
+            $debug->groupStackRef = &$debug->data['groupStacks'][$priority];
         }
     }
 }

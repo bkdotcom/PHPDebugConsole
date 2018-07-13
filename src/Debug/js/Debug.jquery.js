@@ -542,7 +542,7 @@
 			".debug .error-fatal i.fa-times-circle { position:absolute; top:10px; }" +
 			".debug .error-fatal:before { margin-left:14px; }" +
 			".debug .debug-cookie { color:#666; }" +
-			".debug .hidden-error { display:none !important; }" +
+			".debug .hidden-channel, .debug .hidden-error { display:none !important; }" +
 			".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
 			".debug i.fa-plus-circle { opacity:0.42; }" +
 			".debug i.fa-calendar { font-size:1.1em; }" +
@@ -553,14 +553,21 @@
 			".debug .group-header i.fa-warning { color:#cdcb06; margin-left:.33em}" +		// warning
 			".debug .group-header i.fa-times-circle { color:#D8000C; margin-left:.33em;}" +	// error
 			".debug a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; display:block; clear:left; }" +
+			".debug .group-header.hidden-channel + .m_group," +
+			"	.debug *:not(.group-header) + .m_group {" +
+			"		margin-left: 0;" +
+			"		border-left: 0;" +
+			"		padding-left: 0;" +
+			"		display: block !important;" +
+			"	}" +
 			".debug [data-toggle]," +
-				".debug [data-toggle][title]," +	// override .debug[title]
-				".debug .vis-toggles span { cursor:pointer; }" +
+			"	.debug [data-toggle][title]," +	// override .debug[title]
+			"	.debug .vis-toggles span { cursor:pointer; }" +
 			".debug .group-header.empty, .debug .t_classname.empty { cursor:auto; }" +
 			".debug .vis-toggles span:hover," +
-				".debug [data-toggle=interface]:hover { background-color:rgba(0,0,0,0.1); }" +
+			"	.debug [data-toggle=interface]:hover { background-color:rgba(0,0,0,0.1); }" +
 			".debug .vis-toggles .toggle-off," +
-				".debug .interface .toggle-off { opacity:0.42 }" +
+			"	.debug .interface .toggle-off { opacity:0.42 }" +
 			"";
 		if ( scope ) {
 			css = css.replace(new RegExp(/\.debug\s/g), scope+" ");
@@ -667,7 +674,7 @@
 							return  nodeChannel === channel || nodeChannel === undefined;
 						})
 					: $root.find('.m_group > [data-channel="'+channel+'"]').not(".m_group");
-			$nodes.toggleClass("hidden", !$(this).is(":checked"));
+			$nodes.toggleClass("hidden-channel", !$(this).is(":checked"));
 		});
 
 		$root.on("change", "input[data-toggle=error]", function(){

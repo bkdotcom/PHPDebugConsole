@@ -261,13 +261,6 @@
 	border-left: 1px solid rgba(0, 0, 0, 0.25);
 	padding-left: 1px;
 }
-.debug .group-header.hidden + .m_group,
-	.debug *:not(.group-header) + .m_group {
-		margin-left: 0;
-		border-left: 0;
-		padding-left: 0;
-		display: block !important;
-	}
 .debug .group-label { font-weight:bold; }
 .debug .m_group.debug-header,
 	.debug .m_group.debug-content {
@@ -386,14 +379,6 @@
 /*
 	Utilities
 */
-/*
-.debug .clearfix:after {
-  content: "";
-  display: table;
-  clear: both;
-}
-*/
-.debug .hidden { display:none !important; }
 .debug .indent { padding-left:10px; }
 .debug .list-unstyled{
 	list-style: none outside none;

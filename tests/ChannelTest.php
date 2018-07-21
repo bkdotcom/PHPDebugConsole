@@ -113,8 +113,8 @@ class ChannelTest extends DebugTestFramework
                     <div class="m_group">
                         <div class="m_log"><span class="no-pseudo t_string">main: sum 0 / group 1 / group 2 / log</span></div>
                         <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 0 / group 1 / group 2 / log</span></div>
-                        <div class="m_error" title="/Users/bkent/Dropbox/htdocs/common/vendor/bdk/PHPDebugConsole/tests/ChannelTest.php: line %d"><span class="no-pseudo t_string">main: error</span></div>
-                        <div class="m_error" data-channel="foo" title="/Users/bkent/Dropbox/htdocs/common/vendor/bdk/PHPDebugConsole/tests/ChannelTest.php: line %d"><span class="no-pseudo t_string">foo: error</span></div>
+                        <div class="m_error" title="%s: line %d"><span class="no-pseudo t_string">main: error</span></div>
+                        <div class="m_error" data-channel="foo" title="%s: line %d"><span class="no-pseudo t_string">foo: error</span></div>
                     </div>
                 </div>
             </div>

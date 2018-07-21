@@ -206,7 +206,10 @@ class MethodClear
         $clearErrors = $flags & Debug::CLEAR_LOG_ERRORS;
         if ($flags & Debug::CLEAR_LOG) {
             $return = 'log ('.($clearErrors ? 'incl errors' : 'sans errors').')';
-            $curDepth = \array_sum(\array_column($this->data['groupStacks']['main'], 'collect'));
+            $curDepth = 0;
+            foreach ($this->data['groupStacks']['main'] as $group) {
+                $curDepth += (int) $group['collect'];
+            }
             $entriesKeep = $this->debug->internal->getCurrentGroups($this->data['log'], $curDepth);
             $this->clearLogHelper($this->data['log'], $clearErrors, $entriesKeep);
         } elseif ($clearErrors) {
@@ -260,7 +263,10 @@ class MethodClear
             foreach (\array_keys($this->data['logSummary']) as $priority) {
                 $entriesKeep = array();
                 if ($priority === $curPriority) {
-                    $curDepth = \array_sum(\array_column($this->data['groupStacks'][$priority], 'collect'));
+                    $curDepth = 0;
+                    foreach ($this->data['groupStacks'][$priority] as $group) {
+                        $curDepth += (int) $group['collect'];
+                    }
                     $entriesKeep = $this->debug->internal->getCurrentGroups(
                         $this->data['logSummary'][$priority],
                         $curDepth

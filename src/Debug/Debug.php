@@ -558,7 +558,10 @@ class Debug
             $args,
             array('channel' => $this->cfg['channel'])
         );
-        $curDepth = \array_sum(\array_column($this->rootInstance->groupStackRef, 'collect'));
+        $curDepth = 0;
+        foreach ($this->rootInstance->groupStackRef as $group) {
+            $curDepth += (int) $group['collect'];
+        }
         $entryKeys = \array_keys($this->internal->getCurrentGroups($this->rootInstance->logRef, $curDepth));
         foreach ($entryKeys as $key) {
             $this->rootInstance->logRef[$key][0] = 'group';
@@ -1279,16 +1282,16 @@ class Debug
     private function getDefaultServices()
     {
         return array(
-            'abstracter' => function ($debug) {
+            'abstracter' => function (Debug $debug) {
                 return new Debug\Abstracter($debug->eventManager, $debug->config->getCfgLazy('abstracter'));
             },
-            'config' => function ($debug) {
+            'config' => function (Debug $debug) {
                 return new Debug\Config($debug, $debug->cfg);    // cfg is passed by reference
             },
-            'errorEmailer' => function ($debug) {
+            'errorEmailer' => function (Debug $debug) {
                 return new ErrorEmailer($debug->config->getCfgLazy('errorEmailer'));
             },
-            'errorHandler' => function ($debug) {
+            'errorHandler' => function (Debug $debug) {
                 if (ErrorHandler::getInstance()) {
                     return ErrorHandler::getInstance();
                 } else {
@@ -1303,19 +1306,19 @@ class Debug
             'eventManager' => function () {
                 return new EventManager();
             },
-            'internal' => function ($debug) {
+            'internal' => function (Debug $debug) {
                 return new Debug\Internal($debug);
             },
-            'logger' => function ($debug) {
+            'logger' => function (Debug $debug) {
                 return new Debug\Logger($debug);
             },
-            'methodClear' => function ($debug) {
+            'methodClear' => function (Debug $debug) {
                 return new Debug\MethodClear($debug, $debug->data);
             },
             'methodTable' => function () {
                 return new Debug\MethodTable();
             },
-            'output' => function ($debug) {
+            'output' => function (Debug $debug) {
                 $output = new Debug\Output($debug, $debug->config->getCfgLazy('output'));
                 $debug->eventManager->addSubscriberInterface($output);
                 return $output;

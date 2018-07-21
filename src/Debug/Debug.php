@@ -251,7 +251,7 @@ class Debug
     public function alert($message, $class = 'danger', $dismissible = false)
     {
         // "use" our function params so things don't complain
-        $message = $class = $dismissible = null;
+        array($class, $dismissible);
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
@@ -324,7 +324,7 @@ class Debug
     public function clear($flags = self::CLEAR_LOG)
     {
         // "use" our function params so things don't complain
-        $flags = null;
+        array($flags);
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
@@ -523,7 +523,7 @@ class Debug
     public function groupSummary($priority = 0)
     {
         // "use" our function params so things don't complain
-        $priority = null;
+        array($priority);
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,

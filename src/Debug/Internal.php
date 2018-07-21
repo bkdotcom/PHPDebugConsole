@@ -41,7 +41,7 @@ class Internal implements SubscriberInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        if ($debug->getCfg('parent')) {
+        if ($debug->parentInstance) {
             return;
         }
         $this->debug->eventManager->addSubscriberInterface($this);

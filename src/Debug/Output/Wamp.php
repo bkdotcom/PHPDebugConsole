@@ -9,7 +9,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.2
+ * @version   v2.3
  */
 
 namespace bdk\Debug\Output;
@@ -208,7 +208,7 @@ class Wamp implements OutputInterface
             $this->processLogEntryWEvent(
                 $entry[0],
                 $entry[1],
-                array_merge(array('channel'=>$channel), $entry[2])
+                \array_merge(array('channel'=>$channel), $entry[2])
             );
         }
     }

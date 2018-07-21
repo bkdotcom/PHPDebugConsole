@@ -26,7 +26,6 @@ class Html extends Base
     protected $errorSummary;
     protected $wrapAttribs = array();
     protected $channels = array();
-    protected $channelNameNoOutput = '';
 
     /**
      * Constructor
@@ -37,13 +36,6 @@ class Html extends Base
     {
         $this->errorSummary = new HtmlErrorSummary($this, $debug->errorHandler);
         parent::__construct($debug);
-        /*
-            set channelName & channelNameNoOutput here... unit tests don't call onOutput
-        */
-        $this->channelName = $this->debug->getCfg('channel');
-        if (!$this->debug->getCfg('parent')) {
-            $this->channelNameNoOutput = $this->channelName;
-        }
     }
 
     /**
@@ -179,10 +171,6 @@ class Html extends Base
      */
     public function onOutput(Event $event)
     {
-        $this->channelName = $this->debug->getCfg('channel');
-        if (!$this->debug->getCfg('parent')) {
-            $this->channelNameNoOutput = $this->channelName;
-        }
         $this->data = $this->debug->getData();
         $str = '<div class="debug">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
@@ -234,7 +222,7 @@ class Html extends Base
         if (!\in_array($meta['channel'], $this->channels)) {
             $this->channels[] = $meta['channel'];
         }
-        if ($meta['channel'] === $this->channelNameNoOutput) {
+        if ($meta['channel'] === $this->channelNameRoot) {
             $meta['channel'] = null;
         }
         if ($method == 'alert') {
@@ -614,9 +602,9 @@ class Html extends Base
             return '';
         }
         \sort($this->channels);
-        $key = \array_search($this->channelName, $this->channels);
-        if ($key !== false) {
-            unset($this->channels[$key]);
+        $rootKey = \array_search($this->channelNameRoot, $this->channels);
+        if ($rootKey !== false) {
+            unset($this->channels[$rootKey]);
             \array_unshift($this->channels, $this->channelName);
         }
         $checkboxes = '';
@@ -624,7 +612,7 @@ class Html extends Base
             $checkboxes .= '<li><label>'
                 .'<input'.$this->debug->utilities->buildAttribString(array(
                         'checked' => true,
-                        'data-is-root' => $channel == $this->channelName,
+                        'data-is-root' => $channel == $this->channelNameRoot,
                         'data-toggle' => 'channel',
                         'type' => 'checkbox',
                         'value' => $channel,
@@ -632,13 +620,13 @@ class Html extends Base
                 .\htmlspecialchars($channel)
                 .'</label></li>'."\n";
         }
+        $this->channels = array();
         return '<fieldset class="channels" style="display:none;">'."\n"
                 .'<legend>Channels</legend>'."\n"
                 .'<ul class="list-unstyled">'."\n"
                 .$checkboxes
                 .'</ul>'."\n"
             .'</fieldset>'."\n";
-        $this->channels = array();
     }
 
     /**
@@ -688,7 +676,6 @@ class Html extends Base
      */
     protected function processAlerts()
     {
-        $str = '';
         $errorSummary = $this->errorSummary->build($this->debug->internal->errorStats());
         if ($errorSummary) {
             \array_unshift($this->data['alerts'], array(
@@ -700,10 +687,7 @@ class Html extends Base
                 )
             ));
         }
-        foreach ($this->data['alerts'] as $entry) {
-            $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
-        }
-        return $str;
+        return parent::processAlerts();
     }
 
     /**

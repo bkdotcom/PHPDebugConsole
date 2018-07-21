@@ -47,6 +47,8 @@ class Debug
     protected $groupStackRef;   // points to $this->groupStacks[x] (where ex = 'main' or (int) priority)
     protected $logRef;          // points to either log or logSummary[priority]
     protected $config;          // config instance
+    protected $parentInstance;
+    protected $rootInstance;
 
     const CLEAR_ALERTS = 1;
     const CLEAR_LOG = 2;
@@ -58,7 +60,7 @@ class Debug
     const COUNT_NO_INC = 1;
     const COUNT_NO_OUT = 2;
     const META = "\x00meta\x00";
-    const VERSION = "2.3";
+    const VERSION = '2.3';
 
     /**
      * Constructor
@@ -92,7 +94,6 @@ class Debug
             'logEnvInfo' => true,
             'logServerKeys' => array('REQUEST_URI','REQUEST_TIME','HTTP_HOST','SERVER_NAME','SERVER_ADDR','REMOTE_ADDR'),
             'onLog' => null,    // callable
-            'parent' => null,
             'services' => $this->getDefaultServices(),
         );
         if (!isset(self::$instance)) {
@@ -115,7 +116,11 @@ class Debug
         if ($errorHandler) {
             $cfg['services']['errorHandler'] = $errorHandler;
         }
-        $this->__get('config')->setCfg($cfg);
+        if (isset($cfg['parent'])) {
+            $this->parentInstance = $cfg['parent'];
+            unset($cfg['parent']);
+        }
+        $this->__get('config')->setCfg($cfg);   // since is defined (albeit null), we need to call __get to initialize
         $this->internal;
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
@@ -147,7 +152,8 @@ class Debug
                 'stack' => array(),
             ),
         );
-        if (!$this->cfg['parent']) {
+        $this->rootInstance = $this;
+        if (!$this->parentInstance) {
             $this->setLogDest();
             /*
                 Publish bootstrap event
@@ -155,9 +161,10 @@ class Debug
             $this->eventManager->publish('debug.bootstrap', $this);
             $this->data['entryCountInitial'] = \count($this->data['log']);
         } else {
-            $this->data = &$this->cfg['parent']->data;
-            $this->groupStackRef = &$this->cfg['parent']->groupStackRef;
-            $this->logRef = &$this->cfg['parent']->logRef;
+            while ($this->rootInstance->parentInstance) {
+                $this->rootInstance = $this->rootInstance->parentInstance;
+            }
+            $this->data = &$this->rootInstance->data;
         }
     }
 
@@ -217,6 +224,9 @@ class Debug
             }
             $this->{$property} = $val;
             return $val;
+        }
+        if (isset($this->{$property})) {
+            return $this->{$property};
         }
         $getter = 'get'.\ucfirst($property);
         if (\method_exists($this, $getter)) {
@@ -459,10 +469,10 @@ class Debug
             $args,
             array('channel' => $this->cfg['channel'])
         );
-        $groupStackWas = $this->groupStackRef;
+        $groupStackWas = $this->rootInstance->groupStackRef;
         $appendLog = false;
         if ($groupStackWas && \end($groupStackWas)['collect'] == $this->cfg['collect']) {
-            \array_pop($this->groupStackRef);
+            \array_pop($this->rootInstance->groupStackRef);
             $appendLog = $this->cfg['collect'];
         }
         if ($this->data['groupPriorityStack'] && !$groupStackWas) {
@@ -548,10 +558,10 @@ class Debug
             $args,
             array('channel' => $this->cfg['channel'])
         );
-        $curDepth = \array_sum(\array_column($this->groupStackRef, 'collect'));
-        $entryKeys = \array_keys($this->internal->getCurrentGroups($this->logRef, $curDepth));
+        $curDepth = \array_sum(\array_column($this->rootInstance->groupStackRef, 'collect'));
+        $entryKeys = \array_keys($this->internal->getCurrentGroups($this->rootInstance->logRef, $curDepth));
         foreach ($entryKeys as $key) {
-            $this->logRef[$key][0] = 'group';
+            $this->rootInstance->logRef[$key][0] = 'group';
         }
         /*
             Publish the debug.log event (regardless of cfg.collect)
@@ -846,6 +856,13 @@ class Debug
      */
     public function getChannel($channelName)
     {
+        if (\strpos($channelName, '.') !== false) {
+            $this->error('getChannel(): channelName should not contain period (.)');
+            return $this;
+        }
+        if ($this->parentInstance) {
+            $channelName = $this->cfg['channel'].'.'.$channelName;
+        }
         if (!isset($this->channels[$channelName])) {
             $cfg = \array_merge($this->cfg, array(
                 'channel' => $channelName,
@@ -962,13 +979,18 @@ class Debug
             $this,
             array('return'=>'')
         )['return'];
-        $this->setData(array(
-            'alerts' => array(),
-            'counts' => array(),
-            'log' => array(),           // clears groupStack
-            'logSummary' => array(),    // clears groupStacks & groupPriorityStack
-            'outputSent' => true,
-        ));
+        if ($this->parentInstance) {
+            $this->clear(self::CLEAR_ALL | self::CLEAR_SILENT);
+            $this->setData('outputSent', true);
+        } else {
+            $this->setData(array(
+                'alerts' => array(),
+                'counts' => array(),
+                'log' => array(),           // clears groupStack
+                'logSummary' => array(),    // clears groupStacks & groupPriorityStack
+                'outputSent' => true,
+            ));
+        }
         return $return;
     }
 
@@ -1155,15 +1177,15 @@ class Debug
         if ($event->isPropagationStopped()) {
             return;
         }
-        if ($this->cfg['parent']) {
-            $this->cfg['parent']->appendLog(
+        if ($this->parentInstance) {
+            $this->parentInstance->appendLog(
                 $event->getValue('method'),
                 $event->getValue('args'),
                 $event->getValue('meta')
             );
             return;
         }
-        $this->logRef[] = array(
+        $this->rootInstance->logRef[] = array(
             $event->getValue('method'),
             $event->getValue('args'),
             \array_diff_assoc($event->getValue('meta'), array(
@@ -1186,7 +1208,7 @@ class Debug
             $args,
             array('channel' => $this->cfg['channel'])
         );
-        $this->groupStackRef[] = array(
+        $this->rootInstance->groupStackRef[] = array(
             'channel' => $meta['channel'],
             'collect' => $this->cfg['collect'],
         );
@@ -1266,11 +1288,11 @@ class Debug
             'errorEmailer' => function ($debug) {
                 return new ErrorEmailer($debug->config->getCfgLazy('errorEmailer'));
             },
-            'errorHandler' => function () {
+            'errorHandler' => function ($debug) {
                 if (ErrorHandler::getInstance()) {
                     return ErrorHandler::getInstance();
                 } else {
-                    $errorHandler = new ErrorHandler($this->eventManager);
+                    $errorHandler = new ErrorHandler($debug->eventManager);
                     /*
                         log E_USER_ERROR to system_log without halting script
                     */
@@ -1295,7 +1317,7 @@ class Debug
             },
             'output' => function ($debug) {
                 $output = new Debug\Output($debug, $debug->config->getCfgLazy('output'));
-                $this->eventManager->addSubscriberInterface($output);
+                $debug->eventManager->addSubscriberInterface($output);
                 return $output;
             },
             'utf8' => function () {
@@ -1316,28 +1338,24 @@ class Debug
      */
     private function setLogDest($where = 'auto')
     {
-        $debug = $this;
-        while ($debug->cfg['parent']) {
-            $debug = $debug->cfg['parent'];
-        }
         if ($where == 'auto') {
-            $where = $debug->data['groupPriorityStack']
+            $where = $this->data['groupPriorityStack']
                 ? 'summary'
                 : 'log';
         }
         if ($where == 'log') {
-            $debug->logRef = &$debug->data['log'];
-            $debug->groupStackRef = &$debug->data['groupStacks']['main'];
+            $this->rootInstance->logRef = &$this->rootInstance->data['log'];
+            $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks']['main'];
         } elseif ($where == 'alerts') {
-            $debug->logRef = &$debug->data['alerts'];
+            $this->rootInstance->logRef = &$this->rootInstance->data['alerts'];
         } else {
-            $priority = \end($debug->data['groupPriorityStack']);
-            if (!isset($debug->data['logSummary'][$priority])) {
-                $debug->data['logSummary'][$priority] = array();
-                $debug->data['groupStacks'][$priority] = array();
+            $priority = \end($this->data['groupPriorityStack']);
+            if (!isset($this->data['logSummary'][$priority])) {
+                $this->data['logSummary'][$priority] = array();
+                $this->data['groupStacks'][$priority] = array();
             }
-            $debug->logRef = &$debug->data['logSummary'][$priority];
-            $debug->groupStackRef = &$debug->data['groupStacks'][$priority];
+            $this->rootInstance->logRef = &$this->rootInstance->data['logSummary'][$priority];
+            $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks'][$priority];
         }
     }
 }

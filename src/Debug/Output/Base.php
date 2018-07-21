@@ -24,7 +24,10 @@ abstract class Base implements OutputInterface
 
     public $debug;
     protected $data = array();
-    protected $channelName = '';    // should be set by onOutput
+    protected $channelName = null;    // should be set by onOutput
+    protected $channelNameRoot = null;
+    protected $channelRegex;
+    protected $isRootInstance = false;
     protected $dumpType;
     protected $dumpTypeMore;
     protected $name = '';
@@ -46,6 +49,10 @@ abstract class Base implements OutputInterface
             }
             $this->name = $name;
         }
+        $this->channelName = $this->debug->getCfg('channel');
+        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channel');
+        $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
+        $this->isRootInstance = $this->debug->rootInstance === $this->debug;
     }
 
     /**
@@ -114,6 +121,18 @@ abstract class Base implements OutputInterface
      * @return mixed
      */
     abstract public function processLogEntry($method, $args = array(), $meta = array());
+
+    /**
+     * Test channel for inclussion
+     *
+     * @param string $channel channel name to test against
+     *
+     * @return boolean
+     */
+    protected function channelTest($channel)
+    {
+        return $this->isRootInstance || \preg_match($this->channelRegex, $channel);
+    }
 
     /**
      * Get name property
@@ -388,7 +407,10 @@ abstract class Base implements OutputInterface
     {
         $str = '';
         foreach ($this->data['alerts'] as $entry) {
-            $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+            $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
+            if ($this->channelTest($channel)) {
+                $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+            }
         }
         return $str;
     }
@@ -402,7 +424,10 @@ abstract class Base implements OutputInterface
     {
         $str = '';
         foreach ($this->data['log'] as $entry) {
-            $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+            $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
+            if ($this->channelTest($channel)) {
+                $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+            }
         }
         return $str;
     }
@@ -421,7 +446,7 @@ abstract class Base implements OutputInterface
     protected function processLogEntryWEvent($method, $args = array(), $meta = array())
     {
         if (!isset($meta['channel'])) {
-            $meta['channel'] = $this->channelName;
+            $meta['channel'] = $this->channelNameRoot;
         }
         $event = $this->debug->eventManager->publish(
             'debug.outputLogEntry',
@@ -531,7 +556,10 @@ abstract class Base implements OutputInterface
         \krsort($summaryData);
         $summaryData = \call_user_func_array('array_merge', $summaryData);
         foreach ($summaryData as $entry) {
-            $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+            $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
+            if ($this->channelTest($channel)) {
+                $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+            }
         }
         return $str;
     }

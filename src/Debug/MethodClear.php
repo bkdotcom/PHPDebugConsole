@@ -23,6 +23,8 @@ class MethodClear
     private $data;
     private $debug;
     private $channelName = null;
+    private $channelRegex;
+    private $isRootInstance = false;
 
     /**
      * Constructor
@@ -45,9 +47,11 @@ class MethodClear
      */
     public function onLog(Event $event)
     {
-        $this->channelName = $this->debug->getCfg('parent')
+        $this->channelName = $this->debug->parentInstance
             ? $event['meta']['channel'] // just clear this specific channel
             : null;
+        $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
+        $this->isRootInstance = $this->debug->rootInstance === $this->debug;
         $bitmask = $event['meta']['bitmask'];
         $callerInfo = $this->debug->utilities->getCallerInfo();
         $cleared = array();
@@ -75,10 +79,22 @@ class MethodClear
                     'silent' =>  (bool) ($bitmask & Debug::CLEAR_SILENT),
                 ),
             ), $event['meta']),
-            'log' => !($bitmask & Debug::CLEAR_SILENT) && $args[0],
-            'publish' => (bool) $args[0],
+            'log' => $args && !($bitmask & Debug::CLEAR_SILENT),
+            'publish' => (bool) $args,
         ));
         return $event;
+    }
+
+    /**
+     * Test channel for inclussion
+     *
+     * @param string $channel channel name to test against
+     *
+     * @return boolean
+     */
+    private function channelTest($channel)
+    {
+        return $this->isRootInstance || \preg_match($this->channelRegex, $channel);
     }
 
     /**
@@ -95,10 +111,10 @@ class MethodClear
             return null;
         }
         if ($this->channelName) {
-            foreach ($this->alerts as $i => $entry) {
+            foreach ($this->data['alerts'] as $i => $entry) {
                 $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
-                if ($channel === $this->channelName) {
-                    unset($this->alerts[$i]);
+                if ($this->channelTest($channel)) {
+                    unset($this->data['alerts'][$i]);
                 }
             }
             $this->data['alerts'] = \array_values($this->data['alerts']);
@@ -270,6 +286,9 @@ class MethodClear
     private function getLogArgs($cleared)
     {
         $cleared = \array_filter($cleared);
+        if (!$cleared) {
+            return array();
+        }
         $count = \count($cleared);
         $glue = $count == 2
             ? ' and '
@@ -277,9 +296,7 @@ class MethodClear
         if ($count > 2) {
             $cleared[$count-1] = 'and '.$cleared[$count-1];
         }
-        $msg = $cleared
-            ? 'Cleared '.\implode($glue, $cleared)
-            : '';
+        $msg = 'Cleared '.\implode($glue, $cleared);
         if ($this->channelName) {
             return array(
                 $msg.' %c(%s)',

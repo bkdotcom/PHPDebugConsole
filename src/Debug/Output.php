@@ -200,7 +200,11 @@ class Output implements SubscriberInterface
                     $meta = array(
                         'channel' => $info['channel'],
                     );
-                    $this->data['logSummary'][$priority][] = array('groupEnd', array(), $meta);
+                    if ($priority === 'main') {
+                        $this->data['log'][] = array('groupEnd', array(), $meta);
+                    } else {
+                        $this->data['logSummary'][$priority][] = array('groupEnd', array(), $meta);
+                    }
                 }
             }
         }

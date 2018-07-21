@@ -283,31 +283,34 @@ class DebugTestFramework extends DOMTestCase
      *
      * @param array $tests array of 'outputAs' => 'string
      *                         ie array('html'=>'expected html')
+     * @param Debug $debug Debug instance
      *
      * @return void
      */
-    public function outputTest($tests = array())
+    public function outputTest($tests = array(), $debug = null)
     {
-        $backupData = array(
-            'alerts' => $this->debug->getData('alerts'),
-            'log' => $this->debug->getData('log'),
-            'logSummary' => $this->debug->getData('logSummary'),
-            'requestId' => $this->debug->getData('requestId'),
-            'runtime' => $this->debug->getData('runtime'),
-        );
-        $backupOutputAs = $this->debug->getCfg('outputAs');
-        foreach ($tests as $test => $expectContains) {
-            $this->debug->setCfg('outputAs', $test);
-            $output = $this->debug->output();
-            $output = \preg_replace("#^\s+#m", '', $output);
-            $expectContains = \preg_replace('#^\s+#m', '', $expectContains);
-            if ($expectContains) {
-                $this->assertContains($expectContains, $output);
-            }
-            foreach ($backupData as $k => $v) {
-                $this->debug->setData($k, $v);
-            }
+        if (!$debug) {
+            $debug = $this->debug;
         }
-        $this->debug->setCfg('outputAs', $backupOutputAs);
+        $backupData = array(
+            'alerts' => $debug->getData('alerts'),
+            'log' => $debug->getData('log'),
+            'logSummary' => $debug->getData('logSummary'),
+            'requestId' => $debug->getData('requestId'),
+            'runtime' => $debug->getData('runtime'),
+        );
+        $backupOutputAs = $debug->getCfg('outputAs');
+        foreach ($tests as $test => $expectContains) {
+            $debug->setCfg('outputAs', $test);
+            $regexLtrim = '#^\s+#m';
+            $output = $debug->output();
+            $output = \preg_replace($regexLtrim, '', $output);
+            $expectContains = \preg_replace($regexLtrim, '', $expectContains);
+            if ($expectContains) {
+                $this->assertStringMatchesFormat('%A'.$expectContains.'%A', $output);
+            }
+            $debug->setData($backupData);
+        }
+        $debug->setCfg('outputAs', $backupOutputAs);
     }
 }

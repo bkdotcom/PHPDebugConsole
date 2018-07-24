@@ -92,6 +92,7 @@ class Debug
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
             'logEnvInfo' => true,
+            'logHeaders' => true,
             'logServerKeys' => array('REQUEST_URI','REQUEST_TIME','HTTP_HOST','SERVER_NAME','SERVER_ADDR','REMOTE_ADDR'),
             'onLog' => null,    // callable
             'services' => $this->getDefaultServices(),
@@ -989,17 +990,8 @@ class Debug
             $this,
             array('return'=>'')
         )['return'];
-        if ($this->parentInstance) {
-            $this->clear(self::CLEAR_ALL | self::CLEAR_SILENT);
-            $this->setData('outputSent', true);
-        } else {
-            $this->setData(array(
-                'alerts' => array(),
-                'counts' => array(),
-                'log' => array(),           // clears groupStack
-                'logSummary' => array(),    // clears groupStacks & groupPriorityStack
-                'outputSent' => true,
-            ));
+        if (!$this->parentInstance) {
+            $this->data['outputSent'] = true;
         }
         return $return;
     }

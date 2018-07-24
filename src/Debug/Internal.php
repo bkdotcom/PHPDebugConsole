@@ -32,6 +32,7 @@ class Internal implements SubscriberInterface
 
     private $debug;
     private $error;     // store error object when logging an error
+    private $isPost = false;
 
     /**
      * Constructor
@@ -41,6 +42,7 @@ class Internal implements SubscriberInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
+        $this->isPost = isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST';
         if ($debug->parentInstance) {
             return;
         }
@@ -463,11 +465,11 @@ class Internal implements SubscriberInterface
      */
     private function logRequest()
     {
+        $this->logRequestHeaders();
         if (!empty($_COOKIE)) {
             $this->debug->info('$_COOKIE', $_COOKIE);
         }
-        $isPost = isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST';
-        if ($isPost) {
+        if ($this->isPost) {
             if ($_POST) {
                 $this->debug->info('$_POST', $_POST);
             } else {
@@ -485,15 +487,36 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Log Request Headers
+     *
+     * @return void
+     */
+    private function logRequestHeaders()
+    {
+        if (!$this->debug->getCfg('logHeaders')) {
+            return;
+        }
+        if (!empty($_SERVER['argv'])) {
+            return;
+        }
+        $headers = array();
+        foreach ($_SERVER as $k => $v) {
+            if (\strpos($k, 'HTTP_') !== false) {
+                $headers[$k] = $v;
+            }
+        }
+        $this->debug->info('headers', $headers);
+    }
+
+    /**
      * Log $_SERVER values specified by `logServerKeys` config option
      *
      * @return void
      */
     private function logServerKeys()
     {
-        $isPost = isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST';
         $logServerKeys = $this->debug->getCfg('logServerKeys');
-        if ($isPost) {
+        if ($this->isPost) {
             $logServerKeys = \array_merge($logServerKeys, array('REQUEST_METHOD','CONTENT_TYPE'));
         }
         $logServerKeys = \array_unique($logServerKeys);

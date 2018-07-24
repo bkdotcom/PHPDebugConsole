@@ -292,6 +292,7 @@ class DebugTestFramework extends DOMTestCase
         if (!$debug) {
             $debug = $this->debug;
         }
+        /*
         $backupData = array(
             'alerts' => $debug->getData('alerts'),
             'log' => $debug->getData('log'),
@@ -299,6 +300,7 @@ class DebugTestFramework extends DOMTestCase
             'requestId' => $debug->getData('requestId'),
             'runtime' => $debug->getData('runtime'),
         );
+        */
         $backupOutputAs = $debug->getCfg('outputAs');
         foreach ($tests as $test => $expectContains) {
             $debug->setCfg('outputAs', $test);
@@ -309,7 +311,7 @@ class DebugTestFramework extends DOMTestCase
             if ($expectContains) {
                 $this->assertStringMatchesFormat('%A'.$expectContains.'%A', $output);
             }
-            $debug->setData($backupData);
+            // $debug->setData($backupData);
         }
         $debug->setCfg('outputAs', $backupOutputAs);
     }

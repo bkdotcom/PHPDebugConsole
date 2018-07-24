@@ -327,13 +327,15 @@
 					$span = $("<span>"+text+"</span>");
 				if ($this.hasClass("t_string")) {
 					$span.addClass("t_string numeric");
-				} else {
+				} else if ($this.hasClass("t_int")) {
 					$span.addClass("t_int");
+				} else {
+					$span.addClass("t_float");
 				}
 				if ($this.hasClass("no-pseudo")) {
 					$span.addClass("no-pseudo");
 				}
-				$(this).removeClass("t_int t_string numeric no-pseudo");
+				$(this).removeClass("t_float t_int t_string numeric no-pseudo");
 				$(this).html($i).append($span);
 			});
 		}

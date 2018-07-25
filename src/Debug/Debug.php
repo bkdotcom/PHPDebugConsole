@@ -91,8 +91,7 @@ class Debug
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
-            'logEnvInfo' => true,
-            'logHeaders' => true,
+            'logEnvInfo' => array('cookies','headers','phpInfo','post'),
             'logServerKeys' => array('REQUEST_URI','REQUEST_TIME','HTTP_HOST','SERVER_NAME','SERVER_ADDR','REMOTE_ADDR'),
             'onLog' => null,    // callable
             'services' => $this->getDefaultServices(),
@@ -277,7 +276,9 @@ class Debug
     /**
      * Log a message and stack trace to console if first argument is false.
      *
-     * Only appends log when assertation fails
+     * Only appends log when assertion fails
+     *
+     * Supports styling/substitutions
      *
      * @param boolean $assertion argument checked for truthyness
      * @param mixed   $msg,...   (optional) variable num of addititional values to output
@@ -286,19 +287,13 @@ class Debug
      */
     public function assert($assertion, $msg = null)
     {
+        // "use" our function params so things don't complain
+        array($msg);
         $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array(),
-            array(
-                'assertion' => false,
-                'msg' => null,
-            )
-        );
-        \extract($args);
+        $meta = $this->internal->getMetaVals($args);
+        $assertion = \array_shift($args);
         if (!$assertion) {
-            \array_shift($args);
-            if ($msg === null && !$args) {
+            if (!$args) {
                 $callerInfo = $this->utilities->getCallerInfo();
                 $args[] = 'Assertion failed in '.$callerInfo['file'].' on line '.$callerInfo['line'];
             }
@@ -425,6 +420,8 @@ class Debug
 
     /**
      * Log an error message.
+     *
+     * Supports styling/substitutions
      *
      * @param mixed $label,... error message / values
      *
@@ -592,6 +589,8 @@ class Debug
     /**
      * Log some informative information
      *
+     * Supports styling/substitutions
+     *
      * @return void
      */
     public function info()
@@ -601,6 +600,8 @@ class Debug
 
     /**
      * Log general information
+     *
+     * Supports styling/substitutions
      *
      * @return void
      */
@@ -818,6 +819,8 @@ class Debug
 
     /**
      * Log a warning
+     *
+     * Supports styling/substitutions
      *
      * @return void
      */

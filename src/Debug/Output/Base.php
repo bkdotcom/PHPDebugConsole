@@ -475,6 +475,7 @@ abstract class Base implements OutputInterface
      * @return array
      *
      * @see https://console.spec.whatwg.org/#formatter
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
      */
     protected function processSubstitutions($args, &$hasSubs)
     {

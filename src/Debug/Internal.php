@@ -300,8 +300,12 @@ class Internal implements SubscriberInterface
      */
     public function onBootstrap()
     {
-        if (!$this->debug->getCfg('logEnvInfo')) {
+        $logEnvInfo = $this->debug->getCfg('logEnvInfo');
+        if (!$logEnvInfo) {
             return;
+        }
+        if ($logEnvInfo === true) {
+            $this->debug->setCfg('logEnvInfo', array('cookies','headers','phpInfo','post'));
         }
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
@@ -430,6 +434,9 @@ class Internal implements SubscriberInterface
      */
     private function logPhpInfo()
     {
+        if (!\in_array('phpInfo', $this->debug->getCfg('logEnvInfo'))) {
+            return;
+        }
         $this->debug->info('PHP Version', PHP_VERSION);
         $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
         $this->debug->info('session.cache_limiter', \ini_get('session.cache_limiter'));
@@ -466,10 +473,10 @@ class Internal implements SubscriberInterface
     private function logRequest()
     {
         $this->logRequestHeaders();
-        if (!empty($_COOKIE)) {
+        if (\in_array('cookies', $this->debug->getCfg('logEnvInfo'))) {
             $this->debug->info('$_COOKIE', $_COOKIE);
         }
-        if ($this->isPost) {
+        if (\in_array('post', $this->debug->getCfg('logEnvInfo')) && $this->isPost) {
             if ($_POST) {
                 $this->debug->info('$_POST', $_POST);
             } else {
@@ -493,7 +500,7 @@ class Internal implements SubscriberInterface
      */
     private function logRequestHeaders()
     {
-        if (!$this->debug->getCfg('logHeaders')) {
+        if (!\in_array('headers', $this->debug->getCfg('logEnvInfo'))) {
             return;
         }
         if (!empty($_SERVER['argv'])) {
@@ -516,8 +523,9 @@ class Internal implements SubscriberInterface
     private function logServerKeys()
     {
         $logServerKeys = $this->debug->getCfg('logServerKeys');
-        if ($this->isPost) {
-            $logServerKeys = \array_merge($logServerKeys, array('REQUEST_METHOD','CONTENT_TYPE'));
+        if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $logServerKeys[] = 'REQUEST_METHOD';
+            $logServerKeys[] = 'CONTENT_TYPE';
         }
         $logServerKeys = \array_unique($logServerKeys);
         foreach ($logServerKeys as $k) {

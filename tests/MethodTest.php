@@ -204,6 +204,28 @@ class MethodTest extends DebugTestFramework
             )
         );
 
+        // no msg arguments
+        $this->testMethod(
+            'assert',
+            array(false),
+            array(
+                'entry' => array(
+                    'assert',
+                    array('Assertion failed in '.$this->file.' on line '.$this->line),
+                    array(),
+                ),
+                'chromeLogger' => array(
+                    array(false, 'Assertion failed in '.$this->file.' on line '.$this->line),
+                    null,
+                    'assert',
+                ),
+                'html' => '<div class="m_assert"><span class="no-pseudo t_string">Assertion failed in '.$this->file.' on line '.$this->line.'</span></div>',
+                'text' => '≠ Assertion failed in '.$this->file.' on line '.$this->line,
+                'script' => 'console.assert(false,"Assertion failed in '.trim(json_encode($this->file), '"').' on line '.$this->line.'");',
+                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"LOG"},"Assertion failed in '.trim(json_encode($this->file), '"').' on line '.$this->line.'"]|',
+            )
+        );
+
         $this->testMethod(
             'assert',
             array(true, 'this is true... not logged'),

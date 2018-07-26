@@ -91,7 +91,13 @@ class Debug
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
-            'logEnvInfo' => array('cookies','headers','phpInfo','post'),
+            'logEnvInfo' => array(
+                'cookies' => true,
+                'headers' => true,
+                'phpInfo' => true,
+                'post' => true,
+                'serverVals' => true,
+            ),
             'logServerKeys' => array('REQUEST_URI','REQUEST_TIME','HTTP_HOST','SERVER_NAME','SERVER_ADDR','REMOTE_ADDR'),
             'onLog' => null,    // callable
             'services' => $this->getDefaultServices(),

@@ -546,6 +546,7 @@
 			".debug .debug-cookie { color:#666; }" +
 			".debug .hidden-channel, .debug .hidden-error { display:none !important; }" +
 			".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
+			".debug .m_assert > i { position:relative; top:-.20em; }" +
 			".debug i.fa-plus-circle { opacity:0.42; }" +
 			".debug i.fa-calendar { font-size:1.1em; }" +
 			".debug i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }" +

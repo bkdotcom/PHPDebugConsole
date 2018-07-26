@@ -301,19 +301,17 @@ class Internal implements SubscriberInterface
     public function onBootstrap()
     {
         $logEnvInfo = $this->debug->getCfg('logEnvInfo');
-        if (!$logEnvInfo) {
-            return;
-        }
-        if ($logEnvInfo === true) {
-            $this->debug->setCfg('logEnvInfo', array('cookies','headers','phpInfo','post'));
+        if (\is_bool($logEnvInfo)) {
+            $keys = array('cookies','headers','phpInfo','post','serverVals');
+            $logEnvInfo = \array_fill_keys($keys, $logEnvInfo);
+            $this->debug->setCfg('logEnvInfo', $logEnvInfo);
         }
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
-        $this->debug->group('environment');
-        $this->debug->groupUncollapse();
-        $this->logServerKeys();
+        $this->debug->groupUncollapsed('environment');
+        $this->logServerVals();
         $this->logPhpInfo();
-        $this->logRequest();
+        $this->logRequest();    // headers, cookies, post
         $this->debug->groupEnd();
         $this->debug->groupEnd();
         $this->debug->setCfg('collect', $collectWas);
@@ -434,7 +432,7 @@ class Internal implements SubscriberInterface
      */
     private function logPhpInfo()
     {
-        if (!\in_array('phpInfo', $this->debug->getCfg('logEnvInfo'))) {
+        if (!$this->debug->getCfg('logEnvInfo.phpInfo')) {
             return;
         }
         $this->debug->info('PHP Version', PHP_VERSION);
@@ -473,10 +471,13 @@ class Internal implements SubscriberInterface
     private function logRequest()
     {
         $this->logRequestHeaders();
-        if (\in_array('cookies', $this->debug->getCfg('logEnvInfo'))) {
+        if ($this->debug->getCfg('logEnvInfo.cookies')) {
             $this->debug->info('$_COOKIE', $_COOKIE);
         }
-        if (\in_array('post', $this->debug->getCfg('logEnvInfo')) && $this->isPost) {
+        // don't expect a request body for these methods
+        $noBody = !isset($_SERVER['REQUEST_METHOD'])
+            || \in_array($_SERVER['REQUEST_METHOD'], array('CONNECT','GET','HEAD','OPTIONS','TRACE'));
+        if ($this->debug->getCfg('logEnvInfo.post') && !$noBody) {
             if ($_POST) {
                 $this->debug->info('$_POST', $_POST);
             } else {
@@ -484,7 +485,7 @@ class Internal implements SubscriberInterface
                 if ($input) {
                     $this->debug->info('php://input', $input);
                 } else {
-                    $this->debug->warn('POST, but no data');
+                    $this->debug->warn($_SERVER['REQUEST_METHOD'].' request with no body');
                 }
             }
             if (!empty($_FILES)) {
@@ -500,7 +501,7 @@ class Internal implements SubscriberInterface
      */
     private function logRequestHeaders()
     {
-        if (!\in_array('headers', $this->debug->getCfg('logEnvInfo'))) {
+        if (!$this->debug->getCfg('logEnvInfo.headers')) {
             return;
         }
         if (!empty($_SERVER['argv'])) {
@@ -520,8 +521,11 @@ class Internal implements SubscriberInterface
      *
      * @return void
      */
-    private function logServerKeys()
+    private function logServerVals()
     {
+        if (!$this->debug->getCfg('logEnvInfo.serverVals')) {
+            return;
+        }
         $logServerKeys = $this->debug->getCfg('logServerKeys');
         if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] !== 'GET') {
             $logServerKeys[] = 'REQUEST_METHOD';

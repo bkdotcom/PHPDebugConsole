@@ -327,7 +327,7 @@ class Config
                 }
             }
         }
-        if (\count($path) <= 1) {
+        if (\count($path) <= 1 || $path[0] === 'logEnvInfo') {
             \array_unshift($path, 'debug');
         }
         return \implode('/', $path);
@@ -365,10 +365,6 @@ class Config
     {
         if (isset($cfg['key'])) {
             $cfg = \array_merge($cfg, $this->debugKeyValues($cfg['key']));
-        }
-        if (isset($cfg['logEnvInfo'])) {
-            // don't append, replace
-            $this->cfg['logEnvInfo'] = array();
         }
         if (isset($cfg['logServerKeys'])) {
             // don't append, replace

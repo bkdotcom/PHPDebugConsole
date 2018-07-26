@@ -319,6 +319,9 @@ class Html extends Base
         $str = '';
         if (\in_array($method, array('group','groupCollapsed'))) {
             $label = \array_shift($args);
+            $levelClass = isset($meta['level'])
+                ? 'level-'.$meta['level']
+                : null;
             if (!empty($meta['isMethodName'])) {
                 $label = $this->markupClassname($label);
             }
@@ -326,12 +329,16 @@ class Html extends Base
                 $args[$k] = $this->dump($v);
             }
             $argStr = \implode(', ', $args);
+            /*
+                Header
+            */
             $str .= '<div'.$this->debug->utilities->buildAttribString(array(
                 'class' => array(
                     'group-header',
                     $method == 'groupCollapsed'
                         ? 'collapsed'
                         : 'expanded',
+                    $levelClass,
                 ),
                 'data-channel' => $meta['channel'],
             )).'>'
@@ -342,7 +349,15 @@ class Html extends Base
                         : '' )
                 .'</span>'
             .'</div>'."\n";
-            $str .= '<div class="m_group">';
+            /*
+                Group open
+            */
+            $str .= '<div'.$this->debug->utilities->buildAttribString(array(
+                'class' => array(
+                    'm_group',
+                    $levelClass,
+                ),
+            )).'>';
         } elseif ($method == 'groupEnd') {
             $str = '</div>';
         }

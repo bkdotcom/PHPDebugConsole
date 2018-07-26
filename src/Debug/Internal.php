@@ -32,7 +32,6 @@ class Internal implements SubscriberInterface
 
     private $debug;
     private $error;     // store error object when logging an error
-    private $isPost = false;
 
     /**
      * Constructor
@@ -42,7 +41,6 @@ class Internal implements SubscriberInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->isPost = isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST';
         if ($debug->parentInstance) {
             return;
         }
@@ -308,9 +306,12 @@ class Internal implements SubscriberInterface
         }
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
-        $this->debug->groupUncollapsed('environment');
-        $this->logServerVals();
+        $this->debug->group('environment', $this->debug->meta(array(
+            'hideIfEmpty' => true,
+            'level' => 'info',
+        )));
         $this->logPhpInfo();
+        $this->logServerVals();
         $this->logRequest();    // headers, cookies, post
         $this->debug->groupEnd();
         $this->debug->groupEnd();
@@ -435,9 +436,9 @@ class Internal implements SubscriberInterface
         if (!$this->debug->getCfg('logEnvInfo.phpInfo')) {
             return;
         }
-        $this->debug->info('PHP Version', PHP_VERSION);
-        $this->debug->info('memory_limit', $this->debug->utilities->memoryLimit());
-        $this->debug->info('session.cache_limiter', \ini_get('session.cache_limiter'));
+        $this->debug->log('PHP Version', PHP_VERSION);
+        $this->debug->log('memory_limit', $this->debug->utilities->memoryLimit());
+        $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
         if (\error_reporting() !== E_ALL) {
             $styleMono = 'font-family:monospace;';
             $styleReset = 'font-family:inherit; white-space:pre-wrap;';
@@ -472,24 +473,24 @@ class Internal implements SubscriberInterface
     {
         $this->logRequestHeaders();
         if ($this->debug->getCfg('logEnvInfo.cookies')) {
-            $this->debug->info('$_COOKIE', $_COOKIE);
+            $this->debug->log('$_COOKIE', $_COOKIE);
         }
         // don't expect a request body for these methods
         $noBody = !isset($_SERVER['REQUEST_METHOD'])
             || \in_array($_SERVER['REQUEST_METHOD'], array('CONNECT','GET','HEAD','OPTIONS','TRACE'));
         if ($this->debug->getCfg('logEnvInfo.post') && !$noBody) {
             if ($_POST) {
-                $this->debug->info('$_POST', $_POST);
+                $this->debug->log('$_POST', $_POST);
             } else {
                 $input = \file_get_contents('php://input');
                 if ($input) {
-                    $this->debug->info('php://input', $input);
+                    $this->debug->log('php://input', $input);
                 } else {
                     $this->debug->warn($_SERVER['REQUEST_METHOD'].' request with no body');
                 }
             }
             if (!empty($_FILES)) {
-                $this->debug->info('$_FILES', $_FILES);
+                $this->debug->log('$_FILES', $_FILES);
             }
         }
     }
@@ -513,7 +514,7 @@ class Internal implements SubscriberInterface
                 $headers[$k] = $v;
             }
         }
-        $this->debug->info('headers', $headers);
+        $this->debug->log('request headers', $headers);
     }
 
     /**
@@ -532,15 +533,20 @@ class Internal implements SubscriberInterface
             $logServerKeys[] = 'CONTENT_TYPE';
         }
         $logServerKeys = \array_unique($logServerKeys);
+        if (!$logServerKeys) {
+            return;
+        }
+        $vals = array();
         foreach ($logServerKeys as $k) {
-            if ($k == 'REQUEST_TIME') {
-                $this->debug->info($k, \date('Y-m-d H:i:s T', $_SERVER['REQUEST_TIME']));
-            } elseif (isset($_SERVER[$k])) {
-                $this->debug->info($k, $_SERVER[$k]);
+            if (!\array_key_exists($k, $_SERVER)) {
+                $vals[$k] = $this->debug->abstracter->UNDEFINED;
+            } elseif ($k == 'REQUEST_TIME') {
+                $vals[$k] = \date('Y-m-d H:i:s T', $_SERVER['REQUEST_TIME']);
             } else {
-                $this->debug->info($k, $this->debug->abstracter->UNDEFINED);
+                $vals[$k] = $_SERVER[$k];
             }
         }
+        $this->debug->log('$_SERVER', $vals);
     }
 
     /**

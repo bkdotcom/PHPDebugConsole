@@ -253,7 +253,6 @@
 		padding-right: .33em;
 	}
 .debug .m_assert { background-color:rgba(255,204,204,.75); }
-.debug .m_error { background-color:#FFBABA; color:#D8000C; }
 .debug .group-header { display:table; white-space:nowrap; }
 .debug .m_group {
 	clear: left;
@@ -268,9 +267,16 @@
 		border-left: 0;
 		padding-left: 0;
 	}
+
+.debug .m_error,
+	.debug :not(.expanded) > .level-error { background-color:#FFBABA; color:#D8000C; }
+
 .debug .m_info,
-	.debug .info { background-color:#BDE5F8; color:#00529B; }
-.debug .m_warn  { background-color:#FEEFB3; color:#9F6000; }
+	.debug .info,
+	.debug :not(.expanded) > .level-info { background-color:#BDE5F8; color:#00529B; }
+
+.debug .m_warn,
+	.debug :not(.expanded) > .level-warn { background-color:#FEEFB3; color:#9F6000; }
 
 /*
 	emphasize the fatal error

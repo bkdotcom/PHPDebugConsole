@@ -98,7 +98,7 @@ class Debug
                 'post' => true,
                 'serverVals' => true,
             ),
-            'logServerKeys' => array('REQUEST_URI','REQUEST_TIME','HTTP_HOST','SERVER_NAME','SERVER_ADDR','REMOTE_ADDR'),
+            'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
             'onLog' => null,    // callable
             'services' => $this->getDefaultServices(),
         );

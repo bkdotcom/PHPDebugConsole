@@ -437,7 +437,7 @@ class Internal implements SubscriberInterface
             return;
         }
         $this->debug->log('PHP Version', PHP_VERSION);
-        $this->debug->log('memory_limit', $this->debug->utilities->memoryLimit());
+        $this->debug->log('memory_limit', $this->debug->utilities->getBytes($this->debug->utilities->memoryLimit()));
         $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
         if (\error_reporting() !== E_ALL) {
             $styleMono = 'font-family:monospace;';
@@ -473,7 +473,9 @@ class Internal implements SubscriberInterface
     {
         $this->logRequestHeaders();
         if ($this->debug->getCfg('logEnvInfo.cookies')) {
-            $this->debug->log('$_COOKIE', $_COOKIE);
+            $cookieVals = $_COOKIE;
+            \ksort($cookieVals, SORT_NATURAL);
+            $this->debug->log('$_COOKIE', $cookieVals);
         }
         // don't expect a request body for these methods
         $noBody = !isset($_SERVER['REQUEST_METHOD'])
@@ -485,7 +487,7 @@ class Internal implements SubscriberInterface
                 $input = \file_get_contents('php://input');
                 if ($input) {
                     $this->debug->log('php://input', $input);
-                } else {
+                } elseif (isset($_SERVER['REQUEST_METHOD'])) {
                     $this->debug->warn($_SERVER['REQUEST_METHOD'].' request with no body');
                 }
             }
@@ -514,6 +516,7 @@ class Internal implements SubscriberInterface
                 $headers[$k] = $v;
             }
         }
+        \ksort($headers, SORT_NATURAL);
         $this->debug->log('request headers', $headers);
     }
 
@@ -524,13 +527,20 @@ class Internal implements SubscriberInterface
      */
     private function logServerVals()
     {
-        if (!$this->debug->getCfg('logEnvInfo.serverVals')) {
+        $logEnvInfo = $this->debug->getCfg('logEnvInfo');
+        if (!$logEnvInfo['serverVals']) {
             return;
         }
         $logServerKeys = $this->debug->getCfg('logServerKeys');
         if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] !== 'GET') {
             $logServerKeys[] = 'REQUEST_METHOD';
+        }
+        if (isset($_SERVER['CONTENT_LENGTH'])) {
+            $logServerKeys[] = 'CONTENT_LENGTH';
             $logServerKeys[] = 'CONTENT_TYPE';
+        }
+        if (!$logEnvInfo['headers']) {
+            $logServerKeys[] = 'HTTP_HOST';
         }
         $logServerKeys = \array_unique($logServerKeys);
         if (!$logServerKeys) {
@@ -546,6 +556,7 @@ class Internal implements SubscriberInterface
                 $vals[$k] = $_SERVER[$k];
             }
         }
+        \ksort($vals, SORT_NATURAL);
         $this->debug->log('$_SERVER', $vals);
     }
 

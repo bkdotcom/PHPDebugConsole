@@ -303,8 +303,8 @@
 		if ($root.hasClass("group-header")) {
 			// minimal enhancement... just adds data-toggle attr and hides target
 			// target will not be enhanced until expanded
-			enhanceGroupHeader($root);
 			addIcons($root, ["methods"]);
+			enhanceGroupHeader($root);
 			$root.addClass("enhanced");
 		} else if ($root.hasClass("m_groupSummary")) {
 			// groupSummary has no toggle.. and is uncollapsed -> enhance
@@ -346,8 +346,11 @@
 		// console.warn("enhanceGroupHeader", $toggle.text(), $toggle.attr("class"));
 		$toggle.attr("data-toggle", "group");
 		$.each(["level-error","level-info","level-warn"], function(i, val){
+			var $i;
 			if ($toggle.hasClass(val)) {
+				$i = $toggle.children('i').eq(0);
 				$toggle.wrapInner('<span class="'+val+'"></span>');
+				$toggle.prepend($i); // move icon
 			}
 		});
 		$toggle.removeClass("collapsed level-error level-info level-warn"); // collapsed class is never used

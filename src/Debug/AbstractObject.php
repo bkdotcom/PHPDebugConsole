@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.3
  */
 
 namespace bdk\Debug;
@@ -22,13 +22,14 @@ class AbstractObject
     static private $basePropInfo = array(
         'desc' => null,
         'inheritedFrom' => null,        // populated only if inherited
+        'isExcluded' => false,          // true if not included in __debugInfo
         'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
         'overrides' => null,            // populated only if we're overriding
         'type' => null,
         'value' => null,
         'viaDebugInfo' => false,        // true if __debugInfo && __debugInfo value differs
-        'visibility' => 'public',
+        'visibility' => 'public',       // public, private, protected, magic, debug
     );
 	protected $abstracter;
 	protected $phpDoc;
@@ -448,12 +449,12 @@ class AbstractObject
                 unset($debugInfo[$name]);
                 continue;
             }
-            if (\in_array($info['visibility'], array('private','protected')) && $info['inheritedFrom']) {
-                // keep the non-public ancestor regardless of inclusion in __debugInfo
-                // (this doesn't include "magic" properties, which we don't want to keep)
+            $isPrivateAncestor = $info['visibility'] == 'private' && $info['inheritedFrom'];
+            if ($isPrivateAncestor) {
+                // exempt from isExcluded
                 continue;
             }
-            unset($properties[$name]);
+            $properties[$name]['isExcluded'] = true;
         }
         foreach ($debugInfo as $name => $value) {
             $properties[$name] = \array_merge(
@@ -522,7 +523,9 @@ class AbstractObject
             }
             foreach ($abs['phpDoc'][$tag] as $phpDocProp) {
                 $properties[ $phpDocProp['name'] ] = \array_merge(
-                    self::$basePropInfo,
+                    isset($properties[ $phpDocProp['name'] ])
+                        ? $properties[ $phpDocProp['name'] ]
+                        : self::$basePropInfo,
                     array(
                         'desc' => $phpDocProp['desc'],
                         'type' => $phpDocProp['type'],

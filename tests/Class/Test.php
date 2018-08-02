@@ -25,6 +25,7 @@ class TestBase
     private $propPrivate = 'defined in TestBase (private)';
     protected $propProtected = 'defined only in TestBase (protected)';
     public $propPublic = 'defined in TestBase (public)';
+    protected $magicReadProp = 'not null';
 
     /**
      * get magic method
@@ -95,7 +96,7 @@ class Test extends TestBase
      */
     public $propPublic = 'redefined in Test (public)';
 
-    private $propNoDebug = 'hidden via __debugInfo';
+    private $propNoDebug = 'not included in __debugInfo';
 
     public $someArray = array(
         'int' => 123,

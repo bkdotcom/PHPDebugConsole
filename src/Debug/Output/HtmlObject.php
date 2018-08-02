@@ -301,7 +301,8 @@ class HtmlObject
         foreach ($abs['properties'] as $k => $info) {
             $isPrivateAncestor = $info['visibility'] == 'private' && $info['inheritedFrom'];
             $classes = \array_keys(\array_filter(array(
-                'debug-value' => !empty($info['viaDebugInfo']),
+                'debug-value' => $info['viaDebugInfo'],
+                'excluded' => $info['isExcluded'],
                 'private-ancestor' => $isPrivateAncestor,
                 'property' => true,
                 $info['visibility'] => $info['visibility'] != 'debug',

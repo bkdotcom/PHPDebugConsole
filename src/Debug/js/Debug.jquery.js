@@ -23,12 +23,14 @@
 				"> .method.magic" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
 				"> .method.deprecated" :		'<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
 				"> .property.debug-value" :		'<i class="fa fa-fw fa-eye" title="via __debugInfo()"></i>',
+				"> .property.excluded" :		'<span class="fa-stack" title="not included in __debugInfo"><i class="fa fa-info fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x"></i></span>',
 				"> .property.magic" :			'<i class="fa fa-fw fa-magic" title="magic property"></i>',
 				"> .property.magic-read" :		'<i class="fa fa-fw fa-magic" title="magic property"></i>',
 				"> .property.magic-write" :		'<i class="fa fa-fw fa-magic" title="magic property"></i>',
-				"> .property.private-ancestor" :'<i class="fa fa-fw fa-lock"></i>',
-				".toggle-private" :				'<i class="fa fa-user-secret"></i>',
-				".toggle-protected" :			'<i class="fa fa-shield"></i>'
+				"> .property.private-ancestor" :'<i class="fa fa-fw fa-lock" title="private ancestor"></i>',
+				".toggle-vis[data-toggle=private]" :	'<i class="fa fa-user-secret"></i>',
+				".toggle-vis[data-toggle=protected]" :	'<i class="fa fa-shield"></i>',
+				".toggle-vis[data-toggle=excluded]" :'<span class="fa-stack"><i class="fa fa-info fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x"></i></span>'
 			},
 			// debug methods (not object methods)
 			iconsMethods: {
@@ -396,6 +398,7 @@
 		var $wrapper = $inner.parent(),
 			hasProtected = $inner.children(".protected").length > 0,
 			hasPrivate = $inner.children(".private").length > 0,
+			hasExcluded = $inner.children(".excluded").hide().length > 0,
 			accessible = $wrapper.data("accessible"),
 			toggleClass = accessible === "public" ?
 				"toggle-off" :
@@ -427,10 +430,13 @@
 			$wrapper.find(".private, .protected").hide();
 		}
 		if (hasProtected) {
-			visToggles += ' <span class="toggle-protected '+toggleClass+'">' + toggleVerb + " protected</span>";
+			visToggles += ' <span class="toggle-vis '+toggleClass+'" data-toggle="protected">' + toggleVerb + " protected</span>";
 		}
 		if (hasPrivate) {
-			visToggles += ' <span class="toggle-private '+toggleClass+'">' + toggleVerb + " private</span>";
+			visToggles += ' <span class="toggle-vis '+toggleClass+'" data-toggle="private">' + toggleVerb + " private</span>";
+		}
+		if (hasExcluded) {
+			visToggles += ' <span class="toggle-vis '+toggleClass+'" data-toggle="excluded">' + toggleVerb + " excluded</span>";
 		}
 		$inner.prepend('<span class="vis-toggles">' + visToggles + "</span>");
 		enhanceArrays($inner);
@@ -519,21 +525,19 @@
 	}
 
 	function toggleObjectVis(toggle) {
-		var vis = $(toggle).hasClass("toggle-protected") ? "protected" : "private",
-			$toggles = $(toggle).closest(".t_object").find(".toggle-"+vis),
-			$icon = $(toggle).find("i"),
-			iconTag = $icon.length ? $icon[0].outerHTML : "";
+		var vis = $(toggle).data("toggle"),
+			$toggles = $(toggle).closest(".t_object").find(".toggle-vis[data-toggle="+vis+"]");
 		if ($(toggle).hasClass("toggle-off")) {
 			// show for this and all descendants
 			$toggles.
-				html(iconTag + "hide "+vis).
+				html($(toggle).html().replace("show ", "hide ")).
 				addClass("toggle-on").
 				removeClass("toggle-off");
 			$(toggle).closest(".t_object").find("."+vis).show();
 		} else {
 			// hide for this and all descendants
 			$toggles.
-				html(iconTag + "show "+vis).
+				html($(toggle).html().replace("hide ", "show ")).
 				addClass("toggle-off").
 				removeClass("toggle-on");
 			$(toggle).closest(".t_object").find("."+vis).hide();
@@ -553,12 +557,14 @@
 			".debug .error-fatal:before { margin-left:14px; }" +
 			".debug .debug-cookie { color:#666; }" +
 			".debug .hidden-channel, .debug .hidden-error { display:none !important; }" +
-			".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
+			".debug i.fa, .debug .fa-stack, .debug .m_assert i { margin-right:.33em; }" +
+			".debug .fa-stack { line-height:1em; height:1em; width:1em; margin-top:-.2em; }" +
 			".debug .m_assert > i { position:relative; top:-.20em; }" +
 			".debug i.fa-plus-circle { opacity:0.42; }" +
 			".debug i.fa-calendar { font-size:1.1em; }" +
 			".debug i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }" +
-			".debug i.fa-eye[title] { border-bottom:inherit; }" +
+			".debug i.fa-magic { color: orange; }" +
+			".debug .excluded > .fa-stack { color:#f39; }" +
 			".debug i.fa-lg { font-size:1.33em; }" +
 			".debug .group-header.expanded i.fa-warning, .debug .group-header.expanded i.fa-times-circle { display:none; }" +
 			".debug .group-header i.fa-warning { color:#cdcb06; margin-left:.33em}" +		// warning
@@ -665,7 +671,7 @@
 			toggleCollapse(this);
 			return false;
 		});
-		$root.on("click", ".toggle-protected, .toggle-private", function(){
+		$root.on("click", ".toggle-vis", function(){
 			toggleObjectVis(this);
 			return false;
 		});

@@ -17,6 +17,8 @@ class Test2Base
 
     const WORD = 'bird';
 
+    protected $magicReadProp = 'not null';
+
     /**
      * get magic method
      *

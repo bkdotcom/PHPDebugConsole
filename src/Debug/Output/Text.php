@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.1
+ * @version   v2.3
  */
 
 namespace bdk\Debug\Output;
@@ -245,7 +245,9 @@ class Text extends Base
             if ($vis == 'private' && $info['inheritedFrom']) {
                 $vis = '🔒 '.$vis;
             }
-            $str .= '    ('.$vis.') '.$name.' = '.$this->dump($info['value'], $path)."\n";
+            $str .= $info['isExcluded']
+                ? '    ('.$vis.' excluded) '.$name."\n"
+                : '    ('.$vis.') '.$name.' = '.$this->dump($info['value'], $path)."\n";
         }
         $propHeader = $str
             ? 'Properties:'

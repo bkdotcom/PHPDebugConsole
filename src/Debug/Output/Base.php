@@ -264,9 +264,11 @@ abstract class Base implements OutputInterface
                 $vis = $info['visibility'];
                 if (\in_array($vis, array('magic','magic-read','magic-write'))) {
                     $vis = '✨ '.$vis;    // "sparkles": there is no magic-want unicode char
-                }
-                if ($vis == 'private' && $info['inheritedFrom']) {
+                } elseif ($vis == 'private' && $info['inheritedFrom']) {
                     $vis = '🔒 '.$vis;
+                }
+                if ($info['isExcluded']) {
+                    $vis .= ' excluded';
                 }
                 $name = '('.$vis.') '.$name;
                 $return[$name] = $this->dump($info['value'], $path);

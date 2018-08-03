@@ -29,7 +29,8 @@ class AbstractObject
         'type' => null,
         'value' => null,
         'viaDebugInfo' => false,        // true if __debugInfo && __debugInfo value differs
-        'visibility' => 'public',       // public, private, protected, magic, debug
+        'visibility' => 'public',       // public, private, protected, magic, magic-read, magic-write, debug
+                                        //   may also be an array (ie: ['private', 'magic-read'])
     );
 	protected $abstracter;
 	protected $phpDoc;
@@ -289,13 +290,14 @@ class AbstractObject
         if (\method_exists($obj, '__toString')) {
             $abs['methods']['__toString'] = array(
                 'returnValue' => \call_user_func(array($obj, '__toString')),
+                'visibility' => 'public',
             );
         }
         if (\method_exists($obj, '__get')) {
-            $abs['methods']['__get'] = true;
+            $abs['methods']['__get'] = array('visibility' => 'public');
         }
         if (\method_exists($obj, '__set')) {
-            $abs['methods']['__set'] = true;
+            $abs['methods']['__set'] = array('visibility' => 'public');
         }
         return;
     }
@@ -449,7 +451,7 @@ class AbstractObject
                 unset($debugInfo[$name]);
                 continue;
             }
-            $isPrivateAncestor = $info['visibility'] == 'private' && $info['inheritedFrom'];
+            $isPrivateAncestor = \in_array('private', (array) $info['visibility']) && $info['inheritedFrom'];
             if ($isPrivateAncestor) {
                 // exempt from isExcluded
                 continue;
@@ -522,15 +524,18 @@ class AbstractObject
                 continue;
             }
             foreach ($abs['phpDoc'][$tag] as $phpDocProp) {
+                $exists = isset($properties[ $phpDocProp['name'] ]);
                 $properties[ $phpDocProp['name'] ] = \array_merge(
-                    isset($properties[ $phpDocProp['name'] ])
+                    $exists
                         ? $properties[ $phpDocProp['name'] ]
                         : self::$basePropInfo,
                     array(
                         'desc' => $phpDocProp['desc'],
                         'type' => $phpDocProp['type'],
                         'inheritedFrom' => $inheritedFrom,
-                        'visibility' => $vis,
+                        'visibility' => $exists
+                            ? array($properties[ $phpDocProp['name'] ]['visibility'], $vis)
+                            : $vis,
                     )
                 );
             }
@@ -873,12 +878,10 @@ class AbstractObject
                 $sortData['name'][$name] = $name == '__construct'
                     ? '0'     // always place __construct at the top
                     : $name;
-                /*
-                    visibility may not be set on methods... if methods weren't collected, but still collected __toString/returnValue
-                */
-                $sortData['vis'][$name] = isset($info['visibility'])
-                    ? \array_search($info['visibility'], $sortVisOrder)
-                    : \count($sortVisOrder);
+                $vis = \is_array($info['visibility'])
+                    ? $info['visibility'][0]
+                    : $info['visibility'];
+                $sortData['vis'][$name] = \array_search($vis, $sortVisOrder);
             }
             \array_multisort($sortData['vis'], $sortData['name'], $array);
         }

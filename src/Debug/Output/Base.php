@@ -261,16 +261,18 @@ abstract class Base implements OutputInterface
             $pathCount = \count($path);
             foreach ($abs['properties'] as $name => $info) {
                 $path[$pathCount] = $name;
-                $vis = $info['visibility'];
-                if (\in_array($vis, array('magic','magic-read','magic-write'))) {
-                    $vis = '✨ '.$vis;    // "sparkles": there is no magic-want unicode char
-                } elseif ($vis == 'private' && $info['inheritedFrom']) {
-                    $vis = '🔒 '.$vis;
+                $vis = (array) $info['visibility'];
+                foreach ($vis as $i => $v) {
+                    if (\in_array($v, array('magic','magic-read','magic-write'))) {
+                        $vis[$i] = '✨ '.$v;    // "sparkles": there is no magic-want unicode char
+                    } elseif ($v == 'private' && $info['inheritedFrom']) {
+                        $vis[$i] = '🔒 '.$v;
+                    }
                 }
                 if ($info['isExcluded']) {
-                    $vis .= ' excluded';
+                    $vis[] = 'excluded';
                 }
-                $name = '('.$vis.') '.$name;
+                $name = '('.\implode(' ', $vis).') '.$name;
                 $return[$name] = $this->dump($info['value'], $path);
             }
         }

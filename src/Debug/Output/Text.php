@@ -238,13 +238,15 @@ class Text extends Base
         }
         foreach ($abs['properties'] as $name => $info) {
             $path[$pathCount] = $name;
-            $vis = $info['visibility'];
-            if (\in_array($vis, array('magic','magic-read','magic-write'))) {
-                $vis = '✨ '.$vis;    // "sparkles" there is no magic-wand unicode char
+            $vis = (array) $info['visibility'];
+            foreach ($vis as $i => $v) {
+                if (\in_array($v, array('magic','magic-read','magic-write'))) {
+                    $vis[$i] = '✨ '.$v;    // "sparkles" there is no magic-wand unicode char
+                } elseif ($v == 'private' && $info['inheritedFrom']) {
+                    $vis[$i] = '🔒 '.$v;
+                }
             }
-            if ($vis == 'private' && $info['inheritedFrom']) {
-                $vis = '🔒 '.$vis;
-            }
+            $vis = \implode(' ', $vis);
             $str .= $info['isExcluded']
                 ? '    ('.$vis.' excluded) '.$name."\n"
                 : '    ('.$vis.') '.$name.' = '.$this->dump($info['value'], $path)."\n";

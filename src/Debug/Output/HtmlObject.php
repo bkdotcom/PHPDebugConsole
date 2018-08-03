@@ -299,16 +299,19 @@ class HtmlObject
         $magicMethods = \array_intersect(array('__get','__set'), \array_keys($abs['methods']));
         $str .= $this->magicMethodInfo($magicMethods);
         foreach ($abs['properties'] as $k => $info) {
-            $isPrivateAncestor = $info['visibility'] == 'private' && $info['inheritedFrom'];
+            $vis = (array) $info['visibility'];
+            $isPrivateAncestor = \in_array('private', $vis) && $info['inheritedFrom'];
             $classes = \array_keys(\array_filter(array(
-                'debug-value' => $info['viaDebugInfo'],
+                'debuginfo-value' => $info['viaDebugInfo'],
                 'excluded' => $info['isExcluded'],
                 'private-ancestor' => $isPrivateAncestor,
                 'property' => true,
-                $info['visibility'] => $info['visibility'] != 'debug',
+                \implode(' ', $vis) => $info['visibility'] !== 'debug',
             )));
             $str .= '<dd class="'.\implode(' ', $classes).'">'
-                .'<span class="t_modifier_'.$info['visibility'].'">'.$info['visibility'].'</span>'
+                .\implode(' ', \array_map(function ($v) {
+                    return '<span class="t_modifier_'.$v.'">'.$v.'</span>';
+                }, $vis))
                 .($isPrivateAncestor
                     ? ' (<i>'.$info['inheritedFrom'].'</i>)'
                     : ''

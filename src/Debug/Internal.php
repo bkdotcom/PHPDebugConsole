@@ -510,12 +510,7 @@ class Internal implements SubscriberInterface
         if (!empty($_SERVER['argv'])) {
             return;
         }
-        $headers = array();
-        foreach ($_SERVER as $k => $v) {
-            if (\strpos($k, 'HTTP_') !== false) {
-                $headers[$k] = $v;
-            }
-        }
+        $headers = $this->debug->utilities->getAllHeaders();
         \ksort($headers, SORT_NATURAL);
         $this->debug->log('request headers', $headers);
     }

@@ -22,15 +22,15 @@
 				"> .info.magic" :				'<i class="fa fa-fw fa-magic"></i>',
 				"> .method.magic" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
 				"> .method.deprecated" :		'<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
-				"> .property.debug-value" :		'<i class="fa fa-fw fa-eye" title="via __debugInfo()"></i>',
-				"> .property.excluded" :		'<span class="fa-stack" title="not included in __debugInfo"><i class="fa fa-info fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x"></i></span>',
-				"> .property.magic" :			'<i class="fa fa-fw fa-magic" title="magic property"></i>',
-				"> .property.magic-read" :		'<i class="fa fa-fw fa-magic" title="magic property"></i>',
-				"> .property.magic-write" :		'<i class="fa fa-fw fa-magic" title="magic property"></i>',
-				"> .property.private-ancestor" :'<i class="fa fa-fw fa-lock" title="private ancestor"></i>',
+				"> .property.debuginfo-value" :	'<i class="fa fa-eye" title="via __debugInfo()"></i>',
+				"> .property.excluded" :		'<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
+				"> .property.private-ancestor" :'<i class="fa fa-lock" title="private ancestor"></i>',
+				"> .property > .t_modifier_magic" :		  '<i class="fa fa-magic" title="magic property"></i>',
+				"> .property > .t_modifier_magic-read" :  '<i class="fa fa-magic" title="magic property"></i>',
+				"> .property > .t_modifier_magic-write" : '<i class="fa fa-magic" title="magic property"></i>',
 				".toggle-vis[data-toggle=private]" :	'<i class="fa fa-user-secret"></i>',
 				".toggle-vis[data-toggle=protected]" :	'<i class="fa fa-shield"></i>',
-				".toggle-vis[data-toggle=excluded]" :'<span class="fa-stack"><i class="fa fa-info fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x"></i></span>'
+				".toggle-vis[data-toggle=excluded]" :   '<i class="fa fa-eye-slash"></i>'
 			},
 			// debug methods (not object methods)
 			iconsMethods: {
@@ -159,6 +159,7 @@
 			$.each(options.iconsObject, function(selector,v){
 				$root.find(selector).prepend(v);
 			});
+			$root.find("> .property > .fa:first-child, > .property > span:first-child > .fa").addClass("fa-fw");
 		}
 		if ($.inArray("methods", types) >= 0) {
 			$.each(options.iconsMethods, function(selector,v){
@@ -533,14 +534,14 @@
 				html($(toggle).html().replace("show ", "hide ")).
 				addClass("toggle-on").
 				removeClass("toggle-off");
-			$(toggle).closest(".t_object").find("."+vis).show();
+			$(toggle).closest(".t_object").find(".property."+vis).show();
 		} else {
 			// hide for this and all descendants
 			$toggles.
 				html($(toggle).html().replace("hide ", "show ")).
 				addClass("toggle-off").
 				removeClass("toggle-on");
-			$(toggle).closest(".t_object").find("."+vis).hide();
+			$(toggle).closest(".t_object").find(".property."+vis).hide();
 		}
 	}
 
@@ -557,14 +558,13 @@
 			".debug .error-fatal:before { margin-left:14px; }" +
 			".debug .debug-cookie { color:#666; }" +
 			".debug .hidden-channel, .debug .hidden-error { display:none !important; }" +
-			".debug i.fa, .debug .fa-stack, .debug .m_assert i { margin-right:.33em; }" +
-			".debug .fa-stack { line-height:1em; height:1em; width:1em; margin-top:-.2em; }" +
+			".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
 			".debug .m_assert > i { position:relative; top:-.20em; }" +
 			".debug i.fa-plus-circle { opacity:0.42; }" +
 			".debug i.fa-calendar { font-size:1.1em; }" +
 			".debug i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }" +
 			".debug i.fa-magic { color: orange; }" +
-			".debug .excluded > .fa-stack { color:#f39; }" +
+			".debug .excluded > i.fa-eye-slash { color:#f39; }" +
 			".debug i.fa-lg { font-size:1.33em; }" +
 			".debug .group-header.expanded i.fa-warning, .debug .group-header.expanded i.fa-times-circle { display:none; }" +
 			".debug .group-header i.fa-warning { color:#cdcb06; margin-left:.33em}" +		// warning

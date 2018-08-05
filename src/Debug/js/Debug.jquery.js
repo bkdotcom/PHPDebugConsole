@@ -427,6 +427,9 @@
 				});
 			});
 		}
+		$wrapper.find(".private, .protected").
+			filter(".magic, .magic-read, .magic-write").
+			removeClass("private protected");
 		if (accessible === "public") {
 			$wrapper.find(".private, .protected").hide();
 		}

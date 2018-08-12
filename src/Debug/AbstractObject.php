@@ -193,6 +193,10 @@ class AbstractObject
                 'type' => 'integer',
                 'value' => $obj->length,
             ));
+        } elseif ($obj instanceof \Exception) {
+            if (isset($event['properties']['xdebug_message'])) {
+                $event['properties']['xdebug_message']['isExcluded'] = true;
+            }
         } elseif ($obj instanceof \mysqli && !$event['collectPropertyValues']) {
             $propsAlwaysAvail = array(
                 'client_info','client_version','connect_errno','connect_error','errno','error','stat'

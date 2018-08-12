@@ -19,7 +19,6 @@ use bdk\ErrorHandler\ErrorEmailer;
 use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
-use ReflectionClass;
 use ReflectionMethod;
 
 /**
@@ -49,6 +48,7 @@ class Debug
     protected $config;          // config instance
     protected $parentInstance;
     protected $rootInstance;
+    protected static $methodParamCount = array();
 
     const CLEAR_ALERTS = 1;
     const CLEAR_LOG = 2;
@@ -186,7 +186,7 @@ class Debug
      */
     public function __call($methodName, $args)
     {
-        $this->appendLog(
+        return $this->appendLog(
             $methodName,
             $args,
             array('isCustomMethod' => true)
@@ -210,6 +210,25 @@ class Debug
         if (!self::$instance) {
             new static();
         }
+        /*
+            Add 'statically' meta arg
+            Not all methods expect meta args... so make sure it comes after expected args
+        */
+        $argCount = 0;
+        if (!isset(self::$methodParamCount[$methodName])) {
+            $instance = \bdk\Debug::getInstance();
+            if (\method_exists($instance, $methodName)) {
+                $reflectionMethod = new ReflectionMethod($instance, $methodName);
+                $argCount = $reflectionMethod->getNumberOfParameters();
+                self::$methodParamCount[$methodName] = $argCount;
+            }
+        } else {
+            $argCount = self::$methodParamCount[$methodName];
+        }
+        if ($argCount) {
+            $args = array_replace(array_fill(0, $argCount, null), $args);
+        }
+        $args[] = self::meta('statically');
         return \call_user_func_array(array(self::$instance, $methodName), $args);
     }
 
@@ -806,7 +825,11 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel'])
+            array(
+                'caption' => 'trace',
+                'channel' => $this->cfg['channel'],
+                'columns' => array('file','line','function'),
+            )
         );
         $backtrace = $this->errorHandler->backtrace();
         // toss "internal" frames
@@ -1180,21 +1203,22 @@ class Debug
                 'method' => $method,
                 'args' => $args,
                 'meta' => $meta,
+                'appendLog' => true,
+                'return' => null,
             )
         );
         if ($cfgRestore) {
             $this->config->setCfg($cfgRestore);
         }
-        if ($event->isPropagationStopped()) {
-            return;
+        if (!$event->getValue('appendLog')) {
+            return $event->getValue('return');
         }
         if ($this->parentInstance) {
-            $this->parentInstance->appendLog(
+            return $this->parentInstance->appendLog(
                 $event->getValue('method'),
                 $event->getValue('args'),
                 $event->getValue('meta')
             );
-            return;
         }
         $this->rootInstance->logRef[] = array(
             $event->getValue('method'),
@@ -1203,6 +1227,7 @@ class Debug
                 'channel' => $this->cfg['channel'],
             )),
         );
+        return $event->getValue('return');
     }
 
     /**

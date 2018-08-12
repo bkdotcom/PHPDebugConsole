@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.2
+ * @version   v2.3
  */
 
 namespace bdk\Debug;
@@ -122,7 +122,7 @@ class MethodTable
                     $objInfo['cols'][$key] = false;
                 }
                 if (Abstracter::isAbstraction($value)) {
-                    // just output the stringified / __toString value in a table
+                    // just return the stringified / __toString value in a table
                     if (isset($value['stringified'])) {
                         $objInfo['cols'][$key] = $value['className'];
                         $value = $value['stringified'];
@@ -152,6 +152,7 @@ class MethodTable
         $meta = \array_merge(array(
             'caption' => null,
             'columns' => array(),
+            'sortable' => true,
         ), $event['meta']);
         $argCount = \count($args);
         $data = null;

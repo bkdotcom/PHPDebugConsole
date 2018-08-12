@@ -64,8 +64,8 @@ class File extends Text
         if ($method == 'groupUncollapse') {
             return;
         }
-        $meta = $event['meta'];
         $args = $event['args'];
+        $meta = $event['meta'];
         $isSummaryBookend = $method == 'groupSummary' || !empty($meta['closesSummary']);
         if ($isSummaryBookend) {
             \fwrite($this->fileHandle, "=========\n");

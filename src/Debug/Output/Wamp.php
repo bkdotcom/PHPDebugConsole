@@ -65,7 +65,7 @@ class Wamp implements OutputInterface
         $this->publishMeta();
         $this->processExistingData();
         return array(
-            'debug.log' => array('onLog', -1),
+            'debug.log' => array('onLog', PHP_INT_MAX * -1),
             'errorHandler.error' => 'onError',    // assumes errorhandler is using same dispatcher.. as should be
             'php.shutdown' => 'onShutdown',
         );

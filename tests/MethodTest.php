@@ -94,7 +94,10 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'myCustom',
                     array('called statically'),
-                    array('isCustomMethod' => true),
+                    array(
+                        'isCustomMethod' => true,
+                        'statically' => true,
+                    ),
                 ),
                 'chromeLogger' => array(
                     array('called statically'),
@@ -643,13 +646,13 @@ class MethodTest extends DebugTestFramework
         $this->assertSame(array(
             array('count', array('count test',1), array()),
             array('count', array('count test',2), array()),
-            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[1])),
+            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
             array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[0])),
             array('count', array('count test', 3), array()),
-            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[1])),
+            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
             array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[0])),
             array('count', array('count test', 4), array()),
-            array('count', array('count',3), array('file'=>__FILE__,'line'=>$lines[1])),
+            array('count', array('count',3), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
             array('log', array('count_inc test', 3), array()),
             array('count', array('count_inc test',3), array()),
         ), $this->debug->getData('log'));
@@ -869,6 +872,7 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\TestBase->testBasePublic'
                     ),
                     array(
+                        'statically' => true,
                         'isMethodName' => true,
                     ),
                 ),
@@ -897,6 +901,7 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\Test->testBasePublic'
                     ),
                     array(
+                        'statically' => true,
                         'isMethodName' => true,
                     ),
                 ),
@@ -927,6 +932,7 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\TestBase::testBaseStatic'
                     ),
                     array(
+                        'statically' => true,
                         'isMethodName' => true,
                     ),
                 ),
@@ -956,6 +962,7 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\TestBase::testBaseStatic'
                     ),
                     array(
+                        'statically' => true,
                         'isMethodName' => true,
                     ),
                 ),

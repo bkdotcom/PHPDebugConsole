@@ -121,6 +121,11 @@ class Utilities
                 $v = self::buildAttribArrayVal($k, $v);
             } elseif (\is_bool($v)) {
                 $v = self::buildAttribBoolVal($k, $v);
+            } elseif ($k == 'class') {
+                // class passed as string
+                // sort and unique
+                $v = \explode(' ', $v);
+                $v = self::buildAttribArrayVal($k, $v);
             }
             $v = \trim($v);
             if (\array_filter(array(
@@ -146,6 +151,7 @@ class Utilities
         if (\function_exists('getallheaders')) {
             return \getallheaders();
         }
+        $headers = array();
         $copyServer = array(
             'CONTENT_TYPE'   => 'Content-Type',
             'CONTENT_LENGTH' => 'Content-Length',

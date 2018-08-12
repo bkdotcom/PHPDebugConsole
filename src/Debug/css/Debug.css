@@ -68,9 +68,8 @@
 /*.debug pre br { display:none; }*/
 .debug table { border-collapse:collapse; }
 .debug table caption { font-weight:bold; font-style:italic; padding-bottom:0; padding-top:2px; text-align:left; }
-.debug table th { font-weight:bold;background-color:rgba(0,0,0,0.1); }
+.debug table th { font-weight:bold; background-color:rgba(0,0,0,0.1); }
 .debug table thead th { text-align:center; }
-.debug table tbody th { text-align:right; }
 .debug table th, .debug table td { padding:0 .25em; vertical-align:top; }
 .debug .table-bordered th, .debug .table-bordered td { border:1px solid #7F7F7F; padding:1px .25em; }
 .debug table th .t_classname { opacity:.50; font-style:italic; }

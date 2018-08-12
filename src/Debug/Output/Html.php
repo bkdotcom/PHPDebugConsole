@@ -229,23 +229,17 @@ class Html extends Base
             $str = $this->methodAlert($args, $meta);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->buildGroupMethod($method, $args, $meta);
-        } elseif ($method == 'table') {
+        } elseif (\in_array($method, array('table','trace'))) {
             $str = $this->buildTable(
                 $args[0],
                 $meta['caption'],
                 $meta['columns'],
                 array(
-                    'class' => 'm_table table-bordered sortable',
-                    'data-channel' => $meta['channel'],
-                )
-            );
-        } elseif ($method == 'trace') {
-            $str = $this->buildTable(
-                $args[0],
-                'trace',
-                array('file','line','function'),
-                array(
-                    'class' => 'm_trace table-bordered',
+                    'class' => array(
+                        $method == 'table' ? 'm_table' : 'm_trace',
+                        'table-bordered',
+                        !empty($meta['sortable']) ? 'sortable' : null,
+                    ),
                     'data-channel' => $meta['channel'],
                 )
             );
@@ -402,9 +396,12 @@ class Html extends Base
         $str = '';
         $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
         $classAndInner = $this->debug->utilities->parseAttribString($this->dump($rowKey));
-        $classAndInner['class'] = \trim('t_key '.$classAndInner['class']);
+        $classAndInner['class'] = 't_key text-right '.$classAndInner['class'];
         $str .= '<tr>';
-        $str .= '<th class="'.$classAndInner['class'].'" scope="row">'.$classAndInner['innerhtml'].'</th>';
+        $str .= '<th'.$this->debug->utilities->buildAttribString(array(
+            'class' => $classAndInner['class'],
+            'scope' => 'row',
+        )).'>'.$classAndInner['innerhtml'].'</th>';
         if ($objInfo['row']) {
             $str .= $this->markupClassname($objInfo['row']['className'], 'td', array(
                 'title' => $objInfo['row']['phpDoc']['summary'] ?: null,

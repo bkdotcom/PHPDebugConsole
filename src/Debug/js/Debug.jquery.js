@@ -557,8 +557,8 @@
 	 */
 	function addCss(scope) {
 		var css = "" +
-			".debug .error-fatal i.fa-times-circle { position:absolute; top:10px; }" +
-			".debug .error-fatal:before { margin-left:14px; }" +
+			".debug .error-fatal:before { padding-left: 1.25em; }" +
+			".debug .error-fatal i.fa-times-circle { position:absolute; top:.7em; }" +
 			".debug .debug-cookie { color:#666; }" +
 			".debug .hidden-channel, .debug .hidden-error { display:none !important; }" +
 			".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
@@ -589,10 +589,14 @@
 			".debug .vis-toggles .toggle-off," +
 			"	.debug .interface .toggle-off { opacity:0.42 }" +
 			"";
-		if ( scope ) {
+		var id = 'debug_javascript_style';
+		if (scope) {
 			css = css.replace(new RegExp(/\.debug\s/g), scope+" ");
+			id += scope.replace(/\W/g, "_");
 		}
-		$("<style>" + css + "</style>").appendTo("head");
+		if ($("head").find("#"+id).length === 0) {
+			$('<style id="' + id + '">' + css + '</style>').appendTo("head");
+		}
 	}
 
 	function addExpandAll($root) {

@@ -245,7 +245,7 @@ class Utilities
             'class' => null,
             'type' => null,
         );
-        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 8);
+        $backtrace = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS | \DEBUG_BACKTRACE_PROVIDE_OBJECT, 8);
         $numFrames = \count($backtrace);
         $regexInternal = '/^'.\preg_quote(__NAMESPACE__).'\b/';
         if (isset($backtrace[1]['class']) && \preg_match($regexInternal, $backtrace[1]['class'])) {

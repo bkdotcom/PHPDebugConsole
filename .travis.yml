@@ -22,6 +22,7 @@ before_script:
   - |
     echo "TRAVIS_PHP_VERSION:" $TRAVIS_PHP_VERSION;
     php -v;
+    php -r 'echo PHP_VERSION;';
     if [ ${TRAVIS_PHP_VERSION:0:4} == "hhvm" ]; then
       curl -sSfL -o ~/.phpenv/versions/hhvm/bin/phpunit https://phar.phpunit.de/phpunit-5.7.phar;
     fi

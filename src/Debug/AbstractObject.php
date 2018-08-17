@@ -731,7 +731,7 @@ class AbstractObject
         }
         if ($i < 0) {
             $backtrace = \version_compare(PHP_VERSION, '5.4.0', '>=')
-                ? \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
+                ? \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS)
                 : \debug_backtrace(false);   // don't provide object
             foreach ($backtrace as $i => $frame) {
                 if (!isset($frame['class']) || \strpos($frame['class'], __NAMESPACE__) !== 0) {

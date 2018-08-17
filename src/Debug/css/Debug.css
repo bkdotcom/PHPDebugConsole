@@ -282,7 +282,7 @@
 */
 .debug .m_error.error-fatal:before {
 	display: block;
-	padding-left: 10px;
+	margin-left:10px;
 	margin-bottom: 5px;
 	content: "Fatal error";
 	font-size: 1.2em;

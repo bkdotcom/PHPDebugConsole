@@ -145,7 +145,7 @@ class ErrorHandler
             // backtrace unavailable
             $backtrace = array();
         } else {
-            $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            $backtrace = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
         }
         return $this->normalizeTrace($backtrace);
@@ -423,7 +423,7 @@ class ErrorHandler
     {
         if ($caller === null) {
             $backtrace = \version_compare(PHP_VERSION, '5.4.0', '>=')
-                ? \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3)
+                ? \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3)
                 : \debug_backtrace(false);   // don't provide object
             $i = isset($backtrace[$offset+1])
                 ? $offset + 1

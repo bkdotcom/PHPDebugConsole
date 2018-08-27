@@ -106,6 +106,8 @@
 					collapse($self);
 				} else if (method === "registerListeners") {
 					registerListeners($self);
+				} else if (method === "enhanceGroupHeader") {
+					enhanceGroupHeader($self);
 				}
 				return;
 			}
@@ -557,39 +559,39 @@
 	 */
 	function addCss(scope) {
 		var css = "" +
-			".debug .error-fatal:before { padding-left: 1.25em; }" +
-			".debug .error-fatal i.fa-times-circle { position:absolute; top:.7em; }" +
-			".debug .debug-cookie { color:#666; }" +
-			".debug .hidden-channel, .debug .hidden-error { display:none !important; }" +
-			".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
-			".debug .m_assert > i { position:relative; top:-.20em; }" +
-			".debug i.fa-plus-circle { opacity:0.42; }" +
-			".debug i.fa-calendar { font-size:1.1em; }" +
-			".debug i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }" +
-			".debug i.fa-magic { color: orange; }" +
-			".debug .excluded > i.fa-eye-slash { color:#f39; }" +
-			".debug i.fa-lg { font-size:1.33em; }" +
-			".debug .group-header.expanded i.fa-warning, .debug .group-header.expanded i.fa-times-circle { display:none; }" +
-			".debug .group-header i.fa-warning { color:#cdcb06; margin-left:.33em}" +		// warning
-			".debug .group-header i.fa-times-circle { color:#D8000C; margin-left:.33em;}" +	// error
-			".debug a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; display:block; clear:left; }" +
-			".debug .group-header.hidden-channel + .m_group," +
-			"	.debug *:not(.group-header) + .m_group {" +
-			"		margin-left: 0;" +
-			"		border-left: 0;" +
-			"		padding-left: 0;" +
-			"		display: block !important;" +
-			"	}" +
-			".debug [data-toggle]," +
-			"	.debug [data-toggle][title]," +	// override .debug[title]
-			"	.debug .vis-toggles span { cursor:pointer; }" +
-			".debug .group-header.empty, .debug .t_classname.empty { cursor:auto; }" +
-			".debug .vis-toggles span:hover," +
-			"	.debug [data-toggle=interface]:hover { background-color:rgba(0,0,0,0.1); }" +
-			".debug .vis-toggles .toggle-off," +
-			"	.debug .interface .toggle-off { opacity:0.42 }" +
-			"";
-		var id = 'debug_javascript_style';
+				".debug .error-fatal:before { padding-left: 1.25em; }" +
+				".debug .error-fatal i.fa-times-circle { position:absolute; top:.7em; }" +
+				".debug .debug-cookie { color:#666; }" +
+				".debug .hidden-channel, .debug .hidden-error { display:none !important; }" +
+				".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
+				".debug .m_assert > i { position:relative; top:-.20em; }" +
+				".debug i.fa-plus-circle { opacity:0.42; }" +
+				".debug i.fa-calendar { font-size:1.1em; }" +
+				".debug i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }" +
+				".debug i.fa-magic { color: orange; }" +
+				".debug .excluded > i.fa-eye-slash { color:#f39; }" +
+				".debug i.fa-lg { font-size:1.33em; }" +
+				".debug .group-header.expanded i.fa-warning, .debug .group-header.expanded i.fa-times-circle { display:none; }" +
+				".debug .group-header i.fa-warning { color:#cdcb06; margin-left:.33em}" +		// warning
+				".debug .group-header i.fa-times-circle { color:#D8000C; margin-left:.33em;}" +	// error
+				".debug a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; display:block; clear:left; }" +
+				".debug .group-header.hidden-channel + .m_group," +
+				"	.debug *:not(.group-header) + .m_group {" +
+				"		margin-left: 0;" +
+				"		border-left: 0;" +
+				"		padding-left: 0;" +
+				"		display: block !important;" +
+				"	}" +
+				".debug [data-toggle]," +
+				"	.debug [data-toggle][title]," +	// override .debug[title]
+				"	.debug .vis-toggles span { cursor:pointer; }" +
+				".debug .group-header.empty, .debug .t_classname.empty { cursor:auto; }" +
+				".debug .vis-toggles span:hover," +
+				"	.debug [data-toggle=interface]:hover { background-color:rgba(0,0,0,0.1); }" +
+				".debug .vis-toggles .toggle-off," +
+				"	.debug .interface .toggle-off { opacity:0.42 }" +
+				"",
+			id = 'debug_javascript_style';
 		if (scope) {
 			css = css.replace(new RegExp(/\.debug\s/g), scope+" ");
 			id += scope.replace(/\W/g, "_");

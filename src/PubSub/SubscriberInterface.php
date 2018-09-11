@@ -6,7 +6,8 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.0.0
+ * @version   v2.3
+ * @link      http://www.github.com/bkdotcom/PubSub
  */
 
 namespace bdk\PubSub;

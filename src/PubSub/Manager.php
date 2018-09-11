@@ -6,7 +6,8 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.3
+ * @link      http://www.github.com/bkdotcom/PubSub
  */
 
 namespace bdk\PubSub;
@@ -115,7 +116,8 @@ class Manager
         } else {
             $event = new Event($eventOrSubject, $values);
         }
-        if ($subscribers = $this->getSubscribers($eventName)) {
+        $subscribers = $this->getSubscribers($eventName);
+        if ($subscribers) {
             $this->doPublish($eventName, $subscribers, $event);
         }
         return $event;

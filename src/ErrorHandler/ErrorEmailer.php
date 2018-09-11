@@ -4,7 +4,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.2
+ * @version   v2.3
  */
 
 namespace bdk\ErrorHandler;
@@ -352,6 +352,7 @@ class ErrorEmailer implements SubscriberInterface
             // already imported
             return;
         }
+        $throttleData = array();
         if ($this->cfg['emailThrottleRead'] && \is_callable($this->cfg['emailThrottleRead'])) {
             $throttleData = \call_user_func($this->cfg['emailThrottleRead']);
         } elseif ($this->cfg['emailThrottleFile'] && \is_readable($this->cfg['emailThrottleFile'])) {

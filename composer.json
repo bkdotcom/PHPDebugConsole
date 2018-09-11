@@ -26,6 +26,10 @@
 	"autoload-dev": {
 		"classmap": ["tests"]
 	},
+	"replace": {
+		"bdk/errorhandler": "self.version",
+		"bdk/pubsub": "self.version"
+	},
 	"require": {
 		"php": ">=5.4.0"
 	},

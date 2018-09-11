@@ -229,13 +229,19 @@ class ErrorHandler
             ? \error_reporting() // note:  will return 0 if error suppression is active in call stack (via @ operator)
                                 //  our shutdown function unsupresses fatal errors
             : $this->cfg['errorReporting'];
-        $continueToPrev = $this->cfg['continueToPrevHandler'] && $this->prevErrorHandler;
         $isHandledType = $errType & $errorReporting;
         if (!$isHandledType) {
             // not handled
             //   if cfg['errorReporting'] == 'system', error could simply be suppressed
-            if ($continueToPrev) {
-                return \call_user_func($this->prevErrorHandler, $errType, $errMsg, $error['file'], $error['line'], $vars);
+            if ($error['continueToPrevHandler']) {
+                return \call_user_func(
+                    $this->prevErrorHandler,
+                    $error['type'],
+                    $error['message'],
+                    $error['file'],
+                    $error['line'],
+                    $vars
+                );
             }
             return false;   // return false to continue to "normal" error handler
         }
@@ -246,11 +252,18 @@ class ErrorHandler
             $this->eventManager->publish('errorHandler.error', $error);
         }
         $this->data['errors'][ $error['hash'] ] = $error;
-        if ($continueToPrev && !$error->isPropagationStopped()) {
-            return \call_user_func($this->prevErrorHandler, $error['type'], $error['message'], $error['file'], $error['line'], $vars);
+        if ($error['continueToPrevHandler'] && $this->prevErrorHandler && !$error->isPropagationStopped()) {
+            return \call_user_func(
+                $this->prevErrorHandler,
+                $error['type'],
+                $error['message'],
+                $error['file'],
+                $error['line'],
+                $vars
+            );
         }
         if (\in_array($error['type'], array(E_USER_ERROR, E_RECOVERABLE_ERROR))) {
-            $this->onEUserError($error);
+            $this->onUserError($error);
         }
         if ($error['continueToNormal']) {
             // PHP will log the error
@@ -592,6 +605,7 @@ class ErrorHandler
             'vars'      => $vars,
             'backtrace' => array(), // only for fatal type errors, and only if xdebug is enabled
             'continueToNormal' => false,    // aka, let PHP do its thing (log error)
+            'continueToPrevHandler' => $this->cfg['continueToPrevHandler'] && $this->prevErrorHandler,
             'exception' => $this->uncaughtException,  // non-null if error is uncaught-exception
             'hash'          => null,
             'isFirstOccur'  => true,
@@ -651,7 +665,7 @@ class ErrorHandler
      *
      * @return void
      */
-    protected function onEUserError(Event $error)
+    protected function onUserError(Event $error)
     {
         switch ($this->cfg['onEUserError']) {
             case 'continue':

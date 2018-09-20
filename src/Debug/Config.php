@@ -226,6 +226,7 @@ class Config
                 'outputAsDefaultNonHtml',
                 'outputConstants',
                 'outputCss',
+                'outputHeaders',
                 'outputMethodDescription',
                 'outputMethods',
                 'outputScript',

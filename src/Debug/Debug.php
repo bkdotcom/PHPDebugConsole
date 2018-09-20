@@ -138,6 +138,7 @@ class Debug
             'groupPriorityStack' => array(), // array of priorities
                                             //   used to return to the previous summary when groupEnd()ing out of a summary
                                             //   this allows calling groupSummary() while in a groupSummary
+            'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
             'log'               => array(),
             'logSummary'        => array(), // summary log entries subgrouped by priority
             'outputSent'        => false,
@@ -182,7 +183,7 @@ class Debug
      * @param string $methodName Inaccessible method name
      * @param array  $args       Arguments passed to method
      *
-     * @return void
+     * @return mixed
      */
     public function __call($methodName, $args)
     {
@@ -505,7 +506,9 @@ class Debug
         }
         if ($this->data['groupPriorityStack'] && !$groupStackWas) {
             // we're closing a summary group
-            \array_pop($this->data['groupPriorityStack']);
+            $priorityClosing = \array_pop($this->data['groupPriorityStack']);
+            // not really necessary to remove this empty placeholder, but lets keep things tidy
+            unset($this->data['groupStacks'][$priorityClosing]);
             $this->setLogDest('auto');
             /*
                 Publish the debug.log event (regardless of cfg.collect)
@@ -925,7 +928,27 @@ class Debug
      */
     public function getData($path = null)
     {
-        return $this->utilities->arrayPathGet($this->data, $path);
+        $data = $this->utilities->arrayPathGet($this->data, $path);
+        /*
+            some array nodes may be references
+            this is only a concern when calling getData externally
+            serialize/unserialize is expensive.. only do so when requesting the below
+        */
+        return \in_array($path, array('logSummary','groupStacks'))
+            ? \unserialize(\serialize($data))
+            : $data;
+    }
+
+    /**
+     * Get and clear headers that need to be output
+     *
+     * @return [name, value][]
+     */
+    public function getHeaders()
+    {
+        $headers = $this->data['headers'];
+        $this->data['headers'] = array();
+        return $headers;
     }
 
     /**
@@ -1017,15 +1040,28 @@ class Debug
         if (\is_string($outputAs)) {
             $this->output->setCfg('outputAs', $outputAs);
         }
-        $return = $this->eventManager->publish(
+        $event = $this->eventManager->publish(
             'debug.output',
             $this,
-            array('return'=>'')
-        )['return'];
+            array(
+                'headers' => array(),
+                'return' => '',
+            )
+        );
+        $headers = $event['headers'];
+        if (!$this->getCfg('outputHeaders') || !$headers) {
+            $this->data['headers'] = \array_merge($this->data['headers'], $event['headers']);
+        } elseif (\headers_sent($file, $line)) {
+            \trigger_error('PHPDebugConsole: headers already sent: '.$file.', line '.$line, E_USER_NOTICE);
+        } else {
+            foreach ($event['headers'] as $nameVal) {
+                \header($nameVal[0].': '.$nameVal[1]);
+            }
+        }
         if (!$this->parentInstance) {
             $this->data['outputSent'] = true;
         }
-        return $return;
+        return $event['return'];
     }
 
     /**
@@ -1094,8 +1130,8 @@ class Debug
                 array('main' => true)
             );
             $this->data['groupPriorityStack'] = array();
-            $this->setLogDest('log');
         }
+        $this->setLogDest();
     }
 
     /**

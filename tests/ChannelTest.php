@@ -38,8 +38,6 @@ class ChannelTest extends DebugTestFramework
                     array('channel' => 'general', 'collect' => true),
                     array('channel' => 'foo', 'collect' => true),
                 ),
-                0 => array(),
-                1 => array(),
             ),
             'groupPriorityStack' => array(),
             'log' => array(
@@ -90,8 +88,6 @@ class ChannelTest extends DebugTestFramework
                     array('channel' => 'general', 'collect' => true),
                     // array('channel' => 'foo', 'collect' => true),
                 ),
-                0 => array(),
-                1 => array(),
             ),
             'groupPriorityStack' => array(),
             'log' => array(

@@ -45,6 +45,7 @@ class Output implements SubscriberInterface
             'outputAsDefaultNonHtml' => 'chromeLogger',
             'outputConstants' => true,
             'outputCss' => true,            // applies when outputAs = 'html'
+            'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
             'outputMethodDescription' => true, // (or just summary)
             'outputMethods' => true,
             'outputScript' => true,         // applies when outputAs = 'html'

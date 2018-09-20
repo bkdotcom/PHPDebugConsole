@@ -55,6 +55,7 @@ class DebugTestFramework extends DOMTestCase
             'logEnvInfo' => false,
             'output' => true,
             'outputCss' => false,
+            'outputHeaders' => false,
             'outputScript' => false,
             'outputAs' => 'html',
             'onError' => function (Event $event) {
@@ -171,7 +172,7 @@ class DebugTestFramework extends DOMTestCase
     }
 
     /**
-     * Test Method's output
+     * Test Method's log-entry, return value, output, etc
      *
      * @param string|null $method debug method to call or null/false to just test against last log entry
      * @param array       $args   method arguments
@@ -232,32 +233,61 @@ class DebugTestFramework extends DOMTestCase
                 continue;
             }
             $outputObj = $this->debug->output->{$test};
-            if ($test == 'firephp') {
-                $outputObj->unitTestMode = true;
-            }
-            if (!isset($this->reflectionMethods[$test])) {
-                $refMethod = new \ReflectionMethod($outputObj, 'processLogEntryWEvent');
-                $refMethod->setAccessible(true);
-                $this->reflectionMethods[$test] = $refMethod;
-            }
-            $output = $this->reflectionMethods[$test]->invoke($outputObj, $logEntry[0], $logEntry[1], $logEntry[2]);
-            if ($test == 'chromeLogger') {
-                if (!isset($this->reflectionProperties['chromeLogger'])) {
-                    $refProperty = new \ReflectionProperty($outputObj, 'json');
-                    $refProperty->setAccessible(true);
-                    $this->reflectionProperties['chromeLogger'] = $refProperty;
+            if (in_array($test, array('chromeLogger','firephp'))) {
+                // remove data - sans the logEntry we're interested in
+                $dataBackup = array(
+                    'alerts' => $this->debug->getData('alerts'),
+                    'log' => $this->debug->getData('log'),
+                    // 'logSummary' => $this->debug->getData('logSummary'),
+                );
+                $this->debug->setData('alerts', array());
+                $this->debug->setData('log', array($logEntry));
+                /*
+                    We'll call onOutput directly
+                */
+                $event = new \bdk\PubSub\Event(
+                    $this->debug,
+                    array(
+                        'headers' => array(),
+                        'return' => '',
+                    )
+                );
+                $outputObj->onOutput($event, 'debug.output', $this->debug->eventManager);
+                $this->debug->setData($dataBackup);
+                $headers = $event['headers'];
+                if ($test == 'chromeLogger') {
+                    /*
+                        Decode the chromelogger header and get rows data
+                    */
+                    $rows = json_decode(base64_decode($headers[0][1]), true)['rows'];
+                    // entry is nested inside a group
+                    $output = $rows[\count($rows)-2];
+                    if (is_string($outputExpect)) {
+                        $output = json_encode($output);
+                    }
+                } else {
+                    if (is_string($outputExpect)) {
+                        $outputExpect = preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
+                    }
+                    /*
+                        Filter just the log entry headers
+                    */
+                    $headersNew = array();
+                    foreach ($headers as $header) {
+                        if (strpos($header[0], 'X-Wf-1-1-1') === 0) {
+                            $headersNew[] = $header[0].': '.$header[1];
+                        }
+                    }
+                    // entry is nested inside a group
+                    $output = $headersNew[\count($headersNew)-2];
                 }
-                $output = end($this->reflectionProperties['chromeLogger']->getValue($outputObj)['rows']);
-                // output is an array
-                if (is_string($outputExpect)) {
-                    $output = json_encode($output);
+            } else {
+                if (!isset($this->reflectionMethods[$test])) {
+                    $refMethod = new \ReflectionMethod($outputObj, 'processLogEntryWEvent');
+                    $refMethod->setAccessible(true);
+                    $this->reflectionMethods[$test] = $refMethod;
                 }
-            } elseif ($test == 'firephp') {
-                $output = \implode("\n", $outputObj->lastHeadersSent);
-                // @todo assert that header integer increments
-                if (is_string($outputExpect)) {
-                    $outputExpect = preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
-                }
+                $output = $this->reflectionMethods[$test]->invoke($outputObj, $logEntry[0], $logEntry[1], $logEntry[2]);
             }
             if (\is_callable($outputExpect)) {
                 $outputExpect($output);

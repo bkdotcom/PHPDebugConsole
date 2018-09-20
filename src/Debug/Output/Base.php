@@ -558,8 +558,10 @@ abstract class Base implements OutputInterface
     {
         $str = '';
         $summaryData = $this->data['logSummary'];
-        \krsort($summaryData);
-        $summaryData = \call_user_func_array('array_merge', $summaryData);
+        if ($summaryData) {
+            \krsort($summaryData);
+            $summaryData = \call_user_func_array('array_merge', $summaryData);
+        }
         foreach ($summaryData as $entry) {
             $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
             if ($this->channelTest($channel)) {

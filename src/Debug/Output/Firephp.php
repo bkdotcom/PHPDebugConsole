@@ -20,13 +20,6 @@ use bdk\PubSub\Event;
 class Firephp extends Base
 {
 
-    /**
-     * @var array each method will generate 1 or more headers.
-     *             store those headers here for unit tests
-     */
-    public $lastHeadersSent = array();
-    public $unitTestMode = false;
-
     protected $firephpMethods = array(
         'log' => 'LOG',
         'info' => 'INFO',
@@ -38,6 +31,7 @@ class Firephp extends Base
         'groupEnd' => 'GROUP_END',
     );
     protected $messageIndex = 0;
+    protected $outputEvent;
 
     const FIREPHP_PROTO_VER = '0.3';
     const MESSAGE_LIMIT = 99999;
@@ -51,21 +45,21 @@ class Firephp extends Base
      */
     public function onOutput(Event $event)
     {
-        if (\headers_sent($file, $line)) {
-            \trigger_error('Unable to FirePHP: headers already sent. ('.$file.' line '.$line.')', E_USER_NOTICE);
-            return;
-        }
+        $this->outputEvent = $event;
         $this->channelName = $this->debug->getCfg('channel');
         $this->data = $this->debug->getData();
-        $this->setHeader('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
-        $this->setHeader('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
-        $this->setHeader('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
-        $this->processLogEntryWEvent('groupCollapsed', array('PHP: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']));
+        $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
+        $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
+        $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
+        $heading = isset($_SERVER['REQUEST_METHOD'])
+            ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
+            : '$: '. \implode(' ', $_SERVER['argv']);
+        $this->processLogEntryWEvent('groupCollapsed', array('PHP: '.$heading));
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
         $this->processLogEntryWEvent('groupEnd');
-        $this->setHeader('X-Wf-1-Index', $this->messageIndex);
+        $event['headers'][] = array('X-Wf-1-Index', $this->messageIndex);
         $this->data = array();
         return;
     }
@@ -201,7 +195,7 @@ class Firephp extends Base
     }
 
     /**
-     * "output" FirePHP header(s) for log entry
+     * set FirePHP log entry header(s)
      *
      * @param array $meta  meta information
      * @param mixed $value value
@@ -210,7 +204,6 @@ class Firephp extends Base
      */
     private function setFirephpHeader($meta, $value = null)
     {
-        $this->lastHeadersSent = array();
         $msg = \json_encode(array(
             $meta,
             $value,
@@ -225,23 +218,7 @@ class Firephp extends Base
             $headerValue = ( $i==0 ? \strlen($msg) : '')
                 . '|' . $part . '|'
                 . ( $i<$numParts-1 ? '\\' : '' );
-            $this->lastHeadersSent[] = $headerName.': '.$headerValue;
-            $this->setHeader($headerName, $headerValue);
-        }
-    }
-
-    /**
-     * Tis but a simple wrapper for php's header() func
-     *
-     * @param string $name  header name
-     * @param string $value header value
-     *
-     * @return void
-     */
-    private function setHeader($name, $value)
-    {
-        if (!$this->unitTestMode) {
-            \header($name.': '.$value);
+            $this->outputEvent['headers'][] = array($headerName, $headerValue);
         }
     }
 }

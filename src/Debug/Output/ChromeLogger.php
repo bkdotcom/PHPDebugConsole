@@ -68,7 +68,10 @@ class ChromeLogger extends Base
         $this->processLog();
         if ($this->json['rows']) {
             \array_unshift($this->json['rows'], array(
-                array('PHP', $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']),
+                array('PHP', isset($_SERVER['REQUEST_METHOD'])
+                    ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
+                    : '$: '. \implode(' ', $_SERVER['argv'])
+                ),
                 null,
                 'groupCollapsed',
             ));
@@ -78,15 +81,14 @@ class ChromeLogger extends Base
                 'groupEnd',
             ));
             $encoded = $this->encode($this->json);
-            if (\headers_sent($file, $line)) {
-                $this->debug->warn('chromeLogger: headers already sent: '.$file.' (line '.$line.')');
-            } elseif (\strlen($encoded) > 250000) {
+            if (\strlen($encoded) > 250000) {
                 $this->debug->warn('chromeLogger: output limit exceeded');
             } else {
-                \header(self::HEADER_NAME . ': ' . $encoded);
+                $event['headers'][] = array(self::HEADER_NAME, $encoded);
             }
         }
         $this->data = array();
+        $this->json['rows'] = array();
     }
 
     /**

@@ -1109,32 +1109,52 @@ class MethodTest extends DebugTestFramework
 
     public function testGroupsLeftOpen()
     {
+        /*
+        Internal debug.output subscribers
+            1: Output::onOutput:  closes open groups / remoes hideIfEmpty groups
+            0: Internal::onOutput opens and closes groupSummary
+            0: Output plugin's onOutput()
+
+        This also tests that the values returned by getData have been dereferenced
+        */
+
         $this->debug->groupSummary(1);
             $this->debug->log('in summary');
             $this->debug->group('inner group opened but not closed');
                 $this->debug->log('in inner');
         $onOutputVals = array();
+
         $this->debug->eventManager->subscribe('debug.output', function (\bdk\PubSub\Event $event) use (&$onOutputVals) {
+            /*
+                Nothing has been closed yet
+            */
             $debug = $event->getSubject();
             $onOutputVals['groupPriorityStackA'] = $debug->getData('groupPriorityStack');
             $onOutputVals['groupStacksA'] = $debug->getData('groupStacks');
         }, 2);
         $this->debug->eventManager->subscribe('debug.output', function (\bdk\PubSub\Event $event) use (&$onOutputVals) {
+            /*
+                At this point, log has been output.. all groups have been closed
+            */
             $debug = $event->getSubject();
             $onOutputVals['groupPriorityStackB'] = $debug->getData('groupPriorityStack');
             $onOutputVals['groupStacksB'] = $debug->getData('groupStacks');
         }, -1);
-        // Internal::onOutput opens & closes a groupSummary AFTER closeOpenGroups does its thing
         $output = $this->debug->output();
+
         $this->assertSame(array(1), $onOutputVals['groupPriorityStackA']);
         $this->assertSame(array(
             'main' => array(),
-            1 => array(),
+            1 => array(
+                array(
+                    'channel' => 'general',
+                    'collect' => true,
+                ),
+            ),
         ), $onOutputVals['groupStacksA']);
         $this->assertSame(array(), $onOutputVals['groupPriorityStackB']);
         $this->assertSame(array(
             'main' => array(),
-            1 => array(),
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
 <div class="debug">

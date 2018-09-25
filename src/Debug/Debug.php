@@ -48,7 +48,7 @@ class Debug
     protected $config;          // config instance
     protected $parentInstance;
     protected $rootInstance;
-    protected static $methodParamCount = array();
+    protected static $methodDefaultArgs = array();
 
     const CLEAR_ALERTS = 1;
     const CLEAR_LOG = 2;
@@ -215,20 +215,20 @@ class Debug
             Add 'statically' meta arg
             Not all methods expect meta args... so make sure it comes after expected args
         */
-        $argCount = 0;
-        if (!isset(self::$methodParamCount[$methodName])) {
-            $instance = \bdk\Debug::getInstance();
-            if (\method_exists($instance, $methodName)) {
-                $reflectionMethod = new ReflectionMethod($instance, $methodName);
-                $argCount = $reflectionMethod->getNumberOfParameters();
-                self::$methodParamCount[$methodName] = $argCount;
+        $defaultArgs = array();
+        if (isset(self::$methodDefaultArgs[$methodName])) {
+            $defaultArgs = self::$methodDefaultArgs[$methodName];
+        } elseif (\method_exists(self::$instance, $methodName)) {
+            $reflectionMethod = new ReflectionMethod(self::$instance, $methodName);
+            $params = $reflectionMethod->getParameters();
+            foreach ($params as $reflectionParameter) {
+                $defaultArgs[] = $reflectionParameter->isOptional()
+                    ? $reflectionParameter->getDefaultValue()
+                    : null;
             }
-        } else {
-            $argCount = self::$methodParamCount[$methodName];
+            self::$methodDefaultArgs[$methodName] = $defaultArgs;
         }
-        if ($argCount) {
-            $args = array_replace(array_fill(0, $argCount, null), $args);
-        }
+        $args = \array_replace($defaultArgs, $args);
         $args[] = self::meta('statically');
         return \call_user_func_array(array(self::$instance, $methodName), $args);
     }
@@ -489,20 +489,31 @@ class Debug
     /**
      * Close current group
      *
+     * @param mixed $value Value
+     *
      * @return void
      */
-    public function groupEnd()
+    public function groupEnd($value = \bdk\Debug\Abstracter::UNDEFINED)
     {
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel'])
+            array('channel' => $this->cfg['channel']),
+            array('value' => \bdk\Debug\Abstracter::UNDEFINED)
         );
+        \extract($args);
         $groupStackWas = $this->rootInstance->groupStackRef;
         $appendLog = false;
         if ($groupStackWas && \end($groupStackWas)['collect'] == $this->cfg['collect']) {
             \array_pop($this->rootInstance->groupStackRef);
             $appendLog = $this->cfg['collect'];
+        }
+        if ($appendLog && $value !== \bdk\Debug\Abstracter::UNDEFINED) {
+            $this->appendLog(
+                'groupEndValue',
+                array('return', $value),
+                $meta
+            );
         }
         if ($this->data['groupPriorityStack'] && !$groupStackWas) {
             // we're closing a summary group
@@ -1025,11 +1036,15 @@ class Debug
     /**
      * Publishes debug.output event and returns result
      *
+     * @param array $options Override any output options
+     *
      * @return string|null
      */
-    public function output()
+    public function output($options = array())
     {
+        $cfgRestore = $this->config->setCfg($options);
         if (!$this->cfg['output']) {
+            $this->config->setCfg($cfgRestore);
             return null;
         }
         /*
@@ -1061,6 +1076,7 @@ class Debug
         if (!$this->parentInstance) {
             $this->data['outputSent'] = true;
         }
+        $this->config->setCfg($cfgRestore);
         return $event['return'];
     }
 

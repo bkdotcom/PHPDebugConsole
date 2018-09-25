@@ -1107,6 +1107,53 @@ class MethodTest extends DebugTestFramework
         );
     }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testGroupEndWithVal()
+    {
+        $this->debug->group('my group');
+        $this->testMethod(
+            'groupEnd',
+            array('foo'),
+            array(
+                'chromeLogger' => array(
+                    array(),
+                    null,
+                    'groupEnd',
+                ),
+                'firephp' => 'X-Wf-1-1-1-151: 27|[{"Type":"GROUP_END"},null]|',
+                'html' => '</div>',
+                'script' => 'console.groupEnd();',
+                'text' => '',
+            )
+        );
+        $this->testMethod(
+            array(
+                'dataPath' => 'log/1'
+            ),
+            array(),
+            array(
+                'entry' => array(
+                    'groupEndValue',
+                    array('return', 'foo'),
+                    array(),
+                ),
+                'chromeLogger' => array(
+                    array('return', 'foo'),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-154: 39|[{"Type":"LOG","Label":"return"},"foo"]|',
+                'html' => '<div class="m_groupEndValue"><span class="no-pseudo t_string">return</span> = <span class="t_string">foo</span></div>',
+                'script' => 'console.log("return","foo");',
+                'text' => 'return = "foo"',
+            )
+        );
+    }
+
     public function testGroupsLeftOpen()
     {
         /*
@@ -1222,17 +1269,17 @@ EOD;
      */
     public function testGroupUncollapse()
     {
-        $this->debug->groupCollapsed('level1 (test)');
-        $this->debug->groupCollapsed('level2');
-        $this->debug->log('left collapsed');
-        $this->debug->groupEnd('level2');
-        $this->debug->groupCollapsed('level2 (test)');
+        $this->debug->groupCollapsed('level1 (test)');  // 0
+        $this->debug->groupCollapsed('level2');         // 1
+        $this->debug->log('left collapsed');            // 2
+        $this->debug->groupEnd('level2');               // 3 & 4
+        $this->debug->groupCollapsed('level2 (test)');  // 5
         $this->debug->groupUncollapse();
         $log = $this->debug->getData('log');
         $this->assertSame('group', $log[0][0]); // groupCollapsed converted to group
         $this->assertSame('groupCollapsed', $log[1][0]);
-        $this->assertSame('group', $log[4][0]); // groupCollapsed converted to group
-        $this->assertCount(5, $log);    // assert that entry not added
+        $this->assertSame('group', $log[5][0]); // groupCollapsed converted to group
+        $this->assertCount(6, $log);    // assert that entry not added
     }
 
     /**

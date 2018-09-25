@@ -217,20 +217,26 @@
 	 * @return void
 	 */
 	function collapse($toggle, immediate) {
+		var $target = $toggle.next(),
+			$groupEndValue;
 		if ($toggle.is("[data-toggle=array]")) {
 			// show and use the "expand it" toggle as reference toggle
 			$toggle = $toggle.closest(".t_array").prev().show();
-			$toggle.next().hide();
+			$target.hide();
 		} else {
 			if ($toggle.is("[data-toggle=group]")) {
+				$groupEndValue = $target.find("> .m_groupEndValue > :last-child");
 				groupErrorIconChange($toggle);
+				if ($groupEndValue.length) {
+					$toggle.find(".group-label").last().after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML);
+				}
 			}
 			$toggle.removeClass("expanded");
 			if (immediate) {
-				$toggle.next().hide();
+				$target.hide();
 				toggleIconChange($toggle, options.classes.expand);
 			} else {
-				$toggle.next().slideUp("fast", function() {
+				$target.slideUp("fast", function() {
 					toggleIconChange($toggle, options.classes.expand);
 				});
 			}
@@ -488,8 +494,13 @@
 			$target.show();
 		} else {
 			$target.slideDown("fast", function(){
+				var $groupEndValue = $target.find("> .m_groupEndValue");
 				$toggle.addClass("expanded");
 				toggleIconChange($toggle, options.classes.collapse);
+				if ($groupEndValue.length) {
+					// remove value from label
+					$toggle.find(".group-label").last().nextAll().remove();
+				}
 			});
 		}
 	}

@@ -97,10 +97,16 @@ class HtmlObject
             $valAppend = '&hellip; <i>('.($len - 100).' more chars)</i>';
         }
         $toStringDump = $this->debug->output->html->dump($val);
-        $classAndInner = $this->debug->utilities->parseAttribString($toStringDump);
-        return '<span class="'.$classAndInner['class'].' t_stringified"'
-            .(!$abs['stringified'] ? ' title="__toString()"' : '').'>'
-            .$classAndInner['innerhtml']
+        $parsed = $this->debug->utilities->parseTag($toStringDump);
+        $attribs = array(
+            'class' => $parsed['attribs']['class'].' t_stringified',
+            'title' => isset($parsed['attribs']['title'])
+                // ie a timestamp will have a human readable date in title
+                ? (!$abs['stringified'] ? '__toString() : ' : '').$parsed['attribs']['title']
+                : (!$abs['stringified'] ? '__toString()' : null),
+        );
+        return '<span'.$this->debug->utilities->buildAttribString($attribs).'>'
+            .$parsed['innerhtml']
             .$valAppend
             .'</span>'."\n";
     }
@@ -229,9 +235,9 @@ class HtmlObject
                     if (\is_string($defaultValue)) {
                         $defaultValue = \str_replace("\n", ' ', $defaultValue);
                     }
-                    $classAndInner = $this->debug->utilities->parseAttribString($this->debug->output->html->dump($defaultValue));
-                    $classAndInner['class'] = \trim('t_parameter-default '.$classAndInner['class']);
-                    $paramStr .= '<span class="'.$classAndInner['class'].'">'.$classAndInner['innerhtml'].'</span>';
+                    $parsed = $this->debug->utilities->parseTag($this->debug->output->html->dump($defaultValue));
+                    $class = \trim('t_parameter-default '.$parsed['attribs']['class']);
+                    $paramStr .= '<span class="'.$class.'">'.$parsed['innerhtml'].'</span>';
                 }
             }
             $paramStr .= '</span>, '; // end .parameter

@@ -87,54 +87,77 @@ class UtilitiesTest extends DebugTestFramework
      */
     public function testBuildAttribString()
     {
-        $attribs = array(
-            'src' => '/path/to/image.png',
-            'width' => 80,
-            'height' => 100,
-            'class' => array('test','dupe','dupe'),
-            'title' => 'Pork & Beans',
-            'value' => '',      // value=""  (we output empty value attrib)
-            'style' => array('position'=>'absolute','display'=>'inline-block'),
-            'dingus' => array('unknown array'),
-            'foo' => false,     // not output
-            'bar' => true,      // bar="bar"
-            'baz' => '',        // not output (empty string)
-            'autocomplete',     // autocomplete="on"
-            'disabled',         // disabled="disabled"
-            'data-string' => 'wassup?',
-            'data-true' => true,
-            'data-array' => array(
-                'foo' => 'bar',
+        $testStack = array(
+            array(
+                'attribs' => array(
+                    'src' => '/path/to/image.png',
+                    'width' => 80,
+                    'height' => '100',
+                    'class' => array('test','dupe','dupe'),
+                    'title' => 'Pork & Beans',
+                    'value' => '',      // value=""
+                    'style' => array('position'=>'absolute','display'=>'inline-block'),
+                    'dingus' => array('unknown array'),
+                    'hidden' => false,
+                    'foo' => false,     // not a valid boolean attrib - we'll not output regardless
+                    'bar' => true,      // not a valid boolean attrib - we'll output anyhow : bar="bar"
+                    'autocomplete',     // autocomplete="on"
+                    'disabled',         // disabled="disabled"
+                    'data-null' => null,
+                    'data-false' => false,
+                    'data-string' => 'wassup?',
+                    'data-true' => true,
+                    'data-array' => array('foo' => 'bar'),
+                    'data-obj' => (object) array('key' => 'val'),
+                ),
+                'expect' => ''
+                    .' autocomplete="on"'
+                    .' bar="bar"'
+                    .' class="dupe test"'
+                    .' data-array="{&quot;foo&quot;:&quot;bar&quot;}"'
+                    .' data-false="false"'
+                    .' data-null="null"'
+                    .' data-obj="{&quot;key&quot;:&quot;val&quot;}"'
+                    .' data-string="wassup?"'
+                    .' data-true="true"'
+                    .' disabled="disabled"'
+                    .' height="100"'
+                    .' src="/path/to/image.png"'
+                    .' style="display:inline-block;position:absolute;"'
+                    .' title="Pork &amp; Beans"'
+                    .' value=""'
+                    .' width="80"',
+            ),
+            array(
+                'attribs' => array(
+                    'class' => array(),     // not output
+                    'style' => array(),     // not output
+                    'data-empty-string' => '',
+                    'data-empty-array' => array(),
+                    'data-empty-obj' => (object) array(),
+                    'data-false' => false,
+                    'data-null' => null,    // not output
+                ),
+                'expect' => ' data-empty-array="[]" data-empty-obj="{}" data-empty-string="" data-false="false" data-null="null"',
+            ),
+            array(
+                'attribs' => '',
+                'expect' => '',
+            ),
+            array(
+                'attribs' => 'I\'m a string',
+                'expect' => ' I\'m a string',
+            ),
+            array(
+                // should return a single leading space
+                'attribs' => '  leading spaces',
+                'expect' => ' leading spaces',
             ),
         );
-        $attribStr = Utilities::buildAttribString($attribs);
-        $expect = ' autocomplete="on" bar="bar" class="dupe test" data-array="{&quot;foo&quot;:&quot;bar&quot;}" data-string="wassup?" data-true="true" disabled="disabled" height="100" src="/path/to/image.png" style="display:inline-block;position:absolute;" title="Pork &amp; Beans" value="" width="80"';
-        $this->assertSame($expect, $attribStr);
-
-        $attribs = array(
-            'class' => array(),     // not output
-            'style' => array(),     // not output
-            'data-empty-string' => '',
-            'data-empty-array' => array(),
-            'data-empty-obj' => (object) array(),
-            'data-false' => false,
-            'data-null' => null,    // not output
-        );
-        $attribStr = Utilities::buildAttribString($attribs);
-        $expect = ' data-empty-array="[]" data-empty-obj="{}" data-empty-string="" data-false="false"';
-        $this->assertSame($expect, $attribStr);
-
-        $attribStr = Utilities::buildAttribString('');
-        $this->assertSame('', $attribStr);
-
-        $attribStr = Utilities::buildAttribString('I\'m a string');
-        $expect = ' I\'m a string';
-        $this->assertSame($expect, $attribStr);
-
-        // don't add more space to existing space... should return a single leading space
-        $attribStr = Utilities::buildAttribString('  leading spaces');
-        $expect = ' leading spaces';
-        $this->assertSame($expect, $attribStr);
+        foreach ($testStack as $test) {
+            $ret = \bdk\Debug\Utilities::buildAttribString($test['attribs']);
+            $this->assertSame($test['expect'], $ret);
+        }
     }
 
 
@@ -234,18 +257,100 @@ class UtilitiesTest extends DebugTestFramework
     }
 
     /**
-     * Test
-     *
      * @return void
      */
     public function testParseAttribString()
     {
-        $class = 'foo bar';
-        $innerHtml = '<b>blah</b>'."\n";
-        $html = '<span class="'.$class.'">'.$innerHtml.'</span>';
-        $parts = Utilities::parseAttribString($html);
-        $this->assertSame($class, $parts['class']);
-        $this->assertSame($innerHtml, $parts['innerhtml']);
+        $testStack = array(
+            array(
+                'params' => array(''),
+                'expect' => array(),
+            ),
+            array(
+                'params' => array(
+                    ' '
+                    .' placeholder="&quot;quotes&quot; &amp; ampersands"'
+                    .' autocomplete=off'
+                    .' required=required'
+                    .' autofocus'
+                    .' notabool'
+                    .' value=""'
+                    .' data-null="null"'
+                    .' data-obj="{&quot;foo&quot;:&quot;bar&quot;}"'
+                    .' data-str = "foo"'
+                    .' data-zero="0"',
+                ),
+                'expect' => array(
+                    'autocomplete' => 'off',
+                    'autofocus' => true,
+                    'data-null' => null,
+                    'data-obj' => array('foo'=>'bar'),
+                    'data-str' => 'foo',
+                    'data-zero' => 0,
+                    'notabool' => '',
+                    'placeholder' => '"quotes" & ampersands',
+                    'required' => true,
+                    'value' => '',
+                ),
+            ),
+            array(
+                'params' => array(
+                    'data-foo="[&quot;a&quot;,&quot;b&quot;]"',
+                    true,
+                    false,
+                ),
+                'expect' => array(
+                    'data-foo' => '["a","b"]'
+                ),
+            ),
+        );
+        foreach ($testStack as $test) {
+            $ret = call_user_func_array('\\bdk\\Debug\\Utilities::parseAttribString', $test['params']);
+            $this->assertSame($test['expect'], $ret);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function testParseTag()
+    {
+        $testStack = array(
+            array(
+                'tag' => '<div class="test" ><i>stuff</i> &amp; things</div>',
+                'expect' => array(
+                    'tagname'=>'div',
+                    'attribs' => array(
+                        'class'=>'test',
+                    ),
+                    'innerhtml'=>'<i>stuff</i> &amp; things',
+                ),
+            ),
+            array(
+                'tag' => '<input name="name" value="Billy" required/>',
+                'expect' => array(
+                    'tagname' => 'input',
+                    'attribs' => array(
+                        'name' => 'name',
+                        'required' => true,
+                        'value' => 'Billy',
+                    ),
+                    'innerhtml' => null,
+                ),
+            ),
+            array(
+                'tag' => '</ hr>',
+                'expect' => array(
+                    'tagname' => 'hr',
+                    'attribs' => array(),
+                    'innerhtml' => null,
+                ),
+            ),
+        );
+        foreach ($testStack as $test) {
+            $ret = \bdk\Debug\Utilities::parseTag($test['tag']);
+            $this->assertSame($test['expect'], $ret);
+        }
     }
 
     public function testRequestId()

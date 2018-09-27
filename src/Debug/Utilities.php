@@ -17,6 +17,54 @@ namespace bdk\Debug;
 class Utilities
 {
 
+    public static $htmlBoolAttr = array(
+
+        // GLOBAL
+        'contenteditable', 'hidden', 'itemscope',
+        // 'spellcheck', // enum : true|false
+        // 'translate', // enum : yes|no
+
+        // FORM / INPUT
+        // 'autocomplete', // enum : on|off
+        'autofocus', 'checked', 'disabled', 'formnovalidate', 'multiple', 'novalidate', 'readonly', 'required', 'selected',
+
+        // AUDIO / VIDEO / TRACK
+        'autoplay', 'controls', 'default', 'loop', 'muted',
+
+        // DETAILS
+        'open',
+
+        // IFRAME
+        'frameborder',
+
+        // IMG
+        'ismap',
+
+        // OBJECT
+        'typemustmatch',
+
+        // OL
+        'reversed',
+
+        // SCRIPT
+        'async', 'defer', 'nomodule',
+
+        // STYLE
+        'scoped',
+
+        // OBSOLETE / DEPRECATED / NEVER-A-THING
+        // "allowfullscreen",
+        // "allowpaymentrequest",
+        'compact',  // <dir> and <ol>
+        'nohref',   // <area>
+        'noresize', // <frame>
+        'noshade',  // <hr>
+        'nowrap',   // dt, dd, td, th
+        'scrolling',// <iframe>
+        'seamless', // <iframe> - removed from draft
+        'sortable', // <table> - removed from draft
+    );
+
     /**
      * Recursively merge two arrays
      *
@@ -93,6 +141,7 @@ class Utilities
      *
      * Attributes will be sorted by name
      * class & style attributes may be provided as arrays
+     * data-* attributes will be property json-encoded
      *
      * @param array $attribs key/pair values
      *
@@ -111,10 +160,7 @@ class Utilities
                 $v = true;
             }
             $isDataAttrib = \strpos($k, 'data-') === 0;
-            if ($v === null) {
-                // null valued attribs will not be output... not even data attributes
-                continue;
-            } elseif ($isDataAttrib) {
+            if ($isDataAttrib) {
                 $v = \json_encode($v);
                 $v = \trim($v, '"');
             } elseif (\is_array($v)) {
@@ -127,15 +173,15 @@ class Utilities
                 $v = \explode(' ', $v);
                 $v = self::buildAttribArrayVal($k, $v);
             }
-            $v = \trim($v);
             if (\array_filter(array(
-                $v !== '',
-                $k === 'value',
-                $isDataAttrib,
+                $v === null,
+                $v === '' && \in_array($k, array('class', 'style'))
             ))) {
-                // at least one of the conditions is true
-                $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
+                // don't include
+                continue;
             }
+            $v = \trim($v);
+            $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
         }
         \sort($attribPairs);
         return \rtrim(' '.\implode(' ', $attribPairs));
@@ -391,25 +437,78 @@ class Utilities
     }
 
     /**
-     * grab the class attrib and innerHTML from tag
-     * this function is optimized for internal use only
+     * Parse string -o- attributes into a key=>value array
      *
-     * @param string $html html tag
+     * @param string  $str        string to parse
+     * @param boolean $decode     (true) whether to decode special chars
+     * @param boolean $dataDecode (true) whether to json_decode data attributes
      *
      * @return array
      */
-    public static function parseAttribString($html)
+    public static function parseAttribString($str, $decode = true, $dataDecode = true)
     {
-        $regEx = '#^<span class="([^"]+)">(.*)</span>$#s';
-        return \preg_match($regEx, $html, $matches)
-            ? array(
-                'class' => $matches[1],
-                'innerhtml' => $matches[2],
-            )
-            : array(
-                'class' => null,
-                'innerhtml' => $html,
+        $attribs = array();
+        $regexAttribs = '/\b([\w\-]+)\b(?: \s*=\s*(["\'])(.*?)\\2 | \s*=\s*(\S+) )?/xs';
+        \preg_match_all($regexAttribs, $str, $matches);
+        $keys = \array_map('strtolower', $matches[1]);
+        $values = \array_replace($matches[3], \array_filter($matches[4], 'strlen'));
+        foreach ($keys as $i => $k) {
+            $attribs[$k] = $values[$i];
+            if (\in_array($k, self::$htmlBoolAttr)) {
+                $attribs[$k] = true;
+            }
+        }
+        \ksort($attribs);
+        if ($decode) {
+            foreach ($attribs as $k => $v) {
+                if (\is_string($v)) {
+                    $attribs[$k] = \htmlspecialchars_decode($v);
+                }
+                $isDataAttrib = \strpos($k, 'data-') === 0;
+                if ($isDataAttrib && $dataDecode) {
+                    $val = $attribs[$k];
+                    $attribs[$k] = \json_decode($attribs[$k], true);
+                    if ($attribs[$k] === null && $val !== 'null') {
+                        $attribs[$k] = \json_decode('"'.$val.'"', true);
+                    }
+                }
+            }
+        }
+        return $attribs;
+    }
+
+    /**
+     * Parse HTML/XML tag
+     *
+     * returns array(
+     *    'tagname' => string
+     *    'attribs' => array
+     *    'innerhtml' => string | null
+     * )
+     *
+     * @param string $tag html tag to parse
+     *
+     * @return array
+     */
+    public static function parseTag($tag)
+    {
+        $regexTag = '#<([^\s>]+)([^>]*)>(.*)</\\1>#is';
+        $regexTag2 = '#^<(?:\/\s*)?([^\s>]+)(.*?)\/?>$#s';
+        $tag = \trim($tag);
+        if (\preg_match($regexTag, $tag, $matches)) {
+            $return = array(
+                'tagname' => $matches[1],
+                'attribs' => self::parseAttribString($matches[2]),
+                'innerhtml' => $matches[3],
             );
+        } elseif (\preg_match($regexTag2, $tag, $matches)) {
+            $return = array(
+                'tagname' => $matches[1],
+                'attribs' => self::parseAttribString($matches[2]),
+                'innerhtml' => null,
+            );
+        }
+        return $return;
     }
 
     /**
@@ -498,7 +597,7 @@ class Utilities
             \sort($keyValues);
             $value = \implode('', $keyValues);
         } else {
-            $value = '';
+            $value = null;
         }
         return $value;
     }
@@ -515,10 +614,15 @@ class Utilities
     {
         if ($key == 'autocomplete') {
             $value = $value ? 'on' : 'off';
+        } elseif ($key == 'spellcheck') {
+            $value = $value ? 'true' : 'false';
+        } elseif ($key == 'translate') {
+            $value = $value ? 'yes' : 'no';
         } elseif ($value) {
+            // even if not a recognized boolean attribute
             $value = $key;
         } else {
-            $value = '';
+            $value = null;
         }
         return $value;
     }

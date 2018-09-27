@@ -269,6 +269,7 @@ class Html extends Base
                 .$this->buildArgString($args)
                 .'</div>';
         }
+        $str = str_replace(' data-channel="null"', '', $str);
         $str .= "\n";
         return $str;
     }
@@ -395,13 +396,12 @@ class Html extends Base
     {
         $str = '';
         $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
-        $classAndInner = $this->debug->utilities->parseAttribString($this->dump($rowKey));
-        $classAndInner['class'] = 't_key text-right '.$classAndInner['class'];
+        $parsed = $this->debug->utilities->parseTag($this->dump($rowKey));
         $str .= '<tr>';
         $str .= '<th'.$this->debug->utilities->buildAttribString(array(
-            'class' => $classAndInner['class'],
+            'class' => 't_key text-right '.$parsed['attribs']['class'],
             'scope' => 'row',
-        )).'>'.$classAndInner['innerhtml'].'</th>';
+        )).'>'.$parsed['innerhtml'].'</th>';
         if ($objInfo['row']) {
             $str .= $this->markupClassname($objInfo['row']['className'], 'td', array(
                 'title' => $objInfo['row']['phpDoc']['summary'] ?: null,

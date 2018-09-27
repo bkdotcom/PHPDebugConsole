@@ -101,7 +101,7 @@ class UtilitiesTest extends DebugTestFramework
                     'hidden' => false,
                     'foo' => false,     // not a valid boolean attrib - we'll not output regardless
                     'bar' => true,      // not a valid boolean attrib - we'll output anyhow : bar="bar"
-                    'autocomplete',     // autocomplete="on"
+                    'AUTOCOMPLETE',     // autocomplete="on"
                     'disabled',         // disabled="disabled"
                     'data-null' => null,
                     'data-false' => false,
@@ -295,12 +295,15 @@ class UtilitiesTest extends DebugTestFramework
             ),
             array(
                 'params' => array(
-                    'data-foo="[&quot;a&quot;,&quot;b&quot;]"',
-                    true,
+                    'value="sun &amp; ski" data-true="true" data-false="false" data-null="null" data-list="[&quot;a&quot;,&quot;b&quot;]"',
                     false,
                 ),
                 'expect' => array(
-                    'data-foo' => '["a","b"]'
+                    'data-false' => 'false',
+                    'data-list' => '["a","b"]',
+                    'data-null' => 'null',
+                    'data-true' => 'true',
+                    'value' => 'sun & ski',
                 ),
             ),
         );

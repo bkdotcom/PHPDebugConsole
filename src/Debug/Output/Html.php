@@ -81,15 +81,14 @@ class Html extends Base
                 'class' => $attribs,
             );
         }
-        return '<table'.$this->debug->utilities->buildAttribString($attribs).'>'."\n"
-            .($caption ? '<caption>'.$caption.'</caption>'."\n" : '')
-            .'<thead>'
-            .$this->buildTableHeader($keys)
-            .'</thead>'."\n"
-            .'<tbody>'."\n"
-            .$tBody
-            .'</tbody>'."\n"
-            .'</table>';
+        return $this->debug->utilities->buildTag(
+            'table',
+            $attribs,
+            "\n"
+                .($caption ? '<caption>'.$caption.'</caption>'."\n" : '')
+                .'<thead>'."\n".$this->buildTableHeader($keys).'</thead>'."\n"
+                .'<tbody>'."\n".$tBody.'</tbody>'."\n"
+        );
     }
 
     /**
@@ -98,11 +97,11 @@ class Html extends Base
      * @param mixed        $val      value to dump
      * @param array        $path     {@internal}
      * @param boolean      $sanitize (true) apply htmlspecialchars?
-     * @param string|false $wrap     (span) tag to wrap value in (or false)
+     * @param string|false $tagName  (span) tag to wrap value in (or false)
      *
      * @return string
      */
-    public function dump($val, $path = array(), $sanitize = true, $wrap = 'span')
+    public function dump($val, $path = array(), $sanitize = true, $tagName = 'span')
     {
         $this->wrapAttribs = array(
             'class' => array(),
@@ -110,10 +109,7 @@ class Html extends Base
         );
         $this->sanitize = $sanitize;
         $val = parent::dump($val);
-        if (\in_array($this->dumpType, array('recursion'))) {
-            $wrap = false;
-        }
-        if ($wrap) {
+        if ($tagName && !\in_array($this->dumpType, array('recursion'))) {
             $wrapAttribs = $this->debug->utilities->arrayMergeDeep(
                 array(
                     'class' => array(
@@ -123,7 +119,7 @@ class Html extends Base
                 ),
                 $this->wrapAttribs
             );
-            $val = '<'.$wrap.$this->debug->utilities->buildAttribString($wrapAttribs).'>'.$val.'</'.$wrap.'>';
+            $val = $this->debug->utilities->buildTag($tagName, $wrapAttribs, $val);
         }
         $this->wrapAttribs = array();
         return $val;
@@ -135,12 +131,12 @@ class Html extends Base
      * If callable, also wrap .t_operator and .t_method-name
      *
      * @param string $str     classname or classname(::|->)methodname
-     * @param string $tag     ("span") html tag to use
+     * @param string $tagName ("span") html tag to use
      * @param array  $attribs additional html attributes
      *
      * @return string
      */
-    public function markupClassname($str, $tag = 'span', $attribs = array())
+    public function markupClassname($str, $tagName = 'span', $attribs = array())
     {
         if (\preg_match('/^(.+)(::|->)(.+)$/', $str, $matches)) {
             $classname = $matches[1];
@@ -158,7 +154,7 @@ class Html extends Base
         $attribs = \array_merge(array(
             'class' => 't_classname',
         ), $attribs);
-        return '<'.$tag.$this->debug->utilities->buildAttribString($attribs).'>'.$classname.'</'.$tag.'>'
+        return $this->debug->utilities->buildTag($tagName, $attribs, $classname)
             .$opMethod;
     }
 
@@ -265,9 +261,11 @@ class Html extends Base
                     }
                 }
             }
-            $str = '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
-                .$this->buildArgString($args)
-                .'</div>';
+            $str = $this->debug->utilities->buildTag(
+                'div',
+                $attribs,
+                $this->buildArgString($args)
+            );
         }
         $str = str_replace(' data-channel="null"', '', $str);
         $str .= "\n";
@@ -327,23 +325,25 @@ class Html extends Base
             /*
                 Header
             */
-            $str .= '<div'.$this->debug->utilities->buildAttribString(array(
-                'class' => array(
-                    'group-header',
-                    $method == 'groupCollapsed'
-                        ? 'collapsed'
-                        : 'expanded',
-                    $levelClass,
+            $str .= $this->debug->utilities->buildTag(
+                'div',
+                array(
+                    'class' => array(
+                        'group-header',
+                        $method == 'groupCollapsed'
+                            ? 'collapsed'
+                            : 'expanded',
+                        $levelClass,
+                    ),
+                    'data-channel' => $meta['channel'],
                 ),
-                'data-channel' => $meta['channel'],
-            )).'>'
-                .'<span class="group-label">'
+                '<span class="group-label">'
                     .$label
                     .( !empty($argStr)
                         ? '(</span>'.$argStr.'<span class="group-label">)'
                         : '' )
                 .'</span>'
-            .'</div>'."\n";
+            )."\n";
             /*
                 Group open
             */
@@ -398,10 +398,14 @@ class Html extends Base
         $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
         $parsed = $this->debug->utilities->parseTag($this->dump($rowKey));
         $str .= '<tr>';
-        $str .= '<th'.$this->debug->utilities->buildAttribString(array(
-            'class' => 't_key text-right '.$parsed['attribs']['class'],
-            'scope' => 'row',
-        )).'>'.$parsed['innerhtml'].'</th>';
+        $str .= $this->debug->utilities->buildTag(
+            'th',
+            array(
+                'class' => 't_key text-right '.$parsed['attribs']['class'],
+                'scope' => 'row',
+            ),
+            $parsed['innerhtml']
+        );
         if ($objInfo['row']) {
             $str .= $this->markupClassname($objInfo['row']['className'], 'td', array(
                 'title' => $objInfo['row']['phpDoc']['summary'] ?: null,
@@ -622,14 +626,17 @@ class Html extends Base
         $checkboxes = '';
         foreach ($this->channels as $channel) {
             $checkboxes .= '<li><label>'
-                .'<input'.$this->debug->utilities->buildAttribString(array(
+                .$this->debug->utilities->buildTag(
+                    'input',
+                    array(
                         'checked' => true,
                         'data-is-root' => $channel == $this->channelNameRoot,
                         'data-toggle' => 'channel',
                         'type' => 'checkbox',
                         'value' => $channel,
-                    )).' /> '
-                .\htmlspecialchars($channel)
+                    )
+                )
+                .' '.\htmlspecialchars($channel)
                 .'</label></li>'."\n";
         }
         $this->channels = array();
@@ -669,16 +676,12 @@ class Html extends Base
         );
         if ($meta['dismissible']) {
             $attribs['class'] .= ' alert-dismissible';
+            $args[0] = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
+                .'<span aria-hidden="true">&times;</span>'
+                .'</button>'
+                .$args[0];
         }
-        return '<div'.$this->debug->utilities->buildAttribString($attribs).'>'
-            .($meta['dismissible']
-                ? '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
-                    .'<span aria-hidden="true">&times;</span>'
-                    .'</button>'
-                : ''
-            )
-            .$args[0]
-            .'</div>';
+        return $this->debug->utilities->buildTag('div', $attribs, $args[0]);
     }
 
     /**

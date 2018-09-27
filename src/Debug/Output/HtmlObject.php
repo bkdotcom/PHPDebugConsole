@@ -105,10 +105,11 @@ class HtmlObject
                 ? (!$abs['stringified'] ? '__toString() : ' : '').$parsed['attribs']['title']
                 : (!$abs['stringified'] ? '__toString()' : null),
         );
-        return '<span'.$this->debug->utilities->buildAttribString($attribs).'>'
-            .$parsed['innerhtml']
-            .$valAppend
-            .'</span>'."\n";
+        return $this->debug->utilities->buildTag(
+            'span',
+            $attribs,
+            $parsed['innerhtml'].$valAppend
+        )."\n";
     }
 
     /**

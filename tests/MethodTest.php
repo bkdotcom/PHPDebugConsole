@@ -1770,7 +1770,8 @@ EOD;
                     // $this->assertSame('', $logEntry);
                     $trace = $this->debug->getData('log/0/1/0');
                     $this->assertContains('<caption>trace</caption>'."\n"
-                        .'<thead><tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>'."\n"
+                        .'<thead>'."\n"
+                        .'<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>'."\n"
                         .'</thead>', $logEntry);
                     preg_match_all('#<tr>'
                         .'<th.*?>(.*?)</th>'

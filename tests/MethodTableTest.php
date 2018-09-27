@@ -115,7 +115,8 @@ class MethodTableTest extends DebugTestFramework
         $rowsAHtml = <<<'EOD'
 <table class="m_table sortable table-bordered">
 <caption>table caption</caption>
-<thead><tr><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
+<thead>
+<tr><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
 </thead>
 <tbody>
 <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
@@ -193,7 +194,8 @@ EOD;
                 array(
                     'html' => '<table class="m_table sortable table-bordered">
                         <caption>flat</caption>
-                        <thead><tr><th>&nbsp;</th><th>value</th></tr>
+                        <thead>
+                        <tr><th>&nbsp;</th><th>value</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">a</td></tr>
@@ -254,7 +256,8 @@ EOD;
                 array(
                     'html' => '<table class="m_table sortable table-bordered">
                         <caption>traversable -o- traversables (<span class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)</caption>
-                        <thead><tr><th>&nbsp;</th><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
+                        <thead>
+                        <tr><th>&nbsp;</th><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
@@ -294,7 +297,8 @@ EOD;
                 array(
                     'html' => '<table class="m_table sortable table-bordered">
                         <caption>array -o- objects</caption>
-                        <thead><tr><th>&nbsp;</th><th>&nbsp;</th><th>age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
+                        <thead>
+                        <tr><th>&nbsp;</th><th>&nbsp;</th><th>age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_classname">stdClass</td><td class="numeric t_string">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="false t_bool">false</td><td class="t_string">M</td></tr>
@@ -331,7 +335,8 @@ EOD;
                 array(
                     'html' => '<table class="m_table sortable table-bordered">
                         <caption>not all col values of same type</caption>
-                        <thead><tr><th>&nbsp;</th><th>date <span class="t_classname">DateTime</span></th><th scope="col">date2</th></tr>
+                        <thead>
+                        <tr><th>&nbsp;</th><th>date <span class="t_classname">DateTime</span></th><th scope="col">date2</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i</td><td class="t_string">not a datetime</td></tr>

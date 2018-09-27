@@ -17,6 +17,15 @@ namespace bdk\Debug;
 class Utilities
 {
 
+    /**
+     * self closing / empty / void html tags
+     *
+     * Not including 'command' (obsolete) and 'keygen' (deprecated),
+     *
+     * @var array
+     */
+    public static $htmlEmptyTags = array('area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr');
+
     public static $htmlBoolAttr = array(
 
         // GLOBAL
@@ -159,8 +168,8 @@ class Utilities
                 $k = $v;
                 $v = true;
             }
-            $isDataAttrib = \strpos($k, 'data-') === 0;
-            if ($isDataAttrib) {
+            $k = \strtolower($k);
+            if (\strpos($k, 'data-') === 0) {
                 $v = \json_encode($v);
                 $v = \trim($v, '"');
             } elseif (\is_array($v)) {
@@ -185,6 +194,24 @@ class Utilities
         }
         \sort($attribPairs);
         return \rtrim(' '.\implode(' ', $attribPairs));
+    }
+
+    /**
+     * Build an html tag
+     *
+     * @param string       $tagName   tag name (ie "div" or "input")
+     * @param array|string $attribs   key/value attributes
+     * @param string       $innerhtml inner HTML if applicable
+     *
+     * @return string
+     */
+    public static function buildTag($tagName, $attribs = array(), $innerhtml = '')
+    {
+        $tagName = \strtolower($tagName);
+        $attribStr = self::buildAttribString($attribs);
+        return \in_array($tagName, self::$htmlEmptyTags)
+            ? '<'.$tagName.$attribStr.' />'
+            : '<'.$tagName.$attribStr.'>'.$innerhtml.'</'.$tagName.'>';
     }
 
     /**
@@ -440,12 +467,11 @@ class Utilities
      * Parse string -o- attributes into a key=>value array
      *
      * @param string  $str        string to parse
-     * @param boolean $decode     (true) whether to decode special chars
      * @param boolean $dataDecode (true) whether to json_decode data attributes
      *
      * @return array
      */
-    public static function parseAttribString($str, $decode = true, $dataDecode = true)
+    public static function parseAttribString($str, $dataDecode = true)
     {
         $attribs = array();
         $regexAttribs = '/\b([\w\-]+)\b(?: \s*=\s*(["\'])(.*?)\\2 | \s*=\s*(\S+) )?/xs';
@@ -459,18 +485,16 @@ class Utilities
             }
         }
         \ksort($attribs);
-        if ($decode) {
-            foreach ($attribs as $k => $v) {
-                if (\is_string($v)) {
-                    $attribs[$k] = \htmlspecialchars_decode($v);
-                }
-                $isDataAttrib = \strpos($k, 'data-') === 0;
-                if ($isDataAttrib && $dataDecode) {
-                    $val = $attribs[$k];
-                    $attribs[$k] = \json_decode($attribs[$k], true);
-                    if ($attribs[$k] === null && $val !== 'null') {
-                        $attribs[$k] = \json_decode('"'.$val.'"', true);
-                    }
+        foreach ($attribs as $k => $v) {
+            if (\is_string($v)) {
+                $attribs[$k] = \htmlspecialchars_decode($v);
+            }
+            $isDataAttrib = \strpos($k, 'data-') === 0;
+            if ($isDataAttrib && $dataDecode) {
+                $val = $attribs[$k];
+                $attribs[$k] = \json_decode($attribs[$k], true);
+                if ($attribs[$k] === null && $val !== 'null') {
+                    $attribs[$k] = \json_decode('"'.$val.'"', true);
                 }
             }
         }

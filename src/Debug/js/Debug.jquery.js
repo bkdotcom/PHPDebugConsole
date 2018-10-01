@@ -4,19 +4,19 @@
  *    Add FontAwesome icons
  */
 
-(function($) {
+(function($, clipboard) {
 
 	var options = {
 			fontAwesomeCss: "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
 			jQuerySrc: "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
+			clipboardSrc: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
 			classes: {
 				expand : "fa-plus-square-o",
 				collapse : "fa-minus-square-o",
 				empty : "fa-square-o"
 			},
 			iconsMisc: {
-				// ".expand-all" :	'<i class="fa fa-lg fa-plus"></i>',
-				".timestamp" :		'<i class="fa fa-calendar"></i>'
+				".timestamp" : '<i class="fa fa-calendar"></i>'
 			},
 			iconsObject: {
 				"> .info.magic" :				'<i class="fa fa-fw fa-magic"></i>',
@@ -45,53 +45,16 @@
 			},
 			debugKey: getDebugKey()
 		},
-		intervalCounter = 0,
-		checkInterval,
+		listenersRegistered = false;
 		loading = false;
 
-	(function(){
-		var i,
-			links = document.head.getElementsByTagName("link"),
-			count = links.length,
-			haveFa = false;
-		for (i = 0; i < count; i++) {
-			if (links[i].outerHTML.indexOf("font-awesome") > -1) {
-				haveFa = true;
-				break;
-			}
-		}
-		if (!haveFa) {
-			loadStylesheet(options.fontAwesomeCss);
-		}
-	}());
-
-	if ( !$ ) {
-		console.warn("jQuery not yet defined");
-		if (document.getElementsByTagName("body")[0].childElementCount == 1) {
-			// output only contains debug
-			loadScript(options.jQuerySrc);
-		}
-		checkInterval = setInterval(function() {
-			intervalCounter++;
-			if (window.jQuery) {
-				clearInterval(checkInterval);
-				$ = window.jQuery;
-				init();
-			} else if (intervalCounter === 10 && !loading) {
-				loadScript(options.jQuerySrc);
-			} else if (intervalCounter === 20) {
-				clearInterval(checkInterval);
-			}
-		}, 500);
-		return;
-	}
-
-	init();
+	/*
+		Load dependencies and then call init()
+	*/
+	loadDependencies(init);
 
 	function init() {
-
 		console.info("init");
-
 		$.fn.debugEnhance = function(method) {
 			// console.warn("debugEnhance", this);
 			var $self = this;
@@ -122,6 +85,7 @@
 					addCss(this.selector);
 					addPersistOption($self);
 					addExpandAll($self);
+					addNoti($self);
 					enhanceErrorSummary($self);
 					registerListeners($self);
 					// only enhance root log entries
@@ -139,9 +103,16 @@
 		};
 
 		$(function() {
-			$(".debug").debugEnhance();
+			var $debug = $(".debug");
+			if ($debug.length) {
+				$debug.debugEnhance();
+			} else {
+				addCss();
+				addNoti($("body"));
+				registerListeners($("body"));
+			}
 		});
-	}
+	} // end init
 
 	/**
 	 * add font-awsome icons
@@ -222,6 +193,7 @@
 		if ($toggle.is("[data-toggle=array]")) {
 			// show and use the "expand it" toggle as reference toggle
 			$toggle = $toggle.closest(".t_array").prev().show();
+			$target = $toggle.next();
 			$target.hide();
 		} else {
 			if ($toggle.is("[data-toggle=group]")) {
@@ -601,6 +573,37 @@
 				"	.debug [data-toggle=interface]:hover { background-color:rgba(0,0,0,0.1); }" +
 				".debug .vis-toggles .toggle-off," +
 				"	.debug .interface .toggle-off { opacity:0.42 }" +
+				".debug-noti-wrap {" +
+				"	position: fixed;" +
+				"	display: none;" +
+				"	top: 0;" +
+				"	width: 100%;" +
+				"	height: 100%;" +
+				"	pointer-events: none;" +
+				"}" +
+				".debug-noti-wrap .debug-noti {" +
+				"	display: table-cell;" +
+				"	text-align: center;" +
+				"	vertical-align: bottom;" +
+				"	font-size: 30px;" +
+				"	transform-origin: 50% 100%;" +
+				"}" +
+				".debug-noti-table {display:table; width:100%; height:100%}" +
+				".debug-noti.animate {" +
+				"	animation-duration: 1s;" +
+				"	animation-name: expandAndFade;" +
+				"	animation-timing-function: ease-in;" +
+				"}" +
+				"@keyframes expandAndFade {" +
+				"	from {" +
+				"		opacity: .9;" +
+				"		transform: scale(.9, .94);" +
+				"	}" +
+				"	to {" +
+				"		opacity: 0;" +
+				"		transform: scale(1, 1);" +
+				"	}" +
+				"}" +
 				"",
 			id = 'debug_javascript_style';
 		if (scope) {
@@ -609,6 +612,33 @@
 		}
 		if ($("head").find("#"+id).length === 0) {
 			$('<style id="' + id + '">' + css + '</style>').appendTo("head");
+		}
+	}
+
+	function addNoti($root) {
+		$root.append('<div class="debug-noti-wrap">' +
+				'<div class="debug-noti-table">' +
+					'<div class="debug-noti"></div>' +
+				'</div>' +
+			'</div>');
+	}
+
+	/**
+	 * Add FontAwesome CSS to head of page (if missing)
+	 */
+	function addCssFa() {
+		var i,
+			links = document.head.getElementsByTagName("link"),
+			count = links.length,
+			haveFa = false;
+		for (i = 0; i < count; i++) {
+			if (links[i].outerHTML.indexOf("font-awesome") > -1) {
+				haveFa = true;
+				break;
+			}
+		}
+		if (!haveFa) {
+			addStylesheet(options.fontAwesomeCss);
 		}
 	}
 
@@ -649,15 +679,23 @@
 		}
 	}
 
-	function loadScript(src) {
-		var jsNode = document.createElement("script"),
-			first = document.getElementsByTagName("script")[0];
-		loading = true;
-		jsNode.src = src;
-		first.parentNode.insertBefore(jsNode, first);
+	function addScripts(srcs) {
+		var first = document.getElementsByTagName("script")[0],
+			jsNode,
+			i,
+			len;
+		for (i = 0, len = srcs.length; i < len; i++) {
+			if (!srcs[i]) {
+				continue;
+			}
+			loading = true;
+			jsNode = document.createElement("script");
+			jsNode.src = srcs[i];
+			first.parentNode.insertBefore(jsNode, first);
+		}
 	}
 
-	function loadStylesheet(src) {
+	function addStylesheet(src) {
 		var link = document.createElement("link");
 		link.type = "text/css";
 		link.rel = "stylesheet";
@@ -675,6 +713,49 @@
 			key = cookieValue;
 		}
 		return key;
+	}
+
+	/*
+		Check for jQuery, Clipboard, & FontAwesome.
+		Add if missing
+	*/
+	function loadDependencies(callback) {
+		var checkInterval,
+			intervalCounter = 0;
+		addCssFa();
+		if ($ && clipboard) {
+			callback.call();
+			return;
+		}
+		console.warn("jQuery and/or clipboard not yet defined");
+		if (document.getElementsByTagName("body")[0].childElementCount == 1) {
+			// output only contains debug
+			// don't wait for interval to begin
+			addScripts([
+				options.jQuerySrc,
+				options.clipboardSrc
+			]);
+		}
+		checkInterval = setInterval(function() {
+			intervalCounter++;
+			if (window.jQuery && window.ClipboardJS) {
+				clearInterval(checkInterval);
+				$ = window.jQuery;
+				clipboard = window.ClipboardJS
+				loading = false;
+				callback.call();
+			} else if (intervalCounter === 10 && !loading) {
+				// we have waited a bit...
+				// scripts may been on the page, just loaded yet
+				addScripts([
+					window.jQuery ? null : options.jQuerySrc,
+					window.ClipboardJS ? null : options.clipboardSrc
+				]);
+			} else if (intervalCounter === 20) {
+				// give up
+				clearInterval(checkInterval);
+			}
+		}, 500);
 	}
 
 	function registerListeners($root) {
@@ -724,6 +805,26 @@
 				groupErrorIconChange($(this));
 			});
 		});
+
+		if (listenersRegistered) {
+			return;
+		}
+
+		/*
+			Copy strings/floats/ints to clipboard when clicking
+		*/
+		new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
+			target: function (trigger) {
+				notify("Copied to clipboard");
+				return trigger;
+			}
+		});
+
+		$(".debug-noti").on("animationend", function () {
+			$(this).removeClass("animate").closest(".debug-noti-wrap").hide();
+		});
+
+		listenersRegistered = true;
 	}
 
 	/*
@@ -807,6 +908,10 @@
 		});
 	}
 
+	function notify(html) {
+		$(".debug-noti").html(html).addClass("animate").closest(".debug-noti-wrap").show();
+	}
+
 	/**
 	 * sort table
 	 *
@@ -838,4 +943,4 @@
 		}
 	}
 
-}( window.jQuery || undefined ));
+}( window.jQuery || undefined, window.ClipboardJS || undefined ));

@@ -26,8 +26,12 @@ class Utilities
      */
     public static $htmlEmptyTags = array('area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr');
 
+    /**
+     * Used by parseAttribString
+     *
+     * @var array
+     */
     public static $htmlBoolAttr = array(
-
         // GLOBAL
         'contenteditable', 'hidden', 'itemscope',
         // 'spellcheck', // enum : true|false
@@ -152,7 +156,7 @@ class Utilities
      * class & style attributes may be provided as arrays
      * data-* attributes will be property json-encoded
      *
-     * @param array $attribs key/pair values
+     * @param array $attribs key/values
      *
      * @return string
      * @see    https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#autofilling-form-controls:-the-autocomplete-attribute
@@ -172,14 +176,9 @@ class Utilities
             if (\strpos($k, 'data-') === 0) {
                 $v = \json_encode($v);
                 $v = \trim($v, '"');
-            } elseif (\is_array($v)) {
-                $v = self::buildAttribArrayVal($k, $v);
             } elseif (\is_bool($v)) {
                 $v = self::buildAttribBoolVal($k, $v);
-            } elseif ($k == 'class') {
-                // class passed as string
-                // sort and unique
-                $v = \explode(' ', $v);
+            } elseif (\is_array($v) || $k === 'class') {
                 $v = self::buildAttribArrayVal($k, $v);
             }
             if (\array_filter(array(
@@ -450,11 +449,6 @@ class Utilities
     /**
      * Determine PHP's MemoryLimit
      *
-     * default
-     *    php > 5.2.0: 128M
-     *    php = 5.2.0: 16M
-     *    php < 5.2.0: 8M
-     *
      * @return string
      */
     public static function memoryLimit()
@@ -610,6 +604,9 @@ class Utilities
     private static function buildAttribArrayVal($key, $value = array())
     {
         if ($key == 'class') {
+            if (!\is_array($value)) {
+                $value = \explode(' ', $value);
+            }
             $value = \array_filter(\array_unique($value));
             \sort($value);
             $value = \implode(' ', $value);

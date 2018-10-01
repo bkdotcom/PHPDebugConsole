@@ -25,6 +25,7 @@ class TypeObjectTest extends DebugTestFramework
         [bool] => true
         [obj] => null
     )
+    (public) toString = "abracadabra"
     (protected ✨ magic-read) magicReadProp = "not null"
     (protected) propProtected = "defined only in TestBase (protected)"
     (private excluded) propNoDebug
@@ -105,6 +106,7 @@ EOD;
                             "\t".'<span class="key-value"><span class="t_key">bool</span> <span class="t_operator">=&gt;</span> <span class="t_bool true">true</span></span>',
                             "\t".'<span class="key-value"><span class="t_key">obj</span> <span class="t_operator">=&gt;</span> <span class="t_null">null</span></span>',
                             '</span><span class="t_punct">)</span></span></dd>',
+                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
                             '<dd class="property protected magic-read"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">boolean</span> <span class="property-name" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
                             '<dd class="property protected"><span class="t_modifier_protected">protected</span> <span class="property-name">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
                             '<dd class="excluded property private"><span class="t_modifier_private">private</span> <span class="property-name">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
@@ -119,7 +121,7 @@ EOD;
                         $this->assertContains(implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="magic info">This object has a <code>__call</code> method</dd>',
-                            '<dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name" title="Constructor">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
+                            '<dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name" title="Constructor">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="method-name" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">array</span> <span class="method-name" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="method-name" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
@@ -143,8 +145,19 @@ EOD;
                         )), $str);
                     },
                     'text' => $text,
-                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug (not inspected)","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(protected \u2728 magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(\ud83d\udd12 private) testBasePrivate":"defined in TestBase (private)","(\u2728 magic excluded) magicProp":null,"(debug) debugValue":"This property is debug only"});'
+                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug (not inspected)","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected \u2728 magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(\ud83d\udd12 private) testBasePrivate":"defined in TestBase (private)","(\u2728 magic excluded) magicProp":null,"(debug) debugValue":"This property is debug only"});'
                 )
+            ),
+            array(
+                'log',
+                array(
+                    new \bdk\DebugTest\Test('This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it not knowing what it was.  And they\'ll never stop singing it forever just because.  This is the song that never ends...'),
+                ),
+                array(
+                    'html' => function ($str) {
+                        $this->assertContains('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more chars)</i></span>', $str);
+                    }
+                ),
             ),
             array(
                 'log',

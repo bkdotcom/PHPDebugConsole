@@ -109,9 +109,10 @@ class Test extends TestBase
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct($toString = 'abracadabra')
     {
         $this->debug = \bdk\Debug::getInstance();
+        $this->toString = $toString;
         $this->instance = $this;
     }
 
@@ -137,7 +138,7 @@ class Test extends TestBase
      */
     public function __toString()
     {
-        return 'abracadabra';
+        return $this->toString;
     }
 
     /**

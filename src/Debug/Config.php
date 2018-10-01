@@ -196,6 +196,7 @@ class Config
                             //  'output' listed to disambiguate from output object
             ),
             'abstracter' => array(
+                'cacheMethods',
                 'collectConstants',
                 'collectMethods',
                 'objectsExclude',

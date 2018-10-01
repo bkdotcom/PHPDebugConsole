@@ -98,8 +98,13 @@ class HtmlObject
         }
         $toStringDump = $this->debug->output->html->dump($val);
         $parsed = $this->debug->utilities->parseTag($toStringDump);
+        $classArray = \explode(' ', $parsed['attribs']['class']);
+        $classArray[] = 't_stringified';
+        if ($len > 100) {
+            $classArray[] = 't_string_trunc';   // truncated
+        }
         $attribs = array(
-            'class' => $parsed['attribs']['class'].' t_stringified',
+            'class' => $classArray,
             'title' => isset($parsed['attribs']['title'])
                 // ie a timestamp will have a human readable date in title
                 ? (!$abs['stringified'] ? '__toString() : ' : '').$parsed['attribs']['title']

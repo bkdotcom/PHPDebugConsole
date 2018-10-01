@@ -32,6 +32,7 @@ class AbstractObject
         'visibility' => 'public',       // public, private, protected, magic, magic-read, magic-write, debug
                                         //   may also be an array (ie: ['private', 'magic-read'])
     );
+    static private $methodCache = array();
 	protected $abstracter;
 	protected $phpDoc;
 
@@ -246,38 +247,47 @@ class AbstractObject
             $this->addMethodsMin($abs);
             return;
         }
-        $methodArray = array();
-        $reflectionObject = $abs['reflector'];
-        $methods = $reflectionObject->getMethods();
-        $interfaces = $abs['implements'];
-        $interfaceMethods = array(
-            'ArrayAccess' => array('offsetExists','offsetGet','offsetSet','offsetUnset'),
-            'Countable' => array('count'),
-            'Iterator' => array('current','key','next','rewind','void'),
-            'IteratorAggregate' => array('getIterator'),
-            // 'Throwable' => array('getMessage','getCode','getFile','getLine','getTrace','getTraceAsString','getPrevious','__toString'),
-        );
-        $interfacesHide = \array_intersect($interfaces, \array_keys($interfaceMethods));
-        foreach ($methods as $reflectionMethod) {
-            $info = $this->methodInfo($obj, $reflectionMethod);
-            $methodName = $reflectionMethod->getName();
-            if ($info['visibility'] === 'private' && $info['inheritedFrom']) {
-                /*
-                    getMethods() returns parent's private methods (must be a reason... but we'll skip it)
-                */
-                continue;
-            }
-            foreach ($interfacesHide as $interface) {
-                if (\in_array($methodName, $interfaceMethods[$interface])) {
-                    // this method implements this interface
-                    $info['implements'] = $interface;
-                    break;
+        if ($this->abstracter->getCfg('cacheMethods') && isset(static::$methodCache[$abs['className']])) {
+            $abs['methods'] = static::$methodCache[$abs['className']];
+        } else {
+            // $abs['methods'] = static::$methodCache[$abs['className']];
+            $methodArray = array();
+            $reflectionObject = $abs['reflector'];
+            $methods = $reflectionObject->getMethods();
+            $interfaces = $abs['implements'];
+            $interfaceMethods = array(
+                'ArrayAccess' => array('offsetExists','offsetGet','offsetSet','offsetUnset'),
+                'Countable' => array('count'),
+                'Iterator' => array('current','key','next','rewind','void'),
+                'IteratorAggregate' => array('getIterator'),
+                // 'Throwable' => array('getMessage','getCode','getFile','getLine','getTrace','getTraceAsString','getPrevious','__toString'),
+            );
+            $interfacesHide = \array_intersect($interfaces, \array_keys($interfaceMethods));
+            foreach ($methods as $reflectionMethod) {
+                $info = $this->methodInfo($obj, $reflectionMethod);
+                $methodName = $reflectionMethod->getName();
+                if ($info['visibility'] === 'private' && $info['inheritedFrom']) {
+                    /*
+                        getMethods() returns parent's private methods (must be a reason... but we'll skip it)
+                    */
+                    continue;
                 }
+                foreach ($interfacesHide as $interface) {
+                    if (\in_array($methodName, $interfaceMethods[$interface])) {
+                        // this method implements this interface
+                        $info['implements'] = $interface;
+                        break;
+                    }
+                }
+                $methodArray[$methodName] = $info;
             }
-            $methodArray[$methodName] = $info;
+            $abs['methods'] = $methodArray;
+            $this->addMethodsPhpDoc($abs);
+            static::$methodCache[$abs['className']] = $abs['methods'];
         }
-        $abs['methods'] = $methodArray;
-        $this->addMethodsPhpDoc($abs);
+        if (isset($abs['methods']['__toString'])) {
+            $abs['methods']['__toString']['returnValue'] = $obj->__toString();
+        }
         return;
     }
 
@@ -757,7 +767,6 @@ class AbstractObject
     {
         // getDeclaringClass() returns LAST-declared/overridden
         $declaringClassName = $reflectionMethod->getDeclaringClass()->getName();
-        $methodName = $reflectionMethod->getName();
         $phpDoc = $this->phpDoc->getParsed($reflectionMethod);
         $vis = 'public';
         if ($reflectionMethod->isPrivate()) {
@@ -778,9 +787,6 @@ class AbstractObject
             'phpDoc' => $phpDoc,
             'visibility' => $vis,   // public | private | protected | debug | magic
         );
-        if ($methodName == '__toString') {
-            $info['returnValue'] = $reflectionMethod->invoke($obj);
-        }
         unset($info['phpDoc']['param']);
         return $info;
     }

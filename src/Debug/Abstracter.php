@@ -38,6 +38,7 @@ class Abstracter
     {
         $this->eventManager = $eventManager;
         $this->cfg = array(
+            'cacheMethods' => true,
             'collectConstants' => true,
             'collectMethods' => true,
             'objectsExclude' => array(

@@ -24,17 +24,18 @@ use ReflectionMethod;
 /**
  * Web-browser/javascript like console class for PHP
  *
- * @property Abstracter   $abstracter   lazy-loaded Abstracter instance
- * @property ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer instance
- * @property ErrorHandler $errorHandler lazy-loaded ErrorHandler instance
- * @property EventManager $eventManager lazy-loaded EventManager instance
- * @property Internal     $internal     lazy-loaded Internal instance
- * @property Logger       $logger       lazy-loaded PSR-3 instance
- * @property MethodClear  $methodClear  lazy-loaded MethodClear instance
- * @property MethodTable  $methodTable  lazy-loaded MethodTable instance
- * @property Output       $output       lazy-loaded Output instance
- * @property Utf8         $utf8         lazy-loaded Utf8 instance
- * @property Utilities    $utilities    lazy-loaded Utilities instance
+ * @property Abstracter    $abstracter    lazy-loaded Abstracter instance
+ * @property ErrorEmailer  $errorEmailer  lazy-loaded ErrorEmailer instance
+ * @property ErrorHandler  $errorHandler  lazy-loaded ErrorHandler instance
+ * @property EventManager  $eventManager  lazy-loaded EventManager instance
+ * @property Internal      $internal      lazy-loaded Internal instance
+ * @property Logger        $logger        lazy-loaded PSR-3 instance
+ * @property MethodClear   $methodClear   lazy-loaded MethodClear instance
+ * @property MethodProfile $methodProfile lazy-loaded MethodProfile instance
+ * @property MethodTable   $methodTable   lazy-loaded MethodTable instance
+ * @property Output        $output        lazy-loaded Output instance
+ * @property Utf8          $utf8          lazy-loaded Utf8 instance
+ * @property Utilities     $utilities     lazy-loaded Utilities instance
  */
 class Debug
 {
@@ -79,6 +80,7 @@ class Debug
             'key'       => null,
             'output'    => false,           // output the log?
             'channel'   => 'general',
+            'enableProfiling' => false,
             // which error types appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
                             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
@@ -100,6 +102,7 @@ class Debug
             ),
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
             'onLog' => null,    // callable
+            'factories' => $this->getDefaultFactories(),
             'services' => $this->getDefaultServices(),
         );
         if (!isset(self::$instance)) {
@@ -142,6 +145,8 @@ class Debug
             'log'               => array(),
             'logSummary'        => array(), // summary log entries subgrouped by priority
             'outputSent'        => false,
+            'profileAutoInc'    => 1,
+            'profileInstances'  => array(),
             'requestId'         => $this->utilities->requestId(),
             'runtime'           => array(
                 // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
@@ -250,6 +255,12 @@ class Debug
             }
             $this->{$property} = $val;
             return $val;
+        } elseif (isset($this->cfg['factories'][$property])) {
+            $val = $this->cfg['factories'][$property];
+            if (\is_object($val) && \method_exists($val, '__invoke')) {
+                $val = $val($this);
+            }
+            return $val;
         }
         if (isset($this->{$property})) {
             return $this->{$property};
@@ -355,7 +366,7 @@ class Debug
             array('flags' => 'bitmask')
         );
         $event = $this->methodClear->onLog(new Event($this, array(
-            'method' => 'clear',
+            'method' => __FUNCTION__,
             'args' => array(),
             'meta' => $meta,
         )));
@@ -530,7 +541,7 @@ class Debug
                 'debug.log',
                 $this,
                 array(
-                    'method' => 'groupEnd',
+                    'method' => __FUNCTION__,
                     'args' => array(),
                     'meta' => $meta,
                 )
@@ -578,7 +589,7 @@ class Debug
             'debug.log',
             $this,
             array(
-                'method' => 'groupSummary',
+                'method' => __FUNCTION__,
                 'args' => array(),
                 'meta' => $meta,
             )
@@ -618,7 +629,7 @@ class Debug
             'debug.log',
             $this,
             array(
-                'method' => 'groupUncollapse',
+                'method' => __FUNCTION__,
                 'args' => array(),
                 'meta' => $meta,
             )
@@ -650,6 +661,108 @@ class Debug
     }
 
     /**
+     * Starts recording a performance profile
+     *
+     * @param string $name Optional Profile name
+     *
+     * @return void
+     */
+    public function profile($name = null)
+    {
+        if (!$this->cfg['collect']) {
+            return;
+        }
+        $this->config->setCfg('enableProfiling', true);
+        $args = \func_get_args();
+        $meta = $this->internal->getMetaVals(
+            $args,
+            array('channel' => $this->cfg['channel']),
+            array('name' => null),
+            array('name')   // move name to meta
+        );
+        if ($meta['name'] === null) {
+            $meta['name'] = 'Profile '.$this->data['profileAutoInc'];
+            $this->data['profileAutoInc']++;
+        }
+        $name = $meta['name'];
+        $message = '';
+        if (isset($this->data['profileInstances'][$name])) {
+            $instance = $this->data['profileInstances'][$name];
+            $instance->end();
+            $instance->start();
+            // move it to end (last started)
+            unset($this->data['profileInstances'][$name]);
+            $this->data['profileInstances'][$name] = $instance;
+            $message = 'Profile \''.$name.'\' restarted';
+        } else {
+            $this->data['profileInstances'][$name] = $this->methodProfile; // factory
+            $message = 'Profile \''.$name.'\' started';
+        }
+        $this->appendLog(
+            __FUNCTION__,
+            array(
+                $message,
+            ),
+            $meta
+        );
+    }
+
+    /**
+     * Stops recording profile info & adds info to the log
+     *
+     *  * if name is passed and it matches the name of a profile being recorded, then that profile is stopped.
+     *  * if name is passed and it does not match the name of a profile being recorded, nothing will be done
+     *  * if name is not passed, the most recently started profile is stopped (named, or non-named).
+     *
+     * @param string $name Optional Profile name
+     *
+     * @return void
+     */
+    public function profileEnd($name = null)
+    {
+        $args = \func_get_args();
+        $meta = $this->internal->getMetaVals(
+            $args,
+            array('channel' => $this->cfg['channel']),
+            array('name' => null),
+            array('name')
+        );
+        if ($meta['name'] === null) {
+            \end($this->data['profileInstances']);
+            $meta['name'] = \key($this->data['profileInstances']);
+        }
+        $name = $meta['name'];
+        if (isset($this->data['profileInstances'][$name])) {
+            $instance = $this->data['profileInstances'][$name];
+            $args = array($instance->end());
+            $meta['sortable'] = true;
+            $meta['caption'] = 'Profile \''.$name.'\' Results';
+            $meta['totalCols'] = array('ownTime');
+            $meta['columns'] = array();
+            unset($this->data['profileInstances'][$name]);
+            /*
+            $event = $this->methodTable->onLog(new Event($this, array(
+                'method' => __FUNCTION__,
+                'args' => $args,
+                'meta' => $meta,
+            )));
+            $args = $event['args'];
+            $meta = $event['meta'];
+            */
+        } else {
+            $args = array( $name !== null
+                ? 'profileEnd: No such Profile: '.$name
+                : 'profileEnd: Not currently profiling'
+            );
+        }
+        $this->appendLog(
+            __FUNCTION__,
+            $args,
+            $meta
+        );
+    }
+
+    /**
      * Output array as a table
      *
      * Accepts array of arrays or array of objects
@@ -672,7 +785,7 @@ class Debug
             array('channel' => $this->cfg['channel'])
         );
         $event = $this->methodTable->onLog(new Event($this, array(
-            'method' => 'table',
+            'method' => __FUNCTION__,
             'args' => $args,
             'meta' => $meta,
         )));
@@ -1357,6 +1470,20 @@ class Debug
         }
         $depth += \count($this->data['groupPriorityStack']);
         return $depth;
+    }
+
+    /**
+     * Set "container" factories
+     *
+     * @return array
+     */
+    private function getDefaultFactories()
+    {
+        return array(
+            'methodProfile' => function () {
+                return new Debug\MethodProfile();
+            },
+        );
     }
 
     /**

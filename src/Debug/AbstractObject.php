@@ -250,11 +250,8 @@ class AbstractObject
         if ($this->abstracter->getCfg('cacheMethods') && isset(static::$methodCache[$abs['className']])) {
             $abs['methods'] = static::$methodCache[$abs['className']];
         } else {
-            // $abs['methods'] = static::$methodCache[$abs['className']];
             $methodArray = array();
-            $reflectionObject = $abs['reflector'];
-            $methods = $reflectionObject->getMethods();
-            $interfaces = $abs['implements'];
+            $methods = $abs['reflector']->getMethods();
             $interfaceMethods = array(
                 'ArrayAccess' => array('offsetExists','offsetGet','offsetSet','offsetUnset'),
                 'Countable' => array('count'),
@@ -262,7 +259,7 @@ class AbstractObject
                 'IteratorAggregate' => array('getIterator'),
                 // 'Throwable' => array('getMessage','getCode','getFile','getLine','getTrace','getTraceAsString','getPrevious','__toString'),
             );
-            $interfacesHide = \array_intersect($interfaces, \array_keys($interfaceMethods));
+            $interfacesHide = \array_intersect($abs['implements'], \array_keys($interfaceMethods));
             foreach ($methods as $reflectionMethod) {
                 $info = $this->methodInfo($obj, $reflectionMethod);
                 $methodName = $reflectionMethod->getName();

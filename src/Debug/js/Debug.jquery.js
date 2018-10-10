@@ -40,8 +40,10 @@
 				".m_count" :			'<i class="fa fa-lg fa-plus-circle"></i>',
 				".m_error" :			'<i class="fa fa-lg fa-times-circle"></i>',
 				".m_info" :				'<i class="fa fa-lg fa-info-circle"></i>',
-				".m_warn" :				'<i class="fa fa-lg fa-warning"></i>',
-				".m_time" :				'<i class="fa fa-lg fa-clock-o"></i>'
+				".m_profile" :			'<i class="fa fa-lg fa-pie-chart"></i>',
+				".m_profileEnd" :		'<i class="fa fa-lg fa-pie-chart"></i>',
+				".m_time" :				'<i class="fa fa-lg fa-clock-o"></i>',
+				".m_warn" :				'<i class="fa fa-lg fa-warning"></i>'
 			},
 			debugKey: getDebugKey()
 		},
@@ -85,7 +87,6 @@
 					addCss(this.selector);
 					addPersistOption($self);
 					addExpandAll($self);
-					addNoti($self);
 					enhanceErrorSummary($self);
 					registerListeners($self);
 					// only enhance root log entries
@@ -108,9 +109,9 @@
 				$debug.debugEnhance();
 			} else {
 				addCss();
-				addNoti($("body"));
 				registerListeners($("body"));
 			}
+			addNoti($("body"));
 		});
 	} // end init
 
@@ -136,7 +137,16 @@
 		}
 		if ($.inArray("methods", types) >= 0) {
 			$.each(options.iconsMethods, function(selector,v){
+				var $caption
 				if ($root.is(selector)) {
+					if ($root.is("table")) {
+						$caption = $root.find('caption');
+						if (!$caption.length) {
+							$caption = $("<caption></caption>");
+							$table.prepend($caption);
+						}
+						$root = $caption;
+					}
 					$root.prepend(v);
 					return false;
 				}
@@ -820,7 +830,7 @@
 			}
 		});
 
-		$(".debug-noti").on("animationend", function () {
+		$("body").on("animationend", ".debug-noti", function () {
 			$(this).removeClass("animate").closest(".debug-noti-wrap").hide();
 		});
 

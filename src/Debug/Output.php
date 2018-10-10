@@ -136,8 +136,12 @@ class Output implements SubscriberInterface
     {
         $this->data = $this->debug->getData();
         $this->closeOpenGroups();
-        $this->removeHideIfEmptyGroups();
-        $this->uncollapseErrors();
+        foreach ($this->data['logSummary'] as &$log) {
+            $this->removeHideIfEmptyGroups($log);
+            $this->uncollapseErrors($log);
+        }
+        $this->removeHideIfEmptyGroups($this->data['log']);
+        $this->uncollapseErrors($this->data['log']);
         $this->debug->setData($this->data);
     }
 
@@ -236,17 +240,19 @@ class Output implements SubscriberInterface
     /**
      * Remove empty groups with 'hideIfEmpty' meta value
      *
+     * @param array $log log or summary
+     *
      * @return void
      */
-    private function removeHideIfEmptyGroups()
+    private function removeHideIfEmptyGroups(&$log)
     {
         $groupStack = array();
         $groupStackCount = 0;
         $removed = false;
-        for ($i = 0, $count = \count($this->data['log']); $i < $count; $i++) {
-            $method = $this->data['log'][$i][0];
+        for ($i = 0, $count = \count($log); $i < $count; $i++) {
+            $method = $log[$i][0];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $entry = $this->data['log'][$i];
+                $entry = $log[$i];
                 $groupStack[] = array(
                     'i' => $i,
                     'meta' => !empty($entry[2]) ? $entry[2] : array(),
@@ -257,8 +263,8 @@ class Output implements SubscriberInterface
                 $group = \end($groupStack);
                 if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
                     // make it go away
-                    unset($this->data['log'][$group['i']]);
-                    unset($this->data['log'][$i]);
+                    unset($log[$group['i']]);
+                    unset($log[$i]);
                     $removed = true;
                 }
                 \array_pop($groupStack);
@@ -268,7 +274,7 @@ class Output implements SubscriberInterface
             }
         }
         if ($removed) {
-            $this->data['log'] = \array_values($this->data['log']);
+            $log = \array_values($log);
         }
     }
 
@@ -322,20 +328,22 @@ class Output implements SubscriberInterface
     /**
      * Uncollapse groups containing errors.
      *
+     * @param array $log log or summary
+     *
      * @return void
      */
-    private function uncollapseErrors()
+    private function uncollapseErrors(&$log)
     {
         $groupStack = array();
-        for ($i = 0, $count = \count($this->data['log']); $i < $count; $i++) {
-            $method = $this->data['log'][$i][0];
+        for ($i = 0, $count = \count($log); $i < $count; $i++) {
+            $method = $log[$i][0];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $groupStack[] = $i;
             } elseif ($method == 'groupEnd') {
                 \array_pop($groupStack);
             } elseif (\in_array($method, array('error', 'warn'))) {
                 foreach ($groupStack as $i2) {
-                    $this->data['log'][$i2][0] = 'group';
+                    $log[$i2][0] = 'group';
                 }
             }
         }

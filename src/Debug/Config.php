@@ -24,6 +24,7 @@ class Config
     protected $cfgLazy = array();  // store config for child classes that haven't been loaded yet
     protected $debug;
     protected $configKeys;
+    private static $profilingEnabled = false;
 
     /**
      * Constructor
@@ -387,6 +388,13 @@ class Config
                 $this->debug->eventManager->unsubscribe('debug.log', $this->cfg['onLog']);
             }
             $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
+        }
+        if ($this->cfg['enableProfiling'] && $this->cfg['collect'] && !static::$profilingEnabled) {
+            static::$profilingEnabled = true;
+            $pathsExclude = array(
+                __DIR__,
+            );
+            \bdk\Debug\FileStreamWrapper::register($pathsExclude);
         }
     }
 

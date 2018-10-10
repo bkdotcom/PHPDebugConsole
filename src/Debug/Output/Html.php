@@ -225,14 +225,23 @@ class Html extends Base
             $str = $this->methodAlert($args, $meta);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->buildGroupMethod($method, $args, $meta);
-        } elseif (\in_array($method, array('table','trace'))) {
+        } elseif ($method == 'profileEnd' && !is_array($args[0])) {
+            $str = $this->debug->utilities->buildTag(
+                'div',
+                array(
+                    'class' => 'm_profileEnd',
+                    'data-channel' => $meta['channel'],
+                ),
+                $this->buildArgString($args)
+            );
+        } elseif (\in_array($method, array('profileEnd','table','trace'))) {
             $str = $this->buildTable(
                 $args[0],
                 $meta['caption'],
                 $meta['columns'],
                 array(
                     'class' => array(
-                        $method == 'table' ? 'm_table' : 'm_trace',
+                        'm_'.$method ,
                         'table-bordered',
                         !empty($meta['sortable']) ? 'sortable' : null,
                     ),

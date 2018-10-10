@@ -41,33 +41,47 @@ class Html extends Base
     /**
      * Formats an array as a table
      *
-     * @param array  $rows    array of \Traversable
-     * @param string $caption optional caption
-     * @param array  $columns columns to display
-     * @param array  $attribs default attributes
+     * @param array $rows    array of \Traversable
+     * @param array $options options
+     *                           'attribs' : key/val array (or string - interpreted as class value)
+     *                           'caption' : optional caption
+     *                           'columns' : array of columns to display (defaults to all)
+     *                           'totalCols' : array of column keys that will get totaled
      *
      * @return string
      */
-    public function buildTable($rows, $caption = null, $columns = array(), $attribs = array())
+    public function buildTable($rows, $options = array())
     {
+        $options = array_merge(array(
+            'attribs' => array(),
+            'caption' => null,
+            'columns' => array(),
+            'totalCols' => array(),
+        ), $options);
+        if (\is_string($options['attribs'])) {
+            $options['attribs'] = array(
+                'class' => $options['attribs'],
+            );
+        }
         if (!\is_array($rows) || empty($rows)) {
             // empty array/value
             return '<div class="m_log">'
-                .(isset($caption) ? $caption.' = ' : '')
+                .($options['caption'] ? $options['caption'].' = ' : '')
                 .$this->dump($rows)
                 .'</div>';
         }
         if ($this->debug->abstracter->isAbstraction($rows) && $rows['traverseValues']) {
-            $caption .= ' ('.$this->markupClassname($rows['className'], 'span', array(
+            $options['caption'] .= ' ('.$this->markupClassname($rows['className'], 'span', array(
                     'title' => $rows['phpDoc']['summary'] ?: null,
                 )).')';
-            $caption = \trim($caption);
+            $options['caption'] = \trim($options['caption']);
             $rows = $rows['traverseValues'];
         }
-        $keys = $columns ?: $this->debug->methodTable->colKeys($rows);
+        $keys = $options['columns'] ?: $this->debug->methodTable->colKeys($rows);
         $this->tableInfo = array(
-            'haveObjRow' => false,
             'colClasses' => \array_fill_keys($keys, null),
+            'haveObjRow' => false,
+            'totals' => \array_fill_keys($options['totalCols'], null),
         );
         $tBody = '';
         foreach ($rows as $k => $row) {
@@ -76,18 +90,14 @@ class Html extends Base
         if (!$this->tableInfo['haveObjRow']) {
             $tBody = \str_replace('<td class="t_classname"></td>', '', $tBody);
         }
-        if (\is_string($attribs)) {
-            $attribs = array(
-                'class' => $attribs,
-            );
-        }
         return $this->debug->utilities->buildTag(
             'table',
-            $attribs,
+            $options['attribs'],
             "\n"
-                .($caption ? '<caption>'.$caption.'</caption>'."\n" : '')
-                .'<thead>'."\n".$this->buildTableHeader($keys).'</thead>'."\n"
+                .($options['caption'] ? '<caption>'.$options['caption'].'</caption>'."\n" : '')
+                .$this->buildTableHeader($keys)
                 .'<tbody>'."\n".$tBody.'</tbody>'."\n"
+                .$this->buildTableFooter($keys)
         );
     }
 
@@ -237,15 +247,18 @@ class Html extends Base
         } elseif (\in_array($method, array('profileEnd','table','trace'))) {
             $str = $this->buildTable(
                 $args[0],
-                $meta['caption'],
-                $meta['columns'],
                 array(
-                    'class' => array(
-                        'm_'.$method ,
-                        'table-bordered',
-                        !empty($meta['sortable']) ? 'sortable' : null,
+                    'attribs' => array(
+                        'class' => array(
+                            'm_'.$method ,
+                            'table-bordered',
+                            !empty($meta['sortable']) ? 'sortable' : null,
+                        ),
+                        'data-channel' => $meta['channel'],
                     ),
-                    'data-channel' => $meta['channel'],
+                    'caption' => $meta['caption'],
+                    'columns' => $meta['columns'],
+                    'totalCols' => isset($meta['totalCols']) ? $meta['totalCols'] : array(),
                 )
             );
         } else {
@@ -369,7 +382,36 @@ class Html extends Base
     }
 
     /**
-     * Returns table's thead row
+     * Returns table's tfoot
+     *
+     * @param array $keys column header values (keys of array or property names)
+     *
+     * @return string
+     */
+    protected function buildTableFooter($keys)
+    {
+        $haveTotal = false;
+        $cells = array();
+        foreach ($keys as $key) {
+            $colHasTotal = isset($this->tableInfo['totals'][$key]);
+            $cells[] = $colHasTotal
+                ? $this->dump($this->tableInfo['totals'][$key], null, true, 'td')
+                : '<td></td>';
+            $haveTotal = $haveTotal || $colHasTotal;
+        }
+        if (!$haveTotal) {
+            return '';
+        }
+        return '<tfoot>'."\n"
+            .'<tr><td>&nbsp;</td>'
+                .($this->tableInfo['haveObjRow'] ? '<td>&nbsp;</td>' : '')
+                .\implode('', $cells)
+            .'</tr>'."\n"
+            .'</tfoot>'."\n";
+    }
+
+    /**
+     * Returns table's thead
      *
      * @param array $keys column header values (keys of array or property names)
      *
@@ -386,10 +428,12 @@ class Html extends Base
                 $headers[$key] .= ' '.$this->markupClassname($this->tableInfo['colClasses'][$key]);
             }
         }
-        return '<tr><th>&nbsp;</th>'
+        return '<thead>'."\n"
+            .'<tr><th>&nbsp;</th>'
                 .($this->tableInfo['haveObjRow'] ? '<th>&nbsp;</th>' : '')
                 .'<th>'.\implode('</th><th scope="col">', $headers).'</th>'
-            .'</tr>'."\n";
+            .'</tr>'."\n"
+            .'</thead>'."\n";
     }
 
     /**
@@ -428,6 +472,9 @@ class Html extends Base
         }
         $str .= '</tr>'."\n";
         $str = \str_replace(' title=""', '', $str);
+        foreach (\array_keys($this->tableInfo['totals']) as $k) {
+            $this->tableInfo['totals'][$k] += $values[$k];
+        }
         foreach ($objInfo['cols'] as $k2 => $classname) {
             if ($this->tableInfo['colClasses'][$k2] === false) {
                 // column values not of the same type

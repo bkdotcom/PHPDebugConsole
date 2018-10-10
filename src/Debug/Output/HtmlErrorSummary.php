@@ -73,9 +73,11 @@ class HtmlErrorSummary
             // more than one trace frame
             $table = $this->outputHtml->buildTable(
                 $backtrace,
-                'trace',
-                array('file','line','function'),
-                'trace table-bordered'
+                array(
+                    'attribs' => 'trace table-bordered',
+                    'caption' => 'trace',
+                    'columns' => array('file','line','function'),
+                )
             );
             $html .= '<li>'.$lastError['message'].'</li>';
             $html .= '<li>'.$table.'</li>';

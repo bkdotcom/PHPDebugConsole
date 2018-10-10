@@ -740,15 +740,6 @@ class Debug
             $meta['totalCols'] = array('ownTime');
             $meta['columns'] = array();
             unset($this->data['profileInstances'][$name]);
-            /*
-            $event = $this->methodTable->onLog(new Event($this, array(
-                'method' => __FUNCTION__,
-                'args' => $args,
-                'meta' => $meta,
-            )));
-            $args = $event['args'];
-            $meta = $event['meta'];
-            */
         } else {
             $args = array( $name !== null
                 ? 'profileEnd: No such Profile: '.$name

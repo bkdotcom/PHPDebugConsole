@@ -44,7 +44,7 @@ class FileStreamWrapper
     {
         $result = \stream_wrapper_unregister(static::PROTOCOL);
         if ($result === false) {
-            throw new UnexpectedValueException('Failed to unregister');
+            throw new \UnexpectedValueException('Failed to unregister');
         }
         if ($pathsExclude) {
             self::$pathsExclude = $pathsExclude;
@@ -63,7 +63,7 @@ class FileStreamWrapper
     {
         $result = \stream_wrapper_restore(static::PROTOCOL);
         if ($result === false) {
-            throw new UnexpectedValueException('Failed to restore');
+            throw new \UnexpectedValueException('Failed to restore');
         }
     }
 
@@ -85,6 +85,7 @@ class FileStreamWrapper
         $this->handle = null;
         return true;
     }
+
     /**
      * Opens a directory for reading
      *
@@ -100,11 +101,14 @@ class FileStreamWrapper
         if ($this->handle) {
             return false;
         }
+        // "use" our function params so things don't complain
+        array($options);
         self::restorePrev();
         $this->handle = \opendir($path);
         self::register();
         return $this->handle !== false;
     }
+
     /**
      * Read a single filename of a directory
      *
@@ -122,6 +126,7 @@ class FileStreamWrapper
         self::register();
         return $success;
     }
+
     /**
      * Reset directory name pointer
      *
@@ -139,6 +144,7 @@ class FileStreamWrapper
         self::register();
         return true;
     }
+
     /**
      * Create a directory
      *
@@ -155,6 +161,7 @@ class FileStreamWrapper
         self::register();
         return $success;
     }
+
     /**
      * Rename a file
      *
@@ -174,6 +181,7 @@ class FileStreamWrapper
         self::register();
         return $success;
     }
+
     /**
      * Remove a directory
      *
@@ -186,6 +194,8 @@ class FileStreamWrapper
      */
     public function rmdir($path, $options)
     {
+        // "use" our function params so things don't complain
+        array($options);
         self::restorePrev();
         $success = \rmdir($path);
         self::register();
@@ -360,7 +370,7 @@ class FileStreamWrapper
         */
         $meta = \stream_get_meta_data($handle);
         if (!isset($meta['uri'])) {
-            throw new UnexpectedValueException('Uri not in meta data');
+            throw new \UnexpectedValueException('Uri not in meta data');
         }
         $openedPath = $meta['uri'];
         $this->filepath = $openedPath;
@@ -401,14 +411,6 @@ class FileStreamWrapper
                 $buffer,
                 1
             );
-            /*
-            $buffer = \preg_replace(
-                '/^(namespace .+;)$/m',
-                "\\0\necho '".$this->filepath."<br />';\n",
-                $buffer,
-                1
-            );
-            */
             $this->declaredTicks = true;
         }
         $buffer = $this->bufferPrepend.$buffer;

@@ -51,7 +51,7 @@ class FileStreamWrapper
         if ($pathsExclude) {
             self::$pathsExclude = $pathsExclude;
         }
-        \stream_wrapper_register(static::PROTOCOL, \get_class($this));
+        \stream_wrapper_register(static::PROTOCOL, \get_called_class());
     }
 
     /**

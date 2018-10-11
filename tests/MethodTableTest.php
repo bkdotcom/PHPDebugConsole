@@ -53,7 +53,12 @@ class MethodTableTest extends DebugTestFramework
         $this->assertSame(array(
             'table',
             array($list),
-            array('caption'=>null, 'columns'=>array(), 'sortable'=>true),
+            array(
+                'caption'=>null,
+                'columns'=>array(),
+                'sortable'=>true,
+                'totalCols' => array(),
+            ),
         ), $this->debug->getData('log/0'));
         $this->assertSame(array(
             'log',
@@ -67,6 +72,7 @@ class MethodTableTest extends DebugTestFramework
                 'caption'=>'arg1',
                 'columns'=>array(),
                 'sortable'=>true,
+                'totalCols' => array(),
             ),
         ), $this->debug->getData('log/2'));
         $this->assertSame(array(
@@ -76,6 +82,7 @@ class MethodTableTest extends DebugTestFramework
                 'caption'=>'arg2',
                 'columns'=>array('arg3 is array'),
                 'sortable'=>true,
+                'totalCols' => array(),
             ),
         ), $this->debug->getData('log/3'));
         $this->assertSame(array('log', array('arg1', 'arg2'), array()), $this->debug->getData('log/4'));
@@ -88,6 +95,7 @@ class MethodTableTest extends DebugTestFramework
                 'caption'=>'flat',
                 'columns'=>array(),
                 'sortable'=>true,
+                'totalCols' => array(),
             ),
         ), $this->debug->getData('log/5'));
     }

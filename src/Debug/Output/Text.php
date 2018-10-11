@@ -86,7 +86,7 @@ class Text extends Base
             $prefix = $prefixes[$classToPrefix[$class]];
             $prefix = '[Alert '.$prefix.$class.'] ';
             $args = array($args[0]);
-        } elseif ($method == 'table') {
+        } elseif (\in_array($method, array('profileEnd','table'))) {
             $args = array($this->methodTable($args[0], $meta['columns']));
             if ($meta['caption']) {
                 \array_unshift($args, $meta['caption']);

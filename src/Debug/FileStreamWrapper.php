@@ -177,7 +177,7 @@ class FileStreamWrapper
         self::restorePrev();
         $pathFrom = self::overlayPath($pathFrom);
         $pathTo = self::overlayPath($pathTo);
-        $success = rename($pathFrom, $pathTo);
+        $success = \rename($pathFrom, $pathTo);
         self::register();
         return $success;
     }
@@ -396,7 +396,7 @@ class FileStreamWrapper
         $buffer = \fread($this->handle, $count);
         $bufferLen = \strlen($buffer);
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        $isRequire = !in_array($backtrace[1]['function'], array('file_get_contents'));
+        $isRequire = !\in_array($backtrace[1]['function'], array('file_get_contents'));
         if (!$this->declaredTicks && $isRequire) {
             foreach (self::$pathsExclude as $excludePath) {
                 if (\strpos($this->filepath, $excludePath.DIRECTORY_SEPARATOR) === 0) {
@@ -557,12 +557,12 @@ class FileStreamWrapper
             $info = false;
         } elseif ($flags & STREAM_URL_STAT_LINK) {
             $info = $flags & STREAM_URL_STAT_QUIET
-                ? @lstat($path)
-                : lstat($path);
+                ? @\lstat($path)
+                : \lstat($path);
         } else {
             $info = $flags & STREAM_URL_STAT_QUIET
-                ? @stat($path)
-                : stat($path);
+                ? @\stat($path)
+                : \stat($path);
         }
         self::register();
         return $info;

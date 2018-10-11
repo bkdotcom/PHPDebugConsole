@@ -734,11 +734,17 @@ class Debug
         $name = $meta['name'];
         if (isset($this->data['profileInstances'][$name])) {
             $instance = $this->data['profileInstances'][$name];
-            $args = array($instance->end());
-            $meta['sortable'] = true;
-            $meta['caption'] = 'Profile \''.$name.'\' Results';
-            $meta['totalCols'] = array('ownTime');
-            $meta['columns'] = array();
+            $data = $instance->end();
+            $caption = 'Profile \''.$name.'\' Results';
+            if ($data) {
+                $args = array( $data );
+                $meta['sortable'] = true;
+                $meta['caption'] = $caption;
+                $meta['totalCols'] = array('ownTime');
+                $meta['columns'] = array();
+            } else {
+                $args = array($caption, 'no data');
+            }
             unset($this->data['profileInstances'][$name]);
         } else {
             $args = array( $name !== null

@@ -153,6 +153,7 @@ class MethodTable
             'caption' => null,
             'columns' => array(),
             'sortable' => true,
+            'totalCols' => array(),
         ), $event['meta']);
         $argCount = \count($args);
         $data = null;

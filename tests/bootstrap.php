@@ -17,4 +17,6 @@ require __DIR__.'/../vendor/autoload.php';
 
 \bdk\Debug::getInstance(array(
 	'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
+    'enableProfiling' => true,
+    'collect' => true,
 ));

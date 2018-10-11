@@ -110,7 +110,8 @@ class ChromeLogger extends Base
             \array_unshift($args, false);
         } elseif (\in_array($method, array('count','time'))) {
             $method = 'log';
-        } elseif ($method === 'table') {
+        } elseif (\in_array($method, array('profileEnd','table'))) {
+            $method = 'table';
             $args = array($this->methodTable($args[0], $meta['columns']));
         } elseif ($method === 'trace') {
             $method = 'table';

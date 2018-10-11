@@ -41,8 +41,8 @@ class MethodProfile
      */
     public function __construct($namespacesIgnore = array())
     {
-        $namespacesIgnore = array_merge(array(__NAMESPACE__), $namespacesIgnore);
-        $this->nsIgnoreRegex = str_replace('\\', '\\\\', '#^('.implode('|', $namespacesIgnore).')(\\|$)#');
+        $namespacesIgnore = \array_merge(array(__NAMESPACE__), $namespacesIgnore);
+        $this->nsIgnoreRegex = \str_replace('\\', '\\\\', '#^('.\implode('|', $namespacesIgnore).')(\\|$)#');
         $this->start();
     }
 
@@ -87,8 +87,7 @@ class MethodProfile
         $backtrace = $this->backtraceRemoveInternal($backtrace);
         foreach ($backtrace as $frame) {
             $class = isset($frame['class']) ? $frame['class'].'::' : '';
-            $function = $class.$frame['function'];
-            $this->rootStack[] = $class.$function;
+            $this->rootStack[] = $class.$frame['function'];
         }
         \register_tick_function(array($this, 'tickFunction'));
         $this->isProfiling = true;
@@ -129,10 +128,10 @@ class MethodProfile
             $diff = $stackCount - $stackCountInternal;
             for ($i = $diff; $i > 0; $i--) {
                 $class = isset($trace[$i]['class']) ? $trace[$i]['class'] : null;
-                $function = \ltrim($class.'::'.$trace[$i]['function'], ':');
                 if (\preg_match($this->nsIgnoreRegex, $class)) {
                     break;
                 }
+                $function = \ltrim($class.'::'.$trace[$i]['function'], ':');
                 $this->pushStack($function);
             }
         } else {
@@ -153,7 +152,7 @@ class MethodProfile
         $count = \count($backtrace);
         for ($i = $count - 1; $i > 0; $i--) {
             $frame = $backtrace[$i];
-            if (isset($frame['class']) && \strpos($frame['class'], __NAMESPACE__) == 0) {
+            if (isset($frame['class']) && \strpos($frame['class'], __NAMESPACE__) === 0) {
                 break;
             }
         }

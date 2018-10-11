@@ -52,7 +52,7 @@ class Html extends Base
      */
     public function buildTable($rows, $options = array())
     {
-        $options = array_merge(array(
+        $options = \array_merge(array(
             'attribs' => array(),
             'caption' => null,
             'columns' => array(),
@@ -235,7 +235,7 @@ class Html extends Base
             $str = $this->methodAlert($args, $meta);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->buildGroupMethod($method, $args, $meta);
-        } elseif ($method == 'profileEnd' && !is_array($args[0])) {
+        } elseif ($method == 'profileEnd' && !\is_array($args[0])) {
             $str = $this->debug->utilities->buildTag(
                 'div',
                 array(
@@ -245,6 +245,12 @@ class Html extends Base
                 $this->buildArgString($args)
             );
         } elseif (\in_array($method, array('profileEnd','table','trace'))) {
+            $meta = \array_merge(array(
+                'caption' => null,
+                'columns' => array(),
+                'sortable' => false,
+                'totalCols' => array(),
+            ), $meta);
             $str = $this->buildTable(
                 $args[0],
                 array(
@@ -252,13 +258,13 @@ class Html extends Base
                         'class' => array(
                             'm_'.$method ,
                             'table-bordered',
-                            !empty($meta['sortable']) ? 'sortable' : null,
+                            $meta['sortable'] ? 'sortable' : null,
                         ),
                         'data-channel' => $meta['channel'],
                     ),
                     'caption' => $meta['caption'],
                     'columns' => $meta['columns'],
-                    'totalCols' => isset($meta['totalCols']) ? $meta['totalCols'] : array(),
+                    'totalCols' => $meta['totalCols'],
                 )
             );
         } else {
@@ -289,7 +295,7 @@ class Html extends Base
                 $this->buildArgString($args)
             );
         }
-        $str = str_replace(' data-channel="null"', '', $str);
+        $str = \str_replace(' data-channel="null"', '', $str);
         $str .= "\n";
         return $str;
     }

@@ -82,7 +82,8 @@ class Firephp extends Base
             $value = $args[0];
         } elseif (\in_array($method, array('group','groupCollapsed'))) {
             $firePhpMeta['Label'] = $args[0];
-        } elseif ($method == 'table') {
+        } elseif (\in_array($method, array('profileEnd','table'))) {
+            $firePhpMeta['Type'] = $this->firephpMethods['table'];
             $value = $this->methodTable($args[0], $meta['columns']);
             if ($meta['caption']) {
                 $firePhpMeta['Label'] = $meta['caption'];

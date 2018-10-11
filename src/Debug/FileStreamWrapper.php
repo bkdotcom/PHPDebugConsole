@@ -36,9 +36,11 @@ class FileStreamWrapper
     /**
      * Register this stream wrapper
      *
+     * @param array $pathsExclude paths/directories to exclude
+     *
      * @return void
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      */
     public static function register($pathsExclude = array())
     {
@@ -49,7 +51,7 @@ class FileStreamWrapper
         if ($pathsExclude) {
             self::$pathsExclude = $pathsExclude;
         }
-        \stream_wrapper_register(static::PROTOCOL, self::class);
+        \stream_wrapper_register(static::PROTOCOL, \get_class($this));
     }
 
     /**
@@ -57,7 +59,7 @@ class FileStreamWrapper
      *
      * @return void
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      */
     private static function restorePrev()
     {
@@ -347,7 +349,7 @@ class FileStreamWrapper
      * @return boolean
      *
      * @see    http://php.net/manual/en/streamwrapper.stream-open.php
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      */
     public function stream_open($path, $mode, $options, &$openedPath)
     {

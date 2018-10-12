@@ -310,10 +310,14 @@ class Html extends Base
     protected function buildArgString($args)
     {
         $glue = ', ';
-        if (\count($args) == 2 && \is_string($args[0])) {
-            $glue = \preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                ? ''
-                : ' = ';
+        $glueAfterFirst = true;
+        if (\is_string($args[0])) {
+            if (\preg_match('/[=:] ?$/', $args[0])) {
+                // first arg ends with "=" or ":"
+                $glueAfterFirst = false;
+            } elseif (\count($args) == 2) {
+                $glue = ' = ';
+            }
         }
         foreach ($args as $i => $v) {
             if ($i > 0) {
@@ -323,7 +327,11 @@ class Html extends Base
                 $args[$i] = $this->dump($v, array(), false);
             }
         }
-        return \implode($glue, $args);
+        if (!$glueAfterFirst) {
+            return $args[0].\implode($glue, array_slice($args, 1));
+        } else {
+            return \implode($glue, $args);
+        }
     }
 
     /**

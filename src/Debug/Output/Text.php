@@ -59,7 +59,9 @@ class Text extends Base
             'assert' => '≠ ',
             'clear' => '⌦ ',
             'count' => '✚ ',
+            'countReset' => '✚ ',
             'time' => '⏱ ',
+            'timeLog' => '⏱ ',
             'group' => '▸ ',
             'groupCollapsed' => '▸ ',
         );
@@ -126,12 +128,20 @@ class Text extends Base
             }
         }
         $glue = ', ';
-        if ($numArgs == 2) {
-            $glue = \preg_match('/[=:] ?$/', $args[0])   // ends with "=" or ":"
-                ? ''
-                : ' = ';
+        $glueAfterFirst = true;
+        if ($numArgs && \is_string($args[0])) {
+            if (\preg_match('/[=:] ?$/', $args[0])) {
+                // first arg ends with "=" or ":"
+                $glueAfterFirst = false;
+            } elseif (\count($args) == 2) {
+                $glue = ' = ';
+            }
         }
-        return \implode($glue, $args);
+        if (!$glueAfterFirst) {
+            return $args[0].\implode($glue, array_slice($args, 1));
+        } else {
+            return \implode($glue, $args);
+        }
     }
 
     /**

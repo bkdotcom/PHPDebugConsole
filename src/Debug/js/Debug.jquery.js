@@ -38,11 +38,13 @@
 				".m_assert" :			'<i class="fa-lg"><b>&ne;</b></i>',
 				".m_clear" :			'<i class="fa fa-lg fa-ban"></i>',
 				".m_count" :			'<i class="fa fa-lg fa-plus-circle"></i>',
+				".m_countReset" :		'<i class="fa fa-lg fa-plus-circle"></i>',
 				".m_error" :			'<i class="fa fa-lg fa-times-circle"></i>',
 				".m_info" :				'<i class="fa fa-lg fa-info-circle"></i>',
 				".m_profile" :			'<i class="fa fa-lg fa-pie-chart"></i>',
 				".m_profileEnd" :		'<i class="fa fa-lg fa-pie-chart"></i>',
 				".m_time" :				'<i class="fa fa-lg fa-clock-o"></i>',
+				".m_timeLog" :			'<i class="fa fa-lg fa-clock-o"></i>',
 				".m_warn" :				'<i class="fa fa-lg fa-warning"></i>'
 			},
 			debugKey: getDebugKey()

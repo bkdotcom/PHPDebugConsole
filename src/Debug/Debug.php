@@ -407,20 +407,21 @@ class Debug
      */
     public function count($label = null, $flags = 0)
     {
-        $argsPassed = \func_get_args();
-        $args = $argsPassed;
+        $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel']),
-            array(
-                'label' => null,
-                'flags' => 0,
-            )
+            array('channel' => $this->cfg['channel'])
         );
-        if (\count($argsPassed) == 1 && \is_int($argsPassed[0])) {
+        // label may be ommitted and only flags passed as a single argument
+        //   (excluding potential meta argument)
+        if (\count($args) == 1 && \is_int($args[0])) {
             $label = null;
-            $flags = $argsPassed[0];
+            $flags = $args[0];
         } else {
+            $args = \array_combine(
+                array('label', 'flags'),
+                \array_replace(array(null, 0), $args)
+            );
             \extract($args);
         }
         if (isset($label)) {
@@ -453,6 +454,53 @@ class Debug
             );
         }
         return $count;
+    }
+
+    /**
+     * Resets the counter.
+     *
+     * @param mixed   $label label
+     * @param integer $flags (optional)
+     *                          currently only one option
+     *                          \bdk\Debug::COUNT_NO_OUT : don't output/log
+     *
+     * @return void
+     */
+    public function countReset($label = 'default', $flags = null)
+    {
+        $args = \func_get_args();
+        $meta = $this->internal->getMetaVals(
+            $args,
+            array('channel' => $this->cfg['channel'])
+        );
+        // label may be ommitted and only flags passed as a single argument
+        //   (excluding potential meta argument)
+        if (\count($args) == 1 && \is_int($args[0])) {
+            $label = 'default';
+            $flags = $args[0];
+        } else {
+            $args = \array_combine(
+                array('label', 'flags'),
+                \array_replace(array('default', 0), $args)
+            );
+            \extract($args);
+        }
+        if (isset($this->data['counts'][$label])) {
+            $this->data['counts'][$label] = 0;
+            $args = array(
+                (string) $label,
+                0,
+            );
+        } else {
+            $args = array('Counter \''.$label.'\' doesn\'t exist.');
+        }
+        if (!($flags & self::COUNT_NO_OUT)) {
+            $this->appendLog(
+                'countReset',
+                $args,
+                $meta
+            );
+        }
     }
 
     /**
@@ -884,14 +932,16 @@ class Debug
     }
 
     /**
-     * Get the running time without stopping/pausing the timer
+     * Log/get the running time without stopping/pausing the timer
+     *
+     * This method does not have a web console API equivalent
      *
      * @param string         $label            (optional) unique label
      * @param string|boolean $returnOrTemplate string: "%label: %time"
      *                                         boolean:  If true, only return time, rather than log it
      * @param integer        $precision        rounding precision (pass null for no rounding)
      *
-     * @return float|string (numeric)
+     * @return float|string|false returns false if specified label does not exist
      */
     public function timeGet($label = null, $returnOrTemplate = false, $precision = 4)
     {
@@ -924,6 +974,15 @@ class Debug
             }
         } elseif (isset($this->data['timers']['labels'][$label])) {
             list($ellapsed, $microT) = $this->data['timers']['labels'][$label];
+        } else {
+            if ($returnOrTemplate !== true) {
+                $this->appendLog(
+                    'time',
+                    array('Timer \''.$label.'\' does not exist'),
+                    $meta
+                );
+            }
+            return false;
         }
         if ($microT) {
             $ellapsed += \microtime(true) - $microT;
@@ -934,6 +993,52 @@ class Debug
         }
         $this->doTime($ellapsed, $returnOrTemplate, $label, $meta);
         return $ellapsed;
+    }
+
+    /**
+     * Log the running time without stopping/pausing the timer
+     * also logs additional arguments
+     *
+     * Added to web console api in Firefox 62
+     * Added to PHPDebugConsole in v2.3
+     *
+     * @param string $label   (optional) unique label
+     * @param mixed  $arg,... (optional) additional values to be logged with time
+     *
+     * @return void
+     */
+    public function timeLog($label = null, $args = null)
+    {
+        $args = \func_get_args();
+        $meta = $this->internal->getMetaVals(
+            $args,
+            array('channel' => $this->cfg['channel'])
+        );
+        $microT = 0;
+        $ellapsed = 0;
+        if (\count($args) === 0) {
+            $args[0] = 'time';
+            if (!$this->data['timers']['stack']) {
+                list($ellapsed, $microT) = $this->data['timers']['labels']['debugInit'];
+            } else {
+                $microT = \end($this->data['timers']['stack']);
+            }
+        } elseif (isset($this->data['timers']['labels'][$label])) {
+            list($ellapsed, $microT) = $this->data['timers']['labels'][$label];
+        } else {
+            $args = array('Timer \''.$label.'\' does not exist');
+        }
+        if ($microT) {
+            $args[0] .= ': ';
+            $ellapsed += \microtime(true) - $microT;
+            $ellapsed = \number_format($ellapsed, 4, '.', '');
+            \array_splice($args, 1, 0, $ellapsed.' sec');
+        }
+        $this->appendLog(
+            'timeLog',
+            $args,
+            $meta
+        );
     }
 
     /**

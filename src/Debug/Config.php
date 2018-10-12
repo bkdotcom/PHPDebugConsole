@@ -408,7 +408,7 @@ class Config
     private function setDebugOnBootstrap($onBootstrap)
     {
         $callingFunc = null;
-        $backtrace = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 5);
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
         foreach ($backtrace as $i => $frame) {
             if ($frame['function'] == 'setCfg') {
                 $callingFunc = $backtrace[$i+1]['function'];

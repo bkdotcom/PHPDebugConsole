@@ -83,7 +83,7 @@ class MethodProfile
         if ($this->isProfiling) {
             return false;
         }
-        $backtrace = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS);
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
         $backtrace = $this->backtraceRemoveInternal($backtrace);
         foreach ($backtrace as $frame) {
             $class = isset($frame['class']) ? $frame['class'].'::' : '';

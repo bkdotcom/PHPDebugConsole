@@ -727,6 +727,64 @@ class MethodTest extends DebugTestFramework
      *
      * @return void
      */
+    public function testCountReset()
+    {
+        $this->debug->count('foo');
+        $this->debug->count('foo');
+        $this->testMethod(
+            'countReset',
+            array('foo'),
+            array(
+                'entry' => array(
+                    'countReset',
+                    array('foo', 0),
+                    array(),
+                ),
+                'chromeLogger' => array(
+                    array('foo', 0),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-70: 32|[{"Type":"LOG","Label":"foo"},0]|',
+                'html' => '<div class="m_countReset"><span class="no-pseudo t_string">foo</span> = <span class="t_int">0</span></div>',
+                'script' => 'console.log("foo",0);',
+                'text' => '✚ foo = 0',
+            )
+        );
+        $this->testMethod(
+            'countReset',
+            array('noExisty'),
+            array(
+                'entry' => array(
+                    'countReset',
+                    array('Counter \'noExisty\' doesn\'t exist.'),
+                    array(),
+                ),
+                'chromeLogger' => array(
+                    array('Counter \'noExisty\' doesn\'t exist.'),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-73: 52|[{"Type":"LOG"},"Counter \'noExisty\' doesn\'t exist."]|',
+                'html' => '<div class="m_countReset"><span class="no-pseudo t_string">Counter \'noExisty\' doesn\'t exist.</span></div>',
+                'script' => 'console.log("Counter \'noExisty\' doesn\'t exist.");',
+                'text' => '✚ Counter \'noExisty\' doesn\'t exist.',
+            )
+        );
+        $this->testMethod(
+            'countReset',
+            array('noExisty', \bdk\Debug::COUNT_NO_OUT),
+            array(
+                'notLogged' => true,
+            )
+        );
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
     public function testError()
     {
         $resource = fopen(__FILE__, 'r');
@@ -1694,6 +1752,103 @@ EOD;
             array('my label'),
             false
         );
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testTimeLog()
+    {
+        $this->debug->time();
+        $this->debug->time('my label');
+
+        $this->testMethod(
+            'timeLog',
+            array(),
+            array(
+                'entry' => function ($logEntry) {
+                    $expectFormat = json_encode(array(
+                        'timeLog',
+                        array('time: ', '%f sec'),
+                        array(),
+                    ));
+                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
+                },
+                'chromeLogger' => json_encode(array(
+                    array(
+                        'time: ',
+                        '%f sec',
+                    ),
+                    null,
+                    '',
+                )),
+                'firephp' => 'X-Wf-1-1-1-166: 46|[{"Type":"LOG","Label":"time: "},"%f sec"]|',
+                'html' => '<div class="m_timeLog"><span class="no-pseudo t_string">time: </span><span class="t_string">%f sec</span></div>',
+                'script' => 'console.log("time: ","%f sec");',
+                'text' => '⏱ time: "%f sec"',
+            )
+        );
+
+        $this->testMethod(
+            'timeLog',
+            array('my label', array('foo'=>'bar')),
+            array(
+                'entry' => function ($logEntry) {
+                    $expectFormat = json_encode(array(
+                        'timeLog',
+                        array('my label: ', '%f sec', array('foo'=>'bar')),
+                        array(),
+                    ));
+                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
+                },
+                'chromeLogger' => json_encode(array(
+                    array(
+                        'my label: ',
+                        '%f sec',
+                        array('foo'=>'bar'),
+                    ),
+                    null,
+                    '',
+                )),
+                'firephp' => 'X-Wf-1-1-1-169: 66|[{"Type":"LOG","Label":"my label: "},["%f sec",{"foo":"bar"}]]|',
+                'html' => '<div class="m_timeLog"><span class="no-pseudo t_string">my label: </span><span class="t_string">%f sec</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                    <span class="array-inner">
+                    <span class="key-value"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
+                    </span><span class="t_punct">)</span></span></div>',
+                'script' => 'console.log("my label: ","%f sec",{"foo":"bar"});',
+                'text' => '⏱ my label: "%f sec", array(
+                    [foo] => "bar"
+                    )',
+            )
+        );
+
+        $this->testMethod(
+            'timeLog',
+            array('bogus'),
+            array(
+                'entry' => function ($logEntry) {
+                    $expectFormat = json_encode(array(
+                        'timeLog',
+                        array('Timer \'bogus\' does not exist'),
+                        array(),
+                    ));
+                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
+                },
+                'chromeLogger' => json_encode(array(
+                    array('Timer \'bogus\' does not exist'),
+                    null,
+                    '',
+                )),
+                'firephp' => 'X-Wf-1-1-1-172: 47|[{"Type":"LOG"},"Timer \'bogus\' does not exist"]|',
+                'html' => '<div class="m_timeLog"><span class="no-pseudo t_string">Timer \'bogus\' does not exist</span></div>',
+                'script' => 'console.log("Timer \'bogus\' does not exist");',
+                'text' => '⏱ Timer \'bogus\' does not exist',
+            )
+        );
+
+
     }
 
     /**

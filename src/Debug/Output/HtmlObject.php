@@ -316,6 +316,7 @@ class HtmlObject
             $classes = \array_keys(\array_filter(array(
                 'debuginfo-value' => $info['viaDebugInfo'],
                 'excluded' => $info['isExcluded'],
+                'forceShow' => $info['forceShow'],
                 'private-ancestor' => $isPrivateAncestor,
                 'property' => true,
                 \implode(' ', $vis) => $info['visibility'] !== 'debug',

@@ -396,6 +396,8 @@ class Debug
      *
      * If `label` is omitted, logs the number of times `count()` has been called at this particular line.
      *
+     * Count is maintained even when `collect` is false
+     *
      * @param mixed   $label label
      * @param integer $flags (optional)
      *                          A bitmask of

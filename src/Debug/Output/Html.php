@@ -328,7 +328,7 @@ class Html extends Base
             }
         }
         if (!$glueAfterFirst) {
-            return $args[0].\implode($glue, array_slice($args, 1));
+            return $args[0].\implode($glue, \array_slice($args, 1));
         } else {
             return \implode($glue, $args);
         }

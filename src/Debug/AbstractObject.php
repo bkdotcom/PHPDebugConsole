@@ -26,6 +26,8 @@ class AbstractObject
         'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
         'overrides' => null,            // populated only if we're overriding
+        'forceShow' => false,           // initially show the property/value (even if protected or private)
+                                        //    if value is an array, expand it
         'type' => null,
         'value' => null,
         'viaDebugInfo' => false,        // true if __debugInfo && __debugInfo value differs

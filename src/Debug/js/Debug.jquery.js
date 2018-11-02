@@ -437,6 +437,9 @@
 		$inner.prepend('<span class="vis-toggles">' + visToggles + "</span>");
 		enhanceArrays($inner);
 		addIcons($inner, ["object"]);
+		$inner.find("> .property.forceShow").show().find("> .t_array-expand").each(function(){
+			expand($(this));
+		});
 	}
 
 	function enhanceTables($root) {

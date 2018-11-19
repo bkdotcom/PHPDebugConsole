@@ -2,6 +2,8 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Event;
+
 /**
  * Streamwrapper which injects `declare(ticks=1)`
  */
@@ -28,6 +30,8 @@ class FileStreamWrapper
      */
     private static $pathsExclude = array();
 
+    public static $filesModified = array();
+
     /**
      * @var string
      */
@@ -52,6 +56,20 @@ class FileStreamWrapper
             self::$pathsExclude = $pathsExclude;
         }
         \stream_wrapper_register(static::PROTOCOL, \get_called_class());
+    }
+
+    /**
+     * Adjust error's line number to compensate for the 2 lines we dynamically add
+     *
+     * @param Event $event Error event object
+     *
+     * @return void
+     */
+    public static function onError(Event $event)
+    {
+        if (\in_array($event['file'], self::$filesModified)) {
+            $event['line'] = $event['line'] - 2;
+        }
     }
 
     /**
@@ -414,6 +432,7 @@ class FileStreamWrapper
                 1
             );
             $this->declaredTicks = true;
+            self::$filesModified[] = $this->filepath;
         }
         $buffer = $this->bufferPrepend.$buffer;
         $bufferLenAfter = \strlen($buffer);

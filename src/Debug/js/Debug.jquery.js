@@ -50,15 +50,44 @@
 			debugKey: getDebugKey()
 		},
 		listenersRegistered = false;
-		loading = false;
 
 	/*
-		Load dependencies and then call init()
+		Load dependencies
 	*/
-	loadDependencies(init);
+
+	addCssFa();
+
+	loadDependencies([
+		{
+			src: options.jQuerySrc,
+			onLoaded: init,
+			check: function () {
+				return typeof window.jQuery !== "undefined";
+			}
+		},
+		{
+			src: options.clipboardSrc,
+			onLoaded: function () {
+				/*
+					Copy strings/floats/ints to clipboard when clicking
+				*/
+				clipboard = window.ClipboardJS;
+				new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
+					target: function (trigger) {
+						notify("Copied to clipboard");
+						return trigger;
+					}
+				});
+			},
+			check: function() {
+				return typeof window.ClipboardJS !== "undefined";
+			}
+		}
+	]);
 
 	function init() {
 		console.info("init");
+		$ = window.jQuery;
 		$.fn.debugEnhance = function(method) {
 			// console.warn("debugEnhance", this);
 			var $self = this;
@@ -139,13 +168,13 @@
 		}
 		if ($.inArray("methods", types) >= 0) {
 			$.each(options.iconsMethods, function(selector,v){
-				var $caption
+				var $caption;
 				if ($root.is(selector)) {
 					if ($root.is("table")) {
 						$caption = $root.find('caption');
 						if (!$caption.length) {
 							$caption = $("<caption></caption>");
-							$table.prepend($caption);
+							$root.prepend($caption);
 						}
 						$root = $caption;
 					}
@@ -233,7 +262,7 @@
 		$root.find(".t_array").each( function() {
 			var $self = $(this),
 				$expander = $('<span class="t_array-expand" data-toggle="array">' +
-						'<span class="t_keyword">Array</span><span class="t_punct">(</span> ' +
+						'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
 						'<i class="fa ' + options.classes.expand + '"></i>&middot;&middot;&middot; ' +
 						'<span class="t_punct">)</span>' +
 					"</span>"),
@@ -694,19 +723,27 @@
 		}
 	}
 
-	function addScripts(srcs) {
+	function addScripts(deps, checkOnly) {
 		var first = document.getElementsByTagName("script")[0],
 			jsNode,
-			i,
-			len;
-		for (i = 0, len = srcs.length; i < len; i++) {
-			if (!srcs[i]) {
+			dep,
+			i;
+		for (i = deps.length - 1; i >= 0; i--) {
+			dep = deps[i];
+			if (dep.check()) {
+				// dependency exists
+				dep.onLoaded();
+				deps.splice(i, 1);	// remove it
 				continue;
 			}
-			loading = true;
-			jsNode = document.createElement("script");
-			jsNode.src = srcs[i];
-			first.parentNode.insertBefore(jsNode, first);
+			if (dep.status != "loading") {
+				dep.status = "loading";
+				if (!checkOnly) {
+					jsNode = document.createElement("script");
+					jsNode.src = dep.src;
+					first.parentNode.insertBefore(jsNode, first);
+				}
+			}
 		}
 	}
 
@@ -730,46 +767,25 @@
 		return key;
 	}
 
-	/*
-		Check for jQuery, Clipboard, & FontAwesome.
-		Add if missing
-	*/
-	function loadDependencies(callback) {
+	function loadDependencies(deps) {
 		var checkInterval,
-			intervalCounter = 0;
-		addCssFa();
-		if ($ && clipboard) {
-			callback.call();
-			return;
-		}
-		console.warn("jQuery and/or clipboard not yet defined");
+			intervalCounter = 1;
+		deps.reverse();
 		if (document.getElementsByTagName("body")[0].childElementCount == 1) {
 			// output only contains debug
 			// don't wait for interval to begin
-			addScripts([
-				options.jQuerySrc,
-				options.clipboardSrc
-			]);
+			addScripts(deps);
+		} else {
+			addScripts(deps, true);
 		}
 		checkInterval = setInterval(function() {
-			intervalCounter++;
-			if (window.jQuery && window.ClipboardJS) {
+			addScripts(deps, intervalCounter === 10);
+			if (deps.length === 0) {
 				clearInterval(checkInterval);
-				$ = window.jQuery;
-				clipboard = window.ClipboardJS
-				loading = false;
-				callback.call();
-			} else if (intervalCounter === 10 && !loading) {
-				// we have waited a bit...
-				// scripts may been on the page, just loaded yet
-				addScripts([
-					window.jQuery ? null : options.jQuerySrc,
-					window.ClipboardJS ? null : options.clipboardSrc
-				]);
 			} else if (intervalCounter === 20) {
-				// give up
 				clearInterval(checkInterval);
 			}
+			intervalCounter++;
 		}, 500);
 	}
 
@@ -824,16 +840,6 @@
 		if (listenersRegistered) {
 			return;
 		}
-
-		/*
-			Copy strings/floats/ints to clipboard when clicking
-		*/
-		new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
-			target: function (trigger) {
-				notify("Copied to clipboard");
-				return trigger;
-			}
-		});
 
 		$("body").on("animationend", ".debug-noti", function () {
 			$(this).removeClass("animate").closest(".debug-noti-wrap").hide();
@@ -938,7 +944,7 @@
 		var body = table.tBodies[0],
 			rows = body.rows,
 			i,
-			collator = typeof Intl['Collator'] === "function"
+			collator = typeof Intl.Collator === "function"
 				? new Intl.Collator([], {
 					numeric: true,
 					sensitivity: 'base'

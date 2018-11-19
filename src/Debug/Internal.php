@@ -437,8 +437,12 @@ class Internal implements SubscriberInterface
             return;
         }
         $this->debug->log('PHP Version', PHP_VERSION);
+        $this->debug->log('ini location', \php_ini_loaded_file());
         $this->debug->log('memory_limit', $this->debug->utilities->getBytes($this->debug->utilities->memoryLimit()));
         $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
+        if (\session_module_name() === 'files') {
+            $this->debug->log('session_save_path', \session_save_path() ?: \sys_get_temp_dir());
+        }
         if (\error_reporting() !== E_ALL) {
             $styleMono = 'font-family:monospace;';
             $styleReset = 'font-family:inherit; white-space:pre-wrap;';

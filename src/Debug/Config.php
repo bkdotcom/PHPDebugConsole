@@ -13,6 +13,7 @@ namespace bdk\Debug;
 
 use bdk\Debug;
 use bdk\PubSub\Event;
+use bdk\Debug\FileStreamWrapper;
 
 /**
  * Configuration manager
@@ -394,7 +395,12 @@ class Config
             $pathsExclude = array(
                 __DIR__,
             );
-            \bdk\Debug\FileStreamWrapper::register($pathsExclude);
+            FileStreamWrapper::register($pathsExclude);
+            $this->debug->errorHandler->eventManager->subscribe(
+                'errorHandler.error',
+                array('\bdk\Debug\FileStreamWrapper', 'onError'),
+                PHP_INT_MAX
+            );
         }
     }
 

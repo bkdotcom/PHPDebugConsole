@@ -11,6 +11,8 @@ use bdk\Debug\Utilities;
 class UtilitiesTest extends DebugTestFramework
 {
 
+    public $lineOffset = -2;    // account for FileStreamWrapper
+
     /**
      * Test
      *
@@ -178,7 +180,7 @@ class UtilitiesTest extends DebugTestFramework
         $callerInfo = $this->getCallerInfoHelper();
         $this->assertSame(array(
             'file' => __FILE__,
-            'line' => __LINE__ - 3,
+            'line' => __LINE__ - 3 + $this->lineOffset,
             'function' => __FUNCTION__,
             'class' => __CLASS__,
             'type' => '->',
@@ -186,7 +188,7 @@ class UtilitiesTest extends DebugTestFramework
         $callerInfo = call_user_func(array($this, 'getCallerInfoHelper'));
         $this->assertSame(array(
             'file' => __FILE__,
-            'line' => __LINE__ - 3,
+            'line' => __LINE__ - 3 + $this->lineOffset,
             'function' => __FUNCTION__,
             'class' => __CLASS__,
             'type' => '->',

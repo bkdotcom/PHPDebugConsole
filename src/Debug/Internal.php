@@ -239,7 +239,7 @@ class Internal implements SubscriberInterface
     {
         $meta = array();
         foreach ($args as $i => $v) {
-            if (\is_array($v) && \array_intersect_assoc(array('debug'=>Debug::META), $v)) {
+            if (\is_array($v) && isset($v['debug']) && $v['debug'] === Debug::META) {
                 unset($v['debug']);
                 $meta = \array_merge($meta, $v);
                 unset($args[$i]);

@@ -12,8 +12,8 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\PubSub\Event;
 use bdk\Debug\FileStreamWrapper;
+use bdk\PubSub\Event;
 
 /**
  * Configuration manager

@@ -8,6 +8,8 @@ class DebugTest extends DebugTestFramework
 
     protected $debugBackup = array();
 
+    protected $lineOffset = -2;     // account for filestreamwrapper
+
     /**
      * clear/backup some non-accessible things
      *
@@ -213,7 +215,7 @@ class DebugTest extends DebugTestFramework
         $errorCaller = $this->debug->errorHandler->get('errorCaller');
         $this->assertSame(array(
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 4 + $this->lineOffset,
             'groupDepth' => 0,
         ), $errorCaller);
 
@@ -222,7 +224,7 @@ class DebugTest extends DebugTestFramework
         $errorCaller = $this->debug->errorHandler->get('errorCaller');
         $this->assertSame(array(
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 4 + $this->lineOffset,
             'groupDepth' => 0,
         ), $errorCaller);
     }

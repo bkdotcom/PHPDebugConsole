@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use \bdk\Debug\FileStreamWrapper;
+
 /**
  * Utility methods
  */
@@ -350,6 +352,9 @@ class Utilities
         } else {
             $return['file'] = $backtrace[$numFrames-1]['file'];
             $return['line'] = 0;
+        }
+        if (\in_array($return['file'], FileStreamWrapper::$filesModified)) {
+            $return['line'] = $return['line'] - 2;
         }
         return $return;
     }

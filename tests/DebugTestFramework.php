@@ -200,7 +200,7 @@ class DebugTestFramework extends DOMTestCase
         } elseif ($method) {
             $return = \call_user_func_array(array($this->debug, $method), $args);
             $this->file = __FILE__;
-            $this->line = __LINE__ - 2;
+            $this->line = __LINE__ - 2 - 2; // includes FileStreamWrapper tweak
         }
         $logEntry = $this->debug->getData($dataPath);
         if (!$tests) {

@@ -1,4 +1,13 @@
 <?php
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2018 Brad Kent
+ * @version   v2.3
+ */
 
 namespace bdk\Debug;
 
@@ -56,6 +65,12 @@ class FileStreamWrapper
             self::$pathsExclude = $pathsExclude;
         }
         \stream_wrapper_register(static::PROTOCOL, \get_called_class());
+        /*
+            Disable OPcache
+                a) want to make sure we modify required files
+                b) don't want to cache modified files
+        */
+        \ini_set('opcache.enable', 0);
     }
 
     /**
@@ -70,6 +85,13 @@ class FileStreamWrapper
         if (\in_array($event['file'], self::$filesModified)) {
             $event['line'] = $event['line'] - 2;
         }
+        $backtrace = $event['backtrace'];
+        foreach ($backtrace as $i => $row) {
+            if (\in_array($row['file'], self::$filesModified)) {
+                $backtrace[$i]['line'] = $row['line'] - 2;
+            }
+        }
+        $event['backtrace'] = $backtrace;
     }
 
     /**

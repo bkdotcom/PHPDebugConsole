@@ -354,7 +354,7 @@ class Utilities
             $return['line'] = 0;
         }
         if (\in_array($return['file'], FileStreamWrapper::$filesModified)) {
-            $return['line'] = $return['line'] - 2;
+            $return['line'] -= 2;
         }
         return $return;
     }

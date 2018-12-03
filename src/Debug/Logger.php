@@ -76,25 +76,21 @@ class Logger extends AbstractLogger
      */
     protected function getMeta($level, &$context)
     {
-        $haveException = isset($context['exception'])
-            && (
-                $context['exception'] instanceof \Exception
-                || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable
-            );
+        $haveException = isset($context['exception']) &&
+            ($context['exception'] instanceof \Exception
+                || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable);
         $isError = \in_array($level, array('emergency','critical','error','warning','notice'));
         $metaVals = \array_intersect_key($context, \array_flip(array('file','line')));
         $metaVals['psr3level'] = $level;
         $context = \array_diff_key($context, $metaVals);
         if ($haveException) {
-            $defaultFile = $context['exception']->getFile();
-            $defaultLine = $context['exception']->getLine();
-            if (\in_array($defaultFile, FileStreamWrapper::$filesModified)) {
-                $defaultLine = $defaultLine - 2;
-            }
+            $exception = $context['exception'];
             $metaVals = \array_merge(array(
-                'backtrace' => $this->debug->errorHandler->backtrace($context['exception']),
-                'file' => $defaultFile,
-                'line' => $defaultLine,
+                'backtrace' => FileStreamWrapper::backtraceAdjustLines($this->debug->errorHandler->backtrace($exception)),
+                'file' => $exception->getFile(),
+                'line' => \in_array($exception->getFile(), FileStreamWrapper::$filesModified)
+                    ? $exception->getLine() - 2
+                    : $exception->getLine(),
             ), $metaVals);
         } elseif ($isError && \count($metaVals) < 2) {
             $callerInfo = $this->debug->utilities->getCallerInfo(1);

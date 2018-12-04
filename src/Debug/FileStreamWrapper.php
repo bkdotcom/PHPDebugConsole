@@ -330,7 +330,10 @@ class FileStreamWrapper
     /**
      * Advisory file locking
      *
-     * @param integer $operation
+     * @param integer $operation is one of the following:
+     *       LOCK_SH to acquire a shared lock (reader).
+     *       LOCK_EX to acquire an exclusive lock (writer).
+     *       LOCK_UN to release a lock (shared or exclusive).
      *
      * @return boolean
      *
@@ -494,8 +497,9 @@ class FileStreamWrapper
         if (!$this->handle) {
             return false;
         }
-        self::restorePref();
-        $success = \fseek($this->hand, $offset, $whence);
+        self::restorePrev();
+        $result = \fseek($this->handle, $offset, $whence);
+        $success = $result !== -1;
         self::register();
         return $success;
     }

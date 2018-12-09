@@ -42,7 +42,7 @@ class FileStreamWrapperTest extends \PHPUnit\Framework\TestCase
     {
         if ($dh = opendir(__DIR__)) {
             $entry = readdir($dh);
-            $this->assertSame('.', $entry);
+            $this->assertNotFalse($entry);
             closedir($dh);
         } else {
             throw new \PHPUnit\Framework\Exception('opendir failed', 500);
@@ -54,8 +54,8 @@ class FileStreamWrapperTest extends \PHPUnit\Framework\TestCase
         if ($dh = opendir(__DIR__)) {
             $entry = readdir($dh);
             rewinddir($dh);
-            $entry = readdir($dh);
-            $this->assertSame('.', $entry);
+            $entry2 = readdir($dh);
+            $this->assertSame($entry, $entry2);
             closedir($dh);
         } else {
             throw new \PHPUnit\Framework\Exception('opendir failed', 500);

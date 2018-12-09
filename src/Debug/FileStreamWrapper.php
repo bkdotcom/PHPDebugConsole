@@ -15,6 +15,11 @@ use bdk\PubSub\Event;
 
 /**
  * Streamwrapper which injects `declare(ticks=1)`
+ *
+ * @see http://php.net/manual/en/class.streamwrapper.php
+ *
+ * phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+ * phpcs:disable Generic.NamingConventions.CamelCapsFunctionName.ScopeNotCamelCaps
  */
 class FileStreamWrapper
 {
@@ -228,8 +233,6 @@ class FileStreamWrapper
     public function rename($pathFrom, $pathTo)
     {
         self::restorePrev();
-        $pathFrom = self::overlayPath($pathFrom);
-        $pathTo = self::overlayPath($pathTo);
         $success = \rename($pathFrom, $pathTo);
         self::register();
         return $success;
@@ -428,8 +431,7 @@ class FileStreamWrapper
         if (!isset($meta['uri'])) {
             throw new \UnexpectedValueException('Uri not in meta data');
         }
-        $openedPath = $meta['uri'];
-        $this->filepath = $openedPath;
+        $this->filepath = $openedPath = $meta['uri'];
         $this->handle = $handle;
         return true;
     }
@@ -592,7 +594,6 @@ class FileStreamWrapper
     public function unlink($path)
     {
         self::restorePrev();
-        $path = self::overlayPath($path);
         $success = \unlink($path);
         self::register();
         return $success;

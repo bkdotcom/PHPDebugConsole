@@ -6,6 +6,7 @@ $classMap = array(
     'PHPUnit_Framework_Exception' => 'PHPUnit\Framework\Exception',
     'PHPUnit_Framework_TestCase' => 'PHPUnit\Framework\TestCase',
     'PHPUnit_Framework_TestSuite' => 'PHPUnit\Framework\TestSuite',
+    'PHPUnit_Framework_Constraint_IsType' => 'PHPUnit\Framework\Constraint\IsType',
 );
 foreach ($classMap as $old => $new) {
     if (!class_exists($new)) {

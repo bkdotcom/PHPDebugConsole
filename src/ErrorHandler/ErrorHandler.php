@@ -73,8 +73,8 @@ class ErrorHandler
         $this->cfg = array(
             'continueToPrevHandler' => true,    // whether to continue to previously defined handler (if there is/was a prev error handler)
                                                 //   will not continue if error event propagation stopped
-            'errorReporting' => E_ALL,          // what errors are handled by handler? bitmask or "system" to use runtime value
-                                                //   note that if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
+            'errorReporting' => E_ALL | E_STRICT,   // what errors are handled by handler? bitmask or "system" to use runtime value
+                                                    //   note that if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
             // shortcut for subscribing to errorHandler.error Event
             //   will receive error Event object
             'onError' => null,

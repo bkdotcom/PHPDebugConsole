@@ -370,8 +370,7 @@ class Internal implements SubscriberInterface
             'Peak Memory Usage'
                 .($this->debug->getCfg('output/outputAs') == 'html'
                     ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
-                    : ''
-                )
+                    : '')
                 .': '
                 .$this->debug->utilities->getBytes($vals['memoryPeakUsage']).' / '
                 .$this->debug->utilities->getBytes($vals['memoryLimit'])
@@ -443,15 +442,19 @@ class Internal implements SubscriberInterface
         if (\session_module_name() === 'files') {
             $this->debug->log('session_save_path', \session_save_path() ?: \sys_get_temp_dir());
         }
-        if (\error_reporting() !== E_ALL) {
-            $styleMono = 'font-family:monospace;';
+        if (\error_reporting() !== E_ALL | E_STRICT) {
+            $styleMono = 'font-family:monospace; opacity:0.8;';
             $styleReset = 'font-family:inherit; white-space:pre-wrap;';
             $msgLines = array(
-                'PHP\'s %cerror_reporting%c is not set to E_ALL',
+                'PHP\'s %cerror_reporting%c is set to `%c'.ErrorLevel::toConstantString().'%c` vs `%cE_ALL | E_STRICT%c`',
             );
-            $styles = array($styleMono, $styleReset);
+            $styles = array(
+                $styleMono, $styleReset, // wraps "error_reporting"
+                $styleMono, $styleReset, // wraps actual
+                $styleMono, $styleReset, // wraps E_ALL | E_STRICT
+            );
             $errorReporting = $this->debug->getCfg('errorReporting');
-            if ($errorReporting === E_ALL) {
+            if ($errorReporting === E_ALL | E_STRICT) {
                 $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
                 $styles[] = $styleMono;
                 $styles[] = $styleReset;

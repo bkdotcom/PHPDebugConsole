@@ -92,8 +92,13 @@ class Script extends Base
         } elseif (\in_array($method, array('count','time'))) {
             $method = 'log';
         } elseif (\in_array($method, array('profileEnd','table'))) {
-            $method = 'table';
-            $args = array($this->methodTable($args[0], $meta['columns']));
+            $method = 'log';
+            if (\is_array($args[0])) {
+                $method = 'table';
+                $args = array($this->methodTable($args[0], $meta['columns']));
+            } elseif ($meta['caption']) {
+                \array_unshift($args, $meta['caption']);
+            }
         } elseif ($method == 'trace') {
             $method = 'table';
             $args = array($this->methodTable($args[0], array('function','file','line')));

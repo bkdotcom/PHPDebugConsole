@@ -20,6 +20,7 @@ class Text extends Base
 {
 
     protected $depth = 0;   // for keeping track of indentation
+    protected $valDepth = 0;
 
     /**
      * Output the log as text
@@ -89,7 +90,9 @@ class Text extends Base
             $prefix = '[Alert '.$prefix.$class.'] ';
             $args = array($args[0]);
         } elseif (\in_array($method, array('profileEnd','table'))) {
-            $args = array($this->methodTable($args[0], $meta['columns']));
+            if (\is_array($args[0])) {
+                $args = array($this->methodTable($args[0], $meta['columns']));
+            }
             if ($meta['caption']) {
                 \array_unshift($args, $meta['caption']);
             }
@@ -126,6 +129,7 @@ class Text extends Base
             if ($k > 0 || !\is_string($v)) {
                 $args[$k] = $this->dump($v);
             }
+            $this->valDepth = 0;
         }
         $glue = ', ';
         $glueAfterFirst = true;
@@ -147,18 +151,19 @@ class Text extends Base
     /**
      * Dump array as text
      *
-     * @param array $array array
-     * @param array $path  {@internal}
+     * @param array $array Array to display
      *
      * @return string
      */
-    protected function dumpArray($array, $path = array())
+    protected function dumpArray($array)
     {
-        $array = parent::dumpArray($array, $path);
+        $isNested = $this->valDepth > 0;
+        $this->valDepth++;
+        $array = parent::dumpArray($array);
         $str = \trim(\print_r($array, true));
         $str = \preg_replace('#^Array\n\(#', 'array(', $str);
         $str = \preg_replace('#^array\s*\(\s+\)#', 'array()', $str); // single-lineify empty array
-        if (\count($path)) {
+        if ($isNested) {
             $str = \str_replace("\n", "\n    ", $str);
         }
         return $str;
@@ -204,27 +209,27 @@ class Text extends Base
     /**
      * Dump object as text
      *
-     * @param array $abs  object "abstraction"
-     * @param array $path {@internal}
+     * @param array $abs object "abstraction"
      *
      * @return string
      */
-    protected function dumpObject($abs, $path = array())
+    protected function dumpObject($abs)
     {
-        $pathCount = \count($path);
+        $isNested = $this->valueDepth > 0;
+        $this->valueDepth++;
         if ($abs['isRecursion']) {
             $str = '(object) '.$abs['className'].' *RECURSION*';
         } elseif ($abs['isExcluded']) {
             $str = '(object) '.$abs['className'].' (not inspected)';
         } else {
             $str = '(object) '.$abs['className']."\n";
-            $str .= $this->dumpProperties($abs, $path);
+            $str .= $this->dumpProperties($abs);
             if ($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')) {
                 $str .= $this->dumpMethods($abs['methods']);
             }
         }
         $str = \trim($str);
-        if ($pathCount) {
+        if ($isNested) {
             $str = \str_replace("\n", "\n    ", $str);
         }
         return $str;
@@ -233,21 +238,18 @@ class Text extends Base
     /**
      * Dump object properties as text
      *
-     * @param array $abs  object abstraction
-     * @param array $path {@internal}
+     * @param array $abs object abstraction
      *
      * @return string
      */
-    protected function dumpProperties($abs, $path = array())
+    protected function dumpProperties($abs)
     {
         $str = '';
         $propHeader = '';
-        $pathCount = \count($path);
         if (isset($abs['methods']['__get'])) {
             $str .= '    ✨ This object has a __get() method'."\n";
         }
         foreach ($abs['properties'] as $name => $info) {
-            $path[$pathCount] = $name;
             $vis = (array) $info['visibility'];
             foreach ($vis as $i => $v) {
                 if (\in_array($v, array('magic','magic-read','magic-write'))) {
@@ -259,7 +261,7 @@ class Text extends Base
             $vis = \implode(' ', $vis);
             $str .= $info['isExcluded']
                 ? '    ('.$vis.' excluded) '.$name."\n"
-                : '    ('.$vis.') '.$name.' = '.$this->dump($info['value'], $path)."\n";
+                : '    ('.$vis.') '.$name.' = '.$this->dump($info['value'])."\n";
         }
         $propHeader = $str
             ? 'Properties:'

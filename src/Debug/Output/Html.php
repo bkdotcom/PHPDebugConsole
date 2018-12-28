@@ -63,17 +63,14 @@ class Html extends Base
                 'class' => $options['attribs'],
             );
         }
-        if (!\is_array($rows) || empty($rows)) {
-            // empty array/value
-            return '<div class="m_log">'
-                .($options['caption'] ? $options['caption'].' = ' : '')
-                .$this->dump($rows)
-                .'</div>';
-        }
         if ($this->debug->abstracter->isAbstraction($rows) && $rows['traverseValues']) {
-            $options['caption'] .= ' ('.$this->markupClassname($rows['className'], 'span', array(
+            $options['caption'] .= ' ('.$this->markupClassname(
+                $rows['className'],
+                'span',
+                array(
                     'title' => $rows['phpDoc']['summary'] ?: null,
-                )).')';
+                )
+            ).')';
             $options['caption'] = \trim($options['caption']);
             $rows = $rows['traverseValues'];
         }
@@ -105,13 +102,12 @@ class Html extends Base
      * Dump value as html
      *
      * @param mixed        $val      value to dump
-     * @param array        $path     {@internal}
      * @param boolean      $sanitize (true) apply htmlspecialchars?
      * @param string|false $tagName  (span) tag to wrap value in (or false)
      *
      * @return string
      */
-    public function dump($val, $path = array(), $sanitize = true, $tagName = 'span')
+    public function dump($val, $sanitize = true, $tagName = 'span')
     {
         $this->wrapAttribs = array(
             'class' => array(),
@@ -235,15 +231,6 @@ class Html extends Base
             $str = $this->methodAlert($args, $meta);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->buildGroupMethod($method, $args, $meta);
-        } elseif ($method == 'profileEnd' && !\is_array($args[0])) {
-            $str = $this->debug->utilities->buildTag(
-                'div',
-                array(
-                    'class' => 'm_profileEnd',
-                    'data-channel' => $meta['channel'],
-                ),
-                $this->buildArgString($args)
-            );
         } elseif (\in_array($method, array('profileEnd','table','trace'))) {
             $meta = \array_merge(array(
                 'caption' => null,
@@ -251,21 +238,33 @@ class Html extends Base
                 'sortable' => false,
                 'totalCols' => array(),
             ), $meta);
-            $str = $this->buildTable(
-                $args[0],
+            $asTable = \is_array($args[0]) && $args[0];
+            if (!$asTable && $meta['caption']) {
+                \array_unshift($args, $meta['caption']);
+            }
+            $str = $this->debug->utilities->buildTag(
+                'div',
                 array(
-                    'attribs' => array(
-                        'class' => array(
-                            'm_'.$method ,
-                            'table-bordered',
-                            $meta['sortable'] ? 'sortable' : null,
-                        ),
-                        'data-channel' => $meta['channel'],
-                    ),
-                    'caption' => $meta['caption'],
-                    'columns' => $meta['columns'],
-                    'totalCols' => $meta['totalCols'],
-                )
+                    'class' => 'm_'.$method,
+                    'data-channel' => $meta['channel'],
+                ),
+                $asTable
+                    ? "\n"
+                        .$this->buildTable(
+                            $args[0],
+                            array(
+                                'attribs' => array(
+                                    'class' => array(
+                                        'table-bordered',
+                                        $meta['sortable'] ? 'sortable' : null,
+                                    ),
+                                ),
+                                'caption' => $meta['caption'],
+                                'columns' => $meta['columns'],
+                                'totalCols' => $meta['totalCols'],
+                            )
+                        )."\n"
+                    : $this->buildArgString($args)
             );
         } else {
             $attribs = array(
@@ -321,10 +320,10 @@ class Html extends Base
         }
         foreach ($args as $i => $v) {
             if ($i > 0) {
-                $args[$i] = $this->dump($v, array(), true);
+                $args[$i] = $this->dump($v, true);
             } else {
                 // don't apply htmlspecialchars()
-                $args[$i] = $this->dump($v, array(), false);
+                $args[$i] = $this->dump($v, false);
             }
         }
         if (!$glueAfterFirst) {
@@ -375,9 +374,9 @@ class Html extends Base
                 ),
                 '<span class="group-label">'
                     .$label
-                    .( !empty($argStr)
+                    .(!empty($argStr)
                         ? '(</span>'.$argStr.'<span class="group-label">)'
-                        : '' )
+                        : '')
                 .'</span>'
             )."\n";
             /*
@@ -409,7 +408,7 @@ class Html extends Base
         foreach ($keys as $key) {
             $colHasTotal = isset($this->tableInfo['totals'][$key]);
             $cells[] = $colHasTotal
-                ? $this->dump($this->tableInfo['totals'][$key], null, true, 'td')
+                ? $this->dump($this->tableInfo['totals'][$key], true, 'td')
                 : '<td></td>';
             $haveTotal = $haveTotal || $colHasTotal;
         }
@@ -482,7 +481,7 @@ class Html extends Base
             $str .= '<td class="t_classname"></td>';
         }
         foreach ($values as $v) {
-            $str .= $this->dump($v, null, true, 'td');
+            $str .= $this->dump($v, true, 'td');
         }
         $str .= '</tr>'."\n";
         $str = \str_replace(' title=""', '', $str);
@@ -508,11 +507,10 @@ class Html extends Base
      * Dump array as html
      *
      * @param array $array array
-     * @param array $path  {@internal}
      *
      * @return string html
      */
-    protected function dumpArray($array, $path = array())
+    protected function dumpArray($array)
     {
         if (empty($array)) {
             $html = '<span class="t_keyword">array</span>'
@@ -526,7 +524,7 @@ class Html extends Base
                 foreach ($array as $key => $val) {
                     $html .= "\t".'<span class="key-value">'
                             .'<span class="t_key'.(\is_int($key) ? ' t_int' : '').'">'
-                                .$this->dump($key, $path, true, false) // don't wrap it
+                                .$this->dump($key, true, false) // don't wrap it
                             .'</span> '
                             .'<span class="t_operator">=&gt;</span> '
                             .$this->dump($val)
@@ -537,7 +535,7 @@ class Html extends Base
                 // display as list
                 $html .= '<ul class="array-inner list-unstyled">'."\n";
                 foreach ($array as $val) {
-                    $html .= $this->dump($val, $path, true, 'li');
+                    $html .= $this->dump($val, true, 'li');
                 }
                 $html .= '</ul>';
             }
@@ -614,11 +612,10 @@ class Html extends Base
      * Dump object as html
      *
      * @param array $abs  object abstraction
-     * @param array $path {@internal}
      *
      * @return string
      */
-    protected function dumpObject($abs, $path = array())
+    protected function dumpObject($abs)
     {
         /*
             Were we debugged from inside or outside of the object?
@@ -786,7 +783,7 @@ class Html extends Base
     {
         $type = $this->debug->abstracter->getType($val);
         if ($type == 'string') {
-            $val = $this->dump($val, array(), true, false);
+            $val = $this->dump($val, true, false);
         } elseif ($type == 'array') {
             $count = \count($val);
             $val = '<span class="t_keyword">array</span>'

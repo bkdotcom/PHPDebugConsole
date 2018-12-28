@@ -83,7 +83,9 @@ class Firephp extends Base
         } elseif (\in_array($method, array('group','groupCollapsed'))) {
             $firePhpMeta['Label'] = $args[0];
         } elseif (\in_array($method, array('profileEnd','table'))) {
-            $firePhpMeta['Type'] = $this->firephpMethods['table'];
+            $firePhpMeta['Type'] = \is_array($args[0])
+                ? $this->firephpMethods['table']
+                : $this->firephpMethods['log'];
             $value = $this->methodTable($args[0], $meta['columns']);
             if ($meta['caption']) {
                 $firePhpMeta['Label'] = $meta['caption'];
@@ -157,6 +159,9 @@ class Firephp extends Base
      */
     protected function methodTable($array, $columns = array())
     {
+        if (!\is_array($array)) {
+            return $this->dump($array);
+        }
         $table = array();
         $keys = $columns ?: $this->debug->methodTable->colKeys($array);
         $headerVals = $keys;

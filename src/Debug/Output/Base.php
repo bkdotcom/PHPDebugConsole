@@ -73,7 +73,7 @@ abstract class Base implements OutputInterface
     /**
      * {@inheritdoc}
      */
-    public function dump($val, $path = array())
+    public function dump($val)
     {
         $typeMore = null;
         $type = $this->debug->abstracter->getType($val, $typeMore);
@@ -84,9 +84,7 @@ abstract class Base implements OutputInterface
             $typeMore = null;
         }
         $method = 'dump'.\ucfirst($type);
-        $return = \in_array($type, array('array', 'object'))
-            ? $this->{$method}($val, $path)
-            : $this->{$method}($val);
+        $return = $this->{$method}($val);
         $this->dumpType = $type;
         $this->dumpTypeMore = $typeMore;
         return $return;
@@ -165,16 +163,13 @@ abstract class Base implements OutputInterface
      * Dump array
      *
      * @param array $array array to dump
-     * @param array $path  {@internal}
      *
      * @return array
      */
-    protected function dumpArray($array, $path = array())
+    protected function dumpArray($array)
     {
-        $pathCount = \count($path);
         foreach ($array as $key => $val) {
-            $path[$pathCount] = $key;
-            $array[$key] = $this->dump($val, $path);
+            $array[$key] = $this->dump($val);
         }
         return $array;
     }
@@ -244,11 +239,10 @@ abstract class Base implements OutputInterface
      * Dump object
      *
      * @param array $abs  object abstraction
-     * @param array $path {@internal}
      *
      * @return mixed
      */
-    protected function dumpObject($abs, $path = array())
+    protected function dumpObject($abs)
     {
         if ($abs['isRecursion']) {
             $return = '(object) '.$abs['className'].' *RECURSION*';
@@ -258,9 +252,7 @@ abstract class Base implements OutputInterface
             $return = array(
                 '___class_name' => $abs['className'],
             );
-            $pathCount = \count($path);
             foreach ($abs['properties'] as $name => $info) {
-                $path[$pathCount] = $name;
                 $vis = (array) $info['visibility'];
                 foreach ($vis as $i => $v) {
                     if (\in_array($v, array('magic','magic-read','magic-write'))) {
@@ -273,7 +265,7 @@ abstract class Base implements OutputInterface
                     $vis[] = 'excluded';
                 }
                 $name = '('.\implode(' ', $vis).') '.$name;
-                $return[$name] = $this->dump($info['value'], $path);
+                $return[$name] = $this->dump($info['value']);
             }
         }
         return $return;
@@ -366,6 +358,9 @@ abstract class Base implements OutputInterface
      */
     protected function methodTable($array, $columns = array())
     {
+        if (!\is_array($array)) {
+            return $this->dump($array);
+        }
         $keys = $columns ?: $this->debug->methodTable->colKeys($array);
         $table = array();
         $classnames = array();
@@ -374,20 +369,11 @@ abstract class Base implements OutputInterface
         }
         foreach ($array as $k => $row) {
             $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
-            foreach ($values as $k2 => $val) {
-                if ($val === $this->debug->abstracter->UNDEFINED) {
-                    unset($values[$k2]);
-                } elseif (\is_array($val)) {
-                    $values[$k2] = $this->debug->output->text->dump($val);
-                }
-            }
-            if (\count($values) == 1 && $k2 == MethodTable::SCALAR) {
-                $values = $val;
-            }
+            $values = $this->methodTableCleanValues($values);
+            $table[$k] = $values;
             $classnames[$k] = $objInfo['row']
                 ? $objInfo['row']['className']
                 : '';
-            $table[$k] = $values;
         }
         if (\array_filter($classnames)) {
             foreach ($classnames as $k => $classname) {
@@ -398,6 +384,28 @@ abstract class Base implements OutputInterface
             }
         }
         return $table;
+    }
+
+    /**
+     * Ready row value(s)
+     *
+     * @param array $values row values
+     *
+     * @return row values
+     */
+    private function methodTableCleanValues($values)
+    {
+        foreach ($values as $k2 => $val) {
+            if ($val === $this->debug->abstracter->UNDEFINED) {
+                unset($values[$k2]);
+            } elseif (\is_array($val)) {
+                $values[$k2] = $this->debug->output->text->dump($val);
+            }
+        }
+        if (\count($values) == 1 && $k2 == MethodTable::SCALAR) {
+            $values = $val;
+        }
+        return $values;
     }
 
     /**

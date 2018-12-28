@@ -173,23 +173,11 @@ class MethodTable
             }
             unset($args[$i]);
         }
-        if ($data) {
-            $event->setValues(array(
-                'method' => 'table',
-                'args' => array($data),
-                'meta' => $meta,
-            ));
-        } elseif (\is_array($data) && $meta['caption']) {
-            // empty array was passed
-            $event->setValues(array(
-                'method' => 'log',
-                'args' => array($meta['caption'], $data),
-                'meta' => $event['meta'],
-            ));
-        } else {
-            // no array was passed
-            $event['method'] = 'log';
-        }
+        $event->setValues(array(
+            'method' => $event['method'],
+            'args' => array($data),
+            'meta' => $meta,
+        ));
         return $event;
     }
 

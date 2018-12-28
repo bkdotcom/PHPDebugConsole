@@ -47,7 +47,7 @@ class Wamp implements OutputInterface
     /**
      * {@inheritDoc}
      */
-    public function dump($val, $path = array())
+    public function dump($val)
     {
     }
 

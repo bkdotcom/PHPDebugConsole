@@ -22,12 +22,11 @@ interface OutputInterface extends SubscriberInterface
     /**
      * Dump value
      *
-     * @param mixed $val  value to dump
-     * @param array $path {@internal}
+     * @param mixed $val value to dump
      *
      * @return array|string
      */
-	public function dump($val, $path = array());
+	public function dump($val);
 
     /**
      * Process log entry without publishing `debug.outputLogEntry` event

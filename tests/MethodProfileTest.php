@@ -46,7 +46,8 @@ class MethodProfileTest extends DebugTestFramework
                 },
                 'chromeLogger' => '[[{"MethodProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}}],null,"table"]',
                 'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"TABLE","Label":"Profile \'Profile 1\' Results"},[["","calls","totalTime","ownTime"],["MethodProfileTest::a",1,%f,%f],["MethodProfileTest::b",1,%f,%f],["MethodProfileTest::c",2,%f,%f]]]|',
-                'html' => '<table class="m_profileEnd sortable table-bordered">
+                'html' => '<div class="m_profileEnd">
+                    <table class="sortable table-bordered">
                     <caption>Profile \'Profile 1\' Results</caption>
                     <thead>
                         <tr><th>&nbsp;</th><th>calls</th><th scope="col">totalTime</th><th scope="col">ownTime</th></tr>
@@ -59,7 +60,8 @@ class MethodProfileTest extends DebugTestFramework
                     <tfoot>
                         <tr><td>&nbsp;</td><td></td><td></td><td class="t_float">%f</td></tr>
                     </tfoot>
-                    </table>',
+                    </table>
+                    </div>',
                 'script' => 'console.table({"MethodProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}});',
                 'text' => 'Profile \'Profile 1\' Results = array(
                     [MethodProfileTest::a] => array(

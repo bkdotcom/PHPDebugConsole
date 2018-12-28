@@ -62,8 +62,7 @@ class HtmlObject
                 .$this->dumpProperties($abs)
                 .($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')
                     ? $this->dumpMethods($abs['methods'])
-                    : ''
-                )
+                    : '')
                 .$this->dumpPhpDoc($abs['phpDoc'])
             .'</dl>'."\n";
         // remove <dt>'s with empty <dd>'
@@ -156,6 +155,12 @@ class HtmlObject
         $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
         $str .= $this->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {
+            if (!isset($info['phpDoc']['return'])) {
+                $info['phpDoc']['return'] = array(
+                    'desc' => null,
+                    'type' => null,
+                );
+            }
             $classes = \array_keys(\array_filter(array(
                 'method' => true,
                 'deprecated' => $info['isDeprecated'],
@@ -165,35 +170,44 @@ class HtmlObject
                 $info['visibility'] => true,
                 'static' => $info['isStatic'],
             )));
-            $classes = \array_merge($classes, $modifiers);
-            $str .= '<dd class="'.\implode(' ', $classes).'" data-implements="'.$info['implements'].'">'
-                .\implode(' ', \array_map(function ($modifier) {
+            $str .= $this->debug->utilities->buildTag(
+                'dd',
+                array(
+                    'class' => \array_merge($classes, $modifiers),
+                    'data-implements' => $info['implements'],
+                ),
+                \implode(' ', \array_map(function ($modifier) {
                     return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
                 }, $modifiers))
-                .(isset($info['phpDoc']['return'])
-                    ? ' <span class="t_type"'
-                            .' title="'.\htmlspecialchars($info['phpDoc']['return']['desc']).'"'
-                        .'>'.$info['phpDoc']['return']['type'].'</span>'
-                    : ''
+                .' '.$this->debug->utilities->buildTag(
+                    'span',
+                    array(
+                        'class' => 't_type',
+                        'title' => $info['phpDoc']['return']['desc'],
+                    ),
+                    $info['phpDoc']['return']['type']
                 )
-                .' <span class="method-name"'
-                        .' title="'.\trim(\htmlspecialchars($info['phpDoc']['summary']
+                .' '.$this->debug->utilities->buildTag(
+                    'span',
+                    array(
+                        'class' => 'method-name',
+                        'title' => \trim($info['phpDoc']['summary']
                             .($this->debug->output->getCfg('outputMethodDescription')
                                 ? "\n\n".$info['phpDoc']['description']
-                                : ''
-                            ))).'"'
-                    .'>'.$methodName.'</span>'
-                .'<span class="t_punct">(</span>'
-                    .$this->dumpMethodParams($info['params'])
-                    .'<span class="t_punct">)</span>'
-                .($methodName == '__toString'
-                    ? '<br /><span class="indent">'.$this->debug->output->html->dump($info['returnValue']).'</span>'
-                    : ''
+                                : '')),
+                    ),
+                    $methodName
                 )
-                .'</dd>'."\n";
+                .'<span class="t_punct">(</span>'
+                .$this->dumpMethodParams($info['params'])
+                .'<span class="t_punct">)</span>'
+                .($methodName == '__toString'
+                    ? '<br />'.$this->debug->output->html->dump($info['returnValue'])
+                    : '')
+            )."\n";
         }
-        $str = \str_replace(' title=""', '', $str);  // t_type && method-name
-        $str = \str_replace(' data-implements=""', '', $str);
+        $str = \str_replace(' data-implements="null"', '', $str);
+        $str = \str_replace(' <span class="t_type"></span>', '', $str);
         return $str;
     }
 
@@ -327,12 +341,10 @@ class HtmlObject
                 }, $vis))
                 .($isPrivateAncestor
                     ? ' (<i>'.$info['inheritedFrom'].'</i>)'
-                    : ''
-                )
+                    : '')
                 .($info['type']
                     ? ' <span class="t_type">'.$info['type'].'</span>'
-                    : ''
-                )
+                    : '')
                 .' <span class="property-name"'
                     .' title="'.\htmlspecialchars($info['desc']).'"'
                     .'>'.$k.'</span>'

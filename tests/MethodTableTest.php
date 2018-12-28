@@ -61,9 +61,14 @@ class MethodTableTest extends DebugTestFramework
             ),
         ), $this->debug->getData('log/0'));
         $this->assertSame(array(
-            'log',
-            array('arg1', array()),
-            array(),
+            'table',
+            array(array()),
+            array(
+                'caption'=>'arg1',
+                'columns'=>array(),
+                'sortable'=>true,
+                'totalCols' => array(),
+            ),
         ), $this->debug->getData('log/1'));
         $this->assertSame(array(
             'table',
@@ -85,7 +90,16 @@ class MethodTableTest extends DebugTestFramework
                 'totalCols' => array(),
             ),
         ), $this->debug->getData('log/3'));
-        $this->assertSame(array('log', array('arg1', 'arg2'), array()), $this->debug->getData('log/4'));
+        $this->assertSame(array(
+            'table',
+            array(null),
+            array(
+                'caption'=>'arg1',
+                'columns'=>array(),
+                'sortable'=>true,
+                'totalCols' => array(),
+            ),
+        ), $this->debug->getData('log/4'));
         $this->assertSame(array(
             'table',
             array(
@@ -121,7 +135,8 @@ class MethodTableTest extends DebugTestFramework
             )
         );
         $rowsAHtml = <<<'EOD'
-<table class="m_table sortable table-bordered">
+<div class="m_table">
+<table class="sortable table-bordered">
 <caption>table caption</caption>
 <thead>
 <tr><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
@@ -131,6 +146,7 @@ class MethodTableTest extends DebugTestFramework
 <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
 </tbody>
 </table>
+</div>
 EOD;
         $rowsAText = <<<'EOD'
 table caption = array(
@@ -160,7 +176,7 @@ EOD;
                 'table',
                 array(null),
                 array(
-                    'html' => '<div class="m_log"><span class="t_null">null</span></div>',
+                    'html' => '<div class="m_table"><span class="t_null">null</span></div>',
                     'text' => 'null',
                     'script' => 'console.log(null);',
                     'firephp' => 'X-Wf-1-1-1-1: 21|[{"Type":"LOG"},null]|',
@@ -170,10 +186,12 @@ EOD;
                 'table',
                 array('blah'),
                 array(
-                    'html' => '<div class="m_log"><span class="no-pseudo t_string">blah</span></div>',
-                    'text' => 'blah',
-                    'script' => 'console.log("blah");',
-                    'firephp' => 'X-Wf-1-1-1-2: 23|[{"Type":"LOG"},"blah"]|',
+                    'html' => '<div class="m_table">'
+                        .'<span class="no-pseudo t_string">blah</span> = <span class="t_null">null</span>'
+                        .'</div>',
+                    'text' => 'blah = null',
+                    'script' => 'console.log("blah",null);',
+                    'firephp' => 'X-Wf-1-1-1-2: 36|[{"Type":"LOG","Label":"blah"},null]|',
                 ),
             ),
             array(
@@ -200,7 +218,8 @@ EOD;
                     ),
                 ),
                 array(
-                    'html' => '<table class="m_table sortable table-bordered">
+                    'html' => '<div class="m_table">
+                        <table class="sortable table-bordered">
                         <caption>flat</caption>
                         <thead>
                         <tr><th>&nbsp;</th><th>value</th></tr>
@@ -218,12 +237,13 @@ EOD;
                         <dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="method-name">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$closure</span></span>, <span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
                         <dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
                         '.(version_compare(PHP_VERSION, '7.0', '>=') ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">...$parameters</span></span><span class="t_punct">)</span></dd>'."\n" : '')
-                        .(version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="method-name">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>'."\n" : '' )
+                        .(version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="method-name">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>'."\n" : '')
                         .'<dd class="method private"><span class="t_modifier_private">private</span> <span class="method-name">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
                         </dl>
                         </td></tr>
                         </tbody>
-                        </table>',
+                        </table>
+                        </div>',
                     'text' => 'flat = array(
                         [0] => "a"
                         [1] => "2233-03-22T00:00:00%i"
@@ -262,7 +282,8 @@ EOD;
                     )),
                 ),
                 array(
-                    'html' => '<table class="m_table sortable table-bordered">
+                    'html' => '<div class="m_table">
+                        <table class="sortable table-bordered">
                         <caption>traversable -o- traversables (<span class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)</caption>
                         <thead>
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
@@ -271,7 +292,8 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
                         </tbody>
-                        </table>',
+                        </table>
+                        </div>',
                     'text' => 'traversable -o- traversables = array(
                             [4] => array(
                                 [___class_name] => "bdk\DebugTest\TestTraversable"
@@ -303,7 +325,8 @@ EOD;
                     ),
                 ),
                 array(
-                    'html' => '<table class="m_table sortable table-bordered">
+                    'html' => '<div class="m_table">
+                        <table class="sortable table-bordered">
                         <caption>array -o- objects</caption>
                         <thead>
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th>age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
@@ -312,7 +335,8 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_classname">stdClass</td><td class="numeric t_string">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="false t_bool">false</td><td class="t_string">M</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_classname">stdClass</td><td class="numeric t_string">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool true">true</td><td class="t_string">F</td></tr>
                         </tbody>
-                        </table>',
+                        </table>
+                        </div>',
                     'text' => 'array -o- objects = array(
                         [4] => array(
                             [___class_name] => "stdClass"
@@ -341,7 +365,8 @@ EOD;
                     $rowsB,
                 ),
                 array(
-                    'html' => '<table class="m_table sortable table-bordered">
+                    'html' => '<div class="m_table">
+                        <table class="sortable table-bordered">
                         <caption>not all col values of same type</caption>
                         <thead>
                         <tr><th>&nbsp;</th><th>date <span class="t_classname">DateTime</span></th><th scope="col">date2</th></tr>
@@ -350,7 +375,8 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i</td><td class="t_string">not a datetime</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">1985-10-26T00:00:00%i</td><td class="t_string">2015-10-21T00:00:00%i</td></tr>
                         </tbody>
-                        </table>',
+                        </table>
+                        </div>',
                     'text' => 'not all col values of same type = array(
                         [0] => array(
                             [date] => "1955-11-05T00:00:00%i"

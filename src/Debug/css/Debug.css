@@ -31,7 +31,11 @@
 }
 .debug dl { margin-top:0; margin-bottom:0; }
 .debug dt { font-weight:bold; }
-.debug dl:not(.dl-horizontal) dd { margin-left:20px; }
+.debug dl:not(.dl-horizontal) dd {
+	margin-left: 20px;
+	padding-left: 10px;
+	text-indent: -10px;
+}
 .debug fieldset {
 	padding: .66em;
 	margin: 0 0 10px 0;

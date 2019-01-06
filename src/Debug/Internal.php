@@ -442,31 +442,61 @@ class Internal implements SubscriberInterface
         if (\session_module_name() === 'files') {
             $this->debug->log('session_save_path', \session_save_path() ?: \sys_get_temp_dir());
         }
-        if (\error_reporting() !== E_ALL | E_STRICT) {
-            $styleMono = 'font-family:monospace; opacity:0.8;';
-            $styleReset = 'font-family:inherit; white-space:pre-wrap;';
-            $msgLines = array(
-                'PHP\'s %cerror_reporting%c is set to `%c'.ErrorLevel::toConstantString().'%c` vs `%cE_ALL | E_STRICT%c`',
-            );
+        $this->logPhpInfoEr();
+    }
+
+    /**
+     * Log if
+     * PHP's error reporting !== (E_ALL | E_STRICT)
+     * PHPDebugConsole is not logging (E_ALL | E_STRICT)
+     *
+     * @return void
+     */
+    private function logPhpInfoEr()
+    {
+        $errorReportingRaw = $this->debug->getCfg('errorReporting');
+        $errorReporting = $errorReportingRaw === 'system'
+            ? \error_reporting()
+            : $errorReportingRaw;
+        $msgLines = array();
+        $styles = array();
+        $styleMono = 'font-family:monospace; opacity:0.8;';
+        $styleReset = 'font-family:inherit; white-space:pre-wrap;';
+        if (\error_reporting() !== (E_ALL | E_STRICT)) {
+            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c'.ErrorLevel::toConstantString().'%c` rather than `%cE_ALL | E_STRICT%c`';
             $styles = array(
                 $styleMono, $styleReset, // wraps "error_reporting"
                 $styleMono, $styleReset, // wraps actual
                 $styleMono, $styleReset, // wraps E_ALL | E_STRICT
             );
-            $errorReporting = $this->debug->getCfg('errorReporting');
-            if ($errorReporting === E_ALL | E_STRICT) {
+            if ($errorReporting === (E_ALL | E_STRICT)) {
                 $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
                 $styles[] = $styleMono;
                 $styles[] = $styleReset;
-            } elseif ($errorReporting === "system") {
+            }
+        }
+        if ($errorReporting !== (E_ALL | E_STRICT)) {
+            if ($errorReportingRaw === 'system') {
                 $msgLines[] = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
-            } elseif ($errorReporting !== \error_reporting()) {
-                $msgLines[] = 'PHPDebugConsole\'s errorHandler is using a errorReporting value that differs from %cerror_reporting%c';
+            } elseif ($errorReporting === \error_reporting()) {
+                $msgLines[] = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
+                    .'`%c'.ErrorLevel::toConstantString($errorReporting).'%c`';
+                $styles[] = $styleMono;
+                $styles[] = $styleReset;
+            } else {
+                $msgLines[] = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
+                    .'`%c'.ErrorLevel::toConstantString($errorReporting).'%c`';
                 $styles[] = $styleMono;
                 $styles[] = $styleReset;
             }
+        }
+        if ($msgLines) {
             $args = array(\implode("\n", $msgLines));
             $args = \array_merge($args, $styles);
+            $args[] = $this->debug->meta(array(
+                'file' => null,
+                'line' => null,
+            ));
             \call_user_func_array(array($this->debug, 'warn'), $args);
         }
     }

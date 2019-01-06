@@ -210,12 +210,17 @@ class DebugTestFramework extends DOMTestCase
         }
         foreach ($tests as $test => $outputExpect) {
             if ($test == 'entry') {
+                $logEntryTemp = $logEntry;
                 if (\is_callable($outputExpect)) {
-                    \call_user_func($outputExpect, $logEntry);
+                    \call_user_func($outputExpect, $logEntryTemp);
                 } elseif (is_string($outputExpect)) {
-                    $this->assertStringMatchesFormat($outputExpect, json_encode($logEntry), 'log entry does not match format');
+                    $this->assertStringMatchesFormat($outputExpect, json_encode($logEntryTemp), 'log entry does not match format');
                 } else {
-                    $this->assertSame($outputExpect, $logEntry);
+                    if (isset($outputExpect[2]['file']) && $outputExpect[2]['file'] === '*') {
+                        unset($outputExpect[2]['file']);
+                        unset($logEntryTemp[2]['file']);
+                    }
+                    $this->assertSame($outputExpect, $logEntryTemp);
                 }
                 continue;
             } elseif ($test == 'custom') {

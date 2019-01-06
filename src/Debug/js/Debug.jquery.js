@@ -257,23 +257,32 @@
 		}
 	}
 
-	function enhanceEntries($node) {
+	function enhanceEntries($node, inclStrings) {
 		// console.log("enhanceEntries", $node);
+		if (typeof inclStrings == "undefined") {
+			inclStrings = true;
+		}
 		$node.hide();
 		// don't enhance groups... they'll get enhanced when expanded
 		$node.children().not(".m_group").each(function() {
-			enhanceEntry($(this));
+			enhanceEntry($(this), false);
 		});
 		$node.show();
-		$node.find(".t_string:not(.enhanced):visible").each(function() {
-			enhanceString($(this));
-		});
+		if (inclStrings) {
+			enhanceStrings($node);
+		}
 	}
 
-	function enhanceEntry($entry) {
+	function enhanceEntry($entry, inclStrings) {
 		// console.log("enhanceEntry", $entry);
 		if ($entry.hasClass("enhanced")) {
 			return;
+		}
+		if ($entry.hasClass("m_group")) {
+			return;
+		}
+		if (typeof inclStrings == "undefined") {
+			inclStrings = true;
 		}
 		if ($entry.hasClass("group-header")) {
 			// minimal enhancement... just adds data-toggle attr and hides target
@@ -285,12 +294,16 @@
 			// groupSummary has no toggle.. and is uncollapsed -> enhance
 			enhanceEntries($entry);
 		} else {
+			// regular log-type entry
 			$entry.children().each(function() {
 				enhanceValue(this);
 			});
 			enhanceMisc($entry);
 			addIcons($entry, ["misc","methods"]);
 			$entry.addClass("enhanced");
+			if (inclStrings) {
+				enhanceStrings($entry);
+			}
 		}
 	}
 
@@ -374,17 +387,22 @@
 		});
 	}
 
-	function enhanceString($node) {
-		var $container,
-			$stringWrap;
-		if ($node.height() > 70) {
-			$stringWrap = $node.wrap('<div class="show-more-wrapper"></div>').parent();
-			$stringWrap.append('<div class="show-more-fade"></div>');
-			$container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
-			$container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
-			$container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
-		}
-		$node.addClass("enhanced");
+	function enhanceStrings($root) {
+		$root.find(".t_string:not(.enhanced):visible").each(function() {
+			var $this = $(this),
+				$container,
+				$stringWrap,
+				height = $this.height(),
+				diff = height - 70;
+			if (diff > 35) {
+				$stringWrap = $this.wrap('<div class="show-more-wrapper"></div>').parent();
+				$stringWrap.append('<div class="show-more-fade"></div>');
+				$container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
+				$container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
+				$container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
+			}
+			$this.addClass("enhanced");
+		});
 	}
 
 	function enhanceTable($node) {
@@ -412,8 +430,9 @@
 				: $toggleOrTarget.prev(),
 			$target = isToggle
 				? $toggleOrTarget.next()
-				: $toggleOrTarget;
-		if (!$target.hasClass("enhanced")) {
+				: $toggleOrTarget,
+			isEnhanced = $target.hasClass("enhanced");
+		if (!isEnhanced) {
 			if ($toggle.is("[data-toggle=group]")) {
 				enhanceEntries($target);
 			} else if ($toggle.is("[data-toggle=object]")) {
@@ -426,6 +445,9 @@
 			// hide the toggle..  there is a different toggle in the expanded version
 			$toggle.hide();
 			$target.show();
+			if (!isEnhanced) {
+				enhanceStrings($target);
+			}
 		} else {
 			$target.slideDown("fast", function() {
 				var $groupEndValue = $target.find("> .m_groupEndValue");
@@ -435,11 +457,11 @@
 					// remove value from label
 					$toggle.find(".group-label").last().nextAll().remove();
 				}
+				if (!isEnhanced) {
+					enhanceStrings($target);
+				}
 			});
 		}
-		$target.find(".t_string:not(.enhanced):visible").each(function() {
-			enhanceString($(this));
-		});
 	}
 
 	function groupErrorIconChange($toggle) {
@@ -653,9 +675,9 @@
 				"	background-image: linear-gradient(to bottom, transparent, white);" +
 				"	pointer-events: none;" +
 				"}" +
-				".debug .m_error .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FFBABA); }" +
-				".debug .m_info .show-more-fade { background-image: linear-gradient(to bottom, transparent, #BDE5F8); }" +
-				".debug .m_warn .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FEEFB3); }" +
+				".debug .level-error .show-more-fade, .debug .m_error .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FFBABA); }" +
+				".debug .level-info .show-more-fade, .debug .m_info .show-more-fade { background-image: linear-gradient(to bottom, transparent, #BDE5F8); }" +
+				".debug .level-warn .show-more-fade, .debug .m_warn .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FEEFB3); }" +
 				".debug [title]:hover .show-more-fade { background-image: linear-gradient(to bottom, transparent, #c9c9c9); }" +
 				".debug .show-more, .debug .show-less {" +
 				"   display: table;" +
@@ -783,13 +805,11 @@
 				deps.splice(i, 1);	// remove it
 				continue;
 			}
-			if (dep.status != "loading") {
+			if (dep.status != "loading" && !checkOnly) {
 				dep.status = "loading";
-				if (!checkOnly) {
-					jsNode = document.createElement("script");
-					jsNode.src = dep.src;
-					first.parentNode.insertBefore(jsNode, first);
-				}
+				jsNode = document.createElement("script");
+				jsNode.src = dep.src;
+				first.parentNode.insertBefore(jsNode, first);
 			}
 		}
 	}
@@ -826,6 +846,7 @@
 			addScripts(deps, true);
 		}
 		checkInterval = setInterval(function() {
+			console.warn('intervalCounter', intervalCounter);
 			addScripts(deps, intervalCounter === 10);
 			if (deps.length === 0) {
 				clearInterval(checkInterval);
@@ -878,7 +899,7 @@
 			$container.find(".show-more-wrapper")
 				.css("display", "block")
 				.animate({
-					height: '5em'
+					height: '70px'
 				});
 			$container.find(".show-more-fade").fadeIn();
 			$container.find(".show-more").show();

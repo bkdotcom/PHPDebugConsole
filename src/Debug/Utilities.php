@@ -339,6 +339,13 @@ class Utilities
         if (isset($backtrace[$iFunc]) && \in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))) {
             $iLine++;
             $iFunc++;
+        } elseif (isset($backtrace[$iFunc]['class'])
+            && $backtrace[$iFunc]['class'] == 'ReflectionMethod'
+            && $backtrace[$iFunc]['function'] == 'invoke'
+        ) {
+            // called via ReflectionMethod->invoke()
+            $iLine++;
+            $iFunc--;
         }
         if (isset($backtrace[$iFunc])) {
             $return = \array_merge($return, \array_intersect_key($backtrace[$iFunc], $return));

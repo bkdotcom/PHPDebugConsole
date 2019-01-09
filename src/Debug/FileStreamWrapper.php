@@ -419,6 +419,11 @@ class FileStreamWrapper
             $context = \stream_context_get_default();
         }
         self::restorePrev();
+        if (\strpos($mode, 'r') !== false && !\file_exists($path)) {
+            return false;
+        } elseif (\strpos($mode, 'x') !== false && \file_exists($path)) {
+            return false;
+        }
         $handle = \fopen($path, $mode, $useIncludePath, $context);
         self::register();
         if ($handle === false) {

@@ -340,8 +340,17 @@ class ErrorHandler
                 but error_reporting() will return 0 due to the @ operator
                 unsupress fatal error here
             */
-            \error_reporting(E_ALL);
+            \error_reporting(E_ALL | E_STRICT);
             $this->handleError($error['type'], $error['message'], $error['file'], $error['line']);
+        }
+        /*
+            Find the fatal error/uncaught-exception and attach to shutdown event
+        */
+        foreach ($this->data['errors'] as $error) {
+            if ($error['category'] === 'fatal') {
+                $event['error'] = $error;
+                break;
+            }
         }
         return;
     }
@@ -609,6 +618,7 @@ class ErrorHandler
             'exception' => $this->uncaughtException,  // non-null if error is uncaught-exception
             'hash'          => null,
             'isFirstOccur'  => true,
+            'isHtml'        => \filter_var(\ini_get('html_errors'), FILTER_VALIDATE_BOOLEAN),
             'isSuppressed'  => false,
         );
         $hash = $this->errorHash($errorValues);

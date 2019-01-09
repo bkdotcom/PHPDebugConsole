@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.3.0
  */
 
 namespace bdk\Debug\Output;
@@ -65,8 +65,6 @@ class HtmlErrorSummary
         }
         $lastError = $this->errorHandler->get('lastError');
         $backtrace = $lastError['backtrace'];
-        $keysKeep = array('typeStr','message','file','line');
-        $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
         $html = '<h3>Fatal Error</h3>';
         $html .= '<ul class="list-unstyled indent">';
         if (\count($backtrace) > 1) {
@@ -82,7 +80,13 @@ class HtmlErrorSummary
             $html .= '<li>'.$lastError['message'].'</li>';
             $html .= '<li>'.$table.'</li>';
         } else {
+            $isHtml = $lastError['isHtml'];
+            $keysKeep = array('typeStr','message','file','line');
+            $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
             $html .= '<li>'.$this->outputHtml->dump($lastError).'</li>';
+            if ($isHtml) {
+                $html = \str_replace(\htmlspecialchars($lastError['message']), $lastError['message'], $html);
+            }
         }
         if (!\extension_loaded('xdebug')) {
             $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
@@ -172,7 +176,8 @@ class HtmlErrorSummary
         if ($countInCat == 1) {
             $header = \ucfirst($category);
             $error = $this->getErrorsInCategory($category)[0];
-            $msg = $error['file']. '(line '.$error['line'].'): '.$error['message'];
+            $msg = $error['file']. '(line '.$error['line'].'): '
+                .\str_replace('<a ', '<a target="phpRef" ', $error['message']);
         } else {
             $header = $catStrings[$category]['header'];
             $msg = \sprintf($catStrings[$category]['msg'], $countInCat);

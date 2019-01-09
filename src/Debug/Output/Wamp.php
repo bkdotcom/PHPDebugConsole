@@ -67,7 +67,7 @@ class Wamp implements OutputInterface
         return array(
             'debug.log' => array('onLog', PHP_INT_MAX * -1),
             'errorHandler.error' => 'onError',    // assumes errorhandler is using same dispatcher.. as should be
-            'php.shutdown' => 'onShutdown',
+            'php.shutdown' => array('onShutdown', PHP_INT_MAX * -1),
         );
     }
 

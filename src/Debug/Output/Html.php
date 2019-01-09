@@ -267,6 +267,9 @@ class Html extends Base
                     : $this->buildArgString($args)
             );
         } else {
+            $sanitize = isset($meta['sanitize'])
+                ? $meta['sanitize']
+                : true;
             $attribs = array(
                 'class' => 'm_'.$method,
                 'data-channel' => $meta['channel'],
@@ -278,6 +281,12 @@ class Html extends Base
                 if (\in_array($method, array('error','warn'))) {
                     if (isset($meta['errorCat'])) {
                         $attribs['class'] .= ' error-'.$meta['errorCat'];
+                    }
+                    if (!$sanitize) {
+                        // html error
+                        $args = \array_map(function ($arg) {
+                            return \str_replace('<a ', '<a target="phpRef" ', $arg);
+                        }, $args);
                     }
                 }
                 if (\count($args) > 1 && \is_string($args[0])) {
@@ -291,7 +300,7 @@ class Html extends Base
             $str = $this->debug->utilities->buildTag(
                 'div',
                 $attribs,
-                $this->buildArgString($args)
+                $this->buildArgString($args, $sanitize)
             );
         }
         $str = \str_replace(' data-channel="null"', '', $str);
@@ -302,11 +311,12 @@ class Html extends Base
     /**
      * Convert all arguments to html and join them together.
      *
-     * @param array $args arguments
+     * @param array   $args     arguments
+     * @param boolean $sanitize apply htmlspecialchars (to non-first arg)?
      *
      * @return string html
      */
-    protected function buildArgString($args)
+    protected function buildArgString($args, $sanitize = true)
     {
         $glue = ', ';
         $glueAfterFirst = true;
@@ -320,7 +330,7 @@ class Html extends Base
         }
         foreach ($args as $i => $v) {
             if ($i > 0) {
-                $args[$i] = $this->dump($v, true);
+                $args[$i] = $this->dump($v, $sanitize);
             } else {
                 // don't apply htmlspecialchars()
                 $args[$i] = $this->dump($v, false);

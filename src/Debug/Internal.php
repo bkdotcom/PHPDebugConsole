@@ -176,6 +176,7 @@ class Internal implements SubscriberInterface
                 'errorCat' => $this->error['category'],
                 'errorHash' => $this->error['hash'],
                 'backtrace' => $this->error['backtrace'] ?: array(),
+                'sanitize' => $this->error['isHtml'] === false,
             );
         } else {
             $meta = $this->debug->utilities->getCallerInfo();

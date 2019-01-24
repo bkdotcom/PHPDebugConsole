@@ -335,10 +335,14 @@ class HtmlObject
                 'property' => true,
                 \implode(' ', $vis) => $info['visibility'] !== 'debug',
             )));
+            $modifiers = $vis;
+            if ($info['isStatic']) {
+                $modifiers[] = 'static';
+            }
             $str .= '<dd class="'.\implode(' ', $classes).'">'
-                .\implode(' ', \array_map(function ($v) {
-                    return '<span class="t_modifier_'.$v.'">'.$v.'</span>';
-                }, $vis))
+                .\implode(' ', \array_map(function ($modifier) {
+                    return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
+                }, $modifiers))
                 .($isPrivateAncestor
                     ? ' (<i>'.$info['inheritedFrom'].'</i>)'
                     : '')

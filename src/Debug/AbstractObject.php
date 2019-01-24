@@ -691,15 +691,14 @@ class AbstractObject
      */
     private function getPropCommentInfo(\ReflectionProperty $reflectionProperty)
     {
-        $info = array(
-            'type' => null,
-            'desc' => null,
-        );
         $name = $reflectionProperty->name;
         $phpDoc = $this->phpDoc->getParsed($reflectionProperty);
-        if ($phpDoc['summary']) {
-            $info['desc'] = $phpDoc['summary'];
-        }
+        $info = array(
+            'type' => null,
+            'desc' => $phpDoc['summary']
+                ? $phpDoc['summary']
+                : null,
+        );
         if (isset($phpDoc['var'])) {
             if (\count($phpDoc['var']) == 1) {
                 $var = $phpDoc['var'][0];
@@ -715,9 +714,11 @@ class AbstractObject
                 }
             }
             $info['type'] = $var['type'];
-            $info['desc'] = $info['desc']
-                ? $info['desc'].': '.$var['desc']
-                : $var['desc'];
+            if (!$info['desc']) {
+                $info['desc'] = $var['desc'];
+            } elseif ($var['desc']) {
+                $info['desc'] = $info['desc'].': '.$var['desc'];
+            }
         }
         return $info;
     }

@@ -221,19 +221,7 @@ class Debug
             Add 'statically' meta arg
             Not all methods expect meta args... so make sure it comes after expected args
         */
-        $defaultArgs = array();
-        if (isset(self::$methodDefaultArgs[$methodName])) {
-            $defaultArgs = self::$methodDefaultArgs[$methodName];
-        } elseif (\method_exists(self::$instance, $methodName)) {
-            $reflectionMethod = new ReflectionMethod(self::$instance, $methodName);
-            $params = $reflectionMethod->getParameters();
-            foreach ($params as $reflectionParameter) {
-                $defaultArgs[] = $reflectionParameter->isOptional()
-                    ? $reflectionParameter->getDefaultValue()
-                    : null;
-            }
-            self::$methodDefaultArgs[$methodName] = $defaultArgs;
-        }
+        $defaultArgs = self::getMethodDefaultArgs($methodName);
         $args = \array_replace($defaultArgs, $args);
         $args[] = self::meta('statically');
         return \call_user_func_array(array(self::$instance, $methodName), $args);
@@ -1648,6 +1636,31 @@ class Debug
                 return new Debug\Utilities();
             },
         );
+    }
+
+    /**
+     * Get Method's default argument list
+     *
+     * @param string $methodName Name of the method
+     *
+     * @return array
+     */
+    private static function getMethodDefaultArgs($methodName)
+    {
+        $defaultArgs = array();
+        if (isset(self::$methodDefaultArgs[$methodName])) {
+            $defaultArgs = self::$methodDefaultArgs[$methodName];
+        } elseif (\method_exists(self::$instance, $methodName)) {
+            $reflectionMethod = new ReflectionMethod(self::$instance, $methodName);
+            $params = $reflectionMethod->getParameters();
+            foreach ($params as $reflectionParameter) {
+                $defaultArgs[] = $reflectionParameter->isOptional()
+                    ? $reflectionParameter->getDefaultValue()
+                    : null;
+            }
+            self::$methodDefaultArgs[$methodName] = $defaultArgs;
+        }
+        return $defaultArgs;
     }
 
     /**

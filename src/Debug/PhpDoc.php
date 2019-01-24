@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2018 Brad Kent
- * @version   v2.1.0
+ * @version   v2.3
  */
 
 namespace bdk\Debug;
@@ -98,9 +98,19 @@ class PhpDoc
             array(
                 'tags' => array('param','property','property-read', 'property-write', 'var'),
                 'parts' => array('type','name','desc'),
-                'regex' => '/^(?P<type>.*?)'
-                    .'(?:\s+&?\$?(?P<name>\S+))?'
-                    .'(?:\s+(?P<desc>.*))?$/s',
+                'regex' => '/^'
+                    .'(?:(?P<type>[^\$].*?)\s+)?'
+                    .'(?:&?\$?(?P<name>\S+)\s+)?'
+                    .'(?P<desc>.*)?'
+                    .'$/s',
+                'callable' => function ($tag, $parsed) {
+                    if ($tag === 'var' && !$parsed['type'] && \strpos($parsed['desc'], ' ') === false) {
+                        // it appears that desc is actually type
+                        $parsed['type'] = $parsed['desc'];
+                        $parsed['desc'] = null;
+                    }
+                    return $parsed;
+                },
             ),
             array(
                 'tags' => array('method'),
@@ -112,6 +122,11 @@ class PhpDoc
                     .'\((?P<param>((?>[^()]+)|(?R))*)\)'  // see http://php.net/manual/en/regexp.reference.recursive.php
                     .'(?:\s+(?P<desc>.*))?'
                     .'/s',
+                'callable' => function ($tag, $parsed) {
+                    $parsed['static'] = $parsed['static'] !== null;
+                    $parsed['param'] = self::parseParams($parsed['param']);
+                    return $parsed;
+                },
             ),
             array(
                 'tags' => array('return'),
@@ -151,9 +166,8 @@ class PhpDoc
                 ? \trim($matches[$part])
                 : null;
         }
-        if ($tag == 'method') {
-            $parsed['static'] = $parsed['static'] !== null;
-            $parsed['param'] = self::parseParams($parsed['param']);
+        if (isset($parser['callable'])) {
+            $parsed = \call_user_func($parser['callable'], $tag, $parsed);
         }
         $parsed['desc'] = self::trimDesc($parsed['desc']);
         return $parsed;

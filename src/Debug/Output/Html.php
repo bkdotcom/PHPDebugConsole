@@ -329,12 +329,9 @@ class Html extends Base
             }
         }
         foreach ($args as $i => $v) {
-            if ($i > 0) {
-                $args[$i] = $this->dump($v, $sanitize);
-            } else {
-                // don't apply htmlspecialchars()
-                $args[$i] = $this->dump($v, false);
-            }
+            $args[$i] = $i > 0
+                ? $this->dump($v, $sanitize)
+                : $this->dump($v, false);
         }
         if (!$glueAfterFirst) {
             return $args[0].\implode($glue, \array_slice($args, 1));

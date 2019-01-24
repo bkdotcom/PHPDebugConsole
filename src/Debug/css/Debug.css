@@ -214,7 +214,7 @@
 	padding-left: 10px;
 	text-indent: -10px;
 }
-.debug .t_object .property_name[title],
+.debug .t_object .property-name[title],
 	.debug .t_object .method-name[title],
 	.debug .t_object .method .parameter [title],
 	.debug .t_object .t_stringified {
@@ -312,8 +312,8 @@
 .debug .t_const { color:#039; font-family:monospace; }
 .debug .t_object .t_classname,
 	.debug td.t_classname {
-		font-weight:bold;
-		text-decoration:underline;
+		font-weight: bold;
+		/*text-decoration: underline;*/
 	}
 .debug .namespace { opacity:0.5; }
 .debug .t_int,

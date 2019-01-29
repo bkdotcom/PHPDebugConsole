@@ -82,7 +82,7 @@ class AbstractObject
             ),
             'extends' => array(),
             'implements' => $reflector->getInterfaceNames(),
-            'isExcluded' => \in_array($className, $this->abstracter->getCfg('objectsExclude')),
+            'isExcluded' => $this->isObjExcluded($obj),
             'isRecursion' => \in_array($obj, $hist, true),
             'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
             'phpDoc' => array(
@@ -753,6 +753,26 @@ class AbstractObject
                 : null;
         }
         return $className;
+    }
+
+    /**
+     * Is the passed object excluded from debugging?
+     *
+     * @param object $obj object to test
+     *
+     * @return boolean
+     */
+    private function isObjExcluded($obj)
+    {
+        if (\in_array(\get_class($obj), $this->abstracter->getCfg('objectsExclude'))) {
+            return true;
+        }
+        foreach ($this->abstracter->getCfg('objectsExclude') as $exclude) {
+            if (\is_subclass_of($obj, $exclude)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

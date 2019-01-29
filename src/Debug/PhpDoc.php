@@ -104,10 +104,14 @@ class PhpDoc
                     .'(?P<desc>.*)?'
                     .'$/s',
                 'callable' => function ($tag, $parsed) {
-                    if ($tag === 'var' && !$parsed['type'] && \strpos($parsed['desc'], ' ') === false) {
-                        // it appears that desc is actually type
-                        $parsed['type'] = $parsed['desc'];
-                        $parsed['desc'] = null;
+                    if (\strpos($parsed['desc'], ' ') === false) {
+                        if (!$parsed['type']) {
+                            $parsed['type'] = $parsed['desc'];
+                            $parsed['desc'] = null;
+                        } elseif (!$parsed['name']) {
+                            $parsed['name'] = \ltrim($parsed['desc'], '&$');
+                            $parsed['desc'] = null;
+                        }
                     }
                     return $parsed;
                 },
@@ -226,7 +230,7 @@ class PhpDoc
                 return self::findInheritedDoc($reflector);
             } else {
                 $docComment = \preg_replace_callback(
-                    '/{@inheritDoc}/i',
+                    '/{@inheritdoc}/i',
                     function () use ($reflector) {
                         $phpDoc =  self::findInheritedDoc($reflector);
                         return $phpDoc['description'];

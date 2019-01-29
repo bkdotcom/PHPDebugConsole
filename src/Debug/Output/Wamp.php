@@ -45,7 +45,7 @@ class Wamp implements OutputInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function dump($val)
     {

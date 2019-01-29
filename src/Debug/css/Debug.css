@@ -217,7 +217,8 @@
 .debug .t_object .property-name[title],
 	.debug .t_object .method-name[title],
 	.debug .t_object .method .parameter [title],
-	.debug .t_object .t_stringified {
+	.debug .t_object .t_stringified,
+	.debug .t_object .t_type[title] {
 		text-decoration: underline;
 	}
 .debug .t_object .method.deprecated i { border-bottom:0; }

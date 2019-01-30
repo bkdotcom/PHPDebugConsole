@@ -54,10 +54,24 @@
 	/*
 		Load dependencies
 	*/
-
-	addCssFa();
-
-	loadDependencies([
+	loadDeps([
+		{
+			src: options.fontAwesomeCss,
+			type: 'stylesheet',
+			check: function () {
+				var span = document.createElement('span'),
+					haveFa = false;
+				function css(element, property) {
+					return window.getComputedStyle(element, null).getPropertyValue(property);
+				}
+				span.className = 'fa';
+				span.style.display = 'none';
+				document.body.appendChild(span);
+				haveFa = css(span, 'font-family') === 'FontAwesome';
+				document.body.removeChild(span);
+				return haveFa;
+			}
+		},
 		{
 			src: options.jQuerySrc,
 			onLoaded: init,
@@ -736,25 +750,6 @@
 			'</div>');
 	}
 
-	/**
-	 * Add FontAwesome CSS to head of page (if missing)
-	 */
-	function addCssFa() {
-		var i,
-			links = document.head.getElementsByTagName("link"),
-			count = links.length,
-			haveFa = false;
-		for (i = 0; i < count; i++) {
-			if (links[i].outerHTML.indexOf("font-awesome") > -1) {
-				haveFa = true;
-				break;
-			}
-		}
-		if (!haveFa) {
-			addStylesheet(options.fontAwesomeCss);
-		}
-	}
-
 	function addExpandAll($root) {
 		// console.log("addExpandAll");
 		var $expandAll = $("<a>", {
@@ -792,28 +787,6 @@
 		}
 	}
 
-	function addScripts(deps, checkOnly) {
-		var first = document.getElementsByTagName("script")[0],
-			jsNode,
-			dep,
-			i;
-		for (i = deps.length - 1; i >= 0; i--) {
-			dep = deps[i];
-			if (dep.check()) {
-				// dependency exists
-				dep.onLoaded();
-				deps.splice(i, 1);	// remove it
-				continue;
-			}
-			if (dep.status != "loading" && !checkOnly) {
-				dep.status = "loading";
-				jsNode = document.createElement("script");
-				jsNode.src = dep.src;
-				first.parentNode.insertBefore(jsNode, first);
-			}
-		}
-	}
-
 	function addStylesheet(src) {
 		var link = document.createElement("link");
 		link.type = "text/css";
@@ -834,20 +807,19 @@
 		return key;
 	}
 
-	function loadDependencies(deps) {
+	function loadDeps(deps) {
 		var checkInterval,
 			intervalCounter = 1;
 		deps.reverse();
 		if (document.getElementsByTagName("body")[0].childElementCount == 1) {
 			// output only contains debug
 			// don't wait for interval to begin
-			addScripts(deps);
+			loadDepsDoer(deps);
 		} else {
-			addScripts(deps, true);
+			loadDepsDoer(deps, true);
 		}
 		checkInterval = setInterval(function() {
-			console.warn('intervalCounter', intervalCounter);
-			addScripts(deps, intervalCounter === 10);
+			loadDepsDoer(deps, intervalCounter === 10);
 			if (deps.length === 0) {
 				clearInterval(checkInterval);
 			} else if (intervalCounter === 20) {
@@ -856,6 +828,37 @@
 			intervalCounter++;
 		}, 500);
 	}
+
+	function loadDepsDoer(deps, checkOnly) {
+		var firstScript = document.getElementsByTagName("script")[0],
+			jsNode,
+			dep,
+			type,
+			i;
+		for (i = deps.length - 1; i >= 0; i--) {
+			dep = deps[i];
+			type = dep.type || 'script';
+			if (dep.check()) {
+				// dependency exists
+				if (dep.onLoaded) {
+					dep.onLoaded();
+				}
+				deps.splice(i, 1);	// remove it
+				continue;
+			}
+			if (dep.status != "loading" && !checkOnly) {
+				dep.status = "loading";
+				if (type == 'script') {
+					jsNode = document.createElement("script");
+					jsNode.src = dep.src;
+					firstScript.parentNode.insertBefore(jsNode, firstScript);
+				} else if (type == 'stylesheet') {
+					addStylesheet(dep.src);
+				}
+			}
+		}
+	}
+
 
 	function registerListeners($root) {
 		console.warn("registerListeners");
@@ -887,7 +890,6 @@
 			$container.find(".show-more-wrapper").animate({
 				height: $container.find(".t_string").height()
 			},400,"swing",function() {
-				console.warn('boo', this);
 				$(this).css("display", "inline");
 			});
 			$container.find(".show-more-fade").fadeOut();

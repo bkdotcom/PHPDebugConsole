@@ -328,9 +328,10 @@ class HtmlObject
             $vis = (array) $info['visibility'];
             $isPrivateAncestor = \in_array('private', $vis) && $info['inheritedFrom'];
             $classes = \array_keys(\array_filter(array(
-                'debuginfo-value' => $info['viaDebugInfo'],
+                'debuginfo-value' => $info['valueFrom'] == 'debugInfo',
                 'excluded' => $info['isExcluded'],
                 'forceShow' => $info['forceShow'],
+                'debug-value' => $info['valueFrom'] == 'debug',
                 'private-ancestor' => $isPrivateAncestor,
                 'property' => true,
                 \implode(' ', $vis) => $info['visibility'] !== 'debug',

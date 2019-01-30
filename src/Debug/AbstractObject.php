@@ -30,7 +30,8 @@ class AbstractObject
                                         //    if value is an array, expand it
         'type' => null,
         'value' => null,
-        'viaDebugInfo' => false,        // true if __debugInfo && __debugInfo value differs
+        'valueFrom' => 'value',         // 'value' | 'debugInfo' | 'debug'
+        'viaDebugInfo' => false,        // (deprecated) true if __debugInfo && __debugInfo value differs
         'visibility' => 'public',       // public, private, protected, magic, magic-read, magic-write, debug
                                         //   may also be an array (ie: ['private', 'magic-read'])
     );
@@ -98,10 +99,11 @@ class AbstractObject
             'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && $reflector->hasMethod('__debugInfo'),
             // these are temporary values available during abstraction
             'collectPropertyValues' => true,
-            'reflector' => $reflector,
             'hist' => $hist,
+            'propertyOverrideValues' => array(),
+            'reflector' => $reflector,
         ));
-        $keysTemp = \array_flip(array('collectPropertyValues','reflector','hist'));
+        $keysTemp = \array_flip(array('collectPropertyValues','hist','propertyOverrideValues','reflector'));
         if ($abs['isRecursion']) {
             return \array_diff_key($abs->getValues(), $keysTemp);
         }
@@ -110,6 +112,7 @@ class AbstractObject
             set isExcluded
             set collectPropertyValues (boolean)
             set collectMethods (boolean)
+            set propertyOverrideValues
             set stringified
             set traverseValues
         */
@@ -449,6 +452,9 @@ class AbstractObject
      */
     private function addPropertiesDebug(Event $abs)
     {
+        if (!$abs['collectPropertyValues']) {
+            return;
+        }
         if (!$abs['viaDebugInfo']) {
             return;
         }
@@ -456,10 +462,16 @@ class AbstractObject
         $debugInfo = \call_user_func(array($obj, '__debugInfo'));
         $properties = $abs['properties'];
         foreach ($properties as $name => $info) {
+            if (\array_key_exists($name, $abs['propertyOverrideValues'])) {
+                // we're using override value
+                unset($debugInfo[$name]);
+                continue;
+            }
             if (\array_key_exists($name, $debugInfo)) {
                 if ($debugInfo[$name] !== $info['value']) {
-                    $properties[$name]['viaDebugInfo'] = true;
                     $properties[$name]['value'] = $debugInfo[$name];
+                    $properties[$name]['valueFrom'] = 'debugInfo';
+                    $properties[$name]['viaDebugInfo'] = true;
                 }
                 unset($debugInfo[$name]);
                 continue;
@@ -476,6 +488,7 @@ class AbstractObject
                 static::$basePropInfo,
                 array(
                     'value' => $value,
+                    'valueFrom' => 'debugInfo',
                     'viaDebugInfo' => true,
                     'visibility' => 'debug',    // indicates this property is exclusive to debugInfo
                 )
@@ -677,7 +690,13 @@ class AbstractObject
             $propInfo['visibility'] = 'protected';
         }
         if ($abs['collectPropertyValues']) {
-            $propInfo['value'] = $reflectionProperty->getValue($obj);
+            $propName = $reflectionProperty->getName();
+            if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
+                $propInfo['value'] = $abs['propertyOverrideValues'][$propName];
+                $propInfo['valueFrom'] = 'debug';
+            } else {
+                $propInfo['value'] = $reflectionProperty->getValue($obj);
+            }
         }
         return $propInfo;
     }
@@ -861,6 +880,8 @@ class AbstractObject
 
     /**
      * Determine propInfo['overrides'] value
+     *
+     * This is the classname of previous ancestor where property is defined
      *
      * @param \ReflectionProperty $reflectionProperty Reflection Property
      * @param array               $propInfo           Property Info

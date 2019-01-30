@@ -525,8 +525,8 @@
 
 	function onExpandObject($node) {
 		var $wrapper = $node.parent(),
-			hasProtected = $node.children(".protected").length > 0,
-			hasPrivate = $node.children(".private").length > 0,
+			hasProtected = $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
+			hasPrivate = $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
 			hasExcluded = $node.children(".excluded").hide().length > 0,
 			accessible = $wrapper.data("accessible"),
 			toggleClass = accessible === "public" ?

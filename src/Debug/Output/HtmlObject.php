@@ -353,8 +353,10 @@ class HtmlObject
                 .' <span class="property-name"'
                     .' title="'.\htmlspecialchars($info['desc']).'"'
                     .'>'.$k.'</span>'
-                .' <span class="t_operator">=</span> '
-                .$this->debug->output->html->dump($info['value'])
+                .($info['value'] !== $this->debug->abstracter->UNDEFINED
+                    ? ' <span class="t_operator">=</span> '
+                        .$this->debug->output->html->dump($info['value'])
+                    : '')
                 .'</dd>'."\n";
         }
         return $str;

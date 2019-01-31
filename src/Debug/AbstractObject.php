@@ -564,6 +564,9 @@ class AbstractObject
                             : $vis,
                     )
                 );
+                if (!$exists) {
+                    $properties[ $phpDocProp['name'] ]['value'] = $this->abstracter->UNDEFINED;
+                }
             }
             unset($abs['phpDoc'][$tag]);
         }

@@ -45,7 +45,7 @@ EOD;
   Properties:
     ✨ This object has a __get() method
     (protected ✨ magic-read) magicReadProp = "not null"
-    (✨ magic) magicProp = null
+    (✨ magic) magicProp = undefined
   Methods:
     public: 3
     magic: 1
@@ -112,7 +112,7 @@ EOD;
                             '<dd class="excluded property private"><span class="t_modifier_private">private</span> <span class="property-name">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value property private"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="property-name" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
                             '<dd class="private-ancestor property private"><span class="t_modifier_private">private</span> (<i>bdk\DebugTest\TestBase</i>) <span class="property-name">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
-                            '<dd class="excluded property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">boolean</span> <span class="property-name" title="I\'m avail via __get()">magicProp</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>',
+                            '<dd class="excluded property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">boolean</span> <span class="property-name" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="property-name">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
                             '<dt class="methods">methods</dt>'
                         )), $str);
@@ -145,7 +145,7 @@ EOD;
                         )), $str);
                     },
                     'text' => $text,
-                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug (not inspected)","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected \u2728 magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(\ud83d\udd12 private) testBasePrivate":"defined in TestBase (private)","(\u2728 magic excluded) magicProp":null,"(debug) debugValue":"This property is debug only"});'
+                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug (not inspected)","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected \u2728 magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(\ud83d\udd12 private) testBasePrivate":"defined in TestBase (private)","(\u2728 magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});'
                 )
             ),
             array(
@@ -171,7 +171,7 @@ EOD;
                             '<dt class="properties">properties</dt>',
                             '<dd class="magic info">This object has a <code>__get</code> method</dd>',
                             '<dd class="property protected magic-read"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">boolean</span> <span class="property-name" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
-                            '<dd class="property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">boolean</span> <span class="property-name" title="I\'m avail via __get()">magicProp</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>',
+                            '<dd class="property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">boolean</span> <span class="property-name" title="I\'m avail via __get()">magicProp</span></dd>',
                         )), $str);
 
                         // methods
@@ -191,7 +191,7 @@ EOD;
                         )), $str);
                     },
                     'text' => $text2,
-                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test2","(protected \u2728 magic-read) magicReadProp":"not null","(\u2728 magic) magicProp":null});',
+                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test2","(protected \u2728 magic-read) magicReadProp":"not null","(\u2728 magic) magicProp":undefined});',
                 ),
             ),
         );

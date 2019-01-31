@@ -185,8 +185,8 @@ class Wamp implements OutputInterface
             }
             if (\is_array($v)) {
                 $values[$k] = self::crateValues($v);
-            } elseif (\is_string($v)) {
-                $values[$k] = \base64_encode($v);
+            } elseif (\is_string($v) && !$this->debug->utf8->isUtf8($v)) {
+                $values[$k] = '_b64_:'.\base64_encode($v);
             }
         }
         if ($storeKeyOrder) {

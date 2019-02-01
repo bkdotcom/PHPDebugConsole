@@ -31,7 +31,6 @@ class AbstractObject
         'type' => null,
         'value' => null,
         'valueFrom' => 'value',         // 'value' | 'debugInfo' | 'debug'
-        'viaDebugInfo' => false,        // (deprecated) true if __debugInfo && __debugInfo value differs
         'visibility' => 'public',       // public, private, protected, magic, magic-read, magic-write, debug
                                         //   may also be an array (ie: ['private', 'magic-read'])
     );
@@ -456,6 +455,7 @@ class AbstractObject
             return;
         }
         if (!$abs['viaDebugInfo']) {
+            // using __debugInfo is disabled, or object does not have __debugInfo method
             return;
         }
         $obj = $abs->getSubject();
@@ -471,7 +471,6 @@ class AbstractObject
                 if ($debugInfo[$name] !== $info['value']) {
                     $properties[$name]['value'] = $debugInfo[$name];
                     $properties[$name]['valueFrom'] = 'debugInfo';
-                    $properties[$name]['viaDebugInfo'] = true;
                 }
                 unset($debugInfo[$name]);
                 continue;
@@ -489,7 +488,6 @@ class AbstractObject
                 array(
                     'value' => $value,
                     'valueFrom' => 'debugInfo',
-                    'viaDebugInfo' => true,
                     'visibility' => 'debug',    // indicates this property is exclusive to debugInfo
                 )
             );

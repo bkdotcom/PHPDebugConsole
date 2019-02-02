@@ -267,7 +267,7 @@ EOD;
             array(
                 'visibility' => 'public',
                 'value' => 'redefined in Test (public)',
-                'viaDebugInfo' => false,
+                'valueFrom' => 'value',
                 'overrides' => 'bdk\DebugTest\TestBase',
                 'originallyDeclared' => 'bdk\DebugTest\TestBase',
             ),
@@ -277,7 +277,7 @@ EOD;
             array(
                 'visibility' => 'public',
                 // 'value' => 'This property is debug only',
-                'viaDebugInfo' => false,
+                'valueFrom' => 'value',
             ),
             $abs['properties']['someArray']
         );
@@ -288,7 +288,7 @@ EOD;
                 'inheritedFrom' => 'bdk\DebugTest\TestBase',
                 'overrides' => null,
                 'originallyDeclared' => 'bdk\DebugTest\TestBase',
-                'viaDebugInfo' => false,
+                'valueFrom' => 'value',
             ),
             $abs['properties']['propProtected']
         );
@@ -299,7 +299,7 @@ EOD;
                 'inheritedFrom' => null,
                 'overrides' => 'bdk\DebugTest\TestBase',
                 'originallyDeclared' => 'bdk\DebugTest\TestBase',
-                'viaDebugInfo' => true,
+                'valueFrom' => 'debugInfo',
             ),
             $abs['properties']['propPrivate']
         );
@@ -310,14 +310,14 @@ EOD;
                 'inheritedFrom' => 'bdk\DebugTest\TestBase',
                 'overrides' => null,
                 'originallyDeclared' => null,
-                'viaDebugInfo' => false,
+                'valueFrom' => 'value',
             ),
             $abs['properties']['testBasePrivate']
         );
         $this->assertArraySubset(
             array(
                 'value' => 'This property is debug only',
-                'viaDebugInfo' => true,
+                'valueFrom' => 'debugInfo',
             ),
             $abs['properties']['debugValue']
         );
@@ -433,7 +433,7 @@ EOD;
         $this->assertEquals('debug', $props['debugValue']['visibility']);
         // propPrivate
         $this->assertStringEndsWith('(alternate value via __debugInfo)', $props['propPrivate']['value']);
-        $this->assertSame(true, $props['propPrivate']['viaDebugInfo']);
+        $this->assertSame('debugInfo', $props['propPrivate']['valueFrom']);
     }
 
     /**

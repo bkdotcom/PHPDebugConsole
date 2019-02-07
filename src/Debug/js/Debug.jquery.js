@@ -219,7 +219,7 @@
 			if ($toggle.is("[data-toggle=group]")) {
 				$groupEndValue = $target.find("> .m_groupEndValue > :last-child");
 				groupErrorIconChange($toggle);
-				if ($groupEndValue.length) {
+				if ($groupEndValue.length && $toggle.find(".group-label").last().nextAll().length == 0) {
 					$toggle.find(".group-label").last().after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML);
 				}
 			}

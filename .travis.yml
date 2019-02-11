@@ -22,10 +22,10 @@ before_script:
   - |
     echo "TRAVIS_PHP_VERSION:" $TRAVIS_PHP_VERSION;
     php -v;
-    php -r 'echo PHP_VERSION;';
+    php -r 'echo "PHP: ".PHP_VERSION."\n";';
     if [ ${TRAVIS_PHP_VERSION:0:4} == "hhvm" ]; then
       curl -sSfL -o ~/.phpenv/versions/hhvm/bin/phpunit https://phar.phpunit.de/phpunit-5.7.phar;
     elif [ $(echo "$TRAVIS_PHP_VERSION >= 7.2" | bc -l) -eq 1 ]; then
       echo using PHPUnit 7.5.2
-      curl -sSfL -o ~/.phpenv/versions/$(TRAVIS_PHP_VERSION)/bin/phpunit https://phar.phpunit.de/phpunit-7.5.2.phar;
+      curl -sSfL -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-7.5.2.phar;
     fi

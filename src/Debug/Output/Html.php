@@ -282,12 +282,6 @@ class Html extends Base
                     if (isset($meta['errorCat'])) {
                         $attribs['class'] .= ' error-'.$meta['errorCat'];
                     }
-                    if (!$sanitize) {
-                        // html error
-                        $args = \array_map(function ($arg) {
-                            return \str_replace('<a ', '<a target="phpRef" ', $arg);
-                        }, $args);
-                    }
                 }
                 if (\count($args) > 1 && \is_string($args[0])) {
                     $hasSubs = false;

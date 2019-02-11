@@ -64,6 +64,7 @@ class HtmlErrorSummary
             return '';
         }
         $lastError = $this->errorHandler->get('lastError');
+        $isHtml = $lastError['isHtml'];
         $backtrace = $lastError['backtrace'];
         $html = '<h3>Fatal Error</h3>';
         $html .= '<ul class="list-unstyled indent">';
@@ -79,8 +80,10 @@ class HtmlErrorSummary
             );
             $html .= '<li>'.$lastError['message'].'</li>';
             $html .= '<li>'.$table.'</li>';
+            if (!$isHtml) {
+                $html = \str_replace($lastError['message'], \htmlspecialchars($lastError['message']), $html);
+            }
         } else {
-            $isHtml = $lastError['isHtml'];
             $keysKeep = array('typeStr','message','file','line');
             $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
             $html .= '<li>'.$this->outputHtml->dump($lastError).'</li>';
@@ -177,7 +180,9 @@ class HtmlErrorSummary
             $header = \ucfirst($category);
             $error = $this->getErrorsInCategory($category)[0];
             $msg = $error['file']. '(line '.$error['line'].'): '
-                .\str_replace('<a ', '<a target="phpRef" ', $error['message']);
+                .($error['isHtml']
+                    ? $error['message']
+                    : \htmlspecialchars($error['message']));
         } else {
             $header = $catStrings[$category]['header'];
             $msg = \sprintf($catStrings[$category]['msg'], $countInCat);
@@ -210,7 +215,11 @@ class HtmlErrorSummary
             ), $err->getValues())) {
                 continue;
             }
-            $lis[] = '<li>'.$err['typeStr'].': '.$err['file'].' (line '.$err['line'].'): '.$err['message'].'</li>';
+            $lis[] = '<li>'.$err['typeStr'].': '.$err['file'].' (line '.$err['line'].'): '
+                .($err['isHtml']
+                    ? $err['message']
+                    : \htmlspecialchars($err['message']))
+                .'</li>';
         }
         if (!$lis) {
             return '';

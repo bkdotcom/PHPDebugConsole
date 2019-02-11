@@ -54,6 +54,12 @@ class ErrorHandler
         'warning'       => array( E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING ),
         'fatal'         => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
     );
+    protected $userErrors = array(
+        E_USER_DEPRECATED,
+        E_USER_ERROR,
+        E_USER_NOTICE,
+        E_USER_WARNING,
+    );
     protected $registered = false;
     protected $prevDisplayErrors = null;
     protected $prevErrorHandler = null;
@@ -618,12 +624,16 @@ class ErrorHandler
             'exception' => $this->uncaughtException,  // non-null if error is uncaught-exception
             'hash'          => null,
             'isFirstOccur'  => true,
-            'isHtml'        => \filter_var(\ini_get('html_errors'), FILTER_VALIDATE_BOOLEAN),
+            'isHtml'        => \filter_var(\ini_get('html_errors'), FILTER_VALIDATE_BOOLEAN)
+                && !\in_array($errType, $this->userErrors),
             'isSuppressed'  => false,
         );
         $hash = $this->errorHash($errorValues);
         $isFirstOccur = !isset($this->data['errors'][$hash]);
         // if any instance of this error was not supprssed, reflect that
+        if ($errorValues['isHtml']) {
+            $errorValues['message'] = \str_replace('<a ', '<a target="phpRef" ', $errorValues['message']);
+        }
         $isSuppressed = !$isFirstOccur && !$this->data['errors'][$hash]['isSuppressed']
             ? false
             : \error_reporting() === 0;

@@ -90,7 +90,7 @@ class ErrorEmailer implements SubscriberInterface
     {
         $this->throttleDataRead();
         $hash = $error['hash'];
-        $error['email'] = ( $error['type'] & $this->cfg['emailMask'] )
+        $error['email'] = ($error['type'] & $this->cfg['emailMask'])
             && $error['isFirstOccur']
             && $this->cfg['emailTo'];
         $error['stats'] = array(
@@ -230,7 +230,11 @@ class ErrorEmailer implements SubscriberInterface
     protected function emailErr(Event $error)
     {
         $dateTimeFmt = 'Y-m-d H:i:s (T)';
-        $errMsg     = \preg_replace('/ \[<a.*?\/a>\]/i', '', $error['message']);   // remove links from errMsg
+        $errMsg = $error['message'];
+        if ($error['isHtml']) {
+            $errMsg = \strip_tags($errMsg);
+            $errMsg = \htmlspecialchars_decode($errMsg);
+        }
         $countSince = $error['stats']['countSince'];
         $isCli = !isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv']);
         $subject = $isCli

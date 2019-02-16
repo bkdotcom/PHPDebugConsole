@@ -338,6 +338,9 @@ class ErrorHandler
             return;
         }
         $error = $event['error'] ?: \error_get_last();
+        if (!$error) {
+            return;
+        }
         if (\in_array($error['type'], $this->errCategories['fatal'])) {
             /*
                 found in wild:

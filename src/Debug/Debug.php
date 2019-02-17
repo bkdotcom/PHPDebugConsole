@@ -85,6 +85,7 @@ class Debug
             // which error types appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
                             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
+            'emailFrom' => null,    // null = use php's default (php.ini: sendmail_from)
             'emailFunc' => 'mail',  // callable
             'emailLog'  => false,   // Whether to email a debug log.  (requires 'collect' to also be true)
                                     //

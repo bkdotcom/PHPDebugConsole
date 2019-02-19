@@ -5,13 +5,13 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug;
 
-use bdk\PubSub\Event;
+use bdk\Debug\LogEntry;
 
 /**
  * Table helper methods
@@ -142,19 +142,19 @@ class MethodTable
     /**
      * Handle table() call
      *
-     * @param Event $event event object
+     * @param LogEntry $logEntry log entry instance
      *
-     * @return Event
+     * @return void
      */
-    public function onLog(Event $event)
+    public function onLog(LogEntry $logEntry)
     {
-        $args = $event['args'];
+        $args = $logEntry['args'];
         $meta = \array_merge(array(
             'caption' => null,
             'columns' => array(),
             'sortable' => true,
             'totalCols' => array(),
-        ), $event['meta']);
+        ), $logEntry['meta']);
         $argCount = \count($args);
         $data = null;
         for ($i = 0; $i < $argCount; $i++) {
@@ -173,12 +173,10 @@ class MethodTable
             }
             unset($args[$i]);
         }
-        $event->setValues(array(
-            'method' => $event['method'],
+        $logEntry->setValues(array(
             'args' => array($data),
             'meta' => $meta,
         ));
-        return $event;
     }
 
     /**

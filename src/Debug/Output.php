@@ -5,8 +5,8 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug;
@@ -62,14 +62,6 @@ class Output implements SubscriberInterface
      */
     public function __get($prop)
     {
-        if (\strpos($prop, 'output') === 0) {
-            $this->debug->errorHandler->setErrorCaller();
-            \trigger_error('output->'.$prop.' is deprecated, use output->'.\lcfirst(\substr($prop, 6)).' instead', E_USER_DEPRECATED);
-            $prop = \lcfirst(\substr($prop, 6));
-            if ($this->{$prop}) {
-                return $this->{$prop};
-            }
-        }
         $classname = __NAMESPACE__.'\\Output\\'.\ucfirst($prop);
         if (\class_exists($classname)) {
             $this->{$prop} = new $classname($this->debug);
@@ -202,13 +194,18 @@ class Output implements SubscriberInterface
             foreach ($this->data['groupStacks'][$priority] as $i => $info) {
                 if ($info['collect']) {
                     unset($this->data['groupStacks'][$priority][$i]);
-                    $meta = array(
-                        'channel' => $info['channel'],
+                    $logEntry = new LogEntry(
+                        $this->debug,
+                        'groupEnd',
+                        array(),
+                        array(
+                            'channel' => $info['channel'],
+                        )
                     );
                     if ($priority === 'main') {
-                        $this->data['log'][] = array('groupEnd', array(), $meta);
+                        $this->data['log'][] = $logEntry;
                     } else {
-                        $this->data['logSummary'][$priority][] = array('groupEnd', array(), $meta);
+                        $this->data['logSummary'][$priority][] = $logEntry;
                     }
                 }
             }
@@ -250,12 +247,12 @@ class Output implements SubscriberInterface
         $groupStackCount = 0;
         $removed = false;
         for ($i = 0, $count = \count($log); $i < $count; $i++) {
-            $method = $log[$i][0];
+            $logEntry = $log[$i];
+            $method = $logEntry['method'];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $entry = $log[$i];
                 $groupStack[] = array(
                     'i' => $i,
-                    'meta' => !empty($entry[2]) ? $entry[2] : array(),
+                    'meta' => $logEntry['meta'],
                     'hasEntries' => false,
                 );
                 $groupStackCount ++;
@@ -336,14 +333,14 @@ class Output implements SubscriberInterface
     {
         $groupStack = array();
         for ($i = 0, $count = \count($log); $i < $count; $i++) {
-            $method = $log[$i][0];
+            $method = $log[$i]['method'];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $groupStack[] = $i;
             } elseif ($method == 'groupEnd') {
                 \array_pop($groupStack);
             } elseif (\in_array($method, array('error', 'warn'))) {
                 foreach ($groupStack as $i2) {
-                    $log[$i2][0] = 'group';
+                    $log[$i2]['method'] = 'group';
                 }
             }
         }

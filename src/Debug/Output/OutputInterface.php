@@ -5,12 +5,13 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.1
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\LogEntry;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -31,11 +32,9 @@ interface OutputInterface extends SubscriberInterface
     /**
      * Process log entry without publishing `debug.outputLogEntry` event
      *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return mixed
      */
-    public function processLogEntry($method, $args = array(), $meta = array());
+    public function processLogEntry(LogEntry $logEntry);
 }

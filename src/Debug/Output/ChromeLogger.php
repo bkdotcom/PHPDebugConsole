@@ -5,16 +5,17 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.1.1
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  *
  * @see https://craig.is/writing/chrome-logger/techspecs
  */
 
 namespace bdk\Debug\Output;
 
-use bdk\PubSub\Event;
 use bdk\Debug;
+use bdk\Debug\LogEntry;
+use bdk\PubSub\Event;
 
 /**
  * Output log as via ChromeLogger headers
@@ -96,14 +97,15 @@ class ChromeLogger extends Base
      *
      * Transmogrify log entry to chromelogger format
      *
-     * @param string $method method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return void
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    public function processLogEntry(LogEntry $logEntry)
     {
+        $method = $logEntry['method'];
+        $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
         if ($method === 'alert') {
             list($method, $args) = $this->methodAlert($args, $meta);
         } elseif ($method == 'assert') {

@@ -5,14 +5,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\PubSub\Event;
+use bdk\Debug\LogEntry;
 
 /**
  * Clear method
@@ -41,18 +41,18 @@ class MethodClear
     /**
      * Handle clear() call
      *
-     * @param Event $event event object
+     * @param LogEntry $logEntry log entry instance
      *
-     * @return Event
+     * @return void
      */
-    public function onLog(Event $event)
+    public function onLog(LogEntry $logEntry)
     {
         $this->channelName = $this->debug->parentInstance
-            ? $event['meta']['channel'] // just clear this specific channel
+            ? $logEntry['meta']['channel'] // just clear this specific channel
             : null;
         $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
-        $bitmask = $event['meta']['bitmask'];
+        $bitmask = $logEntry['meta']['bitmask'];
         $callerInfo = $this->debug->utilities->getCallerInfo();
         $cleared = array();
         $cleared[] = $this->clearAlerts($bitmask);
@@ -63,7 +63,7 @@ class MethodClear
             $cleared = array('everything');
         }
         $args = $this->getLogArgs($cleared);
-        $event->setValues(array(
+        $logEntry->setValues(array(
             'method' => 'clear',
             'args' => $args,
             'meta' =>  \array_merge(array(
@@ -78,11 +78,10 @@ class MethodClear
                     'summaryErrors' => (bool) ($bitmask & Debug::CLEAR_SUMMARY_ERRORS),
                     'silent' =>  (bool) ($bitmask & Debug::CLEAR_SILENT),
                 ),
-            ), $event['meta']),
+            ), $logEntry['meta']),
             'log' => $args && !($bitmask & Debug::CLEAR_SILENT),
             'publish' => (bool) $args,
         ));
-        return $event;
     }
 
     /**

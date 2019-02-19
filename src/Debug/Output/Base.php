@@ -5,13 +5,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
+use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -112,13 +113,11 @@ abstract class Base implements OutputInterface
     /**
      * Process log entry without publishing `debug.outputLogEntry` event
      *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return mixed
      */
-    abstract public function processLogEntry($method, $args = array(), $meta = array());
+    abstract public function processLogEntry(LogEntry $logEntry);
 
     /**
      * Test channel for inclussion
@@ -238,7 +237,7 @@ abstract class Base implements OutputInterface
     /**
      * Dump object
      *
-     * @param array $abs  object abstraction
+     * @param array $abs object abstraction
      *
      * @return mixed
      */
@@ -347,7 +346,10 @@ abstract class Base implements OutputInterface
     }
 
     /**
-     * Build table rows
+     * Normalize table data
+     *
+     * Ensures each row has all key/values and that they're in the same order
+     * if any row is an object, each row will get a ___class_name value
      *
      * This builds table rows usable by ChromeLogger, Text, and <script>
      *
@@ -418,10 +420,10 @@ abstract class Base implements OutputInterface
     protected function processAlerts()
     {
         $str = '';
-        foreach ($this->data['alerts'] as $entry) {
-            $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
+        foreach ($this->data['alerts'] as $logEntry) {
+            $channel = $logEntry->getMeta('channel');
             if ($this->channelTest($channel)) {
-                $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+                $str .= $this->processLogEntryWEvent($logEntry);
             }
         }
         return $str;
@@ -435,10 +437,10 @@ abstract class Base implements OutputInterface
     protected function processLog()
     {
         $str = '';
-        foreach ($this->data['log'] as $entry) {
-            $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
+        foreach ($this->data['log'] as $logEntry) {
+            $channel = $logEntry->getMeta('channel');
             if ($this->channelTest($channel)) {
-                $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+                $str .= $this->processLogEntryWEvent($logEntry);
             }
         }
         return $str;
@@ -449,32 +451,22 @@ abstract class Base implements OutputInterface
      * Return event['return'] not not empty
      * Otherwise, propagation not stopped, return result of processLogEntry()
      *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return mixed
      */
-    protected function processLogEntryWEvent($method, $args = array(), $meta = array())
+    protected function processLogEntryWEvent(LogEntry $logEntry)
     {
-        if (!isset($meta['channel'])) {
-            $meta['channel'] = $this->channelNameRoot;
+        $logEntry = clone $logEntry;
+        if (!isset($logEntry['meta']['channel'])) {
+            $logEntry->setMeta('channel', $this->channelNameRoot);
         }
-        $event = $this->debug->eventManager->publish(
-            'debug.outputLogEntry',
-            $this,
-            array(
-                'method' => $method,
-                'args' => $args,
-                'meta' => $meta,
-                'return' => null,
-            )
-        );
-        if ($event['return']) {
-            return $event['return'];
+        $this->debug->eventManager->publish('debug.outputLogEntry', $logEntry);
+        if ($logEntry['return']) {
+            return $logEntry['return'];
         }
-        if (!$event->isPropagationStopped()) {
-            return $this->processLogEntry($event['method'], $event['args'], $event['meta']);
+        if (!$logEntry->isPropagationStopped()) {
+            return $this->processLogEntry($logEntry);
         }
     }
 
@@ -570,10 +562,10 @@ abstract class Base implements OutputInterface
             \krsort($summaryData);
             $summaryData = \call_user_func_array('array_merge', $summaryData);
         }
-        foreach ($summaryData as $entry) {
-            $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
+        foreach ($summaryData as $logEntry) {
+            $channel = $logEntry->getMeta('channel');
             if ($this->channelTest($channel)) {
-                $str .= $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+                $str .= $this->processLogEntryWEvent($logEntry);
             }
         }
         return $str;

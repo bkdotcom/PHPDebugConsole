@@ -1,5 +1,6 @@
 <?php
 
+use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\CssXpath\DOMTestCase;
 
@@ -214,8 +215,10 @@ class DebugTestFramework extends DOMTestCase
                 if (\is_callable($outputExpect)) {
                     \call_user_func($outputExpect, $logEntryTemp);
                 } elseif (is_string($outputExpect)) {
+                    $logEntryTemp = $this->logEntryToArray($logEntryTemp);
                     $this->assertStringMatchesFormat($outputExpect, json_encode($logEntryTemp), 'log entry does not match format');
                 } else {
+                    $logEntryTemp = $this->logEntryToArray($logEntryTemp);
                     if (isset($outputExpect[2]['file']) && $outputExpect[2]['file'] === '*') {
                         unset($outputExpect[2]['file']);
                         unset($logEntryTemp[2]['file']);
@@ -292,7 +295,7 @@ class DebugTestFramework extends DOMTestCase
                     $refMethod->setAccessible(true);
                     $this->reflectionMethods[$test] = $refMethod;
                 }
-                $output = $this->reflectionMethods[$test]->invoke($outputObj, $logEntry[0], $logEntry[1], $logEntry[2]);
+                $output = $this->reflectionMethods[$test]->invoke($outputObj, $logEntry);
             }
             if (\is_callable($outputExpect)) {
                 $outputExpect($output);
@@ -349,5 +352,14 @@ class DebugTestFramework extends DOMTestCase
             // $debug->setData($backupData);
         }
         $debug->setCfg('outputAs', $backupOutputAs);
+    }
+
+    protected function logEntryToArray(LogEntry $logEntry)
+    {
+        return array(
+            $logEntry['method'],
+            $logEntry['args'],
+            $logEntry['meta'],
+        );
     }
 }

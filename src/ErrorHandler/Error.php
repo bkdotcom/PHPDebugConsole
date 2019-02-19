@@ -3,7 +3,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v3.0
  */
 
@@ -52,9 +52,7 @@ class Error extends Event
     );
 
     /**
-     * Create error object
-     *
-     * Error object is simply an event object
+     * Constructor
      *
      * @param ErrorHandler $errHandler ErrorHandler instance
      * @param integer      $errType    the level of the error
@@ -62,12 +60,11 @@ class Error extends Event
      * @param string       $file       filepath the error was raised in
      * @param string       $line       the line the error was raised in
      * @param array        $vars       active symbol table at point error occured
-     *
-     * @return Event
      */
-    public static function create($errHandler, $errType, $errMsg, $file, $line, $vars = array())
+    public function __construct(ErrorHandler $errHandler, $errType, $errMsg, $file, $line, $vars = array())
     {
-        $errorValues = array(
+        $this->subject = $errHandler;
+        $values = array(
             'type'      => $errType,                    // int
             'typeStr'   => self::$errTypes[$errType],   // friendly string version of 'type'
             'category'  => self::getCategory($errType),
@@ -85,31 +82,30 @@ class Error extends Event
                 && !\in_array($errType, static::$userErrors),
             'isSuppressed'  => false,
         );
-        $hash = self::errorHash($errorValues);
+        $hash = self::errorHash($values);
         $prevOccurance = $errHandler->get('error', $hash);
         // if any instance of this error was not supprssed, reflect that
         $isSuppressed = $prevOccurance && !$prevOccurance['isSuppressed']
             ? false
             : \error_reporting() === 0;
-        if ($errorValues['isHtml']) {
-            $errorValues['message'] = \str_replace('<a ', '<a target="phpRef" ', $errorValues['message']);
+        if ($values['isHtml']) {
+            $values['message'] = \str_replace('<a ', '<a target="phpRef" ', $values['message']);
         }
         $errorCaller = $errHandler->get('errorCaller');
         if ($errorCaller) {
-            $errorValues['file'] = $errorCaller['file'];
-            $errorValues['line'] = $errorCaller['line'];
+            $values['file'] = $errorCaller['file'];
+            $values['line'] = $errorCaller['line'];
         }
-        if (\in_array($errType, array(E_ERROR, E_USER_ERROR))) {
-            // will return empty unless xdebug extension installed/enabled
-            $errorValues['backtrace'] = $errHandler->backtrace($errorValues);
-        }
-        $errorValues = \array_merge($errorValues, array(
+        $this->values = \array_merge($values, array(
             'continueToNormal' => !$isSuppressed && !$prevOccurance,
             'hash' => $hash,
             'isFirstOccur' => !$prevOccurance,
             'isSuppressed' => $isSuppressed,
         ));
-        return new static($errHandler, $errorValues);
+        if (\in_array($errType, array(E_ERROR, E_USER_ERROR))) {
+            // will return empty unless xdebug extension installed/enabled
+            $this->values['backtrace'] = $errHandler->backtrace($this);
+        }
     }
 
     /**

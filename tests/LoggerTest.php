@@ -20,7 +20,7 @@ class LoggerTest extends DebugTestFramework
             'error',
             array('Emergency broadcast system'),
             $meta,
-        ), $this->debug->getData('log/0'));
+        ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 
     public function testCritical()
@@ -35,7 +35,7 @@ class LoggerTest extends DebugTestFramework
             'error',
             array('Critical test'),
             $metaExpect,
-        ), $this->debug->getData('log/__end__'));
+        ), $this->logEntryToArray($this->debug->getData('log/__end__')));
 
         $this->debug->logger->critical('Make an exception', array(
             'exception' => new Exception(),
@@ -46,19 +46,19 @@ class LoggerTest extends DebugTestFramework
             'file' => 'file',
             'line' => __LINE__ - 6 + $this->lineOffset, // line of Exception
         );
-        $metaActual = $this->debug->getData('log/__end__/2');
-        $this->assertSame('error', $this->debug->getData('log/__end__/0'));
-        $this->assertSame('Make an exception', $this->debug->getData('log/__end__/1/0'));
+        $metaActual = $this->debug->getData('log/__end__/meta');
+        $this->assertSame('error', $this->debug->getData('log/__end__')['method']);
+        $this->assertSame('Make an exception', $this->debug->getData('log/__end__/args/0'));
         // should just contain exception & foo...  file gets moved to meta
-        $this->assertCount(2, $this->debug->getData('log/__end__/1/1'));
+        $this->assertCount(2, $this->debug->getData('log/__end__/args/1'));
         $this->assertArraySubset(array(
             'foo'=>'bar',
-        ), $this->debug->getData('log/__end__/1/1'));
+        ), $this->debug->getData('log/__end__/args/1'));
         $this->assertArraySubset(array(
             'className'=>'Exception',
             'debug' => \bdk\Debug\Abstracter::ABSTRACTION,
             'type' => 'object',
-        ), $this->debug->getData('log/__end__/1/1/exception'));
+        ), $this->debug->getData('log/__end__/args/1/exception'));
         $this->assertArraySubset($metaSubset, $metaActual);
         $backtrace = $this->debug->getData('log/__end__/2/backtrace');
         $this->assertInternalType('array', $backtrace);
@@ -76,7 +76,7 @@ class LoggerTest extends DebugTestFramework
             'error',
             array('Error test'),
             $meta,
-        ), $this->debug->getData('log/0'));
+        ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 
     public function testWarning()
@@ -91,7 +91,7 @@ class LoggerTest extends DebugTestFramework
             'warn',
             array('You\'ve been warned'),
             $meta,
-        ), $this->debug->getData('log/0'));
+        ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 
     public function testNotice()
@@ -106,7 +106,7 @@ class LoggerTest extends DebugTestFramework
             'warn',
             array('Final Notice'),
             $meta,
-        ), $this->debug->getData('log/0'));
+        ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 
     public function testAlert()
@@ -119,7 +119,7 @@ class LoggerTest extends DebugTestFramework
                 'class' => 'danger',
                 'dismissible' => false,
             ),
-        ), $this->debug->getData('alerts/0'));
+        ), $this->logEntryToArray($this->debug->getData('alerts/0')));
     }
 
     public function testInfo()
@@ -129,7 +129,7 @@ class LoggerTest extends DebugTestFramework
             'info',
             array('For your information'),
             array(),
-        ), $this->debug->getData('log/0'));
+        ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 
     public function testDebug()
@@ -142,6 +142,6 @@ class LoggerTest extends DebugTestFramework
                 array('foo'=>'bar'),
             ),
             array(),
-        ), $this->debug->getData('log/0'));
+        ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 }

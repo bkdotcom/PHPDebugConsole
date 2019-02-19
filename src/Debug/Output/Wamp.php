@@ -8,13 +8,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
+use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\WampPublisher;
 
@@ -111,13 +112,13 @@ class Wamp implements OutputInterface
     /**
      * debug.log event subscriber
      *
-     * @param Event $event event object
+     * @param LogEntry $logEntry logEntry instance
      *
      * @return void
      */
-    public function onLog(Event $event)
+    public function onLog(LogEntry $logEntry)
     {
-        $this->processLogEntryWEvent($event['method'], $event['args'], $event['meta']);
+        $this->processLogEntryWEvent($logEntry);
     }
 
     /**
@@ -128,33 +129,36 @@ class Wamp implements OutputInterface
     public function onShutdown()
     {
         // publish a "we're done" message
-        $this->processLogEntry('endOutput', array(
-            'responseCode' => \http_response_code(),
+        $this->processLogEntry(new LogEntry(
+            $this->debug,
+            'endOutput',
+            array(
+                'responseCode' => \http_response_code(),
+            )
         ));
     }
 
     /**
      * Publish WAMP message to topic
      *
-     * @param string $method debug method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return void
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    public function processLogEntry(LogEntry $logEntry)
     {
+        $args = $logEntry['args'];
         $meta = \array_merge(array(
             'format' => 'raw',
             'requestId' => $this->requestId,
-        ), $meta);
+        ), $logEntry['meta']);
         if ($meta['format'] == 'raw') {
             $args = $this->crateValues($args);
         }
         if (!empty($meta['backtrace'])) {
             $meta['backtrace'] = $this->crateValues($meta['backtrace']);
         }
-        $this->wamp->publish($this->topic, array($method, $args, $meta));
+        $this->wamp->publish($this->topic, array($logEntry['method'], $args, $meta));
     }
 
     /**
@@ -204,54 +208,47 @@ class Wamp implements OutputInterface
     {
         $data = $this->debug->getData();
         $this->channelName = $this->debug->getCfg('channel');
-        foreach ($data['alerts'] as $entry) {
-            $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+        foreach ($data['alerts'] as $logEntry) {
+            $this->processLogEntryWEvent($logEntry);
         }
         foreach ($data['logSummary'] as $priority => $entries) {
-            $this->processLogEntryWEvent(
+            $this->processLogEntryWEvent(new LogEntry(
+                $this->debug,
                 'groupSummary',
                 array(),
                 array('priority'=>$priority)
-            );
-            foreach ($entries as $entry) {
-                $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+            ));
+            foreach ($entries as $logEntry) {
+                $this->processLogEntryWEvent($logEntry);
             }
-            $this->processLogEntryWEvent(
+            $this->processLogEntryWEvent(new LogEntry(
+                $this->debug,
                 'groupEnd',
                 array(),
                 array('closesSummary'=>true)
-            );
+            ));
         }
-        foreach ($data['log'] as $entry) {
-            $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
+        foreach ($data['log'] as $logEntry) {
+            $this->processLogEntryWEvent($logEntry);
         }
     }
 
     /**
      * Process/publish a log entry
      *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return void
      */
-    protected function processLogEntryWEvent($method, $args = array(), $meta = array())
+    protected function processLogEntryWEvent(LogEntry $logEntry)
     {
-        if (!isset($meta['channel'])) {
-            $meta['channel'] = $this->channelName;
+        $logEntry = clone $logEntry;
+        if (!isset($logEntry['meta']['channel'])) {
+            $logEntry->setMeta('channel', $this->channelName);
         }
-        $event = $this->debug->eventManager->publish(
-            'debug.outputLogEntry',
-            $this,
-            array(
-                'method' => $method,
-                'args' => $args,
-                'meta' => $meta,
-            )
-        );
-        if (!$event->isPropagationStopped()) {
-            $this->processLogEntry($event['method'], $event['args'], $event['meta']);
+        $this->debug->eventManager->publish('debug.outputLogEntry', $logEntry);
+        if (!$logEntry->isPropagationStopped()) {
+            $this->processLogEntry($logEntry);
         }
     }
 
@@ -284,6 +281,11 @@ class Wamp implements OutputInterface
         if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
             $metaVals['REQUEST_URI'] = '$: '. \implode(' ', $_SERVER['argv']);
         }
-        $this->processLogEntry('meta', $metaVals);
+        $this->processLogEntry(new LogEntry(
+            $this->debug,
+            'meta',
+            array(),
+            $metaVals
+        ));
     }
 }

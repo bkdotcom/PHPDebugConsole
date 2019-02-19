@@ -657,7 +657,9 @@ class MethodTest extends DebugTestFramework
             array('count', array('count',3), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
             array('log', array('count_inc test', 3), array()),
             array('count', array('count_inc test',3), array()),
-        ), $this->debug->getData('log'));
+        ), array_map(function ($logEntry) {
+            return $this->logEntryToArray($logEntry);
+        }, $this->debug->getData('log')));
 
         // test label provided output
         $this->testMethod(
@@ -1123,7 +1125,9 @@ class MethodTest extends DebugTestFramework
         $this->assertSame(array(
             array('group', array('a','b','c'), array()),
             array('groupEnd', array(), array()),
-        ), $log);
+        ), array_map(function ($logEntry) {
+            return $this->logEntryToArray($logEntry);
+        }, $log));
 
         // reset log
         $this->debug->setData('log', array());
@@ -1314,12 +1318,16 @@ EOD;
             array('groupEnd',array(), array()),
             array('log',array('I\'m still in the summary!'), array()),
             array('log',array('I\'m staying in the summary!'), array()),
-        ), $logSummary);
+        ), array_map(function ($logEntry) {
+            return $this->logEntryToArray($logEntry);
+        }, $logSummary));
         $log = $this->debug->getData('log');
         $this->assertSame(array(
             array('log',array('I\'m not in the summary'), array()),
             array('log',array('the end'), array()),
-        ), $log);
+        ), array_map(function ($logEntry) {
+            return $this->logEntryToArray($logEntry);
+        }, $log));
     }
 
     /**
@@ -1336,9 +1344,9 @@ EOD;
         $this->debug->groupCollapsed('level2 (test)');  // 5
         $this->debug->groupUncollapse();
         $log = $this->debug->getData('log');
-        $this->assertSame('group', $log[0][0]); // groupCollapsed converted to group
-        $this->assertSame('groupCollapsed', $log[1][0]);
-        $this->assertSame('group', $log[5][0]); // groupCollapsed converted to group
+        $this->assertSame('group', $log[0]['method']); // groupCollapsed converted to group
+        $this->assertSame('groupCollapsed', $log[1]['method']);
+        $this->assertSame('group', $log[5]['method']); // groupCollapsed converted to group
         $this->assertCount(6, $log);    // assert that entry not added
     }
 
@@ -1355,12 +1363,12 @@ EOD;
             array('a string', array(), new stdClass(), $resource),
             array(
                 'entry' => function ($logEntry) {
-                    $this->assertSame('info', $logEntry[0]);
-                    $this->assertSame('a string', $logEntry[1][0]);
+                    $this->assertSame('info', $logEntry['method']);
+                    $this->assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
                     // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-                    $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-                    $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+                    $isObject = $this->checkAbstractionType($logEntry['args'][2], 'object');
+                    $isResource = $this->checkAbstractionType($logEntry['args'][3], 'resource');
                     // $this->assertTrue($isArray);
                     $this->assertTrue($isObject);
                     $this->assertTrue($isResource);
@@ -1413,12 +1421,12 @@ EOD;
             array('a string', array(), new stdClass(), $resource),
             array(
                 'entry' => function ($logEntry) {
-                    $this->assertSame('log', $logEntry[0]);
-                    $this->assertSame('a string', $logEntry[1][0]);
+                    $this->assertSame('log', $logEntry['method']);
+                    $this->assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
                     // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-                    $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-                    $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+                    $isObject = $this->checkAbstractionType($logEntry['args'][2], 'object');
+                    $isResource = $this->checkAbstractionType($logEntry['args'][3], 'resource');
                     // $this->assertTrue($isArray);
                     $this->assertTrue($isObject);
                     $this->assertTrue($isResource);
@@ -1602,6 +1610,7 @@ EOD;
             ),
             array(
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
                         array("blahmy labelblah%fblah"),
@@ -1655,6 +1664,7 @@ EOD;
                     $this->assertCount(1, $this->debug->getData('timers/stack'));
                 },
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
                         array('time: %f sec'),
@@ -1727,6 +1737,7 @@ EOD;
             ),
             array(
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
                         array("blahmy labelblah%fblah"),
@@ -1771,6 +1782,7 @@ EOD;
             array(),
             array(
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
                         array('time: ', '%f sec'),
@@ -1798,6 +1810,7 @@ EOD;
             array('my label', array('foo'=>'bar')),
             array(
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
                         array('my label: ', '%f sec', array('foo'=>'bar')),
@@ -1831,11 +1844,12 @@ EOD;
             array('bogus'),
             array(
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
                         array('Timer \'bogus\' does not exist'),
                         array(),
-                ));
+                    ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
                 'chromeLogger' => json_encode(array(
@@ -1849,8 +1863,6 @@ EOD;
                 'text' => '⏱ Timer \'bogus\' does not exist',
             )
         );
-
-
     }
 
     /**
@@ -1874,7 +1886,7 @@ EOD;
             array(),
             array(
                 'custom' => function ($logEntry) use ($values) {
-                    $trace = $logEntry[1][0];
+                    $trace = $logEntry['args'][0];
                     $this->assertSame($values['file0'], $trace[0]['file']);
                     $this->assertSame($values['line0'], $trace[0]['line']);
                     $this->assertInternalType('integer', $trace[0]['line']);
@@ -1882,7 +1894,7 @@ EOD;
                     $this->assertSame($values['function1'], $trace[1]['function']);
                 },
                 'chromeLogger' => function ($logEntry) {
-                    $trace = $this->debug->getData('log/0/1/0');
+                    $trace = $this->debug->getData('log/0/args');
                     // reorder keys
                     $order = array('function','file','line');
                     foreach ($trace as $i => $row) {
@@ -1897,7 +1909,7 @@ EOD;
                     $this->assertSame('table', $logEntry[2]);
                 },
                 'firephp' => function ($logEntry) {
-                    $trace = $this->debug->getData('log/0/1/0');
+                    $trace = $this->debug->getData('log/0/args/0');
                     preg_match('#\|(.+)\|#', $logEntry, $matches);
                     $logEntry = json_decode($matches[1], true);
                     list($logEntryMeta, $logEntryTable) = $logEntry;
@@ -1925,7 +1937,7 @@ EOD;
                 },
                 'html' => function ($logEntry) {
                     // $this->assertSame('', $logEntry);
-                    $trace = $this->debug->getData('log/0/1/0');
+                    $trace = $this->debug->getData('log/0/args/0');
                     $this->assertContains('<caption>trace</caption>'."\n"
                         .'<thead>'."\n"
                         .'<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>'."\n"
@@ -1948,7 +1960,7 @@ EOD;
                     }
                 },
                 'script' => function ($logEntry) {
-                    $trace = $this->debug->getData('log/0/1/0');
+                    $trace = $this->debug->getData('log/0/args/0');
                     // reorder keys
                     $order = array('function','file','line');
                     foreach ($trace as $i => $row) {
@@ -1962,7 +1974,7 @@ EOD;
                     $this->assertSame(json_encode($trace), $matches[1]);
                 },
                 'text' => function ($logEntry) use ($values) {
-                    $trace = $this->debug->getData('log/0/1/0');
+                    $trace = $this->debug->getData('log/0/args/0');
                     $expect = 'trace = '.$this->debug->output->text->dump($trace);
                     $this->assertNotEmpty($trace);
                     $this->assertSame($expect, trim($logEntry));
@@ -1991,18 +2003,18 @@ EOD;
             array('a string', array(), new stdClass(), $resource),
             array(
                 'entry' => function ($logEntry) {
-                    $this->assertSame('warn', $logEntry[0]);
-                    $this->assertSame('a string', $logEntry[1][0]);
+                    $this->assertSame('warn', $logEntry['method']);
+                    $this->assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
                     // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-                    $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-                    $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+                    $isObject = $this->checkAbstractionType($logEntry['args'][2], 'object');
+                    $isResource = $this->checkAbstractionType($logEntry['args'][3], 'resource');
                     // $this->assertTrue($isArray);
                     $this->assertTrue($isObject);
                     $this->assertTrue($isResource);
 
-                    $this->assertArrayHasKey('file', $logEntry[2]);
-                    $this->assertArrayHasKey('line', $logEntry[2]);
+                    $this->assertArrayHasKey('file', $logEntry['meta']);
+                    $this->assertArrayHasKey('line', $logEntry['meta']);
                 },
                 'chromeLogger' => json_encode(array(
                     array(

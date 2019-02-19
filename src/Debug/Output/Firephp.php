@@ -5,12 +5,13 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.1.1
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
 
@@ -54,11 +55,18 @@ class Firephp extends Base
         $heading = isset($_SERVER['REQUEST_METHOD'])
             ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
             : '$: '. \implode(' ', $_SERVER['argv']);
-        $this->processLogEntryWEvent('groupCollapsed', array('PHP: '.$heading));
+        $this->processLogEntryWEvent(new LogEntry(
+            $this->debug,
+            'groupCollapsed',
+            array('PHP: '.$heading)
+        ));
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $this->processLogEntryWEvent('groupEnd');
+        $this->processLogEntryWEvent(new LogEntry(
+            $this->debug,
+            'groupEnd'
+        ));
         $event['headers'][] = array('X-Wf-1-Index', $this->messageIndex);
         $this->data = array();
         return;
@@ -67,14 +75,15 @@ class Firephp extends Base
     /**
      * Output a log entry to Firephp
      *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return void
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    public function processLogEntry(LogEntry $logEntry)
     {
+        $method = $logEntry['method'];
+        $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
         $value = null;
         $firePhpMeta = $this->getMeta($method, $meta);
         if ($method == 'alert') {

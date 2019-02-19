@@ -5,13 +5,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
+use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
 
@@ -212,15 +213,16 @@ class Html extends Base
     /**
      * Return a log entry as HTML
      *
-     * @param string $method method
-     * @param array  $args   args
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return string|void
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    public function processLogEntry(LogEntry $logEntry)
     {
         $str = '';
+        $method = $logEntry['method'];
+        $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
         if (!\in_array($meta['channel'], $this->channels)) {
             $this->channels[] = $meta['channel'];
         }
@@ -761,9 +763,12 @@ class Html extends Base
     {
         $errorSummary = $this->errorSummary->build($this->debug->internal->errorStats());
         if ($errorSummary) {
-            \array_unshift($this->data['alerts'], array(
+            \array_unshift($this->data['alerts'], new LogEntry(
+                $this->debug,
                 'alert',
-                array($errorSummary),
+                array(
+                    $errorSummary
+                ),
                 array(
                     'class' => 'danger error-summary',
                     'dismissible' => false,

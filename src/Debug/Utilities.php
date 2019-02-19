@@ -132,7 +132,8 @@ class Utilities
         $path = \array_reverse($path);
         while ($path) {
             $key = \array_pop($path);
-            if (!\is_array($array)) {
+            $arrayAccess = \is_array($array) || $array instanceof \ArrayAccess;
+            if (!$arrayAccess) {
                 return null;
             } elseif (isset($array[$key])) {
                 $array = $array[$key];

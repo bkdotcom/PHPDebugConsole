@@ -3,8 +3,8 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk;
@@ -80,7 +80,7 @@ class ErrorHandler
      *
      * To get trace from within shutdown function utilizes xdebug_get_function_stack() if available
      *
-     * @param array|Event|Exception $error (optional) error details if getting error backtrace
+     * @param Error|Exception $error (optional) error details if getting error backtrace
      *
      * @return array
      */
@@ -90,8 +90,7 @@ class ErrorHandler
         $isFatalError = false;
         if ($error instanceof \Exception) {
             $exception = $error;
-        } elseif ($error) {
-            // array or Event
+        } elseif ($error instanceof Error) {
             $exception = $error['exception'];
             $isFatalError = $error->isFatal();
         }
@@ -205,7 +204,7 @@ class ErrorHandler
      */
     public function handleError($errType, $errMsg, $file, $line, $vars = array())
     {
-        $error = Error::create($this, $errType, $errMsg, $file, $line, $vars);
+        $error = new Error($this, $errType, $errMsg, $file, $line, $vars);
         if (!$this->isErrTypeHandled($errType)) {
             // not handled
             //   if cfg['errorReporting'] == 'system', error could simply be suppressed
@@ -283,7 +282,7 @@ class ErrorHandler
             return;
         }
         if (\is_array($error)) {
-            $error = Error::create($this, $error['type'], $error['message'], $error['file'], $error['line']);
+            $error = new Error($this, $error['type'], $error['message'], $error['file'], $error['line']);
         }
         if ($error->isFatal()) {
             /*
@@ -497,7 +496,7 @@ class ErrorHandler
      */
     protected function continueToPrev(Error $error)
     {
-        if ($this->prevErrorHandler) {
+        if (!$this->prevErrorHandler) {
             return false;
         }
         return \call_user_func(

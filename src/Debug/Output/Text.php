@@ -5,12 +5,13 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
 /**
@@ -44,14 +45,15 @@ class Text extends Base
     /**
      * Return log entry as text
      *
-     * @param string $method method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return string
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    public function processLogEntry(LogEntry $logEntry)
     {
+        $method = $logEntry['method'];
+        $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
         $prefixes = array(
             'error' => '⦻ ',
             'info' => 'ℹ ',

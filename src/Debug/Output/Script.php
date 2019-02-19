@@ -5,12 +5,13 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.1.1
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
 /**
@@ -58,17 +59,24 @@ class Script extends Base
         }
         $str = '';
         $str .= '<script type="text/javascript">'."\n";
-        $str .= $this->processLogEntryWEvent('groupCollapsed', array(
-            'PHP',
-            (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])
-                ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
-                : ''),
-            $errorStr,
+        $str .= $this->processLogEntryWEvent(new LogEntry(
+            $this->debug,
+            'groupCollapsed',
+            array(
+                'PHP',
+                (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])
+                    ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
+                    : ''),
+                $errorStr,
+            )
         ));
         $str .= $this->processAlerts();
         $str .= $this->processSummary();
         $str .= $this->processLog();
-        $str .= $this->processLogEntryWEvent('groupEnd');
+        $str .= $this->processLogEntryWEvent(new LogEntry(
+            $this->debug,
+            'groupEnd'
+        ));
         $str .= '</script>'."\n";
         $this->data = array();
         $event['return'] .= $str;
@@ -77,14 +85,15 @@ class Script extends Base
     /**
      * Return log entry as javascript console.xxxx
      *
-     * @param string $method method
-     * @param array  $args   arguments
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry log entry instance
      *
      * @return string
      */
-    public function processLogEntry($method, $args = array(), $meta = array())
+    public function processLogEntry(LogEntry $logEntry)
     {
+        $method = $logEntry['method'];
+        $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
         if ($method == 'alert') {
             list($method, $args) = $this->methodAlert($args, $meta);
         } elseif ($method == 'assert') {

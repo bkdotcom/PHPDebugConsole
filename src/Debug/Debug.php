@@ -5,8 +5,8 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
- * @version   v2.3
+ * @copyright 2014-2019 Brad Kent
+ * @version   v3.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -15,6 +15,7 @@
 namespace bdk;
 
 use bdk\Debug\FileStreamWrapper;
+use bdk\Debug\LogEntry;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\ErrorEmailer;
 use bdk\PubSub\SubscriberInterface;
@@ -193,11 +194,12 @@ class Debug
      */
     public function __call($methodName, $args)
     {
-        return $this->appendLog(
+        return $this->appendLog(new LogEntry(
+            $this,
             $methodName,
             $args,
             array('isCustomMethod' => true)
-        );
+        ));
     }
 
     /**
@@ -276,12 +278,13 @@ class Debug
      */
     public function alert($message, $class = 'danger', $dismissible = false)
     {
-        // "use" our function params so things don't complain
-        array($class, $dismissible);
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel']),
+        // "use" our function params so things (ie phpmd) don't complain
+        array($message, $class, $dismissible);
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
+            array(),
             array(
                 'message' => null,
                 'class' => 'danger',
@@ -289,13 +292,8 @@ class Debug
             ),
             array('class','dismissible')
         );
-        \extract($args);
         $this->setLogDest('alerts');
-        $this->appendLog(
-            'alert',
-            array($message),
-            $meta
-        );
+        $this->appendLog($logEntry);
         $this->setLogDest('auto');
     }
 
@@ -313,17 +311,23 @@ class Debug
      */
     public function assert($assertion, $msg = null)
     {
-        // "use" our function params so things don't complain
+        // "use" our function params so things (ie phpmd) don't complain
         array($msg);
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals($args);
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args()
+        );
+        $args = $logEntry['args'];
         $assertion = \array_shift($args);
         if (!$assertion) {
             if (!$args) {
+                // add default message
                 $callerInfo = $this->utilities->getCallerInfo();
                 $args[] = 'Assertion failed in '.$callerInfo['file'].' on line '.$callerInfo['line'];
             }
-            $this->appendLog('assert', $args, $meta);
+            $logEntry['args'] = $args;
+            $this->appendLog($logEntry);
         }
     }
 
@@ -345,36 +349,33 @@ class Debug
      */
     public function clear($flags = self::CLEAR_LOG)
     {
-        // "use" our function params so things don't complain
+        // "use" our function params so things (ie phpmd) don't complain
         array($flags);
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel']),
-            array('flags' => self::CLEAR_LOG),
-            array('flags' => 'bitmask')
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
+            array(
+                'channel' => $this->cfg['channel'],
+            ),
+            array(
+                'bitmask' => self::CLEAR_LOG,
+            ),
+            array('bitmask')
         );
-        $event = $this->methodClear->onLog(new Event($this, array(
-            'method' => __FUNCTION__,
-            'args' => array(),
-            'meta' => $meta,
-        )));
+        $logEntry = $this->methodClear->onLog($logEntry);
         // even if cleared from within summary, let's log this in primary log
         $this->setLogDest('log');
         $collect = $this->cfg['collect'];
         $this->cfg['collect'] = true;
-        if ($event['log']) {
-            $this->appendLog(
-                $event['method'],
-                $event['args'],
-                $event['meta']
-            );
-        } elseif ($event['publish']) {
+        if ($logEntry['log']) {
+            $this->appendLog($logEntry);
+        } elseif ($logEntry['publish']) {
             /*
                 Publish the debug.log event (regardless of cfg.collect)
                 don't actually log
             */
-            $this->eventManager->publish('debug.log', $event);
+            $this->eventManager->publish('debug.log', $logEntry);
         }
         $this->cfg['collect'] = $collect;
         $this->setLogDest('auto');
@@ -398,17 +399,19 @@ class Debug
      */
     public function count($label = null, $flags = 0)
     {
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel'])
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args()
         );
         // label may be ommitted and only flags passed as a single argument
         //   (excluding potential meta argument)
+        $args = $logEntry['args'];
         if (\count($args) == 1 && \is_int($args[0])) {
             $label = null;
             $flags = $args[0];
         } else {
+            $args = \array_slice($args, 0, 2);
             $args = \array_combine(
                 array('label', 'flags'),
                 \array_replace(array(null, 0), $args)
@@ -420,12 +423,12 @@ class Debug
         } else {
             // determine calling file & line
             $callerInfo = $this->utilities->getCallerInfo();
-            $meta = \array_merge(array(
+            $logEntry['meta'] = \array_merge(array(
                 'file' => $callerInfo['file'],
                 'line' => $callerInfo['line'],
-            ), $meta);
+            ), $logEntry['meta']);
             $label = 'count';
-            $dataLabel = $meta['file'].': '.$meta['line'];
+            $dataLabel = $logEntry['meta']['file'].': '.$logEntry['meta']['line'];
         }
         if (!isset($this->data['counts'][$dataLabel])) {
             $this->data['counts'][$dataLabel] = 0;
@@ -435,14 +438,11 @@ class Debug
         }
         $count = $this->data['counts'][$dataLabel];
         if (!($flags & self::COUNT_NO_OUT)) {
-            $this->appendLog(
-                'count',
-                array(
-                    (string) $label,
-                    $count,
-                ),
-                $meta
+            $logEntry['args'] = array(
+                (string) $label,
+                $count,
             );
+            $this->appendLog($logEntry);
         }
         return $count;
     }
@@ -459,17 +459,19 @@ class Debug
      */
     public function countReset($label = 'default', $flags = null)
     {
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel'])
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args()
         );
         // label may be ommitted and only flags passed as a single argument
         //   (excluding potential meta argument)
+        $args = $logEntry['args'];
         if (\count($args) == 1 && \is_int($args[0])) {
             $label = 'default';
             $flags = $args[0];
         } else {
+            $args = \array_slice($args, 0, 2);
             $args = \array_combine(
                 array('label', 'flags'),
                 \array_replace(array('default', 0), $args)
@@ -478,19 +480,15 @@ class Debug
         }
         if (isset($this->data['counts'][$label])) {
             $this->data['counts'][$label] = 0;
-            $args = array(
+            $logEntry['args'] = array(
                 (string) $label,
                 0,
             );
         } else {
-            $args = array('Counter \''.$label.'\' doesn\'t exist.');
+            $logEntry['args'] = array('Counter \''.$label.'\' doesn\'t exist.');
         }
         if (!($flags & self::COUNT_NO_OUT)) {
-            $this->appendLog(
-                'countReset',
-                $args,
-                $meta
-            );
+            $this->appendLog($logEntry);
         }
     }
 
@@ -505,11 +503,12 @@ class Debug
      */
     public function error()
     {
-        $this->appendLog(
-            'error',
+        $this->appendLog(new LogEntry(
+            $this,
+            __FUNCTION__,
             \func_get_args(),
             $this->internal->getErrorCaller()
-        );
+        ));
     }
 
     /**
@@ -521,7 +520,7 @@ class Debug
      */
     public function group()
     {
-        $this->doGroup('group', \func_get_args());
+        $this->doGroup(__FUNCTION__, \func_get_args());
     }
 
     /**
@@ -533,7 +532,7 @@ class Debug
      */
     public function groupCollapsed()
     {
-        $this->doGroup('groupCollapsed', \func_get_args());
+        $this->doGroup(__FUNCTION__, \func_get_args());
     }
 
     /**
@@ -545,13 +544,17 @@ class Debug
      */
     public function groupEnd($value = \bdk\Debug\Abstracter::UNDEFINED)
     {
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel']),
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
+            array(
+                'channel' => $this->cfg['channel'],
+            ),
             array('value' => \bdk\Debug\Abstracter::UNDEFINED)
         );
-        \extract($args);
+        $value = $logEntry['args'][0];
+        $logEntry['args'] = array();
         $groupStackWas = $this->rootInstance->groupStackRef;
         $appendLog = false;
         if ($groupStackWas && \end($groupStackWas)['collect'] == $this->cfg['collect']) {
@@ -559,11 +562,11 @@ class Debug
             $appendLog = $this->cfg['collect'];
         }
         if ($appendLog && $value !== \bdk\Debug\Abstracter::UNDEFINED) {
-            $this->appendLog(
+            $this->appendLog(new LogEntry(
+                $this,
                 'groupEndValue',
-                array('return', $value),
-                $meta
-            );
+                array('return', $value)
+            ));
         }
         if ($this->data['groupPriorityStack'] && !$groupStackWas) {
             // we're closing a summary group
@@ -575,18 +578,10 @@ class Debug
                 Publish the debug.log event (regardless of cfg.collect)
                 don't actually log
             */
-            $meta['closesSummary'] = true;
-            $this->eventManager->publish(
-                'debug.log',
-                $this,
-                array(
-                    'method' => __FUNCTION__,
-                    'args' => array(),
-                    'meta' => $meta,
-                )
-            );
+            $logEntry->setMeta('closesSummary', true);
+            $this->eventManager->publish('debug.log', $logEntry);
         } elseif ($appendLog) {
-            $this->appendLog('groupEnd', array(), $meta);
+            $this->appendLog($logEntry);
         }
         $errorCaller = $this->errorHandler->get('errorCaller');
         if ($errorCaller && isset($errorCaller['groupDepth']) && $this->getGroupDepth() < $errorCaller['groupDepth']) {
@@ -609,30 +604,27 @@ class Debug
      */
     public function groupSummary($priority = 0)
     {
-        // "use" our function params so things don't complain
+        // "use" our function params so things (ie phpmd) don't complain
         array($priority);
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel']),
-            array('priority' => 0),
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
+            array(
+                'channel' => $this->cfg['channel'],
+            ),
+            array(
+                'priority' => 0,
+            ),
             array('priority')
         );
-        $this->data['groupPriorityStack'][] = $meta['priority'];
+        $this->data['groupPriorityStack'][] = $logEntry['meta']['priority'];
         $this->setLogDest('summary');
         /*
             Publish the debug.log event (regardless of cfg.collect)
             don't actually log
         */
-        $this->eventManager->publish(
-            'debug.log',
-            $this,
-            array(
-                'method' => __FUNCTION__,
-                'args' => array(),
-                'meta' => $meta,
-            )
-        );
+        $this->eventManager->publish('debug.log', $logEntry);
     }
 
     /**
@@ -647,10 +639,13 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel'])
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
+            array(
+                'channel' => $this->cfg['channel'],
+            )
         );
         $curDepth = 0;
         foreach ($this->rootInstance->groupStackRef as $group) {
@@ -664,15 +659,7 @@ class Debug
             Publish the debug.log event (regardless of cfg.collect)
             don't actually log
         */
-        $this->eventManager->publish(
-            'debug.log',
-            $this,
-            array(
-                'method' => __FUNCTION__,
-                'args' => array(),
-                'meta' => $meta,
-            )
-        );
+        $this->eventManager->publish('debug.log', $logEntry);
     }
 
     /**
@@ -684,7 +671,11 @@ class Debug
      */
     public function info()
     {
-        $this->appendLog('info', \func_get_args());
+        $this->appendLog(new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args()
+        ));
     }
 
     /**
@@ -696,7 +687,11 @@ class Debug
      */
     public function log()
     {
-        $this->appendLog('log', \func_get_args());
+        $this->appendLog(new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args()
+        ));
     }
 
     /**
@@ -712,18 +707,21 @@ class Debug
             return;
         }
         $this->config->setCfg('enableProfiling', true);
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel']),
-            array('name' => null),
-            array('name')   // move name to meta
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
+            array(),
+            array(
+                'name' => null,
+            ),
+            array('name')
         );
-        if ($meta['name'] === null) {
-            $meta['name'] = 'Profile '.$this->data['profileAutoInc'];
+        if ($logEntry['meta']['name'] === null) {
+            $logEntry['meta']['name'] = 'Profile '.$this->data['profileAutoInc'];
             $this->data['profileAutoInc']++;
         }
-        $name = $meta['name'];
+        $name = $logEntry['meta']['name'];
         $message = '';
         if (isset($this->data['profileInstances'][$name])) {
             $instance = $this->data['profileInstances'][$name];
@@ -737,13 +735,8 @@ class Debug
             $this->data['profileInstances'][$name] = $this->methodProfile; // factory
             $message = 'Profile \''.$name.'\' started';
         }
-        $this->appendLog(
-            __FUNCTION__,
-            array(
-                $message,
-            ),
-            $meta
-        );
+        $logEntry['args'] = array($message);
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -759,28 +752,33 @@ class Debug
      */
     public function profileEnd($name = null)
     {
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel']),
-            array('name' => null),
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
+            array(),
+            array(
+                'name' => null
+            ),
             array('name')
         );
-        if ($meta['name'] === null) {
+        if ($logEntry['meta']['name'] === null) {
             \end($this->data['profileInstances']);
-            $meta['name'] = \key($this->data['profileInstances']);
+            $logEntry['meta']['name'] = \key($this->data['profileInstances']);
         }
-        $name = $meta['name'];
+        $name = $logEntry['meta']['name'];
         if (isset($this->data['profileInstances'][$name])) {
             $instance = $this->data['profileInstances'][$name];
             $data = $instance->end();
             $caption = 'Profile \''.$name.'\' Results';
             if ($data) {
                 $args = array( $data );
-                $meta['sortable'] = true;
-                $meta['caption'] = $caption;
-                $meta['totalCols'] = array('ownTime');
-                $meta['columns'] = array();
+                $logEntry->setMeta(array(
+                    'sortable' => true,
+                    'caption' => $caption,
+                    'totalCols' => array('ownTime'),
+                    'columns' => array(),
+                ));
             } else {
                 $args = array($caption, 'no data');
             }
@@ -791,11 +789,8 @@ class Debug
                 : 'profileEnd: Not currently profiling'
             );
         }
-        $this->appendLog(
-            __FUNCTION__,
-            $args,
-            $meta
-        );
+        $logEntry['args'] = $args;
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -815,21 +810,13 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel'])
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args()
         );
-        $event = $this->methodTable->onLog(new Event($this, array(
-            'method' => __FUNCTION__,
-            'args' => $args,
-            'meta' => $meta,
-        )));
-        $this->appendLog(
-            $event['method'],
-            $event['args'],
-            $event['meta']
-        );
+        $this->methodTable->onLog($logEntry);
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -849,13 +836,14 @@ class Debug
      */
     public function time($label = null)
     {
-        $args = \func_get_args();
-        $this->internal->getMetaVals(
-            $args,
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
             array(),
             array('label' => null)
         );
-        \extract($args);
+        $label = $logEntry['args'][0];
         if (isset($label)) {
             $timers = &$this->data['timers']['labels'];
             if (!isset($timers[$label])) {
@@ -884,17 +872,18 @@ class Debug
      */
     public function timeEnd($label = null, $returnOrTemplate = false, $precision = 4)
     {
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel']),
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
+            array(),
             array(
                 'label' => null,
                 'returnOrTemplate' => false,
                 'precision' => 4,
             )
         );
-        \extract($args);
+        list($label, $returnOrTemplate, $precision) = $logEntry['args'];
         if (\is_bool($label) || \strpos($label, '%time') !== false) {
             if (\is_numeric($returnOrTemplate)) {
                 $precision = $returnOrTemplate;
@@ -918,7 +907,7 @@ class Debug
             // use number_format rather than round(), which may still run decimals-a-plenty
             $ret = \number_format($ret, $precision, '.', '');
         }
-        $this->doTime($ret, $returnOrTemplate, $label, $meta);
+        $this->doTime($ret, $returnOrTemplate, $label, $logEntry['meta']);
         return $ret;
     }
 
@@ -936,17 +925,18 @@ class Debug
      */
     public function timeGet($label = null, $returnOrTemplate = false, $precision = 4)
     {
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel']),
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
+            array(),
             array(
                 'label' => null,
                 'returnOrTemplate' => false,
                 'precision' => 4,
             )
         );
-        \extract($args);
+        list($label, $returnOrTemplate, $precision) = $logEntry['args'];
         if (\is_bool($label) || \strpos($label, '%time') !== false) {
             if (\is_numeric($returnOrTemplate)) {
                 $precision = $returnOrTemplate;
@@ -967,11 +957,12 @@ class Debug
             list($ellapsed, $microT) = $this->data['timers']['labels'][$label];
         } else {
             if ($returnOrTemplate !== true) {
-                $this->appendLog(
-                    'time',
+                $this->appendLog(new LogEntry(
+                    $this,
+                    __FUNCTION__,
                     array('Timer \''.$label.'\' does not exist'),
-                    $meta
-                );
+                    $logEntry['meta']
+                ));
             }
             return false;
         }
@@ -982,7 +973,7 @@ class Debug
             // use number_format rather than round(), which may still run decimals-a-plenty
             $ellapsed = \number_format($ellapsed, $precision, '.', '');
         }
-        $this->doTime($ellapsed, $returnOrTemplate, $label, $meta);
+        $this->doTime($ellapsed, $returnOrTemplate, $label, $logEntry['meta']);
         return $ellapsed;
     }
 
@@ -1000,11 +991,12 @@ class Debug
      */
     public function timeLog($label = null, $args = null)
     {
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
-            array('channel' => $this->cfg['channel'])
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args()
         );
+        $args = $logEntry['args'];
         $microT = 0;
         $ellapsed = 0;
         if (\count($args) === 0) {
@@ -1025,11 +1017,8 @@ class Debug
             $ellapsed = \number_format($ellapsed, 4, '.', '');
             \array_splice($args, 1, 0, $ellapsed.' sec');
         }
-        $this->appendLog(
-            'timeLog',
-            $args,
-            $meta
-        );
+        $logEntry['args'] = $args;
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -1042,12 +1031,12 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        $args = \func_get_args();
-        $meta = $this->internal->getMetaVals(
-            $args,
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args(),
             array(
                 'caption' => 'trace',
-                'channel' => $this->cfg['channel'],
                 'columns' => array('file','line','function'),
             )
         );
@@ -1064,7 +1053,8 @@ class Debug
         $backtrace = FileStreamWrapper::backtraceAdjustLines($backtrace);
         // keep the calling file & line, but toss ->trace or ::_trace
         unset($backtrace[0]['function']);
-        $this->appendLog('trace', array($backtrace), $meta);
+        $logEntry['args'] = array($backtrace);
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -1076,11 +1066,12 @@ class Debug
      */
     public function warn()
     {
-        $this->appendLog(
-            'warn',
+        $this->appendLog(new LogEntry(
+            $this,
+            __FUNCTION__,
             \func_get_args(),
             $this->internal->getErrorCaller()
-        );
+        ));
     }
 
     /*
@@ -1429,64 +1420,40 @@ class Debug
      *   + publishes debug.log event
      *   + appends log (if event propagation not stopped)
      *
-     * @param string $method error, info, log, warn, etc
-     * @param array  $args   arguments passed to method
-     * @param array  $meta   meta data
+     * @param LogEntry $logEntry log entry instance
      *
      * @return void
      */
-    protected function appendLog($method, $args = array(), $meta = array())
+    protected function appendLog(LogEntry $logEntry)
     {
         if (!$this->cfg['collect']) {
             return;
         }
         $cfgRestore = array();
-        $meta = \array_merge(
-            array('channel' => $this->cfg['channel']),
-            $meta,
-            $this->internal->getMetaVals($args)
-        );
-        if (isset($meta['cfg'])) {
-            $cfgRestore = $this->config->setCfg($meta['cfg']);
-            unset($meta['cfg']);
+        if (!isset($logEntry['meta']['channel'])) {
+            $logEntry->setMeta('channel', $this->cfg['channel']);
         }
-        foreach ($args as $i => $v) {
+        if (isset($logEntry['meta']['cfg'])) {
+            $cfgRestore = $this->config->setCfg($logEntry['meta']['cfg']);
+            $logEntry->setMeta('cfg', null);
+        }
+        foreach ($logEntry['args'] as $i => $v) {
             if ($this->abstracter->needsAbstraction($v)) {
-                $args[$i] = $this->abstracter->getAbstraction($v, $method);
+                $logEntry['args'][$i] = $this->abstracter->getAbstraction($v, $logEntry['method']);
             }
         }
-        $event = $this->eventManager->publish(
-            'debug.log',
-            $this,
-            array(
-                'method' => $method,
-                'args' => $args,
-                'meta' => $meta,
-                'appendLog' => true,
-                'return' => null,
-            )
-        );
+        $this->eventManager->publish('debug.log', $logEntry);
         if ($cfgRestore) {
             $this->config->setCfg($cfgRestore);
         }
-        if (!$event->getValue('appendLog')) {
-            return $event->getValue('return');
+        if (!$logEntry['appendLog']) {
+            return $logEntry['return'];
         }
         if ($this->parentInstance) {
-            return $this->parentInstance->appendLog(
-                $event->getValue('method'),
-                $event->getValue('args'),
-                $event->getValue('meta')
-            );
+            return $this->parentInstance->appendLog($logEntry);
         }
-        $this->rootInstance->logRef[] = array(
-            $event->getValue('method'),
-            $event->getValue('args'),
-            \array_diff_assoc($event->getValue('meta'), array(
-                'channel' => $this->cfg['channel'],
-            )),
-        );
-        return $event->getValue('return');
+        $this->rootInstance->logRef[] = $logEntry;
+        return $logEntry['return'];
     }
 
     /**
@@ -1499,30 +1466,36 @@ class Debug
      */
     private function doGroup($method, $args)
     {
-        $meta = $this->internal->getMetaVals(
+        $logEntry = new LogEntry(
+            $this,
+            $method,
             $args,
-            array('channel' => $this->cfg['channel'])
+            array(
+                'channel' => $this->cfg['channel'],
+            )
         );
         $this->rootInstance->groupStackRef[] = array(
-            'channel' => $meta['channel'],
+            'channel' => $logEntry['meta']['channel'],
             'collect' => $this->cfg['collect'],
         );
         if (!$this->cfg['collect']) {
             return;
         }
-        if (empty($args)) {
+        if (empty($logEntry['args'])) {
             // give a default label
+            $args = array();
             $caller = $this->utilities->getCallerInfo();
             if (isset($caller['class'])) {
                 $args[] = $caller['class'].$caller['type'].$caller['function'];
-                $meta['isMethodName'] = true;
+                $logEntry->setMeta('isMethodName', true);
             } elseif (isset($caller['function'])) {
                 $args[] = $caller['function'];
             } else {
                 $args[] = 'group';
             }
+            $logEntry['args'] = $args;
         }
-        $this->appendLog($method, $args, $meta);
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -1548,7 +1521,12 @@ class Debug
         } else {
             $str = $label.': '.$seconds.' sec';
         }
-        $this->appendLog('time', array($str), $meta);
+        $this->appendLog(new LogEntry(
+            $this,
+            'time',
+            array($str),
+            $meta
+        ));
     }
 
     /**

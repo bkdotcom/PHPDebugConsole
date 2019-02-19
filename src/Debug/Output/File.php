@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
 /**
@@ -51,28 +52,26 @@ class File extends Text
     /**
      * debug.log event subscriber
      *
-     * @param Event $event debug.log event object
+     * @param LogEntry $logEntry log entry instance
      *
      * @return void
      */
-    public function onLog(Event $event)
+    public function onLog(LogEntry $logEntry)
     {
         if (!$this->fileHandle) {
             return;
         }
-        $method = $event['method'];
+        $method = $logEntry['method'];
         if ($method == 'groupUncollapse') {
             return;
         }
-        $args = $event['args'];
-        $meta = $event['meta'];
-        $isSummaryBookend = $method == 'groupSummary' || !empty($meta['closesSummary']);
+        $isSummaryBookend = $method == 'groupSummary' || !empty($logEntry['meta']['closesSummary']);
         if ($isSummaryBookend) {
             \fwrite($this->fileHandle, "=========\n");
             return;
         }
-        if ($args) {
-            $str = $this->processLogEntryWEvent($method, $args, $meta);
+        if ($logEntry['args']) {
+            $str = $this->processLogEntryWEvent($logEntry);
             \fwrite($this->fileHandle, $str);
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
             $this->depth --;

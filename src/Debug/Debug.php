@@ -363,12 +363,12 @@ class Debug
             ),
             array('bitmask')
         );
-        $logEntry = $this->methodClear->onLog($logEntry);
+        $this->methodClear->onLog($logEntry);
         // even if cleared from within summary, let's log this in primary log
         $this->setLogDest('log');
         $collect = $this->cfg['collect'];
         $this->cfg['collect'] = true;
-        if ($logEntry['log']) {
+        if ($logEntry['appendLog']) {
             $this->appendLog($logEntry);
         } elseif ($logEntry['publish']) {
             /*
@@ -653,7 +653,7 @@ class Debug
         }
         $entryKeys = \array_keys($this->internal->getCurrentGroups($this->rootInstance->logRef, $curDepth));
         foreach ($entryKeys as $key) {
-            $this->rootInstance->logRef[$key][0] = 'group';
+            $this->rootInstance->logRef[$key]['method'] = 'group';
         }
         /*
             Publish the debug.log event (regardless of cfg.collect)

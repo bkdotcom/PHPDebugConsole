@@ -79,7 +79,7 @@ class MethodClear
                     'silent' =>  (bool) ($bitmask & Debug::CLEAR_SILENT),
                 ),
             ), $logEntry['meta']),
-            'log' => $args && !($bitmask & Debug::CLEAR_SILENT),
+            'appendLog' => $args && !($bitmask & Debug::CLEAR_SILENT),
             'publish' => (bool) $args,
         ));
     }
@@ -110,9 +110,8 @@ class MethodClear
             return null;
         }
         if ($this->channelName) {
-            foreach ($this->data['alerts'] as $i => $entry) {
-                $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
-                if ($this->channelTest($channel)) {
+            foreach ($this->data['alerts'] as $i => $logEntry) {
+                if ($this->channelTest($logEntry['meta']['channel'])) {
                     unset($this->data['alerts'][$i]);
                 }
             }
@@ -173,19 +172,18 @@ class MethodClear
     private function clearErrorsHelper(&$log, $clear = true)
     {
         $errorsNotCleared = array();
-        foreach ($log as $k => $entry) {
-            if (!\in_array($entry[0], array('error','warn'))) {
+        foreach ($log as $k => $logEntry) {
+            if (!\in_array($logEntry['method'], array('error','warn'))) {
                 continue;
             }
             $clear2 = $clear;
             if ($this->channelName) {
-                $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
-                $clear2 = $clear && $channel === $this->channelName;
+                $clear2 = $clear && $logEntry['meta']['channel'] === $this->channelName;
             }
             if ($clear2) {
                 unset($log[$k]);
-            } elseif (isset($entry[2]['errorHash'])) {
-                $errorsNotCleared[] = $entry[2]['errorHash'];
+            } elseif (isset($logEntry[2]['errorHash'])) {
+                $errorsNotCleared[] = $logEntry[2]['errorHash'];
             }
         }
         $log = \array_values($log);
@@ -233,11 +231,10 @@ class MethodClear
             : array('error','warn');
         if ($keep || $this->channelName) {
             // we need to go through and filter based on method and/or channel
-            foreach ($log as $k => $entry) {
-                $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
-                $channelMatch = !$this->channelName || $channel === $this->channelName;
-                if (\in_array($entry[0], $keep) || !$channelMatch) {
-                    $entriesKeep[$k] = $entry;
+            foreach ($log as $k => $logEntry) {
+                $channelMatch = !$this->channelName || $logEntry['meta']['channel'] === $this->channelName;
+                if (\in_array($logEntry['method'], $keep) || !$channelMatch) {
+                    $entriesKeep[$k] = $logEntry;
                 }
             }
         }

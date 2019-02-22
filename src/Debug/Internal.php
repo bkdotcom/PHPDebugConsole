@@ -208,7 +208,7 @@ class Internal implements SubscriberInterface
             if ($curDepth < 1) {
                 break;
             }
-            $method = $logEntries[$i][0];
+            $method = $logEntries[$i]['method'];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $curDepth--;
                 if ($curDepth < $minDepth) {
@@ -220,49 +220,6 @@ class Internal implements SubscriberInterface
             }
         }
         return $entries;
-    }
-
-    /**
-     * Extracts meta-data from args
-     *
-     * Extract meta-data added via meta() method..
-     * all meta args are merged together and returned
-     * meta args are removed from passed args
-     *
-     * @param array $args        args to check
-     * @param array $defaultMeta default meta values
-     * @param array $defaultArgs default arg values
-     * @param array $argsToMeta  args to convert to meta
-     *
-     * @return array meta values
-     */
-    public static function getMetaVals(&$args, $defaultMeta = array(), $defaultArgs = array(), $argsToMeta = array())
-    {
-        $meta = array();
-        foreach ($args as $i => $v) {
-            if (\is_array($v) && isset($v['debug']) && $v['debug'] === Debug::META) {
-                unset($v['debug']);
-                $meta = \array_merge($meta, $v);
-                unset($args[$i]);
-            }
-        }
-        $args = \array_values($args);
-        if ($defaultArgs) {
-            $args = \array_slice($args, 0, \count($defaultArgs));
-            $args = \array_combine(
-                \array_keys($defaultArgs),
-                \array_replace(\array_values($defaultArgs), $args)
-            );
-        }
-        foreach ($argsToMeta as $argk => $metak) {
-            if (\is_int($argk)) {
-                $argk = $metak;
-            }
-            $defaultMeta[$metak] = $args[$argk];
-            unset($args[$argk]);
-        }
-        $meta = \array_merge($defaultMeta, $meta);
-        return $meta;
     }
 
     /**
@@ -288,7 +245,7 @@ class Internal implements SubscriberInterface
         $entryCountInitial = $this->debug->getData('entryCountInitial');
         $entryCountCurrent = $this->debug->getData('log/__count__');
         $haveLog = $entryCountCurrent > $entryCountInitial;
-        $lastEntryMethod = $this->debug->getData('log/__end__/0');
+        $lastEntryMethod = $this->debug->getData('log/__end__/method');
         return $haveLog && $lastEntryMethod !== 'clear';
     }
 

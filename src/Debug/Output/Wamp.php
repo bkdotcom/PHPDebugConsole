@@ -152,6 +152,9 @@ class Wamp implements OutputInterface
             'format' => 'raw',
             'requestId' => $this->requestId,
         ), $logEntry['meta']);
+        if ($meta['channel'] == 'general') {
+            unset($meta['channel']);
+        }
         if ($meta['format'] == 'raw') {
             $args = $this->crateValues($args);
         }
@@ -242,7 +245,7 @@ class Wamp implements OutputInterface
      */
     protected function processLogEntryWEvent(LogEntry $logEntry)
     {
-        $logEntry = clone $logEntry;
+        $logEntry = new LogEntry($this, $logEntry['method'], $logEntry['args'], $logEntry['meta']);
         if (!isset($logEntry['meta']['channel'])) {
             $logEntry->setMeta('channel', $this->channelName);
         }

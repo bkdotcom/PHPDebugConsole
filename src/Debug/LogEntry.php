@@ -23,16 +23,16 @@ class LogEntry extends Event
     /**
      * Construct a log entry
      *
-     * @param Debug  $debug       Debug instance (event subject)
-     * @param string $method      Debug method
-     * @param array  $args        arguments passed to method
-     * @param array  $meta        meta values
-     * @param array  $defaultArgs default arguments
-     * @param array  $argsToMeta  move specified keys to meta
+     * @param Debug|OutputInterface $subject     Debug instance or OutputInterface
+     * @param string                $method      Debug method
+     * @param array                 $args        arguments passed to method
+     * @param array                 $meta        meta values
+     * @param array                 $defaultArgs default arguments
+     * @param array                 $argsToMeta  move specified keys to meta
      */
-    public function __construct(Debug $debug, $method, $args = array(), $meta = array(), $defaultArgs = array(), $argsToMeta = array())
+    public function __construct($subject, $method, $args = array(), $meta = array(), $defaultArgs = array(), $argsToMeta = array())
     {
-        $this->subject = $debug;
+        $this->subject = $subject;
         $this->values = array(
             'method' => $method,
             'args' => $args,
@@ -57,28 +57,13 @@ class LogEntry extends Event
     }
 
     /**
-     * Create log entry
+     * Get meta value
      *
-     * @param Debug  $debug  Debug instance
-     * @param string $method debug method
-     * @param array  $args   method arguments
-     * @param array  $meta   meta values
+     * @param string $key     key to get
+     * @param mixed  $default (null) value to get
      *
-     * @return LogEntry
+     * @return mixed
      */
-    /*
-    public static function create(Debug $debug, $method, $args = array(), $meta = array())
-    {
-        return new static($debug, array(
-            'method' => $method,
-            'args' => $args,
-            'meta' => \array_merge(array(
-                'channel' => $debug->cfg['channel']
-            ), $meta),
-        ));
-    }
-    */
-
     public function getMeta($key, $default = null)
     {
         return \array_key_exists($key, $this->values['meta'])
@@ -113,7 +98,7 @@ class LogEntry extends Event
      *
      * @return array meta values
      */
-    public static function metaExtract(&$array)
+    private static function metaExtract(&$array)
     {
         $meta = array();
         foreach ($array as $i => $v) {
@@ -126,31 +111,4 @@ class LogEntry extends Event
         $array = \array_values($array);
         return $meta;
     }
-
-    /**
-     * Move meta-data args to meta
-     *
-     * @param array $defaultArgs default argv values (key->value array)
-     * @param array $argsToMeta  arg keys to move to meta
-     *
-     * @return void
-     */
-    /*
-    public function moveMeta($defaultArgs, $argsToMeta)
-    {
-        $args = \array_slice($this->values['args'], 0, \count($defaultArgs));
-        $args = \array_combine(
-            \array_keys($defaultArgs),
-            \array_replace(\array_values($defaultArgs), $args)
-        );
-        foreach ($argsToMeta as $argk => $metak) {
-            if (\is_int($argk)) {
-                $argk = $metak;
-            }
-            $this->values['meta'][$metak] = $args[$argk];
-            unset($args[$argk]);
-        }
-        $this->values['args'] = \array_values($args);
-    }
-    */
 }

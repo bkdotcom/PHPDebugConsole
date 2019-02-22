@@ -457,7 +457,7 @@ abstract class Base implements OutputInterface
      */
     protected function processLogEntryWEvent(LogEntry $logEntry)
     {
-        $logEntry = clone $logEntry;
+        $logEntry = new LogEntry($this, $logEntry['method'], $logEntry['args'], $logEntry['meta']);
         if (!isset($logEntry['meta']['channel'])) {
             $logEntry->setMeta('channel', $this->channelNameRoot);
         }

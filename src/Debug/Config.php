@@ -206,8 +206,9 @@ class Config
                 'useDebugInfo',
             ),
             'errorEmailer' => array(
-                // 'emailFunc',
                 'emailBacktraceDumper',
+                // 'emailFrom',
+                // 'emailFunc',
                 'emailMask',
                 'emailMin',
                 'emailThrottledSummary',
@@ -349,7 +350,7 @@ class Config
         if (isset($values['debug']['emailLog']) && $values['debug']['emailLog'] === true) {
             $values['debug']['emailLog'] = 'onError';
         }
-        foreach (array('emailFunc','emailTo') as $key) {
+        foreach (array('emailFrom','emailFunc','emailTo') as $key) {
             if (isset($values['debug'][$key]) && !isset($values['errorEmailer'][$key])) {
                 // also set for errorEmailer
                 $values['errorEmailer'][$key] = $values['debug'][$key];

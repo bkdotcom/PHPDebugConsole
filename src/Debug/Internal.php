@@ -66,7 +66,16 @@ class Internal implements SubscriberInterface
      */
     public function email($emailTo, $subject, $body)
     {
-        \call_user_func($this->debug->getCfg('emailFunc'), $emailTo, $subject, $body);
+        $addHeadersStr = '';
+        $fromAddr = $this->debug->getCfg('emailFrom');
+        if ($fromAddr) {
+            $addHeadersStr .= 'From: '.$fromAddr;
+            if (isset($_SERVER['WINDIR'])) {
+                $fromAddr = \preg_replace('/^.*?<([^>]+)>.*$/', '$1', $fromAddr);
+                \ini_set('sendmail_from', $fromAddr);
+            }
+        }
+        \call_user_func($this->debug->getCfg('emailFunc'), $emailTo, $subject, $body, $addHeadersStr);
     }
 
     /**
@@ -399,6 +408,13 @@ class Internal implements SubscriberInterface
         $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
         if (\session_module_name() === 'files') {
             $this->debug->log('session_save_path', \session_save_path() ?: \sys_get_temp_dir());
+        }
+        $extensionsCheck = array('curl','mbstring');
+        $extensionsCheck = \array_filter($extensionsCheck, function ($extension) {
+            return !\extension_loaded($extension);
+        });
+        if ($extensionsCheck) {
+            $this->debug->warn('These common extensions are not loaded:', $extensionsCheck);
         }
         $this->logPhpInfoEr();
     }

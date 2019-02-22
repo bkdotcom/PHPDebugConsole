@@ -11,7 +11,9 @@
 
 namespace bdk\Debug;
 
-use \bdk\Debug\FileStreamWrapper;
+use bdk\Debug;
+use bdk\Debug\FileStreamWrapper;
+use bdk\Debug\LogEntry;
 
 /**
  * Utility methods
@@ -566,6 +568,23 @@ class Utilities
      */
     public static function serializeLog($data)
     {
+        foreach (array('alerts','log','logSummary') as $what) {
+            foreach ($data[$what] as $i => $v) {
+                if ($what == 'logSummary') {
+                    foreach ($v as $i2 => $v2) {
+                        $data['logSummary'][$i][$i2] = array($v2['method'], $v2['args'], $v2['meta']);
+                        if ($v2['meta'] == 'general') {
+                            unset($data['logSummary'][$i][$i2][2]['channel']);
+                        }
+                    }
+                } else {
+                    $data[$what][$i] = array($v['method'], $v['args'], $v['meta']);
+                    if ($v['meta'] == 'general') {
+                        unset($data[$what][$i][2]['channel']);
+                    }
+                }
+            }
+        }
         $str = \serialize($data);
         if (\function_exists('gzdeflate')) {
             $str = \gzdeflate($str);
@@ -579,11 +598,12 @@ class Utilities
     /**
      * Use to unserialize the log serialized by emailLog
      *
-     * @param string $str serialized log data
+     * @param Debug  $debug debug instance
+     * @param string $str   serialized log data
      *
      * @return array | false
      */
-    public static function unserializeLog($str)
+    public static function unserializeLog(Debug $debug, $str)
     {
         $strStart = 'START DEBUG';
         $strEnd = 'END DEBUG';
@@ -600,6 +620,23 @@ class Utilities
             }
         }
         $log = \unserialize($str);
+        foreach (array('alerts','log','logSummary') as $what) {
+            foreach ($log[$what] as $i => $v) {
+                if ($what == 'logSummary') {
+                    foreach ($v as $i2 => $v2) {
+                        if (!isset($v2[2]['channel'])) {
+                            $v2[2]['channel'] = 'general';
+                        }
+                        $log['logSummary'][$i][$i2] = new LogEntry($debug, $v2[0], $v2[1], $v2[2]);
+                    }
+                } else {
+                    if (!isset($v[2]['channel'])) {
+                        $v[2]['channel'] = 'general';
+                    }
+                    $log[$what][$i] = new LogEntry($debug, $v[0], $v[1], $v[2]);
+                }
+            }
+        }
         return $log;
     }
 

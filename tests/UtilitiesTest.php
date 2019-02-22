@@ -368,7 +368,8 @@ class UtilitiesTest extends DebugTestFramework
      *
      * @return array of serialized logs
      */
-    public function testSerializeLog()
+    /*
+    public function serializeLogProvider()
     {
         $log = array(
             array('log', 'What rolls down stairs'),
@@ -380,20 +381,23 @@ class UtilitiesTest extends DebugTestFramework
             array($serialized, $log)
         );
     }
+    */
 
     /**
      * Test
      *
-     * @param string $serialized   string provided by testSerializeLog dataProvider
+     * @param string $serialized   string provided by serializeLogProvider dataProvider
      * @param array  $unserialized the unserialized array
      *
      * @return void
      *
-     * @dataProvider testSerializeLog
+     * @dataProvider serializeLogProvider
      */
+    /*
     public function testUnserializeLog($serialized, $unserialized)
     {
-        $log = Utilities::unserializeLog($serialized);
+        $log = Utilities::unserializeLog($this->debug, $serialized);
         $this->assertSame($unserialized, $log);
     }
+    */
 }

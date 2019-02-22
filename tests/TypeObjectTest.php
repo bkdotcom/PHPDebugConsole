@@ -425,7 +425,7 @@ EOD;
     {
         $test = new \bdk\DebugTest\Test();
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/1/1');
+        $abstraction = $this->debug->getData('log/0/args/1');
         $props = $abstraction['properties'];
         $this->assertArrayNotHasKey('propHidden', $props, 'propHidden shouldn\'t be debugged');
         // debugValue
@@ -447,7 +447,7 @@ EOD;
         $test->prop = array();
         $test->prop[] = &$test->prop;
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/1/1');
+        $abstraction = $this->debug->getData('log/0/args/1');
         $this->assertEquals(
             \bdk\Debug\Abstracter::RECURSION,
             $abstraction['properties']['prop']['value'][0],
@@ -474,7 +474,7 @@ EOD;
         $test = new \bdk\DebugTest\Test();
         $test->propPublic = &$test;
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/1/1');
+        $abstraction = $this->debug->getData('log/0/args/1');
         $this->assertEquals(
             true,
             $abstraction['properties']['propPublic']['value']['isRecursion'],
@@ -493,7 +493,7 @@ EOD;
         $test = new \bdk\DebugTest\Test();
         $test->prop = array( &$test );
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/1/1');
+        $abstraction = $this->debug->getData('log/0/args/1');
         $this->assertEquals(
             true,
             $abstraction['properties']['prop']['value'][0]['isRecursion'],
@@ -516,7 +516,7 @@ EOD;
         $test_oa->ob = $test_ob;
         $test_ob->oa = $test_oa;
         $this->debug->log('test_oa', $test_oa);
-        $abstraction = $this->debug->getData('log/0/1/1');
+        $abstraction = $this->debug->getData('log/0/args/1');
         $this->assertEquals(
             true,
             $abstraction['properties']['ob']['value']['properties']['oa']['value']['isRecursion'],

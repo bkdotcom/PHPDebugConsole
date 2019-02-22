@@ -15,6 +15,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 3 + $this->lineOffset,
             'psr3level' => 'emergency',
+            'channel' => 'general',
         );
         $this->assertSame(array(
             'error',
@@ -30,6 +31,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 3 + $this->lineOffset,
             'psr3level' => 'critical',
+            'channel' => 'general',
         );
         $this->assertSame(array(
             'error',
@@ -60,7 +62,7 @@ class LoggerTest extends DebugTestFramework
             'type' => 'object',
         ), $this->debug->getData('log/__end__/args/1/exception'));
         $this->assertArraySubset($metaSubset, $metaActual);
-        $backtrace = $this->debug->getData('log/__end__/2/backtrace');
+        $backtrace = $this->debug->getData('log/__end__/meta/backtrace');
         $this->assertInternalType('array', $backtrace);
     }
 
@@ -71,6 +73,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 3 + $this->lineOffset,
             'psr3level' => 'error',
+            'channel' => 'general',
         );
         $this->assertSame(array(
             'error',
@@ -86,6 +89,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 3 + $this->lineOffset,
             'psr3level' => 'warning',
+            'channel' => 'general',
         );
         $this->assertSame(array(
             'warn',
@@ -101,6 +105,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 3 + $this->lineOffset,
             'psr3level' => 'notice',
+            'channel' => 'general',
         );
         $this->assertSame(array(
             'warn',
@@ -118,6 +123,7 @@ class LoggerTest extends DebugTestFramework
             array(
                 'class' => 'danger',
                 'dismissible' => false,
+                'channel' => 'general',
             ),
         ), $this->logEntryToArray($this->debug->getData('alerts/0')));
     }
@@ -128,7 +134,9 @@ class LoggerTest extends DebugTestFramework
         $this->assertSame(array(
             'info',
             array('For your information'),
-            array(),
+            array(
+                'channel' => 'general',
+            ),
         ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 
@@ -141,7 +149,9 @@ class LoggerTest extends DebugTestFramework
                 'Awesome debugging',
                 array('foo'=>'bar'),
             ),
-            array(),
+            array(
+                'channel' => 'general',
+            ),
         ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 }

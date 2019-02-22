@@ -330,15 +330,6 @@ class DebugTestFramework extends DOMTestCase
         if (!$debug) {
             $debug = $this->debug;
         }
-        /*
-        $backupData = array(
-            'alerts' => $debug->getData('alerts'),
-            'log' => $debug->getData('log'),
-            'logSummary' => $debug->getData('logSummary'),
-            'requestId' => $debug->getData('requestId'),
-            'runtime' => $debug->getData('runtime'),
-        );
-        */
         $backupOutputAs = $debug->getCfg('outputAs');
         foreach ($tests as $test => $expectContains) {
             $debug->setCfg('outputAs', $test);

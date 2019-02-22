@@ -28,7 +28,9 @@ class TypeResourceTest extends DebugTestFramework
                                 'value' => $value,
                             ),
                         ),
-                        array(),
+                        array(
+                            'channel' => 'general',
+                        ),
                     ),
                     'chromeLogger' => '[["Resource id #'.(int) $fh.': stream"],null,""]',
                     'html' => '<div class="m_log"><span class="t_resource">Resource id #'.(int) $fh.': stream</span></div>',

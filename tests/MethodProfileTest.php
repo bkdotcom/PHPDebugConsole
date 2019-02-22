@@ -18,8 +18,8 @@ class MethodProfileTest extends DebugTestFramework
             array(),
             array(
                 'custom' => function ($logEntry) {
-                    $this->assertSame('profileEnd', $logEntry[0]);
-                    $data = $logEntry[1][0];
+                    $this->assertSame('profileEnd', $logEntry['method']);
+                    $data = $logEntry['args'][0];
                     $a = $data['MethodProfileTest::a'];
                     $b = $data['MethodProfileTest::b'];
                     $c = $data['MethodProfileTest::c'];
@@ -42,7 +42,8 @@ class MethodProfileTest extends DebugTestFramework
                         'caption' => "Profile 'Profile 1' Results",
                         'totalCols' => array('ownTime'),
                         'columns' => array(),
-                    ), $logEntry[2]);
+                        'channel' => 'general',
+                    ), $logEntry['meta']);
                 },
                 'chromeLogger' => '[[{"MethodProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}}],null,"table"]',
                 'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"TABLE","Label":"Profile \'Profile 1\' Results"},[["","calls","totalTime","ownTime"],["MethodProfileTest::a",1,%f,%f],["MethodProfileTest::b",1,%f,%f],["MethodProfileTest::c",2,%f,%f]]]|',

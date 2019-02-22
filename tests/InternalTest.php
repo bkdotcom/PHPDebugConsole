@@ -83,14 +83,43 @@ class InternalTest extends DebugTestFramework
         $this->emailCalled = true;
         $this->assertSame($this->debug->getCfg('emailTo'), $toAddr);
         $this->assertSame($this->expectedSubject, $subject);
-        $unserialized = $this->debug->utilities->unserializeLog($body);
-        $this->assertSame(array(
+        $unserialized = $this->debug->utilities->unserializeLog($this->debug, $body);
+        $expect = array(
             'alerts' => $this->debug->getData('alerts'),
             'log' => $this->debug->getData('log'),
             'logSummary' => $this->debug->getData('logSummary'),
             'requestId' => $this->debug->getData('requestId'),
             'runtime' => $this->debug->getData('runtime'),
-        ), $unserialized);
+        );
+        $this->assertSame($this->deObjectify($expect), $this->deObjectify($unserialized));
+    }
+
+    protected function deObjectify($data)
+    {
+        foreach ($data['alerts'] as $i => $v) {
+            $data['alerts'][$i] = array(
+                $v['method'],
+                $v['args'],
+                $v['meta'],
+            );
+        }
+        foreach ($data['log'] as $i => $v) {
+            $data['log'][$i] = array(
+                $v['method'],
+                $v['args'],
+                $v['meta'],
+            );
+        }
+        foreach ($data['logSummary'] as $i => $group) {
+            foreach ($group as $i2 => $v) {
+                $data['logSummary'][$i][$i2] = array(
+                    $v['method'],
+                    $v['args'],
+                    $v['meta'],
+                );
+            }
+        }
+        return $data;
     }
 
     /**
@@ -154,6 +183,7 @@ class InternalTest extends DebugTestFramework
                 array(
                     'file' => null,  // don't test
                     'line' => null,  // don't test
+                    'channel' => 'general',
                 ),
             ),
         ));
@@ -179,6 +209,7 @@ class InternalTest extends DebugTestFramework
                 array(
                     'file' => null,  // don't test
                     'line' => null,  // don't test
+                    'channel' => 'general',
                 ),
             ),
         ));
@@ -206,6 +237,7 @@ class InternalTest extends DebugTestFramework
                 array(
                     'file' => null,  // don't test
                     'line' => null,  // don't test
+                    'channel' => 'general',
                 ),
             ),
         ));
@@ -233,10 +265,10 @@ class InternalTest extends DebugTestFramework
                 array(
                     'file' => null,  // don't test
                     'line' => null,  // don't test
+                    'channel' => 'general',
                 ),
             ),
         ));
-
 
         /*
             Reset

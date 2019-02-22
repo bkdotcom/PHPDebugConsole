@@ -30,8 +30,8 @@ class ChannelTest extends DebugTestFramework
     {
         $dataExpect = array(
             'alerts' => array(
-                array('alert', array('main: alert'), array('class' => 'danger', 'dismissible' => false)),
-                array('alert', array('foo: alert'), array('channel' => 'foo', 'class' => 'danger', 'dismissible' => false)),
+                array('alert', array('main: alert'), array('class' => 'danger', 'dismissible' => false, 'channel' => 'general')),
+                array('alert', array('foo: alert'), array('class' => 'danger', 'dismissible' => false, 'channel' => 'foo')),
             ),
             'groupStacks' => array(
                 'main' => array(
@@ -41,11 +41,11 @@ class ChannelTest extends DebugTestFramework
             ),
             'groupPriorityStack' => array(),
             'log' => array(
-                array('log', array('main: log'), array()),
-                array('group', array('main: group'), array()),
-                array('log', array('main: group / log'), array()),
+                array('log', array('main: log'), array('channel'=>'general')),
+                array('group', array('main: group'), array('channel'=>'general')),
+                array('log', array('main: group / log'), array('channel'=>'general')),
                 array('group', array('foo: group / group'), array('channel' => 'foo')),
-                array('log', array('main: group / group / log'), array()),
+                array('log', array('main: group / group / log'), array('channel'=>'general')),
                 array('log', array('foo: group / group / log'), array('channel' => 'foo')),
                 array('log', array('foo: group / group / after summaries'), array('channel' => 'foo')),
                 // array('groupEnd', array(), array('channel' => 'foo')),
@@ -54,24 +54,25 @@ class ChannelTest extends DebugTestFramework
             'logSummary' => array(
                 0 => array(
                     array('group', array('foo: sum 0 / group 1'), array('channel' => 'foo')),
-                    array('group', array('main: sum 0 / group 1 / group 2'), array()),
-                    array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
+                    array('group', array('main: sum 0 / group 1 / group 2'), array('channel'=>'general')),
+                    array('log', array('main: sum 0 / group 1 / group 2 / log'), array('channel'=>'general')),
                     array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('error', array('main: error'), array('file' => '', 'line' => '')),
-                    array('error', array('foo: error'), array('channel' => 'foo', 'file' => '', 'line' => '')),
-                    array('groupEnd', array(), array()),
+                    array('error', array('main: error'), array('file' => '', 'line' => '', 'channel'=>'general')),
+                    array('error', array('foo: error'), array('file' => '', 'line' => '', 'channel' => 'foo')),
+                    array('groupEnd', array(), array('channel'=>'general')),
                     array('groupEnd', array(), array('channel' => 'foo')),
                 ),
                 1 => array(
                     array('group', array('foo: sum 1 / group 1'), array('channel' => 'foo')),
-                    array('group', array('main: sum 1 / group 1 / group 2'), array()),
-                    array('log', array('main: sum 1 / group 1 / group 2 / log'), array()),
+                    array('group', array('main: sum 1 / group 1 / group 2'), array('channel'=>'general')),
+                    array('log', array('main: sum 1 / group 1 / group 2 / log'), array('channel'=>'general')),
                     array('log', array('foo: sum 1 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('groupEnd', array(), array()),
+                    array('groupEnd', array(), array('channel'=>'general')),
                     array('groupEnd', array(), array('channel' => 'foo')),
                 ),
             ),
         );
+
         $data = $this->genLog($this->debug);
         $this->assertSame($dataExpect, $data);
 
@@ -80,7 +81,7 @@ class ChannelTest extends DebugTestFramework
 
         $dataFooClearedExpect = array(
             'alerts' => array(
-                array('alert', array('main: alert'), array('class' => 'danger', 'dismissible' => false)),
+                array('alert', array('main: alert'), array('class' => 'danger', 'dismissible' => false, 'channel'=>'general')),
                 // array('alert', array('foo: alert'), array('channel' => 'foo', 'class' => 'danger', 'dismissible' => false)),
             ),
             'groupStacks' => array(
@@ -91,11 +92,11 @@ class ChannelTest extends DebugTestFramework
             ),
             'groupPriorityStack' => array(),
             'log' => array(
-                array('log', array('main: log'), array()),
-                array('group', array('main: group'), array()),
-                array('log', array('main: group / log'), array()),
+                array('log', array('main: log'), array('channel'=>'general')),
+                array('group', array('main: group'), array('channel'=>'general')),
+                array('log', array('main: group / log'), array('channel'=>'general')),
                 array('group', array('foo: group / group'), array('channel' => 'foo')),
-                array('log', array('main: group / group / log'), array()),
+                array('log', array('main: group / group / log'), array('channel'=>'general')),
                 // array('log', array('foo: group / group / log'), array('channel' => 'foo')),
                 array(
                    'clear',
@@ -105,7 +106,6 @@ class ChannelTest extends DebugTestFramework
                         'foo',
                     ),
                     array(
-                        'channel' => 'foo',
                         'file' => '',
                         'line' => '',
                         'bitmask' => 31,
@@ -117,6 +117,7 @@ class ChannelTest extends DebugTestFramework
                             'summaryErrors' => true,
                             'silent' => false,
                         ),
+                        'channel' => 'foo',
                     ),
                 ),
                 array('groupEnd', array(), array('channel' => 'foo')),
@@ -126,20 +127,20 @@ class ChannelTest extends DebugTestFramework
             'logSummary' => array(
                 0 => array(
                     // array('group', array('foo: sum 0 / group 1'), array('channel' => 'foo')),
-                    array('group', array('main: sum 0 / group 1 / group 2'), array()),
-                    array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
+                    array('group', array('main: sum 0 / group 1 / group 2'), array('channel'=>'general')),
+                    array('log', array('main: sum 0 / group 1 / group 2 / log'), array('channel'=>'general')),
                     // array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('error', array('main: error'), array('file' => '', 'line' => '')),
+                    array('error', array('main: error'), array('file' => '', 'line' => '', 'channel'=>'general')),
                     // array('error', array('foo: error'), array('channel' => 'foo', 'file' => '', 'line' => '')),
-                    array('groupEnd', array(), array()),
+                    array('groupEnd', array(), array('channel'=>'general')),
                     // array('groupEnd', array(), array('channel' => 'foo')),
                 ),
                 1 => array(
                     array('group', array('foo: sum 1 / group 1'), array('channel' => 'foo')),
-                    array('group', array('main: sum 1 / group 1 / group 2'), array()),
-                    array('log', array('main: sum 1 / group 1 / group 2 / log'), array()),
+                    array('group', array('main: sum 1 / group 1 / group 2'), array('channel'=>'general')),
+                    array('log', array('main: sum 1 / group 1 / group 2 / log'), array('channel'=>'general')),
                     // array('log', array('foo: sum 1 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('groupEnd', array(), array()),
+                    array('groupEnd', array(), array('channel' => 'general')),
                     array('groupEnd', array(), array('channel' => 'foo')),
                 ),
             ),
@@ -224,6 +225,7 @@ EOD;
             </div>
         </div>
 EOD;
+
         $this->outputTest(array(
             'html' => $htmlFoo,
         ), $this->debugFoo);
@@ -273,13 +275,43 @@ EOD;
                 $this->debugFoo->log('foo: group / group / after summaries');
             // $this->debugFoo->groupEnd(); // foo group
         // $this->debug->groupEnd(); // main group
-        $data = array_intersect_key($this->debug->getData(), array_flip(array(
+
+        $dataTemp = array_intersect_key($this->debug->getData(), array_flip(array(
             'alerts',
             'groupStacks',
             'groupPriorityStack',
             'log',
             'logSummary',
         )));
+        $data = array(
+            'alerts' => array(),
+            'groupStacks' => $dataTemp['groupStacks'],
+            'groupPriorityStack' => $dataTemp['groupPriorityStack'],
+            'log' => array(),
+            'logSummary' => array(),
+        );
+        foreach (array('alerts','log','logSummary') as $what) {
+            if ($what == 'logSummary') {
+                foreach ($dataTemp['logSummary'] as $i => $group) {
+                    foreach ($group as $i2 => $v2) {
+                        $data['logSummary'][$i][$i2] = array(
+                            $v2['method'],
+                            $v2['args'],
+                            $v2['meta'],
+                        );
+                    }
+                }
+            } else {
+                foreach ($dataTemp[$what] as $i => $v) {
+                    $data[$what][$i] = array(
+                        $v['method'],
+                        $v['args'],
+                        $v['meta'],
+                    );
+                }
+            }
+        }
+
         $data = json_encode($data);
         $data = preg_replace('/"(file)":"[^",]+"/', '"$1":""', $data);
         $data = preg_replace('/"(line)":\d+/', '"$1":""', $data);

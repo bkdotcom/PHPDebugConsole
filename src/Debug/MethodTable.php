@@ -173,10 +173,8 @@ class MethodTable
             }
             unset($args[$i]);
         }
-        $logEntry->setValues(array(
-            'args' => array($data),
-            'meta' => $meta,
-        ));
+        $logEntry['args'] = array($data);
+        $logEntry['meta'] = $meta;
     }
 
     /**

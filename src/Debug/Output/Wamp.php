@@ -134,6 +134,7 @@ class Wamp implements OutputInterface
             'endOutput',
             array(
                 'responseCode' => \http_response_code(),
+                'channel' => 'general',
             )
         ));
     }
@@ -287,8 +288,12 @@ class Wamp implements OutputInterface
         $this->processLogEntry(new LogEntry(
             $this->debug,
             'meta',
-            array(),
-            $metaVals
+            array(
+                $metaVals
+            ),
+            array(
+                'channel' => 'general',
+            )
         ));
     }
 }

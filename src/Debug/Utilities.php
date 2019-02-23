@@ -83,6 +83,28 @@ class Utilities
     );
 
     /**
+     * "dereference" array
+     * returns a copy of the array with references removed
+     *
+     * @param array $source source array
+     * @param array $deep   (true) deep copy
+     *
+     * @return array
+     */
+    public static function arrayCopy($source, $deep = true)
+    {
+        $arr = array();
+        foreach ($source as $key => $val) {
+            if ($deep && \is_array($val)) {
+                $arr[$key] = self::arrayCopy($val);
+            } else {
+                $arr[$key] = $val;
+            }
+        }
+        return $arr;
+    }
+
+    /**
      * Recursively merge two arrays
      *
      * @param array $arrayDef default array
@@ -572,16 +594,18 @@ class Utilities
             foreach ($data[$what] as $i => $v) {
                 if ($what == 'logSummary') {
                     foreach ($v as $i2 => $v2) {
-                        $data['logSummary'][$i][$i2] = array($v2['method'], $v2['args'], $v2['meta']);
-                        if ($v2['meta'] == 'general') {
-                            unset($data['logSummary'][$i][$i2][2]['channel']);
+                        $v2 = $v2->export();
+                        if ($v2['meta']['channel'] == 'general') {
+                            unset($v2['channel']);
                         }
+                        $data['logSummary'][$i][$i2] = \array_values($v2);
                     }
                 } else {
-                    $data[$what][$i] = array($v['method'], $v['args'], $v['meta']);
-                    if ($v['meta'] == 'general') {
-                        unset($data[$what][$i][2]['channel']);
+                    $v = $v->export();
+                    if ($v['meta']['channel'] == 'general') {
+                        unset($v['meta']['channel']);
                     }
+                    $data[$what][$i] = \array_values($v);
                 }
             }
         }

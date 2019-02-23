@@ -347,10 +347,6 @@ class DebugTestFramework extends DOMTestCase
 
     protected function logEntryToArray(LogEntry $logEntry)
     {
-        return array(
-            $logEntry['method'],
-            $logEntry['args'],
-            $logEntry['meta'],
-        );
+        return array_values($logEntry->export());
     }
 }

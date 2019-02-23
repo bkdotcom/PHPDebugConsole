@@ -115,13 +115,14 @@ class Internal implements SubscriberInterface
         /*
             "attach" serialized log to body
         */
-        $body .= $this->debug->utilities->serializeLog(array(
-            'alerts' => $this->debug->getData('alerts'),
-            'log' => $this->debug->getData('log'),
-            'logSummary' => $this->debug->getData('logSummary'),
-            'requestId' => $this->debug->getData('requestId'),
-            'runtime' => $this->debug->getData('runtime'),
-        ));
+        $data = \array_intersect_key($this->debug->getData(), \array_flip(array(
+            'alerts',
+            'log',
+            'logSummary',
+            'requestId',
+            'runtime',
+        )));
+        $body .= $this->debug->utilities->serializeLog($data);
         /*
             Now email
         */

@@ -276,38 +276,23 @@ EOD;
             // $this->debugFoo->groupEnd(); // foo group
         // $this->debug->groupEnd(); // main group
 
-        $dataTemp = array_intersect_key($this->debug->getData(), array_flip(array(
+        $data = array_intersect_key($this->debug->getData(), array_flip(array(
             'alerts',
-            'groupStacks',
             'groupPriorityStack',
+            'groupStacks',
             'log',
             'logSummary',
         )));
-        $data = array(
-            'alerts' => array(),
-            'groupStacks' => $dataTemp['groupStacks'],
-            'groupPriorityStack' => $dataTemp['groupPriorityStack'],
-            'log' => array(),
-            'logSummary' => array(),
-        );
         foreach (array('alerts','log','logSummary') as $what) {
             if ($what == 'logSummary') {
-                foreach ($dataTemp['logSummary'] as $i => $group) {
+                foreach ($data['logSummary'] as $i => $group) {
                     foreach ($group as $i2 => $v2) {
-                        $data['logSummary'][$i][$i2] = array(
-                            $v2['method'],
-                            $v2['args'],
-                            $v2['meta'],
-                        );
+                        $data['logSummary'][$i][$i2] = array_values($v2->export());
                     }
                 }
             } else {
-                foreach ($dataTemp[$what] as $i => $v) {
-                    $data[$what][$i] = array(
-                        $v['method'],
-                        $v['args'],
-                        $v['meta'],
-                    );
+                foreach ($data[$what] as $i => $v) {
+                    $data[$what][$i] = array_values($v->export());
                 }
             }
         }

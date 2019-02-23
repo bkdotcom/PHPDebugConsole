@@ -63,7 +63,7 @@ class Debug
     const COUNT_NO_INC = 1;
     const COUNT_NO_OUT = 2;
     const META = "\x00meta\x00";
-    const VERSION = '2.3';
+    const VERSION = '3.0';
 
     /**
      * Constructor
@@ -1138,14 +1138,15 @@ class Debug
      */
     public function getData($path = null)
     {
+        if (!$path) {
+            $data = $this->utilities->arrayCopy($this->data, false);
+            $data['logSummary'] = $this->utilities->arrayCopy($data['logSummary'], false);
+            $data['groupStacks'] = $this->utilities->arrayCopy($data['groupStacks'], false);
+            return $data;
+        }
         $data = $this->utilities->arrayPathGet($this->data, $path);
-        /*
-            some array nodes may be references
-            this is only a concern when calling getData externally
-            serialize/unserialize is expensive.. only do so when requesting the below
-        */
-        return \in_array($path, array('logSummary','groupStacks'))
-            ? \unserialize(\serialize($data))
+        return \is_array($data) && \in_array($path, array('logSummary','groupStacks'))
+            ? $this->utilities->arrayCopy($data, false)
             : $data;
     }
 

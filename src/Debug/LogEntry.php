@@ -57,6 +57,20 @@ class LogEntry extends Event
     }
 
     /**
+     * Return an array containing method, args, & meta
+     *
+     * @return array
+     */
+    public function export()
+    {
+        return array(
+            'method' => $this->values['method'],
+            'args' => $this->values['args'],
+            'meta' => $this->values['meta'],
+        );
+    }
+
+    /**
      * Get meta value
      *
      * @param string $key     key to get

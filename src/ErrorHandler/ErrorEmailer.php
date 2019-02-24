@@ -52,6 +52,33 @@ class ErrorEmailer implements SubscriberInterface
     }
 
     /**
+     * Send an email
+     *
+     * @param string $toAddr  To
+     * @param string $subject Subject
+     * @param string $body    Body
+     *
+     * @return void
+     */
+    public function email($toAddr, $subject, $body)
+    {
+        $addHeadersStr = '';
+        $fromAddr = $this->cfg['emailFrom'];
+        $sendmailFromWas = false;
+        if ($fromAddr) {
+            $addHeadersStr .= 'From: '.$fromAddr;
+            if (isset($_SERVER['WINDIR'])) {
+                $fromAddr = \preg_replace('/^.*?<([^>]+)>.*$/', '$1', $fromAddr);
+                $sendmailFromWas = \ini_set('sendmail_from', $fromAddr);
+            }
+        }
+        \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
+        if ($sendmailFromWas) {
+            \ini_set('sendmail_from', $sendmailFromWas);
+        }
+    }
+
+    /**
      * Retrieve a configuration value
      *
      * @param string $key what to get
@@ -141,19 +168,15 @@ class ErrorEmailer implements SubscriberInterface
     public function setCfg($mixed, $newVal = null)
     {
         $ret = null;
-        $values = array();
         if (\is_string($mixed)) {
-            $key = $mixed;
-            $ret = isset($this->cfg[$key])
-                ? $this->cfg[$key]
+            $ret = isset($this->cfg[$mixed])
+                ? $this->cfg[$mixed]
                 : null;
-            $values = array(
-                $key => $newVal,
-            );
+            $this->cfg[$mixed] = $newVal;
         } elseif (\is_array($mixed)) {
-            $values = $mixed;
+            $ret = \array_intersect_key($this->cfg, $mixed);
+            $this->cfg = \array_merge($this->cfg, $mixed);
         }
-        $this->cfg = \array_merge($this->cfg, $values);
         return $ret;
     }
 
@@ -205,29 +228,6 @@ class ErrorEmailer implements SubscriberInterface
             $str = \substr($str, 0, -1);
         }
         return $str;
-    }
-
-    /**
-     * Send an email
-     *
-     * @param string $toAddr  To
-     * @param string $subject Subject
-     * @param string $body    Body
-     *
-     * @return void
-     */
-    protected function email($toAddr, $subject, $body)
-    {
-        $addHeadersStr = '';
-        $fromAddr = $this->cfg['emailFrom'];
-        if ($fromAddr) {
-            $addHeadersStr .= 'From: '.$fromAddr;
-            if (isset($_SERVER['WINDIR'])) {
-                $fromAddr = \preg_replace('/^.*?<([^>]+)>.*$/', '$1', $fromAddr);
-                \ini_set('sendmail_from', $fromAddr);
-            }
-        }
-        \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
     }
 
     /**

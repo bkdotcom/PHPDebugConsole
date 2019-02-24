@@ -66,16 +66,12 @@ class Internal implements SubscriberInterface
      */
     public function email($emailTo, $subject, $body)
     {
-        $addHeadersStr = '';
-        $fromAddr = $this->debug->getCfg('emailFrom');
-        if ($fromAddr) {
-            $addHeadersStr .= 'From: '.$fromAddr;
-            if (isset($_SERVER['WINDIR'])) {
-                $fromAddr = \preg_replace('/^.*?<([^>]+)>.*$/', '$1', $fromAddr);
-                \ini_set('sendmail_from', $fromAddr);
-            }
-        }
-        \call_user_func($this->debug->getCfg('emailFunc'), $emailTo, $subject, $body, $addHeadersStr);
+        $cfgWas = $this->debug->errorEmailer->setCfg(array(
+            'emailFrom' => $this->debug->getCfg('emailFrom'),
+            'emailFunc' => $this->debug->getCfg('emailFunc'),
+        ));
+        $this->debug->errorEmailer->email($emailTo, $subject, $body);
+        $this->debug->errorEmailer->setCfg($cfgWas);
     }
 
     /**

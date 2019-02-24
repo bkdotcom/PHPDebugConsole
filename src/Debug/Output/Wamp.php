@@ -96,17 +96,19 @@ class Wamp implements OutputInterface
         if ($event['inConsole'] || !$event['isFirstOccur']) {
             return;
         }
-        $this->processLogEntry(
+        $this->processLogEntry(new LogEntry(
+            $this,
             'errorNotConsoled',
             array(
                 $event['typeStr'].': '.$event['file'].' (line '.$event['line'].'): '.$event['message']
             ),
             array(
+                'channel' => 'general',
                 'class' => $event['type'] & $this->debug->getCfg('errorMask')
                     ? 'danger'
                     : 'warning',
             )
-        );
+        ));
     }
 
     /**
@@ -130,8 +132,9 @@ class Wamp implements OutputInterface
     {
         // publish a "we're done" message
         $this->processLogEntry(new LogEntry(
-            $this->debug,
+            $this,
             'endOutput',
+            array(),
             array(
                 'responseCode' => \http_response_code(),
                 'channel' => 'general',
@@ -247,9 +250,6 @@ class Wamp implements OutputInterface
     protected function processLogEntryWEvent(LogEntry $logEntry)
     {
         $logEntry = new LogEntry($this, $logEntry['method'], $logEntry['args'], $logEntry['meta']);
-        if (!isset($logEntry['meta']['channel'])) {
-            $logEntry->setMeta('channel', $this->channelName);
-        }
         $this->debug->eventManager->publish('debug.outputLogEntry', $logEntry);
         if (!$logEntry->isPropagationStopped()) {
             $this->processLogEntry($logEntry);
@@ -286,7 +286,7 @@ class Wamp implements OutputInterface
             $metaVals['REQUEST_URI'] = '$: '. \implode(' ', $_SERVER['argv']);
         }
         $this->processLogEntry(new LogEntry(
-            $this->debug,
+            $this,
             'meta',
             array(
                 $metaVals

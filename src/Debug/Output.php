@@ -140,7 +140,8 @@ class Output implements SubscriberInterface
     /**
      * Set one or more config values
      *
-     * If setting a single value, old value is returned
+     *    setCfg('key', 'value')
+     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
      * @param string $mixed  key=>value array or key
      * @param mixed  $newVal value
@@ -152,14 +153,14 @@ class Output implements SubscriberInterface
         $ret = null;
         $values = array();
         if (\is_string($mixed)) {
-            $key = $mixed;
-            $ret = isset($this->cfg[$key])
-                ? $this->cfg[$key]
+            $ret = isset($this->cfg[$mixed])
+                ? $this->cfg[$mixed]
                 : null;
             $values = array(
-                $key => $newVal,
+                $mixed => $newVal,
             );
         } elseif (\is_array($mixed)) {
+            $ret = \array_intersect_key($this->cfg, $mixed);
             $values = $mixed;
         }
         if (isset($values['outputAs'])) {

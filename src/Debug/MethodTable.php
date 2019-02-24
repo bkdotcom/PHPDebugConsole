@@ -132,7 +132,7 @@ class MethodTable
                     }
                 }
             } else {
-                $value = Abstracter::UNDEFINED;
+                $value = Abstracter::TYPE_UNDEFINED;
             }
             $values[$key] = $value;
         }

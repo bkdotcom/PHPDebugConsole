@@ -23,7 +23,7 @@ class TypeResourceTest extends DebugTestFramework
                         'log',
                         array(
                             array(
-                                'debug' => \bdk\Debug::getInstance()->abstracter->ABSTRACTION,
+                                'debug' => \bdk\Debug\Abstracter::ABSTRACTION,
                                 'type' => 'resource',
                                 'value' => $value,
                             ),

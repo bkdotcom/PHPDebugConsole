@@ -41,12 +41,12 @@ class AbstractArray
     public function getAbstraction(&$array, $method = null, &$hist = array())
     {
         if (\in_array($array, $hist, true)) {
-            return $this->abstracter->RECURSION;
+            return Abstracter::RECURSION;
         }
         if (self::isCallable($array)) {
             // this appears to be a "callable"
             return array(
-                'debug' => $this->abstracter->ABSTRACTION,
+                'debug' => Abstracter::ABSTRACTION,
                 'type' => 'callable',
                 'values' => array(\get_class($array[0]), $array[1]),
             );

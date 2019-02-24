@@ -66,16 +66,12 @@ class Internal implements SubscriberInterface
      */
     public function email($emailTo, $subject, $body)
     {
-        $addHeadersStr = '';
-        $fromAddr = $this->debug->getCfg('emailFrom');
-        if ($fromAddr) {
-            $addHeadersStr .= 'From: '.$fromAddr;
-            if (isset($_SERVER['WINDIR'])) {
-                $fromAddr = \preg_replace('/^.*?<([^>]+)>.*$/', '$1', $fromAddr);
-                \ini_set('sendmail_from', $fromAddr);
-            }
-        }
-        \call_user_func($this->debug->getCfg('emailFunc'), $emailTo, $subject, $body, $addHeadersStr);
+        $cfgWas = $this->debug->errorEmailer->setCfg(array(
+            'emailFrom' => $this->debug->getCfg('emailFrom'),
+            'emailFunc' => $this->debug->getCfg('emailFunc'),
+        ));
+        $this->debug->errorEmailer->email($emailTo, $subject, $body);
+        $this->debug->errorEmailer->setCfg($cfgWas);
     }
 
     /**
@@ -556,7 +552,7 @@ class Internal implements SubscriberInterface
         $vals = array();
         foreach ($logServerKeys as $k) {
             if (!\array_key_exists($k, $_SERVER)) {
-                $vals[$k] = $this->debug->abstracter->UNDEFINED;
+                $vals[$k] = Abstracter::TYPE_UNDEFINED;
             } elseif ($k == 'REQUEST_TIME') {
                 $vals[$k] = \date('Y-m-d H:i:s T', $_SERVER['REQUEST_TIME']);
             } else {

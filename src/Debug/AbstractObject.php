@@ -73,7 +73,7 @@ class AbstractObject
             'className' => $className,
             'collectMethods' => !$isTableTop && $this->abstracter->getCfg('collectMethods') || $className == 'Closure',
             'constants' => array(),
-            'debug' => $this->abstracter->ABSTRACTION,
+            'debug' => Abstracter::ABSTRACTION,
             'debugMethod' => $method,
             'definition' => array(
                 'fileName' => $reflector->getFileName(),
@@ -563,7 +563,7 @@ class AbstractObject
                     )
                 );
                 if (!$exists) {
-                    $properties[ $phpDocProp['name'] ]['value'] = $this->abstracter->UNDEFINED;
+                    $properties[ $phpDocProp['name'] ]['value'] = Abstracter::TYPE_UNDEFINED;
                 }
             }
             unset($abs['phpDoc'][$tag]);
@@ -578,7 +578,7 @@ class AbstractObject
      * returns array of
      *     [
      *         'constantName'   populated only if php >= 5.4.6 & default is a constant
-     *         'defaultValue'   value or UNDEFINED
+     *         'defaultValue'   value or Abstracter::TYPE_UNDEFINED
      *         'desc'           description (from phpDoc)
      *         'isOptional'
      *         'name'           name
@@ -607,7 +607,7 @@ class AbstractObject
                 $name = '&'.$name;
             }
             $constantName = null;
-            $defaultValue = $this->abstracter->UNDEFINED;
+            $defaultValue = Abstracter::TYPE_UNDEFINED;
             if ($reflectionParameter->isDefaultValueAvailable()) {
                 $defaultValue = $reflectionParameter->getDefaultValue();
                 if (\version_compare(PHP_VERSION, '5.4.6', '>=') && $reflectionParameter->isDefaultValueConstant()) {
@@ -844,7 +844,7 @@ class AbstractObject
     private function phpDocParam($param, $className)
     {
         $constantName = null;
-        $defaultValue = $this->abstracter->UNDEFINED;
+        $defaultValue = Abstracter::TYPE_UNDEFINED;
         if (\array_key_exists('defaultValue', $param)) {
             $defaultValue = $param['defaultValue'];
             if (\in_array($defaultValue, array('true','false','null'))) {

@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
@@ -188,7 +189,7 @@ class Firephp extends Base
         foreach ($array as $k => $row) {
             $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
             foreach ($values as $k2 => $val) {
-                if ($val === $this->debug->abstracter->UNDEFINED) {
+                if ($val === Abstracter::TYPE_UNDEFINED) {
                     $values[$k2] = null;
                 }
             }
@@ -230,9 +231,9 @@ class Firephp extends Base
             $part = $parts[$i];
             $this->messageIndex++;
             $headerName = 'X-Wf-1-'.$structureIndex.'-1-'.$this->messageIndex;
-            $headerValue = ( $i==0 ? \strlen($msg) : '')
+            $headerValue = ($i==0 ? \strlen($msg) : '')
                 . '|' . $part . '|'
-                . ( $i<$numParts-1 ? '\\' : '' );
+                . ($i<$numParts-1 ? '\\' : '');
             $this->outputEvent['headers'][] = array($headerName, $headerValue);
         }
     }

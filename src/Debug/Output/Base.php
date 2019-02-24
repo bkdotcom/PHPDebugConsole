@@ -12,6 +12,7 @@
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
+use bdk\Debug\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
@@ -398,7 +399,7 @@ abstract class Base implements OutputInterface
     private function methodTableCleanValues($values)
     {
         foreach ($values as $k2 => $val) {
-            if ($val === $this->debug->abstracter->UNDEFINED) {
+            if ($val === Abstracter::TYPE_UNDEFINED) {
                 unset($values[$k2]);
             } elseif (\is_array($val)) {
                 $values[$k2] = $this->debug->output->text->dump($val);

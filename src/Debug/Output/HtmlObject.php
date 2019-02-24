@@ -12,6 +12,7 @@
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
+use bdk\Debug\Abstracter;
 
 /**
  * Output object as HTML
@@ -229,7 +230,7 @@ class HtmlObject
             $paramStr .= '<span class="t_parameter-name"'
                 .' title="'.\htmlspecialchars($info['desc']).'"'
                 .'>'.\htmlspecialchars($info['name']).'</span>';
-            if ($info['defaultValue'] !== $this->debug->abstracter->UNDEFINED) {
+            if ($info['defaultValue'] !== Abstracter::TYPE_UNDEFINED) {
                 $defaultValue = $info['defaultValue'];
                 $paramStr .= ' <span class="t_operator">=</span> ';
                 if ($info['constantName']) {
@@ -353,7 +354,7 @@ class HtmlObject
                 .' <span class="property-name"'
                     .' title="'.\htmlspecialchars($info['desc']).'"'
                     .'>'.$k.'</span>'
-                .($info['value'] !== $this->debug->abstracter->UNDEFINED
+                .($info['value'] !== Abstracter::TYPE_UNDEFINED
                     ? ' <span class="t_operator">=</span> '
                         .$this->debug->output->html->dump($info['value'])
                     : '')

@@ -327,15 +327,13 @@ class ErrorHandler
     /**
      * Set one or more config values
      *
-     * If setting a single value via method a or b, old value is returned
-     *
      *    setCfg('key', 'value')
      *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
      * @param string $mixed  key=>value array or key
      * @param mixed  $newVal value
      *
-     * @return mixed
+     * @return mixed old value(s)
      */
     public function setCfg($mixed, $newVal = null)
     {
@@ -350,6 +348,7 @@ class ErrorHandler
                 $key => $newVal,
             );
         } elseif (\is_array($mixed)) {
+            $ret = \array_intersect_key($this->cfg, $mixed);
             $values = $mixed;
         }
         if (isset($values['onError'])) {

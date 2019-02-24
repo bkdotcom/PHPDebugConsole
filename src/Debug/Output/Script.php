@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
@@ -123,7 +124,7 @@ class Script extends Base
             $args[$k] = \json_encode($this->dump($arg));
         }
         $str = 'console.'.$method.'('.\implode(',', $args).');'."\n";
-        $str = \str_replace(\json_encode($this->debug->abstracter->UNDEFINED), 'undefined', $str);
+        $str = \str_replace(\json_encode(Abstracter::TYPE_UNDEFINED), 'undefined', $str);
         return $str;
     }
 
@@ -136,7 +137,7 @@ class Script extends Base
      */
     protected function dumpUndefined()
     {
-        return $this->debug->abstracter->UNDEFINED;
+        return Abstracter::TYPE_UNDEFINED;
     }
 
     /**

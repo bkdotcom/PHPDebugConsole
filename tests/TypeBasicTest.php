@@ -78,7 +78,7 @@ class TypeBasicTest extends DebugTestFramework
             ),
             array(
                 'log',
-                array(\bdk\Debug\Abstracter::UNDEFINED),
+                array(\bdk\Debug\Abstracter::TYPE_UNDEFINED),
                 array(
                     'chromeLogger' => '[[null],null,""]',
                     'html' => '<div class="m_log"><span class="t_undefined"></span></div>',

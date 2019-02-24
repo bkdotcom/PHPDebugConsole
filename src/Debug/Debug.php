@@ -14,6 +14,7 @@
 
 namespace bdk;
 
+use bdk\Debug\Abstracter;
 use bdk\Debug\FileStreamWrapper;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler;
@@ -543,7 +544,7 @@ class Debug
      *
      * @return void
      */
-    public function groupEnd($value = \bdk\Debug\Abstracter::UNDEFINED)
+    public function groupEnd($value = Abstracter::TYPE_UNDEFINED)
     {
         $logEntry = new LogEntry(
             $this,
@@ -552,7 +553,7 @@ class Debug
             array(
                 'channel' => $this->cfg['channel'],
             ),
-            array('value' => \bdk\Debug\Abstracter::UNDEFINED)
+            array('value' => Abstracter::TYPE_UNDEFINED)
         );
         $value = $logEntry['args'][0];
         $logEntry['args'] = array();
@@ -562,7 +563,7 @@ class Debug
             \array_pop($this->rootInstance->groupStackRef);
             $appendLog = $this->cfg['collect'];
         }
-        if ($appendLog && $value !== \bdk\Debug\Abstracter::UNDEFINED) {
+        if ($appendLog && $value !== Abstracter::TYPE_UNDEFINED) {
             $this->appendLog(new LogEntry(
                 $this,
                 'groupEndValue',

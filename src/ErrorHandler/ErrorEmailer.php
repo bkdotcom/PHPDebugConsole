@@ -64,18 +64,10 @@ class ErrorEmailer implements SubscriberInterface
     {
         $addHeadersStr = '';
         $fromAddr = $this->cfg['emailFrom'];
-        $sendmailFromWas = false;
         if ($fromAddr) {
             $addHeadersStr .= 'From: '.$fromAddr;
-            if (isset($_SERVER['WINDIR'])) {
-                $fromAddr = \preg_replace('/^.*?<([^>]+)>.*$/', '$1', $fromAddr);
-                $sendmailFromWas = \ini_set('sendmail_from', $fromAddr);
-            }
         }
         \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
-        if ($sendmailFromWas) {
-            \ini_set('sendmail_from', $sendmailFromWas);
-        }
     }
 
     /**

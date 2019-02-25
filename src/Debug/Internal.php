@@ -67,7 +67,7 @@ class Internal implements SubscriberInterface
     public function email($toAddr, $subject, $body)
     {
         $addHeadersStr = '';
-        $fromAddr = $this->cfg['emailFrom'];
+        $fromAddr = $this->debug->getCfg('emailFrom');
         if ($fromAddr) {
             $addHeadersStr .= 'From: '.$fromAddr;
         }

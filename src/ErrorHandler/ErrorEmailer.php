@@ -287,14 +287,12 @@ class ErrorEmailer implements SubscriberInterface
     protected function fileWrite($file, $str)
     {
         $return = false;
-        if (!\file_exists($file)) {
-            $dir = \dirname($file);
-            if (!\is_dir($dir) && \is_writable($dir)) {
-                \mkdir($dir, 0755, true);    // 3rd param is php 5
-            }
+        $dir = \dirname($file);
+        if (!\file_exists($dir)) {
+            \mkdir($dir, 0755, true);
         }
-        if (\is_writable($file)) {
-            \file_put_contents($file, $str);
+        if (\is_writable($file) || !\file_exists($file) && \is_writeable($dir)) {
+            $return = \file_put_contents($file, $str);
         }
         return $return;
     }
@@ -380,7 +378,7 @@ class ErrorEmailer implements SubscriberInterface
      *
      * @param Event $error error event
      *
-     * @return void
+     * @return boolean
      */
     protected function throttleDataSet(Event $error)
     {
@@ -405,8 +403,7 @@ class ErrorEmailer implements SubscriberInterface
         if (empty($this->errTypes)) {
             $this->errTypes = $error->getSubject()->get('errTypes');
         }
-        $this->throttleDataWrite();
-        return;
+        return $this->throttleDataWrite();
     }
 
     /**
@@ -414,16 +411,24 @@ class ErrorEmailer implements SubscriberInterface
      *
      * Uses cfg[emailThrottleWrite] callable if set, otherwise, writes to cfg['emailThrottleFile']
      *
-     * @return void
+     * @return boolean
      */
     protected function throttleDataWrite()
     {
+        $return = true;
         $this->throttleDataGarbageCollection();
         if ($this->cfg['emailThrottleWrite'] && \is_callable($this->cfg['emailThrottleWrite'])) {
-            \call_user_func($this->cfg['emailThrottleWrite'], $this->throttleData);
+            $return = \call_user_func($this->cfg[''], $this->throttleData);
+            if (!$return) {
+                \error_log('ErrorEmailer: emailThrottleWrite() returned false');
+            }
         } elseif ($this->cfg['emailThrottleFile']) {
-            $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData, JSON_PRETTY_PRINT));
+            $wrote = $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData, JSON_PRETTY_PRINT));
+            if (!$wrote) {
+                $return = false;
+                \error_log('Unable to write to '.$this->cfg['emailThrottleFile']);
+            }
         }
-        return;
+        return $return;
     }
 }

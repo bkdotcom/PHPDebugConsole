@@ -52,25 +52,6 @@ class ErrorEmailer implements SubscriberInterface
     }
 
     /**
-     * Send an email
-     *
-     * @param string $toAddr  To
-     * @param string $subject Subject
-     * @param string $body    Body
-     *
-     * @return void
-     */
-    public function email($toAddr, $subject, $body)
-    {
-        $addHeadersStr = '';
-        $fromAddr = $this->cfg['emailFrom'];
-        if ($fromAddr) {
-            $addHeadersStr .= 'From: '.$fromAddr;
-        }
-        \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
-    }
-
-    /**
      * Retrieve a configuration value
      *
      * @param string $key what to get
@@ -220,6 +201,25 @@ class ErrorEmailer implements SubscriberInterface
             $str = \substr($str, 0, -1);
         }
         return $str;
+    }
+
+    /**
+     * Send an email
+     *
+     * @param string $toAddr  To
+     * @param string $subject Subject
+     * @param string $body    Body
+     *
+     * @return void
+     */
+    protected function email($toAddr, $subject, $body)
+    {
+        $addHeadersStr = '';
+        $fromAddr = $this->cfg['emailFrom'];
+        if ($fromAddr) {
+            $addHeadersStr .= 'From: '.$fromAddr;
+        }
+        \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
     }
 
     /**

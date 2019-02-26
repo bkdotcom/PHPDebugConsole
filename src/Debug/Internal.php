@@ -58,20 +58,20 @@ class Internal implements SubscriberInterface
     /**
      * Send an email
      *
-     * @param string $emailTo to
+     * @param string $toAddr  to
      * @param string $subject subject
      * @param string $body    body
      *
      * @return void
      */
-    public function email($emailTo, $subject, $body)
+    public function email($toAddr, $subject, $body)
     {
-        $cfgWas = $this->debug->errorEmailer->setCfg(array(
-            'emailFrom' => $this->debug->getCfg('emailFrom'),
-            'emailFunc' => $this->debug->getCfg('emailFunc'),
-        ));
-        $this->debug->errorEmailer->email($emailTo, $subject, $body);
-        $this->debug->errorEmailer->setCfg($cfgWas);
+        $addHeadersStr = '';
+        $fromAddr = $this->debug->getCfg('emailFrom');
+        if ($fromAddr) {
+            $addHeadersStr .= 'From: '.$fromAddr;
+        }
+        \call_user_func($this->debug->getCfg('emailFunc'), $toAddr, $subject, $body, $addHeadersStr);
     }
 
     /**

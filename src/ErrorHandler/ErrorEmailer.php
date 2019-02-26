@@ -52,33 +52,6 @@ class ErrorEmailer implements SubscriberInterface
     }
 
     /**
-     * Send an email
-     *
-     * @param string $toAddr  To
-     * @param string $subject Subject
-     * @param string $body    Body
-     *
-     * @return void
-     */
-    public function email($toAddr, $subject, $body)
-    {
-        $addHeadersStr = '';
-        $fromAddr = $this->cfg['emailFrom'];
-        $sendmailFromWas = false;
-        if ($fromAddr) {
-            $addHeadersStr .= 'From: '.$fromAddr;
-            if (isset($_SERVER['WINDIR'])) {
-                $fromAddr = \preg_replace('/^.*?<([^>]+)>.*$/', '$1', $fromAddr);
-                $sendmailFromWas = \ini_set('sendmail_from', $fromAddr);
-            }
-        }
-        \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
-        if ($sendmailFromWas) {
-            \ini_set('sendmail_from', $sendmailFromWas);
-        }
-    }
-
-    /**
      * Retrieve a configuration value
      *
      * @param string $key what to get
@@ -143,9 +116,9 @@ class ErrorEmailer implements SubscriberInterface
     public function onErrorLowPri(Event $error)
     {
         if ($error['email'] && $this->cfg['emailMin'] > 0) {
-            $this->throttleDataSet($error);
+            $throttleSuccess = $this->throttleDataSet($error);
             $tsCutoff = \time() - $this->cfg['emailMin'] * 60;
-            $error['email'] = $error['stats']['tsEmailed'] <= $tsCutoff;
+            $error['email'] = $throttleSuccess && $error['stats']['tsEmailed'] <= $tsCutoff;
         }
         if ($error['email']) {
             $this->emailErr($error);
@@ -228,6 +201,26 @@ class ErrorEmailer implements SubscriberInterface
         return $str;
     }
 
+
+    /**
+     * Send an email
+     *
+     * @param string $toAddr  To
+     * @param string $subject Subject
+     * @param string $body    Body
+     *
+     * @return void
+     */
+    protected function email($toAddr, $subject, $body)
+    {
+        $addHeadersStr = '';
+        $fromAddr = $this->cfg['emailFrom'];
+        if ($fromAddr) {
+            $addHeadersStr .= 'From: '.$fromAddr;
+        }
+        \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
+    }
+
     /**
      * Email this error
      *
@@ -293,14 +286,12 @@ class ErrorEmailer implements SubscriberInterface
     protected function fileWrite($file, $str)
     {
         $return = false;
-        if (!\file_exists($file)) {
-            $dir = \dirname($file);
-            if (!\is_dir($dir) && \is_writable($dir)) {
-                \mkdir($dir, 0755, true);    // 3rd param is php 5
-            }
+        $dir = \dirname($file);
+        if (!\file_exists($dir)) {
+            \mkdir($dir, 0755, true);
         }
-        if (\is_writable($file)) {
-            \file_put_contents($file, $str);
+        if (\is_writable($file) || !\file_exists($file) && \is_writeable($dir)) {
+            $return = \file_put_contents($file, $str);
         }
         return $return;
     }
@@ -386,7 +377,7 @@ class ErrorEmailer implements SubscriberInterface
      *
      * @param Event $error error event
      *
-     * @return void
+     * @return boolean
      */
     protected function throttleDataSet(Event $error)
     {
@@ -411,8 +402,7 @@ class ErrorEmailer implements SubscriberInterface
         if (empty($this->errTypes)) {
             $this->errTypes = $error->getSubject()->get('errTypes');
         }
-        $this->throttleDataWrite();
-        return;
+        return $this->throttleDataWrite();
     }
 
     /**
@@ -420,16 +410,24 @@ class ErrorEmailer implements SubscriberInterface
      *
      * Uses cfg[emailThrottleWrite] callable if set, otherwise, writes to cfg['emailThrottleFile']
      *
-     * @return void
+     * @return boolean
      */
     protected function throttleDataWrite()
     {
+        $return = true;
         $this->throttleDataGarbageCollection();
         if ($this->cfg['emailThrottleWrite'] && \is_callable($this->cfg['emailThrottleWrite'])) {
-            \call_user_func($this->cfg['emailThrottleWrite'], $this->throttleData);
+            $return = \call_user_func($this->cfg[''], $this->throttleData);
+            if (!$return) {
+                \error_log('ErrorEmailer: emailThrottleWrite() returned false');
+            }
         } elseif ($this->cfg['emailThrottleFile']) {
-            $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData, JSON_PRETTY_PRINT));
+            $wrote = $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData, JSON_PRETTY_PRINT));
+            if (!$wrote) {
+                $return = false;
+                \error_log('Unable to write to '.$this->cfg['emailThrottleFile']);
+            }
         }
-        return;
+        return $return;
     }
 }

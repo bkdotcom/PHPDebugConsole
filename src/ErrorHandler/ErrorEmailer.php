@@ -238,7 +238,7 @@ class ErrorEmailer implements SubscriberInterface
             $errMsg = \htmlspecialchars_decode($errMsg);
         }
         $countSince = $error['stats']['countSince'];
-        $isCli = !isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv']);
+        $isCli = $this->isCli();
         $subject = $isCli
             ? 'Error: '.\implode(' ', $_SERVER['argv'])
             : 'Website Error: '.$_SERVER['SERVER_NAME'];
@@ -295,6 +295,16 @@ class ErrorEmailer implements SubscriberInterface
             $return = \file_put_contents($file, $str);
         }
         return $return;
+    }
+
+    /**
+     * Is script running from command line (or cron)?
+     *
+     * @return boolean
+     */
+    protected static function isCli()
+    {
+        return \defined('STDIN') || \getenv('SHELL') !== false || isset($_SERVER['argv']);
     }
 
     /**

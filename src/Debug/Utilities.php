@@ -392,9 +392,15 @@ class Utilities
     public static function getInterface()
     {
         $return = 'http';
-        if (\http_response_code() === false) {
+        $isCliOrCron = \count(\array_filter(array(
+            \defined('STDIN'),
+            \getenv('SHELL') !== false,
+            isset($_SERVER['argv']),
+            !\array_key_exists('REQUEST_METHOD', $_SERVER),
+        ))) > 0;
+        if ($isCliOrCron) {
             // TERM is a linux/unix thing
-            $return = isset($_SERVER['TERM']) || \function_exists('posix_isatty') && \posix_isatty(STDOUT)
+            $return = isset($_SERVER['TERM']) || \array_key_exists('PATH', $_SERVER)
                 ? 'cli'
                 : 'cron';
         } elseif (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {

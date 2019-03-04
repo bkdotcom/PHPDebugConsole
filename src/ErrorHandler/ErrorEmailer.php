@@ -222,6 +222,25 @@ class ErrorEmailer implements SubscriberInterface
     }
 
     /**
+     * Send an email
+     *
+     * @param string $toAddr  To
+     * @param string $subject Subject
+     * @param string $body    Body
+     *
+     * @return void
+     */
+    protected function email($toAddr, $subject, $body)
+    {
+        $addHeadersStr = '';
+        $fromAddr = $this->cfg['emailFrom'];
+        if ($fromAddr) {
+            $addHeadersStr .= 'From: '.$fromAddr;
+        }
+        \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
+    }
+
+    /**
      * Email this error
      *
      * @param Event $error error event
@@ -237,7 +256,7 @@ class ErrorEmailer implements SubscriberInterface
             $errMsg = \htmlspecialchars_decode($errMsg);
         }
         $countSince = $error['stats']['countSince'];
-        $isCli = !isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv']);
+        $isCli = $this->isCli();
         $subject = $isCli
             ? 'Error: '.\implode(' ', $_SERVER['argv'])
             : 'Website Error: '.$_SERVER['SERVER_NAME'];
@@ -294,6 +313,16 @@ class ErrorEmailer implements SubscriberInterface
             $return = \file_put_contents($file, $str);
         }
         return $return;
+    }
+
+    /**
+     * Is script running from command line (or cron)?
+     *
+     * @return boolean
+     */
+    protected static function isCli()
+    {
+        return \defined('STDIN') || isset($_SERVER['argv']) || !\array_key_exists('REQUEST_METHOD', $_SERVER);
     }
 
     /**

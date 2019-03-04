@@ -304,7 +304,7 @@ class ErrorEmailer implements SubscriberInterface
      */
     protected static function isCli()
     {
-        return \defined('STDIN') || \getenv('SHELL') !== false || isset($_SERVER['argv']);
+        return \defined('STDIN') || isset($_SERVER['argv']) || !\array_key_exists('REQUEST_METHOD', $_SERVER);
     }
 
     /**

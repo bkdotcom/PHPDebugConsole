@@ -1,0 +1,45 @@
+/*
+	Base debug CSS
+	use setCfg('css', 'more css'); to add rules / override default
+*/
+.debug {
+
+	$info-bg: #d9edf7;
+	$info-fg: #31708f;
+	$error-bg: #ffbaba;
+	$error-fg: #d8000c;
+	$warn-bg: #fcf8e3;
+	$warn-fg: #8a6d3b;
+
+	.debug-bar {
+		padding: 5px;
+		font-size: 115%;
+		background-color: rgba(0, 0, 0, 0.2);
+		margin-bottom: 10px;
+		h3 { margin-top:0; }
+	}
+	.debug-content { margin-top:0.75em; }
+	.channels legend { font-size:144%; }
+	.channels ul { font-size:125%; }
+
+	@import "Reset";
+	@import "Alerts";
+	@import "Table";
+	@import "Tokens";
+	@import "ArrayAndObject";
+	@import "Methods";
+	@import "Drawer";
+
+	//
+	// Utilities
+	//
+	.indent { padding-left:10px; }
+	.list-unstyled{
+		list-style: none outside none;
+		padding-left: 0;
+	}
+	.no-pseudo:before { content:none; }
+	.no-pseudo:after { content:none; }
+	.text-muted { opacity:0.5; }
+	.text-right { text-align:right; }
+}

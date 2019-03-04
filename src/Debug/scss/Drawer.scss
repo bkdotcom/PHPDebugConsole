@@ -1,0 +1,125 @@
+.debug-drawer {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	font-family: arial;
+	background-color: #fff;
+
+	// debug-drawer is closed (pushed offscreen) by default
+	height: 100px;
+	transform: translateY(100px);
+	transition: all 0.5s 0s;
+
+	&.debug-drawer-open {
+		transform: translateY(0px);
+		height: auto;
+		.debug-pull-tab {
+			opacity: 0;
+			transform: translateY(25px);
+		}
+		@at-root {
+			& .debug-resize-handle {
+				cursor: ns-resize;
+			}
+			& .debug-resize-handle:hover,
+			html.debug-resizing .debug-resize-handle {
+				opacity: 1;
+			}
+		}
+	}
+
+	.debug-pull-tab {
+		display: inline-block;
+		opacity: 1;
+		position: absolute;
+		box-sizing: border-box;
+		height: 25px;
+		top: -25px;
+		margin-left: 20px;
+		border: 1px solid #000;
+		border-bottom-width: 0;
+		border-radius: 5px 5px 0 0;
+		padding: 4px 14px;
+		background-color: #f3f3f3;
+		cursor: pointer;
+		transition: all 0.5s 0s;
+		z-index: -1;
+	}
+
+	.debug-resize-handle {
+		display: block;
+		box-sizing: border-box;
+		position: absolute;
+		top: -4px;
+		height: 4px;
+		width: 100%;
+		opacity: 0;
+		border-top: 1px solid #aaa;
+		border-bottom: 1px solid #aaa;
+		background: #eee;
+		transition: all 0.3s 0s;
+		/*
+		@at-root {
+			&:hover,
+			html.debug-resizing .debug-resize-handle {
+				opacity: 1;
+			}
+		}
+		*/
+	}
+
+	@at-root html.debug-resizing {
+		cursor: ns-resize !important;
+		.debug-drawer {
+			// disable transition when resizing
+			transition: none;
+		}
+	}
+
+	.debug-menu-bar {
+		height: 18px;
+		border-top: 1px solid #d0d0d0;
+		padding: 3px 6px;
+		background: #f3f3f3;
+		font-size: 16px;
+		line-height: 1;
+		& :focus,
+		& :hover {
+			color: #333;
+			text-decoration: none;
+		}
+		&,
+		& a {
+			// text-decoration: none;
+			color: #6e6e6e;
+		}
+		button.close {
+			float: right;
+			height: 18px;
+			border: 0;
+			padding: 0;
+			font-size: 1.33rem;
+			line-height: 0;
+		    font-weight: 300;
+			-webkit-appearance: none;
+			   -moz-appearance: none;
+			        appearance: none;
+			background-color: transparent;
+			color: inherit;
+			cursor: pointer;
+			outline: none;
+			span {
+				position: relative;
+				top: -2px;
+			}
+		}
+	}
+
+	.debug-drawer-body {
+		border-top: 1px solid #d0d0d0;
+		padding: 5px 10px;
+		background-color: #FFF;
+		overflow: auto;
+	}
+}

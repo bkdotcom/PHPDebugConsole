@@ -1,0 +1,48 @@
+//
+// array & objects
+//
+
+.t_object .t_classname { font-weight: bold; }
+.namespace { opacity:0.5; }
+
+.array-inner,
+.object-inner { display:block; margin-left:1.5em; }
+span.key-value {
+	display: block;
+	padding-left: 10px;
+	text-indent: -10px;
+}
+.t_object {
+	.property-name[title],
+	.method-name[title],
+	.method .parameter [title],
+	.t_stringified,
+	.t_type[title] {
+		text-decoration: underline;
+	}
+	.method.deprecated i { border-bottom:0; }
+	.t_modifier_static { font-style:italic; color:#00529B; }
+}
+.info {
+	display: inline-block;
+	background-color: $info-bg;
+	color: $info-fg;
+}
+.deprecated {
+	opacity:.66;
+	i { opacity:.66; color:$error-fg; }
+}
+.constant-name,
+.property-name,
+.method .method-name {
+	font-weight: bold;
+}
+.method > .t_punct {
+	opacity: 1;
+	font-weight: bold;
+	color: inherit;
+}
+.property.private-ancestor {
+	color: #F39;
+	&:hover { color: inherit; }
+}

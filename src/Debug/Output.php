@@ -101,7 +101,7 @@ class Output implements SubscriberInterface
     {
         $return = '';
         if ($this->cfg['filepathCss']) {
-            $filepath = \preg_replace('#^[./]+#', __DIR__.'/', $this->cfg['filepathCss']);
+            $filepath = \preg_replace('#^\./?#', __DIR__.'/', $this->cfg['filepathCss']);
             $return = \file_get_contents($filepath);
             if ($return === false) {
                 $return = '/* Unable to read filepathCss */';
@@ -124,7 +124,7 @@ class Output implements SubscriberInterface
     {
         $return = '';
         if ($this->cfg['filepathScript']) {
-            $filepath = \preg_replace('#^[./]+#', __DIR__.'/', $this->cfg['filepathScript']);
+            $filepath = \preg_replace('#^\./?#', __DIR__.'/', $this->cfg['filepathScript']);
             $return = \file_get_contents($filepath);
             if ($return === false) {
                 $return = 'console.warn("PHPDebugConsole: unable to read filepathScript");';

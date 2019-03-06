@@ -11,6 +11,10 @@
 	transform: translateY(100px);
 	transition: all 0.5s 0s;
 
+	> * {
+		box-sizing: border-box;
+	}
+
 	&.debug-drawer-open {
 		transform: translateY(0px);
 		height: auto;
@@ -18,12 +22,9 @@
 			opacity: 0;
 			transform: translateY(25px);
 		}
-		@at-root {
-			& .debug-resize-handle {
-				cursor: ns-resize;
-			}
-			& .debug-resize-handle:hover,
-			html.debug-resizing .debug-resize-handle {
+		& .debug-resize-handle {
+			cursor: ns-resize;
+			&:hover {
 				opacity: 1;
 			}
 		}
@@ -33,7 +34,6 @@
 		display: inline-block;
 		opacity: 1;
 		position: absolute;
-		box-sizing: border-box;
 		height: 25px;
 		top: -25px;
 		margin-left: 20px;
@@ -41,6 +41,7 @@
 		border-bottom-width: 0;
 		border-radius: 5px 5px 0 0;
 		padding: 4px 14px;
+		font-size: 16px;
 		background-color: #f3f3f3;
 		cursor: pointer;
 		transition: all 0.5s 0s;
@@ -49,24 +50,16 @@
 
 	.debug-resize-handle {
 		display: block;
-		box-sizing: border-box;
 		position: absolute;
-		top: -4px;
+		top: -3px;
 		height: 4px;
 		width: 100%;
 		opacity: 0;
 		border-top: 1px solid #aaa;
 		border-bottom: 1px solid #aaa;
 		background: #eee;
-		transition: all 0.3s 0s;
-		/*
-		@at-root {
-			&:hover,
-			html.debug-resizing .debug-resize-handle {
-				opacity: 1;
-			}
-		}
-		*/
+		transition: all 0.25s 0s;
+		transition-timing-function: ease-out;
 	}
 
 	@at-root html.debug-resizing {
@@ -74,11 +67,14 @@
 		.debug-drawer {
 			// disable transition when resizing
 			transition: none;
+			.debug-resize-handle {
+				opacity: 1;
+			}
 		}
 	}
 
 	.debug-menu-bar {
-		height: 18px;
+		height: 24px;
 		border-top: 1px solid #d0d0d0;
 		padding: 3px 6px;
 		background: #f3f3f3;

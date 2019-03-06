@@ -174,7 +174,6 @@ class Html extends Base
      */
     public function onOutput(Event $event)
     {
-        $this->data = $this->debug->getData();
         $str = '<div class="debug">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
@@ -183,9 +182,10 @@ class Html extends Base
         }
         if ($this->debug->getCfg('output.outputScript')) {
             $str .= '<script type="text/javascript">'
-                .\file_get_contents($this->debug->getCfg('filepathScript'))
+                    .$this->debug->output->getScript()."\n"
                 .'</script>'."\n";
         }
+        $this->data = $this->debug->getData();
         $str .= '<div class="debug-bar"><h3>Debug Log</h3></div>'."\n";
         $str .= '{{channelToggles}}'; // initially display:none;
         $str .= $this->processAlerts();

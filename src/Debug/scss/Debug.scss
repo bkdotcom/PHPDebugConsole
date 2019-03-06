@@ -8,7 +8,7 @@
 	$info-fg: #31708f;
 	$error-bg: #ffbaba;
 	$error-fg: #d8000c;
-	$warn-bg: #fcf8e3;
+	$warn-bg: #fefbe5;
 	$warn-fg: #8a6d3b;
 
 	.debug-bar {
@@ -22,13 +22,13 @@
 	.channels legend { font-size:144%; }
 	.channels ul { font-size:125%; }
 
-	@import "Reset";
-	@import "Alerts";
-	@import "Table";
-	@import "Tokens";
-	@import "ArrayAndObject";
-	@import "Methods";
-	@import "Drawer";
+	@import "reset";
+	@import "alerts";
+	@import "arrayAndObject";
+	@import "methods";
+	@import "table";
+	@import "tokens";
+	@import "drawer";
 
 	//
 	// Utilities

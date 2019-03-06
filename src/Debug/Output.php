@@ -99,10 +99,37 @@ class Output implements SubscriberInterface
      */
     public function getCss()
     {
-        $return = \file_get_contents($this->cfg['filepathCss']);
-        $return .= "\n";
+        $return = '';
+        if ($this->cfg['filepathCss']) {
+            $filepath = \preg_replace('#^[./]+#', __DIR__.'/', $this->cfg['filepathCss']);
+            $return = \file_get_contents($filepath);
+            if ($return === false) {
+                $return = '/* Unable to read filepathCss */';
+                $this->debug->alert('unable to read filepathCss');
+            }
+        }
         if (!empty($this->cfg['css'])) {
+            $return .= "\n";
             $return .= $this->cfg['css']."\n";
+        }
+        return $return;
+    }
+
+    /**
+     * Return the log's javascript
+     *
+     * @return string
+     */
+    public function getScript()
+    {
+        $return = '';
+        if ($this->cfg['filepathScript']) {
+            $filepath = \preg_replace('#^[./]+#', __DIR__.'/', $this->cfg['filepathScript']);
+            $return = \file_get_contents($filepath);
+            if ($return === false) {
+                $return = 'console.warn("PHPDebugConsole: unable to read filepathScript");';
+                $this->debug->alert('unable to read filepathScript');
+            }
         }
         return $return;
     }

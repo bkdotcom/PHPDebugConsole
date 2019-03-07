@@ -101,8 +101,7 @@ class Output implements SubscriberInterface
     {
         $return = '';
         if ($this->cfg['filepathCss']) {
-            $filepath = \preg_replace('#^\./?#', __DIR__.'/', $this->cfg['filepathCss']);
-            $return = \file_get_contents($filepath);
+            $return = \file_get_contents($this->cfg['filepathCss']);
             if ($return === false) {
                 $return = '/* Unable to read filepathCss */';
                 $this->debug->alert('unable to read filepathCss');
@@ -124,8 +123,7 @@ class Output implements SubscriberInterface
     {
         $return = '';
         if ($this->cfg['filepathScript']) {
-            $filepath = \preg_replace('#^\./?#', __DIR__.'/', $this->cfg['filepathScript']);
-            $return = \file_get_contents($filepath);
+            $return = \file_get_contents($this->cfg['filepathScript']);
             if ($return === false) {
                 $return = 'console.warn("PHPDebugConsole: unable to read filepathScript");';
                 $this->debug->alert('unable to read filepathScript');
@@ -189,6 +187,12 @@ class Output implements SubscriberInterface
         } elseif (\is_array($mixed)) {
             $ret = \array_intersect_key($this->cfg, $mixed);
             $values = $mixed;
+        }
+        if (isset($values['filepathCss'])) {
+            $values['filepathCss'] = \preg_replace('#^\./?#', __DIR__.'/', $this->cfg['filepathCss']);
+        }
+        if (isset($values['filepathScript'])) {
+            $values['filepathScript'] = \preg_replace('#^\./?#', __DIR__.'/', $this->cfg['filepathScript']);
         }
         if (isset($values['outputAs'])) {
             $this->setOutputAs($values['outputAs']);

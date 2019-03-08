@@ -225,6 +225,7 @@ class Config
                 'displayListKeys',
                 'filepathCss',
                 'filepathScript',
+                'jqueryUrl',
                 'onOutput',
                 'outputAs',
                 'outputAsDefaultNonHtml',

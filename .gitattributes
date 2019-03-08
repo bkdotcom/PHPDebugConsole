@@ -6,4 +6,6 @@
 /.gitignore export-ignore
 /.travis.yml export-ignore
 /phpunit.xml.dist export-ignore
+/src/Debug/js_src
+/src/Debug/rollup.config.js export-ignore
 /tests export-ignore

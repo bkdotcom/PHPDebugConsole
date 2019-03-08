@@ -181,6 +181,7 @@ class Html extends Base
                 .'</style>'."\n";
         }
         if ($this->debug->getCfg('output.outputScript')) {
+            $str .= '<script>window.jQuery || document.write(\'<script src="'.$this->debug->getCfg('output.jqueryUrl').'"><\/script>\')</script>';
             $str .= '<script type="text/javascript">'
                     .$this->debug->output->getScript()."\n"
                 .'</script>'."\n";

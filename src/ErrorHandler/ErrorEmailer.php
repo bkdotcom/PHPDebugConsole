@@ -201,7 +201,6 @@ class ErrorEmailer implements SubscriberInterface
         return $str;
     }
 
-
     /**
      * Send an email
      *

@@ -40,6 +40,7 @@ class Output implements SubscriberInterface
             'displayListKeys' => true,
             'filepathCss' => __DIR__.'/css/Debug.css',
             'filepathScript' => __DIR__.'/js/Debug.jquery.min.js',
+            'jqueryUrl' => '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
             'onOutput'  => null,            // set to something callable
             'outputAs'  => null,            // 'chromeLogger', 'html', 'script', 'text', or Object, if null, will be determined automatically
             'outputAsDefaultNonHtml' => 'chromeLogger',
@@ -189,10 +190,10 @@ class Output implements SubscriberInterface
             $values = $mixed;
         }
         if (isset($values['filepathCss'])) {
-            $values['filepathCss'] = \preg_replace('#^\./?#', __DIR__.'/', $this->cfg['filepathCss']);
+            $values['filepathCss'] = \preg_replace('#^\./?#', __DIR__.'/', $values['filepathCss']);
         }
         if (isset($values['filepathScript'])) {
-            $values['filepathScript'] = \preg_replace('#^\./?#', __DIR__.'/', $this->cfg['filepathScript']);
+            $values['filepathScript'] = \preg_replace('#^\./?#', __DIR__.'/', $values['filepathScript']);
         }
         if (isset($values['outputAs'])) {
             $this->setOutputAs($values['outputAs']);

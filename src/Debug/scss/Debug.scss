@@ -19,10 +19,8 @@
 		h3 { margin-top:0; }
 	}
 	.debug-content { margin-top:0.75em; }
-	.channels legend { font-size:144%; }
-	.channels ul { font-size:125%; }
 
-	@import "reset";
+	@import "base";
 	@import "alerts";
 	@import "arrayAndObject";
 	@import "methods";

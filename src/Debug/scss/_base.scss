@@ -23,6 +23,7 @@ a {
 	&:active, &:hover { outline: 0; color: #e00; }
 }
 button {
+	cursor: pointer;
 	font-family: inherit;
 }
 code {

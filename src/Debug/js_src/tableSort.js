@@ -4,7 +4,6 @@ import $ from "jquery";
  * Add sortability to given table
  */
 export function makeSortable(table) {
-	// var $ = window.jQuery;
 
 	var	$table = $(table),
 		$head = $table.find("> thead");

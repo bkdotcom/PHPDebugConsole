@@ -1,12 +1,11 @@
 /**
  * Enhance debug output
- *    Add expand/collapse functionality to groups and arrays
+ *    Add expand/collapse functionality to groups, arrays, & objects
  *    Add FontAwesome icons
  */
 
 import $ from 'jquery';				// external global
 import * as http from "./http.js";	// cookie & query  utils
-import * as tableSort from "./tableSort.js";
 import * as enhanceMain from "./enhanceMain.js";
 import * as enhanceEntries from "./enhanceEntries.js";
 import * as expandCollapse from "./expandCollapse.js";
@@ -59,7 +58,7 @@ var options = {
 };
 
 if (typeof $ === 'undefined') {
-	throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery. PHPDebugConsole should have included automatically.')
+	throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.');
 }
 
 /*
@@ -116,6 +115,7 @@ $.fn.debugEnhance = function(method) {
 	// console.warn("debugEnhance", this);
 	var $self = this;
 	if (typeof method == "object") {
+		// options passed
 		$.extend(options, method);
 	} else if (method) {
 		if (method === "addCss") {
@@ -127,7 +127,6 @@ $.fn.debugEnhance = function(method) {
 		} else if (method === "registerListeners") {
 			registerListeners($self);
 		} else if (method === "enhanceGroupHeader") {
-			// enhanceEntries.enhanceGroupHeader($self);
 			enhanceEntries.enhance($self);
 		}
 		return;
@@ -135,16 +134,10 @@ $.fn.debugEnhance = function(method) {
 	this.each(function() {
 		var $self = $(this);
 		if ($self.hasClass("enhanced")) {
-			// console.log("enhanced");
 			return;
 		}
 		if ($self.hasClass("debug")) {
 			console.warn("enhancing debug");
-			/*
-			addCss(this.selector);
-			addPersistOption($self);
-			addExpandAll($self);
-			*/
 			enhanceMain.init($self, options);
 			enhanceEntries.init($self, options);
 			expandCollapse.init($self, options);
@@ -187,44 +180,14 @@ function getDebugKey() {
 }
 
 function registerListeners($root) {
-	console.warn("registerListeners");
-	$root.on("click", ".show-more-container .show-more", function() {
-		var $container = $(this).closest(".show-more-container");
-		$container.find(".show-more-wrapper").animate({
-			height: $container.find(".t_string").height()
-		},400,"swing",function() {
-			$(this).css("display", "inline");
-		});
-		$container.find(".show-more-fade").fadeOut();
-		$container.find(".show-more").hide();
-		$container.find(".show-less").show();
-	});
-	$root.on("click", ".show-more-container .show-less", function() {
-		var $container = $(this).closest(".show-more-container");
-		$container.find(".show-more-wrapper")
-			.css("display", "block")
-			.animate({
-				height: '70px'
-			});
-		$container.find(".show-more-fade").fadeIn();
-		$container.find(".show-more").show();
-		$container.find(".show-less").hide();
-	});
-
 	if (listenersRegistered) {
 		return;
 	}
-
 	$("body").on("animationend", ".debug-noti", function () {
 		$(this).removeClass("animate").closest(".debug-noti-wrap").hide();
 	});
-
 	listenersRegistered = true;
 }
-
-/*
-	Utils
-*/
 
 function notify(html) {
 	$(".debug-noti").html(html).addClass("animate").closest(".debug-noti-wrap").show();

@@ -66,11 +66,11 @@ function setHeight(height) {
 };
 
 export function init() {
-	console.info('drawer init');
-
 	$debug = $(".debug-drawer");
+	if ($debug.length === 0) {
+		return;
+	}
 	$(".debug-drawer-body").scrollLock();
-
 	$(window).on("resize", function(){
 		// console.log('window resize', $(window).height());
 		setHeight();

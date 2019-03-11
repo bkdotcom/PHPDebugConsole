@@ -66,12 +66,16 @@
 	background-color: #c0c0ff;
 }
 .c1-control {
+    display: inline-block;
+    vertical-align: middle;
+	/*
     font-size: 3em;
     line-height: 0;
     position: relative;
-    display: inline-block;
-    vertical-align: middle;
     margin: -.12em -.12em 0 -.12em;
+	*/
+	clip-path: inset(30% 0px);
+	transform: scale(2);
 }
 
 //

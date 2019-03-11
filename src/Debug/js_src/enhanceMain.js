@@ -4,13 +4,11 @@
 
 import $ from "jquery";
 import * as drawer from "./drawer.js";
-import * as expandCollapse from "./expandCollapse.js";
 import * as http from "./http.js";
 
 var options;
 
 export function init($root, opts) {
-	console.warn('enhanceMain init');
 	options = opts;
 	addCss($root.selector);
 	enhanceErrorSummary($root);
@@ -39,11 +37,13 @@ export function init($root, opts) {
 		$root.find(selector).toggleClass("hidden-error", !$(this).is(":checked"));
 		// update icon for all groups having nested error
 		// groups containing only hidden errors will loose +/-
+		/*
 		$root.find(".m_error, .m_warn").parents(".m_group").prev(".group-header").each(function() {
 			expandCollapse.groupErrorIconChange($(this));
 		});
+		*/
+		$root.find(".m_error, .m_warn").parents(".m_group").trigger("debug.collapsed.group");
 	});
-
 }
 
 /**
@@ -86,7 +86,7 @@ function addCss(scope) {
 			".debug .show-more-wrapper {display:block; position:relative; height:70px; overflow:hidden;}" +
 			".debug .show-more-fade {" +
 			"	position:absolute;" +
-			"	bottom:0;" +
+			"	bottom: -1px;" +
 			"	width:100%; height:55px;" +
 			"	background-image: linear-gradient(to bottom, transparent, white);" +
 			"	pointer-events: none;" +
@@ -145,7 +145,6 @@ function addCss(scope) {
 }
 
 function enhanceErrorSummary($root) {
-	// console.log("enhanceSummary");
 	var $errorSummary = $root.find(".alert.error-summary");
 	$errorSummary.find("h3:first-child").prepend(options.iconsMethods[".m_error"]);
 	$errorSummary.find("li[class*=error-]").each(function() {
@@ -160,14 +159,13 @@ function enhanceErrorSummary($root) {
 }
 
 function addExpandAll($root) {
-	// console.log("addExpandAll");
 	var $expandAll = $("<a>", {
 			"href":"#"
 		}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups').addClass("expand-all");
 	if ( $root.find(".group-header").length ) {
 		$expandAll.on("click", function() {
-			$root.find(".group-header").not(".expanded").each( function() {
-				expandCollapse.toggle(this);
+			$root.find(".group-header").not(".expanded").each(function() {
+				$(this).debugEnhance('expand');
 			});
 			return false;
 		});

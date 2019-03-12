@@ -2,6 +2,7 @@
 .m_clear,
 .m_count,
 .m_error,
+.m_groupEndValue,
 .m_info,
 .m_log,
 .m_warn {
@@ -13,20 +14,16 @@
 	padding-right: .33em;
 }
 .m_assert { background-color:rgba(255,204,204,.75); }
-.group-header { display:table; white-space:nowrap; }
 .m_group {
-	clear: left;
-	margin-left: 1em;
-	border-left: 1px solid rgba(0, 0, 0, 0.25);
-	padding-left: 1px;
-	&.debug-header,
-	&.debug-content {
-		margin-left: 0;
-		border-left: 0;
-		padding-left: 0;
+	.group-header { display:table; white-space:nowrap; }
+	.group-label { font-weight:bold; }
+	> ul {
+		list-style: none;
+		margin-left: 1em;
+		border-left: 1px solid rgba(0, 0, 0, 0.25);
+		padding-left: 1px;
 	}
 }
-.group-label { font-weight:bold; }
 
 .m_error,
 :not(.expanded) > .level-error { background-color:$error-bg; color:$error-fg; }
@@ -46,7 +43,7 @@
 	font-size: 1.2em;
 	font-weight: bold;
 }
-.debug-content .error-fatal {
+.debug-log .error-fatal {
 	padding: 10px;
 	border-left: solid 2px $error-fg;
 }

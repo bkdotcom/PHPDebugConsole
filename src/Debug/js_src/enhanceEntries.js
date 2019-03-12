@@ -103,7 +103,7 @@ function addIcons($root, types) {
 export function enhance($node) {
 	$node.hide();
 	$node.children().each(function() {
-		enhanceEntry($(this), false);
+		enhanceEntry($(this));
 	});
 	$node.show();
 	enhanceStrings($node);
@@ -148,34 +148,36 @@ function enhanceArray($node) {
 /**
  * Enhance a single log entry
  */
-export function enhanceEntry($entry) {
+export function enhanceEntry($entry, inclStrings) {
 	// console.log("enhanceEntry", $entry);
 	if ($entry.hasClass("enhanced")) {
 		return;
 	}
 	if ($entry.hasClass("m_group")) {
-		return;
-	}
-	if ($entry.hasClass("group-header")) {
 		// minimal enhancement... just adds data-toggle attr and hides target
 		// target will not be enhanced until expanded
-		addIcons($entry, ["methods"]);
-		enhanceGroupHeader($entry);
+		enhanceGroup($entry.find("> .group-header"));
+	/*
 	} else if ($entry.hasClass("m_groupSummary")) {
 		// groupSummary has no toggle.. and is uncollapsed -> enhance
 		enhance($entry);
+	*/
 	} else {
 		// regular log-type entry
 		$entry.children().each(function() {
 			enhanceValue(this);
 		});
-		addIcons($entry, ["misc","methods"]);
+		addIcons($entry, ["methods", "misc"]);
+	}
+	if (inclStrings) {
+		enhanceStrings($entry);
 	}
 	$entry.addClass("enhanced");
 }
 
-function enhanceGroupHeader($toggle) {
+function enhanceGroup($toggle) {
 	var $target = $toggle.next();
+	addIcons($toggle, ["methods"]);
 	$toggle.attr("data-toggle", "group");
 	$.each(["level-error","level-info","level-warn"], function(i, val){
 		var $icon;

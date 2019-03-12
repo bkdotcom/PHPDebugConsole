@@ -4,7 +4,7 @@
 
 import { uglify } from 'rollup-plugin-uglify';
 
-export default [
+var tasks = [
 	{
 		input: "js_src/main.js",
 		external: ['jquery'],
@@ -15,8 +15,11 @@ export default [
 				jquery: 'window.jQuery'
 			}
 		}
-	},
-	{
+	}
+];
+
+if (process.env.NODE_ENV !== 'watch') {
+	tasks.push({
 		input: "js_src/main.js",
 		external: ['jquery'],
 		output: {
@@ -33,5 +36,7 @@ export default [
 				}
 			})
 		]
-	}
-]
+	});
+}
+
+export default tasks

@@ -197,12 +197,12 @@ class Html extends Base
         if ($this->debug->getCfg('output.outputScript')) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>'."\n";
         }
-        $str .= '<div class="debug-header m_group"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
-        $str .= $this->processSummary();
-        $str .= '</div>'."\n";
-        $str .= '<div class="debug-content m_group"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n";
-        $str .= $this->processLog();
-        $str .= '</div>'."\n";  // close .debug-content
+        $str .= '<ul class="debug-log-summary"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n"
+            .$this->processSummary()
+            .'</ul>'."\n";
+        $str .= '<ul class="debug-log"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n"
+            .$this->processLog()
+            .'</ul>'."\n";
         $str .= '</div>'."\n";  // close .debug
         $str = \strtr($str, array(
             '{{channelToggles}}' => $this->getChannelToggles(),
@@ -246,7 +246,7 @@ class Html extends Base
                 \array_unshift($args, $meta['caption']);
             }
             $str = $this->debug->utilities->buildTag(
-                'div',
+                'li',
                 array(
                     'class' => 'm_'.$method,
                     'data-channel' => $meta['channel'],
@@ -295,7 +295,7 @@ class Html extends Base
                 }
             }
             $str = $this->debug->utilities->buildTag(
-                'div',
+                'li',
                 $attribs,
                 $this->buildArgString($args, $sanitize)
             );
@@ -361,6 +361,7 @@ class Html extends Base
                 $args[$k] = $this->dump($v);
             }
             $argStr = \implode(', ', $args);
+            $str .= '<li class="m_group">'."\n";
             /*
                 Header
             */
@@ -386,14 +387,13 @@ class Html extends Base
             /*
                 Group open
             */
-            $str .= '<div'.$this->debug->utilities->buildAttribString(array(
+            $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
                 'class' => array(
-                    'm_group',
                     $levelClass,
                 ),
             )).'>';
         } elseif ($method == 'groupEnd') {
-            $str = '</div>';
+            $str = '</ul></li>';
         }
         return $str;
     }

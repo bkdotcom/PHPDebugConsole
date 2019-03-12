@@ -124,10 +124,14 @@ $.fn.debugEnhance = function(method) {
 			expandCollapse.expand($self);
 		} else if (method === "collapse") {
 			expandCollapse.collapse($self);
-		} else if (method === "registerListeners") {
+		} else if (method === "init") {
+			enhanceMain.init($self, options);
+			enhanceEntries.init($self, options);
+			expandCollapse.init($self, options);
 			registerListeners($self);
-		} else if (method === "enhanceGroupHeader") {
-			enhanceEntries.enhance($self);
+		} else if (method === "registerListeners") {
+			// deprecaated
+			registerListeners($self);
 		}
 		return;
 	}
@@ -137,34 +141,17 @@ $.fn.debugEnhance = function(method) {
 			return;
 		}
 		if ($self.hasClass("debug")) {
-			console.warn("enhancing debug");
-			enhanceMain.init($self, options);
-			enhanceEntries.init($self, options);
-			expandCollapse.init($self, options);
-
-			registerListeners($self);
-
-			// only enhance root log entries
-			// enhance collapsed/hidden entries when expanded
-
-			enhanceEntries.enhance($self.find("> .debug-header, > .debug-content"));
+			$self.debugEnhance("init");
+			enhanceEntries.enhance($self.find("> .debug-log-summary, > .debug-log"));
 		} else {
-			// console.log("enhancing node");
-			enhanceEntries.enhanceEntry($self);
+			enhanceEntries.enhanceEntry($self, true);
 		}
 	});
 	return this;
 };
 
 $(function() {
-	var $debug = $(".debug");
-	if ($debug.length) {
-		$debug.debugEnhance();
-	} else {
-		// addCss();
-		// registerListeners($("body"));
-	}
-	// addNoti($("body"));
+	$(".debug").debugEnhance();
 });
 
 function getDebugKey() {

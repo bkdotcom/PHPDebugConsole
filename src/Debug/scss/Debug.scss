@@ -18,7 +18,19 @@
 		margin-bottom: 10px;
 		h3 { margin-top:0; }
 	}
-	.debug-content { margin-top:0.75em; }
+	ul {
+		// clear: left;
+		&.debug-log-summary,
+		&.debug-log {
+			list-style: none;
+			margin-left: 0;
+			border-left: 0;
+			padding-left: 0;
+		}
+		&.debug-log {
+			margin-top:0.75em;
+		}
+	}
 
 	@import "base";
 	@import "alerts";

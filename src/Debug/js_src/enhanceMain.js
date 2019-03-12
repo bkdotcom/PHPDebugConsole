@@ -33,7 +33,7 @@ export function init($root, opts) {
 
 	$root.on("change", "input[data-toggle=error]", function() {
 		var className = $(this).val(),
-			selector = ".debug-header ." + className +", .debug-content ."+className;
+			selector = ".debug-log-summary ." + className +", .debug-log ."+className;
 		$root.find(selector).toggleClass("hidden-error", !$(this).is(":checked"));
 		// update icon for all groups having nested error
 		// groups containing only hidden errors will loose +/-
@@ -169,7 +169,7 @@ function addExpandAll($root) {
 			});
 			return false;
 		});
-		$root.find(".debug-header").before($expandAll);
+		$root.find(".debug-log-summary").before($expandAll);
 	}
 }
 

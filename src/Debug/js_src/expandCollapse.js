@@ -114,10 +114,11 @@ function groupErrorIconGet($container) {
 
 function groupErrorIconUpdate($toggle) {
 	var selector = ".fa-times-circle, .fa-warning",
-		$target= $toggle.next(),
+		$group = $toggle.parent(),
+		$target = $toggle.next(),
 		icon = groupErrorIconGet($target),
-		isExpanded = $toggle.hasClass(".expanded");
-	$toggle.removeClass("empty");
+		isExpanded = $toggle.is(".expanded");
+	$group.removeClass("empty");
 	if (icon) {
 		if ($toggle.find(selector).length) {
 			$toggle.find(selector).replaceWith(icon);
@@ -131,7 +132,7 @@ function groupErrorIconUpdate($toggle) {
 		$toggle.find(selector).remove();
 		if ($target.children().not(".m_warn, .m_error").length < 1) {
 			// group only contains errors & they're now hidden
-			$toggle.addClass("empty");
+			$group.addClass("empty");
 			groupIconUpdate($toggle, options.classes.empty);
 		}
 	}
@@ -139,7 +140,7 @@ function groupErrorIconUpdate($toggle) {
 
 function groupIconUpdate($toggle, classNameNew) {
 	var $icon = $toggle.children("i").eq(0);
-	if ($toggle.is(".empty[data-toggle=group]")) {
+	if ($toggle.is(".group-header") && $toggle.parent().is(".empty")) {
 		classNameNew = options.classes.empty;
 	}
 	$.each(options.classes, function(i, className) {
@@ -149,10 +150,10 @@ function groupIconUpdate($toggle, classNameNew) {
 
 export function toggle(toggle) {
 	var $toggle = $(toggle);
-	if ($toggle.hasClass("empty")) {
+	if ($toggle.is(".group-header") && $toggle.parent().is(".empty")) {
 		return;
 	}
-	if ($toggle.hasClass("expanded")) {
+	if ($toggle.is(".expanded")) {
 		collapse($toggle);
 	} else {
 		expand($toggle);

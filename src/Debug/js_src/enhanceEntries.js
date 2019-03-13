@@ -34,7 +34,7 @@ export function init($root, opts) {
 	});
 	$root.on("debug.expand.array", function(e){
 		var $node = $(e.target);
-		if ($node.hasClass("enhanced")) {
+		if ($node.is(".enhanced")) {
 			return;
 		}
 		$node.find("> .array-inner > .key-value > :last-child").each(function() {
@@ -46,7 +46,7 @@ export function init($root, opts) {
 	});
 	$root.on("debug.expand.object", function(e){
 		var $node = $(e.target);
-		if ($node.hasClass("enhanced")) {
+		if ($node.is(".enhanced")) {
 			return;
 		}
 		$node.find("> .constant > :last-child, > .property > :last-child").each(function() {
@@ -56,7 +56,7 @@ export function init($root, opts) {
 	});
 	$root.on("debug.expanded.array, debug.expanded.group, debug.expanded.object", function(e){
 		var $node = $(e.target);
-		if ($node.hasClass("enhanced")) {
+		if ($node.is(".enhanced")) {
 			return;
 		}
 		enhanceStrings($node);
@@ -115,7 +115,7 @@ export function enhance($node) {
  */
 function enhanceArray($node) {
 	// console.log("enhanceArray", $node[0]);
-	var isEnhanced = $node.prev().hasClass("t_array-expand"),
+	var isEnhanced = $node.prev().is(".t_array-expand"),
 		$expander = $('<span class="t_array-expand" data-toggle="array">' +
 				'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
 				'<i class="fa ' + options.classes.expand + '"></i>&middot;&middot;&middot; ' +
@@ -149,16 +149,16 @@ function enhanceArray($node) {
  * Enhance a single log entry
  */
 export function enhanceEntry($entry, inclStrings) {
-	// console.log("enhanceEntry", $entry);
-	if ($entry.hasClass("enhanced")) {
+	// console.log("enhanceEntry", $entry.attr("class"));
+	if ($entry.is(".enhanced")) {
 		return;
 	}
-	if ($entry.hasClass("m_group")) {
+	if ($entry.is(".m_group")) {
 		// minimal enhancement... just adds data-toggle attr and hides target
 		// target will not be enhanced until expanded
 		enhanceGroup($entry.find("> .group-header"));
 	/*
-	} else if ($entry.hasClass("m_groupSummary")) {
+	} else if ($entry.is(".m_groupSummary")) {
 		// groupSummary has no toggle.. and is uncollapsed -> enhance
 		enhance($entry);
 	*/
@@ -176,7 +176,8 @@ export function enhanceEntry($entry, inclStrings) {
 }
 
 function enhanceGroup($toggle) {
-	var $target = $toggle.next();
+	var $group = $toggle.parent(),
+		$target = $toggle.next();
 	addIcons($toggle, ["methods"]);
 	$toggle.attr("data-toggle", "group");
 	$.each(["level-error","level-info","level-warn"], function(i, val){
@@ -189,9 +190,9 @@ function enhanceGroup($toggle) {
 	});
 	$toggle.removeClass("collapsed level-error level-info level-warn"); // collapsed class is never used
 	if ($.trim($target.html()).length < 1) {
-		$toggle.addClass("empty");
+		$group.addClass("empty");
 	}
-	if ($toggle.hasClass("expanded") || $target.find(".m_error, .m_warn").not(".hidden-error").length) {
+	if ($toggle.is(".expanded") || $target.find(".m_error, .m_warn").not(".hidden-error").length) {
 		$toggle.debugEnhance("expand");
 	} else {
 		$toggle.debugEnhance("collapse", true);
@@ -218,24 +219,24 @@ function enhanceStrings($root) {
 
 function enhanceValue(node) {
 	var $node = $(node);
-	if ($node.hasClass("t_array")) {
+	if ($node.is(".t_array")) {
 		enhanceArray($node);
-	} else if ($node.hasClass("t_object")) {
+	} else if ($node.is(".t_object")) {
 		enhanceObject.enhance($node);
 	} else if ($node.is("table")) {
 		tableSort.makeSortable($node);
-	} else if ($node.hasClass(".timestamp")) {
+	} else if ($node.is(".timestamp")) {
 		var $i = $node.find("i"),
 			text = $node.text(),
 			$span = $("<span>"+text+"</span>");
-		if ($node.hasClass("t_string")) {
+		if ($node.is(".t_string")) {
 			$span.addClass("t_string numeric");
-		} else if (node.hasClass("t_int")) {
+		} else if (node.is(".t_int")) {
 			$span.addClass("t_int");
 		} else {
 			$span.addClass("t_float");
 		}
-		if ($node.hasClass("no-pseudo")) {
+		if ($node.is(".no-pseudo")) {
 			$span.addClass("no-pseudo");
 		}
 		$node.removeClass("t_float t_int t_string numeric no-pseudo");

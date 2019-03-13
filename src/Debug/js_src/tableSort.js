@@ -15,7 +15,7 @@ export function makeSortable(table) {
 		var $th = $(this),
 			$cells = $(this).closest("tr").children(),
 			i = $cells.index($th),
-			curDir = $th.hasClass("sort-asc") ? "asc" : "desc",
+			curDir = $th.is(".sort-asc") ? "asc" : "desc",
 			newDir = curDir === "desc" ? "asc" : "desc";
 		$cells.removeClass("sort-asc sort-desc");
 		$th.addClass("sort-"+newDir);

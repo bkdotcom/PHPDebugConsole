@@ -54,7 +54,7 @@ export function enhanceInner($node) {
 			"hide",
 		visToggles = "",
 		hiddenInterfaces = [];
-	if ($node.hasClass("enhanced")) {
+	if ($node.is(".enhanced")) {
 		return;
 	}
 	if ($node.find(".method[data-implements]").hide().length) {
@@ -101,7 +101,7 @@ function toggleInterface(toggle) {
 	var $toggle = $(toggle),
 		iface = $toggle.data("interface"),
 		$methods = $toggle.closest(".t_object").find("> .object-inner > dd[data-implements="+iface+"]");
-	if ($toggle.hasClass("toggle-off")) {
+	if ($toggle.is(".toggle-off")) {
 		$toggle.addClass("toggle-on").removeClass("toggle-off");
 		$methods.show();
 	} else {
@@ -118,7 +118,7 @@ function toggleVis(toggle) {
 		vis = $toggle.data("vis"),
 		$objInner = $toggle.closest(".object-inner"),
 		$toggles = $objInner.find("[data-toggle=vis][data-vis="+vis+"]");
-	if ($toggle.hasClass("toggle-off")) {
+	if ($toggle.is(".toggle-off")) {
 		// show for this and all descendants
 		$toggles.
 			html($toggle.html().replace("show ", "hide ")).

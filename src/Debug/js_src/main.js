@@ -137,10 +137,10 @@ $.fn.debugEnhance = function(method) {
 	}
 	this.each(function() {
 		var $self = $(this);
-		if ($self.hasClass("enhanced")) {
+		if ($self.is(".enhanced")) {
 			return;
 		}
-		if ($self.hasClass("debug")) {
+		if ($self.is(".debug")) {
 			$self.debugEnhance("init");
 			enhanceEntries.enhance($self.find("> .debug-log-summary, > .debug-log"));
 		} else {

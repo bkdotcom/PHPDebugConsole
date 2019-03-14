@@ -1,6 +1,6 @@
 import $ from "jquery";
 
-var origH, origPageY, $debug;
+var $debug, options, origH, origPageY;
 
 /**
  * @see https://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element-when-inner-element-scroll-position-reaches-t
@@ -36,13 +36,14 @@ $.fn.scrollLock = function(enable){
 		: this.off("DOMMouseScroll mousewheel wheel");
 };
 
-export function init() {
-	$debug = $(".debug-drawer");
-	if ($debug.length === 0) {
+export function init(opts) {
+	options = opts;
+	if (!opts.drawer) {
 		return;
 	}
+	$debug = $(".debug").addClass("debug-drawer");
 	addDrawerMarkup();
-	$(".debug-drawer-body").scrollLock();
+	$(".debug-body").scrollLock();
 	$(window).on("resize", function(){
 		// console.log('window resize', $(window).height());
 		setHeight();
@@ -52,7 +53,7 @@ export function init() {
 			// drawer isn't open / ignore resize
 			return;
 		}
-		origH = $debug.find(".debug-drawer-body").height();
+		origH = $debug.find(".debug-body").height();
 		origPageY = e.pageY;
 		$("html").addClass("debug-resizing");
 		$debug.parents()
@@ -62,7 +63,7 @@ export function init() {
 	});
 	$(".debug-pull-tab").on("click", function(){
 		var $drawer = $(this).closest(".debug-drawer"),
-			$body = $drawer.find(".debug-drawer-body");
+			$body = $drawer.find(".debug-body");
 		$drawer.addClass("debug-drawer-open");
 		setHeight(); // makes sure height within min/max
 		$("body").css("marginBottom", ($debug.height() + 8) + "px");
@@ -74,18 +75,19 @@ export function init() {
 }
 
 function addDrawerMarkup() {
-	var $body = $('<div class="debug-drawer-body"></div>');
-	$(".debug-menu-bar").before('<div class="debug-pull-tab">\
+	var $menuBar = $(".debug-menu-bar");
+	// var $body = $('<div class="debug-body"></div>');
+	$menuBar.before('<div class="debug-pull-tab">\
 			<i class="fa fa-bug"></i> PHP\
 		</div>\
 		<div class="debug-resize-handle"></div>');
-	$(".debug-menu-bar").html('<a href="http://www.bradkent.com/php/debug" target="_blank"><i class="fa fa-bug"></i> PHPDebugConsole</a>\
+	$menuBar.html('<a href="http://www.bradkent.com/php/debug" target="_blank"><i class="fa fa-bug"></i> PHPDebugConsole</a>\
 		<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">\
 			<span aria-hidden="true">&times;</span>\
 		</button>');
-	var $move = $(".debug-menu-bar").nextAll();
-	$(".debug-menu-bar").after($body);
-	$move.appendTo($body);
+	// var $move = $(".debug-menu-bar").nextAll();
+	// $(".debug-menu-bar").after($body);
+	// $move.appendTo($body);
 }
 
 function mousemove(e) {
@@ -102,7 +104,7 @@ function mouseup() {
 };
 
 function setHeight(height) {
-	var $body = $debug.find(".debug-drawer-body"),
+	var $body = $debug.find(".debug-body"),
 		menuH = $debug.find(".debug-menu-bar").outerHeight(),
 		minH = 20,
 		// inacurate if document.doctype is null : $(window).height()

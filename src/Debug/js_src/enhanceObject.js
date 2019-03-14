@@ -34,7 +34,7 @@ export function enhance($node) {
 			$toggle.addClass("empty");
 			return;
 		}
-		$toggle.append(' <i class="fa ' + options.classes.expand + '"></i>');
+		$toggle.append(' <i class="fa ' + options.iconsExpand.expand + '"></i>');
 		$toggle.attr("data-toggle", "object");
 		$target.hide();
 	});

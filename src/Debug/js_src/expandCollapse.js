@@ -37,7 +37,7 @@ export function collapse($toggle, immediate) {
 	var $target = $toggle.next(),
 		$groupEndValue,
 		what = "array",
-		icon = options.classes.expand;
+		icon = options.iconsExpand.expand;
 	if ($toggle.is("[data-toggle=array]")) {
 		// show and use the "expand it" toggle as reference toggle
 		$toggle = $toggle.closest(".t_array").prev().show();
@@ -92,7 +92,7 @@ export function expand($toggleOrTarget) {
 		$target.slideDown("fast", function() {
 			var $groupEndValue = $target.find("> .m_groupEndValue");
 			$toggle.addClass("expanded");
-			groupIconUpdate($toggle, options.classes.collapse);
+			groupIconUpdate($toggle, options.iconsExpand.collapse);
 			if ($groupEndValue.length) {
 				// remove value from label
 				$toggle.find(".group-label").last().nextAll().remove();
@@ -126,14 +126,14 @@ function groupErrorIconUpdate($toggle) {
 			$toggle.append(icon);
 		}
 		if (!isExpanded) {
-			groupIconUpdate($toggle, options.classes.expand);
+			groupIconUpdate($toggle, options.iconsExpand.expand);
 		}
 	} else {
 		$toggle.find(selector).remove();
 		if ($target.children().not(".m_warn, .m_error").length < 1) {
 			// group only contains errors & they're now hidden
 			$group.addClass("empty");
-			groupIconUpdate($toggle, options.classes.empty);
+			groupIconUpdate($toggle, options.iconsExpand.empty);
 		}
 	}
 }
@@ -141,9 +141,9 @@ function groupErrorIconUpdate($toggle) {
 function groupIconUpdate($toggle, classNameNew) {
 	var $icon = $toggle.children("i").eq(0);
 	if ($toggle.is(".group-header") && $toggle.parent().is(".empty")) {
-		classNameNew = options.classes.empty;
+		classNameNew = options.iconsExpand.empty;
 	}
-	$.each(options.classes, function(i, className) {
+	$.each(options.iconsExpand, function(i, className) {
 		$icon.toggleClass(className, className === classNameNew);
 	});
 }

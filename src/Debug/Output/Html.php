@@ -174,7 +174,12 @@ class Html extends Base
      */
     public function onOutput(Event $event)
     {
-        $str = '<div class="debug debug-drawer">'."\n";
+        $str = '<div'.$this->debug->utilities->buildAttribString(array(
+            'class' => 'debug',
+            'data-options' => array(
+                'drawer' => true,
+            ),
+        )).">\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
                     .$this->debug->output->getCss()."\n"
@@ -190,6 +195,7 @@ class Html extends Base
         $str .= '<header class="debug-menu-bar">'
             .'<a href="http://www.bradkent.com/php/debug" target="_blank">PHPDebugConsole</a>'
             .'</header>'."\n";
+        $str .= '<div class="debug-body">'."\n";
         $str .= '{{channelToggles}}'; // initially display:none;
         $str .= $this->processAlerts();
         /*
@@ -204,11 +210,12 @@ class Html extends Base
         $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
             'class' => 'debug-log-summary',
             'style' => $style,
-        )).'>'."\n".$this->processSummary().'</ul>'."\n";
+        )).">\n".$this->processSummary().'</ul>'."\n";
         $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
             'class' => 'debug-log',
             'style' => $style,
-        )).'>'."\n".$this->processLog().'</ul>'."\n";
+        )).">\n".$this->processLog().'</ul>'."\n";
+        $str .= '</div>'."\n";  // close .debug-body
         $str .= '</div>'."\n";  // close .debug
         $str = \strtr($str, array(
             '{{channelToggles}}' => $this->getChannelToggles(),

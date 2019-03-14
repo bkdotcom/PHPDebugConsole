@@ -15,7 +15,7 @@ export function init($root, opts) {
 	addExpandAll($root);
 	addNoti($("body"));
 	addPersistOption($root);
-	drawer.init();
+	drawer.init(options);
 	$root.find(".channels").show();
 	$root.find(".loading").hide();
 	$root.addClass("enhanced");
@@ -53,7 +53,7 @@ function addCss(scope) {
 	var css = "" +
 			".debug .error-fatal:before { padding-left: 1.25em; }" +
 			".debug .error-fatal i.fa-times-circle { position:absolute; top:.7em; }" +
-			".debug .debug-cookie { color:#666; }" +
+			".debug .debug-cookie { float:right; color:#666; }" +
 			".debug .hidden-channel, .debug .hidden-error { display:none !important; }" +
 			".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
 			".debug .m_assert > i { position:relative; top:-.20em; }" +
@@ -184,20 +184,18 @@ function addNoti($root) {
 function addPersistOption($root) {
 	var $node;
 	if (options.debugKey) {
-		$node = $('<label class="debug-cookie"><input type="checkbox"> Keep debug on</label>').css({"float":"right"});
+		$node = $('<label class="debug-cookie" title="Add/remove debug cookie"><input type="checkbox"> Keep debug on</label>');
 		if (http.cookieGet("debug") === options.debugKey) {
 			$node.find("input").prop("checked", true);
 		}
 		$("input", $node).on("change", function() {
 			var checked = $(this).is(":checked");
-			console.log("debug persist checkbox changed", checked);
 			if (checked) {
-				console.log("debugKey", options.debugKey);
 				http.cookieSave("debug", options.debugKey, 7);
 			} else {
 				http.cookieRemove("debug");
 			}
 		});
-		$root.find(".debug-bar").eq(0).prepend($node);
+		$root.find(".debug-menu-bar").eq(0).prepend($node);
 	}
 }

@@ -17,7 +17,7 @@ var options = {
 	fontAwesomeCss: "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
 	// jQuerySrc: "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
 	clipboardSrc: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
-	classes: {
+	iconsExpand: {
 		expand : "fa-plus-square-o",
 		collapse : "fa-minus-square-o",
 		empty : "fa-square-o"
@@ -54,7 +54,8 @@ var options = {
 		".m_timeLog" :		'<i class="fa fa-lg fa-clock-o"></i>',
 		".m_warn" :			'<i class="fa fa-lg fa-warning"></i>'
 	},
-	debugKey: getDebugKey()
+	debugKey: getDebugKey(),
+	drawer: false
 };
 
 if (typeof $ === 'undefined') {
@@ -151,6 +152,10 @@ $.fn.debugEnhance = function(method) {
 };
 
 $(function() {
+	var dataOpts = $(".debug").eq(0).data("options");
+	if (dataOpts) {
+		$.extend(options, dataOpts);
+	}
 	$(".debug").debugEnhance();
 });
 

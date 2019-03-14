@@ -118,7 +118,7 @@ function enhanceArray($node) {
 	var isEnhanced = $node.prev().is(".t_array-expand"),
 		$expander = $('<span class="t_array-expand" data-toggle="array">' +
 				'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-				'<i class="fa ' + options.classes.expand + '"></i>&middot;&middot;&middot; ' +
+				'<i class="fa ' + options.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
 				'<span class="t_punct">)</span>' +
 			"</span>"),
 		numParents = $node.parentsUntil(".m_group", ".t_object, .t_array").length;
@@ -134,7 +134,7 @@ function enhanceArray($node) {
 	// add collapse link
 	$node.find(".t_keyword").first().
 		wrap('<span class="t_array-collapse expanded" data-toggle="array">').
-		after('<span class="t_punct">(</span> <i class="fa ' + options.classes.collapse + '"></i>').
+		after('<span class="t_punct">(</span> <i class="fa ' + options.iconsExpand.collapse + '"></i>').
 		parent().next().remove();	// remove original "("
 	$node.before($expander);
 	if (numParents === 0) {

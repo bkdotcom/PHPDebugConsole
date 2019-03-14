@@ -1,4 +1,4 @@
-.debug-drawer {
+&.debug-drawer {
 	position: fixed;
 	bottom: 0;
 	left: 0;
@@ -80,13 +80,14 @@
 		background: #f3f3f3;
 		font-size: 16px;
 		line-height: 1;
+		margin-bottom: 0;
 		& :focus,
 		& :hover {
 			color: #333;
 			text-decoration: none;
 		}
 		&,
-		& a {
+		a {
 			// text-decoration: none;
 			color: #6e6e6e;
 		}

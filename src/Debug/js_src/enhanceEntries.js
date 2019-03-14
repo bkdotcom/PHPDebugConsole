@@ -231,7 +231,7 @@ function enhanceValue(node) {
 			$span = $("<span>"+text+"</span>");
 		if ($node.is(".t_string")) {
 			$span.addClass("t_string numeric");
-		} else if (node.is(".t_int")) {
+		} else if ($node.is(".t_int")) {
 			$span.addClass("t_int");
 		} else {
 			$span.addClass("t_float");

@@ -142,7 +142,7 @@ $.fn.debugEnhance = function(method) {
 		}
 		if ($self.is(".debug")) {
 			$self.debugEnhance("init");
-			enhanceEntries.enhance($self.find("> .debug-log-summary, > .debug-log"));
+			enhanceEntries.enhance($self.find(".debug-log-summary, .debug-log"));
 		} else {
 			enhanceEntries.enhanceEntry($self, true);
 		}

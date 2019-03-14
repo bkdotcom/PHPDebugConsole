@@ -174,7 +174,7 @@ class Html extends Base
      */
     public function onOutput(Event $event)
     {
-        $str = '<div class="debug">'."\n";
+        $str = '<div class="debug debug-drawer">'."\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
                     .$this->debug->output->getCss()."\n"
@@ -187,22 +187,28 @@ class Html extends Base
                 .'</script>'."\n";
         }
         $this->data = $this->debug->getData();
-        $str .= '<div class="debug-bar"><h3>Debug Log</h3></div>'."\n";
+        $str .= '<header class="debug-menu-bar">'
+            .'<a href="http://www.bradkent.com/php/debug" target="_blank">PHPDebugConsole</a>'
+            .'</header>'."\n";
         $str .= '{{channelToggles}}'; // initially display:none;
         $str .= $this->processAlerts();
         /*
             If outputing script, initially hide the output..
             this will help page load performance (fewer redraws)... by magnitudes
         */
+        $style = null;
         if ($this->debug->getCfg('output.outputScript')) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>'."\n";
+            $style = 'display:none;';
         }
-        $str .= '<ul class="debug-log-summary"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n"
-            .$this->processSummary()
-            .'</ul>'."\n";
-        $str .= '<ul class="debug-log"'.($this->debug->getCfg('outputScript') ? ' style="display:none;"' : '').'>'."\n"
-            .$this->processLog()
-            .'</ul>'."\n";
+        $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
+            'class' => 'debug-log-summary',
+            'style' => $style,
+        )).'>'."\n".$this->processSummary().'</ul>'."\n";
+        $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
+            'class' => 'debug-log',
+            'style' => $style,
+        )).'>'."\n".$this->processLog().'</ul>'."\n";
         $str .= '</div>'."\n";  // close .debug
         $str = \strtr($str, array(
             '{{channelToggles}}' => $this->getChannelToggles(),
@@ -361,9 +367,12 @@ class Html extends Base
                 $args[$k] = $this->dump($v);
             }
             $argStr = \implode(', ', $args);
-            $str .= '<li class="m_group">'."\n";
+            $str .= '<li'.$this->debug->utilities->buildAttribString(array(
+                'class' => 'm_group',
+                'data-channel' => $meta['channel'],
+            )).'>'."\n";
             /*
-                Header
+                Header / label / toggle
             */
             $str .= $this->debug->utilities->buildTag(
                 'div',
@@ -375,7 +384,6 @@ class Html extends Base
                             : 'expanded',
                         $levelClass,
                     ),
-                    'data-channel' => $meta['channel'],
                 ),
                 '<span class="group-label">'
                     .$label
@@ -615,7 +623,7 @@ class Html extends Base
     /**
      * Dump object as html
      *
-     * @param array $abs  object abstraction
+     * @param array $abs object abstraction
      *
      * @return string
      */

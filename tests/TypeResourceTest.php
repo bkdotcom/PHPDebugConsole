@@ -33,7 +33,7 @@ class TypeResourceTest extends DebugTestFramework
                         ),
                     ),
                     'chromeLogger' => '[["Resource id #'.(int) $fh.': stream"],null,""]',
-                    'html' => '<div class="m_log"><span class="t_resource">Resource id #'.(int) $fh.': stream</span></div>',
+                    'html' => '<li class="m_log"><span class="t_resource">Resource id #'.(int) $fh.': stream</span></li>',
                     'text' => 'Resource id #'.(int) $fh.': stream',
                     'script' => 'console.log("Resource id #'.(int) $fh.': stream");',
                 )

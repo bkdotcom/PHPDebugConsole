@@ -4,23 +4,28 @@
 
 import $ from "jquery";
 import * as drawer from "./drawer.js";
+import * as optionsMenu from "./optionsDropdown.js";
+import * as sidebar from "./sidebar.js";
 import * as http from "./http.js";
 
 var options;
 
 export function init($root, opts) {
 	options = opts;
-	addCss($root.selector);
+	// addCss($root.selector);
 	enhanceErrorSummary($root);
 	addExpandAll($root);
 	addNoti($("body"));
 	addPersistOption($root);
 	drawer.init(options);
+	optionsMenu.init(options);
+	sidebar.init(options);
 	$root.find(".channels").show();
 	$root.find(".loading").hide();
 	$root.addClass("enhanced");
 
 	$root.on("change", "input[data-toggle=channel]", function() {
+		console.warn("channel toggle");
 		var channel = $(this).val(),
 			$nodes = $(this).data("isRoot")
 				? $root.find(".m_group > *").not(".m_group").filter(function() {
@@ -49,6 +54,7 @@ export function init($root, opts) {
 /**
  * Adds CSS to head of page
  */
+/*
 function addCss(scope) {
 	var css = "" +
 			".debug .error-fatal:before { padding-left: 1.25em; }" +
@@ -143,6 +149,7 @@ function addCss(scope) {
 		$('<style id="' + id + '">' + css + '</style>').appendTo("head");
 	}
 }
+*/
 
 function enhanceErrorSummary($root) {
 	var $errorSummary = $root.find(".alert.error-summary");

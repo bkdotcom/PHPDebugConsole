@@ -1,0 +1,119 @@
+
+/*
+.sidebar-show .debug-body {
+	transform: scale(1); // so that sidebar gets attached here
+}
+*/
+
+& {
+	transform: scale(1); // so that sidebar gets attached here
+}
+
+.badge {
+	display: inline-block;
+	padding: .25em .4em .16em;
+	font-size: 82%;
+	font-weight: 500;
+	line-height: 1;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: bottom;
+	border-radius: .25rem;
+	// transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+	color: #fff;
+	background-color: #666;
+}
+
+.debug-sidebar {
+
+	$sidebar-w: 119px;
+	$toggle-w: 7px;
+
+	position: fixed;
+	box-sizing: border-box;
+	width: $sidebar-w + $toggle-w;
+	background: $lite-grey;
+	height: 100%;
+	padding-top: 4px;
+	// border-right: 1px solid $border-color;
+	transform: translateX(-$sidebar-w);
+	transition: transform .33s;
+
+	.sidebar-toggle {
+		position: absolute;
+		box-sizing: border-box;
+		right: 0;
+		top: 0;
+		height: 100%;
+		width: $toggle-w;
+		background: $lite-grey;
+		border-left: 1px solid $border-color;
+		border-right: 1px solid $border-color;
+		cursor: pointer;
+		display: flex;
+		color: $border-color;
+		text-align: center;
+		&:hover {
+			color: $grey-text;
+			background: darken($lite-grey, 10%);
+		}
+		> div {
+			margin: auto;
+			padding-left: 1px;
+		}
+	}
+
+	.fa-times-circle { color: $error-fg; }
+	.fa-warning { color: $warn-fg; }
+	.fa-info-circle { color: $info-fg; }
+
+	// .expand { display: block; }
+	.collapse { display: none; }
+	// .fa-ellipsis-v { padding-left: 0.5px; }
+
+	input[type=checkbox] {
+		display: none;
+	}
+	label {
+		font-weight: normal;
+	}
+
+	+ .debug-body {
+		padding-left: 10px;
+		transition: margin-left .33s;
+		margin-left: 6px;
+	}
+	&.show {
+		transform: translateX(0);
+		.expand { display: none; }
+		.collapse { display: block; }
+		+ .debug-body {
+			margin-left: $sidebar-w + $toggle-w;
+		}
+	}
+	li.toggle {
+		cursor: pointer;
+		&.active {
+			background: darken($lite-grey, 10%);
+			&:hover {
+				background: darken($lite-grey, 20%);
+			}
+		}
+		&:hover {
+			// background: #DDE6F0;
+			background: darken($lite-grey, 10%);
+		}
+	}
+	> ul > li {
+		padding: 3px 0 3px 10px;
+		ul {
+			margin-left: -10px;
+			li {
+				padding: 2px 0 2px 38px;
+				&:first-child {
+					padding-top: 4px;
+				}
+			}
+		}
+	}
+}

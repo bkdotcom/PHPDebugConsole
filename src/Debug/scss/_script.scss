@@ -1,0 +1,118 @@
+a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; display:block; clear:left; }
+
+.error-fatal {
+	&:before { padding-left: 1.25em; }
+	i.fa-times-circle { position:absolute; top:.7em; }
+}
+
+.hidden-channel,
+.hidden-error { display:none !important; }
+
+.debug-body i.fa,
+.m_assert i { margin-right:.33em; }
+.m_assert > i { position:relative; top:-.20em; }
+i.fa-plus-circle { opacity:0.42; }
+i.fa-calendar { font-size:1.1em; }
+i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }
+i.fa-magic { color: orange; }
+.excluded > i.fa-eye-slash { color:#f39; }
+i.fa-lg { font-size:1.33em; }
+
+.group-header {
+	i.fa-warning {
+		color: #cdcb06;
+		margin-left: .33em;
+	}
+	i.fa-times-circle {
+		color: #D8000C;
+		margin-left: .33em;
+	}
+	&.expanded {
+		i.fa-warning,
+		i.fa-times-circle {
+			display: none;
+		}
+	}
+}
+
+.group-header.hidden-channel + .m_group,
+*:not(.group-header) + .m_group {
+	margin-left: 0;
+	border-left: 0;
+	padding-left: 0;
+	display: block !important;
+}
+[data-toggle],
+[data-toggle][title],	// override .debug[title]
+.vis-toggles span { cursor:pointer; }
+
+.group-header.empty,
+.t_classname.empty { cursor:auto; }
+
+.vis-toggles span:hover,
+[data-toggle=interface]:hover { background-color:rgba(0,0,0,0.1); }
+
+.vis-toggles .toggle-off,
+.interface .toggle-off { opacity:0.42 }
+
+//
+// strings - show more
+//
+.show-more-container {display: inline;}
+.show-more-wrapper {display:block; position:relative; height:70px; overflow:hidden;}
+.show-more-fade {
+	position:absolute;
+	bottom: -1px;
+	width:100%; height:55px;
+	background-image: linear-gradient(to bottom, transparent, white);
+	pointer-events: none;
+}
+[title]:hover .show-more-fade { background-image: linear-gradient(to bottom, transparent, #c9c9c9); }
+.show-more, .show-less {
+    display: table;
+	box-shadow: 1px 1px 0px 0px rgba(0,0,0, 0.20);
+	border: 1px solid rgba(0,0,0, 0.20);
+	border-radius: 2px;
+	background-color: #EEE;
+}
+.level-error .show-more-fade,
+.m_error .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FFBABA); }
+.level-info .show-more-fade,
+.m_info .show-more-fade { background-image: linear-gradient(to bottom, transparent, #BDE5F8); }
+.level-warn .show-more-fade,
+.m_warn .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FEEFB3); }
+
+//
+// notifications
+//
+.debug-noti-wrap {
+	position: fixed;
+	display: none;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+.debug-noti-wrap .debug-noti {
+	display: table-cell;
+	text-align: center;
+	vertical-align: bottom;
+	font-size: 30px;
+	transform-origin: 50% 100%;
+}
+.debug-noti-table {display:table; width:100%; height:100%}
+.debug-noti.animate {
+	animation-duration: 1s;
+	animation-name: expandAndFade;
+	animation-timing-function: ease-in;
+}
+@keyframes expandAndFade {
+	from {
+		opacity: .9;
+		transform: scale(.9, .94);
+	}
+	to {
+		opacity: 0;
+		transform: scale(1, 1);
+	}
+}

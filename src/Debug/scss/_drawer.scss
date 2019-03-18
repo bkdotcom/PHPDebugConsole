@@ -1,4 +1,5 @@
 &.debug-drawer {
+
 	position: fixed;
 	bottom: 0;
 	left: 0;
@@ -9,7 +10,7 @@
 	// debug-drawer is closed (pushed offscreen) by default
 	height: 100px;
 	transform: translateY(100px);
-	transition: all 0.5s 0s;
+	transition: all 0.5s;
 
 	> * {
 		box-sizing: border-box;
@@ -42,9 +43,9 @@
 		border-radius: 5px 5px 0 0;
 		padding: 4px 14px;
 		font-size: 16px;
-		background-color: #f3f3f3;
+		background: $lite-grey;
 		cursor: pointer;
-		transition: all 0.5s 0s;
+		transition: all 0.5s;
 		z-index: -1;
 	}
 
@@ -55,11 +56,11 @@
 		height: 4px;
 		width: 100%;
 		opacity: 0;
-		border-top: 1px solid #aaa;
-		border-bottom: 1px solid #aaa;
-		background: #eee;
-		transition: all 0.25s 0s;
-		transition-timing-function: ease-out;
+		border-top: 1px solid $border-color;
+		border-bottom: 1px solid $border-color;
+		background: darken($lite-grey, 10%);
+		transition: all 0.25s ease-out;
+		// transition-timing-function: ease-out;
 	}
 
 	@at-root html.debug-resizing {
@@ -74,47 +75,55 @@
 	}
 
 	.debug-menu-bar {
-		height: 24px;
-		border-top: 1px solid #d0d0d0;
+		position: relative;
+		height: 25px;
+		border-top: 1px solid $border-color;
+		border-bottom: 1px solid $border-color;
 		padding: 3px 6px;
-		background: #f3f3f3;
+		background: $lite-grey;
 		font-size: 16px;
 		line-height: 1;
 		margin-bottom: 0;
-		& :focus,
-		& :hover {
-			color: #333;
-			text-decoration: none;
-		}
 		&,
 		a {
 			// text-decoration: none;
-			color: #6e6e6e;
+			color: $grey-text;
 		}
-		button.close {
-			float: right;
+		a,
+		button,
+		label {
+			&:focus,
+			&:hover {
+				color: #333;
+				text-decoration: none;
+			}
+		}
+		.pull-right {
+			position: absolute;
+			top: 0;
+			right: 6px
+		}
+		button {
+			// float: right;
 			height: 18px;
 			border: 0;
 			padding: 0;
-			font-size: 1.33rem;
 			line-height: 0;
-		    font-weight: 300;
 			-webkit-appearance: none;
 			   -moz-appearance: none;
 			        appearance: none;
 			background-color: transparent;
 			color: inherit;
-			cursor: pointer;
+			// cursor: pointer;
 			outline: none;
-			span {
-				position: relative;
-				top: -2px;
+			&.close > * {
+				font-size: 1.33rem;
+			    font-weight: 300;
 			}
 		}
 	}
 
 	.debug-body {
-		border-top: 1px solid #d0d0d0;
 		padding: 5px 10px;
 		background-color: #FFF;
 		overflow: auto;

@@ -11,6 +11,10 @@
 	$warn-bg: #fefbe5;
 	$warn-fg: #8a6d3b;
 
+	$grey-text: #6e6e6e;
+	$lite-grey: #f3f3f3;
+	$border-color: #d0d0d0;
+
 	@import "base";
 
 	.debug-menu-bar {
@@ -20,7 +24,12 @@
 		margin-bottom: 10px;
 		// h3 { margin-top:0; }
 		a {
-			color: #6e6e6e;
+			color: $grey-text;
+		}
+		.debug-cookie {
+			// checkbox added by javascript
+			float: right;
+			color: #666;
 		}
 	}
 
@@ -47,11 +56,14 @@
 	@import "table";
 	@import "tokens";
 	@import "drawer";
+	@import "optionsDropdown";
+	@import "sidebar";
+	@import "script"; // misc css only applicable when javascript enhanced
 
 	//
 	// Utilities
 	//
-	.indent { padding-left:10px; }
+	.indent { padding-left:10px !important; }
 	.list-unstyled {
 		list-style: none outside none;
 		padding-left: 0;

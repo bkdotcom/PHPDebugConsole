@@ -164,7 +164,7 @@ class DebugTestFramework extends DOMTestCase
                 'log',
                 array(null),
                 array(
-                    'html' => '<div class="m_log"><span class="t_null">null</span></div>',
+                    'html' => '<li class="m_log"><span class="t_null">null</span></li>',
                     'text' => 'null',
                     'script' => 'console.log(null);',
                 ),

@@ -15,7 +15,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\PubSub\Event;
+use bdk\ErrorHandler\Error;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -163,7 +163,15 @@ class Internal implements SubscriberInterface
                 $stats['inConsoleCategories']++;
             }
         }
-        \ksort($stats['counts']);
+        $order = array(
+            'fatal',
+            'error',
+            'warning',
+            'deprecated',
+            'notice',
+            'strict',
+        );
+        $stats['counts'] = \array_intersect_key(\array_merge(\array_flip($order), $stats['counts']), $stats['counts']);
         return $stats;
     }
 
@@ -183,6 +191,7 @@ class Internal implements SubscriberInterface
                 'errorHash' => $this->error['hash'],
                 'backtrace' => $this->error['backtrace'] ?: array(),
                 'sanitize' => $this->error['isHtml'] === false,
+                'channel' => 'phpError',
             );
         } else {
             $meta = $this->debug->utilities->getCallerInfo();
@@ -286,11 +295,11 @@ class Internal implements SubscriberInterface
      * errorHandler.error event subscriber
      * adds error to console as error or warn
      *
-     * @param Event $error error/event object
+     * @param Error $error error/event object
      *
      * @return void
      */
-    public function onError(Event $error)
+    public function onError(Error $error)
     {
         if ($this->debug->getCfg('collect')) {
             /*

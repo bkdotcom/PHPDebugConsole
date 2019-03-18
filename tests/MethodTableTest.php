@@ -141,7 +141,7 @@ class MethodTableTest extends DebugTestFramework
             )
         );
         $rowsAHtml = <<<'EOD'
-<div class="m_table">
+<li class="m_table">
 <table class="sortable table-bordered">
 <caption>table caption</caption>
 <thead>
@@ -152,7 +152,7 @@ class MethodTableTest extends DebugTestFramework
 <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
 </tbody>
 </table>
-</div>
+</li>
 EOD;
         $rowsAText = <<<'EOD'
 table caption = array(
@@ -182,7 +182,7 @@ EOD;
                 'table',
                 array(null),
                 array(
-                    'html' => '<div class="m_table"><span class="t_null">null</span></div>',
+                    'html' => '<li class="m_table"><span class="t_null">null</span></li>',
                     'text' => 'null',
                     'script' => 'console.log(null);',
                     'firephp' => 'X-Wf-1-1-1-1: 21|[{"Type":"LOG"},null]|',
@@ -192,9 +192,9 @@ EOD;
                 'table',
                 array('blah'),
                 array(
-                    'html' => '<div class="m_table">'
+                    'html' => '<li class="m_table">'
                         .'<span class="no-pseudo t_string">blah</span> = <span class="t_null">null</span>'
-                        .'</div>',
+                        .'</li>',
                     'text' => 'blah = null',
                     'script' => 'console.log("blah",null);',
                     'firephp' => 'X-Wf-1-1-1-2: 36|[{"Type":"LOG","Label":"blah"},null]|',
@@ -224,7 +224,7 @@ EOD;
                     ),
                 ),
                 array(
-                    'html' => '<div class="m_table">
+                    'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
                         <caption>flat</caption>
                         <thead>
@@ -249,7 +249,7 @@ EOD;
                         </td></tr>
                         </tbody>
                         </table>
-                        </div>',
+                        </li>',
                     'text' => 'flat = array(
                         [0] => "a"
                         [1] => "2233-03-22T00:00:00%i"
@@ -288,7 +288,7 @@ EOD;
                     )),
                 ),
                 array(
-                    'html' => '<div class="m_table">
+                    'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
                         <caption>traversable -o- traversables (<span class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)</caption>
                         <thead>
@@ -299,7 +299,7 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
                         </tbody>
                         </table>
-                        </div>',
+                        </li>',
                     'text' => 'traversable -o- traversables = array(
                             [4] => array(
                                 [___class_name] => "bdk\DebugTest\TestTraversable"
@@ -331,7 +331,7 @@ EOD;
                     ),
                 ),
                 array(
-                    'html' => '<div class="m_table">
+                    'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
                         <caption>array -o- objects</caption>
                         <thead>
@@ -342,7 +342,7 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_classname">stdClass</td><td class="numeric t_string">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool true">true</td><td class="t_string">F</td></tr>
                         </tbody>
                         </table>
-                        </div>',
+                        </li>',
                     'text' => 'array -o- objects = array(
                         [4] => array(
                             [___class_name] => "stdClass"
@@ -371,7 +371,7 @@ EOD;
                     $rowsB,
                 ),
                 array(
-                    'html' => '<div class="m_table">
+                    'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
                         <caption>not all col values of same type</caption>
                         <thead>
@@ -382,7 +382,7 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">1985-10-26T00:00:00%i</td><td class="t_string">2015-10-21T00:00:00%i</td></tr>
                         </tbody>
                         </table>
-                        </div>',
+                        </li>',
                     'text' => 'not all col values of same type = array(
                         [0] => array(
                             [date] => "1955-11-05T00:00:00%i"

@@ -19,7 +19,7 @@ class TypeBasicTest extends DebugTestFramework
                 array(true),
                 array(
                     'chromeLogger' => '[[true],null,""]',
-                    'html' => '<div class="m_log"><span class="t_bool true">true</span></div>',
+                    'html' => '<li class="m_log"><span class="t_bool true">true</span></li>',
                     'text' => 'true',
                     'script' => 'console.log(true);',
                 )
@@ -29,7 +29,7 @@ class TypeBasicTest extends DebugTestFramework
                 array(false),
                 array(
                     'chromeLogger' => '[[false],null,""]',
-                    'html' => '<div class="m_log"><span class="false t_bool">false</span></div>',
+                    'html' => '<li class="m_log"><span class="false t_bool">false</span></li>',
                     'text' => 'false',
                     'script' => 'console.log(false);',
                 )
@@ -40,7 +40,7 @@ class TypeBasicTest extends DebugTestFramework
                 array(null),
                 array(
                     'chromeLogger' => '[[null],null,""]',
-                    'html' => '<div class="m_log"><span class="t_null">null</span></div>',
+                    'html' => '<li class="m_log"><span class="t_null">null</span></li>',
                     'text' => 'null',
                     'script' => 'console.log(null);',
                 ),
@@ -51,7 +51,7 @@ class TypeBasicTest extends DebugTestFramework
                 array(10),
                 array(
                     'chromeLogger' => '[[10],null,""]',
-                    'html' => '<div class="m_log"><span class="t_int">10</span></div>',
+                    'html' => '<li class="m_log"><span class="t_int">10</span></li>',
                     'text' => '10',
                     'script' => 'console.log(10);',
                 ),
@@ -61,7 +61,7 @@ class TypeBasicTest extends DebugTestFramework
                 array(10.10),
                 array(
                     'chromeLogger' => '[[10.1],null,""]',
-                    'html' => '<div class="m_log"><span class="t_float">10.1</span></div>',
+                    'html' => '<li class="m_log"><span class="t_float">10.1</span></li>',
                     'text' => '10.1',
                     'script' => 'console.log(10.1);',
                 ),
@@ -71,7 +71,7 @@ class TypeBasicTest extends DebugTestFramework
                 array($ts),
                 array(
                     'chromeLogger' => '[["'.$ts.' ('.$datetime.')"],null,""]',
-                    'html' => '<div class="m_log"><span class="t_int timestamp" title="'.$datetime.'">'.$ts.'</span></div>',
+                    'html' => '<li class="m_log"><span class="t_int timestamp" title="'.$datetime.'">'.$ts.'</span></li>',
                     'text' => '📅 '.$ts.' ('.$datetime.')',
                     'script' => 'console.log("'.$ts.' ('.$datetime.')");',
                 ),
@@ -81,7 +81,7 @@ class TypeBasicTest extends DebugTestFramework
                 array(\bdk\Debug\Abstracter::TYPE_UNDEFINED),
                 array(
                     'chromeLogger' => '[[null],null,""]',
-                    'html' => '<div class="m_log"><span class="t_undefined"></span></div>',
+                    'html' => '<li class="m_log"><span class="t_undefined"></span></li>',
                     'text' => 'undefined',
                     'script' => 'console.log(undefined);',
                 ),
@@ -91,7 +91,7 @@ class TypeBasicTest extends DebugTestFramework
                 array(array($test,'testBaseStatic')),
                 array(
                     'chromeLogger' => '[["callable: bdk\\\DebugTest\\\Test::testBaseStatic"],null,""]',
-                    'html' => '<div class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>',
+                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></li>',
                     'text' => 'callable: bdk\DebugTest\Test::testBaseStatic',
                     'script' => 'console.log("callable: bdk\\\DebugTest\\\Test::testBaseStatic");',
                 ),

@@ -178,6 +178,7 @@ class Html extends Base
             'class' => 'debug',
             'data-options' => array(
                 'drawer' => true,
+                'sidebar' => true,
             ),
         )).">\n";
         if ($this->debug->getCfg('output.outputCss')) {
@@ -186,15 +187,13 @@ class Html extends Base
                 .'</style>'."\n";
         }
         if ($this->debug->getCfg('output.outputScript')) {
-            $str .= '<script>window.jQuery || document.write(\'<script src="'.$this->debug->getCfg('output.jqueryUrl').'"><\/script>\')</script>';
+            $str .= '<script>window.jQuery || document.write(\'<script src="'.$this->debug->getCfg('output.jqueryUrl').'"><\/script>\')</script>'."\n";
             $str .= '<script type="text/javascript">'
                     .$this->debug->output->getScript()."\n"
                 .'</script>'."\n";
         }
         $this->data = $this->debug->getData();
-        $str .= '<header class="debug-menu-bar">'
-            .'<a href="http://www.bradkent.com/php/debug" target="_blank">PHPDebugConsole</a>'
-            .'</header>'."\n";
+        $str .= '<header class="debug-menu-bar">PHPDebugConsole</header>'."\n";
         $str .= '<div class="debug-body">'."\n";
         $str .= '{{channelToggles}}'; // initially display:none;
         $str .= $this->processAlerts();
@@ -237,7 +236,7 @@ class Html extends Base
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
-        if (!\in_array($meta['channel'], $this->channels)) {
+        if (!\in_array($meta['channel'], $this->channels) && $meta['channel'] !== 'phpError') {
             $this->channels[] = $meta['channel'];
         }
         if ($meta['channel'] === $this->channelNameRoot) {
@@ -408,7 +407,7 @@ class Html extends Base
                 ),
             )).'>';
         } elseif ($method == 'groupEnd') {
-            $str = '</ul></li>';
+            $str = '</ul>'."\n".'</li>';
         }
         return $str;
     }
@@ -700,7 +699,7 @@ class Html extends Base
      */
     protected function getChannelToggles()
     {
-        if (\count($this->channels) < 2) {
+        if ($this->channels == array($this->channelNameRoot)) {
             return '';
         }
         \sort($this->channels);

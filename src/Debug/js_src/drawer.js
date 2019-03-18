@@ -1,4 +1,5 @@
 import $ from "jquery";
+import {lsGet,lsSet} from "./http.js";
 
 var $debug, options, origH, origPageY;
 
@@ -34,89 +35,110 @@ $.fn.scrollLock = function(enable){
 			}
 		})
 		: this.off("DOMMouseScroll mousewheel wheel");
-};
+}
 
 export function init(opts) {
 	options = opts;
 	if (!opts.drawer) {
 		return;
 	}
+
 	$debug = $(".debug").addClass("debug-drawer");
-	addDrawerMarkup();
-	$(".debug-body").scrollLock();
-	$(window).on("resize", function(){
-		// console.log('window resize', $(window).height());
-		setHeight();
-	});
-	$(".debug-resize-handle").on("mousedown", function(e) {
-		if (!$(this).closest(".debug-drawer").is(".debug-drawer-open")) {
-			// drawer isn't open / ignore resize
-			return;
-		}
-		origH = $debug.find(".debug-body").height();
-		origPageY = e.pageY;
-		$("html").addClass("debug-resizing");
-		$debug.parents()
-			.on("mousemove", mousemove)
-			.on("mouseup", mouseup);
-		e.preventDefault();
-	});
-	$(".debug-pull-tab").on("click", function(){
-		var $drawer = $(this).closest(".debug-drawer"),
-			$body = $drawer.find(".debug-body");
-		$drawer.addClass("debug-drawer-open");
-		setHeight(); // makes sure height within min/max
-		$("body").css("marginBottom", ($debug.height() + 8) + "px");
-	});
-	$(".debug-drawer .debug-menu-bar .close").on("click", function(){
-		$(".debug-drawer").removeClass("debug-drawer-open");
-		$("body").css("marginBottom", "");
-	});
+
+	addMarkup();
+
+	if (options.persistDrawer && lsGet("phpDebugConsole-openDrawer")) {
+		open();
+	}
+
+	$debug.find(".debug-body").scrollLock();
+	$debug.find(".debug-resize-handle").on("mousedown", onMousedown);
+	$debug.find(".debug-pull-tab").on("click", open);
+	$debug.find(".debug-menu-bar .close").on("click", close);
 }
 
-function addDrawerMarkup() {
+function addMarkup() {
 	var $menuBar = $(".debug-menu-bar");
 	// var $body = $('<div class="debug-body"></div>');
 	$menuBar.before('<div class="debug-pull-tab">\
 			<i class="fa fa-bug"></i> PHP\
 		</div>\
 		<div class="debug-resize-handle"></div>');
-	$menuBar.html('<a href="http://www.bradkent.com/php/debug" target="_blank"><i class="fa fa-bug"></i> PHPDebugConsole</a>\
-		<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">\
-			<span aria-hidden="true">&times;</span>\
-		</button>');
-	// var $move = $(".debug-menu-bar").nextAll();
-	// $(".debug-menu-bar").after($body);
-	// $move.appendTo($body);
+	$menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole\
+		<div class="pull-right">\
+			<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">\
+				<span aria-hidden="true">&times;</span>\
+			</button>\
+		</div>');
 }
 
-function mousemove(e) {
-	var h = origH + (origPageY - e.pageY);
-	setHeight(h);
-};
+function open() {
+	$debug.addClass("debug-drawer-open");
+	setHeight(); // makes sure height within min/max
+	$("body").css("marginBottom", ($debug.height() + 8) + "px");
+	$(window).on("resize", setHeight);
+	if (options.persistDrawer) {
+		lsSet("phpDebugConsole-openDrawer", true);
+	}
+}
 
-function mouseup() {
+function close() {
+	$debug.removeClass("debug-drawer-open");
+	$("body").css("marginBottom", "");
+	$(window).off("resize", setHeight);
+	if (options.persistDrawer) {
+		lsSet("phpDebugConsole-openDrawer", false);
+	}
+}
+
+function onMousemove(e) {
+	var h = origH + (origPageY - e.pageY);
+	setHeight(h, true);
+}
+
+function onMousedown(e) {
+	if (!$(this).closest(".debug-drawer").is(".debug-drawer-open")) {
+		// drawer isn't open / ignore resize
+		return;
+	}
+	origH = $debug.find(".debug-body").height();
+	origPageY = e.pageY;
+	$("html").addClass("debug-resizing");
+	$debug.parents()
+		.on("mousemove", onMousemove)
+		.on("mouseup", onMouseup);
+	e.preventDefault();
+}
+
+function onMouseup() {
 	$("html").removeClass("debug-resizing");
 	$debug.parents()
-		.off("mousemove", mousemove)
-		.off("mouseup", mouseup);
+		.off("mousemove", onMousemove)
+		.off("mouseup", onMouseup);
 	$("body").css("marginBottom", ($debug.height() + 8) + "px");
-};
+}
 
-function setHeight(height) {
+function setHeight(height, viaUser) {
 	var $body = $debug.find(".debug-body"),
 		menuH = $debug.find(".debug-menu-bar").outerHeight(),
 		minH = 20,
 		// inacurate if document.doctype is null : $(window).height()
 		//    aka document.documentElement.clientHeight
 		maxH = window.innerHeight - menuH - 50;
-	if (!height) {
+	if (!height || typeof height === "object") {
 		// no height passed -> use last or 100
-		height = parseInt($body[0].style.height, 10) || 100
+		height = parseInt($body[0].style.height, 10);
+		if (!height && options.persistDrawer) {
+			height = lsGet("phpDebugConsole-height");
+		}
+		if (!height) {
+			height = 100;
+		}
 	}
 	height = Math.min(height, maxH);
 	height = Math.max(height, minH);
 	$body.css("height", height);
-	// localStorage.setItem('phpdebugbar-height', height);
-	// this.recomputeBottomOffset();
-};
+	if (viaUser && options.persistDrawer) {
+		lsSet("phpDebugConsole-height", height);
+	}
+}

@@ -153,75 +153,97 @@ class ChannelTest extends DebugTestFramework
     {
         $this->genLog();
         $htmlFoo = <<<EOD
-        <div class="debug">
-            <div class="debug-bar"><h3>Debug Log</h3></div>
-            <div class="alert alert-danger" data-channel="foo" role="alert">foo: alert</div>
-            <div class="debug-header m_group">
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: sum 1 / group 1</span></div>
-                <div class="m_group">
-                    <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 1 / group 1 / group 2 / log</span></div>
-                </div>
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: sum 0 / group 1</span></div>
-                <div class="m_group">
-                    <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 0 / group 1 / group 2 / log</span></div>
-                    <div class="m_error" data-channel="foo" title="%s: line %d"><span class="no-pseudo t_string">foo: error</span></div>
-                </div>
-            </div>
-            <div class="debug-content m_group">
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: group / group</span></div>
-                <div class="m_group">
-                    <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / log</span></div>
-                    <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / after summaries</span></div>
-                </div>
+        <div class="debug" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true}">
+            <header class="debug-menu-bar">PHPDebugConsole</header>
+            <div class="debug-body">
+                <div class="alert alert-danger" data-channel="foo" role="alert">foo: alert</div>
+                <ul class="debug-log-summary">
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label">foo: sum 1 / group 1</span></div>
+                        <ul>
+                            <li class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 1 / group 1 / group 2 / log</span></li>
+                        </ul>
+                    </li>
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label">foo: sum 0 / group 1</span></div>
+                        <ul>
+                            <li class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
+                            <li class="m_error" data-channel="foo" title="%s: line %d"><span class="no-pseudo t_string">foo: error</span></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="debug-log">
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label">foo: group / group</span></div>
+                        <ul>
+                            <li class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / log</span></li>
+                            <li class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / after summaries</span></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
 EOD;
         $html = <<<EOD
-        <div class="debug">
-            <div class="debug-bar"><h3>Debug Log</h3></div>
-            <fieldset class="channels" style="display:none;">
-                <legend>Channels</legend>
-                <ul class="list-unstyled">
-                    <li><label><input checked="checked" data-is-root="true" data-toggle="channel" type="checkbox" value="general" /> general</label></li>
-                    <li><label><input checked="checked" data-is-root="false" data-toggle="channel" type="checkbox" value="foo" /> foo</label></li>
+        <div class="debug" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true}">
+            <header class="debug-menu-bar">PHPDebugConsole</header>
+            <div class="debug-body">
+                <fieldset class="channels" style="display:none;">
+                    <legend>Channels</legend>
+                    <ul class="list-unstyled">
+                        <li><label><input checked="checked" data-is-root="true" data-toggle="channel" type="checkbox" value="general" /> general</label></li>
+                        <li><label><input checked="checked" data-is-root="false" data-toggle="channel" type="checkbox" value="foo" /> foo</label></li>
+                    </ul>
+                </fieldset>
+                <div class="alert alert-danger" role="alert">main: alert</div>
+                <div class="alert alert-danger" data-channel="foo" role="alert">foo: alert</div>
+                <ul class="debug-log-summary">
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label">foo: sum 1 / group 1</span></div>
+                        <ul>
+                            <li class="m_group">
+                                <div class="expanded group-header"><span class="group-label">main: sum 1 / group 1 / group 2</span></div>
+                                <ul>
+                                    <li class="m_log"><span class="no-pseudo t_string">main: sum 1 / group 1 / group 2 / log</span></li>
+                                    <li class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 1 / group 1 / group 2 / log</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="m_info"><span class="no-pseudo t_string">Built In %f sec</span></li>
+                    <li class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d %cB</span></li>
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label">foo: sum 0 / group 1</span></div>
+                        <ul>
+                            <li class="m_group">
+                                <div class="expanded group-header"><span class="group-label">main: sum 0 / group 1 / group 2</span></div>
+                                <ul>
+                                    <li class="m_log"><span class="no-pseudo t_string">main: sum 0 / group 1 / group 2 / log</span></li>
+                                    <li class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
+                                    <li class="m_error" title="%s: line %d"><span class="no-pseudo t_string">main: error</span></li>
+                                    <li class="m_error" data-channel="foo" title="%s: line %d"><span class="no-pseudo t_string">foo: error</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
-            </fieldset>
-            <div class="alert alert-danger" role="alert">main: alert</div>
-            <div class="alert alert-danger" data-channel="foo" role="alert">foo: alert</div>
-            <div class="debug-header m_group">
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: sum 1 / group 1</span></div>
-                <div class="m_group">
-                    <div class="expanded group-header"><span class="group-label">main: sum 1 / group 1 / group 2</span></div>
-                    <div class="m_group">
-                        <div class="m_log"><span class="no-pseudo t_string">main: sum 1 / group 1 / group 2 / log</span></div>
-                        <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 1 / group 1 / group 2 / log</span></div>
-                    </div>
-                </div>
-                <div class="m_info"><span class="no-pseudo t_string">Built In %f sec</span></div>
-                <div class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d %cB</span></div>
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: sum 0 / group 1</span></div>
-                <div class="m_group">
-                    <div class="expanded group-header"><span class="group-label">main: sum 0 / group 1 / group 2</span></div>
-                    <div class="m_group">
-                        <div class="m_log"><span class="no-pseudo t_string">main: sum 0 / group 1 / group 2 / log</span></div>
-                        <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 0 / group 1 / group 2 / log</span></div>
-                        <div class="m_error" title="%s: line %d"><span class="no-pseudo t_string">main: error</span></div>
-                        <div class="m_error" data-channel="foo" title="%s: line %d"><span class="no-pseudo t_string">foo: error</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="debug-content m_group">
-                <div class="m_log"><span class="no-pseudo t_string">main: log</span></div>
-                <div class="expanded group-header"><span class="group-label">main: group</span></div>
-                <div class="m_group">
-                    <div class="m_log"><span class="no-pseudo t_string">main: group / log</span></div>
-                    <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: group / group</span></div>
-                    <div class="m_group">
-                        <div class="m_log"><span class="no-pseudo t_string">main: group / group / log</span></div>
-                        <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / log</span></div>
-                        <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / after summaries</span></div>
-                    </div>
-                </div>
+                <ul class="debug-log">
+                    <li class="m_log"><span class="no-pseudo t_string">main: log</span></li>
+                    <li class="m_group">
+                        <div class="expanded group-header"><span class="group-label">main: group</span></div>
+                        <ul>
+                            <li class="m_log"><span class="no-pseudo t_string">main: group / log</span></li>
+                            <li class="m_group" data-channel="foo">
+                                <div class="expanded group-header"><span class="group-label">foo: group / group</span></div>
+                                <ul>
+                                    <li class="m_log"><span class="no-pseudo t_string">main: group / group / log</span></li>
+                                    <li class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / log</span></li>
+                                    <li class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / after summaries</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
 EOD;

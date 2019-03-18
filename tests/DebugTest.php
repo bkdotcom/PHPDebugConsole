@@ -74,6 +74,33 @@ class DebugTest extends DebugTestFramework
         }
     }
 
+    public function testPhpError()
+    {
+        parent::$allowError = true;
+        $strict = array_pop(explode('-', 'hello-world'));   // Only variables should be passed by reference
+        $lastError = $this->debug->errorHandler->get('lastError');
+        $this->testMethod(null, array(), array(
+            'entry' => array(
+                'warn',
+                array(
+                    'Runtime Notice (E_STRICT): '.__FILE__.' (line '.$lastError['line'].'): ',
+                    'Only variables should be passed by reference',
+                ),
+                array(
+                    'errorType' => 2048,
+                    'errorCat' => 'strict',
+                    'errorHash' => $lastError['hash'],
+                    // 'file' => __FILE__,
+                    // 'line' => $lastError['line'],
+                    'backtrace' => $lastError['backtrace'],
+                    'sanitize' => true,
+                    'channel' => 'phpError',
+                ),
+            ),
+            'html' => '<li class="error-strict m_warn" data-channel="phpError"><span class="no-pseudo t_string">Runtime Notice (E_STRICT): '.__FILE__.' (line '.$lastError['line'].'): </span><span class="t_string">Only variables should be passed by reference</span></li>',
+        ));
+    }
+
     /**
      * Assert that calling \bdk\Debug::_setCfg() before an instance has been instantiated creates an instance
      *

@@ -30,6 +30,14 @@ export function cookieSave(name, value, days) {
 	document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
 }
 
+export function lsGet(key) {
+	return JSON.parse(window.localStorage.getItem(key));
+}
+
+export function lsSet(key, val) {
+	window.localStorage.setItem(key, JSON.stringify(val));
+}
+
 export function queryDecode(qs) {
 	var params = {},
 		tokens,

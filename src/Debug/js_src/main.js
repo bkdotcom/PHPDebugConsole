@@ -55,7 +55,8 @@ var options = {
 		".m_warn" :			'<i class="fa fa-lg fa-warning"></i>'
 	},
 	debugKey: getDebugKey(),
-	drawer: false
+	drawer: false,
+	persistDrawer: http.lsGet("phpDebugConsole-persistDrawer")
 };
 
 if (typeof $ === 'undefined') {

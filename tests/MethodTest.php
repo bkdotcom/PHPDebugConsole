@@ -23,7 +23,7 @@ class MethodTest extends DebugTestFramework
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
                 } elseif ($plugin == 'bdk\Debug\Output\Html') {
-                    $event['return'] = '<div class="m_trace">this was a trace</div>';
+                    $event['return'] = '<li class="m_trace">this was a trace</li>';
                 } elseif ($plugin == 'bdk\Debug\Output\Script') {
                     $event['return'] = 'console.log("this was a trace");';
                 } elseif ($plugin == 'bdk\Debug\Output\Text') {
@@ -42,7 +42,7 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: 35|[{"Type":"LOG"},"this was a trace"]|',
-                'html' => '<div class="m_trace">this was a trace</div>',
+                'html' => '<li class="m_trace">this was a trace</li>',
                 'script' => 'console.log("this was a trace");',
                 'text' => 'this was a trace',
             )
@@ -60,7 +60,7 @@ class MethodTest extends DebugTestFramework
                 foreach ($event['args'] as $arg) {
                     $lis[] = '<li>'.htmlspecialchars($arg).'</li>';
                 }
-                $event['return'] = '<div class="m_myCustom"><ul>'.implode('', $lis).'</ul></div>';
+                $event['return'] = '<li class="m_myCustom"><ul>'.implode('', $lis).'</ul></li>';
             }
         };
         $this->debug->eventManager->subscribe('debug.outputLogEntry', $closure);
@@ -82,7 +82,7 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
-                'html' => '<div class="m_myCustom"><ul><li>How\'s it goin?</li></ul></div>',
+                'html' => '<li class="m_myCustom"><ul><li>How\'s it goin?</li></ul></li>',
                 'script' => 'console.log("How\'s it goin?");',
                 'text' => 'How\'s it goin?',
             )
@@ -111,7 +111,7 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"called statically"]|',
-                'html' => '<div class="m_myCustom"><ul><li>called statically</li></ul></div>',
+                'html' => '<li class="m_myCustom"><ul><li>called statically</li></ul></li>',
                 'script' => 'console.log("called statically");',
                 'text' => 'called statically',
             )
@@ -138,7 +138,7 @@ class MethodTest extends DebugTestFramework
                     ),
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
-                'html' => '<div class="m_myCustom"><span class="no-pseudo t_string">How\'s it goin?</span></div>',
+                'html' => '<li class="m_myCustom"><span class="no-pseudo t_string">How\'s it goin?</span></li>',
                 'script' => 'console.log("How\'s it goin?");',
                 'text' => 'How\'s it goin?',
             )
@@ -212,7 +212,7 @@ class MethodTest extends DebugTestFramework
                     null,
                     'assert',
                 ),
-                'html' => '<div class="m_assert"><span class="no-pseudo t_string">this is false</span></div>',
+                'html' => '<li class="m_assert"><span class="no-pseudo t_string">this is false</span></li>',
                 'text' => '≠ this is false',
                 'script' => 'console.assert(false,"this is false");',
                 'firephp' => 'X-Wf-1-1-1-2: 32|[{"Type":"LOG"},"this is false"]|',
@@ -236,7 +236,7 @@ class MethodTest extends DebugTestFramework
                     null,
                     'assert',
                 ),
-                'html' => '<div class="m_assert"><span class="no-pseudo t_string">Assertion failed in '.$this->file.' on line '.$this->line.'</span></div>',
+                'html' => '<li class="m_assert"><span class="no-pseudo t_string">Assertion failed in '.$this->file.' on line '.$this->line.'</span></li>',
                 'text' => '≠ Assertion failed in '.$this->file.' on line '.$this->line,
                 'script' => 'console.assert(false,"Assertion failed in '.trim(json_encode($this->file), '"').' on line '.$this->line.'");',
                 'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"LOG"},"Assertion failed in '.trim(json_encode($this->file), '"').' on line '.$this->line.'"]|',
@@ -298,7 +298,7 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared log (sans errors)</span></div>',
+                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared log (sans errors)</span></li>',
                 'text' => '⌦ Cleared log (sans errors)',
                 'script' => 'console.log("Cleared log (sans errors)");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared log (sans errors)"]|',
@@ -355,7 +355,7 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared alerts</span></div>',
+                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared alerts</span></li>',
                 'text' => '⌦ Cleared alerts',
                 'script' => 'console.log("Cleared alerts");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared alerts"]|',
@@ -406,7 +406,7 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared summary (sans errors)</span></div>',
+                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared summary (sans errors)</span></li>',
                 'text' => '⌦ Cleared summary (sans errors)',
                 'script' => 'console.log("Cleared summary (sans errors)");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (sans errors)"]|',
@@ -461,7 +461,7 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared errors</span></div>',
+                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared errors</span></li>',
                 'text' => '⌦ Cleared errors',
                 'script' => 'console.log("Cleared errors");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared errors"]|',
@@ -514,7 +514,7 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared everything</span></div>',
+                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared everything</span></li>',
                 'text' => '⌦ Cleared everything',
                 'script' => 'console.log("Cleared everything");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared everything"]|',
@@ -567,7 +567,7 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared summary (incl errors)</span></div>',
+                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared summary (incl errors)</span></li>',
                 'text' => '⌦ Cleared summary (incl errors)',
                 'script' => 'console.log("Cleared summary (incl errors)");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (incl errors)"]|',
@@ -689,7 +689,7 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'html' => '<div class="m_count"><span class="no-pseudo t_string">count_inc test</span> = <span class="t_int">3</span></div>',
+                'html' => '<li class="m_count"><span class="no-pseudo t_string">count_inc test</span> = <span class="t_int">3</span></li>',
                 'text' => '✚ count_inc test = 3',
                 'script' => 'console.log("count_inc test",3);',
                 'firephp' => 'X-Wf-1-1-1-3: 43|[{"Type":"LOG","Label":"count_inc test"},3]|',
@@ -708,7 +708,7 @@ class MethodTest extends DebugTestFramework
                     __FILE__.': '.$lines[1],
                     '',
                 ),
-                'html' => '<div class="m_count" title="'.__FILE__.': line '.$lines[1].'"><span class="no-pseudo t_string">count</span> = <span class="t_int">1</span></div>',
+                'html' => '<li class="m_count" title="'.__FILE__.': line '.$lines[1].'"><span class="no-pseudo t_string">count</span> = <span class="t_int">1</span></li>',
                 'text' => '✚ count = 1',
                 'script' => 'console.log("count",1);',
                 'firephp' => 'X-Wf-1-1-1-4: %d|[{"Type":"LOG","File":"'.str_replace('/', '\\/', __FILE__).'","Line":'.$lines[1].',"Label":"count"},1]|',
@@ -770,7 +770,7 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-70: 32|[{"Type":"LOG","Label":"foo"},0]|',
-                'html' => '<div class="m_countReset"><span class="no-pseudo t_string">foo</span> = <span class="t_int">0</span></div>',
+                'html' => '<li class="m_countReset"><span class="no-pseudo t_string">foo</span> = <span class="t_int">0</span></li>',
                 'script' => 'console.log("foo",0);',
                 'text' => '✚ foo = 0',
             )
@@ -792,7 +792,7 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-73: 52|[{"Type":"LOG"},"Counter \'noExisty\' doesn\'t exist."]|',
-                'html' => '<div class="m_countReset"><span class="no-pseudo t_string">Counter \'noExisty\' doesn\'t exist.</span></div>',
+                'html' => '<li class="m_countReset"><span class="no-pseudo t_string">Counter \'noExisty\' doesn\'t exist.</span></li>',
                 'script' => 'console.log("Counter \'noExisty\' doesn\'t exist.");',
                 'text' => '✚ Counter \'noExisty\' doesn\'t exist.',
             )
@@ -837,12 +837,12 @@ class MethodTest extends DebugTestFramework
                     __DIR__.'/DebugTestFramework.php: %d',
                     'error',
                 )),
-                'html' => '<div class="m_error" title="%s: line %d"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                'html' => '<li class="m_error" title="%s: line %d"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
-                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
+                    </span>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'text' => '⦻ a string, array(), (object) stdClass
                     Properties: none!
                     Methods: none!, Resource id #%i: stream',
@@ -901,8 +901,9 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+                    <ul>',
                 'text' => '▸ a, "b", "c"',
                 'script' => 'console.group("a","b","c");',
                 'firephp' => 'X-Wf-1-1-1-4: 61|[{"Type":"GROUP_START","Collapsed":"false","Label":"a"},null]|',
@@ -916,8 +917,8 @@ class MethodTest extends DebugTestFramework
         $this->debug->log('after group');
         $this->outputTest(array(
             // @todo chromeLogger & firephp
-            'html' => '<div class="m_log"><span class="no-pseudo t_string">before group</span></div>
-                <div class="m_log"><span class="no-pseudo t_string">after group</span></div>',
+            'html' => '<li class="m_log"><span class="no-pseudo t_string">before group</span></li>
+                <li class="m_log"><span class="no-pseudo t_string">after group</span></li>',
             'text' => 'before group
                 after group',
             'script' => 'console.log("before group");
@@ -945,8 +946,9 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">testMethod</span></span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">testMethod</span></span></div>
+                    <ul>',
                 'text' => '▸ '.__CLASS__.'->testMethod',
                 'script' => 'console.group("'.__CLASS__.'->testMethod");',
                 'firephp' => 'X-Wf-1-1-1-6: 82|[{"Type":"GROUP_START","Collapsed":"false","Label":"'.__CLASS__.'->testMethod"},null]|',
@@ -975,8 +977,9 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
+                    <ul>',
                 'text' => '▸ bdk\DebugTest\TestBase->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase->testBasePublic");',
                 'firephp' => 'X-Wf-1-1-1-7: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase->testBasePublic"},null]|',
@@ -1005,8 +1008,9 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
+                    <ul>',
                 'text' => '▸ bdk\DebugTest\Test->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\Test->testBasePublic");',
                 'firephp' => 'X-Wf-1-1-1-8: 96|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\Test->testBasePublic"},null]|',
@@ -1037,8 +1041,9 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
+                    <ul>',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
                 'firephp' => 'X-Wf-1-1-1-9: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
@@ -1068,8 +1073,9 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
+                    <ul>',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
                 'firephp' => 'X-Wf-1-1-1-10: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
@@ -1115,22 +1121,24 @@ class MethodTest extends DebugTestFramework
                     'groupCollapsed',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: 60|[{"Type":"GROUP_START","Collapsed":"true","Label":"a"},null]|',
-                'html' => '<div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+                    <ul>',
                 'script' => 'console.groupCollapsed("a","b","c");',
                 'text' => '▸ a, "b", "c"',
             )
         );
 
-        // add a nested gorup that will get removed on output
+        // add a nested group that will get removed on output
         $this->debug->groupCollapsed($this->debug->meta('hideIfEmpty'));
         $this->debug->groupEnd();
         $this->debug->log('after nested group');
         $this->outputTest(array(
-            'html' => '<div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-                <div class="m_group">
-                    <div class="m_log"><span class="no-pseudo t_string">after nested group</span></div>
-                </div>',
+            'html' => '<li class="m_group">
+                <div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+                <ul>
+                    <li class="m_log"><span class="no-pseudo t_string">after nested group</span></li>
+                </ul>',
             'text' => '▸ a, "b", "c"
                 after nested group',
             'script' => 'console.groupCollapsed("a","b","c");
@@ -1211,7 +1219,7 @@ class MethodTest extends DebugTestFramework
                     'groupEnd',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: 27|[{"Type":"GROUP_END"},null]|',
-                'html' => '</div>',
+                'html' => '</ul>'."\n".'</li>',
                 'script' => 'console.groupEnd();',
                 'text' => '',
             )
@@ -1236,7 +1244,7 @@ class MethodTest extends DebugTestFramework
                     'groupEnd',
                 ),
                 'firephp' => 'X-Wf-1-1-1-151: 27|[{"Type":"GROUP_END"},null]|',
-                'html' => '</div>',
+                'html' => '</ul>'."\n".'</li>',
                 'script' => 'console.groupEnd();',
                 'text' => '',
             )
@@ -1260,7 +1268,7 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-154: 39|[{"Type":"LOG","Label":"return"},"foo"]|',
-                'html' => '<div class="m_groupEndValue"><span class="no-pseudo t_string">return</span> = <span class="t_string">foo</span></div>',
+                'html' => '<li class="m_groupEndValue"><span class="no-pseudo t_string">return</span> = <span class="t_string">foo</span></li>',
                 'script' => 'console.log("return","foo");',
                 'text' => 'return = "foo"',
             )
@@ -1317,18 +1325,22 @@ class MethodTest extends DebugTestFramework
             'main' => array(),
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
-<div class="debug">
-    <div class="debug-bar"><h3>Debug Log</h3></div>
-    <div class="debug-header m_group">
-        <div class="m_log"><span class="no-pseudo t_string">in summary</span></div>
-        <div class="expanded group-header"><span class="group-label">inner group opened but not closed</span></div>
-        <div class="m_group">
-            <div class="m_log"><span class="no-pseudo t_string">in inner</span></div>
-        </div>
-        <div class="m_info"><span class="no-pseudo t_string">Built In %f sec</span></div>
-        <div class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d %cB</span></div>
-    </div>
-    <div class="debug-content m_group">
+<div class="debug" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true}">
+    <header class="debug-menu-bar">PHPDebugConsole</header>
+    <div class="debug-body">
+        <ul class="debug-log-summary">
+            <li class="m_log"><span class="no-pseudo t_string">in summary</span></li>
+            <li class="m_group">
+                <div class="expanded group-header"><span class="group-label">inner group opened but not closed</span></div>
+                <ul>
+                    <li class="m_log"><span class="no-pseudo t_string">in inner</span></li>
+                </ul>
+            </li>
+            <li class="m_info"><span class="no-pseudo t_string">Built In %f sec</span></li>
+            <li class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d %cB</span></li>
+        </ul>
+        <ul class="debug-log">
+        </ul>
     </div>
 </div>
 EOD;
@@ -1434,12 +1446,12 @@ EOD;
                     null,
                     'info',
                 )),
-                'html' => '<div class="m_info"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                'html' => '<li class="m_info"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
-                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
+                    </span>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'text' => 'ℹ a string, array(), (object) stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
@@ -1492,12 +1504,12 @@ EOD;
                     null,
                     '',
                 )),
-                'html' => '<div class="m_log"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                'html' => '<li class="m_log"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
-                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
+                    </span>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'text' => 'a string, array(), (object) stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
@@ -1553,7 +1565,7 @@ EOD;
                     '',
                 ),
                 'firephp' => str_replace('%c', '%%c', 'X-Wf-1-1-1-19: 168|[{"Type":"LOG","Label":"%cLocation:%c <a href=\"%s\">%s<\/a>"},'.json_encode(array_slice($args, 1)).']|'),
-                'html' => '<div class="m_log"><span class="no-pseudo t_string"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></div>',
+                'html' => '<li class="m_log"><span class="no-pseudo t_string"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></li>',
                 'script' => str_replace('%c', '%%c', 'console.log('.trim(json_encode($args), '[]').');'),
                 'text' => 'Location: "http://localhost/?foo=bar&jim=slim"',
             )
@@ -1613,7 +1625,7 @@ EOD;
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
+                'html' => '<li class="m_time"><span class="no-pseudo t_string">time: %f sec</span></li>',
                 'script' => 'console.log("time: %f sec");',
                 'text' => '⏱ time: %f sec',
             )
@@ -1652,7 +1664,7 @@ EOD;
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
+                'html' => '<li class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></li>',
                 'script' => 'console.log("my label: %f sec");',
                 'text' => '⏱ my label: %f sec',
             )
@@ -1683,7 +1695,7 @@ EOD;
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
+                'html' => '<li class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></li>',
                 'script' => 'console.log("blahmy labelblah%fblah");',
                 'text' => '⏱ blahmy labelblah%fblah',
             )
@@ -1739,7 +1751,7 @@ EOD;
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
+                'html' => '<li class="m_time"><span class="no-pseudo t_string">time: %f sec</span></li>',
                 'script' => 'console.log("time: %f sec");',
                 'text' => '⏱ time: %f sec',
             )
@@ -1766,7 +1778,7 @@ EOD;
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
+                'html' => '<li class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></li>',
                 'script' => 'console.log("my label: %f sec");',
                 'text' => '⏱ my label: %f sec',
             )
@@ -1816,7 +1828,7 @@ EOD;
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
+                'html' => '<li class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></li>',
                 'script' => 'console.log("blahmy labelblah%fblah");',
                 'text' => '⏱ blahmy labelblah%fblah',
             )
@@ -1864,7 +1876,7 @@ EOD;
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-166: 46|[{"Type":"LOG","Label":"time: "},"%f sec"]|',
-                'html' => '<div class="m_timeLog"><span class="no-pseudo t_string">time: </span><span class="t_string">%f sec</span></div>',
+                'html' => '<li class="m_timeLog"><span class="no-pseudo t_string">time: </span><span class="t_string">%f sec</span></li>',
                 'script' => 'console.log("time: ","%f sec");',
                 'text' => '⏱ time: "%f sec"',
             )
@@ -1895,10 +1907,10 @@ EOD;
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-169: 66|[{"Type":"LOG","Label":"my label: "},["%f sec",{"foo":"bar"}]]|',
-                'html' => '<div class="m_timeLog"><span class="no-pseudo t_string">my label: </span><span class="t_string">%f sec</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                'html' => '<li class="m_timeLog"><span class="no-pseudo t_string">my label: </span><span class="t_string">%f sec</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                     <span class="array-inner">
                     <span class="key-value"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
-                    </span><span class="t_punct">)</span></span></div>',
+                    </span><span class="t_punct">)</span></span></li>',
                 'script' => 'console.log("my label: ","%f sec",{"foo":"bar"});',
                 'text' => '⏱ my label: "%f sec", array(
                     [foo] => "bar"
@@ -1927,7 +1939,7 @@ EOD;
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-172: 47|[{"Type":"LOG"},"Timer \'bogus\' does not exist"]|',
-                'html' => '<div class="m_timeLog"><span class="no-pseudo t_string">Timer \'bogus\' does not exist</span></div>',
+                'html' => '<li class="m_timeLog"><span class="no-pseudo t_string">Timer \'bogus\' does not exist</span></li>',
                 'script' => 'console.log("Timer \'bogus\' does not exist");',
                 'text' => '⏱ Timer \'bogus\' does not exist',
             )
@@ -2097,12 +2109,12 @@ EOD;
                     __DIR__.'/DebugTestFramework.php: %d',
                     'warn',
                 )),
-                'html' => '<div class="m_warn" title="'.__DIR__.'/DebugTestFramework.php: line %d"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                'html' => '<li class="m_warn" title="'.__DIR__.'/DebugTestFramework.php: line %d"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
-                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
+                    </span>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'text' => '⚠ a string, array(), (object) stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',

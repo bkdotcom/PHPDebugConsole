@@ -60,7 +60,7 @@ EOD;
                 array(
                     'html' => function ($str) {
                         $this->assertStringStartsWith(
-                            '<div class="m_log"><span class="t_object" data-accessible="public">'
+                            '<li class="m_log"><span class="t_object" data-accessible="public">'
                             .'<span class="t_string t_stringified" title="__toString()">abracadabra</span>'."\n"
                             .'<span class="t_classname" title="Test"><span class="namespace">bdk\DebugTest\</span>Test</span>',
                             $str

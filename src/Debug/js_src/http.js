@@ -20,7 +20,7 @@ export function cookieRemove(name) {
 }
 
 export function cookieSave(name, value, days) {
-	console.log("cookieSave", name, value, days);
+	// console.log("cookieSave", name, value, days);
 	var expires = "",
 		date = new Date();
 	if ( days ) {

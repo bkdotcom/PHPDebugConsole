@@ -14,6 +14,7 @@
 	$grey-text: #6e6e6e;
 	$lite-grey: #f3f3f3;
 	$border-color: #d0d0d0;
+	$lite-blue: #DDE6F0;
 
 	@import "base";
 
@@ -67,6 +68,9 @@
 	.list-unstyled {
 		list-style: none outside none;
 		padding-left: 0;
+		ul {
+			margin-left: 10px;
+		}
 	}
 	.no-pseudo:before { content:none; }
 	.no-pseudo:after { content:none; }

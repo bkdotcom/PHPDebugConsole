@@ -78,8 +78,9 @@ class Error extends Event
             'exception' => $errHandler->get('uncaughtException'),  // non-null if error is uncaught-exception
             'hash'          => null,
             'isFirstOccur'  => true,
+            // isHtml = "allow" HTML
             'isHtml'        => \filter_var(\ini_get('html_errors'), FILTER_VALIDATE_BOOLEAN)
-                && !\in_array($errType, static::$userErrors),
+                && !\in_array($errType, static::$userErrors) && !$errHandler->get('uncaughtException'),
             'isSuppressed'  => false,
         );
         $hash = self::errorHash($values);

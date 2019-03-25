@@ -174,12 +174,16 @@ class Html extends Base
      */
     public function onOutput(Event $event)
     {
+        $this->channels = array();
         $str = '<div'.$this->debug->utilities->buildAttribString(array(
             'class' => 'debug',
             'data-options' => array(
                 'drawer' => true,
                 'sidebar' => true,
             ),
+            // channel list gets built as log processed...  we'll str_replace this...
+            'data-channels' => '{{channels}}',
+            'data-channel-root' => $this->channelNameRoot,
         )).">\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
@@ -195,7 +199,6 @@ class Html extends Base
         $this->data = $this->debug->getData();
         $str .= '<header class="debug-menu-bar">PHPDebugConsole</header>'."\n";
         $str .= '<div class="debug-body">'."\n";
-        $str .= '{{channelToggles}}'; // initially display:none;
         $str .= $this->processAlerts();
         /*
             If outputing script, initially hide the output..
@@ -207,17 +210,17 @@ class Html extends Base
             $style = 'display:none;';
         }
         $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
-            'class' => 'debug-log-summary',
+            'class' => 'debug-log-summary group-body',
             'style' => $style,
         )).">\n".$this->processSummary().'</ul>'."\n";
         $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
-            'class' => 'debug-log',
+            'class' => 'debug-log group-body',
             'style' => $style,
         )).">\n".$this->processLog().'</ul>'."\n";
         $str .= '</div>'."\n";  // close .debug-body
         $str .= '</div>'."\n";  // close .debug
         $str = \strtr($str, array(
-            '{{channelToggles}}' => $this->getChannelToggles(),
+            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
         ));
         $this->data = array();
         $event['return'] .= $str;
@@ -350,6 +353,37 @@ class Html extends Base
     }
 
     /**
+     * Display channel checkboxes
+     *
+     * @return string
+     */
+    protected function buildChannelTree()
+    {
+        if ($this->channels == array($this->channelNameRoot)) {
+            return array();
+        }
+        \sort($this->channels);
+        // move root to the top
+        $rootKey = \array_search($this->channelNameRoot, $this->channels);
+        if ($rootKey !== false) {
+            unset($this->channels[$rootKey]);
+            \array_unshift($this->channels, $this->channelName);
+        }
+        $tree = array();
+        foreach ($this->channels as $channel) {
+            $ref = &$tree;
+            $path = \explode('.', $channel);
+            foreach ($path as $k) {
+                if (!isset($ref[$k])) {
+                    $ref[$k] = array();
+                }
+                $ref = &$ref[$k];
+            }
+        }
+        return $tree;
+    }
+
+    /**
      * handle html output of group, groupCollapsed, & groupEnd
      *
      * @param string $method group|groupCollapsed|groupEnd
@@ -403,6 +437,7 @@ class Html extends Base
             */
             $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
                 'class' => array(
+                    'group-body',
                     $levelClass,
                 ),
             )).'>';
@@ -693,47 +728,6 @@ class Html extends Base
     }
 
     /**
-     * Display channel checkboxes
-     *
-     * @return string
-     */
-    protected function getChannelToggles()
-    {
-        if ($this->channels == array($this->channelNameRoot)) {
-            return '';
-        }
-        \sort($this->channels);
-        $rootKey = \array_search($this->channelNameRoot, $this->channels);
-        if ($rootKey !== false) {
-            unset($this->channels[$rootKey]);
-            \array_unshift($this->channels, $this->channelName);
-        }
-        $checkboxes = '';
-        foreach ($this->channels as $channel) {
-            $checkboxes .= '<li><label>'
-                .$this->debug->utilities->buildTag(
-                    'input',
-                    array(
-                        'checked' => true,
-                        'data-is-root' => $channel == $this->channelNameRoot,
-                        'data-toggle' => 'channel',
-                        'type' => 'checkbox',
-                        'value' => $channel,
-                    )
-                )
-                .' '.\htmlspecialchars($channel)
-                .'</label></li>'."\n";
-        }
-        $this->channels = array();
-        return '<fieldset class="channels" style="display:none;">'."\n"
-                .'<legend>Channels</legend>'."\n"
-                .'<ul class="list-unstyled">'."\n"
-                .$checkboxes
-                .'</ul>'."\n"
-            .'</fieldset>'."\n";
-    }
-
-    /**
      * Getter for this->object
      *
      * @return HtmlObject
@@ -755,7 +749,7 @@ class Html extends Base
     protected function methodAlert($args, $meta)
     {
         $attribs = array(
-            'class' => 'alert alert-'.$meta['class'],
+            'class' => 'm_alert alert-'.$meta['class'],
             'data-channel' => $meta['channel'],
             'role' => 'alert',
         );

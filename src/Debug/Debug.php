@@ -1105,7 +1105,10 @@ class Debug
     }
 
     /**
-     * Create/return a new sub-instance
+     * Return a named subinstance... if channel does not exist, it will be created
+     *
+     * Channels can be used to categorize log data... for example, may have a framework channel, database channel, library-x channel, etc
+     * Channels may have subchannels
      *
      * @param string $channelName channel name
      *
@@ -1117,17 +1120,28 @@ class Debug
             $this->error('getChannel(): channelName should not contain period (.)');
             return $this;
         }
-        if ($this->parentInstance) {
-            $channelName = $this->cfg['channel'].'.'.$channelName;
-        }
         if (!isset($this->channels[$channelName])) {
             $cfg = \array_merge($this->cfg, array(
-                'channel' => $channelName,
+                'channel' => $this->parentInstance
+                    ? $this->cfg['channel'].'.'.$channelName
+                    : $channelName,
                 'parent' => $this,
             ));
             $this->channels[$channelName] = new static($cfg);
         }
         return $this->channels[$channelName];
+    }
+
+    /**
+     * Return array of channels
+     *
+     * Only this instances immediate sub-channels are returned, not the entire channel "tree"
+     *
+     * @return array
+     */
+    public function getChannels()
+    {
+        return $this->channels;
     }
 
     /**

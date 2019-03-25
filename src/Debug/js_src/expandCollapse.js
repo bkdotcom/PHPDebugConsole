@@ -20,8 +20,9 @@ export function init($root, opts) {
 		toggle(this);
 		return false;
 	});
-	$root.on("debug.collapsed.group", function(){
-		groupErrorIconUpdate($(this).prev());
+	$root.on("debug.collapsed.group", function(e){
+		// console.warn('debug.collapsed.group');
+		groupErrorIconUpdate($(e.target).prev());
 	});
 }
 
@@ -56,10 +57,10 @@ export function collapse($toggle, immediate) {
 		$toggle.removeClass("expanded");
 		if (immediate) {
 			$target.hide();
-			groupIconUpdate($toggle, icon);
+			iconUpdate($toggle, icon);
 		} else {
 			$target.slideUp("fast", function() {
-				groupIconUpdate($toggle, icon);
+				iconUpdate($toggle, icon);
 			});
 		}
 	}
@@ -92,7 +93,7 @@ export function expand($toggleOrTarget) {
 		$target.slideDown("fast", function() {
 			var $groupEndValue = $target.find("> .m_groupEndValue");
 			$toggle.addClass("expanded");
-			groupIconUpdate($toggle, options.iconsExpand.collapse);
+			iconUpdate($toggle, options.iconsExpand.collapse);
 			if ($groupEndValue.length) {
 				// remove value from label
 				$toggle.find(".group-label").last().nextAll().remove();
@@ -104,9 +105,9 @@ export function expand($toggleOrTarget) {
 
 function groupErrorIconGet($container) {
 	var icon = "";
-	if ($container.find(".m_error").not(".hidden-error").length) {
+	if ($container.find(".m_error").not(".filter-hidden").length) {
 		icon = options.iconsMethods[".m_error"];
-	} else if ($container.find(".m_warn").not(".hidden-error").length) {
+	} else if ($container.find(".m_warn").not(".filter-hidden").length) {
 		icon = options.iconsMethods[".m_warn"];
 	}
 	return icon;
@@ -118,27 +119,28 @@ function groupErrorIconUpdate($toggle) {
 		$target = $toggle.next(),
 		icon = groupErrorIconGet($target),
 		isExpanded = $toggle.is(".expanded");
-	$group.removeClass("empty");
+	$group.removeClass("empty");	// "empty" class just affects cursor
 	if (icon) {
 		if ($toggle.find(selector).length) {
 			$toggle.find(selector).replaceWith(icon);
 		} else {
 			$toggle.append(icon);
 		}
-		if (!isExpanded) {
-			groupIconUpdate($toggle, options.iconsExpand.expand);
-		}
+		iconUpdate($toggle, isExpanded
+			? options.iconsExpand.collapse
+			: options.iconsExpand.expand
+		);
 	} else {
 		$toggle.find(selector).remove();
 		if ($target.children().not(".m_warn, .m_error").length < 1) {
 			// group only contains errors & they're now hidden
 			$group.addClass("empty");
-			groupIconUpdate($toggle, options.iconsExpand.empty);
+			iconUpdate($toggle, options.iconsExpand.empty);
 		}
 	}
 }
 
-function groupIconUpdate($toggle, classNameNew) {
+function iconUpdate($toggle, classNameNew) {
 	var $icon = $toggle.children("i").eq(0);
 	if ($toggle.is(".group-header") && $toggle.parent().is(".empty")) {
 		classNameNew = options.iconsExpand.empty;

@@ -23,8 +23,13 @@ a {
 	&:active, &:hover { outline: 0; color: #e00; }
 }
 button {
+	color: inherit;
 	cursor: pointer;
 	font-family: inherit;
+	outline: none;
+	&:hover {
+		background-color: $lite-blue;
+	}
 }
 code {
 	padding: 2px 4px;
@@ -48,7 +53,7 @@ fieldset {
 	min-width: 0;
 	border: 1px solid black;
 	border-radius: 4px;
-	ul {
+	> ul {
 		font-size:125%;
 	}
 }

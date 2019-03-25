@@ -192,7 +192,7 @@ function enhanceGroup($toggle) {
 	if ($.trim($target.html()).length < 1) {
 		$group.addClass("empty");
 	}
-	if ($toggle.is(".expanded") || $target.find(".m_error, .m_warn").not(".hidden-error").length) {
+	if ($toggle.is(".expanded") || $target.find(".m_error, .m_warn").not(".filter-hidden").length) {
 		$toggle.debugEnhance("expand");
 	} else {
 		$toggle.debugEnhance("collapse", true);

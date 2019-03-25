@@ -174,7 +174,7 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'html' => '<div class="alert alert-danger" role="alert">'.$message.'</div>',
+                'html' => '<div class="alert-danger m_alert" role="alert">'.$message.'</div>',
                 'text' => '[Alert ⦻ danger] '.$message,
                 'script' => str_replace('%c', '%%c', 'console.log("%c'.$message.'","padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
                 'firephp' => 'X-Wf-1-1-1-1: 108|[{"Type":"LOG"},"'.$message.'"]|',
@@ -903,7 +903,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-                    <ul>',
+                    <ul class="group-body">',
                 'text' => '▸ a, "b", "c"',
                 'script' => 'console.group("a","b","c");',
                 'firephp' => 'X-Wf-1-1-1-4: 61|[{"Type":"GROUP_START","Collapsed":"false","Label":"a"},null]|',
@@ -948,7 +948,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">testMethod</span></span></div>
-                    <ul>',
+                    <ul class="group-body">',
                 'text' => '▸ '.__CLASS__.'->testMethod',
                 'script' => 'console.group("'.__CLASS__.'->testMethod");',
                 'firephp' => 'X-Wf-1-1-1-6: 82|[{"Type":"GROUP_START","Collapsed":"false","Label":"'.__CLASS__.'->testMethod"},null]|',
@@ -979,7 +979,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
-                    <ul>',
+                    <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase->testBasePublic");',
                 'firephp' => 'X-Wf-1-1-1-7: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase->testBasePublic"},null]|',
@@ -1010,7 +1010,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
-                    <ul>',
+                    <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\Test->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\Test->testBasePublic");',
                 'firephp' => 'X-Wf-1-1-1-8: 96|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\Test->testBasePublic"},null]|',
@@ -1043,7 +1043,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
-                    <ul>',
+                    <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
                 'firephp' => 'X-Wf-1-1-1-9: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
@@ -1075,7 +1075,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
-                    <ul>',
+                    <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
                 'firephp' => 'X-Wf-1-1-1-10: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
@@ -1123,7 +1123,7 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-1: 60|[{"Type":"GROUP_START","Collapsed":"true","Label":"a"},null]|',
                 'html' => '<li class="m_group">
                     <div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-                    <ul>',
+                    <ul class="group-body">',
                 'script' => 'console.groupCollapsed("a","b","c");',
                 'text' => '▸ a, "b", "c"',
             )
@@ -1136,7 +1136,7 @@ class MethodTest extends DebugTestFramework
         $this->outputTest(array(
             'html' => '<li class="m_group">
                 <div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-                <ul>
+                <ul class="group-body">
                     <li class="m_log"><span class="no-pseudo t_string">after nested group</span></li>
                 </ul>',
             'text' => '▸ a, "b", "c"
@@ -1325,21 +1325,21 @@ class MethodTest extends DebugTestFramework
             'main' => array(),
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
-<div class="debug" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true}">
+<div class="debug" data-channel-root="general" data-channels="{}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true}">
     <header class="debug-menu-bar">PHPDebugConsole</header>
     <div class="debug-body">
-        <ul class="debug-log-summary">
+        <ul class="debug-log-summary group-body">
             <li class="m_log"><span class="no-pseudo t_string">in summary</span></li>
             <li class="m_group">
                 <div class="expanded group-header"><span class="group-label">inner group opened but not closed</span></div>
-                <ul>
+                <ul class="group-body">
                     <li class="m_log"><span class="no-pseudo t_string">in inner</span></li>
                 </ul>
             </li>
             <li class="m_info"><span class="no-pseudo t_string">Built In %f sec</span></li>
             <li class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d %cB</span></li>
         </ul>
-        <ul class="debug-log">
+        <ul class="debug-log group-body">
         </ul>
     </div>
 </div>

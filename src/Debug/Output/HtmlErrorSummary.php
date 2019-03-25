@@ -128,7 +128,7 @@ class HtmlErrorSummary
             if (!$a['inConsole'] || $category == 'fatal') {
                 continue;
             }
-            $html .= '<li class="error-'.$category.'">'.$category.': '.$a['inConsole'].'</li>';
+            $html .= '<li class="error-'.$category.'" data-count="'.$a['inConsole'].'">'.$category.': '.$a['inConsole'].'</li>';
         }
         $html .= '</ul>';
         return $html;
@@ -189,7 +189,7 @@ class HtmlErrorSummary
         }
         $html = '<h3>'.$header.'</h3>'
             .'<ul class="list-unstyled indent">'
-                .'<li class="error-'.$category.'">'.$msg.'</li>'
+                .'<li class="error-'.$category.'" data-count="'.$countInCat.'">'.$msg.'</li>'
                 .'</ul>';
         return $html;
     }

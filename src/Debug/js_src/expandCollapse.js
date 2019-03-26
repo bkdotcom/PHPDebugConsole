@@ -6,21 +6,21 @@ import $ from "jquery";
 
 var options;
 
-export function init($root, opts) {
+export function init($delegateNode, opts) {
 	options = opts;
-	$root.on("click", "[data-toggle=array]", function() {
+	$delegateNode.on("click", "[data-toggle=array]", function() {
 		toggle(this);
 		return false;
 	});
-	$root.on("click", "[data-toggle=group]", function() {
+	$delegateNode.on("click", "[data-toggle=group]", function() {
 		toggle(this);
 		return false;
 	});
-	$root.on("click", "[data-toggle=object]", function() {
+	$delegateNode.on("click", "[data-toggle=object]", function() {
 		toggle(this);
 		return false;
 	});
-	$root.on("debug.collapsed.group", function(e){
+	$delegateNode.on("debug.collapsed.group", function(e){
 		// console.warn('debug.collapsed.group');
 		groupErrorIconUpdate($(e.target).prev());
 	});

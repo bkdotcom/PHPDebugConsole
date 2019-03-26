@@ -16,7 +16,7 @@ namespace bdk\Debug\Output;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\PubSub\Event;
+use bdk\ErrorHandler\Error;
 use bdk\WampPublisher;
 
 /**
@@ -87,24 +87,24 @@ class Wamp implements OutputInterface
      *
      * Used to capture errors that aren't sent to log (ie debug capture is false)
      *
-     * @param Event $event event object
+     * @param Error $error error event instance
      *
      * @return void
      */
-    public function onError(Event $event)
+    public function onError(Error $error)
     {
-        if ($event['inConsole'] || !$event['isFirstOccur']) {
+        if ($error['inConsole'] || !$error['isFirstOccur']) {
             return;
         }
         $this->processLogEntry(new LogEntry(
             $this,
             'errorNotConsoled',
             array(
-                $event['typeStr'].': '.$event['file'].' (line '.$event['line'].'): '.$event['message']
+                $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message']
             ),
             array(
-                'channel' => 'general',
-                'class' => $event['type'] & $this->debug->getCfg('errorMask')
+                'channel' => $this->debug->getCfg('channel'),
+                'class' => $error['type'] & $this->debug->getCfg('errorMask')
                     ? 'danger'
                     : 'warning',
             )
@@ -137,7 +137,7 @@ class Wamp implements OutputInterface
             array(),
             array(
                 'responseCode' => \http_response_code(),
-                'channel' => 'general',
+                'channel' => $this->debug->getCfg('channel'),
             )
         ));
     }
@@ -156,7 +156,7 @@ class Wamp implements OutputInterface
             'format' => 'raw',
             'requestId' => $this->requestId,
         ), $logEntry['meta']);
-        if ($meta['channel'] == 'general') {
+        if ($meta['channel'] == $this->debug->getCfg('channel')) {
             unset($meta['channel']);
         }
         if ($meta['format'] == 'raw') {
@@ -289,10 +289,14 @@ class Wamp implements OutputInterface
             $this,
             'meta',
             array(
-                $metaVals
+                $metaVals,
+                array(
+                    'drawer' => true,
+                    'channelRoot' => $this->debug->rootInstance->getCfg('channel'),
+                )
             ),
             array(
-                'channel' => 'general',
+                'channel' => $this->debug->getCfg('channel'),
             )
         ));
     }

@@ -118,6 +118,7 @@ class Internal implements SubscriberInterface
             'requestId',
             'runtime',
         )));
+        $data['rootChannel'] = $this->debug->getCfg('channel');
         $body .= $this->debug->utilities->serializeLog($data);
         /*
             Now email

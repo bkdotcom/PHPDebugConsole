@@ -90,6 +90,7 @@ class InternalTest extends DebugTestFramework
             'logSummary' => $this->debug->getData('logSummary'),
             'requestId' => $this->debug->getData('requestId'),
             'runtime' => $this->debug->getData('runtime'),
+            'rootChannel' => $this->debug->getCfg('channel'),
         );
         $this->assertSame($this->deObjectify($expect), $this->deObjectify($unserialized));
     }

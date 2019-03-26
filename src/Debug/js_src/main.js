@@ -122,10 +122,12 @@ $.fn.debugEnhance = function(method) {
 	} else if (method) {
 		if (method === "addCss") {
 			addCss(arguments[1]);
-		} else if (method === "expand") {
-			expandCollapse.expand($self);
+		} else if (method === "buildChannelList") {
+			return enhanceMain.buildChannelList(arguments[1], "", arguments[1]);
 		} else if (method === "collapse") {
 			expandCollapse.collapse($self);
+		} else if (method === "expand") {
+			expandCollapse.expand($self);
 		} else if (method === "init") {
 			enhanceMain.init($self, options);
 			enhanceEntries.init($self, options);

@@ -31,12 +31,12 @@ export function init($debugRoot, opts) {
 function addChannelToggles() {
 	var channels = $root.data("channels"),
 		$toggles,
-		$ul = buildChannelTree(channels, "");
+		$ul = buildChannelList(channels, "", $root.data("channelRoot"));
 	$toggles = $("<fieldset />", {
 			class: "channels",
 		})
 		.append('<legend>Channels</legend>')
-		.append($ul)
+		.append($ul);
 	$root.find(".debug-body").prepend($toggles);
 }
 
@@ -46,7 +46,7 @@ function addExpandAll() {
 		}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
 	if ($root.find(".group-header").length) {
 		$expandAll.on("click", function() {
-			$root.find(".group-header").not(".expanded").each(function() {
+			$(this).closest(".debug").find(".group-header").not(".expanded").each(function() {
 				$(this).debugEnhance('expand');
 			});
 			return false;
@@ -82,29 +82,50 @@ function addPersistOption() {
 	}
 }
 
-function buildChannelTree(channels, prepend) {
+export function buildChannelList(channels, prepend, channelRoot) {
 	var $ul = $('<ul class="list-unstyled">'),
 		$div,
 		$li,
 		channel,
-		rootChannel = $root.data("channelRoot"),
 		$label;
+	prepend = prepend || "";
+	if ($.isArray(channels)) {
+		channels = channelsToTree(channels);
+	}
 	for (channel in channels) {
 		$li = $("<li>");
 		$label = $('<label>').append($("<input>", {
 			checked: true,
-			"data-is-root": channel == rootChannel,
+			"data-is-root": channel == channelRoot,
 			"data-toggle": "channel",
 			type: "checkbox",
 			value: prepend + channel
 		})).append(" " + channel);
 		$li.append($label);
 		if (Object.keys(channels[channel]).length) {
-			$li.append(buildChannelTree(channels[channel], prepend + channel + "."));
+			$li.append(buildChannelList(channels[channel], prepend + channel + "."));
 		}
 		$ul.append($li);
 	}
 	return $ul;
+}
+
+function channelsToTree(channels) {
+	var channelTree = {},
+		ref,
+		i, i2,
+		path;
+	for (i = 0; i < channels.length; i++) {
+		ref = channelTree;
+		path = channels[i].split('.');
+		for (i2 = 0; i2 < path.length; i2++) {
+			if (!ref[ path[i2] ]) {
+				ref[ path[i2] ] = {};
+			}
+			ref = ref[ path[i2] ];
+		}
+	}
+	return channelTree;
 }
 
 function enhanceErrorSummary() {

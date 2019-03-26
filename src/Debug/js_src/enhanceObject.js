@@ -2,13 +2,13 @@ import $ from "jquery";
 
 var options;
 
-export function init($root, opts) {
+export function init($delegateNode, opts) {
 	options = opts;
-	$root.on("click", "[data-toggle=vis]", function() {
+	$delegateNode.on("click", "[data-toggle=vis]", function() {
 		toggleVis(this);
 		return false;
 	});
-	$root.on("click", "[data-toggle=interface]", function() {
+	$delegateNode.on("click", "[data-toggle=interface]", function() {
 		toggleInterface(this);
 		return false;
 	});

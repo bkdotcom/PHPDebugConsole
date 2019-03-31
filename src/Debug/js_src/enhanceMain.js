@@ -93,6 +93,10 @@ export function buildChannelList(channels, prepend, channelRoot) {
 		channels = channelsToTree(channels);
 	}
 	for (channel in channels) {
+		if (channel === "phpError") {
+			// phpError is a special channel
+			continue;
+		}
 		$li = $("<li>");
 		$label = $('<label>').append($("<input>", {
 			checked: true,

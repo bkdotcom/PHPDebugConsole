@@ -505,7 +505,7 @@ class Internal implements SubscriberInterface
                 $input = \file_get_contents('php://input');
                 if ($input) {
                     $this->debug->log('php://input', $input);
-                } elseif (isset($_SERVER['REQUEST_METHOD'])) {
+                } elseif (isset($_SERVER['REQUEST_METHOD']) && empty($_FILES)) {
                     $this->debug->warn($_SERVER['REQUEST_METHOD'].' request with no body');
                 }
             }

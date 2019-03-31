@@ -5,7 +5,7 @@
  */
 
 import $ from 'jquery';				// external global
-import * as http from "./http.js";	// cookie & query  utils
+import * as http from "./http.js";	// cookie & query utils
 import * as enhanceMain from "./enhanceMain.js";
 import * as enhanceEntries from "./enhanceEntries.js";
 import * as expandCollapse from "./expandCollapse.js";
@@ -114,7 +114,7 @@ loadDeps([
 ]);
 
 $.fn.debugEnhance = function(method) {
-	// console.warn("debugEnhance", this);
+	// console.warn("debugEnhance", method, this);
 	var $self = this;
 	if (typeof method == "object") {
 		// options passed
@@ -123,7 +123,7 @@ $.fn.debugEnhance = function(method) {
 		if (method === "addCss") {
 			addCss(arguments[1]);
 		} else if (method === "buildChannelList") {
-			return enhanceMain.buildChannelList(arguments[1], "", arguments[1]);
+			return enhanceMain.buildChannelList(arguments[1], "", arguments[2]);
 		} else if (method === "collapse") {
 			expandCollapse.collapse($self);
 		} else if (method === "expand") {
@@ -133,9 +133,6 @@ $.fn.debugEnhance = function(method) {
 			enhanceEntries.init($self, options);
 			expandCollapse.init($self, options);
 			registerListeners($self);
-		} else if (method === "registerListeners") {
-			// deprecaated
-			registerListeners($self);
 		}
 		return;
 	}
@@ -144,10 +141,10 @@ $.fn.debugEnhance = function(method) {
 		if ($self.is(".enhanced")) {
 			return;
 		}
-		if ($self.is(".debug")) {
-			$self.debugEnhance("init");
-			enhanceEntries.enhance($self.find(".debug-log-summary, .debug-log"));
+		if ($self.is(".group-body")) {
+			enhanceEntries.enhanceEntries($self);
 		} else {
+			// log entry assumed
 			enhanceEntries.enhanceEntry($self, true);
 		}
 	});
@@ -159,7 +156,10 @@ $(function() {
 	if (dataOpts) {
 		$.extend(options, dataOpts);
 	}
-	$(".debug").debugEnhance();
+	$(".debug").each(function(){
+		$(this).debugEnhance("init");
+		$(this).find(".debug-log-summary, .debug-log").debugEnhance();
+	});
 });
 
 function getDebugKey() {

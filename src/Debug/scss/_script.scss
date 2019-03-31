@@ -97,26 +97,32 @@ i.fa-lg { font-size:1.33em; }
 //
 // notifications
 //
-.debug-noti-wrap {
-	position: fixed;
-	display: none;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	pointer-events: none;
-}
-.debug-noti-wrap .debug-noti {
-	display: table-cell;
-	text-align: center;
-	vertical-align: bottom;
-	font-size: 30px;
-	transform-origin: 50% 100%;
-}
-.debug-noti-table {display:table; width:100%; height:100%}
-.debug-noti.animate {
-	animation-duration: 1s;
-	animation-name: expandAndFade;
-	animation-timing-function: ease-in;
+@at-root {
+	.debug-noti-wrap {
+		position: fixed;
+		display: none;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		.debug-noti {
+			display: table-cell;
+			text-align: center;
+			vertical-align: bottom;
+			font-size: 30px;
+			transform-origin: 50% 100%;
+			&.animate {
+				animation-duration: 1s;
+				animation-name: expandAndFade;
+				animation-timing-function: ease-in;
+			}
+		}
+	}
+	.debug-noti-table {
+		display:table;
+		width:100%;
+		height:100%;
+	}
 }
 @keyframes expandAndFade {
 	from {

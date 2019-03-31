@@ -42,7 +42,7 @@ export function init($root, opts) {
 		});
 	});
 	$root.on("debug.expand.group", function(e){
-		enhance($(e.target));
+		enhanceEntries($(e.target));
 	});
 	$root.on("debug.expand.object", function(e){
 		var $node = $(e.target);
@@ -100,7 +100,7 @@ function addIcons($root, types) {
 /**
  * Enhance log entries
  */
-export function enhance($node) {
+export function enhanceEntries($node) {
 	$node.hide();
 	$node.children().each(function() {
 		enhanceEntry($(this));
@@ -147,6 +147,7 @@ function enhanceArray($node) {
 
 /**
  * Enhance a single log entry
+ * we don't enhance strings by default (add showmore).. needs to be visible to calc height
  */
 export function enhanceEntry($entry, inclStrings) {
 	// console.log("enhanceEntry", $entry.attr("class"));
@@ -160,7 +161,7 @@ export function enhanceEntry($entry, inclStrings) {
 	/*
 	} else if ($entry.is(".m_groupSummary")) {
 		// groupSummary has no toggle.. and is uncollapsed -> enhance
-		enhance($entry);
+		enhanceEntries($entry);
 	*/
 	} else {
 		// regular log-type entry

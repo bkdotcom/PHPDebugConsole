@@ -14,30 +14,27 @@
 .t_int,
 .t_float,
 .numeric {
-	font-family: Courier New,monospace,Ariel;
+	font-family: $font-family-numeric;
 	color: #009;
 	font-size: 1.15em;
 	line-height: 1.15em;
+	&:before,
+	&:after {
+		// undo font-size increase got
+		font-family: $font-family;
+		font-size: 0.8695em;
+	}
 }
 
 .t_key {
 	opacity:.75;
 	&:before,
 	&:after {
-		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-family: $font-family;
 		color: #999;
 	}
 	&:before { content:'['; margin-right:1px; }
 	&:after { content:']'; margin-left:1px; }
-	&.t_int:before,
-	&.t_int:after,
-	&.t_float:before,
-	&.t_float:after,
-	&.numeric:before,
-	&.numeric:after {
-		// undo font-size increase numerics got
-		font-size: 0.8695em;
-	}
 }
 .t_keyword { color:#07A; }
 .t_null { opacity:0.3; }
@@ -45,10 +42,18 @@
 .t_punct { color:#999; }
 .t_recursion { font-weight:bold; color:#F00; }
 .t_resource { font-style:italic; }
-.t_string { white-space:pre-wrap; }
-.t_string * { white-space:normal; }
-.t_string:before { content:open-quote; opacity:0.33; }
-.t_string:after { content:close-quote; opacity:0.33; }
+.t_string {
+	white-space: pre-wrap;
+	&:before,
+	&:after {
+		font-family: $font-family;
+		opacity: 0.33;
+		color: #333;
+	}
+	&:before { content: open-quote; }
+	&:after { content: close-quote; }
+	* { white-space:normal; }
+}
 .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
 .t_type { color:#693; }
 .t_undefined:after { content:"undefined"; opacity:0.3; }

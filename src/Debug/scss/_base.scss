@@ -71,6 +71,11 @@ label {
 	margin: 0;
 	cursor: pointer;
 	font-weight: bold;
+	max-width: none;
+	&.disabled {
+		cursor: default;
+		pointer-events: none;
+	}
 }
 legend {
 	// channels is the only component that uses fieldset/legend
@@ -105,4 +110,9 @@ ul {
 [title] {
 	cursor: help;
 	&:hover { background-color:rgba(0,0,0,0.2); }
+}
+.close {
+	opacity: 1;
+	float: none;
+
 }

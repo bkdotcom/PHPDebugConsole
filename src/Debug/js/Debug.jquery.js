@@ -1,393 +1,748 @@
-/**
- * Enhance debug output
- *    Add expand/collapse functionality to groups and arrays
- *    Add FontAwesome icons
- */
+(function ($) {
+	'use strict';
 
-(function($, clipboard) {
+	$ = $ && $.hasOwnProperty('default') ? $['default'] : $;
 
-	var options = {
-			fontAwesomeCss: "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
-			jQuerySrc: "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
-			clipboardSrc: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
-			classes: {
-				expand : "fa-plus-square-o",
-				collapse : "fa-minus-square-o",
-				empty : "fa-square-o"
-			},
-			iconsMisc: {
-				".timestamp" : '<i class="fa fa-calendar"></i>'
-			},
-			iconsObject: {
-				"> .info.magic" :				'<i class="fa fa-fw fa-magic"></i>',
-				"> .method.magic" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
-				"> .method.deprecated" :		'<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
-				"> .property.debuginfo-value" :	'<i class="fa fa-eye" title="via __debugInfo()"></i>',
-				"> .property.excluded" :		'<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
-				"> .property.private-ancestor" :'<i class="fa fa-lock" title="private ancestor"></i>',
-				"> .property > .t_modifier_magic" :		  '<i class="fa fa-magic" title="magic property"></i>',
-				"> .property > .t_modifier_magic-read" :  '<i class="fa fa-magic" title="magic property"></i>',
-				"> .property > .t_modifier_magic-write" : '<i class="fa fa-magic" title="magic property"></i>',
-				".toggle-vis[data-toggle=private]" :	'<i class="fa fa-user-secret"></i>',
-				".toggle-vis[data-toggle=protected]" :	'<i class="fa fa-shield"></i>',
-				".toggle-vis[data-toggle=excluded]" :   '<i class="fa fa-eye-slash"></i>'
-			},
-			// debug methods (not object methods)
-			iconsMethods: {
-				".group-header" :		'<i class="fa fa-lg fa-minus-square-o"></i>',
-				".m_assert" :			'<i class="fa-lg"><b>&ne;</b></i>',
-				".m_clear" :			'<i class="fa fa-lg fa-ban"></i>',
-				".m_count" :			'<i class="fa fa-lg fa-plus-circle"></i>',
-				".m_countReset" :		'<i class="fa fa-lg fa-plus-circle"></i>',
-				".m_error" :			'<i class="fa fa-lg fa-times-circle"></i>',
-				".m_info" :				'<i class="fa fa-lg fa-info-circle"></i>',
-				".m_profile" :			'<i class="fa fa-lg fa-pie-chart"></i>',
-				".m_profileEnd" :		'<i class="fa fa-lg fa-pie-chart"></i>',
-				".m_time" :				'<i class="fa fa-lg fa-clock-o"></i>',
-				".m_timeLog" :			'<i class="fa fa-lg fa-clock-o"></i>',
-				".m_warn" :				'<i class="fa fa-lg fa-warning"></i>'
-			},
-			debugKey: getDebugKey()
-		},
-		listenersRegistered = false;
-
-	/*
-		Load dependencies
-	*/
-	loadDeps([
-		{
-			src: options.fontAwesomeCss,
-			type: 'stylesheet',
-			check: function () {
-				var span = document.createElement('span'),
-					haveFa = false;
-				function css(element, property) {
-					return window.getComputedStyle(element, null).getPropertyValue(property);
-				}
-				span.className = 'fa';
-				span.style.display = 'none';
-				document.body.appendChild(span);
-				haveFa = css(span, 'font-family') === 'FontAwesome';
-				document.body.removeChild(span);
-				return haveFa;
+	function cookieGet(name) {
+		var nameEQ = name + "=",
+			ca = document.cookie.split(";"),
+			c = null,
+			i = 0;
+		for ( i = 0; i < ca.length; i += 1 ) {
+			c = ca[i];
+			while (c.charAt(0) === " ") {
+				c = c.substring(1, c.length);
 			}
-		},
-		{
-			src: options.jQuerySrc,
-			onLoaded: init,
-			check: function () {
-				return typeof window.jQuery !== "undefined";
-			}
-		},
-		{
-			src: options.clipboardSrc,
-			onLoaded: function () {
-				/*
-					Copy strings/floats/ints to clipboard when clicking
-				*/
-				clipboard = window.ClipboardJS;
-				new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
-					target: function (trigger) {
-						notify("Copied to clipboard");
-						return trigger;
-					}
-				});
-			},
-			check: function() {
-				return typeof window.ClipboardJS !== "undefined";
+			if (c.indexOf(nameEQ) === 0) {
+				return c.substring(nameEQ.length, c.length);
 			}
 		}
-	]);
+		return null;
+	}
 
-	function init() {
-		console.info("init");
-		$ = window.jQuery;
-		$.fn.debugEnhance = function(method) {
-			// console.warn("debugEnhance", this);
-			var $self = this;
-			if (typeof method == "object") {
-				$.extend(options, method);
-			} else if (method) {
-				if (method === "addCss") {
-					addCss(arguments[1]);
-				} else if (method === "expand") {
-					expand($self);
-				} else if (method === "collapse") {
-					collapse($self);
-				} else if (method === "registerListeners") {
-					registerListeners($self);
-				} else if (method === "enhanceGroupHeader") {
-					enhanceGroupHeader($self);
+	function cookieRemove(name) {
+		cookieSave(name, "", -1);
+	}
+
+	function cookieSave(name, value, days) {
+		// console.log("cookieSave", name, value, days);
+		var expires = "",
+			date = new Date();
+		if ( days ) {
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+			expires = "; expires=" + date.toGMTString();
+		}
+		document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
+	}
+
+	function lsGet(key) {
+		return JSON.parse(window.localStorage.getItem(key));
+	}
+
+	function lsSet(key, val) {
+		window.localStorage.setItem(key, JSON.stringify(val));
+	}
+
+	function queryDecode(qs) {
+		var params = {},
+			tokens,
+			re = /[?&]?([^&=]+)=?([^&]*)/g;
+		if (qs === undefined) {
+			qs = document.location.search;
+		}
+		qs = qs.split("+").join(" ");	// replace + with " "
+		while (true) {
+			tokens = re.exec(qs);
+			if (!tokens) {
+				break;
+			}
+			params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+		}
+		return params;
+	}
+
+	var $root, options, origH, origPageY;
+
+	/**
+	 * @see https://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element-when-inner-element-scroll-position-reaches-t
+	 */
+	$.fn.scrollLock = function(enable){
+		enable = typeof enable == "undefined"
+			? true
+			: enable;
+		return enable
+			? this.on("DOMMouseScroll mousewheel wheel",function(e){
+				var $this = $(this),
+					st = this.scrollTop,
+					sh = this.scrollHeight,
+					h = $this.innerHeight(),
+					d = e.originalEvent.wheelDelta,
+					isUp = d>0,
+					prevent = function(){
+						e.stopPropagation();
+						e.preventDefault();
+						e.returnValue = false;
+						return false
+					};
+				if (!isUp && -d > sh-h-st) {
+					// Scrolling down, but this will take us past the bottom.
+					$this.scrollTop(sh);
+					return prevent()
+				} else if (isUp && d > st) {
+					// Scrolling up, but this will take us past the top.
+					$this.scrollTop(0);
+					return prevent();
 				}
+			})
+			: this.off("DOMMouseScroll mousewheel wheel");
+	};
+
+	function init($debugRoot, opts) {
+		// console.warn('drawer.init', $debugRoot[0]);
+		$root = $debugRoot;
+		options = opts;
+		if (!opts.drawer) {
+			return;
+		}
+
+		$root.addClass("debug-drawer");
+
+		addMarkup();
+
+		if (options.persistDrawer && lsGet("phpDebugConsole-openDrawer")) {
+			open();
+		}
+
+		$root.find(".debug-body").scrollLock();
+		$root.find(".debug-resize-handle").on("mousedown", onMousedown);
+		$root.find(".debug-pull-tab").on("click", open);
+		$root.find(".debug-menu-bar .close").on("click", close);
+	}
+
+	function addMarkup() {
+		var $menuBar = $(".debug-menu-bar");
+		// var $body = $('<div class="debug-body"></div>');
+		$menuBar.before('\
+		<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i> PHP</div>\
+		<div class="debug-resize-handle"></div>'
+		);
+		$menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole\
+		<div class="pull-right">\
+			<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">\
+				<span aria-hidden="true">&times;</span>\
+			</button>\
+		</div>');
+	}
+
+	function open() {
+		$root.addClass("debug-drawer-open");
+		setHeight(); // makes sure height within min/max
+		$("body").css("marginBottom", ($root.height() + 8) + "px");
+		$(window).on("resize", setHeight);
+		if (options.persistDrawer) {
+			lsSet("phpDebugConsole-openDrawer", true);
+		}
+	}
+
+	function close() {
+		$root.removeClass("debug-drawer-open");
+		$("body").css("marginBottom", "");
+		$(window).off("resize", setHeight);
+		if (options.persistDrawer) {
+			lsSet("phpDebugConsole-openDrawer", false);
+		}
+	}
+
+	function onMousemove(e) {
+		var h = origH + (origPageY - e.pageY);
+		setHeight(h, true);
+	}
+
+	function onMousedown(e) {
+		if (!$(this).closest(".debug-drawer").is(".debug-drawer-open")) {
+			// drawer isn't open / ignore resize
+			return;
+		}
+		origH = $root.find(".debug-body").height();
+		origPageY = e.pageY;
+		$("html").addClass("debug-resizing");
+		$root.parents()
+			.on("mousemove", onMousemove)
+			.on("mouseup", onMouseup);
+		e.preventDefault();
+	}
+
+	function onMouseup() {
+		$("html").removeClass("debug-resizing");
+		$root.parents()
+			.off("mousemove", onMousemove)
+			.off("mouseup", onMouseup);
+		$("body").css("marginBottom", ($root.height() + 8) + "px");
+	}
+
+	function setHeight(height, viaUser) {
+		var $body = $root.find(".debug-body"),
+			menuH = $root.find(".debug-menu-bar").outerHeight(),
+			minH = 20,
+			// inacurate if document.doctype is null : $(window).height()
+			//    aka document.documentElement.clientHeight
+			maxH = window.innerHeight - menuH - 50;
+		if (!height || typeof height === "object") {
+			// no height passed -> use last or 100
+			height = parseInt($body[0].style.height, 10);
+			if (!height && options.persistDrawer) {
+				height = lsGet("phpDebugConsole-height");
+			}
+			if (!height) {
+				height = 100;
+			}
+		}
+		height = Math.min(height, maxH);
+		height = Math.max(height, minH);
+		$body.css("height", height);
+		if (viaUser && options.persistDrawer) {
+			lsSet("phpDebugConsole-height", height);
+		}
+	}
+
+	/**
+	 * Filter entries
+	 */
+
+	var channels = [];
+	var tests = [
+		function ($node) {
+			var channel = $node.data("channel");
+			return channels.indexOf(channel) > -1;
+		}
+	];
+	var preFilterCallbacks = [
+		function ($root) {
+			var $checkboxes = $root.find("input[data-toggle=channel]");
+			channels = $checkboxes.length
+				? []
+				: [undefined];
+			$checkboxes.filter(":checked").each(function(){
+				channels.push($(this).val());
+				if ($(this).data("isRoot")) {
+					channels.push(undefined);
+				}
+			});
+		}
+	];
+
+	function init$1($delegateNode) {
+
+		$delegateNode.on("change", "input[type=checkbox]", function() {
+			var $this = $(this),
+				isChecked = $this.is(":checked"),
+				$nested = $this.closest("label").next("ul").find("input");
+			if ($this.data("toggle") == "error") {
+				// filtered separately
 				return;
 			}
-			this.each(function() {
-				var $self = $(this);
-				if ($self.hasClass("enhanced")) {
-					// console.log("enhanced");
-					return;
+			$nested.prop("checked", isChecked);
+			applyFilter($this.closest(".debug"));
+		});
+
+		$delegateNode.on("change", "input[data-toggle=error]", function() {
+			var $this = $(this),
+				$root = $this.closest(".debug"),
+				errorClass = $this.val(),
+				isChecked = $this.is(":checked"),
+				selector = ".group-body ." + errorClass;
+			$root.find(selector).toggleClass("filter-hidden", !isChecked);
+			// trigger collapse to potentially update group icon
+			$root.find(".m_error, .m_warn").parents(".m_group").find(".group-body")
+				.trigger("debug.collapsed.group");
+		});
+	}
+
+	function addTest(func) {
+		tests.push(func);
+	}
+
+	function addPreFilter(func) {
+		preFilterCallbacks.push(func);
+	}
+
+	function applyFilter($root) {
+		var i;
+		for (i in preFilterCallbacks) {
+			preFilterCallbacks[i]($root);
+		}
+		$root.find("> .debug-body .m_alert, .group-body > *").each(function(){
+			var $node = $(this),
+				show = true;
+			if ($node.data("channel") == "phpError") {
+				// php Errors are filtered separately
+				return;
+			}
+			for (i in tests) {
+				show = tests[i]($node);
+				if (!show) {
+					break;
 				}
-				if ($self.hasClass("debug")) {
-					console.warn("enhancing debug");
-					addCss(this.selector);
-					addPersistOption($self);
-					addExpandAll($self);
-					enhanceErrorSummary($self);
-					registerListeners($self);
-					// only enhance root log entries
-					// enhance collapsed/hidden entries when expanded
-					enhanceEntries($self.find("> .debug-header, > .debug-content"));
-					$self.find(".channels").show();
-					$self.find(".loading").hide();
-					$self.addClass("enhanced");
-				} else {
-					// console.log("enhancing node");
-					enhanceEntry($self);
+			}
+			$node.toggleClass("filter-hidden", !show);
+		});
+	}
+
+	var $root$1, options$1;
+
+	var KEYCODE_ESC = 27;
+
+	function init$2($debugRoot, opts) {
+		$root$1 = $debugRoot;
+		options$1 = opts;
+
+		addDropdown();
+
+		$("#debug-options-toggle").on("click", function(e){
+			var isVis = $(".debug-options").is(".show");
+			if (!isVis) {
+				open$1();
+			} else {
+				close$1();
+			}
+			e.stopPropagation();
+		});
+
+		$("input[name=debugCookie]").on("change", function(){
+			var isChecked = $(this).is(":checked");
+			if (isChecked) {
+				cookieSave("debug", options$1.debugKey, 7);
+			} else {
+				cookieRemove("debug");
+			}
+		}).prop("checked", options$1.debugKey && cookieGet("debug") === options$1.debugKey);
+		if (!options$1.debugKey) {
+			$("input[name=debugCookie]").prop("disabled", true)
+				.closest("label").addClass("disabled");
+		}
+
+		$("input[name=persistDrawer]").on("change", function(){
+			var isChecked = $(this).is(":checked");
+			options$1.persistDrawer = isChecked;
+			lsSet("phpDebugConsole-persistDrawer", isChecked);
+		}).prop("checked", options$1.persistDrawer);
+	}
+
+	function addDropdown() {
+		var $menuBar = $root$1.find(".debug-menu-bar");
+		$menuBar.find(".pull-right").prepend('<button id="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">\
+			<i class="fa fa-ellipsis-v fa-fw"></i>\
+		</button>');
+		$menuBar.append('<div class="debug-options" aria-labelledby="debug-options-toggle">\
+			<div class="debug-options-body">\
+				<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>\
+				<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>\
+				<hr class="dropdown-divider" />\
+				<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>\
+			</div>\
+		</div>');
+	}
+
+	function onBodyClick(e) {
+		if ($root$1.find(".debug-options").find(e.target).length === 0) {
+			// we clicked outside the dropdown
+			close$1();
+		}
+	}
+
+	function onBodyKeyup(e) {
+		if (e.keyCode === KEYCODE_ESC) {
+			close$1();
+		}
+	}
+
+	function open$1() {
+		$root$1.find(".debug-options").addClass("show");
+		$("body").on("click", onBodyClick);
+		$("body").on("keyup", onBodyKeyup);
+	}
+
+	function close$1() {
+		$root$1.find(".debug-options").removeClass("show");
+		$("body").off("click", onBodyClick);
+		$("body").off("keyup", onBodyKeyup);
+	}
+
+	var options$2;
+	var methods;	// method filters
+	var $root$2;
+
+	function init$3($debugRoot, opts) {
+		$root$2 = $debugRoot;
+		options$2 = opts;
+
+		if (!opts.sidebar) {
+			return;
+		}
+
+		addMarkup$1();
+
+		if (options$2.persistDrawer && !lsGet("phpDebugConsole-openSidebar")) {
+			close$2();
+		}
+
+		addPreFilter(function($root){
+			methods = [];
+			$root.find("input[data-toggle=method]:checked").each(function(){
+				methods.push($(this).val());
+			});
+		});
+
+		addTest(function($node){
+			var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
+			if (["alert","error","warn","info"].indexOf(method) > -1) {
+				return methods.indexOf(method) > -1;
+			} else {
+				return methods.indexOf("other") > -1;
+			}
+		});
+
+		$root$2.on("click", ".close[data-dismiss=alert]", function() {
+			// setTimeout -> new thread -> executed after event bubbled
+			setTimeout(function(){
+				if ($root$2.find(".m_alert").length) {
+					$root$2.find(".debug-sidebar input[data-toggle=method][value=alert]").parent().addClass("disabled");
 				}
 			});
-			return this;
-		};
-
-		$(function() {
-			var $debug = $(".debug");
-			if ($debug.length) {
-				$debug.debugEnhance();
-			} else {
-				addCss();
-				registerListeners($("body"));
-			}
-			addNoti($("body"));
 		});
-	} // end init
+
+		$root$2.find(".sidebar-toggle").on("click", function() {
+			var isVis = $(".debug-sidebar").is(".show");
+			if (!isVis) {
+				open$2();
+			} else {
+				close$2();
+			}
+		});
+
+		$root$2.find(".debug-sidebar input[type=checkbox]").on("change", function(e) {
+			var $input = $(this),
+				$toggle = $input.closest(".toggle"),
+				$nested = $toggle.next("ul").find(".toggle"),
+				isActive = $input.is(":checked");
+			$toggle.toggleClass("active", isActive);
+			$nested.toggleClass("active", isActive);
+			if ($input.val() == "error-fatal") {
+				$(".m_alert.error-summary").toggle(!isActive);
+			}
+		});
+	}
+
+	function addMarkup$1() {
+		var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
+		$sidebar.html('\
+		<div class="sidebar-toggle">\
+			<div class="collapse">\
+				<i class="fa fa-caret-left"></i>\
+				<i class="fa fa-ellipsis-v"></i>\
+				<i class="fa fa-caret-left"></i>\
+			</div>\
+			<div class="expand">\
+				<i class="fa fa-caret-right"></i>\
+				<i class="fa fa-ellipsis-v"></i>\
+				<i class="fa fa-caret-right"></i>\
+			</div>\
+		</div>\
+		<ul class="list-unstyled debug-filters">\
+			<li class="php-errors">\
+				<span><i class="fa fa-fw fa-lg fa-code"></i> PHP Errors</span>\
+				<ul class="list-unstyled">\
+				</ul>\
+			</li>\
+			<li class="channels">\
+				<span><i class="fa fa-fw fa-lg fa-list-ul"></i> Channels</span>\
+				<ul class="list-unstyled">\
+				</ul>\
+			</li>\
+		</ul>\
+	');
+		$root$2.find(".debug-body").before($sidebar);
+
+		phpErrorToggles();
+		moveChannelToggles();
+		addMethodToggles();
+		moveExpandAll();
+
+		setTimeout(function(){
+			$sidebar.removeClass("no-transition");
+		}, 500);
+	}
+
+	function addMethodToggles() {
+		var $filters = $root$2.find(".debug-filters"),
+			$entries = $root$2.find("> .debug-body .m_alert, .group-body > *"),
+			val,
+			labels = {
+				alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i> Alerts',
+				error: '<i class="fa fa-fw fa-lg fa-times-circle"></i> Error',
+				warn: '<i class="fa fa-fw fa-lg fa-warning"></i> Warning',
+				info: '<i class="fa fa-fw fa-lg fa-info-circle"></i> Info',
+				other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i> Other'
+			},
+			haveEntry;
+		for (val in labels) {
+			haveEntry = val == "other"
+				? $entries.not(".m_alert, .m_error, .m_warn, .m_info").length > 0
+				: $entries.filter(".m_"+val).length > 0;
+			$filters.append(
+				$("<li>").append(
+					$('<label class="toggle active disabled" />').toggleClass("disabled", !haveEntry).append(
+						$("<input />", {
+							type: "checkbox",
+							checked: true,
+							"data-toggle": "method",
+							value: val
+						})
+					).append(
+						labels[val]
+					)
+				)
+			);
+		}
+
+	}
 
 	/**
-	 * add font-awsome icons
+	 * grab the .debug-body toggles and move them to sidebar
 	 */
-	function addIcons($root, types) {
-		if (!$.isArray(types)) {
-			types = typeof types === "undefined" ?
-				["misc"] :
-				[types];
+	function moveChannelToggles() {
+		var $togglesSrc = $root$2.find(".debug-body .channels > ul > li"),
+			$togglesDest = $root$2.find(".debug-sidebar .channels ul");
+		$togglesSrc.find("label").addClass("toggle active");
+		$togglesDest.append($togglesSrc);
+		if ($togglesDest.children().length === 0) {
+			$togglesDest.parent().hide();
 		}
-		if ($.inArray("misc", types) >= 0) {
-			$.each(options.iconsMisc, function(selector,v){
-				$root.find(selector).prepend(v);
-			});
-		}
-		if ($.inArray("object", types) >= 0) {
-			$.each(options.iconsObject, function(selector,v){
-				$root.find(selector).prepend(v);
-			});
-			$root.find("> .property > .fa:first-child, > .property > span:first-child > .fa").addClass("fa-fw");
-		}
-		if ($.inArray("methods", types) >= 0) {
-			$.each(options.iconsMethods, function(selector,v){
-				var $caption;
-				if ($root.is(selector)) {
-					if ($root.is("table")) {
-						$caption = $root.find('caption');
-						if (!$caption.length) {
-							$caption = $("<caption></caption>");
-							$root.prepend($caption);
-						}
-						$root = $caption;
-					}
-					$root.prepend(v);
-					return false;
-				}
-			});
+		$root$2.find(".debug-body .channels").remove();
+	}
+
+	/**
+	 * Grab the .debug-body "Expand All" and move it to sidebar
+	 */
+	function moveExpandAll() {
+		var $btn = $root$2.find(".debug-body > .expand-all"),
+			html = $btn.html();
+		if ($btn.length) {
+			$btn.html(html.replace('Expand', 'Exp'));
+			$btn.appendTo($root$2.find(".debug-sidebar"));
 		}
 	}
 
 	/**
-	 * Collapse an array, group, or object
-	 *
-	 * @param jQueryObj $toggle   the toggle node
-	 * @param immediate immediate no annimation
-	 *
-	 * @return void
+	 * Grab the error toggles from .debug-body's error-summary move to sidebar
 	 */
-	function collapse($toggle, immediate) {
-		var $target = $toggle.next(),
-			$groupEndValue;
-		if ($toggle.is("[data-toggle=array]")) {
-			// show and use the "expand it" toggle as reference toggle
-			$toggle = $toggle.closest(".t_array").prev().show();
-			$target = $toggle.next();
-			$target.hide();
+	function phpErrorToggles() {
+		var $togglesUl = $root$2.find(".debug-sidebar .php-errors ul"),
+			$errorSummary = $root$2.find(".m_alert.error-summary"),
+			haveFatal = $root$2.find(".m_error.error-fatal").length > 0;
+		if (haveFatal) {
+			$togglesUl.append('<li class="toggle active"><label>\
+			<input type="checkbox" checked data-toggle="error" value="error-fatal" />fatal <span class="badge">1</span>\
+			</label></li>');
+		}
+		$errorSummary.find("label").each(function(){
+			var $li = $(this).parent().addClass("toggle active"),
+				$checkbox = $(this).find("input"),
+				val = $checkbox.val().replace("error-", ""),
+				html = "<label>" + $checkbox[0].outerHTML + val + ' <span class="badge">' + $checkbox.data("count") + "</span></label>";
+			$li.html(html);
+			$togglesUl.append($li);
+		});
+		if ($togglesUl.children().length === 0) {
+			$togglesUl.parent().hide();
+		}
+		if (!haveFatal) {
+			$errorSummary.remove();
 		} else {
-			if ($toggle.is("[data-toggle=group]")) {
-				$groupEndValue = $target.find("> .m_groupEndValue > :last-child");
-				groupErrorIconChange($toggle);
-				if ($groupEndValue.length && $toggle.find(".group-label").last().nextAll().length == 0) {
-					$toggle.find(".group-label").last().after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML);
-				}
-			}
-			$toggle.removeClass("expanded");
-			if (immediate) {
-				$target.hide();
-				toggleIconChange($toggle, options.classes.expand);
-			} else {
-				$target.slideUp("fast", function() {
-					toggleIconChange($toggle, options.classes.expand);
+			$errorSummary.find("h3").eq(1).remove();
+		}
+	}
+
+	function open$2() {
+		$(".debug-sidebar").addClass("show");
+		lsSet("phpDebugConsole-openSidebar", true);
+	}
+
+	function close$2() {
+		$(".debug-sidebar").removeClass("show");
+		lsSet("phpDebugConsole-openSidebar", false);
+	}
+
+	/**
+	 * Add primary Ui elements
+	 */
+
+	var options$3;
+	var $root$3;
+
+	function init$4($debugRoot, opts) {
+		options$3 = opts;
+		$root$3 = $debugRoot;
+		addChannelToggles();
+		addExpandAll();
+		addNoti($("body"));
+		addPersistOption();
+		enhanceErrorSummary();
+		init($root$3, opts);
+		init$1($root$3);
+		init$3($root$3, opts);
+		init$2($root$3, opts);
+		$root$3.find(".loading").hide();
+		$root$3.addClass("enhanced");
+	}
+
+	function addChannelToggles() {
+		var channels = $root$3.data("channels"),
+			$toggles,
+			$ul = buildChannelList(channels, "", $root$3.data("channelRoot"));
+		$toggles = $("<fieldset />", {
+				class: "channels",
+			})
+			.append('<legend>Channels</legend>')
+			.append($ul);
+		if ($ul.html().length) {
+			$root$3.find(".debug-body").prepend($toggles);
+		}
+	}
+
+	function addExpandAll() {
+		var $expandAll = $("<button>", {
+			class: "expand-all"
+			}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
+		// this is currently invoked before entries are enhance / empty class not yet added
+		if ($root$3.find(".m_group:not(.empty)").length) {
+			$expandAll.on("click", function() {
+				$(this).closest(".debug").find(".group-header").not(".expanded").each(function() {
+					$(this).debugEnhance('expand');
 				});
-			}
-		}
-	}
-
-	/**
-	 * Adds expand/collapse functionality to array
-	 */
-	function enhanceArray($node) {
-		// console.log('enhanceArray', $node[0]);
-		var isEnhanced = $node.prev().hasClass("t_array-expand"),
-			$expander = $('<span class="t_array-expand" data-toggle="array">' +
-					'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-					'<i class="fa ' + options.classes.expand + '"></i>&middot;&middot;&middot; ' +
-					'<span class="t_punct">)</span>' +
-				"</span>"),
-			numParents = $node.parentsUntil(".m_group", ".t_object, .t_array").length;
-		if (isEnhanced) {
-			return;
-		}
-		if ($.trim($node.find(".array-inner").html()).length < 1) {
-			// empty array -> don't add expand/collapse
-			$node.find("br").hide();
-			$node.find(".array-inner").hide();
-			return;
-		}
-		// add collapse link
-		$node.find(".t_keyword").first().
-			wrap('<span class="t_array-collapse expanded" data-toggle="array">').
-			after('<span class="t_punct">(</span> <i class="fa ' + options.classes.collapse + '"></i>').
-			parent().next().remove();	// remove original "("
-		$node.before($expander);
-		if (numParents === 0) {
-			// outermost array -> leave open
-			expand($node);
-		} else {
-			// $node.hide();
-			collapse($node.find(".t_array-collapse").first());
-		}
-	}
-
-	function enhanceEntries($node, inclStrings) {
-		// console.log("enhanceEntries", $node);
-		if (typeof inclStrings == "undefined") {
-			inclStrings = true;
-		}
-		$node.hide();
-		// don't enhance groups... they'll get enhanced when expanded
-		$node.children().not(".m_group").each(function() {
-			enhanceEntry($(this), false);
-		});
-		$node.show();
-		if (inclStrings) {
-			enhanceStrings($node);
-		}
-	}
-
-	function enhanceEntry($entry, inclStrings) {
-		// console.log("enhanceEntry", $entry);
-		if ($entry.hasClass("enhanced")) {
-			return;
-		}
-		if ($entry.hasClass("m_group")) {
-			return;
-		}
-		if (typeof inclStrings == "undefined") {
-			inclStrings = true;
-		}
-		if ($entry.hasClass("group-header")) {
-			// minimal enhancement... just adds data-toggle attr and hides target
-			// target will not be enhanced until expanded
-			addIcons($entry, ["methods"]);
-			enhanceGroupHeader($entry);
-			$entry.addClass("enhanced");
-		} else if ($entry.hasClass("m_groupSummary")) {
-			// groupSummary has no toggle.. and is uncollapsed -> enhance
-			enhanceEntries($entry);
-		} else {
-			// regular log-type entry
-			$entry.children().each(function() {
-				enhanceValue(this);
+				return false;
 			});
-			enhanceMisc($entry);
-			addIcons($entry, ["misc","methods"]);
-			$entry.addClass("enhanced");
-			if (inclStrings) {
-				enhanceStrings($entry);
-			}
+			$root$3.find(".debug-log-summary").before($expandAll);
 		}
 	}
 
-	function enhanceErrorSummary($root) {
-		// console.log("enhanceSummary");
-		var $errorSummary = $root.find(".alert.error-summary");
-		$errorSummary.find("h3:first-child").prepend(options.iconsMethods[".m_error"]);
-		$errorSummary.find("li[class*=error-]").each( function() {
+	function addNoti($root) {
+		$root.append('<div class="debug-noti-wrap">' +
+				'<div class="debug-noti-table">' +
+					'<div class="debug-noti"></div>' +
+				'</div>' +
+			'</div>');
+	}
+
+	function addPersistOption() {
+		var $node;
+		if (options$3.debugKey) {
+			$node = $('<label class="debug-cookie" title="Add/remove debug cookie"><input type="checkbox"> Keep debug on</label>');
+			if (cookieGet("debug") === options$3.debugKey) {
+				$node.find("input").prop("checked", true);
+			}
+			$("input", $node).on("change", function() {
+				var checked = $(this).is(":checked");
+				if (checked) {
+					cookieSave("debug", options$3.debugKey, 7);
+				} else {
+					cookieRemove("debug");
+				}
+			});
+			$root$3.find(".debug-menu-bar").eq(0).prepend($node);
+		}
+	}
+
+	function buildChannelList(channels, prepend, channelRoot) {
+		var $ul = $('<ul class="list-unstyled">'),
+			$li,
+			channel,
+			$label;
+		prepend = prepend || "";
+		if ($.isArray(channels)) {
+			channels = channelsToTree(channels);
+		}
+		for (channel in channels) {
+			if (channel === "phpError") {
+				// phpError is a special channel
+				continue;
+			}
+			$li = $("<li>");
+			$label = $('<label>').append($("<input>", {
+				checked: true,
+				"data-is-root": channel == channelRoot,
+				"data-toggle": "channel",
+				type: "checkbox",
+				value: prepend + channel
+			})).append(" " + channel);
+			$li.append($label);
+			if (Object.keys(channels[channel]).length) {
+				$li.append(buildChannelList(channels[channel], prepend + channel + "."));
+			}
+			$ul.append($li);
+		}
+		return $ul;
+	}
+
+	function channelsToTree(channels) {
+		var channelTree = {},
+			ref,
+			i, i2,
+			path;
+		for (i = 0; i < channels.length; i++) {
+			ref = channelTree;
+			path = channels[i].split('.');
+			for (i2 = 0; i2 < path.length; i2++) {
+				if (!ref[ path[i2] ]) {
+					ref[ path[i2] ] = {};
+				}
+				ref = ref[ path[i2] ];
+			}
+		}
+		return channelTree;
+	}
+
+	function enhanceErrorSummary() {
+		var $errorSummary = $root$3.find(".m_alert.error-summary");
+		$errorSummary.find("h3:first-child").prepend(options$3.iconsMethods[".m_error"]);
+		$errorSummary.find("li[class*=error-]").each(function() {
 			var classAttr = $(this).attr("class"),
 				html = $(this).html(),
-				htmlNew = '<label>' +
-					'<input type="checkbox" checked data-toggle="error" value="' + classAttr + '" /> ' +
+				htmlReplace = '<li><label>' +
+					'<input type="checkbox" checked data-toggle="error" data-count="'+$(this).data("count")+'" value="' + classAttr + '" /> ' +
 					html +
-					'</label>';
-			$(this).html(htmlNew).removeAttr("class");
+					'</label></li>';
+			$(this).replaceWith(htmlReplace);
 		});
 	}
 
-	function enhanceGroupHeader($toggle) {
-		var $target = $toggle.next();
-		// console.warn("enhanceGroupHeader", $toggle.text(), $toggle.attr("class"));
-		$toggle.attr("data-toggle", "group");
-		$.each(["level-error","level-info","level-warn"], function(i, val){
-			var $i;
-			if ($toggle.hasClass(val)) {
-				$i = $toggle.children('i').eq(0);
-				$toggle.wrapInner('<span class="'+val+'"></span>');
-				$toggle.prepend($i); // move icon
-			}
+	var options$4;
+
+	function init$5($delegateNode, opts) {
+		options$4 = opts;
+		$delegateNode.on("click", "[data-toggle=vis]", function() {
+			toggleVis(this);
+			return false;
 		});
-		$toggle.removeClass("collapsed level-error level-info level-warn"); // collapsed class is never used
-		if ($.trim($target.html()).length < 1) {
-			// console.log("adding empty class");
-			$toggle.addClass("empty");
-			toggleIconChange($toggle, options.classes.empty);
-			return;
-		}
-		if ($toggle.hasClass("expanded") || $target.find(".m_error, .m_warn").not(".hidden-error").length) {
-			expand($toggle);
-		} else {
-			collapse($toggle, true);
-		}
+		$delegateNode.on("click", "[data-toggle=interface]", function() {
+			toggleInterface(this);
+			return false;
+		});
 	}
 
-	function enhanceMisc($root) {
-		$root.find(".timestamp").each(function() {
-			var $this = $(this),
-				$i = $this.find("i"),
-				text = $this.text(),
-				$span = $("<span>"+text+"</span>");
-			if ($this.hasClass("t_string")) {
-				$span.addClass("t_string numeric");
-			} else if ($this.hasClass("t_int")) {
-				$span.addClass("t_int");
-			} else {
-				$span.addClass("t_float");
-			}
-			if ($this.hasClass("no-pseudo")) {
-				$span.addClass("no-pseudo");
-			}
-			$this.removeClass("t_float t_int t_string numeric no-pseudo");
-			$this.html($i).append($span);
+	function addIcons($node) {
+		$.each(options$4.iconsObject, function(selector, v){
+			$node.find(selector).prepend(v);
 		});
+		$node.find("> .property > .fa:first-child, > .property > span:first-child > .fa").
+			addClass("fa-fw");
 	}
 
 	/**
 	 * Adds toggle icon & hides target
 	 * Minimal DOM manipulation -> apply to all descendants
 	 */
-	function enhanceObject($node) {
+	function enhance($node) {
 		$node.find("> .t_classname").each(function() {
 			var $toggle = $(this),
 				$target = $toggle.next();
@@ -395,135 +750,13 @@
 				$toggle.addClass("empty");
 				return;
 			}
-			$toggle.append(' <i class="fa ' + options.classes.expand + '"></i>');
+			$toggle.append(' <i class="fa ' + options$4.iconsExpand.expand + '"></i>');
 			$toggle.attr("data-toggle", "object");
 			$target.hide();
 		});
 	}
 
-	function enhanceStrings($root) {
-		$root.find(".t_string:not(.enhanced):visible").each(function() {
-			var $this = $(this),
-				$container,
-				$stringWrap,
-				height = $this.height(),
-				diff = height - 70;
-			if (diff > 35) {
-				$stringWrap = $this.wrap('<div class="show-more-wrapper"></div>').parent();
-				$stringWrap.append('<div class="show-more-fade"></div>');
-				$container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
-				$container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
-				$container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
-			}
-			$this.addClass("enhanced");
-		});
-	}
-
-	function enhanceTable($node) {
-		if ($node.is("table.sortable")) {
-			makeSortable($node[0]);
-		}
-	}
-
-	function enhanceValue(node) {
-		var $node = $(node);
-		if ($node.hasClass("t_array")) {
-			enhanceArray($node);
-		} else if ($node.hasClass("t_object")) {
-			enhanceObject($node);
-		} else if ($node.is("table")) {
-			enhanceTable($node);
-		}
-	}
-
-	function expand($toggleOrTarget) {
-		// console.warn('expand', $toggleOrTarget[0]);
-		var isToggle = $toggleOrTarget.is("[data-toggle]"),
-			$toggle = isToggle
-				? $toggleOrTarget
-				: $toggleOrTarget.prev(),
-			$target = isToggle
-				? $toggleOrTarget.next()
-				: $toggleOrTarget,
-			isEnhanced = $target.hasClass("enhanced");
-		if (!isEnhanced) {
-			if ($toggle.is("[data-toggle=group]")) {
-				enhanceEntries($target);
-			} else if ($toggle.is("[data-toggle=object]")) {
-				onExpandObject($target);
-			} else {
-				onExpandArray($target);
-			}
-		}
-		if ($toggle.is("[data-toggle=array]")) {
-			// hide the toggle..  there is a different toggle in the expanded version
-			$toggle.hide();
-			$target.show();
-			if (!isEnhanced) {
-				enhanceStrings($target);
-			}
-		} else {
-			$target.slideDown("fast", function() {
-				var $groupEndValue = $target.find("> .m_groupEndValue");
-				$toggle.addClass("expanded");
-				toggleIconChange($toggle, options.classes.collapse);
-				if ($groupEndValue.length) {
-					// remove value from label
-					$toggle.find(".group-label").last().nextAll().remove();
-				}
-				if (!isEnhanced) {
-					enhanceStrings($target);
-				}
-			});
-		}
-	}
-
-	function groupErrorIconChange($toggle) {
-		var selector = ".fa-times-circle, .fa-warning",
-			$target= $toggle.next(),
-			icon = groupErrorIconGet($target),
-			isExpanded = $toggle.hasClass(".expanded");
-		$toggle.removeClass("empty");
-		if (icon) {
-			if ($toggle.find(selector).length) {
-				$toggle.find(selector).replaceWith(icon);
-			} else {
-				$toggle.append(icon);
-			}
-			if (!isExpanded) {
-				toggleIconChange($toggle, options.classes.expand);
-			}
-		} else {
-			$toggle.find(selector).remove();
-			if ($target.children().not(".m_warn, .m_error").length < 1) {
-				// group only contains errors & they're now hidden
-				$toggle.addClass("empty");
-				toggleIconChange($toggle, options.classes.empty);
-			}
-		}
-	}
-
-	function groupErrorIconGet($container) {
-		var icon = "";
-		if ($container.find(".m_error").not(".hidden-error").length) {
-			icon = options.iconsMethods[".m_error"];
-		} else if ($container.find(".m_warn").not(".hidden-error").length) {
-			icon = options.iconsMethods[".m_warn"];
-		}
-		return icon;
-	}
-
-	function onExpandArray($node) {
-		if ($node.hasClass("enhanced")) {
-			return;
-		}
-		$node.addClass("enhanced");
-		$node.find("> .array-inner > .key-value > :last-child").each(function() {
-			enhanceValue(this);
-		});
-	}
-
-	function onExpandObject($node) {
+	function enhanceInner($node) {
 		var $wrapper = $node.parent(),
 			hasProtected = $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
 			hasPrivate = $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
@@ -537,13 +770,9 @@
 				"hide",
 			visToggles = "",
 			hiddenInterfaces = [];
-		if ($node.hasClass("enhanced")) {
+		if ($node.is(".enhanced")) {
 			return;
 		}
-		$node.addClass("enhanced");
-		$node.find("> .constant > :last-child, > .property > :last-child").each(function() {
-			enhanceValue(this);
-		});
 		if ($node.find(".method[data-implements]").hide().length) {
 			// linkify visibility
 			$node.find(".method[data-implements]").each( function() {
@@ -569,49 +798,26 @@
 			$wrapper.find(".private, .protected").hide();
 		}
 		if (hasProtected) {
-			visToggles += ' <span class="toggle-vis '+toggleClass+'" data-toggle="protected">' + toggleVerb + " protected</span>";
+			visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="protected">' + toggleVerb + " protected</span>";
 		}
 		if (hasPrivate) {
-			visToggles += ' <span class="toggle-vis '+toggleClass+'" data-toggle="private">' + toggleVerb + " private</span>";
+			visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="private">' + toggleVerb + " private</span>";
 		}
 		if (hasExcluded) {
-			visToggles += ' <span class="toggle-vis '+toggleClass+'" data-toggle="excluded">' + toggleVerb + " excluded</span>";
+			visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="excluded">' + toggleVerb + " excluded</span>";
 		}
 		$node.prepend('<span class="vis-toggles">' + visToggles + "</span>");
-		addIcons($node, ["object"]);
+		addIcons($node);
 		$node.find("> .property.forceShow").show().find("> .t_array-expand").each(function() {
-			expand($(this));
+			$(this).debugEnhance('expand');
 		});
 	}
 
-	function toggleCollapse(toggle) {
-		var $toggle = $(toggle);
-		if ($toggle.hasClass("empty")) {
-			return;
-		}
-		if ($toggle.hasClass("expanded")) {
-			$toggle.debugEnhance("collapse");
-		} else {
-			$toggle.debugEnhance("expand");
-		}
-	}
-
-	function toggleIconChange($toggle, classNameNew) {
-		// console.log("toggleIconChange", $toggle.text(), classNameNew);
-		var $icon = $toggle.children("i").eq(0);
-		$icon.addClass(classNameNew);
-		$.each(options.classes, function(i,className) {
-			if (className !== classNameNew) {
-				$icon.removeClass(className);
-			}
-		});
-	}
-
-	function toggleInterfaceVis(toggle) {
+	function toggleInterface(toggle) {
 		var $toggle = $(toggle),
-			iface = $(toggle).data("interface"),
-			$methods = $(toggle).closest(".t_object").find("> .object-inner > dd[data-implements="+iface+"]");
-		if ($(toggle).hasClass("toggle-off")) {
+			iface = $toggle.data("interface"),
+			$methods = $toggle.closest(".t_object").find("> .object-inner > dd[data-implements="+iface+"]");
+		if ($toggle.is(".toggle-off")) {
 			$toggle.addClass("toggle-on").removeClass("toggle-off");
 			$methods.show();
 		} else {
@@ -620,393 +826,47 @@
 		}
 	}
 
-	function toggleObjectVis(toggle) {
-		var vis = $(toggle).data("toggle"),
-			$toggles = $(toggle).closest(".t_object").find(".toggle-vis[data-toggle="+vis+"]");
-		if ($(toggle).hasClass("toggle-off")) {
+	/**
+	 * Toggle visibility for private/protected properties and methods
+	 */
+	function toggleVis(toggle) {
+		var $toggle = $(toggle),
+			vis = $toggle.data("vis"),
+			$objInner = $toggle.closest(".object-inner"),
+			$toggles = $objInner.find("[data-toggle=vis][data-vis="+vis+"]");
+		if ($toggle.is(".toggle-off")) {
 			// show for this and all descendants
 			$toggles.
-				html($(toggle).html().replace("show ", "hide ")).
+				html($toggle.html().replace("show ", "hide ")).
 				addClass("toggle-on").
 				removeClass("toggle-off");
-			$(toggle).closest(".object-inner").find("> ."+vis).show();
+			$objInner.find("> ."+vis).show();
 		} else {
 			// hide for this and all descendants
 			$toggles.
-				html($(toggle).html().replace("hide ", "show ")).
+				html($toggle.html().replace("hide ", "show ")).
 				addClass("toggle-off").
 				removeClass("toggle-on");
-		$(toggle).closest(".object-inner").find("> ."+vis).hide();
+			$objInner.find("> ."+vis).hide();
 		}
-	}
-
-	/*
-		Initialization type Functions
-	*/
-
-	/**
-	 * Adds CSS to head of page
-	 */
-	function addCss(scope) {
-		var css = "" +
-				".debug .error-fatal:before { padding-left: 1.25em; }" +
-				".debug .error-fatal i.fa-times-circle { position:absolute; top:.7em; }" +
-				".debug .debug-cookie { color:#666; }" +
-				".debug .hidden-channel, .debug .hidden-error { display:none !important; }" +
-				".debug i.fa, .debug .m_assert i { margin-right:.33em; }" +
-				".debug .m_assert > i { position:relative; top:-.20em; }" +
-				".debug i.fa-plus-circle { opacity:0.42; }" +
-				".debug i.fa-calendar { font-size:1.1em; }" +
-				".debug i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }" +
-				".debug i.fa-magic { color: orange; }" +
-				".debug .excluded > i.fa-eye-slash { color:#f39; }" +
-				".debug i.fa-lg { font-size:1.33em; }" +
-				".debug .group-header.expanded i.fa-warning, .debug .group-header.expanded i.fa-times-circle { display:none; }" +
-				".debug .group-header i.fa-warning { color:#cdcb06; margin-left:.33em}" +		// warning
-				".debug .group-header i.fa-times-circle { color:#D8000C; margin-left:.33em;}" +	// error
-				".debug a.expand-all { font-size:1.25em; color:inherit; text-decoration:none; display:block; clear:left; }" +
-				".debug .group-header.hidden-channel + .m_group," +
-				"	.debug *:not(.group-header) + .m_group {" +
-				"		margin-left: 0;" +
-				"		border-left: 0;" +
-				"		padding-left: 0;" +
-				"		display: block !important;" +
-				"	}" +
-				".debug [data-toggle]," +
-				"	.debug [data-toggle][title]," +	// override .debug[title]
-				"	.debug .vis-toggles span { cursor:pointer; }" +
-				".debug .group-header.empty, .debug .t_classname.empty { cursor:auto; }" +
-				".debug .vis-toggles span:hover," +
-				"	.debug [data-toggle=interface]:hover { background-color:rgba(0,0,0,0.1); }" +
-				".debug .vis-toggles .toggle-off," +
-				"	.debug .interface .toggle-off { opacity:0.42 }" +
-				".debug .show-more-container {display: inline;}" +
-				".debug .show-more-wrapper {display:block; position:relative; height:70px; overflow:hidden;}" +
-				".debug .show-more-fade {" +
-				"	position:absolute;" +
-				"	bottom:0;" +
-				"	width:100%; height:55px;" +
-				"	background-image: linear-gradient(to bottom, transparent, white);" +
-				"	pointer-events: none;" +
-				"}" +
-				".debug .level-error .show-more-fade, .debug .m_error .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FFBABA); }" +
-				".debug .level-info .show-more-fade, .debug .m_info .show-more-fade { background-image: linear-gradient(to bottom, transparent, #BDE5F8); }" +
-				".debug .level-warn .show-more-fade, .debug .m_warn .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FEEFB3); }" +
-				".debug [title]:hover .show-more-fade { background-image: linear-gradient(to bottom, transparent, #c9c9c9); }" +
-				".debug .show-more, .debug .show-less {" +
-				"   display: table;" +
-				"	box-shadow: 1px 1px 0px 0px rgba(0,0,0, 0.20);" +
-				"	border: 1px solid rgba(0,0,0, 0.20);" +
-				"	border-radius: 2px;" +
-				"	background-color: #EEE;" +
-				"}" +
-				".debug-noti-wrap {" +
-				"	position: fixed;" +
-				"	display: none;" +
-				"	top: 0;" +
-				"	width: 100%;" +
-				"	height: 100%;" +
-				"	pointer-events: none;" +
-				"}" +
-				".debug-noti-wrap .debug-noti {" +
-				"	display: table-cell;" +
-				"	text-align: center;" +
-				"	vertical-align: bottom;" +
-				"	font-size: 30px;" +
-				"	transform-origin: 50% 100%;" +
-				"}" +
-				".debug-noti-table {display:table; width:100%; height:100%}" +
-				".debug-noti.animate {" +
-				"	animation-duration: 1s;" +
-				"	animation-name: expandAndFade;" +
-				"	animation-timing-function: ease-in;" +
-				"}" +
-				"@keyframes expandAndFade {" +
-				"	from {" +
-				"		opacity: .9;" +
-				"		transform: scale(.9, .94);" +
-				"	}" +
-				"	to {" +
-				"		opacity: 0;" +
-				"		transform: scale(1, 1);" +
-				"	}" +
-				"}" +
-				"",
-			id = 'debug_javascript_style';
-		if (scope) {
-			css = css.replace(new RegExp(/\.debug\s/g), scope+" ");
-			id += scope.replace(/\W/g, "_");
-		}
-		if ($("head").find("#"+id).length === 0) {
-			$('<style id="' + id + '">' + css + '</style>').appendTo("head");
-		}
-	}
-
-	function addNoti($root) {
-		$root.append('<div class="debug-noti-wrap">' +
-				'<div class="debug-noti-table">' +
-					'<div class="debug-noti"></div>' +
-				'</div>' +
-			'</div>');
-	}
-
-	function addExpandAll($root) {
-		// console.log("addExpandAll");
-		var $expandAll = $("<a>", {
-				"href":"#"
-			}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups').addClass("expand-all");
-		if ( $root.find(".group-header").length ) {
-			$expandAll.on("click", function() {
-				$root.find(".group-header").not(".expanded").each( function() {
-					toggleCollapse(this);
-				});
-				return false;
-			});
-			$root.find(".debug-header").before($expandAll);
-		}
-	}
-
-	function addPersistOption($root) {
-		var $node;
-		if (options.debugKey) {
-			$node = $('<label class="debug-cookie"><input type="checkbox"> Keep debug on</label>').css({"float":"right"});
-			if (cookieGet("debug") === options.debugKey) {
-				$node.find("input").prop("checked", true);
-			}
-			$("input", $node).on("change", function() {
-				var checked = $(this).is(":checked");
-				console.log("debug persist checkbox changed", checked);
-				if (checked) {
-					console.log("debugKey", options.debugKey);
-					cookieSave("debug", options.debugKey, 7);
-				} else {
-					cookieRemove("debug");
-				}
-			});
-			$root.find(".debug-bar").eq(0).prepend($node);
-		}
-	}
-
-	function addStylesheet(src) {
-		var link = document.createElement("link");
-		link.type = "text/css";
-		link.rel = "stylesheet";
-		link.href = src;
-		document.head.appendChild(link);
-	}
-
-	function getDebugKey() {
-		var key = null,
-			queryParams = queryDecode(),
-			cookieValue = cookieGet("debug");
-		if (typeof queryParams.debug !== "undefined") {
-			key = queryParams.debug;
-		} else if (cookieValue) {
-			key = cookieValue;
-		}
-		return key;
-	}
-
-	function loadDeps(deps) {
-		var checkInterval,
-			intervalCounter = 1;
-		deps.reverse();
-		if (document.getElementsByTagName("body")[0].childElementCount == 1) {
-			// output only contains debug
-			// don't wait for interval to begin
-			loadDepsDoer(deps);
-		} else {
-			loadDepsDoer(deps, true);
-		}
-		checkInterval = setInterval(function() {
-			loadDepsDoer(deps, intervalCounter === 10);
-			if (deps.length === 0) {
-				clearInterval(checkInterval);
-			} else if (intervalCounter === 20) {
-				clearInterval(checkInterval);
-			}
-			intervalCounter++;
-		}, 500);
-	}
-
-	function loadDepsDoer(deps, checkOnly) {
-		var firstScript = document.getElementsByTagName("script")[0],
-			jsNode,
-			dep,
-			type,
-			i;
-		for (i = deps.length - 1; i >= 0; i--) {
-			dep = deps[i];
-			type = dep.type || 'script';
-			if (dep.check()) {
-				// dependency exists
-				if (dep.onLoaded) {
-					dep.onLoaded();
-				}
-				deps.splice(i, 1);	// remove it
-				continue;
-			}
-			if (dep.status != "loading" && !checkOnly) {
-				dep.status = "loading";
-				if (type == 'script') {
-					jsNode = document.createElement("script");
-					jsNode.src = dep.src;
-					firstScript.parentNode.insertBefore(jsNode, firstScript);
-				} else if (type == 'stylesheet') {
-					addStylesheet(dep.src);
-				}
-			}
-		}
-	}
-
-
-	function registerListeners($root) {
-		console.warn("registerListeners");
-		$root.on("click", "[data-toggle=array]", function() {
-			toggleCollapse(this);
-			return false;
-		});
-		$root.on("click", "[data-toggle=group]", function() {
-			toggleCollapse(this);
-			return false;
-		});
-		$root.on("click", "[data-toggle=object]", function() {
-			toggleCollapse(this);
-			return false;
-		});
-		$root.on("click", ".toggle-vis", function() {
-			toggleObjectVis(this);
-			return false;
-		});
-		$root.on("click", "[data-toggle=interface]", function() {
-			toggleInterfaceVis(this);
-			return false;
-		});
-		$root.on("click", ".alert-dismissible .close", function() {
-			$(this).parent().remove();
-		});
-		$root.on("click", ".show-more-container .show-more", function() {
-			var $container = $(this).closest(".show-more-container");
-			$container.find(".show-more-wrapper").animate({
-				height: $container.find(".t_string").height()
-			},400,"swing",function() {
-				$(this).css("display", "inline");
-			});
-			$container.find(".show-more-fade").fadeOut();
-			$container.find(".show-more").hide();
-			$container.find(".show-less").show();
-		});
-		$root.on("click", ".show-more-container .show-less", function() {
-			var $container = $(this).closest(".show-more-container");
-			$container.find(".show-more-wrapper")
-				.css("display", "block")
-				.animate({
-					height: '70px'
-				});
-			$container.find(".show-more-fade").fadeIn();
-			$container.find(".show-more").show();
-			$container.find(".show-less").hide();
-		});
-
-		$root.on("change", "input[data-toggle=channel]", function() {
-			var channel = $(this).val(),
-				$nodes = $(this).data("isRoot")
-					? $root.find(".m_group > *").not(".m_group").filter(function() {
-							var nodeChannel = $(this).data("channel");
-							return  nodeChannel === channel || nodeChannel === undefined;
-						})
-					: $root.find('.m_group > [data-channel="'+channel+'"]').not(".m_group");
-			$nodes.toggleClass("hidden-channel", !$(this).is(":checked"));
-		});
-
-		$root.on("change", "input[data-toggle=error]", function() {
-			var className = $(this).val(),
-				selector = ".debug-header ." + className +", .debug-content ."+className;
-			$root.find(selector).toggleClass("hidden-error", !$(this).is(":checked"));
-			// update icon for all groups having nested error
-			// groups containing only hidden erros will loose +/-
-			$root.find(".m_error, .m_warn").parents(".m_group").prev(".group-header").each(function() {
-				groupErrorIconChange($(this));
-			});
-		});
-
-		if (listenersRegistered) {
-			return;
-		}
-
-		$("body").on("animationend", ".debug-noti", function () {
-			$(this).removeClass("animate").closest(".debug-noti-wrap").hide();
-		});
-
-		listenersRegistered = true;
-	}
-
-	/*
-		Utils
-	*/
-
-	function cookieGet(name) {
-		var nameEQ = name + "=",
-			ca = document.cookie.split(";"),
-			c = null,
-			i = 0;
-		for ( i = 0; i < ca.length; i += 1 ) {
-			c = ca[i];
-			while (c.charAt(0) === " ") {
-				c = c.substring(1, c.length);
-			}
-			if (c.indexOf(nameEQ) === 0) {
-				return c.substring(nameEQ.length, c.length);
-			}
-		}
-		return null;
-	}
-
-	function cookieRemove(name) {
-		cookieSave(name, "", -1);
-	}
-
-	function cookieSave(name, value, days) {
-		console.log("cookieSave", name, value, days);
-		var expires = "",
-			date = new Date();
-		if ( days ) {
-			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-			expires = "; expires=" + date.toGMTString();
-		}
-		document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
-	}
-
-	function queryDecode(qs) {
-		var params = {},
-			tokens,
-			re = /[?&]?([^&=]+)=?([^&]*)/g;
-		if ( qs === undefined ) {
-			qs = document.location.search;
-		}
-		qs = qs.split("+").join(" ");	// replace + with " "
-		while ( true ) {
-			tokens = re.exec(qs);
-			if ( !tokens ) {
-				break;
-			}
-			params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
-		}
-		return params;
 	}
 
 	/**
 	 * Add sortability to given table
 	 */
 	function makeSortable(table) {
-		var $table = $(table),
+
+		var	$table = $(table),
 			$head = $table.find("> thead");
+		if (!$table.is("table.sortable")) {
+			return $table;
+		}
 		$table.addClass("table-sort");
 		$head.on("click", "th", function() {
 			var $th = $(this),
 				$cells = $(this).closest("tr").children(),
 				i = $cells.index($th),
-				curDir = $th.hasClass("sort-asc") ? "asc" : "desc",
+				curDir = $th.is(".sort-asc") ? "asc" : "desc",
 				newDir = curDir === "desc" ? "asc" : "desc";
 			$cells.removeClass("sort-asc sort-desc");
 			$th.addClass("sort-"+newDir);
@@ -1018,16 +878,13 @@
 						'<i class="fa fa-caret-down" aria-hidden="true"></i>' +
 					"</span>");
 			}
-			sortTable(table, i, newDir);
+			sortTable($table[0], i, newDir);
 		});
-	}
-
-	function notify(html) {
-		$(".debug-noti").html(html).addClass("animate").closest(".debug-noti-wrap").show();
+		return $table;
 	}
 
 	/**
-	 * sort table
+	 * Sort table
 	 *
 	 * @param obj table dom element
 	 * @param int col   column index
@@ -1057,4 +914,655 @@
 		}
 	}
 
-}( window.jQuery || undefined, window.ClipboardJS || undefined ));
+	var options$5;
+
+	function init$6($root, opts) {
+		options$5 = opts;
+		init$5($root, options$5);
+		$root.on("click", ".close[data-dismiss=alert]", function() {
+			$(this).parent().remove();
+		});
+		$root.on("click", ".show-more-container .show-more", function() {
+			var $container = $(this).closest(".show-more-container");
+			$container.find(".show-more-wrapper").animate({
+				height: $container.find(".t_string").height()
+			},400,"swing",function() {
+				$(this).css("display", "inline");
+			});
+			$container.find(".show-more-fade").fadeOut();
+			$container.find(".show-more").hide();
+			$container.find(".show-less").show();
+		});
+		$root.on("click", ".show-more-container .show-less", function() {
+			var $container = $(this).closest(".show-more-container");
+			$container.find(".show-more-wrapper")
+				.css("display", "block")
+				.animate({
+					height: "70px"
+				});
+			$container.find(".show-more-fade").fadeIn();
+			$container.find(".show-more").show();
+			$container.find(".show-less").hide();
+		});
+		$root.on("debug.expand.array", function(e){
+			var $node = $(e.target);
+			if ($node.is(".enhanced")) {
+				return;
+			}
+			$node.find("> .array-inner > .key-value > :last-child").each(function() {
+				enhanceValue(this);
+			});
+		});
+		$root.on("debug.expand.group", function(e){
+			enhanceEntries($(e.target));
+		});
+		$root.on("debug.expand.object", function(e){
+			var $node = $(e.target);
+			if ($node.is(".enhanced")) {
+				return;
+			}
+			$node.find("> .constant > :last-child, > .property > :last-child").each(function() {
+				enhanceValue(this);
+			});
+			enhanceInner($node);
+		});
+		$root.on("debug.expanded.array, debug.expanded.group, debug.expanded.object", function(e){
+			var $node = $(e.target);
+			if ($node.is(".enhanced")) {
+				return;
+			}
+			enhanceStrings($node);
+			$node.addClass("enhanced");
+		});
+	}
+
+	/**
+	 * add font-awsome icons
+	 */
+	function addIcons$1($root, types) {
+		if (!$.isArray(types)) {
+			types = typeof types === "undefined" ?
+				["misc"] :
+				[types];
+		}
+		if ($.inArray("misc", types) >= 0) {
+			$.each(options$5.iconsMisc, function(selector,v){
+				$root.find(selector).prepend(v);
+			});
+		}
+		if ($.inArray("methods", types) >= 0) {
+			$.each(options$5.iconsMethods, function(selector,v){
+				var $caption;
+				if ($root.is(selector)) {
+					if ($root.is(".m_profileEnd") && $root.find("> table").length) {
+						$caption = $root.find("> table > caption");
+						if (!$caption.length) {
+							$caption = $("<caption>");
+							$root.find("> table").prepend($caption);
+						}
+						$root = $caption;
+					}
+					$root.prepend(v);
+					return false;	// break
+				}
+			});
+		}
+	}
+
+	/**
+	 * Enhance log entries
+	 */
+	function enhanceEntries($node) {
+		$node.hide();
+		$node.children().each(function() {
+			enhanceEntry($(this));
+		});
+		$node.show();
+		enhanceStrings($node);
+	}
+
+	/**
+	 * Adds expand/collapse functionality to array
+	 * does not enhance values
+	 */
+	function enhanceArray($node) {
+		// console.log("enhanceArray", $node[0]);
+		var isEnhanced = $node.prev().is(".t_array-expand"),
+			$expander = $('<span class="t_array-expand" data-toggle="array">' +
+					'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
+					'<i class="fa ' + options$5.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+					'<span class="t_punct">)</span>' +
+				"</span>"),
+			numParents = $node.parentsUntil(".m_group", ".t_object, .t_array").length;
+		if (isEnhanced) {
+			return;
+		}
+		if ($.trim($node.find(".array-inner").html()).length < 1) {
+			// empty array -> don't add expand/collapse
+			$node.find("br").hide();
+			$node.find(".array-inner").hide();
+			return;
+		}
+		// add collapse link
+		$node.find(".t_keyword").first().
+			wrap('<span class="t_array-collapse expanded" data-toggle="array">').
+			after('<span class="t_punct">(</span> <i class="fa ' + options$5.iconsExpand.collapse + '"></i>').
+			parent().next().remove();	// remove original "("
+		$node.before($expander);
+		if (numParents === 0) {
+			// outermost array -> leave open
+			$node.debugEnhance("expand");
+		} else {
+			$node.find(".t_array-collapse").first().debugEnhance("collapse");
+		}
+	}
+
+	/**
+	 * Enhance a single log entry
+	 * we don't enhance strings by default (add showmore).. needs to be visible to calc height
+	 */
+	function enhanceEntry($entry, inclStrings) {
+		// console.log("enhanceEntry", $entry.attr("class"));
+		if ($entry.is(".enhanced")) {
+			return;
+		}
+		if ($entry.is(".m_group")) {
+			// minimal enhancement... just adds data-toggle attr and hides target
+			// target will not be enhanced until expanded
+			enhanceGroup($entry.find("> .group-header"));
+		/*
+		} else if ($entry.is(".m_groupSummary")) {
+			// groupSummary has no toggle.. and is uncollapsed -> enhance
+			enhanceEntries($entry);
+		*/
+		} else {
+			// regular log-type entry
+			$entry.children().each(function() {
+				enhanceValue(this);
+			});
+			addIcons$1($entry, ["methods", "misc"]);
+		}
+		if (inclStrings) {
+			enhanceStrings($entry);
+		}
+		$entry.addClass("enhanced");
+	}
+
+	function enhanceGroup($toggle) {
+		var $group = $toggle.parent(),
+			$target = $toggle.next();
+		addIcons$1($toggle, ["methods"]);
+		$toggle.attr("data-toggle", "group");
+		$.each(["level-error","level-info","level-warn"], function(i, val){
+			var $icon;
+			if ($toggle.hasClass(val)) {
+				$icon = $toggle.children("i").eq(0);
+				$toggle.wrapInner('<span class="'+val+'"></span>');
+				$toggle.prepend($icon); // move icon
+			}
+		});
+		$toggle.removeClass("collapsed level-error level-info level-warn"); // collapsed class is never used
+		if ($.trim($target.html()).length < 1) {
+			$group.addClass("empty");
+		}
+		if ($toggle.is(".expanded") || $target.find(".m_error, .m_warn").not(".filter-hidden").length) {
+			$toggle.debugEnhance("expand");
+		} else {
+			$toggle.debugEnhance("collapse", true);
+		}
+	}
+
+	function enhanceStrings($root) {
+		$root.find(".t_string:not(.enhanced):visible").each(function() {
+			var $this = $(this),
+				$container,
+				$stringWrap,
+				height = $this.height(),
+				diff = height - 70;
+			if (diff > 35) {
+				$stringWrap = $this.wrap('<div class="show-more-wrapper"></div>').parent();
+				$stringWrap.append('<div class="show-more-fade"></div>');
+				$container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
+				$container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
+				$container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
+			}
+			$this.addClass("enhanced");
+		});
+	}
+
+	function enhanceValue(node) {
+		var $node = $(node);
+		if ($node.is(".t_array")) {
+			enhanceArray($node);
+		} else if ($node.is(".t_object")) {
+			enhance($node);
+		} else if ($node.is("table")) {
+			makeSortable($node);
+		} else if ($node.is(".timestamp")) {
+			var $i = $node.find("i"),
+				text = $node.text(),
+				$span = $("<span>"+text+"</span>");
+			if ($node.is(".t_string")) {
+				$span.addClass("t_string numeric");
+			} else if ($node.is(".t_int")) {
+				$span.addClass("t_int");
+			} else {
+				$span.addClass("t_float");
+			}
+			if ($node.is(".no-pseudo")) {
+				$span.addClass("no-pseudo");
+			}
+			$node.removeClass("t_float t_int t_string numeric no-pseudo");
+			$node.html($i).append($span);
+		}
+	}
+
+	/**
+	 * handle expanding/collapsing arrays, groups, & objects
+	 */
+
+	var options$6;
+
+	function init$7($delegateNode, opts) {
+		options$6 = opts;
+		$delegateNode.on("click", "[data-toggle=array]", function() {
+			toggle(this);
+			return false;
+		});
+		$delegateNode.on("click", "[data-toggle=group]", function() {
+			toggle(this);
+			return false;
+		});
+		$delegateNode.on("click", "[data-toggle=object]", function() {
+			toggle(this);
+			return false;
+		});
+		$delegateNode.on("debug.collapsed.group", function(e){
+			// console.warn('debug.collapsed.group');
+			groupErrorIconUpdate($(e.target).prev());
+		});
+	}
+
+	/**
+	 * Collapse an array, group, or object
+	 *
+	 * @param jQueryObj $toggle   the toggle node
+	 * @param immediate immediate no annimation
+	 *
+	 * @return void
+	 */
+	function collapse($toggle, immediate) {
+		var $target = $toggle.next(),
+			$groupEndValue,
+			what = "array",
+			icon = options$6.iconsExpand.expand;
+		if ($toggle.is("[data-toggle=array]")) {
+			// show and use the "expand it" toggle as reference toggle
+			$toggle = $toggle.closest(".t_array").prev().show();
+			$target = $toggle.next();
+			$target.hide();
+		} else {
+			if ($toggle.is("[data-toggle=group]")) {
+				$groupEndValue = $target.find("> .m_groupEndValue > :last-child");
+				if ($groupEndValue.length && $toggle.find(".group-label").last().nextAll().length == 0) {
+					$toggle.find(".group-label").last().after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML);
+				}
+				what = "group";
+			} else {
+				what = "object";
+			}
+			$toggle.removeClass("expanded");
+			if (immediate) {
+				$target.hide();
+				iconUpdate($toggle, icon);
+			} else {
+				$target.slideUp("fast", function() {
+					iconUpdate($toggle, icon);
+				});
+			}
+		}
+		$target.trigger("debug.collapsed." + what);
+	}
+
+	function expand($toggleOrTarget) {
+		var isToggle = $toggleOrTarget.is("[data-toggle]"),
+			$toggle = isToggle
+				? $toggleOrTarget
+				: $toggleOrTarget.prev(),
+			$target = isToggle
+				? $toggleOrTarget.next()
+				: $toggleOrTarget,
+			what = "array";
+		if ($toggle.is("[data-toggle=group]")) {
+			what = "group";
+		} else if ($toggle.is("[data-toggle=object]")) {
+			what = "object";
+		}
+		// trigger while still hidden!
+		//    no redraws
+		$target.trigger('debug.expand.' + what);
+		if (what === "array") {
+			// hide the toggle..  there is a different toggle in the expanded version
+			$toggle.hide();
+			$target.show();
+			$target.trigger('debug.expanded.' + what);
+		} else {
+			$target.slideDown("fast", function() {
+				var $groupEndValue = $target.find("> .m_groupEndValue");
+				$toggle.addClass("expanded");
+				iconUpdate($toggle, options$6.iconsExpand.collapse);
+				if ($groupEndValue.length) {
+					// remove value from label
+					$toggle.find(".group-label").last().nextAll().remove();
+				}
+				$target.trigger('debug.expanded.' + what);
+			});
+		}
+	}
+
+	function groupErrorIconGet($container) {
+		var icon = "";
+		if ($container.find(".m_error").not(".filter-hidden").length) {
+			icon = options$6.iconsMethods[".m_error"];
+		} else if ($container.find(".m_warn").not(".filter-hidden").length) {
+			icon = options$6.iconsMethods[".m_warn"];
+		}
+		return icon;
+	}
+
+	function groupErrorIconUpdate($toggle) {
+		var selector = ".fa-times-circle, .fa-warning",
+			$group = $toggle.parent(),
+			$target = $toggle.next(),
+			icon = groupErrorIconGet($target),
+			isExpanded = $toggle.is(".expanded");
+		$group.removeClass("empty");	// "empty" class just affects cursor
+		if (icon) {
+			if ($toggle.find(selector).length) {
+				$toggle.find(selector).replaceWith(icon);
+			} else {
+				$toggle.append(icon);
+			}
+			iconUpdate($toggle, isExpanded
+				? options$6.iconsExpand.collapse
+				: options$6.iconsExpand.expand
+			);
+		} else {
+			$toggle.find(selector).remove();
+			if ($target.children().not(".m_warn, .m_error").length < 1) {
+				// group only contains errors & they're now hidden
+				$group.addClass("empty");
+				iconUpdate($toggle, options$6.iconsExpand.empty);
+			}
+		}
+	}
+
+	function iconUpdate($toggle, classNameNew) {
+		var $icon = $toggle.children("i").eq(0);
+		if ($toggle.is(".group-header") && $toggle.parent().is(".empty")) {
+			classNameNew = options$6.iconsExpand.empty;
+		}
+		$.each(options$6.iconsExpand, function(i, className) {
+			$icon.toggleClass(className, className === classNameNew);
+		});
+	}
+
+	function toggle(toggle) {
+		var $toggle = $(toggle);
+		if ($toggle.is(".group-header") && $toggle.parent().is(".empty")) {
+			return;
+		}
+		if ($toggle.is(".expanded")) {
+			collapse($toggle);
+		} else {
+			expand($toggle);
+		}
+	}
+
+	function loadDeps(deps) {
+		var checkInterval,
+			intervalCounter = 1;
+		deps.reverse();
+		if (document.getElementsByTagName("body")[0].childElementCount == 1) {
+			// output only contains debug
+			// don't wait for interval to begin
+			loadDepsDoer(deps);
+		} else {
+			loadDepsDoer(deps, true);
+		}
+		checkInterval = setInterval(function() {
+			loadDepsDoer(deps, intervalCounter === 10);
+			if (deps.length === 0) {
+				clearInterval(checkInterval);
+			} else if (intervalCounter === 20) {
+				clearInterval(checkInterval);
+			}
+			intervalCounter++;
+		}, 500);
+	}
+
+	function addScript(src) {
+		var firstScript = document.getElementsByTagName("script")[0],
+			jsNode = document.createElement("script");
+		jsNode.src = src;
+		firstScript.parentNode.insertBefore(jsNode, firstScript);
+	}
+
+	function addStylesheet(src) {
+		var link = document.createElement("link");
+		link.type = "text/css";
+		link.rel = "stylesheet";
+		link.href = src;
+		document.head.appendChild(link);
+	}
+
+	function loadDepsDoer(deps, checkOnly) {
+		var dep,
+			type,
+			i;
+		for (i = deps.length - 1; i >= 0; i--) {
+			dep = deps[i];
+			if (dep.check()) {
+				// dependency exists
+				if (dep.onLoaded) {
+					dep.onLoaded();
+				}
+				deps.splice(i, 1);	// remove it
+				continue;
+			}
+			if (dep.status != "loading" && !checkOnly) {
+				dep.status = "loading";
+				type = dep.type || 'script';
+				if (type == 'script') {
+					addScript(dep.src);
+				} else if (type == 'stylesheet') {
+					addStylesheet(dep.src);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Enhance debug output
+	 *    Add expand/collapse functionality to groups, arrays, & objects
+	 *    Add FontAwesome icons
+	 */
+
+	// var $ = window.jQuery;	// may not be defined yet!
+	var listenersRegistered = false;
+	var optionsDefault = {
+		fontAwesomeCss: "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
+		// jQuerySrc: "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
+		clipboardSrc: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
+		iconsExpand: {
+			expand : "fa-plus-square-o",
+			collapse : "fa-minus-square-o",
+			empty : "fa-square-o"
+		},
+		iconsMisc: {
+			".timestamp" : '<i class="fa fa-calendar"></i>'
+		},
+		iconsObject: {
+			"> .info.magic" :				'<i class="fa fa-fw fa-magic"></i>',
+			"> .method.magic" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
+			"> .method.deprecated" :		'<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
+			"> .property.debuginfo-value" :	'<i class="fa fa-eye" title="via __debugInfo()"></i>',
+			"> .property.excluded" :		'<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
+			"> .property.private-ancestor" :'<i class="fa fa-lock" title="private ancestor"></i>',
+			"> .property > .t_modifier_magic" :			'<i class="fa fa-magic" title="magic property"></i>',
+			"> .property > .t_modifier_magic-read" :	'<i class="fa fa-magic" title="magic property"></i>',
+			"> .property > .t_modifier_magic-write" :	'<i class="fa fa-magic" title="magic property"></i>',
+			"[data-toggle=vis][data-vis=private]" :		'<i class="fa fa-user-secret"></i>',
+			"[data-toggle=vis][data-vis=protected]" :	'<i class="fa fa-shield"></i>',
+			"[data-toggle=vis][data-vis=excluded]" :	'<i class="fa fa-eye-slash"></i>'
+		},
+		// debug methods (not object methods)
+		iconsMethods: {
+			".group-header" :	'<i class="fa fa-lg fa-minus-square-o"></i>',
+			".m_assert" :		'<i class="fa-lg"><b>&ne;</b></i>',
+			".m_clear" :		'<i class="fa fa-lg fa-ban"></i>',
+			".m_count" :		'<i class="fa fa-lg fa-plus-circle"></i>',
+			".m_countReset" :	'<i class="fa fa-lg fa-plus-circle"></i>',
+			".m_error" :		'<i class="fa fa-lg fa-times-circle"></i>',
+			".m_info" :			'<i class="fa fa-lg fa-info-circle"></i>',
+			".m_profile" :		'<i class="fa fa-lg fa-pie-chart"></i>',
+			".m_profileEnd" :	'<i class="fa fa-lg fa-pie-chart"></i>',
+			".m_time" :			'<i class="fa fa-lg fa-clock-o"></i>',
+			".m_timeLog" :		'<i class="fa fa-lg fa-clock-o"></i>',
+			".m_warn" :			'<i class="fa fa-lg fa-warning"></i>'
+		},
+		debugKey: getDebugKey(),
+		drawer: false,
+		persistDrawer: lsGet("phpDebugConsole-persistDrawer")
+	};
+
+	if (typeof $ === 'undefined') {
+		throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.');
+	}
+
+	/*
+		Load "optional" dependencies
+	*/
+	loadDeps([
+		{
+			src: optionsDefault.fontAwesomeCss,
+			type: 'stylesheet',
+			check: function () {
+				var span = document.createElement('span'),
+					haveFa = false;
+				function css(element, property) {
+					return window.getComputedStyle(element, null).getPropertyValue(property);
+				}
+				span.className = 'fa';
+				span.style.display = 'none';
+				document.body.appendChild(span);
+				haveFa = css(span, 'font-family') === 'FontAwesome';
+				document.body.removeChild(span);
+				return haveFa;
+			}
+		},
+		/*
+		{
+			src: options.jQuerySrc,
+			onLoaded: start,
+			check: function () {
+				return typeof window.jQuery !== "undefined";
+			}
+		},
+		*/
+		{
+			src: optionsDefault.clipboardSrc,
+			check: function() {
+				return typeof window.ClipboardJS !== "undefined";
+			},
+			onLoaded: function () {
+				/*
+					Copy strings/floats/ints to clipboard when clicking
+				*/
+				var clipboard = window.ClipboardJS;
+				new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
+					target: function (trigger) {
+						notify("Copied to clipboard");
+						return trigger;
+					}
+				});
+			}
+		}
+	]);
+
+	$.fn.debugEnhance = function(method) {
+		// console.warn("debugEnhance", method, this);
+		var $self = this,
+			options = {};
+		if (method === "addCss") {
+			addCss(arguments[1]);
+		} else if (method === "buildChannelList") {
+			return buildChannelList(arguments[1], "", arguments[2]);
+		} else if (method === "collapse") {
+			collapse($self);
+		} else if (method === "expand") {
+			expand($self);
+		} else if (method === "init") {
+			options = $self.eq(0).data("options") || {};
+			options = $.extend({}, optionsDefault, options);
+			init$4($self, options);
+			init$6($self, options);
+			init$7($self, options);
+			registerListeners($self);
+		} else if (method == "setOptions") {
+			if (typeof arguments[1] == "object") {
+				options = $self.data("options") || {};
+				$.extend(options, arguments[1]);
+				$self.data("options", options);
+	 		}
+		} else {
+			this.each(function() {
+				var $self = $(this);
+				if ($self.is(".enhanced")) {
+					return;
+				}
+				if ($self.is(".group-body")) {
+					enhanceEntries($self);
+				} else {
+					// log entry assumed
+					enhanceEntry($self, true);
+				}
+			});
+		}
+		return this;
+	};
+
+	$(function() {
+		$(".debug").each(function(){
+			$(this).debugEnhance("init");
+			$(this).find(".debug-log-summary, .debug-log").debugEnhance();
+		});
+	});
+
+	function getDebugKey() {
+		var key = null,
+			queryParams = queryDecode(),
+			cookieValue = cookieGet("debug");
+		if (typeof queryParams.debug !== "undefined") {
+			key = queryParams.debug;
+		} else if (cookieValue) {
+			key = cookieValue;
+		}
+		return key;
+	}
+
+	function registerListeners($root) {
+		if (listenersRegistered) {
+			return;
+		}
+		$("body").on("animationend", ".debug-noti", function () {
+			$(this).removeClass("animate").closest(".debug-noti-wrap").hide();
+		});
+		listenersRegistered = true;
+	}
+
+	function notify(html) {
+		$(".debug-noti").html(html).addClass("animate").closest(".debug-noti-wrap").show();
+	}
+
+}(window.jQuery));

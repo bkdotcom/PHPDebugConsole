@@ -145,7 +145,7 @@ class Manager
      *
      * @param string   $eventName event name
      * @param callable $callable  callable
-     * @param integer  $priority  The higher this value, the earlier an event
+     * @param integer  $priority  The higher this value, the earlier we handle event
      *
      * @return void
      */

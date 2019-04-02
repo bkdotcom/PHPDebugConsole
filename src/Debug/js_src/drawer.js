@@ -1,7 +1,7 @@
 import $ from "jquery";
 import {lsGet,lsSet} from "./http.js";
 
-var $debug, options, origH, origPageY;
+var $root, options, origH, origPageY;
 
 /**
  * @see https://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element-when-inner-element-scroll-position-reaches-t
@@ -37,13 +37,15 @@ $.fn.scrollLock = function(enable){
 		: this.off("DOMMouseScroll mousewheel wheel");
 }
 
-export function init(opts) {
+export function init($debugRoot, opts) {
+	// console.warn('drawer.init', $debugRoot[0]);
+	$root = $debugRoot;
 	options = opts;
 	if (!opts.drawer) {
 		return;
 	}
 
-	$debug = $(".debug").addClass("debug-drawer");
+	$root.addClass("debug-drawer");
 
 	addMarkup();
 
@@ -51,19 +53,19 @@ export function init(opts) {
 		open();
 	}
 
-	$debug.find(".debug-body").scrollLock();
-	$debug.find(".debug-resize-handle").on("mousedown", onMousedown);
-	$debug.find(".debug-pull-tab").on("click", open);
-	$debug.find(".debug-menu-bar .close").on("click", close);
+	$root.find(".debug-body").scrollLock();
+	$root.find(".debug-resize-handle").on("mousedown", onMousedown);
+	$root.find(".debug-pull-tab").on("click", open);
+	$root.find(".debug-menu-bar .close").on("click", close);
 }
 
 function addMarkup() {
 	var $menuBar = $(".debug-menu-bar");
 	// var $body = $('<div class="debug-body"></div>');
-	$menuBar.before('<div class="debug-pull-tab">\
-			<i class="fa fa-bug"></i> PHP\
-		</div>\
-		<div class="debug-resize-handle"></div>');
+	$menuBar.before('\
+		<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i> PHP</div>\
+		<div class="debug-resize-handle"></div>'
+	);
 	$menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole\
 		<div class="pull-right">\
 			<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">\
@@ -73,9 +75,9 @@ function addMarkup() {
 }
 
 function open() {
-	$debug.addClass("debug-drawer-open");
+	$root.addClass("debug-drawer-open");
 	setHeight(); // makes sure height within min/max
-	$("body").css("marginBottom", ($debug.height() + 8) + "px");
+	$("body").css("marginBottom", ($root.height() + 8) + "px");
 	$(window).on("resize", setHeight);
 	if (options.persistDrawer) {
 		lsSet("phpDebugConsole-openDrawer", true);
@@ -83,7 +85,7 @@ function open() {
 }
 
 function close() {
-	$debug.removeClass("debug-drawer-open");
+	$root.removeClass("debug-drawer-open");
 	$("body").css("marginBottom", "");
 	$(window).off("resize", setHeight);
 	if (options.persistDrawer) {
@@ -101,10 +103,10 @@ function onMousedown(e) {
 		// drawer isn't open / ignore resize
 		return;
 	}
-	origH = $debug.find(".debug-body").height();
+	origH = $root.find(".debug-body").height();
 	origPageY = e.pageY;
 	$("html").addClass("debug-resizing");
-	$debug.parents()
+	$root.parents()
 		.on("mousemove", onMousemove)
 		.on("mouseup", onMouseup);
 	e.preventDefault();
@@ -112,15 +114,15 @@ function onMousedown(e) {
 
 function onMouseup() {
 	$("html").removeClass("debug-resizing");
-	$debug.parents()
+	$root.parents()
 		.off("mousemove", onMousemove)
 		.off("mouseup", onMouseup);
-	$("body").css("marginBottom", ($debug.height() + 8) + "px");
+	$("body").css("marginBottom", ($root.height() + 8) + "px");
 }
 
 function setHeight(height, viaUser) {
-	var $body = $debug.find(".debug-body"),
-		menuH = $debug.find(".debug-menu-bar").outerHeight(),
+	var $body = $root.find(".debug-body"),
+		menuH = $root.find(".debug-menu-bar").outerHeight(),
 		minH = 20,
 		// inacurate if document.doctype is null : $(window).height()
 		//    aka document.documentElement.clientHeight

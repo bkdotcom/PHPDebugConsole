@@ -36,6 +36,15 @@ export function init($debugRoot, opts) {
 		}
 	});
 
+	$root.on("click", ".close[data-dismiss=alert]", function() {
+		// setTimeout -> new thread -> executed after event bubbled
+		setTimeout(function(){
+			if ($root.find(".m_alert").length) {
+				$root.find(".debug-sidebar input[data-toggle=method][value=alert]").parent().addClass("disabled");
+			}
+		});
+	});
+
 	$root.find(".sidebar-toggle").on("click", function() {
 		var isVis = $(".debug-sidebar").is(".show");
 		if (!isVis) {
@@ -84,22 +93,52 @@ function addMarkup() {
 				<ul class="list-unstyled">\
 				</ul>\
 			</li>\
-			<li><label class="toggle active"><input type="checkbox" checked data-toggle="method" value="alert"><i class="fa fa-fw fa-lg fa-bullhorn"></i> Alerts</label></li>\
-			<li><label class="toggle active"><input type="checkbox" checked data-toggle="method" value="error"><i class="fa fa-fw fa-lg fa-times-circle"></i> Error</label></li>\
-			<li><label class="toggle active"><input type="checkbox" checked data-toggle="method" value="warn"><i class="fa fa-fw fa-lg fa-warning"></i> warning</label></li>\
-			<li><label class="toggle active"><input type="checkbox" checked data-toggle="method" value="info"><i class="fa fa-fw fa-lg fa-info-circle"></i> Info</label></li>\
-			<li><label class="toggle active"><input type="checkbox" checked data-toggle="method" value="other"><i class="fa fa-fw fa-lg fa-sticky-note-o"></i> Other</label></li>\
 		</ul>\
 	');
 	$root.find(".debug-body").before($sidebar);
 
 	phpErrorToggles();
 	moveChannelToggles();
+	addMethodToggles();
 	moveExpandAll();
 
 	setTimeout(function(){
 		$sidebar.removeClass("no-transition");
 	}, 500);
+}
+
+function addMethodToggles() {
+	var $filters = $root.find(".debug-filters"),
+		$entries = $root.find("> .debug-body .m_alert, .group-body > *"),
+		val,
+		labels = {
+			alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i> Alerts',
+			error: '<i class="fa fa-fw fa-lg fa-times-circle"></i> Error',
+			warn: '<i class="fa fa-fw fa-lg fa-warning"></i> Warning',
+			info: '<i class="fa fa-fw fa-lg fa-info-circle"></i> Info',
+			other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i> Other'
+		},
+		haveEntry;
+	for (val in labels) {
+		haveEntry = val == "other"
+			? $entries.not(".m_alert, .m_error, .m_warn, .m_info").length > 0
+			: $entries.filter(".m_"+val).length > 0;
+		$filters.append(
+			$("<li>").append(
+				$('<label class="toggle active disabled" />').toggleClass("disabled", !haveEntry).append(
+					$("<input />", {
+						type: "checkbox",
+						checked: true,
+						"data-toggle": "method",
+						value: val
+					})
+				).append(
+					labels[val]
+				)
+			)
+		);
+	}
+
 }
 
 /**
@@ -122,8 +161,10 @@ function moveChannelToggles() {
 function moveExpandAll() {
 	var $btn = $root.find(".debug-body > .expand-all"),
 		html = $btn.html();
-	$btn.html(html.replace('Expand', 'Exp'));
-	$btn.appendTo($root.find(".debug-sidebar"));
+	if ($btn.length) {
+		$btn.html(html.replace('Expand', 'Exp'));
+		$btn.appendTo($root.find(".debug-sidebar"));
+	}
 }
 
 /**

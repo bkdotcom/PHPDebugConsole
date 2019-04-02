@@ -13,8 +13,11 @@ var tests = [
 ];
 var preFilterCallbacks = [
 	function ($root) {
-		channels = [];
-		$root.find("input[data-toggle=channel]:checked").each(function(){
+		var $checkboxes = $root.find("input[data-toggle=channel]");
+		channels = $checkboxes.length
+			? []
+			: [undefined];
+		$checkboxes.filter(":checked").each(function(){
 			channels.push($(this).val());
 			if ($(this).data("isRoot")) {
 				channels.push(undefined);

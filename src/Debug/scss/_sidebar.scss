@@ -87,6 +87,9 @@
 		}
 		label {
 			padding: 2px 0 2px 100%;
+			&.disabled {
+				color: #818a91
+			}
 		}
 		> li {
 			> *:first-child {
@@ -136,5 +139,9 @@
 				background: darken($lite-blue, 10%);
 			}
 		}
+	}
+
+	.expand-all {
+		font-size: 1.25em;
 	}
 }

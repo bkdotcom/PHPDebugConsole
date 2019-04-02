@@ -7,7 +7,7 @@ var options;
 export function init($root, opts) {
 	options = opts;
 	enhanceObject.init($root, options);
-	$root.on("click", ".alert-dismissible .close", function() {
+	$root.on("click", ".close[data-dismiss=alert]", function() {
 		$(this).parent().remove();
 	});
 	$root.on("click", ".show-more-container .show-more", function() {
@@ -82,16 +82,16 @@ function addIcons($root, types) {
 		$.each(options.iconsMethods, function(selector,v){
 			var $caption;
 			if ($root.is(selector)) {
-				if ($root.is("table")) {
-					$caption = $root.find("caption");
+				if ($root.is(".m_profileEnd") && $root.find("> table").length) {
+					$caption = $root.find("> table > caption");
 					if (!$caption.length) {
-						$caption = $("<caption></caption>");
-						$root.prepend($caption);
+						$caption = $("<caption>");
+						$root.find("> table").prepend($caption);
 					}
 					$root = $caption;
 				}
 				$root.prepend(v);
-				return false;
+				return false;	// break
 			}
 		});
 	}

@@ -708,7 +708,15 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        $this->config->setCfg('enableProfiling', true);
+        if (!$this->cfg['enableProfiling']) {
+            $callerInfo = $this->utilities->getCallerInfo();
+            $this->appendLog(new LogEntry(
+                $this,
+                __FUNCTION__,
+                array('Profile: Unable to start - enableProfiling opt not set.  ' . $callerInfo['file'] .' on line ' . $callerInfo['line'] . '.')
+            ));
+            return;
+        }
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,

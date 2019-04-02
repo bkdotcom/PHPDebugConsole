@@ -19,6 +19,7 @@
 	&.debug-drawer-open {
 		transform: translateY(0px);
 		height: auto;
+		z-index: 1049;
 		.debug-pull-tab {
 			opacity: 0;
 			transform: translateY(25px);
@@ -113,8 +114,8 @@
 			   -moz-appearance: none;
 			        appearance: none;
 			background-color: transparent;
-			&.close > * {
-				font-size: 1.33rem;
+			&.close {
+				font-size: 21px;
 			    font-weight: 300;
 			}
 		}

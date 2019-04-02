@@ -13,7 +13,7 @@ import loadDeps from "./loadDeps.js";
 
 // var $ = window.jQuery;	// may not be defined yet!
 var listenersRegistered = false;
-var options = {
+var optionsDefault = {
 	fontAwesomeCss: "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
 	// jQuerySrc: "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
 	clipboardSrc: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
@@ -68,7 +68,7 @@ if (typeof $ === 'undefined') {
 */
 loadDeps([
 	{
-		src: options.fontAwesomeCss,
+		src: optionsDefault.fontAwesomeCss,
 		type: 'stylesheet',
 		check: function () {
 			var span = document.createElement('span'),
@@ -94,7 +94,7 @@ loadDeps([
 	},
 	*/
 	{
-		src: options.clipboardSrc,
+		src: optionsDefault.clipboardSrc,
 		check: function() {
 			return typeof window.ClipboardJS !== "undefined";
 		},
@@ -115,47 +115,47 @@ loadDeps([
 
 $.fn.debugEnhance = function(method) {
 	// console.warn("debugEnhance", method, this);
-	var $self = this;
-	if (typeof method == "object") {
-		// options passed
-		$.extend(options, method);
-	} else if (method) {
-		if (method === "addCss") {
-			addCss(arguments[1]);
-		} else if (method === "buildChannelList") {
-			return enhanceMain.buildChannelList(arguments[1], "", arguments[2]);
-		} else if (method === "collapse") {
-			expandCollapse.collapse($self);
-		} else if (method === "expand") {
-			expandCollapse.expand($self);
-		} else if (method === "init") {
-			enhanceMain.init($self, options);
-			enhanceEntries.init($self, options);
-			expandCollapse.init($self, options);
-			registerListeners($self);
-		}
-		return;
+	var $self = this,
+		options = {};
+	if (method === "addCss") {
+		addCss(arguments[1]);
+	} else if (method === "buildChannelList") {
+		return enhanceMain.buildChannelList(arguments[1], "", arguments[2]);
+	} else if (method === "collapse") {
+		expandCollapse.collapse($self);
+	} else if (method === "expand") {
+		expandCollapse.expand($self);
+	} else if (method === "init") {
+		options = $self.eq(0).data("options") || {};
+		options = $.extend({}, optionsDefault, options);
+		enhanceMain.init($self, options);
+		enhanceEntries.init($self, options);
+		expandCollapse.init($self, options);
+		registerListeners($self);
+	} else if (method == "setOptions") {
+		if (typeof arguments[1] == "object") {
+			options = $self.data("options") || {};
+			$.extend(options, arguments[1]);
+			$self.data("options", options)
+ 		}
+	} else {
+		this.each(function() {
+			var $self = $(this);
+			if ($self.is(".enhanced")) {
+				return;
+			}
+			if ($self.is(".group-body")) {
+				enhanceEntries.enhanceEntries($self);
+			} else {
+				// log entry assumed
+				enhanceEntries.enhanceEntry($self, true);
+			}
+		});
 	}
-	this.each(function() {
-		var $self = $(this);
-		if ($self.is(".enhanced")) {
-			return;
-		}
-		if ($self.is(".group-body")) {
-			enhanceEntries.enhanceEntries($self);
-		} else {
-			// log entry assumed
-			enhanceEntries.enhanceEntry($self, true);
-		}
-	});
 	return this;
 };
 
 $(function() {
-	var dataOpts = $(".debug").eq(0).data("options");
-	if (dataOpts) {
-		$.extend(options, dataOpts);
-	}
 	$(".debug").each(function(){
 		$(this).debugEnhance("init");
 		$(this).find(".debug-log-summary, .debug-log").debugEnhance();

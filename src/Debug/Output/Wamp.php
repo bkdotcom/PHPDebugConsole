@@ -291,7 +291,7 @@ class Wamp implements OutputInterface
             array(
                 $metaVals,
                 array(
-                    'drawer' => true,
+                    'drawer' => $this->debug->getCfg('output.drawer'),
                     'channelRoot' => $this->debug->rootInstance->getCfg('channel'),
                 )
             ),

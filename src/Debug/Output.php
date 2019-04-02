@@ -35,21 +35,24 @@ class Output implements SubscriberInterface
     {
         $this->debug = $debug;
         $this->cfg = array(
-            'addBR' => false,
-            'css' => '',                    // additional "override" css
             'displayListKeys' => true,
-            'filepathCss' => __DIR__.'/css/Debug.css',
-            'filepathScript' => __DIR__.'/js/Debug.jquery.min.js',
-            'jqueryUrl' => '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
             'onOutput'  => null,            // set to something callable
             'outputAs'  => null,            // 'chromeLogger', 'html', 'script', 'text', or Object, if null, will be determined automatically
             'outputAsDefaultNonHtml' => 'chromeLogger',
             'outputConstants' => true,
-            'outputCss' => true,            // applies when outputAs = 'html'
             'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
             'outputMethodDescription' => true, // (or just summary)
             'outputMethods' => true,
+            // Html options
+            'addBR' => false,
+            'css' => '',                    // additional "override" css
+            'drawer' => true,
+            'filepathCss' => __DIR__.'/css/Debug.css',
+            'filepathScript' => __DIR__.'/js/Debug.jquery.min.js',
+            'jqueryUrl' => '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
+            'outputCss' => true,            // applies when outputAs = 'html'
             'outputScript' => true,         // applies when outputAs = 'html'
+            'sidebar' => true,
         );
         $this->setCfg($cfg);
     }

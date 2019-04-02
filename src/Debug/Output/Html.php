@@ -27,6 +27,7 @@ class Html extends Base
     protected $errorSummary;
     protected $wrapAttribs = array();
     protected $channels = array();
+    protected $tableInfo;
 
     /**
      * Constructor
@@ -178,8 +179,8 @@ class Html extends Base
         $str = '<div'.$this->debug->utilities->buildAttribString(array(
             'class' => 'debug',
             'data-options' => array(
-                'drawer' => true,
-                'sidebar' => true,
+                'drawer' => $this->debug->getCfg('output.drawer'),
+                'sidebar' => $this->debug->getCfg('output.sidebar'),
             ),
             // channel list gets built as log processed...  we'll str_replace this...
             'data-channels' => '{{channels}}',
@@ -461,7 +462,7 @@ class Html extends Base
         foreach ($keys as $key) {
             $colHasTotal = isset($this->tableInfo['totals'][$key]);
             $cells[] = $colHasTotal
-                ? $this->dump($this->tableInfo['totals'][$key], true, 'td')
+                ? $this->dump(\round($this->tableInfo['totals'][$key], 5), true, 'td')
                 : '<td></td>';
             $haveTotal = $haveTotal || $colHasTotal;
         }

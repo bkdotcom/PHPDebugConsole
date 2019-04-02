@@ -20,10 +20,10 @@ export function init($debugRoot, opts) {
 	addNoti($("body"));
 	addPersistOption();
 	enhanceErrorSummary();
-	drawer.init(options);
-	filter.init($debugRoot);
-	sidebar.init($debugRoot, options);
-	optionsMenu.init(options);
+	drawer.init($root, opts);
+	filter.init($root);
+	sidebar.init($root, opts);
+	optionsMenu.init($root, opts);
 	$root.find(".loading").hide();
 	$root.addClass("enhanced");
 }
@@ -37,14 +37,17 @@ function addChannelToggles() {
 		})
 		.append('<legend>Channels</legend>')
 		.append($ul);
-	$root.find(".debug-body").prepend($toggles);
+	if ($ul.html().length) {
+		$root.find(".debug-body").prepend($toggles);
+	}
 }
 
 function addExpandAll() {
 	var $expandAll = $("<button>", {
 		class: "expand-all"
 		}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
-	if ($root.find(".group-header").length) {
+	// this is currently invoked before entries are enhance / empty class not yet added
+	if ($root.find(".m_group:not(.empty)").length) {
 		$expandAll.on("click", function() {
 			$(this).closest(".debug").find(".group-header").not(".expanded").each(function() {
 				$(this).debugEnhance('expand');

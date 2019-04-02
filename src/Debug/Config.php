@@ -56,14 +56,26 @@ class Config
         if (isset($path[1]) && $path[1] === '*') {
             \array_pop($path);
         }
-        $first = \array_shift($path);
-        if ($first == 'debug') {
+        $classname = \array_shift($path);
+        if ($classname == 'debug') {
             return $this->debug->utilities->arrayPathGet($this->cfg, $path);
-        } elseif (\is_object($this->debug->{$first})) {
-            // child class config value
-            $pathRel = \implode('/', $path);
-            return $this->debug->{$first}->getCfg($pathRel);
         }
+        if (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
+            $pathRel = \implode('/', $path);
+            return $this->debug->{$classname}->getCfg($pathRel);
+        }
+        if (isset($this->cfgLazy[$classname])) {
+            $val = $this->debug->utilities->arrayPathGet($this->cfgLazy[$classname], $path);
+            if ($val !== null) {
+                return $val;
+            }
+        }
+        if (isset($this->cfg['services'][$classname])) {
+            // inititalize obj and retry
+            $this->debug->{$classname};
+            return $this->getCfg(\func_get_arg(0));
+        }
+        return null;
     }
 
     /**
@@ -110,8 +122,10 @@ class Config
         if (isset($this->cfgLazy['output']['outputAs'])) {
             $lazyPlugins = array('chromeLogger','firephp','html','script','text');
             if (\is_object($this->cfgLazy['output']['outputAs']) || !\in_array($this->cfgLazy['output']['outputAs'], $lazyPlugins)) {
-                // output may need to subscribe to events.... go ahead and load
-                $this->debug->output;
+                // output is likely a dependency
+                $outputAs = $this->cfgLazy['output']['outputAs'];
+                unset($this->cfgLazy['output']['outputAs']);
+                $this->debug->output->setCfg('outputAs', $outputAs);
             }
         }
         if (\is_string($pathOrVals)) {
@@ -172,7 +186,7 @@ class Config
                 $return[$k] = \array_intersect_key($this->getCfg($k.'/*'), $v);
                 $this->debug->{$k}->setCfg($v);
             } elseif (isset($this->cfgLazy[$k])) {
-                $return[$k] = $this->cfgLazy[$k];
+                $return[$k] = \array_intersect_key($this->cfgLazy[$k], $v);
                 $this->cfgLazy[$k] = \array_merge($this->cfgLazy[$k], $v);
             } else {
                 $return[$k] = array();
@@ -220,21 +234,24 @@ class Config
             ),
             'errorHandler' => \array_keys($this->debug->errorHandler->getCfg()),
             'output' => array(
-                'addBR',
-                'css',
                 'displayListKeys',
-                'filepathCss',
-                'filepathScript',
-                'jqueryUrl',
                 'onOutput',
                 'outputAs',
                 'outputAsDefaultNonHtml',
                 'outputConstants',
-                'outputCss',
                 'outputHeaders',
                 'outputMethodDescription',
                 'outputMethods',
+                // html opts
+                'addBR',
+                'css',
+                'drawer',
+                'filepathCss',
+                'filepathScript',
+                'jqueryUrl',
+                'outputCss',
                 'outputScript',
+                'sidebar',
             ),
         );
         return $this->configKeys;
@@ -294,6 +311,8 @@ class Config
                         : $v;
                     $translated = true;
                     break;
+                } elseif (\is_array($v) && isset($configKeys[$k])) {
+                    continue;
                 } elseif (\in_array($k, $objKeys)) {
                     $return[$objName][$k] = $v;
                     $translated = true;

@@ -1,14 +1,15 @@
 import $ from "jquery";
 import * as http from "./http.js";
 
-var options;
+var $root, options;
 
 var KEYCODE_ESC = 27;
 
-export function init(opts) {
+export function init($debugRoot, opts) {
+	$root = $debugRoot;
 	options = opts;
 
-	addMockup();
+	addDropdown();
 
 	$("#debug-options-toggle").on("click", function(e){
 		var isVis = $(".debug-options").is(".show");
@@ -40,8 +41,8 @@ export function init(opts) {
 	}).prop("checked", options.persistDrawer);
 }
 
-function addMockup() {
-	var $menuBar = $(".debug-menu-bar");
+function addDropdown() {
+	var $menuBar = $root.find(".debug-menu-bar");
 	$menuBar.find(".pull-right").prepend('<button id="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">\
 			<i class="fa fa-ellipsis-v fa-fw"></i>\
 		</button>')
@@ -49,14 +50,14 @@ function addMockup() {
 			<div class="debug-options-body">\
 				<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>\
 				<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>\
-				<hr />\
+				<hr class="dropdown-divider" />\
 				<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>\
 			</div>\
 		</div>');
 }
 
 function onBodyClick(e) {
-	if ($(".debug-options").find(e.target).length === 0) {
+	if ($root.find(".debug-options").find(e.target).length === 0) {
 		// we clicked outside the dropdown
 		close();
 	}
@@ -69,13 +70,13 @@ function onBodyKeyup(e) {
 }
 
 function open() {
-	$(".debug-options").addClass("show");
+	$root.find(".debug-options").addClass("show");
 	$("body").on("click", onBodyClick);
 	$("body").on("keyup", onBodyKeyup);
 }
 
 function close() {
-	$(".debug-options").removeClass("show");
+	$root.find(".debug-options").removeClass("show");
 	$("body").off("click", onBodyClick);
 	$("body").off("keyup", onBodyKeyup);
 }

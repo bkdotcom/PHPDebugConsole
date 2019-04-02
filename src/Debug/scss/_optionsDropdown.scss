@@ -15,7 +15,7 @@
 	box-sizing:	border-box;
 	z-index: 1000;
 	float: right;
-	min-width: 10rem;
+	min-width: 12em;
 	background-color: inherit;
 	box-shadow: 0 4px 8px rgba(0,0,0, 0.25);
 	transition: all 0.25s ease-out;
@@ -24,22 +24,20 @@
 	.debug-options-body {
 		background-clip: padding-box;
 		border: 1px solid $border-color;
-		padding: .5rem 0 .5rem 15px;
+		padding: .5em 0 .5em 15px;
 	}
 	&.show {
 		max-height: 100px;
 	}
 	label {
 		font-weight: normal;
-		padding: 0.25rem 0;
+		padding: 0.25em 0;
 		&.disabled {
 			color: #999;
-			cursor: default;
-			pointer-events: none;
 		}
 	}
-	hr {
-		margin-left: -15px;
+	hr.dropdown-divider {
+		margin: .5em 0 .5em -15px;
 		background: $border-color;
 		height: 1px;
 		border: none;

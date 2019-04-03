@@ -894,17 +894,37 @@
 		var body = table.tBodies[0],
 			rows = body.rows,
 			i,
+			floatRe = /^([+\-]?(?:0|[1-9]\d*)(?:\.\d*)?)(?:[eE]([+\-]?\d+))?$/,
 			collator = typeof Intl.Collator === "function"
 				? new Intl.Collator([], {
 					numeric: true,
-					sensitivity: 'base'
+					sensitivity: "base"
 				})
 				: false;
 		dir = dir === "desc" ? -1 : 1;
 		rows = Array.prototype.slice.call(rows, 0), // Converts HTMLCollection to Array
 		rows = rows.sort(function (trA, trB) {
 			var a = trA.cells[col].textContent.trim(),
-				b = trB.cells[col].textContent.trim();
+				b = trB.cells[col].textContent.trim(),
+				afloat = a.match(floatRe),
+				bfloat = b.match(floatRe);
+			if (afloat && afloat[2]) {
+				// sci notation
+				a = Number.parseFloat(a).toFixed(6);
+			}
+			if (bfloat && bfloat[2]) {
+				// sci notation
+				b = Number.parseFloat(b).toFixed(6);
+			}
+			if (afloat && bfloat) {
+				if (a < b) {
+					return -1;
+				}
+				if (a > b) {
+					return 1;
+				}
+				return 0;
+			}
 			return collator
 				? dir * collator.compare(a, b)
 				: dir * a.localeCompare(b);	// not a natural sort

@@ -462,7 +462,7 @@ class Html extends Base
         foreach ($keys as $key) {
             $colHasTotal = isset($this->tableInfo['totals'][$key]);
             $cells[] = $colHasTotal
-                ? $this->dump(\round($this->tableInfo['totals'][$key], 5), true, 'td')
+                ? $this->dump(\round($this->tableInfo['totals'][$key], 6), true, 'td')
                 : '<td></td>';
             $haveTotal = $haveTotal || $colHasTotal;
         }

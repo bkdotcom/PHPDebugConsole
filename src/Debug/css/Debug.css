@@ -187,7 +187,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-sidebar .toggle.active:hover { background: #bacce0; }
 .debug .debug-sidebar .toggle:hover, .debug .debug-sidebar .toggle:hover + ul { background: #DDE6F0; }
 .debug .debug-sidebar .toggle:hover .toggle.active, .debug .debug-sidebar .toggle:hover + ul .toggle.active { background: #bacce0; }
-.debug .debug-sidebar .expand-all { font-size: 1.25em; margin-bottom: .5em; }
+.debug .debug-sidebar .expand-all { font-size: 1.25em; }
 .debug .debug-body > .expand-all { margin-bottom: .5em; }
 .debug .error-fatal:before { padding-left: 1.25em; }
 .debug .error-fatal i.fa-times-circle { position: absolute; top: .7em; }

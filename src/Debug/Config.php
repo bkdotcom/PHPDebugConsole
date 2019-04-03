@@ -64,16 +64,17 @@ class Config
             $pathRel = \implode('/', $path);
             return $this->debug->{$classname}->getCfg($pathRel);
         }
-        if (isset($this->cfgLazy[$classname])) {
+        if (isset($this->cfgLazy[$classname]) && $path) {
             $val = $this->debug->utilities->arrayPathGet($this->cfgLazy[$classname], $path);
             if ($val !== null) {
                 return $val;
             }
         }
         if (isset($this->cfg['services'][$classname])) {
+            // getting value of uninitialized obj
             // inititalize obj and retry
-            $this->debug->{$classname};
-            return $this->getCfg(\func_get_arg(0));
+            $pathRel = \implode('/', $path);
+            return $this->debug->{$classname}->getCfg($pathRel);
         }
         return null;
     }

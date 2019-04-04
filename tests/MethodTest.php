@@ -6,8 +6,6 @@
 class MethodTest extends DebugTestFramework
 {
 
-    public $lineOffset = -2;    // account for FileStreamWrapper
-
     /**
      * Test overriding a core method
      */
@@ -646,12 +644,12 @@ class MethodTest extends DebugTestFramework
         $this->debug->count('count test');          // 1 (0)
         for ($i=0; $i<3; $i++) {
             if ($i > 0) {
-                $lines[0] = __LINE__ + 1 + $this->lineOffset;
+                $lines[0] = __LINE__ + 1;
                 $this->debug->count();              // 1,2 (3,6)
             }
             $this->debug->count('count test');      // 2,3,4 (1,4,7)
             $this->debug->count('count_inc test', \bdk\Debug::COUNT_NO_OUT);  //  1,2,3, but not logged
-            $lines[1] = __LINE__ + 1 + $this->lineOffset;
+            $lines[1] = __LINE__ + 1;
             \bdk\Debug::_count();                   // 1,2,3 (2,5,8)
         }
         $this->debug->log(
@@ -1956,7 +1954,7 @@ EOD;
         $this->debug->trace();
         $values = array(
             'file0' => __FILE__,
-            'line0' => __LINE__ - 3 + $this->lineOffset,
+            'line0' => __LINE__ - 3,
             'function1' => __CLASS__.'->'.__FUNCTION__,
         );
 

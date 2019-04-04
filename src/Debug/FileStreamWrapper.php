@@ -5,13 +5,11 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v2.3
  */
 
 namespace bdk\Debug;
-
-use bdk\PubSub\Event;
 
 /**
  * Streamwrapper which injects `declare(ticks=1)`

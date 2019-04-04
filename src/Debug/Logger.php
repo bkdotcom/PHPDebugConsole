@@ -12,7 +12,6 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\FileStreamWrapper;
 use Psr\Log\AbstractLogger;
 use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
@@ -86,11 +85,9 @@ class Logger extends AbstractLogger
         if ($haveException) {
             $exception = $context['exception'];
             $metaVals = \array_merge(array(
-                'backtrace' => FileStreamWrapper::backtraceAdjustLines($this->debug->errorHandler->backtrace($exception)),
+                'backtrace' => $this->debug->errorHandler->backtrace($exception),
                 'file' => $exception->getFile(),
-                'line' => \in_array($exception->getFile(), FileStreamWrapper::$filesModified)
-                    ? $exception->getLine() - 2
-                    : $exception->getLine(),
+                'line' => $exception->getLine(),
             ), $metaVals);
         } elseif ($isError && \count($metaVals) < 2) {
             $callerInfo = $this->debug->utilities->getCallerInfo(1);

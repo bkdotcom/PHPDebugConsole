@@ -15,7 +15,6 @@
 namespace bdk;
 
 use bdk\Debug\Abstracter;
-use bdk\Debug\FileStreamWrapper;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\ErrorEmailer;
@@ -1060,7 +1059,6 @@ class Debug
             }
         }
         $backtrace = \array_slice($backtrace, $i-1);
-        $backtrace = FileStreamWrapper::backtraceAdjustLines($backtrace);
         // keep the calling file & line, but toss ->trace or ::_trace
         unset($backtrace[0]['function']);
         $logEntry['args'] = array($backtrace);

@@ -907,27 +907,34 @@
 			var a = trA.cells[col].textContent.trim(),
 				b = trB.cells[col].textContent.trim(),
 				afloat = a.match(floatRe),
-				bfloat = b.match(floatRe);
-			if (afloat && afloat[2]) {
-				// sci notation
-				a = Number.parseFloat(a).toFixed(6);
+				bfloat = b.match(floatRe),
+				comp = 0;
+			if (afloat) {
+				a = Number.parseFloat(a);
+				if (afloat[2]) {
+					// sci notation
+					a = a.toFixed(6);
+				}
 			}
-			if (bfloat && bfloat[2]) {
-				// sci notation
-				b = Number.parseFloat(b).toFixed(6);
+			if (bfloat) {
+				b = Number.parseFloat(b);
+				if (bfloat[2]) {
+					// sci notation
+					b = b.toFixed(6);
+				}
 			}
 			if (afloat && bfloat) {
 				if (a < b) {
-					return -1;
+					comp = -1;
+				} else if (a > b) {
+					comp = 1;
 				}
-				if (a > b) {
-					return 1;
-				}
-				return 0;
+				return dir * comp;
 			}
-			return collator
-				? dir * collator.compare(a, b)
-				: dir * a.localeCompare(b);	// not a natural sort
+			comp = collator
+				? collator.compare(a, b)
+				: a.localeCompare(b);	// not a natural sort
+			return dir * comp;
 		});
 		for (i = 0; i < rows.length; ++i) {
 			body.appendChild(rows[i]); // append each row in order (which moves)

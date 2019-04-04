@@ -418,11 +418,6 @@ class Config
                 __DIR__,
             );
             FileStreamWrapper::register($pathsExclude);
-            $this->debug->errorHandler->eventManager->subscribe(
-                'errorHandler.error',
-                array('\bdk\Debug\FileStreamWrapper', 'onError'),
-                PHP_INT_MAX
-            );
         }
     }
 

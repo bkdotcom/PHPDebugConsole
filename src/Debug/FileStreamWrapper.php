@@ -79,38 +79,6 @@ class FileStreamWrapper
     }
 
     /**
-     * Adjust line numbers in backtrace to compensate for on-the-fly
-     *
-     * @param array $backtrace backtrace frames
-     *
-     * @return array
-     */
-    public static function backtraceAdjustLines($backtrace)
-    {
-        foreach ($backtrace as $i => $row) {
-            if (\in_array($row['file'], self::$filesModified)) {
-                $backtrace[$i]['line'] -= 2;
-            }
-        }
-        return $backtrace;
-    }
-
-    /**
-     * Adjust error's line number to compensate for the 2 lines we dynamically add
-     *
-     * @param Event $event Error event object
-     *
-     * @return void
-     */
-    public static function onError(Event $event)
-    {
-        if (\in_array($event['file'], self::$filesModified)) {
-            $event['line'] -= 2;
-        }
-        $event['backtrace'] = self::backtraceAdjustLines($event['backtrace']);
-    }
-
-    /**
      * Restore previous wrapper
      *
      * @return void
@@ -468,9 +436,10 @@ class FileStreamWrapper
             }
         }
         if (!$this->declaredTicks && $isRequire) {
+            // insert declare(ticks=1);  without adding any new lines
             $buffer = \preg_replace(
                 '/^(<\?php\s*)$/m',
-                "\\0\ndeclare(ticks=1);\n",
+                '$0 declare(ticks=1);',
                 $buffer,
                 1
             );

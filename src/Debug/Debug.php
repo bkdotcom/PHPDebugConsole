@@ -5,7 +5,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v2.3
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
@@ -14,7 +14,6 @@
 
 namespace bdk;
 
-use bdk\Debug\FileStreamWrapper;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\ErrorEmailer;
 use bdk\PubSub\SubscriberInterface;
@@ -712,7 +711,14 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        $this->config->setCfg('enableProfiling', true);
+        if (!$this->cfg['enableProfiling']) {
+            $callerInfo = $this->utilities->getCallerInfo();
+            $this->appendLog(
+                __FUNCTION__,
+                array('Profile: Unable to start - enableProfiling opt not set.  ' . $callerInfo['file'] .' on line ' . $callerInfo['line'] . '.')
+            );
+            return;
+        }
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
@@ -1062,7 +1068,6 @@ class Debug
             }
         }
         $backtrace = \array_slice($backtrace, $i-1);
-        $backtrace = FileStreamWrapper::backtraceAdjustLines($backtrace);
         // keep the calling file & line, but toss ->trace or ::_trace
         unset($backtrace[0]['function']);
         $this->appendLog('trace', array($backtrace), $meta);
@@ -1113,7 +1118,10 @@ class Debug
     }
 
     /**
-     * Create/return a new sub-instance
+     * Return a named subinstance... if channel does not exist, it will be created
+     *
+     * Channels can be used to categorize log data... for example, may have a framework channel, database channel, library-x channel, etc
+     * Channels may have subchannels
      *
      * @param string $channelName channel name
      *
@@ -1125,17 +1133,28 @@ class Debug
             $this->error('getChannel(): channelName should not contain period (.)');
             return $this;
         }
-        if ($this->parentInstance) {
-            $channelName = $this->cfg['channel'].'.'.$channelName;
-        }
         if (!isset($this->channels[$channelName])) {
             $cfg = \array_merge($this->cfg, array(
-                'channel' => $channelName,
+                'channel' => $this->parentInstance
+                    ? $this->cfg['channel'].'.'.$channelName
+                    : $channelName,
                 'parent' => $this,
             ));
             $this->channels[$channelName] = new static($cfg);
         }
         return $this->channels[$channelName];
+    }
+
+    /**
+     * Return array of channels
+     *
+     * Only this instances immediate sub-channels are returned, not the entire channel "tree"
+     *
+     * @return array
+     */
+    public function getChannels()
+    {
+        return $this->channels;
     }
 
     /**

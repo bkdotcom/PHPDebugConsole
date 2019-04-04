@@ -6,14 +6,12 @@
 class LoggerTest extends DebugTestFramework
 {
 
-    public $lineOffset = -2;    // account for FileStreamWrapper
-
     public function testEmergency()
     {
         $this->debug->logger->emergency('Emergency broadcast system');
         $meta = array(
             'file' => __FILE__,
-            'line' => __LINE__ - 3 + $this->lineOffset,
+            'line' => __LINE__ - 3,
             'psr3level' => 'emergency',
         );
         $this->assertSame(array(
@@ -28,7 +26,7 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->critical('Critical test');
         $metaExpect = array(
             'file' => __FILE__,
-            'line' => __LINE__ - 3 + $this->lineOffset,
+            'line' => __LINE__ - 3,
             'psr3level' => 'critical',
         );
         $this->assertSame(array(
@@ -44,7 +42,7 @@ class LoggerTest extends DebugTestFramework
         ));
         $metaSubset = array(
             'file' => 'file',
-            'line' => __LINE__ - 6 + $this->lineOffset, // line of Exception
+            'line' => __LINE__ - 6, // line of Exception
         );
         $metaActual = $this->debug->getData('log/__end__/2');
         $this->assertSame('error', $this->debug->getData('log/__end__/0'));
@@ -69,7 +67,7 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->error('Error test');
         $meta = array(
             'file' => __FILE__,
-            'line' => __LINE__ - 3 + $this->lineOffset,
+            'line' => __LINE__ - 3,
             'psr3level' => 'error',
         );
         $this->assertSame(array(
@@ -84,7 +82,7 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->warning('You\'ve been warned');
         $meta = array(
             'file' => __FILE__,
-            'line' => __LINE__ - 3 + $this->lineOffset,
+            'line' => __LINE__ - 3,
             'psr3level' => 'warning',
         );
         $this->assertSame(array(
@@ -99,7 +97,7 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->notice('Final Notice');
         $meta = array(
             'file' => __FILE__,
-            'line' => __LINE__ - 3 + $this->lineOffset,
+            'line' => __LINE__ - 3,
             'psr3level' => 'notice',
         );
         $this->assertSame(array(

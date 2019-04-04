@@ -8,7 +8,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v2.3
  */
 
@@ -101,6 +101,7 @@ class Wamp implements OutputInterface
                 $event['typeStr'].': '.$event['file'].' (line '.$event['line'].'): '.$event['message']
             ),
             array(
+                'channel' => 'phpError',
                 'class' => $event['type'] & $this->debug->getCfg('errorMask')
                     ? 'danger'
                     : 'warning',
@@ -128,9 +129,14 @@ class Wamp implements OutputInterface
     public function onShutdown()
     {
         // publish a "we're done" message
-        $this->processLogEntry('endOutput', array(
-            'responseCode' => \http_response_code(),
-        ));
+        $this->processLogEntry(
+            'endOutput',
+            array(),
+            array(
+                'responseCode' => \http_response_code(),
+                'channel' => $this->debug->getCfg('channel'),
+            )
+        );
     }
 
     /**
@@ -148,6 +154,9 @@ class Wamp implements OutputInterface
             'format' => 'raw',
             'requestId' => $this->requestId,
         ), $meta);
+        if ($meta['channel'] == $this->debug->getCfg('channel')) {
+            unset($meta['channel']);
+        }
         if ($meta['format'] == 'raw') {
             $args = $this->crateValues($args);
         }
@@ -284,6 +293,14 @@ class Wamp implements OutputInterface
         if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
             $metaVals['REQUEST_URI'] = '$: '. \implode(' ', $_SERVER['argv']);
         }
-        $this->processLogEntry('meta', $metaVals);
+        $this->processLogEntry(
+            'meta',
+            array(
+                $metaVals,
+            ),
+            array(
+                'channel' => $this->debug->getCfg('channel'),
+            )
+        );
     }
 }

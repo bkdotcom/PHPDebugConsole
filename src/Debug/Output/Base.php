@@ -5,7 +5,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v2.3
  */
 
@@ -238,7 +238,7 @@ abstract class Base implements OutputInterface
     /**
      * Dump object
      *
-     * @param array $abs  object abstraction
+     * @param array $abs object abstraction
      *
      * @return mixed
      */
@@ -347,7 +347,10 @@ abstract class Base implements OutputInterface
     }
 
     /**
-     * Build table rows
+     * Normalize table data
+     *
+     * Ensures each row has all key/values and that they're in the same order
+     * if any row is an object, each row will get a ___class_name value
      *
      * This builds table rows usable by ChromeLogger, Text, and <script>
      *

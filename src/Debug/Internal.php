@@ -5,7 +5,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v2.3
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
@@ -111,13 +111,15 @@ class Internal implements SubscriberInterface
         /*
             "attach" serialized log to body
         */
-        $body .= $this->debug->utilities->serializeLog(array(
-            'alerts' => $this->debug->getData('alerts'),
-            'log' => $this->debug->getData('log'),
-            'logSummary' => $this->debug->getData('logSummary'),
-            'requestId' => $this->debug->getData('requestId'),
-            'runtime' => $this->debug->getData('runtime'),
-        ));
+        $data = \array_intersect_key($this->debug->getData(), \array_flip(array(
+            'alerts',
+            'log',
+            'logSummary',
+            'requestId',
+            'runtime',
+        )));
+        $data['rootChannel'] = $this->debug->getCfg('channel');
+        $body .= $this->debug->utilities->serializeLog($data);
         /*
             Now email
         */
@@ -162,7 +164,15 @@ class Internal implements SubscriberInterface
                 $stats['inConsoleCategories']++;
             }
         }
-        \ksort($stats['counts']);
+        $order = array(
+            'fatal',
+            'error',
+            'warning',
+            'deprecated',
+            'notice',
+            'strict',
+        );
+        $stats['counts'] = \array_intersect_key(\array_merge(\array_flip($order), $stats['counts']), $stats['counts']);
         return $stats;
     }
 
@@ -182,6 +192,7 @@ class Internal implements SubscriberInterface
                 'errorHash' => $this->error['hash'],
                 'backtrace' => $this->error['backtrace'] ?: array(),
                 'sanitize' => $this->error['isHtml'] === false,
+                'channel' => 'phpError',
             );
         } else {
             $meta = $this->debug->utilities->getCallerInfo();
@@ -537,7 +548,7 @@ class Internal implements SubscriberInterface
                 $input = \file_get_contents('php://input');
                 if ($input) {
                     $this->debug->log('php://input', $input);
-                } elseif (isset($_SERVER['REQUEST_METHOD'])) {
+                } elseif (isset($_SERVER['REQUEST_METHOD']) && empty($_FILES)) {
                     $this->debug->warn($_SERVER['REQUEST_METHOD'].' request with no body');
                 }
             }

@@ -5,13 +5,11 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v2.3
  */
 
 namespace bdk\Debug;
-
-use bdk\PubSub\Event;
 
 /**
  * Streamwrapper which injects `declare(ticks=1)`
@@ -76,38 +74,6 @@ class FileStreamWrapper
                 b) don't want to cache modified files
         */
         \ini_set('opcache.enable', 0);
-    }
-
-    /**
-     * Adjust line numbers in backtrace to compensate for on-the-fly
-     *
-     * @param array $backtrace backtrace frames
-     *
-     * @return array
-     */
-    public static function backtraceAdjustLines($backtrace)
-    {
-        foreach ($backtrace as $i => $row) {
-            if (\in_array($row['file'], self::$filesModified)) {
-                $backtrace[$i]['line'] -= 2;
-            }
-        }
-        return $backtrace;
-    }
-
-    /**
-     * Adjust error's line number to compensate for the 2 lines we dynamically add
-     *
-     * @param Event $event Error event object
-     *
-     * @return void
-     */
-    public static function onError(Event $event)
-    {
-        if (\in_array($event['file'], self::$filesModified)) {
-            $event['line'] -= 2;
-        }
-        $event['backtrace'] = self::backtraceAdjustLines($event['backtrace']);
     }
 
     /**
@@ -468,9 +434,10 @@ class FileStreamWrapper
             }
         }
         if (!$this->declaredTicks && $isRequire) {
+            // insert declare(ticks=1);  without adding any new lines
             $buffer = \preg_replace(
                 '/^(<\?php\s*)$/m',
-                "\\0\ndeclare(ticks=1);\n",
+                '$0 declare(ticks=1);',
                 $buffer,
                 1
             );

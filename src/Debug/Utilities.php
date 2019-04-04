@@ -5,13 +5,11 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v2.3
  */
 
 namespace bdk\Debug;
-
-use \bdk\Debug\FileStreamWrapper;
 
 /**
  * Utility methods
@@ -132,7 +130,8 @@ class Utilities
         $path = \array_reverse($path);
         while ($path) {
             $key = \array_pop($path);
-            if (!\is_array($array)) {
+            $arrayAccess = \is_array($array) || $array instanceof \ArrayAccess;
+            if (!$arrayAccess) {
                 return null;
             } elseif (isset($array[$key])) {
                 $array = $array[$key];
@@ -359,9 +358,6 @@ class Utilities
         } else {
             $return['file'] = $backtrace[$numFrames-1]['file'];
             $return['line'] = 0;
-        }
-        if (\in_array($return['file'], FileStreamWrapper::$filesModified)) {
-            $return['line'] -= 2;
         }
         return $return;
     }
@@ -603,8 +599,8 @@ class Utilities
                 $str = $strInflated;
             }
         }
-        $log = \unserialize($str);
-        return $log;
+        $data = \unserialize($str);
+        return $data;
     }
 
     /**

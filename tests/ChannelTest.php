@@ -152,7 +152,7 @@ class ChannelTest extends DebugTestFramework
     {
         $this->genLog();
         $htmlFoo = <<<EOD
-        <div class="debug">
+        <div class="debug" data-channel-root="general" data-channels="{&quot;foo&quot;:{}}">
             <div class="debug-bar"><h3>Debug Log</h3></div>
             <div class="alert alert-danger" data-channel="foo" role="alert">foo: alert</div>
             <div class="debug-header m_group">
@@ -176,15 +176,8 @@ class ChannelTest extends DebugTestFramework
         </div>
 EOD;
         $html = <<<EOD
-        <div class="debug">
+        <div class="debug" data-channel-root="general" data-channels="{&quot;general&quot;:{},&quot;foo&quot;:{}}">
             <div class="debug-bar"><h3>Debug Log</h3></div>
-            <fieldset class="channels" style="display:none;">
-                <legend>Channels</legend>
-                <ul class="list-unstyled">
-                    <li><label><input checked="checked" data-is-root="true" data-toggle="channel" type="checkbox" value="general" /> general</label></li>
-                    <li><label><input checked="checked" data-is-root="false" data-toggle="channel" type="checkbox" value="foo" /> foo</label></li>
-                </ul>
-            </fieldset>
             <div class="alert alert-danger" role="alert">main: alert</div>
             <div class="alert alert-danger" data-channel="foo" role="alert">foo: alert</div>
             <div class="debug-header m_group">

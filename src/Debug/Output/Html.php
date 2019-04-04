@@ -5,7 +5,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v2.3
  */
 
@@ -26,6 +26,7 @@ class Html extends Base
     protected $errorSummary;
     protected $wrapAttribs = array();
     protected $channels = array();
+    protected $tableInfo;
 
     /**
      * Constructor
@@ -174,7 +175,13 @@ class Html extends Base
     public function onOutput(Event $event)
     {
         $this->data = $this->debug->getData();
-        $str = '<div class="debug">'."\n";
+        $this->channels = array();
+        $str = '<div'.$this->debug->utilities->buildAttribString(array(
+            'class' => 'debug',
+            // channel list gets built as log processed...  we'll str_replace this...
+            'data-channels' => '{{channels}}',
+            'data-channel-root' => $this->channelNameRoot,
+        )).">\n";
         if ($this->debug->getCfg('output.outputCss')) {
             $str .= '<style type="text/css">'."\n"
                     .$this->debug->output->getCss()."\n"
@@ -186,7 +193,6 @@ class Html extends Base
                 .'</script>'."\n";
         }
         $str .= '<div class="debug-bar"><h3>Debug Log</h3></div>'."\n";
-        $str .= '{{channelToggles}}'; // initially display:none;
         $str .= $this->processAlerts();
         /*
             If outputing script, initially hide the output..
@@ -203,7 +209,7 @@ class Html extends Base
         $str .= '</div>'."\n";  // close .debug-content
         $str .= '</div>'."\n";  // close .debug
         $str = \strtr($str, array(
-            '{{channelToggles}}' => $this->getChannelToggles(),
+            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
         ));
         $this->data = array();
         $event['return'] .= $str;
@@ -335,6 +341,37 @@ class Html extends Base
     }
 
     /**
+     * Display channel checkboxes
+     *
+     * @return array
+     */
+    protected function buildChannelTree()
+    {
+        if ($this->channels == array($this->channelNameRoot)) {
+            return array();
+        }
+        \sort($this->channels);
+        // move root to the top
+        $rootKey = \array_search($this->channelNameRoot, $this->channels);
+        if ($rootKey !== false) {
+            unset($this->channels[$rootKey]);
+            \array_unshift($this->channels, $this->channelName);
+        }
+        $tree = array();
+        foreach ($this->channels as $channel) {
+            $ref = &$tree;
+            $path = \explode('.', $channel);
+            foreach ($path as $k) {
+                if (!isset($ref[$k])) {
+                    $ref[$k] = array();
+                }
+                $ref = &$ref[$k];
+            }
+        }
+        return $tree;
+    }
+
+    /**
      * handle html output of group, groupCollapsed, & groupEnd
      *
      * @param string $method group|groupCollapsed|groupEnd
@@ -409,7 +446,7 @@ class Html extends Base
         foreach ($keys as $key) {
             $colHasTotal = isset($this->tableInfo['totals'][$key]);
             $cells[] = $colHasTotal
-                ? $this->dump($this->tableInfo['totals'][$key], true, 'td')
+                ? $this->dump(\round($this->tableInfo['totals'][$key], 6), true, 'td')
                 : '<td></td>';
             $haveTotal = $haveTotal || $colHasTotal;
         }
@@ -612,7 +649,7 @@ class Html extends Base
     /**
      * Dump object as html
      *
-     * @param array $abs  object abstraction
+     * @param array $abs object abstraction
      *
      * @return string
      */
@@ -673,47 +710,6 @@ class Html extends Base
     protected function dumpUndefined()
     {
         return '';
-    }
-
-    /**
-     * Display channel checkboxes
-     *
-     * @return string
-     */
-    protected function getChannelToggles()
-    {
-        if (\count($this->channels) < 2) {
-            return '';
-        }
-        \sort($this->channels);
-        $rootKey = \array_search($this->channelNameRoot, $this->channels);
-        if ($rootKey !== false) {
-            unset($this->channels[$rootKey]);
-            \array_unshift($this->channels, $this->channelName);
-        }
-        $checkboxes = '';
-        foreach ($this->channels as $channel) {
-            $checkboxes .= '<li><label>'
-                .$this->debug->utilities->buildTag(
-                    'input',
-                    array(
-                        'checked' => true,
-                        'data-is-root' => $channel == $this->channelNameRoot,
-                        'data-toggle' => 'channel',
-                        'type' => 'checkbox',
-                        'value' => $channel,
-                    )
-                )
-                .' '.\htmlspecialchars($channel)
-                .'</label></li>'."\n";
-        }
-        $this->channels = array();
-        return '<fieldset class="channels" style="display:none;">'."\n"
-                .'<legend>Channels</legend>'."\n"
-                .'<ul class="list-unstyled">'."\n"
-                .$checkboxes
-                .'</ul>'."\n"
-            .'</fieldset>'."\n";
     }
 
     /**

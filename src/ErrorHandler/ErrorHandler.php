@@ -628,7 +628,7 @@ class ErrorHandler
             'hash'          => null,
             'isFirstOccur'  => true,
             'isHtml'        => \filter_var(\ini_get('html_errors'), FILTER_VALIDATE_BOOLEAN)
-                && !\in_array($errType, $this->userErrors),
+                && !\in_array($errType, $this->userErrors) && !$this->uncaughtException,
             'isSuppressed'  => false,
         );
         $hash = $this->errorHash($errorValues);

@@ -5,7 +5,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2018 Brad Kent
+ * @copyright 2014-2019 Brad Kent
  * @version   v2.3
  */
 
@@ -56,14 +56,27 @@ class Config
         if (isset($path[1]) && $path[1] === '*') {
             \array_pop($path);
         }
-        $first = \array_shift($path);
-        if ($first == 'debug') {
+        $classname = \array_shift($path);
+        if ($classname == 'debug') {
             return $this->debug->utilities->arrayPathGet($this->cfg, $path);
-        } elseif (\is_object($this->debug->{$first})) {
-            // child class config value
-            $pathRel = \implode('/', $path);
-            return $this->debug->{$first}->getCfg($pathRel);
         }
+        if (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
+            $pathRel = \implode('/', $path);
+            return $this->debug->{$classname}->getCfg($pathRel);
+        }
+        if (isset($this->cfgLazy[$classname]) && $path) {
+            $val = $this->debug->utilities->arrayPathGet($this->cfgLazy[$classname], $path);
+            if ($val !== null) {
+                return $val;
+            }
+        }
+        if (isset($this->cfg['services'][$classname])) {
+            // getting value of uninitialized obj
+            // inititalize obj and retry
+            $pathRel = \implode('/', $path);
+            return $this->debug->{$classname}->getCfg($pathRel);
+        }
+        return null;
     }
 
     /**
@@ -110,8 +123,12 @@ class Config
         if (isset($this->cfgLazy['output']['outputAs'])) {
             $lazyPlugins = array('chromeLogger','firephp','html','script','text');
             if (\is_object($this->cfgLazy['output']['outputAs']) || !\in_array($this->cfgLazy['output']['outputAs'], $lazyPlugins)) {
-                // output may need to subscribe to events.... go ahead and load
-                $this->debug->output;
+                // output is likely a dependency
+                $outputAs = $this->cfgLazy['output']['outputAs'];
+                unset($this->cfgLazy['output']['outputAs']);
+                // this will autoload output, which will pull in cfgLazy...
+                ///   we then set ouputAs
+                $this->debug->output->setCfg('outputAs', $outputAs);
             }
         }
         if (\is_string($pathOrVals)) {
@@ -172,7 +189,7 @@ class Config
                 $return[$k] = \array_intersect_key($this->getCfg($k.'/*'), $v);
                 $this->debug->{$k}->setCfg($v);
             } elseif (isset($this->cfgLazy[$k])) {
-                $return[$k] = $this->cfgLazy[$k];
+                $return[$k] = \array_intersect_key($this->cfgLazy[$k], $v);
                 $this->cfgLazy[$k] = \array_merge($this->cfgLazy[$k], $v);
             } else {
                 $return[$k] = array();
@@ -293,6 +310,8 @@ class Config
                         : $v;
                     $translated = true;
                     break;
+                } elseif (\is_array($v) && isset($configKeys[$k])) {
+                    continue;
                 } elseif (\in_array($k, $objKeys)) {
                     $return[$objName][$k] = $v;
                     $translated = true;
@@ -397,11 +416,6 @@ class Config
                 __DIR__,
             );
             FileStreamWrapper::register($pathsExclude);
-            $this->debug->errorHandler->eventManager->subscribe(
-                'errorHandler.error',
-                array('\bdk\Debug\FileStreamWrapper', 'onError'),
-                PHP_INT_MAX
-            );
         }
     }
 

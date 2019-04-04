@@ -227,7 +227,7 @@ class Html extends Base
     public function processLogEntry($method, $args = array(), $meta = array())
     {
         $str = '';
-        if (!\in_array($meta['channel'], $this->channels)) {
+        if (!\in_array($meta['channel'], $this->channels) && $meta['channel'] !== 'phpError') {
             $this->channels[] = $meta['channel'];
         }
         if ($meta['channel'] === $this->channelNameRoot) {
@@ -341,7 +341,7 @@ class Html extends Base
     }
 
     /**
-     * Display channel checkboxes
+     * Build a tree of all channels that have been output
      *
      * @return array
      */

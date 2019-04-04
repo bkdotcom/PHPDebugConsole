@@ -132,6 +132,7 @@
 					addCss(this.selector);
 					addPersistOption($self);
 					addExpandAll($self);
+					addChannelToggles($self);
 					enhanceErrorSummary($self);
 					registerListeners($self);
 					// only enhance root log entries
@@ -750,6 +751,42 @@
 			'</div>');
 	}
 
+	function addChannelToggles($root) {
+		var channels = $root.data("channels"),
+			$toggles,
+			$ul = buildChannelTree(channels, "", $root.data("channelRoot"));
+		$toggles = $("<fieldset />", {
+				class: "channels",
+			})
+			.append('<legend>Channels</legend>')
+			.append($ul)
+		$root.find(".debug-bar").after($toggles);
+	}
+
+	function buildChannelTree(channels, prepend, rootChannel) {
+		var $ul = $('<ul class="list-unstyled">'),
+			$div,
+			$li,
+			channel,
+			$label;
+		for (channel in channels) {
+			$li = $("<li>");
+			$label = $('<label>').append($("<input>", {
+				checked: true,
+				"data-is-root": channel == rootChannel,
+				"data-toggle": "channel",
+				type: "checkbox",
+				value: prepend + channel
+			})).append(" " + channel);
+			$li.append($label);
+			if (Object.keys(channels[channel]).length) {
+				$li.append(buildChannelTree(channels[channel], prepend + channel + "."));
+			}
+			$ul.append($li);
+		}
+		return $ul;
+	}
+
 	function addExpandAll($root) {
 		// console.log("addExpandAll");
 		var $expandAll = $("<a>", {
@@ -909,14 +946,31 @@
 		});
 
 		$root.on("change", "input[data-toggle=channel]", function() {
-			var channel = $(this).val(),
-				$nodes = $(this).data("isRoot")
-					? $root.find(".m_group > *").not(".m_group").filter(function() {
-							var nodeChannel = $(this).data("channel");
-							return  nodeChannel === channel || nodeChannel === undefined;
-						})
-					: $root.find('.m_group > [data-channel="'+channel+'"]').not(".m_group");
-			$nodes.toggleClass("hidden-channel", !$(this).is(":checked"));
+			var channels = [],
+				isChecked = $(this).is(":checked"),
+				$nested = $(this).closest("label").next("ul").find("input");
+			console.log('this', this);
+			console.log("nested", $nested);
+			$nested.prop("checked", isChecked);
+			$("input[data-toggle=channel]:checked").each(function(){
+				channels.push($(this).val());
+				if ($(this).data("isRoot")) {
+					channels.push(undefined);
+				}
+			});
+			/*
+			$nodes = $(this).data("isRoot")
+				? $root.find(".m_group > *").not(".m_group").filter(function() {
+						var nodeChannel = $(this).data("channel");
+						return  nodeChannel === channel || nodeChannel === undefined;
+					})
+				: $root.find('.m_group > [data-channel="'+channel+'"]').not(".m_group");
+			*/
+			$root.find(".m_group > *").not(".m_group").each(function(){
+				var channel = $(this).data("channel"),
+					show = channels.indexOf(channel) >= 0;
+				$(this).toggleClass("hidden-channel", !show);
+			});
 		});
 
 		$root.on("change", "input[data-toggle=error]", function() {

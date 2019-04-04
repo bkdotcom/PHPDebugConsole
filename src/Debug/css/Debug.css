@@ -202,7 +202,7 @@
 .debug .debug-bar h3 { margin-top:0; }
 .debug .debug-content { margin-top:0.75em; }
 .debug .channels legend { font-size:144%; }
-.debug .channels ul { font-size:125%; }
+.debug .channels > ul { font-size:125%; }
 
 /*
 	array & objects
@@ -395,6 +395,9 @@
 .debug .list-unstyled{
 	list-style: none outside none;
 	padding-left: 0;
+}
+.debug .list-unstyled ul {
+	margin-left: 10px;
 }
 .debug .no-pseudo:before { content:none; }
 .debug .no-pseudo:after { content:none; }

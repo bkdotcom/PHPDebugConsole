@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3
+ * @version   v3.0
  */
 
 namespace bdk\Debug;
@@ -126,6 +126,8 @@ class Config
                 // output is likely a dependency
                 $outputAs = $this->cfgLazy['output']['outputAs'];
                 unset($this->cfgLazy['output']['outputAs']);
+                // this will autoload output, which will pull in cfgLazy...
+                ///   we then set ouputAs
                 $this->debug->output->setCfg('outputAs', $outputAs);
             }
         }

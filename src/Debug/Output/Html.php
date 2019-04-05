@@ -175,6 +175,7 @@ class Html extends Base
      */
     public function onOutput(Event $event)
     {
+        $this->data = $this->debug->getData();
         $this->channels = array();
         $str = '<div'.$this->debug->utilities->buildAttribString(array(
             'class' => 'debug',
@@ -197,7 +198,6 @@ class Html extends Base
                     .$this->debug->output->getScript()."\n"
                 .'</script>'."\n";
         }
-        $this->data = $this->debug->getData();
         $str .= '<header class="debug-menu-bar">PHPDebugConsole</header>'."\n";
         $str .= '<div class="debug-body">'."\n";
         $str .= $this->processAlerts();
@@ -354,9 +354,9 @@ class Html extends Base
     }
 
     /**
-     * Display channel checkboxes
+     * Build a tree of all channels that have been output
      *
-     * @return string
+     * @return array
      */
     protected function buildChannelTree()
     {

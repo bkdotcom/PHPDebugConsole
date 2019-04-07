@@ -117,9 +117,7 @@ $.fn.debugEnhance = function(method) {
 	// console.warn("debugEnhance", method, this);
 	var $self = this,
 		options = {};
-	if (method === "addCss") {
-		addCss(arguments[1]);
-	} else if (method === "buildChannelList") {
+	if (method === "buildChannelList") {
 		return enhanceMain.buildChannelList(arguments[1], "", arguments[2]);
 	} else if (method === "collapse") {
 		expandCollapse.collapse($self);

@@ -82,12 +82,12 @@
 						e.stopPropagation();
 						e.preventDefault();
 						e.returnValue = false;
-						return false
+						return false;
 					};
 				if (!isUp && -d > sh-h-st) {
 					// Scrolling down, but this will take us past the bottom.
 					$this.scrollTop(sh);
-					return prevent()
+					return prevent();
 				} else if (isUp && d > st) {
 					// Scrolling up, but this will take us past the top.
 					$this.scrollTop(0);
@@ -159,7 +159,7 @@
 	}
 
 	function onMousedown(e) {
-		if (!$(this).closest(".debug-drawer").is(".debug-drawer-open")) {
+		if (!$(e.target).closest(".debug-drawer").is(".debug-drawer-open")) {
 			// drawer isn't open / ignore resize
 			return;
 		}
@@ -601,7 +601,7 @@
 			$toggles,
 			$ul = buildChannelList(channels, "", $root$3.data("channelRoot"));
 		$toggles = $("<fieldset />", {
-				class: "channels",
+				"class": "channels",
 			})
 			.append('<legend>Channels</legend>')
 			.append($ul);
@@ -612,7 +612,7 @@
 
 	function addExpandAll() {
 		var $expandAll = $("<button>", {
-			class: "expand-all"
+				"class": "expand-all"
 			}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
 		// this is currently invoked before entries are enhance / empty class not yet added
 		if ($root$3.find(".m_group:not(.empty)").length) {
@@ -902,7 +902,7 @@
 				})
 				: false;
 		dir = dir === "desc" ? -1 : 1;
-		rows = Array.prototype.slice.call(rows, 0), // Converts HTMLCollection to Array
+		rows = Array.prototype.slice.call(rows, 0); // Converts HTMLCollection to Array
 		rows = rows.sort(function (trA, trB) {
 			var a = trA.cells[col].textContent.trim(),
 				b = trB.cells[col].textContent.trim(),
@@ -1521,9 +1521,7 @@
 		// console.warn("debugEnhance", method, this);
 		var $self = this,
 			options = {};
-		if (method === "addCss") {
-			addCss(arguments[1]);
-		} else if (method === "buildChannelList") {
+		if (method === "buildChannelList") {
 			return buildChannelList(arguments[1], "", arguments[2]);
 		} else if (method === "collapse") {
 			collapse($self);

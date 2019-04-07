@@ -33,7 +33,7 @@ function addChannelToggles() {
 		$toggles,
 		$ul = buildChannelList(channels, "", $root.data("channelRoot"));
 	$toggles = $("<fieldset />", {
-			class: "channels",
+			"class": "channels",
 		})
 		.append('<legend>Channels</legend>')
 		.append($ul);
@@ -44,7 +44,7 @@ function addChannelToggles() {
 
 function addExpandAll() {
 	var $expandAll = $("<button>", {
-		class: "expand-all"
+			"class": "expand-all"
 		}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
 	// this is currently invoked before entries are enhance / empty class not yet added
 	if ($root.find(".m_group:not(.empty)").length) {
@@ -87,7 +87,6 @@ function addPersistOption() {
 
 export function buildChannelList(channels, prepend, channelRoot) {
 	var $ul = $('<ul class="list-unstyled">'),
-		$div,
 		$li,
 		channel,
 		$label;

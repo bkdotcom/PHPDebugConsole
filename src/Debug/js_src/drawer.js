@@ -22,12 +22,12 @@ $.fn.scrollLock = function(enable){
 					e.stopPropagation();
 					e.preventDefault();
 					e.returnValue = false;
-					return false
+					return false;
 				};
 			if (!isUp && -d > sh-h-st) {
 				// Scrolling down, but this will take us past the bottom.
 				$this.scrollTop(sh);
-				return prevent()
+				return prevent();
 			} else if (isUp && d > st) {
 				// Scrolling up, but this will take us past the top.
 				$this.scrollTop(0);
@@ -99,7 +99,7 @@ function onMousemove(e) {
 }
 
 function onMousedown(e) {
-	if (!$(this).closest(".debug-drawer").is(".debug-drawer-open")) {
+	if (!$(e.target).closest(".debug-drawer").is(".debug-drawer-open")) {
 		// drawer isn't open / ignore resize
 		return;
 	}

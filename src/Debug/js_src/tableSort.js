@@ -51,7 +51,7 @@ function sortTable(table, col, dir) {
 			})
 			: false;
 	dir = dir === "desc" ? -1 : 1;
-	rows = Array.prototype.slice.call(rows, 0), // Converts HTMLCollection to Array
+	rows = Array.prototype.slice.call(rows, 0); // Converts HTMLCollection to Array
 	rows = rows.sort(function (trA, trB) {
 		var a = trA.cells[col].textContent.trim(),
 			b = trB.cells[col].textContent.trim(),

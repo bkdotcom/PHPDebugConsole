@@ -85,8 +85,8 @@
 				/*
 					Copy strings/floats/ints to clipboard when clicking
 				*/
-				clipboard = window.ClipboardJS;
-				new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
+				var clipboard = window.ClipboardJS;
+				clipboard = new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
 					target: function (trigger) {
 						notify("Copied to clipboard");
 						return trigger;
@@ -110,6 +110,8 @@
 			} else if (method) {
 				if (method === "addCss") {
 					addCss(arguments[1]);
+				} else if (method === "buildChannelList") {
+					return buildChannelList(arguments[1], "", arguments[2]);
 				} else if (method === "expand") {
 					expand($self);
 				} else if (method === "collapse") {
@@ -185,16 +187,16 @@
 			$.each(options.iconsMethods, function(selector,v){
 				var $caption;
 				if ($root.is(selector)) {
-					if ($root.is("table")) {
-						$caption = $root.find('caption');
+					if ($root.is(".m_profileEnd") && $root.find("> table").length) {
+						$caption = $root.find("> table > caption");
 						if (!$caption.length) {
-							$caption = $("<caption></caption>");
-							$root.prepend($caption);
+							$caption = $("<caption>");
+							$root.find("> table").prepend($caption);
 						}
 						$root = $caption;
 					}
 					$root.prepend(v);
-					return false;
+					return false;	// break
 				}
 			});
 		}
@@ -754,37 +756,64 @@
 	function addChannelToggles($root) {
 		var channels = $root.data("channels"),
 			$toggles,
-			$ul = buildChannelTree(channels, "", $root.data("channelRoot"));
-		$toggles = $("<fieldset />", {
-				class: "channels",
+			$ul = buildChannelList(channels, "", $root.data("channelRoot"));
+		$toggles = $("<fieldset>", {
+				'class': "channels"
 			})
 			.append('<legend>Channels</legend>')
-			.append($ul)
-		$root.find(".debug-bar").after($toggles);
+			.append($ul);
+		if ($ul.html().length) {
+			$root.find(".debug-bar").after($toggles);
+		}
 	}
 
-	function buildChannelTree(channels, prepend, rootChannel) {
+	function buildChannelList(channels, prepend, channelRoot) {
 		var $ul = $('<ul class="list-unstyled">'),
-			$div,
 			$li,
 			channel,
 			$label;
+		prepend = prepend || "";
+		if ($.isArray(channels)) {
+			channels = channelsToTree(channels);
+		}
 		for (channel in channels) {
+			if (channel === "phpError") {
+				// phpError is a special channel
+				continue;
+			}
 			$li = $("<li>");
 			$label = $('<label>').append($("<input>", {
 				checked: true,
-				"data-is-root": channel == rootChannel,
+				"data-is-root": channel == channelRoot,
 				"data-toggle": "channel",
 				type: "checkbox",
 				value: prepend + channel
 			})).append(" " + channel);
 			$li.append($label);
 			if (Object.keys(channels[channel]).length) {
-				$li.append(buildChannelTree(channels[channel], prepend + channel + "."));
+				$li.append(buildChannelList(channels[channel], prepend + channel + "."));
 			}
 			$ul.append($li);
 		}
 		return $ul;
+	}
+
+	function channelsToTree(channels) {
+		var channelTree = {},
+			ref,
+			i, i2,
+			path;
+		for (i = 0; i < channels.length; i++) {
+			ref = channelTree;
+			path = channels[i].split('.');
+			for (i2 = 0; i2 < path.length; i2++) {
+				if (!ref[ path[i2] ]) {
+					ref[ path[i2] ] = {};
+				}
+				ref = ref[ path[i2] ];
+			}
+		}
+		return channelTree;
 	}
 
 	function addExpandAll($root) {
@@ -1081,7 +1110,7 @@
 	}
 
 	/**
-	 * sort table
+	 * Sort table
 	 *
 	 * @param obj table dom element
 	 * @param int col   column index
@@ -1091,20 +1120,47 @@
 		var body = table.tBodies[0],
 			rows = body.rows,
 			i,
+			floatRe = /^([+\-]?(?:0|[1-9]\d*)(?:\.\d*)?)(?:[eE]([+\-]?\d+))?$/,
 			collator = typeof Intl.Collator === "function"
 				? new Intl.Collator([], {
 					numeric: true,
-					sensitivity: 'base'
+					sensitivity: "base"
 				})
 				: false;
 		dir = dir === "desc" ? -1 : 1;
-		rows = Array.prototype.slice.call(rows, 0), // Converts HTMLCollection to Array
+		rows = Array.prototype.slice.call(rows, 0); // Converts HTMLCollection to Array
 		rows = rows.sort(function (trA, trB) {
 			var a = trA.cells[col].textContent.trim(),
-				b = trB.cells[col].textContent.trim();
-			return collator
-				? dir * collator.compare(a, b)
-				: dir * a.localeCompare(b);	// not a natural sort
+				b = trB.cells[col].textContent.trim(),
+				afloat = a.match(floatRe),
+				bfloat = b.match(floatRe),
+				comp = 0;
+			if (afloat) {
+				a = Number.parseFloat(a);
+				if (afloat[2]) {
+					// sci notation
+					a = a.toFixed(6);
+				}
+			}
+			if (bfloat) {
+				b = Number.parseFloat(b);
+				if (bfloat[2]) {
+					// sci notation
+					b = b.toFixed(6);
+				}
+			}
+			if (afloat && bfloat) {
+				if (a < b) {
+					comp = -1;
+				} else if (a > b) {
+					comp = 1;
+				}
+				return dir * comp;
+			}
+			comp = collator
+				? collator.compare(a, b)
+				: a.localeCompare(b);	// not a natural sort
+			return dir * comp;
 		});
 		for (i = 0; i < rows.length; ++i) {
 			body.appendChild(rows[i]); // append each row in order (which moves)

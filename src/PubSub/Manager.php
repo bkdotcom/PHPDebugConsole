@@ -107,7 +107,7 @@ class Manager
      * @param mixed  $eventOrSubject passed to subscribers
      * @param array  $values         values to attach to event
      *
-     * @return mixed
+     * @return Event
      */
     public function publish($eventName, $eventOrSubject = null, array $values = array())
     {

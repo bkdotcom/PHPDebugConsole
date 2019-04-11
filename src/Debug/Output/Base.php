@@ -449,7 +449,7 @@ abstract class Base implements OutputInterface
 
     /**
      * Publish debug.outputLogEntry.
-     * Return event['return'] not not empty
+     * Return event['return'] if not empty
      * Otherwise, propagation not stopped, return result of processLogEntry()
      *
      * @param string $method method

@@ -33,6 +33,8 @@ class Internal implements SubscriberInterface
     private $debug;
     private $error;     // store error object when logging an error
 
+    private static $profilingEnabled = false;
+
     /**
      * Constructor
      *
@@ -288,6 +290,7 @@ class Internal implements SubscriberInterface
     {
         return array(
             'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
+            'debug.config' => array('onConfig', PHP_INT_MAX),
             'debug.output' => 'onOutput',
             'errorHandler.error' => 'onError',
             'php.shutdown' => 'onShutdown',
@@ -315,11 +318,9 @@ class Internal implements SubscriberInterface
      */
     public function onBootstrap()
     {
-        $logEnvInfo = $this->debug->getCfg('logEnvInfo');
-        if (\is_bool($logEnvInfo)) {
-            $keys = array('cookies','headers','phpInfo','post','serverVals');
-            $logEnvInfo = \array_fill_keys($keys, $logEnvInfo);
-            $this->debug->setCfg('logEnvInfo', $logEnvInfo);
+        if ($this->debug->parentInstance) {
+            // only recored php/request info for root instance
+            return;
         }
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
@@ -333,6 +334,54 @@ class Internal implements SubscriberInterface
         $this->debug->groupEnd();
         $this->debug->groupEnd();
         $this->debug->setCfg('collect', $collectWas);
+    }
+
+    /**
+     * debug.config subscriber
+     *
+     * @param Event $event event instance
+     *
+     * @return void
+     */
+    public function onConfig(Event $event)
+    {
+        $cfg = $event['config'];
+        if (!isset($cfg['debug'])) {
+            // no debug config values have changed
+            return;
+        }
+        $cfg = $cfg['debug'];
+        if (isset($cfg['file'])) {
+            $this->debug->addPlugin($this->debug->output->file);
+        }
+        if (isset($cfg['onBootstrap'])) {
+            if (!$this->debug->parentInstance) {
+                // we're initializing
+                $this->debug->eventManager->subscribe('debug.bootstrap', $cfg['onBootstrap']);
+            } else {
+                // boostrap has already occured, so go ahead and call
+                \call_user_func($cfg['onBootstrap'], new Event($this->debug));
+            }
+        }
+        if (isset($cfg['onLog'])) {
+            /*
+                Replace - not append - subscriber set via setCfg
+            */
+            if (isset($this->cfg['onLog'])) {
+                $this->debug->eventManager->unsubscribe('debug.log', $this->cfg['onLog']);
+            }
+            $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
+        }
+        if (!static::$profilingEnabled) {
+            $cfg = $this->debug->getCfg('debug/*');
+            if ($cfg['enableProfiling'] && $cfg['collect']) {
+                static::$profilingEnabled = true;
+                $pathsExclude = array(
+                    __DIR__,
+                );
+                FileStreamWrapper::register($pathsExclude);
+            }
+        }
     }
 
     /**
@@ -380,6 +429,10 @@ class Internal implements SubscriberInterface
      */
     public function onOutput()
     {
+        if ($this->debug->parentInstance) {
+            // only record runtime info for root instance
+            return;
+        }
         $vals = $this->runtimeVals();
         $this->debug->groupSummary(1);
         $this->debug->info('Built In '.$vals['runtime'].' sec');
@@ -411,6 +464,34 @@ class Internal implements SubscriberInterface
             echo $this->debug->output();
         }
         return;
+    }
+
+    /**
+     * Publish/Trigger/Dispatch event
+     * Event will get published on ancestor channels if propagation not stopped
+     *
+     * @param string $eventName      event name
+     * @param mixed  $eventOrSubject passed to subscribers
+     * @param array  $values         values to attach to event
+     *
+     * @return mixed
+     */
+    public function publishBubbleEvent($eventName, $eventOrSubject, array $values = array())
+    {
+        if ($eventOrSubject instanceof Event) {
+            $event = $eventOrSubject;
+        } else {
+            $event = new Event($eventOrSubject, $values);
+        }
+        $debug = $this->debug;
+        while (!$event->isPropagationStopped()) {
+            $debug->eventManager->publish($eventName, $event);
+            if (!$debug->parentInstance) {
+                break;
+            }
+            $debug = $debug->parentInstance;
+        }
+        return $event;
     }
 
     /**

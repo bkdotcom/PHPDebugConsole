@@ -11,7 +11,7 @@
 
 namespace bdk\Debug;
 
-use bdk\PubSub\Manager as EventManager;
+use bdk\Debug;
 
 /**
  * Methods used store array/object/resource info
@@ -19,7 +19,7 @@ use bdk\PubSub\Manager as EventManager;
 class Abstracter
 {
 
-    public $eventManager;
+    public $debug;
     protected $cfg = array();
     protected $abstractArray;
     protected $abstractObject;
@@ -31,12 +31,12 @@ class Abstracter
     /**
      * Constructor
      *
-     * @param EventManager $eventManager event manager
-     * @param array        $cfg          config options
+     * @param Debug $debug debug instance
+     * @param array $cfg   config options
      */
-    public function __construct(EventManager $eventManager, $cfg = array())
+    public function __construct(Debug $debug, $cfg = array())
     {
-        $this->eventManager = $eventManager;
+        $this->debug = $debug;  // we need debug instance so we can bubble events up channels
         $this->cfg = array(
             'cacheMethods' => true,
             'collectConstants' => true,
@@ -124,7 +124,7 @@ class Abstracter
      * @param mixed  $val      value
      * @param string $typeMore will be populated with additional type info ("numeric"/"binary")
      *
-     * @return [type] [description]
+     * @return string
      */
     public static function getType($val, &$typeMore = null)
     {
@@ -150,7 +150,7 @@ class Abstracter
             }
         } elseif (\is_bool($val)) {
             $type = 'bool';
-            $typeMore = $val ? 'true' : 'false';
+            $typeMore = \json_encode($val);
         } elseif (\is_float($val)) {
             $type = 'float';
         } elseif (\is_int($val)) {
@@ -170,7 +170,7 @@ class Abstracter
     }
 
     /**
-     * * Is the passed value an abstraction
+     * Is the passed value an abstraction
      *
      * @param mixed $mixed value to check
      *
@@ -197,19 +197,25 @@ class Abstracter
     /**
      * Set one or more config values
      *
-     * @param string $path   key
+     *    setCfg('key', 'value')
+     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *
+     * @param string $mixed  key=>value array or key
      * @param mixed  $newVal value
      *
-     * @return mixed
+     * @return mixed old value(s)
      */
-    public function setCfg($path, $newVal = null)
+    public function setCfg($mixed, $newVal = null)
     {
         $ret = null;
-        if (\is_string($path)) {
-            $ret = $this->cfg[$path];
-            $this->cfg[$path] = $newVal;
-        } elseif (\is_array($path)) {
-            $this->cfg = \array_merge($this->cfg, $path);
+        if (\is_string($mixed)) {
+            $ret = isset($this->cfg[$mixed])
+                ? $this->cfg[$mixed]
+                : null;
+            $this->cfg[$mixed] = $newVal;
+        } elseif (\is_array($mixed)) {
+            $ret = \array_intersect_key($this->cfg, $mixed);
+            $this->cfg = \array_merge($this->cfg, $mixed);
         }
         if (!\in_array(__NAMESPACE__, $this->cfg['objectsExclude'])) {
             $this->cfg['objectsExclude'][] = __NAMESPACE__;

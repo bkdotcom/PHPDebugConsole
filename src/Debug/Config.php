@@ -25,7 +25,6 @@ class Config
     protected $cfgLazy = array();  // store config for child classes that haven't been loaded yet
     protected $debug;
     protected $configKeys;
-    private static $profilingEnabled = false;
 
     /**
      * Constructor
@@ -52,19 +51,20 @@ class Config
     public function getCfg($path = '')
     {
         $path = $this->normalizePath($path);
-        $path = \preg_split('#[\./]#', $path);
-        if (isset($path[1]) && $path[1] === '*') {
-            \array_pop($path);
+        $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
+        if (empty($path)) {
+            return $this->getCfgAll();
         }
         $classname = \array_shift($path);
         if ($classname == 'debug') {
             return $this->debug->utilities->arrayPathGet($this->cfg, $path);
-        }
-        if (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
+        } elseif (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
             $pathRel = \implode('/', $path);
             return $this->debug->{$classname}->getCfg($pathRel);
         }
         if (isset($this->cfgLazy[$classname]) && $path) {
+            // want a config value of obj that has not yet been instantiated...
+            // value may in cfgLazy
             $val = $this->debug->utilities->arrayPathGet($this->cfgLazy[$classname], $path);
             if ($val !== null) {
                 return $val;
@@ -105,6 +105,8 @@ class Config
      *
      * Setting/updating 'key' will also set 'collect' and 'output'
      *
+     * Triggers a debug.config event that contains all changed values
+     *
      * @param string|array $pathOrVals key/path or cfg array
      * @param mixed        $val        (optional) value
      *
@@ -127,7 +129,7 @@ class Config
                 $outputAs = $this->cfgLazy['output']['outputAs'];
                 unset($this->cfgLazy['output']['outputAs']);
                 // this will autoload output, which will pull in cfgLazy...
-                ///   we then set ouputAs
+                //   we then set outputAs
                 $this->debug->output->setCfg('outputAs', $outputAs);
             }
         }
@@ -200,6 +202,27 @@ class Config
     }
 
     /**
+     * Get config for debug.
+     * If no path specified, config for debug and dependencies is returned
+     *
+     * @return mixed
+     */
+    private function getCfgAll()
+    {
+        $cfg = array();
+        foreach (\array_keys($this->configKeys) as $classname) {
+            if ($classname === 'debug') {
+                $cfg['debug'] = $this->cfg;
+            } elseif (isset($this->debug->{$classname})) {
+                $cfg[$classname] = $this->debug->{$classname}->getCfg();
+            } elseif (isset($this->cfgLazy[$classname])) {
+                $cfg[$classname] = $this->cfgLazy[$classname];
+            }
+        }
+        return $cfg;
+    }
+
+    /**
      * get available config keys for objects
      *
      * @return array
@@ -211,8 +234,7 @@ class Config
         }
         $this->configKeys = array(
             'debug' => array(
-                'output',   // any key not found falls under 'debug'...
-                            //  'output' listed to disambiguate from output object
+                // any key not found falls under 'debug'...
             ),
             'abstracter' => array(
                 'cacheMethods',
@@ -329,7 +351,12 @@ class Config
     }
 
     /**
-     * [expandPath description]
+     * Normalize string path
+     * Returns either
+     *     ''         empty string = all config values grouped by class
+     *     '{class}'         we want all config values for class
+     *     '{class}/{key}    want specific value from this class'
+     *   {class} may be debug
      *
      * @param string $path string path
      *
@@ -338,21 +365,29 @@ class Config
     private function normalizePath($path)
     {
         $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
-        if (\count($path) == 1) {
-            $configKeys = $this->getConfigKeys();
-            foreach ($configKeys as $objName => $objKeys) {
-                if (\in_array($path[0], $objKeys)) {
-                    \array_unshift($path, $objName);
-                    break;
-                }
-                if ($path[0] == $objName) {
-                    $path[] = '*';
-                    break;
-                }
+        if (\count($path) == 0 || $path[0] == '*') {
+            return '';
+        }
+        $configKeys = $this->getConfigKeys();
+        $found = false;
+        foreach ($configKeys as $objName => $objKeys) {
+            if (\in_array($path[0], $objKeys) && $objName !== 'debug') {
+                $found = true;
+                \array_unshift($path, $objName);
+                break;
+            }
+            if ($path[0] == $objName && !empty($path[1])) {
+                // $path[] = '*';
+                $found = true;
+                break;
             }
         }
-        if (\count($path) <= 1 || $path[0] === 'logEnvInfo') {
+        if (!$found) {
+            // we didn't find our key... assume debug
             \array_unshift($path, 'debug');
+        }
+        if (\end($path) == '*') {
+            \array_pop($path);
         }
         return \implode('/', $path);
     }
@@ -390,59 +425,14 @@ class Config
         if (isset($cfg['key'])) {
             $cfg = \array_merge($cfg, $this->debugKeyValues($cfg['key']));
         }
+        if (isset($cfg['logEnvInfo']) && \is_bool($cfg['logEnvInfo'])) {
+            $keys = \array_keys($this->cfg['logEnvInfo']);
+            $cfg['logEnvInfo'] = \array_fill_keys($keys, $cfg['logEnvInfo']);
+        }
         if (isset($cfg['logServerKeys'])) {
             // don't append, replace
             $this->cfg['logServerKeys'] = array();
         }
         $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $cfg);
-        if (isset($cfg['file'])) {
-            $this->debug->addPlugin($this->debug->output->file);
-        }
-        if (isset($cfg['onBootstrap'])) {
-            $this->setDebugOnBootstrap($cfg['onBootstrap']);
-        }
-        if (isset($cfg['onLog'])) {
-            /*
-                Replace - not append - subscriber set via setCfg
-            */
-            if (isset($this->cfg['onLog'])) {
-                $this->debug->eventManager->unsubscribe('debug.log', $this->cfg['onLog']);
-            }
-            $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
-        }
-        if ($this->cfg['enableProfiling'] && $this->cfg['collect'] && !static::$profilingEnabled) {
-            static::$profilingEnabled = true;
-            $pathsExclude = array(
-                __DIR__,
-            );
-            FileStreamWrapper::register($pathsExclude);
-        }
-    }
-
-    /**
-     * Handle setting onBootstrap cfg value
-     *
-     * @param callable $onBootstrap onBoostrap cfg value
-     *
-     * @return void
-     */
-    private function setDebugOnBootstrap($onBootstrap)
-    {
-        $callingFunc = null;
-        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
-        foreach ($backtrace as $i => $frame) {
-            if ($frame['function'] == 'setCfg') {
-                $callingFunc = $backtrace[$i+1]['function'];
-                break;
-            }
-        }
-        if ($callingFunc == '__construct') {
-            // we're being called from construct... subscribe
-            $this->debug->eventManager->subscribe('debug.bootstrap', $onBootstrap);
-        } else {
-            // boostrap has already occured, so go ahead and call
-            \call_user_func($onBootstrap, new Event($this->debug));
-        }
-        unset($this->cfg['onBootstrap']);
     }
 }

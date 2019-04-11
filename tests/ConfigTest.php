@@ -16,6 +16,7 @@ class ConfigTest extends DebugTestFramework
      */
     public function testGetCfg()
     {
+        $configKeys = array('debug', 'abstracter', 'errorEmailer', 'errorHandler', 'output');
         $abstracterKeys = array('cacheMethods', 'collectConstants', 'collectMethods', 'objectsExclude', 'objectSort', 'useDebugInfo');
         $debugKeys = array('collect', 'file', 'key', 'output', 'channel', 'enableProfiling', 'errorMask', 'emailFrom', 'emailFunc', 'emailLog', 'emailTo', 'logEnvInfo', 'logServerKeys', 'onLog', 'factories', 'services');
 
@@ -26,11 +27,15 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame('visibility', $this->debug->getCfg('abstracter.objectSort'));
         $this->assertSame('visibility', $this->debug->getCfg('abstracter/objectSort'));
 
-        $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter')));
+        $this->assertSame(null, $this->debug->getCfg('debug'));
+        $this->assertSame(null, $this->debug->getCfg('abstracter'));
         $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter/*')));
-        $this->assertSame($debugKeys, array_keys($this->debug->getCfg()));
-        $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug')));
+        $this->assertInternalType('boolean', $this->debug->getCfg('output'));       // debug/output
+        $this->assertInternalType('array', $this->debug->getCfg('output/*'));
+        $this->assertSame($configKeys, array_keys($this->debug->getCfg()));
+        $this->assertSame($configKeys, array_keys($this->debug->getCfg('*')));
         $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug/*')));
+        $this->assertSame(false, $this->debug->getCfg('logEnvInfo/cookies'));       // debug/logEnvInfo/cookies
     }
 
     /**

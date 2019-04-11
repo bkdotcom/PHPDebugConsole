@@ -11,7 +11,7 @@
 
 namespace bdk\Debug;
 
-use bdk\PubSub\Manager as EventManager;
+use bdk\Debug;
 
 /**
  * Methods used store array/object/resource info
@@ -19,7 +19,7 @@ use bdk\PubSub\Manager as EventManager;
 class Abstracter
 {
 
-    public $eventManager;
+    public $debug;
     protected $cfg = array();
     protected $abstractArray;
     protected $abstractObject;
@@ -31,12 +31,12 @@ class Abstracter
     /**
      * Constructor
      *
-     * @param EventManager $eventManager event manager
-     * @param array        $cfg          config options
+     * @param Debug $debug debug instance
+     * @param array $cfg   config options
      */
-    public function __construct(EventManager $eventManager, $cfg = array())
+    public function __construct(Debug $debug, $cfg = array())
     {
-        $this->eventManager = $eventManager;
+        $this->debug = $debug;  // we need debug instance so we can bubble events up channels
         $this->cfg = array(
             'cacheMethods' => true,
             'collectConstants' => true,

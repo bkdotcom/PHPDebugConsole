@@ -220,6 +220,7 @@ EOD;
                         fopen(__FILE__, 'r'),
                         array($this, __FUNCTION__),
                         function ($foo) {
+                            echo $foo;
                         },
                     ),
                 ),

@@ -16,6 +16,8 @@ foreach ($classMap as $old => $new) {
 
 require __DIR__.'/../vendor/autoload.php';
 
+ini_set("xdebug.var_display_max_data", -1);
+
 \bdk\Debug::getInstance(array(
 	'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
     'enableProfiling' => true,

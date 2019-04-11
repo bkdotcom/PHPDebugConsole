@@ -128,12 +128,12 @@ class Debug
         if ($errorHandler) {
             $cfg['services']['errorHandler'] = $errorHandler;
         }
-        if (isset($cfg['parent'])) {
-            $this->parentInstance = $cfg['parent'];
-            unset($cfg['parent']);
-        }
-        $this->__get('config')->setCfg($cfg);   // since is defined (albeit null), we need to call __get to initialize
         $this->internal;
+        $this->__get('config')->setCfg($cfg);   // since is defined (albeit null), we need to call __get to initialize
+        if (isset($this->cfg['parent'])) {
+            $this->parentInstance = $this->cfg['parent'];
+            unset($this->cfg['parent']);
+        }
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method
@@ -170,10 +170,6 @@ class Debug
         $this->rootInstance = $this;
         if (!$this->parentInstance) {
             $this->setLogDest();
-            /*
-                Publish bootstrap event
-            */
-            $this->eventManager->publish('debug.bootstrap', $this);
             $this->data['entryCountInitial'] = \count($this->data['log']);
         } else {
             while ($this->rootInstance->parentInstance) {
@@ -181,12 +177,16 @@ class Debug
             }
             $this->data = &$this->rootInstance->data;
         }
+        /*
+            Publish bootstrap event
+        */
+        $this->eventManager->publish('debug.bootstrap', $this);
     }
 
     /**
      * Magic method... inaccessible method called.
      *
-     * Treat as a custom method
+     * If method not found in internal class, treat as a custom method.
      *
      * @param string $methodName Inaccessible method name
      * @param array  $args       Arguments passed to method
@@ -195,6 +195,9 @@ class Debug
      */
     public function __call($methodName, $args)
     {
+        if (\method_exists($this->internal, $methodName)) {
+            \call_user_func_array(array($this->internal, $methodName), $args);
+        }
         return $this->appendLog(new LogEntry(
             $this,
             $methodName,
@@ -367,18 +370,7 @@ class Debug
         $this->methodClear->onLog($logEntry);
         // even if cleared from within summary, let's log this in primary log
         $this->setLogDest('log');
-        $collect = $this->cfg['collect'];
-        $this->cfg['collect'] = true;
-        if ($logEntry['appendLog']) {
-            $this->appendLog($logEntry);
-        } elseif ($logEntry['publish']) {
-            /*
-                Publish the debug.log event (regardless of cfg.collect)
-                don't actually log
-            */
-            $this->eventManager->publish('debug.log', $logEntry);
-        }
-        $this->cfg['collect'] = $collect;
+        $this->appendLog($logEntry, $logEntry['publish']);
         $this->setLogDest('auto');
     }
 
@@ -549,25 +541,16 @@ class Debug
             $this,
             __FUNCTION__,
             \func_get_args(),
-            array(
-                'channel' => $this->cfg['channel'],
-            ),
+            array(),
             array('value' => Abstracter::TYPE_UNDEFINED)
         );
         $value = $logEntry['args'][0];
         $logEntry['args'] = array();
         $groupStackWas = $this->rootInstance->groupStackRef;
-        $appendLog = false;
+        $haveOpenGroup = false;
         if ($groupStackWas && \end($groupStackWas)['collect'] == $this->cfg['collect']) {
             \array_pop($this->rootInstance->groupStackRef);
-            $appendLog = $this->cfg['collect'];
-        }
-        if ($appendLog && $value !== Abstracter::TYPE_UNDEFINED) {
-            $this->appendLog(new LogEntry(
-                $this,
-                'groupEndValue',
-                array('return', $value)
-            ));
+            $haveOpenGroup = $this->cfg['collect'];
         }
         if ($this->data['groupPriorityStack'] && !$groupStackWas) {
             // we're closing a summary group
@@ -579,9 +562,17 @@ class Debug
                 Publish the debug.log event (regardless of cfg.collect)
                 don't actually log
             */
+            $logEntry['appendLog'] = false;
             $logEntry->setMeta('closesSummary', true);
-            $this->eventManager->publish('debug.log', $logEntry);
-        } elseif ($appendLog) {
+            $this->appendLog($logEntry, true);
+        } elseif ($haveOpenGroup) {
+            if ($value !== Abstracter::TYPE_UNDEFINED) {
+                $this->appendLog(new LogEntry(
+                    $this,
+                    'groupEndValue',
+                    array('return', $value)
+                ));
+            }
             $this->appendLog($logEntry);
         }
         $errorCaller = $this->errorHandler->get('errorCaller');
@@ -611,9 +602,7 @@ class Debug
             $this,
             __FUNCTION__,
             \func_get_args(),
-            array(
-                'channel' => $this->cfg['channel'],
-            ),
+            array(),
             array(
                 'priority' => 0,
             ),
@@ -625,7 +614,8 @@ class Debug
             Publish the debug.log event (regardless of cfg.collect)
             don't actually log
         */
-        $this->eventManager->publish('debug.log', $logEntry);
+        $logEntry['appendLog'] = false;
+        $this->appendLog($logEntry, true);
     }
 
     /**
@@ -643,10 +633,7 @@ class Debug
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args(),
-            array(
-                'channel' => $this->cfg['channel'],
-            )
+            \func_get_args()
         );
         $curDepth = 0;
         foreach ($this->rootInstance->groupStackRef as $group) {
@@ -660,7 +647,8 @@ class Debug
             Publish the debug.log event (regardless of cfg.collect)
             don't actually log
         */
-        $this->eventManager->publish('debug.log', $logEntry);
+        $logEntry['appendLog'] = false;
+        $this->appendLog($logEntry, true);
     }
 
     /**
@@ -1117,23 +1105,38 @@ class Debug
      * Channels may have subchannels
      *
      * @param string $channelName channel name
+     * @param array  $config      channel specific configuration
      *
      * @return Debug
      */
-    public function getChannel($channelName)
+    public function getChannel($channelName, $config = array())
     {
         if (\strpos($channelName, '.') !== false) {
             $this->error('getChannel(): channelName should not contain period (.)');
             return $this;
         }
         if (!isset($this->channels[$channelName])) {
-            $cfg = \array_merge($this->cfg, array(
-                'channel' => $this->parentInstance
-                    ? $this->cfg['channel'].'.'.$channelName
-                    : $channelName,
-                'parent' => $this,
-            ));
+            // get inherited config
+            $cfg = $this->getCfg();
+            // remove config values that channel should not inherit
+            $cfg = \array_diff_key($cfg, \array_flip(array(
+                'errorEmailer',
+                'errorHandler',
+                'output',
+            )));
+            unset($cfg['debug']['onBootstrap']);
+            // set channel values
+            $cfg['debug']['channel'] = $this->parentInstance
+                ? $this->cfg['channel'].'.'.$channelName
+                : $channelName;
+            $cfg['debug']['parent'] = $this;
+            // instantiate channel
             $this->channels[$channelName] = new static($cfg);
+            // now update config with passed config
+            //   since passed config not yet "normalized", merging above not possible
+            if ($config) {
+                $this->channels[$channelName]->setCfg($config);
+            }
         }
         return $this->channels[$channelName];
     }
@@ -1443,13 +1446,14 @@ class Debug
      *   + publishes debug.log event
      *   + appends log (if event propagation not stopped)
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry     log entry instance
+     * @param boolean  $forcePublish (false) publish event event if collect is false
      *
      * @return void
      */
-    protected function appendLog(LogEntry $logEntry)
+    protected function appendLog(LogEntry $logEntry, $forcePublish = false)
     {
-        if (!$this->cfg['collect']) {
+        if (!$this->cfg['collect'] && !$forcePublish) {
             return;
         }
         $cfgRestore = array();
@@ -1465,17 +1469,13 @@ class Debug
                 $logEntry['args'][$i] = $this->abstracter->getAbstraction($v, $logEntry['method']);
             }
         }
-        $this->eventManager->publish('debug.log', $logEntry);
+        $this->internal->publishBubbleEvent('debug.log', $logEntry);
         if ($cfgRestore) {
             $this->config->setCfg($cfgRestore);
         }
-        if (!$logEntry['appendLog']) {
-            return $logEntry['return'];
+        if ($logEntry['appendLog']) {
+            $this->rootInstance->logRef[] = $logEntry;
         }
-        if ($this->parentInstance) {
-            return $this->parentInstance->appendLog($logEntry);
-        }
-        $this->rootInstance->logRef[] = $logEntry;
         return $logEntry['return'];
     }
 
@@ -1590,7 +1590,7 @@ class Debug
     {
         return array(
             'abstracter' => function (Debug $debug) {
-                return new Debug\Abstracter($debug->eventManager, $debug->config->getCfgLazy('abstracter'));
+                return new Debug\Abstracter($debug, $debug->config->getCfgLazy('abstracter'));
             },
             'config' => function (Debug $debug) {
                 return new Debug\Config($debug, $debug->cfg);    // cfg is passed by reference

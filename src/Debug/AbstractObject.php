@@ -48,8 +48,8 @@ class AbstractObject
     {
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
-        $abstracter->eventManager->subscribe('debug.objAbstractStart', array($this, 'onStart'));
-        $abstracter->eventManager->subscribe('debug.objAbstractEnd', array($this, 'onEnd'));
+        $abstracter->debug->eventManager->subscribe('debug.objAbstractStart', array($this, 'onStart'));
+        $abstracter->debug->eventManager->subscribe('debug.objAbstractEnd', array($this, 'onEnd'));
     }
 
     /**
@@ -115,7 +115,7 @@ class AbstractObject
             set stringified
             set traverseValues
         */
-        $abs = $this->abstracter->eventManager->publish('debug.objAbstractStart', $abs);
+        $abs = $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractStart', $abs);
         if (\array_filter(array($abs['isExcluded'], $abs->isPropagationStopped()))) {
             return \array_diff_key($abs->getValues(), $keysTemp);
         }
@@ -123,7 +123,7 @@ class AbstractObject
         /*
             debug.objAbstractEnd subscriber has free reign to modify abtraction array
         */
-        $return = $this->abstracter->eventManager->publish('debug.objAbstractEnd', $abs)->getValues();
+        $return = $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractEnd', $abs)->getValues();
         $this->sort($return['properties']);
         $this->sort($return['methods']);
         return \array_diff_key($return, $keysTemp);

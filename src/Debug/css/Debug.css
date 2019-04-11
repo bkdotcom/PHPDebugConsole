@@ -2,13 +2,13 @@
 	Base debug CSS
 	use setCfg('css', 'more css'); to add rules / override default
 */
-.debug { position: relative; clear: both; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: .6em; line-height: normal; text-shadow: none; color: #111; }
+.debug { position: relative; clear: both; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: normal; text-shadow: none; color: #111; }
 .debug * { font-size: inherit; line-height: normal; text-indent: 0; color: inherit; }
 .debug a { text-decoration: none; color: #00e; }
 .debug a:visited { color: #551a8b; }
 .debug a:focus, .debug a:hover { text-decoration: underline; }
 .debug a:active, .debug a:hover { outline: 0; color: #e00; }
-.debug button { color: inherit; cursor: pointer; font-family: inherit; outline: none; }
+.debug button { color: inherit; cursor: pointer; font-family: inherit; outline: none; vertical-align: baseline; }
 .debug button:hover { background-color: #DDE6F0; }
 .debug code { padding: 2px 4px; background-color: transparent; font-family: Menlo,Monaco,Consolas,"Courier New",monospace; }
 .debug dl { margin-top: 0; margin-bottom: 0; }

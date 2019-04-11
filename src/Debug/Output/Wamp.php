@@ -214,7 +214,7 @@ class Wamp implements OutputInterface
     private function processExistingData()
     {
         $data = $this->debug->getData();
-        $this->channelName = $this->debug->getCfg('channel');
+        $channelName = $this->debug->getCfg('channel');
         foreach ($data['alerts'] as $logEntry) {
             $this->processLogEntryWEvent($logEntry);
         }
@@ -223,7 +223,10 @@ class Wamp implements OutputInterface
                 $this->debug,
                 'groupSummary',
                 array(),
-                array('priority'=>$priority)
+                array(
+                    'channel' => $channelName,
+                    'priority'=>$priority
+                )
             ));
             foreach ($entries as $logEntry) {
                 $this->processLogEntryWEvent($logEntry);
@@ -232,7 +235,10 @@ class Wamp implements OutputInterface
                 $this->debug,
                 'groupEnd',
                 array(),
-                array('closesSummary'=>true)
+                array(
+                    'channel' => $channelName,
+                    'closesSummary'=>true,
+                )
             ));
         }
         foreach ($data['log'] as $logEntry) {

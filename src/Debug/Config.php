@@ -129,7 +129,7 @@ class Config
                 $outputAs = $this->cfgLazy['output']['outputAs'];
                 unset($this->cfgLazy['output']['outputAs']);
                 // this will autoload output, which will pull in cfgLazy...
-                //   we then set ouputAs
+                //   we then set outputAs
                 $this->debug->output->setCfg('outputAs', $outputAs);
             }
         }

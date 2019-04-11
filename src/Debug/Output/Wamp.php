@@ -225,7 +225,7 @@ class Wamp implements OutputInterface
                 array(),
                 array(
                     'channel' => $channelName,
-                    'priority'=>$priority
+                    'priority' => $priority,
                 )
             ));
             foreach ($entries as $logEntry) {
@@ -237,7 +237,7 @@ class Wamp implements OutputInterface
                 array(),
                 array(
                     'channel' => $channelName,
-                    'closesSummary'=>true,
+                    'closesSummary' => true,
                 )
             ));
         }

@@ -488,10 +488,10 @@
 		for (val in labels) {
 			haveEntry = val == "other"
 				? $entries.not(".m_alert, .m_error, .m_warn, .m_info").length > 0
-				: $entries.filter(".m_"+val).length > 0;
+				: $entries.filter(".m_"+val).not("[data-channel=phpError]").length > 0;
 			$filters.append(
-				$("<li>").append(
-					$('<label class="toggle active disabled" />').toggleClass("disabled", !haveEntry).append(
+				$('<li />').append(
+					$('<label class="toggle active" />').toggleClass("disabled", !haveEntry).append(
 						$("<input />", {
 							type: "checkbox",
 							checked: true,
@@ -499,12 +499,13 @@
 							value: val
 						})
 					).append(
-						labels[val]
+						$("<span>").append(
+							labels[val]
+						)
 					)
 				)
 			);
 		}
-
 	}
 
 	/**
@@ -541,17 +542,21 @@
 			$errorSummary = $root$2.find(".m_alert.error-summary"),
 			haveFatal = $root$2.find(".m_error.error-fatal").length > 0;
 		if (haveFatal) {
-			$togglesUl.append('<li class="toggle active"><label>\
+			$togglesUl.append('<li><label class="toggle active">\
 			<input type="checkbox" checked data-toggle="error" value="error-fatal" />fatal <span class="badge">1</span>\
 			</label></li>');
 		}
 		$errorSummary.find("label").each(function(){
-			var $li = $(this).parent().addClass("toggle active"),
+			var $li = $(this).parent(),	 // addClass("toggle active"),
 				$checkbox = $(this).find("input"),
-				val = $checkbox.val().replace("error-", ""),
-				html = "<label>" + $checkbox[0].outerHTML + val + ' <span class="badge">' + $checkbox.data("count") + "</span></label>";
-			$li.html(html);
-			$togglesUl.append($li);
+				val = $checkbox.val().replace("error-", "");
+			$togglesUl.append(
+				$("<li>").append(
+					$('<label class="toggle active">').html(
+						$checkbox[0].outerHTML + val + ' <span class="badge">' + $checkbox.data("count") + "</span>"
+					)
+				)
+			);
 		});
 		if ($togglesUl.children().length === 0) {
 			$togglesUl.parent().hide();

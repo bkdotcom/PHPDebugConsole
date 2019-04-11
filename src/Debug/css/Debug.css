@@ -2,6 +2,7 @@
 	Base debug CSS
 	use setCfg('css', 'more css'); to add rules / override default
 */
+.debug { font-size: 13px; }
 .debug { position: relative; clear: both; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: normal; text-shadow: none; color: #111; }
 .debug * { font-size: inherit; line-height: normal; text-indent: 0; color: inherit; }
 .debug a { text-decoration: none; color: #00e; }
@@ -156,7 +157,11 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-options hr.dropdown-divider { margin: .5em 0 .5em -15px; background: #d0d0d0; height: 1px; border: none; }
 .debug { transform: scale(1); }
 .debug .badge { display: inline-block; padding: .25em .4em .16em; font-size: 82%; font-weight: 500; line-height: 1; text-align: center; white-space: nowrap; vertical-align: bottom; border-radius: .25rem; color: #fff; background-color: #666; }
-.debug .debug-sidebar { position: fixed; box-sizing: border-box; width: 126px; background: #f3f3f3; height: 100%; padding: 4px 11px 0 4px; transform: translateX(-119px); transition: transform 0.33s; }
+.debug .debug-sidebar { position: fixed; box-sizing: border-box; width: 126px; background: #f3f3f3; height: 100%; padding: 4px 11px 0 4px; transform: translateX(-119px); transition: transform 0.33s; /*
+.expand-all {
+	font-size: 1.25em;
+}
+*/ }
 .debug .debug-sidebar + .debug-body { margin-left: 6px; padding-left: 10px; transition: margin-left 0.33s; }
 .debug .debug-sidebar.no-transition + .debug-body { transition: none; }
 .debug .debug-sidebar .collapse { display: none; }
@@ -170,11 +175,14 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-sidebar .debug-filters { position: relative; margin: 0 -4px 10px -4px; }
 .debug .debug-sidebar .debug-filters ul { margin-left: 0; }
 .debug .debug-sidebar .debug-filters li { padding-left: 10px; }
+.debug .debug-sidebar .debug-filters > li { padding-left: 8px; }
 .debug .debug-sidebar .debug-filters label { padding: 2px 0 2px 100%; }
-.debug .debug-sidebar .debug-filters label.disabled { color: #818a91; }
+.debug .debug-sidebar .debug-filters label.disabled span { /*
+color: #818a91
+*/ opacity: 0.5; }
 .debug .debug-sidebar .debug-filters > li > *:first-child { padding-top: 3px; padding-bottom: 3px; }
 .debug .debug-sidebar .debug-filters > li > ul { margin-left: -10px; }
-.debug .debug-sidebar .debug-filters > li > ul > li { padding-left: 34px; }
+.debug .debug-sidebar .debug-filters > li > ul > li { padding-left: 32px; }
 .debug .debug-sidebar .debug-filters label, .debug .debug-sidebar .debug-filters ul ul { margin-left: -100%; padding-left: 100%; }
 .debug .debug-sidebar .fa-times-circle { color: #d8000c; }
 .debug .debug-sidebar .fa-warning { color: #8a6d3b; }
@@ -187,7 +195,6 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-sidebar .toggle.active:hover { background: #bacce0; }
 .debug .debug-sidebar .toggle:hover, .debug .debug-sidebar .toggle:hover + ul { background: #DDE6F0; }
 .debug .debug-sidebar .toggle:hover .toggle.active, .debug .debug-sidebar .toggle:hover + ul .toggle.active { background: #bacce0; }
-.debug .debug-sidebar .expand-all { font-size: 1.25em; }
 .debug .debug-body > .expand-all { margin-bottom: .5em; }
 .debug .error-fatal:before { padding-left: 1.25em; }
 .debug .error-fatal i.fa-times-circle { position: absolute; top: .7em; }

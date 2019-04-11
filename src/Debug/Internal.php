@@ -277,7 +277,7 @@ class Internal implements SubscriberInterface
     public function onBootstrap()
     {
         if ($this->debug->parentInstance) {
-            // only recored php/request info for root instance
+            // only record php/request info for root instance
             return;
         }
         $collectWas = $this->debug->setCfg('collect', true);
@@ -387,6 +387,10 @@ class Internal implements SubscriberInterface
      */
     public function onOutput()
     {
+        if ($this->debug->parentInstance) {
+            // only record runtime info for root instance
+            return;
+        }
         $vals = $this->runtimeVals();
         $this->debug->groupSummary(1);
         $this->debug->info('Built In '.$vals['runtime'].' sec');

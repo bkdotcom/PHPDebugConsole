@@ -51,6 +51,23 @@ class StatementInfo
     }
 
     /**
+     * Magic method
+     *
+     * @return array
+     */
+    public function __debugInfo()
+    {
+        return array(
+            'duration' => $this->duration,
+            'exception' => $this->exception,
+            'memoryUsage' => $this->memoryUsage,
+            'parameters' => $this->parameters,
+            'rowCount' => $this->rowCount,
+            'sql' => $this->sql,
+        );
+    }
+
+    /**
      * Magic getter
      *
      * @param string $name property name

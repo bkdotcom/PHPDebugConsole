@@ -1,5 +1,7 @@
 <?php
 
+use bdk\PubSub\Event;
+
 /**
  * PHPUnit tests for Debug Channels
  */
@@ -217,12 +219,20 @@ EOD;
             </div>
         </div>
 EOD;
+        $this->eventCounter = array();
+        $this->debugFoo->eventManager->subscribe('debug.output', function (Event $event) {
+            $channel = $event->getSubject()->getCfg('channel');
+            $this->eventCounter[$channel.'.debug.output'] = isset($this->eventCounter[$channel.'.debug.output'])
+                ? $this->eventCounter[$channel.'.debug.output'] + 1
+                : 1;
+        });
         $this->outputTest(array(
             'html' => $htmlFoo,
         ), $this->debugFoo);
         $this->outputTest(array(
             'html' => $html,
         ), $this->debug);
+        $this->assertSame(2, $this->eventCounter['foo.debug.output']);
     }
 
     protected function genLog(\bdk\Debug $clearer = null, $bitmask = null)

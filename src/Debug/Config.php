@@ -377,7 +377,6 @@ class Config
                 break;
             }
             if ($path[0] == $objName && !empty($path[1])) {
-                // $path[] = '*';
                 $found = true;
                 break;
             }

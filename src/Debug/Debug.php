@@ -1166,12 +1166,27 @@ class Debug
     /**
      * Return array of channels
      *
-     * Only this instances immediate sub-channels are returned, not the entire channel "tree"
+     * If $allDescendants == true :  key = "fully qualified" channel name
+     *
+     * Does not return self
+     *
+     * @param boolean $allDescendants (false) include all descendants?
      *
      * @return array
      */
-    public function getChannels()
+    public function getChannels($allDescendants = false)
     {
+        if ($allDescendants) {
+            $channels = array();
+            foreach ($this->channels as $channel) {
+                $channels = \array_merge(
+                    $channels,
+                    array($channel->getCfg('channel') => $channel),
+                    $channel->getChannels(true)
+                );
+            }
+            return $channels;
+        }
         return $this->channels;
     }
 
@@ -1300,21 +1315,30 @@ class Debug
         if (\is_string($outputAs)) {
             $this->output->setCfg('outputAs', $outputAs);
         }
-        $event = $this->eventManager->publish(
-            'debug.output',
-            $this,
-            array(
-                'headers' => array(),
-                'return' => '',
-            )
-        );
-        $headers = $event['headers'];
+        /*
+            Publish debug.output on all descendant channels and then ourself
+        */
+        $channels = $this->getChannels(true);
+        $channels[] = $this;
+        $headers = array();
+        foreach ($channels as $channel) {
+            $event = $channel->eventManager->publish(
+                'debug.output',
+                $channel,
+                array(
+                    'headers' => array(),
+                    'return' => '',
+                    'isTarget' => $channel === $this,
+                )
+            );
+            $headers = \array_merge($headers, $event['headers']);
+        }
         if (!$this->getCfg('outputHeaders') || !$headers) {
             $this->data['headers'] = \array_merge($this->data['headers'], $event['headers']);
         } elseif (\headers_sent($file, $line)) {
             \trigger_error('PHPDebugConsole: headers already sent: '.$file.', line '.$line, E_USER_NOTICE);
         } else {
-            foreach ($event['headers'] as $nameVal) {
+            foreach ($headers as $nameVal) {
                 \header($nameVal[0].': '.$nameVal[1]);
             }
         }

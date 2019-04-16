@@ -40,6 +40,7 @@
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",
 		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",
-		"psr/log": "PSR-3 : Common interface for logging libraries"
+		"psr/log": "PSR-3 : Common interface for logging libraries",
+		"jdorn/sql-formatter": "A PHP class for formatting and highlighting SQL statements"
 	}
 }

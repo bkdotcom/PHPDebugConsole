@@ -81,12 +81,15 @@ class DebugTest extends DebugTestFramework
             'entry' => array(
                 'warn',
                 array(
-                    'Runtime Notice (E_STRICT): '.__FILE__.' (line '.$lastError['line'].'): ',
+                    (version_compare(PHP_VERSION, '7.0', '>=')
+                        ? 'Notice: '.__FILE__.' (line '.$lastError['line'].'): '
+                        : 'Runtime Notice (E_STRICT): '.__FILE__.' (line '.$lastError['line'].'): '
+                    ),
                     'Only variables should be passed by reference',
                 ),
                 array(
-                    'errorType' => 2048,
-                    'errorCat' => 'strict',
+                    'errorType' => version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
+                    'errorCat' => version_compare(PHP_VERSION, '7.0', '>=') ? 'notice' : 'strict',
                     'errorHash' => $lastError['hash'],
                     // 'file' => __FILE__,
                     // 'line' => $lastError['line'],

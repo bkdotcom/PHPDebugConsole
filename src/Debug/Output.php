@@ -155,14 +155,21 @@ class Output implements SubscriberInterface
      */
     public function onOutput(Event $event)
     {
+        if (!$event['isTarget']) {
+            /*
+                All channels share the same data.
+                We only need to do this via the channel that called output
+            */
+            return;
+        }
         $this->data = $this->debug->getData();
         $this->closeOpenGroups();
+        $this->removeHideIfEmptyGroups($this->data['log']);
+        $this->uncollapseErrors($this->data['log']);
         foreach ($this->data['logSummary'] as &$log) {
             $this->removeHideIfEmptyGroups($log);
             $this->uncollapseErrors($log);
         }
-        $this->removeHideIfEmptyGroups($this->data['log']);
-        $this->uncollapseErrors($this->data['log']);
         $this->debug->setData($this->data);
     }
 

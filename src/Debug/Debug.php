@@ -1307,6 +1307,7 @@ class Debug
                 array(
                     'headers' => array(),
                     'return' => '',
+                    'isTarget' => $channel === $this,
                 )
             );
             $headers = \array_merge($headers, $event['headers']);

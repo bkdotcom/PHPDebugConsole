@@ -341,7 +341,7 @@ class Pdo extends PdoBase
      */
     public function getTimeSpent()
     {
-        $time = \array_reduce($this->loggedStatements, function ($val, $info) {
+        $time = \array_reduce($this->loggedStatements, function ($val, StatementInfo $info) {
             return $val + $info->duration;
         });
         return \round($time, 6);
@@ -354,7 +354,7 @@ class Pdo extends PdoBase
      */
     public function getPeakMemoryUsage()
     {
-        return \array_reduce($this->loggedStatements, function ($carry, $info) {
+        return \array_reduce($this->loggedStatements, function ($carry, StatementInfo $info) {
             $mem = $info->memoryUsage;
             return $mem > $carry
                 ? $mem

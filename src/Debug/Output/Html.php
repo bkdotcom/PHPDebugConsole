@@ -397,17 +397,30 @@ class Html extends Base
     {
         $str = '';
         if (\in_array($method, array('group','groupCollapsed'))) {
-            $label = \array_shift($args);
+            $argsAsParams = isset($meta['argsAsParams'])
+                ? $meta['argsAsParams']
+                : true;
             $levelClass = isset($meta['level'])
                 ? 'level-'.$meta['level']
                 : null;
-            if (!empty($meta['isMethodName'])) {
-                $label = $this->markupClassname($label);
-            }
+            $label = \array_shift($args);
             foreach ($args as $k => $v) {
                 $args[$k] = $this->dump($v);
             }
             $argStr = \implode(', ', $args);
+            if ($argsAsParams) {
+                if (!empty($meta['isMethodName'])) {
+                    $label = $this->markupClassname($label);
+                }
+                $argStr = '<span class="group-label">'.$label.'(</span>'
+                    .$argStr
+                    .'<span class="group-label">)</span>';
+                $argStr = \str_replace('(</span><span class="group-label">)', '', $argStr);
+            } else {
+                $argStr = '<span class="group-label">'.$label.':</span> '
+                    .$argStr;
+                $argStr = \preg_replace("#:</span> $#", '</span>', $argStr);
+            }
             $str .= '<li'.$this->debug->utilities->buildAttribString(array(
                 'class' => 'm_group',
                 'data-channel' => $meta['channel'],
@@ -426,12 +439,7 @@ class Html extends Base
                         $levelClass,
                     ),
                 ),
-                '<span class="group-label">'
-                    .$label
-                    .(!empty($argStr)
-                        ? '(</span>'.$argStr.'<span class="group-label">)'
-                        : '')
-                .'</span>'
+                $argStr
             )."\n";
             /*
                 Group open

@@ -5,7 +5,7 @@ namespace bdk\Debug\Collector\Pdo;
 use PDO as PdoBase;   // PDO conflicts with namespace
 use PDOException;
 use PDOStatement;
-use bdk\Debug\Collector\Pdo\Pdo as DebugCollectorPdo;
+use bdk\Debug\Collector\Pdo as DebugCollectorPdo;
 
 /**
  * Debuggable PDOStatement
@@ -105,26 +105,23 @@ class Statement extends PDOStatement
         }
 
         $info = new StatementInfo($this->queryString, $boundParameters, $preparedId);
+        $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;
 
         $exception = null;
         try {
             $result = parent::execute($inputParameters);
+            if (!$isExceptionMode && $result === false) {
+                $error = $this->errorInfo();
+                $exception = new PDOException($error[2], (int) $error[0]);
+            }
         } catch (PDOException $e) {
             $exception = $e;
         }
 
-        if ($this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) !== PdoBase::ERRMODE_EXCEPTION && $result === false) {
-            $error = $this->errorInfo();
-            $exception = new PDOException($error[2], (int) $error[0]);
-        }
-
         $info->end($exception, $this->rowCount());
-        // $this->pdo->addExecutedStatement($trace);
-        $this->pdo->debug->info($info);
-        // \bdk\Debug::_info($info);
-        // $this->pdo->debug->log('sql', $info->sqlWithParams);
+        $this->pdo->addStatementInfo($info);
 
-        if ($this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION && $exception) {
+        if ($isExceptionMode && $exception) {
             throw $exception;
         }
         return $result;

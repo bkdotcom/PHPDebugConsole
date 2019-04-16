@@ -1,10 +1,12 @@
 <?php
 
-namespace bdk\Debug\Collector\Pdo;
+namespace bdk\Debug\Collector;
 
 use PDO as PdoBase;
 use PDOException;
 use bdk\Debug;
+use bdk\PubSub\Event;
+use bdk\Debug\Collector\Pdo\StatementInfo;
 
 /**
  * A PDO proxy which traces statements
@@ -13,7 +15,7 @@ class Pdo extends PdoBase
 {
     public $debug;
     protected $pdo;
-    protected $executedStatements = array();
+    protected $loggedStatements = array();
 
     /**
      * Constructor
@@ -33,6 +35,7 @@ class Pdo extends PdoBase
         $this->pdo = $pdo;
         $this->debug = $debug;
         $this->pdo->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, array('bdk\Debug\Collector\Pdo\Statement', array($this)));
+        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'));
     }
 
     /**
@@ -71,6 +74,45 @@ class Pdo extends PdoBase
     public function __set($name, $value)
     {
         $this->pdo->$name = $value;
+    }
+
+    /**
+     * debug.output subscriber
+     *
+     * @param Event $event event instance
+     *
+     * @return void
+     */
+    public function onDebugOutput(Event $event)
+    {
+        $debug = $event->getSubject();
+        // parse server info
+        \preg_match_all(
+            '/([^:]+): ([a-zA-Z0-9.]+)\s*/',
+            $this->pdo->getAttribute(PDO::ATTR_SERVER_INFO),
+            $matches
+        );
+        $serverInfo = \array_map(function ($val) {
+            return $val * 1;
+        }, \array_combine($matches[1], $matches[2]));
+        $serverInfo['Version'] = $this->pdo->getAttribute(PDO::ATTR_SERVER_VERSION);
+        \ksort($serverInfo);
+        $debug->groupSummary(0);
+        $debug->group(
+            'PDO info',
+            $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME),
+            $this->pdo->getAttribute(PDO::ATTR_CONNECTION_STATUS),
+            $debug->meta(array(
+                'level' => 'info',
+                'argsAsParams' => false,
+            ))
+        );
+        $debug->log('logged operations: ', \count($this->loggedStatements));
+        $debug->log('total time: ', $this->getTimeSpent());
+        $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));
+        $debug->log('server info', $serverInfo);
+        $debug->groupEnd();
+        $debug->groupEnd();
     }
 
     /**
@@ -256,100 +298,77 @@ class Pdo extends PdoBase
      */
     protected function profileCall($method, $sql, array $args)
     {
-        $trace = new TracedStatement($sql);
-        $trace->start();
+        $info = new StatementInfo($sql);
+        $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;
 
         $exception = null;
         try {
             $result = \call_user_func_array(array($this->pdo, $method), $args);
+            if (!$isExceptionMode && $result === false) {
+                $error = $this->pdo->errorInfo();
+                $exception = new PDOException($error[2], $error[0]);
+            }
         } catch (PDOException $e) {
             $exception = $e;
         }
 
-        if ($this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) !== PdoBase::ERRMODE_EXCEPTION && $result === false) {
-            $error = $this->pdo->errorInfo();
-            $exception = new PDOException($error[2], $error[0]);
-        }
+        $info->end($exception);
+        $this->addStatementInfo($info);
 
-        $trace->end($exception);
-        // $this->addExecutedStatement($trace);
-
-        if ($this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION && $exception !== null) {
+        if ($isExceptionMode && $exception !== null) {
             throw $exception;
         }
-
         return $result;
     }
 
     /**
      * Adds an executed TracedStatement
      *
-     * @param TracedStatement $stmt
+     * @param StatementInfo $info statement info instance
+     *
+     * @return void
      */
-    /*
-    public function addExecutedStatement(TracedStatement $stmt)
+    public function addStatementInfo(StatementInfo $info)
     {
-        $this->executedStatements[] = $stmt;
+        $this->loggedStatements[] = $info;
+        $this->debug->log($info);
     }
-    */
 
     /**
      * Returns the accumulated execution time of statements
      *
      * @return integer
      */
-    /*
-    public function getAccumulatedStatementsDuration()
+    public function getTimeSpent()
     {
-        return \array_reduce($this->executedStatements, function ($v, $s) { return $v + $s->getDuration(); });
+        $time = \array_reduce($this->loggedStatements, function ($val, $info) {
+            return $val + $info->duration;
+        });
+        return \round($time, 6);
     }
-    */
 
     /**
      * Returns the peak memory usage while performing statements
      *
      * @return integer
      */
-    /*
-    public function getMemoryUsage()
-    {
-        return \array_reduce($this->executedStatements, function ($v, $s) { return $v + $s->getMemoryUsage(); });
-    }
-    */
-
-    /**
-     * Returns the peak memory usage while performing statements
-     *
-     * @return integer
-     */
-    /*
     public function getPeakMemoryUsage()
     {
-        return \array_reduce($this->executedStatements, function ($v, $s) { $m = $s->getEndMemory(); return $m > $v ? $m : $v; });
+        return \array_reduce($this->loggedStatements, function ($carry, $info) {
+            $mem = $info->memoryUsage;
+            return $mem > $carry
+                ? $mem
+                : $carry;
+        });
     }
-    */
 
     /**
      * Returns the list of executed statements as TracedStatement objects
      *
      * @return array
      */
-    /*
-    public function getExecutedStatements()
+    public function getLoggedStatements()
     {
-        return $this->executedStatements;
+        return $this->loggedStatements;
     }
-    */
-
-    /**
-     * Returns the list of failed statements
-     *
-     * @return array
-     */
-    /*
-    public function getFailedExecutedStatements()
-    {
-        return \array_filter($this->executedStatements, function ($s) { return !$s->isSuccess(); });
-    }
-    */
 }

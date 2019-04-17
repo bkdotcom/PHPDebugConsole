@@ -98,7 +98,9 @@ class DebugTest extends DebugTestFramework
                     'channel' => 'phpError',
                 ),
             ),
-            'html' => '<li class="error-strict m_warn" data-channel="phpError"><span class="no-pseudo t_string">Runtime Notice (E_STRICT): '.__FILE__.' (line '.$lastError['line'].'): </span><span class="t_string">Only variables should be passed by reference</span></li>',
+            'html' => '<li class="error-notice m_warn" data-channel="phpError">'
+                .'<span class="no-pseudo t_string">'.(version_compare(PHP_VERSION, '7.0', '>=') ? 'Notice' : 'Runtime Notice (E_STRICT)' ).': '.__FILE__.' (line '.$lastError['line'].'): </span><span class="t_string">Only variables should be passed by reference</span>'
+                .'</li>',
         ));
     }
 

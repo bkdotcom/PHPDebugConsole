@@ -78,7 +78,7 @@ class DebugTest extends DebugTestFramework
         $strict = array_pop(explode('-', 'hello-world'));   // Only variables should be passed by reference
         $lastError = $this->debug->errorHandler->get('lastError');
         $typeFileLine = version_compare(PHP_VERSION, '7.0', '>=')
-            ? 'Notice: '.__FILE__.' (line '.$lastError['line'].'): '
+            ? 'Notice: '.__FILE__.' (line '.$lastError['line'].')'
             : 'Runtime Notice (E_STRICT): '.__FILE__.' (line '.$lastError['line'].')';
         $errCat = version_compare(PHP_VERSION, '7.0', '>=')
             ? 'notice'

@@ -77,19 +77,23 @@ class DebugTest extends DebugTestFramework
         parent::$allowError = true;
         $strict = array_pop(explode('-', 'hello-world'));   // Only variables should be passed by reference
         $lastError = $this->debug->errorHandler->get('lastError');
+        $typeFileLine = version_compare(PHP_VERSION, '7.0', '>=')
+            ? 'Notice: '.__FILE__.' (line '.$lastError['line'].'): '
+            : 'Runtime Notice (E_STRICT): '.__FILE__.' (line '.$lastError['line'].')';
+        $errCat = version_compare(PHP_VERSION, '7.0', '>=')
+            ? 'notice'
+            : 'strict';
+        $errMsg = 'Only variables should be passed by reference';
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'warn',
                 array(
-                    (version_compare(PHP_VERSION, '7.0', '>=')
-                        ? 'Notice: '.__FILE__.' (line '.$lastError['line'].'): '
-                        : 'Runtime Notice (E_STRICT): '.__FILE__.' (line '.$lastError['line'].'): '
-                    ),
-                    'Only variables should be passed by reference',
+                    $typeFileLine.': ',
+                    $errMsg,
                 ),
                 array(
                     'errorType' => version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
-                    'errorCat' => version_compare(PHP_VERSION, '7.0', '>=') ? 'notice' : 'strict',
+                    'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],
                     // 'file' => __FILE__,
                     // 'line' => $lastError['line'],
@@ -98,8 +102,8 @@ class DebugTest extends DebugTestFramework
                     'channel' => 'phpError',
                 ),
             ),
-            'html' => '<li class="error-notice m_warn" data-channel="phpError">'
-                .'<span class="no-pseudo t_string">'.(version_compare(PHP_VERSION, '7.0', '>=') ? 'Notice' : 'Runtime Notice (E_STRICT)' ).': '.__FILE__.' (line '.$lastError['line'].'): </span><span class="t_string">Only variables should be passed by reference</span>'
+            'html' => '<li class="error-'.$errCat.' m_warn" data-channel="phpError">'
+                .'<span class="no-pseudo t_string">'.$typeFileLine.': </span><span class="t_string">'.$errMsg.'</span>'
                 .'</li>',
         ));
     }

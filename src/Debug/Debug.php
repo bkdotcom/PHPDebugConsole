@@ -615,7 +615,8 @@ class Debug
             don't actually log
         */
         $logEntry['appendLog'] = false;
-        $this->appendLog($logEntry, true);
+        // groupSumary's debug.log event should happen on the root instance
+        $this->rootInstance->appendLog($logEntry, true);
     }
 
     /**

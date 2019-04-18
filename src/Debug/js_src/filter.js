@@ -81,5 +81,12 @@ function applyFilter($root) {
 		}
 		$node.toggleClass("filter-hidden", !show);
 	});
+	/*
+		Collapsed groups may get filter-hidden..
+		this may result in exposing entries in that group that have yet to be enhanced
+	*/
+	$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body > li:not(.filter-hidden):not(.enhanced)").each(function(){
+		$(this).debugEnhance();
+	});
 }
 

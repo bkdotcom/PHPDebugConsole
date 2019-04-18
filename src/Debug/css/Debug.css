@@ -201,7 +201,7 @@ color: #818a91
 .debug .filter-hidden { display: none; }
 .debug .filter-hidden.m_group { display: list-item; }
 .debug .filter-hidden.m_group > .group-header { display: none; }
-.debug .filter-hidden.m_group > .group-body { margin-left: 0; border-left: 0; padding-left: 0; }
+.debug .filter-hidden.m_group > .group-body { display: block !important; margin-left: 0; border-left: 0; padding-left: 0; }
 .debug .debug-body i.fa, .debug .m_assert i { margin-right: .33em; }
 .debug .m_assert > i { position: relative; top: -.20em; }
 .debug i.fa-plus-circle { opacity: 0.42; }

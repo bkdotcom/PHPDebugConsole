@@ -301,6 +301,7 @@ class Pdo extends PdoBase
         $info = new StatementInfo($sql);
         $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;
 
+        $result = null;
         $exception = null;
         try {
             $result = \call_user_func_array(array($this->pdo, $method), $args);

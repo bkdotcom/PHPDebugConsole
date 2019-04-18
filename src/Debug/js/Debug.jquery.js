@@ -286,6 +286,13 @@
 			}
 			$node.toggleClass("filter-hidden", !show);
 		});
+		/*
+			Collapsed groups may get filter-hidden..
+			this may result in exposing entries in that group that have yet to be enhanced
+		*/
+		$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body > li:not(.filter-hidden):not(.enhanced)").each(function(){
+			$(this).debugEnhance();
+		});
 	}
 
 	var $root$1, options$1;
@@ -547,7 +554,7 @@
 			</label></li>');
 		}
 		$errorSummary.find("label").each(function(){
-			var $li = $(this).parent(),	 // addClass("toggle active"),
+			var $li = $(this).parent(),
 				$checkbox = $(this).find("input"),
 				val = $checkbox.val().replace("error-", "");
 			$togglesUl.append(

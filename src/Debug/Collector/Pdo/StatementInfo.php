@@ -2,6 +2,8 @@
 
 namespace bdk\Debug\Collector\Pdo;
 
+use SqlFormatter;       // optional library
+
 /**
  * Holds information about a statement
  *
@@ -10,6 +12,8 @@ namespace bdk\Debug\Collector\Pdo;
  * @property-read string    $errorMessage
  * @property-read Exception $exception
  * @property-read string    $id
+ * @property-read boolean   $isPrepared
+ * @property-read boolean   $isSuccess
  * @property-read integer   $memoryEnd
  * @property-read integer   $memoryStart
  * @property-read integer   $memoryUsage
@@ -48,6 +52,10 @@ class StatementInfo
         $this->id = $id;
         $this->timeStart = \microtime(true);
         $this->memoryStart = \memory_get_usage(false);
+        if (\class_exists('\SqlFormatter')) {
+            // whitespace only, don't hightlight
+            $this->sql = SqlFormatter::format($this->sql, false);
+        }
     }
 
     /**
@@ -79,6 +87,8 @@ class StatementInfo
         $getter = 'get'.\ucfirst($name);
         if (\method_exists($this, $getter)) {
             return $this->$getter();
+        } elseif (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {
+            return $this->$name();
         } elseif (isset($this->$name)) {
             return $this->{$name};
         } else {
@@ -102,162 +112,6 @@ class StatementInfo
         $this->memoryEnd = $memoryEnd ?: \memory_get_usage(false);
         $this->duration = $this->timeEnd - $this->timeStart;
         $this->memoryUsage = $this->memoryEnd - $this->memoryStart;
-    }
-
-    /**
-     * Check parameters for illegal (non UTF-8) strings, like Binary data.
-     *
-     * @param array $params
-     *
-     * @return mixed
-     */
-    /*
-    public function checkParameters($params)
-    {
-        foreach ($params as &$param) {
-            if (!\mb_check_encoding($param, 'UTF-8')) {
-                $param = '[BINARY DATA]';
-            }
-        }
-        return $params;
-    }
-    */
-
-    /**
-     * Returns the SQL string used for the query
-     *
-     * @return string
-     */
-    /*
-    public function getSql()
-    {
-        return $this->sql;
-    }
-    */
-
-    /**
-     * Returns the number of rows affected/returned
-     *
-     * @return integer
-     */
-    /*
-    public function getRowCount()
-    {
-        return $this->rowCount;
-    }
-    */
-
-    /**
-     * Returns an array of parameters used with the query
-     *
-     * @return array
-     */
-    /*
-    public function getParameters()
-    {
-        // $params = array();
-        // foreach ($this->parameters as $name => $param) {
-        //     $params[$name] = \htmlentities($param, ENT_QUOTES, 'UTF-8', false);
-        // }
-        // return $params;
-        return $this->parameters;
-    }
-    */
-
-    /**
-     * Returns the prepared statement id
-     *
-     * @return string
-     */
-    /*
-    public function getPreparedId()
-    {
-        return $this->preparedId;
-    }
-    */
-
-    /**
-     * @return mixed
-     */
-    /*
-    public function getStartTime()
-    {
-        return $this->startTime;
-    }
-    */
-
-    /**
-     * @return mixed
-     */
-    /*
-    public function getEndTime()
-    {
-        return $this->endTime;
-    }
-    */
-
-    /**
-     * Returns the duration in seconds of the execution
-     *
-     * @return integer
-     */
-    /*
-    public function getDuration()
-    {
-        return $this->duration;
-    }
-    */
-
-    /**
-     * @return mixed
-     */
-    /*
-    public function getStartMemory()
-    {
-        return $this->startMemory;
-    }
-    */
-
-    /**
-     * @return mixed
-     */
-    /*
-    public function getEndMemory()
-    {
-        return $this->endMemory;
-    }
-    */
-
-    /**
-     * Returns the exception triggered
-     *
-     * @return \Exception
-     */
-    /*
-    public function getException()
-    {
-        return $this->exception;
-    }
-    */
-
-    /**
-     * Checks if this is a prepared statement
-     *
-     * @return boolean
-     */
-    public function isPrepared()
-    {
-        return $this->preparedId !== null;
-    }
-
-    /**
-     * Checks if the statement was successful
-     *
-     * @return boolean
-     */
-    public function isSuccess()
-    {
-        return $this->exception === null;
     }
 
     /**
@@ -312,5 +166,25 @@ class StatementInfo
             }
         }
         return $sql;
+    }
+
+    /**
+     * Checks if this is a prepared statement
+     *
+     * @return boolean
+     */
+    protected function isPrepared()
+    {
+        return $this->id !== null;
+    }
+
+    /**
+     * Checks if the statement was successful
+     *
+     * @return boolean
+     */
+    protected function isSuccess()
+    {
+        return $this->exception === null;
     }
 }

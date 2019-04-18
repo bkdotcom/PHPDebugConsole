@@ -15,6 +15,7 @@
 			display: none;
 		}
 		> .group-body {
+			display: block !important;	// override collapsed
 			margin-left: 0;
 			border-left: 0;
 			padding-left: 0;

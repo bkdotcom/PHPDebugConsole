@@ -41,7 +41,7 @@ var optionsDefault = {
 	},
 	// debug methods (not object methods)
 	iconsMethods: {
-		".group-header" :	'<i class="fa fa-lg fa-minus-square-o"></i>',
+		".group-header"	:   '<i class="fa fa-lg fa-minus-square-o"></i>',
 		".m_assert" :		'<i class="fa-lg"><b>&ne;</b></i>',
 		".m_clear" :		'<i class="fa fa-lg fa-ban"></i>',
 		".m_count" :		'<i class="fa fa-lg fa-plus-circle"></i>',

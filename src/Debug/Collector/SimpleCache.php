@@ -108,7 +108,7 @@ class SimpleCache implements CacheInterface
         if ($keys instanceof Traversable) {
             $keysDebug = \array_keys(\iterator_to_array($values));
         } elseif (\is_array($keys)) {
-            $keysDebug = array_keys($values);
+            $keysDebug = \array_keys($values);
         }
         return $this->profileCall('setMultiple', \func_get_args(), true, $keysDebug);
     }
@@ -204,7 +204,7 @@ class SimpleCache implements CacheInterface
     {
         $this->loggedActions[] = $info;
         $this->debug->log(
-            $info->method.'('.json_encode($info->keyOrKeys).') took '.number_format($info->duration, 5) .'sec',
+            $info->method.'('.\json_encode($info->keyOrKeys).') took '.\number_format($info->duration, 5) .'sec',
             $this->debug->meta('icon', 'fa fa-cube')
         );
     }

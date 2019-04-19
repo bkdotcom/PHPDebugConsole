@@ -1018,41 +1018,50 @@
 	/**
 	 * add font-awsome icons
 	 */
-	function addIcons$1($root, types) {
+	function addIcons$1($root) {
+		/*
 		if (!$.isArray(types)) {
 			types = typeof types === "undefined" ?
 				["misc"] :
 				[types];
 		}
 		if ($.inArray("misc", types) >= 0) {
-			$.each(options$5.iconsMisc, function(selector,v){
-				$root.find(selector).prepend(v);
-			});
 		}
 		if ($.inArray("methods", types) >= 0) {
+		}
+		*/
+		var $caption, icon, selector;
+		$.each(options$5.iconsMisc, function(selector,v){
+			$root.find(selector).prepend(v);
+		});
+		if ($root.data("icon")) {
+			icon = $("<i>").addClass($root.data("icon"));
+		} else {
+			for (selector in options$5.iconsMethods) {
+				if ($root.is(selector)) {
+					icon = options$5.iconsMethods[selector];
+					break;
+				}
+			}
+		}
+		if (icon) {
+			if ($root.is(".m_group")) {
+				// custom icon..   add to .group-label
+				$root = $root.find("> .group-header .group-label").eq(0);
+			} else if ($root.find("> table").length) {
+				// table... we'll prepend icon to caption
+				$caption = $root.find("> table > caption");
+				if (!$caption.length) {
+					$caption = $("<caption>");
+					$root.find("> table").prepend($caption);
+				}
+				$root = $caption;
+			}
 			if ($root.find("> i:first-child").length) {
 				// alrady have icon
 				return;
 			}
-			if ($root.data("icon")) {
-				$root.prepend($("<i>").addClass($root.data("icon")));
-				return;
-			}
-			$.each(options$5.iconsMethods, function(selector,v){
-				var $caption;
-				if ($root.is(selector)) {
-					if ($root.is(".m_profileEnd") && $root.find("> table").length) {
-						$caption = $root.find("> table > caption");
-						if (!$caption.length) {
-							$caption = $("<caption>");
-							$root.find("> table").prepend($caption);
-						}
-						$root = $caption;
-					}
-					$root.prepend(v);
-					return false;	// break
-				}
-			});
+			$root.prepend(icon);
 		}
 	}
 
@@ -1114,20 +1123,13 @@
 			return;
 		}
 		if ($entry.is(".m_group")) {
-			// minimal enhancement... just adds data-toggle attr and hides target
-			// target will not be enhanced until expanded
-			enhanceGroup($entry.find("> .group-header"));
-		/*
-		} else if ($entry.is(".m_groupSummary")) {
-			// groupSummary has no toggle.. and is uncollapsed -> enhance
-			enhanceEntries($entry);
-		*/
+			enhanceGroup($entry);
 		} else {
 			// regular log-type entry
 			$entry.children().each(function() {
 				enhanceValue(this);
 			});
-			addIcons$1($entry, ["methods", "misc"]);
+			addIcons$1($entry);
 		}
 		if (inclStrings) {
 			enhanceStrings($entry);
@@ -1135,10 +1137,11 @@
 		$entry.addClass("enhanced");
 	}
 
-	function enhanceGroup($toggle) {
-		var $group = $toggle.parent(),
+	function enhanceGroup($group) {
+		var $toggle = $group.find("> .group-header"),
 			$target = $toggle.next();
-		addIcons$1($toggle, ["methods"]);
+		addIcons$1($group);
+		addIcons$1($toggle);
 		$toggle.attr("data-toggle", "group");
 		$.each(["level-error","level-info","level-warn"], function(i, val){
 			var $icon;
@@ -1465,7 +1468,7 @@
 		},
 		// debug methods (not object methods)
 		iconsMethods: {
-			".group-header" :	'<i class="fa fa-lg fa-minus-square-o"></i>',
+			".group-header"	:   '<i class="fa fa-lg fa-minus-square-o"></i>',
 			".m_assert" :		'<i class="fa-lg"><b>&ne;</b></i>',
 			".m_clear" :		'<i class="fa fa-lg fa-ban"></i>',
 			".m_count" :		'<i class="fa fa-lg fa-plus-circle"></i>',

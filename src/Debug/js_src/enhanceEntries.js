@@ -67,41 +67,50 @@ export function init($root, opts) {
 /**
  * add font-awsome icons
  */
-function addIcons($root, types) {
+function addIcons($root) {
+	/*
 	if (!$.isArray(types)) {
 		types = typeof types === "undefined" ?
 			["misc"] :
 			[types];
 	}
 	if ($.inArray("misc", types) >= 0) {
-		$.each(options.iconsMisc, function(selector,v){
-			$root.find(selector).prepend(v);
-		});
 	}
 	if ($.inArray("methods", types) >= 0) {
+	}
+	*/
+	var $caption, icon, selector;
+	$.each(options.iconsMisc, function(selector,v){
+		$root.find(selector).prepend(v);
+	});
+	if ($root.data("icon")) {
+		icon = $("<i>").addClass($root.data("icon"));
+	} else {
+		for (selector in options.iconsMethods) {
+			if ($root.is(selector)) {
+				icon = options.iconsMethods[selector];
+				break;
+			}
+		}
+	}
+	if (icon) {
+		if ($root.is(".m_group")) {
+			// custom icon..   add to .group-label
+			$root = $root.find("> .group-header .group-label").eq(0);
+		} else if ($root.find("> table").length) {
+			// table... we'll prepend icon to caption
+			$caption = $root.find("> table > caption");
+			if (!$caption.length) {
+				$caption = $("<caption>");
+				$root.find("> table").prepend($caption);
+			}
+			$root = $caption;
+		}
 		if ($root.find("> i:first-child").length) {
 			// alrady have icon
 			return;
 		}
-		if ($root.data("icon")) {
-			$root.prepend($("<i>").addClass($root.data("icon")));
-			return;
-		}
-		$.each(options.iconsMethods, function(selector,v){
-			var $caption;
-			if ($root.is(selector)) {
-				if ($root.is(".m_profileEnd") && $root.find("> table").length) {
-					$caption = $root.find("> table > caption");
-					if (!$caption.length) {
-						$caption = $("<caption>");
-						$root.find("> table").prepend($caption);
-					}
-					$root = $caption;
-				}
-				$root.prepend(v);
-				return false;	// break
-			}
-		});
+		$root.prepend(icon);
 	}
 }
 
@@ -163,20 +172,13 @@ export function enhanceEntry($entry, inclStrings) {
 		return;
 	}
 	if ($entry.is(".m_group")) {
-		// minimal enhancement... just adds data-toggle attr and hides target
-		// target will not be enhanced until expanded
-		enhanceGroup($entry.find("> .group-header"));
-	/*
-	} else if ($entry.is(".m_groupSummary")) {
-		// groupSummary has no toggle.. and is uncollapsed -> enhance
-		enhanceEntries($entry);
-	*/
+		enhanceGroup($entry);
 	} else {
 		// regular log-type entry
 		$entry.children().each(function() {
 			enhanceValue(this);
 		});
-		addIcons($entry, ["methods", "misc"]);
+		addIcons($entry);
 	}
 	if (inclStrings) {
 		enhanceStrings($entry);
@@ -184,10 +186,11 @@ export function enhanceEntry($entry, inclStrings) {
 	$entry.addClass("enhanced");
 }
 
-function enhanceGroup($toggle) {
-	var $group = $toggle.parent(),
+function enhanceGroup($group) {
+	var $toggle = $group.find("> .group-header"),
 		$target = $toggle.next();
-	addIcons($toggle, ["methods"]);
+	addIcons($group);
+	addIcons($toggle);
 	$toggle.attr("data-toggle", "group");
 	$.each(["level-error","level-info","level-warn"], function(i, val){
 		var $icon;

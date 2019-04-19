@@ -238,88 +238,21 @@ class Html extends Base
     {
         $str = '';
         $method = $logEntry['method'];
-        $args = $logEntry['args'];
         $meta = $logEntry['meta'];
         if (!\in_array($meta['channel'], $this->channels) && $meta['channel'] !== 'phpError') {
             $this->channels[] = $meta['channel'];
         }
         if ($meta['channel'] === $this->channelNameRoot) {
-            $meta['channel'] = null;
+            $logEntry->setMeta('channel', null);
         }
         if ($method == 'alert') {
-            $str = $this->methodAlert($args, $meta);
+            $str = $this->buildMethodAlert($logEntry);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $str = $this->buildGroupMethod($method, $args, $meta);
+            $str = $this->buildMethodGroup($logEntry);
         } elseif (\in_array($method, array('profileEnd','table','trace'))) {
-            $meta = \array_merge(array(
-                'caption' => null,
-                'columns' => array(),
-                'icon' => null,
-                'sortable' => false,
-                'totalCols' => array(),
-            ), $meta);
-            $asTable = \is_array($args[0]) && $args[0];
-            if (!$asTable && $meta['caption']) {
-                \array_unshift($args, $meta['caption']);
-            }
-            $str = $this->debug->utilities->buildTag(
-                'li',
-                array(
-                    'class' => 'm_'.$method,
-                    'data-channel' => $meta['channel'],
-                    'data-icon' => $meta['icon'],
-                ),
-                $asTable
-                    ? "\n"
-                        .$this->buildTable(
-                            $args[0],
-                            array(
-                                'attribs' => array(
-                                    'class' => array(
-                                        'table-bordered',
-                                        $meta['sortable'] ? 'sortable' : null,
-                                    ),
-                                ),
-                                'caption' => $meta['caption'],
-                                'columns' => $meta['columns'],
-                                'totalCols' => $meta['totalCols'],
-                            )
-                        )."\n"
-                    : $this->buildArgString($args)
-            );
+            $str = $this->buildMethodTabular($logEntry);
         } else {
-            $sanitize = isset($meta['sanitize'])
-                ? $meta['sanitize']
-                : true;
-            $attribs = array(
-                'class' => 'm_'.$method,
-                'data-channel' => $meta['channel'],
-                'data-icon' => isset($meta['icon'])
-                    ? $meta['icon']
-                    : null,
-                'title' => isset($meta['file'])
-                    ? $meta['file'].': line '.$meta['line']
-                    : null,
-            );
-            if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
-                if (\in_array($method, array('error','warn'))) {
-                    if (isset($meta['errorCat'])) {
-                        $attribs['class'] .= ' error-'.$meta['errorCat'];
-                    }
-                }
-                if (\count($args) > 1 && \is_string($args[0])) {
-                    $hasSubs = false;
-                    $args = $this->processSubstitutions($args, $hasSubs);
-                    if ($hasSubs) {
-                        $args = array( \implode('', $args) );
-                    }
-                }
-            }
-            $str = $this->debug->utilities->buildTag(
-                'li',
-                $attribs,
-                $this->buildArgString($args, $sanitize)
-            );
+            $str = $this->buildMethodDefault($logEntry);
         }
         $str = \str_replace(' data-channel="null"', '', $str);
         $str .= "\n";
@@ -390,31 +323,105 @@ class Html extends Base
     }
 
     /**
-     * handle html output of group, groupCollapsed, & groupEnd
+     * Handle alert method
      *
-     * @param string $method group|groupCollapsed|groupEnd
-     * @param array  $args   args passed to method
-     * @param array  $meta   meta values
+     * @param LogEntry $logEntry logEntry instance
+     *
+     * @return array array($method, $args)
+     */
+    protected function buildMethodAlert(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
+        $attribs = array(
+            'class' => 'm_alert alert-'.$meta['class'],
+            'data-channel' => $meta['channel'],
+            'data-icon' => isset($meta['icon']) ? $meta['icon'] : null,
+            'role' => 'alert',
+        );
+        if ($meta['dismissible']) {
+            $attribs['class'] .= ' alert-dismissible';
+            $args[0] = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
+                .'<span aria-hidden="true">&times;</span>'
+                .'</button>'
+                .$args[0];
+        }
+        return $this->debug->utilities->buildTag('div', $attribs, $args[0]);
+    }
+
+    /**
+     * Handle html output of default/standard methods
+     *
+     * @param LogEntry $logEntry logEntry instance
      *
      * @return string
      */
-    protected function buildGroupMethod($method, $args = array(), $meta = array())
+    protected function buildMethodDefault(LogEntry $logEntry)
     {
+        $method = $logEntry['method'];
+        $args = $logEntry['args'];
+        $meta = \array_merge(array(
+            'errorCat' => null,
+            'icon' => null,
+            'sanitize' => true,
+        ), $logEntry['meta']);
+        $attribs = array(
+            'class' => 'm_'.$method,
+            'data-channel' => $meta['channel'],
+            'data-icon' => $meta['icon'],
+            'title' => isset($meta['file'])
+                ? $meta['file'].': line '.$meta['line']
+                : null,
+        );
+        if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
+            if ($meta['errorCat']) {
+                //  should only be applicable for error & warn methods
+                $attribs['class'] .= ' error-'.$meta['errorCat'];
+            }
+            if (\count($args) > 1 && \is_string($args[0])) {
+                $hasSubs = false;
+                $args = $this->processSubstitutions($args, $hasSubs);
+                if ($hasSubs) {
+                    $args = array( \implode('', $args) );
+                }
+            }
+        }
+        return $this->debug->utilities->buildTag(
+            'li',
+            $attribs,
+            $this->buildArgString($args, $meta['sanitize'])
+        );
+    }
+
+    /**
+     * Handle html output of group, groupCollapsed, & groupEnd
+     *
+     * @param LogEntry $logEntry logEntry instance
+     *
+     * @return string
+     */
+    protected function buildMethodGroup(LogEntry $logEntry)
+    {
+        $method = $logEntry['method'];
+        $args = $logEntry['args'];
+        $meta = array_merge(array(
+            'argsAsParams' => true,
+            'icon' => null,
+            'isMethodName' => false,
+            'level' => null,
+        ), $logEntry['meta']);
         $str = '';
         if (\in_array($method, array('group','groupCollapsed'))) {
-            $argsAsParams = isset($meta['argsAsParams'])
-                ? $meta['argsAsParams']
-                : true;
-            $levelClass = isset($meta['level'])
+            $label = \array_shift($args);
+            $levelClass = $meta['level']
                 ? 'level-'.$meta['level']
                 : null;
-            $label = \array_shift($args);
             foreach ($args as $k => $v) {
                 $args[$k] = $this->dump($v);
             }
             $argStr = \implode(', ', $args);
-            if ($argsAsParams) {
-                if (!empty($meta['isMethodName'])) {
+            if ($meta['argsAsParams']) {
+                if ($meta['isMethodName']) {
                     $label = $this->markupClassname($label);
                 }
                 $argStr = '<span class="group-label">'.$label.'(</span>'
@@ -429,6 +436,7 @@ class Html extends Base
             $str .= '<li'.$this->debug->utilities->buildAttribString(array(
                 'class' => 'm_group',
                 'data-channel' => $meta['channel'],
+                'data-icon' => $meta['icon'],
             )).'>'."\n";
             /*
                 Header / label / toggle
@@ -459,6 +467,54 @@ class Html extends Base
             $str = '</ul>'."\n".'</li>';
         }
         return $str;
+    }
+
+    /**
+     * Handle profile(End), table, & trace methods
+     *
+     * @param LogEntry $logEntry logEntry instance
+     *
+     * @return string
+     */
+    protected function buildMethodTabular(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        $meta = \array_merge(array(
+            'caption' => null,
+            'columns' => array(),
+            'icon' => null,
+            'sortable' => false,
+            'totalCols' => array(),
+        ), $logEntry['meta']);
+        $asTable = \is_array($args[0]) && $args[0];
+        if (!$asTable && $meta['caption']) {
+            \array_unshift($args, $meta['caption']);
+        }
+        return $this->debug->utilities->buildTag(
+            'li',
+            array(
+                'class' => 'm_'.$logEntry['method'],
+                'data-channel' => $meta['channel'],
+                'data-icon' => $meta['icon'],
+            ),
+            $asTable
+                ? "\n"
+                    .$this->buildTable(
+                        $args[0],
+                        array(
+                            'attribs' => array(
+                                'class' => array(
+                                    'table-bordered',
+                                    $meta['sortable'] ? 'sortable' : null,
+                                ),
+                            ),
+                            'caption' => $meta['caption'],
+                            'columns' => $meta['columns'],
+                            'totalCols' => $meta['totalCols'],
+                        )
+                    )."\n"
+                : $this->buildArgString($args)
+        );
     }
 
     /**
@@ -750,32 +806,6 @@ class Html extends Base
     {
         $this->object = new HtmlObject($this->debug);
         return $this->object;
-    }
-
-    /**
-     * Handle alert method
-     *
-     * @param array $args arguments
-     * @param array $meta meta info
-     *
-     * @return array array($method, $args)
-     */
-    protected function methodAlert($args, $meta)
-    {
-        $attribs = array(
-            'class' => 'm_alert alert-'.$meta['class'],
-            'data-channel' => $meta['channel'],
-            'data-icon' => isset($meta['icon']) ? $meta['icon'] : null,
-            'role' => 'alert',
-        );
-        if ($meta['dismissible']) {
-            $attribs['class'] .= ' alert-dismissible';
-            $args[0] = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
-                .'<span aria-hidden="true">&times;</span>'
-                .'</button>'
-                .$args[0];
-        }
-        return $this->debug->utilities->buildTag('div', $attribs, $args[0]);
     }
 
     /**

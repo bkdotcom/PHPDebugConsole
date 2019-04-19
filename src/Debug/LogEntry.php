@@ -98,8 +98,6 @@ class LogEntry extends Event
     {
         if (\is_array($key)) {
             $this->values['meta'] = \array_merge($this->values['meta'], $key);
-        } elseif ($val === null) {
-            unset($this->values['meta'][$key]);
         } else {
             $this->values['meta'][$key] = $val;
         }

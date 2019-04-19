@@ -20,6 +20,8 @@ use bdk\Debug\Abstracter;
 class HtmlObject
 {
 
+    protected $debug;
+
 	/**
      * Constructor
      *

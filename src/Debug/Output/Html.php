@@ -254,6 +254,7 @@ class Html extends Base
             $meta = \array_merge(array(
                 'caption' => null,
                 'columns' => array(),
+                'icon' => null,
                 'sortable' => false,
                 'totalCols' => array(),
             ), $meta);
@@ -266,6 +267,7 @@ class Html extends Base
                 array(
                     'class' => 'm_'.$method,
                     'data-channel' => $meta['channel'],
+                    'data-icon' => $meta['icon'],
                 ),
                 $asTable
                     ? "\n"
@@ -292,6 +294,9 @@ class Html extends Base
             $attribs = array(
                 'class' => 'm_'.$method,
                 'data-channel' => $meta['channel'],
+                'data-icon' => isset($meta['icon'])
+                    ? $meta['icon']
+                    : null,
                 'title' => isset($meta['file'])
                     ? $meta['file'].': line '.$meta['line']
                     : null,
@@ -760,6 +765,7 @@ class Html extends Base
         $attribs = array(
             'class' => 'm_alert alert-'.$meta['class'],
             'data-channel' => $meta['channel'],
+            'data-icon' => isset($meta['icon']) ? $meta['icon'] : null,
             'role' => 'alert',
         );
         if ($meta['dismissible']) {

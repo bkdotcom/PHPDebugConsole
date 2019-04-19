@@ -156,7 +156,7 @@ $.fn.debugEnhance = function(method) {
 $(function() {
 	$(".debug").each(function(){
 		$(this).debugEnhance("init");
-		$(this).find(".debug-log-summary, .debug-log").debugEnhance();
+		$(this).find(".m_alert, .debug-log-summary, .debug-log").debugEnhance();
 	});
 });
 

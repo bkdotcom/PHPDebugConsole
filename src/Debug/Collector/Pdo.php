@@ -332,7 +332,7 @@ class Pdo extends PdoBase
     public function addStatementInfo(StatementInfo $info)
     {
         $this->loggedStatements[] = $info;
-        $this->debug->log($info);
+        $this->debug->log($info, $this->debug->meta('icon', 'fa fa-database'));
     }
 
     /**

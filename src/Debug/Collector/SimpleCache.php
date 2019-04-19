@@ -203,7 +203,10 @@ class SimpleCache implements CacheInterface
     public function addCallInfo(CallInfo $info)
     {
         $this->loggedActions[] = $info;
-        $this->debug->log($info);
+        $this->debug->log(
+            $info->method.'('.json_encode($info->keyOrKeys).') took '.number_format($info->duration, 5) .'sec',
+            $this->debug->meta('icon', 'fa fa-cube')
+        );
     }
 
     /**

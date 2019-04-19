@@ -271,7 +271,7 @@
 		for (i in preFilterCallbacks) {
 			preFilterCallbacks[i]($root);
 		}
-		$root.find("> .debug-body .m_alert, .group-body > *").each(function(){
+		$root.find("> .debug-body .m_alert, .group-body > *:not(.m_groupSummary)").each(function(){
 			var $node = $(this),
 				show = true;
 			if ($node.data("channel") == "phpError") {
@@ -1030,6 +1030,14 @@
 			});
 		}
 		if ($.inArray("methods", types) >= 0) {
+			if ($root.find("> i:first-child").length) {
+				// alrady have icon
+				return;
+			}
+			if ($root.data("icon")) {
+				$root.prepend($("<i>").addClass($root.data("icon")));
+				return;
+			}
 			$.each(options$5.iconsMethods, function(selector,v){
 				var $caption;
 				if ($root.is(selector)) {
@@ -1572,7 +1580,7 @@
 	$(function() {
 		$(".debug").each(function(){
 			$(this).debugEnhance("init");
-			$(this).find(".debug-log-summary, .debug-log").debugEnhance();
+			$(this).find(".m_alert, .debug-log-summary, .debug-log").debugEnhance();
 		});
 	});
 

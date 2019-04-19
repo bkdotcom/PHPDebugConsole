@@ -79,6 +79,14 @@ function addIcons($root, types) {
 		});
 	}
 	if ($.inArray("methods", types) >= 0) {
+		if ($root.find("> i:first-child").length) {
+			// alrady have icon
+			return;
+		}
+		if ($root.data("icon")) {
+			$root.prepend($("<i>").addClass($root.data("icon")));
+			return;
+		}
 		$.each(options.iconsMethods, function(selector,v){
 			var $caption;
 			if ($root.is(selector)) {

@@ -12,9 +12,11 @@
 .debug button { color: inherit; cursor: pointer; font-family: inherit; outline: none; vertical-align: baseline; }
 .debug button:hover { background-color: #DDE6F0; }
 .debug code { padding: 2px 4px; background-color: transparent; font-family: Menlo,Monaco,Consolas,"Courier New",monospace; }
+.debug pre code { display: block; }
 .debug dl { margin-top: 0; margin-bottom: 0; }
 .debug dl dt { font-weight: bold; }
 .debug dl:not(.dl-horizontal) dd { margin-left: 20px; padding-left: 10px; text-indent: -10px; }
+.debug li.no-indent, .debug dl dd.no-indent { padding-left: 0; text-indent: 0; }
 .debug fieldset { padding: .66em; margin: 0 0 10px 0; min-width: 0; border: 1px solid black; border-radius: 4px; }
 .debug fieldset > ul { font-size: 125%; }
 .debug h3 { margin-top: .66em; margin-bottom: 0; font-size: 1.15em; font-weight: bold; }
@@ -26,7 +28,7 @@
 .debug legend { padding: 0; float: left; margin-bottom: .5em; border: 0; width: 100%; font-size: 144%; font-weight: bold; }
 .debug p { margin-top: .25em; margin-bottom: 0; }
 .debug p:first-child { margin-top: 0; }
-.debug pre { padding: 0; border: 0; margin: 0; font-size: 1.2em; line-height: 1.1em; white-space: pre; -moz-tab-size: 3; -o-tag-size: 3; -tab-size: 3; }
+.debug pre { padding: 0; border: 0; margin: 0; white-space: pre; -moz-tab-size: 3; -o-tag-size: 3; -tab-size: 3; }
 .debug ul { margin-top: 0; margin-bottom: 0; }
 .debug [title] { cursor: help; }
 .debug [title]:hover { background-color: rgba(0, 0, 0, 0.2); }
@@ -58,17 +60,17 @@
 .debug .t_object .property-name[title], .debug .t_object .method-name[title], .debug .t_object .method .parameter [title], .debug .t_object .t_stringified, .debug .t_object .t_type[title] { text-decoration: underline; }
 .debug .t_object .method.deprecated i { border-bottom: 0; }
 .debug .t_object .t_modifier_static { font-style: italic; color: #00529B; }
-.debug .info { display: inline-block; background-color: #d9edf7; color: #31708f; }
+.debug .t_object .info { display: inline-block; background-color: #d9edf7; color: #31708f; }
 .debug .deprecated { opacity: .66; }
 .debug .deprecated i { opacity: .66; color: #d8000c; }
 .debug .constant-name, .debug .property-name, .debug .method .method-name { font-weight: bold; }
 .debug .method > .t_punct { opacity: 1; font-weight: bold; color: inherit; }
 .debug .property.private-ancestor { color: #F39; }
 .debug .property.private-ancestor:hover { color: inherit; }
-.debug .m_assert, .debug .m_clear, .debug .m_count, .debug .m_error, .debug .m_groupEndValue, .debug .m_info, .debug .m_log, .debug .m_warn { position: relative; display: table; padding-left: 10px; text-indent: -10px; padding-right: .33em; }
+.debug .m_assert, .debug .m_clear, .debug .m_count, .debug .m_error, .debug .m_groupEndValue, .debug .m_info, .debug .m_log, .debug .m_warn { position: relative; display: table; padding-left: 10px; text-indent: -10px; padding-right: .33em; word-break: break-all; }
 .debug .m_assert { background-color: rgba(255, 204, 204, 0.75); }
 .debug .m_group .group-header { display: table; white-space: nowrap; }
-.debug .m_group .group-label { font-weight: bold; }
+.debug .m_group .group-label-bold { font-weight: bold; }
 .debug .m_group > ul { list-style: none; margin-left: 1em; border-left: 1px solid rgba(0, 0, 0, 0.25); padding-left: 1px; }
 .debug .m_error, .debug :not(.expanded) > .level-error { background-color: #ffbaba; color: #d8000c; }
 .debug .m_info, .debug :not(.expanded) > .level-info { background-color: #d9edf7; color: #31708f; }
@@ -118,7 +120,7 @@
 .debug .t_string:before, .debug .t_string:after { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; opacity: 0.33; color: #333; }
 .debug .t_string:before { content: open-quote; }
 .debug .t_string:after { content: close-quote; }
-.debug .t_string * { white-space: normal; }
+.debug .t_string *:not(pre, pre *) { white-space: normal; }
 .debug .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
 .debug .t_type { color: #693; }
 .debug .t_undefined:after { content: "undefined"; opacity: 0.3; }

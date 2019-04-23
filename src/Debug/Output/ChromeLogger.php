@@ -160,7 +160,7 @@ class ChromeLogger extends Base
     protected function methodAlert($args, $meta)
     {
         $args = array('%c'.$args[0], '');
-        $method = $meta['class'];
+        $method = $meta['level'];
         $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
         switch ($method) {
             case 'danger':

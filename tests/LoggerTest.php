@@ -119,7 +119,7 @@ class LoggerTest extends DebugTestFramework
             'alert',
             array('Alert'),
             array(
-                'class' => 'danger',
+                'level' => 'danger',
                 'dismissible' => false,
                 'channel' => 'general',
             ),

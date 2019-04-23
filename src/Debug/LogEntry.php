@@ -23,14 +23,14 @@ class LogEntry extends Event
     /**
      * Construct a log entry
      *
-     * @param Debug|OutputInterface $subject     Debug instance or OutputInterface
-     * @param string                $method      Debug method
-     * @param array                 $args        arguments passed to method
-     * @param array                 $meta        meta values
-     * @param array                 $defaultArgs default arguments
-     * @param array                 $argsToMeta  move specified keys to meta
+     * @param Debug  $subject     Debug instance or OutputInterface
+     * @param string $method      Debug method
+     * @param array  $args        arguments passed to method (may include meta args)
+     * @param array  $meta        default meta values
+     * @param array  $defaultArgs default arguments (key/value array)
+     * @param array  $argsToMeta  move specified keys to meta
      */
-    public function __construct($subject, $method, $args = array(), $meta = array(), $defaultArgs = array(), $argsToMeta = array())
+    public function __construct(Debug $subject, $method, $args = array(), $meta = array(), $defaultArgs = array(), $argsToMeta = array())
     {
         $this->subject = $subject;
         $this->values = array(

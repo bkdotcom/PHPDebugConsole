@@ -275,15 +275,15 @@ class Debug
      * Add an alert to top of log
      *
      * @param string  $message     message
-     * @param string  $class       (danger), info, success, warning
+     * @param string  $level       (danger), info, success, warning
      * @param boolean $dismissible (false)
      *
      * @return void
      */
-    public function alert($message, $class = 'danger', $dismissible = false)
+    public function alert($message, $level = 'danger', $dismissible = false)
     {
         // "use" our function params so things (ie phpmd) don't complain
-        array($message, $class, $dismissible);
+        array($message, $level, $dismissible);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -291,10 +291,10 @@ class Debug
             array(),
             array(
                 'message' => null,
-                'class' => 'danger',
+                'level' => 'danger',
                 'dismissible' => false,
             ),
-            array('class','dismissible')
+            array('level','dismissible')
         );
         $this->setLogDest('alerts');
         $this->appendLog($logEntry);
@@ -828,20 +828,34 @@ class Debug
      *
      * Does not append log.  Use timeEnd or timeGet to get time
      *
-     * @param string $label unique label
+     * @param string $label    unique label
+     * @param float  $duration (optional) duration
      *
      * @return void
      */
-    public function time($label = null)
+    public function time($label = null, $duration = null)
     {
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
             \func_get_args(),
             array(),
-            array('label' => null)
+            array(
+                'label' => null,
+                'duration' => null,
+            )
         );
-        $label = $logEntry['args'][0];
+        $args = $logEntry['args'];
+        $floats = \array_filter($args, function ($val) {
+            return \is_float($val);
+        });
+        $args = \array_values(\array_diff_key($args, $floats));
+        $label = $args[0];
+        if ($floats) {
+            $duration = \reset($floats);
+            $this->doTime($label, $duration);
+            return;
+        }
         if (isset($label)) {
             $timers = &$this->data['timers']['labels'];
             if (!isset($timers[$label])) {
@@ -898,15 +912,9 @@ class Debug
                 );
             }
         } else {
-            $label = 'time';
             \array_pop($this->data['timers']['stack']);
         }
-        if (\is_int($precision)) {
-            // use number_format rather than round(), which may still run decimals-a-plenty
-            $ret = \number_format($ret, $precision, '.', '');
-        }
-        $this->doTime($ret, $returnOrTemplate, $label, $logEntry['meta']);
-        return $ret;
+        return $this->doTime($label, $ret, $precision, $returnOrTemplate, $logEntry['meta']);
     }
 
     /**
@@ -943,16 +951,15 @@ class Debug
             $label = null;
         }
         $microT = 0;
-        $ellapsed = 0;
-        if (!isset($label)) {
-            $label = 'time';
+        $elapsed = 0;
+        if ($label === null) {
             if (!$this->data['timers']['stack']) {
-                list($ellapsed, $microT) = $this->data['timers']['labels']['debugInit'];
+                list($elapsed, $microT) = $this->data['timers']['labels']['debugInit'];
             } else {
                 $microT = \end($this->data['timers']['stack']);
             }
         } elseif (isset($this->data['timers']['labels'][$label])) {
-            list($ellapsed, $microT) = $this->data['timers']['labels'][$label];
+            list($elapsed, $microT) = $this->data['timers']['labels'][$label];
         } else {
             if ($returnOrTemplate !== true) {
                 $this->appendLog(new LogEntry(
@@ -965,14 +972,9 @@ class Debug
             return false;
         }
         if ($microT) {
-            $ellapsed += \microtime(true) - $microT;
+            $elapsed += \microtime(true) - $microT;
         }
-        if (\is_int($precision)) {
-            // use number_format rather than round(), which may still run decimals-a-plenty
-            $ellapsed = \number_format($ellapsed, $precision, '.', '');
-        }
-        $this->doTime($ellapsed, $returnOrTemplate, $label, $logEntry['meta']);
-        return $ellapsed;
+        return $this->doTime($label, $elapsed, $precision, $returnOrTemplate, $logEntry['meta']);
     }
 
     /**
@@ -996,24 +998,24 @@ class Debug
         );
         $args = $logEntry['args'];
         $microT = 0;
-        $ellapsed = 0;
+        $elapsed = 0;
         if (\count($args) === 0) {
             $args[0] = 'time';
             if (!$this->data['timers']['stack']) {
-                list($ellapsed, $microT) = $this->data['timers']['labels']['debugInit'];
+                list($elapsed, $microT) = $this->data['timers']['labels']['debugInit'];
             } else {
                 $microT = \end($this->data['timers']['stack']);
             }
         } elseif (isset($this->data['timers']['labels'][$label])) {
-            list($ellapsed, $microT) = $this->data['timers']['labels'][$label];
+            list($elapsed, $microT) = $this->data['timers']['labels'][$label];
         } else {
             $args = array('Timer \''.$label.'\' does not exist');
         }
         if ($microT) {
             $args[0] .= ': ';
-            $ellapsed += \microtime(true) - $microT;
-            $ellapsed = \number_format($ellapsed, 4, '.', '');
-            \array_splice($args, 1, 0, $ellapsed.' sec');
+            $elapsed += \microtime(true) - $microT;
+            $elapsed = \number_format($elapsed, 4, '.', '');
+            \array_splice($args, 1, 0, $elapsed.' sec');
         }
         $logEntry['args'] = $args;
         $this->appendLog($logEntry);
@@ -1549,32 +1551,41 @@ class Debug
     /**
      * Log timeEnd() and timeGet()
      *
-     * @param float  $seconds          seconds
-     * @param mixed  $returnOrTemplate false: log the time with default template (default)
+     * @param string  $label            label
+     * @param float   $elapsed          elapsed time in seconds
+     * @param integer $precision        rounding precision (pass null for no rounding)
+     * @param mixed   $returnOrTemplate false: log the time with default template (default)
      *                                  true: do not log
      *                                  string: log using passed template
-     * @param string $label            label
-     * @param array  $meta             meta values
+     * @param array   $meta             meta values
      *
-     * @return void
+     * @return mixed
      */
-    protected function doTime($seconds, $returnOrTemplate = false, $label = 'time', $meta = array())
+    protected function doTime($label, $elapsed, $precision = 4, $returnOrTemplate = false, $meta = array())
     {
-        if (\is_string($returnOrTemplate)) {
-            $str = $returnOrTemplate;
-            $str = \str_replace('%label', $label, $str);
-            $str = \str_replace('%time', $seconds, $str);
-        } elseif ($returnOrTemplate === true) {
-            return;
-        } else {
-            $str = $label.': '.$seconds.' sec';
+        if ($label === null) {
+            $label = 'time';
         }
-        $this->appendLog(new LogEntry(
-            $this,
-            'time',
-            array($str),
-            $meta
-        ));
+        if (\is_int($precision)) {
+            // use number_format rather than round(), which may still run decimals-a-plenty
+            $elapsed = \number_format($elapsed, $precision, '.', '');
+        }
+        if ($returnOrTemplate !== true) {
+            if (\is_string($returnOrTemplate)) {
+                $str = $returnOrTemplate;
+                $str = \str_replace('%label', $label, $str);
+                $str = \str_replace('%time', $elapsed, $str);
+            } else {
+                $str = $label.': '.$elapsed.' sec';
+            }
+            $this->appendLog(new LogEntry(
+                $this,
+                'time',
+                array($str),
+                $meta
+            ));
+        }
+        return $elapsed;
     }
 
     /**

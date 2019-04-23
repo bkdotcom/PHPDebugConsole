@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3.0
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
@@ -70,7 +70,7 @@ class HtmlErrorSummary
         $html .= '<ul class="list-unstyled indent">';
         if (\count($backtrace) > 1) {
             // more than one trace frame
-            $table = $this->outputHtml->buildTable(
+            $table = $this->outputHtml->table->build(
                 $backtrace,
                 array(
                     'attribs' => 'trace table-bordered',

@@ -339,7 +339,7 @@ abstract class Base implements OutputInterface
             'warning' => 'warn',
         );
         $msg = \str_replace('<br />', ", \n", $args[0]);
-        $method = $meta['class'];
+        $method = $meta['level'];
         if (isset($classToMethod[$method])) {
             $method = $classToMethod[$method];
         }
@@ -424,7 +424,7 @@ abstract class Base implements OutputInterface
         foreach ($this->data['alerts'] as $logEntry) {
             $channel = $logEntry->getMeta('channel');
             if ($this->channelTest($channel)) {
-                $str .= $this->processLogEntryWEvent($logEntry);
+                $str .= $this->processLogEntryViaEvent($logEntry);
             }
         }
         return $str;
@@ -441,7 +441,7 @@ abstract class Base implements OutputInterface
         foreach ($this->data['log'] as $logEntry) {
             $channel = $logEntry->getMeta('channel');
             if ($this->channelTest($channel)) {
-                $str .= $this->processLogEntryWEvent($logEntry);
+                $str .= $this->processLogEntryViaEvent($logEntry);
             }
         }
         return $str;
@@ -456,19 +456,18 @@ abstract class Base implements OutputInterface
      *
      * @return mixed
      */
-    protected function processLogEntryWEvent(LogEntry $logEntry)
+    protected function processLogEntryViaEvent(LogEntry $logEntry)
     {
-        $logEntry = new LogEntry($this, $logEntry['method'], $logEntry['args'], $logEntry['meta']);
+        $logEntry = new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta']);
+        $logEntry['outputAs'] = $this;
         if (!isset($logEntry['meta']['channel'])) {
             $logEntry->setMeta('channel', $this->channelNameRoot);
         }
-        $this->debug->eventManager->publish('debug.outputLogEntry', $logEntry);
-        if ($logEntry['return']) {
+        $this->debug->internal->publishBubbleEvent('debug.outputLogEntry', $logEntry);
+        if ($logEntry['return'] !== null) {
             return $logEntry['return'];
         }
-        if (!$logEntry->isPropagationStopped()) {
-            return $this->processLogEntry($logEntry);
-        }
+        return $this->processLogEntry($logEntry);
     }
 
     /**
@@ -566,7 +565,7 @@ abstract class Base implements OutputInterface
         foreach ($summaryData as $logEntry) {
             $channel = $logEntry->getMeta('channel');
             if ($this->channelTest($channel)) {
-                $str .= $this->processLogEntryWEvent($logEntry);
+                $str .= $this->processLogEntryViaEvent($logEntry);
             }
         }
         return $str;

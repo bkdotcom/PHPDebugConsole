@@ -428,27 +428,29 @@ class Internal implements SubscriberInterface
      * Publish/Trigger/Dispatch event
      * Event will get published on ancestor channels if propagation not stopped
      *
-     * @param string $eventName      event name
-     * @param mixed  $eventOrSubject passed to subscribers
-     * @param array  $values         values to attach to event
+     * @param string $eventName event name
+     * @param Event  $event     event instance
+     * @param Debug  $debug     specify Debug instance to start on
+     *                            if not specified will check if getSubject returns Debug instance
+     *                            fallback this->debug
      *
-     * @return mixed
+     * @return Event
      */
-    public function publishBubbleEvent($eventName, $eventOrSubject, array $values = array())
+    public function publishBubbleEvent($eventName, Event $event, Debug $debug = null)
     {
-        if ($eventOrSubject instanceof Event) {
-            $event = $eventOrSubject;
-        } else {
-            $event = new Event($eventOrSubject, $values);
+        if (!$debug) {
+            $debug = $event->getSubject();
+            if (!$debug instanceof Debug) {
+                $debug = $this->debug;
+            }
         }
-        $debug = $this->debug;
-        while (!$event->isPropagationStopped()) {
+        do {
             $debug->eventManager->publish($eventName, $event);
             if (!$debug->parentInstance) {
                 break;
             }
             $debug = $debug->parentInstance;
-        }
+        } while (!$event->isPropagationStopped());
         return $event;
     }
 

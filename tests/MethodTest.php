@@ -1,5 +1,7 @@
 <?php
 
+use bdk\Debug\LogEntry;
+
 /**
  * PHPUnit tests for Debug Methods
  */
@@ -13,18 +15,18 @@ class MethodTest extends DebugTestFramework
     {
         $closure = function ($event) {
             if ($event['method'] == 'trace') {
-                $plugin = get_class($event->getSubject());
-                if ($plugin == 'bdk\Debug\Output\ChromeLogger') {
+                $outputAs = get_class($event['outputAs']);
+                if ($outputAs == 'bdk\Debug\Output\ChromeLogger') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($plugin == 'bdk\Debug\Output\Firephp') {
+                } elseif ($outputAs == 'bdk\Debug\Output\Firephp') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($plugin == 'bdk\Debug\Output\Html') {
+                } elseif ($outputAs == 'bdk\Debug\Output\Html') {
                     $event['return'] = '<li class="m_trace">this was a trace</li>';
-                } elseif ($plugin == 'bdk\Debug\Output\Script') {
+                } elseif ($outputAs == 'bdk\Debug\Output\Script') {
                     $event['return'] = 'console.log("this was a trace");';
-                } elseif ($plugin == 'bdk\Debug\Output\Text') {
+                } elseif ($outputAs == 'bdk\Debug\Output\Text') {
                     $event['return'] = 'this was a trace';
                 }
             }
@@ -52,13 +54,13 @@ class MethodTest extends DebugTestFramework
      */
     public function testCustom()
     {
-        $closure = function ($event) {
-            if ($event['method'] == 'myCustom' && $event->getSubject() instanceof \bdk\Debug\Output\Html) {
+        $closure = function (LogEntry $logEntry) {
+            if ($logEntry['method'] == 'myCustom' && $logEntry['outputAs'] instanceof \bdk\Debug\Output\Html) {
                 $lis = array();
-                foreach ($event['args'] as $arg) {
+                foreach ($logEntry['args'] as $arg) {
                     $lis[] = '<li>'.htmlspecialchars($arg).'</li>';
                 }
-                $event['return'] = '<li class="m_myCustom"><ul>'.implode('', $lis).'</ul></li>';
+                $logEntry['return'] = '<li class="m_myCustom"><ul>'.implode('', $lis).'</ul></li>';
             }
         };
         $this->debug->eventManager->subscribe('debug.outputLogEntry', $closure);
@@ -159,7 +161,7 @@ class MethodTest extends DebugTestFramework
                     'alert',
                     array($message),
                     array(
-                        'class' => 'danger',
+                        'level' => 'danger',
                         'dismissible' => false,
                         'channel' => 'general',
                     ),
@@ -900,7 +902,7 @@ class MethodTest extends DebugTestFramework
                     'group',
                 ),
                 'html' => '<li class="m_group">
-                    <div class="expanded group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+                    <div class="expanded group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
                     <ul class="group-body">',
                 'text' => '▸ a, "b", "c"',
                 'script' => 'console.group("a","b","c");',
@@ -945,7 +947,7 @@ class MethodTest extends DebugTestFramework
                     'group',
                 ),
                 'html' => '<li class="m_group">
-                    <div class="expanded group-header"><span class="group-label"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">testMethod</span></span></div>
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">testMethod</span></span></div>
                     <ul class="group-body">',
                 'text' => '▸ '.__CLASS__.'->testMethod',
                 'script' => 'console.group("'.__CLASS__.'->testMethod");',
@@ -976,7 +978,7 @@ class MethodTest extends DebugTestFramework
                     'group',
                 ),
                 'html' => '<li class="m_group">
-                    <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
                     <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase->testBasePublic");',
@@ -1007,7 +1009,7 @@ class MethodTest extends DebugTestFramework
                     'group',
                 ),
                 'html' => '<li class="m_group">
-                    <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
                     <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\Test->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\Test->testBasePublic");',
@@ -1040,7 +1042,7 @@ class MethodTest extends DebugTestFramework
                     'group',
                 ),
                 'html' => '<li class="m_group">
-                    <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
                     <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
@@ -1072,7 +1074,7 @@ class MethodTest extends DebugTestFramework
                     'group',
                 ),
                 'html' => '<li class="m_group">
-                    <div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
                     <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
@@ -1120,7 +1122,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: 60|[{"Type":"GROUP_START","Collapsed":"true","Label":"a"},null]|',
                 'html' => '<li class="m_group">
-                    <div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+                    <div class="collapsed group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
                     <ul class="group-body">',
                 'script' => 'console.groupCollapsed("a","b","c");',
                 'text' => '▸ a, "b", "c"',
@@ -1133,7 +1135,7 @@ class MethodTest extends DebugTestFramework
         $this->debug->log('after nested group');
         $this->outputTest(array(
             'html' => '<li class="m_group">
-                <div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
+                <div class="collapsed group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
                 <ul class="group-body">
                     <li class="m_log"><span class="no-pseudo t_string">after nested group</span></li>
                 </ul>',
@@ -1329,7 +1331,7 @@ class MethodTest extends DebugTestFramework
         <ul class="debug-log-summary group-body">
             <li class="m_log"><span class="no-pseudo t_string">in summary</span></li>
             <li class="m_group">
-                <div class="expanded group-header"><span class="group-label">inner group opened but not closed</span></div>
+                <div class="expanded group-header"><span class="group-label group-label-bold">inner group opened but not closed</span></div>
                 <ul class="group-body">
                     <li class="m_log"><span class="no-pseudo t_string">in inner</span></li>
                 </ul>

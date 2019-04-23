@@ -56,7 +56,7 @@ class Firephp extends Base
         $heading = isset($_SERVER['REQUEST_METHOD'])
             ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
             : '$: '. \implode(' ', $_SERVER['argv']);
-        $this->processLogEntryWEvent(new LogEntry(
+        $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupCollapsed',
             array('PHP: '.$heading)
@@ -64,7 +64,7 @@ class Firephp extends Base
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $this->processLogEntryWEvent(new LogEntry(
+        $this->processLogEntryviaEvent(new LogEntry(
             $this->debug,
             'groupEnd'
         ));

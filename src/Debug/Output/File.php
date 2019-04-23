@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.1.0
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
@@ -71,7 +71,7 @@ class File extends Text
             return;
         }
         if ($logEntry['args']) {
-            $str = $this->processLogEntryWEvent($logEntry);
+            $str = $this->processLogEntryViaEvent($logEntry);
             \fwrite($this->fileHandle, $str);
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
             $this->depth --;

@@ -81,15 +81,15 @@ class Text extends Base
                 }
             }
         } elseif ($method == 'alert') {
-            $classToPrefix = array(
+            $levelToPrefix = array(
                 'danger' => 'error',
                 'info' => 'info',
                 'success' => 'info',
                 'warning' => 'warn',
             );
-            $class = $meta['class'];
-            $prefix = $prefixes[$classToPrefix[$class]];
-            $prefix = '[Alert '.$prefix.$class.'] ';
+            $level = $meta['level'];
+            $prefix = $prefixes[$levelToPrefix[$level]];
+            $prefix = '[Alert '.$prefix.$level.'] ';
             $args = array($args[0]);
         } elseif (\in_array($method, array('profileEnd','table'))) {
             if (\is_array($args[0])) {

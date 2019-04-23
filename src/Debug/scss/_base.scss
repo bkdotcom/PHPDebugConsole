@@ -37,6 +37,9 @@ code {
 	background-color: transparent;
 	font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
 }
+pre code {
+	display: block;
+}
 dl {
 	margin-top: 0;
 	margin-bottom: 0;
@@ -47,6 +50,12 @@ dl {
 		text-indent: -10px;
 	}
 }
+li.no-indent,
+dl dd.no-indent {
+	padding-left: 0;
+	text-indent: 0;
+}
+
 fieldset {
 	// channels is the only component that uses fieldset
 	padding: .66em;
@@ -97,8 +106,6 @@ pre {
 	padding: 0;
 	border: 0;
 	margin: 0;
-	font-size: 1.2em;
-	line-height: 1.1em;
 	white-space: pre;
 	-moz-tab-size: 3;
 	  -o-tag-size: 3;

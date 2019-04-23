@@ -308,7 +308,8 @@ class Utilities
             }
         }
         $units = array('B','kB','MB','GB','TB','PB');
-        $pow = \pow(1024, ($i=\floor(\log($size, 1024))));
+        $i = $i=\floor(\log($size, 1024));
+        $pow = \pow(1024, $i);
         $size = $pow == 0
             ? '0 B'
             : \round($size/$pow, 2).' '.$units[$i];

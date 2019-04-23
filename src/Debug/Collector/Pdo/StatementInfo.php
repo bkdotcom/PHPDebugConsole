@@ -40,6 +40,8 @@ class StatementInfo
     protected $duration;
     protected $exception;
     protected $id;
+    protected $isPrepared;
+    protected $isSuccess;
     protected $memoryEnd;
     protected $memoryStart;
     protected $memoryUsage;
@@ -59,11 +61,17 @@ class StatementInfo
         $this->sql = $sql;
         $this->parameters = $params;
         $this->id = $id;
+        $this->isPrepared = $id !== null;
         $this->timeStart = \microtime(true);
         $this->memoryStart = \memory_get_usage(false);
         if (\class_exists('\SqlFormatter')) {
             // whitespace only, don't hightlight
             $this->sql = SqlFormatter::format($this->sql, false);
+            // SqlFormatter borks bound params
+            $this->sql = \strtr($this->sql, array(
+                ' : ' => ' :',
+                ' =: ' => ' = :',
+            ));
         }
     }
 
@@ -120,7 +128,8 @@ class StatementInfo
         $this->timeEnd = $timeEnd ?: \microtime(true);
         $this->memoryEnd = $memoryEnd ?: \memory_get_usage(false);
         $this->duration = $this->timeEnd - $this->timeStart;
-        $this->memoryUsage = $this->memoryEnd - $this->memoryStart;
+        $this->memoryUsage = \max($this->memoryEnd - $this->memoryStart, 0);
+        $this->isSuccess = $exception === null;
     }
 
     /**
@@ -175,25 +184,5 @@ class StatementInfo
             }
         }
         return $sql;
-    }
-
-    /**
-     * Checks if this is a prepared statement
-     *
-     * @return boolean
-     */
-    protected function isPrepared()
-    {
-        return $this->id !== null;
-    }
-
-    /**
-     * Checks if the statement was successful
-     *
-     * @return boolean
-     */
-    protected function isSuccess()
-    {
-        return $this->exception === null;
     }
 }

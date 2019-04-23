@@ -1030,21 +1030,21 @@
 		if ($.inArray("methods", types) >= 0) {
 		}
 		*/
-		var $caption, icon, selector;
+		var $caption, $icon, selector;
 		$.each(options$5.iconsMisc, function(selector,v){
 			$root.find(selector).prepend(v);
 		});
 		if ($root.data("icon")) {
-			icon = $("<i>").addClass($root.data("icon"));
+			$icon = $("<i>").addClass($root.data("icon"));
 		} else {
 			for (selector in options$5.iconsMethods) {
 				if ($root.is(selector)) {
-					icon = options$5.iconsMethods[selector];
+					$icon = $(options$5.iconsMethods[selector]);
 					break;
 				}
 			}
 		}
-		if (icon) {
+		if ($icon) {
 			if ($root.is(".m_group")) {
 				// custom icon..   add to .group-label
 				$root = $root.find("> .group-header .group-label").eq(0);
@@ -1057,11 +1057,11 @@
 				}
 				$root = $caption;
 			}
-			if ($root.find("> i:first-child").length) {
+			if ($root.find("> i:first-child").hasClass($icon.attr("class"))) {
 				// alrady have icon
 				return;
 			}
-			$root.prepend(icon);
+			$root.prepend($icon);
 		}
 	}
 

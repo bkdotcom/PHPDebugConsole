@@ -12,11 +12,12 @@
 	padding-left: 10px;
 	text-indent: -10px;
 	padding-right: .33em;
+	word-break: break-all;
 }
 .m_assert { background-color:rgba(255,204,204,.75); }
 .m_group {
 	.group-header { display:table; white-space:nowrap; }
-	.group-label { font-weight:bold; }
+	.group-label-bold { font-weight:bold; }
 	> ul {
 		list-style: none;
 		margin-left: 1em;

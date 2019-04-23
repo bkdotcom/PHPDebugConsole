@@ -22,11 +22,11 @@ span.key-value {
 	}
 	.method.deprecated i { border-bottom:0; }
 	.t_modifier_static { font-style:italic; color:#00529B; }
-}
-.info {
-	display: inline-block;
-	background-color: $info-bg;
-	color: $info-fg;
+	.info {
+		display: inline-block;
+		background-color: $info-bg;
+		color: $info-fg;
+	}
 }
 .deprecated {
 	opacity:.66;

@@ -97,7 +97,7 @@ class Wamp implements OutputInterface
             return;
         }
         $this->processLogEntry(new LogEntry(
-            $this,
+            $this->debug,
             'errorNotConsoled',
             array(
                 $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message']
@@ -120,7 +120,7 @@ class Wamp implements OutputInterface
      */
     public function onLog(LogEntry $logEntry)
     {
-        $this->processLogEntryWEvent($logEntry);
+        $this->processLogEntryViaEvent($logEntry);
     }
 
     /**
@@ -132,7 +132,7 @@ class Wamp implements OutputInterface
     {
         // publish a "we're done" message
         $this->processLogEntry(new LogEntry(
-            $this,
+            $this->debug,
             'endOutput',
             array(),
             array(
@@ -158,6 +158,9 @@ class Wamp implements OutputInterface
         ), $logEntry['meta']);
         if ($meta['channel'] == $this->debug->getCfg('channel')) {
             unset($meta['channel']);
+        }
+        if ($logEntry['return']) {
+            $args = $logEntry['return'];
         }
         if ($meta['format'] == 'raw') {
             $args = $this->crateValues($args);
@@ -216,10 +219,10 @@ class Wamp implements OutputInterface
         $data = $this->debug->getData();
         $channelName = $this->debug->getCfg('channel');
         foreach ($data['alerts'] as $logEntry) {
-            $this->processLogEntryWEvent($logEntry);
+            $this->processLogEntryViaEvent($logEntry);
         }
         foreach ($data['logSummary'] as $priority => $entries) {
-            $this->processLogEntryWEvent(new LogEntry(
+            $this->processLogEntryViaEvent(new LogEntry(
                 $this->debug,
                 'groupSummary',
                 array(),
@@ -229,9 +232,9 @@ class Wamp implements OutputInterface
                 )
             ));
             foreach ($entries as $logEntry) {
-                $this->processLogEntryWEvent($logEntry);
+                $this->processLogEntryViaEvent($logEntry);
             }
-            $this->processLogEntryWEvent(new LogEntry(
+            $this->processLogEntryViaEvent(new LogEntry(
                 $this->debug,
                 'groupEnd',
                 array(),
@@ -242,7 +245,7 @@ class Wamp implements OutputInterface
             ));
         }
         foreach ($data['log'] as $logEntry) {
-            $this->processLogEntryWEvent($logEntry);
+            $this->processLogEntryViaEvent($logEntry);
         }
     }
 
@@ -253,13 +256,12 @@ class Wamp implements OutputInterface
      *
      * @return void
      */
-    protected function processLogEntryWEvent(LogEntry $logEntry)
+    protected function processLogEntryViaEvent(LogEntry $logEntry)
     {
-        $logEntry = new LogEntry($this, $logEntry['method'], $logEntry['args'], $logEntry['meta']);
-        $this->debug->eventManager->publish('debug.outputLogEntry', $logEntry);
-        if (!$logEntry->isPropagationStopped()) {
-            $this->processLogEntry($logEntry);
-        }
+        $logEntry = new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta']);
+        $logEntry['outputAs'] = $this;
+        $this->debug->internal->publishBubbleEvent('debug.outputLogEntry', $logEntry);
+        $this->processLogEntry($logEntry);
     }
 
     /**
@@ -292,7 +294,7 @@ class Wamp implements OutputInterface
             $metaVals['REQUEST_URI'] = '$: '. \implode(' ', $_SERVER['argv']);
         }
         $this->processLogEntry(new LogEntry(
-            $this,
+            $this->debug,
             'meta',
             array(
                 $metaVals,

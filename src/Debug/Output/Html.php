@@ -204,15 +204,18 @@ class Html extends Base
     /**
      * Convert all arguments to html and join them together.
      *
-     * @param array   $args     arguments
-     * @param boolean $sanitize apply htmlspecialchars (to non-first arg)?
+     * @param array $args arguments
+     * @param array $meta meta values
      *
      * @return string html
      */
-    protected function buildArgString($args, $sanitize = true)
+    protected function buildArgString($args, $meta = array())
     {
         $glue = ', ';
         $glueAfterFirst = true;
+        $meta = \array_merge(array(
+            'sanitize' => true, // apply htmlspecialchars (to non-first arg)?
+        ), $meta);
         if (\is_string($args[0])) {
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
@@ -223,7 +226,7 @@ class Html extends Base
         }
         foreach ($args as $i => $v) {
             $args[$i] = $i > 0
-                ? $this->dump($v, $sanitize)
+                ? $this->dump($v, $meta['sanitize'])
                 : $this->dump($v, false);
         }
         if (!$glueAfterFirst) {
@@ -274,12 +277,17 @@ class Html extends Base
     protected function buildMethodAlert(LogEntry $logEntry)
     {
         $args = $logEntry['args'];
-        $meta = $logEntry['meta'];
+        $meta = \array_merge(array(
+            'class' => null,    // additional css classes
+            'icon' => null,
+            'style' => null,
+        ), $logEntry['meta']);
         $attribs = array(
-            'class' => 'm_alert alert-'.$meta['class'],
+            'class' => 'm_alert alert-'.$meta['level'].' '.$meta['class'],
             'data-channel' => $meta['channel'],
-            'data-icon' => isset($meta['icon']) ? $meta['icon'] : null,
+            'data-icon' => $meta['icon'],
             'role' => 'alert',
+            'style' => $meta['style'],
         );
         if ($meta['dismissible']) {
             $attribs['class'] .= ' alert-dismissible';
@@ -303,17 +311,20 @@ class Html extends Base
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = \array_merge(array(
+            'class' => null,
             'errorCat' => null,
             'icon' => null,
             'sanitize' => true,
+            'style' => null,
         ), $logEntry['meta']);
         $attribs = array(
-            'class' => 'm_'.$method,
+            'class' => 'm_'.$method.' '.$meta['class'],
             'data-channel' => $meta['channel'],
             'data-icon' => $meta['icon'],
             'title' => isset($meta['file'])
                 ? $meta['file'].': line '.$meta['line']
                 : null,
+            'style' => $meta['style'],
         );
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if ($meta['errorCat']) {
@@ -331,7 +342,7 @@ class Html extends Base
         return $this->debug->utilities->buildTag(
             'li',
             $attribs,
-            $this->buildArgString($args, $meta['sanitize'])
+            $this->buildArgString($args, $meta)
         );
     }
 
@@ -348,9 +359,11 @@ class Html extends Base
         $args = $logEntry['args'];
         $meta = \array_merge(array(
             'argsAsParams' => true,
+            'boldLabel' => true,
             'icon' => null,
             'isMethodName' => false,
             'level' => null,
+            'style' => null,
         ), $logEntry['meta']);
         $str = '';
         if (\in_array($method, array('group','groupCollapsed'))) {
@@ -366,19 +379,23 @@ class Html extends Base
                 if ($meta['isMethodName']) {
                     $label = $this->markupClassname($label);
                 }
-                $argStr = '<span class="group-label">'.$label.'(</span>'
+                $argStr = '<span class="group-label group-label-bold">'.$label.'(</span>'
                     .$argStr
-                    .'<span class="group-label">)</span>';
-                $argStr = \str_replace('(</span><span class="group-label">)', '', $argStr);
+                    .'<span class="group-label group-label-bold">)</span>';
+                $argStr = \str_replace('(</span><span class="group-label group-label-bold">)', '', $argStr);
             } else {
-                $argStr = '<span class="group-label">'.$label.':</span> '
+                $argStr = '<span class="group-label group-label-bold">'.$label.':</span> '
                     .$argStr;
                 $argStr = \preg_replace("#:</span> $#", '</span>', $argStr);
+            }
+            if (!$meta['boldLabel']) {
+                $argStr = \str_replace(' group-label-bold', '', $argStr);
             }
             $str .= '<li'.$this->debug->utilities->buildAttribString(array(
                 'class' => 'm_group',
                 'data-channel' => $meta['channel'],
                 'data-icon' => $meta['icon'],
+                'style' => $meta['style'],
             )).'>'."\n";
             /*
                 Header / label / toggle
@@ -423,9 +440,11 @@ class Html extends Base
         $args = $logEntry['args'];
         $meta = \array_merge(array(
             'caption' => null,
+            'class' => null,
             'columns' => array(),
             'icon' => null,
             'sortable' => false,
+            'style' => null,
             'totalCols' => array(),
         ), $logEntry['meta']);
         $asTable = \is_array($args[0]) && $args[0];
@@ -435,9 +454,10 @@ class Html extends Base
         return $this->debug->utilities->buildTag(
             'li',
             array(
-                'class' => 'm_'.$logEntry['method'],
+                'class' => 'm_'.$logEntry['method'].' '.$meta['class'],
                 'data-channel' => $meta['channel'],
                 'data-icon' => $meta['icon'],
+                'style' => $meta['style'],
             ),
             $asTable
                 ? "\n"
@@ -668,8 +688,9 @@ class Html extends Base
                     $errorSummary
                 ),
                 array(
-                    'class' => 'danger error-summary',
+                    'class' => 'error-summary',
                     'dismissible' => false,
+                    'level' => 'danger',
                 )
             ));
         }

@@ -52,7 +52,7 @@
 	}
 	&:before { content: open-quote; }
 	&:after { content: close-quote; }
-	* { white-space:normal; }
+	*:not(pre, pre *) { white-space:normal; }
 }
 .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
 .t_type { color:#693; }

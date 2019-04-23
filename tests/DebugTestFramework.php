@@ -291,7 +291,7 @@ class DebugTestFramework extends DOMTestCase
                 }
             } else {
                 if (!isset($this->reflectionMethods[$test])) {
-                    $refMethod = new \ReflectionMethod($outputObj, 'processLogEntryWEvent');
+                    $refMethod = new \ReflectionMethod($outputObj, 'processLogEntryViaEvent');
                     $refMethod->setAccessible(true);
                     $this->reflectionMethods[$test] = $refMethod;
                 }

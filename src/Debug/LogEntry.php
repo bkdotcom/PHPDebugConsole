@@ -53,7 +53,7 @@ class LogEntry extends Event
             }
             $this->values['args'] = \array_values($args);
         }
-        $this->values['meta'] = \array_merge($this->values['meta'], $metaExtracted);
+        $this->values['meta'] = \array_merge(array('channel'=>null), $this->values['meta'], $metaExtracted);
     }
 
     /**

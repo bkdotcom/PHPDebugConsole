@@ -11,8 +11,18 @@ class DebugTestFramework extends DOMTestCase
 {
 
     public static $allowError = false;
-    private $reflectionMethods = array();
-    private $reflectionProperties = array();
+
+    protected function &getSharedVar($key)
+    {
+        static $values = array(
+            'reflectionMethods' => array(),
+            'reflectionProperties' => array(),
+        );
+        if (!isset($values[$key])) {
+            $values[$key] = null;
+        }
+        return $values[$key];
+    }
 
     /**
      * for given $var, check if it's abstraction type is of $type
@@ -48,6 +58,16 @@ class DebugTestFramework extends DOMTestCase
      */
     public function setUp()
     {
+        /*
+        $count = &$this->getSharedVar('count');
+        $count = $count === null
+            ? 1
+            : $count + 1;
+        $GLOBALS['debugTest'] = $count == 10;
+        if ($GLOBALS['debugTest']) {
+            var_dump(' ----------------- setUp -----------------');
+        }
+        */
         self::$allowError = false;
         $this->debug = \bdk\Debug::getInstance(array(
             'collect' => true,
@@ -131,12 +151,20 @@ class DebugTestFramework extends DOMTestCase
         foreach ($subscribers as $subscriber) {
             $this->debug->eventManager->unsubscribe('debug.outputLogEntry', $subscriber);
         }
-        if (!isset($this->reflectionProperties['textDepth'])) {
+        $refProperties = &$this->getSharedVar('reflectionProperties');
+        if (!isset($refProperties['textDepth'])) {
             $depthRef = new \ReflectionProperty($this->debug->output->text, 'depth');
             $depthRef->setAccessible(true);
-            $this->reflectionProperties['textDepth'] = $depthRef;
+            $refProperties['textDepth'] = $depthRef;
         }
-        $this->reflectionProperties['textDepth']->setValue($this->debug->output->text, 0);
+        if (!isset($refProperties['registeredPlugins'])) {
+            $registeredPluginsRef = new \ReflectionProperty($this->debug, 'registeredPlugins');
+            $registeredPluginsRef->setAccessible(true);
+            $refProperties['registeredPlugins'] = $registeredPluginsRef;
+        }
+        $refProperties['textDepth']->setValue($this->debug->output->text, 0);
+        $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
+        $registeredPlugins->removeAll($registeredPlugins);
     }
 
     /**
@@ -290,12 +318,13 @@ class DebugTestFramework extends DOMTestCase
                     $output = $headersNew[\count($headersNew)-2];
                 }
             } else {
-                if (!isset($this->reflectionMethods[$test])) {
+                $refMethods = &$this->getSharedVar('reflectionMethods');
+                if (!isset($refMethods[$test])) {
                     $refMethod = new \ReflectionMethod($outputObj, 'processLogEntryViaEvent');
                     $refMethod->setAccessible(true);
-                    $this->reflectionMethods[$test] = $refMethod;
+                    $refMethods[$test] = $refMethod;
                 }
-                $output = $this->reflectionMethods[$test]->invoke($outputObj, $logEntry);
+                $output = $refMethods[$test]->invoke($outputObj, $logEntry);
             }
             if (\is_callable($outputExpect)) {
                 $outputExpect($output);
@@ -347,6 +376,8 @@ class DebugTestFramework extends DOMTestCase
 
     protected function logEntryToArray(LogEntry $logEntry)
     {
-        return array_values($logEntry->export());
+        $return = array_values($logEntry->export(true));
+        \ksort($return[2]);
+        return $return;
     }
 }

@@ -77,33 +77,30 @@ class DebugTest extends DebugTestFramework
         parent::$allowError = true;
         $strict = array_pop(explode('-', 'hello-world'));   // Only variables should be passed by reference
         $lastError = $this->debug->errorHandler->get('lastError');
-        $typeFileLine = version_compare(PHP_VERSION, '7.0', '>=')
-            ? 'Notice: '.__FILE__.' (line '.$lastError['line'].')'
-            : 'Runtime Notice (E_STRICT): '.__FILE__.' (line '.$lastError['line'].')';
         $errCat = version_compare(PHP_VERSION, '7.0', '>=')
             ? 'notice'
             : 'strict';
         $errMsg = 'Only variables should be passed by reference';
+        $args = version_compare(PHP_VERSION, '7.0', '>=')
+            ? array('Notice:', __FILE__.' (line '.$lastError['line'].')', $errMsg)
+            : array('Runtime Notice (E_STRICT):', __FILE__.' (line '.$lastError['line'].')', $errMsg);
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'warn',
+                $args,
                 array(
-                    $typeFileLine.': ',
-                    $errMsg,
-                ),
-                array(
-                    'errorType' => version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
+                    'backtrace' => $lastError['backtrace'],
+                    'channel' => 'phpError',
                     'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],
-                    // 'file' => __FILE__,
-                    // 'line' => $lastError['line'],
-                    'backtrace' => $lastError['backtrace'],
+                    'errorType' => version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
                     'sanitize' => true,
-                    'channel' => 'phpError',
                 ),
             ),
             'html' => '<li class="error-'.$errCat.' m_warn" data-channel="phpError">'
-                .'<span class="no-pseudo t_string">'.$typeFileLine.': </span><span class="t_string">'.$errMsg.'</span>'
+                .'<span class="no-pseudo t_string">'.$args[0].' </span>'
+                .'<span class="t_string">'.$args[1].'</span>, '
+                .'<span class="t_string">'.$errMsg.'</span>'
                 .'</li>',
         ));
     }

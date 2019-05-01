@@ -182,9 +182,9 @@ class InternalTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
+                    'channel' => 'general',
                     'file' => null,
                     'line' => null,
-                    'channel' => 'general',
                 ),
             ),
         ));
@@ -208,9 +208,9 @@ class InternalTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
+                    'channel' => 'general',
                     'file' => null,
                     'line' => null,
-                    'channel' => 'general',
                 ),
             ),
         ));
@@ -236,9 +236,9 @@ class InternalTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
+                    'channel' => 'general',
                     'file' => null,
                     'line' => null,
-                    'channel' => 'general',
                 ),
             ),
         ));
@@ -264,9 +264,9 @@ class InternalTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
+                    'channel' => 'general',
                     'file' => null,
                     'line' => null,
-                    'channel' => 'general',
                 ),
             ),
         ));

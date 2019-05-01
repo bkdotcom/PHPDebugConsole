@@ -54,13 +54,25 @@ export function init($root, opts) {
 		});
 		enhanceObject.enhanceInner($node);
 	});
-	$root.on("debug.expanded.array, debug.expanded.group, debug.expanded.object", function(e){
+	$root.on("debug.expanded.array debug.expanded.group debug.expanded.object", function(e){
 		var $node = $(e.target);
 		if ($node.is(".enhanced")) {
 			return;
 		}
-		enhanceStrings($node);
-		$node.addClass("enhanced");
+		/*
+		if (!$node.is(":visible")) {
+			console.warn('but not visible??');
+			var $foo = $node.parent();
+			console.log('foo', $foo);
+			while ($foo.length) {
+				console.log('visible', $foo.is(":visible"), $foo);
+				$foo = $foo.parent();
+			}
+		}
+		*/
+		// console.log('expanded', $node.is(":visible"), $node);
+		// enhanceStrings($node);
+		// $node.addClass("enhanced");
 	});
 }
 
@@ -68,21 +80,18 @@ export function init($root, opts) {
  * add font-awsome icons
  */
 function addIcons($root) {
-	/*
-	if (!$.isArray(types)) {
-		types = typeof types === "undefined" ?
-			["misc"] :
-			[types];
-	}
-	if ($.inArray("misc", types) >= 0) {
-	}
-	if ($.inArray("methods", types) >= 0) {
-	}
-	*/
-	var $caption, $icon, selector;
-	$.each(options.iconsMisc, function(selector,v){
-		$root.find(selector).prepend(v);
-	});
+	var $caption, $icon, $node, selector;
+	for (selector in options.iconsMisc) {
+		$node = $root.find(selector);
+		if ($node.length) {
+			$icon = $(options.iconsMisc[selector]);
+			if ($node.find("> i:first-child").hasClass($icon.attr("class"))) {
+				// already have icon
+				continue;
+			}
+			$node.prepend($icon);
+		}
+	};
 	if ($root.data("icon")) {
 		$icon = $("<i>").addClass($root.data("icon"));
 	} else {
@@ -107,17 +116,22 @@ function addIcons($root) {
 			$root = $caption;
 		}
 		if ($root.find("> i:first-child").hasClass($icon.attr("class"))) {
-			// alrady have icon
+			// already have icon
 			return;
 		}
 		$root.prepend($icon);
 	}
 }
 
+function buildFileLink(file, line) {
+	return "subl://open?url=file://"+file+"&line="+(line||1);
+}
+
 /**
  * Enhance log entries
  */
 export function enhanceEntries($node) {
+	// console.warn('enhanceEntries', $node);
 	$node.hide();
 	$node.children().each(function() {
 		enhanceEntry($(this));
@@ -167,7 +181,7 @@ function enhanceArray($node) {
  * we don't enhance strings by default (add showmore).. needs to be visible to calc height
  */
 export function enhanceEntry($entry, inclStrings) {
-	// console.log("enhanceEntry", $entry.attr("class"));
+	// console.log("enhanceEntry", $entry);
 	if ($entry.is(".enhanced")) {
 		return;
 	}
@@ -184,6 +198,7 @@ export function enhanceEntry($entry, inclStrings) {
 		enhanceStrings($entry);
 	}
 	$entry.addClass("enhanced");
+	$entry.trigger("debug.enhanced");
 }
 
 function enhanceGroup($group) {
@@ -205,28 +220,121 @@ function enhanceGroup($group) {
 		$group.addClass("empty");
 	}
 	if ($toggle.is(".expanded") || $target.find(".m_error, .m_warn").not(".filter-hidden").length) {
+		// console.warn("expanding because error or uncollapsed", $group, $group.is(":visible"));
 		$toggle.debugEnhance("expand");
 	} else {
 		$toggle.debugEnhance("collapse", true);
 	}
 }
 
-function enhanceStrings($root) {
-	$root.find(".t_string:not(.enhanced):visible").each(function() {
-		var $this = $(this),
-			$container,
-			$stringWrap,
-			height = $this.height(),
-			diff = height - 70;
-		if (diff > 35) {
-			$stringWrap = $this.wrap('<div class="show-more-wrapper"></div>').parent();
-			$stringWrap.append('<div class="show-more-fade"></div>');
-			$container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
-			$container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
-			$container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
+function enhanceStrings($node) {
+	var $entries = $node.is(".group-body")
+		? $node.children()	// .not(".m_group")
+		: $node;
+	// console.log('enhanceStrings', $entries);
+	$entries.each(function(){
+		var $entry = $(this),
+			$strings = $entry.find(".t_string");
+		if (!$entry.is(":visible")) {
+			// console.warn('not visible!!');
+			return;
 		}
-		$this.addClass("enhanced");
+		if ($entry.is(".m_group")) {
+			enhanceStrings($entry.find("> .group-body"));
+			return;
+		}
+		if ($entry.is(".enhanced-strings")) {
+			return;
+		}
+		$entry.addClass("enhanced-strings");
+		$strings.each(function() {
+			var $this = $(this),
+				$container,
+				$stringWrap,
+				height = $this.height(),
+				diff = height - 70;
+			if (diff > 35) {
+				$stringWrap = $this.wrap('<div class="show-more-wrapper"></div>').parent();
+				$stringWrap.append('<div class="show-more-fade"></div>');
+				$container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
+				$container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
+				$container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
+			}
+		});
+		createFileLinks($entry, $strings)
 	});
+}
+
+/**
+ * Create text editor links for error, warn, & trace
+ */
+function createFileLinks($entry, $strings) {
+	var dataDetectFiles = $entry.data("detectFiles"),
+		dataFoundFiles = $entry.data("foundFiles") || [];
+	// console.warn('createFileLinks', $entry);
+	if (dataDetectFiles === false) {
+		return;
+	}
+	if ($entry.is(".m_error, .m_warn") || dataDetectFiles) {
+		if (dataDetectFiles) {
+			/*
+			console.warn({
+				dataDetectFiles: dataDetectFiles,
+				dataFoundFiles: dataFoundFiles
+			});
+			*/
+		}
+		$strings.each(function(){
+			var $a,
+				$string = $(this),
+				text = $string.text(),
+				matches = [];
+			if ($string.data("file")) {
+				// filepath specified in data attr
+				matches = [null, $string.data("file"), 1];
+			} else if (dataFoundFiles.indexOf(text) === 0 || $string.is(".file")) {
+				matches = [null, text, 1];
+			} else {
+				matches = text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/);
+			}
+			if ($string.closest(".m_trace").length) {
+				createFileLinks($string.closest(".m_trace"));
+				return false;
+			}
+			if (matches) {
+				// console.warn('matches', matches);
+				$a = $('<a>', {
+					html: text + ' <i class="fa fa-external-link"></i>',
+					href: buildFileLink(matches[1], matches[2]),
+					title: "Open in editor"
+				}).addClass("file-link");
+				if ($string.is("td")) {
+					$string.html($a);
+				} else {
+					$a.addClass($string.attr("class"));
+					$a.attr("style", $string.attr("style"));
+					$string.replaceWith($a);
+				}
+			}
+		});
+		$entry.removeData("detectFiles foundFiles");
+	} else if ($entry.is(".m_trace")) {
+		$entry.find("table thead tr > *:nth-child(4)").after("<th></th>");
+		$entry.find("table tbody tr").each(function(){
+			var $tds = $(this).find("> td");
+			var $a = $('<a>', {
+				class: "file-link",
+				href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
+				html: '<i class="fa fa-fw fa-external-link"></i>',
+				style: "vertical-align: bottom",
+				title: "Open in editor"
+			});
+			$tds.eq(2).after($("<td/>", {
+				class: "text-center",
+				html: $a
+			}));
+		});
+	}
 }
 
 function enhanceValue(node) {

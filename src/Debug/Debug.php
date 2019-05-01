@@ -15,6 +15,7 @@
 namespace bdk;
 
 use bdk\Debug\Abstracter;
+use bdk\Debug\AssetProvider;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\ErrorEmailer;
@@ -22,6 +23,7 @@ use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
 use ReflectionMethod;
+use SplObjectStorage;
 
 /**
  * Web-browser/javascript like console class for PHP
@@ -50,6 +52,7 @@ class Debug
     protected $logRef;          // points to either log or logSummary[priority]
     protected $config;          // config instance
     protected $parentInstance;
+    protected $registeredPlugins;   // SplObjectHash
     protected $rootInstance;
     protected static $methodDefaultArgs = array();
 
@@ -108,6 +111,7 @@ class Debug
             'factories' => $this->getDefaultFactories(),
             'services' => $this->getDefaultServices(),
         );
+        $this->registeredPlugins = new SplObjectStorage();
         if (!isset(self::$instance)) {
             /*
                self::getInstance() will always return initial/first instance
@@ -1080,13 +1084,29 @@ class Debug
     /**
      * Extend debug with a plugin
      *
-     * @param SubscriberInterface $plugin object implementing SubscriberInterface
+     * @param SubscriberInterface|AssetProvider $plugin object implementing SubscriberInterface and/or AssetProvider
      *
      * @return void
+     * @throws \InvalidArgumentException
      */
-    public function addPlugin(SubscriberInterface $plugin)
+    public function addPlugin($plugin)
     {
-        $this->eventManager->addSubscriberInterface($plugin);
+        if ($this->registeredPlugins->contains($plugin)) {
+            return;
+        }
+        $isPlugin = false;
+        if ($plugin instanceof SubscriberInterface) {
+            $isPlugin = true;
+            $this->eventManager->addSubscriberInterface($plugin);
+        }
+        if ($plugin instanceof AssetProvider) {
+            $isPlugin = true;
+            $this->rootInstance->output->addAssetProvider($plugin);
+        }
+        if (!$isPlugin) {
+            throw new \InvalidArgumentException('addPlugin expects \\bdk\\PubSub\\SubscriberInterface or \\bdk\\Debug\\AssetProvider');
+        }
+        $this->registeredPlugins->attach($plugin);
     }
 
     /**
@@ -1309,8 +1329,8 @@ class Debug
                 $channel,
                 array(
                     'headers' => array(),
-                    'return' => '',
                     'isTarget' => $channel === $this,
+                    'return' => '',
                 )
             );
             $headers = \array_merge($headers, $event['headers']);
@@ -1340,6 +1360,7 @@ class Debug
      */
     public function removePlugin(SubscriberInterface $plugin)
     {
+        $this->registeredPlugins->detach($plugin);
         $this->eventManager->RemoveSubscriberInterface($plugin);
     }
 

@@ -25,8 +25,10 @@ class Html extends Base
 {
 
     protected $errorSummary;
-    protected $wrapAttribs = array();
+    protected $argAttribs = array();
+    protected $logEntryAttribs = array();
     protected $channels = array();
+    protected $detectFiles = false;
 
     /**
      * Constructor
@@ -50,25 +52,25 @@ class Html extends Base
      */
     public function dump($val, $sanitize = true, $tagName = 'span')
     {
-        $this->wrapAttribs = array(
+        $this->argAttribs = array(
             'class' => array(),
             'title' => null,
         );
         $this->sanitize = $sanitize;
         $val = parent::dump($val);
         if ($tagName && !\in_array($this->dumpType, array('recursion'))) {
-            $wrapAttribs = $this->debug->utilities->arrayMergeDeep(
+            $argAttribs = $this->debug->utilities->arrayMergeDeep(
                 array(
                     'class' => array(
                         't_'.$this->dumpType,
                         $this->dumpTypeMore,
                     ),
                 ),
-                $this->wrapAttribs
+                $this->argAttribs
             );
-            $val = $this->debug->utilities->buildTag($tagName, $wrapAttribs, $val);
+            $val = $this->debug->utilities->buildTag($tagName, $argAttribs, $val);
         }
-        $this->wrapAttribs = array();
+        $this->argAttribs = array();
         return $val;
     }
 
@@ -177,13 +179,26 @@ class Html extends Base
     {
         $str = '';
         $method = $logEntry['method'];
-        $meta = $logEntry['meta'];
+        $meta = \array_merge(array(
+            'channel' => null,
+            'class' => null,
+            'detectFiles' => null,
+            'icon' => null,
+            'style' => null,
+        ), $logEntry['meta']);
         if (!\in_array($meta['channel'], $this->channels) && $meta['channel'] !== 'phpError') {
             $this->channels[] = $meta['channel'];
         }
-        if ($meta['channel'] === $this->channelNameRoot) {
-            $logEntry->setMeta('channel', null);
-        }
+        $this->detectFiles = $meta['detectFiles'];
+        $this->logEntryAttribs = array(
+            'class' => 'm_'.$method.' '.$meta['class'],
+            'data-channel' => $meta['channel'] !== $this->channelNameRoot
+                ? $meta['channel']
+                : null,
+            'data-detect-files' => $meta['detectFiles'],
+            'data-icon' => $meta['icon'],
+            'style' => $meta['style'],
+        );
         if ($method == 'alert') {
             $str = $this->buildMethodAlert($logEntry);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
@@ -195,6 +210,7 @@ class Html extends Base
         }
         $str = \strtr($str, array(
             ' data-channel="null"' => '',
+            ' data-detect-files="null"' => '',
             ' data-icon="null"' => '',
         ));
         $str .= "\n";
@@ -220,6 +236,7 @@ class Html extends Base
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
                 $glueAfterFirst = false;
+                $args[0] = \rtrim($args[0]).' ';
             } elseif (\count($args) == 2) {
                 $glue = ' = ';
             }
@@ -277,18 +294,11 @@ class Html extends Base
     protected function buildMethodAlert(LogEntry $logEntry)
     {
         $args = $logEntry['args'];
-        $meta = \array_merge(array(
-            'class' => null,    // additional css classes
-            'icon' => null,
-            'style' => null,
-        ), $logEntry['meta']);
-        $attribs = array(
-            'class' => 'm_alert alert-'.$meta['level'].' '.$meta['class'],
-            'data-channel' => $meta['channel'],
-            'data-icon' => $meta['icon'],
+        $meta = $logEntry['meta'];
+        $attribs = \array_merge($this->logEntryAttribs, array(
+            'class' => 'alert-'.$meta['level'].' '.$this->logEntryAttribs['class'],
             'role' => 'alert',
-            'style' => $meta['style'],
-        );
+        ));
         if ($meta['dismissible']) {
             $attribs['class'] .= ' alert-dismissible';
             $args[0] = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
@@ -311,21 +321,14 @@ class Html extends Base
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = \array_merge(array(
-            'class' => null,
             'errorCat' => null,
-            'icon' => null,
             'sanitize' => true,
-            'style' => null,
         ), $logEntry['meta']);
-        $attribs = array(
-            'class' => 'm_'.$method.' '.$meta['class'],
-            'data-channel' => $meta['channel'],
-            'data-icon' => $meta['icon'],
+        $attribs = \array_merge($this->logEntryAttribs, array(
             'title' => isset($meta['file'])
                 ? $meta['file'].': line '.$meta['line']
                 : null,
-            'style' => $meta['style'],
-        );
+        ));
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if ($meta['errorCat']) {
                 //  should only be applicable for error & warn methods
@@ -360,10 +363,8 @@ class Html extends Base
         $meta = \array_merge(array(
             'argsAsParams' => true,
             'boldLabel' => true,
-            'icon' => null,
             'isMethodName' => false,
             'level' => null,
-            'style' => null,
         ), $logEntry['meta']);
         $str = '';
         if (\in_array($method, array('group','groupCollapsed'))) {
@@ -391,12 +392,8 @@ class Html extends Base
             if (!$meta['boldLabel']) {
                 $argStr = \str_replace(' group-label-bold', '', $argStr);
             }
-            $str .= '<li'.$this->debug->utilities->buildAttribString(array(
-                'class' => 'm_group',
-                'data-channel' => $meta['channel'],
-                'data-icon' => $meta['icon'],
-                'style' => $meta['style'],
-            )).'>'."\n";
+            $this->logEntryAttribs['class'] = 'm_group';
+            $str .= '<li'.$this->debug->utilities->buildAttribString($this->logEntryAttribs).'>'."\n";
             /*
                 Header / label / toggle
             */
@@ -440,11 +437,8 @@ class Html extends Base
         $args = $logEntry['args'];
         $meta = \array_merge(array(
             'caption' => null,
-            'class' => null,
             'columns' => array(),
-            'icon' => null,
             'sortable' => false,
-            'style' => null,
             'totalCols' => array(),
         ), $logEntry['meta']);
         $asTable = \is_array($args[0]) && $args[0];
@@ -453,12 +447,7 @@ class Html extends Base
         }
         return $this->debug->utilities->buildTag(
             'li',
-            array(
-                'class' => 'm_'.$logEntry['method'].' '.$meta['class'],
-                'data-channel' => $meta['channel'],
-                'data-icon' => $meta['icon'],
-                'style' => $meta['style'],
-            ),
+            $this->logEntryAttribs,
             $asTable
                 ? "\n"
                     .$this->table->build(
@@ -556,8 +545,8 @@ class Html extends Base
     {
         $date = $this->checkTimestamp($val);
         if ($date) {
-            $this->wrapAttribs['class'][] = 'timestamp';
-            $this->wrapAttribs['title'] = $date;
+            $this->argAttribs['class'][] = 'timestamp';
+            $this->argAttribs['title'] = $date;
         }
         return $val;
     }
@@ -597,7 +586,7 @@ class Html extends Base
             Were we debugged from inside or outside of the object?
         */
         $dump = $this->object->dump($abs);
-        $this->wrapAttribs['data-accessible'] = $abs['scopeClass'] == $abs['className']
+        $this->argAttribs['data-accessible'] = $abs['scopeClass'] == $abs['className']
             ? 'private'
             : 'public';
         return $dump;
@@ -625,15 +614,18 @@ class Html extends Base
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
             if ($date) {
-                $this->wrapAttribs['class'][] = 'timestamp';
-                $this->wrapAttribs['title'] = $date;
+                $this->argAttribs['class'][] = 'timestamp';
+                $this->argAttribs['title'] = $date;
             }
         } else {
+            if ($this->detectFiles && !\preg_match('/[\r\n]/', $val) && \is_file($val)) {
+                $this->argAttribs['class'][] = 'file';
+            }
             if ($this->sanitize) {
                 $val = $this->debug->utf8->dump($val, true, true);
                 $val = $this->visualWhiteSpace($val);
             } else {
-                $this->wrapAttribs['class'][] = 'no-pseudo';
+                $this->argAttribs['class'][] = 'no-pseudo';
                 $val = $this->debug->utf8->dump($val, true, false);
             }
         }
@@ -698,7 +690,7 @@ class Html extends Base
     }
 
     /**
-     * Cooerce value to string
+     * Coerce value to string
      *
      * @param mixed $val value
      *

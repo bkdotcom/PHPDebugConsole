@@ -359,12 +359,11 @@ class Internal implements SubscriberInterface
                  b) calling info
             */
             $this->error = $error;
-            $errInfo = $error['typeStr'].': '.$error['file'].' (line '.$error['line'].')';
-            $errMsg = $error['message'];
+            $errLoc = $error['file'].' (line '.$error['line'].')';
             if ($error['type'] & $this->debug->getCfg('errorMask')) {
-                $this->debug->error($errInfo.': ', $errMsg);
+                $this->debug->error($error['typeStr'].':', $errLoc, $error['message']);
             } else {
-                $this->debug->warn($errInfo.': ', $errMsg);
+                $this->debug->warn($error['typeStr'].':', $errLoc, $error['message']);
             }
             $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
             $error['inConsole'] = true;
@@ -494,7 +493,7 @@ class Internal implements SubscriberInterface
             return;
         }
         $this->debug->log('PHP Version', PHP_VERSION);
-        $this->debug->log('ini location', \php_ini_loaded_file());
+        $this->debug->log('ini location', \php_ini_loaded_file(), $this->debug->meta('detectFiles', true));
         $this->debug->log('memory_limit', $this->debug->utilities->getBytes($this->debug->utilities->memoryLimit()));
         $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
         if (\session_module_name() === 'files') {

@@ -52,16 +52,21 @@ var optionsDefault = {
 		".m_profileEnd" :	'<i class="fa fa-lg fa-pie-chart"></i>',
 		".m_time" :			'<i class="fa fa-lg fa-clock-o"></i>',
 		".m_timeLog" :		'<i class="fa fa-lg fa-clock-o"></i>',
+		".m_trace" :		'<i class="fa fa-list"></i>',
 		".m_warn" :			'<i class="fa fa-lg fa-warning"></i>'
 	},
 	debugKey: getDebugKey(),
 	drawer: false,
-	persistDrawer: http.lsGet("phpDebugConsole-persistDrawer")
+	persistDrawer: http.lsGet("phpDebugConsole-persistDrawer"),
+	linkFiles: http.lsGet("phpDebugConsole-linkFiles"),
+	linkFilesTemplate: http.lsGet("phpDebugConsole-linkFilesTemplate") || "subl://open?url=file://%file&line=%line"
 };
 
 if (typeof $ === 'undefined') {
 	throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.');
 }
+
+// var $selfScript = $(document.CurrentScript || document.scripts[document.scripts.length -1]);
 
 /*
 	Load "optional" dependencies
@@ -105,6 +110,9 @@ loadDeps([
 			var clipboard = window.ClipboardJS;
 			new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
 				target: function (trigger) {
+					if ($(trigger).is("a")) {
+						return $('<div>')[0];
+					}
 					notify("Copied to clipboard");
 					return trigger;
 				}
@@ -126,27 +134,41 @@ $.fn.debugEnhance = function(method) {
 	} else if (method === "init") {
 		options = $self.eq(0).data("options") || {};
 		options = $.extend({}, optionsDefault, options);
-		enhanceMain.init($self, options);
 		enhanceEntries.init($self, options);
 		expandCollapse.init($self, options);
 		registerListeners($self);
+		enhanceMain.init($self, options);
+		if (!options.drawer) {
+			$self.debugEnhance();
+		}
 	} else if (method == "setOptions") {
 		if (typeof arguments[1] == "object") {
 			options = $self.data("options") || {};
 			$.extend(options, arguments[1]);
 			$self.data("options", options)
- 		}
+		}
 	} else {
 		this.each(function() {
 			var $self = $(this);
+			/*
 			if ($self.is(".enhanced")) {
+				console.warn('already enhanced');
 				return;
 			}
-			if ($self.is(".group-body")) {
-				enhanceEntries.enhanceEntries($self);
-			} else {
-				// log entry assumed
-				enhanceEntries.enhanceEntry($self, true);
+			*/
+			if ($self.is(".debug")) {
+				// console.warn("debugEnhance() : .debug");
+				$self.find(".debug-log-summary, .debug-log").show();
+				$self.find(".m_alert, .debug-log-summary, .debug-log").debugEnhance();
+			} else if (!$self.is(".enhanced")) {
+				if ($self.is(".group-body")) {
+					// console.warn("debugEnhance() : .group-body");
+					enhanceEntries.enhanceEntries($self);
+				} else {
+					// log entry assumed
+					// console.warn("debugEnhance() : entry");
+					enhanceEntries.enhanceEntry($self, true);
+				}
 			}
 		});
 	}
@@ -156,7 +178,7 @@ $.fn.debugEnhance = function(method) {
 $(function() {
 	$(".debug").each(function(){
 		$(this).debugEnhance("init");
-		$(this).find(".m_alert, .debug-log-summary, .debug-log").debugEnhance();
+		// $(this).find(".m_alert, .debug-log-summary, .debug-log").debugEnhance();
 	});
 });
 

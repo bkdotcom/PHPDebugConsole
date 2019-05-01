@@ -18,7 +18,10 @@ table {
 	&.table-bordered td { border:1px solid #7F7F7F; padding:1px .25em; }
 	tbody th.t_int,
 	td.numeric,
-	td.t_int { text-align:right; }
+	td.t_int {
+		text-align: right;
+		white-space: nowrap;
+	}
 	td.t_key:before,
 	td.t_key:after,
 	th.t_key:before,

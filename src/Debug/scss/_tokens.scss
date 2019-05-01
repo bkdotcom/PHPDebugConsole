@@ -35,6 +35,7 @@
 	}
 	&:before { content:'['; margin-right:1px; }
 	&:after { content:']'; margin-left:1px; }
+	&.t_int { white-space: nowrap; }
 }
 .t_keyword { color:#07A; }
 .t_null { opacity:0.3; }
@@ -52,7 +53,9 @@
 	}
 	&:before { content: open-quote; }
 	&:after { content: close-quote; }
-	*:not(pre, pre *) { white-space:normal; }
+	*:not(pre, pre *) {
+		white-space: pre-wrap;
+	}
 }
 .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
 .t_type { color:#693; }

@@ -10,10 +10,10 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->emergency('Emergency broadcast system');
         $meta = array(
-            'file' => __FILE__,
-            'line' => __LINE__ - 3,
-            'psr3level' => 'emergency',
             'channel' => 'general',
+            'file' => __FILE__,
+            'line' => __LINE__ - 4,
+            'psr3level' => 'emergency',
         );
         $this->assertSame(array(
             'error',
@@ -26,10 +26,10 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->critical('Critical test');
         $metaExpect = array(
-            'file' => __FILE__,
-            'line' => __LINE__ - 3,
-            'psr3level' => 'critical',
             'channel' => 'general',
+            'file' => __FILE__,
+            'line' => __LINE__ - 4,
+            'psr3level' => 'critical',
         );
         $this->assertSame(array(
             'error',
@@ -68,10 +68,10 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->error('Error test');
         $meta = array(
-            'file' => __FILE__,
-            'line' => __LINE__ - 3,
-            'psr3level' => 'error',
             'channel' => 'general',
+            'file' => __FILE__,
+            'line' => __LINE__ - 4,
+            'psr3level' => 'error',
         );
         $this->assertSame(array(
             'error',
@@ -84,10 +84,10 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->warning('You\'ve been warned');
         $meta = array(
-            'file' => __FILE__,
-            'line' => __LINE__ - 3,
-            'psr3level' => 'warning',
             'channel' => 'general',
+            'file' => __FILE__,
+            'line' => __LINE__ - 4,
+            'psr3level' => 'warning',
         );
         $this->assertSame(array(
             'warn',
@@ -100,10 +100,10 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->notice('Final Notice');
         $meta = array(
-            'file' => __FILE__,
-            'line' => __LINE__ - 3,
-            'psr3level' => 'notice',
             'channel' => 'general',
+            'file' => __FILE__,
+            'line' => __LINE__ - 4,
+            'psr3level' => 'notice',
         );
         $this->assertSame(array(
             'warn',
@@ -119,9 +119,9 @@ class LoggerTest extends DebugTestFramework
             'alert',
             array('Alert'),
             array(
-                'level' => 'danger',
-                'dismissible' => false,
                 'channel' => 'general',
+                'dismissible' => false,
+                'level' => 'danger',
             ),
         ), $this->logEntryToArray($this->debug->getData('alerts/0')));
     }

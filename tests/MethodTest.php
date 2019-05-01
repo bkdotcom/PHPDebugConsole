@@ -72,8 +72,8 @@ class MethodTest extends DebugTestFramework
                     'myCustom',
                     array('How\'s it goin?'),
                     array(
-                        'isCustomMethod' => true,
                         'channel' => 'general',
+                        'isCustomMethod' => true,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -100,9 +100,9 @@ class MethodTest extends DebugTestFramework
                     'myCustom',
                     array('called statically'),
                     array(
+                        'channel' => 'general',
                         'isCustomMethod' => true,
                         'statically' => true,
-                        'channel' => 'general',
                     ),
                 ),
                 'chromeLogger' => array(
@@ -133,8 +133,8 @@ class MethodTest extends DebugTestFramework
                     'myCustom',
                     array('How\'s it goin?'),
                     array(
-                        'isCustomMethod' => true,
                         'channel' => 'general',
+                        'isCustomMethod' => true,
                     ),
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
@@ -161,9 +161,9 @@ class MethodTest extends DebugTestFramework
                     'alert',
                     array($message),
                     array(
-                        'level' => 'danger',
-                        'dismissible' => false,
                         'channel' => 'general',
+                        'dismissible' => false,
+                        'level' => 'danger',
                     ),
                 ),
                 'chromeLogger' => array(
@@ -279,9 +279,9 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared log (sans errors)'),
                     array(
-                        'file' => $this->file,
-                        'line' => $this->line,
                         'bitmask' => \bdk\Debug::CLEAR_LOG,
+                        'channel' => 'general',
+                        'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
                             'log' => true,
@@ -290,7 +290,7 @@ class MethodTest extends DebugTestFramework
                             'summaryErrors' => false,
                             'silent' => false,
                         ),
-                        'channel' => 'general',
+                        'line' => $this->line,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -336,9 +336,9 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared alerts'),
                     array(
-                        'file' => $this->file,
-                        'line' => $this->line,
                         'bitmask' => \bdk\Debug::CLEAR_ALERTS,
+                        'channel' => 'general',
+                        'file' => $this->file,
                         'flags' => array(
                             'alerts' => true,
                             'log' => false,
@@ -347,7 +347,7 @@ class MethodTest extends DebugTestFramework
                             'summaryErrors' => false,
                             'silent' => false,
                         ),
-                        'channel' => 'general',
+                        'line' => $this->line,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -387,9 +387,9 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared summary (sans errors)'),
                     array(
-                        'file' => $this->file,
-                        'line' => $this->line,
                         'bitmask' => \bdk\Debug::CLEAR_SUMMARY,
+                        'channel' => 'general',
+                        'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
                             'log' => false,
@@ -398,7 +398,7 @@ class MethodTest extends DebugTestFramework
                             'summaryErrors' => false,
                             'silent' => false,
                         ),
-                        'channel' => 'general',
+                        'line' => $this->line,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -442,9 +442,9 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared errors'),
                     array(
-                        'file' => $this->file,
-                        'line' => $this->line,
                         'bitmask' => \bdk\Debug::CLEAR_LOG_ERRORS,
+                        'channel' => 'general',
+                        'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
                             'log' => false,
@@ -453,7 +453,7 @@ class MethodTest extends DebugTestFramework
                             'summaryErrors' => false,
                             'silent' => false,
                         ),
-                        'channel' => 'general',
+                        'line' => $this->line,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -495,9 +495,9 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared everything'),
                     array(
-                        'file' => $this->file,
-                        'line' => $this->line,
                         'bitmask' => \bdk\Debug::CLEAR_ALL,
+                        'channel' => 'general',
+                        'file' => $this->file,
                         'flags' => array(
                             'alerts' => true,
                             'log' => true,
@@ -506,7 +506,7 @@ class MethodTest extends DebugTestFramework
                             'summaryErrors' => true,
                             'silent' => false,
                         ),
-                        'channel' => 'general',
+                        'line' => $this->line,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -548,9 +548,9 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared summary (incl errors)'),
                     array(
-                        'file' => $this->file,
-                        'line' => $this->line,
                         'bitmask' => \bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_SUMMARY_ERRORS,
+                        'channel' => 'general',
+                        'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
                             'log' => false,
@@ -559,7 +559,7 @@ class MethodTest extends DebugTestFramework
                             'summaryErrors' => true,
                             'silent' => false,
                         ),
-                        'channel' => 'general',
+                        'line' => $this->line,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -666,13 +666,13 @@ class MethodTest extends DebugTestFramework
         $this->assertSame(array(
             array('count', array('count test',1), array('channel'=>'general')),
             array('count', array('count test',2), array('channel'=>'general')),
-            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true,'channel'=>'general')),
-            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[0],'channel'=>'general')),
+            array('count', array('count',1), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
+            array('count', array('count',1), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[0])),
             array('count', array('count test', 3), array('channel'=>'general')),
-            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true,'channel'=>'general')),
-            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[0],'channel'=>'general')),
+            array('count', array('count',2), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
+            array('count', array('count',2), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[0])),
             array('count', array('count test', 4), array('channel'=>'general')),
-            array('count', array('count',3), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true,'channel'=>'general')),
+            array('count', array('count',3), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
             array('log', array('count_inc test', 3), array('channel'=>'general')),
             array('count', array('count_inc test',3), array('channel'=>'general')),
         ), array_map(function ($logEntry) {
@@ -968,8 +968,8 @@ class MethodTest extends DebugTestFramework
                     ),
                     array(
                         'channel' => 'general',
-                        'statically' => true,
                         'isMethodName' => true,
+                        'statically' => true,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -999,8 +999,8 @@ class MethodTest extends DebugTestFramework
                     ),
                     array(
                         'channel' => 'general',
-                        'statically' => true,
                         'isMethodName' => true,
+                        'statically' => true,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -1032,8 +1032,8 @@ class MethodTest extends DebugTestFramework
                     ),
                     array(
                         'channel' => 'general',
-                        'statically' => true,
                         'isMethodName' => true,
+                        'statically' => true,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -1064,8 +1064,8 @@ class MethodTest extends DebugTestFramework
                     ),
                     array(
                         'channel' => 'general',
-                        'statically' => true,
                         'isMethodName' => true,
+                        'statically' => true,
                     ),
                 ),
                 'chromeLogger' => array(

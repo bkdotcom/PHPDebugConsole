@@ -32,8 +32,8 @@ class ChannelTest extends DebugTestFramework
     {
         $dataExpect = array(
             'alerts' => array(
-                array('alert', array('main: alert'), array('level' => 'danger', 'dismissible' => false, 'channel' => 'general')),
-                array('alert', array('foo: alert'), array('level' => 'danger', 'dismissible' => false, 'channel' => 'foo')),
+                array('alert', array('main: alert'), array('channel' => 'general', 'level' => 'danger', 'dismissible' => false)),
+                array('alert', array('foo: alert'), array('channel' => 'foo', 'level' => 'danger', 'dismissible' => false)),
             ),
             'groupStacks' => array(
                 'main' => array(
@@ -59,8 +59,8 @@ class ChannelTest extends DebugTestFramework
                     array('group', array('main: sum 0 / group 1 / group 2'), array('channel'=>'general')),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array('channel'=>'general')),
                     array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('error', array('main: error'), array('file' => '', 'line' => '', 'channel'=>'general')),
-                    array('error', array('foo: error'), array('file' => '', 'line' => '', 'channel' => 'foo')),
+                    array('error', array('main: error'), array('channel'=>'general', 'file' => '', 'line' => '')),
+                    array('error', array('foo: error'), array('channel'=>'foo', 'file' => '', 'line' => '')),
                     array('groupEnd', array(), array('channel'=>'general')),
                     array('groupEnd', array(), array('channel' => 'foo')),
                 ),
@@ -83,7 +83,7 @@ class ChannelTest extends DebugTestFramework
 
         $dataFooClearedExpect = array(
             'alerts' => array(
-                array('alert', array('main: alert'), array('level' => 'danger', 'dismissible' => false, 'channel'=>'general')),
+                array('alert', array('main: alert'), array('channel'=>'general', 'level' => 'danger', 'dismissible' => false)),
                 // array('alert', array('foo: alert'), array('channel' => 'foo', 'level' => 'danger', 'dismissible' => false)),
             ),
             'groupStacks' => array(
@@ -101,7 +101,7 @@ class ChannelTest extends DebugTestFramework
                 array('log', array('main: group / group / log'), array('channel'=>'general')),
                 // array('log', array('foo: group / group / log'), array('channel' => 'foo')),
                 array(
-                   'clear',
+                    'clear',
                     array(
                         'Cleared everything %c(%s)',
                         'background-color:#c0c0c0; padding:0 .33em;',
@@ -132,7 +132,7 @@ class ChannelTest extends DebugTestFramework
                     array('group', array('main: sum 0 / group 1 / group 2'), array('channel'=>'general')),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array('channel'=>'general')),
                     // array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('error', array('main: error'), array('file' => '', 'line' => '', 'channel'=>'general')),
+                    array('error', array('main: error'), array('channel'=>'general', 'file' => '', 'line' => '')),
                     // array('error', array('foo: error'), array('channel' => 'foo', 'file' => '', 'line' => '')),
                     array('groupEnd', array(), array('channel'=>'general')),
                     // array('groupEnd', array(), array('channel' => 'foo')),

@@ -191,6 +191,7 @@ function phpErrorToggles() {
 				)
 			)
 		);
+		$li.remove();
 	});
 	if ($togglesUl.children().length === 0) {
 		$togglesUl.parent().hide();

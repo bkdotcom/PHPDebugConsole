@@ -24,10 +24,10 @@
 	.debug-options-body {
 		background-clip: padding-box;
 		border: 1px solid $border-color;
-		padding: .5em 0 .5em 15px;
+		padding: .5em 5px .5em 15px;
 	}
 	&.show {
-		max-height: 100px;
+		max-height: 150px;
 	}
 	label {
 		font-weight: normal;
@@ -37,7 +37,7 @@
 		}
 	}
 	hr.dropdown-divider {
-		margin: .5em 0 .5em -15px;
+		margin: .5em -5px .5em -15px;
 		background: $border-color;
 		height: 1px;
 		border: none;

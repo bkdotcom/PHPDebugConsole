@@ -49,14 +49,14 @@ export function init($debugRoot, opts) {
 
 	addMarkup();
 
-	if (options.persistDrawer && lsGet("phpDebugConsole-openDrawer")) {
-		open();
-	}
-
 	$root.find(".debug-body").scrollLock();
 	$root.find(".debug-resize-handle").on("mousedown", onMousedown);
 	$root.find(".debug-pull-tab").on("click", open);
 	$root.find(".debug-menu-bar .close").on("click", close);
+
+	if (options.persistDrawer && lsGet("phpDebugConsole-openDrawer")) {
+		open();
+	}
 }
 
 function addMarkup() {
@@ -76,6 +76,7 @@ function addMarkup() {
 
 function open() {
 	$root.addClass("debug-drawer-open");
+	$root.debugEnhance();
 	setHeight(); // makes sure height within min/max
 	$("body").css("marginBottom", ($root.height() + 8) + "px");
 	$(window).on("resize", setHeight);

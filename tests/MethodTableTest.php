@@ -55,10 +55,10 @@ class MethodTableTest extends DebugTestFramework
             array($list),
             array(
                 'caption'=>null,
+                'channel' => 'general',
                 'columns'=>array(),
                 'sortable'=>true,
                 'totalCols' => array(),
-                'channel' => 'general',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/0')));
         $this->assertSame(array(
@@ -66,10 +66,10 @@ class MethodTableTest extends DebugTestFramework
             array(array()),
             array(
                 'caption'=>'arg1',
+                'channel' => 'general',
                 'columns'=>array(),
                 'sortable'=>true,
                 'totalCols' => array(),
-                'channel' => 'general',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/1')));
         $this->assertSame(array(
@@ -77,10 +77,10 @@ class MethodTableTest extends DebugTestFramework
             array($list),
             array(
                 'caption'=>'arg1',
+                'channel' => 'general',
                 'columns'=>array(),
                 'sortable'=>true,
                 'totalCols' => array(),
-                'channel' => 'general',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/2')));
         $this->assertSame(array(
@@ -88,10 +88,10 @@ class MethodTableTest extends DebugTestFramework
             array($list),
             array(
                 'caption'=>'arg2',
+                'channel' => 'general',
                 'columns'=>array('arg3 is array'),
                 'sortable'=>true,
                 'totalCols' => array(),
-                'channel' => 'general',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/3')));
         $this->assertSame(array(
@@ -99,10 +99,10 @@ class MethodTableTest extends DebugTestFramework
             array(null),
             array(
                 'caption'=>'arg1',
+                'channel' => 'general',
                 'columns'=>array(),
                 'sortable'=>true,
                 'totalCols' => array(),
-                'channel' => 'general',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/4')));
         $this->assertSame(array(
@@ -112,10 +112,10 @@ class MethodTableTest extends DebugTestFramework
             ),
             array(
                 'caption'=>'flat',
+                'channel' => 'general',
                 'columns'=>array(),
                 'sortable'=>true,
                 'totalCols' => array(),
-                'channel' => 'general',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/5')));
     }

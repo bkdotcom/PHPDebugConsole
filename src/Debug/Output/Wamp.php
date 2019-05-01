@@ -31,6 +31,8 @@ class Wamp implements OutputInterface
     public $topic = 'bdk.debug';
     public $wamp;
     protected $channelName = '';
+    protected $detectFiles = false;
+    protected $foundFiles = array();
 
     /**
      * Constructor
@@ -162,11 +164,16 @@ class Wamp implements OutputInterface
         if ($logEntry['return']) {
             $args = $logEntry['return'];
         }
+        $this->detectFiles = $logEntry->getMeta('detectFiles', false);
+        $this->foundFiles = array();
         if ($meta['format'] == 'raw') {
             $args = $this->crateValues($args);
         }
         if (!empty($meta['backtrace'])) {
             $meta['backtrace'] = $this->crateValues($meta['backtrace']);
+        }
+        if ($this->detectFiles) {
+            $meta['foundFiles'] = $this->foundFiles;
         }
         $this->wamp->publish($this->topic, array($logEntry['method'], $args, $meta));
     }
@@ -198,9 +205,17 @@ class Wamp implements OutputInterface
                 $prevIntK = $k;
             }
             if (\is_array($v)) {
-                $values[$k] = self::crateValues($v);
-            } elseif (\is_string($v) && !$this->debug->utf8->isUtf8($v)) {
-                $values[$k] = '_b64_:'.\base64_encode($v);
+                if ($this->debug->abstracter->isAbstraction($v) && $v['type'] == 'object') {
+                    $values[$k]['properties'] = self::crateValues($v['properties']);
+                } else {
+                    $values[$k] = self::crateValues($v);
+                }
+            } elseif (\is_string($v)) {
+                if (!$this->debug->utf8->isUtf8($v)) {
+                    $values[$k] = '_b64_:'.\base64_encode($v);
+                } elseif ($this->detectFiles && !\preg_match('/[\r\n]/', $v) && \is_file($v)) {
+                    $this->foundFiles[] = $v;
+                }
             }
         }
         if ($storeKeyOrder) {

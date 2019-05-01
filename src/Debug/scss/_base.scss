@@ -21,6 +21,7 @@ a {
 	&:visited { color: #551a8b; }
 	&:focus, &:hover { text-decoration: underline; }
 	&:active, &:hover { outline: 0; color: #e00; }
+	&.file-link { color: inherit; }
 }
 button {
 	color: inherit;
@@ -115,7 +116,7 @@ ul {
 	margin-top: 0;
 	margin-bottom: 0;
 }
-[title] {
+*[title]:not(a) {
 	cursor: help;
 	&:hover { background-color:rgba(0,0,0,0.2); }
 }

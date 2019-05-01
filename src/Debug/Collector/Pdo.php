@@ -15,8 +15,9 @@ use PDO as PdoBase;
 use PDOException;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\PubSub\Event;
+use bdk\Debug\Plugin\Prism;
 use bdk\Debug\Collector\Pdo\StatementInfo;
+use bdk\PubSub\Event;
 
 /**
  * A PDO proxy which traces statements
@@ -46,7 +47,7 @@ class Pdo extends PdoBase
         $this->debug = $debug;
         $this->pdo->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, array('bdk\Debug\Collector\Pdo\Statement', array($this)));
         $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'));
-        // $this->debug->eventManager->subscribe('debug.outputLogEntry', array($this, 'onOutputLogEntry'));
+        $this->debug->addPlugin(new Prism());
     }
 
     /**
@@ -114,8 +115,9 @@ class Pdo extends PdoBase
             $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME),
             $this->pdo->getAttribute(PDO::ATTR_CONNECTION_STATUS),
             $debug->meta(array(
-                'level' => 'info',
                 'argsAsParams' => false,
+                'icon' => 'fa fa-database',
+                'level' => 'info',
             ))
         );
         $debug->log('logged operations: ', \count($this->loggedStatements));
@@ -125,46 +127,6 @@ class Pdo extends PdoBase
         $debug->groupEnd();
         $debug->groupEnd();
     }
-
-    /**
-     * Custom output for StatementInfo object
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    /*
-    public function onOutputLogEntry(LogEntry $logEntry)
-    {
-        $args = $logEntry['args'];
-        $isHtmlOrWamp = $logEntry['outputAs'] instanceof \bdk\Debug\Output\Html || $logEntry['outputAs'] instanceof \bdk\Debug\Output\Wamp;
-        if ($isHtmlOrWamp && $logEntry['method'] == 'log' && $this->debug->abstracter->isAbstraction($args[0])) {
-            $info = $args[0];
-            $vals = \array_map(function ($info) {
-                return $info['value'];
-            }, $info['properties']);
-            $params = $vals['parameters'];
-            if ($params) {
-                $params = $this->debug->output->html->dump($params);
-                $params = \preg_match('#<span class="array-inner">\s+(.*?)\s</span>\s*<span class="t_punct">#s', $params, $matches);
-                $params = $matches[1];
-            }
-            $logEntry['args'] = array('
-                <pre><code class="language-sql">'.\htmlspecialchars($vals['sql']).'</code></pre>
-                <dl class="list-unstyled pull-left">'
-                    .($params
-                        ? '<dt>Parameters</dt>'
-                            .'<dd class="no-indent">'.$params.'</dd>'
-                        : '').'
-                </dl>
-            ');
-            $logEntry->setMeta(array(
-                'format' => 'html',
-                'class' => 'no-indent',
-            ));
-        }
-    }
-    */
 
     /**
      * Initiates a transaction
@@ -383,17 +345,27 @@ class Pdo extends PdoBase
     public function addStatementInfo(StatementInfo $info)
     {
         $this->loggedStatements[] = $info;
-        \preg_match('/^((?:DROP|SHOW).+$|SELECT\s*(?P<select>.*?)\s*FROM\s+\S+|UPDATE\s+\S+|DELETE.*?FROM\s+\S+)(?P<more>.*)/mis', $info->sql, $matches);
-        $isMore = !empty($matches['more']);
-        $label = $matches[1].($isMore ? '…' : '');
-        if (\strlen($matches['select']) > 100) {
-            $label = \str_replace($matches['select'], '(…)', $label);
+        $logSql = true;
+        $label = $info->sql;
+        if (\preg_match('/^(
+            (?:DROP|SHOW).+$|
+            INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s*\S+|
+            SELECT\s*(?P<select>.*?)\s+FROM\s+\S+|
+            UPDATE\s+\S+|
+            DELETE.*?FROM\s+\S+
+        )(?P<more>.*)/imsx', $label, $matches)) {
+            $logSql = !empty($matches['more']);
+            $label = $matches[1].($logSql ? '…' : '');
+            if (\strlen($matches['select']) > 100) {
+                $label = \str_replace($matches['select'], '(…)', $label);
+            }
+            $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
         }
         $this->debug->groupCollapsed($label, $this->debug->meta(array(
             'icon' => 'fa fa-database',
             'boldLabel' => false,
         )));
-        if ($isMore) {
+        if ($logSql) {
             $this->debug->log(
                 '<pre><code class="language-sql">'.\htmlspecialchars($info->sql).'</code></pre>',
                 $this->debug->meta('class', 'no-indent')

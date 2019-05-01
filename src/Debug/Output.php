@@ -12,6 +12,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use bdk\Debug\AssetProvider;
 use bdk\Debug\Output\OutputInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -24,6 +25,8 @@ class Output implements SubscriberInterface
 
     private $cfg = array();
     private $debug;
+    private $addCss = array();
+    private $addScript = array();
 
     /**
      * Constructor
@@ -75,6 +78,44 @@ class Output implements SubscriberInterface
     }
 
     /**
+     * Add/register css or javascript
+     *
+     * @param string $what  "css" or "script"
+     * @param string $mixed css, javascript, or filepath
+     *
+     * @return void
+     */
+    public function addAsset($what, $mixed)
+    {
+        if ($what == 'css') {
+            $this->addCss[] = $mixed;
+        } elseif ($what == 'script') {
+            $this->addScript[] = $mixed;
+        }
+    }
+
+    /**
+     * Get and register assets from passed provider
+     *
+     * @param AssetProvider $assetProvider Asset provider
+     *
+     * @return void
+     */
+    public function addAssetProvider(AssetProvider $assetProvider)
+    {
+        $assets = \array_merge(array(
+            'css' => array(),
+            'script' => array(),
+        ), $assetProvider->getAssets());
+        foreach ((array) $assets['css'] as $css) {
+            $this->addAsset('css', $css);
+        }
+        foreach ((array) $assets['script'] as $script) {
+            $this->addAsset('script', $script);
+        }
+    }
+
+    /**
      * Get config val
      *
      * @param string $path what to get
@@ -111,9 +152,20 @@ class Output implements SubscriberInterface
                 $this->debug->alert('unable to read filepathCss');
             }
         }
+        /*
+            add "plugin" css  (ie prism.css)
+        */
+        foreach ($this->addCss as $mixed) {
+            if (!\preg_match('#[\r\n]#', $mixed)) {
+                $mixed = \preg_replace('#^\./?#', __DIR__.'/', $mixed);
+                if (\file_exists($mixed)) {
+                    $mixed = \file_get_contents($mixed);
+                }
+            }
+            $return .= $mixed."\n";
+        }
         if (!empty($this->cfg['css'])) {
-            $return .= "\n";
-            $return .= $this->cfg['css']."\n";
+            $return .= $this->cfg['css'];
         }
         return $return;
     }
@@ -132,6 +184,18 @@ class Output implements SubscriberInterface
                 $return = 'console.warn("PHPDebugConsole: unable to read filepathScript");';
                 $this->debug->alert('unable to read filepathScript');
             }
+        }
+        /*
+            add "plugin" scripts  (ie prism.js)
+        */
+        foreach ($this->addScript as $mixed) {
+            if (!\preg_match('#[\r\n]#', $mixed)) {
+                $mixed = \preg_replace('#^\./?#', __DIR__.'/', $mixed);
+                if (\file_exists($mixed)) {
+                    $mixed = \file_get_contents($mixed);
+                }
+            }
+            $return .= $mixed."\n";
         }
         return $return;
     }

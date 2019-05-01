@@ -39,6 +39,23 @@ export function init($debugRoot, opts) {
 		options.persistDrawer = isChecked;
 		http.lsSet("phpDebugConsole-persistDrawer", isChecked);
 	}).prop("checked", options.persistDrawer);
+
+	console.log('options.linkFiles', options.linkFiles);
+	$("input[name=linkFiles]").on("change", function(){
+        var isChecked = $(this).prop("checked"),
+        	$formGroup = $("#linkFilesTemplate").closest(".form-group");
+		console.log('linkfiles clicked', isChecked);
+		http.lsSet("phpDebugConsole-linkFiles", isChecked);
+        // $("#linkFilesTemplate").closest(".form-group").slideToggle(isChecked);
+        isChecked
+            ? $formGroup.slideDown()
+            : $formGroup.slideUp();
+	}).prop("checked", options.linkFiles).trigger("change");
+
+	console.log('linkFilesTemplate', options.linkFilesTemplate);
+	$("input[name=linkFilesTemplate]").on("change", function(){
+		http.lsSet("phpDebugConsole-linkFilesTemplate", $(this).val());
+	}).val(options.linkFilesTemplate);
 }
 
 function addDropdown() {
@@ -50,6 +67,11 @@ function addDropdown() {
 			<div class="debug-options-body">\
 				<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>\
 				<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>\
+				<label><input type="checkbox" name="linkFiles" /> Create file links</label>\
+				<div class="form-group">\
+					<label for="linkFilesTemplate">Link Template</label>\
+					<input name="linkFilesTemplate" id="linkFilesTemplate" />\
+				</div>\
 				<hr class="dropdown-divider" />\
 				<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>\
 			</div>\

@@ -146,4 +146,5 @@ function enhanceErrorSummary() {
 				'</label></li>';
 		$(this).replaceWith(htmlReplace);
 	});
+	$errorSummary.find(".m_trace").debugEnhance();
 }

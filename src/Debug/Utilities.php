@@ -180,7 +180,8 @@ class Utilities
      *
      * Attributes will be sorted by name
      * class & style attributes may be provided as arrays
-     * data-* attributes will be property json-encoded
+     * data-* attributes will be json-encoded (if non-string)
+     * non data attribs with null value will not be output
      *
      * @param array $attribs key/values
      *
@@ -200,8 +201,9 @@ class Utilities
             }
             $k = \strtolower($k);
             if (\strpos($k, 'data-') === 0) {
-                $v = \json_encode($v);
-                $v = \trim($v, '"');
+                if (!\is_string($v)) {
+                    $v = \json_encode($v);
+                }
             } elseif (\is_bool($v)) {
                 $v = self::buildAttribBoolVal($k, $v);
             } elseif (\is_array($v) || $k === 'class') {

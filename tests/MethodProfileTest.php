@@ -36,13 +36,14 @@ class MethodProfileTest extends DebugTestFramework
                     $this->assertSame(2, $c['calls']);
                     $this->assertGreaterThanOrEqual(0.75*2, $c['totalTime']);
                     $this->assertLessThan(0.75*2 + 0.01, $a['ownTime']);
+                    ksort($logEntry['meta']);
                     $this->assertSame(array(
+                        'caption' => "Profile 'Profile 1' Results",
+                        'channel' => 'general',
+                        'columns' => array(),
                         'name' => 'Profile 1',
                         'sortable' => true,
-                        'caption' => "Profile 'Profile 1' Results",
                         'totalCols' => array('ownTime'),
-                        'columns' => array(),
-                        'channel' => 'general',
                     ), $logEntry['meta']);
                 },
                 'chromeLogger' => '[[{"MethodProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}}],null,"table"]',

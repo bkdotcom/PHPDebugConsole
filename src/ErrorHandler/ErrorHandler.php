@@ -27,7 +27,8 @@ class ErrorHandler
     protected $data = array(
         'errorCaller'   => array(),
         'errors'        => array(),
-        'lastError'     => null,
+        'lastErrors'     => array(),    // contains up to two errors: suppressed & unsuppressed
+                                        // lastError[0] is the most recent error
         'uncaughtException' => null,
     );
     protected $registered = false;
@@ -141,9 +142,7 @@ class ErrorHandler
                 : false;
         }
         if ($key == 'lastError') {
-            return isset($this->data['lastError'])
-                ? $this->data['lastError']->getValues()
-                : null;
+            return $this->getLastError();
         }
         if (isset($this->data[$key])) {
             return $this->data[$key];
@@ -168,6 +167,28 @@ class ErrorHandler
         }
         if (isset($this->cfg[$key])) {
             return $this->cfg[$key];
+        }
+        return null;
+    }
+
+    /**
+     * Get information about last error
+     *
+     * @param boolean $inclSuppressed (false)
+     *
+     * @return null|array
+     */
+    public function getLastError($inclSuppressed = false)
+    {
+        if (!$inclSuppressed) {
+            // (default) skip over suppressed error to find last non-suppressed
+            foreach ($this->data['lastErrors'] as $error) {
+                if (!$error['isSuppressed']) {
+                    return $error->getValues();
+                }
+            }
+        } elseif ($this->data['lastErrors']) {
+            return $this->data['lastErrors'][0]->getValues();
         }
         return null;
     }
@@ -211,10 +232,11 @@ class ErrorHandler
             // return false to continue to "normal" error handler
             return $this->continueToPrev($error);
         }
+        $this->storeLastError($error);
         if (!$error['isSuppressed']) {
-            // suppressed error should not clear error caller
-            $this->data['lastError'] = $error;
+            // only clear error caller via non-suppressed error
             $this->data['errorCaller'] = array();
+            // only publish event for non-suppressed error
             $this->eventManager->publish('errorHandler.error', $error);
         }
         $this->data['errors'][ $error['hash'] ] = $error;
@@ -606,5 +628,23 @@ class ErrorHandler
                     script will be halted
                 */
         }
+    }
+
+    /**
+     * Store last error
+     *
+     * We store up to two errors...  so that we can return last suppressed error (if desired)
+     *
+     * @param Error $error error instance
+     *
+     * @return void
+     */
+    private function storeLastError(Error $error)
+    {
+        $this->data['lastErrors'] = \array_filter($this->data['lastErrors'], function (Error $error) {
+            return !$error['isSuppressed'];
+        });
+        $this->data['lastErrors'] = \array_slice($this->data['lastErrors'], 0, 1);
+        \array_unshift($this->data['lastErrors'], $error);
     }
 }

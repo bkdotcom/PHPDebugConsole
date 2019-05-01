@@ -67,7 +67,7 @@ class HtmlErrorSummary
         $isHtml = $lastError['isHtml'];
         $backtrace = $lastError['backtrace'];
         $html = '<h3>Fatal Error</h3>';
-        $html .= '<ul class="list-unstyled indent">';
+        $html .= '<ul class="list-unstyled">';
         if (\count($backtrace) > 1) {
             // more than one trace frame
             $table = $this->outputHtml->table->build(
@@ -79,7 +79,7 @@ class HtmlErrorSummary
                 )
             );
             $html .= '<li>'.$lastError['message'].'</li>';
-            $html .= '<li>'.$table.'</li>';
+            $html .= '<li class="m_trace">'.$table.'</li>';
             if (!$isHtml) {
                 $html = \str_replace($lastError['message'], \htmlspecialchars($lastError['message']), $html);
             }
@@ -123,7 +123,7 @@ class HtmlErrorSummary
             $header = 'There were '.$this->stats['inConsole'].' errors';
         }
         $html = '<h3>'.$header.':</h3>'."\n";
-        $html .= '<ul class="list-unstyled indent">';
+        $html .= '<ul class="list-unstyled">';
         foreach ($this->stats['counts'] as $category => $a) {
             if (!$a['inConsole'] || $category == 'fatal') {
                 continue;
@@ -188,7 +188,7 @@ class HtmlErrorSummary
             $msg = \sprintf($catStrings[$category]['msg'], $countInCat);
         }
         $html = '<h3>'.$header.'</h3>'
-            .'<ul class="list-unstyled indent">'
+            .'<ul class="list-unstyled">'
                 .'<li class="error-'.$category.'" data-count="'.$countInCat.'">'.$msg.'</li>'
                 .'</ul>';
         return $html;
@@ -235,7 +235,7 @@ class HtmlErrorSummary
                 : 'were '.$count.' errors'
         );
         $html = '<h3>'.$header.'</h3>'
-            .'<ul class="list-unstyled indent">'."\n"
+            .'<ul class="list-unstyled">'."\n"
             .\implode("\n", $lis)."\n"
             .'</ul>';
         return $html;

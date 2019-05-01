@@ -23,8 +23,11 @@
 	}
 }
 
-.debug-body i.fa,
-.m_assert i { margin-right:.33em; }
+.debug-body {
+	i.fa,
+	.m_assert i { margin-right:.33em; }
+	.file-link i { margin-right: 0; vertical-align: baseline; }
+}
 .m_assert > i { position:relative; top:-.20em; }
 i.fa-plus-circle { opacity:0.42; }
 i.fa-calendar { font-size:1.1em; }
@@ -105,6 +108,7 @@ i.fa-lg { font-size:1.33em; }
 		width: 100%;
 		height: 100%;
 		pointer-events: none;
+		z-index: 1050;
 		.debug-noti {
 			display: table-cell;
 			text-align: center;

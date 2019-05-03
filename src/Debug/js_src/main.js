@@ -131,7 +131,7 @@ $.fn.debugEnhance = function(method) {
 	if (method === "buildChannelList") {
 		return enhanceMain.buildChannelList(arguments[1], "", arguments[2]);
 	} else if (method === "collapse") {
-		expandCollapse.collapse($self);
+		expandCollapse.collapse($self, arguments[1]);
 	} else if (method === "expand") {
 		expandCollapse.expand($self);
 	} else if (method === "init") {
@@ -161,6 +161,7 @@ $.fn.debugEnhance = function(method) {
 	} else {
 		this.each(function() {
 			var $self = $(this);
+			// console.log('debugEnhance', this);
 			if ($self.is(".debug")) {
 				// console.warn("debugEnhance() : .debug");
 				$self.find(".debug-log-summary, .debug-log").show();

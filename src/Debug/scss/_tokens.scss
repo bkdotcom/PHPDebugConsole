@@ -56,9 +56,12 @@
 	&:after { content: close-quote; }
 	// *:not(pre, pre *) {
 	// }
-	* {
+	> * {
 		white-space: normal;
 		word-break: break-word;
+	}
+	pre {
+		white-space: pre;
 	}
 }
 .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }

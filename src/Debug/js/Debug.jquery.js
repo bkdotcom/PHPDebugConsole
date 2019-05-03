@@ -1157,20 +1157,6 @@
 	}
 
 	/**
-	 * Enhance log entries
-	 */
-	function enhanceEntries($node) {
-		// console.warn('enhanceEntries', $node);
-		$node.hide();
-		$node.children().each(function() {
-			enhanceEntry($(this));
-		});
-		$node.show();
-		enhanceStrings($node);
-		$node.addClass("enhanced");
-	}
-
-	/**
 	 * Adds expand/collapse functionality to array
 	 * does not enhance values
 	 */
@@ -1207,6 +1193,20 @@
 	}
 
 	/**
+	 * Enhance log entries
+	 */
+	function enhanceEntries($node) {
+		// console.warn('enhanceEntries', $node);
+		$node.hide();
+		$node.children().each(function() {
+			enhanceEntry($(this));
+		});
+		$node.show();
+		enhanceStrings($node);
+		$node.addClass("enhanced");
+	}
+
+	/**
 	 * Enhance a single log entry
 	 * we don't enhance strings by default (add showmore).. needs to be visible to calc height
 	 */
@@ -1215,6 +1215,7 @@
 		if ($entry.is(".enhanced")) {
 			return;
 		}
+		// console.log('enhanceEntry', this);
 		if ($entry.is(".m_group")) {
 			enhanceGroup($entry);
 		} else {
@@ -1863,7 +1864,7 @@
 		if (method === "buildChannelList") {
 			return buildChannelList(arguments[1], "", arguments[2]);
 		} else if (method === "collapse") {
-			collapse($self);
+			collapse($self, arguments[1]);
 		} else if (method === "expand") {
 			expand($self);
 		} else if (method === "init") {
@@ -1893,6 +1894,7 @@
 		} else {
 			this.each(function() {
 				var $self = $(this);
+				// console.log('debugEnhance', this);
 				if ($self.is(".debug")) {
 					// console.warn("debugEnhance() : .debug");
 					$self.find(".debug-log-summary, .debug-log").show();

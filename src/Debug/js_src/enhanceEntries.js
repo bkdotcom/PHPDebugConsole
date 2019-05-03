@@ -148,20 +148,6 @@ function buildFileLink(file, line) {
 }
 
 /**
- * Enhance log entries
- */
-export function enhanceEntries($node) {
-	// console.warn('enhanceEntries', $node);
-	$node.hide();
-	$node.children().each(function() {
-		enhanceEntry($(this));
-	});
-	$node.show();
-	enhanceStrings($node);
-	$node.addClass("enhanced");
-}
-
-/**
  * Adds expand/collapse functionality to array
  * does not enhance values
  */
@@ -198,6 +184,20 @@ function enhanceArray($node) {
 }
 
 /**
+ * Enhance log entries
+ */
+export function enhanceEntries($node) {
+	// console.warn('enhanceEntries', $node);
+	$node.hide();
+	$node.children().each(function() {
+		enhanceEntry($(this));
+	});
+	$node.show();
+	enhanceStrings($node);
+	$node.addClass("enhanced");
+}
+
+/**
  * Enhance a single log entry
  * we don't enhance strings by default (add showmore).. needs to be visible to calc height
  */
@@ -206,6 +206,7 @@ export function enhanceEntry($entry, inclStrings) {
 	if ($entry.is(".enhanced")) {
 		return;
 	}
+	// console.log('enhanceEntry', this);
 	if ($entry.is(".m_group")) {
 		enhanceGroup($entry);
 	} else {

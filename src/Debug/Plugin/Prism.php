@@ -35,12 +35,13 @@ class Prism implements AssetProvider
             'script' => array(
                 './js/prism.js',
                 '(function(){
-                    $("body").on("debug.enhanced", function(){
-                        var $target = $(this);
-                        if ($target.is("m_group")) {
+                    $("body").on("enhanced.debug", function(e){
+                        var target = e.target;
+                        if ($(target).is(".m_group")) {
                             return;
                         }
-                        Prism.highlightAllUnder($target[0]);
+                        // console.log("Prism enhanced.debug", target);
+                        Prism.highlightAllUnder(target);
                     });
                 }());',
             ),

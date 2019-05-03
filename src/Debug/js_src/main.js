@@ -9,11 +9,11 @@ import * as http from "./http.js";	// cookie & query utils
 import * as enhanceMain from "./enhanceMain.js";
 import * as enhanceEntries from "./enhanceEntries.js";
 import * as expandCollapse from "./expandCollapse.js";
+import {Config} from "./config.js";
 import loadDeps from "./loadDeps.js";
 
-// var $ = window.jQuery;	// may not be defined yet!
 var listenersRegistered = false;
-var optionsDefault = {
+var config = new Config({
 	fontAwesomeCss: "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
 	// jQuerySrc: "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
 	clipboardSrc: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
@@ -57,10 +57,11 @@ var optionsDefault = {
 	},
 	debugKey: getDebugKey(),
 	drawer: false,
-	persistDrawer: http.lsGet("phpDebugConsole-persistDrawer"),
-	linkFiles: http.lsGet("phpDebugConsole-linkFiles"),
-	linkFilesTemplate: http.lsGet("phpDebugConsole-linkFilesTemplate") || "subl://open?url=file://%file&line=%line"
-};
+	persistDrawer: false,
+	linkFiles: false,
+	linkFilesTemplate: "subl://open?url=file://%file&line=%line",
+	useLocalStorage: true
+}, "phpDebugConsole");
 
 if (typeof $ === 'undefined') {
 	throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.');
@@ -73,7 +74,7 @@ if (typeof $ === 'undefined') {
 */
 loadDeps([
 	{
-		src: optionsDefault.fontAwesomeCss,
+		src: config.get('fontAwesomeCss'),
 		type: 'stylesheet',
 		check: function () {
 			var span = document.createElement('span'),
@@ -99,7 +100,7 @@ loadDeps([
 	},
 	*/
 	{
-		src: optionsDefault.clipboardSrc,
+		src: config.get('clipboardSrc'),
 		check: function() {
 			return typeof window.ClipboardJS !== "undefined";
 		},
@@ -124,6 +125,8 @@ loadDeps([
 $.fn.debugEnhance = function(method) {
 	// console.warn("debugEnhance", method, this);
 	var $self = this,
+		dataOptions = {},
+		lsOptions = {},	// localStorage options
 		options = {};
 	if (method === "buildChannelList") {
 		return enhanceMain.buildChannelList(arguments[1], "", arguments[2]);
@@ -132,30 +135,32 @@ $.fn.debugEnhance = function(method) {
 	} else if (method === "expand") {
 		expandCollapse.expand($self);
 	} else if (method === "init") {
-		options = $self.eq(0).data("options") || {};
-		options = $.extend({}, optionsDefault, options);
-		enhanceEntries.init($self, options);
-		expandCollapse.init($self, options);
+		// dataOptions = $self.eq(0).data("options") || {};
+		// lsOptions = http.lsGet("phpDebugConsole") || {};
+		// options = $.extend({}, optionsDefault, dataOptions, lsOptions);
+		config.set($self.eq(0).data("options") || {});
+		if (typeof arguments[1] == "object") {
+			config.set(arguments[1]);
+		}
+		enhanceEntries.init($self, config);
+		expandCollapse.init($self, config);
 		registerListeners($self);
-		enhanceMain.init($self, options);
-		if (!options.drawer) {
+		enhanceMain.init($self, config);
+		if (!config.get("drawer")) {
 			$self.debugEnhance();
 		}
-	} else if (method == "setOptions") {
+	} else if (method == "setConfig") {
 		if (typeof arguments[1] == "object") {
-			options = $self.data("options") || {};
-			$.extend(options, arguments[1]);
-			$self.data("options", options)
+			config.set(arguments[1]);
+			// update logs that have already been enhanced
+            $(this)
+            	.find(".debug-log.enhanced")
+            	.closest(".debug")
+            	.trigger("config.debug.updated", "linkFilesTemplate");
 		}
 	} else {
 		this.each(function() {
 			var $self = $(this);
-			/*
-			if ($self.is(".enhanced")) {
-				console.warn('already enhanced');
-				return;
-			}
-			*/
 			if ($self.is(".debug")) {
 				// console.warn("debugEnhance() : .debug");
 				$self.find(".debug-log-summary, .debug-log").show();

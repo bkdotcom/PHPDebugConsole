@@ -1,13 +1,13 @@
 import $ from "jquery";
-import * as http from "./http.js";
+import {cookieGet,cookieRemove,cookieSet} from "./http.js";
 
-var $root, options;
+var $root, config;
 
 var KEYCODE_ESC = 27;
 
-export function init($debugRoot, opts) {
+export function init($debugRoot, conf) {
 	$root = $debugRoot;
-	options = opts;
+	config = conf;
 
 	addDropdown();
 
@@ -24,38 +24,41 @@ export function init($debugRoot, opts) {
 	$("input[name=debugCookie]").on("change", function(){
 		var isChecked = $(this).is(":checked");
 		if (isChecked) {
-			http.cookieSave("debug", options.debugKey, 7);
+			cookieSave("debug", config.get("debugKey"), 7);
 		} else {
-			http.cookieRemove("debug");
+			cookieRemove("debug");
 		}
-	}).prop("checked", options.debugKey && http.cookieGet("debug") === options.debugKey);
-	if (!options.debugKey) {
+	}).prop("checked", config.get("debugKey") && cookieGet("debug") === config.get("debugKey"));
+	if (!config.get("debugKey")) {
 		$("input[name=debugCookie]").prop("disabled", true)
 			.closest("label").addClass("disabled");
 	}
 
 	$("input[name=persistDrawer]").on("change", function(){
 		var isChecked = $(this).is(":checked");
-		options.persistDrawer = isChecked;
-		http.lsSet("phpDebugConsole-persistDrawer", isChecked);
-	}).prop("checked", options.persistDrawer);
+		// options.persistDrawer = isChecked;
+		config.set({
+			persistDrawer: isChecked,
+			openDrawer: isChecked,
+			openSidebar: true
+		});
+	}).prop("checked", config.get("persistDrawer"));
 
-	console.log('options.linkFiles', options.linkFiles);
 	$("input[name=linkFiles]").on("change", function(){
-        var isChecked = $(this).prop("checked"),
-        	$formGroup = $("#linkFilesTemplate").closest(".form-group");
-		console.log('linkfiles clicked', isChecked);
-		http.lsSet("phpDebugConsole-linkFiles", isChecked);
-        // $("#linkFilesTemplate").closest(".form-group").slideToggle(isChecked);
-        isChecked
-            ? $formGroup.slideDown()
-            : $formGroup.slideUp();
-	}).prop("checked", options.linkFiles).trigger("change");
+		var isChecked = $(this).prop("checked"),
+			$formGroup = $("#linkFilesTemplate").closest(".form-group");
+		isChecked
+			? $formGroup.slideDown()
+			: $formGroup.slideUp();
+		config.set("linkFiles", isChecked);
+		$("input[name=linkFilesTemplate]").trigger("change");
+	}).prop("checked", config.get("linkFiles")).trigger("change");
 
-	console.log('linkFilesTemplate', options.linkFilesTemplate);
 	$("input[name=linkFilesTemplate]").on("change", function(){
-		http.lsSet("phpDebugConsole-linkFilesTemplate", $(this).val());
-	}).val(options.linkFilesTemplate);
+		var val = $(this).val();
+		config.set("linkFilesTemplate", val);
+		$debugRoot.trigger("config.debug.updated", "linkFilesTemplate");
+	}).val(config.get("linkFilesTemplate"));
 }
 
 function addDropdown() {

@@ -1909,7 +1909,7 @@ EOD;
                 'firephp' => 'X-Wf-1-1-1-169: 66|[{"Type":"LOG","Label":"my label: "},["%f sec",{"foo":"bar"}]]|',
                 'html' => '<li class="m_timeLog"><span class="no-pseudo t_string">my label: </span><span class="t_string">%f sec</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                     <span class="array-inner">
-                    <span class="key-value"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
+                    <span class="key-value"><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></span>
                     </span><span class="t_punct">)</span></span></li>',
                 'script' => 'console.log("my label: ","%f sec",{"foo":"bar"});',
                 'text' => '⏱ my label: "%f sec", array(

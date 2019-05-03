@@ -49,7 +49,7 @@ export function init($delegateNode) {
 		$root.find(selector).toggleClass("filter-hidden", !isChecked);
 		// trigger collapse to potentially update group icon
 		$root.find(".m_error, .m_warn").parents(".m_group").find(".group-body")
-			.trigger("debug.collapsed.group");
+			.trigger("collapsed.debug.group");
 	});
 }
 

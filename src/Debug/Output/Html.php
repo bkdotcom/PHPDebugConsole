@@ -118,11 +118,13 @@ class Html extends Base
     {
         $this->data = $this->debug->getData();
         $this->channels = array();
+        $lftDefault = \strtr(\ini_get('xdebug.file_link_format'), array('%f'=>'%file','%l'=>'%line'));
         $str = '<div'.$this->debug->utilities->buildAttribString(array(
             'class' => 'debug',
             'data-options' => array(
                 'drawer' => $this->debug->getCfg('output.drawer'),
                 'sidebar' => $this->debug->getCfg('output.sidebar'),
+                'linkFilesTemplateDefault' => $lftDefault ?: null,
             ),
             // channel list gets built as log processed...  we'll str_replace this...
             'data-channels' => '{{channels}}',
@@ -490,8 +492,8 @@ class Html extends Base
                     $html .= "\t".'<span class="key-value">'
                             .'<span class="t_key'.(\is_int($key) ? ' t_int' : '').'">'
                                 .$this->dump($key, true, false) // don't wrap it
-                            .'</span> '
-                            .'<span class="t_operator">=&gt;</span> '
+                            .'</span>'
+                            .'<span class="t_operator">=&gt;</span>'
                             .$this->dump($val)
                         .'</span>'."\n";
                 }

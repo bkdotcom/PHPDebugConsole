@@ -21,11 +21,11 @@
 	}
 
 	function cookieRemove(name) {
-		cookieSave(name, "", -1);
+		cookieSet(name, "", -1);
 	}
 
-	function cookieSave(name, value, days) {
-		// console.log("cookieSave", name, value, days);
+	function cookieSet(name, value, days) {
+		// console.log("cookieSet", name, value, days);
 		var expires = "",
 			date = new Date();
 		if ( days ) {
@@ -36,11 +36,38 @@
 	}
 
 	function lsGet(key) {
-		return JSON.parse(window.localStorage.getItem(key));
+		var path = key.split(".", 2);
+	    var val = window.localStorage.getItem(path[0]);
+	    if (typeof val !== "string" || val.length < 1) {
+	        return null;
+	    } else {
+	        try {
+	            val = JSON.parse(val);
+	        } catch (e) {
+	        }
+	    }
+		return path.length > 1
+			? val[path[1]]
+			: val;
 	}
 
 	function lsSet(key, val) {
-		window.localStorage.setItem(key, JSON.stringify(val));
+		var path = key.split(".", 2);
+		var lsVal;
+		key = path[0];
+		if (path.length > 1) {
+			lsVal = lsGet(key) || {};
+			lsVal[path[1]] = val;
+			val = lsVal;
+		}
+	    if (val === null) {
+	        localStorage.removeItem(key);
+	        return;
+	    }
+	    if (typeof val !== "string") {
+	        val = JSON.stringify(val);
+	    }
+		window.localStorage.setItem(key, val);
 	}
 
 	function queryDecode(qs) {
@@ -61,7 +88,9 @@
 		return params;
 	}
 
-	var $root, options, origH, origPageY;
+	// import {lsGet,lsSet} from "./http.js";
+
+	var $root, config, origH, origPageY;
 
 	/**
 	 * @see https://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element-when-inner-element-scroll-position-reaches-t
@@ -97,11 +126,11 @@
 			: this.off("DOMMouseScroll mousewheel wheel");
 	};
 
-	function init($debugRoot, opts) {
+	function init($debugRoot, conf) {
 		// console.warn('drawer.init', $debugRoot[0]);
 		$root = $debugRoot;
-		options = opts;
-		if (!opts.drawer) {
+		config = conf;
+		if (!config.get("drawer")) {
 			return;
 		}
 
@@ -114,7 +143,7 @@
 		$root.find(".debug-pull-tab").on("click", open);
 		$root.find(".debug-menu-bar .close").on("click", close);
 
-		if (options.persistDrawer && lsGet("phpDebugConsole-openDrawer")) {
+		if (config.get("persistDrawer") && config.get("openDrawer")) {
 			open();
 		}
 	}
@@ -140,8 +169,8 @@
 		setHeight(); // makes sure height within min/max
 		$("body").css("marginBottom", ($root.height() + 8) + "px");
 		$(window).on("resize", setHeight);
-		if (options.persistDrawer) {
-			lsSet("phpDebugConsole-openDrawer", true);
+		if (config.get("persistDrawer")) {
+			config.set("openDrawer", true);
 		}
 	}
 
@@ -149,8 +178,8 @@
 		$root.removeClass("debug-drawer-open");
 		$("body").css("marginBottom", "");
 		$(window).off("resize", setHeight);
-		if (options.persistDrawer) {
-			lsSet("phpDebugConsole-openDrawer", false);
+		if (config.get("persistDrawer")) {
+			config.set("openDrawer", false);
 		}
 	}
 
@@ -191,8 +220,8 @@
 		if (!height || typeof height === "object") {
 			// no height passed -> use last or 100
 			height = parseInt($body[0].style.height, 10);
-			if (!height && options.persistDrawer) {
-				height = lsGet("phpDebugConsole-height");
+			if (!height && config.get("persistDrawer")) {
+				height = config.get("height");
 			}
 			if (!height) {
 				height = 100;
@@ -201,8 +230,8 @@
 		height = Math.min(height, maxH);
 		height = Math.max(height, minH);
 		$body.css("height", height);
-		if (viaUser && options.persistDrawer) {
-			lsSet("phpDebugConsole-height", height);
+		if (viaUser && config.get("persistDrawer")) {
+			config.set("height", height);
 		}
 	}
 
@@ -255,7 +284,7 @@
 			$root.find(selector).toggleClass("filter-hidden", !isChecked);
 			// trigger collapse to potentially update group icon
 			$root.find(".m_error, .m_warn").parents(".m_group").find(".group-body")
-				.trigger("debug.collapsed.group");
+				.trigger("collapsed.debug.group");
 		});
 	}
 
@@ -296,13 +325,13 @@
 		});
 	}
 
-	var $root$1, options$1;
+	var $root$1, config$1;
 
 	var KEYCODE_ESC = 27;
 
-	function init$2($debugRoot, opts) {
+	function init$2($debugRoot, conf) {
 		$root$1 = $debugRoot;
-		options$1 = opts;
+		config$1 = conf;
 
 		addDropdown();
 
@@ -319,38 +348,41 @@
 		$("input[name=debugCookie]").on("change", function(){
 			var isChecked = $(this).is(":checked");
 			if (isChecked) {
-				cookieSave("debug", options$1.debugKey, 7);
+				cookieSave("debug", config$1.get("debugKey"), 7);
 			} else {
 				cookieRemove("debug");
 			}
-		}).prop("checked", options$1.debugKey && cookieGet("debug") === options$1.debugKey);
-		if (!options$1.debugKey) {
+		}).prop("checked", config$1.get("debugKey") && cookieGet("debug") === config$1.get("debugKey"));
+		if (!config$1.get("debugKey")) {
 			$("input[name=debugCookie]").prop("disabled", true)
 				.closest("label").addClass("disabled");
 		}
 
 		$("input[name=persistDrawer]").on("change", function(){
 			var isChecked = $(this).is(":checked");
-			options$1.persistDrawer = isChecked;
-			lsSet("phpDebugConsole-persistDrawer", isChecked);
-		}).prop("checked", options$1.persistDrawer);
+			// options.persistDrawer = isChecked;
+			config$1.set({
+				persistDrawer: isChecked,
+				openDrawer: isChecked,
+				openSidebar: true
+			});
+		}).prop("checked", config$1.get("persistDrawer"));
 
-		console.log('options.linkFiles', options$1.linkFiles);
 		$("input[name=linkFiles]").on("change", function(){
-	        var isChecked = $(this).prop("checked"),
-	        	$formGroup = $("#linkFilesTemplate").closest(".form-group");
-			console.log('linkfiles clicked', isChecked);
-			lsSet("phpDebugConsole-linkFiles", isChecked);
-	        // $("#linkFilesTemplate").closest(".form-group").slideToggle(isChecked);
-	        isChecked
-	            ? $formGroup.slideDown()
-	            : $formGroup.slideUp();
-		}).prop("checked", options$1.linkFiles).trigger("change");
+			var isChecked = $(this).prop("checked"),
+				$formGroup = $("#linkFilesTemplate").closest(".form-group");
+			isChecked
+				? $formGroup.slideDown()
+				: $formGroup.slideUp();
+			config$1.set("linkFiles", isChecked);
+			$("input[name=linkFilesTemplate]").trigger("change");
+		}).prop("checked", config$1.get("linkFiles")).trigger("change");
 
-		console.log('linkFilesTemplate', options$1.linkFilesTemplate);
 		$("input[name=linkFilesTemplate]").on("change", function(){
-			lsSet("phpDebugConsole-linkFilesTemplate", $(this).val());
-		}).val(options$1.linkFilesTemplate);
+			var val = $(this).val();
+			config$1.set("linkFilesTemplate", val);
+			$debugRoot.trigger("config.debug.updated", "linkFilesTemplate");
+		}).val(config$1.get("linkFilesTemplate"));
 	}
 
 	function addDropdown() {
@@ -398,21 +430,21 @@
 		$("body").off("keyup", onBodyKeyup);
 	}
 
-	var options$2;
+	var config$2;
 	var methods;	// method filters
 	var $root$2;
 
-	function init$3($debugRoot, opts) {
+	function init$3($debugRoot, conf) {
 		$root$2 = $debugRoot;
-		options$2 = opts;
+		config$2 = conf;
 
-		if (!opts.sidebar) {
+		if (!config$2.get("sidebar")) {
 			return;
 		}
 
 		addMarkup$1();
 
-		if (options$2.persistDrawer && !lsGet("phpDebugConsole-openSidebar")) {
+		if (config$2.get("persistDrawer") && !config$2.get("openSidebar")) {
 			close$2();
 		}
 
@@ -601,33 +633,33 @@
 
 	function open$2() {
 		$(".debug-sidebar").addClass("show");
-		lsSet("phpDebugConsole-openSidebar", true);
+		config$2.set("openSidebar", true);
 	}
 
 	function close$2() {
 		$(".debug-sidebar").removeClass("show");
-		lsSet("phpDebugConsole-openSidebar", false);
+		config$2.set("openSidebar", false);
 	}
 
 	/**
 	 * Add primary Ui elements
 	 */
 
-	var options$3;
+	var config$3;
 	var $root$3;
 
-	function init$4($debugRoot, opts) {
-		options$3 = opts;
+	function init$4($debugRoot, conf) {
+		config$3 = conf.config;
 		$root$3 = $debugRoot;
 		addChannelToggles();
 		addExpandAll();
 		addNoti($("body"));
 		addPersistOption();
 		enhanceErrorSummary();
-		init($root$3, opts);
+		init($root$3, conf);
 		init$1($root$3);
-		init$3($root$3, opts);
-		init$2($root$3, opts);
+		init$3($root$3, conf);
+		init$2($root$3, conf);
 		$root$3.find(".loading").hide();
 		$root$3.addClass("enhanced");
 	}
@@ -672,15 +704,15 @@
 
 	function addPersistOption() {
 		var $node;
-		if (options$3.debugKey) {
+		if (config$3.debugKey) {
 			$node = $('<label class="debug-cookie" title="Add/remove debug cookie"><input type="checkbox"> Keep debug on</label>');
-			if (cookieGet("debug") === options$3.debugKey) {
+			if (cookieGet("debug") === options.debugKey) {
 				$node.find("input").prop("checked", true);
 			}
 			$("input", $node).on("change", function() {
 				var checked = $(this).is(":checked");
 				if (checked) {
-					cookieSave("debug", options$3.debugKey, 7);
+					cookieSet("debug", options.debugKey, 7);
 				} else {
 					cookieRemove("debug");
 				}
@@ -740,7 +772,7 @@
 
 	function enhanceErrorSummary() {
 		var $errorSummary = $root$3.find(".m_alert.error-summary");
-		$errorSummary.find("h3:first-child").prepend(options$3.iconsMethods[".m_error"]);
+		$errorSummary.find("h3:first-child").prepend(config$3.iconsMethods[".m_error"]);
 		$errorSummary.find("li[class*=error-]").each(function() {
 			var classAttr = $(this).attr("class"),
 				html = $(this).html(),
@@ -753,10 +785,10 @@
 		$errorSummary.find(".m_trace").debugEnhance();
 	}
 
-	var options$4;
+	var config$4;
 
-	function init$5($delegateNode, opts) {
-		options$4 = opts;
+	function init$5($delegateNode, conf) {
+		config$4 = conf.config;
 		$delegateNode.on("click", "[data-toggle=vis]", function() {
 			toggleVis(this);
 			return false;
@@ -768,7 +800,8 @@
 	}
 
 	function addIcons($node) {
-		$.each(options$4.iconsObject, function(selector, v){
+		// console.warn('addIcons', $node);
+		$.each(config$4.iconsObject, function(selector, v){
 			$node.find(selector).prepend(v);
 		});
 		$node.find("> .property > .fa:first-child, > .property > span:first-child > .fa").
@@ -787,7 +820,7 @@
 				$toggle.addClass("empty");
 				return;
 			}
-			$toggle.append(' <i class="fa ' + options$4.iconsExpand.expand + '"></i>');
+			$toggle.append(' <i class="fa ' + config$4.iconsExpand.expand + '"></i>');
 			$toggle.attr("data-toggle", "object");
 			$target.hide();
 		});
@@ -848,6 +881,7 @@
 		$node.find("> .property.forceShow").show().find("> .t_array-expand").each(function() {
 			$(this).debugEnhance('expand');
 		});
+		$node.addClass("enhanced");
 	}
 
 	function toggleInterface(toggle) {
@@ -978,11 +1012,11 @@
 		}
 	}
 
-	var options$5;
+	var config$5;
 
-	function init$6($root, opts) {
-		options$5 = opts;
-		init$5($root, options$5);
+	function init$6($root, conf) {
+		config$5 = conf.config;
+		init$5($root, conf);
 		$root.on("click", ".close[data-dismiss=alert]", function() {
 			$(this).parent().remove();
 		});
@@ -1008,7 +1042,7 @@
 			$container.find(".show-more").show();
 			$container.find(".show-less").hide();
 		});
-		$root.on("debug.expand.array", function(e){
+		$root.on("expand.debug.array", function(e){
 			var $node = $(e.target);
 			if ($node.is(".enhanced")) {
 				return;
@@ -1017,10 +1051,10 @@
 				enhanceValue(this);
 			});
 		});
-		$root.on("debug.expand.group", function(e){
+		$root.on("expand.debug.group", function(e){
 			enhanceEntries($(e.target));
 		});
-		$root.on("debug.expand.object", function(e){
+		$root.on("expand.debug.object", function(e){
 			var $node = $(e.target);
 			if ($node.is(".enhanced")) {
 				return;
@@ -1030,7 +1064,7 @@
 			});
 			enhanceInner($node);
 		});
-		$root.on("debug.expanded.array debug.expanded.group debug.expanded.object", function(e){
+		$root.on("expanded.debug.array expanded.debug.group expanded.debug.object", function(e){
 			var $node = $(e.target);
 			if ($node.is(".enhanced")) {
 				return;
@@ -1050,6 +1084,13 @@
 			// enhanceStrings($node);
 			// $node.addClass("enhanced");
 		});
+		$root.on("config.debug.updated", function(e, changedOpt){
+			// console.warn('config updated', changedOpt, config);
+			if (changedOpt == "linkFilesTemplate") {
+				console.log('updateFileLinks', $root);
+				updateFileLinks($root);
+			}
+		});
 	}
 
 	/**
@@ -1057,22 +1098,24 @@
 	 */
 	function addIcons$1($root) {
 		var $caption, $icon, $node, selector;
-		for (selector in options$5.iconsMisc) {
+		for (selector in config$5.iconsMisc) {
 			$node = $root.find(selector);
 			if ($node.length) {
-				$icon = $(options$5.iconsMisc[selector]);
+				$icon = $(config$5.iconsMisc[selector]);
 				if ($node.find("> i:first-child").hasClass($icon.attr("class"))) {
 					// already have icon
+					$icon = null;
 					continue;
 				}
 				$node.prepend($icon);
+				$icon = null;
 			}
 		}	if ($root.data("icon")) {
 			$icon = $("<i>").addClass($root.data("icon"));
 		} else {
-			for (selector in options$5.iconsMethods) {
+			for (selector in config$5.iconsMethods) {
 				if ($root.is(selector)) {
-					$icon = $(options$5.iconsMethods[selector]);
+					$icon = $(config$5.iconsMethods[selector]);
 					break;
 				}
 			}
@@ -1099,7 +1142,18 @@
 	}
 
 	function buildFileLink(file, line) {
-		return "subl://open?url=file://"+file+"&line="+(line||1);
+		var data = {
+			file: file,
+			line: line||1
+		};
+		return config$5.linkFilesTemplate.replace(
+			/%(\w*)\b/g,
+			function(m, key){
+				return data.hasOwnProperty(key)
+					? data[ key ]
+					: "";
+			}
+		);
 	}
 
 	/**
@@ -1113,6 +1167,7 @@
 		});
 		$node.show();
 		enhanceStrings($node);
+		$node.addClass("enhanced");
 	}
 
 	/**
@@ -1124,7 +1179,7 @@
 		var isEnhanced = $node.prev().is(".t_array-expand"),
 			$expander = $('<span class="t_array-expand" data-toggle="array">' +
 					'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-					'<i class="fa ' + options$5.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+					'<i class="fa ' + config$5.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
 					'<span class="t_punct">)</span>' +
 				"</span>"),
 			numParents = $node.parentsUntil(".m_group", ".t_object, .t_array").length;
@@ -1140,7 +1195,7 @@
 		// add collapse link
 		$node.find(".t_keyword").first().
 			wrap('<span class="t_array-collapse expanded" data-toggle="array">').
-			after('<span class="t_punct">(</span> <i class="fa ' + options$5.iconsExpand.collapse + '"></i>').
+			after('<span class="t_punct">(</span> <i class="fa ' + config$5.iconsExpand.collapse + '"></i>').
 			parent().next().remove();	// remove original "("
 		$node.before($expander);
 		if (numParents === 0) {
@@ -1173,7 +1228,7 @@
 			enhanceStrings($entry);
 		}
 		$entry.addClass("enhanced");
-		$entry.trigger("debug.enhanced");
+		$entry.trigger("enhanced.debug");
 	}
 
 	function enhanceGroup($group) {
@@ -1241,21 +1296,39 @@
 	}
 
 	/**
+	 * Linkify files if not already done or update already linked files
+	 */
+	function updateFileLinks($group) {
+		var remove = !config$5.linkFiles || config$5.linkFilesTemplate.length == 0;
+		$group.find("[data-detect-files], .m_error, .m_warn, .m_trace").each(function(){
+			createFileLinks($(this), $(this).find(".t_string"), remove);
+		});
+	}
+
+	/**
 	 * Create text editor links for error, warn, & trace
 	 */
-	function createFileLinks($entry, $strings) {
+	function createFileLinks($entry, $strings, remove) {
 		var dataDetectFiles = $entry.data("detectFiles"),
 			dataFoundFiles = $entry.data("foundFiles") || [];
 		// console.warn('createFileLinks', $entry);
+		if (!config$5.linkFiles && !remove) {
+			return;
+		}
 		if (dataDetectFiles === false) {
 			return;
 		}
 		if ($entry.is(".m_error, .m_warn") || dataDetectFiles) {
 			$strings.each(function(){
-				var $a,
+				var $replace,
 					$string = $(this),
-					text = $string.text(),
+					attr = $string[0].attributes,
+					text = $.trim($string.text()),
 					matches = [];
+				if ($string.closest(".m_trace").length) {
+					createFileLinks($string.closest(".m_trace"));
+					return false;
+				}
 				if ($string.data("file")) {
 					// filepath specified in data attr
 					matches = [null, $string.data("file"), 1];
@@ -1264,42 +1337,73 @@
 				} else {
 					matches = text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/);
 				}
-				if ($string.closest(".m_trace").length) {
-					createFileLinks($string.closest(".m_trace"));
-					return false;
-				}
 				if (matches) {
 					// console.warn('matches', matches);
-					$a = $('<a>', {
-						html: text + ' <i class="fa fa-external-link"></i>',
-						href: buildFileLink(matches[1], matches[2]),
-						title: "Open in editor"
-					}).addClass("file-link");
+					$replace = remove
+						? $("<span>", {
+								html: text,
+							})
+						: $('<a>', {
+								html: text + ' <i class="fa fa-external-link"></i>',
+								href: buildFileLink(matches[1], matches[2]),
+								title: "Open in editor"
+							});
 					if ($string.is("td")) {
-						$string.html($a);
+						$string.html(remove
+							? text
+							: $replace
+						);
 					} else {
-						$a.addClass($string.attr("class"));
-						$a.attr("style", $string.attr("style"));
-						$string.replaceWith($a);
+						// $a.addClass($string.attr("class"));
+						// $a.attr("style", $string.attr("style"));
+						/*
+							attr is not a plain object, but an array of attribute nodes
+	    					which contain both the name and value
+						*/
+						$.each(attr, function(){
+							var name = this.name;
+							if (["html","href","title"].indexOf(name) > -1) {
+								return;	// continue;
+							}
+							$replace.attr(name, this.value);
+						});
+						$string.replaceWith($replace);
+					}
+					if (!remove) {
+						$replace.addClass("file-link");
 					}
 				}
 			});
-			$entry.removeData("detectFiles foundFiles");
+			// don't remove data... link template may change
+			// $entry.removeData("detectFiles foundFiles");
 		} else if ($entry.is(".m_trace")) {
-			$entry.find("table thead tr > *:nth-child(4)").after("<th></th>");
+			var isUpdate = $entry.find(".file-link").length > 0;
+			if (!isUpdate) {
+				$entry.find("table thead tr > *:nth-child(4)").after("<th></th>");
+			} else if (remove) {
+				$entry.find("table tr > *:nth-child(5)").remove();
+				return;
+			}
 			$entry.find("table tbody tr").each(function(){
-				var $tds = $(this).find("> td");
-				var $a = $('<a>', {
-					class: "file-link",
-					href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
-					html: '<i class="fa fa-fw fa-external-link"></i>',
-					style: "vertical-align: bottom",
-					title: "Open in editor"
-				});
-				$tds.eq(2).after($("<td/>", {
-					class: "text-center",
-					html: $a
-				}));
+				var $tr = $(this),
+					$tds = $tr.find("> td"),
+					$a = $('<a>', {
+						class: "file-link",
+						href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
+						html: '<i class="fa fa-fw fa-external-link"></i>',
+						style: "vertical-align: bottom",
+						title: "Open in editor"
+					});
+				if (isUpdate) {
+					$tr.find(".file-link").replaceWith($a);
+				// } else if (remove) {
+					// $tr.find(".file-link").closest("td").remove();
+				} else {
+					$tds.eq(2).after($("<td/>", {
+						class: "text-center",
+						html: $a
+					}));
+				}
 			});
 		}
 	}
@@ -1335,10 +1439,10 @@
 	 * handle expanding/collapsing arrays, groups, & objects
 	 */
 
-	var options$6;
+	var config$6;
 
-	function init$7($delegateNode, opts) {
-		options$6 = opts;
+	function init$7($delegateNode, conf) {
+		config$6 = conf.config;
 		$delegateNode.on("click", "[data-toggle=array]", function() {
 			toggle(this);
 			return false;
@@ -1351,8 +1455,8 @@
 			toggle(this);
 			return false;
 		});
-		$delegateNode.on("debug.collapsed.group", function(e){
-			// console.warn('debug.collapsed.group');
+		$delegateNode.on("collapsed.debug.group", function(e){
+			// console.warn('collapsed.debug.group');
 			groupErrorIconUpdate($(e.target).prev());
 		});
 	}
@@ -1369,7 +1473,7 @@
 		var $target = $toggle.next(),
 			$groupEndValue,
 			what = "array",
-			icon = options$6.iconsExpand.expand;
+			icon = config$6.iconsExpand.expand;
 		if ($toggle.is("[data-toggle=array]")) {
 			// show and use the "expand it" toggle as reference toggle
 			$toggle = $toggle.closest(".t_array").prev().show();
@@ -1395,7 +1499,7 @@
 				});
 			}
 		}
-		$target.trigger("debug.collapsed." + what);
+		$target.trigger("collapsed.debug." + what);
 	}
 
 	function expand($toggleOrTarget) {
@@ -1414,22 +1518,22 @@
 		}
 		// trigger while still hidden!
 		//    no redraws
-		$target.trigger('debug.expand.' + what);
+		$target.trigger("expand.debug." + what);
 		if (what === "array") {
 			// hide the toggle..  there is a different toggle in the expanded version
 			$toggle.hide();
 			$target.show();
-			$target.trigger('debug.expanded.' + what);
+			$target.trigger("expanded.debug." + what);
 		} else {
 			$target.slideDown("fast", function() {
 				var $groupEndValue = $target.find("> .m_groupEndValue");
 				$toggle.addClass("expanded");
-				iconUpdate($toggle, options$6.iconsExpand.collapse);
+				iconUpdate($toggle, config$6.iconsExpand.collapse);
 				if ($groupEndValue.length) {
 					// remove value from label
 					$toggle.find(".group-label").last().nextAll().remove();
 				}
-				$target.trigger('debug.expanded.' + what);
+				$target.trigger("expanded.debug." + what);
 			});
 		}
 	}
@@ -1437,9 +1541,9 @@
 	function groupErrorIconGet($container) {
 		var icon = "";
 		if ($container.find(".m_error").not(".filter-hidden").length) {
-			icon = options$6.iconsMethods[".m_error"];
+			icon = config$6.iconsMethods[".m_error"];
 		} else if ($container.find(".m_warn").not(".filter-hidden").length) {
-			icon = options$6.iconsMethods[".m_warn"];
+			icon = config$6.iconsMethods[".m_warn"];
 		}
 		return icon;
 	}
@@ -1458,15 +1562,15 @@
 				$toggle.append(icon);
 			}
 			iconUpdate($toggle, isExpanded
-				? options$6.iconsExpand.collapse
-				: options$6.iconsExpand.expand
+				? config$6.iconsExpand.collapse
+				: config$6.iconsExpand.expand
 			);
 		} else {
 			$toggle.find(selector).remove();
 			if ($target.children().not(".m_warn, .m_error").length < 1) {
 				// group only contains errors & they're now hidden
 				$group.addClass("empty");
-				iconUpdate($toggle, options$6.iconsExpand.empty);
+				iconUpdate($toggle, config$6.iconsExpand.empty);
 			}
 		}
 	}
@@ -1474,9 +1578,9 @@
 	function iconUpdate($toggle, classNameNew) {
 		var $icon = $toggle.children("i").eq(0);
 		if ($toggle.is(".group-header") && $toggle.parent().is(".empty")) {
-			classNameNew = options$6.iconsExpand.empty;
+			classNameNew = config$6.iconsExpand.empty;
 		}
-		$.each(options$6.iconsExpand, function(i, className) {
+		$.each(config$6.iconsExpand, function(i, className) {
 			$icon.toggleClass(className, className === classNameNew);
 		});
 	}
@@ -1492,6 +1596,87 @@
 			expand($toggle);
 		}
 	}
+
+	function Config(defaults, localStorageKey) {
+	    var storedConfig = null;
+	    if (defaults.useLocalStorage) {
+	        storedConfig = lsGet(localStorageKey);
+	    }
+	    this.config = $.extend({}, defaults, storedConfig || {});
+	    // console.warn('config', JSON.parse(JSON.stringify(this.config)));
+	    this.haveSavedConfig = typeof storedConfig === "object";
+	    this.localStorageKey = localStorageKey;
+	    this.localStorageKeys = ["persistDrawer","openDrawer","openSidebar","height","linkFiles","linkFilesTemplate"];
+	}
+
+	Config.prototype.get = function(key) {
+	    if (typeof key == "undefined") {
+	        return JSON.parse(JSON.stringify(this.config));
+	    }
+	    return typeof(this.config[key]) !== "undefined"
+	        ? this.config[key]
+	        : null;
+	};
+
+	Config.prototype.set = function(key, val) {
+	    var lsObj = {},
+	        setVals = {},
+	        haveLsKey = false;
+	    if (typeof key == "object") {
+	        setVals = key;
+	    } else {
+	        setVals[key] = val;
+	    }
+	    // console.log('config.set', setVals);
+	    for (var k in setVals) {
+	        this.config[k] = setVals[k];
+	    }
+	    if (this.config.useLocalStorage) {
+	        lsObj = lsGet(this.localStorageKey) || {};
+	        if (setVals.linkFilesTemplateDefault && !lsObj.linkFilesTemplate) {
+	            // we don't have a user specified template... use the default
+	            this.config.linkFiles = setVals.linkFiles = true;
+	            this.config.linkFilesTemplate = setVals.linkFilesTemplate = setVals.linkFilesTemplateDefault;
+	        }
+	        for (var i = 0, count = this.localStorageKeys.length; i < count; i++) {
+	            key = this.localStorageKeys[i];
+	            if (typeof setVals[key] !== "undefined") {
+	                haveLsKey = true;
+	                lsObj[key] = setVals[key];
+	            }
+	        }
+	        if (haveLsKey) {
+	            lsSet(this.localStorageKey, lsObj);
+	        }
+	    }
+	    this.haveSavedConfig = true;
+	};
+
+	/*
+	function setLocalStorageItem(key, val) {
+	    if (val === null) {
+	        localStorage.removeItem(key);
+	        return;
+	    }
+	    if (typeof val !== "string") {
+	        val = JSON.stringify(val);
+	    }
+	    localStorage.setItem(key, val);
+	}
+
+	function getLocalStorageItem(key) {
+	    var val = localStorage.getItem(key);
+	    if (typeof val !== "string" || val.length < 1) {
+	        return null;
+	    } else {
+	        try {
+	            return JSON.parse(val);
+	        } catch (e) {
+	            return val;
+	        }
+	    }
+	}
+	*/
 
 	function loadDeps(deps) {
 		var checkInterval,
@@ -1562,9 +1747,8 @@
 	 *    Add FontAwesome icons
 	 */
 
-	// var $ = window.jQuery;	// may not be defined yet!
 	var listenersRegistered = false;
-	var optionsDefault = {
+	var config$7 = new Config({
 		fontAwesomeCss: "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
 		// jQuerySrc: "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
 		clipboardSrc: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
@@ -1608,10 +1792,11 @@
 		},
 		debugKey: getDebugKey(),
 		drawer: false,
-		persistDrawer: lsGet("phpDebugConsole-persistDrawer"),
-		linkFiles: lsGet("phpDebugConsole-linkFiles"),
-		linkFilesTemplate: lsGet("phpDebugConsole-linkFilesTemplate") || "subl://open?url=file://%file&line=%line"
-	};
+		persistDrawer: false,
+		linkFiles: false,
+		linkFilesTemplate: "subl://open?url=file://%file&line=%line",
+		useLocalStorage: true
+	}, "phpDebugConsole");
 
 	if (typeof $ === 'undefined') {
 		throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.');
@@ -1624,7 +1809,7 @@
 	*/
 	loadDeps([
 		{
-			src: optionsDefault.fontAwesomeCss,
+			src: config$7.get('fontAwesomeCss'),
 			type: 'stylesheet',
 			check: function () {
 				var span = document.createElement('span'),
@@ -1650,7 +1835,7 @@
 		},
 		*/
 		{
-			src: optionsDefault.clipboardSrc,
+			src: config$7.get('clipboardSrc'),
 			check: function() {
 				return typeof window.ClipboardJS !== "undefined";
 			},
@@ -1674,8 +1859,7 @@
 
 	$.fn.debugEnhance = function(method) {
 		// console.warn("debugEnhance", method, this);
-		var $self = this,
-			options = {};
+		var $self = this;
 		if (method === "buildChannelList") {
 			return buildChannelList(arguments[1], "", arguments[2]);
 		} else if (method === "collapse") {
@@ -1683,30 +1867,32 @@
 		} else if (method === "expand") {
 			expand($self);
 		} else if (method === "init") {
-			options = $self.eq(0).data("options") || {};
-			options = $.extend({}, optionsDefault, options);
-			init$6($self, options);
-			init$7($self, options);
+			// dataOptions = $self.eq(0).data("options") || {};
+			// lsOptions = http.lsGet("phpDebugConsole") || {};
+			// options = $.extend({}, optionsDefault, dataOptions, lsOptions);
+			config$7.set($self.eq(0).data("options") || {});
+			if (typeof arguments[1] == "object") {
+				config$7.set(arguments[1]);
+			}
+			init$6($self, config$7);
+			init$7($self, config$7);
 			registerListeners($self);
-			init$4($self, options);
-			if (!options.drawer) {
+			init$4($self, config$7);
+			if (!config$7.get("drawer")) {
 				$self.debugEnhance();
 			}
-		} else if (method == "setOptions") {
+		} else if (method == "setConfig") {
 			if (typeof arguments[1] == "object") {
-				options = $self.data("options") || {};
-				$.extend(options, arguments[1]);
-				$self.data("options", options);
+				config$7.set(arguments[1]);
+				// update logs that have already been enhanced
+	            $(this)
+	            	.find(".debug-log.enhanced")
+	            	.closest(".debug")
+	            	.trigger("config.debug.updated", "linkFilesTemplate");
 			}
 		} else {
 			this.each(function() {
 				var $self = $(this);
-				/*
-				if ($self.is(".enhanced")) {
-					console.warn('already enhanced');
-					return;
-				}
-				*/
 				if ($self.is(".debug")) {
 					// console.warn("debugEnhance() : .debug");
 					$self.find(".debug-log-summary, .debug-log").show();

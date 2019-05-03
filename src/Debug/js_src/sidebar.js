@@ -1,22 +1,22 @@
 import $ from "jquery";
-import {lsGet,lsSet} from "./http.js";
+// import {lsGet,lsSet} from "./http.js";
 import {addTest as addFilterTest, addPreFilter} from "./filter.js";
 
-var options;
+var config;
 var methods;	// method filters
 var $root;
 
-export function init($debugRoot, opts) {
+export function init($debugRoot, conf) {
 	$root = $debugRoot;
-	options = opts;
+	config = conf;
 
-	if (!opts.sidebar) {
+	if (!config.get("sidebar")) {
 		return;
 	}
 
 	addMarkup();
 
-	if (options.persistDrawer && !lsGet("phpDebugConsole-openSidebar")) {
+	if (config.get("persistDrawer") && !config.get("openSidebar")) {
 		close();
 	}
 
@@ -205,10 +205,10 @@ function phpErrorToggles() {
 
 function open() {
 	$(".debug-sidebar").addClass("show");
-	lsSet("phpDebugConsole-openSidebar", true);
+	config.set("openSidebar", true);
 }
 
 function close() {
 	$(".debug-sidebar").removeClass("show");
-	lsSet("phpDebugConsole-openSidebar", false);
+	config.set("openSidebar", false);
 }

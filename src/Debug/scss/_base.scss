@@ -116,10 +116,6 @@ ul {
 	margin-top: 0;
 	margin-bottom: 0;
 }
-*[title]:not(a) {
-	cursor: help;
-	&:hover { background-color:rgba(0,0,0,0.2); }
-}
 .close {
 	opacity: 1;
 	float: none;

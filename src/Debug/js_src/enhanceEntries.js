@@ -2,11 +2,11 @@ import $ from "jquery";
 import * as enhanceObject from "./enhanceObject.js";
 import * as tableSort from "./tableSort.js";
 
-var options;
+var config;
 
-export function init($root, opts) {
-	options = opts;
-	enhanceObject.init($root, options);
+export function init($root, conf) {
+	config = conf.config;
+	enhanceObject.init($root, conf);
 	$root.on("click", ".close[data-dismiss=alert]", function() {
 		$(this).parent().remove();
 	});
@@ -32,7 +32,7 @@ export function init($root, opts) {
 		$container.find(".show-more").show();
 		$container.find(".show-less").hide();
 	});
-	$root.on("debug.expand.array", function(e){
+	$root.on("expand.debug.array", function(e){
 		var $node = $(e.target);
 		if ($node.is(".enhanced")) {
 			return;
@@ -41,10 +41,10 @@ export function init($root, opts) {
 			enhanceValue(this);
 		});
 	});
-	$root.on("debug.expand.group", function(e){
+	$root.on("expand.debug.group", function(e){
 		enhanceEntries($(e.target));
 	});
-	$root.on("debug.expand.object", function(e){
+	$root.on("expand.debug.object", function(e){
 		var $node = $(e.target);
 		if ($node.is(".enhanced")) {
 			return;
@@ -54,7 +54,7 @@ export function init($root, opts) {
 		});
 		enhanceObject.enhanceInner($node);
 	});
-	$root.on("debug.expanded.array debug.expanded.group debug.expanded.object", function(e){
+	$root.on("expanded.debug.array expanded.debug.group expanded.debug.object", function(e){
 		var $node = $(e.target);
 		if ($node.is(".enhanced")) {
 			return;
@@ -74,6 +74,13 @@ export function init($root, opts) {
 		// enhanceStrings($node);
 		// $node.addClass("enhanced");
 	});
+	$root.on("config.debug.updated", function(e, changedOpt){
+		// console.warn('config updated', changedOpt, config);
+		if (changedOpt == "linkFilesTemplate") {
+			console.log('updateFileLinks', $root);
+			updateFileLinks($root);
+		}
+	});
 }
 
 /**
@@ -81,23 +88,25 @@ export function init($root, opts) {
  */
 function addIcons($root) {
 	var $caption, $icon, $node, selector;
-	for (selector in options.iconsMisc) {
+	for (selector in config.iconsMisc) {
 		$node = $root.find(selector);
 		if ($node.length) {
-			$icon = $(options.iconsMisc[selector]);
+			$icon = $(config.iconsMisc[selector]);
 			if ($node.find("> i:first-child").hasClass($icon.attr("class"))) {
 				// already have icon
+				$icon = null;
 				continue;
 			}
 			$node.prepend($icon);
+			$icon = null;
 		}
 	};
 	if ($root.data("icon")) {
 		$icon = $("<i>").addClass($root.data("icon"));
 	} else {
-		for (selector in options.iconsMethods) {
+		for (selector in config.iconsMethods) {
 			if ($root.is(selector)) {
-				$icon = $(options.iconsMethods[selector]);
+				$icon = $(config.iconsMethods[selector]);
 				break;
 			}
 		}
@@ -124,7 +133,18 @@ function addIcons($root) {
 }
 
 function buildFileLink(file, line) {
-	return "subl://open?url=file://"+file+"&line="+(line||1);
+	var data = {
+		file: file,
+		line: line||1
+	};
+	return config.linkFilesTemplate.replace(
+		/%(\w*)\b/g,
+		function(m, key){
+			return data.hasOwnProperty(key)
+				? data[ key ]
+				: "";
+		}
+	);
 }
 
 /**
@@ -138,6 +158,7 @@ export function enhanceEntries($node) {
 	});
 	$node.show();
 	enhanceStrings($node);
+	$node.addClass("enhanced");
 }
 
 /**
@@ -149,7 +170,7 @@ function enhanceArray($node) {
 	var isEnhanced = $node.prev().is(".t_array-expand"),
 		$expander = $('<span class="t_array-expand" data-toggle="array">' +
 				'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-				'<i class="fa ' + options.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+				'<i class="fa ' + config.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
 				'<span class="t_punct">)</span>' +
 			"</span>"),
 		numParents = $node.parentsUntil(".m_group", ".t_object, .t_array").length;
@@ -165,7 +186,7 @@ function enhanceArray($node) {
 	// add collapse link
 	$node.find(".t_keyword").first().
 		wrap('<span class="t_array-collapse expanded" data-toggle="array">').
-		after('<span class="t_punct">(</span> <i class="fa ' + options.iconsExpand.collapse + '"></i>').
+		after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>').
 		parent().next().remove();	// remove original "("
 	$node.before($expander);
 	if (numParents === 0) {
@@ -198,7 +219,7 @@ export function enhanceEntry($entry, inclStrings) {
 		enhanceStrings($entry);
 	}
 	$entry.addClass("enhanced");
-	$entry.trigger("debug.enhanced");
+	$entry.trigger("enhanced.debug");
 }
 
 function enhanceGroup($group) {
@@ -266,12 +287,25 @@ function enhanceStrings($node) {
 }
 
 /**
+ * Linkify files if not already done or update already linked files
+ */
+function updateFileLinks($group) {
+	var remove = !config.linkFiles || config.linkFilesTemplate.length == 0;
+	$group.find("[data-detect-files], .m_error, .m_warn, .m_trace").each(function(){
+		createFileLinks($(this), $(this).find(".t_string"), remove);
+	});
+}
+
+/**
  * Create text editor links for error, warn, & trace
  */
-function createFileLinks($entry, $strings) {
+function createFileLinks($entry, $strings, remove) {
 	var dataDetectFiles = $entry.data("detectFiles"),
 		dataFoundFiles = $entry.data("foundFiles") || [];
 	// console.warn('createFileLinks', $entry);
+	if (!config.linkFiles && !remove) {
+		return;
+	}
 	if (dataDetectFiles === false) {
 		return;
 	}
@@ -285,10 +319,15 @@ function createFileLinks($entry, $strings) {
 			*/
 		}
 		$strings.each(function(){
-			var $a,
+			var $replace,
 				$string = $(this),
-				text = $string.text(),
+				attr = $string[0].attributes,
+				text = $.trim($string.text()),
 				matches = [];
+			if ($string.closest(".m_trace").length) {
+				createFileLinks($string.closest(".m_trace"));
+				return false;
+			}
 			if ($string.data("file")) {
 				// filepath specified in data attr
 				matches = [null, $string.data("file"), 1];
@@ -297,42 +336,73 @@ function createFileLinks($entry, $strings) {
 			} else {
 				matches = text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/);
 			}
-			if ($string.closest(".m_trace").length) {
-				createFileLinks($string.closest(".m_trace"));
-				return false;
-			}
 			if (matches) {
 				// console.warn('matches', matches);
-				$a = $('<a>', {
-					html: text + ' <i class="fa fa-external-link"></i>',
-					href: buildFileLink(matches[1], matches[2]),
-					title: "Open in editor"
-				}).addClass("file-link");
+				$replace = remove
+					? $("<span>", {
+							html: text,
+						})
+					: $('<a>', {
+							html: text + ' <i class="fa fa-external-link"></i>',
+							href: buildFileLink(matches[1], matches[2]),
+							title: "Open in editor"
+						});
 				if ($string.is("td")) {
-					$string.html($a);
+					$string.html(remove
+						? text
+						: $replace
+					);
 				} else {
-					$a.addClass($string.attr("class"));
-					$a.attr("style", $string.attr("style"));
-					$string.replaceWith($a);
+					// $a.addClass($string.attr("class"));
+					// $a.attr("style", $string.attr("style"));
+					/*
+						attr is not a plain object, but an array of attribute nodes
+    					which contain both the name and value
+					*/
+					$.each(attr, function(){
+						var name = this.name;
+						if (["html","href","title"].indexOf(name) > -1) {
+							return;	// continue;
+						}
+						$replace.attr(name, this.value);
+					});
+					$string.replaceWith($replace);
+				}
+				if (!remove) {
+					$replace.addClass("file-link");
 				}
 			}
 		});
-		$entry.removeData("detectFiles foundFiles");
+		// don't remove data... link template may change
+		// $entry.removeData("detectFiles foundFiles");
 	} else if ($entry.is(".m_trace")) {
-		$entry.find("table thead tr > *:nth-child(4)").after("<th></th>");
+		var isUpdate = $entry.find(".file-link").length > 0;
+		if (!isUpdate) {
+			$entry.find("table thead tr > *:nth-child(4)").after("<th></th>");
+		} else if (remove) {
+			$entry.find("table tr > *:nth-child(5)").remove();
+			return;
+		}
 		$entry.find("table tbody tr").each(function(){
-			var $tds = $(this).find("> td");
-			var $a = $('<a>', {
-				class: "file-link",
-				href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
-				html: '<i class="fa fa-fw fa-external-link"></i>',
-				style: "vertical-align: bottom",
-				title: "Open in editor"
-			});
-			$tds.eq(2).after($("<td/>", {
-				class: "text-center",
-				html: $a
-			}));
+			var $tr = $(this),
+				$tds = $tr.find("> td"),
+				$a = $('<a>', {
+					class: "file-link",
+					href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
+					html: '<i class="fa fa-fw fa-external-link"></i>',
+					style: "vertical-align: bottom",
+					title: "Open in editor"
+				});
+			if (isUpdate) {
+				$tr.find(".file-link").replaceWith($a);
+			// } else if (remove) {
+				// $tr.find(".file-link").closest("td").remove();
+			} else {
+				$tds.eq(2).after($("<td/>", {
+					class: "text-center",
+					html: $a
+				}));
+			}
 		});
 	}
 }

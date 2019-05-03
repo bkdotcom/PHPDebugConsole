@@ -12,9 +12,9 @@ class TypeArrayTest extends DebugTestFramework
         $arrayDumpHtml = <<<'EOD'
 <li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <span class="array-inner">
-	<span class="key-value"><span class="t_key t_int">0</span> <span class="t_operator">=&gt;</span> <span class="t_string">a</span></span>
-	<span class="key-value"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
-	<span class="key-value"><span class="t_key t_int">1</span> <span class="t_operator">=&gt;</span> <span class="t_string">c</span></span>
+	<span class="key-value"><span class="t_key t_int">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></span>
+	<span class="key-value"><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></span>
+	<span class="key-value"><span class="t_key t_int">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></span>
 </span><span class="t_punct">)</span></span></li>
 EOD;
 		// indented with 4 spaces

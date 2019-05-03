@@ -26,9 +26,14 @@
 .debug-body {
 	i.fa,
 	.m_assert i { margin-right:.33em; }
+	.m_assert > i {
+		display: inline-block;
+		margin-bottom: -0.2em;
+		line-height: .6em;
+		vertical-align: text-bottom;
+	}
 	.file-link i { margin-right: 0; vertical-align: baseline; }
 }
-.m_assert > i { position:relative; top:-.20em; }
 i.fa-plus-circle { opacity:0.42; }
 i.fa-calendar { font-size:1.1em; }
 i.fa-eye { color:#00529b; font-size:1.1em; border-bottom:0; }

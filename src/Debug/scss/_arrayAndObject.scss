@@ -11,6 +11,13 @@ span.key-value {
 	display: block;
 	padding-left: 10px;
 	text-indent: -10px;
+	// :nth-child(-n+2) {
+		// first two elements (_key & t_operator)
+		// white-space: nowrap;
+	// }
+	> .t_operator {
+		margin: 0 .25em;
+	}
 }
 .t_object {
 	.property-name[title],

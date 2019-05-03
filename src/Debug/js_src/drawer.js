@@ -1,7 +1,7 @@
 import $ from "jquery";
-import {lsGet,lsSet} from "./http.js";
+// import {lsGet,lsSet} from "./http.js";
 
-var $root, options, origH, origPageY;
+var $root, config, origH, origPageY;
 
 /**
  * @see https://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element-when-inner-element-scroll-position-reaches-t
@@ -37,11 +37,11 @@ $.fn.scrollLock = function(enable){
 		: this.off("DOMMouseScroll mousewheel wheel");
 }
 
-export function init($debugRoot, opts) {
+export function init($debugRoot, conf) {
 	// console.warn('drawer.init', $debugRoot[0]);
 	$root = $debugRoot;
-	options = opts;
-	if (!opts.drawer) {
+	config = conf;
+	if (!config.get("drawer")) {
 		return;
 	}
 
@@ -54,7 +54,7 @@ export function init($debugRoot, opts) {
 	$root.find(".debug-pull-tab").on("click", open);
 	$root.find(".debug-menu-bar .close").on("click", close);
 
-	if (options.persistDrawer && lsGet("phpDebugConsole-openDrawer")) {
+	if (config.get("persistDrawer") && config.get("openDrawer")) {
 		open();
 	}
 }
@@ -80,8 +80,8 @@ function open() {
 	setHeight(); // makes sure height within min/max
 	$("body").css("marginBottom", ($root.height() + 8) + "px");
 	$(window).on("resize", setHeight);
-	if (options.persistDrawer) {
-		lsSet("phpDebugConsole-openDrawer", true);
+	if (config.get("persistDrawer")) {
+		config.set("openDrawer", true);
 	}
 }
 
@@ -89,8 +89,8 @@ function close() {
 	$root.removeClass("debug-drawer-open");
 	$("body").css("marginBottom", "");
 	$(window).off("resize", setHeight);
-	if (options.persistDrawer) {
-		lsSet("phpDebugConsole-openDrawer", false);
+	if (config.get("persistDrawer")) {
+		config.set("openDrawer", false);
 	}
 }
 
@@ -131,8 +131,8 @@ function setHeight(height, viaUser) {
 	if (!height || typeof height === "object") {
 		// no height passed -> use last or 100
 		height = parseInt($body[0].style.height, 10);
-		if (!height && options.persistDrawer) {
-			height = lsGet("phpDebugConsole-height");
+		if (!height && config.get("persistDrawer")) {
+			height = config.get("height");
 		}
 		if (!height) {
 			height = 100;
@@ -141,7 +141,7 @@ function setHeight(height, viaUser) {
 	height = Math.min(height, maxH);
 	height = Math.max(height, minH);
 	$body.css("height", height);
-	if (viaUser && options.persistDrawer) {
-		lsSet("phpDebugConsole-height", height);
+	if (viaUser && config.get("persistDrawer")) {
+		config.set("height", height);
 	}
 }

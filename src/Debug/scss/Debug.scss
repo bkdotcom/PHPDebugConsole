@@ -38,6 +38,13 @@
 		}
 	}
 
+	.debug-body {
+		*[title]:not(a) {
+			cursor: help;
+			&:hover { background-color:rgba(0,0,0,0.2); }
+		}
+	}
+
 	ul {
 		&.debug-log-summary,
 		&.debug-log,

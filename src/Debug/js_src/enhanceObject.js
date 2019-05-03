@@ -1,9 +1,9 @@
 import $ from "jquery";
 
-var options;
+var config;
 
-export function init($delegateNode, opts) {
-	options = opts;
+export function init($delegateNode, conf) {
+	config = conf.config;
 	$delegateNode.on("click", "[data-toggle=vis]", function() {
 		toggleVis(this);
 		return false;
@@ -15,7 +15,8 @@ export function init($delegateNode, opts) {
 }
 
 function addIcons($node) {
-	$.each(options.iconsObject, function(selector, v){
+	// console.warn('addIcons', $node);
+	$.each(config.iconsObject, function(selector, v){
 		$node.find(selector).prepend(v);
 	});
 	$node.find("> .property > .fa:first-child, > .property > span:first-child > .fa").
@@ -34,7 +35,7 @@ export function enhance($node) {
 			$toggle.addClass("empty");
 			return;
 		}
-		$toggle.append(' <i class="fa ' + options.iconsExpand.expand + '"></i>');
+		$toggle.append(' <i class="fa ' + config.iconsExpand.expand + '"></i>');
 		$toggle.attr("data-toggle", "object");
 		$target.hide();
 	});
@@ -95,6 +96,7 @@ export function enhanceInner($node) {
 	$node.find("> .property.forceShow").show().find("> .t_array-expand").each(function() {
 		$(this).debugEnhance('expand');
 	});
+	$node.addClass("enhanced");
 }
 
 function toggleInterface(toggle) {

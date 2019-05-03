@@ -7,23 +7,23 @@ import * as drawer from "./drawer.js";
 import * as filter from "./filter.js";
 import * as optionsMenu from "./optionsDropdown.js";
 import * as sidebar from "./sidebar.js";
-import * as http from "./http.js";
+import {cookieGet,cookieRemove,cookieSet} from "./http.js";
 
-var options;
+var config;
 var $root;
 
-export function init($debugRoot, opts) {
-	options = opts;
+export function init($debugRoot, conf) {
+	config = conf.config;
 	$root = $debugRoot;
 	addChannelToggles();
 	addExpandAll();
 	addNoti($("body"));
 	addPersistOption();
 	enhanceErrorSummary();
-	drawer.init($root, opts);
+	drawer.init($root, conf);
 	filter.init($root);
-	sidebar.init($root, opts);
-	optionsMenu.init($root, opts);
+	sidebar.init($root, conf);
+	optionsMenu.init($root, conf);
 	$root.find(".loading").hide();
 	$root.addClass("enhanced");
 }
@@ -68,17 +68,17 @@ function addNoti($root) {
 
 function addPersistOption() {
 	var $node;
-	if (options.debugKey) {
+	if (config.debugKey) {
 		$node = $('<label class="debug-cookie" title="Add/remove debug cookie"><input type="checkbox"> Keep debug on</label>');
-		if (http.cookieGet("debug") === options.debugKey) {
+		if (cookieGet("debug") === options.debugKey) {
 			$node.find("input").prop("checked", true);
 		}
 		$("input", $node).on("change", function() {
 			var checked = $(this).is(":checked");
 			if (checked) {
-				http.cookieSave("debug", options.debugKey, 7);
+				cookieSet("debug", options.debugKey, 7);
 			} else {
-				http.cookieRemove("debug");
+				cookieRemove("debug");
 			}
 		});
 		$root.find(".debug-menu-bar").eq(0).prepend($node);
@@ -136,7 +136,7 @@ function channelsToTree(channels) {
 
 function enhanceErrorSummary() {
 	var $errorSummary = $root.find(".m_alert.error-summary");
-	$errorSummary.find("h3:first-child").prepend(options.iconsMethods[".m_error"]);
+	$errorSummary.find("h3:first-child").prepend(config.iconsMethods[".m_error"]);
 	$errorSummary.find("li[class*=error-]").each(function() {
 		var classAttr = $(this).attr("class"),
 			html = $(this).html(),

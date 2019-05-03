@@ -16,11 +16,11 @@ export function cookieGet(name) {
 }
 
 export function cookieRemove(name) {
-	cookieSave(name, "", -1);
+	cookieSet(name, "", -1);
 }
 
-export function cookieSave(name, value, days) {
-	// console.log("cookieSave", name, value, days);
+export function cookieSet(name, value, days) {
+	// console.log("cookieSet", name, value, days);
 	var expires = "",
 		date = new Date();
 	if ( days ) {
@@ -31,11 +31,38 @@ export function cookieSave(name, value, days) {
 }
 
 export function lsGet(key) {
-	return JSON.parse(window.localStorage.getItem(key));
+	var path = key.split(".", 2);
+    var val = window.localStorage.getItem(path[0]);
+    if (typeof val !== "string" || val.length < 1) {
+        return null;
+    } else {
+        try {
+            val = JSON.parse(val);
+        } catch (e) {
+        }
+    }
+	return path.length > 1
+		? val[path[1]]
+		: val;
 }
 
 export function lsSet(key, val) {
-	window.localStorage.setItem(key, JSON.stringify(val));
+	var path = key.split(".", 2);
+	var lsVal;
+	key = path[0];
+	if (path.length > 1) {
+		lsVal = lsGet(key) || {};
+		lsVal[path[1]] = val;
+		val = lsVal;
+	}
+    if (val === null) {
+        localStorage.removeItem(key);
+        return;
+    }
+    if (typeof val !== "string") {
+        val = JSON.stringify(val);
+    }
+	window.localStorage.setItem(key, val);
 }
 
 export function queryDecode(qs) {

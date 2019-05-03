@@ -45,6 +45,7 @@
 .t_resource { font-style:italic; }
 .t_string {
 	white-space: pre-wrap;
+	word-break: break-all;
 	&:before,
 	&:after {
 		font-family: $font-family;
@@ -53,8 +54,11 @@
 	}
 	&:before { content: open-quote; }
 	&:after { content: close-quote; }
-	*:not(pre, pre *) {
-		white-space: pre-wrap;
+	// *:not(pre, pre *) {
+	// }
+	* {
+		white-space: normal;
+		word-break: break-word;
 	}
 }
 .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }

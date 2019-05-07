@@ -31,7 +31,7 @@ export function init($debugRoot, conf) {
 function addChannelToggles() {
 	var channels = $root.data("channels"),
 		$toggles,
-		$ul = buildChannelList(channels, "", $root.data("channelRoot"));
+		$ul = buildChannelList(channels, $root.data("channelRoot"));
 	$toggles = $("<fieldset />", {
 			"class": "channels",
 		})
@@ -85,11 +85,12 @@ function addPersistOption() {
 	}
 }
 
-export function buildChannelList(channels, prepend, channelRoot) {
+export function buildChannelList(channels, channelRoot, checkedChannels, prepend) {
 	var $ul = $('<ul class="list-unstyled">'),
 		$li,
 		channel,
 		$label;
+	// checkedChannels = checkedChannels || [];
 	prepend = prepend || "";
 	if ($.isArray(channels)) {
 		channels = channelsToTree(channels);
@@ -100,8 +101,12 @@ export function buildChannelList(channels, prepend, channelRoot) {
 			continue;
 		}
 		$li = $("<li>");
-		$label = $('<label>').append($("<input>", {
-			checked: true,
+		$label = $('<label>', {
+			"class": "toggle active",
+		}).append($("<input>", {
+			checked: checkedChannels
+				? checkedChannels.indexOf(prepend + channel) > -1
+				: true,
 			"data-is-root": channel == channelRoot,
 			"data-toggle": "channel",
 			type: "checkbox",
@@ -109,7 +114,7 @@ export function buildChannelList(channels, prepend, channelRoot) {
 		})).append(" " + channel);
 		$li.append($label);
 		if (Object.keys(channels[channel]).length) {
-			$li.append(buildChannelList(channels[channel], prepend + channel + "."));
+			$li.append(buildChannelList(channels[channel], channelRoot, checkedChannels, prepend + channel + "."));
 		}
 		$ul.append($li);
 	}

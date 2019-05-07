@@ -10,14 +10,14 @@ export function init($debugRoot, conf) {
 	$root = $debugRoot;
 	config = conf;
 
-	if (!config.get("sidebar")) {
-		return;
+	console.warn('sidebar.init');
+
+	if (config.get("sidebar")) {
+		addMarkup($root);
 	}
 
-	addMarkup();
-
 	if (config.get("persistDrawer") && !config.get("openSidebar")) {
-		close();
+		close($root);
 	}
 
 	addPreFilter(function($root){
@@ -38,27 +38,31 @@ export function init($debugRoot, conf) {
 
 	$root.on("click", ".close[data-dismiss=alert]", function() {
 		// setTimeout -> new thread -> executed after event bubbled
+		var $debug = $(this).closest(".debug");
 		setTimeout(function(){
-			if ($root.find(".m_alert").length) {
-				$root.find(".debug-sidebar input[data-toggle=method][value=alert]").parent().addClass("disabled");
+			if ($debug.find(".m_alert").length) {
+				$debug.find(".debug-sidebar input[data-toggle=method][value=alert]").parent().addClass("disabled");
 			}
 		});
 	});
 
-	$root.find(".sidebar-toggle").on("click", function() {
-		var isVis = $(".debug-sidebar").is(".show");
+	$root.on("click", ".sidebar-toggle", function() {
+		var $debug = $(this).closest(".debug"),
+			isVis = $debug.find(".debug-sidebar").is(".show");
 		if (!isVis) {
-			open();
+			open($debug);
 		} else {
-			close();
+			close($debug);
 		}
 	});
 
-	$root.find(".debug-sidebar input[type=checkbox]").on("change", function(e) {
+	$root.on("change", ".debug-sidebar input[type=checkbox]", function(e) {
+		// console.warn("sidebar checkbox change", this);
 		var $input = $(this),
 			$toggle = $input.closest(".toggle"),
 			$nested = $toggle.next("ul").find(".toggle"),
 			isActive = $input.is(":checked");
+		// e.stopPropagation();
 		$toggle.toggleClass("active", isActive);
 		$nested.toggleClass("active", isActive);
 		if ($input.val() == "error-fatal") {
@@ -67,7 +71,7 @@ export function init($debugRoot, conf) {
 	});
 }
 
-function addMarkup() {
+export function addMarkup($node) {
 	var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
 	$sidebar.html('\
 		<div class="sidebar-toggle">\
@@ -95,21 +99,33 @@ function addMarkup() {
 			</li>\
 		</ul>\
 	');
-	$root.find(".debug-body").before($sidebar);
+	$node.find(".debug-body").before($sidebar);
 
-	phpErrorToggles();
-	moveChannelToggles();
-	addMethodToggles();
-	moveExpandAll();
+	phpErrorToggles($node);
+	moveChannelToggles($node);
+	addMethodToggles($node);
+	moveExpandAll($node);
 
 	setTimeout(function(){
 		$sidebar.removeClass("no-transition");
 	}, 500);
 }
 
-function addMethodToggles() {
-	var $filters = $root.find(".debug-filters"),
-		$entries = $root.find("> .debug-body .m_alert, .group-body > *"),
+export function close($node) {
+	$node.find(".debug-sidebar").removeClass("show").attr("style", "");
+	config.set("openSidebar", false);
+}
+
+export function open($node) {
+	$node.find(".debug-sidebar")
+		.addClass("show")
+		.trigger("open.debug.sidebar");
+	config.set("openSidebar", true);
+}
+
+function addMethodToggles($node) {
+	var $filters = $node.find(".debug-filters"),
+		$entries = $node.find("> .debug-body .m_alert, .group-body > *"),
 		val,
 		labels = {
 			alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i> Alerts',
@@ -145,36 +161,36 @@ function addMethodToggles() {
 /**
  * grab the .debug-body toggles and move them to sidebar
  */
-function moveChannelToggles() {
-	var $togglesSrc = $root.find(".debug-body .channels > ul > li"),
-		$togglesDest = $root.find(".debug-sidebar .channels ul");
+function moveChannelToggles($node) {
+	var $togglesSrc = $node.find(".debug-body .channels > ul > li"),
+		$togglesDest = $node.find(".debug-sidebar .channels ul");
 	$togglesSrc.find("label").addClass("toggle active");
 	$togglesDest.append($togglesSrc);
 	if ($togglesDest.children().length === 0) {
 		$togglesDest.parent().hide();
 	}
-	$root.find(".debug-body .channels").remove();
+	$node.find(".debug-body .channels").remove();
 }
 
 /**
  * Grab the .debug-body "Expand All" and move it to sidebar
  */
-function moveExpandAll() {
-	var $btn = $root.find(".debug-body > .expand-all"),
+function moveExpandAll($node) {
+	var $btn = $node.find(".debug-body > .expand-all"),
 		html = $btn.html();
 	if ($btn.length) {
 		$btn.html(html.replace('Expand', 'Exp'));
-		$btn.appendTo($root.find(".debug-sidebar"));
+		$btn.appendTo($node.find(".debug-sidebar"));
 	}
 }
 
 /**
  * Grab the error toggles from .debug-body's error-summary move to sidebar
  */
-function phpErrorToggles() {
-	var $togglesUl = $root.find(".debug-sidebar .php-errors ul"),
-		$errorSummary = $root.find(".m_alert.error-summary"),
-		haveFatal = $root.find(".m_error.error-fatal").length > 0;
+function phpErrorToggles($node) {
+	var $togglesUl = $node.find(".debug-sidebar .php-errors ul"),
+		$errorSummary = $node.closest(".debug").find(".m_alert.error-summary"),
+		haveFatal = $node.closest(".debug").find(".m_error.error-fatal").length > 0;
 	if (haveFatal) {
 		$togglesUl.append('<li><label class="toggle active">\
 			<input type="checkbox" checked data-toggle="error" value="error-fatal" />fatal <span class="badge">1</span>\
@@ -201,14 +217,4 @@ function phpErrorToggles() {
 	} else {
 		$errorSummary.find("h3").eq(1).remove();
 	}
-}
-
-function open() {
-	$(".debug-sidebar").addClass("show");
-	config.set("openSidebar", true);
-}
-
-function close() {
-	$(".debug-sidebar").removeClass("show");
-	config.set("openSidebar", false);
 }

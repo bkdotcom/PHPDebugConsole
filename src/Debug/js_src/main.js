@@ -5,10 +5,11 @@
  */
 
 import $ from 'jquery';				// external global
-import * as http from "./http.js";	// cookie & query utils
-import * as enhanceMain from "./enhanceMain.js";
 import * as enhanceEntries from "./enhanceEntries.js";
+import * as enhanceMain from "./enhanceMain.js";
 import * as expandCollapse from "./expandCollapse.js";
+import * as http from "./http.js";	// cookie & query utils
+import * as sidebar from "./sidebar.js";
 import {Config} from "./config.js";
 import loadDeps from "./loadDeps.js";
 
@@ -122,16 +123,24 @@ loadDeps([
 	}
 ]);
 
-$.fn.debugEnhance = function(method) {
+$.fn.debugEnhance = function(method, arg1, arg2) {
 	// console.warn("debugEnhance", method, this);
 	var $self = this,
 		dataOptions = {},
 		lsOptions = {},	// localStorage options
 		options = {};
-	if (method === "buildChannelList") {
-		return enhanceMain.buildChannelList(arguments[1], "", arguments[2]);
+	if (method === "sidebar") {
+		if (arg1 == "add") {
+			sidebar.addMarkup($self);
+		} else if (arg1 == "open") {
+			sidebar.open($self);
+		} else if (arg1 == "close") {
+			sidebar.close($self);
+		}
+	} else if (method === "buildChannelList") {
+		return enhanceMain.buildChannelList(arg1, arg2, arguments[3]);
 	} else if (method === "collapse") {
-		expandCollapse.collapse($self, arguments[1]);
+		expandCollapse.collapse($self, arg1);
 	} else if (method === "expand") {
 		expandCollapse.expand($self);
 	} else if (method === "init") {
@@ -139,8 +148,8 @@ $.fn.debugEnhance = function(method) {
 		// lsOptions = http.lsGet("phpDebugConsole") || {};
 		// options = $.extend({}, optionsDefault, dataOptions, lsOptions);
 		config.set($self.eq(0).data("options") || {});
-		if (typeof arguments[1] == "object") {
-			config.set(arguments[1]);
+		if (typeof arg1 == "object") {
+			config.set(arg1);
 		}
 		enhanceEntries.init($self, config);
 		expandCollapse.init($self, config);
@@ -150,8 +159,8 @@ $.fn.debugEnhance = function(method) {
 			$self.debugEnhance();
 		}
 	} else if (method == "setConfig") {
-		if (typeof arguments[1] == "object") {
-			config.set(arguments[1]);
+		if (typeof arg1 == "object") {
+			config.set(arg1);
 			// update logs that have already been enhanced
             $(this)
             	.find(".debug-log.enhanced")

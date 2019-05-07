@@ -3,792 +3,10 @@
 
 	$ = $ && $.hasOwnProperty('default') ? $['default'] : $;
 
-	function cookieGet(name) {
-		var nameEQ = name + "=",
-			ca = document.cookie.split(";"),
-			c = null,
-			i = 0;
-		for ( i = 0; i < ca.length; i += 1 ) {
-			c = ca[i];
-			while (c.charAt(0) === " ") {
-				c = c.substring(1, c.length);
-			}
-			if (c.indexOf(nameEQ) === 0) {
-				return c.substring(nameEQ.length, c.length);
-			}
-		}
-		return null;
-	}
+	var config;
 
-	function cookieRemove(name) {
-		cookieSet(name, "", -1);
-	}
-
-	function cookieSet(name, value, days) {
-		// console.log("cookieSet", name, value, days);
-		var expires = "",
-			date = new Date();
-		if ( days ) {
-			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-			expires = "; expires=" + date.toGMTString();
-		}
-		document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
-	}
-
-	function lsGet(key) {
-		var path = key.split(".", 2);
-	    var val = window.localStorage.getItem(path[0]);
-	    if (typeof val !== "string" || val.length < 1) {
-	        return null;
-	    } else {
-	        try {
-	            val = JSON.parse(val);
-	        } catch (e) {
-	        }
-	    }
-		return path.length > 1
-			? val[path[1]]
-			: val;
-	}
-
-	function lsSet(key, val) {
-		var path = key.split(".", 2);
-		var lsVal;
-		key = path[0];
-		if (path.length > 1) {
-			lsVal = lsGet(key) || {};
-			lsVal[path[1]] = val;
-			val = lsVal;
-		}
-	    if (val === null) {
-	        localStorage.removeItem(key);
-	        return;
-	    }
-	    if (typeof val !== "string") {
-	        val = JSON.stringify(val);
-	    }
-		window.localStorage.setItem(key, val);
-	}
-
-	function queryDecode(qs) {
-		var params = {},
-			tokens,
-			re = /[?&]?([^&=]+)=?([^&]*)/g;
-		if (qs === undefined) {
-			qs = document.location.search;
-		}
-		qs = qs.split("+").join(" ");	// replace + with " "
-		while (true) {
-			tokens = re.exec(qs);
-			if (!tokens) {
-				break;
-			}
-			params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
-		}
-		return params;
-	}
-
-	// import {lsGet,lsSet} from "./http.js";
-
-	var $root, config, origH, origPageY;
-
-	/**
-	 * @see https://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element-when-inner-element-scroll-position-reaches-t
-	 */
-	$.fn.scrollLock = function(enable){
-		enable = typeof enable == "undefined"
-			? true
-			: enable;
-		return enable
-			? this.on("DOMMouseScroll mousewheel wheel",function(e){
-				var $this = $(this),
-					st = this.scrollTop,
-					sh = this.scrollHeight,
-					h = $this.innerHeight(),
-					d = e.originalEvent.wheelDelta,
-					isUp = d>0,
-					prevent = function(){
-						e.stopPropagation();
-						e.preventDefault();
-						e.returnValue = false;
-						return false;
-					};
-				if (!isUp && -d > sh-h-st) {
-					// Scrolling down, but this will take us past the bottom.
-					$this.scrollTop(sh);
-					return prevent();
-				} else if (isUp && d > st) {
-					// Scrolling up, but this will take us past the top.
-					$this.scrollTop(0);
-					return prevent();
-				}
-			})
-			: this.off("DOMMouseScroll mousewheel wheel");
-	};
-
-	function init($debugRoot, conf) {
-		// console.warn('drawer.init', $debugRoot[0]);
-		$root = $debugRoot;
-		config = conf;
-		if (!config.get("drawer")) {
-			return;
-		}
-
-		$root.addClass("debug-drawer");
-
-		addMarkup();
-
-		$root.find(".debug-body").scrollLock();
-		$root.find(".debug-resize-handle").on("mousedown", onMousedown);
-		$root.find(".debug-pull-tab").on("click", open);
-		$root.find(".debug-menu-bar .close").on("click", close);
-
-		if (config.get("persistDrawer") && config.get("openDrawer")) {
-			open();
-		}
-	}
-
-	function addMarkup() {
-		var $menuBar = $(".debug-menu-bar");
-		// var $body = $('<div class="debug-body"></div>');
-		$menuBar.before('\
-		<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i> PHP</div>\
-		<div class="debug-resize-handle"></div>'
-		);
-		$menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole\
-		<div class="pull-right">\
-			<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">\
-				<span aria-hidden="true">&times;</span>\
-			</button>\
-		</div>');
-	}
-
-	function open() {
-		$root.addClass("debug-drawer-open");
-		$root.debugEnhance();
-		setHeight(); // makes sure height within min/max
-		$("body").css("marginBottom", ($root.height() + 8) + "px");
-		$(window).on("resize", setHeight);
-		if (config.get("persistDrawer")) {
-			config.set("openDrawer", true);
-		}
-	}
-
-	function close() {
-		$root.removeClass("debug-drawer-open");
-		$("body").css("marginBottom", "");
-		$(window).off("resize", setHeight);
-		if (config.get("persistDrawer")) {
-			config.set("openDrawer", false);
-		}
-	}
-
-	function onMousemove(e) {
-		var h = origH + (origPageY - e.pageY);
-		setHeight(h, true);
-	}
-
-	function onMousedown(e) {
-		if (!$(e.target).closest(".debug-drawer").is(".debug-drawer-open")) {
-			// drawer isn't open / ignore resize
-			return;
-		}
-		origH = $root.find(".debug-body").height();
-		origPageY = e.pageY;
-		$("html").addClass("debug-resizing");
-		$root.parents()
-			.on("mousemove", onMousemove)
-			.on("mouseup", onMouseup);
-		e.preventDefault();
-	}
-
-	function onMouseup() {
-		$("html").removeClass("debug-resizing");
-		$root.parents()
-			.off("mousemove", onMousemove)
-			.off("mouseup", onMouseup);
-		$("body").css("marginBottom", ($root.height() + 8) + "px");
-	}
-
-	function setHeight(height, viaUser) {
-		var $body = $root.find(".debug-body"),
-			menuH = $root.find(".debug-menu-bar").outerHeight(),
-			minH = 20,
-			// inacurate if document.doctype is null : $(window).height()
-			//    aka document.documentElement.clientHeight
-			maxH = window.innerHeight - menuH - 50;
-		if (!height || typeof height === "object") {
-			// no height passed -> use last or 100
-			height = parseInt($body[0].style.height, 10);
-			if (!height && config.get("persistDrawer")) {
-				height = config.get("height");
-			}
-			if (!height) {
-				height = 100;
-			}
-		}
-		height = Math.min(height, maxH);
-		height = Math.max(height, minH);
-		$body.css("height", height);
-		if (viaUser && config.get("persistDrawer")) {
-			config.set("height", height);
-		}
-	}
-
-	/**
-	 * Filter entries
-	 */
-
-	var channels = [];
-	var tests = [
-		function ($node) {
-			var channel = $node.data("channel");
-			return channels.indexOf(channel) > -1;
-		}
-	];
-	var preFilterCallbacks = [
-		function ($root) {
-			var $checkboxes = $root.find("input[data-toggle=channel]");
-			channels = $checkboxes.length
-				? []
-				: [undefined];
-			$checkboxes.filter(":checked").each(function(){
-				channels.push($(this).val());
-				if ($(this).data("isRoot")) {
-					channels.push(undefined);
-				}
-			});
-		}
-	];
-
-	function init$1($delegateNode) {
-
-		$delegateNode.on("change", "input[type=checkbox]", function() {
-			var $this = $(this),
-				isChecked = $this.is(":checked"),
-				$nested = $this.closest("label").next("ul").find("input");
-			if ($this.data("toggle") == "error") {
-				// filtered separately
-				return;
-			}
-			$nested.prop("checked", isChecked);
-			applyFilter($this.closest(".debug"));
-		});
-
-		$delegateNode.on("change", "input[data-toggle=error]", function() {
-			var $this = $(this),
-				$root = $this.closest(".debug"),
-				errorClass = $this.val(),
-				isChecked = $this.is(":checked"),
-				selector = ".group-body ." + errorClass;
-			$root.find(selector).toggleClass("filter-hidden", !isChecked);
-			// trigger collapse to potentially update group icon
-			$root.find(".m_error, .m_warn").parents(".m_group").find(".group-body")
-				.trigger("collapsed.debug.group");
-		});
-	}
-
-	function addTest(func) {
-		tests.push(func);
-	}
-
-	function addPreFilter(func) {
-		preFilterCallbacks.push(func);
-	}
-
-	function applyFilter($root) {
-		var i;
-		for (i in preFilterCallbacks) {
-			preFilterCallbacks[i]($root);
-		}
-		$root.find("> .debug-body .m_alert, .group-body > *:not(.m_groupSummary)").each(function(){
-			var $node = $(this),
-				show = true;
-			if ($node.data("channel") == "phpError") {
-				// php Errors are filtered separately
-				return;
-			}
-			for (i in tests) {
-				show = tests[i]($node);
-				if (!show) {
-					break;
-				}
-			}
-			$node.toggleClass("filter-hidden", !show);
-		});
-		/*
-			Collapsed groups may get filter-hidden..
-			this may result in exposing entries in that group that have yet to be enhanced
-		*/
-		$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body > li:not(.filter-hidden):not(.enhanced)").each(function(){
-			$(this).debugEnhance();
-		});
-	}
-
-	var $root$1, config$1;
-
-	var KEYCODE_ESC = 27;
-
-	function init$2($debugRoot, conf) {
-		$root$1 = $debugRoot;
-		config$1 = conf;
-
-		addDropdown();
-
-		$("#debug-options-toggle").on("click", function(e){
-			var isVis = $(".debug-options").is(".show");
-			if (!isVis) {
-				open$1();
-			} else {
-				close$1();
-			}
-			e.stopPropagation();
-		});
-
-		$("input[name=debugCookie]").on("change", function(){
-			var isChecked = $(this).is(":checked");
-			if (isChecked) {
-				cookieSave("debug", config$1.get("debugKey"), 7);
-			} else {
-				cookieRemove("debug");
-			}
-		}).prop("checked", config$1.get("debugKey") && cookieGet("debug") === config$1.get("debugKey"));
-		if (!config$1.get("debugKey")) {
-			$("input[name=debugCookie]").prop("disabled", true)
-				.closest("label").addClass("disabled");
-		}
-
-		$("input[name=persistDrawer]").on("change", function(){
-			var isChecked = $(this).is(":checked");
-			// options.persistDrawer = isChecked;
-			config$1.set({
-				persistDrawer: isChecked,
-				openDrawer: isChecked,
-				openSidebar: true
-			});
-		}).prop("checked", config$1.get("persistDrawer"));
-
-		$("input[name=linkFiles]").on("change", function(){
-			var isChecked = $(this).prop("checked"),
-				$formGroup = $("#linkFilesTemplate").closest(".form-group");
-			isChecked
-				? $formGroup.slideDown()
-				: $formGroup.slideUp();
-			config$1.set("linkFiles", isChecked);
-			$("input[name=linkFilesTemplate]").trigger("change");
-		}).prop("checked", config$1.get("linkFiles")).trigger("change");
-
-		$("input[name=linkFilesTemplate]").on("change", function(){
-			var val = $(this).val();
-			config$1.set("linkFilesTemplate", val);
-			$debugRoot.trigger("config.debug.updated", "linkFilesTemplate");
-		}).val(config$1.get("linkFilesTemplate"));
-	}
-
-	function addDropdown() {
-		var $menuBar = $root$1.find(".debug-menu-bar");
-		$menuBar.find(".pull-right").prepend('<button id="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">\
-			<i class="fa fa-ellipsis-v fa-fw"></i>\
-		</button>');
-		$menuBar.append('<div class="debug-options" aria-labelledby="debug-options-toggle">\
-			<div class="debug-options-body">\
-				<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>\
-				<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>\
-				<label><input type="checkbox" name="linkFiles" /> Create file links</label>\
-				<div class="form-group">\
-					<label for="linkFilesTemplate">Link Template</label>\
-					<input name="linkFilesTemplate" id="linkFilesTemplate" />\
-				</div>\
-				<hr class="dropdown-divider" />\
-				<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>\
-			</div>\
-		</div>');
-	}
-
-	function onBodyClick(e) {
-		if ($root$1.find(".debug-options").find(e.target).length === 0) {
-			// we clicked outside the dropdown
-			close$1();
-		}
-	}
-
-	function onBodyKeyup(e) {
-		if (e.keyCode === KEYCODE_ESC) {
-			close$1();
-		}
-	}
-
-	function open$1() {
-		$root$1.find(".debug-options").addClass("show");
-		$("body").on("click", onBodyClick);
-		$("body").on("keyup", onBodyKeyup);
-	}
-
-	function close$1() {
-		$root$1.find(".debug-options").removeClass("show");
-		$("body").off("click", onBodyClick);
-		$("body").off("keyup", onBodyKeyup);
-	}
-
-	var config$2;
-	var methods;	// method filters
-	var $root$2;
-
-	function init$3($debugRoot, conf) {
-		$root$2 = $debugRoot;
-		config$2 = conf;
-
-		if (!config$2.get("sidebar")) {
-			return;
-		}
-
-		addMarkup$1();
-
-		if (config$2.get("persistDrawer") && !config$2.get("openSidebar")) {
-			close$2();
-		}
-
-		addPreFilter(function($root){
-			methods = [];
-			$root.find("input[data-toggle=method]:checked").each(function(){
-				methods.push($(this).val());
-			});
-		});
-
-		addTest(function($node){
-			var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
-			if (["alert","error","warn","info"].indexOf(method) > -1) {
-				return methods.indexOf(method) > -1;
-			} else {
-				return methods.indexOf("other") > -1;
-			}
-		});
-
-		$root$2.on("click", ".close[data-dismiss=alert]", function() {
-			// setTimeout -> new thread -> executed after event bubbled
-			setTimeout(function(){
-				if ($root$2.find(".m_alert").length) {
-					$root$2.find(".debug-sidebar input[data-toggle=method][value=alert]").parent().addClass("disabled");
-				}
-			});
-		});
-
-		$root$2.find(".sidebar-toggle").on("click", function() {
-			var isVis = $(".debug-sidebar").is(".show");
-			if (!isVis) {
-				open$2();
-			} else {
-				close$2();
-			}
-		});
-
-		$root$2.find(".debug-sidebar input[type=checkbox]").on("change", function(e) {
-			var $input = $(this),
-				$toggle = $input.closest(".toggle"),
-				$nested = $toggle.next("ul").find(".toggle"),
-				isActive = $input.is(":checked");
-			$toggle.toggleClass("active", isActive);
-			$nested.toggleClass("active", isActive);
-			if ($input.val() == "error-fatal") {
-				$(".m_alert.error-summary").toggle(!isActive);
-			}
-		});
-	}
-
-	function addMarkup$1() {
-		var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
-		$sidebar.html('\
-		<div class="sidebar-toggle">\
-			<div class="collapse">\
-				<i class="fa fa-caret-left"></i>\
-				<i class="fa fa-ellipsis-v"></i>\
-				<i class="fa fa-caret-left"></i>\
-			</div>\
-			<div class="expand">\
-				<i class="fa fa-caret-right"></i>\
-				<i class="fa fa-ellipsis-v"></i>\
-				<i class="fa fa-caret-right"></i>\
-			</div>\
-		</div>\
-		<ul class="list-unstyled debug-filters">\
-			<li class="php-errors">\
-				<span><i class="fa fa-fw fa-lg fa-code"></i> PHP Errors</span>\
-				<ul class="list-unstyled">\
-				</ul>\
-			</li>\
-			<li class="channels">\
-				<span><i class="fa fa-fw fa-lg fa-list-ul"></i> Channels</span>\
-				<ul class="list-unstyled">\
-				</ul>\
-			</li>\
-		</ul>\
-	');
-		$root$2.find(".debug-body").before($sidebar);
-
-		phpErrorToggles();
-		moveChannelToggles();
-		addMethodToggles();
-		moveExpandAll();
-
-		setTimeout(function(){
-			$sidebar.removeClass("no-transition");
-		}, 500);
-	}
-
-	function addMethodToggles() {
-		var $filters = $root$2.find(".debug-filters"),
-			$entries = $root$2.find("> .debug-body .m_alert, .group-body > *"),
-			val,
-			labels = {
-				alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i> Alerts',
-				error: '<i class="fa fa-fw fa-lg fa-times-circle"></i> Error',
-				warn: '<i class="fa fa-fw fa-lg fa-warning"></i> Warning',
-				info: '<i class="fa fa-fw fa-lg fa-info-circle"></i> Info',
-				other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i> Other'
-			},
-			haveEntry;
-		for (val in labels) {
-			haveEntry = val == "other"
-				? $entries.not(".m_alert, .m_error, .m_warn, .m_info").length > 0
-				: $entries.filter(".m_"+val).not("[data-channel=phpError]").length > 0;
-			$filters.append(
-				$('<li />').append(
-					$('<label class="toggle active" />').toggleClass("disabled", !haveEntry).append(
-						$("<input />", {
-							type: "checkbox",
-							checked: true,
-							"data-toggle": "method",
-							value: val
-						})
-					).append(
-						$("<span>").append(
-							labels[val]
-						)
-					)
-				)
-			);
-		}
-	}
-
-	/**
-	 * grab the .debug-body toggles and move them to sidebar
-	 */
-	function moveChannelToggles() {
-		var $togglesSrc = $root$2.find(".debug-body .channels > ul > li"),
-			$togglesDest = $root$2.find(".debug-sidebar .channels ul");
-		$togglesSrc.find("label").addClass("toggle active");
-		$togglesDest.append($togglesSrc);
-		if ($togglesDest.children().length === 0) {
-			$togglesDest.parent().hide();
-		}
-		$root$2.find(".debug-body .channels").remove();
-	}
-
-	/**
-	 * Grab the .debug-body "Expand All" and move it to sidebar
-	 */
-	function moveExpandAll() {
-		var $btn = $root$2.find(".debug-body > .expand-all"),
-			html = $btn.html();
-		if ($btn.length) {
-			$btn.html(html.replace('Expand', 'Exp'));
-			$btn.appendTo($root$2.find(".debug-sidebar"));
-		}
-	}
-
-	/**
-	 * Grab the error toggles from .debug-body's error-summary move to sidebar
-	 */
-	function phpErrorToggles() {
-		var $togglesUl = $root$2.find(".debug-sidebar .php-errors ul"),
-			$errorSummary = $root$2.find(".m_alert.error-summary"),
-			haveFatal = $root$2.find(".m_error.error-fatal").length > 0;
-		if (haveFatal) {
-			$togglesUl.append('<li><label class="toggle active">\
-			<input type="checkbox" checked data-toggle="error" value="error-fatal" />fatal <span class="badge">1</span>\
-			</label></li>');
-		}
-		$errorSummary.find("label").each(function(){
-			var $li = $(this).parent(),
-				$checkbox = $(this).find("input"),
-				val = $checkbox.val().replace("error-", "");
-			$togglesUl.append(
-				$("<li>").append(
-					$('<label class="toggle active">').html(
-						$checkbox[0].outerHTML + val + ' <span class="badge">' + $checkbox.data("count") + "</span>"
-					)
-				)
-			);
-			$li.remove();
-		});
-		if ($togglesUl.children().length === 0) {
-			$togglesUl.parent().hide();
-		}
-		if (!haveFatal) {
-			$errorSummary.remove();
-		} else {
-			$errorSummary.find("h3").eq(1).remove();
-		}
-	}
-
-	function open$2() {
-		$(".debug-sidebar").addClass("show");
-		config$2.set("openSidebar", true);
-	}
-
-	function close$2() {
-		$(".debug-sidebar").removeClass("show");
-		config$2.set("openSidebar", false);
-	}
-
-	/**
-	 * Add primary Ui elements
-	 */
-
-	var config$3;
-	var $root$3;
-
-	function init$4($debugRoot, conf) {
-		config$3 = conf.config;
-		$root$3 = $debugRoot;
-		addChannelToggles();
-		addExpandAll();
-		addNoti($("body"));
-		addPersistOption();
-		enhanceErrorSummary();
-		init($root$3, conf);
-		init$1($root$3);
-		init$3($root$3, conf);
-		init$2($root$3, conf);
-		$root$3.find(".loading").hide();
-		$root$3.addClass("enhanced");
-	}
-
-	function addChannelToggles() {
-		var channels = $root$3.data("channels"),
-			$toggles,
-			$ul = buildChannelList(channels, "", $root$3.data("channelRoot"));
-		$toggles = $("<fieldset />", {
-				"class": "channels",
-			})
-			.append('<legend>Channels</legend>')
-			.append($ul);
-		if ($ul.html().length) {
-			$root$3.find(".debug-body").prepend($toggles);
-		}
-	}
-
-	function addExpandAll() {
-		var $expandAll = $("<button>", {
-				"class": "expand-all"
-			}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
-		// this is currently invoked before entries are enhance / empty class not yet added
-		if ($root$3.find(".m_group:not(.empty)").length) {
-			$expandAll.on("click", function() {
-				$(this).closest(".debug").find(".group-header").not(".expanded").each(function() {
-					$(this).debugEnhance('expand');
-				});
-				return false;
-			});
-			$root$3.find(".debug-log-summary").before($expandAll);
-		}
-	}
-
-	function addNoti($root) {
-		$root.append('<div class="debug-noti-wrap">' +
-				'<div class="debug-noti-table">' +
-					'<div class="debug-noti"></div>' +
-				'</div>' +
-			'</div>');
-	}
-
-	function addPersistOption() {
-		var $node;
-		if (config$3.debugKey) {
-			$node = $('<label class="debug-cookie" title="Add/remove debug cookie"><input type="checkbox"> Keep debug on</label>');
-			if (cookieGet("debug") === options.debugKey) {
-				$node.find("input").prop("checked", true);
-			}
-			$("input", $node).on("change", function() {
-				var checked = $(this).is(":checked");
-				if (checked) {
-					cookieSet("debug", options.debugKey, 7);
-				} else {
-					cookieRemove("debug");
-				}
-			});
-			$root$3.find(".debug-menu-bar").eq(0).prepend($node);
-		}
-	}
-
-	function buildChannelList(channels, prepend, channelRoot) {
-		var $ul = $('<ul class="list-unstyled">'),
-			$li,
-			channel,
-			$label;
-		prepend = prepend || "";
-		if ($.isArray(channels)) {
-			channels = channelsToTree(channels);
-		}
-		for (channel in channels) {
-			if (channel === "phpError") {
-				// phpError is a special channel
-				continue;
-			}
-			$li = $("<li>");
-			$label = $('<label>').append($("<input>", {
-				checked: true,
-				"data-is-root": channel == channelRoot,
-				"data-toggle": "channel",
-				type: "checkbox",
-				value: prepend + channel
-			})).append(" " + channel);
-			$li.append($label);
-			if (Object.keys(channels[channel]).length) {
-				$li.append(buildChannelList(channels[channel], prepend + channel + "."));
-			}
-			$ul.append($li);
-		}
-		return $ul;
-	}
-
-	function channelsToTree(channels) {
-		var channelTree = {},
-			ref,
-			i, i2,
-			path;
-		for (i = 0; i < channels.length; i++) {
-			ref = channelTree;
-			path = channels[i].split('.');
-			for (i2 = 0; i2 < path.length; i2++) {
-				if (!ref[ path[i2] ]) {
-					ref[ path[i2] ] = {};
-				}
-				ref = ref[ path[i2] ];
-			}
-		}
-		return channelTree;
-	}
-
-	function enhanceErrorSummary() {
-		var $errorSummary = $root$3.find(".m_alert.error-summary");
-		$errorSummary.find("h3:first-child").prepend(config$3.iconsMethods[".m_error"]);
-		$errorSummary.find("li[class*=error-]").each(function() {
-			var classAttr = $(this).attr("class"),
-				html = $(this).html(),
-				htmlReplace = '<li><label>' +
-					'<input type="checkbox" checked data-toggle="error" data-count="'+$(this).data("count")+'" value="' + classAttr + '" /> ' +
-					html +
-					'</label></li>';
-			$(this).replaceWith(htmlReplace);
-		});
-		$errorSummary.find(".m_trace").debugEnhance();
-	}
-
-	var config$4;
-
-	function init$5($delegateNode, conf) {
-		config$4 = conf.config;
+	function init($delegateNode, conf) {
+		config = conf.config;
 		$delegateNode.on("click", "[data-toggle=vis]", function() {
 			toggleVis(this);
 			return false;
@@ -801,7 +19,7 @@
 
 	function addIcons($node) {
 		// console.warn('addIcons', $node);
-		$.each(config$4.iconsObject, function(selector, v){
+		$.each(config.iconsObject, function(selector, v){
 			$node.find(selector).prepend(v);
 		});
 		$node.find("> .property > .fa:first-child, > .property > span:first-child > .fa").
@@ -820,7 +38,7 @@
 				$toggle.addClass("empty");
 				return;
 			}
-			$toggle.append(' <i class="fa ' + config$4.iconsExpand.expand + '"></i>');
+			$toggle.append(' <i class="fa ' + config.iconsExpand.expand + '"></i>');
 			$toggle.attr("data-toggle", "object");
 			$target.hide();
 		});
@@ -1012,11 +230,11 @@
 		}
 	}
 
-	var config$5;
+	var config$1;
 
-	function init$6($root, conf) {
-		config$5 = conf.config;
-		init$5($root, conf);
+	function init$1($root, conf) {
+		config$1 = conf.config;
+		init($root, conf);
 		$root.on("click", ".close[data-dismiss=alert]", function() {
 			$(this).parent().remove();
 		});
@@ -1098,10 +316,10 @@
 	 */
 	function addIcons$1($root) {
 		var $caption, $icon, $node, selector;
-		for (selector in config$5.iconsMisc) {
+		for (selector in config$1.iconsMisc) {
 			$node = $root.find(selector);
 			if ($node.length) {
-				$icon = $(config$5.iconsMisc[selector]);
+				$icon = $(config$1.iconsMisc[selector]);
 				if ($node.find("> i:first-child").hasClass($icon.attr("class"))) {
 					// already have icon
 					$icon = null;
@@ -1113,9 +331,9 @@
 		}	if ($root.data("icon")) {
 			$icon = $("<i>").addClass($root.data("icon"));
 		} else {
-			for (selector in config$5.iconsMethods) {
+			for (selector in config$1.iconsMethods) {
 				if ($root.is(selector)) {
-					$icon = $(config$5.iconsMethods[selector]);
+					$icon = $(config$1.iconsMethods[selector]);
 					break;
 				}
 			}
@@ -1146,7 +364,7 @@
 			file: file,
 			line: line||1
 		};
-		return config$5.linkFilesTemplate.replace(
+		return config$1.linkFilesTemplate.replace(
 			/%(\w*)\b/g,
 			function(m, key){
 				return data.hasOwnProperty(key)
@@ -1165,7 +383,7 @@
 		var isEnhanced = $node.prev().is(".t_array-expand"),
 			$expander = $('<span class="t_array-expand" data-toggle="array">' +
 					'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-					'<i class="fa ' + config$5.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+					'<i class="fa ' + config$1.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
 					'<span class="t_punct">)</span>' +
 				"</span>"),
 			numParents = $node.parentsUntil(".m_group", ".t_object, .t_array").length;
@@ -1181,7 +399,7 @@
 		// add collapse link
 		$node.find(".t_keyword").first().
 			wrap('<span class="t_array-collapse expanded" data-toggle="array">').
-			after('<span class="t_punct">(</span> <i class="fa ' + config$5.iconsExpand.collapse + '"></i>').
+			after('<span class="t_punct">(</span> <i class="fa ' + config$1.iconsExpand.collapse + '"></i>').
 			parent().next().remove();	// remove original "("
 		$node.before($expander);
 		if (numParents === 0) {
@@ -1300,7 +518,7 @@
 	 * Linkify files if not already done or update already linked files
 	 */
 	function updateFileLinks($group) {
-		var remove = !config$5.linkFiles || config$5.linkFilesTemplate.length == 0;
+		var remove = !config$1.linkFiles || config$1.linkFilesTemplate.length == 0;
 		$group.find("[data-detect-files], .m_error, .m_warn, .m_trace").each(function(){
 			createFileLinks($(this), $(this).find(".t_string"), remove);
 		});
@@ -1313,7 +531,7 @@
 		var dataDetectFiles = $entry.data("detectFiles"),
 			dataFoundFiles = $entry.data("foundFiles") || [];
 		// console.warn('createFileLinks', $entry);
-		if (!config$5.linkFiles && !remove) {
+		if (!config$1.linkFiles && !remove) {
 			return;
 		}
 		if (dataDetectFiles === false) {
@@ -1434,6 +652,799 @@
 			$node.removeClass("t_float t_int t_string numeric no-pseudo");
 			$node.html($i).append($span);
 		}
+	}
+
+	// import {lsGet,lsSet} from "./http.js";
+
+	var $root, config$2, origH, origPageY;
+
+	/**
+	 * @see https://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element-when-inner-element-scroll-position-reaches-t
+	 */
+	$.fn.scrollLock = function(enable){
+		enable = typeof enable == "undefined"
+			? true
+			: enable;
+		return enable
+			? this.on("DOMMouseScroll mousewheel wheel",function(e){
+				var $this = $(this),
+					st = this.scrollTop,
+					sh = this.scrollHeight,
+					h = $this.innerHeight(),
+					d = e.originalEvent.wheelDelta,
+					isUp = d>0,
+					prevent = function(){
+						e.stopPropagation();
+						e.preventDefault();
+						e.returnValue = false;
+						return false;
+					};
+				if (!isUp && -d > sh-h-st) {
+					// Scrolling down, but this will take us past the bottom.
+					$this.scrollTop(sh);
+					return prevent();
+				} else if (isUp && d > st) {
+					// Scrolling up, but this will take us past the top.
+					$this.scrollTop(0);
+					return prevent();
+				}
+			})
+			: this.off("DOMMouseScroll mousewheel wheel");
+	};
+
+	function init$2($debugRoot, conf) {
+		// console.warn('drawer.init', $debugRoot[0]);
+		$root = $debugRoot;
+		config$2 = conf;
+		if (!config$2.get("drawer")) {
+			return;
+		}
+
+		$root.addClass("debug-drawer");
+
+		addMarkup();
+
+		$root.find(".debug-body").scrollLock();
+		$root.find(".debug-resize-handle").on("mousedown", onMousedown);
+		$root.find(".debug-pull-tab").on("click", open);
+		$root.find(".debug-menu-bar .close").on("click", close);
+
+		if (config$2.get("persistDrawer") && config$2.get("openDrawer")) {
+			open();
+		}
+	}
+
+	function addMarkup() {
+		var $menuBar = $(".debug-menu-bar");
+		// var $body = $('<div class="debug-body"></div>');
+		$menuBar.before('\
+		<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i> PHP</div>\
+		<div class="debug-resize-handle"></div>'
+		);
+		$menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole\
+		<div class="pull-right">\
+			<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">\
+				<span aria-hidden="true">&times;</span>\
+			</button>\
+		</div>');
+	}
+
+	function open() {
+		$root.addClass("debug-drawer-open");
+		$root.debugEnhance();
+		setHeight(); // makes sure height within min/max
+		$("body").css("marginBottom", ($root.height() + 8) + "px");
+		$(window).on("resize", setHeight);
+		if (config$2.get("persistDrawer")) {
+			config$2.set("openDrawer", true);
+		}
+	}
+
+	function close() {
+		$root.removeClass("debug-drawer-open");
+		$("body").css("marginBottom", "");
+		$(window).off("resize", setHeight);
+		if (config$2.get("persistDrawer")) {
+			config$2.set("openDrawer", false);
+		}
+	}
+
+	function onMousemove(e) {
+		var h = origH + (origPageY - e.pageY);
+		setHeight(h, true);
+	}
+
+	function onMousedown(e) {
+		if (!$(e.target).closest(".debug-drawer").is(".debug-drawer-open")) {
+			// drawer isn't open / ignore resize
+			return;
+		}
+		origH = $root.find(".debug-body").height();
+		origPageY = e.pageY;
+		$("html").addClass("debug-resizing");
+		$root.parents()
+			.on("mousemove", onMousemove)
+			.on("mouseup", onMouseup);
+		e.preventDefault();
+	}
+
+	function onMouseup() {
+		$("html").removeClass("debug-resizing");
+		$root.parents()
+			.off("mousemove", onMousemove)
+			.off("mouseup", onMouseup);
+		$("body").css("marginBottom", ($root.height() + 8) + "px");
+	}
+
+	function setHeight(height, viaUser) {
+		var $body = $root.find(".debug-body"),
+			menuH = $root.find(".debug-menu-bar").outerHeight(),
+			minH = 20,
+			// inacurate if document.doctype is null : $(window).height()
+			//    aka document.documentElement.clientHeight
+			maxH = window.innerHeight - menuH - 50;
+		if (!height || typeof height === "object") {
+			// no height passed -> use last or 100
+			height = parseInt($body[0].style.height, 10);
+			if (!height && config$2.get("persistDrawer")) {
+				height = config$2.get("height");
+			}
+			if (!height) {
+				height = 100;
+			}
+		}
+		height = Math.min(height, maxH);
+		height = Math.max(height, minH);
+		$body.css("height", height);
+		if (viaUser && config$2.get("persistDrawer")) {
+			config$2.set("height", height);
+		}
+	}
+
+	/**
+	 * Filter entries
+	 */
+
+	var channels = [];
+	var tests = [
+		function ($node) {
+			var channel = $node.data("channel");
+			return channels.indexOf(channel) > -1;
+		}
+	];
+	var preFilterCallbacks = [
+		function ($root) {
+			var $checkboxes = $root.find("input[data-toggle=channel]");
+			channels = $checkboxes.length
+				? []
+				: [undefined];
+			$checkboxes.filter(":checked").each(function(){
+				channels.push($(this).val());
+				if ($(this).data("isRoot")) {
+					channels.push(undefined);
+				}
+			});
+		}
+	];
+
+	function init$3($delegateNode) {
+
+		$delegateNode.on("change", "input[type=checkbox]", function() {
+			var $this = $(this),
+				isChecked = $this.is(":checked"),
+				$nested = $this.closest("label").next("ul").find("input");
+			if ($this.data("toggle") == "error") {
+				// filtered separately
+				return;
+			}
+			$nested.prop("checked", isChecked);
+			applyFilter($this.closest(".debug"));
+		});
+
+		$delegateNode.on("change", "input[data-toggle=error]", function() {
+			var $this = $(this),
+				$root = $this.closest(".debug"),
+				errorClass = $this.val(),
+				isChecked = $this.is(":checked"),
+				selector = ".group-body ." + errorClass;
+			$root.find(selector).toggleClass("filter-hidden", !isChecked);
+			// trigger collapse to potentially update group icon
+			$root.find(".m_error, .m_warn").parents(".m_group").find(".group-body")
+				.trigger("collapsed.debug.group");
+		});
+	}
+
+	function addTest(func) {
+		tests.push(func);
+	}
+
+	function addPreFilter(func) {
+		preFilterCallbacks.push(func);
+	}
+
+	function applyFilter($root) {
+		var i;
+		for (i in preFilterCallbacks) {
+			preFilterCallbacks[i]($root);
+		}
+		$root.find("> .debug-body .m_alert, .group-body > *:not(.m_groupSummary)").each(function(){
+			var $node = $(this),
+				show = true;
+			if ($node.data("channel") == "phpError") {
+				// php Errors are filtered separately
+				return;
+			}
+			for (i in tests) {
+				show = tests[i]($node);
+				if (!show) {
+					break;
+				}
+			}
+			$node.toggleClass("filter-hidden", !show);
+		});
+		/*
+			Collapsed groups may get filter-hidden..
+			this may result in exposing entries in that group that have yet to be enhanced
+		*/
+		$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body > li:not(.filter-hidden):not(.enhanced)").each(function(){
+			$(this).debugEnhance();
+		});
+	}
+
+	function cookieGet(name) {
+		var nameEQ = name + "=",
+			ca = document.cookie.split(";"),
+			c = null,
+			i = 0;
+		for ( i = 0; i < ca.length; i += 1 ) {
+			c = ca[i];
+			while (c.charAt(0) === " ") {
+				c = c.substring(1, c.length);
+			}
+			if (c.indexOf(nameEQ) === 0) {
+				return c.substring(nameEQ.length, c.length);
+			}
+		}
+		return null;
+	}
+
+	function cookieRemove(name) {
+		cookieSet(name, "", -1);
+	}
+
+	function cookieSet(name, value, days) {
+		// console.log("cookieSet", name, value, days);
+		var expires = "",
+			date = new Date();
+		if ( days ) {
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+			expires = "; expires=" + date.toGMTString();
+		}
+		document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
+	}
+
+	function lsGet(key) {
+		var path = key.split(".", 2);
+	    var val = window.localStorage.getItem(path[0]);
+	    if (typeof val !== "string" || val.length < 1) {
+	        return null;
+	    } else {
+	        try {
+	            val = JSON.parse(val);
+	        } catch (e) {
+	        }
+	    }
+		return path.length > 1
+			? val[path[1]]
+			: val;
+	}
+
+	function lsSet(key, val) {
+		var path = key.split(".", 2);
+		var lsVal;
+		key = path[0];
+		if (path.length > 1) {
+			lsVal = lsGet(key) || {};
+			lsVal[path[1]] = val;
+			val = lsVal;
+		}
+	    if (val === null) {
+	        localStorage.removeItem(key);
+	        return;
+	    }
+	    if (typeof val !== "string") {
+	        val = JSON.stringify(val);
+	    }
+		window.localStorage.setItem(key, val);
+	}
+
+	function queryDecode(qs) {
+		var params = {},
+			tokens,
+			re = /[?&]?([^&=]+)=?([^&]*)/g;
+		if (qs === undefined) {
+			qs = document.location.search;
+		}
+		qs = qs.split("+").join(" ");	// replace + with " "
+		while (true) {
+			tokens = re.exec(qs);
+			if (!tokens) {
+				break;
+			}
+			params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+		}
+		return params;
+	}
+
+	var $root$1, config$3;
+
+	var KEYCODE_ESC = 27;
+
+	function init$4($debugRoot, conf) {
+		$root$1 = $debugRoot;
+		config$3 = conf;
+
+		addDropdown();
+
+		$("#debug-options-toggle").on("click", function(e){
+			var isVis = $(".debug-options").is(".show");
+			if (!isVis) {
+				open$1();
+			} else {
+				close$1();
+			}
+			e.stopPropagation();
+		});
+
+		$("input[name=debugCookie]").on("change", function(){
+			var isChecked = $(this).is(":checked");
+			if (isChecked) {
+				cookieSave("debug", config$3.get("debugKey"), 7);
+			} else {
+				cookieRemove("debug");
+			}
+		}).prop("checked", config$3.get("debugKey") && cookieGet("debug") === config$3.get("debugKey"));
+		if (!config$3.get("debugKey")) {
+			$("input[name=debugCookie]").prop("disabled", true)
+				.closest("label").addClass("disabled");
+		}
+
+		$("input[name=persistDrawer]").on("change", function(){
+			var isChecked = $(this).is(":checked");
+			// options.persistDrawer = isChecked;
+			config$3.set({
+				persistDrawer: isChecked,
+				openDrawer: isChecked,
+				openSidebar: true
+			});
+		}).prop("checked", config$3.get("persistDrawer"));
+
+		$("input[name=linkFiles]").on("change", function(){
+			var isChecked = $(this).prop("checked"),
+				$formGroup = $("#linkFilesTemplate").closest(".form-group");
+			isChecked
+				? $formGroup.slideDown()
+				: $formGroup.slideUp();
+			config$3.set("linkFiles", isChecked);
+			$("input[name=linkFilesTemplate]").trigger("change");
+		}).prop("checked", config$3.get("linkFiles")).trigger("change");
+
+		$("input[name=linkFilesTemplate]").on("change", function(){
+			var val = $(this).val();
+			config$3.set("linkFilesTemplate", val);
+			$debugRoot.trigger("config.debug.updated", "linkFilesTemplate");
+		}).val(config$3.get("linkFilesTemplate"));
+	}
+
+	function addDropdown() {
+		var $menuBar = $root$1.find(".debug-menu-bar");
+		$menuBar.find(".pull-right").prepend('<button id="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">\
+			<i class="fa fa-ellipsis-v fa-fw"></i>\
+		</button>');
+		$menuBar.append('<div class="debug-options" aria-labelledby="debug-options-toggle">\
+			<div class="debug-options-body">\
+				<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>\
+				<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>\
+				<label><input type="checkbox" name="linkFiles" /> Create file links</label>\
+				<div class="form-group">\
+					<label for="linkFilesTemplate">Link Template</label>\
+					<input name="linkFilesTemplate" id="linkFilesTemplate" />\
+				</div>\
+				<hr class="dropdown-divider" />\
+				<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>\
+			</div>\
+		</div>');
+	}
+
+	function onBodyClick(e) {
+		if ($root$1.find(".debug-options").find(e.target).length === 0) {
+			// we clicked outside the dropdown
+			close$1();
+		}
+	}
+
+	function onBodyKeyup(e) {
+		if (e.keyCode === KEYCODE_ESC) {
+			close$1();
+		}
+	}
+
+	function open$1() {
+		$root$1.find(".debug-options").addClass("show");
+		$("body").on("click", onBodyClick);
+		$("body").on("keyup", onBodyKeyup);
+	}
+
+	function close$1() {
+		$root$1.find(".debug-options").removeClass("show");
+		$("body").off("click", onBodyClick);
+		$("body").off("keyup", onBodyKeyup);
+	}
+
+	var config$4;
+	var methods;	// method filters
+	var $root$2;
+
+	function init$5($debugRoot, conf) {
+		$root$2 = $debugRoot;
+		config$4 = conf;
+
+		console.warn('sidebar.init');
+
+		if (config$4.get("sidebar")) {
+			addMarkup$1($root$2);
+		}
+
+		if (config$4.get("persistDrawer") && !config$4.get("openSidebar")) {
+			close$2($root$2);
+		}
+
+		addPreFilter(function($root){
+			methods = [];
+			$root.find("input[data-toggle=method]:checked").each(function(){
+				methods.push($(this).val());
+			});
+		});
+
+		addTest(function($node){
+			var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
+			if (["alert","error","warn","info"].indexOf(method) > -1) {
+				return methods.indexOf(method) > -1;
+			} else {
+				return methods.indexOf("other") > -1;
+			}
+		});
+
+		$root$2.on("click", ".close[data-dismiss=alert]", function() {
+			// setTimeout -> new thread -> executed after event bubbled
+			var $debug = $(this).closest(".debug");
+			setTimeout(function(){
+				if ($debug.find(".m_alert").length) {
+					$debug.find(".debug-sidebar input[data-toggle=method][value=alert]").parent().addClass("disabled");
+				}
+			});
+		});
+
+		$root$2.on("click", ".sidebar-toggle", function() {
+			var $debug = $(this).closest(".debug"),
+				isVis = $debug.find(".debug-sidebar").is(".show");
+			if (!isVis) {
+				open$2($debug);
+			} else {
+				close$2($debug);
+			}
+		});
+
+		$root$2.on("change", ".debug-sidebar input[type=checkbox]", function(e) {
+			// console.warn("sidebar checkbox change", this);
+			var $input = $(this),
+				$toggle = $input.closest(".toggle"),
+				$nested = $toggle.next("ul").find(".toggle"),
+				isActive = $input.is(":checked");
+			// e.stopPropagation();
+			$toggle.toggleClass("active", isActive);
+			$nested.toggleClass("active", isActive);
+			if ($input.val() == "error-fatal") {
+				$(".m_alert.error-summary").toggle(!isActive);
+			}
+		});
+	}
+
+	function addMarkup$1($node) {
+		var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
+		$sidebar.html('\
+		<div class="sidebar-toggle">\
+			<div class="collapse">\
+				<i class="fa fa-caret-left"></i>\
+				<i class="fa fa-ellipsis-v"></i>\
+				<i class="fa fa-caret-left"></i>\
+			</div>\
+			<div class="expand">\
+				<i class="fa fa-caret-right"></i>\
+				<i class="fa fa-ellipsis-v"></i>\
+				<i class="fa fa-caret-right"></i>\
+			</div>\
+		</div>\
+		<ul class="list-unstyled debug-filters">\
+			<li class="php-errors">\
+				<span><i class="fa fa-fw fa-lg fa-code"></i> PHP Errors</span>\
+				<ul class="list-unstyled">\
+				</ul>\
+			</li>\
+			<li class="channels">\
+				<span><i class="fa fa-fw fa-lg fa-list-ul"></i> Channels</span>\
+				<ul class="list-unstyled">\
+				</ul>\
+			</li>\
+		</ul>\
+	');
+		$node.find(".debug-body").before($sidebar);
+
+		phpErrorToggles($node);
+		moveChannelToggles($node);
+		addMethodToggles($node);
+		moveExpandAll($node);
+
+		setTimeout(function(){
+			$sidebar.removeClass("no-transition");
+		}, 500);
+	}
+
+	function close$2($node) {
+		$node.find(".debug-sidebar").removeClass("show").attr("style", "");
+		config$4.set("openSidebar", false);
+	}
+
+	function open$2($node) {
+		$node.find(".debug-sidebar")
+			.addClass("show")
+			.trigger("open.debug.sidebar");
+		config$4.set("openSidebar", true);
+	}
+
+	function addMethodToggles($node) {
+		var $filters = $node.find(".debug-filters"),
+			$entries = $node.find("> .debug-body .m_alert, .group-body > *"),
+			val,
+			labels = {
+				alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i> Alerts',
+				error: '<i class="fa fa-fw fa-lg fa-times-circle"></i> Error',
+				warn: '<i class="fa fa-fw fa-lg fa-warning"></i> Warning',
+				info: '<i class="fa fa-fw fa-lg fa-info-circle"></i> Info',
+				other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i> Other'
+			},
+			haveEntry;
+		for (val in labels) {
+			haveEntry = val == "other"
+				? $entries.not(".m_alert, .m_error, .m_warn, .m_info").length > 0
+				: $entries.filter(".m_"+val).not("[data-channel=phpError]").length > 0;
+			$filters.append(
+				$('<li />').append(
+					$('<label class="toggle active" />').toggleClass("disabled", !haveEntry).append(
+						$("<input />", {
+							type: "checkbox",
+							checked: true,
+							"data-toggle": "method",
+							value: val
+						})
+					).append(
+						$("<span>").append(
+							labels[val]
+						)
+					)
+				)
+			);
+		}
+	}
+
+	/**
+	 * grab the .debug-body toggles and move them to sidebar
+	 */
+	function moveChannelToggles($node) {
+		var $togglesSrc = $node.find(".debug-body .channels > ul > li"),
+			$togglesDest = $node.find(".debug-sidebar .channels ul");
+		$togglesSrc.find("label").addClass("toggle active");
+		$togglesDest.append($togglesSrc);
+		if ($togglesDest.children().length === 0) {
+			$togglesDest.parent().hide();
+		}
+		$node.find(".debug-body .channels").remove();
+	}
+
+	/**
+	 * Grab the .debug-body "Expand All" and move it to sidebar
+	 */
+	function moveExpandAll($node) {
+		var $btn = $node.find(".debug-body > .expand-all"),
+			html = $btn.html();
+		if ($btn.length) {
+			$btn.html(html.replace('Expand', 'Exp'));
+			$btn.appendTo($node.find(".debug-sidebar"));
+		}
+	}
+
+	/**
+	 * Grab the error toggles from .debug-body's error-summary move to sidebar
+	 */
+	function phpErrorToggles($node) {
+		var $togglesUl = $node.find(".debug-sidebar .php-errors ul"),
+			$errorSummary = $node.closest(".debug").find(".m_alert.error-summary"),
+			haveFatal = $node.closest(".debug").find(".m_error.error-fatal").length > 0;
+		if (haveFatal) {
+			$togglesUl.append('<li><label class="toggle active">\
+			<input type="checkbox" checked data-toggle="error" value="error-fatal" />fatal <span class="badge">1</span>\
+			</label></li>');
+		}
+		$errorSummary.find("label").each(function(){
+			var $li = $(this).parent(),
+				$checkbox = $(this).find("input"),
+				val = $checkbox.val().replace("error-", "");
+			$togglesUl.append(
+				$("<li>").append(
+					$('<label class="toggle active">').html(
+						$checkbox[0].outerHTML + val + ' <span class="badge">' + $checkbox.data("count") + "</span>"
+					)
+				)
+			);
+			$li.remove();
+		});
+		if ($togglesUl.children().length === 0) {
+			$togglesUl.parent().hide();
+		}
+		if (!haveFatal) {
+			$errorSummary.remove();
+		} else {
+			$errorSummary.find("h3").eq(1).remove();
+		}
+	}
+
+	/**
+	 * Add primary Ui elements
+	 */
+
+	var config$5;
+	var $root$3;
+
+	function init$6($debugRoot, conf) {
+		config$5 = conf.config;
+		$root$3 = $debugRoot;
+		addChannelToggles();
+		addExpandAll();
+		addNoti($("body"));
+		addPersistOption();
+		enhanceErrorSummary();
+		init$2($root$3, conf);
+		init$3($root$3);
+		init$5($root$3, conf);
+		init$4($root$3, conf);
+		$root$3.find(".loading").hide();
+		$root$3.addClass("enhanced");
+	}
+
+	function addChannelToggles() {
+		var channels = $root$3.data("channels"),
+			$toggles,
+			$ul = buildChannelList(channels, $root$3.data("channelRoot"));
+		$toggles = $("<fieldset />", {
+				"class": "channels",
+			})
+			.append('<legend>Channels</legend>')
+			.append($ul);
+		if ($ul.html().length) {
+			$root$3.find(".debug-body").prepend($toggles);
+		}
+	}
+
+	function addExpandAll() {
+		var $expandAll = $("<button>", {
+				"class": "expand-all"
+			}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
+		// this is currently invoked before entries are enhance / empty class not yet added
+		if ($root$3.find(".m_group:not(.empty)").length) {
+			$expandAll.on("click", function() {
+				$(this).closest(".debug").find(".group-header").not(".expanded").each(function() {
+					$(this).debugEnhance('expand');
+				});
+				return false;
+			});
+			$root$3.find(".debug-log-summary").before($expandAll);
+		}
+	}
+
+	function addNoti($root) {
+		$root.append('<div class="debug-noti-wrap">' +
+				'<div class="debug-noti-table">' +
+					'<div class="debug-noti"></div>' +
+				'</div>' +
+			'</div>');
+	}
+
+	function addPersistOption() {
+		var $node;
+		if (config$5.debugKey) {
+			$node = $('<label class="debug-cookie" title="Add/remove debug cookie"><input type="checkbox"> Keep debug on</label>');
+			if (cookieGet("debug") === options.debugKey) {
+				$node.find("input").prop("checked", true);
+			}
+			$("input", $node).on("change", function() {
+				var checked = $(this).is(":checked");
+				if (checked) {
+					cookieSet("debug", options.debugKey, 7);
+				} else {
+					cookieRemove("debug");
+				}
+			});
+			$root$3.find(".debug-menu-bar").eq(0).prepend($node);
+		}
+	}
+
+	function buildChannelList(channels, channelRoot, checkedChannels, prepend) {
+		var $ul = $('<ul class="list-unstyled">'),
+			$li,
+			channel,
+			$label;
+		// checkedChannels = checkedChannels || [];
+		prepend = prepend || "";
+		if ($.isArray(channels)) {
+			channels = channelsToTree(channels);
+		}
+		for (channel in channels) {
+			if (channel === "phpError") {
+				// phpError is a special channel
+				continue;
+			}
+			$li = $("<li>");
+			$label = $('<label>', {
+				"class": "toggle active",
+			}).append($("<input>", {
+				checked: checkedChannels
+					? checkedChannels.indexOf(prepend + channel) > -1
+					: true,
+				"data-is-root": channel == channelRoot,
+				"data-toggle": "channel",
+				type: "checkbox",
+				value: prepend + channel
+			})).append(" " + channel);
+			$li.append($label);
+			if (Object.keys(channels[channel]).length) {
+				$li.append(buildChannelList(channels[channel], channelRoot, checkedChannels, prepend + channel + "."));
+			}
+			$ul.append($li);
+		}
+		return $ul;
+	}
+
+	function channelsToTree(channels) {
+		var channelTree = {},
+			ref,
+			i, i2,
+			path;
+		for (i = 0; i < channels.length; i++) {
+			ref = channelTree;
+			path = channels[i].split('.');
+			for (i2 = 0; i2 < path.length; i2++) {
+				if (!ref[ path[i2] ]) {
+					ref[ path[i2] ] = {};
+				}
+				ref = ref[ path[i2] ];
+			}
+		}
+		return channelTree;
+	}
+
+	function enhanceErrorSummary() {
+		var $errorSummary = $root$3.find(".m_alert.error-summary");
+		$errorSummary.find("h3:first-child").prepend(config$5.iconsMethods[".m_error"]);
+		$errorSummary.find("li[class*=error-]").each(function() {
+			var classAttr = $(this).attr("class"),
+				html = $(this).html(),
+				htmlReplace = '<li><label>' +
+					'<input type="checkbox" checked data-toggle="error" data-count="'+$(this).data("count")+'" value="' + classAttr + '" /> ' +
+					html +
+					'</label></li>';
+			$(this).replaceWith(htmlReplace);
+		});
+		$errorSummary.find(".m_trace").debugEnhance();
 	}
 
 	/**
@@ -1858,13 +1869,21 @@
 		}
 	]);
 
-	$.fn.debugEnhance = function(method) {
+	$.fn.debugEnhance = function(method, arg1, arg2) {
 		// console.warn("debugEnhance", method, this);
 		var $self = this;
-		if (method === "buildChannelList") {
-			return buildChannelList(arguments[1], "", arguments[2]);
+		if (method === "sidebar") {
+			if (arg1 == "add") {
+				addMarkup$1($self);
+			} else if (arg1 == "open") {
+				open$2($self);
+			} else if (arg1 == "close") {
+				close$2($self);
+			}
+		} else if (method === "buildChannelList") {
+			return buildChannelList(arg1, arg2, arguments[3]);
 		} else if (method === "collapse") {
-			collapse($self, arguments[1]);
+			collapse($self, arg1);
 		} else if (method === "expand") {
 			expand($self);
 		} else if (method === "init") {
@@ -1872,19 +1891,19 @@
 			// lsOptions = http.lsGet("phpDebugConsole") || {};
 			// options = $.extend({}, optionsDefault, dataOptions, lsOptions);
 			config$7.set($self.eq(0).data("options") || {});
-			if (typeof arguments[1] == "object") {
-				config$7.set(arguments[1]);
+			if (typeof arg1 == "object") {
+				config$7.set(arg1);
 			}
-			init$6($self, config$7);
+			init$1($self, config$7);
 			init$7($self, config$7);
 			registerListeners($self);
-			init$4($self, config$7);
+			init$6($self, config$7);
 			if (!config$7.get("drawer")) {
 				$self.debugEnhance();
 			}
 		} else if (method == "setConfig") {
-			if (typeof arguments[1] == "object") {
-				config$7.set(arguments[1]);
+			if (typeof arg1 == "object") {
+				config$7.set(arg1);
 				// update logs that have already been enhanced
 	            $(this)
 	            	.find(".debug-log.enhanced")

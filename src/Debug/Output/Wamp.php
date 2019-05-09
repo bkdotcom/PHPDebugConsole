@@ -303,6 +303,9 @@ class Wamp implements OutputInterface
             'meta',
             array(
                 $metaVals,
+                array(
+                    'channelRoot' => $this->debug->rootInstance->getCfg('channel'),
+                ),
             ),
             array(
                 'channel' => $this->debug->getCfg('channel'),

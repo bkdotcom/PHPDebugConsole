@@ -1325,7 +1325,7 @@ class MethodTest extends DebugTestFramework
             'main' => array(),
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
-<div class="debug" data-channel-root="general" data-channels="{}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true}">
+<div class="debug" data-channel-root="general" data-channels="{}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
     <header class="debug-menu-bar">PHPDebugConsole</header>
     <div class="debug-body">
         <ul class="debug-log-summary group-body">

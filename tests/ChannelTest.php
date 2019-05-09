@@ -155,7 +155,7 @@ class ChannelTest extends DebugTestFramework
     {
         $this->genLog();
         $htmlFoo = <<<EOD
-        <div class="debug" data-channel-root="general" data-channels="{&quot;foo&quot;:{}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true}">
+        <div class="debug" data-channel-root="general" data-channels="{&quot;foo&quot;:{}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
             <header class="debug-menu-bar">PHPDebugConsole</header>
             <div class="debug-body">
                 <div class="alert-danger m_alert" data-channel="foo" role="alert">foo: alert</div>
@@ -187,7 +187,7 @@ class ChannelTest extends DebugTestFramework
         </div>
 EOD;
         $html = <<<EOD
-        <div class="debug" data-channel-root="general" data-channels="{&quot;general&quot;:{},&quot;foo&quot;:{}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true}">
+        <div class="debug" data-channel-root="general" data-channels="{&quot;general&quot;:{},&quot;foo&quot;:{}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
             <header class="debug-menu-bar">PHPDebugConsole</header>
             <div class="debug-body">
                 <div class="alert-danger m_alert" role="alert">main: alert</div>

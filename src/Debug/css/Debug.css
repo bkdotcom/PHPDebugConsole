@@ -164,7 +164,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-options hr.dropdown-divider { margin: .5em -5px .5em -15px; background: #d0d0d0; height: 1px; border: none; }
 .debug { transform: scale(1); }
 .debug .badge { display: inline-block; padding: .25em .4em .16em; font-size: 82%; font-weight: 500; line-height: 1; text-align: center; white-space: nowrap; vertical-align: bottom; border-radius: .25rem; color: #fff; background-color: #666; }
-.debug .debug-sidebar { position: fixed; box-sizing: border-box; width: 126px; background: #f3f3f3; height: 100%; padding: 4px 11px 0 4px; transform: translateX(-119px); transition: transform 0.33s; /*
+.debug .debug-sidebar { position: fixed; box-sizing: border-box; width: 126px; background: #f3f3f3; height: 100%; transform: translateX(-119px); transition: transform 0.33s; /*
 .expand-all {
 	font-size: 1.25em;
 }
@@ -176,6 +176,8 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-sidebar.show .expand { display: none; }
 .debug .debug-sidebar.show .collapse { display: block; }
 .debug .debug-sidebar.show + .debug-body { margin-left: 126px; }
+.debug .debug-sidebar.show .sidebar-content { opacity: 1; transition: opacity 0.33s; }
+.debug .debug-sidebar .sidebar-content { padding: 4px 11px 0 4px; opacity: 0; overflow: hidden; }
 .debug .debug-sidebar .sidebar-toggle { position: absolute; box-sizing: border-box; right: 0; top: 0; height: 100%; width: 7px; background: #f3f3f3; border-left: 1px solid #d0d0d0; border-right: 1px solid #d0d0d0; cursor: pointer; display: flex; color: #d0d0d0; text-align: center; }
 .debug .debug-sidebar .sidebar-toggle:hover { color: #6e6e6e; background: #dadada; }
 .debug .debug-sidebar .sidebar-toggle > div { margin: auto; padding-left: 1px; }
@@ -209,6 +211,7 @@ color: #818a91
 .debug .filter-hidden.m_group { display: list-item; }
 .debug .filter-hidden.m_group > .group-header { display: none; }
 .debug .filter-hidden.m_group > .group-body { display: block !important; margin-left: 0; border-left: 0; padding-left: 0; }
+.debug .filter-hidden.m_group.filter-hidden-body > .group-body { display: none !important; }
 .debug .debug-body i.fa, .debug .debug-body .m_assert i { margin-right: .33em; }
 .debug .debug-body .m_assert > i { display: inline-block; margin-bottom: -0.2em; line-height: .6em; vertical-align: text-bottom; }
 .debug .debug-body .file-link i { margin-right: 0; vertical-align: baseline; }

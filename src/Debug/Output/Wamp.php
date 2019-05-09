@@ -289,7 +289,6 @@ class Wamp implements OutputInterface
         $debugClass = \get_class($this->debug);
         $metaVals = array(
             'debug_version' => $debugClass::VERSION,
-            'linkFilesTemplate' => \strtr(\ini_get('xdebug.file_link_format'), array('%f'=>'%file','%l'=>'%line')) ?: null,
         );
         $keys = array(
             'HTTP_HOST',
@@ -317,6 +316,7 @@ class Wamp implements OutputInterface
                 array(
                     'drawer' => $this->debug->getCfg('output.drawer'),
                     'channelRoot' => $this->debug->rootInstance->getCfg('channel'),
+                    'linkFilesTemplateDefault' => \strtr(\ini_get('xdebug.file_link_format'), array('%f'=>'%file','%l'=>'%line')) ?: null,
                 )
             ),
             array(

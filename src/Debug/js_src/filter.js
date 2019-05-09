@@ -45,7 +45,7 @@ export function init($delegateNode) {
 			$root = $this.closest(".debug"),
 			errorClass = $this.val(),
 			isChecked = $this.is(":checked"),
-			selector = ".group-body ." + errorClass;
+			selector = ".group-body .error-" + errorClass;
 		$root.find(selector).toggleClass("filter-hidden", !isChecked);
 		// trigger collapse to potentially update group icon
 		$root.find(".m_error, .m_warn").parents(".m_group").find(".group-body")
@@ -66,7 +66,7 @@ function applyFilter($root) {
 	for (i in preFilterCallbacks) {
 		preFilterCallbacks[i]($root);
 	}
-	$root.find("> .debug-body .m_alert, .group-body > *:not(.m_groupSummary)").each(function(){
+	$root.find("> .debug-body .m_alert, .group-body:not(.level-error, .level-info, .level-warn) > *:not(.m_groupSummary)").each(function(){
 		var $node = $(this),
 			show = true;
 		if ($node.data("channel") == "phpError") {

@@ -29,6 +29,10 @@ export function init($debugRoot, conf) {
 
 	addFilterTest(function($node){
 		var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
+		if (method == "group" && $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)) {
+			method = $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)[1];
+			$node.toggleClass("filter-hidden-body", methods.indexOf(method) < 0);
+		}
 		if (["alert","error","warn","info"].indexOf(method) > -1) {
 			return methods.indexOf(method) > -1;
 		} else {
@@ -65,7 +69,7 @@ export function init($debugRoot, conf) {
 		// e.stopPropagation();
 		$toggle.toggleClass("active", isActive);
 		$nested.toggleClass("active", isActive);
-		if ($input.val() == "error-fatal") {
+		if ($input.val() == "fatal") {
 			$(".m_alert.error-summary").toggle(!isActive);
 		}
 	});
@@ -73,6 +77,7 @@ export function init($debugRoot, conf) {
 
 export function addMarkup($node) {
 	var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
+	var $expAll = $node.find(".debug-body > .expand-all");
 	$sidebar.html('\
 		<div class="sidebar-toggle">\
 			<div class="collapse">\
@@ -86,33 +91,42 @@ export function addMarkup($node) {
 				<i class="fa fa-caret-right"></i>\
 			</div>\
 		</div>\
-		<ul class="list-unstyled debug-filters">\
-			<li class="php-errors">\
-				<span><i class="fa fa-fw fa-lg fa-code"></i> PHP Errors</span>\
-				<ul class="list-unstyled">\
-				</ul>\
-			</li>\
-			<li class="channels">\
-				<span><i class="fa fa-fw fa-lg fa-list-ul"></i> Channels</span>\
-				<ul class="list-unstyled">\
-				</ul>\
-			</li>\
-		</ul>\
+		<div class="sidebar-content">\
+			<ul class="list-unstyled debug-filters">\
+				<li class="php-errors">\
+					<span><i class="fa fa-fw fa-lg fa-code"></i> PHP Errors</span>\
+					<ul class="list-unstyled">\
+					</ul>\
+				</li>\
+				<li class="channels">\
+					<span><i class="fa fa-fw fa-lg fa-list-ul"></i> Channels</span>\
+					<ul class="list-unstyled">\
+					</ul>\
+				</li>\
+			</ul>\
+			<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>\
+		</div>\
 	');
 	$node.find(".debug-body").before($sidebar);
 
 	phpErrorToggles($node);
 	moveChannelToggles($node);
 	addMethodToggles($node);
-	moveExpandAll($node);
-
+	// moveExpandAll($node);
+	if ($expAll.length) {
+		$expAll.remove();
+		$sidebar.find(".expand-all").show();
+	}
 	setTimeout(function(){
 		$sidebar.removeClass("no-transition");
 	}, 500);
 }
 
 export function close($node) {
-	$node.find(".debug-sidebar").removeClass("show").attr("style", "");
+	$node.find(".debug-sidebar")
+		.removeClass("show")
+		.attr("style", "")
+		.trigger("close.debug.sidebar");
 	config.set("openSidebar", false);
 }
 
@@ -175,6 +189,7 @@ function moveChannelToggles($node) {
 /**
  * Grab the .debug-body "Expand All" and move it to sidebar
  */
+/*
 function moveExpandAll($node) {
 	var $btn = $node.find(".debug-body > .expand-all"),
 		html = $btn.html();
@@ -183,6 +198,7 @@ function moveExpandAll($node) {
 		$btn.appendTo($node.find(".debug-sidebar"));
 	}
 }
+*/
 
 /**
  * Grab the error toggles from .debug-body's error-summary move to sidebar
@@ -193,13 +209,13 @@ function phpErrorToggles($node) {
 		haveFatal = $node.closest(".debug").find(".m_error.error-fatal").length > 0;
 	if (haveFatal) {
 		$togglesUl.append('<li><label class="toggle active">\
-			<input type="checkbox" checked data-toggle="error" value="error-fatal" />fatal <span class="badge">1</span>\
+			<input type="checkbox" checked data-toggle="error" value="fatal" />fatal <span class="badge">1</span>\
 			</label></li>');
 	}
 	$errorSummary.find("label").each(function(){
 		var $li = $(this).parent(),
 			$checkbox = $(this).find("input"),
-			val = $checkbox.val().replace("error-", "");
+			val = $checkbox.val();
 		$togglesUl.append(
 			$("<li>").append(
 				$('<label class="toggle active">').html(

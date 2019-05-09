@@ -20,6 +20,12 @@
 			border-left: 0;
 			padding-left: 0;
 		}
+		&.filter-hidden-body {
+			// this may be applied to a group that has a level-info, level-warn, level-error...
+			> .group-body {
+				display: none !important;
+			}
+		}
 	}
 }
 

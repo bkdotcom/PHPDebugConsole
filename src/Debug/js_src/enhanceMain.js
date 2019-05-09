@@ -48,14 +48,14 @@ function addExpandAll() {
 		}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
 	// this is currently invoked before entries are enhance / empty class not yet added
 	if ($root.find(".m_group:not(.empty)").length) {
-		$expandAll.on("click", function() {
-			$(this).closest(".debug").find(".group-header").not(".expanded").each(function() {
-				$(this).debugEnhance('expand');
-			});
-			return false;
-		});
 		$root.find(".debug-log-summary").before($expandAll);
 	}
+	$root.on("click", ".expand-all", function(){
+		$(this).closest(".debug").find(".group-header").not(".expanded").each(function() {
+			$(this).debugEnhance('expand');
+		});
+		return false;
+	});
 }
 
 function addNoti($root) {

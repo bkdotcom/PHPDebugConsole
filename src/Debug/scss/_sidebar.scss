@@ -27,7 +27,6 @@
 	width: $sidebar-w + $toggle-w;
 	background: $lite-grey;
 	height: 100%;
-	padding: 4px 11px 0 4px;
 	transform: translateX(-$sidebar-w);
 	transition: transform $trans-time;
 
@@ -49,6 +48,16 @@
 		+ .debug-body {
 			margin-left: $sidebar-w + $toggle-w;
 		}
+		.sidebar-content {
+			opacity: 1;
+			transition: opacity .33s
+		}
+	}
+
+	.sidebar-content {
+		padding: 4px 11px 0 4px;
+		opacity: 0;
+		overflow: hidden;
 	}
 
 	.sidebar-toggle {

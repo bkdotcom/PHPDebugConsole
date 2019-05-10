@@ -19,6 +19,8 @@ use bdk\Debug;
 class HtmlObject
 {
 
+    protected $debug;
+
 	/**
      * Constructor
      *

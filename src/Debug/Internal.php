@@ -476,21 +476,21 @@ class Internal implements SubscriberInterface
      *
      * @return mixed
      */
-    public function publishBubbleEvent($eventName, $eventOrSubject, array $values = array())
+    public function publishBubbleEvent($eventName, Event $event, Debug $debug = null)
     {
-        if ($eventOrSubject instanceof Event) {
-            $event = $eventOrSubject;
-        } else {
-            $event = new Event($eventOrSubject, $values);
+        if (!$debug) {
+            $debug = $event->getSubject();
+            if (!$debug instanceof Debug) {
+                $debug = $this->debug;
+            }
         }
-        $debug = $this->debug;
-        while (!$event->isPropagationStopped()) {
+        do {
             $debug->eventManager->publish($eventName, $event);
             if (!$debug->parentInstance) {
                 break;
             }
             $debug = $debug->parentInstance;
-        }
+        } while (!$event->isPropagationStopped());
         return $event;
     }
 

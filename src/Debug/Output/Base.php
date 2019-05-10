@@ -463,22 +463,17 @@ abstract class Base implements OutputInterface
         if (!isset($meta['channel'])) {
             $meta['channel'] = $this->channelNameRoot;
         }
-        $event = $this->debug->eventManager->publish(
-            'debug.outputLogEntry',
-            $this,
-            array(
-                'method' => $method,
-                'args' => $args,
-                'meta' => $meta,
-                'return' => null,
-            )
-        );
-        if ($event['return']) {
+        $event = new Event($this, array(
+            'method' => $method,
+            'args' => $args,
+            'meta' => $meta,
+            'return' => null,
+        ));
+        $this->debug->internal->publishBubbleEvent('debug.outputLogEntry', $event, $this->debug);
+        if ($event['return'] !== null) {
             return $event['return'];
         }
-        if (!$event->isPropagationStopped()) {
-            return $this->processLogEntry($event['method'], $event['args'], $event['meta']);
-        }
+        return $this->processLogEntry($event['method'], $event['args'], $event['meta']);
     }
 
     /**

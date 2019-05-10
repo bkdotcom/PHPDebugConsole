@@ -115,7 +115,7 @@ class AbstractObject
             set stringified
             set traverseValues
         */
-        $abs = $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractStart', $abs);
+        $abs = $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractStart', $abs, $this->abstracter->debug);
         if (\array_filter(array($abs['isExcluded'], $abs->isPropagationStopped()))) {
             return \array_diff_key($abs->getValues(), $keysTemp);
         }
@@ -123,7 +123,7 @@ class AbstractObject
         /*
             debug.objAbstractEnd subscriber has free reign to modify abtraction array
         */
-        $return = $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractEnd', $abs)->getValues();
+        $return = $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractEnd', $abs, $this->abstracter->debug)->getValues();
         $this->sort($return['properties']);
         $this->sort($return['methods']);
         return \array_diff_key($return, $keysTemp);

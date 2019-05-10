@@ -324,6 +324,7 @@ class Html extends Base
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
                 $glueAfterFirst = false;
+                $args[0] = \rtrim($args[0]).' ';
             } elseif (\count($args) == 2) {
                 $glue = ' = ';
             }
@@ -770,7 +771,7 @@ class Html extends Base
     }
 
     /**
-     * Cooerce value to string
+     * Coerce value to string
      *
      * @param mixed $val value
      *

@@ -579,15 +579,12 @@ class Debug
                 don't actually log
             */
             $meta['closesSummary'] = true;
-            $this->internal->publishBubbleEvent(
-                'debug.log',
-                $this,
-                array(
-                    'method' => __FUNCTION__,
-                    'args' => array(),
-                    'meta' => $meta,
-                )
-            );
+            $event = new Event($this, array(
+                'method' => __FUNCTION__,
+                'args' => array(),
+                'meta' => $meta,
+            ));
+            $this->internal->publishBubbleEvent('debug.log', $event);
         } elseif ($appendLog) {
             $this->appendLog('groupEnd', array(), $meta);
         }
@@ -627,15 +624,12 @@ class Debug
             Publish the debug.log event (regardless of cfg.collect)
             don't actually log
         */
-        $this->internal->publishBubbleEvent(
-            'debug.log',
-            $this,
-            array(
-                'method' => __FUNCTION__,
-                'args' => array(),
-                'meta' => $meta,
-            )
-        );
+        $event = new Event($this, array(
+            'method' => __FUNCTION__,
+            'args' => array(),
+            'meta' => $meta,
+        ));
+        $this->internal->publishBubbleEvent('debug.log', $event);
     }
 
     /**
@@ -667,15 +661,12 @@ class Debug
             Publish the debug.log event (regardless of cfg.collect)
             don't actually log
         */
-        $this->internal->publishBubbleEvent(
-            'debug.log',
-            $this,
-            array(
-                'method' => __FUNCTION__,
-                'args' => array(),
-                'meta' => $meta,
-            )
-        );
+        $event = new Event($this, array(
+            'method' => __FUNCTION__,
+            'args' => array(),
+            'meta' => $meta,
+        ));
+        $this->internal->publishBubbleEvent('debug.log', $event);
     }
 
     /**

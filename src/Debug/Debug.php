@@ -101,6 +101,7 @@ class Debug
                 : null,
             'logEnvInfo' => array(
                 'cookies' => true,
+                'gitInfo' => true,
                 'headers' => true,
                 'phpInfo' => true,
                 'post' => true,
@@ -118,7 +119,7 @@ class Debug
             */
             self::$instance = $this;
             /*
-                Only register autloader:
+                Only register autoloader:
                   a. on initial instance (even though re-registering function does't re-register)
                   b. if we're unable to to find our Config class (must not be using Composer)
             */
@@ -681,11 +682,15 @@ class Debug
      */
     public function log()
     {
-        $this->appendLog(new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args()
-        ));
+        $args = \func_get_args();
+        $logEntry = \count($args) === 1 && $args[0] instanceof LogEntry
+            ? $args[0]
+            : new LogEntry(
+                $this,
+                __FUNCTION__,
+                $args
+            );
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -1028,20 +1033,29 @@ class Debug
     /**
      * Log a stack trace
      *
+     * @param string $caption (optional) "trace"
+     *
      * @return void
      */
-    public function trace()
+    public function trace($caption = 'trace')
     {
         if (!$this->cfg['collect']) {
             return;
         }
+        // "use" our function params so things (ie phpmd) don't complain
+        array($caption);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
             \func_get_args(),
             array(
-                'caption' => 'trace',
                 'columns' => array('file','line','function'),
+            ),
+            array(
+                'caption' => 'trace',
+            ),
+            array(
+                'caption',
             )
         );
         $backtrace = $this->errorHandler->backtrace();
@@ -1098,6 +1112,19 @@ class Debug
         if ($plugin instanceof SubscriberInterface) {
             $isPlugin = true;
             $this->eventManager->addSubscriberInterface($plugin);
+            $subscriptions = $plugin->getSubscriptions();
+            if (isset($subscriptions['debug.pluginInit'])) {
+                /*
+                    plugin we just added subscribes to debug.pluginInit
+                    call subscriber directly
+                */
+                \call_user_func(
+                    array($plugin, $subscriptions['debug.pluginInit']),
+                    new Event($this),
+                    'debug.pluginInit',
+                    $this->eventManager
+                );
+            }
         }
         if ($plugin instanceof AssetProvider) {
             $isPlugin = true;

@@ -286,6 +286,7 @@ class Internal implements SubscriberInterface
             'hideIfEmpty' => true,
             'level' => 'info',
         )));
+        $this->logGitInfo();
         $this->logPhpInfo();
         $this->logServerVals();
         $this->logRequest();    // headers, cookies, post
@@ -480,6 +481,34 @@ class Internal implements SubscriberInterface
             $errorStr .= '  Line '.$error['line'].': ('.$typeStr.') '.$error['message']."\n";
         }
         return $errorStr;
+    }
+
+    /**
+     * Log git branch (if applicable)
+     *
+     * @return void
+     */
+    private function logGitInfo()
+    {
+        if (!$this->debug->getCfg('logEnvInfo.gitInfo')) {
+            return;
+        }
+        \exec('git branch', $outputLines, $returnStatus);
+        if ($returnStatus === 0) {
+            $lines = \implode("\n", $outputLines);
+            \preg_match('#^\* (.+)$#m', $lines, $matches);
+            $branch = $matches[1];
+            $this->debug->groupSummary(1);
+            $this->debug->log(
+                // '<i class="fa fa-github fa-lg" aria-hidden="true"></i> %cgit branch: %c%s',
+                '%cgit branch: %c%s',
+                'font-weight:bold;',
+                'font-size:1.5em; background-color:#DDD; padding:0 .3em;',
+                $branch,
+                $this->debug->meta('icon', 'fa fa-github fa-lg')
+            );
+            $this->debug->groupEnd();
+        }
     }
 
     /**

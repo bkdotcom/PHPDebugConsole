@@ -66,7 +66,8 @@ function applyFilter($root) {
 	for (i in preFilterCallbacks) {
 		preFilterCallbacks[i]($root);
 	}
-	$root.find("> .debug-body .m_alert, .group-body:not(.level-error, .level-info, .level-warn) > *:not(.m_groupSummary)").each(function(){
+	// :not(.level-error, .level-info, .level-warn)
+	$root.find("> .debug-body .m_alert, .group-body > *:not(.m_groupSummary)").each(function(){
 		var $node = $(this),
 			show = true;
 		if ($node.data("channel") == "phpError") {

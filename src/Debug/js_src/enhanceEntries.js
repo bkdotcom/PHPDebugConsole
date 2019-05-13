@@ -77,7 +77,7 @@ export function init($root, conf) {
 	$root.on("config.debug.updated", function(e, changedOpt){
 		// console.warn('config updated', changedOpt, config);
 		if (changedOpt == "linkFilesTemplate") {
-			console.log('updateFileLinks', $root);
+			// console.log('updateFileLinks', $root);
 			updateFileLinks($root);
 		}
 	});
@@ -379,9 +379,9 @@ function createFileLinks($entry, $strings, remove) {
 	} else if ($entry.is(".m_trace")) {
 		var isUpdate = $entry.find(".file-link").length > 0;
 		if (!isUpdate) {
-			$entry.find("table thead tr > *:nth-child(4)").after("<th></th>");
+			$entry.find("table thead tr > *:last-child").after("<th></th>");
 		} else if (remove) {
-			$entry.find("table tr > *:nth-child(5)").remove();
+			$entry.find("table tr > *:last-child").remove();
 			return;
 		}
 		$entry.find("table tbody tr").each(function(){
@@ -399,7 +399,7 @@ function createFileLinks($entry, $strings, remove) {
 			// } else if (remove) {
 				// $tr.find(".file-link").closest("td").remove();
 			} else {
-				$tds.eq(2).after($("<td/>", {
+				$tds.last().after($("<td/>", {
 					class: "text-center",
 					html: $a
 				}));

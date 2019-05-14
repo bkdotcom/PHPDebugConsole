@@ -485,7 +485,7 @@
 			var $entry = $(this),
 				$strings = $entry.find(".t_string");
 			if (!$entry.is(":visible")) {
-				// console.warn('not visible!!');
+				// console.warn('not visible!!', this);
 				return;
 			}
 			if ($entry.is(".m_group")) {
@@ -529,7 +529,8 @@
 	 */
 	function createFileLinks($entry, $strings, remove) {
 		var dataDetectFiles = $entry.data("detectFiles"),
-			dataFoundFiles = $entry.data("foundFiles") || [];
+			dataFoundFiles = $entry.data("foundFiles") || [],
+			isUpdate = false;
 		// console.warn('createFileLinks', $entry);
 		if (!config$1.linkFiles && !remove) {
 			return;
@@ -596,7 +597,7 @@
 			// don't remove data... link template may change
 			// $entry.removeData("detectFiles foundFiles");
 		} else if ($entry.is(".m_trace")) {
-			var isUpdate = $entry.find(".file-link").length > 0;
+			isUpdate = $entry.find(".file-link").length > 0;
 			if (!isUpdate) {
 				$entry.find("table thead tr > *:last-child").after("<th></th>");
 			} else if (remove) {
@@ -615,8 +616,6 @@
 					});
 				if (isUpdate) {
 					$tr.find(".file-link").replaceWith($a);
-				// } else if (remove) {
-					// $tr.find(".file-link").closest("td").remove();
 				} else {
 					$tds.last().after($("<td/>", {
 						class: "text-center",

@@ -1,5 +1,4 @@
 import $ from "jquery";
-// import {lsGet,lsSet} from "./http.js";
 import {addTest as addFilterTest, addPreFilter} from "./filter.js";
 
 var config;
@@ -10,7 +9,7 @@ export function init($debugRoot, conf) {
 	$root = $debugRoot;
 	config = conf;
 
-	console.warn('sidebar.init');
+	// console.warn('sidebar.init');
 
 	if (config.get("sidebar")) {
 		addMarkup($root);
@@ -61,16 +60,14 @@ export function init($debugRoot, conf) {
 	});
 
 	$root.on("change", ".debug-sidebar input[type=checkbox]", function(e) {
-		// console.warn("sidebar checkbox change", this);
 		var $input = $(this),
 			$toggle = $input.closest(".toggle"),
 			$nested = $toggle.next("ul").find(".toggle"),
 			isActive = $input.is(":checked");
-		// e.stopPropagation();
 		$toggle.toggleClass("active", isActive);
 		$nested.toggleClass("active", isActive);
 		if ($input.val() == "fatal") {
-			$(".m_alert.error-summary").toggle(!isActive);
+			$(".m_alert.error-summary").toggle(isActive);
 		}
 	});
 }

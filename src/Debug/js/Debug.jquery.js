@@ -831,13 +831,15 @@
 		$delegateNode.on("change", "input[type=checkbox]", function() {
 			var $this = $(this),
 				isChecked = $this.is(":checked"),
-				$nested = $this.closest("label").next("ul").find("input");
+				$nested = $this.closest("label").next("ul").find("input"),
+				$root = $this.closest(".debug");
 			if ($this.data("toggle") == "error") {
 				// filtered separately
 				return;
 			}
 			$nested.prop("checked", isChecked);
-			applyFilter($this.closest(".debug"));
+			applyFilter($root);
+			updateFilterStatus($root);
 		});
 
 		$delegateNode.on("change", "input[data-toggle=error]", function() {
@@ -850,6 +852,7 @@
 			// trigger collapse to potentially update group icon
 			$root.find(".m_error, .m_warn").parents(".m_group").find(".group-body")
 				.trigger("collapsed.debug.group");
+			updateFilterStatus($root);
 		});
 	}
 
@@ -889,6 +892,11 @@
 		$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body > li:not(.filter-hidden):not(.enhanced)").each(function(){
 			$(this).debugEnhance();
 		});
+	}
+
+	function updateFilterStatus($debugRoot) {
+		var haveUnchecked = $debugRoot.find(".debug-sidebar input:checkbox:not(:checked)").length > 0;
+		$debugRoot.toggleClass("filter-active", haveUnchecked);
 	}
 
 	function cookieGet(name) {
@@ -1054,6 +1062,9 @@
 				<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>\
 			</div>\
 		</div>');
+		if (!config$3.get("drawer")) {
+			$menuBar.find("input[name=persistDrawer]").closest("label").remove();
+		}
 	}
 
 	function onBodyClick(e) {
@@ -1089,7 +1100,7 @@
 		$root$2 = $debugRoot;
 		config$4 = conf;
 
-		console.warn('sidebar.init');
+		// console.warn('sidebar.init');
 
 		if (config$4.get("sidebar")) {
 			addMarkup$1($root$2);
@@ -1140,16 +1151,14 @@
 		});
 
 		$root$2.on("change", ".debug-sidebar input[type=checkbox]", function(e) {
-			// console.warn("sidebar checkbox change", this);
 			var $input = $(this),
 				$toggle = $input.closest(".toggle"),
 				$nested = $toggle.next("ul").find(".toggle"),
 				isActive = $input.is(":checked");
-			// e.stopPropagation();
 			$toggle.toggleClass("active", isActive);
 			$nested.toggleClass("active", isActive);
 			if ($input.val() == "fatal") {
-				$(".m_alert.error-summary").toggle(!isActive);
+				$(".m_alert.error-summary").toggle(isActive);
 			}
 		});
 	}
@@ -1324,15 +1333,17 @@
 	function init$6($debugRoot, conf) {
 		config$5 = conf.config;
 		$root$3 = $debugRoot;
+		$root$3.find(".debug-menu-bar").append($('<div />', {class:"pull-right"}));
 		addChannelToggles();
 		addExpandAll();
 		addNoti($("body"));
-		addPersistOption();
+		// addPersistOption();
 		enhanceErrorSummary();
 		init$2($root$3, conf);
 		init$3($root$3);
 		init$5($root$3, conf);
 		init$4($root$3, conf);
+		addErrorIcons();
 		$root$3.find(".loading").hide();
 		$root$3.addClass("enhanced");
 	}
@@ -1349,6 +1360,34 @@
 		if ($ul.html().length) {
 			$root$3.find(".debug-body").prepend($toggles);
 		}
+	}
+
+	function addErrorIcons() {
+		var counts = {
+			error : $root$3.find(".m_error[data-channel=phpError]").length,
+			warn : $root$3.find(".m_warn[data-channel=phpError]").length
+		};
+		var $icon;
+		var $icons = $("<span>", {class: "debug-error-counts"});
+		// var $badge = $("<span>", {class: "badge"});
+		if (counts.error) {
+			$icon = $(config$5.iconsMethods[".m_error"]).removeClass("fa-lg").addClass("text-error");
+			// $root.find(".debug-pull-tab").append($icon);
+			$icons.append($icon).append($("<span>", {
+				class: "badge",
+				html: counts.error
+			}));
+		}
+		if (counts.warn) {
+			$icon = $(config$5.iconsMethods[".m_warn"]).removeClass("fa-lg").addClass("text-warn");
+			// $root.find(".debug-pull-tab").append($icon);
+			$icons.append($icon).append($("<span>", {
+				class: "badge",
+				html: counts.warn
+			}));
+		}
+		$root$3.find(".debug-pull-tab").append($icons[0].outerHTML);
+		$root$3.find(".debug-menu-bar .pull-right").prepend($icons);
 	}
 
 	function addExpandAll() {
@@ -1375,9 +1414,10 @@
 			'</div>');
 	}
 
+	/*
 	function addPersistOption() {
 		var $node;
-		if (config$5.debugKey) {
+		if (config.debugKey) {
 			$node = $('<label class="debug-cookie" title="Add/remove debug cookie"><input type="checkbox"> Keep debug on</label>');
 			if (cookieGet("debug") === options.debugKey) {
 				$node.find("input").prop("checked", true);
@@ -1390,9 +1430,10 @@
 					cookieRemove("debug");
 				}
 			});
-			$root$3.find(".debug-menu-bar").eq(0).prepend($node);
+			$root.find(".debug-menu-bar").eq(0).prepend($node);
 		}
 	}
+	*/
 
 	function buildChannelList(channels, channelRoot, checkedChannels, prepend) {
 		var $ul = $('<ul class="list-unstyled">'),
@@ -1452,10 +1493,10 @@
 		var $errorSummary = $root$3.find(".m_alert.error-summary");
 		$errorSummary.find("h3:first-child").prepend(config$5.iconsMethods[".m_error"]);
 		$errorSummary.find("li[class*=error-]").each(function() {
-			var classAttr = $(this).attr("class"),
+			var category = $(this).attr("class").replace("error-", ""),
 				html = $(this).html(),
 				htmlReplace = '<li><label>' +
-					'<input type="checkbox" checked data-toggle="error" data-count="'+$(this).data("count")+'" value="' + classAttr + '" /> ' +
+					'<input type="checkbox" checked data-toggle="error" data-count="'+$(this).data("count")+'" value="' + category + '" /> ' +
 					html +
 					'</label></li>';
 			$(this).replaceWith(htmlReplace);

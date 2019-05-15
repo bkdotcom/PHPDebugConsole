@@ -79,6 +79,9 @@ function addDropdown() {
 				<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>\
 			</div>\
 		</div>');
+	if (!config.get("drawer")) {
+		$menuBar.find("input[name=persistDrawer]").closest("label").remove();
+	}
 }
 
 function onBodyClick(e) {

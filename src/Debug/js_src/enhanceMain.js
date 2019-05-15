@@ -15,15 +15,17 @@ var $root;
 export function init($debugRoot, conf) {
 	config = conf.config;
 	$root = $debugRoot;
+	$root.find(".debug-menu-bar").append($('<div />', {class:"pull-right"}));
 	addChannelToggles();
 	addExpandAll();
 	addNoti($("body"));
-	addPersistOption();
+	// addPersistOption();
 	enhanceErrorSummary();
 	drawer.init($root, conf);
 	filter.init($root);
 	sidebar.init($root, conf);
 	optionsMenu.init($root, conf);
+	addErrorIcons();
 	$root.find(".loading").hide();
 	$root.addClass("enhanced");
 }
@@ -40,6 +42,34 @@ function addChannelToggles() {
 	if ($ul.html().length) {
 		$root.find(".debug-body").prepend($toggles);
 	}
+}
+
+function addErrorIcons() {
+	var counts = {
+		error : $root.find(".m_error[data-channel=phpError]").length,
+		warn : $root.find(".m_warn[data-channel=phpError]").length
+	}
+	var $icon;
+	var $icons = $("<span>", {class: "debug-error-counts"});
+	// var $badge = $("<span>", {class: "badge"});
+	if (counts.error) {
+		$icon = $(config.iconsMethods[".m_error"]).removeClass("fa-lg").addClass("text-error");
+		// $root.find(".debug-pull-tab").append($icon);
+		$icons.append($icon).append($("<span>", {
+			class: "badge",
+			html: counts.error
+		}));
+	}
+	if (counts.warn) {
+		$icon = $(config.iconsMethods[".m_warn"]).removeClass("fa-lg").addClass("text-warn");
+		// $root.find(".debug-pull-tab").append($icon);
+		$icons.append($icon).append($("<span>", {
+			class: "badge",
+			html: counts.warn
+		}));
+	}
+	$root.find(".debug-pull-tab").append($icons[0].outerHTML);
+	$root.find(".debug-menu-bar .pull-right").prepend($icons);
 }
 
 function addExpandAll() {
@@ -66,6 +96,7 @@ function addNoti($root) {
 		'</div>');
 }
 
+/*
 function addPersistOption() {
 	var $node;
 	if (config.debugKey) {
@@ -84,6 +115,7 @@ function addPersistOption() {
 		$root.find(".debug-menu-bar").eq(0).prepend($node);
 	}
 }
+*/
 
 export function buildChannelList(channels, channelRoot, checkedChannels, prepend) {
 	var $ul = $('<ul class="list-unstyled">'),
@@ -143,10 +175,10 @@ function enhanceErrorSummary() {
 	var $errorSummary = $root.find(".m_alert.error-summary");
 	$errorSummary.find("h3:first-child").prepend(config.iconsMethods[".m_error"]);
 	$errorSummary.find("li[class*=error-]").each(function() {
-		var classAttr = $(this).attr("class"),
+		var category = $(this).attr("class").replace("error-", ""),
 			html = $(this).html(),
 			htmlReplace = '<li><label>' +
-				'<input type="checkbox" checked data-toggle="error" data-count="'+$(this).data("count")+'" value="' + classAttr + '" /> ' +
+				'<input type="checkbox" checked data-toggle="error" data-count="'+$(this).data("count")+'" value="' + category + '" /> ' +
 				html +
 				'</label></li>';
 		$(this).replaceWith(htmlReplace);

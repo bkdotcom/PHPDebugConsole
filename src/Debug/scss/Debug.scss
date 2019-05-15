@@ -24,6 +24,7 @@
 	@import "base";
 
 	.debug-menu-bar {
+		position: relative;
 		padding: 5px;
 		font-size: 115%;
 		background-color: rgba(0, 0, 0, 0.2);
@@ -31,10 +32,29 @@
 		a {
 			color: $grey-text;
 		}
-		.debug-cookie {
+		// .debug-cookie {
 			// checkbox added by javascript
-			float: right;
-			color: #666;
+		//	float: right;
+		//	color: #666;
+		// }
+		button {
+			height: 18px;
+			border: 0;
+			padding: 0;
+			line-height: 0;
+			-webkit-appearance: none;
+			   -moz-appearance: none;
+			        appearance: none;
+			background-color: transparent;
+		}
+	}
+	.debug-error-counts {
+		.badge {
+			padding: 0 0.4em 0 0.25em;
+			color: inherit;
+			background: inherit;
+			font-size: inherit;
+			vertical-align: unset;
 		}
 	}
 
@@ -88,4 +108,7 @@
 	.text-muted { opacity: 0.5; }
 	// .text-nowrap { white-space: nowrap; }
 	.text-right { text-align: right; }
+	.text-error { color: $error-fg; }
+	.text-info { color: $info-fg; }
+	.text-warn { color: $warn-fg; }
 }

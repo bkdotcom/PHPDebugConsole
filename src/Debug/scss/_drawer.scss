@@ -48,6 +48,15 @@
 		cursor: pointer;
 		transition: all 0.5s;
 		z-index: -1;
+		&:hover {
+			background: darken($lite-grey, 10%);
+		}
+		.debug-error-counts {
+			margin-left: .5em;
+		}
+		.badge {
+			display: none;
+		}
 	}
 
 	.debug-resize-handle {
@@ -76,7 +85,6 @@
 	}
 
 	.debug-menu-bar {
-		position: relative;
 		height: 25px;
 		border-top: 1px solid $border-color;
 		border-bottom: 1px solid $border-color;
@@ -99,25 +107,19 @@
 				text-decoration: none;
 			}
 		}
+		button.close {
+			font-size: 21px;
+		    font-weight: 300;
+		}
 		.pull-right {
 			position: absolute;
 			top: 0;
 			right: 6px
 		}
-		button {
-			// float: right;
-			height: 18px;
-			border: 0;
-			padding: 0;
-			line-height: 0;
-			-webkit-appearance: none;
-			   -moz-appearance: none;
-			        appearance: none;
-			background-color: transparent;
-			&.close {
-				font-size: 21px;
-			    font-weight: 300;
-			}
+		.debug-error-counts {
+			position: relative;
+			top: -2px;
+			font-size: .78em;
 		}
 	}
 

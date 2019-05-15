@@ -32,9 +32,10 @@
 .debug pre { padding: 0; border: 0; margin: 0; white-space: pre; -moz-tab-size: 3; -o-tag-size: 3; -tab-size: 3; }
 .debug ul { margin-top: 0; margin-bottom: 0; }
 .debug .close { opacity: 1; float: none; }
-.debug .debug-menu-bar { padding: 5px; font-size: 115%; background-color: rgba(0, 0, 0, 0.2); margin-bottom: 10px; }
+.debug .debug-menu-bar { position: relative; padding: 5px; font-size: 115%; background-color: rgba(0, 0, 0, 0.2); margin-bottom: 10px; }
 .debug .debug-menu-bar a { color: #6e6e6e; }
-.debug .debug-menu-bar .debug-cookie { float: right; color: #666; }
+.debug .debug-menu-bar button { height: 18px; border: 0; padding: 0; line-height: 0; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: transparent; }
+.debug .debug-error-counts .badge { padding: 0 0.4em 0 0.25em; color: inherit; background: inherit; font-size: inherit; vertical-align: unset; }
 .debug .debug-body *[title]:not(a) { cursor: help; }
 .debug .debug-body *[title]:not(a):hover { background-color: rgba(0, 0, 0, 0.2); }
 .debug ul.debug-log-summary, .debug ul.debug-log, .debug ul .m_groupSummary > ul { list-style: none; margin-left: 0; border-left: 0; padding-left: 0; }
@@ -144,19 +145,22 @@
 .debug.debug-drawer.debug-drawer-open .debug-resize-handle { cursor: ns-resize; }
 .debug.debug-drawer.debug-drawer-open .debug-resize-handle:hover { opacity: 1; }
 .debug.debug-drawer .debug-pull-tab { display: inline-block; opacity: 1; position: absolute; height: 25px; top: -25px; margin-left: 20px; border: 1px solid #000; border-bottom-width: 0; border-radius: 5px 5px 0 0; padding: 4px 14px; font-size: 16px; background: #f3f3f3; cursor: pointer; transition: all 0.5s; z-index: -1; }
+.debug.debug-drawer .debug-pull-tab:hover { background: #dadada; }
+.debug.debug-drawer .debug-pull-tab .debug-error-counts { margin-left: .5em; }
+.debug.debug-drawer .debug-pull-tab .badge { display: none; }
 .debug.debug-drawer .debug-resize-handle { display: block; position: absolute; top: -3px; height: 4px; width: 100%; opacity: 0; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; background: #dadada; transition: all 0.25s ease-out; }
 html.debug-resizing { cursor: ns-resize !important; }
 html.debug-resizing .debug-drawer { transition: none; }
 html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
-.debug.debug-drawer .debug-menu-bar { position: relative; height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; padding: 3px 6px; background: #f3f3f3; font-size: 16px; line-height: 1; margin-bottom: 0; }
+.debug.debug-drawer .debug-menu-bar { height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; padding: 3px 6px; background: #f3f3f3; font-size: 16px; line-height: 1; margin-bottom: 0; }
 .debug.debug-drawer .debug-menu-bar, .debug.debug-drawer .debug-menu-bar a { color: #6e6e6e; }
 .debug.debug-drawer .debug-menu-bar a:focus, .debug.debug-drawer .debug-menu-bar a:hover, .debug.debug-drawer .debug-menu-bar button:focus, .debug.debug-drawer .debug-menu-bar button:hover, .debug.debug-drawer .debug-menu-bar label:focus, .debug.debug-drawer .debug-menu-bar label:hover { color: #333; text-decoration: none; }
-.debug.debug-drawer .debug-menu-bar .pull-right { position: absolute; top: 0; right: 6px; }
-.debug.debug-drawer .debug-menu-bar button { height: 18px; border: 0; padding: 0; line-height: 0; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: transparent; }
 .debug.debug-drawer .debug-menu-bar button.close { font-size: 21px; font-weight: 300; }
+.debug.debug-drawer .debug-menu-bar .pull-right { position: absolute; top: 0; right: 6px; }
+.debug.debug-drawer .debug-menu-bar .debug-error-counts { position: relative; top: -2px; font-size: .78em; }
 .debug.debug-drawer .debug-body { padding: 5px 10px; background-color: #FFF; overflow: auto; }
 .debug #debug-options-toggle { position: relative; top: -1px; }
-.debug .debug-options { position: absolute; top: 100%; right: 0; max-height: 0; box-sizing: border-box; z-index: 1000; float: right; min-width: 12em; background-color: inherit; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25); transition: all 0.25s ease-out; overflow: hidden; font-size: 13px; }
+.debug .debug-options { position: absolute; top: 100%; right: 0; max-height: 0; box-sizing: border-box; z-index: 1000; float: right; min-width: 12em; background: #f3f3f3; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25); transition: all 0.25s ease-out; overflow: hidden; font-size: 13px; }
 .debug .debug-options .debug-options-body { background-clip: padding-box; border: 1px solid #d0d0d0; padding: .5em 5px .5em 15px; }
 .debug .debug-options.show { max-height: 150px; }
 .debug .debug-options label { font-weight: normal; padding: 0.25em 0; }
@@ -251,3 +255,6 @@ color: #818a91
 .debug .text-center { text-align: center; }
 .debug .text-muted { opacity: 0.5; }
 .debug .text-right { text-align: right; }
+.debug .text-error { color: #d8000c; }
+.debug .text-info { color: #31708f; }
+.debug .text-warn { color: #8a6d3b; }

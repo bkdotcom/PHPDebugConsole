@@ -31,13 +31,15 @@ export function init($delegateNode) {
 	$delegateNode.on("change", "input[type=checkbox]", function() {
 		var $this = $(this),
 			isChecked = $this.is(":checked"),
-			$nested = $this.closest("label").next("ul").find("input");
+			$nested = $this.closest("label").next("ul").find("input"),
+			$root = $this.closest(".debug");
 		if ($this.data("toggle") == "error") {
 			// filtered separately
 			return;
 		}
 		$nested.prop("checked", isChecked);
-		applyFilter($this.closest(".debug"));
+		applyFilter($root);
+		updateFilterStatus($root);
 	});
 
 	$delegateNode.on("change", "input[data-toggle=error]", function() {
@@ -50,6 +52,7 @@ export function init($delegateNode) {
 		// trigger collapse to potentially update group icon
 		$root.find(".m_error, .m_warn").parents(".m_group").find(".group-body")
 			.trigger("collapsed.debug.group");
+		updateFilterStatus($root);
 	});
 }
 
@@ -91,3 +94,7 @@ function applyFilter($root) {
 	});
 }
 
+function updateFilterStatus($debugRoot) {
+	var haveUnchecked = $debugRoot.find(".debug-sidebar input:checkbox:not(:checked)").length > 0;
+	$debugRoot.toggleClass("filter-active", haveUnchecked);
+}

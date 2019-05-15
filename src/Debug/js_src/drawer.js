@@ -1,5 +1,4 @@
 import $ from "jquery";
-// import {lsGet,lsSet} from "./http.js";
 
 var $root, config, origH, origPageY;
 

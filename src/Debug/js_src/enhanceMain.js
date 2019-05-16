@@ -74,10 +74,10 @@ function addErrorIcons() {
 
 function addExpandAll() {
 	var $expandAll = $("<button>", {
-			"class": "expand-all"
+			"class": "expand-all",
 		}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
 	// this is currently invoked before entries are enhance / empty class not yet added
-	if ($root.find(".m_group:not(.empty)").length) {
+	if ($root.find(".m_group:not(.empty)").length > 1) {
 		$root.find(".debug-log-summary").before($expandAll);
 	}
 	$root.on("click", ".expand-all", function(){

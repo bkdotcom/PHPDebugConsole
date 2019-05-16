@@ -166,6 +166,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-options label { font-weight: normal; padding: 0.25em 0; }
 .debug .debug-options label.disabled { color: #999; }
 .debug .debug-options hr.dropdown-divider { margin: .5em -5px .5em -15px; background: #d0d0d0; height: 1px; border: none; }
+.debug .debug-options .form-group { margin: 0; }
 .debug { transform: scale(1); }
 .debug .badge { display: inline-block; padding: .25em .4em .16em; font-size: 82%; font-weight: 500; line-height: 1; text-align: center; white-space: nowrap; vertical-align: bottom; border-radius: .25rem; color: #fff; background-color: #666; }
 .debug .debug-sidebar { position: fixed; box-sizing: border-box; width: 126px; background: #f3f3f3; height: 100%; transform: translateX(-119px); transition: transform 0.33s; /*
@@ -237,9 +238,9 @@ color: #818a91
 .debug .show-more-fade { position: absolute; bottom: -1px; width: 100%; height: 55px; background-image: linear-gradient(to bottom, transparent, white); pointer-events: none; }
 .debug [title]:hover .show-more-fade { background-image: linear-gradient(to bottom, transparent, #c9c9c9); }
 .debug .show-more, .debug .show-less { display: table; box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.2); border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 2px; background-color: #EEE; }
-.debug .level-error .show-more-fade, .debug .m_error .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FFBABA); }
-.debug .level-info .show-more-fade, .debug .m_info .show-more-fade { background-image: linear-gradient(to bottom, transparent, #BDE5F8); }
-.debug .level-warn .show-more-fade, .debug .m_warn .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FEEFB3); }
+.debug .level-error .show-more-fade, .debug .m_error .show-more-fade { background-image: linear-gradient(to bottom, transparent, #ffbaba); }
+.debug .level-info .show-more-fade, .debug .m_info .show-more-fade { background-image: linear-gradient(to bottom, transparent, #d9edf7); }
+.debug .level-warn .show-more-fade, .debug .m_warn .show-more-fade { background-image: linear-gradient(to bottom, transparent, #fefbe5); }
 .debug-noti-wrap { position: fixed; display: none; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1050; }
 .debug-noti-wrap .debug-noti { display: table-cell; text-align: center; vertical-align: bottom; font-size: 30px; transform-origin: 50% 100%; }
 .debug-noti-wrap .debug-noti.animate { animation-duration: 1s; animation-name: expandAndFade; animation-timing-function: ease-in; }

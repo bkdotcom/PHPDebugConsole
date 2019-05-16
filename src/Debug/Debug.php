@@ -333,7 +333,11 @@ class Debug
             if (!$args) {
                 // add default message
                 $callerInfo = $this->utilities->getCallerInfo();
-                $args[] = 'Assertion failed in '.$callerInfo['file'].' on line '.$callerInfo['line'];
+                $args = array(
+                    'Assertion failed:',
+                    $callerInfo['file'].' (line '.$callerInfo['line'].')',
+                );
+                $logEntry->setMeta('detectFiles', true);
             }
             $logEntry['args'] = $args;
             $this->appendLog($logEntry);
@@ -835,7 +839,7 @@ class Debug
      * Label not passed
      *    timer will be added to a no-label stack
      *
-     * Does not append log.  Use timeEnd or timeGet to get time
+     * Does not append log (unless duration is passed).  Use timeEnd or timeGet to get time
      *
      * @param string $label    unique label
      * @param float  $duration (optional) duration
@@ -1701,7 +1705,7 @@ class Debug
                 return new Debug\Internal($debug);
             },
             'logger' => function (Debug $debug) {
-                return new Debug\Logger($debug);
+                return new Debug\Collector\Logger($debug);
             },
             'methodClear' => function (Debug $debug) {
                 return new Debug\MethodClear($debug, $debug->data);

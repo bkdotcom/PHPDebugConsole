@@ -102,11 +102,11 @@ i.fa-lg { font-size:1.33em; }
 	background-color: #EEE;
 }
 .level-error .show-more-fade,
-.m_error .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FFBABA); }
+.m_error .show-more-fade { background-image: linear-gradient(to bottom, transparent, $error-bg); }
 .level-info .show-more-fade,
-.m_info .show-more-fade { background-image: linear-gradient(to bottom, transparent, #BDE5F8); }
+.m_info .show-more-fade { background-image: linear-gradient(to bottom, transparent, $info-bg); }
 .level-warn .show-more-fade,
-.m_warn .show-more-fade { background-image: linear-gradient(to bottom, transparent, #FEEFB3); }
+.m_warn .show-more-fade { background-image: linear-gradient(to bottom, transparent, $warn-bg); }
 
 //
 // notifications

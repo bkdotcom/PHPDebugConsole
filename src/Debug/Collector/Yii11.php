@@ -56,24 +56,8 @@ class Yii11 implements SubscriberInterface
         $this->debug = $event->getSubject()->getChannel('Yii');
         $this->yiiApp = Yii::app();
         $this->usePdoCollector();
+        $this->addDebugProp();
         $this->debug->yiiRouteEnable();
-        /*
-        $mProp = new \ReflectionProperty($this->yiiApp, '_m');
-        $mProp->setAccessible(true);
-        $val = $mProp->getValue($this->yiiApp);
-        Debug::_warn('behaviors', $val);
-        */
-        $refClass = new \ReflectionClass($this->yiiApp);
-        while ($refClass = $refClass->getParentClass()) {
-            if ($refClass->hasProperty('_m')) {
-                $mProp = $refClass->getProperty('_m');
-                $mProp->setAccessible(true);
-                $val = $mProp->getValue($this->yiiApp);
-                $val['debug'] = $this->debug;
-                $mProp->setValue($this->yiiApp, $val);
-                break;
-            }
-        }
     }
 
     /**
@@ -254,22 +238,31 @@ class Yii11 implements SubscriberInterface
         } elseif ($event['category'] === 'fatal') {
             // Yii's  error handler exits (for reasons)
             //    exit within shutdown procedure = immediate exit
-            //    we need to output()...  so that debug.output event gets published
+            //    manually publish the shutdown event
             // remaining error subscribers aren't going to get called because of the exit...
-            /*
-            $this->debug->output();
-            $this->debug->output->wamp->processLogEntry(new bdk\Debug\LogEntry(
-                $this->debug,
-                'endOutput',
-                array(),
-                array(
-                    'channel' => 'general',
-                    'responseCode' => \http_response_code(),
-                )
-            ));
-            */
             $this->debug->rootInstance->eventManager->publish('php.shutdown');
             $this->yiiApp->handleError($event['type'], $event['message'], $event['file'], $event['line']);
+        }
+    }
+
+    /**
+     * Make Yii::app()->debug a thing
+     *
+     * @return void
+     */
+    private function addDebugProp()
+    {
+        $refClass = new \ReflectionClass($this->yiiApp);
+        while ($refClass = $refClass->getParentClass()) {
+            if (!$refClass->hasProperty('_m')) {
+                continue;
+            }
+            $mProp = $refClass->getProperty('_m');
+            $mProp->setAccessible(true);
+            $val = $mProp->getValue($this->yiiApp);
+            $val['debug'] = $this->debug;
+            $mProp->setValue($this->yiiApp, $val);
+            break;
         }
     }
 }

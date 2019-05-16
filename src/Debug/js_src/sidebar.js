@@ -109,7 +109,6 @@ export function addMarkup($node) {
 	phpErrorToggles($node);
 	moveChannelToggles($node);
 	addMethodToggles($node);
-	// moveExpandAll($node);
 	if ($expAll.length) {
 		$expAll.remove();
 		$sidebar.find(".expand-all").show();
@@ -182,20 +181,6 @@ function moveChannelToggles($node) {
 	}
 	$node.find(".debug-body .channels").remove();
 }
-
-/**
- * Grab the .debug-body "Expand All" and move it to sidebar
- */
-/*
-function moveExpandAll($node) {
-	var $btn = $node.find(".debug-body > .expand-all"),
-		html = $btn.html();
-	if ($btn.length) {
-		$btn.html(html.replace('Expand', 'Exp'));
-		$btn.appendTo($node.find(".debug-sidebar"));
-	}
-}
-*/
 
 /**
  * Grab the error toggles from .debug-body's error-summary move to sidebar

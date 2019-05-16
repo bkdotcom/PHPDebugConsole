@@ -81,6 +81,8 @@ class Utilities
         'sortable', // <table> - removed from draft
     );
 
+    public static $frameworkPaths = array();
+
     /**
      * "dereference" array
      * returns a copy of the array with references removed
@@ -320,7 +322,7 @@ class Utilities
 
     /**
      * Returns information regarding previous call stack position
-     * call_user_func and call_user_func_array are skipped
+     * call_user_func() and call_user_func_array() are skipped
      *
      * Information returned:
      *     function : function/method name
@@ -339,55 +341,25 @@ class Utilities
      */
     public static function getCallerInfo($offset = 0)
     {
-        $return = array(
-            'file' => null,
-            'line' => null,
-            'function' => null,
-            'class' => null,
-            'type' => null,
-        );
+        /*
+            backtrace:  index 0 is current position
+        */
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 8);
         $numFrames = \count($backtrace);
         $regexInternal = '/^'.\preg_quote(__NAMESPACE__).'\b/';
-        if (isset($backtrace[1]['class']) && \preg_match($regexInternal, $backtrace[1]['class'])) {
-            // called from within
-            // find the frame that called/triggered a debug function
-            for ($i = $numFrames - 1; $i >= 0; $i--) {
-                if (isset($backtrace[$i]['class']) && \preg_match($regexInternal, $backtrace[$i]['class'])) {
-                    break;
+        for ($i = $numFrames - 1; $i > 1; $i--) {
+            // var_dump($i.(isset($backtrace[$i]['class']) ? ': '.$backtrace[$i]['class'] : ''));
+            if (isset($backtrace[$i]['class']) && \preg_match($regexInternal, $backtrace[$i]['class'])) {
+                break;
+            }
+            foreach (self::$frameworkPaths as $path) {
+                if (isset($backtrace[$i]['file']) && \strpos($backtrace[$i]['file'], $path) === 0) {
+                    $i++;
+                    break 2;
                 }
             }
-        } else {
-            $i = 1;
         }
-        $i += $offset;
-        $iLine = $i;
-        $iFunc = $i + 1;
-        if (isset($backtrace[$iFunc]) && \in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))) {
-            $iLine++;
-            $iFunc++;
-        } elseif (isset($backtrace[$iFunc]['class'])
-            && $backtrace[$iFunc]['class'] == 'ReflectionMethod'
-            && $backtrace[$iFunc]['function'] == 'invoke'
-        ) {
-            // called via ReflectionMethod->invoke()
-            $iLine++;
-            $iFunc--;
-        }
-        if (isset($backtrace[$iFunc])) {
-            $return = \array_merge($return, \array_intersect_key($backtrace[$iFunc], $return));
-            if ($return['type'] == '->') {
-                $return['class'] = \get_class($backtrace[$iFunc]['object']);
-            }
-        }
-        if (isset($backtrace[$iLine])) {
-            $return['file'] = $backtrace[$iLine]['file'];
-            $return['line'] = $backtrace[$iLine]['line'];
-        } else {
-            $return['file'] = $backtrace[$numFrames-1]['file'];
-            $return['line'] = 0;
-        }
-        return $return;
+        return self::getCallerInfoBuild(\array_slice($backtrace, $i + $offset));
     }
 
     /**
@@ -726,6 +698,53 @@ class Utilities
             $value = null;
         }
         return $value;
+    }
+
+    /**
+     * Build callerInfo array from given backtrace segment
+     *
+     * @param array $backtrace backtrace
+     *
+     * @return array
+     */
+    private static function getCallerInfoBuild($backtrace)
+    {
+        $return = array(
+            'file' => null,
+            'line' => null,
+            'function' => null,
+            'class' => null,
+            'type' => null,
+        );
+        $numFrames = \count($backtrace);
+        $iLine = 0;
+        $iFunc = 1;
+        if (isset($backtrace[$iFunc])) {
+            // skip over call_user_func / call_user_func_array / invoke
+            $class = isset($backtrace[$iFunc]['class'])
+                ? $backtrace[$iFunc]['class']
+                : null;
+            if (\in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array')) ||
+                $class == 'ReflectionMethod' && $backtrace[$iFunc]['function'] == 'invoke'
+            ) {
+                $iLine++;
+                $iFunc++;
+            }
+        }
+        if (isset($backtrace[$iFunc])) {
+            $return = \array_merge($return, \array_intersect_key($backtrace[$iFunc], $return));
+            if ($return['type'] == '->') {
+                $return['class'] = \get_class($backtrace[$iFunc]['object']);
+            }
+        }
+        if (isset($backtrace[$iLine])) {
+            $return['file'] = $backtrace[$iLine]['file'];
+            $return['line'] = $backtrace[$iLine]['line'];
+        } else {
+            $return['file'] = $backtrace[$numFrames-1]['file'];
+            $return['line'] = 0;
+        }
+        return $return;
     }
 
     /**

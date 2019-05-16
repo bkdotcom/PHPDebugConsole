@@ -61,6 +61,7 @@ class Yii11LogRoute extends CLogRoute
                 $this->{$k} = $v;
             }
         }
+        \bdk\Debug\Utilities::$frameworkPaths[] = YII_PATH;
         $this->debug = $debug;
     }
 
@@ -134,15 +135,6 @@ class Yii11LogRoute extends CLogRoute
                     'file' => $line[1],
                     'line' => $line[2] * 1,
                 );
-            }
-        }
-        if (!$logEntry['trace'] && \in_array($logEntry['level'], array(CLogger::LEVEL_ERROR, CLogger::LEVEL_WARNING))) {
-            $backtrace = $this->debug->errorHandler->backtrace();
-            foreach ($backtrace as $i => $frame) {
-                if (\strpos($frame['file'], YII_PATH) === false && $frame['file'] !== __FILE__) {
-                    $logEntry['trace'] = \array_slice($backtrace, $i);
-                    break;
-                }
             }
         }
         if ($logEntry['trace']) {
@@ -296,14 +288,14 @@ class Yii11LogRoute extends CLogRoute
             $logEntry['category'].':',
             $logEntry['message']
         );
-        if (\in_array($method, array('error','warn'))) {
+        if (\in_array($method, array('error','warn')) && $logEntry['file']) {
             $args[] = $debug->meta(array(
                 'file' => $logEntry['file'],
                 'line' => $logEntry['line'],
             ));
-            if ($method == 'warn') {
-                $args[] = $debug->meta('backtrace', $logEntry['trace']);
-            }
+        }
+        if ($logEntry['trace']) {
+            $args[] = $debug->meta('backtrace', $logEntry['trace']);
         }
         \call_user_func_array(array($debug, $method), $args);
     }

@@ -653,8 +653,6 @@
 		}
 	}
 
-	// import {lsGet,lsSet} from "./http.js";
-
 	var $root, config$2, origH, origPageY;
 
 	/**
@@ -1200,7 +1198,6 @@
 		phpErrorToggles($node);
 		moveChannelToggles($node);
 		addMethodToggles($node);
-		// moveExpandAll($node);
 		if ($expAll.length) {
 			$expAll.remove();
 			$sidebar.find(".expand-all").show();
@@ -1273,20 +1270,6 @@
 		}
 		$node.find(".debug-body .channels").remove();
 	}
-
-	/**
-	 * Grab the .debug-body "Expand All" and move it to sidebar
-	 */
-	/*
-	function moveExpandAll($node) {
-		var $btn = $node.find(".debug-body > .expand-all"),
-			html = $btn.html();
-		if ($btn.length) {
-			$btn.html(html.replace('Expand', 'Exp'));
-			$btn.appendTo($node.find(".debug-sidebar"));
-		}
-	}
-	*/
 
 	/**
 	 * Grab the error toggles from .debug-body's error-summary move to sidebar
@@ -1392,10 +1375,10 @@
 
 	function addExpandAll() {
 		var $expandAll = $("<button>", {
-				"class": "expand-all"
+				"class": "expand-all",
 			}).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
 		// this is currently invoked before entries are enhance / empty class not yet added
-		if ($root$3.find(".m_group:not(.empty)").length) {
+		if ($root$3.find(".m_group:not(.empty)").length > 1) {
 			$root$3.find(".debug-log-summary").before($expandAll);
 		}
 		$root$3.on("click", ".expand-all", function(){

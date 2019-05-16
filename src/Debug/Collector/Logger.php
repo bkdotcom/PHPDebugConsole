@@ -6,10 +6,10 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3
+ * @version   v3.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use Psr\Log\AbstractLogger;

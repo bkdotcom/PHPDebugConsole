@@ -226,20 +226,28 @@ class MethodTest extends DebugTestFramework
             array(
                 'entry' => array(
                     'assert',
-                    array('Assertion failed in '.$this->file.' on line '.$this->line),
+                    array(
+                        'Assertion failed:',
+                        $this->file.' (line '.$this->line.')',
+                    ),
                     array(
                         'channel' => 'general',
+                        'detectFiles' => true,
                     ),
                 ),
                 'chromeLogger' => array(
-                    array(false, 'Assertion failed in '.$this->file.' on line '.$this->line),
+                    array(
+                        false,
+                        'Assertion failed:',
+                        $this->file.' (line '.$this->line.')',
+                    ),
                     null,
                     'assert',
                 ),
-                'html' => '<li class="m_assert"><span class="no-pseudo t_string">Assertion failed in '.$this->file.' on line '.$this->line.'</span></li>',
-                'text' => '≠ Assertion failed in '.$this->file.' on line '.$this->line,
-                'script' => 'console.assert(false,"Assertion failed in '.trim(json_encode($this->file), '"').' on line '.$this->line.'");',
-                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"LOG"},"Assertion failed in '.trim(json_encode($this->file), '"').' on line '.$this->line.'"]|',
+                'html' => '<li class="m_assert" data-detect-files="true"><span class="no-pseudo t_string">Assertion failed: </span><span class="t_string">'.$this->file.' (line '.$this->line.')</span></li>',
+                'text' => '≠ Assertion failed: "'.$this->file.' (line '.$this->line.')"',
+                'script' => 'console.assert(false,"Assertion failed:",'.json_encode($this->file.' (line '.$this->line.')').');',
+                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"LOG","Label":"Assertion failed:"},'.json_encode($this->file.' (line '.$this->line.')').']|',
             )
         );
 

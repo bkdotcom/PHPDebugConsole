@@ -139,6 +139,7 @@ class Text extends Base
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
                 $glueAfterFirst = false;
+                $args[0] = \rtrim($args[0]).' ';
             } elseif (\count($args) == 2) {
                 $glue = ' = ';
             }

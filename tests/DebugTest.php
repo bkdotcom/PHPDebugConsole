@@ -94,6 +94,8 @@ class DebugTest extends DebugTestFramework
                     'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],
                     'errorType' => version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
+                    'file' => __FILE__,
+                    'line' => $lastError['line'],
                     'sanitize' => true,
                 ),
             ),

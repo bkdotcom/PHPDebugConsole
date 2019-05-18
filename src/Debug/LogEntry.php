@@ -74,12 +74,16 @@ class LogEntry extends Event
      * Get meta value
      *
      * @param string $key     key to get
+     *                        if not passed, return all meta values (no different than $logEntry['meta'])
      * @param mixed  $default (null) value to get
      *
      * @return mixed
      */
-    public function getMeta($key, $default = null)
+    public function getMeta($key = null, $default = null)
     {
+        if ($key === null) {
+            return $this->values['meta'];
+        }
         return \array_key_exists($key, $this->values['meta'])
             ? $this->values['meta'][$key]
             : $default;

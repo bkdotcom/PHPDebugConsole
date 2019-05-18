@@ -32,7 +32,6 @@ class Internal implements SubscriberInterface
 {
 
     private $debug;
-    private $error;     // store error object when logging an error
 
     private static $profilingEnabled = false;
 
@@ -177,34 +176,6 @@ class Internal implements SubscriberInterface
         );
         $stats['counts'] = \array_intersect_key(\array_merge(\array_flip($order), $stats['counts']), $stats['counts']);
         return $stats;
-    }
-
-    /**
-     * Get calling line/file for error and warn
-     *
-     * @return array
-     */
-    public function getErrorCaller()
-    {
-        $meta = array();
-        if ($this->error) {
-            // no need to store originating file/line... it's part of error message
-            $meta = array(
-                'errorType' => $this->error['type'],
-                'errorCat' => $this->error['category'],
-                'errorHash' => $this->error['hash'],
-                'backtrace' => $this->error['backtrace'] ?: array(),
-                'sanitize' => $this->error['isHtml'] === false,
-                'channel' => 'phpError',
-            );
-        } else {
-            $meta = $this->debug->utilities->getCallerInfo();
-            $meta = array(
-                'file' => $meta['file'],
-                'line' => $meta['line'],
-            );
-        }
-        return $meta;
     }
 
     /**
@@ -354,24 +325,27 @@ class Internal implements SubscriberInterface
     public function onError(Error $error)
     {
         if ($this->debug->getCfg('collect')) {
-            /*
-                temporarily store error so that we can easily determine error/warn
-                 a) came via error handler
-                 b) calling info
-            */
-            $this->error = $error;
             $errLoc = $error['file'].' (line '.$error['line'].')';
+            $meta = $this->debug->meta(array(
+                'backtrace' => $error['backtrace'],
+                'channel' => 'phpError',
+                'errorCat' => $error['category'],
+                'errorHash' => $error['hash'],
+                'errorType' => $error['type'],
+                'file' => $error['file'],
+                'line' => $error['line'],
+                'sanitize' => $error['isHtml'] === false,
+            ));
             if ($error['type'] & $this->debug->getCfg('errorMask')) {
-                $this->debug->error($error['typeStr'].':', $errLoc, $error['message']);
+                $this->debug->error($error['typeStr'].':', $errLoc, $error['message'], $meta);
             } else {
-                $this->debug->warn($error['typeStr'].':', $errLoc, $error['message']);
+                $this->debug->warn($error['typeStr'].':', $errLoc, $error['message'], $meta);
             }
             $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
             $error['inConsole'] = true;
             // Prevent ErrorHandler\ErrorEmailer from sending email.
             // Since we're collecting log info, we send email on shutdown
             $error['email'] = false;
-            $this->error = null;
         } elseif ($this->debug->getCfg('output')) {
             $error['email'] = false;
             $error['inConsole'] = false;

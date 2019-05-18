@@ -505,12 +505,22 @@ class Debug
      */
     public function error()
     {
-        $this->appendLog(new LogEntry(
+        $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args(),
-            $this->internal->getErrorCaller()
-        ));
+            \func_get_args()
+        );
+        // file & line meta may already be set (ie coming via errorHandler)
+        // file & line may also be defined as null
+        $default = "\x00default\x00";
+        if ($logEntry->getMeta('file', $default) === $default) {
+            $callerInfo = $this->utilities->getCallerInfo();
+            $logEntry->setMeta(array(
+                'file' => $callerInfo['file'],
+                'line' => $callerInfo['line'],
+            ));
+        }
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -1087,12 +1097,22 @@ class Debug
      */
     public function warn()
     {
-        $this->appendLog(new LogEntry(
+        $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args(),
-            $this->internal->getErrorCaller()
-        ));
+            \func_get_args()
+        );
+        // file & line meta may already be set (ie coming via errorHandler)
+        // file & line may also be defined as null
+        $default = "\x00default\x00";
+        if ($logEntry->getMeta('file', $default) === $default) {
+            $callerInfo = $this->utilities->getCallerInfo();
+            $logEntry->setMeta(array(
+                'file' => $callerInfo['file'],
+                'line' => $callerInfo['line'],
+            ));
+        }
+        $this->appendLog($logEntry);
     }
 
     /*
@@ -1104,13 +1124,13 @@ class Debug
      *
      * @param SubscriberInterface|AssetProvider $plugin object implementing SubscriberInterface and/or AssetProvider
      *
-     * @return void
+     * @return Debug self for chaining
      * @throws \InvalidArgumentException
      */
     public function addPlugin($plugin)
     {
         if ($this->registeredPlugins->contains($plugin)) {
-            return;
+            return $this;
         }
         $isPlugin = false;
         if ($plugin instanceof SubscriberInterface) {
@@ -1138,6 +1158,7 @@ class Debug
             throw new \InvalidArgumentException('addPlugin expects \\bdk\\PubSub\\SubscriberInterface or \\bdk\\Debug\\AssetProvider');
         }
         $this->registeredPlugins->attach($plugin);
+        return $this;
     }
 
     /**
@@ -1387,12 +1408,13 @@ class Debug
      *
      * @param SubscriberInterface $plugin object implementing SubscriberInterface
      *
-     * @return void
+     * @return Debug self for chaining
      */
     public function removePlugin(SubscriberInterface $plugin)
     {
         $this->registeredPlugins->detach($plugin);
         $this->eventManager->RemoveSubscriberInterface($plugin);
+        return $this;
     }
 
     /**

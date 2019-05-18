@@ -20,6 +20,9 @@ use bdk\Debug\LogEntry;
 class Utilities
 {
 
+    public static $callerExcludePaths = array();
+    public static $callerExcludeClasses = array('bdk\\Debug');
+
     /**
      * self closing / empty / void html tags
      *
@@ -80,8 +83,6 @@ class Utilities
         'seamless', // <iframe> - removed from draft
         'sortable', // <table> - removed from draft
     );
-
-    public static $frameworkPaths = array();
 
     /**
      * "dereference" array
@@ -346,13 +347,12 @@ class Utilities
         */
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 8);
         $numFrames = \count($backtrace);
-        $regexInternal = '/^'.\preg_quote(__NAMESPACE__).'\b/';
+        $classExcludeRegex = '/^('.\implode('|', \array_map('preg_quote', self::$callerExcludeClasses)).')\b/';
         for ($i = $numFrames - 1; $i > 1; $i--) {
-            // var_dump($i.(isset($backtrace[$i]['class']) ? ': '.$backtrace[$i]['class'] : ''));
-            if (isset($backtrace[$i]['class']) && \preg_match($regexInternal, $backtrace[$i]['class'])) {
+            if (isset($backtrace[$i]['class']) && \preg_match($classExcludeRegex, $backtrace[$i]['class'])) {
                 break;
             }
-            foreach (self::$frameworkPaths as $path) {
+            foreach (self::$callerExcludePaths as $path) {
                 if (isset($backtrace[$i]['file']) && \strpos($backtrace[$i]['file'], $path) === 0) {
                     $i++;
                     break 2;

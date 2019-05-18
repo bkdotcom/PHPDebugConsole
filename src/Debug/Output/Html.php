@@ -327,7 +327,7 @@ class Html extends Base
             'sanitize' => true,
         ), $logEntry['meta']);
         $attribs = \array_merge($this->logEntryAttribs, array(
-            'title' => isset($meta['file'])
+            'title' => isset($meta['file']) && $meta['channel'] !== 'phpError'
                 ? $meta['file'].': line '.$meta['line']
                 : null,
         ));

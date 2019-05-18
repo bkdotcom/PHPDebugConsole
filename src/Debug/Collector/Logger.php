@@ -32,6 +32,8 @@ class Logger extends AbstractLogger
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
+        \bdk\Debug\Utilities::$callerExcludeClasses[] = 'Monolog\\Logger';
+        \bdk\Debug\Utilities::$callerExcludeClasses[] = 'Psr\\Log\\AbstractLogger';
     }
 
     /**
@@ -78,7 +80,6 @@ class Logger extends AbstractLogger
         $haveException = isset($context['exception']) &&
             ($context['exception'] instanceof \Exception
                 || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable);
-        $isError = \in_array($level, array('emergency','critical','error','warning','notice'));
         $metaVals = \array_intersect_key($context, \array_flip(array('file','line')));
         $metaVals['psr3level'] = $level;
         $context = \array_diff_key($context, $metaVals);
@@ -88,12 +89,6 @@ class Logger extends AbstractLogger
                 'backtrace' => $this->debug->errorHandler->backtrace($exception),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
-            ), $metaVals);
-        } elseif ($isError && \count($metaVals) < 2) {
-            $callerInfo = $this->debug->utilities->getCallerInfo(1);
-            $metaVals = \array_merge(array(
-                'file' => $callerInfo['file'],
-                'line' => $callerInfo['line'],
             ), $metaVals);
         }
         if (!$context) {

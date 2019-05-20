@@ -32,8 +32,10 @@ class Logger extends AbstractLogger
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        \bdk\Debug\Utilities::$callerExcludeClasses[] = 'Monolog\\Logger';
-        \bdk\Debug\Utilities::$callerExcludeClasses[] = 'Psr\\Log\\AbstractLogger';
+        \bdk\Debug\Utilities::addCallerBreaker('class', array(
+            'Monolog\\Logger',
+            'Psr\\Log\\AbstractLogger',
+        ));
     }
 
     /**

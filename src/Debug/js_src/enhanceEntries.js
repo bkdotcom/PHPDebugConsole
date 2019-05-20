@@ -33,51 +33,46 @@ export function init($root, conf) {
 		$container.find(".show-less").hide();
 	});
 	$root.on("expand.debug.array", function(e){
-		var $node = $(e.target);
+		var $node = $(e.target),
+			$entry;
 		if ($node.is(".enhanced")) {
 			return;
 		}
+		$entry = $node.closest("li[class*=m_]");
 		$node.find("> .array-inner > .key-value > :last-child").each(function() {
-			enhanceValue(this);
+			enhanceValue($entry, this);
 		});
 	});
 	$root.on("expand.debug.group", function(e){
 		enhanceEntries($(e.target));
 	});
 	$root.on("expand.debug.object", function(e){
-		var $node = $(e.target);
+		var $node = $(e.target),
+			$entry;
 		if ($node.is(".enhanced")) {
 			return;
 		}
-		$node.find("> .constant > :last-child, > .property > :last-child").each(function() {
-			enhanceValue(this);
+		$entry = $node.closest("li[class*=m_]");
+		$node.find("> .constant > :last-child,\
+			> .property > :last-child"
+		).each(function() {
+			enhanceValue($entry, this);
 		});
 		enhanceObject.enhanceInner($node);
 	});
 	$root.on("expanded.debug.array expanded.debug.group expanded.debug.object", function(e){
 		var $node = $(e.target);
-		if ($node.is(".enhanced")) {
-			return;
+		if (!$node.is(".enhanced-strings")) {
+			$node.find("> .constant > :last-child,\
+				> .property > :last-child,\
+				> .method .t_string").filter(".t_string").each(function(){
+					enhanceLongString($(this))
+				});
+			$node.addClass("enhanced-strings");
 		}
-		/*
-		if (!$node.is(":visible")) {
-			console.warn('but not visible??');
-			var $foo = $node.parent();
-			console.log('foo', $foo);
-			while ($foo.length) {
-				console.log('visible', $foo.is(":visible"), $foo);
-				$foo = $foo.parent();
-			}
-		}
-		*/
-		// console.log('expanded', $node.is(":visible"), $node);
-		// enhanceStrings($node);
-		// $node.addClass("enhanced");
 	});
 	$root.on("config.debug.updated", function(e, changedOpt){
-		// console.warn('config updated', changedOpt, config);
 		if (changedOpt == "linkFilesTemplate") {
-			// console.log('updateFileLinks', $root);
 			updateFileLinks($root);
 		}
 	});
@@ -148,163 +143,12 @@ function buildFileLink(file, line) {
 }
 
 /**
- * Adds expand/collapse functionality to array
- * does not enhance values
- */
-function enhanceArray($node) {
-	// console.log("enhanceArray", $node[0]);
-	var isEnhanced = $node.prev().is(".t_array-expand"),
-		$expander = $('<span class="t_array-expand" data-toggle="array">' +
-				'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-				'<i class="fa ' + config.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
-				'<span class="t_punct">)</span>' +
-			"</span>"),
-		numParents = $node.parentsUntil(".m_group", ".t_object, .t_array").length;
-	if (isEnhanced) {
-		return;
-	}
-	if ($.trim($node.find(".array-inner").html()).length < 1) {
-		// empty array -> don't add expand/collapse
-		$node.find("br").hide();
-		$node.find(".array-inner").hide();
-		return;
-	}
-	// add collapse link
-	$node.find(".t_keyword").first().
-		wrap('<span class="t_array-collapse expanded" data-toggle="array">').
-		after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>').
-		parent().next().remove();	// remove original "("
-	$node.before($expander);
-	if (numParents === 0) {
-		// outermost array -> leave open
-		$node.debugEnhance("expand");
-	} else {
-		$node.find(".t_array-collapse").first().debugEnhance("collapse");
-	}
-}
-
-/**
- * Enhance log entries
- */
-export function enhanceEntries($node) {
-	// console.warn('enhanceEntries', $node);
-	$node.hide();
-	$node.children().each(function() {
-		enhanceEntry($(this));
-	});
-	$node.show();
-	enhanceStrings($node);
-	$node.addClass("enhanced");
-}
-
-/**
- * Enhance a single log entry
- * we don't enhance strings by default (add showmore).. needs to be visible to calc height
- */
-export function enhanceEntry($entry, inclStrings) {
-	// console.log("enhanceEntry", $entry);
-	if ($entry.is(".enhanced")) {
-		return;
-	}
-	// console.log('enhanceEntry', this);
-	if ($entry.is(".m_group")) {
-		enhanceGroup($entry);
-	} else {
-		// regular log-type entry
-		$entry.children().each(function() {
-			enhanceValue(this);
-		});
-		addIcons($entry);
-	}
-	if (inclStrings) {
-		enhanceStrings($entry);
-	}
-	$entry.addClass("enhanced");
-	$entry.trigger("enhanced.debug");
-}
-
-function enhanceGroup($group) {
-	var $toggle = $group.find("> .group-header"),
-		$target = $toggle.next();
-	addIcons($group);
-	addIcons($toggle);
-	$toggle.attr("data-toggle", "group");
-	$.each(["level-error","level-info","level-warn"], function(i, val){
-		var $icon;
-		if ($toggle.hasClass(val)) {
-			$icon = $toggle.children("i").eq(0);
-			$toggle.wrapInner('<span class="'+val+'"></span>');
-			$toggle.prepend($icon); // move icon
-		}
-	});
-	$toggle.removeClass("collapsed level-error level-info level-warn"); // collapsed class is never used
-	if ($.trim($target.html()).length < 1) {
-		$group.addClass("empty");
-	}
-	if ($toggle.is(".expanded") || $target.find(".m_error, .m_warn").not(".filter-hidden").length) {
-		// console.warn("expanding because error or uncollapsed", $group, $group.is(":visible"));
-		$toggle.debugEnhance("expand");
-	} else {
-		$toggle.debugEnhance("collapse", true);
-	}
-}
-
-function enhanceStrings($node) {
-	var $entries = $node.is(".group-body")
-		? $node.children()	// .not(".m_group")
-		: $node;
-	// console.log('enhanceStrings', $entries);
-	$entries.each(function(){
-		var $entry = $(this),
-			$strings = $entry.find(".t_string");
-		if (!$entry.is(":visible")) {
-			// console.warn('not visible!!', this);
-			return;
-		}
-		if ($entry.is(".m_group")) {
-			enhanceStrings($entry.find("> .group-body"));
-			return;
-		}
-		if ($entry.is(".enhanced-strings")) {
-			return;
-		}
-		$entry.addClass("enhanced-strings");
-		$strings.each(function() {
-			var $this = $(this),
-				$container,
-				$stringWrap,
-				height = $this.height(),
-				diff = height - 70;
-			if (diff > 35) {
-				$stringWrap = $this.wrap('<div class="show-more-wrapper"></div>').parent();
-				$stringWrap.append('<div class="show-more-fade"></div>');
-				$container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
-				$container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
-				$container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
-			}
-		});
-		createFileLinks($entry, $strings)
-	});
-}
-
-/**
- * Linkify files if not already done or update already linked files
- */
-function updateFileLinks($group) {
-	var remove = !config.linkFiles || config.linkFilesTemplate.length == 0;
-	$group.find("[data-detect-files], .m_error, .m_warn, .m_trace").each(function(){
-		createFileLinks($(this), $(this).find(".t_string"), remove);
-	});
-}
-
-/**
  * Create text editor links for error, warn, & trace
  */
 function createFileLinks($entry, $strings, remove) {
 	var dataDetectFiles = $entry.data("detectFiles"),
 		dataFoundFiles = $entry.data("foundFiles") || [],
 		isUpdate = false;
-	// console.warn('createFileLinks', $entry);
 	if (!config.linkFiles && !remove) {
 		return;
 	}
@@ -312,14 +156,6 @@ function createFileLinks($entry, $strings, remove) {
 		return;
 	}
 	if ($entry.is(".m_error, .m_warn") || dataDetectFiles) {
-		if (dataDetectFiles) {
-			/*
-			console.warn({
-				dataDetectFiles: dataDetectFiles,
-				dataFoundFiles: dataFoundFiles
-			});
-			*/
-		}
 		$strings.each(function(){
 			var $replace,
 				$string = $(this),
@@ -339,7 +175,6 @@ function createFileLinks($entry, $strings, remove) {
 				matches = text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/);
 			}
 			if (matches) {
-				// console.warn('matches', matches);
 				$replace = remove
 					? $("<span>", {
 							html: text,
@@ -355,8 +190,6 @@ function createFileLinks($entry, $strings, remove) {
 						: $replace
 					);
 				} else {
-					// $a.addClass($string.attr("class"));
-					// $a.attr("style", $string.attr("style"));
 					/*
 						attr is not a plain object, but an array of attribute nodes
     					which contain both the name and value
@@ -407,7 +240,154 @@ function createFileLinks($entry, $strings, remove) {
 	}
 }
 
-function enhanceValue(node) {
+/**
+ * Adds expand/collapse functionality to array
+ * does not enhance values
+ */
+function enhanceArray($node) {
+	// console.log("enhanceArray", $node[0]);
+	var isEnhanced = $node.prev().is(".t_array-expand"),
+		$expander = $('<span class="t_array-expand" data-toggle="array">' +
+				'<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
+				'<i class="fa ' + config.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+				'<span class="t_punct">)</span>' +
+			"</span>"),
+		numParents = $node.parentsUntil(".m_group", ".t_object, .t_array").length;
+	if (isEnhanced) {
+		return;
+	}
+	if ($.trim($node.find(".array-inner").html()).length < 1) {
+		// empty array -> don't add expand/collapse
+		$node.find("br").hide();
+		$node.find(".array-inner").hide();
+		return;
+	}
+	// add collapse link
+	$node.find(".t_keyword").first().
+		wrap('<span class="t_array-collapse expanded" data-toggle="array">').
+		after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>').
+		parent().next().remove();	// remove original "("
+	$node.before($expander);
+	if (numParents === 0) {
+		// outermost array -> leave open
+		$node.debugEnhance("expand");
+	} else {
+		$node.find(".t_array-collapse").first().debugEnhance("collapse");
+	}
+}
+
+/**
+ * Enhance log entries
+ */
+export function enhanceEntries($node) {
+	$node.hide();
+	$node.children().each(function() {
+		enhanceEntry($(this));
+	});
+	$node.show();
+	// enhanceLongStrings($node);
+	$node.addClass("enhanced");
+}
+
+/**
+ * Enhance a single log entry
+ * we don't enhance strings by default (add showmore).. needs to be visible to calc height
+ */
+export function enhanceEntry($entry) {
+	// console.log("enhanceEntry", $entry);
+	if ($entry.is(".enhanced")) {
+		return;
+	}
+	// console.log('enhanceEntry', this);
+	if ($entry.is(".m_group")) {
+		enhanceGroup($entry);
+	} else if ($entry.is(".m_trace")) {
+		createFileLinks($entry);
+	} else {
+		// regular log-type entry
+		$entry.children().each(function() {
+			enhanceValue($entry, this);
+		});
+		addIcons($entry);
+	}
+	/*
+	if (inclStrings) {
+		enhanceLongStrings($entry);
+	}
+	*/
+	$entry.addClass("enhanced");
+	$entry.trigger("enhanced.debug");
+}
+
+function enhanceGroup($group) {
+	var $toggle = $group.find("> .group-header"),
+		$target = $toggle.next();
+	addIcons($group);
+	addIcons($toggle);
+	$toggle.attr("data-toggle", "group");
+	$.each(["level-error","level-info","level-warn"], function(i, val){
+		var $icon;
+		if ($toggle.hasClass(val)) {
+			$icon = $toggle.children("i").eq(0);
+			$toggle.wrapInner('<span class="'+val+'"></span>');
+			$toggle.prepend($icon); // move icon
+		}
+	});
+	$toggle.removeClass("collapsed level-error level-info level-warn"); // collapsed class is never used
+	if ($.trim($target.html()).length < 1) {
+		$group.addClass("empty");
+	}
+	if ($toggle.is(".expanded") || $target.find(".m_error, .m_warn").not(".filter-hidden").length) {
+		$toggle.debugEnhance("expand");
+	} else {
+		$toggle.debugEnhance("collapse", true);
+	}
+}
+
+/*
+function enhanceLongStrings($node) {
+	var $entries = $node.is(".group-body")
+		? $node.children()	// .not(".m_group")
+		: $node;
+	// console.log('enhanceLongStrings', $entries);
+	$entries.each(function(){
+		var $entry = $(this),
+			$strings = $entry.find(".t_string");
+		if (!$entry.is(":visible")) {
+			// console.warn('not visible!!', this);
+			return;
+		}
+		if ($entry.is(".m_group")) {
+			enhanceLongStrings($entry.find("> .group-body"));
+			return;
+		}
+		if ($entry.is(".enhanced-strings")) {
+			return;
+		}
+		$entry.addClass("enhanced-strings");
+		$strings.each(function() {
+			enhanceLongString($(this));
+		});
+		createFileLinks($entry, $strings)
+	});
+}
+*/
+
+function enhanceLongString($node) {
+	var $container,
+		$stringWrap,
+		height = $node.height(),
+		diff = height - 70;
+	if (diff > 35) {
+		$stringWrap = $node.wrap('<div class="show-more-wrapper"></div>').parent();
+		$stringWrap.append('<div class="show-more-fade"></div>');
+		$container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
+		$container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
+		$container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
+	}
+}
+
+function enhanceValue($entry, node) {
 	var $node = $(node);
 	if ($node.is(".t_array")) {
 		enhanceArray($node);
@@ -415,7 +395,11 @@ function enhanceValue(node) {
 		enhanceObject.enhance($node);
 	} else if ($node.is("table")) {
 		tableSort.makeSortable($node);
-	} else if ($node.is(".timestamp")) {
+	} else if ($node.is(".t_string")) {
+		enhanceLongString($node);
+		createFileLinks($entry, $node);
+	}
+	if ($node.is(".timestamp")) {
 		var $i = $node.find("i"),
 			text = $node.text(),
 			$span = $("<span>"+text+"</span>");
@@ -432,4 +416,14 @@ function enhanceValue(node) {
 		$node.removeClass("t_float t_int t_string numeric no-pseudo");
 		$node.html($i).append($span);
 	}
+}
+
+/**
+ * Linkify files if not already done or update already linked files
+ */
+function updateFileLinks($group) {
+	var remove = !config.linkFiles || config.linkFilesTemplate.length == 0;
+	$group.find("[data-detect-files], .m_error, .m_warn, .m_trace").each(function(){
+		createFileLinks($(this), $(this).find(".t_string"), remove);
+	});
 }

@@ -182,7 +182,7 @@ $.fn.debugEnhance = function(method, arg1, arg2) {
 				} else {
 					// log entry assumed
 					// console.warn("debugEnhance() : entry");
-					enhanceEntries.enhanceEntry($self, true);
+					enhanceEntries.enhanceEntry($self); // true
 				}
 			}
 		});

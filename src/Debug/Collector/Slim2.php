@@ -42,7 +42,7 @@ class Slim2
             Determine filepath for slim's logger so we skipp over it when determining where warn/errors originate
         */
         $refClass = new \ReflectionClass(\Slim\Slim::getInstance()->log);
-        \bdk\Debug\Utilities::$callerExcludePaths[] = $refClass->getFileName();
+        \bdk\Debug\Utilities::addCallerBreaker('path', $refClass->getFileName());
         $this->debug = $debug;
         $this->prevWriter = $prevWriter;
     }

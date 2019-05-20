@@ -20,8 +20,17 @@ use bdk\Debug\LogEntry;
 class Utilities
 {
 
-    public static $callerExcludePaths = array();
-    public static $callerExcludeClasses = array('bdk\\Debug');
+    /**
+     * Used to determine caller info...
+     * backtrace is walked and we stop when frame matches on of the set classes or filepaths
+     *
+     * @var array
+     */
+    private static $callerBreakers = array(
+        'classes' => array('bdk\\Debug'),
+        'classesRegex' => '/^bdk\\\\Debug\b/',  // we cache a regex of the classes
+        'paths' => array(),
+    );
 
     /**
      * self closing / empty / void html tags
@@ -83,6 +92,32 @@ class Utilities
         'seamless', // <iframe> - removed from draft
         'sortable', // <table> - removed from draft
     );
+
+    /**
+     * add a new namespace, classname or filepath to be used to determine when to
+     * stop iterrating over the backtrace when determining calling info
+     *
+     * @param string       $what 'class' or 'path'
+     * @param string|array $val  'class' : classname(s)|namespace(s)
+     *                           'path' : path(s)
+     *
+     * @return void
+     */
+    public static function addCallerBreaker($what, $val)
+    {
+        if ($what == 'class') {
+            $what = 'classes';
+        } elseif ($what == 'path') {
+            $what = 'paths';
+        }
+        self::$callerBreakers[$what] = \array_merge(self::$callerBreakers[$what], (array) $val);
+        self::$callerBreakers[$what] = \array_unique(self::$callerBreakers[$what]);
+        if ($what == 'classes') {
+            self::$callerBreakers['classesRegex'] = '/^('
+                .\implode('|', \array_map('preg_quote', self::$callerBreakers['classes']))
+                .')\b/';
+        }
+    }
 
     /**
      * "dereference" array
@@ -347,12 +382,11 @@ class Utilities
         */
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 8);
         $numFrames = \count($backtrace);
-        $classExcludeRegex = '/^('.\implode('|', \array_map('preg_quote', self::$callerExcludeClasses)).')\b/';
         for ($i = $numFrames - 1; $i > 1; $i--) {
-            if (isset($backtrace[$i]['class']) && \preg_match($classExcludeRegex, $backtrace[$i]['class'])) {
+            if (isset($backtrace[$i]['class']) && \preg_match(self::$callerBreakers['classesRegex'], $backtrace[$i]['class'])) {
                 break;
             }
-            foreach (self::$callerExcludePaths as $path) {
+            foreach (self::$callerBreakers['paths'] as $path) {
                 if (isset($backtrace[$i]['file']) && \strpos($backtrace[$i]['file'], $path) === 0) {
                     $i++;
                     break 2;

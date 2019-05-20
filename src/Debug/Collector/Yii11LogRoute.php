@@ -61,7 +61,7 @@ class Yii11LogRoute extends CLogRoute
                 $this->{$k} = $v;
             }
         }
-        \bdk\Debug\Utilities::$callerExcludePaths[] = YII_PATH;
+        \bdk\Debug\Utilities::addCallerBreaker('path', YII_PATH);
         $this->debug = $debug;
     }
 

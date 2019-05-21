@@ -75,7 +75,7 @@ class Slim2
     {
         $map = array(
             Log::EMERGENCY => 'error',
-            Log::ALERT => 'error',
+            Log::ALERT => 'alert',
             Log::CRITICAL => 'error',
             Log::ERROR => 'error',
             Log::WARN => 'warn',

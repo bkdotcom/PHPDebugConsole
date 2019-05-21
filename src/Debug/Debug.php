@@ -876,7 +876,7 @@ class Debug
         $label = $args[0];
         if ($floats) {
             $duration = \reset($floats);
-            $this->doTime($label, $duration);
+            $this->doTime($label, $duration, 4, false, $logEntry['meta']);
             return;
         }
         if (isset($label)) {

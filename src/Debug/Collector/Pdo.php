@@ -383,7 +383,7 @@ class Pdo extends PdoBase
     /**
      * Returns the accumulated execution time of statements
      *
-     * @return integer
+     * @return float
      */
     public function getTimeSpent()
     {

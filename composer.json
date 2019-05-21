@@ -35,7 +35,10 @@
 	},
 	"require-dev": {
 		"bdk/css-xpath": "^1.0",
-		"psr/log": "^1.0"
+		"psr/log": "^1.0",
+		"monolog/monolog": "^1.0",
+		"slim/slim": "^2.0",
+		"twig/twig": "^1.0"
 	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",

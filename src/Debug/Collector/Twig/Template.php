@@ -13,26 +13,11 @@ namespace bdk\Debug\Collector\Twig;
 
 use bdk\Debug;
 use bdk\Debug\Collector\Twig;
-/*
-use bdk\Debug\LogEntry;
-use bdk\Debug\Collector\Twig\Template;
-use bdk\PubSub\Event;
-use Twig_CompilerInterface;
-use Twig_Environment;
-use Twig_ExtensionInterface;
-use Twig_LexerInterface;
-use Twig_LoaderInterface;
-use Twig_NodeInterface;
-use Twig_NodeVisitorInterface;
-use Twig_ParserInterface;
-use Twig_TokenParserInterface;
-use Twig_TokenStream;
-*/
 use Twig_Template;
 use Twig_TemplateInterface;
 
 /**
- * A Twig proxy
+ * A Twig Template proxy
  */
 class Template extends Twig_Template implements Twig_TemplateInterface
 {
@@ -65,26 +50,11 @@ class Template extends Twig_Template implements Twig_TemplateInterface
     /**
      * {@inheritDoc}
      */
-    public static function clearCache()
-    {
-        Twig_Template::clearCache();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function display(array $context, array $blocks = array())
     {
         $start = \microtime(true);
         $this->template->display($context, $blocks);
         $end = \microtime(true);
-        /*
-        $timeDataCollector = $this->env->getTimeDataCollector();
-        if ($timeDataCollector) {
-            $name = \sprintf("twig.render(%s)", $this->template->getTemplateName());
-            $timeDataCollector->addMeasure($name, $start, $end);
-        }
-        */
         $this->twig->addRenderedTemplate(array(
             'name' => $this->template->getTemplateName(),
             'duration' => $end - $start,

@@ -83,26 +83,27 @@
 .debug .debug-log .error-fatal { padding: 10px; border-left: solid 2px #d8000c; }
 .debug table { border-collapse: collapse; }
 .debug table caption { font-weight: bold; font-style: italic; padding-bottom: 0; padding-top: 2px; text-align: left; }
-.debug table th, .debug table tfoot td { font-weight: bold; background-color: rgba(0, 0, 0, 0.1); }
 .debug table thead th { text-align: center; }
 .debug table thead th .t_classname { opacity: .50; font-style: italic; }
 .debug table thead th .t_classname:before { content: "("; }
 .debug table thead th .t_classname:after { content: ")"; }
-.debug table td.t_classname { font-weight: bold; }
+.debug table th, .debug table tfoot td { font-weight: bold; background-color: rgba(0, 0, 0, 0.1); }
 .debug table th, .debug table td { padding: 0 .25em; vertical-align: top; }
-.debug table.table-bordered th, .debug table.table-bordered td { border: 1px solid #7F7F7F; padding: 1px .25em; }
 .debug table tbody th.t_int, .debug table td.numeric, .debug table td.t_int { text-align: right; white-space: nowrap; }
-.debug table td.t_key:before, .debug table td.t_key:after, .debug table th.t_key:before, .debug table th.t_key:after { content: none; }
+.debug table th.t_key { white-space: nowrap; }
+.debug table th.t_key:before, .debug table th.t_key:after { content: none; }
+.debug table td.t_classname { font-weight: bold; }
 .debug table td.t_undefined { background-color: rgba(0, 0, 0, 0.1); }
 .debug table td.t_undefined:after { content: none; }
+.debug table.table-bordered th, .debug table.table-bordered td { border: 1px solid #7F7F7F; padding: 1px .25em; }
 .debug table.table-sort > thead th { cursor: default; }
 .debug table.table-sort > thead th:hover { background-color: rgba(0, 0, 0, 0.25); }
-.debug .sort-arrows { text-align: center; height: 1.64em; width: 1.2em; margin-left: 0; margin-right: 1px; }
-.debug .sort-arrows .fa { position: absolute; opacity: .33; }
-.debug .sort-arrows .fa-caret-down { bottom: 0; }
-.debug .sort-arrows .fa-caret-up { top: -1px; }
-.debug .sort-asc .fa-caret-down { opacity: 1; }
-.debug .sort-desc .fa-caret-up { opacity: 1; }
+.debug table.table-sort .sort-arrows { text-align: center; height: 1.64em; width: 1.2em; margin-left: 0; margin-right: 1px; }
+.debug table.table-sort .sort-arrows .fa { position: absolute; opacity: .33; }
+.debug table.table-sort .sort-arrows .fa-caret-down { bottom: 0; }
+.debug table.table-sort .sort-arrows .fa-caret-up { top: -1px; }
+.debug table.table-sort .sort-asc .fa-caret-down { opacity: 1; }
+.debug table.table-sort .sort-desc .fa-caret-up { opacity: 1; }
 .debug .t_bool.true { color: #993; text-shadow: 1px 1px 2px rgba(153, 153, 51, 0.5); }
 .debug .t_bool.false { color: #C33; text-shadow: 1px 1px 2px rgba(204, 51, 51, 0.5); }
 .debug .t_callable { font-weight: bold; }

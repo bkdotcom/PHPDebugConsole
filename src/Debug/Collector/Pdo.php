@@ -24,7 +24,8 @@ use bdk\PubSub\Event;
  */
 class Pdo extends PdoBase
 {
-    public $debug;
+
+    private $debug;
     protected $pdo;
     protected $loggedStatements = array();
 

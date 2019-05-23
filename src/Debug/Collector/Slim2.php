@@ -20,7 +20,7 @@ use Slim\Log;
 class Slim2
 {
 
-    public $debug;
+    private $debug;
     private $prevWriter;
 
     /**

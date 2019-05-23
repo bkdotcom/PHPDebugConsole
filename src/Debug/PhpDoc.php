@@ -279,7 +279,9 @@ class PhpDoc
      */
     private static function parseParams($paramStr)
     {
-        $params = self::splitParams($paramStr);
+        $params = $paramStr
+            ? self::splitParams($paramStr)
+            : array();
         foreach ($params as $i => $str) {
             \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(\S+))?$/', $str, $matches);
             $info = array(

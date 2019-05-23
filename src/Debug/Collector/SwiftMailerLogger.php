@@ -34,6 +34,8 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
 
     private $debug;
     protected $messages = array();
+    protected $iconMeta;
+    protected $useIcon = true;
 
     /**
      * Constructor
@@ -50,6 +52,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
             $debug = $debug->getChannel('SwiftMailer');
         }
         $this->debug = $debug;
+        $this->iconMeta = $this->debug->meta('icon', 'fa fa-envelope-o');
     }
 
     /**
@@ -64,18 +67,14 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     public function beforeSendPerformed(Swift_Events_SendEvent $event)
     {
         $msg = $event->getMessage();
-        $this->debug->log(
+        $this->debug->groupCollapsed(
             'sending email',
-            $msg->getHeaders()->toString(),
-            /*
-            array(
-                'to' => $this->formatEmailAddrs($msg->getTo()),
-                'subject' => $msg->getSubject(),
-                'headers' => $msg->getHeaders()->toString()
-            ),
-            */
-            $this->debug->meta('icon', 'fa fa-envelope-o')
+            $this->formatEmailAddrs($msg->getTo()),
+            $msg->getSubject(),
+            $this->iconMeta
         );
+        $this->debug->log('headers', $msg->getHeaders()->toString());
+        $this->useIcon = false; // don't use icon within group;
     }
 
     /**
@@ -89,7 +88,9 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
      */
     public function sendPerformed(Swift_Events_SendEvent $event)
     {
-        return;
+        $this->debug->groupEnd();
+        $this->clear();
+        $this->useIcon = true;
     }
 
     /**
@@ -104,7 +105,14 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     public function add($entry)
     {
         $this->messages[] = $entry;
-        $this->debug->log($entry, $this->debug->meta('icon', 'fa fa-envelope-o'));
+        $debugArgs = array($entry);
+        if (\preg_match('#^(([-+><])\2) (.+)$#s', $entry, $matches)) {
+            $debugArgs = array($matches[1].':', $matches[3]);
+        }
+        if ($this->useIcon) {
+            $debugArgs[] = $this->iconMeta;
+        }
+        \call_user_func_array(array($this->debug, 'log'), $debugArgs);
     }
 
     /**
@@ -189,6 +197,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     {
         $transportName = \get_class($evt->getSource());
         $this->add(\sprintf('++ %s started', $transportName));
+        $this->clear();
     }
 
     /**
@@ -203,7 +212,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     public function beforeTransportStopped(Swift_Events_TransportChangeEvent $evt)
     {
         $transportName = \get_class($evt->getSource());
-        $this->add(\sprintf('++ Stopping %s', $transportName));
+        $this->add(\sprintf('-- Stopping %s', $transportName));
     }
 
     /**
@@ -218,7 +227,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     public function transportStopped(Swift_Events_TransportChangeEvent $evt)
     {
         $transportName = \get_class($evt->getSource());
-        $this->add(\sprintf('++ %s stopped', $transportName));
+        $this->add(\sprintf('-- %s stopped', $transportName));
     }
 
     /**
@@ -251,7 +260,6 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
      *
      * @return string
      */
-    /*
     protected function formatEmailAddrs($addrs)
     {
         $return = array();
@@ -260,5 +268,4 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
         }
         return \implode(', ', $return);
     }
-    */
 }

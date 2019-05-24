@@ -378,9 +378,14 @@ class Utilities
     public static function getCallerInfo($offset = 0)
     {
         /*
-            backtrace:  index 0 is current position
+            backtrace:
+            index 0 is current position
+            file/line are calling _from_
+            function/class are what's getting called
+
+            Must get at least backtrace 13 frames to account for potential framework loggers
         */
-        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 8);
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 13);
         $numFrames = \count($backtrace);
         for ($i = $numFrames - 1; $i > 1; $i--) {
             if (isset($backtrace[$i]['class']) && \preg_match(self::$callerBreakers['classesRegex'], $backtrace[$i]['class'])) {

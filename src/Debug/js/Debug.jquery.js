@@ -530,6 +530,7 @@
 			enhanceGroup($entry);
 		} else if ($entry.is(".m_trace")) {
 			createFileLinks($entry);
+			addIcons$1($entry);
 		} else {
 			// regular log-type entry
 			$entry.children().each(function() {

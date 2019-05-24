@@ -303,6 +303,7 @@ export function enhanceEntry($entry) {
 		enhanceGroup($entry);
 	} else if ($entry.is(".m_trace")) {
 		createFileLinks($entry);
+		addIcons($entry);
 	} else {
 		// regular log-type entry
 		$entry.children().each(function() {

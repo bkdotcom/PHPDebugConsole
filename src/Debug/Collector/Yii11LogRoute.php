@@ -112,23 +112,26 @@ class Yii11LogRoute extends CLogRoute
     /**
      * Yii's logger appends trace info to log message as a string
      *
-     * @param array $logEntry key/value'd Yii log entry
+     * @param array $logEntry raw/indexed Yii log entry
      *
-     * @return array
+     * @return LogEntry
      */
-    protected function buildLogEntry($logEntry = array())
+    protected function buildLogEntry(array $logEntry)
     {
         $logEntry = \array_combine(
             array('message','level','category','time'),
             $logEntry
         );
-        $logEntry['trace'] = array();
-        $logEntry['file'] = null;
-        $logEntry['line'] = null;
+        $logEntry = \array_merge($logEntry, array(
+            'channel' => null,  // string
+            'meta' => array(),
+            'trace' => array(),
+        ));
         if ($logEntry['level'] == CLogger::LEVEL_TRACE || YII_DEBUG && YII_TRACE_LEVEL>0) {
             // if YII_DEBUG is on, we may have trace info
             $regex = '#^in (.+) \((\d+)\)$#m';
             \preg_match_all($regex, $logEntry['message'], $matches, PREG_SET_ORDER);
+            // remove the trace info from the message
             $logEntry['message'] = \rtrim(\preg_replace($regex, '', $logEntry['message']));
             foreach ($matches as $line) {
                 $logEntry['trace'][] = array(
@@ -136,10 +139,43 @@ class Yii11LogRoute extends CLogRoute
                     'line' => $line[2] * 1,
                 );
             }
+            if ($logEntry['trace']) {
+                $logEntry['meta']['file'] = $logEntry['trace'][0]['file'];
+                $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
+                if ($logEntry['level'] == CLogger::LEVEL_ERROR) {
+                    $logEntry['meta']['backtrace'] = $logEntry['trace'];
+                    unset($logEntry['trace']);
+                }
+            }
         }
-        if ($logEntry['trace']) {
-            $logEntry['file'] = $logEntry['trace'][0]['file'];
-            $logEntry['line'] = $logEntry['trace'][0]['line'];
+        return $this->buildLogEntryChannel($logEntry);
+    }
+
+    /**
+     * [buildLogEntryChannel description]
+     *
+     * @param array $logEntry key/valued Yii log entry
+     *
+     * @return array
+     */
+    protected function buildLogEntryChannel(array $logEntry)
+    {
+        if (\strpos($logEntry['category'], 'system.') === 0) {
+            if (\strpos($logEntry['category'], 'system.caching.') === 0) {
+                $logEntry['category'] = \str_replace('system.caching.', '', $logEntry['category']);
+                $logEntry['channel'] = $logEntry['category']; // ie CFileCache
+                $logEntry['message'] = \preg_replace('# (to|from) cache$#', '', $logEntry['message']);
+                $logEntry['meta']['icon'] = 'fa fa-cube';
+            } elseif ($logEntry['category'] === 'system.CModule') {
+                $logEntry['channel'] = 'CModule';
+                $logEntry['meta']['icon'] = 'fa fa-puzzle-piece';
+            } else {
+                $logEntry['channel'] = 'system misc';
+                $logEntry['meta']['icon'] = 'fa fa-cogs';
+            }
+        } elseif ($logEntry['category'] === 'application') {
+            $logEntry['category'] = null;
+            $logEntry['channel'] = 'app';
         }
         return $logEntry;
     }
@@ -157,7 +193,7 @@ class Yii11LogRoute extends CLogRoute
     /**
      * Get instance of this route
      *
-     * @return [type] [description]
+     * @return Yii11LogRoute
      */
     protected static function getInstance()
     {
@@ -205,10 +241,15 @@ class Yii11LogRoute extends CLogRoute
      */
     protected function levelToMethod($type)
     {
+        /*
+        LEVEL_INFO
+        LEVEL_WARNING
+        LEVEL_ERROR
+        LEVEL_TRACE
+        LEVEL_PROFILE
+        */
         $method = 'log';
-        if ($type == CLogger::LEVEL_INFO) {
-            $method = 'info';
-        } elseif ($type == CLogger::LEVEL_ERROR) {
+        if ($type == CLogger::LEVEL_ERROR) {
             $method = 'error';
         } elseif ($type == CLogger::LEVEL_WARNING) {
             $method = 'warn';
@@ -249,50 +290,33 @@ class Yii11LogRoute extends CLogRoute
      *
      * @return void
      */
-    protected function processLogEntry($logEntry)
+    protected function processLogEntry(array $logEntry)
     {
-        $debug = $this->debug;
-        $meta = array();
-        if (\strpos($logEntry['category'], 'system.') === 0) {
-            if (\strpos($logEntry['category'], 'system.caching.') === 0) {
-                $logEntry['category'] = \str_replace('system.caching.', '', $logEntry['category']);
-                $logEntry['message'] = \preg_replace('# (to|from) cache$#', '', $logEntry['message']);
-                $meta['icon'] = 'fa fa-cube';
-                $debug = $debug->getChannel($logEntry['category']); // ie CFileCache
-            } elseif ($logEntry['category'] === 'system.CModule') {
-                $debug = $debug->getChannel('CModule');
-                $meta['icon'] = 'fa fa-puzzle-piece';
+        $debug = $logEntry['channel']
+            ? $this->debug->getChannel($logEntry['channel'])
+            : $this->debug;
+        if ($logEntry['level'] == CLogger::LEVEL_PROFILE) {
+            if (\strpos($logEntry['message'], 'begin:') === 0) {
+                // add to stack
+                $this->stack[] = $logEntry;
             } else {
-                $debug = $debug->getChannel('system');
-                $meta['icon'] = 'fa fa-cogs';
+                $logEntryBegin = \array_pop($this->stack);
+                $duration = $logEntry['time'] - $logEntryBegin['time'];
+                $debug->time($begin['category'].': '.$begin['message'], $duration);
             }
-        } elseif ($logEntry['category'] === 'application') {
-            $logEntry['category'] = null;
-            $debug = $debug->getChannel('app');
+            return;
         }
         if ($logEntry['level'] == CLogger::LEVEL_TRACE) {
-            $meta['caption'] = $logEntry['category'].': '.$logEntry['message'];
-            $meta['columns'] = array('file','line');
+            $logEntry['meta']['caption'] = $logEntry['category'].': '.$logEntry['message'];
+            $logEntry['meta']['columns'] = array('file','line');
             $debug->log(new LogEntry(
                 $debug,
                 'trace',
                 array(
                     $logEntry['trace'],
                 ),
-                $meta
+                $logEntry['meta']
             ));
-            return;
-        }
-        if ($logEntry['level'] == CLogger::LEVEL_PROFILE) {
-            if (\strpos($logEntry['message'], 'begin:') === 0) {
-                // add to stack
-                // $logEntry['message'] = \substr($logEntry['message'], 6);
-                $this->stack[] = $logEntry;
-            } else {
-                $begin = \array_pop($this->stack);
-                $duration = $logEntry['time'] - $begin['time'];
-                $debug->time($begin['category'].': '.$begin['message'], $duration);
-            }
             return;
         }
         $method = $this->levelToMethod($logEntry['level']);
@@ -301,15 +325,8 @@ class Yii11LogRoute extends CLogRoute
             $args[] = $logEntry['category'].':';
         }
         $args[] = $logEntry['message'];
-        if (\in_array($method, array('error','warn')) && $logEntry['file']) {
-            $meta['file'] = $logEntry['file'];
-            $meta['line'] = $logEntry['line'];
-        }
-        if ($logEntry['trace']) {
-            $meta['backtrace'] = $logEntry['trace'];
-        }
-        if ($meta) {
-            $args[] = $debug->meta($meta);
+        if ($logEntry['meta']) {
+            $args[] = $debug->meta($logEntry['meta']);
         }
         \call_user_func_array(array($debug, $method), $args);
     }

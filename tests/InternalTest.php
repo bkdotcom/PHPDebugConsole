@@ -90,7 +90,7 @@ class InternalTest extends DebugTestFramework
             'logSummary' => $this->debug->getData('logSummary'),
             'requestId' => $this->debug->getData('requestId'),
             'runtime' => $this->debug->getData('runtime'),
-            'rootChannel' => $this->debug->getCfg('channel'),
+            'rootChannel' => $this->debug->getCfg('channelName'),
         );
         $this->assertSame($this->deObjectify($expect), $this->deObjectify($unserialized));
     }
@@ -182,7 +182,6 @@ class InternalTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
-                    'channel' => 'general',
                     'file' => null,
                     'line' => null,
                 ),
@@ -208,7 +207,6 @@ class InternalTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
-                    'channel' => 'general',
                     'file' => null,
                     'line' => null,
                 ),
@@ -236,7 +234,6 @@ class InternalTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
-                    'channel' => 'general',
                     'file' => null,
                     'line' => null,
                 ),
@@ -264,7 +261,6 @@ class InternalTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
-                    'channel' => 'general',
                     'file' => null,
                     'line' => null,
                 ),

@@ -302,12 +302,8 @@ class Output implements SubscriberInterface
                 if ($info['collect']) {
                     unset($this->data['groupStacks'][$priority][$i]);
                     $logEntry = new LogEntry(
-                        $this->debug,
-                        'groupEnd',
-                        array(),
-                        array(
-                            'channel' => $info['channel'],
-                        )
+                        $info['channel'],
+                        'groupEnd'
                     );
                     if ($priority === 'main') {
                         $this->data['log'][] = $logEntry;

@@ -120,7 +120,7 @@ class Internal implements SubscriberInterface
             'requestId',
             'runtime',
         )));
-        $data['rootChannel'] = $this->debug->getCfg('channel');
+        $data['rootChannel'] = $this->debug->getCfg('channelName');
         $body .= $this->debug->utilities->serializeLog($data);
         /*
             Now email
@@ -328,7 +328,6 @@ class Internal implements SubscriberInterface
             $errLoc = $error['file'].' (line '.$error['line'].')';
             $meta = $this->debug->meta(array(
                 'backtrace' => $error['backtrace'],
-                'channel' => 'phpError',
                 'errorCat' => $error['category'],
                 'errorHash' => $error['hash'],
                 'errorType' => $error['type'],
@@ -336,11 +335,15 @@ class Internal implements SubscriberInterface
                 'line' => $error['line'],
                 'sanitize' => $error['isHtml'] === false,
             ));
-            if ($error['type'] & $this->debug->getCfg('errorMask')) {
-                $this->debug->error($error['typeStr'].':', $errLoc, $error['message'], $meta);
-            } else {
-                $this->debug->warn($error['typeStr'].':', $errLoc, $error['message'], $meta);
-            }
+            $method = $error['type'] & $this->debug->getCfg('errorMask')
+                ? 'error'
+                : 'warn';
+            $this->debug->getChannel('phpError')->{$method}(
+                $error['typeStr'].':',
+                $errLoc,
+                $error['message'],
+                $meta
+            );
             $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
             $error['inConsole'] = true;
             // Prevent ErrorHandler\ErrorEmailer from sending email.

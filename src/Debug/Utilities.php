@@ -6,7 +6,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3
+ * @version   v3.0
  */
 
 namespace bdk\Debug;
@@ -605,22 +605,15 @@ class Utilities
      */
     public static function serializeLog($data)
     {
-        $rootChannel = $data['rootChannel'];
         foreach (array('alerts','log','logSummary') as $what) {
             foreach ($data[$what] as $i => $v) {
                 if ($what == 'logSummary') {
                     foreach ($v as $i2 => $v2) {
                         $v2 = $v2->export();
-                        if ($v2['meta']['channel'] == $rootChannel) {
-                            unset($v2['channel']);
-                        }
                         $data['logSummary'][$i][$i2] = \array_values($v2);
                     }
                 } else {
                     $v = $v->export();
-                    if ($v['meta']['channel'] == $rootChannel) {
-                        unset($v['meta']['channel']);
-                    }
                     $data[$what][$i] = \array_values($v);
                 }
             }
@@ -660,20 +653,13 @@ class Utilities
             }
         }
         $data = \unserialize($str);
-        $rootChannel = $data['rootChannel'];
         foreach (array('alerts','log','logSummary') as $what) {
             foreach ($data[$what] as $i => $v) {
                 if ($what == 'logSummary') {
                     foreach ($v as $i2 => $v2) {
-                        if (!isset($v2[2]['channel'])) {
-                            $v2[2]['channel'] = $rootChannel;
-                        }
                         $data['logSummary'][$i][$i2] = new LogEntry($debug, $v2[0], $v2[1], $v2[2]);
                     }
                 } else {
-                    if (!isset($v[2]['channel'])) {
-                        $v[2]['channel'] = $rootChannel;
-                    }
                     $data[$what][$i] = new LogEntry($debug, $v[0], $v[1], $v[2]);
                 }
             }

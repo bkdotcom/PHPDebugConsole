@@ -182,20 +182,21 @@ class Html extends Base
         $str = '';
         $method = $logEntry['method'];
         $meta = \array_merge(array(
-            'channel' => null,
             'class' => null,
             'detectFiles' => null,
             'icon' => null,
             'style' => null,
         ), $logEntry['meta']);
-        if (!\in_array($meta['channel'], $this->channels) && $meta['channel'] !== 'phpError') {
-            $this->channels[] = $meta['channel'];
+        $channelName = $logEntry->getChannel();
+        // phpError channel is handled separately
+        if (!isset($this->channels[$channelName]) && $channelName !== 'phpError') {
+            $this->channels[$channelName] = $logEntry->getSubject();
         }
         $this->detectFiles = $meta['detectFiles'];
         $this->logEntryAttribs = array(
             'class' => 'm_'.$method.' '.$meta['class'],
-            'data-channel' => $meta['channel'] !== $this->channelNameRoot
-                ? $meta['channel']
+            'data-channel' => $channelName !== $this->channelNameRoot
+                ? $channelName
                 : null,
             'data-detect-files' => $meta['detectFiles'],
             'data-icon' => $meta['icon'],
@@ -262,20 +263,19 @@ class Html extends Base
      */
     protected function buildChannelTree()
     {
-        if ($this->channels == array($this->channelNameRoot)) {
+        if (\array_keys($this->channels) == array($this->channelNameRoot)) {
             return array();
         }
-        \sort($this->channels);
+        \ksort($this->channels);
         // move root to the top
-        $rootKey = \array_search($this->channelNameRoot, $this->channels);
-        if ($rootKey !== false) {
-            unset($this->channels[$rootKey]);
-            \array_unshift($this->channels, $this->channelName);
+        if (isset($this->channels[$this->channelNameRoot])) {
+            // move root to the top
+            $this->channels = array($this->channelNameRoot => $this->channels[$this->channelNameRoot]) + $this->channels;
         }
         $tree = array();
-        foreach ($this->channels as $channel) {
+        foreach ($this->channels as $channelName => $channel) {
             $ref = &$tree;
-            $path = \explode('.', $channel);
+            $path = \explode('.', $channelName);
             foreach ($path as $k) {
                 if (!isset($ref[$k])) {
                     $ref[$k] = array();
@@ -327,7 +327,7 @@ class Html extends Base
             'sanitize' => true,
         ), $logEntry['meta']);
         $attribs = \array_merge($this->logEntryAttribs, array(
-            'title' => isset($meta['file']) && $meta['channel'] !== 'phpError'
+            'title' => isset($meta['file']) && $logEntry->getChannel() !== 'phpError'
                 ? $meta['file'].': line '.$meta['line']
                 : null,
         ));

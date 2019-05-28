@@ -376,7 +376,7 @@ class DebugTestFramework extends DOMTestCase
 
     protected function logEntryToArray(LogEntry $logEntry)
     {
-        $return = array_values($logEntry->export(true));
+        $return = array_values($logEntry->export());
         \ksort($return[2]);
         return $return;
     }

@@ -48,7 +48,7 @@ class Debug
     private $channels = array();
     protected $cfg = array();
     protected $data = array();
-    protected $groupStackRef;   // points to $this->groupStacks[x] (where ex = 'main' or (int) priority)
+    protected $groupStackRef;   // points to $this->groupStacks[x] (where x = 'main' or (int) priority)
     protected $logRef;          // points to either log or logSummary[priority]
     protected $config;          // config instance
     protected $parentInstance;
@@ -84,7 +84,8 @@ class Debug
             'file'      => null,            // if a filepath, will receive log data
             'key'       => null,
             'output'    => false,           // output the log?
-            'channel'   => 'general',
+            'channelName' => 'general',
+            'channelIcon' => null,
             'enableProfiling' => false,
             // which error types appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
@@ -144,7 +145,7 @@ class Debug
             'counts'            => array(), // count method
             'entryCountInitial' => 0,       // store number of log entries created during init
             'groupStacks' => array(
-                'main' => array(),  // array('channel' => xxx, 'collect' => xxx)[]
+                'main' => array(),  // array('channel' => Debug, 'collect' => bool)[]
             ),
             'groupPriorityStack' => array(), // array of priorities
                                             //   used to return to the previous summary when groupEnd()ing out of a summary
@@ -368,9 +369,7 @@ class Debug
             $this,
             __FUNCTION__,
             \func_get_args(),
-            array(
-                'channel' => $this->cfg['channel'],
-            ),
+            array(),
             array(
                 'bitmask' => self::CLEAR_LOG,
             ),
@@ -1201,8 +1200,8 @@ class Debug
             )));
             unset($cfg['debug']['onBootstrap']);
             // set channel values
-            $cfg['debug']['channel'] = $this->parentInstance
-                ? $this->cfg['channel'].'.'.$channelName
+            $cfg['debug']['channelName'] = $this->parentInstance
+                ? $this->cfg['channelName'].'.'.$channelName
                 : $channelName;
             $cfg['debug']['parent'] = $this;
             // instantiate channel
@@ -1234,7 +1233,7 @@ class Debug
             foreach ($this->channels as $channel) {
                 $channels = \array_merge(
                     $channels,
-                    array($channel->getCfg('channel') => $channel),
+                    array($channel->getCfg('channelName') => $channel),
                     $channel->getChannels(true)
                 );
             }
@@ -1558,9 +1557,6 @@ class Debug
             return;
         }
         $cfgRestore = array();
-        if (!isset($logEntry['meta']['channel'])) {
-            $logEntry->setMeta('channel', $this->cfg['channel']);
-        }
         if (isset($logEntry['meta']['cfg'])) {
             $cfgRestore = $this->config->setCfg($logEntry['meta']['cfg']);
             $logEntry->setMeta('cfg', null);
@@ -1593,13 +1589,10 @@ class Debug
         $logEntry = new LogEntry(
             $this,
             $method,
-            $args,
-            array(
-                'channel' => $this->cfg['channel'],
-            )
+            $args
         );
         $this->rootInstance->groupStackRef[] = array(
-            'channel' => $logEntry['meta']['channel'],
+            'channel' => $this,
             'collect' => $this->cfg['collect'],
         );
         if (!$this->cfg['collect']) {

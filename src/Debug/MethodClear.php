@@ -48,7 +48,7 @@ class MethodClear
     public function onLog(LogEntry $logEntry)
     {
         $this->channelName = $this->debug->parentInstance
-            ? $logEntry['meta']['channel'] // just clear this specific channel
+            ? $logEntry->getChannel() // just clear this specific channel
             : null;
         $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
@@ -87,13 +87,14 @@ class MethodClear
     /**
      * Test channel for inclussion
      *
-     * @param string $channel channel name to test against
+     * @param LogEntry $logEntry logEntry instance
      *
      * @return boolean
      */
-    private function channelTest($channel)
+    private function channelTest($logEntry)
     {
-        return $this->isRootInstance || \preg_match($this->channelRegex, $channel);
+        $channelName = $logEntry->getChannel();
+        return $this->isRootInstance || \preg_match($this->channelRegex, $channelName);
     }
 
     /**
@@ -111,7 +112,7 @@ class MethodClear
         }
         if ($this->channelName) {
             foreach ($this->data['alerts'] as $i => $logEntry) {
-                if ($this->channelTest($logEntry['meta']['channel'])) {
+                if ($this->channelTest($logEntry)) {
                     unset($this->data['alerts'][$i]);
                 }
             }
@@ -178,7 +179,8 @@ class MethodClear
             }
             $clear2 = $clear;
             if ($this->channelName) {
-                $clear2 = $clear && $logEntry['meta']['channel'] === $this->channelName;
+                $channelName = $logEntry->getChannel();
+                $clear2 = $clear && $channelName === $this->channelName;
             }
             if ($clear2) {
                 unset($log[$k]);
@@ -232,7 +234,8 @@ class MethodClear
         if ($keep || $this->channelName) {
             // we need to go through and filter based on method and/or channel
             foreach ($log as $k => $logEntry) {
-                $channelMatch = !$this->channelName || $logEntry['meta']['channel'] === $this->channelName;
+                $channelName = $logEntry->getChannel();
+                $channelMatch = !$this->channelName || $channelName === $this->channelName;
                 if (\in_array($logEntry['method'], $keep) || !$channelMatch) {
                     $entriesKeep[$k] = $logEntry;
                 }

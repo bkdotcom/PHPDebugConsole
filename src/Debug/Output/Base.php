@@ -51,8 +51,8 @@ abstract class Base implements OutputInterface
             }
             $this->name = $name;
         }
-        $this->channelName = $this->debug->getCfg('channel');
-        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channel');
+        $this->channelName = $this->debug->getCfg('channelName');
+        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
         $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
     }
@@ -123,13 +123,14 @@ abstract class Base implements OutputInterface
     /**
      * Test channel for inclussion
      *
-     * @param string $channel channel name to test against
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return boolean
      */
-    protected function channelTest($channel)
+    protected function channelTest($logEntry)
     {
-        return $this->isRootInstance || \preg_match($this->channelRegex, $channel);
+        $channelName = $logEntry->getChannel();
+        return $this->isRootInstance || \preg_match($this->channelRegex, $channelName);
     }
 
     /**
@@ -422,8 +423,7 @@ abstract class Base implements OutputInterface
     {
         $str = '';
         foreach ($this->data['alerts'] as $logEntry) {
-            $channel = $logEntry->getMeta('channel');
-            if ($this->channelTest($channel)) {
+            if ($this->channelTest($logEntry)) {
                 $str .= $this->processLogEntryViaEvent($logEntry);
             }
         }
@@ -439,8 +439,7 @@ abstract class Base implements OutputInterface
     {
         $str = '';
         foreach ($this->data['log'] as $logEntry) {
-            $channel = $logEntry->getMeta('channel');
-            if ($this->channelTest($channel)) {
+            if ($this->channelTest($logEntry)) {
                 $str .= $this->processLogEntryViaEvent($logEntry);
             }
         }
@@ -460,9 +459,6 @@ abstract class Base implements OutputInterface
     {
         $logEntry = new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta']);
         $logEntry['outputAs'] = $this;
-        if (!isset($logEntry['meta']['channel'])) {
-            $logEntry->setMeta('channel', $this->channelNameRoot);
-        }
         $this->debug->internal->publishBubbleEvent('debug.outputLogEntry', $logEntry);
         if ($logEntry['return'] !== null) {
             return $logEntry['return'];
@@ -563,8 +559,7 @@ abstract class Base implements OutputInterface
             $summaryData = \call_user_func_array('array_merge', $summaryData);
         }
         foreach ($summaryData as $logEntry) {
-            $channel = $logEntry->getMeta('channel');
-            if ($this->channelTest($channel)) {
+            if ($this->channelTest($logEntry)) {
                 $str .= $this->processLogEntryViaEvent($logEntry);
             }
         }

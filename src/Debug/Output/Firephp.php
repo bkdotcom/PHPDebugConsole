@@ -48,7 +48,7 @@ class Firephp extends Base
     public function onOutput(Event $event)
     {
         $this->outputEvent = $event;
-        $this->channelName = $this->debug->getCfg('channel');
+        $this->channelName = $this->debug->getCfg('channelName');
         $this->data = $this->debug->getData();
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);

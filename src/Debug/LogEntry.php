@@ -53,7 +53,7 @@ class LogEntry extends Event
             }
             $this->values['args'] = \array_values($args);
         }
-        $this->values['meta'] = \array_merge(array('channel'=>null), $this->values['meta'], $metaExtracted);
+        $this->setMeta($metaExtracted);
     }
 
     /**
@@ -63,11 +63,27 @@ class LogEntry extends Event
      */
     public function export()
     {
-        return array(
+        $return = array(
             'method' => $this->values['method'],
             'args' => $this->values['args'],
             'meta' => $this->values['meta'],
         );
+        if ($this->subject->parentInstance) {
+            $return['meta']['channel'] = $this->getChannel();
+        }
+        return $return;
+    }
+
+    /**
+     * Return channel name
+     *
+     * shortcut for getSubject()->getCfg('channelName')
+     *
+     * @return string
+     */
+    public function getChannel()
+    {
+        return $this->subject->getCfg('channelName');
     }
 
     /**
@@ -104,6 +120,12 @@ class LogEntry extends Event
             $this->values['meta'] = \array_merge($this->values['meta'], $key);
         } else {
             $this->values['meta'][$key] = $val;
+        }
+        if (isset($this->values['meta']['channel'])) {
+            $this->subject = $this->subject->parentInstance
+                ? $this->subject->parentInstance->getChannel($this->values['meta']['channel'])
+                : $this->subject->getChannel($this->values['meta']['channel']);
+            unset($this->values['meta']['channel']);
         }
     }
 

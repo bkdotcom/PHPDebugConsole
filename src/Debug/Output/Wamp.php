@@ -99,13 +99,12 @@ class Wamp implements OutputInterface
             return;
         }
         $this->processLogEntry(new LogEntry(
-            $this->debug,
+            $this->debug->getChannel('phpError'),
             'errorNotConsoled',
             array(
                 $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message']
             ),
             array(
-                'channel' => 'phpError',
                 'class' => $error['type'] & $this->debug->getCfg('errorMask')
                     ? 'danger'
                     : 'warning',
@@ -139,7 +138,6 @@ class Wamp implements OutputInterface
             array(),
             array(
                 'responseCode' => \http_response_code(),
-                'channel' => $this->debug->getCfg('channel'),
             )
         ));
     }
@@ -158,8 +156,8 @@ class Wamp implements OutputInterface
             'format' => 'raw',
             'requestId' => $this->requestId,
         ), $logEntry['meta']);
-        if ($meta['channel'] == $this->debug->getCfg('channel')) {
-            unset($meta['channel']);
+        if ($logEntry->getSubject() !== $this->debug) {
+            $meta['channel'] = $logEntry->getChannel();
         }
         if ($logEntry['return']) {
             $args = $logEntry['return'];
@@ -232,7 +230,6 @@ class Wamp implements OutputInterface
     private function processExistingData()
     {
         $data = $this->debug->getData();
-        $channelName = $this->debug->getCfg('channel');
         foreach ($data['alerts'] as $logEntry) {
             $this->processLogEntryViaEvent($logEntry);
         }
@@ -242,7 +239,6 @@ class Wamp implements OutputInterface
                 'groupSummary',
                 array(),
                 array(
-                    'channel' => $channelName,
                     'priority' => $priority,
                 )
             ));
@@ -254,7 +250,6 @@ class Wamp implements OutputInterface
                 'groupEnd',
                 array(),
                 array(
-                    'channel' => $channelName,
                     'closesSummary' => true,
                 )
             ));
@@ -315,12 +310,12 @@ class Wamp implements OutputInterface
                 $metaVals,
                 array(
                     'drawer' => $this->debug->getCfg('output.drawer'),
-                    'channelRoot' => $this->debug->rootInstance->getCfg('channel'),
-                    'linkFilesTemplateDefault' => \strtr(\ini_get('xdebug.file_link_format'), array('%f'=>'%file','%l'=>'%line')) ?: null,
+                    'channelRoot' => $this->debug->rootInstance->getCfg('channelName'),
+                    'linkFilesTemplateDefault' => \strtr(
+                        \ini_get('xdebug.file_link_format'),
+                        array('%f'=>'%file', '%l'=>'%line')
+                    ) ?: null,
                 ),
-            ),
-            array(
-                'channel' => $this->debug->getCfg('channel'),
             )
         ));
     }

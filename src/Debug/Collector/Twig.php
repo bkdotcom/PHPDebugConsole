@@ -124,7 +124,7 @@ class Twig extends Twig_Environment
             ))
         );
         $debug->log('rendered templates: ', \count($this->renderedTemplates));
-        $debug->log('total time: ', number_format($this->getTimeSpent(), 5));
+        $debug->time('total time', $this->getTimeSpent());
         $debug->groupEnd();
         $debug->groupEnd();
     }

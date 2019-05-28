@@ -39,7 +39,6 @@ class MethodProfileTest extends DebugTestFramework
                     ksort($logEntry['meta']);
                     $this->assertSame(array(
                         'caption' => "Profile 'Profile 1' Results",
-                        'channel' => 'general',
                         'columns' => array(),
                         'name' => 'Profile 1',
                         'sortable' => true,

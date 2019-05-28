@@ -10,9 +10,8 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->emergency('Emergency broadcast system');
         $meta = array(
-            'channel' => 'general',
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 3,
             'psr3level' => 'emergency',
         );
         $this->assertSame(array(
@@ -26,9 +25,8 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->critical('Critical test');
         $metaExpect = array(
-            'channel' => 'general',
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 3,
             'psr3level' => 'critical',
         );
         $this->assertSame(array(
@@ -68,9 +66,8 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->error('Error test');
         $meta = array(
-            'channel' => 'general',
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 3,
             'psr3level' => 'error',
         );
         $this->assertSame(array(
@@ -84,9 +81,8 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->warning('You\'ve been warned');
         $meta = array(
-            'channel' => 'general',
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 3,
             'psr3level' => 'warning',
         );
         $this->assertSame(array(
@@ -100,9 +96,8 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->notice('Final Notice');
         $meta = array(
-            'channel' => 'general',
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 3,
             'psr3level' => 'notice',
         );
         $this->assertSame(array(
@@ -119,7 +114,6 @@ class LoggerTest extends DebugTestFramework
             'alert',
             array('Alert'),
             array(
-                'channel' => 'general',
                 'dismissible' => false,
                 'level' => 'danger',
             ),
@@ -132,9 +126,7 @@ class LoggerTest extends DebugTestFramework
         $this->assertSame(array(
             'info',
             array('For your information'),
-            array(
-                'channel' => 'general',
-            ),
+            array(),
         ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 
@@ -147,9 +139,7 @@ class LoggerTest extends DebugTestFramework
                 'Awesome debugging',
                 array('foo'=>'bar'),
             ),
-            array(
-                'channel' => 'general',
-            ),
+            array(),
         ), $this->logEntryToArray($this->debug->getData('log/0')));
     }
 }

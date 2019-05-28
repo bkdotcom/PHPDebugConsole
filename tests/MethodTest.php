@@ -72,7 +72,6 @@ class MethodTest extends DebugTestFramework
                     'myCustom',
                     array('How\'s it goin?'),
                     array(
-                        'channel' => 'general',
                         'isCustomMethod' => true,
                     ),
                 ),
@@ -100,7 +99,6 @@ class MethodTest extends DebugTestFramework
                     'myCustom',
                     array('called statically'),
                     array(
-                        'channel' => 'general',
                         'isCustomMethod' => true,
                         'statically' => true,
                     ),
@@ -133,7 +131,6 @@ class MethodTest extends DebugTestFramework
                     'myCustom',
                     array('How\'s it goin?'),
                     array(
-                        'channel' => 'general',
                         'isCustomMethod' => true,
                     ),
                 ),
@@ -161,7 +158,6 @@ class MethodTest extends DebugTestFramework
                     'alert',
                     array($message),
                     array(
-                        'channel' => 'general',
                         'dismissible' => false,
                         'level' => 'danger',
                     ),
@@ -203,9 +199,7 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'assert',
                     array('this is false'),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 ),
                 'chromeLogger' => array(
                     array(false, 'this is false'),
@@ -231,7 +225,6 @@ class MethodTest extends DebugTestFramework
                         $this->file.' (line '.$this->line.')',
                     ),
                     array(
-                        'channel' => 'general',
                         'detectFiles' => true,
                     ),
                 ),
@@ -288,7 +281,6 @@ class MethodTest extends DebugTestFramework
                     array('Cleared log (sans errors)'),
                     array(
                         'bitmask' => \bdk\Debug::CLEAR_LOG,
-                        'channel' => 'general',
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
@@ -345,7 +337,6 @@ class MethodTest extends DebugTestFramework
                     array('Cleared alerts'),
                     array(
                         'bitmask' => \bdk\Debug::CLEAR_ALERTS,
-                        'channel' => 'general',
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => true,
@@ -382,12 +373,12 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(6, $this->debug->getData('log'));
                     $this->assertSame(array(
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         0 => array(),
                         1 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -396,7 +387,6 @@ class MethodTest extends DebugTestFramework
                     array('Cleared summary (sans errors)'),
                     array(
                         'bitmask' => \bdk\Debug::CLEAR_SUMMARY,
-                        'channel' => 'general',
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
@@ -435,14 +425,14 @@ class MethodTest extends DebugTestFramework
                         // 0 => array(1, 1),
                         // 1 => array(1, 1),
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         0 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         1 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -451,7 +441,6 @@ class MethodTest extends DebugTestFramework
                     array('Cleared errors'),
                     array(
                         'bitmask' => \bdk\Debug::CLEAR_LOG_ERRORS,
-                        'channel' => 'general',
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
@@ -490,12 +479,12 @@ class MethodTest extends DebugTestFramework
                         // 0 => array(0, 0),
                         // 1 => array(1, 1),
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         0 => array(),
                         1 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -504,7 +493,6 @@ class MethodTest extends DebugTestFramework
                     array('Cleared everything'),
                     array(
                         'bitmask' => \bdk\Debug::CLEAR_ALL,
-                        'channel' => 'general',
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => true,
@@ -543,12 +531,12 @@ class MethodTest extends DebugTestFramework
                         // 0 => array(0, 0),
                         // 1 => array(1, 1),
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         0 => array(),
                         1 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -557,7 +545,6 @@ class MethodTest extends DebugTestFramework
                     array('Cleared summary (incl errors)'),
                     array(
                         'bitmask' => \bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_SUMMARY_ERRORS,
-                        'channel' => 'general',
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
@@ -672,17 +659,17 @@ class MethodTest extends DebugTestFramework
         $this->debug->count('count_inc test', \bdk\Debug::COUNT_NO_INC);  // (9) //  doesn't increment
 
         $this->assertSame(array(
-            array('count', array('count test',1), array('channel'=>'general')),
-            array('count', array('count test',2), array('channel'=>'general')),
-            array('count', array('count',1), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
-            array('count', array('count',1), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[0])),
-            array('count', array('count test', 3), array('channel'=>'general')),
-            array('count', array('count',2), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
-            array('count', array('count',2), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[0])),
-            array('count', array('count test', 4), array('channel'=>'general')),
-            array('count', array('count',3), array('channel'=>'general','file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
-            array('log', array('count_inc test', 3), array('channel'=>'general')),
-            array('count', array('count_inc test',3), array('channel'=>'general')),
+            array('count', array('count test',1), array()),
+            array('count', array('count test',2), array()),
+            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
+            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[0])),
+            array('count', array('count test', 3), array()),
+            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
+            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[0])),
+            array('count', array('count test', 4), array()),
+            array('count', array('count',3), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
+            array('log', array('count_inc test', 3), array()),
+            array('count', array('count_inc test',3), array()),
         ), array_map(function ($logEntry) {
             return $this->logEntryToArray($logEntry);
         }, $this->debug->getData('log')));
@@ -768,9 +755,7 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'countReset',
                     array('foo', 0),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 ),
                 'chromeLogger' => array(
                     array('foo', 0),
@@ -790,9 +775,7 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'countReset',
                     array('Counter \'noExisty\' doesn\'t exist.'),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 ),
                 'chromeLogger' => array(
                     array('Counter \'noExisty\' doesn\'t exist.'),
@@ -893,14 +876,12 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'group',
                     array('a','b','c'),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 ),
                 'custom' => function () {
                     $this->assertSame(array(
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -945,7 +926,6 @@ class MethodTest extends DebugTestFramework
                     'group',
                     array(__CLASS__.'->testMethod'),
                     array(
-                        'channel' => 'general',
                         'isMethodName' => true,
                     ),
                 ),
@@ -975,7 +955,6 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\TestBase->testBasePublic'
                     ),
                     array(
-                        'channel' => 'general',
                         'isMethodName' => true,
                         'statically' => true,
                     ),
@@ -1006,7 +985,6 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\Test->testBasePublic'
                     ),
                     array(
-                        'channel' => 'general',
                         'isMethodName' => true,
                         'statically' => true,
                     ),
@@ -1039,7 +1017,6 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\TestBase::testBaseStatic'
                     ),
                     array(
-                        'channel' => 'general',
                         'isMethodName' => true,
                         'statically' => true,
                     ),
@@ -1071,7 +1048,6 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\TestBase::testBaseStatic'
                     ),
                     array(
-                        'channel' => 'general',
                         'isMethodName' => true,
                         'statically' => true,
                     ),
@@ -1112,14 +1088,12 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'groupCollapsed',
                     array('a','b','c'),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 ),
                 'custom' => function () {
                     $this->assertSame(array(
                         'main' => array(
-                            0 => array('channel' => 'general', 'collect' => true),
+                            0 => array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -1180,8 +1154,8 @@ class MethodTest extends DebugTestFramework
         $log = $this->debug->getData('log');
         $this->assertCount(2, $log);
         $this->assertSame(array(
-            array('group', array('a','b','c'), array('channel'=>'general')),
-            array('groupEnd', array(), array('channel'=>'general')),
+            array('group', array('a','b','c'), array()),
+            array('groupEnd', array(), array()),
         ), array_map(function ($logEntry) {
             return $this->logEntryToArray($logEntry);
         }, $log));
@@ -1214,9 +1188,7 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'groupEnd',
                     array(),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 ),
                 'custom' => function () {
                     // $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
@@ -1266,9 +1238,7 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'groupEndValue',
                     array('return', 'foo'),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 ),
                 'chromeLogger' => array(
                     array('return', 'foo'),
@@ -1323,7 +1293,7 @@ class MethodTest extends DebugTestFramework
             'main' => array(),
             1 => array(
                 array(
-                    'channel' => 'general',
+                    'channel' => $this->debug,
                     'collect' => true,
                 ),
             ),
@@ -1382,18 +1352,18 @@ EOD;
 
         $logSummary = $this->debug->getData('logSummary/0');
         $this->assertSame(array(
-            array('group',array('group inside summary'), array('channel'=>'general')),
-            array('log',array('I\'m in the summary!'), array('channel'=>'general')),
-            array('groupEnd',array(), array('channel'=>'general')),
-            array('log',array('I\'m still in the summary!'), array('channel'=>'general')),
-            array('log',array('I\'m staying in the summary!'), array('channel'=>'general')),
+            array('group',array('group inside summary'), array()),
+            array('log',array('I\'m in the summary!'), array()),
+            array('groupEnd',array(), array()),
+            array('log',array('I\'m still in the summary!'), array()),
+            array('log',array('I\'m staying in the summary!'), array()),
         ), array_map(function ($logEntry) {
             return $this->logEntryToArray($logEntry);
         }, $logSummary));
         $log = $this->debug->getData('log');
         $this->assertSame(array(
-            array('log',array('I\'m not in the summary'), array('channel'=>'general')),
-            array('log',array('the end'), array('channel'=>'general')),
+            array('log',array('I\'m not in the summary'), array()),
+            array('log',array('the end'), array()),
         ), array_map(function ($logEntry) {
             return $this->logEntryToArray($logEntry);
         }, $log));
@@ -1563,9 +1533,7 @@ EOD;
                         $location,
                         $location,
                     ),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 ),
                 'chromeLogger' => array(
                     $args,
@@ -1621,9 +1589,7 @@ EOD;
                     array(
                         'time: %f sec',
                     ),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
@@ -1660,9 +1626,7 @@ EOD;
                     array(
                         'my label: %f sec',
                     ),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
@@ -1689,9 +1653,7 @@ EOD;
                     $expectFormat = json_encode(array(
                         'time',
                         array("blahmy labelblah%fblah"),
-                        array(
-                            'channel' => 'general',
-                        ),
+                        array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'chromeLogger not same');
                 },
@@ -1745,9 +1707,7 @@ EOD;
                     $expectFormat = json_encode(array(
                         'time',
                         array('time: %f sec'),
-                        array(
-                            'channel' => 'general',
-                        ),
+                        array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
@@ -1774,9 +1734,7 @@ EOD;
                     array(
                         'my label: %f sec',
                     ),
-                    array(
-                        'channel' => 'general',
-                    ),
+                    array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
@@ -1822,9 +1780,7 @@ EOD;
                     $expectFormat = json_encode(array(
                         'time',
                         array("blahmy labelblah%fblah"),
-                        array(
-                            'channel' => 'general',
-                        ),
+                        array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'entry as expected');
                 },
@@ -1869,9 +1825,7 @@ EOD;
                     $expectFormat = json_encode(array(
                         'timeLog',
                         array('time: ', '%f sec'),
-                        array(
-                            'channel' => 'general',
-                        ),
+                        array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
@@ -1899,9 +1853,7 @@ EOD;
                     $expectFormat = json_encode(array(
                         'timeLog',
                         array('my label: ', '%f sec', array('foo'=>'bar')),
-                        array(
-                            'channel' => 'general',
-                        ),
+                        array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
@@ -1935,9 +1887,7 @@ EOD;
                     $expectFormat = json_encode(array(
                         'timeLog',
                         array('Timer \'bogus\' does not exist'),
-                        array(
-                            'channel' => 'general',
-                        ),
+                        array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },

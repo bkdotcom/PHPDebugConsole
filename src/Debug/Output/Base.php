@@ -11,7 +11,6 @@
 
 namespace bdk\Debug\Output;
 
-use bdk\Debug;
 use bdk\Debug\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
@@ -21,7 +20,7 @@ use bdk\PubSub\SubscriberInterface;
 /**
  * Base output plugin
  */
-abstract class Base implements OutputInterface
+abstract class Base implements OutputInterface, SubscriberInterface
 {
 
     public $debug;
@@ -36,12 +35,9 @@ abstract class Base implements OutputInterface
 
     /**
      * Constructor
-     *
-     * @param \bdk\Debug $debug debug instance
      */
-    public function __construct(Debug $debug)
+    public function __construct()
     {
-        $this->debug = $debug;
         if (!$this->name) {
             $name = \get_called_class();
             $idx = \strrpos($name, '\\');
@@ -51,10 +47,6 @@ abstract class Base implements OutputInterface
             }
             $this->name = $name;
         }
-        $this->channelName = $this->debug->getCfg('channelName');
-        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
-        $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
-        $this->isRootInstance = $this->debug->rootInstance === $this->debug;
     }
 
     /**
@@ -99,7 +91,24 @@ abstract class Base implements OutputInterface
     {
         return array(
             'debug.output' => 'onOutput',
+            'debug.pluginInit' => 'init',
         );
+    }
+
+    /**
+     * debug.pluginInit subscriber
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function init(Event $event)
+    {
+        $this->debug = $event->getSubject();
+        $this->channelName = $this->debug->getCfg('channelName');
+        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
+        $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
+        $this->isRootInstance = $this->debug->rootInstance === $this->debug;
     }
 
     /**

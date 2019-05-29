@@ -23,7 +23,7 @@ class LogEntry extends Event
     /**
      * Construct a log entry
      *
-     * @param Debug  $subject     Debug instance or OutputInterface
+     * @param Debug  $subject     Debug instance
      * @param string $method      Debug method
      * @param array  $args        arguments passed to method (may include meta args)
      * @param array  $meta        default meta values

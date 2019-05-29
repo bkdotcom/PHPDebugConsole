@@ -11,7 +11,6 @@
 
 namespace bdk\Debug\Output;
 
-use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
@@ -29,17 +28,6 @@ class Html extends Base
     protected $logEntryAttribs = array();
     protected $channels = array();
     protected $detectFiles = false;
-
-    /**
-     * Constructor
-     *
-     * @param \bdk\Debug $debug debug instance
-     */
-    public function __construct(Debug $debug)
-    {
-        $this->errorSummary = new HtmlErrorSummary($this, $debug->errorHandler);
-        parent::__construct($debug);
-    }
 
     /**
      * Dump value as html
@@ -72,6 +60,19 @@ class Html extends Base
         }
         $this->argAttribs = array();
         return $val;
+    }
+
+    /**
+     * debug.pluginInit subscriber
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function init(Event $event)
+    {
+        parent::init($event);
+        $this->errorSummary = new HtmlErrorSummary($this, $this->debug->errorHandler);
     }
 
     /**

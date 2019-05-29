@@ -33,6 +33,7 @@ class File extends Text
         return array(
             'debug.config' => 'onConfig',
             'debug.log' => 'onLog',
+            'debug.pluginInit' => 'init', // 'init' inherited from Text/Base class
         );
     }
 

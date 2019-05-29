@@ -17,12 +17,14 @@ namespace bdk\Debug\Output;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
+use bdk\PubSub\Event;
+use bdk\PubSub\SubscriberInterface;
 use bdk\WampPublisher;
 
 /**
  * PHPDebugConsole plugin for routing debug messages thru WAMP router
  */
-class Wamp implements OutputInterface
+class Wamp implements SubscriberInterface
 {
 
     public $debug;
@@ -38,21 +40,11 @@ class Wamp implements OutputInterface
     /**
      * Constructor
      *
-     * @param Debug         $debug Debug instance
-     * @param WampPublisher $wamp  WAMP Publisher instance
+     * @param WampPublisher $wamp WAMP Publisher instance
      */
-    public function __construct(Debug $debug, WampPublisher $wamp)
+    public function __construct(WampPublisher $wamp)
     {
-        $this->debug = $debug;
         $this->wamp = $wamp;
-        $this->requestId = $this->debug->getData('requestId');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function dump($val)
-    {
     }
 
     /**
@@ -62,17 +54,30 @@ class Wamp implements OutputInterface
      */
     public function getSubscriptions()
     {
-        if (!$this->isConnected()) {
-            $this->debug->alert('WAMP publisher not connected to WAMP router');
-            return array();
-        }
-        $this->publishMeta();
-        $this->processExistingData();
         return array(
             'debug.log' => array('onLog', PHP_INT_MAX * -1),
+            'debug.pluginInit' => 'init',
             'errorHandler.error' => 'onError',    // assumes errorhandler is using same dispatcher.. as should be
             'php.shutdown' => array('onShutdown', PHP_INT_MAX * -1),
         );
+    }
+
+    /**
+     * debug.pluginInit subscriber
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function init(Event $event)
+    {
+        $this->debug = $event->getSubject();
+        $this->requestId = $this->debug->getData('requestId');
+        if (!$this->isConnected()) {
+            $this->debug->alert('WAMP publisher not connected to WAMP router');
+        }
+        $this->publishMeta();
+        $this->processExistingData();
     }
 
     /**

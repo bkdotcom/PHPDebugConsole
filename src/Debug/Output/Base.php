@@ -15,12 +15,11 @@ use bdk\Debug\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
-use bdk\PubSub\SubscriberInterface;
 
 /**
  * Base output plugin
  */
-abstract class Base implements OutputInterface, SubscriberInterface
+abstract class Base implements OutputInterface
 {
 
     public $debug;

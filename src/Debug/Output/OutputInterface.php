@@ -12,11 +12,12 @@
 namespace bdk\Debug\Output;
 
 use bdk\Debug\LogEntry;
+use bdk\PubSub\SubscriberInterface;
 
 /**
  * Base output plugin
  */
-interface OutputInterface
+interface OutputInterface extends SubscriberInterface
 {
 
     /**

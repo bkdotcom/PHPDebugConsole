@@ -16,15 +16,15 @@ namespace bdk\Debug\Output;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Output\OutputInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
-use bdk\PubSub\SubscriberInterface;
 use bdk\WampPublisher;
 
 /**
  * PHPDebugConsole plugin for routing debug messages thru WAMP router
  */
-class Wamp implements SubscriberInterface
+class Wamp implements OutputInterface
 {
 
     public $debug;
@@ -48,6 +48,14 @@ class Wamp implements SubscriberInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function dump($val)
+    {
+        return $val;
+    }
+
+     /**
      * Return a list of event subscribers
      *
      * @return array The event names to subscribe to

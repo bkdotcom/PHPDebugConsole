@@ -397,31 +397,25 @@ class Output implements SubscriberInterface
             $this->debug->removePlugin($this->cfg['outputAs']);
             $this->cfg['outputAs'] = null;
         }
-        $prop = null;
-        $obj = null;
         if (\is_string($outputAs)) {
             $prop = $outputAs;
             $classname = __NAMESPACE__.'\\Output\\'.\ucfirst($outputAs);
             if (\property_exists($this, $prop)) {
-                $obj = $this->{$prop};
+                $outputAs = $this->{$prop};
             } elseif (\class_exists($classname)) {
-                $obj = new $classname();
+                $outputAs = new $classname();
             }
-        } elseif ($outputAs instanceof OutputInterface) {
+        }
+        if ($outputAs instanceof OutputInterface) {
+            $this->debug->addPlugin($outputAs);
             $classname = \get_class($outputAs);
             $prefix = __NAMESPACE__.'\\Output\\';
             if (\strpos($classname, $prefix) == 0) {
                 $prop = \substr($classname, \strlen($prefix));
                 $prop = \lcfirst($prop);
+                $this->{$prop} = $outputAs;
             }
-            $obj = $outputAs;
-        }
-        if ($obj) {
-            $this->debug->addPlugin($obj);
-            $this->cfg['outputAs'] = $obj;
-            if ($prop) {
-                $this->{$prop} = $obj;
-            }
+            $this->cfg['outputAs'] = $outputAs;
         }
     }
 

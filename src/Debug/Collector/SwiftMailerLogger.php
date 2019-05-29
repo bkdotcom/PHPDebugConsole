@@ -34,6 +34,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
 
     private $debug;
     protected $messages = array();
+    protected $icon = 'fa fa-envelope-o';
     protected $iconMeta;
     protected $useIcon = true;
 
@@ -47,12 +48,12 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     public function __construct(Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('SwiftMailer');
+            $debug = \bdk\Debug::_getChannel('SwiftMailer', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('SwiftMailer');
+            $debug = $debug->getChannel('SwiftMailer', array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
-        $this->iconMeta = $this->debug->meta('icon', 'fa fa-envelope-o');
+        $this->iconMeta = $this->debug->meta('icon', $this->icon);
     }
 
     /**

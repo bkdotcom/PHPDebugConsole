@@ -28,6 +28,7 @@ class Pdo extends PdoBase
     private $debug;
     protected $pdo;
     protected $loggedStatements = array();
+    protected $icon = 'fa fa-database';
 
     /**
      * Constructor
@@ -40,9 +41,9 @@ class Pdo extends PdoBase
     public function __construct(\PDO $pdo, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('PDO');
+            $debug = \bdk\Debug::_getChannel('PDO', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('PDO');
+            $debug = $debug->getChannel('PDO', array('channelIcon' => $this->icon));
         }
         $this->pdo = $pdo;
         $this->debug = $debug;
@@ -117,12 +118,12 @@ class Pdo extends PdoBase
             $this->pdo->getAttribute(PDO::ATTR_CONNECTION_STATUS),
             $debug->meta(array(
                 'argsAsParams' => false,
-                'icon' => 'fa fa-database',
+                'icon' => $this->icon,
                 'level' => 'info',
             ))
         );
         $debug->log('logged operations: ', \count($this->loggedStatements));
-        $debug->log('total time: ', $this->getTimeSpent());
+        $debug->time('total time', $this->getTimeSpent());
         $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));
         $debug->log('server info', $serverInfo);
         $debug->groupEnd();
@@ -363,7 +364,7 @@ class Pdo extends PdoBase
             $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
         }
         $this->debug->groupCollapsed($label, $this->debug->meta(array(
-            'icon' => 'fa fa-database',
+            'icon' => $this->icon,
             'boldLabel' => false,
         )));
         if ($logSql) {
@@ -388,10 +389,9 @@ class Pdo extends PdoBase
      */
     public function getTimeSpent()
     {
-        $time = \array_reduce($this->loggedStatements, function ($val, StatementInfo $info) {
+        return \array_reduce($this->loggedStatements, function ($val, StatementInfo $info) {
             return $val + $info->duration;
         });
-        return \round($time, 6);
     }
 
     /**

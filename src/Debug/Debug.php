@@ -84,8 +84,9 @@ class Debug
             'file'      => null,            // if a filepath, will receive log data
             'key'       => null,
             'output'    => false,           // output the log?
-            'channelName' => 'general',
             'channelIcon' => null,
+            'channelName' => 'general',
+            'channelShow' => true,          // wheter initially filtered or not
             'enableProfiling' => false,
             // which error types appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR

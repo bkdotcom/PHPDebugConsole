@@ -278,9 +278,15 @@ class Html extends Base
             $path = \explode('.', $channelName);
             foreach ($path as $k) {
                 if (!isset($ref[$k])) {
-                    $ref[$k] = array();
+                    $ref[$k] = array(
+                        'options' => array(
+                            'icon' => $channel->getCfg('channelIcon'),
+                            'show' => $channel->getCfg('channelShow'),
+                        ),
+                        'channels' => array(),
+                    );
                 }
-                $ref = &$ref[$k];
+                $ref = &$ref[$k]['channels'];
             }
         }
         return $tree;

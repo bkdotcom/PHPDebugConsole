@@ -91,6 +91,16 @@ class InternalTest extends DebugTestFramework
             'requestId' => $this->debug->getData('requestId'),
             'runtime' => $this->debug->getData('runtime'),
             'rootChannel' => $this->debug->getCfg('channelName'),
+            'channels' => array(
+                'foo' => array(
+                    'channelIcon' => null,
+                    'channelShow' => true,
+                ),
+                'phpError' => array(
+                    'channelIcon' => null,
+                    'channelShow' => true,
+                ),
+            )
         );
         $this->assertSame($this->deObjectify($expect), $this->deObjectify($unserialized));
     }

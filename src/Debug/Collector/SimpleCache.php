@@ -23,6 +23,7 @@ class SimpleCache implements CacheInterface
 {
     public $debug;
     protected $cache;
+    protected $icon = 'fa fa-cube';
     protected $loggedActions = array();
 
     /**
@@ -36,9 +37,9 @@ class SimpleCache implements CacheInterface
     public function __construct(CacheInterface $cache, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('SimpleCache');
+            $debug = \bdk\Debug::_getChannel('SimpleCache', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('SimpleCache');
+            $debug = $debug->getChannel('SimpleCache', array('channelIcon' => $this->icon));
         }
         $this->cache = $cache;
         $this->debug = $debug;
@@ -214,7 +215,7 @@ class SimpleCache implements CacheInterface
         $this->loggedActions[] = $info;
         $this->debug->log(
             $info->method.'('.\json_encode($info->keyOrKeys).') took '.\number_format($info->duration, 5) .'sec',
-            $this->debug->meta('icon', 'fa fa-cube')
+            $this->debug->meta('icon', $this->icon)
         );
     }
 

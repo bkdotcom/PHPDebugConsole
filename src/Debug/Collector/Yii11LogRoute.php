@@ -123,7 +123,7 @@ class Yii11LogRoute extends CLogRoute
             $logEntry
         );
         $logEntry = \array_merge($logEntry, array(
-            'channel' => null,  // string
+            'channel' => $this->debug,
             'meta' => array(),
             'trace' => array(),
         ));
@@ -146,13 +146,15 @@ class Yii11LogRoute extends CLogRoute
                     $logEntry['meta']['backtrace'] = $logEntry['trace'];
                     unset($logEntry['trace']);
                 }
+            } else {
+                $logEntry['level'] = CLogger::LEVEL_INFO;
             }
         }
         return $this->buildLogEntryChannel($logEntry);
     }
 
     /**
-     * [buildLogEntryChannel description]
+     * Determine channel
      *
      * @param array $logEntry key/valued Yii log entry
      *
@@ -162,20 +164,24 @@ class Yii11LogRoute extends CLogRoute
     {
         if (\strpos($logEntry['category'], 'system.') === 0) {
             if (\strpos($logEntry['category'], 'system.caching.') === 0) {
-                $logEntry['category'] = \str_replace('system.caching.', '', $logEntry['category']);
-                $logEntry['channel'] = $logEntry['category']; // ie CFileCache
+                $category = \str_replace('system.caching.', '', $logEntry['category']);
+                $icon = 'fa fa-cube';
+                $logEntry['category'] = $category;
+                $logEntry['channel'] = $this->debug->getChannel($category, array('channelIcon' => $icon));
                 $logEntry['message'] = \preg_replace('# (to|from) cache$#', '', $logEntry['message']);
-                $logEntry['meta']['icon'] = 'fa fa-cube';
+                $logEntry['meta']['icon'] = $icon;
             } elseif ($logEntry['category'] === 'system.CModule') {
-                $logEntry['channel'] = 'CModule';
-                $logEntry['meta']['icon'] = 'fa fa-puzzle-piece';
+                $icon = 'fa fa-puzzle-piece';
+                $logEntry['channel'] = $this->debug->getChannel('CModule', array('channelIcon' => $icon));
+                $logEntry['meta']['icon'] = $icon;
             } else {
-                $logEntry['channel'] = 'system misc';
-                $logEntry['meta']['icon'] = 'fa fa-cogs';
+                $icon = 'fa fa-cogs';
+                $logEntry['channel'] = $this->debug->getChannel('system misc', array('channelIcon' => $icon));
+                $logEntry['meta']['icon'] = $icon;
             }
         } elseif ($logEntry['category'] === 'application') {
             $logEntry['category'] = null;
-            $logEntry['channel'] = 'app';
+            $logEntry['channel'] = $this->debug->getChannel('app');
         }
         return $logEntry;
     }
@@ -292,9 +298,7 @@ class Yii11LogRoute extends CLogRoute
      */
     protected function processLogEntry(array $logEntry)
     {
-        $debug = $logEntry['channel']
-            ? $this->debug->getChannel($logEntry['channel'])
-            : $this->debug;
+        $debug = $logEntry['channel'];
         if ($logEntry['level'] == CLogger::LEVEL_PROFILE) {
             if (\strpos($logEntry['message'], 'begin:') === 0) {
                 // add to stack

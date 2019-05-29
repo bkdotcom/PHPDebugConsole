@@ -55,6 +55,7 @@ class Twig extends Twig_Environment
     protected $debug;
     protected $renderedTemplates = array();
     protected $twig;
+    protected $icon = 'fa fa-file-text-o';
 
     /**
      * Constructor
@@ -67,9 +68,9 @@ class Twig extends Twig_Environment
     public function __construct(Twig_Environment $twig, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('Twig');
+            $debug = \bdk\Debug::_getChannel('Twig', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('Twig');
+            $debug = $debug->getChannel('Twig', array('channelIcon' => $this->icon));
         }
         $this->twig = $twig;
         $this->debug = $debug;
@@ -100,7 +101,7 @@ class Twig extends Twig_Environment
     {
         $this->renderedTemplates[] = $info;
         $this->debug->time('Rendered Template: '.$info['name'], $info['duration'], $this->debug->meta(array(
-            'icon' => 'fa fa-file-text-o',
+            'icon' => $this->icon,
         )));
     }
 
@@ -119,7 +120,7 @@ class Twig extends Twig_Environment
             'Twig info',
             $debug->meta(array(
                 'argsAsParams' => false,
-                'icon' => 'fa fa-file-text-o',
+                'icon' => $this->icon,
                 'level' => 'info',
             ))
         );

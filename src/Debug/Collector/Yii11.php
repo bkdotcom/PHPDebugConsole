@@ -70,7 +70,8 @@ class Yii11 implements SubscriberInterface
     {
         $db = $this->yiiApp->db;
         $pdo = $db->pdoInstance;
-        $pdoChannel = $this->debug->rootInstance->getChannel('PDO');
+        // nest the PDO channel under our Yii channel
+        $pdoChannel = $this->debug->getChannel('PDO', array('channelIcon'=>'fa fa-database'));
         $pdoCollector = new \bdk\Debug\Collector\Pdo($pdo, $pdoChannel);
         $pdoProp = new \ReflectionProperty($db, '_pdo');
         $pdoProp->setAccessible(true);

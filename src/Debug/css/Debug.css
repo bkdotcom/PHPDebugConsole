@@ -191,7 +191,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-sidebar .debug-filters ul { margin-left: 0; }
 .debug .debug-sidebar .debug-filters li { padding-left: 10px; }
 .debug .debug-sidebar .debug-filters > li { padding-left: 8px; }
-.debug .debug-sidebar .debug-filters label { padding: 2px 0 2px 100%; }
+.debug .debug-sidebar .debug-filters label { padding: 2px 0 2px 100%; white-space: nowrap; }
 .debug .debug-sidebar .debug-filters label.disabled span { /*
 color: #818a91
 */ opacity: 0.5; }

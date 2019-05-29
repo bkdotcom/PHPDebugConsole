@@ -33,6 +33,7 @@ class Wamp implements OutputInterface
     protected $channelName = '';
     protected $detectFiles = false;
     protected $foundFiles = array();
+    protected $channelNames = array();
 
     /**
      * Constructor
@@ -158,6 +159,11 @@ class Wamp implements OutputInterface
         ), $logEntry['meta']);
         if ($logEntry->getSubject() !== $this->debug) {
             $meta['channel'] = $logEntry->getChannel();
+            if (!\in_array($meta['channel'], $this->channelNames)) {
+                $meta['channelIcon'] = $logEntry->getSubject()->getCfg('channelIcon');
+                $meta['channelShow'] = $logEntry->getSubject()->getCfg('channelShow');
+                $this->channelNames[] = $meta['channel'];
+            }
         }
         if ($logEntry['return']) {
             $args = $logEntry['return'];

@@ -1424,33 +1424,41 @@
 	function buildChannelList(channels, channelRoot, checkedChannels, prepend) {
 		var $ul = $('<ul class="list-unstyled">'),
 			$li,
+			$label,
 			channel,
-			$label;
-		// checkedChannels = checkedChannels || [];
+			channelName = '',
+			isChecked = true;
 		prepend = prepend || "";
 		if ($.isArray(channels)) {
 			channels = channelsToTree(channels);
 		}
-		for (channel in channels) {
-			if (channel === "phpError") {
+		// console.log('channels', channels);
+		// console.warn('checkedChannels', checkedChannels);
+		for (channelName in channels) {
+			if (channelName === "phpError") {
 				// phpError is a special channel
 				continue;
 			}
-			$li = $("<li>");
+			channel = channels[channelName];
+			isChecked = checkedChannels !== undefined
+				? checkedChannels.indexOf(prepend + channelName) > -1
+				: true;
 			$label = $('<label>', {
-				"class": "toggle active",
-			}).append($("<input>", {
-				checked: checkedChannels
-					? checkedChannels.indexOf(prepend + channel) > -1
-					: true,
-				"data-is-root": channel == channelRoot,
-				"data-toggle": "channel",
-				type: "checkbox",
-				value: prepend + channel
-			})).append(" " + channel);
-			$li.append($label);
-			if (Object.keys(channels[channel]).length) {
-				$li.append(buildChannelList(channels[channel], channelRoot, checkedChannels, prepend + channel + "."));
+					"class": "toggle",
+				}).append($("<input>", {
+					checked: isChecked,
+					"data-is-root": channelName == channelRoot,
+					"data-toggle": "channel",
+					type: "checkbox",
+					value: prepend + channelName
+				})).append(" " + channelName);
+			$label.toggleClass("active", isChecked);
+			$li = $("<li>").append($label);
+			if (channel.options.icon) {
+				$li.find('label').prepend($('<i>', {"class": channel.options.icon}));
+			}
+			if (Object.keys(channel.channels).length) {
+				$li.append(buildChannelList(channel.channels, channelRoot, checkedChannels, prepend + channelName + "."));
 			}
 			$ul.append($li);
 		}
@@ -1459,17 +1467,28 @@
 
 	function channelsToTree(channels) {
 		var channelTree = {},
+			channel,
 			ref,
 			i, i2,
 			path;
+		channels = channels.sort(function(a,b){
+			return a.name < b.name;
+		});
 		for (i = 0; i < channels.length; i++) {
 			ref = channelTree;
-			path = channels[i].split('.');
+			channel = channels[i];
+			path = channel.name.split('.');
 			for (i2 = 0; i2 < path.length; i2++) {
 				if (!ref[ path[i2] ]) {
-					ref[ path[i2] ] = {};
+					ref[ path[i2] ] = {
+						options: {
+							icon: i2 == path.length - 1 ? channel.icon : null,
+							show: i2 == path.length - 1 ? channel.show : null
+						},
+						channels: {}
+					};
 				}
-				ref = ref[ path[i2] ];
+				ref = ref[ path[i2] ].channels;
 			}
 		}
 		return channelTree;

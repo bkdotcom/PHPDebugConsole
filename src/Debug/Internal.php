@@ -121,6 +121,12 @@ class Internal implements SubscriberInterface
             'runtime',
         )));
         $data['rootChannel'] = $this->debug->getCfg('channelName');
+        $data['channels'] = \array_map(function ($channel) {
+            return array(
+                'channelIcon' => $channel->getCfg('channelIcon'),
+                'channelShow' => $channel->getCfg('channelShow'),
+            );
+        }, $this->debug->getChannels(true));
         $body .= $this->debug->utilities->serializeLog($data);
         /*
             Now email

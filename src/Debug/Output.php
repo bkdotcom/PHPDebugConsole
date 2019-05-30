@@ -403,7 +403,7 @@ class Output implements SubscriberInterface
             if (\property_exists($this, $prop)) {
                 $outputAs = $this->{$prop};
             } elseif (\class_exists($classname)) {
-                $outputAs = new $classname();
+                $outputAs = new $classname($this->debug);
             }
         }
         if ($outputAs instanceof OutputInterface) {

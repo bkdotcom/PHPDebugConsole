@@ -40,11 +40,14 @@ class Wamp implements OutputInterface
     /**
      * Constructor
      *
-     * @param WampPublisher $wamp WAMP Publisher instance
+     * @param Debug         $debug Debug instance
+     * @param WampPublisher $wamp  WAMP Publisher instance
      */
-    public function __construct(WampPublisher $wamp)
+    public function __construct(Debug $debug, WampPublisher $wamp)
     {
+        $this->debug = $debug;
         $this->wamp = $wamp;
+        $this->requestId = $this->debug->getData('requestId');
     }
 
     /**
@@ -62,6 +65,10 @@ class Wamp implements OutputInterface
      */
     public function getSubscriptions()
     {
+        if (!$this->isConnected()) {
+            $this->debug->alert('WAMP publisher not connected to WAMP router');
+            return array();
+        }
         return array(
             'debug.log' => array('onLog', PHP_INT_MAX * -1),
             'debug.pluginInit' => 'init',
@@ -79,11 +86,6 @@ class Wamp implements OutputInterface
      */
     public function init(Event $event)
     {
-        $this->debug = $event->getSubject();
-        $this->requestId = $this->debug->getData('requestId');
-        if (!$this->isConnected()) {
-            $this->debug->alert('WAMP publisher not connected to WAMP router');
-        }
         $this->publishMeta();
         $this->processExistingData();
     }

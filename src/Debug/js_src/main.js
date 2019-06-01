@@ -144,9 +144,6 @@ $.fn.debugEnhance = function(method, arg1, arg2) {
 	} else if (method === "expand") {
 		expandCollapse.expand($self);
 	} else if (method === "init") {
-		// dataOptions = $self.eq(0).data("options") || {};
-		// lsOptions = http.lsGet("phpDebugConsole") || {};
-		// options = $.extend({}, optionsDefault, dataOptions, lsOptions);
 		config.set($self.eq(0).data("options") || {});
 		if (typeof arg1 == "object") {
 			config.set(arg1);
@@ -177,7 +174,7 @@ $.fn.debugEnhance = function(method, arg1, arg2) {
 				$self.find(".m_alert, .debug-log-summary, .debug-log").debugEnhance();
 			} else if (!$self.is(".enhanced")) {
 				if ($self.is(".group-body")) {
-					// console.warn("debugEnhance() : .group-body");
+					// console.warn("debugEnhance() : .group-body", $self);
 					enhanceEntries.enhanceEntries($self);
 				} else {
 					// log entry assumed

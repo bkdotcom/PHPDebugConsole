@@ -239,9 +239,8 @@ class Yii11 implements SubscriberInterface
         } elseif ($event['category'] === 'fatal') {
             // Yii's  error handler exits (for reasons)
             //    exit within shutdown procedure = immediate exit
-            //    manually publish the shutdown event
-            // remaining error subscribers aren't going to get called because of the exit...
-            $this->debug->rootInstance->eventManager->unregister(); // don't get caught in a loop
+            //    manually publish the shutdown event before calling yii's error handler
+            $this->debug->rootInstance->errorHandler->unregister(); // don't get caught in a loop
             $this->debug->rootInstance->eventManager->publish('php.shutdown');
             $this->yiiApp->handleError($event['type'], $event['message'], $event['file'], $event['line']);
         }

@@ -54,6 +54,11 @@ export function init($delegateNode) {
 			.trigger("collapsed.debug.group");
 		updateFilterStatus($root);
 	});
+
+	$delegateNode.on("channelAdded.debug", function(e) {
+		var $root = $(e.target).closest(".debug");
+		updateFilterStatus($root);
+	});
 }
 
 export function addTest(func) {

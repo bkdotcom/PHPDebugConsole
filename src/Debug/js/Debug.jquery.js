@@ -230,7 +230,9 @@
 		}
 	}
 
-	var config$1;
+	var config$1,
+		expandStack = [],
+		strings = [];
 
 	function init$1($root, conf) {
 		config$1 = conf.config;
@@ -260,48 +262,50 @@
 			$container.find(".show-more").show();
 			$container.find(".show-less").hide();
 		});
+		$root.on("config.debug.updated", function(e, changedOpt){
+			e.stopPropagation();
+			if (changedOpt == "linkFilesTemplate") {
+				updateFileLinks($root);
+			}
+		});
 		$root.on("expand.debug.array", function(e){
 			var $node = $(e.target),
-				$entry;
-			if ($node.is(".enhanced")) {
-				return;
-			}
-			$entry = $node.closest("li[class*=m_]");
+				$entry = $node.closest("li[class*=m_]");
+			e.stopPropagation();
+			expandStack.push($node);
 			$node.find("> .array-inner > .key-value > :last-child").each(function() {
 				enhanceValue($entry, this);
 			});
 		});
 		$root.on("expand.debug.group", function(e){
-			enhanceEntries($(e.target));
+			var $node = $(e.target);
+			e.stopPropagation();
+			enhanceEntries($node);
 		});
 		$root.on("expand.debug.object", function(e){
 			var $node = $(e.target),
-				$entry;
+				$entry = $node.closest("li[class*=m_]");
+			e.stopPropagation();
 			if ($node.is(".enhanced")) {
 				return;
 			}
-			$entry = $node.closest("li[class*=m_]");
-			$node.find("> .constant > :last-child,\
-			> .property > :last-child"
-			).each(function() {
-				enhanceValue($entry, this);
-			});
+			expandStack.push($node);
 			enhanceInner($node);
+			$node.find("> .constant > :last-child,\
+			> .property > :last-child,\
+			> .method .t_string").each(function(){
+					enhanceValue($entry, this);
+				});
 		});
 		$root.on("expanded.debug.array expanded.debug.group expanded.debug.object", function(e){
-			var $node = $(e.target);
-			if (!$node.is(".enhanced-strings")) {
-				$node.find("> .constant > :last-child,\
-				> .property > :last-child,\
-				> .method .t_string").filter(".t_string").each(function(){
-						enhanceLongString($(this));
-					});
-				$node.addClass("enhanced-strings");
-			}
-		});
-		$root.on("config.debug.updated", function(e, changedOpt){
-			if (changedOpt == "linkFilesTemplate") {
-				updateFileLinks($root);
+			var i, count;
+			expandStack.pop();
+			if (expandStack.length == 0) {
+				// now that everything relevant's been expanded we can enhanceLongString
+				for (i = 0, count = strings.length; i < count; i++) {
+					enhanceLongString(strings[i]);
+				}
+				strings = [];
 			}
 		});
 	}
@@ -507,13 +511,15 @@
 	 * Enhance log entries
 	 */
 	function enhanceEntries($node) {
+		// console.warn('enhanceEntries', $node[0]);
+		expandStack.push($node);
 		$node.hide();
 		$node.children().each(function() {
 			enhanceEntry($(this));
 		});
 		$node.show();
-		// enhanceLongStrings($node);
 		$node.addClass("enhanced");
+		$node.trigger("expanded.debug.group");
 	}
 
 	/**
@@ -538,11 +544,6 @@
 			});
 			addIcons$1($entry);
 		}
-		/*
-		if (inclStrings) {
-			enhanceLongStrings($entry);
-		}
-		*/
 		$entry.addClass("enhanced");
 		$entry.trigger("enhanced.debug");
 	}
@@ -624,7 +625,8 @@
 		} else if ($node.is("table")) {
 			makeSortable($node);
 		} else if ($node.is(".t_string")) {
-			enhanceLongString($node);
+			// enhanceLongString($node);
+			strings.push($node);
 			createFileLinks($entry, $node);
 		}
 		if ($node.is(".timestamp")) {
@@ -718,7 +720,11 @@
 		var $menuBar = $(".debug-menu-bar");
 		// var $body = $('<div class="debug-body"></div>');
 		$menuBar.before('\
-		<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i> PHP</div>\
+		<div class="debug-pull-tab" title="Open PHPDebugConsole">\
+			<i class="fa fa-bug"></i>\
+			<i class="fa fa-spinner fa-pulse" style="display:none;"></i>\
+			PHP\
+		</div>\
 		<div class="debug-resize-handle"></div>'
 		);
 		$menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole\
@@ -730,8 +736,14 @@
 	}
 
 	function open() {
-		$root.addClass("debug-drawer-open");
+		var $faBug = $root.find(".debug-pull-tab .fa-bug"),
+			$faSpinner = $root.find(".debug-pull-tab .fa-spinner");
+		$faBug.hide();
+		$faSpinner.show();
 		$root.debugEnhance();
+		$faBug.show();
+		$faSpinner.hide();
+		$root.addClass("debug-drawer-open");
 		setHeight(); // makes sure height within min/max
 		$("body").css("marginBottom", ($root.height() + 8) + "px");
 		$(window).on("resize", setHeight);
@@ -853,6 +865,11 @@
 			// trigger collapse to potentially update group icon
 			$root.find(".m_error, .m_warn").parents(".m_group").find(".group-body")
 				.trigger("collapsed.debug.group");
+			updateFilterStatus($root);
+		});
+
+		$delegateNode.on("channelAdded.debug", function(e) {
+			var $root = $(e.target).closest(".debug");
 			updateFilterStatus($root);
 		});
 	}
@@ -1432,8 +1449,6 @@
 		if ($.isArray(channels)) {
 			channels = channelsToTree(channels);
 		}
-		// console.log('channels', channels);
-		// console.warn('checkedChannels', checkedChannels);
 		for (channelName in channels) {
 			if (channelName === "phpError") {
 				// phpError is a special channel
@@ -1949,9 +1964,6 @@
 		} else if (method === "expand") {
 			expand($self);
 		} else if (method === "init") {
-			// dataOptions = $self.eq(0).data("options") || {};
-			// lsOptions = http.lsGet("phpDebugConsole") || {};
-			// options = $.extend({}, optionsDefault, dataOptions, lsOptions);
 			config$7.set($self.eq(0).data("options") || {});
 			if (typeof arg1 == "object") {
 				config$7.set(arg1);
@@ -1982,7 +1994,7 @@
 					$self.find(".m_alert, .debug-log-summary, .debug-log").debugEnhance();
 				} else if (!$self.is(".enhanced")) {
 					if ($self.is(".group-body")) {
-						// console.warn("debugEnhance() : .group-body");
+						// console.warn("debugEnhance() : .group-body", $self);
 						enhanceEntries($self);
 					} else {
 						// log entry assumed

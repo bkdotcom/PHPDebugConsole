@@ -2,7 +2,9 @@ import $ from "jquery";
 import * as enhanceObject from "./enhanceObject.js";
 import * as tableSort from "./tableSort.js";
 
-var config;
+var config,
+	expandStack = [],
+	strings = [];
 
 export function init($root, conf) {
 	config = conf.config;
@@ -32,48 +34,50 @@ export function init($root, conf) {
 		$container.find(".show-more").show();
 		$container.find(".show-less").hide();
 	});
+	$root.on("config.debug.updated", function(e, changedOpt){
+		e.stopPropagation();
+		if (changedOpt == "linkFilesTemplate") {
+			updateFileLinks($root);
+		}
+	});
 	$root.on("expand.debug.array", function(e){
 		var $node = $(e.target),
-			$entry;
-		if ($node.is(".enhanced")) {
-			return;
-		}
-		$entry = $node.closest("li[class*=m_]");
+			$entry = $node.closest("li[class*=m_]");
+		e.stopPropagation();
+		expandStack.push($node);
 		$node.find("> .array-inner > .key-value > :last-child").each(function() {
 			enhanceValue($entry, this);
 		});
 	});
 	$root.on("expand.debug.group", function(e){
-		enhanceEntries($(e.target));
+		var $node = $(e.target);
+		e.stopPropagation();
+		enhanceEntries($node);
 	});
 	$root.on("expand.debug.object", function(e){
 		var $node = $(e.target),
-			$entry;
+			$entry = $node.closest("li[class*=m_]");
+		e.stopPropagation();
 		if ($node.is(".enhanced")) {
 			return;
 		}
-		$entry = $node.closest("li[class*=m_]");
-		$node.find("> .constant > :last-child,\
-			> .property > :last-child"
-		).each(function() {
-			enhanceValue($entry, this);
-		});
+		expandStack.push($node);
 		enhanceObject.enhanceInner($node);
+		$node.find("> .constant > :last-child,\
+			> .property > :last-child,\
+			> .method .t_string").each(function(){
+				enhanceValue($entry, this)
+			});
 	});
 	$root.on("expanded.debug.array expanded.debug.group expanded.debug.object", function(e){
-		var $node = $(e.target);
-		if (!$node.is(".enhanced-strings")) {
-			$node.find("> .constant > :last-child,\
-				> .property > :last-child,\
-				> .method .t_string").filter(".t_string").each(function(){
-					enhanceLongString($(this))
-				});
-			$node.addClass("enhanced-strings");
-		}
-	});
-	$root.on("config.debug.updated", function(e, changedOpt){
-		if (changedOpt == "linkFilesTemplate") {
-			updateFileLinks($root);
+		var i, count;
+		expandStack.pop();
+		if (expandStack.length == 0) {
+			// now that everything relevant's been expanded we can enhanceLongString
+			for (i = 0, count = strings.length; i < count; i++) {
+				enhanceLongString(strings[i]);
+			}
+			strings = [];
 		}
 	});
 }
@@ -280,13 +284,15 @@ function enhanceArray($node) {
  * Enhance log entries
  */
 export function enhanceEntries($node) {
+	// console.warn('enhanceEntries', $node[0]);
+	expandStack.push($node);
 	$node.hide();
 	$node.children().each(function() {
 		enhanceEntry($(this));
 	});
 	$node.show();
-	// enhanceLongStrings($node);
 	$node.addClass("enhanced");
+	$node.trigger("expanded.debug.group");
 }
 
 /**
@@ -311,11 +317,6 @@ export function enhanceEntry($entry) {
 		});
 		addIcons($entry);
 	}
-	/*
-	if (inclStrings) {
-		enhanceLongStrings($entry);
-	}
-	*/
 	$entry.addClass("enhanced");
 	$entry.trigger("enhanced.debug");
 }
@@ -397,7 +398,8 @@ function enhanceValue($entry, node) {
 	} else if ($node.is("table")) {
 		tableSort.makeSortable($node);
 	} else if ($node.is(".t_string")) {
-		enhanceLongString($node);
+		// enhanceLongString($node);
+		strings.push($node);
 		createFileLinks($entry, $node);
 	}
 	if ($node.is(".timestamp")) {

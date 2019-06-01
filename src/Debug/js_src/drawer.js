@@ -62,7 +62,11 @@ function addMarkup() {
 	var $menuBar = $(".debug-menu-bar");
 	// var $body = $('<div class="debug-body"></div>');
 	$menuBar.before('\
-		<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i> PHP</div>\
+		<div class="debug-pull-tab" title="Open PHPDebugConsole">\
+			<i class="fa fa-bug"></i>\
+			<i class="fa fa-spinner fa-pulse" style="display:none;"></i>\
+			PHP\
+		</div>\
 		<div class="debug-resize-handle"></div>'
 	);
 	$menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole\
@@ -74,8 +78,14 @@ function addMarkup() {
 }
 
 function open() {
-	$root.addClass("debug-drawer-open");
+	var $faBug = $root.find(".debug-pull-tab .fa-bug"),
+		$faSpinner = $root.find(".debug-pull-tab .fa-spinner");
+	$faBug.hide();
+	$faSpinner.show();
 	$root.debugEnhance();
+	$faBug.show();
+	$faSpinner.hide();
+	$root.addClass("debug-drawer-open");
 	setHeight(); // makes sure height within min/max
 	$("body").css("marginBottom", ($root.height() + 8) + "px");
 	$(window).on("resize", setHeight);

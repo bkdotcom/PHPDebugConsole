@@ -91,7 +91,7 @@ class MethodClear
      *
      * @return boolean
      */
-    private function channelTest($logEntry)
+    private function channelTest(LogEntry $logEntry)
     {
         $channelName = $logEntry->getChannel();
         return $this->isRootInstance || \preg_match($this->channelRegex, $channelName);

@@ -15,7 +15,7 @@
 namespace bdk;
 
 use bdk\Debug\Abstracter;
-use bdk\Debug\AssetProvider;
+use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\ErrorEmailer;
@@ -1122,7 +1122,7 @@ class Debug
     /**
      * Extend debug with a plugin
      *
-     * @param AssetProvider|SubscriberInterface $plugin object implementing SubscriberInterface and/or AssetProvider
+     * @param AssetProviderInterface|SubscriberInterface $plugin object implementing SubscriberInterface and/or AssetProviderInterface
      *
      * @return Debug self for chaining
      * @throws \InvalidArgumentException
@@ -1133,7 +1133,7 @@ class Debug
             return $this;
         }
         $isPlugin = false;
-        if ($plugin instanceof AssetProvider) {
+        if ($plugin instanceof AssetProviderInterface) {
             $isPlugin = true;
             $this->rootInstance->output->addAssetProvider($plugin);
         }
@@ -1155,7 +1155,7 @@ class Debug
             }
         }
         if (!$isPlugin) {
-            throw new \InvalidArgumentException('addPlugin expects \\bdk\\Debug\\AssetProvider and/or \\bdk\\PubSub\\SubscriberInterface');
+            throw new \InvalidArgumentException('addPlugin expects \\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface');
         }
         $this->registeredPlugins->attach($plugin);
         return $this;

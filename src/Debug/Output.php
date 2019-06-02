@@ -12,7 +12,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\AssetProvider;
+use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\Output\OutputInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -97,11 +97,11 @@ class Output implements SubscriberInterface
     /**
      * Get and register assets from passed provider
      *
-     * @param AssetProvider $assetProvider Asset provider
+     * @param AssetProviderInterface $assetProvider Asset provider
      *
      * @return void
      */
-    public function addAssetProvider(AssetProvider $assetProvider)
+    public function addAssetProvider(AssetProviderInterface $assetProvider)
     {
         $assets = \array_merge(array(
             'css' => array(),

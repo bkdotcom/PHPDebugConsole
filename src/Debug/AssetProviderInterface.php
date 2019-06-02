@@ -14,7 +14,7 @@ namespace bdk\Debug;
 /**
  * Provide css and/or javascript assets
  */
-interface AssetProvider
+interface AssetProviderInterface
 {
 
     /**

@@ -17,8 +17,10 @@ use bdk\Debug\Collector\Yii11LogRoute;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
-use Yii;
+use CActiveRecord;
+use CDbCommand;
 use CEvent;
+use Yii;
 
 /**
  * Yii v1.1 debug helper
@@ -188,7 +190,7 @@ class Yii11 implements SubscriberInterface
      */
     public function onDebugObjAbstractStart(Event $event)
     {
-        if ($event->getSubject() instanceof \CActiveRecord) {
+        if ($event->getSubject() instanceof CActiveRecord) {
             $model = $event->getSubject();
             $refObj = new \ReflectionObject($model);
             while (!$refObj->hasProperty('_models')) {
@@ -197,7 +199,7 @@ class Yii11 implements SubscriberInterface
             $refProp = $refObj->getProperty('_models');
             $refProp->setAccessible(true);
             $event['propertyOverrideValues'] = array(
-                '_models' => \array_map(function ($val) use ($model) {
+                '_models' => \array_map(function ($val) {
                     return \get_class($val).' (not inspected)';
                 }, $refProp->getValue($model)),
             );

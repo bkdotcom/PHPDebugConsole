@@ -11,12 +11,12 @@
 
 namespace bdk\Debug\Plugin;
 
-use bdk\Debug\AssetProvider;
+use bdk\Debug\AssetProviderInterface;
 
 /**
  * Register prismjs' javascript & css
  */
-class Prism implements AssetProvider
+class Prism implements AssetProviderInterface
 {
 
     /**

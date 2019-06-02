@@ -15,6 +15,7 @@ use bdk\Debug;
 use bdk\PubSub\Event;
 use bdk\Debug\Collector\SimpleCache\CallInfo;
 use Psr\SimpleCache\CacheInterface;
+use Traversable;
 
 /**
  * A SimpleCache wrapper to log SimpleCache operations

@@ -40,6 +40,7 @@ use Twig_Environment;
 use Twig_LexerInterface;
 use Twig_NodeInterface;
 use Twig_ParserInterface;
+use Twig\Error\RuntimeError;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
 use Twig\NodeVisitor\NodeVisitorInterface;
@@ -545,29 +546,11 @@ class Twig extends Twig_Environment
      */
     public function loadTemplate($name, $index = null)
     {
-        $cls = $this->twig->getTemplateClass($name, $index);
-
-        if (isset($this->twig->loadedTemplates[$cls])) {
-            return $this->twig->loadedTemplates[$cls];
+        $template = $this->twig->loadTemplate($name, $index);
+        if ($template instanceof Template) {
+            return $template;
         }
-
-        if (!\class_exists($cls, false)) {
-            $cache = $cache = $this->getCacheFilename($name);
-            if ($cache === false) {
-                eval('?>'.$this->compileSource($this->getLoader()->getSource($name), $name));
-            } else {
-                if (!\is_file($cache) || ($this->isAutoReload() && !$this->isTemplateFresh($name, \filemtime($cache)))) {
-                    $this->writeCacheFile($cache, $this->compileSource($this->getLoader()->getSource($name), $name));
-                }
-
-                require_once $cache;
-            }
-        }
-
-        if (!$this->twig->runtimeInitialized) {
-            $this->initRuntime();
-        }
-
+        $cls = \get_class($template);
         return $this->twig->loadedTemplates[$cls] = new Template($this, new $cls($this));
     }
 

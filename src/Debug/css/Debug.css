@@ -143,12 +143,15 @@
 .debug.debug-drawer > * { box-sizing: border-box; }
 .debug.debug-drawer.debug-drawer-open { transform: translateY(0px); height: auto; z-index: 1049; }
 .debug.debug-drawer.debug-drawer-open .debug-pull-tab { opacity: 0; transform: translateY(25px); }
+.debug.debug-drawer.debug-drawer-open .debug-pull-tab .fa-bug { display: none; }
+.debug.debug-drawer.debug-drawer-open .debug-pull-tab .fa-spinner { display: inline-block; }
 .debug.debug-drawer.debug-drawer-open .debug-resize-handle { cursor: ns-resize; }
 .debug.debug-drawer.debug-drawer-open .debug-resize-handle:hover { opacity: 1; }
 .debug.debug-drawer .debug-pull-tab { display: inline-block; opacity: 1; position: absolute; height: 25px; top: -25px; margin-left: 20px; border: 1px solid #000; border-bottom-width: 0; border-radius: 5px 5px 0 0; padding: 4px 14px; font-size: 16px; background: #f3f3f3; cursor: pointer; transition: all 0.5s; z-index: -1; }
 .debug.debug-drawer .debug-pull-tab:hover { background: #dadada; }
 .debug.debug-drawer .debug-pull-tab .debug-error-counts { margin-left: .5em; }
 .debug.debug-drawer .debug-pull-tab .badge { display: none; }
+.debug.debug-drawer .debug-pull-tab .fa-spinner { display: none; }
 .debug.debug-drawer .debug-resize-handle { display: block; position: absolute; top: -3px; height: 4px; width: 100%; opacity: 0; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; background: #dadada; transition: all 0.25s ease-out; }
 html.debug-resizing { cursor: ns-resize !important; }
 html.debug-resizing .debug-drawer { transition: none; }

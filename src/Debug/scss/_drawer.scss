@@ -23,6 +23,13 @@
 		.debug-pull-tab {
 			opacity: 0;
 			transform: translateY(25px);
+			.fa-bug {
+				display: none;
+			}
+			.fa-spinner {
+				display: inline-block;
+			}
+
 		}
 		& .debug-resize-handle {
 			cursor: ns-resize;
@@ -55,6 +62,9 @@
 			margin-left: .5em;
 		}
 		.badge {
+			display: none;
+		}
+		.fa-spinner {
 			display: none;
 		}
 	}

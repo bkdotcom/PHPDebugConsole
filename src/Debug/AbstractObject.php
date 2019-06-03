@@ -192,12 +192,10 @@ class AbstractObject
     public function onEnd(Event $event)
     {
         $obj = $event->getSubject();
-        if ($obj instanceof \DOMNodeList) {
-            // for reasons unknown, DOMNodeList's properties are invisible to reflection
-            $event['properties']['length'] = \array_merge(static::$basePropInfo, array(
-                'type' => 'integer',
-                'value' => $obj->length,
-            ));
+        if ($this->isDomObj($obj)) {
+            // DOM* properties were invisible to reflection
+            // https://bugs.php.net/bug.php?id=48527
+            $this->addPropertiesDom($event);
         } elseif ($obj instanceof \Exception) {
             if (isset($event['properties']['xdebug_message'])) {
                 $event['properties']['xdebug_message']['isExcluded'] = true;
@@ -496,6 +494,43 @@ class AbstractObject
     }
 
     /**
+     * Add properties to Dom* abstraction
+     *
+     * DOM* properties are invisible to reflection
+     * https://bugs.php.net/bug.php?id=48527
+     *
+     * @param Event $abs Abstraction event object
+     *
+     * @return void
+     */
+    private function addPropertiesDom(Event $abs)
+    {
+        if ($abs['properties']) {
+            return;
+        }
+        $obj = $abs->getSubject();
+        // use var_dump to get the property names
+        // get_object_vars doesn't work
+        $iniWas = \ini_set('xdebug.overload_var_dump', false);
+        \ob_start();
+        \var_dump($obj);
+        $dump = \ob_get_clean();
+        \ini_set('xdebug.overload_var_dump', $iniWas);
+        \preg_match_all('/^\s+\["(.*?)"\]=>$/sm', $dump, $matches);
+        $props = $matches[1];
+        \sort($props);
+        foreach ($props as $propName) {
+            $val = $obj->{$propName};
+            $abs['properties'][$propName] = \array_merge(static::$basePropInfo, array(
+                'type' => $this->abstracter->getType($val),
+                'value' => $this->abstracter->needsAbstraction($val)
+                    ? $this->abstracter->getAbstraction($val, $abs['debugMethod'], $abs['hist'])
+                    : $val,
+            ));
+        }
+    }
+
+    /**
      * "Magic" properties may be defined in a class' doc-block
      * If so... move this information to the properties array
      *
@@ -773,6 +808,18 @@ class AbstractObject
                 : null;
         }
         return $className;
+    }
+
+    /**
+     * Check if a Dom* class  where properties aren't avail to reflection
+     *
+     * @param object $obj object to check
+     *
+     * @return boolean
+     */
+    private function isDomObj($obj)
+    {
+        return $obj instanceof \DomDocument || $obj instanceof \DomNode || $obj instanceof \DOMNodeList;
     }
 
     /**

@@ -40,7 +40,6 @@ use Twig_Environment;
 use Twig_LexerInterface;
 use Twig_NodeInterface;
 use Twig_ParserInterface;
-use Twig\Error\RuntimeError;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
 use Twig\NodeVisitor\NodeVisitorInterface;

@@ -398,7 +398,6 @@ function enhanceValue($entry, node) {
 	} else if ($node.is("table")) {
 		tableSort.makeSortable($node);
 	} else if ($node.is(".t_string")) {
-		// enhanceLongString($node);
 		strings.push($node);
 		createFileLinks($entry, $node);
 	}

@@ -223,7 +223,7 @@ class Text extends Base
         if ($abs['isRecursion']) {
             $str = '(object) '.$abs['className'].' *RECURSION*';
         } elseif ($abs['isExcluded']) {
-            $str = '(object) '.$abs['className'].' (not inspected)';
+            $str = '(object) '.$abs['className'].' NOT INSPECTED';
         } else {
             $str = '(object) '.$abs['className']."\n";
             $str .= $this->dumpProperties($abs);

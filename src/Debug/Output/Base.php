@@ -226,6 +226,16 @@ abstract class Base implements OutputInterface
     }
 
     /**
+     * Dump non-inspected value (likely object)
+     *
+     * @return string
+     */
+    protected function dumpNotInspected()
+    {
+        return 'NOT INSPECTED';
+    }
+
+    /**
      * Dump null value
      *
      * @return null
@@ -247,7 +257,7 @@ abstract class Base implements OutputInterface
         if ($abs['isRecursion']) {
             $return = '(object) '.$abs['className'].' *RECURSION*';
         } elseif ($abs['isExcluded']) {
-            $return = '(object) '.$abs['className'].' (not inspected)';
+            $return = '(object) '.$abs['className'].' NOT INSPECTED';
         } else {
             $return = array(
                 '___class_name' => $abs['className'],

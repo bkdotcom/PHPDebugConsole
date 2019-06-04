@@ -237,6 +237,7 @@ class Yii11 implements SubscriberInterface
             return;
         }
         if ($event['exception']) {
+            Yii11LogRoute::toggle(false);
             $this->yiiApp->handleException($event['exception']);
         } elseif ($event['category'] === 'fatal') {
             // Yii's  error handler exits (for reasons)

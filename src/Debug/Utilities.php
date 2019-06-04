@@ -398,7 +398,15 @@ class Utilities
                 }
             }
         }
-        return self::getCallerInfoBuild(\array_slice($backtrace, $i + $offset));
+        /*
+            file/line values may be missing... if called via core PHP function/method
+        */
+        for ($i = $i + $offset; $i < $numFrames; $i++) {
+            if (isset($backtrace[$i]['line'])) {
+                break;
+            }
+        }
+        return self::getCallerInfoBuild(\array_slice($backtrace, $i));
     }
 
     /**

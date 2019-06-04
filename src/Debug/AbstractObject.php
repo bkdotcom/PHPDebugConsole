@@ -192,11 +192,7 @@ class AbstractObject
     public function onEnd(Event $event)
     {
         $obj = $event->getSubject();
-        if ($this->isDomObj($obj)) {
-            // DOM* properties were invisible to reflection
-            // https://bugs.php.net/bug.php?id=48527
-            $this->addPropertiesDom($event);
-        } elseif ($obj instanceof \Exception) {
+        if ($obj instanceof \Exception) {
             if (isset($event['properties']['xdebug_message'])) {
                 $event['properties']['xdebug_message']['isExcluded'] = true;
             }
@@ -418,7 +414,7 @@ class AbstractObject
                 }
                 if ($isDebugObj && $name == 'data') {
                     $abs['properties']['data'] = \array_merge(self::$basePropInfo, array(
-                        'value' => array('NOT INSPECTED'),
+                        'value' => Abstracter::NOT_INSPECTED,
                         'visibility' => 'protected',
                     ));
                     continue;
@@ -427,6 +423,7 @@ class AbstractObject
             }
             $reflectionObject = $reflectionObject->getParentClass();
         }
+        $this->addPropertiesDom($abs);
         $this->addPropertiesPhpDoc($abs);   // magic properties documented via phpDoc
         $this->addPropertiesDebug($abs);    // use __debugInfo() values if useDebugInfo' && method exists
         $properties = $abs['properties'];
@@ -505,28 +502,80 @@ class AbstractObject
      */
     private function addPropertiesDom(Event $abs)
     {
+        $obj = $abs->getSubject();
         if ($abs['properties']) {
             return;
         }
-        $obj = $abs->getSubject();
+        if (!$this->isDomObj($obj)) {
+            return;
+        }
         // use var_dump to get the property names
-        // get_object_vars doesn't work
+        // get_object_vars() doesn't work
         $iniWas = \ini_set('xdebug.overload_var_dump', false);
         \ob_start();
         \var_dump($obj);
         $dump = \ob_get_clean();
         \ini_set('xdebug.overload_var_dump', $iniWas);
-        \preg_match_all('/^\s+\["(.*?)"\]=>$/sm', $dump, $matches);
-        $props = $matches[1];
-        \sort($props);
-        foreach ($props as $propName) {
+        \preg_match_all('/^\s+\["(.*?)"\]=>\n/sm', $dump, $matches);
+        $props = \array_fill_keys($matches[1], null);
+
+        if ($obj instanceof \DOMNode) {
+            $props = \array_merge($props, array(
+                'attributes' => 'DOMNamedNodeMap',
+                'childNodes' => 'DOMNodeList',
+                'firstChild' => 'DOMNode',
+                'lastChild' => 'DOMNode',
+                'localName' => 'string',
+                'namespaceURI' => 'string',
+                'nextSibling' => 'DOMNode', // var_dump() doesn't include ¯\_(ツ)_/¯
+                'nodeName' => 'string',
+                'nodeType' => 'int',
+                'nodeValue' => 'string',
+                'ownerDocument' => 'DOMDocument',
+                'parentNode' => 'DOMNode',
+                'prefix' => 'string',
+                'previousSibling' => 'DOMNode',
+                'textContent' => 'string',
+            ));
+            if ($obj instanceof \DOMDocument) {
+                $props = \array_merge($props, array(
+                    'actualEncoding' => 'string',
+                    'baseURI' => 'string',
+                    'config' => 'DOMConfiguration',
+                    'doctype' => 'DOMDocumentType',
+                    'documentElement' => 'DOMElement',
+                    'documentURI' => 'string',
+                    'encoding' => 'string',
+                    'formatOutput' => 'bool',
+                    'implementation' => 'DOMImplementation',
+                    'preserveWhiteSpace' => 'bool',
+                    'recover' => 'bool',
+                    'resolveExternals' => 'bool',
+                    'standalone' => 'bool',
+                    'strictErrorChecking' => 'bool',
+                    'substituteEntities' => 'bool',
+                    'validateOnParse' => 'bool',
+                    'version' => 'string',
+                    'xmlEncoding' => 'string',
+                    'xmlStandalone' => 'bool',
+                    'xmlVersion' => 'string',
+                ));
+            } elseif ($obj instanceof \DOMElement) {
+                $props = \array_merge($props, array(
+                    'schemaTypeInfo' => 'bool',
+                    'tagName' => 'string',
+                ));
+            }
+        }
+        foreach ($props as $propName => $type) {
             $val = $obj->{$propName};
-            $abs['properties'][$propName] = \array_merge(static::$basePropInfo, array(
-                'type' => $this->abstracter->getType($val),
-                'value' => $this->abstracter->needsAbstraction($val)
-                    ? $this->abstracter->getAbstraction($val, $abs['debugMethod'], $abs['hist'])
+            $propInfo = \array_merge(static::$basePropInfo, array(
+                'type' => $type ?: $this->abstracter->getType($val),
+                'value' => \is_object($val)
+                    ? Abstracter::NOT_INSPECTED
                     : $val,
             ));
+            $abs['properties'][$propName] = $propInfo;
         }
     }
 
@@ -819,7 +868,7 @@ class AbstractObject
      */
     private function isDomObj($obj)
     {
-        return $obj instanceof \DomDocument || $obj instanceof \DomNode || $obj instanceof \DOMNodeList;
+        return $obj instanceof \DOMNode || $obj instanceof \DOMNodeList;
     }
 
     /**

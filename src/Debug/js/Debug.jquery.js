@@ -625,7 +625,6 @@
 		} else if ($node.is("table")) {
 			makeSortable($node);
 		} else if ($node.is(".t_string")) {
-			// enhanceLongString($node);
 			strings.push($node);
 			createFileLinks($entry, $node);
 		}
@@ -1925,7 +1924,7 @@
 				var clipboard = window.ClipboardJS;
 				new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
 					target: function (trigger) {
-						if ($(trigger).is("a")) {
+						if ($(trigger).is("a") || getSelectedText().length) {
 							return $('<div>')[0];
 						}
 						notify("Copied to clipboard");
@@ -1935,6 +1934,16 @@
 			}
 		}
 	]);
+
+	function getSelectedText() {
+		var text = "";
+		if (typeof window.getSelection != "undefined") {
+			text = window.getSelection().toString();
+		} else if (typeof document.selection != "undefined" && document.selection.type == "Text") {
+			text = document.selection.createRange().text;
+		}
+		return text;
+	}
 
 	$.fn.debugEnhance = function(method, arg1, arg2) {
 		// console.warn("debugEnhance", method, this);

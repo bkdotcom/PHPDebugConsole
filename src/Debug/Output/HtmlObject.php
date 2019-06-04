@@ -52,7 +52,7 @@ class HtmlObject
         if ($abs['isExcluded']) {
             return $this->dumpToString($abs)
                 .$strClassName."\n"
-                .'<span class="excluded">(not inspected)</span>';
+                .'<span class="excluded t_notInspected">NOT INSPECTED</span>';
         }
         $html = $this->dumpToString($abs)
             .$strClassName."\n"

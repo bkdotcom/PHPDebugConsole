@@ -25,6 +25,7 @@ class Abstracter
     protected $abstractObject;
 
     const ABSTRACTION = "\x00debug\x00";
+    const NOT_INSPECTED = "\x00notInspected\x00";
     const RECURSION = "\x00recursion\x00";  // ie, array recursion
     const TYPE_UNDEFINED = "\x00undefined\x00";
 
@@ -218,6 +219,8 @@ class Abstracter
             $type = 'undefined';    // not a native php type!
         } elseif ($val === self::RECURSION) {
             $type = 'recursion';    // not a native php type!
+        } elseif ($val == self::NOT_INSPECTED) {
+            $type = 'notInspected';
         }
         return array($type, $typeMore);
     }

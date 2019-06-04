@@ -94,7 +94,7 @@ export function enhanceInner($node) {
 	$node.prepend('<span class="vis-toggles">' + visToggles + "</span>");
 	addIcons($node);
 	$node.find("> .property.forceShow").show().find("> .t_array-expand").each(function() {
-		$(this).debugEnhance('expand');
+		$(this).debugEnhance("expand");
 	});
 	$node.addClass("enhanced");
 }

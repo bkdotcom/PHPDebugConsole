@@ -45,6 +45,7 @@
 	}
 
 	function enhanceInner($node) {
+		console.log('enhanceInner', $node);
 		var $wrapper = $node.parent(),
 			hasProtected = $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
 			hasPrivate = $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
@@ -59,6 +60,7 @@
 			visToggles = "",
 			hiddenInterfaces = [];
 		if ($node.is(".enhanced")) {
+			debug.warn('already enhanced');
 			return;
 		}
 		if ($node.find(".method[data-implements]").hide().length) {
@@ -96,8 +98,9 @@
 		}
 		$node.prepend('<span class="vis-toggles">' + visToggles + "</span>");
 		addIcons($node);
+		console.warn('what gives', $node.find("> .property.forceShow")[0].innerHTML);
 		$node.find("> .property.forceShow").show().find("> .t_array-expand").each(function() {
-			$(this).debugEnhance('expand');
+			$(this).debugEnhance("expand");
 		});
 		$node.addClass("enhanced");
 	}
@@ -290,12 +293,12 @@
 				return;
 			}
 			expandStack.push($node);
-			enhanceInner($node);
 			$node.find("> .constant > :last-child,\
 			> .property > :last-child,\
 			> .method .t_string").each(function(){
 					enhanceValue($entry, this);
 				});
+			enhanceInner($node);
 		});
 		$root.on("expanded.debug.array expanded.debug.group expanded.debug.object", function(e){
 			var i, count;

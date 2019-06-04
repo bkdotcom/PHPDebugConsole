@@ -62,12 +62,12 @@ export function init($root, conf) {
 			return;
 		}
 		expandStack.push($node);
-		enhanceObject.enhanceInner($node);
 		$node.find("> .constant > :last-child,\
 			> .property > :last-child,\
 			> .method .t_string").each(function(){
 				enhanceValue($entry, this)
 			});
+		enhanceObject.enhanceInner($node);
 	});
 	$root.on("expanded.debug.array expanded.debug.group expanded.debug.object", function(e){
 		var i, count;

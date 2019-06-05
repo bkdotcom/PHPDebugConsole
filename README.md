@@ -62,7 +62,7 @@ See http://www.bradkent.com/php/debug
 
 ### Tests / Quality
 ![No Dependencies](https://img.shields.io/badge/dependencies-none-333333.svg)
-[![Build Status](https://img.shields.io/travis/bkdotcom/PHPDebugConsole.svg)](https://travis-ci.org/bkdotcom/PHPDebugConsole)
+[![Build Status](https://img.shields.io/travis/bkdotcom/PHPDebugConsole/master.svg)](https://travis-ci.org/bkdotcom/PHPDebugConsole)
 [![SensioLabsInsight](https://img.shields.io/sensiolabs/i/789295b4-6040-4367-8fd5-b04a6f0d7a0c.svg)](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c)
 
 ### Changelog

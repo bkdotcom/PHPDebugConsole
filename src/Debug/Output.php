@@ -352,25 +352,29 @@ class Output implements SubscriberInterface
         for ($i = 0, $count = \count($log); $i < $count; $i++) {
             $logEntry = $log[$i];
             $method = $logEntry['method'];
+            /*
+                pushing/popping to/from groupStack led to unexplicable warning:
+                "Cannot add element to the array as the next element is already occupied"
+            */
             if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[] = array(
+                $groupStack[$groupStackCount] = array(
                     'i' => $i,
                     'meta' => $logEntry['meta'],
                     'hasEntries' => false,
                 );
                 $groupStackCount ++;
-            } elseif ($method == 'groupEnd') {
-                $group = \end($groupStack);
-                if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
-                    // make it go away
-                    unset($log[$group['i']]);
-                    unset($log[$i]);
-                    $removed = true;
+            } elseif ($groupStackCount) {
+                if ($method == 'groupEnd') {
+                    $groupStackCount--;
+                    $group = $groupStack[$groupStackCount];
+                    if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
+                        unset($log[$group['i']]);   // remove open entry
+                        unset($log[$i]);            // remove end entry
+                        $removed = true;
+                    }
+                } else {
+                    $groupStack[$groupStackCount - 1]['hasEntries'] = true;
                 }
-                \array_pop($groupStack);
-                $groupStackCount--;
-            } elseif ($groupStack) {
-                $groupStack[$groupStackCount - 1]['hasEntries'] = true;
             }
         }
         if ($removed) {

@@ -120,7 +120,7 @@
 .debug .t_null { opacity: 0.3; }
 .debug .t_operator { color: #A67F59; }
 .debug .t_punct { color: #999; }
-.debug .t_notInspected, .debug .t_recursion { font-weight: bold; color: #F00; }
+.debug .excluded, .debug .t_notInspected, .debug .t_recursion { font-weight: bold; color: #F00; }
 .debug .t_resource { font-style: italic; }
 .debug .t_string { white-space: pre-wrap; word-break: break-all; }
 .debug .t_string:before, .debug .t_string:after { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; opacity: 0.33; color: #333; }

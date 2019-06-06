@@ -136,7 +136,7 @@ export function buildChannelList(channels, channelRoot, checkedChannels, prepend
 		channel = channels[channelName];
 		isChecked = checkedChannels !== undefined
 			? checkedChannels.indexOf(prepend + channelName) > -1
-			: true;
+			: channel.options.show;
 		$label = $('<label>', {
 				"class": "toggle",
 			}).append($("<input>", {

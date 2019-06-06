@@ -348,7 +348,7 @@ class Utilities
             }
         }
         $units = array('B','kB','MB','GB','TB','PB');
-        $i = $i=\floor(\log($size, 1024));
+        $i = \floor(\log($size, 1024));
         $pow = \pow(1024, $i);
         $size = $pow == 0
             ? '0 B'
@@ -399,7 +399,7 @@ class Utilities
             }
         }
         /*
-            file/line values may be missing... if called via core PHP function/method
+            file/line values may be missing... if frame called via core PHP function/method
         */
         for ($i = $i + $offset; $i < $numFrames; $i++) {
             if (isset($backtrace[$i]['line'])) {

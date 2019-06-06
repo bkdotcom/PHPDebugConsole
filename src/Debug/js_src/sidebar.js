@@ -174,7 +174,6 @@ function addMethodToggles($node) {
 function moveChannelToggles($node) {
 	var $togglesSrc = $node.find(".debug-body .channels > ul > li"),
 		$togglesDest = $node.find(".debug-sidebar .channels ul");
-	$togglesSrc.find("label").addClass("toggle active");
 	$togglesDest.append($togglesSrc);
 	if ($togglesDest.children().length === 0) {
 		$togglesDest.parent().hide();

@@ -177,7 +177,7 @@ $.fn.debugEnhance = function(method, arg1, arg2) {
 	} else {
 		this.each(function() {
 			var $self = $(this);
-			// console.log('debugEnhance', this);
+			// console.log('debugEnhance', this, $self.is(".enhanced"));
 			if ($self.is(".debug")) {
 				// console.warn("debugEnhance() : .debug");
 				$self.find(".debug-log-summary, .debug-log").show();

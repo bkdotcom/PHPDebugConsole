@@ -300,7 +300,7 @@ export function enhanceEntries($node) {
  * we don't enhance strings by default (add showmore).. needs to be visible to calc height
  */
 export function enhanceEntry($entry) {
-	// console.log("enhanceEntry", $entry);
+	// console.log("enhanceEntry", $entry[0]);
 	if ($entry.is(".enhanced")) {
 		return;
 	}

@@ -45,7 +45,6 @@
 	}
 
 	function enhanceInner($node) {
-		console.log('enhanceInner', $node);
 		var $wrapper = $node.parent(),
 			hasProtected = $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
 			hasPrivate = $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
@@ -60,7 +59,6 @@
 			visToggles = "",
 			hiddenInterfaces = [];
 		if ($node.is(".enhanced")) {
-			debug.warn('already enhanced');
 			return;
 		}
 		if ($node.find(".method[data-implements]").hide().length) {
@@ -98,7 +96,6 @@
 		}
 		$node.prepend('<span class="vis-toggles">' + visToggles + "</span>");
 		addIcons($node);
-		console.warn('what gives', $node.find("> .property.forceShow")[0].innerHTML);
 		$node.find("> .property.forceShow").show().find("> .t_array-expand").each(function() {
 			$(this).debugEnhance("expand");
 		});
@@ -530,7 +527,7 @@
 	 * we don't enhance strings by default (add showmore).. needs to be visible to calc height
 	 */
 	function enhanceEntry($entry) {
-		// console.log("enhanceEntry", $entry);
+		// console.log("enhanceEntry", $entry[0]);
 		if ($entry.is(".enhanced")) {
 			return;
 		}
@@ -882,7 +879,8 @@
 		// :not(.level-error, .level-info, .level-warn)
 		$root.find("> .debug-body .m_alert, .group-body > *:not(.m_groupSummary)").each(function(){
 			var $node = $(this),
-				show = true;
+				show = true,
+				unhiding = false;
 			if ($node.data("channel") == "phpError") {
 				// php Errors are filtered separately
 				return;
@@ -893,15 +891,22 @@
 					break;
 				}
 			}
+			unhiding = show && $node.is(".filter-hidden");
 			$node.toggleClass("filter-hidden", !show);
+			if (unhiding) {
+				$node.debugEnhance();
+			}
 		});
 		/*
 			Collapsed groups may get filter-hidden..
 			this may result in exposing entries in that group that have yet to be enhanced
 		*/
+		/*
+		// li:not(.filter-hidden):not(.enhanced):visible,
 		$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body > li:not(.filter-hidden):not(.enhanced)").each(function(){
 			$(this).debugEnhance();
 		});
+		*/
 	}
 
 	function updateFilterStatus($debugRoot) {
@@ -1275,7 +1280,6 @@
 	function moveChannelToggles($node) {
 		var $togglesSrc = $node.find(".debug-body .channels > ul > li"),
 			$togglesDest = $node.find(".debug-sidebar .channels ul");
-		$togglesSrc.find("label").addClass("toggle active");
 		$togglesDest.append($togglesSrc);
 		if ($togglesDest.children().length === 0) {
 			$togglesDest.parent().hide();
@@ -1449,7 +1453,7 @@
 			channel = channels[channelName];
 			isChecked = checkedChannels !== undefined
 				? checkedChannels.indexOf(prepend + channelName) > -1
-				: true;
+				: channel.options.show;
 			$label = $('<label>', {
 					"class": "toggle",
 				}).append($("<input>", {
@@ -1989,7 +1993,7 @@
 		} else {
 			this.each(function() {
 				var $self = $(this);
-				// console.log('debugEnhance', this);
+				// console.log('debugEnhance', this, $self.is(".enhanced"));
 				if ($self.is(".debug")) {
 					// console.warn("debugEnhance() : .debug");
 					$self.find(".debug-log-summary, .debug-log").show();

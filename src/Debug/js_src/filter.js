@@ -77,7 +77,8 @@ function applyFilter($root) {
 	// :not(.level-error, .level-info, .level-warn)
 	$root.find("> .debug-body .m_alert, .group-body > *:not(.m_groupSummary)").each(function(){
 		var $node = $(this),
-			show = true;
+			show = true,
+			unhiding = false;
 		if ($node.data("channel") == "phpError") {
 			// php Errors are filtered separately
 			return;
@@ -88,15 +89,22 @@ function applyFilter($root) {
 				break;
 			}
 		}
+		unhiding = show && $node.is(".filter-hidden");
 		$node.toggleClass("filter-hidden", !show);
+		if (unhiding) {
+			$node.debugEnhance();
+		}
 	});
 	/*
 		Collapsed groups may get filter-hidden..
 		this may result in exposing entries in that group that have yet to be enhanced
 	*/
+	/*
+	// li:not(.filter-hidden):not(.enhanced):visible,
 	$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body > li:not(.filter-hidden):not(.enhanced)").each(function(){
 		$(this).debugEnhance();
 	});
+	*/
 }
 
 function updateFilterStatus($debugRoot) {

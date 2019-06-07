@@ -29,8 +29,11 @@ class Logger extends AbstractLogger
      *
      * @param Debug $debug Debug instance
      */
-    public function __construct(Debug $debug)
+    public function __construct(Debug $debug = null)
     {
+        if (!$debug) {
+            $debug = \bdk\Debug::_getInstance();
+        }
         $this->debug = $debug;
         \bdk\Debug\Utilities::addCallerBreaker('class', array(
             'Monolog\\Logger',

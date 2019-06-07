@@ -1985,10 +1985,10 @@
 			if (typeof arg1 == "object") {
 				config$7.set(arg1);
 				// update logs that have already been enhanced
-	            $(this)
-	            	.find(".debug-log.enhanced")
-	            	.closest(".debug")
-	            	.trigger("config.debug.updated", "linkFilesTemplate");
+				$(this)
+					.find(".debug-log.enhanced")
+					.closest(".debug")
+					.trigger("config.debug.updated", "linkFilesTemplate");
 			}
 		} else {
 			this.each(function() {

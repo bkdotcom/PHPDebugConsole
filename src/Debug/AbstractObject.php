@@ -693,7 +693,8 @@ class AbstractObject
             $constantName = null;
             $defaultValue = Abstracter::TYPE_UNDEFINED;
             if ($reflectionParameter->isDefaultValueAvailable()) {
-                $defaultValue = $reflectionParameter->getDefaultValue();
+                // suppressing following to avoid "Use of undefined constant STDERR" type notice
+                $defaultValue = @$reflectionParameter->getDefaultValue();
                 if (\version_compare(PHP_VERSION, '5.4.6', '>=') && $reflectionParameter->isDefaultValueConstant()) {
                     /*
                         php may return something like self::CONSTANT_NAME
@@ -736,7 +737,8 @@ class AbstractObject
         $return = null;
         if ($reflectionParameter->isArray()) {
             $return = 'array';
-        } elseif (\preg_match('/\[\s\<\w+?>\s([\w\\\\]+)/s', $reflectionParameter->__toString(), $matches)) {
+        } elseif (\preg_match('/\[\s\<\w+?>\s([\w\\\\]+)/s', @$reflectionParameter->__toString(), $matches)) {
+            // suppressed error to avoid "Use of undefined constant STDERR" type notice
             $return = $matches[1];
         }
         return $return;

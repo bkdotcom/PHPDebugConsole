@@ -18,7 +18,7 @@ use Psr\SimpleCache\CacheInterface;
 use Traversable;
 
 /**
- * A SimpleCache wrapper to log SimpleCache operations
+ * A SimpleCache (PSR-16) wrapper to log SimpleCache operations
  */
 class SimpleCache implements CacheInterface
 {

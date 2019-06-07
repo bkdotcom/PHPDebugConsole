@@ -155,15 +155,7 @@ class Output implements SubscriberInterface
         /*
             add "plugin" css  (ie prism.css)
         */
-        foreach ($this->addCss as $mixed) {
-            if (!\preg_match('#[\r\n]#', $mixed)) {
-                $mixed = \preg_replace('#^\./?#', __DIR__.'/', $mixed);
-                if (\file_exists($mixed)) {
-                    $mixed = \file_get_contents($mixed);
-                }
-            }
-            $return .= $mixed."\n";
-        }
+        $return .= $this->buildAssetOutput($this->addCss);
         if (!empty($this->cfg['css'])) {
             $return .= $this->cfg['css'];
         }
@@ -188,15 +180,7 @@ class Output implements SubscriberInterface
         /*
             add "plugin" scripts  (ie prism.js)
         */
-        foreach ($this->addScript as $mixed) {
-            if (!\preg_match('#[\r\n]#', $mixed)) {
-                $mixed = \preg_replace('#^\./?#', __DIR__.'/', $mixed);
-                if (\file_exists($mixed)) {
-                    $mixed = \file_get_contents($mixed);
-                }
-            }
-            $return .= $mixed."\n";
-        }
+        $return .= $this->buildAssetOutput($this->addScript);
         return $return;
     }
 
@@ -284,6 +268,34 @@ class Output implements SubscriberInterface
         }
         $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $values);
         return $ret;
+    }
+
+    /**
+     * Combine css or script assets into a single string
+     *
+     * @param array $assets array of assets (filepaths / strings)
+     *
+     * @return string
+     */
+    private function buildAssetOutput(array $assets)
+    {
+        $return = '';
+        $hashes = array();
+        foreach ($assets as $asset) {
+            if (!\preg_match('#[\r\n]#', $asset)) {
+                // single line... potential filepath
+                $asset = \preg_replace('#^\./?#', __DIR__.'/', $asset);
+                if (\file_exists($asset)) {
+                    $asset = \file_get_contents($asset);
+                }
+            }
+            $hash = \md5($asset);
+            if (!\in_array($hash, $hashes)) {
+                $return .= $asset."\n";
+                $hashes[] = $hash;
+            }
+        }
+        return $return;
     }
 
     /**

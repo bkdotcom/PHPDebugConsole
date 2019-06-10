@@ -14,9 +14,8 @@ namespace bdk\Debug\Collector;
 use PDO as PdoBase;
 use PDOException;
 use bdk\Debug;
-use bdk\Debug\LogEntry;
+use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Plugin\Prism;
-use bdk\Debug\Collector\Pdo\StatementInfo;
 use bdk\PubSub\Event;
 
 /**
@@ -100,28 +99,37 @@ class Pdo extends PdoBase
     public function onDebugOutput(Event $event)
     {
         $debug = $event->getSubject();
+        $driverName = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+
         // parse server info
-        \preg_match_all(
-            '/([^:]+): ([a-zA-Z0-9.]+)\s*/',
-            $this->pdo->getAttribute(PDO::ATTR_SERVER_INFO),
-            $matches
-        );
+        $serverInfo = $driverName !== 'sqlite'
+            ? $this->pdo->getAttribute(PDO::ATTR_SERVER_INFO)
+            : '';
+        \preg_match_all('/([^:]+): ([a-zA-Z0-9.]+)\s*/', $serverInfo, $matches);
         $serverInfo = \array_map(function ($val) {
             return $val * 1;
         }, \array_combine($matches[1], $matches[2]));
         $serverInfo['Version'] = $this->pdo->getAttribute(PDO::ATTR_SERVER_VERSION);
         \ksort($serverInfo);
+
+        $status = $driverName !== 'sqlite'
+            ? $this->pdo->getAttribute(PDO::ATTR_CONNECTION_STATUS)
+            : null;
+
         $debug->groupSummary(0);
-        $debug->groupCollapsed(
+        $groupParams = array(
             'PDO info',
-            $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME),
-            $this->pdo->getAttribute(PDO::ATTR_CONNECTION_STATUS),
-            $debug->meta(array(
-                'argsAsParams' => false,
-                'icon' => $this->icon,
-                'level' => 'info',
-            ))
+            $driverName,
         );
+        if ($status) {
+            $groupParams[] = $status;
+        }
+        $groupParams[] = $debug->meta(array(
+            'argsAsParams' => false,
+            'icon' => $this->icon,
+            'level' => 'info',
+        ));
+        \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
         $debug->log('logged operations: ', \count($this->loggedStatements));
         $debug->time('total time', $this->getTimeSpent());
         $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));
@@ -347,39 +355,7 @@ class Pdo extends PdoBase
     public function addStatementInfo(StatementInfo $info)
     {
         $this->loggedStatements[] = $info;
-        $logSql = true;
-        $label = $info->sql;
-        if (\preg_match('/^(
-            (?:DROP|SHOW).+$|
-            INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s*\S+|
-            SELECT\s*(?P<select>.*?)\s+FROM\s+\S+|
-            UPDATE\s+\S+|
-            DELETE.*?FROM\s+\S+
-        )(?P<more>.*)/imsx', $label, $matches)) {
-            $logSql = !empty($matches['more']);
-            $label = $matches[1].($logSql ? '…' : '');
-            if (\strlen($matches['select']) > 100) {
-                $label = \str_replace($matches['select'], '(…)', $label);
-            }
-            $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
-        }
-        $this->debug->groupCollapsed($label, $this->debug->meta(array(
-            'icon' => $this->icon,
-            'boldLabel' => false,
-        )));
-        if ($logSql) {
-            $this->debug->log(
-                '<pre><code class="language-sql">'.\htmlspecialchars($info->sql).'</code></pre>',
-                $this->debug->meta('class', 'no-indent')
-            );
-        }
-        if ($info->parameters) {
-            $this->debug->log('parameters', $info->parameters);
-        }
-        $this->debug->time('duration', $info->duration);
-        $this->debug->log('memory usage', $this->debug->utilities->getBytes($info->memoryUsage));
-        $this->debug->log('rowCount', $info->rowCount);
-        $this->debug->groupEnd();
+        $info->appendLog($this->debug);
     }
 
     /**

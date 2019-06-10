@@ -271,7 +271,7 @@ abstract class Base implements OutputInterface
                         $vis[$i] = '🔒 '.$v;
                     }
                 }
-                if ($info['isExcluded']) {
+                if ($info['debugInfoExcluded']) {
                     $vis[] = 'excluded';
                 }
                 $name = '('.\implode(' ', $vis).') '.$name;

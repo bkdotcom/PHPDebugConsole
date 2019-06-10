@@ -139,6 +139,14 @@ class PhpDoc
                     .'(?:\s+(?P<desc>.*))?$/s',
             ),
             array(
+                'tags' => array('author'),
+                'parts' => array('name', 'email','desc'),
+                'regex' => '/^(?P<name>[^<]+)'
+                    .'(?:\s+<(?P<email>\S*)>)?'
+                    .'(?:\s+(?P<desc>.*))?'
+                    .'$/s',
+            ),
+            array(
                 'tags' => array('link'),
                 'parts' => array('uri', 'desc'),
                 'regex' => '/^(?P<uri>\S+)'

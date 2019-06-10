@@ -109,10 +109,10 @@ EOD;
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="property-name">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
                             '<dd class="property protected magic-read"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">boolean</span> <span class="property-name" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
                             '<dd class="property protected"><span class="t_modifier_protected">protected</span> <span class="property-name">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
-                            '<dd class="excluded property private"><span class="t_modifier_private">private</span> <span class="property-name">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
+                            '<dd class="debuginfo-excluded property private"><span class="t_modifier_private">private</span> <span class="property-name">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value property private"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="property-name" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
                             '<dd class="private-ancestor property private"><span class="t_modifier_private">private</span> (<i>bdk\DebugTest\TestBase</i>) <span class="property-name">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
-                            '<dd class="excluded property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">boolean</span> <span class="property-name" title="I\'m avail via __get()">magicProp</span></dd>',
+                            '<dd class="debuginfo-excluded property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">boolean</span> <span class="property-name" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="property-name">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
                             '<dt class="methods">methods</dt>'
                         )), $str);
@@ -260,7 +260,7 @@ EOD;
 
         //    Properties
         // $this->assertArrayNotHasKey('propNoDebug', $abs['properties']);
-        $this->assertTrue($abs['properties']['propNoDebug']['isExcluded']);
+        $this->assertTrue($abs['properties']['propNoDebug']['debugInfoExcluded']);
         $this->assertTrue($abs['properties']['debug']['value']['isExcluded']);
         $this->assertTrue($abs['properties']['instance']['value']['isRecursion']);
         $this->assertArraySubset(

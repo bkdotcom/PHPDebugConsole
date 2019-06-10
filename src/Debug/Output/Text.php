@@ -262,7 +262,7 @@ class Text extends Base
                 }
             }
             $vis = \implode(' ', $vis);
-            $str .= $info['isExcluded']
+            $str .= $info['debugInfoExcluded']
                 ? '    ('.$vis.' excluded) '.$name."\n"
                 : '    ('.$vis.') '.$name.' = '.$this->dump($info['value'])."\n";
         }

@@ -284,7 +284,16 @@ class HtmlObject
                 continue;
             }
             foreach ($values as $value) {
-                if ($k == 'link') {
+                if ($k == 'author') {
+                    $html = $value['name'];
+                    if ($value['email']) {
+                        $html .= ' &lt;<a href="mailto:'.$value['email'].'">'.$value['email'].'</a>&gt;';
+                    }
+                    if ($value['desc']) {
+                        $html .= ' '.\htmlspecialchars($value['desc']);
+                    }
+                    $value = $html;
+                } elseif ($k == 'link') {
                     $value = '<a href="'.$value['uri'].'" target="_blank">'
                         .\htmlspecialchars($value['desc'] ?: $value['uri'])
                         .'</a>';
@@ -332,7 +341,7 @@ class HtmlObject
             $isPrivateAncestor = \in_array('private', $vis) && $info['inheritedFrom'];
             $classes = \array_keys(\array_filter(array(
                 'debuginfo-value' => $info['valueFrom'] == 'debugInfo',
-                'excluded' => $info['isExcluded'],
+                'debuginfo-excluded' => $info['debugInfoExcluded'],
                 'forceShow' => $info['forceShow'],
                 'debug-value' => $info['valueFrom'] == 'debug',
                 'private-ancestor' => $isPrivateAncestor,

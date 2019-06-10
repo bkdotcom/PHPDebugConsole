@@ -228,7 +228,7 @@ color: #818a91
 .debug i.fa-calendar { font-size: 1.1em; }
 .debug i.fa-eye { color: #00529b; font-size: 1.1em; border-bottom: 0; }
 .debug i.fa-magic { color: orange; }
-.debug .excluded > i.fa-eye-slash { color: #f39; }
+.debug .debugInfo-excluded > i.fa-eye-slash { color: #f39; }
 .debug i.fa-lg { font-size: 1.33em; }
 .debug .group-header i.fa-warning { color: #cdcb06; margin-left: .33em; }
 .debug .group-header i.fa-times-circle { color: #D8000C; margin-left: .33em; }

@@ -15,6 +15,7 @@ use PDO as PdoBase;   // PDO conflicts with namespace
 use PDOException;
 use PDOStatement;
 use bdk\Debug\Collector\Pdo as DebugCollectorPdo;
+use bdk\Debug\Collector\StatementInfo;
 
 /**
  * Debuggable PDOStatement
@@ -24,6 +25,7 @@ class Statement extends PDOStatement
 
     protected $pdo;
     protected $boundParameters = array();
+    protected $boundParameterTypes = array();
 
     /**
      * Constructor.
@@ -50,6 +52,7 @@ class Statement extends PDOStatement
     public function bindColumn($column, &$param, $type = null, $maxlen = null, $driverdata = null)
     {
         $this->boundParameters[$column] = $param;
+        $this->boundParameterTypes[$column] = $type;
         $args = \array_merge(array($column, &$param), \array_slice(\func_get_args(), 2));
         return \call_user_func_array(array("parent", 'bindColumn'), $args);
     }
@@ -61,7 +64,7 @@ class Statement extends PDOStatement
      *                                 this will be a parameter name of the form :name. For a prepared statement using
      *                                 question mark placeholders, this will be the 1-indexed position of the parameter.
      * @param mixed   $variable      Name of the PHP variable to bind to the SQL statement parameter.
-     * @param integer $data_type     [optional] Explicit data type for the parameter using the PDO::PARAM_* constants.
+     * @param integer $dataType      [optional] Explicit data type for the parameter using the PDO::PARAM_* constants.
      * @param integer $length        [optional] Length of the data type. To indicate that a parameter is an OUT
      *                                 parameter from a stored procedure, you must explicitly set the length.
      * @param mixed   $driverOptions [optional]
@@ -69,9 +72,10 @@ class Statement extends PDOStatement
      * @return boolean
      * @link   http://php.net/manual/en/pdostatement.bindparam.php
      */
-    public function bindParam($parameter, &$variable, $data_type = PdoBase::PARAM_STR, $length = null, $driverOptions = null)
+    public function bindParam($parameter, &$variable, $dataType = PdoBase::PARAM_STR, $length = null, $driverOptions = null)
     {
         $this->boundParameters[$parameter] = $variable;
+        $this->boundParameterTypes[$parameter] = $dataType;
         $args = \array_merge(array($parameter, &$variable), \array_slice(\func_get_args(), 2));
         return \call_user_func_array(array("parent", 'bindParam'), $args);
     }
@@ -91,6 +95,7 @@ class Statement extends PDOStatement
     public function bindValue($parameter, $value, $dataType = PdoBase::PARAM_STR)
     {
         $this->boundParameters[$parameter] = $value;
+        $this->boundParameterTypes[$parameter] = $dataType;
         return \call_user_func_array(array("parent", 'bindValue'), \func_get_args());
     }
 
@@ -107,13 +112,12 @@ class Statement extends PDOStatement
      */
     public function execute($inputParameters = null)
     {
-        $preparedId = \spl_object_hash($this);
         $boundParameters = $this->boundParameters;
         if (\is_array($inputParameters)) {
             $boundParameters = \array_merge($boundParameters, $inputParameters);
         }
 
-        $info = new StatementInfo($this->queryString, $boundParameters, $preparedId);
+        $info = new StatementInfo($this->queryString, $boundParameters, $this->boundParameterTypes);
         $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;
 
         $exception = null;

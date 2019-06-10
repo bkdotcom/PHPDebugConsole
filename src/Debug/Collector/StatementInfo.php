@@ -9,9 +9,10 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Collector\Pdo;
+namespace bdk\Debug\Collector;
 
 use SqlFormatter;       // optional library
+use bdk\Debug;
 
 /**
  * Holds information about a statement
@@ -20,59 +21,74 @@ use SqlFormatter;       // optional library
  * @property-read integer   $errorCode
  * @property-read string    $errorMessage
  * @property-read Exception $exception
- * @property-read string    $id
- * @property-read boolean   $isPrepared
  * @property-read boolean   $isSuccess
  * @property-read integer   $memoryEnd
  * @property-read integer   $memoryStart
  * @property-read integer   $memoryUsage
- * @property-read array     $parameters
+ * @property-read array     $params
  * @property-read integer   $rowCount      number of rows affected by the last DELETE, INSERT, or UPDATE statement
  *                                          or number of rows returned by SELECT statement
  * @property-read string    $sql
  * @property-read string    $sqlWithParams
  * @property-read float     $timeEnd
  * @property-read float     $timeStart
+ * @property-read array     $types
  */
 class StatementInfo
 {
 
     protected $duration;
     protected $exception;
-    protected $id;
-    protected $isPrepared;
     protected $isSuccess;
     protected $memoryEnd;
     protected $memoryStart;
     protected $memoryUsage;
-    protected $parameters;
+    protected $params;
     protected $rowCount;
     protected $sql;
     protected $timeEnd;
     protected $timeStart;
+    protected $types;
+    protected static $constants;
 
     /**
      * @param string $sql    SQL
      * @param array  $params bound params
-     * @param string $id     Id of PdoStatement uniqid
+     * @param string $types  bound types
      */
-    public function __construct($sql, array $params = array(), $id = null)
+    public function __construct($sql, $params = null, $types = null)
     {
-        $this->sql = $sql;
-        $this->parameters = $params;
-        $this->id = $id;
-        $this->isPrepared = $id !== null;
-        $this->timeStart = \microtime(true);
-        $this->memoryStart = \memory_get_usage(false);
         if (\class_exists('\SqlFormatter')) {
             // whitespace only, don't hightlight
-            $this->sql = SqlFormatter::format($this->sql, false);
+            $sql = SqlFormatter::format($sql, false);
             // SqlFormatter borks bound params
-            $this->sql = \strtr($this->sql, array(
+            $sql = \strtr($sql, array(
                 ' : ' => ' :',
                 ' =: ' => ' = :',
             ));
         }
+        if (!self::$constants) {
+            $ref = new \ReflectionClass('PDO');
+            $consts = array();
+            $constsAll = $ref->getConstants();
+            foreach ($constsAll as $name => $val) {
+                if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
+                    $consts[$val] = '\\PDO::'.$name;
+                }
+            }
+            if (\class_exists('\\Doctrine\\DBAL\\Connection')) {
+                $consts += array(
+                    \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => '\\Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
+                    \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => '\\Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',
+                );
+            }
+            self::$constants = $consts;
+        }
+        $this->memoryStart = \memory_get_usage(false);
+        $this->params = $params;
+        $this->sql = $sql;
+        $this->timeStart = \microtime(true);
+        $this->types = $types;
     }
 
     /**
@@ -86,9 +102,10 @@ class StatementInfo
             'duration' => $this->duration,
             'exception' => $this->exception,
             'memoryUsage' => $this->memoryUsage,
-            'parameters' => $this->parameters,
+            'params' => $this->params,
             'rowCount' => $this->rowCount,
             'sql' => $this->sql,
+            'types' => $this->types,
         );
     }
 
@@ -116,20 +133,61 @@ class StatementInfo
     /**
      * @param \Exception|null $exception Exception (if statement threw exception)
      * @param integer         $rowCount  Number of rows affected by the last DELETE, INSERT, or UPDATE statement
-     * @param float           $timeEnd   microtime statement returned
-     * @param integer         $memoryEnd memory usage when statement returned
      *
      * @return void
      */
-    public function end(\PDOException $exception = null, $rowCount = 0, $timeEnd = null, $memoryEnd = null)
+    public function end(\PDOException $exception = null, $rowCount = 0)
     {
         $this->exception = $exception;
         $this->rowCount = $rowCount;
-        $this->timeEnd = $timeEnd ?: \microtime(true);
-        $this->memoryEnd = $memoryEnd ?: \memory_get_usage(false);
+        $this->timeEnd = \microtime(true);
+        $this->memoryEnd = \memory_get_usage(false);
         $this->duration = $this->timeEnd - $this->timeStart;
         $this->memoryUsage = \max($this->memoryEnd - $this->memoryStart, 0);
         $this->isSuccess = $exception === null;
+    }
+
+    /**
+     * Add this info to debug log
+     *
+     * @param Debug $debug Debug instance
+     *
+     * @return void
+     */
+    public function appendLog(Debug $debug)
+    {
+        $logSql = true;
+        $label = $this->sql;
+        if (\preg_match('/^(
+            (?:DROP|SHOW).+$|
+            CREATE(?:\sTEMPORARY)?\s+TABLE(?:\sIF\sNOT\sEXISTS)?\s+\S+|
+            DELETE.*?FROM\s+\S+|
+            INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
+            SELECT\s*(?P<select>.*?)\s+FROM\s+\S+|
+            UPDATE\s+\S+
+        )(?P<more>.*)/imsx', $label, $matches)) {
+            $logSql = !empty($matches['more']);
+            $label = $matches[1].($logSql ? '…' : '');
+            if (\strlen($matches['select']) > 100) {
+                $label = \str_replace($matches['select'], '(…)', $label);
+            }
+            $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
+        }
+        $debug->groupCollapsed($label, $debug->meta(array(
+            'icon' => $debug->getCfg('channelIcon'),
+            'boldLabel' => false,
+        )));
+        if ($logSql) {
+            $debug->log(
+                '<pre><code class="language-sql">'.\htmlspecialchars($this->sql).'</code></pre>',
+                $debug->meta('class', 'no-indent')
+            );
+        }
+        $this->logParams($debug);
+        $debug->time('duration', $this->duration);
+        $debug->log('memory usage', $debug->utilities->getBytes($this->memoryUsage));
+        $debug->log('rowCount', $this->rowCount);
+        $debug->groupEnd();
     }
 
     /**
@@ -174,7 +232,7 @@ class StatementInfo
         }
 
         $sql = $this->sql;
-        foreach ($this->parameters as $k => $v) {
+        foreach ($this->params as $k => $v) {
             $v = "$quoteLeft$v$quoteRight";
             if (!\is_numeric($k)) {
                 $sql = \preg_replace('/'.$k.'\b/', $v, $sql);
@@ -184,5 +242,38 @@ class StatementInfo
             }
         }
         return $sql;
+    }
+
+    /**
+     * [logParams description]
+     *
+     * @param Debug $debug [description]
+     *
+     * @return void
+     */
+    private function logParams(Debug $debug)
+    {
+        if (!$this->params) {
+            return;
+        }
+        if (!$this->types) {
+            $debug->log('parameters', $this->params);
+            return;
+        }
+        $params = array();
+        foreach ($this->params as $name => $value) {
+            $params[$name] = array(
+                'value' => $value,
+            );
+            if (!isset($this->types[$name])) {
+                continue;
+            }
+            $type = $this->types[$name];
+            $params[$name]['type'] = $type;
+            if (isset(self::$constants[$type])) {
+                $params[$name]['type'] = self::$constants[$type];
+            }
+        }
+        $debug->table('parameters', $params);
     }
 }

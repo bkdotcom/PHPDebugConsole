@@ -20,9 +20,9 @@ class AbstractObject
 {
 
     static private $basePropInfo = array(
+        'debugInfoExcluded' => false,   // true if not included in __debugInfo
         'desc' => null,
         'inheritedFrom' => null,        // populated only if inherited
-        'isExcluded' => false,          // true if not included in __debugInfo
         'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
         'overrides' => null,            // populated only if we're overriding
@@ -194,7 +194,7 @@ class AbstractObject
         $obj = $event->getSubject();
         if ($obj instanceof \Exception) {
             if (isset($event['properties']['xdebug_message'])) {
-                $event['properties']['xdebug_message']['isExcluded'] = true;
+                $event['properties']['xdebug_message']['debugInfoExcluded'] = true;
             }
         } elseif ($obj instanceof \mysqli && !$event['collectPropertyValues']) {
             $propsAlwaysAvail = array(
@@ -475,7 +475,7 @@ class AbstractObject
                 // exempt from isExcluded
                 continue;
             }
-            $properties[$name]['isExcluded'] = true;
+            $properties[$name]['debugInfoExcluded'] = true;
         }
         foreach ($debugInfo as $name => $value) {
             $properties[$name] = \array_merge(

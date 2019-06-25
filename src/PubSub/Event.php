@@ -170,7 +170,7 @@ class Event implements ArrayAccess, IteratorAggregate
      */
     public function offsetExists($key)
     {
-        return $this->hasValue($key);
+        return isset($this->values[$key]);
     }
 
     /**

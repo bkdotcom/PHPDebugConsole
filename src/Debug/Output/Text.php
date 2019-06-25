@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Output;
 
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
@@ -92,7 +93,8 @@ class Text extends Base
             $prefix = '[Alert '.$prefix.$level.'] ';
             $args = array($args[0]);
         } elseif (\in_array($method, array('profileEnd','table'))) {
-            if (\is_array($args[0])) {
+            $asTable = \is_array($args[0]) && (bool) $args[0] || $this->debug->abstracter->isAbstraction($args[0], 'object');
+            if ($asTable) {
                 $args = array($this->methodTable($args[0], $meta['columns']));
             }
             if ($meta['caption']) {
@@ -212,11 +214,11 @@ class Text extends Base
     /**
      * Dump object as text
      *
-     * @param array $abs object "abstraction"
+     * @param Abstraction $abs object "abstraction"
      *
      * @return string
      */
-    protected function dumpObject($abs)
+    protected function dumpObject(Abstraction $abs)
     {
         $isNested = $this->valueDepth > 0;
         $this->valueDepth++;
@@ -241,11 +243,11 @@ class Text extends Base
     /**
      * Dump object properties as text
      *
-     * @param array $abs object abstraction
+     * @param Abstraction $abs object abstraction
      *
      * @return string
      */
-    protected function dumpProperties($abs)
+    protected function dumpProperties(Abstraction $abs)
     {
         $str = '';
         $propHeader = '';

@@ -28,7 +28,7 @@ function addIcons($node) {
  * Minimal DOM manipulation -> apply to all descendants
  */
 export function enhance($node) {
-	$node.find("> .t_classname").each(function() {
+	$node.find("> .classname").each(function() {
 		var $toggle = $(this),
 			$target = $toggle.next();
 		if ($target.is(".t_recursion, .excluded")) {

@@ -12,6 +12,7 @@
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
@@ -29,6 +30,7 @@ class Html extends Base
     protected $logEntryAttribs = array();
     protected $channels = array();
     protected $detectFiles = false;
+    protected $argStringOpts = array();     // per-argument string options
 
     /**
      * Constructor
@@ -44,19 +46,39 @@ class Html extends Base
     /**
      * Dump value as html
      *
-     * @param mixed        $val      value to dump
-     * @param boolean      $sanitize (true) apply htmlspecialchars?
-     * @param string|false $tagName  (span) tag to wrap value in (or false)
+     * @param mixed        $val     value to dump
+     * @param array        $opts    options for string values
+     * @param string|false $tagName (span) tag to wrap value in (or false)
      *
      * @return string
      */
-    public function dump($val, $sanitize = true, $tagName = 'span')
+    public function dump($val, $opts = array(), $tagName = 'span')
     {
         $this->argAttribs = array(
             'class' => array(),
             'title' => null,
         );
-        $this->sanitize = $sanitize;
+        $optsDefault = array(
+            'addQuotes' => true,
+            'sanitize' => true,
+            'visualWhiteSpace' => true,
+        );
+        if (\is_bool($opts)) {
+            $keys = \array_keys($optsDefault);
+            $opts = \array_fill_keys($keys, $opts);
+        } else {
+            $opts = \array_merge($optsDefault, $opts);
+        }
+        $absAttribs = array();
+        if ($val instanceof Abstraction) {
+            $absAttribs = $val['attribs'];
+            foreach (\array_keys($opts) as $k) {
+                if ($val[$k] !== null) {
+                    $opts[$k] = $val[$k];
+                }
+            }
+        }
+        $this->argStringOpts = $opts;
         $val = parent::dump($val);
         if ($tagName && !\in_array($this->dumpType, array('recursion'))) {
             $argAttribs = $this->debug->utilities->arrayMergeDeep(
@@ -68,6 +90,15 @@ class Html extends Base
                 ),
                 $this->argAttribs
             );
+            if ($absAttribs) {
+                $absAttribs['class'] = isset($absAttribs['class'])
+                    ? (array) $absAttribs['class']
+                    : array();
+                $argAttribs = $this->debug->utilities->arrayMergeDeep(
+                    $argAttribs,
+                    $absAttribs
+                );
+            }
             $val = $this->debug->utilities->buildTag($tagName, $argAttribs, $val);
         }
         $this->argAttribs = array();
@@ -75,25 +106,25 @@ class Html extends Base
     }
 
     /**
-     * Wrap classname in span.t_classname
-     * if namespaced'd additionally wrap namespace in span.namespace
-     * If callable, also wrap .t_operator and .t_method-name
+     * Wrap classname in span.classname
+     * if namespaced additionally wrap namespace in span.namespace
+     * If callable, also wrap with .t_operator and .t_identifier
      *
-     * @param string $str     classname or classname(::|->)methodname
-     * @param string $tagName ("span") html tag to use
+     * @param string $str     classname or classname(::|->)name (method/property/const)
      * @param array  $attribs additional html attributes
+     * @param string $tagName ("span") html tag to use
      *
      * @return string
      */
-    public function markupClassname($str, $tagName = 'span', $attribs = array())
+    public function markupIdentifier($str, $attribs = array(), $tagName = 'span')
     {
         if (\preg_match('/^(.+)(::|->)(.+)$/', $str, $matches)) {
             $classname = $matches[1];
-            $opMethod = '<span class="t_operator">'.\htmlspecialchars($matches[2]).'</span>'
-                    . '<span class="method-name">'.$matches[3].'</span>';
+            $opIdentifier = '<span class="t_operator">'.\htmlspecialchars($matches[2]).'</span>'
+                    . '<span class="t_identifier">'.$matches[3].'</span>';
         } else {
             $classname = $str;
-            $opMethod = '';
+            $opIdentifier = '';
         }
         $idx = \strrpos($classname, '\\');
         if ($idx) {
@@ -101,10 +132,10 @@ class Html extends Base
                 . \substr($classname, $idx + 1);
         }
         $attribs = \array_merge(array(
-            'class' => 't_classname',
+            'class' => 'classname',
         ), $attribs);
         return $this->debug->utilities->buildTag($tagName, $attribs, $classname)
-            .$opMethod;
+            .$opIdentifier;
     }
 
     /**
@@ -182,10 +213,9 @@ class Html extends Base
         $str = '';
         $method = $logEntry['method'];
         $meta = \array_merge(array(
-            'class' => null,
+            'attribs' => array(),
             'detectFiles' => null,
             'icon' => null,
-            'style' => null,
         ), $logEntry['meta']);
         $channelName = $logEntry->getChannel();
         // phpError channel is handled separately
@@ -194,14 +224,15 @@ class Html extends Base
         }
         $this->detectFiles = $meta['detectFiles'];
         $this->logEntryAttribs = array(
-            'class' => 'm_'.$method.' '.$meta['class'],
+            'class' => '',
             'data-channel' => $channelName !== $this->channelNameRoot
                 ? $channelName
                 : null,
             'data-detect-files' => $meta['detectFiles'],
             'data-icon' => $meta['icon'],
-            'style' => $meta['style'],
         );
+        $this->logEntryAttribs = \array_merge($this->logEntryAttribs, $meta['attribs']);
+        $this->logEntryAttribs['class'] .= ' m_'.$method;
         if ($method == 'alert') {
             $str = $this->buildMethodAlert($logEntry);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
@@ -233,8 +264,12 @@ class Html extends Base
         $glue = ', ';
         $glueAfterFirst = true;
         $meta = \array_merge(array(
-            'sanitize' => true, // apply htmlspecialchars (to non-first arg)?
+            'sanitize' => true,         // apply htmlspecialchars (to non-first arg)?
+            'sanitizeFirst' => null,    // if null, use meta.sanitize
         ), $meta);
+        if ($meta['sanitizeFirst'] === null) {
+            $meta['sanitizeFirst'] = $meta['sanitize'];
+        }
         if (\is_string($args[0])) {
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
@@ -245,9 +280,13 @@ class Html extends Base
             }
         }
         foreach ($args as $i => $v) {
-            $args[$i] = $i > 0
-                ? $this->dump($v, $meta['sanitize'])
-                : $this->dump($v, false);
+            $args[$i] = $this->dump($v, array(
+                'sanitize' => $i === 0
+                    ? $meta['sanitizeFirst']
+                    : $meta['sanitize'],
+                'addQuotes' => $i !== 0,
+                'visualWhiteSpace' => $i !== 0,
+            ));
         }
         if (!$glueAfterFirst) {
             return $args[0].\implode($glue, \array_slice($args, 1));
@@ -330,7 +369,6 @@ class Html extends Base
         $args = $logEntry['args'];
         $meta = \array_merge(array(
             'errorCat' => null,
-            'sanitize' => true,
         ), $logEntry['meta']);
         $attribs = \array_merge($this->logEntryAttribs, array(
             'title' => isset($meta['file']) && $logEntry->getChannel() !== 'phpError'
@@ -371,7 +409,7 @@ class Html extends Base
         $meta = \array_merge(array(
             'argsAsParams' => true,
             'boldLabel' => true,
-            'isMethodName' => false,
+            'isFuncName' => false,
             'level' => null,
         ), $logEntry['meta']);
         $str = '';
@@ -385,8 +423,8 @@ class Html extends Base
             }
             $argStr = \implode(', ', $args);
             if ($meta['argsAsParams']) {
-                if ($meta['isMethodName']) {
-                    $label = $this->markupClassname($label);
+                if ($meta['isFuncName']) {
+                    $label = $this->markupIdentifier($label);
                 }
                 $argStr = '<span class="group-label group-label-bold">'.$label.'(</span>'
                     .$argStr
@@ -400,7 +438,7 @@ class Html extends Base
             if (!$meta['boldLabel']) {
                 $argStr = \str_replace(' group-label-bold', '', $argStr);
             }
-            $this->logEntryAttribs['class'] = 'm_group';
+            $this->logEntryAttribs['class'] = \str_replace('m_'.$method, 'm_group', $this->logEntryAttribs['class']);
             $str .= '<li'.$this->debug->utilities->buildAttribString($this->logEntryAttribs).'>'."\n";
             /*
                 Header / label / toggle
@@ -449,7 +487,12 @@ class Html extends Base
             'sortable' => false,
             'totalCols' => array(),
         ), $logEntry['meta']);
-        $asTable = \is_array($args[0]) && $args[0];
+        $asTable = false;
+        if (\is_array($args[0])) {
+            $asTable = (bool) $args[0];
+        } elseif ($this->debug->abstracter->isAbstraction($args[0], 'object')) {
+            $asTable = true;
+        }
         if (!$asTable && $meta['caption']) {
             \array_unshift($args, $meta['caption']);
         }
@@ -532,14 +575,29 @@ class Html extends Base
     /**
      * Dump "Callable" as html
      *
-     * @param array $abs array/callable abstraction
+     * @param Abstraction $abs array/callable abstraction
      *
      * @return string
      */
-    protected function dumpCallable($abs)
+    protected function dumpCallable(Abstraction $abs)
     {
         return '<span class="t_type">callable</span> '
-            .$this->markupClassname($abs['values'][0].'::'.$abs['values'][1]);
+            .$this->markupIdentifier($abs['values'][0].'::'.$abs['values'][1]);
+    }
+
+    /**
+     * Dump "const" abstration as html
+     *
+     * @param Abstraction $abs const abstraction
+     *
+     * @return string
+     */
+    protected function dumpConst(Abstraction $abs)
+    {
+        $this->argAttribs['title'] = $abs['value']
+            ? 'value: '.$this->debug->output->text->dump($abs['value'])
+            : null;
+        return $this->markupIdentifier($abs['name']);
     }
 
     /**
@@ -584,11 +642,11 @@ class Html extends Base
     /**
      * Dump object as html
      *
-     * @param array $abs object abstraction
+     * @param Abstraction $abs object abstraction
      *
      * @return string
      */
-    protected function dumpObject($abs)
+    protected function dumpObject(Abstraction $abs)
     {
         /*
             Were we debugged from inside or outside of the object?
@@ -629,13 +687,17 @@ class Html extends Base
             if ($this->detectFiles && !\preg_match('/[\r\n]/', $val) && \is_file($val)) {
                 $this->argAttribs['class'][] = 'file';
             }
-            if ($this->sanitize) {
+            if ($this->argStringOpts['sanitize']) {
                 $val = $this->debug->utf8->dump($val, true, true);
-                $val = $this->visualWhiteSpace($val);
             } else {
-                $this->argAttribs['class'][] = 'no-pseudo';
                 $val = $this->debug->utf8->dump($val, true, false);
             }
+            if ($this->argStringOpts['visualWhiteSpace']) {
+                $val = $this->visualWhiteSpace($val);
+            }
+        }
+        if (!$this->argStringOpts['addQuotes']) {
+            $this->argAttribs['class'][] = 'no-quotes';
         }
         return $val;
     }
@@ -706,7 +768,7 @@ class Html extends Base
      */
     protected function substitutionAsString($val)
     {
-        $type = $this->debug->abstracter->getType($val);
+        list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($type == 'string') {
             $val = $this->dump($val, true, false);
         } elseif ($type == 'array') {
@@ -714,7 +776,7 @@ class Html extends Base
             $val = '<span class="t_keyword">array</span>'
                 .'<span class="t_punct">(</span>'.$count.'<span class="t_punct">)</span>';
         } elseif ($type == 'object') {
-            $val = $this->markupClassname($val['className']);
+            $val = $this->markupIdentifier($val['className']);
         } else {
             $val = $this->dump($val);
         }

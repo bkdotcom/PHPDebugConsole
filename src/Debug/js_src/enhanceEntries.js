@@ -412,10 +412,10 @@ function enhanceValue($entry, node) {
 		} else {
 			$span.addClass("t_float");
 		}
-		if ($node.is(".no-pseudo")) {
-			$span.addClass("no-pseudo");
+		if ($node.is(".no-quotes")) {
+			$span.addClass("no-quotes");
 		}
-		$node.removeClass("t_float t_int t_string numeric no-pseudo");
+		$node.removeClass("t_float t_int t_string numeric no-quotes");
 		$node.html($i).append($span);
 	}
 }

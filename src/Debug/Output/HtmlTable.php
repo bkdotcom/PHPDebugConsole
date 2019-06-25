@@ -60,16 +60,26 @@ class HtmlTable
                 'class' => $options['attribs'],
             );
         }
-        if ($this->debug->abstracter->isAbstraction($rows) && $rows['traverseValues']) {
-            $options['caption'] .= ' ('.$this->outputHtml->markupClassname(
-                $rows['className'],
-                'span',
-                array(
-                    'title' => $rows['phpDoc']['summary'] ?: null,
-                )
-            ).')';
-            $options['caption'] = \trim($options['caption']);
-            $rows = $rows['traverseValues'];
+        if ($this->debug->abstracter->isAbstraction($rows, 'object')) {
+            if ($rows['traverseValues']) {
+                $options['caption'] .= ' ('.$this->outputHtml->markupIdentifier(
+                    $rows['className'],
+                    array(
+                        'title' => $rows['phpDoc']['summary'] ?: null,
+                    )
+                ).')';
+                $options['caption'] = \trim($options['caption']);
+                $rows = $rows['traverseValues'];
+            } else {
+                $rows = \array_map(
+                    function ($info) {
+                        return $info['value'];
+                    },
+                    \array_filter($rows['properties'], function ($info) {
+                        return !\in_array($info['visibility'], array('private', 'protected'));
+                    })
+                );
+            }
         }
         $keys = $options['columns'] ?: $this->debug->methodTable->colKeys($rows);
         $this->tableInfo = array(
@@ -79,19 +89,19 @@ class HtmlTable
         );
         $tBody = '';
         foreach ($rows as $k => $row) {
-            $tBody .= $this->buildTableRow($row, $keys, $k);
+            $tBody .= $this->buildRow($row, $keys, $k);
         }
         if (!$this->tableInfo['haveObjRow']) {
-            $tBody = \str_replace('<td class="t_classname"></td>', '', $tBody);
+            $tBody = \str_replace('<td class="classname"></td>', '', $tBody);
         }
         return $this->debug->utilities->buildTag(
             'table',
             $options['attribs'],
             "\n"
                 .($options['caption'] ? '<caption>'.$options['caption'].'</caption>'."\n" : '')
-                .$this->buildTableHeader($keys)
+                .$this->buildHeader($keys)
                 .'<tbody>'."\n".$tBody.'</tbody>'."\n"
-                .$this->buildTableFooter($keys)
+                .$this->buildFooter($keys)
         );
     }
 
@@ -102,7 +112,7 @@ class HtmlTable
      *
      * @return string
      */
-    protected function buildTableFooter($keys)
+    protected function buildFooter($keys)
     {
         $haveTotal = false;
         $cells = array();
@@ -131,7 +141,7 @@ class HtmlTable
      *
      * @return string
      */
-    protected function buildTableHeader($keys)
+    protected function buildHeader($keys)
     {
         $headers = array();
         foreach ($keys as $key) {
@@ -139,7 +149,7 @@ class HtmlTable
                 ? 'value'
                 : \htmlspecialchars($key);
             if ($this->tableInfo['colClasses'][$key]) {
-                $headers[$key] .= ' '.$this->outputHtml->markupClassname($this->tableInfo['colClasses'][$key]);
+                $headers[$key] .= ' '.$this->outputHtml->markupIdentifier($this->tableInfo['colClasses'][$key]);
             }
         }
         return '<thead>'."\n"
@@ -159,7 +169,7 @@ class HtmlTable
      *
      * @return string
      */
-    protected function buildTableRow($row, $keys, $rowKey)
+    protected function buildRow($row, $keys, $rowKey)
     {
         $str = '';
         $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
@@ -174,12 +184,12 @@ class HtmlTable
             $parsed['innerhtml']
         );
         if ($objInfo['row']) {
-            $str .= $this->outputHtml->markupClassname($objInfo['row']['className'], 'td', array(
+            $str .= $this->outputHtml->markupIdentifier($objInfo['row']['className'], array(
                 'title' => $objInfo['row']['phpDoc']['summary'] ?: null,
-            ));
+            ), 'td');
             $this->tableInfo['haveObjRow'] = true;
         } else {
-            $str .= '<td class="t_classname"></td>';
+            $str .= '<td class="classname"></td>';
         }
         foreach ($values as $v) {
             $str .= $this->outputHtml->dump($v, true, 'td');

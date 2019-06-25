@@ -35,9 +35,11 @@
 	},
 	"require-dev": {
 		"bdk/css-xpath": "^1.0",
-		"psr/log": "^1.0",
+		"doctrine/dbal": "^2.5.0",
+		"guzzlehttp/guzzle": "^6.3",
 		"monolog/monolog": "^1.0",
 		"php-curl-class/php-curl-class": "^8.6",
+		"psr/log": "^1.0",
 		"slim/slim": "^2.0",
 		"swiftmailer/swiftmailer": "^5.0",
 		"twig/twig": "^1.0"

@@ -35,7 +35,7 @@ class Pdo extends PdoBase
      * @param \PDO  $pdo   PDO instance
      * @param Debug $debug (optional) Specify PHPDebugConsole instance
      *                        if not passed, will create PDO channnel on singleton instance
-     *                        if root channel is specifyed, will create a PDO channel
+     *                        if root channel is specified, will create a PDO channel
      */
     public function __construct(\PDO $pdo, Debug $debug = null)
     {

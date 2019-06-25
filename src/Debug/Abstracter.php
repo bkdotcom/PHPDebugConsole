@@ -12,6 +12,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
 
 /**
  * Methods used store array/object/resource info
@@ -27,7 +28,7 @@ class Abstracter
     const ABSTRACTION = "\x00debug\x00";
     const NOT_INSPECTED = "\x00notInspected\x00";
     const RECURSION = "\x00recursion\x00";  // ie, array recursion
-    const TYPE_UNDEFINED = "\x00undefined\x00";
+    const UNDEFINED = "\x00undefined\x00";
 
     /**
      * Constructor
@@ -94,35 +95,33 @@ class Abstracter
         } elseif (\is_object($mixed)) {
             return $this->abstractObject->getAbstraction($mixed, $method, $hist);
         } elseif (\is_resource($mixed) || \strpos(\print_r($mixed, true), 'Resource') === 0) {
-            return array(
-                'debug' => self::ABSTRACTION,
+            return new Abstraction(array(
                 'type' => 'resource',
                 'value' => \print_r($mixed, true).': '.\get_resource_type($mixed),
-            );
+            ));
         }
     }
 
     /**
-     * Returns value's type
+     * Returns value's type and "extended type" (ie "numeric"/"binary")
      *
-     * @param mixed  $val      value
-     * @param string $typeMore will be populated with additional type info ("numeric"/"binary")
+     * @param mixed $val value
      *
-     * @return string
+     * @return array [$type, $typeMore]
      */
-    public static function getType($val, &$typeMore = null)
+    public static function getType($val)
     {
-        if (\is_string($val)) {
+        $typeMore = null;
+        if ($val instanceof Abstraction) {
+            $type = $val['type'];
+            $typeMore = 'abstraction';
+        } elseif (\is_string($val)) {
             list($type, $typeMore) = self::getStringType($val);
         } elseif (\is_array($val)) {
-            if (\in_array(self::ABSTRACTION, $val, true)) {
-                $type = $val['type'];
-                $typeMore = 'abstraction';
-            } elseif (AbstractArray::isCallable($val)) {
+            $type = 'array';
+            $typeMore = 'raw';  // needs abstracted (references removed / values abstracted if necessary)
+            if (AbstractArray::isCallable($val)) {
                 $type = 'callable';
-                $typeMore = 'raw';  // needs abstracted
-            } else {
-                $type = 'array';
                 $typeMore = 'raw';  // needs abstracted
             }
         } elseif (\is_bool($val)) {
@@ -143,19 +142,26 @@ class Abstracter
             $type = 'resource';
             $typeMore = 'raw';  // needs abstracted
         }
-        return $type;
+        return array($type, $typeMore);
     }
 
     /**
      * Is the passed value an abstraction
      *
-     * @param mixed $mixed value to check
+     * @param mixed  $mixed value to check
+     * @param string $type  additionally check type
      *
      * @return boolean
      */
-    public static function isAbstraction($mixed)
+    public static function isAbstraction($mixed, $type = null)
     {
-        return \is_array($mixed) && isset($mixed['debug']) && $mixed['debug'] === self::ABSTRACTION;
+        $isAbstraction = $mixed instanceof Abstraction;
+        if (!$isAbstraction) {
+            return false;
+        }
+        return $type
+            ? $mixed['type'] === $type
+            : true;
     }
 
     /**
@@ -167,7 +173,7 @@ class Abstracter
      */
     public static function needsAbstraction($val)
     {
-        self::getType($val, $typeMore);
+        list($type, $typeMore) = self::getType($val);
         return $typeMore === 'raw';
     }
 
@@ -215,7 +221,7 @@ class Abstracter
         $typeMore = null;
         if (\is_numeric($val)) {
             $typeMore = 'numeric';
-        } elseif ($val === self::TYPE_UNDEFINED) {
+        } elseif ($val === self::UNDEFINED) {
             $type = 'undefined';    // not a native php type!
         } elseif ($val === self::RECURSION) {
             $type = 'recursion';    // not a native php type!

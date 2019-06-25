@@ -69,10 +69,12 @@ i.fa-lg { font-size:1.33em; }
 .vis-toggles span { cursor:pointer; }
 
 .empty {
-	&.m_group .group-header,
-	&.t_classname {
+	&.m_group .group-header {
 		cursor: auto;
 	}
+	// &.classname {
+		// cursor: auto;
+	// }
 }
 
 .vis-toggles span:hover,

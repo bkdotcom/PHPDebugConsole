@@ -15,6 +15,7 @@
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Output\OutputInterface;
 use bdk\ErrorHandler\Error;
@@ -59,10 +60,10 @@ class Wamp implements OutputInterface
     }
 
      /**
-     * Return a list of event subscribers
-     *
-     * @return array The event names to subscribe to
-     */
+      * Return a list of event subscribers
+      *
+      * @return array The event names to subscribe to
+      */
     public function getSubscriptions()
     {
         if (!$this->isConnected()) {
@@ -198,6 +199,43 @@ class Wamp implements OutputInterface
     }
 
     /**
+     * Crate object abstraction
+     * (make sure string values are base64 encoded when necessary)
+     *
+     * @param Abstraction $abs Object abstraction
+     *
+     * @return array
+     */
+    private function crateObject(Abstraction $abs)
+    {
+        $info = $abs->jsonSerialize();
+        foreach ($info['properties'] as $k => $propInfo) {
+            $info['properties'][$k]['value'] = $this->crateValues($propInfo['value']);
+        }
+        if (isset($info['methods']['__toString'])) {
+            $info['methods']['__toString'] = $this->crateValues($info['methods']['__toString']);
+        }
+        return $info;
+    }
+
+    /**
+     * Base64 encode string if it contains non-utf8 characters
+     *
+     * @param string $str string
+     *
+     * @return string
+     */
+    private function crateString($str)
+    {
+        if (!$this->debug->utf8->isUtf8($str)) {
+            $str = '_b64_:'.\base64_encode($str);
+        } elseif ($this->detectFiles && !\preg_match('/[\r\n]/', $str) && \is_file($str)) {
+            $this->foundFiles[] = $str;
+        }
+        return $str;
+    }
+
+    /**
      * JSON doesn't handle binary well (at all)
      *     a) strings with invalid utf-8 can't be json_encoded
      *     b) "javascript has a unicode problem" / will munge strings
@@ -208,39 +246,36 @@ class Wamp implements OutputInterface
      *     in practice this seems to only be an issue with int/numeric keys
      *     store property order
      *
-     * @param array $values array structure
+     * @param mixed $mixed value to crate
      *
      * @return array
      */
-    private function crateValues($values)
+    private function crateValues($mixed)
     {
-        $prevIntK = null;
-        $storeKeyOrder = false;
-        foreach ($values as $k => $v) {
-            if (!$storeKeyOrder && \is_int($k)) {
-                if ($k < $prevIntK) {
-                    $storeKeyOrder = true;
+        if (\is_array($mixed)) {
+            $prevIntK = null;
+            $storeKeyOrder = false;
+            foreach ($mixed as $k => $v) {
+                if (!$storeKeyOrder && \is_int($k)) {
+                    if ($k < $prevIntK) {
+                        $storeKeyOrder = true;
+                    }
+                    $prevIntK = $k;
                 }
-                $prevIntK = $k;
+                $mixed[$k] = $this->crateValues($v);
             }
-            if (\is_array($v)) {
-                if ($this->debug->abstracter->isAbstraction($v) && $v['type'] == 'object') {
-                    $values[$k]['properties'] = self::crateValues($v['properties']);
-                } else {
-                    $values[$k] = self::crateValues($v);
-                }
-            } elseif (\is_string($v)) {
-                if (!$this->debug->utf8->isUtf8($v)) {
-                    $values[$k] = '_b64_:'.\base64_encode($v);
-                } elseif ($this->detectFiles && !\preg_match('/[\r\n]/', $v) && \is_file($v)) {
-                    $this->foundFiles[] = $v;
-                }
+            if ($storeKeyOrder) {
+                $mixed['__debug_key_order__'] = \array_keys($mixed);
             }
+            return $mixed;
         }
-        if ($storeKeyOrder) {
-            $values['__debug_key_order__'] = \array_keys($values);
+        if (\is_string($mixed)) {
+            return $this->crateString($mixed);
         }
-        return $values;
+        if ($this->debug->abstracter->isAbstraction($mixed, 'object')) {
+            return $this->crateObject($mixed);
+        }
+        return $mixed;
     }
 
     /**

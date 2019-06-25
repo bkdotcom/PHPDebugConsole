@@ -20,6 +20,8 @@ use bdk\Debug\LogEntry;
 class Utilities
 {
 
+    const INCL_ARGS = 1;
+
     /**
      * Used to determine caller info...
      * backtrace is walked and we stop when frame matches on of the set classes or filepaths
@@ -375,7 +377,7 @@ class Utilities
      *
      * @return array
      */
-    public static function getCallerInfo($offset = 0)
+    public static function getCallerInfo($offset = 0, $flags = 0)
     {
         /*
             backtrace:
@@ -385,7 +387,11 @@ class Utilities
 
             Must get at least backtrace 13 frames to account for potential framework loggers
         */
-        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 13);
+        $options = DEBUG_BACKTRACE_PROVIDE_OBJECT;
+        if (!($flags & self::INCL_ARGS)) {
+            $options = $options | DEBUG_BACKTRACE_IGNORE_ARGS;
+        }
+        $backtrace = \debug_backtrace($options, 13);
         $numFrames = \count($backtrace);
         for ($i = $numFrames - 1; $i > 1; $i--) {
             if (isset($backtrace[$i]['class']) && \preg_match(self::$callerBreakers['classesRegex'], $backtrace[$i]['class'])) {
@@ -660,7 +666,9 @@ class Utilities
                 $str = $strInflated;
             }
         }
-        $data = \unserialize($str);
+        $data = self::unserializeSafe($str, array(
+            'bdk\\Debug\\Abstraction\\Abstraction',
+        ));
         foreach (array('alerts','log','logSummary') as $what) {
             foreach ($data[$what] as $i => $v) {
                 if ($what == 'logSummary') {
@@ -765,7 +773,8 @@ class Utilities
             }
         }
         if (isset($backtrace[$iFunc])) {
-            $return = \array_merge($return, \array_intersect_key($backtrace[$iFunc], $return));
+            $return = \array_merge($return, $backtrace[$iFunc]);
+            unset($return['object']);
             if ($return['type'] == '->') {
                 $return['class'] = \get_class($backtrace[$iFunc]['object']);
             }
@@ -791,5 +800,34 @@ class Utilities
     private static function isCallable($array)
     {
         return \is_callable($array, true) && \is_object($array[0]);
+    }
+
+    /**
+     * Unserialize while only allowing the specified classes to be unserialized
+     *
+     * @param string $str            serialized string
+     * @param array  $allowedClasses allowed class names
+     *
+     * @return mixed
+     */
+    private static function unserializeSafe($str, $allowedClasses = array())
+    {
+        if (\version_compare(PHP_VERSION, '7.0', '>=')) {
+            // 2nd param is PHP >= 7.0 (get a warning: unserialize() expects exactly 1 parameter, 2 given)
+            return \unserialize($str, array(
+                'allowed_classes' => $allowedClasses,
+            ));
+        }
+        // There's a possibility this pattern may be found inside a string (false positive)
+        $regex = '#[CO]:(\d+):"([\w\\\\]+)":\d+:#';
+        \preg_match_all($regex, $str, $matches, PREG_SET_ORDER);
+        foreach ($matches as $set) {
+            if (\strlen($set[2]) !== $set[1]) {
+                continue;
+            } elseif (!\in_array($set[2], $allowedClasses)) {
+                return false;
+            }
+        }
+        return \unserialize($str);
     }
 }

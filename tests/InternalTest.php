@@ -36,6 +36,7 @@ class InternalTest extends DebugTestFramework
         $this->assertFalse($this->emailCalled);
 
         $this->debug->log('this is a test');
+        $this->debug->log(new \DateTime());
 
         /*
             Test that emailed if something logged
@@ -102,7 +103,7 @@ class InternalTest extends DebugTestFramework
                 ),
             )
         );
-        $this->assertSame($this->deObjectify($expect), $this->deObjectify($unserialized));
+        $this->assertEquals($this->deObjectify($expect), $this->deObjectify($unserialized));
     }
 
     protected function deObjectify($data)

@@ -31,7 +31,7 @@
 	 * Minimal DOM manipulation -> apply to all descendants
 	 */
 	function enhance($node) {
-		$node.find("> .t_classname").each(function() {
+		$node.find("> .classname").each(function() {
 			var $toggle = $(this),
 				$target = $toggle.next();
 			if ($target.is(".t_recursion, .excluded")) {
@@ -639,10 +639,10 @@
 			} else {
 				$span.addClass("t_float");
 			}
-			if ($node.is(".no-pseudo")) {
-				$span.addClass("no-pseudo");
+			if ($node.is(".no-quotes")) {
+				$span.addClass("no-quotes");
 			}
-			$node.removeClass("t_float t_int t_string numeric no-pseudo");
+			$node.removeClass("t_float t_int t_string numeric no-quotes");
 			$node.html($i).append($span);
 		}
 	}

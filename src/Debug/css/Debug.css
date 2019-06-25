@@ -2,7 +2,7 @@
 	Base debug CSS
 	use setCfg('css', 'more css'); to add rules / override default
 */
-.debug { font-size: 13px; }
+.debug { font-size: 13px; /** Quite unusual, but experienced site css that modified div css...  reset */ }
 .debug { position: relative; clear: both; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: normal; text-shadow: none; color: #111; }
 .debug * { font-size: inherit; line-height: normal; text-indent: 0; color: inherit; }
 .debug a { text-decoration: none; color: #00e; }
@@ -14,6 +14,7 @@
 .debug button:hover { background-color: #DDE6F0; }
 .debug code { padding: 2px 4px; background-color: transparent; font-family: Menlo,Monaco,Consolas,"Courier New",monospace; }
 .debug pre code { display: block; }
+.debug, .debug div { margin: 0; width: auto; padding: 0; background-color: transparent; border-radius: 0; }
 .debug dl { margin-top: 0; margin-bottom: 0; }
 .debug dl dt { font-weight: bold; }
 .debug dl:not(.dl-horizontal) dd { margin-left: 20px; padding-left: 10px; text-indent: -10px; }
@@ -37,7 +38,7 @@
 .debug .debug-menu-bar button { height: 18px; border: 0; padding: 0; line-height: 0; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: transparent; }
 .debug .debug-error-counts .badge { padding: 0 0.4em 0 0.25em; color: inherit; background: inherit; font-size: inherit; vertical-align: unset; }
 .debug .debug-body *[title]:not(a) { cursor: help; }
-.debug .debug-body *[title]:not(a):hover { background-color: rgba(0, 0, 0, 0.2); }
+.debug .debug-body *[title]:not(a):hover { background-color: rgba(0, 0, 0, 0.05); }
 .debug ul.debug-log-summary, .debug ul.debug-log, .debug ul .m_groupSummary > ul { list-style: none; margin-left: 0; border-left: 0; padding-left: 0; }
 .debug ul.debug-log-summary { margin-bottom: 0.75em; }
 .debug .m_alert { font-size: 125%; padding: .66em; margin-bottom: 10px; border: 1px solid transparent; border-radius: 4px; }
@@ -55,21 +56,21 @@
 .debug .alert-success .alert-link { color: #2b542c; }
 .debug .alert-warning { background-color: #fefbe5; border-color: #faebcc; color: #8a6d3b; }
 .debug .alert-warning .alert-link { color: #66512c; }
-.debug .t_object .t_classname { font-weight: bold; }
 .debug .namespace { opacity: 0.5; }
 .debug .array-inner, .debug .object-inner { display: block; margin-left: 1.5em; }
 .debug span.key-value { display: block; padding-left: 10px; text-indent: -10px; }
 .debug span.key-value > .t_operator { margin: 0 .25em; }
-.debug .t_object .property-name[title], .debug .t_object .method-name[title], .debug .t_object .method .parameter [title], .debug .t_object .t_stringified, .debug .t_object .t_type[title] { text-decoration: underline; }
-.debug .t_object .method.deprecated i { border-bottom: 0; }
+.debug .t_object > .classname { font-weight: bold; }
+.debug .t_object .t_identifier { font-weight: bold; }
+.debug .t_object .method .parameter [title], .debug .t_object .t_identifier[title], .debug .t_object .t_stringified, .debug .t_object .t_type[title] { text-decoration: underline; }
+.debug .t_object .method.deprecated { opacity: .66; }
+.debug .t_object .method.deprecated i { opacity: .66; color: #d8000c; border-bottom: 0; }
+.debug .t_object .method > .t_punct { opacity: 1; font-weight: bold; color: inherit; }
+.debug .t_object .method .t_parameter-name { color: #263; }
+.debug .t_object .property.private-ancestory { color: #F39; }
+.debug .t_object .property.private-ancestory:hover { color: inherit; }
 .debug .t_object .t_modifier_static { font-style: italic; color: #00529B; }
 .debug .t_object .info { display: inline-block; background-color: #d9edf7; color: #31708f; }
-.debug .deprecated { opacity: .66; }
-.debug .deprecated i { opacity: .66; color: #d8000c; }
-.debug .constant-name, .debug .property-name, .debug .method .method-name { font-weight: bold; }
-.debug .method > .t_punct { opacity: 1; font-weight: bold; color: inherit; }
-.debug .property.private-ancestor { color: #F39; }
-.debug .property.private-ancestor:hover { color: inherit; }
 .debug .m_assert, .debug .m_clear, .debug .m_count, .debug .m_error, .debug .m_groupEndValue, .debug .m_info, .debug .m_log, .debug .m_warn { position: relative; display: table; padding-left: 10px; text-indent: -10px; padding-right: .33em; word-break: break-word; }
 .debug .m_table td, .debug .m_trace td { word-break: break-word; }
 .debug .m_assert { background-color: rgba(255, 204, 204, 0.75); }
@@ -84,15 +85,15 @@
 .debug table { border-collapse: collapse; }
 .debug table caption { font-weight: bold; font-style: italic; padding-bottom: 0; padding-top: 2px; text-align: left; }
 .debug table thead th { text-align: center; }
-.debug table thead th .t_classname { opacity: .50; font-style: italic; }
-.debug table thead th .t_classname:before { content: "("; }
-.debug table thead th .t_classname:after { content: ")"; }
+.debug table thead th .classname { opacity: .50; font-style: italic; }
+.debug table thead th .classname:before { content: "("; }
+.debug table thead th .classname:after { content: ")"; }
 .debug table th, .debug table tfoot td { font-weight: bold; background-color: rgba(0, 0, 0, 0.1); }
 .debug table th, .debug table td { padding: 0 .25em; vertical-align: top; }
 .debug table tbody th.t_int, .debug table td.numeric, .debug table td.t_int { text-align: right; white-space: nowrap; }
 .debug table th.t_key { white-space: nowrap; }
 .debug table th.t_key:before, .debug table th.t_key:after { content: none; }
-.debug table td.t_classname { font-weight: bold; }
+.debug table td.classname { font-weight: bold; }
 .debug table td.t_undefined { background-color: rgba(0, 0, 0, 0.1); }
 .debug table td.t_undefined:after { content: none; }
 .debug table.table-bordered th, .debug table.table-bordered td { border: 1px solid #7F7F7F; padding: 1px .25em; }
@@ -234,7 +235,7 @@ color: #818a91
 .debug .group-header i.fa-times-circle { color: #D8000C; margin-left: .33em; }
 .debug .group-header.expanded i.fa-warning, .debug .group-header.expanded i.fa-times-circle { display: none; }
 .debug [data-toggle], .debug [data-toggle][title], .debug .vis-toggles span { cursor: pointer; }
-.debug .empty.m_group .group-header, .debug .empty.t_classname { cursor: auto; }
+.debug .empty.m_group .group-header { cursor: auto; }
 .debug .vis-toggles span:hover, .debug [data-toggle=interface]:hover { background-color: rgba(0, 0, 0, 0.1); }
 .debug .vis-toggles .toggle-off, .debug .interface .toggle-off { opacity: 0.42; }
 .debug .show-more-container { display: inline; }
@@ -255,8 +256,8 @@ color: #818a91
 .debug .indent { padding-left: 10px !important; }
 .debug .list-unstyled { list-style: none outside none; padding-left: 0; }
 .debug .list-unstyled ul { margin-left: 10px; }
-.debug .no-pseudo:before { content: none; }
-.debug .no-pseudo:after { content: none; }
+.debug .no-quotes:before { content: none; }
+.debug .no-quotes:after { content: none; }
 .debug .text-center { text-align: center; }
 .debug .text-muted { opacity: 0.5; }
 .debug .text-right { text-align: right; }

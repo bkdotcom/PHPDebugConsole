@@ -103,7 +103,8 @@ class Script extends Base
             $method = 'log';
         } elseif (\in_array($method, array('profileEnd','table'))) {
             $method = 'log';
-            if (\is_array($args[0])) {
+            $asTable = \is_array($args[0]) || $this->debug->abstracter->isAbstraction($args[0], 'object');
+            if ($asTable) {
                 $method = 'table';
                 $args = array($this->methodTable($args[0], $meta['columns']));
             } elseif ($meta['caption']) {
@@ -124,7 +125,7 @@ class Script extends Base
             $args[$k] = \json_encode($this->dump($arg));
         }
         $str = 'console.'.$method.'('.\implode(',', $args).');'."\n";
-        $str = \str_replace(\json_encode(Abstracter::TYPE_UNDEFINED), 'undefined', $str);
+        $str = \str_replace(\json_encode(Abstracter::UNDEFINED), 'undefined', $str);
         return $str;
     }
 
@@ -137,7 +138,7 @@ class Script extends Base
      */
     protected function dumpUndefined()
     {
-        return Abstracter::TYPE_UNDEFINED;
+        return Abstracter::UNDEFINED;
     }
 
     /**

@@ -24,6 +24,7 @@ class PhpCurlClass extends Curl
     private $debug;
     private $icon = 'fa fa-exchange';
     private $optionsDebug = array();
+    private $optionsConstDebug = array();
 
     /**
      * @var array constant value to array of names
@@ -36,7 +37,7 @@ class PhpCurlClass extends Curl
      * @param array $options options
      * @param Debug $debug   (optional) Specify PHPDebugConsole instance
      *                        if not passed, will create Curl channnel on singleton instance
-     *                        if root channel is specifyed, will create a Curl channel
+     *                        if root channel is specified, will create a Curl channel
      */
     public function __construct($options = array(), Debug $debug = null)
     {
@@ -63,7 +64,7 @@ class PhpCurlClass extends Curl
     public function close()
     {
         parent::close();
-        $this->optionsDebug = array();
+        $this->optionsConstDebug = array();
     }
 
     /**
@@ -131,7 +132,7 @@ class PhpCurlClass extends Curl
     {
         $return = parent::setOpt($option, $value);
         if ($return) {
-            $this->optionsDebug[$option] = $value;
+            $this->optionsConstDebug[$option] = $value;
         }
         return $return;
     }
@@ -170,7 +171,7 @@ class PhpCurlClass extends Curl
     private function buildDebugOptions()
     {
         $opts = array();
-        foreach ($this->optionsDebug as $constVal => $val) {
+        foreach ($this->optionsConstDebug as $constVal => $val) {
             $name = \implode(' / ', self::$optionConstants[$constVal]);
             $opts[$name] = $val;
         }

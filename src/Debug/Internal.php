@@ -226,6 +226,7 @@ class Internal implements SubscriberInterface
         return array(
             'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
             'debug.config' => array('onConfig', PHP_INT_MAX),
+            'debug.dumpCustom' => 'onDumpCustom',
             'debug.output' => 'onOutput',
             'errorHandler.error' => 'onError',
             'php.shutdown' => 'onShutdown',
@@ -318,6 +319,24 @@ class Internal implements SubscriberInterface
                 FileStreamWrapper::register($pathsExclude);
             }
         }
+    }
+
+    /**
+     * debug.dumpCustom subscriber
+     *
+     * @param Event $event event instance
+     *
+     * @return void
+     */
+    public function onDumpCustom(Event $event)
+    {
+        $abs = $event->getSubject();
+        if ($abs['return']) {
+            // return already defined..   prev subscriber should have stopped propagation
+            return;
+        }
+        $event['return'] = \print_r($abs->getValues(), true);
+        $event['typeMore'] = 't_string';
     }
 
     /**
@@ -422,10 +441,10 @@ class Internal implements SubscriberInterface
     public function publishBubbleEvent($eventName, Event $event, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = $event->getSubject();
-            if (!$debug instanceof Debug) {
-                $debug = $this->debug;
-            }
+            $subject = $event->getSubject();
+            $debug = $subject instanceof Debug
+                ? $subject
+                : $this->debug;
         }
         do {
             $debug->eventManager->publish($eventName, $event);
@@ -657,7 +676,7 @@ class Internal implements SubscriberInterface
         $vals = array();
         foreach ($logServerKeys as $k) {
             if (!\array_key_exists($k, $_SERVER)) {
-                $vals[$k] = Abstracter::TYPE_UNDEFINED;
+                $vals[$k] = Abstracter::UNDEFINED;
             } elseif ($k == 'REQUEST_TIME') {
                 $vals[$k] = \date('Y-m-d H:i:s T', $_SERVER['REQUEST_TIME']);
             } else {

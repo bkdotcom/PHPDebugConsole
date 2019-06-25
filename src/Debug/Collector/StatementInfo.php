@@ -13,6 +13,7 @@ namespace bdk\Debug\Collector;
 
 use SqlFormatter;       // optional library
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
 
 /**
  * Holds information about a statement
@@ -136,7 +137,7 @@ class StatementInfo
      *
      * @return void
      */
-    public function end(\PDOException $exception = null, $rowCount = 0)
+    public function end(\PDOException $exception = null, $rowCount = null)
     {
         $this->exception = $exception;
         $this->rowCount = $rowCount;
@@ -179,14 +180,28 @@ class StatementInfo
         )));
         if ($logSql) {
             $debug->log(
-                '<pre><code class="language-sql">'.\htmlspecialchars($this->sql).'</code></pre>',
-                $debug->meta('class', 'no-indent')
+                new Abstraction(array(
+                    'type' => 'string',
+                    'attribs' => array(
+                        'class' => 'language-sql prism',
+                    ),
+                    'addQuotes' => false,
+                    'visualWhiteSpace' => false,
+                    'value' => $this->sql,
+                )),
+                $debug->meta(array(
+                    'attribs' => array(
+                        'class' => 'no-indent',
+                    ),
+                ))
             );
         }
         $this->logParams($debug);
         $debug->time('duration', $this->duration);
         $debug->log('memory usage', $debug->utilities->getBytes($this->memoryUsage));
-        $debug->log('rowCount', $this->rowCount);
+        if ($this->rowCount !== null) {
+            $debug->log('rowCount', $this->rowCount);
+        }
         $debug->groupEnd();
     }
 
@@ -269,9 +284,13 @@ class StatementInfo
                 continue;
             }
             $type = $this->types[$name];
-            $params[$name]['type'] = $type;
+            $params[$name]['type'] = $type; // integer value
             if (isset(self::$constants[$type])) {
-                $params[$name]['type'] = self::$constants[$type];
+                $params[$name]['type'] = new Abstraction(array(
+                    'type' => 'const',
+                    'name' => self::$constants[$type],
+                    'value' => $type,
+                ));
             }
         }
         $debug->table('parameters', $params);

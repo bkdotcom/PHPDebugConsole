@@ -35,17 +35,20 @@ class DebugTestFramework extends DOMTestCase
     protected function checkAbstractionType($var, $type)
     {
         $return = false;
+        if (!$var instanceof \bdk\Debug\Abstraction\Abstraction) {
+            return false;
+        }
         if ($type == 'object') {
             $keys = array('collectMethods','viaDebugInfo','isExcluded','isRecursion',
-                    'extends','implements','constants','properties','methods','scopeClass','stringified');
-            $keysMissing = array_diff($keys, array_keys($var));
-            $return = $var['debug'] === \bdk\Debug\Abstracter::ABSTRACTION
-                && $var['type'] === 'object'
+                'extends','implements','constants','properties','methods','scopeClass','stringified');
+            $keysMissing = array_diff($keys, array_keys($var->getValues()));
+            $return = // $var['debug'] === \bdk\Debug\Abstracter::ABSTRACTION
+                $var['type'] === 'object'
                 && $var['className'] === 'stdClass'
                 && count($keysMissing) == 0;
         } elseif ($type == 'resource') {
-            $return = $var['debug'] === \bdk\Debug\Abstracter::ABSTRACTION
-                && $var['type'] === 'resource'
+            $return = // $var['debug'] === \bdk\Debug\Abstracter::ABSTRACTION
+                $var['type'] === 'resource'
                 && isset($var['value']);
         }
         return $return;
@@ -251,7 +254,7 @@ class DebugTestFramework extends DOMTestCase
                         unset($outputExpect[2]['file']);
                         unset($logEntryTemp[2]['file']);
                     }
-                    $this->assertSame($outputExpect, $logEntryTemp);
+                    $this->assertEquals($outputExpect, $logEntryTemp);
                 }
                 continue;
             } elseif ($test == 'custom') {

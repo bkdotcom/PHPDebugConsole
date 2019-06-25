@@ -100,7 +100,7 @@ class DebugTest extends DebugTestFramework
                 ),
             ),
             'html' => '<li class="error-'.$errCat.' m_warn" data-channel="phpError">'
-                .'<span class="no-pseudo t_string">'.$args[0].' </span>'
+                .'<span class="no-quotes t_string">'.$args[0].' </span>'
                 .'<span class="t_string">'.$args[1].'</span>, '
                 .'<span class="t_string">'.$errMsg.'</span>'
                 .'</li>',

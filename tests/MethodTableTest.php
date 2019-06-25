@@ -187,7 +187,7 @@ EOD;
                 array('blah'),
                 array(
                     'html' => '<li class="m_table">'
-                        .'<span class="no-pseudo t_string">blah</span> = <span class="t_null">null</span>'
+                        .'<span class="no-quotes t_string">blah</span> = <span class="t_null">null</span>'
                         .'</li>',
                     'text' => 'blah = null',
                     'script' => 'console.log("blah",null);',
@@ -229,17 +229,17 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">a</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="t_classname">MethodTableTest</span><span class="t_operator">::</span><span class="method-name">providerTestMethod</span></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_object" data-accessible="public"><span class="t_classname">Closure</span>
+                        <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="classname">MethodTableTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestMethod</span></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_object" data-accessible="public"><span class="classname">Closure</span>
                         <dl class="object-inner">
                         <dt class="properties">no properties</dt>
                         <dt class="methods">methods</dt>
-                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
-                        <dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="method-name">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$closure</span></span>, <span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
-                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
-                        '.(version_compare(PHP_VERSION, '7.0', '>=') ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="method-name">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">...$parameters</span></span><span class="t_punct">)</span></dd>'."\n" : '')
-                        .(version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="method-name">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>'."\n" : '')
-                        .'<dd class="method private"><span class="t_modifier_private">private</span> <span class="method-name">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
+                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
+                        <dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$closure</span></span>, <span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
+                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
+                        '.(version_compare(PHP_VERSION, '7.0', '>=') ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">...$parameters</span></span><span class="t_punct">)</span></dd>'."\n" : '')
+                        .(version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>'."\n" : '')
+                        .'<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
                         </dl>
                         </td></tr>
                         </tbody>
@@ -267,7 +267,7 @@ EOD;
                     new \bdk\DebugTest\TestTraversable($rowsA),
                 ),
                 array(
-                    'html' => str_replace('table caption', 'traversable (<span class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)', $rowsAHtml),
+                    'html' => str_replace('table caption', 'traversable (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)', $rowsAHtml),
                     'text' => str_replace('table caption', 'traversable', $rowsAText),
                     'script' => 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
                     'firephp' => 'X-Wf-1-1-1-5: 149|[{"Type":"TABLE","Label":"traversable"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
@@ -285,13 +285,13 @@ EOD;
                 array(
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
-                        <caption>traversable -o- traversables (<span class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)</caption>
+                        <caption>traversable -o- traversables (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)</caption>
                         <thead>
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
                         </tbody>
                         </table>
                         </li>',
@@ -333,8 +333,8 @@ EOD;
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th>age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_classname">stdClass</td><td class="numeric t_string">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="false t_bool">false</td><td class="t_string">M</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_classname">stdClass</td><td class="numeric t_string">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool true">true</td><td class="t_string">F</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname">stdClass</td><td class="numeric t_string">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="false t_bool">false</td><td class="t_string">M</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname">stdClass</td><td class="numeric t_string">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool true">true</td><td class="t_string">F</td></tr>
                         </tbody>
                         </table>
                         </li>',
@@ -370,7 +370,7 @@ EOD;
                         <table class="sortable table-bordered">
                         <caption>not all col values of same type</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th>date <span class="t_classname">DateTime</span></th><th scope="col">date2</th></tr>
+                        <tr><th>&nbsp;</th><th>date <span class="classname">DateTime</span></th><th scope="col">date2</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i</td><td class="t_string">not a datetime</td></tr>

@@ -13,6 +13,7 @@ namespace bdk\Debug\Output;
 
 use bdk\Debug;
 use bdk\Debug\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
@@ -77,15 +78,33 @@ abstract class Base implements OutputInterface
     public function dump($val)
     {
         $typeMore = null;
-        $type = $this->debug->abstracter->getType($val, $typeMore);
+        list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($typeMore == 'raw') {
             $val = $this->debug->abstracter->getAbstraction($val);
             $typeMore = null;
-        } elseif ($typeMore == 'abstraction') {
-            $typeMore = null;
         }
         $method = 'dump'.\ucfirst($type);
-        $return = $this->{$method}($val);
+        if ($typeMore === 'abstraction') {
+            if (!\method_exists($this, $method)) {
+                $event = $this->debug->internal->publishBubbleEvent('debug.dumpCustom', new Event(
+                    $val,
+                    array(
+                        'output' => $this,
+                        'return' => '',
+                        'typeMore' => null,
+                    )
+                ));
+                $return = $event['return'];
+                $typeMore = $event['typeMore'];
+            } elseif (\in_array($type, array('string','bool','float','int','null'))) {
+                $return = $this->{$method}($val['value']);
+            } else {
+                $return = $this->{$method}($val);
+            }
+            $typeMore = null;
+        } else {
+            $return = $this->{$method}($val);
+        }
         $this->dumpType = $type;
         $this->dumpTypeMore = $typeMore;
         return $return;
@@ -189,13 +208,25 @@ abstract class Base implements OutputInterface
     /**
      * Dump callable
      *
-     * @param array $abs array/callable abstraction
+     * @param Abstraction $abs array/callable abstraction
      *
      * @return string
      */
-    protected function dumpCallable($abs)
+    protected function dumpCallable(Abstraction $abs)
     {
         return 'callable: '.$abs['values'][0].'::'.$abs['values'][1];
+    }
+
+    /**
+     * Dump constant
+     *
+     * @param Abstraction $abs constant abstraction
+     *
+     * @return string
+     */
+    protected function dumpConst(Abstraction $abs)
+    {
+        return $abs['name'];
     }
 
     /**
@@ -248,11 +279,11 @@ abstract class Base implements OutputInterface
     /**
      * Dump object
      *
-     * @param array $abs object abstraction
+     * @param Abstraction $abs object abstraction
      *
      * @return mixed
      */
-    protected function dumpObject($abs)
+    protected function dumpObject(Abstraction $abs)
     {
         if ($abs['isRecursion']) {
             $return = '(object) '.$abs['className'].' *RECURSION*';
@@ -294,11 +325,11 @@ abstract class Base implements OutputInterface
     /**
      * Dump resource
      *
-     * @param array $abs resource abstraction
+     * @param Abstraction $abs resource abstraction
      *
      * @return string
      */
-    protected function dumpResource($abs)
+    protected function dumpResource(Abstraction $abs)
     {
         return $abs['value'];
     }
@@ -371,7 +402,8 @@ abstract class Base implements OutputInterface
      */
     protected function methodTable($array, $columns = array())
     {
-        if (!\is_array($array)) {
+        $isTableable = \is_array($array) || $this->debug->abstracter->isAbstraction($array, 'object');
+        if (!$isTableable) {
             return $this->dump($array);
         }
         $keys = $columns ?: $this->debug->methodTable->colKeys($array);
@@ -409,7 +441,7 @@ abstract class Base implements OutputInterface
     private function methodTableCleanValues($values)
     {
         foreach ($values as $k2 => $val) {
-            if ($val === Abstracter::TYPE_UNDEFINED) {
+            if ($val === Abstracter::UNDEFINED) {
                 unset($values[$k2]);
             } elseif (\is_array($val)) {
                 $values[$k2] = $this->debug->output->text->dump($val);
@@ -584,7 +616,7 @@ abstract class Base implements OutputInterface
      */
     protected function substitutionAsString($val)
     {
-        $type = $this->debug->abstracter->getType($val);
+        list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($type == 'array') {
             $count = \count($val);
             $val = 'array('.$count.')';

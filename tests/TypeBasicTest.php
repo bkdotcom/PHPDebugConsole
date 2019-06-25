@@ -78,7 +78,7 @@ class TypeBasicTest extends DebugTestFramework
             ),
             array(
                 'log',
-                array(\bdk\Debug\Abstracter::TYPE_UNDEFINED),
+                array(\bdk\Debug\Abstracter::UNDEFINED),
                 array(
                     'chromeLogger' => '[[null],null,""]',
                     'html' => '<li class="m_log"><span class="t_undefined"></span></li>',
@@ -91,7 +91,7 @@ class TypeBasicTest extends DebugTestFramework
                 array(array($test,'testBaseStatic')),
                 array(
                     'chromeLogger' => '[["callable: bdk\\\DebugTest\\\Test::testBaseStatic"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></li>',
+                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></li>',
                     'text' => 'callable: bdk\DebugTest\Test::testBaseStatic',
                     'script' => 'console.log("callable: bdk\\\DebugTest\\\Test::testBaseStatic");',
                 ),

@@ -15,8 +15,10 @@
 namespace bdk;
 
 use bdk\Debug\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Utilities;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\ErrorEmailer;
 use bdk\PubSub\SubscriberInterface;
@@ -554,14 +556,14 @@ class Debug
      *
      * @return void
      */
-    public function groupEnd($value = Abstracter::TYPE_UNDEFINED)
+    public function groupEnd($value = Abstracter::UNDEFINED)
     {
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
             \func_get_args(),
             array(),
-            array('value' => Abstracter::TYPE_UNDEFINED)
+            array('value' => Abstracter::UNDEFINED)
         );
         $value = $logEntry['args'][0];
         $logEntry['args'] = array();
@@ -585,7 +587,7 @@ class Debug
             $logEntry->setMeta('closesSummary', true);
             $this->appendLog($logEntry, true);
         } elseif ($haveOpenGroup) {
-            if ($value !== Abstracter::TYPE_UNDEFINED) {
+            if ($value !== Abstracter::UNDEFINED) {
                 $this->appendLog(new LogEntry(
                     $this,
                     'groupEndValue',
@@ -1550,12 +1552,12 @@ class Debug
      * @param LogEntry $logEntry     log entry instance
      * @param boolean  $forcePublish (false) publish event event if collect is false
      *
-     * @return void
+     * @return boolean whether or not entry got appended
      */
     protected function appendLog(LogEntry $logEntry, $forcePublish = false)
     {
         if (!$this->cfg['collect'] && !$forcePublish) {
-            return;
+            return false;
         }
         $cfgRestore = array();
         if (isset($logEntry['meta']['cfg'])) {
@@ -1573,8 +1575,9 @@ class Debug
         }
         if ($logEntry['appendLog']) {
             $this->rootInstance->logRef[] = $logEntry;
+            return true;
         }
-        return $logEntry['return'];
+        return false;
     }
 
     /**
@@ -1599,21 +1602,49 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        if (empty($logEntry['args'])) {
+        if (!$logEntry['args']) {
             // give a default label
             $args = array();
-            $caller = $this->utilities->getCallerInfo();
-            if (isset($caller['class'])) {
-                $args[] = $caller['class'].$caller['type'].$caller['function'];
-                $logEntry->setMeta('isMethodName', true);
-            } elseif (isset($caller['function'])) {
-                $args[] = $caller['function'];
+            $caller = $this->utilities->getCallerInfo(0, Utilities::INCL_ARGS);
+            if (isset($caller['function'])) {
+                $args[] = isset($caller['class'])
+                    ? $caller['class'].$caller['type'].$caller['function']
+                    : $caller['function'];
+                $args = \array_merge($args, $caller['args']);
+                $logEntry->setMeta('isFuncName', true);
             } else {
                 $args[] = 'group';
             }
             $logEntry['args'] = $args;
         }
-        $this->appendLog($logEntry);
+        $appended = $this->appendLog($logEntry);
+        if ($appended) {
+            $this->doGroupStringify($logEntry);
+        }
+    }
+
+    /**
+     * Use string representation for group args if available
+     *
+     * @param LogEntry $logEntry Log entry
+     *
+     * @return void
+     */
+    private function doGroupStringify(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        foreach ($args as $k => $v) {
+            if (!$this->abstracter->isAbstraction($v, 'object')) {
+                continue;
+            }
+            if ($v['stringified']) {
+                $v = $v['stringified'];
+            } elseif (isset($v['methods']['__toString']['returnValue'])) {
+                $v = $v['methods']['__toString']['returnValue'];
+            }
+            $args[$k] = $v;
+        }
+        $logEntry['args'] = $args;
     }
 
     /**

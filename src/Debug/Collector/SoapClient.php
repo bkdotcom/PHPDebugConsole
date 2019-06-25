@@ -12,9 +12,11 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Plugin\Prism;
 
 /**
- * A PDO proxy which traces statements
+ * A replacement SoapClient which traces requests
  */
 class SoapClient extends \SoapClient
 {
@@ -29,7 +31,7 @@ class SoapClient extends \SoapClient
      * @param array  $options Array of options
      * @param Debug  $debug   (optional) Specify PHPDebugConsole instance
      *                            if not passed, will create Soap channnel on singleton instance
-     *                            if root channel is specifyed, will create a Soap channel
+     *                            if root channel is specified, will create a Soap channel
      */
     public function __construct($wsdl, $options = array(), Debug $debug = null)
     {
@@ -39,6 +41,7 @@ class SoapClient extends \SoapClient
             $debug = $debug->getChannel('Soap', array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
+        $this->debug->addPlugin(new Prism());
         $options['trace'] = true;
         parent::__construct($wsdl, $options);
     }
@@ -80,9 +83,41 @@ class SoapClient extends \SoapClient
         }
 
         $debug->log('request headers', $this->__getLastRequestHeaders());
-        $debug->log('request body: <pre><code class="language-xml">'.\htmlspecialchars($xmlRequest).'</code></pre>');
+        $debug->log(
+            'request body',
+            new Abstraction(array(
+                'type' => 'string',
+                'attribs' => array(
+                    'class' => 'language-xml prism',
+                ),
+                'addQuotes' => false,
+                'visualWhiteSpace' => false,
+                'value' => $xmlRequest,
+            )),
+            $debug->meta(array(
+                'attribs' => array(
+                    'class' => 'no-indent',
+                ),
+            ))
+        );
         $debug->log('response headers', $this->__getLastResponseHeaders());
-        $debug->log('response body: <pre><code class="language-xml">'.\htmlspecialchars($xmlResponse).'</code></pre>');
+        $debug->log(
+            'response body',
+            new Abstraction(array(
+                'type' => 'string',
+                'attribs' => array(
+                    'class' => 'language-xml prism',
+                ),
+                'addQuotes' => false,
+                'visualWhiteSpace' => false,
+                'value' => $xmlResponse,
+            )),
+            $debug->meta(array(
+                'attribs' => array(
+                    'class' => 'no-indent',
+                ),
+            ))
+        );
         $debug->groupEnd();
         return $return;
     }

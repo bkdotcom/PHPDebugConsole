@@ -22,11 +22,10 @@ class TypeResourceTest extends DebugTestFramework
                     'entry' => array(
                         'log',
                         array(
-                            array(
-                                'debug' => \bdk\Debug\Abstracter::ABSTRACTION,
+                            new \bdk\Debug\Abstraction\Abstraction(array(
                                 'type' => 'resource',
                                 'value' => $value,
-                            ),
+                            )),
                         ),
                         array(),
                     ),

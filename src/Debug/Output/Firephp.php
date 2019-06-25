@@ -93,7 +93,7 @@ class Firephp extends Base
         } elseif (\in_array($method, array('group','groupCollapsed'))) {
             $firePhpMeta['Label'] = $args[0];
         } elseif (\in_array($method, array('profileEnd','table'))) {
-            $firePhpMeta['Type'] = \is_array($args[0])
+            $firePhpMeta['Type'] = \is_array($args[0]) || $this->debug->abstracter->isAbstraction($args[0], 'object')
                 ? $this->firephpMethods['table']
                 : $this->firephpMethods['log'];
             $value = $this->methodTable($args[0], $meta['columns']);
@@ -169,7 +169,8 @@ class Firephp extends Base
      */
     protected function methodTable($array, $columns = array())
     {
-        if (!\is_array($array)) {
+        $isTableable = \is_array($array) || $this->debug->abstracter->isAbstraction($array, 'object');
+        if (!$isTableable) {
             return $this->dump($array);
         }
         $table = array();
@@ -189,7 +190,7 @@ class Firephp extends Base
         foreach ($array as $k => $row) {
             $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
             foreach ($values as $k2 => $val) {
-                if ($val === Abstracter::TYPE_UNDEFINED) {
+                if ($val === Abstracter::UNDEFINED) {
                     $values[$k2] = null;
                 }
             }

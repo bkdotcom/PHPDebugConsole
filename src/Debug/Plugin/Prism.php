@@ -36,10 +36,28 @@ class Prism implements AssetProviderInterface
                 './js/prism.js',
                 '(function(){
                     $("body").on("enhanced.debug", function(e){
-                        var target = e.target;
+                        var target = e.target,
+                            $prism,
+                            classes,
+                            lang,
+                            length,
+                            i;
                         if ($(target).is(".m_group")) {
                             return;
                         }
+                        $prism = $(target).find(".prism").removeClass("prism").css({display:"block"});
+                        if (!$prism.length) {
+                            return;
+                        }
+                        classes = $prism.attr("class").split(" ");
+                        for (i = 0, length = classes.length; i < length; i++) {
+                            if (classes[i].match(/^language-/)) {
+                                lang = classes[i];
+                                $prism.removeClass(lang);
+                                break;
+                            }
+                        }
+                        $prism.wrapInner(\'<pre><code class="\'+lang+\'"></code></pre>\');
                         // console.log("Prism enhanced.debug", target);
                         Prism.highlightAllUnder(target);
                     });

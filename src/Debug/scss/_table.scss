@@ -9,7 +9,7 @@ table {
 	}
 	thead th {
 		text-align: center;
-		.t_classname {
+		.classname {
 			opacity: .50;
 			font-style: italic;
 			&:before { content:"("; }
@@ -39,7 +39,7 @@ table {
 		}
 	}
 	td {
-		&.t_classname { font-weight: bold; }
+		&.classname { font-weight: bold; }
 		&.t_undefined {
 			background-color: rgba(0, 0, 0, 0.1);
 			&:after { content:none; }

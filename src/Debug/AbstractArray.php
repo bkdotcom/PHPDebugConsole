@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use bdk\Debug\Abstraction\Abstraction;
+
 /**
  * Abstracter:  Methods used de=refrence and store arrays
  */
@@ -45,11 +47,10 @@ class AbstractArray
         }
         if (self::isCallable($array)) {
             // this appears to be a "callable"
-            return array(
-                'debug' => Abstracter::ABSTRACTION,
+            return new Abstraction(array(
                 'type' => 'callable',
                 'values' => array(\get_class($array[0]), $array[1]),
-            );
+            ));
         }
         $return = array();
         $hist[] = $array;

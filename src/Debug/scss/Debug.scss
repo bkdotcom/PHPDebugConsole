@@ -61,7 +61,7 @@
 	.debug-body {
 		*[title]:not(a) {
 			cursor: help;
-			&:hover { background-color:rgba(0,0,0,0.2); }
+			&:hover { background-color:rgba(0,0,0,0.05); }
 		}
 	}
 
@@ -102,8 +102,10 @@
 			margin-left: 10px;
 		}
 	}
-	.no-pseudo:before { content: none; }
-	.no-pseudo:after { content: none; }
+	.no-quotes {
+		&:before { content: none; }
+		&:after { content: none; }
+	}
 	.text-center { text-align: center; }
 	.text-muted { opacity: 0.5; }
 	// .text-nowrap { white-space: nowrap; }

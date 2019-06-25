@@ -54,7 +54,6 @@ class LoggerTest extends DebugTestFramework
         ), $this->debug->getData('log/__end__/args/1'));
         $this->assertArraySubset(array(
             'className'=>'Exception',
-            'debug' => \bdk\Debug\Abstracter::ABSTRACTION,
             'type' => 'object',
         ), $this->debug->getData('log/__end__/args/1/exception'));
         $this->assertArraySubset($metaSubset, $metaActual);

@@ -94,38 +94,18 @@ class DoctrineLogger implements SQLLogger
     public function onDebugOutput(Event $event)
     {
         $debug = $event->getSubject();
-        $debug->log('connection', $this->connection);
         $connectionInfo = array();
         if ($this->connection) {
             $connectionInfo = $this->connection->getParams();
         }
-        /*
-        $driverName = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-
-        // parse server info
-        $serverInfo = $driverName !== 'sqlite'
-            ? $this->pdo->getAttribute(PDO::ATTR_SERVER_INFO)
-            : '';
-        \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $serverInfo, $matches);
-        $serverInfo = \array_map(function ($val) {
-            return $val * 1;
-        }, \array_combine($matches[1], $matches[2]));
-        $serverInfo['Version'] = $this->pdo->getAttribute(PDO::ATTR_SERVER_VERSION);
-        \ksort($serverInfo);
-
-        $status = $driverName !== 'sqlite'
-            ? $this->pdo->getAttribute(PDO::ATTR_CONNECTION_STATUS)
-            : null;
-        */
 
         $debug->groupSummary(0);
         $groupParams = array(
             'Doctrine',
-            // $driverName,
         );
-        // if ($status) {
-            // $groupParams[] = $status;
-        // }
+        if ($connectionInfo) {
+            $groupParams[] = $connectionInfo['url'];
+        }
         $groupParams[] = $debug->meta(array(
             'argsAsParams' => false,
             'icon' => $this->icon,

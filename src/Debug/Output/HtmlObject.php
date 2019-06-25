@@ -6,13 +6,14 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
 use bdk\Debug\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 
 /**
  * Output object as HTML
@@ -35,14 +36,14 @@ class HtmlObject
     /**
      * Dump object as html
      *
-     * @param array $abs object abstraction
+     * @param Abstraction $abs object abstraction
      *
      * @return string
      */
-	public function dump($abs)
+	public function dump(Abstraction $abs)
 	{
         $title = \trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
-        $strClassName = $this->debug->output->html->markupClassname($abs['className'], 'span', array(
+        $strClassName = $this->debug->output->html->markupIdentifier($abs['className'], array(
             'title' => $title ?: null,
         ));
         if ($abs['isRecursion']) {
@@ -58,9 +59,13 @@ class HtmlObject
             .$strClassName."\n"
             .'<dl class="object-inner">'."\n"
                 .'<dt>extends</dt>'."\n"
-                    .'<dd class="extends">'.\implode('</dd>'."\n".'<dd class="extends">', $abs['extends']).'</dd>'."\n"
+                    .\implode(\array_map(function ($classname) {
+                        return '<dd class="extends">'.$this->debug->output->html->markupIdentifier($classname).'</dd>'."\n";
+                    }, $abs['extends']))
                 .'<dt>implements</dt>'."\n"
-                    .'<dd class="interface">'.\implode('</dd>'."\n".'<dd class="interface">', $abs['implements']).'</dd>'."\n"
+                    .\implode(\array_map(function ($classname) {
+                        return '<dd class="interface">'.$this->debug->output->html->markupIdentifier($classname).'</dd>'."\n";
+                    }, $abs['implements']))
                 .$this->dumpConstants($abs['constants'])
                 .$this->dumpProperties($abs)
                 .($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')
@@ -68,8 +73,8 @@ class HtmlObject
                     : '')
                 .$this->dumpPhpDoc($abs['phpDoc'])
             .'</dl>'."\n";
-        // remove <dt>'s with empty <dd>'
-        $html = \preg_replace('#<dt[^>]*>\w+</dt>\s*<dd[^>]*></dd>\s*#', '', $html);
+        // remove <dt>'s that have no <dd>'
+        $html = \preg_replace('#(?:<dt>(?:extends|implements|phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
         $html = \str_replace(' title=""', '', $html);
         return $html;
     }
@@ -77,11 +82,11 @@ class HtmlObject
     /**
      * Dump object's __toString or stringified value
      *
-     * @param array $abs object abstraction
+     * @param Abstraction $abs object abstraction
      *
      * @return string html
      */
-    protected function dumpToString($abs)
+    protected function dumpToString(Abstraction $abs)
     {
         $val = '';
         if ($abs['stringified']) {
@@ -128,16 +133,16 @@ class HtmlObject
      */
     protected function dumpConstants($constants)
     {
-        $str = '';
-        if ($constants && $this->debug->output->getCfg('outputConstants')) {
-            $str = '<dt class="constants">constants</dt>'."\n";
-            foreach ($constants as $k => $value) {
-                $str .= '<dd class="constant">'
-                    .'<span class="constant-name">'.$k.'</span>'
-                    .' <span class="t_operator">=</span> '
-                    .$this->debug->output->html->dump($value)
-                    .'</dd>'."\n";
-            }
+        if (!$constants || !$this->debug->output->getCfg('outputConstants')) {
+            return '';
+        }
+        $str = '<dt class="constants">constants</dt>'."\n";
+        foreach ($constants as $k => $value) {
+            $str .= '<dd class="constant">'
+                .'<span class="t_identifier">'.$k.'</span>'
+                .' <span class="t_operator">=</span> '
+                .$this->debug->output->html->dump($value)
+                .'</dd>'."\n";
         }
         return $str;
     }
@@ -193,7 +198,7 @@ class HtmlObject
                 .' '.$this->debug->utilities->buildTag(
                     'span',
                     array(
-                        'class' => 'method-name',
+                        'class' => 't_identifier',
                         'title' => \trim($info['phpDoc']['summary']
                             .($this->debug->output->getCfg('outputMethodDescription')
                                 ? "\n\n".$info['phpDoc']['description']
@@ -232,36 +237,15 @@ class HtmlObject
             $paramStr .= '<span class="t_parameter-name"'
                 .' title="'.\htmlspecialchars($info['desc']).'"'
                 .'>'.\htmlspecialchars($info['name']).'</span>';
-            if ($info['defaultValue'] !== Abstracter::TYPE_UNDEFINED) {
-                $defaultValue = $info['defaultValue'];
+            if ($info['defaultValue'] !== Abstracter::UNDEFINED) {
                 $paramStr .= ' <span class="t_operator">=</span> ';
-                if ($info['constantName']) {
-                    /*
-                        only php >= 5.4.6 supports this...
-                        or via @method phpDoc
-
-                        show the constant name / hover for value
-                    */
-                    $title = '';
-                    $type = $this->debug->abstracter->getType($defaultValue);
-                    if (!\in_array($type, array('array','resource'))) {
-                        $title = $this->debug->output->text->dump($defaultValue);
-                        $title = \htmlspecialchars('value: '.$title);
-                    }
-                    $paramStr .= '<span class="t_parameter-default t_const"'
-                        .' title="'.$title.'"'
-                        .'>'.$info['constantName'].'</span>';
-                } else {
-                    /*
-                        The constant's value is shown
-                    */
-                    if (\is_string($defaultValue)) {
-                        $defaultValue = \str_replace("\n", ' ', $defaultValue);
-                    }
-                    $parsed = $this->debug->utilities->parseTag($this->debug->output->html->dump($defaultValue));
-                    $class = \trim('t_parameter-default '.$parsed['attribs']['class']);
-                    $paramStr .= '<span class="'.$class.'">'.$parsed['innerhtml'].'</span>';
-                }
+                $parsed = $this->debug->utilities->parseTag($this->debug->output->html->dump($info['defaultValue']));
+                $parsed['attribs']['class'] .= ' t_parameter-default';
+                $paramStr .= $this->debug->utilities->buildTag(
+                    'span',
+                    $parsed['attribs'],
+                    $parsed['innerhtml']
+                );
             }
             $paramStr .= '</span>, '; // end .parameter
         }
@@ -278,7 +262,7 @@ class HtmlObject
      */
     protected function dumpPhpDoc($phpDoc)
     {
-        $str = '';
+        $str = '<dt>phpDoc</dt>'."\n";
         foreach ($phpDoc as $k => $values) {
             if (!\is_array($values)) {
                 continue;
@@ -311,21 +295,17 @@ class HtmlObject
                     .'</dd>'."\n";
             }
         }
-        if ($str) {
-            $str = '<dt class="phpDoc">phpDoc</dt>'."\n"
-                .$str;
-        }
         return $str;
     }
 
     /**
      * Dump object properties as HTML
      *
-     * @param array $abs object abstraction
+     * @param Abstraction $abs object abstraction
      *
      * @return string
      */
-    protected function dumpProperties($abs)
+    protected function dumpProperties(Abstraction $abs)
     {
         $label = \count($abs['properties'])
             ? 'properties'
@@ -362,10 +342,10 @@ class HtmlObject
                 .($info['type']
                     ? ' <span class="t_type">'.$info['type'].'</span>'
                     : '')
-                .' <span class="property-name"'
+                .' <span class="t_identifier"'
                     .' title="'.\htmlspecialchars($info['desc']).'"'
                     .'>'.$k.'</span>'
-                .($info['value'] !== Abstracter::TYPE_UNDEFINED
+                .($info['value'] !== Abstracter::UNDEFINED
                     ? ' <span class="t_operator">=</span> '
                         .$this->debug->output->html->dump($info['value'])
                     : '')

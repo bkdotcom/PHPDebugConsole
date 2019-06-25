@@ -30,11 +30,15 @@ class MethodTable
      */
     public static function colKeys($rows)
     {
+        if (Abstracter::isAbstraction($rows, 'object')) {
+            if ($rows['traverseValues']) {
+                $rows = $rows['traverseValues'];
+            } else {
+                return array(self::SCALAR);
+            }
+        }
         if (!\is_array($rows)) {
             return array();
-        }
-        if (Abstracter::isAbstraction($rows) && $rows['traverseValues']) {
-            $rows = $rows['traverseValues'];
         }
         $lastKeys = array();
         $newKeys = array();
@@ -86,8 +90,7 @@ class MethodTable
             'row' => false,
             'cols' => array(),
         );
-        $rowIsAbstraction = Abstracter::isAbstraction($row);
-        if ($rowIsAbstraction) {
+        if (Abstracter::isAbstraction($row)) {
             if ($row['type'] == 'object') {
                 $objInfo['row'] = array(
                     'className' => $row['className'],
@@ -113,26 +116,26 @@ class MethodTable
         }
         $values = array();
         foreach ($keys as $key) {
-            if (\array_key_exists($key, $row)) {
-                $value = $row[$key];
-                if ($value !== null) {
-                    // by setting to false :
-                    //    indicate that the column is not populated by objs of the same type
-                    //    if stringified abstraction, we'll set cols[key] below
-                    $objInfo['cols'][$key] = false;
+            if (!\array_key_exists($key, $row)) {
+                $values[$key] = Abstracter::UNDEFINED;
+                continue;
+            }
+            $value = $row[$key];
+            if ($value !== null) {
+                // by setting to false :
+                //    indicate that the column is not populated by objs of the same type
+                //    if stringified abstraction, we'll set cols[key] below
+                $objInfo['cols'][$key] = false;
+            }
+            if (Abstracter::isAbstraction($value)) {
+                // just return the stringified / __toString value in a table
+                if (isset($value['stringified'])) {
+                    $objInfo['cols'][$key] = $value['className'];
+                    $value = $value['stringified'];
+                } elseif (isset($value['__toString']['returnValue'])) {
+                    $objInfo['cols'][$key] = $value['className'];
+                    $value = $value['__toString']['returnValue'];
                 }
-                if (Abstracter::isAbstraction($value)) {
-                    // just return the stringified / __toString value in a table
-                    if (isset($value['stringified'])) {
-                        $objInfo['cols'][$key] = $value['className'];
-                        $value = $value['stringified'];
-                    } elseif (isset($value['__toString']['returnValue'])) {
-                        $objInfo['cols'][$key] = $value['className'];
-                        $value = $value['__toString']['returnValue'];
-                    }
-                }
-            } else {
-                $value = Abstracter::TYPE_UNDEFINED;
             }
             $values[$key] = $value;
         }
@@ -164,7 +167,8 @@ class MethodTable
                 } elseif (!$meta['columns']) {
                     $meta['columns'] = $args[$i];
                 }
-            } elseif ($args[$i] instanceof \Traversable) {
+            } elseif (\is_object($args[$i])) {
+                // Traversable or other
                 if ($data === null) {
                     $data = $args[$i];
                 }
@@ -218,7 +222,7 @@ class MethodTable
 
     /**
      * Get object abstraction's values
-     * if, object has a stringified or __toString value, it will bereturned
+     * if, object has a stringified or __toString value, it will be returned
      *
      * @param array $abs object abstraction
      *

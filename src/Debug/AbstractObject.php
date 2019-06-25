@@ -11,7 +11,7 @@
 
 namespace bdk\Debug;
 
-use bdk\PubSub\Event;
+use bdk\Debug\Abstraction\Abstraction;
 
 /**
  * Abstracter:  Methods used to abstract objects
@@ -48,6 +48,10 @@ class AbstractObject
     {
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
+        if ($abstracter->debug->parentInstance) {
+            // we only need to subscribe to these events from root channel
+            return;
+        }
         $abstracter->debug->eventManager->subscribe('debug.objAbstractStart', array($this, 'onStart'));
         $abstracter->debug->eventManager->subscribe('debug.objAbstractEnd', array($this, 'onEnd'));
     }
@@ -59,7 +63,7 @@ class AbstractObject
      * @param string $method Method requesting abstraction
      * @param array  $hist   (@internal) array & object history
      *
-     * @return array
+     * @return Abstraction
      */
     public function getAbstraction($obj, $method = null, &$hist = array())
     {
@@ -69,11 +73,10 @@ class AbstractObject
         $reflector = new \ReflectionObject($obj);
         $className = $reflector->getName();
         $isTableTop = $method === 'table' && \count($hist) < 2;  // rows (traversable) || row (traversable)
-        $abs = new Event($obj, array(
+        $abs = new Abstraction(array(
             'className' => $className,
             'collectMethods' => !$isTableTop && $this->abstracter->getCfg('collectMethods') || $className == 'Closure',
             'constants' => array(),
-            'debug' => Abstracter::ABSTRACTION,
             'debugMethod' => $method,
             'definition' => array(
                 'fileName' => $reflector->getFileName(),
@@ -102,9 +105,12 @@ class AbstractObject
             'propertyOverrideValues' => array(),
             'reflector' => $reflector,
         ));
+        $abs->setSubject($obj);
         $keysTemp = \array_flip(array('collectPropertyValues','hist','propertyOverrideValues','reflector'));
         if ($abs['isRecursion']) {
-            return \array_diff_key($abs->getValues(), $keysTemp);
+            $abs->setValues(\array_diff_key($abs->getValues(), $keysTemp));
+            $abs->removeSubject();
+            return $abs;
         }
         /*
             debug.objAbstractStart subscriber may
@@ -115,28 +121,34 @@ class AbstractObject
             set stringified
             set traverseValues
         */
-        $abs = $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractStart', $abs, $this->abstracter->debug);
-        if (\array_filter(array($abs['isExcluded'], $abs->isPropagationStopped()))) {
-            return \array_diff_key($abs->getValues(), $keysTemp);
+        $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractStart', $abs, $this->abstracter->debug);
+        if ($abs['isExcluded']) {
+            $abs->setValues(\array_diff_key($abs->getValues(), $keysTemp));
+            $abs->removeSubject();
+            return $abs;
         }
         $this->getAbstractionDetails($abs);
         /*
             debug.objAbstractEnd subscriber has free reign to modify abtraction array
         */
-        $return = $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractEnd', $abs, $this->abstracter->debug)->getValues();
-        $this->sort($return['properties']);
-        $this->sort($return['methods']);
-        return \array_diff_key($return, $keysTemp);
+        $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractEnd', $abs, $this->abstracter->debug)->getValues();
+        $values = $abs->getValues();
+        $this->sort($values['properties']);
+        $this->sort($values['methods']);
+        $values = \array_diff_key($values, $keysTemp);
+        $abs->setValues($values);
+        $abs->removeSubject();
+        return $abs;
     }
 
     /**
      * Populate constants, extends, methods, phpDoc, properties, etc
      *
-     * @param Event $abs Abstraction event object
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    private function getAbstractionDetails(Event $abs)
+    private function getAbstractionDetails(Abstraction $abs)
     {
         $reflector = $abs['reflector'];
         $abs['phpDoc'] = $this->phpDoc->getParsed($reflector);
@@ -167,43 +179,43 @@ class AbstractObject
     /**
      * debug.objAbstractStart event subscriber
      *
-     * @param Event $event event object
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    public function onStart(Event $event)
+    public function onStart(Abstraction $abs)
     {
-        $obj = $event->getSubject();
+        $obj = $abs->getSubject();
         if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
-            $event['stringified'] = $obj->format(\DateTime::ISO8601);
+            $abs['stringified'] = $obj->format(\DateTime::ISO8601);
         } elseif ($obj instanceof \mysqli && ($obj->connect_errno || !$obj->stat)) {
             // avoid "Property access is not allowed yet"
-            $event['collectPropertyValues'] = false;
+            $abs['collectPropertyValues'] = false;
         }
     }
 
     /**
      * debug.objAbstractEnd event subscriber
      *
-     * @param Event $event event object
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    public function onEnd(Event $event)
+    public function onEnd(Abstraction $abs)
     {
-        $obj = $event->getSubject();
+        $obj = $abs->getSubject();
         if ($obj instanceof \Exception) {
-            if (isset($event['properties']['xdebug_message'])) {
-                $event['properties']['xdebug_message']['debugInfoExcluded'] = true;
+            if (isset($abs['properties']['xdebug_message'])) {
+                $abs['properties']['xdebug_message']['debugInfoExcluded'] = true;
             }
-        } elseif ($obj instanceof \mysqli && !$event['collectPropertyValues']) {
+        } elseif ($obj instanceof \mysqli && !$abs['collectPropertyValues']) {
             $propsAlwaysAvail = array(
                 'client_info','client_version','connect_errno','connect_error','errno','error','stat'
             );
-            $reflectionObject = $event['reflector'];
+            $reflectionObject = $abs['reflector'];
             foreach ($propsAlwaysAvail as $name) {
                 $reflectionProperty = $reflectionObject->getProperty($name);
-                $event['properties'][$name]['value'] = $reflectionProperty->getValue($obj);
+                $abs['properties'][$name]['value'] = $reflectionProperty->getValue($obj);
             }
         }
     }
@@ -211,11 +223,11 @@ class AbstractObject
     /**
      * Get object's constants
      *
-     * @param Event $abs Abstraction event object
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    public function addConstants(Event $abs)
+    public function addConstants(Abstraction $abs)
     {
         if (!$this->abstracter->getCfg('collectConstants')) {
             return;
@@ -234,11 +246,11 @@ class AbstractObject
     /**
      * Adds methods to abstraction
      *
-     * @param Event $abs Abstraction event object
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    private function addMethods(Event $abs)
+    private function addMethods(Abstraction $abs)
     {
         $obj = $abs->getSubject();
         if (!$abs['collectMethods']) {
@@ -289,11 +301,11 @@ class AbstractObject
     /**
      * Add minimal method information to abstraction
      *
-     * @param Event $abs Abstraction event object
+     * @param Abstraction $abs Abstraction event object
      *
      * @return void
      */
-    private function addMethodsMin(Event $abs)
+    private function addMethodsMin(Abstraction $abs)
     {
         $obj = $abs->getSubject();
         if (\method_exists($obj, '__toString')) {
@@ -315,13 +327,13 @@ class AbstractObject
      * "Magic" methods may be defined in a class' doc-block
      * If so... move this information to the properties array
      *
-     * @param Event $abs Abstraction event object
+     * @param Abstraction $abs Abstraction event object
      *
      * @return void
      *
      * @see http://docs.phpdoc.org/references/phpdoc/tags/method.html
      */
-    private function addMethodsPhpDoc(Event $abs)
+    private function addMethodsPhpDoc(Abstraction $abs)
     {
         $inheritedFrom = null;
         if (empty($abs['phpDoc']['method'])) {
@@ -353,10 +365,8 @@ class AbstractObject
                 'isFinal' => false,
                 'isStatic' => $phpDocMethod['static'],
                 'params' => \array_map(function ($param) use ($className) {
-                    $info = $this->phpDocParam($param, $className);
                     return array(
-                        'constantName' => $info['constantName'],
-                        'defaultValue' => $info['defaultValue'],
+                        'defaultValue' => $this->phpDocParamValue($param, $className),
                         'desc' => null,
                         'name' => $param['name'],
                         'optional' => false,
@@ -381,11 +391,11 @@ class AbstractObject
     /**
      * Adds properties to abstraction
      *
-     * @param Event $abs Abstraction event object
+     * @param Abstraction $abs Abstraction event object
      *
      * @return void
      */
-    private function addProperties(Event $abs)
+    private function addProperties(Abstraction $abs)
     {
         if ($abs['debugMethod'] === 'table' && $abs['traverseValues']) {
             return;
@@ -414,6 +424,7 @@ class AbstractObject
                 }
                 if ($isDebugObj && $name == 'data') {
                     $abs['properties']['data'] = \array_merge(self::$basePropInfo, array(
+                        'type' => 'array',
                         'value' => Abstracter::NOT_INSPECTED,
                         'visibility' => 'protected',
                     ));
@@ -440,11 +451,11 @@ class AbstractObject
     /**
      * Add/Update properties with info from __debugInfo method
      *
-     * @param Event $abs Abstraction event object
+     * @param Abstraction $abs Abstraction event object
      *
      * @return void
      */
-    private function addPropertiesDebug(Event $abs)
+    private function addPropertiesDebug(Abstraction $abs)
     {
         if (!$abs['collectPropertyValues']) {
             return;
@@ -496,11 +507,11 @@ class AbstractObject
      * DOM* properties are invisible to reflection
      * https://bugs.php.net/bug.php?id=48527
      *
-     * @param Event $abs Abstraction event object
+     * @param Abstraction $abs Abstraction event object
      *
      * @return void
      */
-    private function addPropertiesDom(Event $abs)
+    private function addPropertiesDom(Abstraction $abs)
     {
         $obj = $abs->getSubject();
         if ($abs['properties']) {
@@ -569,8 +580,11 @@ class AbstractObject
         }
         foreach ($props as $propName => $type) {
             $val = $obj->{$propName};
+            if (!$type) {
+                list($type, $typeMore) = $this->abstracter->getType($val);
+            }
             $propInfo = \array_merge(static::$basePropInfo, array(
-                'type' => $type ?: $this->abstracter->getType($val),
+                'type' => $type,
                 'value' => \is_object($val)
                     ? Abstracter::NOT_INSPECTED
                     : $val,
@@ -583,13 +597,13 @@ class AbstractObject
      * "Magic" properties may be defined in a class' doc-block
      * If so... move this information to the properties array
      *
-     * @param Event $abs Abstraction event object
+     * @param Abstraction $abs Abstraction event object
      *
      * @return void
      *
      * @see http://docs.phpdoc.org/references/phpdoc/tags/property.html
      */
-    private function addPropertiesPhpDoc(Event $abs)
+    private function addPropertiesPhpDoc(Abstraction $abs)
     {
         // tag => visibility
         $tags = array(
@@ -647,7 +661,7 @@ class AbstractObject
                     )
                 );
                 if (!$exists) {
-                    $properties[ $phpDocProp['name'] ]['value'] = Abstracter::TYPE_UNDEFINED;
+                    $properties[ $phpDocProp['name'] ]['value'] = Abstracter::UNDEFINED;
                 }
             }
             unset($abs['phpDoc'][$tag]);
@@ -661,8 +675,7 @@ class AbstractObject
      *
      * returns array of
      *     [
-     *         'constantName'   populated only if php >= 5.4.6 & default is a constant
-     *         'defaultValue'   value or Abstracter::TYPE_UNDEFINED
+     *         'defaultValue'   value or Abstracter::UNDEFINED
      *         'desc'           description (from phpDoc)
      *         'isOptional'
      *         'name'           name
@@ -690,8 +703,7 @@ class AbstractObject
             if ($reflectionParameter->isPassedByReference()) {
                 $name = '&'.$name;
             }
-            $constantName = null;
-            $defaultValue = Abstracter::TYPE_UNDEFINED;
+            $defaultValue = Abstracter::UNDEFINED;
             if ($reflectionParameter->isDefaultValueAvailable()) {
                 // suppressing following to avoid "Use of undefined constant STDERR" type notice
                 $defaultValue = @$reflectionParameter->getDefaultValue();
@@ -700,11 +712,14 @@ class AbstractObject
                         php may return something like self::CONSTANT_NAME
                         hhvm will return WhateverTheClassNameIs::CONSTANT_NAME
                     */
-                    $constantName = $reflectionParameter->getDefaultValueConstantName();
+                    $defaultValue = new Abstraction(array(
+                        'type' => 'const',
+                        'name' => $reflectionParameter->getDefaultValueConstantName(),
+                        'value' => $defaultValue,
+                    ));
                 }
             }
             $paramInfo = array(
-                'constantName' => $constantName,
                 'defaultValue' => $defaultValue,
                 'desc' => null,
                 'isOptional' => $reflectionParameter->isOptional(),
@@ -734,25 +749,31 @@ class AbstractObject
      */
     private function getParamTypeHint(\ReflectionParameter $reflectionParameter)
     {
-        $return = null;
+        $type = null;
         if ($reflectionParameter->isArray()) {
-            $return = 'array';
-        } elseif (\preg_match('/\[\s\<\w+?>\s([\w\\\\]+)/s', @$reflectionParameter->__toString(), $matches)) {
+            $type = 'array';
+        } elseif (\version_compare(PHP_VERSION, '7.0.0', '>=')) {
+            $type = (string) $reflectionParameter->getType();
+            $type = $type instanceof \ReflectionNamedType
+                ? $type->getName()
+                : (string) $type;
+        } elseif (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', @$reflectionParameter->__toString(), $matches)) {
             // suppressed error to avoid "Use of undefined constant STDERR" type notice
-            $return = $matches[1];
+            // Parameter #0 [ <required> namespace\Type $varName ]
+            $type = $matches[1];
         }
-        return $return;
+        return $type;
     }
 
     /**
      * Get property info
      *
-     * @param Event               $abs                Abstraction event object
+     * @param Abstraction         $abs                Abstraction event object
      * @param \ReflectionProperty $reflectionProperty reflection property
      *
      * @return array
      */
-    private function getPropInfo(Event $abs, \ReflectionProperty $reflectionProperty)
+    private function getPropInfo(Abstraction $abs, \ReflectionProperty $reflectionProperty)
     {
         $obj = $abs->getSubject();
         $reflectionProperty->setAccessible(true); // only accessible via reflection
@@ -930,51 +951,51 @@ class AbstractObject
     }
 
     /**
-     * Get defaultValue and constantName info from phpDoc param
+     * Get defaultValue from phpDoc param
      *
      * Converts the defaultValue string to php scalar
      *
      * @param array  $param     parsed param in from @method tag
      * @param string $className className where phpDoc was found
      *
-     * @return array
+     * @return mixed
      */
-    private function phpDocParam($param, $className)
+    private function phpDocParamValue($param, $className)
     {
-        $constantName = null;
-        $defaultValue = Abstracter::TYPE_UNDEFINED;
-        if (\array_key_exists('defaultValue', $param)) {
-            $defaultValue = $param['defaultValue'];
-            if (\in_array($defaultValue, array('true','false','null'))) {
-                $defaultValue = \json_decode($defaultValue);
-            } elseif (\is_numeric($defaultValue)) {
-                // there are no quotes around value
-                $defaultValue = $defaultValue * 1;
-            } elseif (\preg_match('/^array\(\s*\)|\[\s*\]$/i', $defaultValue)) {
-                // empty array...
-                // we're not going to eval non-empty arrays...
-                //    non empty array will appear as a string
-                $defaultValue = array();
-            } elseif (\preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
-                // appears to be a constant
-                if ($matches[1]) {
-                    // self
-                    if (\defined($className.'::'.$matches[2])) {
-                        $constantName = $matches[0];
-                        $defaultValue = \constant($className.'::'.$matches[2]);
-                    }
-                } elseif (\defined($defaultValue)) {
-                    $constantName = $defaultValue;
-                    $defaultValue = \constant($defaultValue);
-                }
-            } else {
-                $defaultValue = \trim($defaultValue, '\'"');
-            }
+        if (!\array_key_exists('defaultValue', $param)) {
+            return Abstracter::UNDEFINED;
         }
-        return array(
-            'constantName' => $constantName,
-            'defaultValue' => $defaultValue,
-        );
+        $defaultValue = $param['defaultValue'];
+        if (\in_array($defaultValue, array('true','false','null'))) {
+            $defaultValue = \json_decode($defaultValue);
+        } elseif (\is_numeric($defaultValue)) {
+            // there are no quotes around value
+            $defaultValue = $defaultValue * 1;
+        } elseif (\preg_match('/^array\(\s*\)|\[\s*\]$/i', $defaultValue)) {
+            // empty array...
+            // we're not going to eval non-empty arrays...
+            //    non empty array will appear as a string
+            $defaultValue = array();
+        } elseif (\preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
+            // appears to be a constant
+            if ($matches[1] && \defined($className.'::'.$matches[2])) {
+                // self
+                $defaultValue = new Abstraction(array(
+                    'type' => 'const',
+                    'name' => $matches[0],
+                    'value' => \constant($className.'::'.$matches[2]),
+                ));
+            } elseif (\defined($defaultValue)) {
+                $defaultValue = new Abstraction(array(
+                    'type' => 'const',
+                    'name' => $defaultValue,
+                    'value' => \constant($defaultValue),
+                ));
+            }
+        } else {
+            $defaultValue = \trim($defaultValue, '\'"');
+        }
+        return $defaultValue;
     }
 
     /**

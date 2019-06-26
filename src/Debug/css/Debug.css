@@ -57,7 +57,7 @@
 .debug .alert-warning { background-color: #fefbe5; border-color: #faebcc; color: #8a6d3b; }
 .debug .alert-warning .alert-link { color: #66512c; }
 .debug .namespace { opacity: 0.5; }
-.debug .array-inner, .debug .object-inner { display: block; margin-left: 1.5em; }
+.debug .array-inner, .debug .object-inner { display: block; margin-left: 1em; }
 .debug span.key-value { display: block; padding-left: 10px; text-indent: -10px; }
 .debug span.key-value > .t_operator { margin: 0 .25em; }
 .debug .t_object > .classname { font-weight: bold; }

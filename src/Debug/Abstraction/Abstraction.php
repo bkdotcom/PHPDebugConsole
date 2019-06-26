@@ -12,7 +12,7 @@
 namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
-use bdk\Debug\Abstracter;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\PubSub\Event;
 use JsonSerializable;
 use Serializable;

@@ -9,8 +9,11 @@
  * @version   v2.3
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Abstraction;
 
+use bdk\Debug;
+use bdk\Debug\PhpDoc;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 
 /**
@@ -73,6 +76,8 @@ class AbstractObject
         $reflector = new \ReflectionObject($obj);
         $className = $reflector->getName();
         $isTableTop = $method === 'table' && \count($hist) < 2;  // rows (traversable) || row (traversable)
+        $interfaceNames = $reflector->getInterfaceNames();
+        \sort($interfaceNames);
         $abs = new Abstraction(array(
             'className' => $className,
             'collectMethods' => !$isTableTop && $this->abstracter->getCfg('collectMethods') || $className == 'Closure',
@@ -84,8 +89,8 @@ class AbstractObject
                 'extensionName' => $reflector->getExtensionName(),
             ),
             'extends' => array(),
-            'implements' => $reflector->getInterfaceNames(),
-            'isExcluded' => $this->isObjExcluded($obj),
+            'implements' => $interfaceNames,
+            'isExcluded' => $hist && $this->isObjExcluded($obj),    // don't exclude if we're debugging directly
             'isRecursion' => \in_array($obj, $hist, true),
             'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
             'phpDoc' => array(
@@ -191,6 +196,12 @@ class AbstractObject
         } elseif ($obj instanceof \mysqli && ($obj->connect_errno || !$obj->stat)) {
             // avoid "Property access is not allowed yet"
             $abs['collectPropertyValues'] = false;
+        } elseif ($obj instanceof Debug) {
+            $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
+        } elseif ($obj instanceof \bdk\Debug\PhpDoc) {
+            $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
+        } elseif ($obj instanceof \bdk\Debug\Abstraction\AbstractObject) {
+            $abs['propertyOverrideValues']['methodCache'] = Abstracter::NOT_INSPECTED;
         }
     }
 
@@ -408,7 +419,6 @@ class AbstractObject
         while ($reflectionObject) {
             $className = $reflectionObject->getName();
             $properties = $reflectionObject->getProperties();
-            $isDebugObj = $className == __NAMESPACE__;
             while ($properties) {
                 $reflectionProperty = \array_shift($properties);
                 $name = $reflectionProperty->getName();
@@ -420,14 +430,6 @@ class AbstractObject
                         $className
                     );
                     $abs['properties'][$name]['originallyDeclared'] = $className;
-                    continue;
-                }
-                if ($isDebugObj && $name == 'data') {
-                    $abs['properties']['data'] = \array_merge(self::$basePropInfo, array(
-                        'type' => 'array',
-                        'value' => Abstracter::NOT_INSPECTED,
-                        'visibility' => 'protected',
-                    ));
                     continue;
                 }
                 $abs['properties'][$name] = $this->getPropInfo($abs, $reflectionProperty);
@@ -800,7 +802,12 @@ class AbstractObject
         if ($abs['collectPropertyValues']) {
             $propName = $reflectionProperty->getName();
             if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
-                $propInfo['value'] = $abs['propertyOverrideValues'][$propName];
+                $value = $abs['propertyOverrideValues'][$propName];
+                if (\is_array($value) && \array_intersect_key($value, static::$basePropInfo)) {
+                    $propInfo = $value;
+                } else {
+                    $propInfo['value'] = $value;
+                }
                 $propInfo['valueFrom'] = 'debug';
             } else {
                 $propInfo['value'] = $reflectionProperty->getValue($obj);
@@ -906,6 +913,7 @@ class AbstractObject
         if (\in_array(\get_class($obj), $this->abstracter->getCfg('objectsExclude'))) {
             return true;
         }
+        // now test "instanceof"
         foreach ($this->abstracter->getCfg('objectsExclude') as $exclude) {
             if (\is_subclass_of($obj, $exclude)) {
                 return true;

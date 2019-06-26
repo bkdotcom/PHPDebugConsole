@@ -12,7 +12,7 @@
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
-use bdk\Debug\Abstracter;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;

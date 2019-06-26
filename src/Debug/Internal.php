@@ -15,6 +15,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;

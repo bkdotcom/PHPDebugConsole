@@ -11,7 +11,7 @@
 
 namespace bdk\Debug\Output;
 
-use bdk\Debug\Abstracter;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;

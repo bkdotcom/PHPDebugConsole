@@ -384,6 +384,7 @@ class Html extends Base
                 $hasSubs = false;
                 $args = $this->processSubstitutions($args, $hasSubs);
                 if ($hasSubs) {
+                    $meta['sanitizeFirst'] = false;
                     $args = array( \implode('', $args) );
                 }
             }

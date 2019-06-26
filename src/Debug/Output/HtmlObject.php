@@ -12,7 +12,7 @@
 namespace bdk\Debug\Output;
 
 use bdk\Debug;
-use bdk\Debug\Abstracter;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 
 /**
@@ -232,7 +232,9 @@ class HtmlObject
         foreach ($params as $info) {
             $paramStr .= '<span class="parameter">';
             if (!empty($info['type'])) {
-                $paramStr .= '<span class="t_type">'.$info['type'].'</span> ';
+                $paramStr .= $this->debug->output->html->markupIdentifier($info['type'], array(
+                    'class' => 't_type',
+                )).' ';
             }
             $paramStr .= '<span class="t_parameter-name"'
                 .' title="'.\htmlspecialchars($info['desc']).'"'

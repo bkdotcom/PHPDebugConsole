@@ -1,5 +1,7 @@
 <?php
 
+use bdk\Debug\Abstraction\Abstracter;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -78,7 +80,7 @@ class TypeBasicTest extends DebugTestFramework
             ),
             array(
                 'log',
-                array(\bdk\Debug\Abstracter::UNDEFINED),
+                array(Abstracter::UNDEFINED),
                 array(
                     'chromeLogger' => '[[null],null,""]',
                     'html' => '<li class="m_log"><span class="t_undefined"></span></li>',

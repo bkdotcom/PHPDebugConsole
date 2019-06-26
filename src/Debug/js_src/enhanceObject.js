@@ -69,7 +69,7 @@ export function enhanceInner($node) {
 		$.each(hiddenInterfaces, function(i, iface) {
 			$node.find(".interface").each(function() {
 				var html = '<span class="toggle-off" data-toggle="interface" data-interface="'+iface+'" title="toggle methods">' +
-						'<i class="fa fa-eye-slash"></i> ' + iface + "</span>";
+						'<i class="fa fa-eye-slash"></i>' + iface + "</span>";
 				if ($(this).text() == iface) {
 					$(this).html(html);
 				}

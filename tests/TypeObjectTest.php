@@ -1,5 +1,7 @@
 <?php
 
+use bdk\Debug\Abstraction\Abstracter;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -450,7 +452,7 @@ EOD;
         $this->debug->log('test', $test);
         $abstraction = $this->debug->getData('log/0/args/1');
         $this->assertEquals(
-            \bdk\Debug\Abstracter::RECURSION,
+            Abstracter::RECURSION,
             $abstraction['properties']['prop']['value'][0],
             'Did not find expected recursion'
         );

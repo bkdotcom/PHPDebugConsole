@@ -9,10 +9,13 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
+use bdk\Debug\PhpDoc;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractArray;
+use bdk\Debug\Abstraction\AbstractObject;
 
 /**
  * Methods used store array/object/resource info
@@ -200,8 +203,9 @@ class Abstracter
             $ret = \array_intersect_key($this->cfg, $mixed);
             $this->cfg = \array_merge($this->cfg, $mixed);
         }
-        if (!\in_array(__NAMESPACE__, $this->cfg['objectsExclude'])) {
-            $this->cfg['objectsExclude'][] = __NAMESPACE__;
+        $debugClass = \get_class($this->debug);
+        if (!\in_array($debugClass, $this->cfg['objectsExclude'])) {
+            $this->cfg['objectsExclude'][] = $debugClass;
         }
         return $ret;
     }

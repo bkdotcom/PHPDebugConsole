@@ -42,14 +42,11 @@ class DebugTestFramework extends DOMTestCase
             $keys = array('collectMethods','viaDebugInfo','isExcluded','isRecursion',
                 'extends','implements','constants','properties','methods','scopeClass','stringified');
             $keysMissing = array_diff($keys, array_keys($var->getValues()));
-            $return = // $var['debug'] === \bdk\Debug\Abstracter::ABSTRACTION
-                $var['type'] === 'object'
+            $return = $var['type'] === 'object'
                 && $var['className'] === 'stdClass'
                 && count($keysMissing) == 0;
         } elseif ($type == 'resource') {
-            $return = // $var['debug'] === \bdk\Debug\Abstracter::ABSTRACTION
-                $var['type'] === 'resource'
-                && isset($var['value']);
+            $return = $var['type'] === 'resource' && isset($var['value']);
         }
         return $return;
     }

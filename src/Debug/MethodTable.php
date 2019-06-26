@@ -11,6 +11,7 @@
 
 namespace bdk\Debug;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 
 /**

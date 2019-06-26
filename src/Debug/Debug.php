@@ -14,7 +14,7 @@
 
 namespace bdk;
 
-use bdk\Debug\Abstracter;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\LogEntry;
@@ -1725,7 +1725,7 @@ class Debug
     {
         return array(
             'abstracter' => function (Debug $debug) {
-                return new Debug\Abstracter($debug, $debug->config->getCfgLazy('abstracter'));
+                return new Abstracter($debug, $debug->config->getCfgLazy('abstracter'));
             },
             'config' => function (Debug $debug) {
                 return new Debug\Config($debug, $debug->cfg);    // cfg is passed by reference

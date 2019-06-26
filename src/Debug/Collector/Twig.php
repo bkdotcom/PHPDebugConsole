@@ -30,11 +30,11 @@ $aliases = array(
 );
 foreach ($aliases as $old => $new) {
     if (!\interface_exists($new) && !\class_exists($new)) {
-        \bdk\Debug::_warn('creating alias', $new);
         \class_alias($old, $new);
     }
 }
 
+use bdk\Debug;
 use Twig_CompilerInterface;
 use Twig_Environment;
 use Twig_LexerInterface;
@@ -68,7 +68,7 @@ class Twig extends Twig_Environment
     public function __construct(Twig_Environment $twig, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('Twig', array('channelIcon' => $this->icon));
+            $debug = Debug::_getChannel('Twig', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Twig', array('channelIcon' => $this->icon));
         }

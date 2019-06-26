@@ -49,7 +49,7 @@ class Yii11LogRoute extends CLogRoute
     public function __construct(Debug $debug = null, $opts = array())
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('Yii');
+            $debug = Debug::_getChannel('Yii');
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Yii');
         }

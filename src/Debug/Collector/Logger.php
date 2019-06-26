@@ -32,7 +32,7 @@ class Logger extends AbstractLogger
     public function __construct(Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getInstance();
+            $debug = Debug::_getInstance();
         }
         $this->debug = $debug;
         \bdk\Debug\Utilities::addCallerBreaker('class', array(

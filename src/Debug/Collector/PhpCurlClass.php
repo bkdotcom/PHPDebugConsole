@@ -46,7 +46,7 @@ class PhpCurlClass extends Curl
             'verbose' => false,
         ), $options);
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('Curl', array('channelIcon' => $this->icon));
+            $debug = Debug::_getChannel('Curl', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Curl', array('channelIcon' => $this->icon));
         }

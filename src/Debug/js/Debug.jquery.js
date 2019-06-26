@@ -48,7 +48,7 @@
 		var $wrapper = $node.parent(),
 			hasProtected = $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
 			hasPrivate = $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
-			hasExcluded = $node.children(".excluded").hide().length > 0,
+			hasExcluded = $node.children(".debuginfo-excluded").hide().length > 0,
 			accessible = $wrapper.data("accessible"),
 			toggleClass = accessible === "public" ?
 				"toggle-off" :
@@ -92,7 +92,7 @@
 			visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="private">' + toggleVerb + " private</span>";
 		}
 		if (hasExcluded) {
-			visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="excluded">' + toggleVerb + " excluded</span>";
+			visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="debuginfo-excluded">' + toggleVerb + " excluded</span>";
 		}
 		$node.prepend('<span class="vis-toggles">' + visToggles + "</span>");
 		addIcons($node);
@@ -1850,14 +1850,14 @@
 			"> .method.magic" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
 			"> .method.deprecated" :		'<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
 			"> .property.debuginfo-value" :	'<i class="fa fa-eye" title="via __debugInfo()"></i>',
-			"> .property.debugInfo-excluded" :	'<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
+			"> .property.debuginfo-excluded" :	'<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
 			"> .property.private-ancestor" :	'<i class="fa fa-lock" title="private ancestor"></i>',
 			"> .property > .t_modifier_magic" :			'<i class="fa fa-magic" title="magic property"></i>',
 			"> .property > .t_modifier_magic-read" :	'<i class="fa fa-magic" title="magic property"></i>',
 			"> .property > .t_modifier_magic-write" :	'<i class="fa fa-magic" title="magic property"></i>',
 			"[data-toggle=vis][data-vis=private]" :		'<i class="fa fa-user-secret"></i>',
 			"[data-toggle=vis][data-vis=protected]" :	'<i class="fa fa-shield"></i>',
-			"[data-toggle=vis][data-vis=excluded]" :	'<i class="fa fa-eye-slash"></i>'
+			"[data-toggle=vis][data-vis=debuginfo-excluded]" :	'<i class="fa fa-eye-slash"></i>'
 		},
 		// debug methods (not object methods)
 		iconsMethods: {

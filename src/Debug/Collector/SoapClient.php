@@ -36,7 +36,7 @@ class SoapClient extends \SoapClient
     public function __construct($wsdl, $options = array(), Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('Soap', array('channelIcon' => $this->icon));
+            $debug = Debug::_getChannel('Soap', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Soap', array('channelIcon' => $this->icon));
         }

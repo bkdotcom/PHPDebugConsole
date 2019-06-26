@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Collector;
 
+use Exception;
 use SqlFormatter;       // optional library
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
@@ -132,12 +133,12 @@ class StatementInfo
     }
 
     /**
-     * @param \Exception|null $exception Exception (if statement threw exception)
-     * @param integer         $rowCount  Number of rows affected by the last DELETE, INSERT, or UPDATE statement
+     * @param Exception|null $exception (optional) Exception (if statement threw exception)
+     * @param integer        $rowCount  (optional) Number of rows affected by the last DELETE, INSERT, or UPDATE statement
      *
      * @return void
      */
-    public function end(\PDOException $exception = null, $rowCount = null)
+    public function end(Exception $exception = null, $rowCount = null)
     {
         $this->exception = $exception;
         $this->rowCount = $rowCount;

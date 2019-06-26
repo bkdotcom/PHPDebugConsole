@@ -34,7 +34,7 @@ class Slim2
     public function __construct(Debug $debug = null, $prevWriter = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('Slim');
+            $debug = Debug::_getChannel('Slim');
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Slim');
         }

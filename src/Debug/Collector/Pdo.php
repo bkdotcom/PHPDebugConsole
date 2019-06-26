@@ -40,7 +40,7 @@ class Pdo extends PdoBase
     public function __construct(\PDO $pdo, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('PDO', array('channelIcon' => $this->icon));
+            $debug = Debug::_getChannel('PDO', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('PDO', array('channelIcon' => $this->icon));
         }
@@ -346,7 +346,7 @@ class Pdo extends PdoBase
     }
 
     /**
-     * Adds an executed TracedStatement
+     * Logs StatementInfo
      *
      * @param StatementInfo $info statement info instance
      *
@@ -386,9 +386,9 @@ class Pdo extends PdoBase
     }
 
     /**
-     * Returns the list of executed statements as TracedStatement objects
+     * Returns the list of executed statements as StatementInfo objects
      *
-     * @return array
+     * @return StatementInfo[]
      */
     public function getLoggedStatements()
     {

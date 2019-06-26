@@ -45,7 +45,7 @@ export function enhanceInner($node) {
 	var $wrapper = $node.parent(),
 		hasProtected = $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
 		hasPrivate = $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
-		hasExcluded = $node.children(".excluded").hide().length > 0,
+		hasExcluded = $node.children(".debuginfo-excluded").hide().length > 0,
 		accessible = $wrapper.data("accessible"),
 		toggleClass = accessible === "public" ?
 			"toggle-off" :
@@ -89,7 +89,7 @@ export function enhanceInner($node) {
 		visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="private">' + toggleVerb + " private</span>";
 	}
 	if (hasExcluded) {
-		visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="excluded">' + toggleVerb + " excluded</span>";
+		visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="debuginfo-excluded">' + toggleVerb + " excluded</span>";
 	}
 	$node.prepend('<span class="vis-toggles">' + visToggles + "</span>");
 	addIcons($node);

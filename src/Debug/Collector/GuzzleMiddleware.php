@@ -39,12 +39,11 @@ class GuzzleMiddleware
     public function __construct(Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('Guzzle', array('channelIcon' => $this->icon));
+            $debug = Debug::_getChannel('Guzzle', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Guzzle', array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
-        // $this->debug->eventManager->subscribe('debug.objAbstractStart', array($this, 'onObjAbstractStart'));
     }
 
     /**
@@ -59,7 +58,7 @@ class GuzzleMiddleware
     }
 
     /**
-     * [middleware description]
+     * Log Request Begin
      *
      * @param RequestInterface $request [description]
      * @param array            $options [description]
@@ -74,8 +73,6 @@ class GuzzleMiddleware
             (string) $request->getUri(),
             $this->debug->meta('icon', $this->icon)
         );
-        // $this->debug->log('request', $request);
-        // $this->debug->log('options', $options);
         $this->debug->log('request headers', $this->buildHeadersString($request));
         $func = $this->nextHandler;
         return $func($request, $options)->then(
@@ -83,24 +80,6 @@ class GuzzleMiddleware
             array($this, 'onRejected')
         );
     }
-
-    /**
-     * debug.objAbstractStart event subscriber
-     *
-     * @param Event $event event object
-     *
-     * @return void
-     */
-    /*
-    public function onObjAbstractStart(Event $event)
-    {
-        // EasyHandle::_get() throws an exception when we attempt to get handle property value
-        if ($event->getSubject() instanceof \GuzzleHttp\Handler\EasyHandle) {
-            $event['propertyOverrideValues']['handle'] = \bdk\Debug\Abstracter::NOT_INSPECTED;
-            $event->stopPropagation();
-        }
-    }
-    */
 
     /**
      * Fulfilled Request handler
@@ -111,7 +90,6 @@ class GuzzleMiddleware
      */
     public function onFulfilled(ResponseInterface $response)
     {
-        // \bdk\Debug::_log('response', $response);
         $this->debug->log('response headers', $this->buildHeadersString($response));
         $this->debug->groupEnd();
         return $response;
@@ -126,7 +104,6 @@ class GuzzleMiddleware
      */
     public function onRejected($reason)
     {
-        // $this->debug->warn(__METHOD__, $reason);
         $response = null;
         if ($reason instanceof Exception) {
             $this->debug->warn($reason->getCode(), $reason->getMessage());

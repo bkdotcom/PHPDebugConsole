@@ -47,7 +47,7 @@ class DoctrineLogger implements SQLLogger
     public function __construct(Connection $connection = null, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('Doctrine', array('channelIcon' => $this->icon));
+            $debug = Debug::_getChannel('Doctrine', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Doctrine', array('channelIcon' => $this->icon));
         }
@@ -128,16 +128,6 @@ class DoctrineLogger implements SQLLogger
     public function startQuery($sql, array $params = null, array $types = null)
     {
         $this->statementInfo = new StatementInfo($sql, $params, $types);
-        /*
-        $this->sql = \preg_replace_callback("/\?/", function ($matches) use (&$params, &$types) {
-            $param = \array_shift($params);
-            if (null === $param) {
-                return "NULL";
-            } else {
-                return "'" . $param . "'";
-            }
-        }, $sql);
-        */
     }
 
     /**

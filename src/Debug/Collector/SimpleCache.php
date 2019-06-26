@@ -38,7 +38,7 @@ class SimpleCache implements CacheInterface
     public function __construct(CacheInterface $cache, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = \bdk\Debug::_getChannel('SimpleCache', array('channelIcon' => $this->icon));
+            $debug = Debug::_getChannel('SimpleCache', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('SimpleCache', array('channelIcon' => $this->icon));
         }
@@ -205,7 +205,7 @@ class SimpleCache implements CacheInterface
     }
 
     /**
-     * Adds an executed TracedStatement
+     * Logs CallInfo
      *
      * @param CallInfo $info statement info instance
      *
@@ -249,9 +249,9 @@ class SimpleCache implements CacheInterface
     }
 
     /**
-     * Returns the list of executed statements as TracedStatement objects
+     * Returns the list of executed statements as CallInfo objects
      *
-     * @return array
+     * @return CallInfo[]
      */
     public function getLoggedActions()
     {

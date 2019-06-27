@@ -98,7 +98,10 @@ export function expand($toggleOrTarget) {
 				// remove value from label
 				$toggle.find(".group-label").last().nextAll().remove();
 			}
-			$target.trigger("expanded.debug." + what);
+			// setTimeout for reasons... ensures listener gets visible target
+			setTimeout(function(){
+				$target.trigger("expanded.debug." + what);
+			});
 		});
 	}
 }

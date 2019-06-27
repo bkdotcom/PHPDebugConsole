@@ -1022,7 +1022,7 @@
 		$("input[name=debugCookie]").on("change", function(){
 			var isChecked = $(this).is(":checked");
 			if (isChecked) {
-				cookieSave("debug", config$3.get("debugKey"), 7);
+				cookieSet("debug", config$3.get("debugKey"), 7);
 			} else {
 				cookieRemove("debug");
 			}
@@ -1618,7 +1618,10 @@
 					// remove value from label
 					$toggle.find(".group-label").last().nextAll().remove();
 				}
-				$target.trigger("expanded.debug." + what);
+				// setTimeout for reasons... ensures listener gets visible target
+				setTimeout(function(){
+					$target.trigger("expanded.debug." + what);
+				});
 			});
 		}
 	}

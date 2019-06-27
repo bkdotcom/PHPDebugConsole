@@ -24,7 +24,7 @@ export function init($debugRoot, conf) {
 	$("input[name=debugCookie]").on("change", function(){
 		var isChecked = $(this).is(":checked");
 		if (isChecked) {
-			cookieSave("debug", config.get("debugKey"), 7);
+			cookieSet("debug", config.get("debugKey"), 7);
 		} else {
 			cookieRemove("debug");
 		}

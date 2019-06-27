@@ -52,10 +52,10 @@ class LoggerTest extends DebugTestFramework
         $this->assertArraySubset(array(
             'foo'=>'bar',
         ), $this->debug->getData('log/__end__/args/1'));
-        $this->assertArraySubset(array(
-            'className'=>'Exception',
-            'type' => 'object',
-        ), $this->debug->getData('log/__end__/args/1/exception'));
+        $exceptionAbs = $this->debug->getData('log/__end__/args/1/exception');
+        $this->assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $exceptionAbs);
+        $this->assertSame('Exception', $exceptionAbs['className']);
+        $this->assertSame('object', $exceptionAbs['type']);
         $this->assertArraySubset($metaSubset, $metaActual);
         $backtrace = $this->debug->getData('log/__end__/meta/backtrace');
         $this->assertInternalType('array', $backtrace);

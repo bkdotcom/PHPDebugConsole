@@ -176,7 +176,8 @@ class Abstracter
      */
     public static function needsAbstraction($val)
     {
-        list($type, $typeMore) = self::getType($val);
+        // function array dereferencing = php 5.4
+        $typeMore = self::getType($val)[1];
         return $typeMore === 'raw';
     }
 

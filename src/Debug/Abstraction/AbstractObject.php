@@ -583,7 +583,8 @@ class AbstractObject
         foreach ($props as $propName => $type) {
             $val = $obj->{$propName};
             if (!$type) {
-                list($type, $typeMore) = $this->abstracter->getType($val);
+                // function array dereferencing = php 5.4
+                $type = $this->abstracter->getType($val)[0];
             }
             $propInfo = \array_merge(static::$basePropInfo, array(
                 'type' => $type,

@@ -11,11 +11,6 @@
 
 namespace bdk\Debug\Collector;
 
-use bdk\Debug;
-use bdk\Debug\LogEntry;
-use bdk\Debug\Collector\Twig\Template;
-use bdk\PubSub\Event;
-
 /*
     Try to avoid "Declaration should be compatible" notices
     Some 1.38.0 methods use namespaced hints..
@@ -35,6 +30,9 @@ foreach ($aliases as $old => $new) {
 }
 
 use bdk\Debug;
+use bdk\Debug\LogEntry;
+use bdk\Debug\Collector\Twig\Template;
+use bdk\PubSub\Event;
 use Twig_CompilerInterface;
 use Twig_Environment;
 use Twig_LexerInterface;

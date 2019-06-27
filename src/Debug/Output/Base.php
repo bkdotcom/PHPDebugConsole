@@ -616,7 +616,8 @@ abstract class Base implements OutputInterface
      */
     protected function substitutionAsString($val)
     {
-        list($type, $typeMore) = $this->debug->abstracter->getType($val);
+        // function array dereferencing = php 5.4
+        $type = $this->debug->abstracter->getType($val)[0];
         if ($type == 'array') {
             $count = \count($val);
             $val = 'array('.$count.')';

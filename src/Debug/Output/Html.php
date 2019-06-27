@@ -769,7 +769,8 @@ class Html extends Base
      */
     protected function substitutionAsString($val)
     {
-        list($type, $typeMore) = $this->debug->abstracter->getType($val);
+        // function array dereferencing = php 5.4
+        $type = $this->debug->abstracter->getType($val)[0];
         if ($type == 'string') {
             $val = $this->dump($val, true, false);
         } elseif ($type == 'array') {

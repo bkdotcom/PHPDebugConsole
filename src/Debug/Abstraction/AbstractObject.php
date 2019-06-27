@@ -756,10 +756,12 @@ class AbstractObject
         if ($reflectionParameter->isArray()) {
             $type = 'array';
         } elseif (\version_compare(PHP_VERSION, '7.0.0', '>=')) {
-            $type = (string) $reflectionParameter->getType();
-            $type = $type instanceof \ReflectionNamedType
-                ? $type->getName()
-                : (string) $type;
+            $type = $reflectionParameter->getType();
+            if ($type instanceof \ReflectionNamedType) {
+                $type = $type->getName();
+            } elseif ($type) {
+                $type = (string) $type;
+            }
         } elseif (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', @$reflectionParameter->__toString(), $matches)) {
             // suppressed error to avoid "Use of undefined constant STDERR" type notice
             // Parameter #0 [ <required> namespace\Type $varName ]

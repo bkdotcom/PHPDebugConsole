@@ -99,12 +99,7 @@ function applyFilter($root) {
 		Collapsed groups may get filter-hidden..
 		this may result in exposing entries in that group that have yet to be enhanced
 	*/
-	/*
-	// li:not(.filter-hidden):not(.enhanced):visible,
-	$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body > li:not(.filter-hidden):not(.enhanced)").each(function(){
-		$(this).debugEnhance();
-	});
-	*/
+	$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body").debugEnhance();
 }
 
 function updateFilterStatus($debugRoot) {

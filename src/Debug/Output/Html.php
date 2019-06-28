@@ -111,12 +111,12 @@ class Html extends Base
      * If callable, also wrap with .t_operator and .t_identifier
      *
      * @param string $str     classname or classname(::|->)name (method/property/const)
-     * @param array  $attribs additional html attributes
      * @param string $tagName ("span") html tag to use
+     * @param array  $attribs (optional) additional html attributes
      *
      * @return string
      */
-    public function markupIdentifier($str, $attribs = array(), $tagName = 'span')
+    public function markupIdentifier($str, $tagName = 'span', $attribs = array())
     {
         if (\preg_match('/^(.+)(::|->)(.+)$/', $str, $matches)) {
             $classname = $matches[1];

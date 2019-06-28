@@ -43,7 +43,7 @@ class HtmlObject
 	public function dump(Abstraction $abs)
 	{
         $title = \trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
-        $strClassName = $this->debug->output->html->markupIdentifier($abs['className'], array(
+        $strClassName = $this->debug->output->html->markupIdentifier($abs['className'], 'span', array(
             'title' => $title ?: null,
         ));
         if ($abs['isRecursion']) {
@@ -170,8 +170,9 @@ class HtmlObject
                 );
             }
             $classes = \array_keys(\array_filter(array(
-                'method' => true,
                 'deprecated' => $info['isDeprecated'],
+                'inherited' => $info['inheritedFrom'],
+                'method' => true,
             )));
             $modifiers = \array_keys(\array_filter(array(
                 'final' => $info['isFinal'],
@@ -232,7 +233,7 @@ class HtmlObject
         foreach ($params as $info) {
             $paramStr .= '<span class="parameter">';
             if (!empty($info['type'])) {
-                $paramStr .= $this->debug->output->html->markupIdentifier($info['type'], array(
+                $paramStr .= $this->debug->output->html->markupIdentifier($info['type'], 'span', array(
                     'class' => 't_type',
                 )).' ';
             }
@@ -339,7 +340,7 @@ class HtmlObject
                     return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
                 }, $modifiers))
                 .($isPrivateAncestor
-                    ? ' (<i>'.$info['inheritedFrom'].'</i>)'
+                    ? ' ('.$this->debug->output->html->markupIdentifier($info['inheritedFrom'], 'i').')'
                     : '')
                 .($info['type']
                     ? ' <span class="t_type">'.$info['type'].'</span>'

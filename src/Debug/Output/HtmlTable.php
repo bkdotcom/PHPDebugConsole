@@ -64,6 +64,7 @@ class HtmlTable
             if ($rows['traverseValues']) {
                 $options['caption'] .= ' ('.$this->outputHtml->markupIdentifier(
                     $rows['className'],
+                    'span',
                     array(
                         'title' => $rows['phpDoc']['summary'] ?: null,
                     )
@@ -184,9 +185,9 @@ class HtmlTable
             $parsed['innerhtml']
         );
         if ($objInfo['row']) {
-            $str .= $this->outputHtml->markupIdentifier($objInfo['row']['className'], array(
+            $str .= $this->outputHtml->markupIdentifier($objInfo['row']['className'], 'td', array(
                 'title' => $objInfo['row']['phpDoc']['summary'] ?: null,
-            ), 'td');
+            ));
             $this->tableInfo['haveObjRow'] = true;
         } else {
             $str .= '<td class="classname"></td>';

@@ -16,6 +16,7 @@
 
 	$grey-text: #6e6e6e;
 	$lite-grey: #f3f3f3;
+	$text-muted: #777;
 	$border-color: #d0d0d0;
 	$lite-blue: #DDE6F0;
 
@@ -107,7 +108,7 @@
 		&:after { content: none; }
 	}
 	.text-center { text-align: center; }
-	.text-muted { opacity: 0.5; }
+	.text-muted { color: $text-muted; }
 	// .text-nowrap { white-space: nowrap; }
 	.text-right { text-align: right; }
 	.text-error { color: $error-fg; }

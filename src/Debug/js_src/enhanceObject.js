@@ -17,7 +17,17 @@ export function init($delegateNode, conf) {
 function addIcons($node) {
 	// console.warn('addIcons', $node);
 	$.each(config.iconsObject, function(selector, v){
-		$node.find(selector).prepend(v);
+		var prepend = true,
+			matches = v.match(/^([ap])\s*:(.+)$/);
+		if (matches) {
+			prepend = matches[1] == 'p';
+			v = matches[2];
+		}
+		if (prepend) {
+			$node.find(selector).prepend(v);
+		} else {
+			$node.find(selector).append(v);
+		}
 	});
 	$node.find("> .property > .fa:first-child, > .property > span:first-child > .fa").
 		addClass("fa-fw");
@@ -43,9 +53,12 @@ export function enhance($node) {
 
 export function enhanceInner($node) {
 	var $wrapper = $node.parent(),
-		hasProtected = $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
-		hasPrivate = $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
-		hasExcluded = $node.children(".debuginfo-excluded").hide().length > 0,
+		flags = {
+			hasProtected: $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
+			hasPrivate: $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
+			hasExcluded: $node.children(".debuginfo-excluded").hide().length > 0,
+			hasInherited: $node.children(".inherited")
+		},
 		accessible = $wrapper.data("accessible"),
 		toggleClass = accessible === "public" ?
 			"toggle-off" :
@@ -82,14 +95,17 @@ export function enhanceInner($node) {
 	if (accessible === "public") {
 		$wrapper.find(".private, .protected").hide();
 	}
-	if (hasProtected) {
+	if (flags.hasProtected) {
 		visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="protected">' + toggleVerb + " protected</span>";
 	}
-	if (hasPrivate) {
+	if (flags.hasPrivate) {
 		visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="private">' + toggleVerb + " private</span>";
 	}
-	if (hasExcluded) {
-		visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="debuginfo-excluded">' + toggleVerb + " excluded</span>";
+	if (flags.hasExcluded) {
+		visToggles += ' <span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>';
+	}
+	if (flags.hasInherited) {
+		visToggles += ' <span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited methods</span>';
 	}
 	$node.prepend('<span class="vis-toggles">' + visToggles + "</span>");
 	addIcons($node);

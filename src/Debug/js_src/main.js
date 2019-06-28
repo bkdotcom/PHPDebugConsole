@@ -30,6 +30,7 @@ var config = new Config({
 		"> .info.magic" :				'<i class="fa fa-fw fa-magic"></i>',
 		"> .method.magic" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
 		"> .method.deprecated" :		'<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
+		"> .method.inherited" :			'a: <i class="fa fa-fw fa-clone" title="Inherited"></i>',
 		"> .property.debuginfo-value" :	'<i class="fa fa-eye" title="via __debugInfo()"></i>',
 		"> .property.debuginfo-excluded" :	'<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
 		"> .property.private-ancestor" :	'<i class="fa fa-lock" title="private ancestor"></i>',
@@ -38,7 +39,8 @@ var config = new Config({
 		"> .property > .t_modifier_magic-write" :	'<i class="fa fa-magic" title="magic property"></i>',
 		"[data-toggle=vis][data-vis=private]" :		'<i class="fa fa-user-secret"></i>',
 		"[data-toggle=vis][data-vis=protected]" :	'<i class="fa fa-shield"></i>',
-		"[data-toggle=vis][data-vis=debuginfo-excluded]" :	'<i class="fa fa-eye-slash"></i>'
+		"[data-toggle=vis][data-vis=debuginfo-excluded]" :	'<i class="fa fa-eye-slash"></i>',
+		"[data-toggle=vis][data-vis=inherited]" :	'<i class="fa fa-clone"></i>'
 	},
 	// debug methods (not object methods)
 	iconsMethods: {

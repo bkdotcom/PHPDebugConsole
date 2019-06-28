@@ -286,7 +286,7 @@ class AbstractObject
                 $methodName = $reflectionMethod->getName();
                 if ($info['visibility'] === 'private' && $info['inheritedFrom']) {
                     /*
-                        getMethods() returns parent's private methods (must be a reason... but we'll skip it)
+                        getMethods() returns parent's private methods (#reasons)..  we'll skip it
                     */
                     continue;
                 }

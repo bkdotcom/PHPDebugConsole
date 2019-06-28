@@ -161,6 +161,7 @@ class SimpleCache implements CacheInterface
             'SimpleCache info',
             $debug->meta(array(
                 'level' => 'info',
+                'icon' => $this->icon,
             ))
         );
         $debug->log('logged operations: ', \count($this->loggedActions));

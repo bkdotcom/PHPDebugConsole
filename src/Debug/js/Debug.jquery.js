@@ -20,7 +20,17 @@
 	function addIcons($node) {
 		// console.warn('addIcons', $node);
 		$.each(config.iconsObject, function(selector, v){
-			$node.find(selector).prepend(v);
+			var prepend = true,
+				matches = v.match(/^([ap])\s*:(.+)$/);
+			if (matches) {
+				prepend = matches[1] == 'p';
+				v = matches[2];
+			}
+			if (prepend) {
+				$node.find(selector).prepend(v);
+			} else {
+				$node.find(selector).append(v);
+			}
 		});
 		$node.find("> .property > .fa:first-child, > .property > span:first-child > .fa").
 			addClass("fa-fw");
@@ -46,9 +56,12 @@
 
 	function enhanceInner($node) {
 		var $wrapper = $node.parent(),
-			hasProtected = $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
-			hasPrivate = $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
-			hasExcluded = $node.children(".debuginfo-excluded").hide().length > 0,
+			flags = {
+				hasProtected: $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
+				hasPrivate: $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
+				hasExcluded: $node.children(".debuginfo-excluded").hide().length > 0,
+				hasInherited: $node.children(".inherited")
+			},
 			accessible = $wrapper.data("accessible"),
 			toggleClass = accessible === "public" ?
 				"toggle-off" :
@@ -85,14 +98,17 @@
 		if (accessible === "public") {
 			$wrapper.find(".private, .protected").hide();
 		}
-		if (hasProtected) {
+		if (flags.hasProtected) {
 			visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="protected">' + toggleVerb + " protected</span>";
 		}
-		if (hasPrivate) {
+		if (flags.hasPrivate) {
 			visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="private">' + toggleVerb + " private</span>";
 		}
-		if (hasExcluded) {
-			visToggles += ' <span class="'+toggleClass+'" data-toggle="vis" data-vis="debuginfo-excluded">' + toggleVerb + " excluded</span>";
+		if (flags.hasExcluded) {
+			visToggles += ' <span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>';
+		}
+		if (flags.hasInherited) {
+			visToggles += ' <span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited methods</span>';
 		}
 		$node.prepend('<span class="vis-toggles">' + visToggles + "</span>");
 		addIcons($node);
@@ -901,12 +917,7 @@
 			Collapsed groups may get filter-hidden..
 			this may result in exposing entries in that group that have yet to be enhanced
 		*/
-		/*
-		// li:not(.filter-hidden):not(.enhanced):visible,
-		$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body > li:not(.filter-hidden):not(.enhanced)").each(function(){
-			$(this).debugEnhance();
-		});
-		*/
+		$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body").debugEnhance();
 	}
 
 	function updateFilterStatus($debugRoot) {
@@ -1852,6 +1863,7 @@
 			"> .info.magic" :				'<i class="fa fa-fw fa-magic"></i>',
 			"> .method.magic" :				'<i class="fa fa-fw fa-magic" title="magic method"></i>',
 			"> .method.deprecated" :		'<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
+			"> .method.inherited" :			'a: <i class="fa fa-fw fa-clone" title="Inherited"></i>',
 			"> .property.debuginfo-value" :	'<i class="fa fa-eye" title="via __debugInfo()"></i>',
 			"> .property.debuginfo-excluded" :	'<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
 			"> .property.private-ancestor" :	'<i class="fa fa-lock" title="private ancestor"></i>',
@@ -1860,7 +1872,8 @@
 			"> .property > .t_modifier_magic-write" :	'<i class="fa fa-magic" title="magic property"></i>',
 			"[data-toggle=vis][data-vis=private]" :		'<i class="fa fa-user-secret"></i>',
 			"[data-toggle=vis][data-vis=protected]" :	'<i class="fa fa-shield"></i>',
-			"[data-toggle=vis][data-vis=debuginfo-excluded]" :	'<i class="fa fa-eye-slash"></i>'
+			"[data-toggle=vis][data-vis=debuginfo-excluded]" :	'<i class="fa fa-eye-slash"></i>',
+			"[data-toggle=vis][data-vis=inherited]" :	'<i class="fa fa-clone"></i>'
 		},
 		// debug methods (not object methods)
 		iconsMethods: {

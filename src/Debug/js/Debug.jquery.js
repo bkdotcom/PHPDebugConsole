@@ -135,24 +135,43 @@
 	 * Toggle visibility for private/protected properties and methods
 	 */
 	function toggleVis(toggle) {
+		// console.log('toggleVis', toggle);
 		var $toggle = $(toggle),
 			vis = $toggle.data("vis"),
 			$objInner = $toggle.closest(".object-inner"),
-			$toggles = $objInner.find("[data-toggle=vis][data-vis="+vis+"]");
+			$toggles = $objInner.find("[data-toggle=vis][data-vis="+vis+"]"),
+			$nodes = $objInner.find("."+vis);
 		if ($toggle.is(".toggle-off")) {
 			// show for this and all descendants
 			$toggles.
 				html($toggle.html().replace("show ", "hide ")).
 				addClass("toggle-on").
 				removeClass("toggle-off");
-			$objInner.find("> ."+vis).show();
+			$nodes.each(function(){
+				var $node = $(this),
+					$objInner = $node.closest(".object-inner"),
+					show = true;
+				$objInner.find("> .vis-toggles [data-toggle]").each(function(){
+					var $toggle = $(this),
+						vis = $toggle.data("vis"),
+						isOn = $toggle.is(".toggle-on");
+					// if any applicable test is false, don't show it
+					if (!isOn && $node.hasClass(vis)) {
+						show = false;
+						return false;	// break
+					}
+				});
+				if (show) {
+					$node.show();
+				}
+			});
 		} else {
 			// hide for this and all descendants
 			$toggles.
 				html($toggle.html().replace("hide ", "show ")).
 				addClass("toggle-off").
 				removeClass("toggle-on");
-			$objInner.find("> ."+vis).hide();
+			$nodes.hide();
 		}
 	}
 

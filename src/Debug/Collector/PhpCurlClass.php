@@ -84,17 +84,8 @@ class PhpCurlClass extends Curl
         if ($this->error) {
             $this->debug->warn($this->errorCode, $this->errorMessage);
         }
-        $requestCookies = isset($options['CURLOPT_COOKIE'])
-            ? $this->parseRequestCookies($options['CURLOPT_COOKIE'])
-            : array();
-        $responseCookies = array();
-        foreach ($this->responseCookies as $name => $value) {
-            $responseCookies[\urldecode($name)] = \urldecode($value);
-        }
         $this->debug->log('request headers', $this->getInfo(CURLINFO_HEADER_OUT));
-        $this->debug->log('request cookies', $requestCookies);
         $this->debug->log('response headers', $this->rawResponseHeaders);
-        $this->debug->log('response cookies', $responseCookies);
         if ($this->optionsDebug['inclInfo']) {
             $this->debug->log('info', $this->getInfo());
         }
@@ -180,25 +171,5 @@ class PhpCurlClass extends Curl
         }
         \ksort($opts);
         return $opts;
-    }
-
-    /**
-     * [parseRequestCookies description]
-     *
-     * @param string $rawCookies raw Cookie header value
-     *
-     * @return array
-     */
-    private function parseRequestCookies($rawCookies)
-    {
-        $keyValues = array();
-        $keyValuePairs = $rawCookies
-            ? \explode('; ', $rawCookies)
-            : array();
-        foreach ($keyValuePairs as $keyValue) {
-            list($key, $value) = \explode('=', $keyValue, 2);
-            $keyValues[\urldecode($key)] = \urldecode($value);
-        }
-        return $keyValues;
     }
 }

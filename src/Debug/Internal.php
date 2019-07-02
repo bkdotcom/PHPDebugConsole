@@ -33,7 +33,7 @@ class Internal implements SubscriberInterface
 {
 
     private $debug;
-
+    private $inShutdown = false;
     private static $profilingEnabled = false;
 
     /**
@@ -56,6 +56,50 @@ class Internal implements SubscriberInterface
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
         }, 'onErrorLowPri'), PHP_INT_MAX * -1);
+        /*
+            Initial setCfg has already occured... so we missed the initial debug.config event
+            manually call onConfig here
+        */
+        $this->onConfig(new Event(
+            $this->debug,
+            array('config' => $this->debug->getCfg())
+        ));
+    }
+
+    /**
+     * Close any unclosed groups
+     *
+     * We may have forgotten to end a group or the script may have exited
+     *
+     * @return void
+     */
+    public function closeOpenGroups()
+    {
+        if ($this->inShutdown) {
+            // we already closed
+            return;
+        }
+        $data = $this->debug->getData();
+        $data['groupPriorityStack'][] = 'main';
+        while ($data['groupPriorityStack']) {
+            $priority = \array_pop($data['groupPriorityStack']);
+            foreach ($data['groupStacks'][$priority] as $i => $info) {
+                if (!$info['collect']) {
+                    continue;
+                }
+                unset($data['groupStacks'][$priority][$i]);
+                $logEntry = new LogEntry(
+                    $info['channel'],
+                    'groupEnd'
+                );
+                if ($priority === 'main') {
+                    $data['log'][] = $logEntry;
+                } else {
+                    $data['logSummary'][$priority][] = $logEntry;
+                }
+            }
+        }
+        $this->debug->setData($data);
     }
 
     /**
@@ -224,13 +268,20 @@ class Internal implements SubscriberInterface
      */
     public function getSubscriptions()
     {
+        /*
+            OnShutDown subscribes to 'debug.log'..  onDebugLogShutdown
+              we add a "php.shutdown" log entry
+        */
         return array(
             'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
             'debug.config' => array('onConfig', PHP_INT_MAX),
             'debug.dumpCustom' => 'onDumpCustom',
             'debug.output' => 'onOutput',
             'errorHandler.error' => 'onError',
-            'php.shutdown' => 'onShutdown',
+            'php.shutdown' => array(
+                array('onShutdownHigh', PHP_INT_MAX),
+                array('onShutdownLow', PHP_INT_MAX * -1)
+            ),
         );
     }
 
@@ -255,10 +306,6 @@ class Internal implements SubscriberInterface
      */
     public function onBootstrap()
     {
-        if ($this->debug->parentInstance) {
-            // only record php/request info for root instance
-            return;
-        }
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
         $this->debug->group('environment', $this->debug->meta(array(
@@ -320,6 +367,22 @@ class Internal implements SubscriberInterface
                 FileStreamWrapper::register($pathsExclude);
             }
         }
+    }
+
+    /**
+     * Listen for a log entry occuring after php.shutdown...
+     *
+     * @return void
+     */
+    public function onDebugLogShutdown()
+    {
+        $this->debug->eventManager->unsubscribe('debug.log', array($this, __FUNCTION__));
+        $this->debug->info('php.shutdown', $this->debug->meta(array(
+            'attribs' => array(
+                'class' => 'php-shutdown',
+            ),
+            'icon' => 'fa fa-power-off',
+        )));
     }
 
     /**
@@ -385,15 +448,15 @@ class Internal implements SubscriberInterface
 
     /**
      * debug.output event subscriber
+     * Log our runtime info in a summary group
+     *
+     * As we're only subscribed to root debug instance's debug.output event,  this info
+     *   will not be output for any sub-channels output directly
      *
      * @return void
      */
     public function onOutput()
     {
-        if ($this->debug->parentInstance) {
-            // only record runtime info for root instance
-            return;
-        }
         $vals = $this->runtimeVals();
         $this->debug->groupSummary(1);
         $this->debug->info('Built In '.$vals['runtime'].' sec');
@@ -410,15 +473,29 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * php.shutdown subscriber (high priority)
+     *
+     * @return void
+     */
+    public function onShutdownHigh()
+    {
+        $this->closeOpenGroups();
+        $this->inShutdown = true;
+        $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLogShutdown'));
+    }
+
+    /**
+     * php.shutdown subscriber (low priority)
      * Email Log if emailLog is 'always' or 'onError'
      * output log if not already output
      *
      * @return void
      */
-    public function onShutdown()
+    public function onShutdownLow()
     {
-        $this->runtimeVals();
+        $this->debug->eventManager->unsubscribe('debug.log', array($this, 'onDebugLogShutdown'));
         if ($this->testEmailLog()) {
+            $this->runtimeVals();
             $this->emailLog();
         }
         if (!$this->debug->getData('outputSent')) {

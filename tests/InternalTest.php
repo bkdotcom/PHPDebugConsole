@@ -32,7 +32,7 @@ class InternalTest extends DebugTestFramework
         /*
             Test that not emailed if nothing logged
         */
-        $this->debug->internal->onShutdown();
+        $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
         $this->debug->log('this is a test');
@@ -42,7 +42,7 @@ class InternalTest extends DebugTestFramework
             Test that emailed if something logged
         */
         $this->expectedSubject = 'Debug Log';
-        $this->debug->internal->onShutdown();
+        $this->debug->internal->onShutdownLow();
         $this->assertTrue($this->emailCalled);
         $this->emailCalled = false;
 
@@ -51,7 +51,7 @@ class InternalTest extends DebugTestFramework
         /*
             Test that not emailed if no error
         */
-        $this->debug->internal->onShutdown();
+        $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
         /*
@@ -59,7 +59,7 @@ class InternalTest extends DebugTestFramework
         */
         // $notice[bar] = 'undefined constant';    // this is a warning in PHP 7.2
         $notice = $undefinedVar;
-        $this->debug->internal->onShutdown();
+        $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
         /*
@@ -67,7 +67,7 @@ class InternalTest extends DebugTestFramework
         */
         $warning = 1/0; // warning
         $this->expectedSubject = 'Debug Log: Error';
-        $this->debug->internal->onShutdown();
+        $this->debug->internal->onShutdownLow();
         $this->assertTrue($this->emailCalled);
         $this->emailCalled = false;
 
@@ -75,7 +75,7 @@ class InternalTest extends DebugTestFramework
             Test that not emailed if disabled
         */
         $this->debug->setCfg('emailLog', false);
-        $this->debug->internal->onShutdown();
+        $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
     }
 

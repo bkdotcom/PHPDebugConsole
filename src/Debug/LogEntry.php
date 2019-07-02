@@ -35,7 +35,7 @@ class LogEntry extends Event
         $this->subject = $subject;
         $this->values = array(
             'method' => $method,
-            'args' => $args,
+            'args' => $args ?: array(),
             'meta' => $meta,
             'appendLog' => true,
             'return' => null,

@@ -57,7 +57,7 @@ export function enhanceInner($node) {
 			hasProtected: $node.children(".protected").not(".magic, .magic-read, .magic-write").length > 0,
 			hasPrivate: $node.children(".private").not(".magic, .magic-read, .magic-write").length > 0,
 			hasExcluded: $node.children(".debuginfo-excluded").hide().length > 0,
-			hasInherited: $node.children(".inherited")
+			hasInherited: $node.children(".inherited").length > 0
 		},
 		accessible = $wrapper.data("accessible"),
 		toggleClass = accessible === "public" ?

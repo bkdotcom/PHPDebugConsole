@@ -153,10 +153,11 @@ class Yii11 implements SubscriberInterface
         $outputAs = \get_class($logEntry['outputAs']);
         if ($logEntry['method'] == 'log' && $logEntry['args'][0] == 'files') {
             // let's embolden the primary files
+            $root = \realpath(YII_PATH.'/..');
             $html = $debug->output->html->processLogEntry($logEntry);
-            $html = \preg_replace_callback('#(<span class="file t_string">)(.*?)(</span>)#', function ($matches) {
+            $html = \preg_replace_callback('#(<span class="file t_string">)(.*?)(</span>)#', function ($matches) use ($root) {
                 $filepath = $matches[2];
-                $filepathRel = \str_replace($_SERVER['DOCUMENT_ROOT'], '', $filepath);
+                $filepathRel = \str_replace($root, '.', $filepath);
                 $embolden = \preg_match('#/protected/controllers/.+.php#', $filepathRel);
                 $embolden = $embolden || \preg_match('#/protected/views(?:(?!/_|/layout).)+.php#', $filepathRel);
                 return \bdk\Debug\Utilities::buildTag(
@@ -171,10 +172,8 @@ class Yii11 implements SubscriberInterface
                     $filepathRel
                 );
             }, $html);
-            if ($outputAs == 'bdk\Debug\Output\Wamp') {
-                $logEntry['meta']['format'] = 'html';
-                $logEntry['args'] = $html;
-            } elseif ($outputAs == 'bdk\Debug\Output\Html') {
+            if (\in_array($outputAs, array('bdk\Debug\Output\Wamp', 'bdk\Debug\Output\Html'))) {
+                $logEntry->setMeta('format', 'html');
                 $logEntry['return'] = $html;
             }
             $logEntry->stopPropagation();

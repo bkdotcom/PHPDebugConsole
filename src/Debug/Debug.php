@@ -137,12 +137,17 @@ class Debug
         if ($errorHandler) {
             $cfg['services']['errorHandler'] = $errorHandler;
         }
-        $this->internal;
+        /*
+            Order is important
+            a) setCfg (so that this->parentInstance gets set
+            b) initialize this->internal after this->parentInstance set
+        */
         $this->__get('config')->setCfg($cfg);   // since is defined (albeit null), we need to call __get to initialize
         if (isset($this->cfg['parent'])) {
             $this->parentInstance = $this->cfg['parent'];
             unset($this->cfg['parent']);
         }
+        $this->internal;
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method

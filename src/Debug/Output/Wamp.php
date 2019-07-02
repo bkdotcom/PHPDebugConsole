@@ -122,9 +122,11 @@ class Wamp implements OutputInterface
                 $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message']
             ),
             array(
-                'class' => $error['type'] & $this->debug->getCfg('errorMask')
-                    ? 'danger'
-                    : 'warning',
+                'attribs' => array(
+                    'class' => $error['type'] & $this->debug->getCfg('errorMask')
+                        ? 'danger'
+                        : 'warning',
+                )
             )
         ));
     }

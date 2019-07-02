@@ -13,6 +13,7 @@ namespace bdk\Debug;
 
 use bdk\Debug;
 use bdk\Debug\AssetProviderInterface;
+use bdk\Debug\LogEntry;
 use bdk\Debug\Output\OutputInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -210,8 +211,8 @@ class Output implements SubscriberInterface
             */
             return;
         }
+        $this->debug->internal->closeOpenGroups();
         $this->data = $this->debug->getData();
-        $this->closeOpenGroups();
         $this->removeHideIfEmptyGroups($this->data['log']);
         $this->uncollapseErrors($this->data['log']);
         foreach ($this->data['logSummary'] as &$log) {
@@ -296,35 +297,6 @@ class Output implements SubscriberInterface
             }
         }
         return $return;
-    }
-
-    /**
-     * Close any unclosed groups
-     *
-     * We may have forgotten to end a group or the script may have exited
-     *
-     * @return void
-     */
-    private function closeOpenGroups()
-    {
-        $this->data['groupPriorityStack'][] = 'main';
-        while ($this->data['groupPriorityStack']) {
-            $priority = \array_pop($this->data['groupPriorityStack']);
-            foreach ($this->data['groupStacks'][$priority] as $i => $info) {
-                if ($info['collect']) {
-                    unset($this->data['groupStacks'][$priority][$i]);
-                    $logEntry = new LogEntry(
-                        $info['channel'],
-                        'groupEnd'
-                    );
-                    if ($priority === 'main') {
-                        $this->data['log'][] = $logEntry;
-                    } else {
-                        $this->data['logSummary'][$priority][] = $logEntry;
-                    }
-                }
-            }
-        }
     }
 
     /**

@@ -81,6 +81,11 @@
 			margin-bottom: 0.75em;
 		}
 	}
+	// specific log entry created in Output to separate entries occuring after shutdown
+	li.php-shutdown {
+		display:block;
+		border-bottom: $info-fg solid 1px;
+	}
 
 	@import "alerts";
 	@import "arrayAndObject";

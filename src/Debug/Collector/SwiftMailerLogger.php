@@ -12,6 +12,8 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\PubSub\Event;
+use SplObjectStorage;
 use Swift_Events_CommandEvent;
 use Swift_Events_CommandListener;
 use Swift_Events_ResponseEvent;
@@ -37,6 +39,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     protected $icon = 'fa fa-envelope-o';
     protected $iconMeta;
     protected $useIcon = true;
+    protected $transports;  // splObjectStorage
 
     /**
      * Constructor
@@ -52,8 +55,10 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('SwiftMailer', array('channelIcon' => $this->icon));
         }
+        $debug->rootInstance->eventManager->subscribe('php.shutdown', array($this, 'onShutdown'), PHP_INT_MAX * -1 + 1);
         $this->debug = $debug;
         $this->iconMeta = $this->debug->meta('icon', $this->icon);
+        $this->transports = new SplObjectStorage();
     }
 
     /**
@@ -186,22 +191,6 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     }
 
     /**
-     * Invoked immediately after the Transport is started.
-     *
-     * Implements Swift_Events_TransportChangeListener
-     *
-     * @param Swift_Events_TransportChangeEvent $evt Swift Event
-     *
-     * @return void
-     */
-    public function transportStarted(Swift_Events_TransportChangeEvent $evt)
-    {
-        $transportName = \get_class($evt->getSource());
-        $this->add(\sprintf('++ %s started', $transportName));
-        $this->clear();
-    }
-
-    /**
      * Invoked just before a Transport is stopped.
      *
      * Implements Swift_Events_TransportChangeListener
@@ -217,6 +206,37 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     }
 
     /**
+     * php.shutdown listener
+     *
+     * "preemptively" stop transports rather than wait for transport's __destruct
+     *
+     * @return void
+     */
+    public function onShutdown()
+    {
+        foreach ($this->transports as $transport) {
+            $transport->stop();
+        }
+    }
+
+    /**
+     * Invoked immediately after the Transport is started.
+     *
+     * Implements Swift_Events_TransportChangeListener
+     *
+     * @param Swift_Events_TransportChangeEvent $evt Swift Event
+     *
+     * @return void
+     */
+    public function transportStarted(Swift_Events_TransportChangeEvent $evt)
+    {
+        $transportName = \get_class($evt->getSource());
+        $this->add(\sprintf('++ %s started', $transportName));
+        $this->clear();
+        $this->transports->attach($evt->getSource());
+    }
+
+    /**
      * Invoked immediately after the Transport is stopped.
      *
      * Implements Swift_Events_TransportChangeListener
@@ -229,6 +249,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     {
         $transportName = \get_class($evt->getSource());
         $this->add(\sprintf('-- %s stopped', $transportName));
+        $this->transports->detach($evt->getSource());
     }
 
     /**

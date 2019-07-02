@@ -312,7 +312,7 @@ class ErrorHandler
                 @include(some_file_with_parse_error)
                 which will trigger a fatal error (here we are),
                 but error_reporting() will return 0 due to the @ operator
-                unsupress fatal error here
+                unsuppress fatal error here
             */
             \error_reporting(E_ALL | E_STRICT);
             $this->handleError($error['type'], $error['message'], $error['file'], $error['line']);

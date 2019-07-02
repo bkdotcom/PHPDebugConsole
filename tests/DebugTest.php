@@ -147,10 +147,12 @@ class DebugTest extends DebugTestFramework
     public function testShutDownSubscribers()
     {
         $subscribers = $this->debug->eventManager->getSubscribers('php.shutdown');
-        $this->assertSame($this->debug->errorHandler, $subscribers[0][0]);
-        $this->assertSame('onShutdown', $subscribers[0][1]);
-        $this->assertSame($this->debug->internal, $subscribers[1][0]);
-        $this->assertSame('onShutdown', $subscribers[1][1]);
+        $subscribersExpect = array(
+            array($this->debug->errorHandler, 'onShutdown'),
+            array($this->debug->internal, 'onShutdownHigh'),
+            array($this->debug->internal, 'onShutdownLow'),
+        );
+        $this->assertSame($subscribersExpect, $subscribers);
     }
 
     /*

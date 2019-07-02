@@ -157,7 +157,7 @@ class SimpleCache implements CacheInterface
     {
         $debug = $event->getSubject();
         $debug->groupSummary(0);
-        $debug->group(
+        $debug->groupCollapsed(
             'SimpleCache info',
             $debug->meta(array(
                 'level' => 'info',

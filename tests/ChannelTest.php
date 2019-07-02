@@ -1,5 +1,6 @@
 <?php
 
+use bdk\Debug;
 use bdk\PubSub\Event;
 
 /**
@@ -258,7 +259,7 @@ EOD;
         $this->assertSame(2, $this->eventCounter['foo.debug.output']);
     }
 
-    protected function genLog(\bdk\Debug $clearer = null, $bitmask = null)
+    protected function genLog(Debug $clearer = null, $bitmask = null)
     {
         if (!$clearer) {
             $clearer = $this->debug;

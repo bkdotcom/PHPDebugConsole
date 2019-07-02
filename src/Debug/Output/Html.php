@@ -751,7 +751,9 @@ class Html extends Base
                     $errorSummary
                 ),
                 array(
-                    'class' => 'error-summary',
+                    'attribs' => array(
+                        'class' => 'error-summary',
+                    ),
                     'dismissible' => false,
                     'level' => 'danger',
                 )

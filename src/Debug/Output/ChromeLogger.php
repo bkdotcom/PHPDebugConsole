@@ -62,7 +62,6 @@ class ChromeLogger extends Base
      */
     public function onOutput(Event $event)
     {
-        $this->channelName = $this->debug->getCfg('channelName');
         $this->data = $this->debug->getData();
         $this->processAlerts();
         $this->processSummary();

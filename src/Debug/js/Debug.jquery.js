@@ -1436,6 +1436,9 @@
 	}
 
 	function addNoti($root) {
+		if ($root.find(".debug-noti-wrap").length) {
+			return;
+		}
 		$root.append('<div class="debug-noti-wrap">' +
 				'<div class="debug-noti-table">' +
 					'<div class="debug-noti"></div>' +

@@ -336,8 +336,8 @@ class Internal implements SubscriberInterface
             return;
         }
         $cfg = $cfg['debug'];
-        if (isset($cfg['file'])) {
-            $this->debug->addPlugin($this->debug->output->file);
+        if (isset($cfg['stream'])) {
+            $this->debug->addPlugin($this->debug->output->stream);
         }
         if (isset($cfg['onBootstrap'])) {
             if (!$this->debug->data) {

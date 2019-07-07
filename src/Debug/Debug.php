@@ -83,7 +83,6 @@ class Debug
     {
         $this->cfg = array(
             'collect'   => false,
-            'file'      => null,            // if a filepath, will receive log data
             'key'       => null,
             'output'    => false,           // output the log?
             'channelIcon' => null,
@@ -115,39 +114,8 @@ class Debug
             'onLog' => null,    // callable
             'factories' => $this->getDefaultFactories(),
             'services' => $this->getDefaultServices(),
+            'stream' => null,   // string (filepath or uri) or resource
         );
-        $this->registeredPlugins = new SplObjectStorage();
-        if (!isset(self::$instance)) {
-            /*
-               self::getInstance() will always return initial/first instance
-            */
-            self::$instance = $this;
-            /*
-                Only register autoloader:
-                  a. on initial instance (even though re-registering function does't re-register)
-                  b. if we're unable to to find our Config class (must not be using Composer)
-            */
-            if (!\class_exists('\\bdk\\Debug\\Config')) {
-                \spl_autoload_register(array($this, 'autoloader'));
-            }
-        }
-        if ($eventManager) {
-            $cfg['services']['eventManager'] = $eventManager;
-        }
-        if ($errorHandler) {
-            $cfg['services']['errorHandler'] = $errorHandler;
-        }
-        /*
-            Order is important
-            a) setCfg (so that this->parentInstance gets set
-            b) initialize this->internal after this->parentInstance set
-        */
-        $this->__get('config')->setCfg($cfg);   // since is defined (albeit null), we need to call __get to initialize
-        if (isset($this->cfg['parent'])) {
-            $this->parentInstance = $this->cfg['parent'];
-            unset($this->cfg['parent']);
-        }
-        $this->internal;
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method
@@ -181,16 +149,49 @@ class Debug
                 'stack' => array(),
             ),
         );
+        $this->registeredPlugins = new SplObjectStorage();
+        if (!isset(self::$instance)) {
+            /*
+               self::getInstance() will always return initial/first instance
+            */
+            self::$instance = $this;
+            /*
+                Only register autoloader:
+                  a. on initial instance (even though re-registering function does't re-register)
+                  b. if we're unable to to find our Config class (must not be using Composer)
+            */
+            if (!\class_exists('\\bdk\\Debug\\Config')) {
+                \spl_autoload_register(array($this, 'autoloader'));
+            }
+        }
+        if ($eventManager) {
+            $cfg['services']['eventManager'] = $eventManager;
+        }
+        if ($errorHandler) {
+            $cfg['services']['errorHandler'] = $errorHandler;
+        }
+        /*
+            Order is important
+            a) setCfg (so that this->parentInstance gets set
+            b) initialize this->internal after all properties have been initialized
+        */
+        $this->__get('config')->setCfg($cfg);   // since is defined (albeit null), we need to call __get to initialize
         $this->rootInstance = $this;
-        if (!$this->parentInstance) {
-            $this->setLogDest();
-            $this->data['entryCountInitial'] = \count($this->data['log']);
-        } else {
+        if (isset($this->cfg['parent'])) {
+            $this->parentInstance = $this->cfg['parent'];
             while ($this->rootInstance->parentInstance) {
                 $this->rootInstance = $this->rootInstance->parentInstance;
             }
             $this->data = &$this->rootInstance->data;
+            unset($this->cfg['parent']);
+        } else {
+            $this->setLogDest();
+            $this->data['entryCountInitial'] = \count($this->data['log']);
         }
+        /*
+            Initialize Internal
+        */
+        $this->internal;
         /*
             Publish bootstrap event
         */
@@ -1214,11 +1215,9 @@ class Debug
             $cfg['debug']['parent'] = $this;
             // instantiate channel
             $this->channels[$channelName] = new static($cfg);
-            // now update config with passed config
-            //   since passed config not yet "normalized", merging above not possible
-            if ($config) {
-                $this->channels[$channelName]->setCfg($config);
-            }
+        }
+        if ($config) {
+            $this->channels[$channelName]->setCfg($config);
         }
         return $this->channels[$channelName];
     }

@@ -18,7 +18,7 @@ class ConfigTest extends DebugTestFramework
     {
         $configKeys = array('debug', 'abstracter', 'errorEmailer', 'errorHandler', 'output');
         $abstracterKeys = array('cacheMethods', 'collectConstants', 'collectMethods', 'objectsExclude', 'objectSort', 'useDebugInfo');
-        $debugKeys = array('collect', 'file', 'key', 'output', 'channelIcon', 'channelName', 'channelShow', 'enableProfiling', 'errorMask', 'emailFrom', 'emailFunc', 'emailLog', 'emailTo', 'logEnvInfo', 'logServerKeys', 'onLog', 'factories', 'services');
+        $debugKeys = array('collect', 'key', 'output', 'channelIcon', 'channelName', 'channelShow', 'enableProfiling', 'errorMask', 'emailFrom', 'emailFunc', 'emailLog', 'emailTo', 'logEnvInfo', 'logServerKeys', 'onLog', 'factories', 'services', 'stream');
 
         $this->assertSame(true, $this->debug->getCfg('collect'));
         $this->assertSame(true, $this->debug->getCfg('debug.collect'));

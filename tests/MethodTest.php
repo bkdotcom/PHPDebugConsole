@@ -170,8 +170,8 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'html' => '<div class="alert-danger m_alert" role="alert">'.$message.'</div>',
-                'text' => '[Alert ⦻ danger] '.$message,
+                'html' => '<div class="alert-danger m_alert" role="alert"><span class="no-quotes t_string">'.$message.'</span></div>',
+                'text' => '》[Alert ⦻ danger] '.$message.'《',
                 'script' => str_replace('%c', '%%c', 'console.log("%c'.$message.'","padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
                 'firephp' => 'X-Wf-1-1-1-1: 108|[{"Type":"LOG"},"'.$message.'"]|',
             )
@@ -893,7 +893,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
                     <ul class="group-body">',
-                'text' => '▸ a, "b", "c"',
+                'text' => '▸ a("b", "c")',
                 'script' => 'console.group("a","b","c");',
                 'firephp' => 'X-Wf-1-1-1-4: 61|[{"Type":"GROUP_START","Collapsed":"false","Label":"a"},null]|',
             )
@@ -947,7 +947,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="t_identifier">methodWithGroup</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="group-label group-label-bold">)</span></div>
                     <ul class="group-body">',
-                'text' => '▸ '.__CLASS__.'->methodWithGroup, "foo", 10',
+                'text' => '▸ '.__CLASS__.'->methodWithGroup("foo", 10)',
                 'script' => 'console.group("'.__CLASS__.'->methodWithGroup","foo",10);',
                 'firephp' => 'X-Wf-1-1-1-6: %d|[{"Type":"GROUP_START","Collapsed":"false","Label":"'.__CLASS__.'->methodWithGroup"},null]|',
             )
@@ -1122,7 +1122,7 @@ class MethodTest extends DebugTestFramework
                     <div class="collapsed group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
                     <ul class="group-body">',
                 'script' => 'console.groupCollapsed("a","b","c");',
-                'text' => '▸ a, "b", "c"',
+                'text' => '▸ a("b", "c")',
             )
         );
 
@@ -1136,7 +1136,7 @@ class MethodTest extends DebugTestFramework
                 <ul class="group-body">
                     <li class="m_log"><span class="no-quotes t_string">after nested group</span></li>
                 </ul>',
-            'text' => '▸ a, "b", "c"
+            'text' => '▸ a("b", "c")
                 after nested group',
             'script' => 'console.groupCollapsed("a","b","c");
                 console.log("after nested group");',

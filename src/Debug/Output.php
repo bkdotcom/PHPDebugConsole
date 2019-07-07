@@ -316,7 +316,7 @@ class Output implements SubscriberInterface
                 $ret = $this->cfg['outputAsDefaultNonHtml'];
             }
         } else {
-            $ret = 'text';
+            $ret = 'stream';
         }
         return $ret;
     }

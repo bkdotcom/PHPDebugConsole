@@ -216,22 +216,27 @@ class Html extends Base
             'attribs' => array(),
             'detectFiles' => null,
             'icon' => null,
+            'sanitize' => true,         // apply htmlspecialchars (to non-first arg)?
+            'sanitizeFirst' => null,    // if null, use meta.sanitize
         ), $logEntry['meta']);
+        if ($meta['sanitizeFirst'] === null) {
+            $meta['sanitizeFirst'] = $meta['sanitize'];
+        }
+        $logEntry->setMeta($meta);
         $channelName = $logEntry->getChannel();
         // phpError channel is handled separately
         if (!isset($this->channels[$channelName]) && $channelName !== 'phpError') {
             $this->channels[$channelName] = $logEntry->getSubject();
         }
         $this->detectFiles = $meta['detectFiles'];
-        $this->logEntryAttribs = array(
+        $this->logEntryAttribs = \array_merge(array(
             'class' => '',
             'data-channel' => $channelName !== $this->channelNameRoot
                 ? $channelName
                 : null,
             'data-detect-files' => $meta['detectFiles'],
             'data-icon' => $meta['icon'],
-        );
-        $this->logEntryAttribs = \array_merge($this->logEntryAttribs, $meta['attribs']);
+        ), $meta['attribs']);
         $this->logEntryAttribs['class'] .= ' m_'.$method;
         if ($method == 'alert') {
             $str = $this->buildMethodAlert($logEntry);
@@ -263,13 +268,6 @@ class Html extends Base
     {
         $glue = ', ';
         $glueAfterFirst = true;
-        $meta = \array_merge(array(
-            'sanitize' => true,         // apply htmlspecialchars (to non-first arg)?
-            'sanitizeFirst' => null,    // if null, use meta.sanitize
-        ), $meta);
-        if ($meta['sanitizeFirst'] === null) {
-            $meta['sanitizeFirst'] = $meta['sanitize'];
-        }
         if (\is_string($args[0])) {
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
@@ -340,20 +338,24 @@ class Html extends Base
      */
     protected function buildMethodAlert(LogEntry $logEntry)
     {
-        $args = $logEntry['args'];
         $meta = $logEntry['meta'];
         $attribs = \array_merge($this->logEntryAttribs, array(
             'class' => 'alert-'.$meta['level'].' '.$this->logEntryAttribs['class'],
             'role' => 'alert',
         ));
+        $html = $this->dump($logEntry['args'][0], array(
+            'addQuotes' => false,
+            'sanitize' => $meta['sanitizeFirst'],
+            'visualWhiteSpace' => false,
+        ));
         if ($meta['dismissible']) {
             $attribs['class'] .= ' alert-dismissible';
-            $args[0] = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
+            $html = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
                 .'<span aria-hidden="true">&times;</span>'
                 .'</button>'
-                .$args[0];
+                .$html;
         }
-        return $this->debug->utilities->buildTag('div', $attribs, $args[0]);
+        return $this->debug->utilities->buildTag('div', $attribs, $html);
     }
 
     /**
@@ -368,7 +370,7 @@ class Html extends Base
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = \array_merge(array(
-            'errorCat' => null,
+            'errorCat' => null,  //  should only be applicable for error & warn methods
         ), $logEntry['meta']);
         $attribs = \array_merge($this->logEntryAttribs, array(
             'title' => isset($meta['file']) && $logEntry->getChannel() !== 'phpError'
@@ -377,7 +379,6 @@ class Html extends Base
         ));
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if ($meta['errorCat']) {
-                //  should only be applicable for error & warn methods
                 $attribs['class'] .= ' error-'.$meta['errorCat'];
             }
             if (\count($args) > 1 && \is_string($args[0])) {
@@ -416,6 +417,13 @@ class Html extends Base
         $str = '';
         if (\in_array($method, array('group','groupCollapsed'))) {
             $label = \array_shift($args);
+            if ($meta['isFuncName']) {
+                $label = $this->markupIdentifier($label);
+            }
+            $labelClasses = \implode(' ', \array_keys(\array_filter(array(
+                'group-label' => true,
+                'group-label-bold' => $meta['boldLabel'],
+            ))));
             $levelClass = $meta['level']
                 ? 'level-'.$meta['level']
                 : null;
@@ -423,24 +431,18 @@ class Html extends Base
                 $args[$k] = $this->dump($v);
             }
             $argStr = \implode(', ', $args);
-            if ($meta['argsAsParams']) {
-                if ($meta['isFuncName']) {
-                    $label = $this->markupIdentifier($label);
-                }
-                $argStr = '<span class="group-label group-label-bold">'.$label.'(</span>'
+            if (!$argStr) {
+                $headerStr = '<span class="'.$labelClasses.'">'.$label.'</span>';
+            } elseif ($meta['argsAsParams']) {
+                $headerStr = '<span class="'.$labelClasses.'">'.$label.'(</span>'
                     .$argStr
-                    .'<span class="group-label group-label-bold">)</span>';
-                $argStr = \str_replace('(</span><span class="group-label group-label-bold">)', '', $argStr);
+                    .'<span class="'.$labelClasses.'">)</span>';
             } else {
-                $argStr = '<span class="group-label group-label-bold">'.$label.':</span> '
+                $headerStr = '<span class="'.$labelClasses.'">'.$label.':</span> '
                     .$argStr;
-                $argStr = \preg_replace("#:</span> $#", '</span>', $argStr);
-            }
-            if (!$meta['boldLabel']) {
-                $argStr = \str_replace(' group-label-bold', '', $argStr);
             }
             $this->logEntryAttribs['class'] = \str_replace('m_'.$method, 'm_group', $this->logEntryAttribs['class']);
-            $str .= '<li'.$this->debug->utilities->buildAttribString($this->logEntryAttribs).'>'."\n";
+            $str = '<li'.$this->debug->utilities->buildAttribString($this->logEntryAttribs).'>'."\n";
             /*
                 Header / label / toggle
             */
@@ -455,7 +457,7 @@ class Html extends Base
                         $levelClass,
                     ),
                 ),
-                $argStr
+                $headerStr
             )."\n";
             /*
                 Group open
@@ -516,7 +518,7 @@ class Html extends Base
                             'totalCols' => $meta['totalCols'],
                         )
                     )."\n"
-                : $this->buildArgString($args)
+                : $this->buildArgString($args, $meta)
         );
     }
 

@@ -23,6 +23,22 @@ class Text extends Base
 
     protected $depth = 0;   // for keeping track of indentation
     protected $valDepth = 0;
+    protected $cfg = array(
+        'prefixes' => array(
+            'error' => '⦻ ',
+            'info' => 'ℹ ',
+            'log' => '',
+            'warn' => '⚠ ',
+            'assert' => '≠ ',
+            'clear' => '⌦ ',
+            'count' => '✚ ',
+            'countReset' => '✚ ',
+            'time' => '⏱ ',
+            'timeLog' => '⏱ ',
+            'group' => '▸ ',
+            'groupCollapsed' => '▸ ',
+        ),
+    );
 
     /**
      * Output the log as text
@@ -33,7 +49,6 @@ class Text extends Base
      */
     public function onOutput(Event $event)
     {
-        $this->channelName = $this->debug->getCfg('channelName');
         $this->data = $this->debug->getData();
         $str = '';
         $str .= $this->processAlerts();
@@ -53,67 +68,29 @@ class Text extends Base
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        $args = $logEntry['args'];
-        $meta = $logEntry['meta'];
-        $prefixes = array(
-            'error' => '⦻ ',
-            'info' => 'ℹ ',
-            'log' => '',
-            'warn' => '⚠ ',
-            'assert' => '≠ ',
-            'clear' => '⌦ ',
-            'count' => '✚ ',
-            'countReset' => '✚ ',
-            'time' => '⏱ ',
-            'timeLog' => '⏱ ',
-            'group' => '▸ ',
-            'groupCollapsed' => '▸ ',
-        );
-        $prefix = isset($prefixes[$method])
-            ? $prefixes[$method]
-            : '';
         $strIndent = \str_repeat('    ', $this->depth);
-        if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
-            if (\count($args) > 1 && \is_string($args[0])) {
-                $hasSubs = false;
-                $args = $this->processSubstitutions($args, $hasSubs);
-                if ($hasSubs) {
-                    $args = array( \implode('', $args) );
-                }
-            }
-        } elseif ($method == 'alert') {
-            $levelToPrefix = array(
-                'danger' => 'error',
-                'info' => 'info',
-                'success' => 'info',
-                'warning' => 'warn',
-            );
-            $level = $meta['level'];
-            $prefix = $prefixes[$levelToPrefix[$level]];
-            $prefix = '[Alert '.$prefix.$level.'] ';
-            $args = array($args[0]);
-        } elseif (\in_array($method, array('profileEnd','table'))) {
-            $asTable = \is_array($args[0]) && (bool) $args[0] || $this->debug->abstracter->isAbstraction($args[0], 'object');
-            if ($asTable) {
-                $args = array($this->methodTable($args[0], $meta['columns']));
-            }
-            if ($meta['caption']) {
-                \array_unshift($args, $meta['caption']);
-            }
-        } elseif ($method == 'trace') {
-            \array_unshift($args, 'trace');
+        $str = '';
+        if ($method == 'alert') {
+            $str = $this->buildMethodAlert($logEntry);
         } elseif (\in_array($method, array('group','groupCollapsed'))) {
             $this->depth ++;
+            $str = $this->buildMethodGroup($logEntry);
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
             $this->depth --;
+        } elseif (\in_array($method, array('profileEnd','table','trace'))) {
+            $str = $this->buildMethodTabular($logEntry);
+        } else {
+            $str = $this->buildMethodDefault($logEntry);
         }
-        $str = $prefix.$this->buildArgString($args);
         $str = \rtrim($str);
         if ($str) {
-            $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str);
-            return $str."\n";
+            $prefix = isset($this->cfg['prefixes'][$method])
+                ? $this->cfg['prefixes'][$method]
+                : '';
+            $str = $prefix.$str;
+            $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str)."\n";
         }
-        return '';
+        return $str;
     }
 
     /**
@@ -151,6 +128,104 @@ class Text extends Base
         } else {
             return \implode($glue, $args);
         }
+    }
+
+    /**
+     * Build Alert
+     *
+     * @param LogEntry $logEntry log entry instance
+     *
+     * @return string
+     */
+    protected function buildMethodAlert(LogEntry $logEntry)
+    {
+        $level = $logEntry['meta']['level'];
+        $levelToMethod = array(
+            'danger' => 'error',
+            'info' => 'info',
+            'success' => 'info',
+            'warning' => 'warn',
+        );
+        $prefix = $this->cfg['prefixes'][$levelToMethod[$level]];
+        $prefix = '[Alert '.$prefix.$level.'] ';
+        $wrap = array('》','《');
+        return $wrap[0].$prefix.$logEntry['args'][0].$wrap[1];
+    }
+
+    /**
+     * Build output for default/standard methods
+     *
+     * @param LogEntry $logEntry logEntry instance
+     *
+     * @return string
+     */
+    protected function buildMethodDefault(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        if (\count($args) > 1 && \is_string($args[0])) {
+            $hasSubs = false;
+            $args = $this->processSubstitutions($args, $hasSubs);
+            if ($hasSubs) {
+                $args = array( \implode('', $args) );
+            }
+        }
+        return $this->buildArgString($args);
+    }
+
+    /**
+     * Build group start
+     *
+     * @param LogEntry $logEntry logEntry instance
+     *
+     * @return string
+     */
+    protected function buildMethodGroup(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        $meta = \array_merge(array(
+            'argsAsParams' => true,
+            'boldLabel' => true,
+            'isFuncName' => false,
+            'level' => null,
+        ), $logEntry['meta']);
+        $label = \array_shift($args);
+        if ($meta['isFuncName']) {
+            $label = $this->markupIdentifier($label);
+        }
+        foreach ($args as $k => $v) {
+            $args[$k] = $this->dump($v);
+        }
+        $str = '';
+        $argStr = \implode(', ', $args);
+        if (!$argStr) {
+            $str = $label;
+        } elseif ($meta['argsAsParams']) {
+            $str = $label.'('.$argStr.')';
+        } else {
+            $str = $label.': '.$argStr;
+        }
+        return $str;
+    }
+
+    /**
+     * Build output for profile(End), table, & trace methods
+     *
+     * @param LogEntry $logEntry logEntry instance
+     *
+     * @return string
+     */
+    protected function buildMethodTabular(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
+        $asTable = \is_array($args[0]) && (bool) $args[0] || $this->debug->abstracter->isAbstraction($args[0], 'object');
+        if ($asTable) {
+            $args = array($this->methodTable($args[0], $meta['columns']));
+        }
+        if ($meta['caption']) {
+            \array_unshift($args, $meta['caption']);
+        }
+        return $this->buildArgString($args);
     }
 
     /**
@@ -220,8 +295,8 @@ class Text extends Base
      */
     protected function dumpObject(Abstraction $abs)
     {
-        $isNested = $this->valueDepth > 0;
-        $this->valueDepth++;
+        $isNested = $this->valDepth > 0;
+        $this->valDepth++;
         if ($abs['isRecursion']) {
             $str = '(object) '.$abs['className'].' *RECURSION*';
         } elseif ($abs['isExcluded']) {
@@ -237,41 +312,6 @@ class Text extends Base
         if ($isNested) {
             $str = \str_replace("\n", "\n    ", $str);
         }
-        return $str;
-    }
-
-    /**
-     * Dump object properties as text
-     *
-     * @param Abstraction $abs object abstraction
-     *
-     * @return string
-     */
-    protected function dumpProperties(Abstraction $abs)
-    {
-        $str = '';
-        $propHeader = '';
-        if (isset($abs['methods']['__get'])) {
-            $str .= '    ✨ This object has a __get() method'."\n";
-        }
-        foreach ($abs['properties'] as $name => $info) {
-            $vis = (array) $info['visibility'];
-            foreach ($vis as $i => $v) {
-                if (\in_array($v, array('magic','magic-read','magic-write'))) {
-                    $vis[$i] = '✨ '.$v;    // "sparkles" there is no magic-wand unicode char
-                } elseif ($v == 'private' && $info['inheritedFrom']) {
-                    $vis[$i] = '🔒 '.$v;
-                }
-            }
-            $vis = \implode(' ', $vis);
-            $str .= $info['debugInfoExcluded']
-                ? '    ('.$vis.' excluded) '.$name."\n"
-                : '    ('.$vis.') '.$name.' = '.$this->dump($info['value'])."\n";
-        }
-        $propHeader = $str
-            ? 'Properties:'
-            : 'Properties: none!';
-        $str = '  '.$propHeader."\n".$str;
         return $str;
     }
 
@@ -308,6 +348,40 @@ class Text extends Base
     }
 
     /**
+     * Dump object properties as text
+     *
+     * @param Abstraction $abs object abstraction
+     *
+     * @return string
+     */
+    protected function dumpProperties(Abstraction $abs)
+    {
+        $str = '';
+        $propHeader = '';
+        if (isset($abs['methods']['__get'])) {
+            $str .= '    ✨ This object has a __get() method'."\n";
+        }
+        foreach ($abs['properties'] as $name => $info) {
+            $vis = (array) $info['visibility'];
+            foreach ($vis as $i => $v) {
+                if (\in_array($v, array('magic','magic-read','magic-write'))) {
+                    $vis[$i] = '✨ '.$v;    // "sparkles" there is no magic-wand unicode char
+                } elseif ($v == 'private' && $info['inheritedFrom']) {
+                    $vis[$i] = '🔒 '.$v;
+                }
+            }
+            $vis = \implode(' ', $vis);
+            $str .= $info['debugInfoExcluded']
+                ? '    ('.$vis.' excluded) '.$name."\n"
+                : '    ('.$vis.') '.$name.' = '.$this->dump($info['value'])."\n";
+        }
+        $propHeader = $str
+            ? 'Properties:'
+            : 'Properties: none!';
+        return '  '.$propHeader."\n".$str;
+    }
+
+    /**
      * Dump string
      *
      * @param string $val string value
@@ -334,5 +408,17 @@ class Text extends Base
     protected function dumpUndefined()
     {
         return 'undefined';
+    }
+
+    /**
+     * Extend me to format classname/constant, etc
+     *
+     * @param string $str classname or classname(::|->)name (method/property/const)
+     *
+     * @return string
+     */
+    protected function markupIdentifier($str)
+    {
+        return $str;
     }
 }

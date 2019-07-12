@@ -12,6 +12,7 @@ namespace bdk;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
+use ReflectionClass;
 use ReflectionObject;
 
 /**
@@ -31,6 +32,7 @@ class ErrorHandler
                                         // lastError[0] is the most recent error
         'uncaughtException' => null,
     );
+    protected $inShutdown = false;
     protected $registered = false;
     protected $prevDisplayErrors = null;
     protected $prevErrorHandler = null;
@@ -81,19 +83,17 @@ class ErrorHandler
      *
      * To get trace from within shutdown function utilizes xdebug_get_function_stack() if available
      *
-     * @param Error|Exception $error (optional) error details if getting error backtrace
+     * @param Error|Exception $error (optional) Error instance if getting error backtrace
      *
      * @return array
      */
     public function backtrace($error = null)
     {
         $exception = null;
-        $isFatalError = false;
         if ($error instanceof \Exception) {
             $exception = $error;
         } elseif ($error instanceof Error) {
             $exception = $error['exception'];
-            $isFatalError = $error->isFatal();
         }
         if ($exception) {
             $backtrace = $exception->getTrace();
@@ -101,8 +101,11 @@ class ErrorHandler
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
             ));
-        } elseif ($isFatalError && \extension_loaded('xdebug')) {
-            $backtrace = \xdebug_get_function_stack();
+        } elseif ($this->inShutdown) {
+            if (!\extension_loaded('xdebug')) {
+                return array();
+            }
+            $backtrace = $this->xdebugGetFunctionStack();
             $backtrace = \array_reverse($backtrace);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
             $errorFileLine = array(
@@ -116,9 +119,6 @@ class ErrorHandler
             if (\array_intersect_assoc($errorFileLine, $backtrace[0]) !== $errorFileLine) {
                 \array_unshift($backtrace, $errorFileLine);
             }
-        } elseif ($isFatalError) {
-            // backtrace unavailable
-            $backtrace = array();
         } else {
             $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
@@ -296,6 +296,7 @@ class ErrorHandler
      */
     public function onShutdown(Event $event)
     {
+        $this->inShutdown = true;
         if (!$this->registered) {
             return;
         }
@@ -646,5 +647,29 @@ class ErrorHandler
         });
         $this->data['lastErrors'] = \array_slice($this->data['lastErrors'], 0, 1);
         \array_unshift($this->data['lastErrors'], $error);
+    }
+
+    /**
+     * wrapper for xdebug_get_function_stack
+     * accounts for bug 1529 (may report incorrect file)
+     *
+     * @return array
+     * @see    https://bugs.xdebug.org/view.php?id=1529
+     */
+    protected function xdebugGetFunctionStack()
+    {
+        $stack = \xdebug_get_function_stack();
+        $xdebugVer = \phpversion('xdebug');
+        if (\version_compare($xdebugVer, '2.6.0', '<')) {
+            foreach ($stack as $i => $frame) {
+                if ($frame['function'] === '__get') {
+                    // wrong file!
+                    $class = $stack[$i-1]['class'];
+                    $refClass = new ReflectionClass($class);
+                    $stack[$i]['file'] = $refClass->getFileName();
+                }
+            }
+        }
+        return $stack;
     }
 }

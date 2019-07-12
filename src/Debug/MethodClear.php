@@ -29,8 +29,8 @@ class MethodClear
     /**
      * Constructor
      *
-     * @param \bdk\Debug $debug Debug instance
-     * @param array      $data  debug data
+     * @param Debug $debug Debug instance
+     * @param array $data  debug data
      */
     public function __construct(Debug $debug, &$data)
     {

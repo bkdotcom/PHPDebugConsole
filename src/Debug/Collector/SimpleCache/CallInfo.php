@@ -11,6 +11,8 @@
 
 namespace bdk\Debug\Collector\SimpleCache;
 
+use Exception;
+
 /**
  * Holds information about a SimpleCache call
  *
@@ -88,11 +90,11 @@ class CallInfo
     }
 
     /**
-     * @param \Exception|null $exception Exception (if statement threw exception)
+     * @param Exception|null $exception Exception (if statement threw exception)
      *
      * @return void
      */
-    public function end(\Exception $exception = null)
+    public function end(Exception $exception = null)
     {
         $this->exception = $exception;
         $this->timeEnd = \microtime(true);

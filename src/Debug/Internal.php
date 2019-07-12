@@ -199,7 +199,7 @@ class Internal implements SubscriberInterface
      * @param array   $logEntries log entries
      * @param integer $curDepth   current group depth
      *
-     * @return array key => logEntry array
+     * @return LogEntry[] kwys are maintained
      */
     public static function getCurrentGroups(&$logEntries, $curDepth)
     {

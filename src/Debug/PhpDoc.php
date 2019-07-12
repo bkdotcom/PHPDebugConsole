@@ -11,6 +11,8 @@
 
 namespace bdk\Debug;
 
+use Reflector;
+
 /**
  * Get and parse phpDoc block
  */
@@ -188,11 +190,11 @@ class PhpDoc
     /**
      * Find "parent" phpDoc
      *
-     * @param \Reflector $reflector reflectionMethod
+     * @param Reflector $reflector reflectionMethod
      *
      * @return array
      */
-    public static function findInheritedDoc(\Reflector $reflector)
+    public static function findInheritedDoc(Reflector $reflector)
     {
         $name = $reflector->getName();
         $reflectionClass = $reflector->getDeclaringClass();

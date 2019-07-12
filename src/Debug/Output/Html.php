@@ -41,7 +41,7 @@ class Html extends Base
     /**
      * Constructor
      *
-     * @param \bdk\Debug $debug debug instance
+     * @param Debug $debug debug instance
      */
     public function __construct(Debug $debug)
     {

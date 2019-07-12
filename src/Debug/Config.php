@@ -27,8 +27,8 @@ class Config
     /**
      * Constructor
      *
-     * @param \bdk\Debug $debug debug object
-     * @param array      $cfg   configuration
+     * @param Debug $debug debug instance
+     * @param array $cfg   configuration
      */
     public function __construct(Debug $debug, &$cfg = array())
     {

@@ -219,7 +219,7 @@ class Debug
     public function __call($methodName, $args)
     {
         if (\method_exists($this->internal, $methodName)) {
-            \call_user_func_array(array($this->internal, $methodName), $args);
+            return \call_user_func_array(array($this->internal, $methodName), $args);
         }
         return $this->appendLog(new LogEntry(
             $this,

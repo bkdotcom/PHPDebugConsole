@@ -32,12 +32,12 @@ class Pdo extends PdoBase
     /**
      * Constructor
      *
-     * @param \PDO  $pdo   PDO instance
-     * @param Debug $debug (optional) Specify PHPDebugConsole instance
-     *                        if not passed, will create PDO channnel on singleton instance
-     *                        if root channel is specified, will create a PDO channel
+     * @param PdoBase $pdo   PDO instance
+     * @param Debug   $debug (optional) Specify PHPDebugConsole instance
+     *                         if not passed, will create PDO channnel on singleton instance
+     *                         if root channel is specified, will create a PDO channel
      */
-    public function __construct(\PDO $pdo, Debug $debug = null)
+    public function __construct(PdoBase $pdo, Debug $debug = null)
     {
         if (!$debug) {
             $debug = Debug::_getChannel('PDO', array('channelIcon' => $this->icon));

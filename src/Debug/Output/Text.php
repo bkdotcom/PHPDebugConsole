@@ -304,7 +304,7 @@ class Text extends Base
         } else {
             $str = '(object) '.$abs['className']."\n";
             $str .= $this->dumpProperties($abs);
-            if ($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')) {
+            if ($abs['collectMethods'] && $this->debug->getCfg('outputMethods')) {
                 $str .= $this->dumpMethods($abs['methods']);
             }
         }

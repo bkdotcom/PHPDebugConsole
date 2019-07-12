@@ -218,7 +218,7 @@ class MethodClear
     }
 
     /**
-     * [clearLogHelper description]
+     * Clear log data
      *
      * @param array   $log         log to clear (passed by reference)
      * @param boolean $clearErrors whether or not to clear errors

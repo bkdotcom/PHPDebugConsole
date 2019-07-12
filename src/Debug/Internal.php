@@ -16,6 +16,7 @@ namespace bdk\Debug;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Output\OutputInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -44,10 +45,10 @@ class Internal implements SubscriberInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
+        $this->debug->eventManager->addSubscriberInterface($this);
         if ($debug->parentInstance) {
             return;
         }
-        $this->debug->eventManager->addSubscriberInterface($this);
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
@@ -62,44 +63,8 @@ class Internal implements SubscriberInterface
         */
         $this->onConfig(new Event(
             $this->debug,
-            array('config' => $this->debug->getCfg())
+            $this->debug->getCfg()
         ));
-    }
-
-    /**
-     * Close any unclosed groups
-     *
-     * We may have forgotten to end a group or the script may have exited
-     *
-     * @return void
-     */
-    public function closeOpenGroups()
-    {
-        if ($this->inShutdown) {
-            // we already closed
-            return;
-        }
-        $data = $this->debug->getData();
-        $data['groupPriorityStack'][] = 'main';
-        while ($data['groupPriorityStack']) {
-            $priority = \array_pop($data['groupPriorityStack']);
-            foreach ($data['groupStacks'][$priority] as $i => $info) {
-                if (!$info['collect']) {
-                    continue;
-                }
-                unset($data['groupStacks'][$priority][$i]);
-                $logEntry = new LogEntry(
-                    $info['channel'],
-                    'groupEnd'
-                );
-                if ($priority === 'main') {
-                    $data['log'][] = $logEntry;
-                } else {
-                    $data['logSummary'][$priority][] = $logEntry;
-                }
-            }
-        }
-        $this->debug->setData($data);
     }
 
     /**
@@ -268,21 +233,33 @@ class Internal implements SubscriberInterface
      */
     public function getSubscriptions()
     {
-        /*
-            OnShutDown subscribes to 'debug.log'..  onDebugLogShutdown
-              we add a "php.shutdown" log entry
-        */
-        return array(
-            'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
-            'debug.config' => array('onConfig', PHP_INT_MAX),
-            'debug.dumpCustom' => 'onDumpCustom',
-            'debug.output' => 'onOutput',
-            'errorHandler.error' => 'onError',
-            'php.shutdown' => array(
-                array('onShutdownHigh', PHP_INT_MAX),
-                array('onShutdownLow', PHP_INT_MAX * -1)
-            ),
-        );
+        if ($this->debug->parentInstance) {
+            // all channels should subscribe
+            return array(
+                'debug.output' => array('onOutputCleanup', 1),
+                'debug.config' => array('onConfig', PHP_INT_MAX),
+            );
+        } else {
+            /*
+                OnShutDownHigh subscribes to 'debug.log' (onDebugLogShutdown)
+                  so... if any log entry is added in php's shutdown phase, we'll have a
+                  "php.shutdown" log entry
+            */
+            return array(
+                'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
+                'debug.config' => array('onConfig', PHP_INT_MAX),
+                'debug.dumpCustom' => 'onDumpCustom',
+                'debug.output' => array(
+                    array('onOutputCleanup', 1),
+                    'onOutputLogRuntime'
+                ),
+                'errorHandler.error' => 'onError',
+                'php.shutdown' => array(
+                    array('onShutdownHigh', PHP_INT_MAX),
+                    array('onShutdownLow', PHP_INT_MAX * -1)
+                ),
+            );
+        }
     }
 
     /**
@@ -306,6 +283,10 @@ class Internal implements SubscriberInterface
      */
     public function onBootstrap()
     {
+        $outputAs = $this->debug->getCfg("outputAs");
+        if ($outputAs === 'stream') {
+            $this->debug->setCfg('outputAs', $outputAs);
+        }
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
         $this->debug->group('environment', $this->debug->meta(array(
@@ -330,14 +311,14 @@ class Internal implements SubscriberInterface
      */
     public function onConfig(Event $event)
     {
-        $cfg = $event['config'];
+        $cfg = $event->getValues();
         if (!isset($cfg['debug'])) {
             // no debug config values have changed
             return;
         }
         $cfg = $cfg['debug'];
-        if (isset($cfg['stream'])) {
-            $this->debug->addPlugin($this->debug->output->stream);
+        if (isset($cfg['outputAs'])) {
+            $event['debug']['outputAs'] = $this->setOutputAs($cfg['outputAs']);
         }
         if (isset($cfg['onBootstrap'])) {
             if (!$this->debug->data) {
@@ -352,10 +333,14 @@ class Internal implements SubscriberInterface
             /*
                 Replace - not append - subscriber set via setCfg
             */
-            if (isset($this->cfg['onLog'])) {
-                $this->debug->eventManager->unsubscribe('debug.log', $this->cfg['onLog']);
+            $onLogPrev = $this->debug->getCfg('onLog');
+            if ($onLogPrev) {
+                $this->debug->eventManager->unsubscribe('debug.log', $onLogPrev);
             }
             $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
+        }
+        if (isset($cfg['stream'])) {
+            $this->debug->addPlugin($this->debug->outputStream);
         }
         if (!static::$profilingEnabled) {
             $cfg = $this->debug->getCfg('debug/*');
@@ -447,6 +432,33 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * debug.output subscriber
+     *
+     * @param Event $event debug.output event object
+     *
+     * @return void
+     */
+    public function onOutputCleanup(Event $event)
+    {
+        if (!$event['isTarget']) {
+            /*
+                All channels share the same data.
+                We only need to do this via the channel that called output
+            */
+            return;
+        }
+        $this->closeOpenGroups();
+        $data = $this->debug->getData();
+        $this->removeHideIfEmptyGroups($data['log']);
+        $this->uncollapseErrors($data['log']);
+        foreach ($data['logSummary'] as &$log) {
+            $this->removeHideIfEmptyGroups($log);
+            $this->uncollapseErrors($log);
+        }
+        $this->debug->setData($data);
+    }
+
+    /**
      * debug.output event subscriber
      * Log our runtime info in a summary group
      *
@@ -455,19 +467,20 @@ class Internal implements SubscriberInterface
      *
      * @return void
      */
-    public function onOutput()
+    public function onOutputLogRuntime()
     {
         $vals = $this->runtimeVals();
         $this->debug->groupSummary(1);
         $this->debug->info('Built In '.$vals['runtime'].' sec');
         $this->debug->info(
             'Peak Memory Usage'
-                .($this->debug->getCfg('output/outputAs') == 'html'
+                .(\get_class($this->debug->getCfg('outputAs')) == 'bdk\\Debug\\Output\\Html'
                     ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
                     : '')
                 .': '
                 .$this->debug->utilities->getBytes($vals['memoryPeakUsage']).' / '
-                .$this->debug->utilities->getBytes($vals['memoryLimit'])
+                .$this->debug->utilities->getBytes($vals['memoryLimit']),
+            $this->debug->meta('sanitize', false)
         );
         $this->debug->groupEnd();
     }
@@ -561,6 +574,42 @@ class Internal implements SubscriberInterface
             $errorStr .= '  Line '.$error['line'].': ('.$typeStr.') '.$error['message']."\n";
         }
         return $errorStr;
+    }
+
+    /**
+     * Close any unclosed groups
+     *
+     * We may have forgotten to end a group or the script may have exited
+     *
+     * @return void
+     */
+    private function closeOpenGroups()
+    {
+        if ($this->inShutdown) {
+            // we already closed
+            return;
+        }
+        $data = $this->debug->getData();
+        $data['groupPriorityStack'][] = 'main';
+        while ($data['groupPriorityStack']) {
+            $priority = \array_pop($data['groupPriorityStack']);
+            foreach ($data['groupStacks'][$priority] as $i => $info) {
+                if (!$info['collect']) {
+                    continue;
+                }
+                unset($data['groupStacks'][$priority][$i]);
+                $logEntry = new LogEntry(
+                    $info['channel'],
+                    'groupEnd'
+                );
+                if ($priority === 'main') {
+                    $data['log'][] = $logEntry;
+                } else {
+                    $data['logSummary'][$priority][] = $logEntry;
+                }
+            }
+        }
+        $this->debug->setData($data);
     }
 
     /**
@@ -766,6 +815,51 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Remove empty groups with 'hideIfEmpty' meta value
+     *
+     * @param array $log log or summary
+     *
+     * @return void
+     */
+    private function removeHideIfEmptyGroups(&$log)
+    {
+        $groupStack = array();
+        $groupStackCount = 0;
+        $removed = false;
+        for ($i = 0, $count = \count($log); $i < $count; $i++) {
+            $logEntry = $log[$i];
+            $method = $logEntry['method'];
+            /*
+                pushing/popping to/from groupStack led to unexplicable warning:
+                "Cannot add element to the array as the next element is already occupied"
+            */
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $groupStack[$groupStackCount] = array(
+                    'i' => $i,
+                    'meta' => $logEntry['meta'],
+                    'hasEntries' => false,
+                );
+                $groupStackCount ++;
+            } elseif ($groupStackCount) {
+                if ($method == 'groupEnd') {
+                    $groupStackCount--;
+                    $group = $groupStack[$groupStackCount];
+                    if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
+                        unset($log[$group['i']]);   // remove open entry
+                        unset($log[$i]);            // remove end entry
+                        $removed = true;
+                    }
+                } else {
+                    $groupStack[$groupStackCount - 1]['hasEntries'] = true;
+                }
+            }
+        }
+        if ($removed) {
+            $log = \array_values($log);
+        }
+    }
+
+    /**
      * Get/store values such as runtime & peak memory usage
      *
      * @return array
@@ -782,6 +876,43 @@ class Internal implements SubscriberInterface
             $this->debug->setData('runtime', $vals);
         }
         return $vals;
+    }
+
+    /**
+     * Set outputAs value
+     * instantiate object if necessary & addPlugin if not already subscribed
+     *
+     * @param OutputInterface|string $outputAs OutputInterface instance, or (short) classname
+     *
+     * @return OutputInterface|null
+     */
+    private function setOutputAs($outputAs)
+    {
+        $outputAsPrev = $this->debug->getCfg('outputAs');
+        if (\is_object($outputAsPrev)) {
+            /*
+                unsubscribe current OutputInterface
+                there can only be one 'outputAs' at a time
+                if multiple output routes are desired, use debug->addPlugin()
+            */
+            $this->debug->removePlugin($outputAsPrev);
+        }
+        if (\is_string($outputAs)) {
+            $prop = 'output'.\ucfirst($outputAs);
+            $outputAs = $this->debug->{$prop};
+        }
+        if ($outputAs instanceof OutputInterface) {
+            $this->debug->addPlugin($outputAs);
+            $classname = \get_class($outputAs);
+            $prefix = __NAMESPACE__.'\\Output\\';
+            if (\strpos($classname, $prefix) === 0) {
+                $prop = 'output'.\substr($classname, \strlen($prefix));
+                $this->debug->{$prop} = $outputAs;
+            }
+        } else {
+            $outputAs = null;
+        }
+        return $outputAs;
     }
 
     /**
@@ -813,5 +944,29 @@ class Internal implements SubscriberInterface
             return !empty($emailableErrors);
         }
         return false;
+    }
+
+    /**
+     * Uncollapse groups containing errors.
+     *
+     * @param array $log log or summary
+     *
+     * @return void
+     */
+    private function uncollapseErrors(&$log)
+    {
+        $groupStack = array();
+        for ($i = 0, $count = \count($log); $i < $count; $i++) {
+            $method = $log[$i]['method'];
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $groupStack[] = $i;
+            } elseif ($method == 'groupEnd') {
+                \array_pop($groupStack);
+            } elseif (\in_array($method, array('error', 'warn'))) {
+                foreach ($groupStack as $i2) {
+                    $log[$i2]['method'] = 'group';
+                }
+            }
+        }
     }
 }

@@ -126,6 +126,7 @@ class Error extends Event
      */
     public function log()
     {
+        $error = $this->values;
         $str = 'PHP '.$error['typeStr'].':  '.$error['message'].' in '.$error['file'].' on line '.$error['line'];
         return \error_log($str);
     }

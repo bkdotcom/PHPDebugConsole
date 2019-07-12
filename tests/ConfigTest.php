@@ -16,9 +16,50 @@ class ConfigTest extends DebugTestFramework
      */
     public function testGetCfg()
     {
-        $configKeys = array('debug', 'abstracter', 'errorEmailer', 'errorHandler', 'output');
-        $abstracterKeys = array('cacheMethods', 'collectConstants', 'collectMethods', 'objectsExclude', 'objectSort', 'useDebugInfo');
-        $debugKeys = array('collect', 'key', 'output', 'channelIcon', 'channelName', 'channelShow', 'enableProfiling', 'errorMask', 'emailFrom', 'emailFunc', 'emailLog', 'emailTo', 'logEnvInfo', 'logServerKeys', 'onLog', 'factories', 'services', 'stream');
+        $configKeys = array(
+            'debug',
+            'abstracter',
+            'errorEmailer',
+            'errorHandler',
+            'outputHtml',
+            'outputStream',
+        );
+        $abstracterKeys = array(
+            'cacheMethods',
+            'collectConstants',
+            'collectMethods',
+            'objectsExclude',
+            'objectSort',
+            'useDebugInfo',
+        );
+        $debugKeys = array(
+            'collect',
+            'key',
+            'output',
+            'arrayShowListKeys',
+            'channelIcon',
+            'channelName',
+            'channelShow',
+            'enableProfiling',
+            'errorMask',
+            'emailFrom',
+            'emailFunc',
+            'emailLog',
+            'emailTo',
+            'factories',
+            'logEnvInfo',
+            'logServerKeys',
+            'onBootstrap',
+            'onLog',
+            'onOutput',
+            'outputAs',
+            'outputAsDefaultNonHtml',
+            'outputConstants',
+            'outputHeaders',
+            'outputMethodDescription',
+            'outputMethods',
+            'services',
+        );
 
         $this->assertSame(true, $this->debug->getCfg('collect'));
         $this->assertSame(true, $this->debug->getCfg('debug.collect'));
@@ -31,7 +72,7 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame(null, $this->debug->getCfg('abstracter'));
         $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter/*')));
         $this->assertInternalType('boolean', $this->debug->getCfg('output'));       // debug/output
-        $this->assertInternalType('array', $this->debug->getCfg('output/*'));
+
         $this->assertSame($configKeys, array_keys($this->debug->getCfg()));
         $this->assertSame($configKeys, array_keys($this->debug->getCfg('*')));
         $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug/*')));

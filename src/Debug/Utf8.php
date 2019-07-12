@@ -297,68 +297,94 @@ class Utf8
      * @param string $blockType "utf8", "utf8special", or "other"
      * @param array  $options   options
      *
-     * @return [type] [description]
+     * @return string hidden/special chars converted to visible human-readable
      */
     private static function dumpBlock($str, $blockType, $options = array())
     {
         if ($str === '') {
             return '';
         }
-        $options = \array_merge(array(
-            'prefix' => true,
-        ), $options);
         if ($blockType == 'utf8' && self::$sanitizeNonBinary) {
             $str = \htmlspecialchars($str);
         } elseif ($blockType == 'utf8special') {
-            $strNew = '';
-            $i = 0;
-            $length = \strlen($str);
-            while ($i < $length) {
-                $ord = self::ordUtf8($str, $i, $char);
-                $ordHex = \dechex($ord);
-                $ordHex = \str_pad($ordHex, 4, "0", STR_PAD_LEFT);
-                if (self::$useHtml) {
-                    $chars = \str_split($char);
-                    $utf8Hex = \array_map('bin2hex', $chars);
-                    $utf8Hex = '\x'.\implode(' \x', $utf8Hex);
-                    $title = $utf8Hex;
-                    if (isset(self::$charDesc[$ord])) {
-                        $title = self::$charDesc[$ord].': '.$utf8Hex;
-                    }
-                    $strNew = '<a class="unicode" href="https://unicode-table.com/en/'.$ordHex.'" target="unicode-table" title="'.$title.'">\u'.$ordHex.'</a>';
-                } else {
-                    $strNew .= '\u{'.$ordHex.'}';
-                }
-            }
-            $str = $strNew;
+            $str = self::dumpBlockSpecial($str);
         } elseif ($blockType == 'other') {
-            if (!$options['prefix']) {
-                $str = \bin2hex($str);
-                $str = \trim(\chunk_split($str, 2, ' '));
-            } else {
-                $chars = \str_split($str);
-                foreach ($chars as $i => $char) {
-                    $ord = \ord($char);
-                    $hex = \bin2hex($char); // could use dechex($ord), but would require padding
-                    if (self::$useHtml && isset(self::$charDesc[$ord])) {
-                        if ($ord < 0x20 || $ord == 0x7f) {
-                            // lets use the control pictures
-                            $chr = $ord == 0x7f
-                                ? "\xe2\x90\xa1"            // "del" char
-                                : "\xe2\x90".\chr($ord+128); // chars for 0x00 - 0x1F
-                            $chars[$i] = '<span class="c1-control" title="'.self::$charDesc[$ord].': \x'.$hex.'">'.$chr.'</span>';
-                        } else {
-                            $chars[$i] = '<span title="'.self::$charDesc[$ord].'">\x'.$hex.'</span>';
-                        }
-                    } else {
-                        $chars[$i] = '\x'.$hex;
-                    }
-                }
-                $str = \implode(' ', $chars);
-            }
+            $str = self::dumpBlockOther($str, $options);
+        }
+        return $str;
+    }
+
+    /**
+     * Dump a "special" char  (ie hidden/whitespace)
+     *
+     * @param string $str string/char
+     *
+     * @return string
+     */
+    private static function dumpBlockSpecial($str)
+    {
+        $strNew = '';
+        $i = 0;
+        $length = \strlen($str);
+        while ($i < $length) {
+            $ord = self::ordUtf8($str, $i, $char);
+            $ordHex = \dechex($ord);
+            $ordHex = \str_pad($ordHex, 4, "0", STR_PAD_LEFT);
             if (self::$useHtml) {
-                $str = '<span class="binary">'.$str.'</span>';
+                $chars = \str_split($char);
+                $utf8Hex = \array_map('bin2hex', $chars);
+                $utf8Hex = '\x'.\implode(' \x', $utf8Hex);
+                $title = $utf8Hex;
+                if (isset(self::$charDesc[$ord])) {
+                    $title = self::$charDesc[$ord].': '.$utf8Hex;
+                }
+                $strNew = '<a class="unicode" href="https://unicode-table.com/en/'.$ordHex.'" target="unicode-table" title="'.$title.'">\u'.$ordHex.'</a>';
+            } else {
+                $strNew .= '\u{'.$ordHex.'}';
             }
+        }
+        return $strNew;
+    }
+
+    /**
+     * Dump "other" characters (ie control char)
+     *
+     * @param string $str     string/char
+     * @param array  $options options
+     *
+     * @return string
+     */
+    private static function dumpBlockOther($str, $options = array())
+    {
+        $options = \array_merge(array(
+            'prefix' => true,
+        ), $options);
+        if (!$options['prefix']) {
+            $str = \bin2hex($str);
+            $str = \trim(\chunk_split($str, 2, ' '));
+        } else {
+            $chars = \str_split($str);
+            foreach ($chars as $i => $char) {
+                $ord = \ord($char);
+                $hex = \bin2hex($char); // could use dechex($ord), but would require padding
+                if (self::$useHtml && isset(self::$charDesc[$ord])) {
+                    if ($ord < 0x20 || $ord == 0x7f) {
+                        // lets use the control pictures
+                        $chr = $ord == 0x7f
+                            ? "\xe2\x90\xa1"            // "del" char
+                            : "\xe2\x90".\chr($ord+128); // chars for 0x00 - 0x1F
+                        $chars[$i] = '<span class="c1-control" title="'.self::$charDesc[$ord].': \x'.$hex.'">'.$chr.'</span>';
+                    } else {
+                        $chars[$i] = '<span title="'.self::$charDesc[$ord].'">\x'.$hex.'</span>';
+                    }
+                } else {
+                    $chars[$i] = '\x'.$hex;
+                }
+            }
+            $str = \implode(' ', $chars);
+        }
+        if (self::$useHtml) {
+            $str = '<span class="binary">'.$str.'</span>';
         }
         return $str;
     }

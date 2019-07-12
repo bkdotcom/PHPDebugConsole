@@ -457,7 +457,6 @@ EOD;
             'Did not find expected recursion'
         );
         $output = $this->debug->output();
-        // $this->output('output', $output);
         $select = '.m_log
             > .t_object > .object-inner
             > .property

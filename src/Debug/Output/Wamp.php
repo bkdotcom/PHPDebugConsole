@@ -367,7 +367,7 @@ class Wamp implements OutputInterface
             array(
                 $metaVals,
                 array(
-                    'drawer' => $this->debug->getCfg('output.drawer'),
+                    'drawer' => $this->debug->getCfg('outputHtml.drawer'),
                     'channelRoot' => $this->debug->rootInstance->getCfg('channelName'),
                     'linkFilesTemplateDefault' => \strtr(
                         \ini_get('xdebug.file_link_format'),

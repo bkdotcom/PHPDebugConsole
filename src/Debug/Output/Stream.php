@@ -25,7 +25,7 @@ class Stream extends Text
 
     protected $fileHandle;
     protected $streamCfg = array(
-        'ansi' => false,
+        'ansi' => 'default',    // default | true | false  (STDOUT & STDERR streams will default to true)
         'escapeCodes' => array(
             'arrayKey' => "\e[38;5;253m",
             'excluded' => "\e[38;5;9m",
@@ -49,9 +49,10 @@ class Stream extends Text
             'info' => "\e[38;5;55;48;5;159m",
             'warn' => "\e[38;5;1;48;5;230m",
         ),
-        'streamUri' => 'php://stderr',
+        'stream' => 'php://stderr',   // filepath/uri/resource
     );
     protected $escapeReset = "\e[0m";
+    protected $ansi = false;        // derived from cfg['ansi'] & stream wrapper type
 
     /**
      * Constructor
@@ -70,7 +71,6 @@ class Stream extends Text
     public function getSubscriptions()
     {
         return array(
-            'debug.config' => 'onConfig',
             'debug.log' => 'onLog',
             'debug.pluginInit' => 'init',
         );
@@ -83,21 +83,10 @@ class Stream extends Text
      */
     public function init()
     {
-        $stream = $this->debug->getCfg('stream');
-        $this->setStream($stream);
-    }
-
-    /**
-     * debug.config event subscriber
-     *
-     * @param Event $event debug.config event object
-     *
-     * @return void
-     */
-    public function onConfig(Event $event)
-    {
-        $stream = $this->debug->getCfg('stream');
-        $this->setStream($stream);
+        $stream = $this->cfg['stream'];
+        if ($stream) {
+            $this->openStream($stream);
+        }
     }
 
     /**
@@ -118,8 +107,13 @@ class Stream extends Text
         }
         $isSummaryBookend = $method == 'groupSummary' || !empty($logEntry['meta']['closesSummary']);
         if ($isSummaryBookend) {
+            $str = '========='."\n";
             $strIndent = \str_repeat('    ', $this->depth);
-            \fwrite($this->fileHandle, $strIndent."\e[2m=========\e[0m\n");
+            if ($this->ansi) {
+                $str = "\e[2m{$str}\e[0m";
+            }
+            $str = $strIndent.$str;
+            \fwrite($this->fileHandle, $str);
             return;
         }
         if ($logEntry['args']) {
@@ -136,20 +130,49 @@ class Stream extends Text
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        $escapeCode = isset($this->cfg['escapeCodesMethods'][$method])
-            ? $this->cfg['escapeCodesMethods'][$method]
-            : '';
+        $escapeCode = '';
+        if ($this->ansi) {
+            if ($method == 'alert') {
+                $level = $logEntry['meta']['level'];
+                $escapeCode = $this->cfg['escapeCodesLevels'][$level];
+            } elseif (isset($this->cfg['escapeCodesMethods'][$method])) {
+                $escapeCode = $this->cfg['escapeCodesMethods'][$method];
+            }
+        }
         $this->escapeReset = $escapeCode ?: "\e[0m";
         $str = parent::processLogEntry($logEntry);
-        if ($method == 'alert') {
-            $level = $logEntry['meta']['level'];
-            $escapeCode = $this->cfg['escapeCodesLevels'][$level];
-        }
         if ($str && $escapeCode) {
             $strIndent = \str_repeat('    ', $this->depth);
-            $str = preg_replace('#^('.$strIndent.')(.+)$#m', '$1'.$escapeCode.'$2'."\e[0m", $str);
+            $str = \preg_replace('#^('.$strIndent.')(.+)$#m', '$1'.$escapeCode.'$2'."\e[0m", $str);
         }
         return $str;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setCfg($mixed, $val = null)
+    {
+        $return = parent::setCfg($mixed, $val);
+        if (!\is_array($mixed)) {
+            $mixed = array($mixed => $val);
+        }
+        if (\array_key_exists('stream', $mixed)) {
+            // changing stream?
+            $this->openStream($mixed['stream']);
+        }
+        return $return;
+    }
+
+    /**
+     * Determine whether or not to use ANSI escape sequences (color output)
+     *
+     * @return boolean
+     */
+    private function ansiCheck()
+    {
+        $meta = \stream_get_meta_data($this->fileHandle);
+        return $this->cfg['ansi'] === true || $this->cfg['ansi'] === 'default' && $meta['wrapper_type'] === 'PHP';
     }
 
     /**
@@ -161,31 +184,30 @@ class Stream extends Text
      */
     protected function dumpArray($array)
     {
+        if (!$this->ansi) {
+            return parent::dumpArray($array);
+        }
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
-        if ($this->cfg['ansi']) {
-            $escapeCodes = $this->cfg['escapeCodes'];
-            $str = $escapeCodes['keyword'].'array'.$escapeCodes['punct'].'('.$this->escapeReset."\n";
-            foreach ($array as $k => $v) {
-                $escapeKey = \is_int($k)
-                    ? $escapeCodes['numeric']
-                    : $escapeCodes['arrayKey'];
-                $str .= '    '
-                    .$escapeCodes['punct'].'['.$escapeKey.$k.$escapeCodes['punct'].']'
-                    .$escapeCodes['operator'].' => '.$this->escapeReset
-                    .$this->dump($v)
-                    ."\n";
-            }
-            $str .= $this->cfg['escapeCodes']['punct'].')'.$this->escapeReset;
-            if (!$array) {
-                $str = \str_replace("\n", '', $str)."\n";
-            } elseif ($isNested) {
-                $str = \str_replace("\n", "\n    ", $str);
-            }
-            return $str;
-        } else {
-            return parent::dumpArray();
+        $escapeCodes = $this->cfg['escapeCodes'];
+        $str = $escapeCodes['keyword'].'array'.$escapeCodes['punct'].'('.$this->escapeReset."\n";
+        foreach ($array as $k => $v) {
+            $escapeKey = \is_int($k)
+                ? $escapeCodes['numeric']
+                : $escapeCodes['arrayKey'];
+            $str .= '    '
+                .$escapeCodes['punct'].'['.$escapeKey.$k.$escapeCodes['punct'].']'
+                .$escapeCodes['operator'].' => '.$this->escapeReset
+                .$this->dump($v)
+                ."\n";
         }
+        $str .= $this->cfg['escapeCodes']['punct'].')'.$this->escapeReset;
+        if (!$array) {
+            $str = \str_replace("\n", '', $str)."\n";
+        } elseif ($isNested) {
+            $str = \str_replace("\n", "\n    ", $str);
+        }
+        return $str;
     }
 
     /**
@@ -197,7 +219,7 @@ class Stream extends Text
      */
     protected function dumpBool($val)
     {
-        if ($this->cfg['ansi']) {
+        if ($this->ansi) {
             return $val
                 ? $this->cfg['escapeCodes']['true'].'true'.$this->escapeReset
                 : $this->cfg['escapeCodes']['false'].'false'.$this->escapeReset;
@@ -214,10 +236,10 @@ class Stream extends Text
      */
     protected function dumpFloat($val)
     {
-        $date = $this->checkTimestamp($val);
-        if ($this->cfg['ansi']) {
+        if ($this->ansi) {
             $val = $this->cfg['escapeCodes']['numeric'].$val.$this->escapeReset;
         }
+        $date = $this->checkTimestamp($val);
         return $date
             ? '📅 '.$val.' ('.$date.')'
             : $val;
@@ -230,7 +252,7 @@ class Stream extends Text
      */
     protected function dumpNull()
     {
-        return $this->cfg['ansi']
+        return $this->ansi
             ? $this->cfg['escapeCodes']['muted'].'null'.$this->escapeReset
             : 'null';
     }
@@ -244,34 +266,23 @@ class Stream extends Text
      */
     protected function dumpObject(Abstraction $abs)
     {
+        if (!$this->ansi) {
+            return parent::dumpObject($abs);
+        }
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
-        if ($this->cfg['ansi']) {
-            $escapeCodes = $this->cfg['escapeCodes'];
-            if ($abs['isRecursion']) {
-                $str = $escapeCodes['excluded'].'*RECURSION*'.$this->escapeReset;
-            } elseif ($abs['isExcluded']) {
-                $str = $escapeCodes['excluded'].'NOT INSPECTED'.$this->escapeReset;
-            } else {
-                $str = $this->markupIdentifier($abs['className'])."\n";
-                $str .= $this->cfg['ansi']
-                    ? $this->dumpPropertiesAnsi($abs)
-                    : $this->dumpProperties($abs);
-                if ($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')) {
-                    $str .= $this->dumpMethods($abs['methods']);
-                }
-            }
+        $escapeCodes = $this->cfg['escapeCodes'];
+        if ($abs['isRecursion']) {
+            $str = $escapeCodes['excluded'].'*RECURSION*'.$this->escapeReset;
+        } elseif ($abs['isExcluded']) {
+            $str = $escapeCodes['excluded'].'NOT INSPECTED'.$this->escapeReset;
         } else {
-            if ($abs['isRecursion']) {
-                $str = '*RECURSION*';
-            } elseif ($abs['isExcluded']) {
-                $str = 'NOT INSPECTED';
-            } else {
-                $str = '(object) '.$abs['className']."\n";
-                $str .= $this->dumpProperties($abs);
-                if ($abs['collectMethods'] && $this->debug->output->getCfg('outputMethods')) {
-                    $str .= $this->dumpMethods($abs['methods']);
-                }
+            $str = $this->markupIdentifier($abs['className'])."\n";
+            $str .= $this->ansi
+                ? $this->dumpPropertiesAnsi($abs)
+                : $this->dumpProperties($abs);
+            if ($abs['collectMethods'] && $this->debug->getCfg('outputMethods')) {
+                $str .= $this->dumpMethods($abs['methods']);
             }
         }
         $str = \trim($str);
@@ -288,7 +299,7 @@ class Stream extends Text
      *
      * @return string
      */
-    protected function dumpPropertiesAnsi(Abstraction $abs)
+    private function dumpPropertiesAnsi(Abstraction $abs)
     {
         $str = '';
         $propHeader = '';
@@ -330,10 +341,13 @@ class Stream extends Text
      */
     protected function dumpString($val)
     {
+        if (!$this->ansi) {
+            return parent::dumpString($val);
+        }
         $escapeCodes = $this->cfg['escapeCodes'];
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
-            $val = $this->cfg['ansi']
+            $val = $this->ansi
                 ? $escapeCodes['quote'].'"'
                     .$escapeCodes['numeric'].$val
                     .$escapeCodes['quote'].'"'
@@ -344,7 +358,7 @@ class Stream extends Text
                 : $val;
         } else {
             $ansiQuote = $escapeCodes['quote'].'"'.$this->escapeReset;
-            return $this->cfg['ansi']
+            return $this->ansi
                 ? $ansiQuote.$this->debug->utf8->dump($val).$ansiQuote
                 : '"'.$this->debug->utf8->dump($val).'"';
         }
@@ -357,7 +371,7 @@ class Stream extends Text
      */
     protected function dumpUndefined()
     {
-        return $this->cfg['ansi']
+        return $this->ansi
             ? "\e[2mundefined\e[22m"
             : 'undefined';
     }
@@ -388,23 +402,18 @@ class Stream extends Text
     }
 
     /**
-     * Set file we will write to
+     * Set file/stream we will write to
      *
      * @param resource|string $stream file path, uri, or stream resource
      *
      * @return void
      */
-    protected function setStream($stream)
+    protected function openStream($stream)
     {
-        /*
-        if ($stream === $this->cfg['streamUri']) {
-            // no change
-            return;
-        }
-        */
         if ($this->fileHandle) {
             $meta = \stream_get_meta_data($this->fileHandle);
             if ($meta['uri'] === $stream) {
+                // no change
                 return;
             }
         }
@@ -413,17 +422,18 @@ class Stream extends Text
             \fclose($this->fileHandle);
             $this->fileHandle = null;
         }
-        $this->cfg['streamUri'] = $stream;
         if (!$stream) {
             return;
         }
         $uriExists = \file_exists($stream);
         $this->fileHandle = \fopen($stream, 'a');
-        if ($this->fileHandle) {
+        $this->ansi = $this->ansiCheck();
+        $meta = \stream_get_meta_data($this->fileHandle);
+        if ($this->fileHandle && $meta['wrapper_type'] === 'plainfile') {
             \fwrite($this->fileHandle, '***** '.\date('Y-m-d H:i:s').' *****'."\n");
             if (!$uriExists) {
                 // we just created file
-                // \chmod($stream, 0660);
+                \chmod($stream, 0660);
             }
         }
     }

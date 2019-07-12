@@ -1,5 +1,7 @@
 <?php
 
+use \bdk\Debug;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -122,14 +124,15 @@ class DebugTest extends DebugTestFramework
     {
         $this->destroyDebug();
 
-        \bdk\Debug::_setCfg(array('collect'=>true, 'output'=>true, 'initViaSetCfg'=>true));
-        $this->assertSame(true, \bdk\Debug::getInstance()->getCfg('initViaSetCfg'));
+        // explicitly set outputAs, so that stream/cli output does not initiate
+        Debug::_setCfg(array('collect'=>true, 'output'=>true, 'outputAs'=>'html', 'initViaSetCfg'=>true));
+        $this->assertSame(true, Debug::getInstance()->getCfg('initViaSetCfg'));
 
         /*
             The new debug instance got a new eventManager
             Lets clear all of its subscribers
         */
-        $eventManager = \bdk\Debug::getInstance()->eventManager;
+        $eventManager = Debug::getInstance()->eventManager;
         foreach ($eventManager->getSubscribers() as $eventName => $subs) {
             foreach ($subs as $sub) {
                 $eventManager->unsubscribe($eventName, $sub);
@@ -179,35 +182,35 @@ class DebugTest extends DebugTestFramework
             Test cfg shortcut...
         */
         $this->assertSame(array(
-            'cfg'=>array('foo'=>'bar'),
-            'debug'=>\bdk\Debug::META,
+            'cfg' => array('foo'=>'bar'),
+            'debug' => Debug::META,
         ), $this->debug->meta('cfg', array('foo'=>'bar')));
         $this->assertSame(array(
-            'cfg'=>array('foo'=>'bar'),
-            'debug'=>\bdk\Debug::META,
+            'cfg' => array('foo'=>'bar'),
+            'debug' => Debug::META,
         ), $this->debug->meta('cfg', 'foo', 'bar'));
         $this->assertSame(array(
-            'cfg'=>array('foo'=>true),
-            'debug'=>\bdk\Debug::META,
+            'cfg' => array('foo'=>true),
+            'debug' => Debug::META,
         ), $this->debug->meta('cfg', 'foo'));
         // invalid cfg val... empty meta
         $this->assertSame(array(
-            'debug'=>\bdk\Debug::META,
+            'debug' => Debug::META,
         ), $this->debug->meta('cfg'));
         /*
             non cfg shortcut
         */
         $this->assertSame(array(
             'foo' => 'bar',
-            'debug'=>\bdk\Debug::META,
+            'debug' => Debug::META,
         ), $this->debug->meta(array('foo'=>'bar')));
         $this->assertSame(array(
             'foo' => 'bar',
-            'debug'=>\bdk\Debug::META,
+            'debug' => Debug::META,
         ), $this->debug->meta('foo', 'bar'));
         $this->assertSame(array(
             'foo' => true,
-            'debug'=>\bdk\Debug::META,
+            'debug' => Debug::META,
         ), $this->debug->meta('foo'));
     }
 
@@ -280,7 +283,7 @@ class DebugTest extends DebugTestFramework
     private function setErrorCallerHelper($static = false)
     {
         if ($static) {
-            \bdk\Debug::_setErrorCaller();
+            Debug::_setErrorCaller();
         } else {
             $this->debug->setErrorCaller();
         }

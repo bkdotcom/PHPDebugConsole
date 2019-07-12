@@ -154,7 +154,7 @@ class Yii11 implements SubscriberInterface
         if ($logEntry['method'] == 'log' && $logEntry['args'][0] == 'files') {
             // let's embolden the primary files
             $root = \realpath(YII_PATH.'/..');
-            $html = $debug->output->html->processLogEntry($logEntry);
+            $html = $debug->outputHtml->processLogEntry($logEntry);
             $html = \preg_replace_callback('#(<span class="file t_string">)(.*?)(</span>)#', function ($matches) use ($root) {
                 $filepath = $matches[2];
                 $filepathRel = \str_replace($root, '.', $filepath);

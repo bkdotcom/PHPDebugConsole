@@ -65,7 +65,7 @@ class DebugTestFramework extends DOMTestCase
             : $count + 1;
         $GLOBALS['debugTest'] = $count == 10;
         if ($GLOBALS['debugTest']) {
-            var_dump(' ----------------- setUp -----------------');
+            $this->stdout(' ----------------- setUp -----------------');
         }
         */
         self::$allowError = false;
@@ -135,6 +135,7 @@ class DebugTestFramework extends DOMTestCase
     public function tearDown()
     {
         $this->debug->setCfg('output', false);
+        // fwrite(STDERR, "tearDown\n");
         $subscribers = $this->debug->eventManager->getSubscribers('debug.output');
         foreach ($subscribers as $subscriber) {
             $unsub = false;
@@ -153,7 +154,7 @@ class DebugTestFramework extends DOMTestCase
         }
         $refProperties = &$this->getSharedVar('reflectionProperties');
         if (!isset($refProperties['textDepth'])) {
-            $depthRef = new \ReflectionProperty($this->debug->output->text, 'depth');
+            $depthRef = new \ReflectionProperty($this->debug->outputText, 'depth');
             $depthRef->setAccessible(true);
             $refProperties['textDepth'] = $depthRef;
         }
@@ -162,9 +163,9 @@ class DebugTestFramework extends DOMTestCase
             $registeredPluginsRef->setAccessible(true);
             $refProperties['registeredPlugins'] = $registeredPluginsRef;
         }
-        $refProperties['textDepth']->setValue($this->debug->output->text, 0);
+        $refProperties['textDepth']->setValue($this->debug->outputText, 0);
         $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
-        $registeredPlugins->removeAll($registeredPlugins);
+        $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
     }
 
     /**
@@ -175,9 +176,12 @@ class DebugTestFramework extends DOMTestCase
      *
      * @return void
      */
-    public function stdout($label, $val)
+    public function stdout($label, $val = null)
     {
-        fwrite(STDOUT, $label.' = '.print_r($val, true) . "\n");
+        $out = func_num_args() > 1
+            ? $label.' = '.print_r($val, true)
+            : print_r($label, true);
+        fwrite(STDOUT, $out . "\n");
     }
 
     /**
@@ -268,7 +272,8 @@ class DebugTestFramework extends DOMTestCase
                 }
                 continue;
             }
-            $outputObj = $this->debug->output->{$test};
+            $prop = 'output'.\ucfirst($test);
+            $outputObj = $this->debug->{$prop};
             if (in_array($test, array('chromeLogger','firephp'))) {
                 // remove data - sans the logEntry we're interested in
                 $dataBackup = array(
@@ -360,16 +365,16 @@ class DebugTestFramework extends DOMTestCase
             $debug = $this->debug;
         }
         $backupOutputAs = $debug->getCfg('outputAs');
+        $regexLtrim = '#^\s+#m';
         foreach ($tests as $test => $expectContains) {
             $debug->setCfg('outputAs', $test);
-            $regexLtrim = '#^\s+#m';
             $output = $debug->output();
+            // $this->stdout($test, $output);
             $output = \preg_replace($regexLtrim, '', $output);
             $expectContains = \preg_replace($regexLtrim, '', $expectContains);
             if ($expectContains) {
                 $this->assertStringMatchesFormat('%A'.$expectContains.'%A', $output);
             }
-            // $debug->setData($backupData);
         }
         $debug->setCfg('outputAs', $backupOutputAs);
     }

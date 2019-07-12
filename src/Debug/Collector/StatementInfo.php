@@ -261,9 +261,9 @@ class StatementInfo
     }
 
     /**
-     * [logParams description]
+     * Log statement bound params
      *
-     * @param Debug $debug [description]
+     * @param Debug $debug Debug instance
      *
      * @return void
      */

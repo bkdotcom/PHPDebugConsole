@@ -795,7 +795,7 @@ class Utilities
      *
      * @param array $array variable to check
      *
-     * @return boolean [description]
+     * @return boolean
      */
     private static function isCallable($array)
     {

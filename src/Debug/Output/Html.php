@@ -13,6 +13,7 @@ namespace bdk\Debug\Output;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
@@ -31,6 +32,11 @@ class Html extends Base
     protected $channels = array();
     protected $detectFiles = false;
     protected $argStringOpts = array();     // per-argument string options
+    protected $cfg = array();
+    private $assets = array(
+        'css' => array(),
+        'script' => array(),
+    );
 
     /**
      * Constructor
@@ -40,7 +46,56 @@ class Html extends Base
     public function __construct(Debug $debug)
     {
         $this->errorSummary = new HtmlErrorSummary($this, $debug->errorHandler);
+        $this->cfg = array(
+            'addBR' => false,
+            'css' => '',                    // additional "override" css
+            'drawer' => true,
+            'filepathCss' => __DIR__.'/../css/Debug.css',
+            'filepathScript' => __DIR__.'/../js/Debug.jquery.min.js',
+            'jqueryUrl' => '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
+            'outputCss' => true,
+            'outputScript' => true,
+            'sidebar' => true,
+        );
         parent::__construct($debug);
+    }
+
+    /**
+     * Add/register css or javascript
+     *
+     * @param string $what  "css" or "script"
+     * @param string $mixed css, javascript, or filepath
+     *
+     * @return void
+     */
+    public function addAsset($what, $mixed)
+    {
+        if ($what == 'css') {
+            $this->assets['css'][] = $mixed;
+        } elseif ($what == 'script') {
+            $this->assets['script'][] = $mixed;
+        }
+    }
+
+    /**
+     * Get and register assets from passed provider
+     *
+     * @param AssetProviderInterface $assetProvider Asset provider
+     *
+     * @return void
+     */
+    public function addAssetProvider(AssetProviderInterface $assetProvider)
+    {
+        $assets = \array_merge(array(
+            'css' => array(),
+            'script' => array(),
+        ), $assetProvider->getAssets());
+        foreach ((array) $assets['css'] as $css) {
+            $this->addAsset('css', $css);
+        }
+        foreach ((array) $assets['script'] as $script) {
+            $this->addAsset('script', $script);
+        }
     }
 
     /**
@@ -106,6 +161,53 @@ class Html extends Base
     }
 
     /**
+     * Return the log's CSS
+     *
+     * @return string
+     */
+    public function getCss()
+    {
+        $return = '';
+        if ($this->cfg['filepathCss']) {
+            $return = \file_get_contents($this->cfg['filepathCss']);
+            if ($return === false) {
+                $return = '/* Unable to read filepathCss */';
+                $this->debug->alert('unable to read filepathCss');
+            }
+        }
+        /*
+            add "plugin" css  (ie prism.css)
+        */
+        $return .= $this->buildAssetOutput($this->assets['css']);
+        if (!empty($this->cfg['css'])) {
+            $return .= $this->cfg['css'];
+        }
+        return $return;
+    }
+
+    /**
+     * Return the log's javascript
+     *
+     * @return string
+     */
+    public function getScript()
+    {
+        $return = '';
+        if ($this->cfg['filepathScript']) {
+            $return = \file_get_contents($this->cfg['filepathScript']);
+            if ($return === false) {
+                $return = 'console.warn("PHPDebugConsole: unable to read filepathScript");';
+                $this->debug->alert('unable to read filepathScript');
+            }
+        }
+        /*
+            add "plugin" scripts  (ie prism.js)
+        */
+        $return .= $this->buildAssetOutput($this->assets['script']);
+        return $return;
+    }
+
+    /**
      * Wrap classname in span.classname
      * if namespaced additionally wrap namespace in span.namespace
      * If callable, also wrap with .t_operator and .t_identifier
@@ -153,23 +255,23 @@ class Html extends Base
         $str = '<div'.$this->debug->utilities->buildAttribString(array(
             'class' => 'debug',
             'data-options' => array(
-                'drawer' => $this->debug->getCfg('output.drawer'),
-                'sidebar' => $this->debug->getCfg('output.sidebar'),
+                'drawer' => $this->cfg['drawer'],
+                'sidebar' => $this->cfg['sidebar'],
                 'linkFilesTemplateDefault' => $lftDefault ?: null,
             ),
             // channel list gets built as log processed...  we'll str_replace this...
             'data-channels' => '{{channels}}',
             'data-channel-root' => $this->channelNameRoot,
         )).">\n";
-        if ($this->debug->getCfg('output.outputCss')) {
+        if ($this->cfg['outputCss']) {
             $str .= '<style type="text/css">'."\n"
-                    .$this->debug->output->getCss()."\n"
+                    .$this->getCss()."\n"
                 .'</style>'."\n";
         }
-        if ($this->debug->getCfg('output.outputScript')) {
-            $str .= '<script>window.jQuery || document.write(\'<script src="'.$this->debug->getCfg('output.jqueryUrl').'"><\/script>\')</script>'."\n";
+        if ($this->cfg['outputScript']) {
+            $str .= '<script>window.jQuery || document.write(\'<script src="'.$this->cfg['jqueryUrl'].'"><\/script>\')</script>'."\n";
             $str .= '<script type="text/javascript">'
-                    .$this->debug->output->getScript()."\n"
+                    .$this->getScript()."\n"
                 .'</script>'."\n";
         }
         $str .= '<header class="debug-menu-bar">PHPDebugConsole</header>'."\n";
@@ -180,7 +282,7 @@ class Html extends Base
             this will help page load performance (fewer redraws)... by magnitudes
         */
         $style = null;
-        if ($this->debug->getCfg('output.outputScript')) {
+        if ($this->cfg['outputScript']) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>'."\n";
             $style = 'display:none;';
         }
@@ -257,6 +359,26 @@ class Html extends Base
     }
 
     /**
+     * Set one or more config values
+     *
+     *    setCfg('key', 'value')
+     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *
+     * @param string $mixed key=>value array or key
+     * @param mixed  $val   new value
+     *
+     * @return mixed returns previous value(s)
+     */
+    public function setCfg($mixed, $val = null)
+    {
+        $ret = parent::setCfg($mixed, $val);
+        foreach (array('filepathCss', 'filepathScript') as $k) {
+            $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__.'/../', $this->cfg[$k]);
+        }
+        return $ret;
+    }
+
+    /**
      * Convert all arguments to html and join them together.
      *
      * @param array $args arguments
@@ -291,6 +413,34 @@ class Html extends Base
         } else {
             return \implode($glue, $args);
         }
+    }
+
+    /**
+     * Combine css or script assets into a single string
+     *
+     * @param array $assets array of assets (filepaths / strings)
+     *
+     * @return string
+     */
+    private function buildAssetOutput(array $assets)
+    {
+        $return = '';
+        $hashes = array();
+        foreach ($assets as $asset) {
+            if (!\preg_match('#[\r\n]#', $asset)) {
+                // single line... potential filepath
+                $asset = \preg_replace('#^\./?#', __DIR__.'/../', $asset);
+                if (\file_exists($asset)) {
+                    $asset = \file_get_contents($asset);
+                }
+            }
+            $hash = \md5($asset);
+            if (!\in_array($hash, $hashes)) {
+                $return .= $asset."\n";
+                $hashes[] = $hash;
+            }
+        }
+        return $return;
     }
 
     /**
@@ -535,10 +685,10 @@ class Html extends Base
             $html = '<span class="t_keyword">array</span>'
                 .'<span class="t_punct">()</span>';
         } else {
-            $displayKeys = $this->debug->getCfg('output.displayListKeys') || !$this->debug->utilities->isList($array);
+            $showKeys = $this->debug->getCfg('arrayShowListKeys') || !$this->debug->utilities->isList($array);
             $html = '<span class="t_keyword">array</span>'
                 .'<span class="t_punct">(</span>'."\n";
-            if ($displayKeys) {
+            if ($showKeys) {
                 $html .= '<span class="array-inner">'."\n";
                 foreach ($array as $key => $val) {
                     $html .= "\t".'<span class="key-value">'
@@ -598,7 +748,7 @@ class Html extends Base
     protected function dumpConst(Abstraction $abs)
     {
         $this->argAttribs['title'] = $abs['value']
-            ? 'value: '.$this->debug->output->text->dump($abs['value'])
+            ? 'value: '.$this->debug->outputText->dump($abs['value'])
             : null;
         return $this->markupIdentifier($abs['name']);
     }
@@ -722,7 +872,7 @@ class Html extends Base
      */
     protected function getObject()
     {
-        $this->object = new HtmlObject($this->debug);
+        $this->object = new HtmlObject($this);
         return $this->object;
     }
 
@@ -758,6 +908,7 @@ class Html extends Base
                     ),
                     'dismissible' => false,
                     'level' => 'danger',
+                    'sanitize' => false,
                 )
             ));
         }
@@ -814,7 +965,7 @@ class Html extends Base
      */
     protected function visualWhiteSpaceCallback($matches)
     {
-        $strBr = $this->debug->getCfg('addBR') ? '<br />' : '';
+        $strBr = $this->cfg['addBR'] ? '<br />' : '';
         $search = array("\r","\n");
         $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>'.$strBr."\n");
         return \str_replace($search, $replace, $matches[1]);

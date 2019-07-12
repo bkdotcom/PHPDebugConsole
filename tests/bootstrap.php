@@ -18,8 +18,14 @@ require __DIR__.'/../vendor/autoload.php';
 
 ini_set("xdebug.var_display_max_data", -1);
 
+/*
+    We also initialize via DebugTestFramework::setUp()
+    however, testProviders are called before setup (I belive)
+    provider may also initialiez debug if instance does not exist...
+    ... we want to make sure we initialize with outputAs='html'
+*/
 \bdk\Debug::getInstance(array(
-	'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
+    'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
     'enableProfiling' => true,
-    'collect' => true,
+    'outputAs' => 'html',
 ));

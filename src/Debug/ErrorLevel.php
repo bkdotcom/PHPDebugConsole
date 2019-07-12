@@ -71,7 +71,7 @@ class ErrorLevel
     }
 
     /**
-     * [toConstantString description]
+     * Convert PHP error-level integer (bitmask) to constant bitwise representation
      *
      * @param integer $level          Error Level (bitmask) value
      * @param string  $phpVer         (PHP_VERSION) php Version
@@ -132,10 +132,10 @@ class ErrorLevel
     }
 
     /**
-     * [isConstantSetInLevel description]
+     * Test if value is incl in bitmask
      *
-     * @param integer $value   [description]
-     * @param integer $bitmask [description]
+     * @param integer $value   value to check
+     * @param integer $bitmask bitmask
      *
      * @return boolean
      */

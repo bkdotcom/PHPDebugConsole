@@ -32,7 +32,7 @@ class HtmlTable
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->outputHtml = $debug->output->html;
+        $this->outputHtml = $debug->outputHtml;
     }
 
     /**

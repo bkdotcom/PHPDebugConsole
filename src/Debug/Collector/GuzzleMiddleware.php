@@ -60,8 +60,8 @@ class GuzzleMiddleware
     /**
      * Log Request Begin
      *
-     * @param RequestInterface $request [description]
-     * @param array            $options [description]
+     * @param RequestInterface $request Guzzle request
+     * @param array            $options opts
      *
      * @return PromiseInterface
      */
@@ -84,7 +84,7 @@ class GuzzleMiddleware
     /**
      * Fulfilled Request handler
      *
-     * @param ResponseInterface $response [description]
+     * @param ResponseInterface $response Guzzle response
      *
      * @return ResponseInterface
      */
@@ -98,7 +98,7 @@ class GuzzleMiddleware
     /**
      * Rejected Request handler
      *
-     * @param mixed $reason [description]
+     * @param mixed $reason Reject reason
      *
      * @return PromiseInterface
      */

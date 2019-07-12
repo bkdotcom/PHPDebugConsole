@@ -25,6 +25,7 @@ abstract class Base implements OutputInterface
 {
 
     public $debug;
+    protected $cfg = array();
     protected $data = array();
     protected $channelName = null;    // should be set by onOutput
     protected $channelNameRoot = null;
@@ -111,6 +112,23 @@ abstract class Base implements OutputInterface
     }
 
     /**
+     * Get config value(s)
+     *
+     * @param string $key (optional) key
+     *
+     * @return mixed
+     */
+    public function getCfg($key = null)
+    {
+        if ($key === null) {
+            return $this->cfg;
+        }
+        return isset($this->cfg[$key])
+            ? $this->cfg[$key]
+            : null;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getSubscriptions()
@@ -118,6 +136,32 @@ abstract class Base implements OutputInterface
         return array(
             'debug.output' => 'onOutput',
         );
+    }
+
+    /**
+     * Set one or more config values
+     *
+     *    setCfg('key', 'value')
+     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *
+     * @param string $mixed key=>value array or key
+     * @param mixed  $val   new value
+     *
+     * @return mixed returns previous value(s)
+     */
+    public function setCfg($mixed, $val = null)
+    {
+        $ret = null;
+        if (\is_string($mixed)) {
+            $ret = isset($this->cfg[$mixed])
+                ? $this->cfg[$mixed]
+                : null;
+            $this->cfg[$mixed] = $val;
+        } elseif (\is_array($mixed)) {
+            $ret = \array_intersect_key($this->cfg, $mixed);
+            $this->cfg = \array_merge($this->cfg, $mixed);
+        }
+        return $ret;
     }
 
     /**
@@ -444,7 +488,7 @@ abstract class Base implements OutputInterface
             if ($val === Abstracter::UNDEFINED) {
                 unset($values[$k2]);
             } elseif (\is_array($val)) {
-                $values[$k2] = $this->debug->output->text->dump($val);
+                $values[$k2] = $this->debug->outputText->dump($val);
             }
         }
         if (\count($values) == 1 && $k2 == MethodTable::SCALAR) {

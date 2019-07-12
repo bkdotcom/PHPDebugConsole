@@ -85,6 +85,7 @@ class Debug
             'collect'   => false,
             'key'       => null,
             'output'    => false,           // output the log?
+            'arrayShowListKeys' => true,
             'channelIcon' => null,
             'channelName' => 'general',
             'channelShow' => true,          // wheter initially filtered or not
@@ -102,6 +103,7 @@ class Debug
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
+            'factories' => $this->getDefaultFactories(),
             'logEnvInfo' => array(
                 'cookies' => true,
                 'gitInfo' => true,
@@ -111,10 +113,16 @@ class Debug
                 'serverVals' => true,
             ),
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
-            'onLog' => null,    // callable
-            'factories' => $this->getDefaultFactories(),
+            'onBootstrap' => null,          // callable
+            'onLog' => null,                // callable
+            'onOutput'  => null,            // callable
+            'outputAs'  => null,            // 'chromeLogger', 'firePhp', 'html', 'script', 'steam', 'text', or Object, if null, will be determined automatically
+            'outputAsDefaultNonHtml' => 'chromeLogger',
+            'outputConstants' => true,
+            'outputHeaders' => true,            // ie, ChromeLogger and/or firePHP headers
+            'outputMethodDescription' => true,  // (or just summary)
+            'outputMethods' => true,
             'services' => $this->getDefaultServices(),
-            'stream' => null,   // string (filepath or uri) or resource
         );
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
@@ -175,7 +183,7 @@ class Debug
             a) setCfg (so that this->parentInstance gets set
             b) initialize this->internal after all properties have been initialized
         */
-        $this->__get('config')->setCfg($cfg);   // since is defined (albeit null), we need to call __get to initialize
+        $this->__get('config')->setValues($cfg);   // since it's defined (albeit null), we need to call __get to initialize
         $this->rootInstance = $this;
         if (isset($this->cfg['parent'])) {
             $this->parentInstance = $this->cfg['parent'];
@@ -236,7 +244,21 @@ class Debug
     {
         $methodName = \ltrim($methodName, '_');
         if (!self::$instance) {
-            new static();
+            if ($methodName == 'setCfg') {
+                /*
+                    Treat as a special case
+                    Want to initialize with the passed config vs initialize, then setCfg
+                    ie _setCfg(array('outputAs'=>'html')) via command line
+                    we don't want to first initialize with default STDERR output
+                */
+                $cfg = \is_array($args[0])
+                    ? $args[0]
+                    : array($args[0] => $args[1]);
+                new static($cfg);
+                return;
+            } else {
+                new static();
+            }
         }
         /*
             Add 'statically' meta arg
@@ -260,14 +282,15 @@ class Debug
     {
         if (isset($this->cfg['services'][$property])) {
             $val = $this->cfg['services'][$property];
-            if (\is_object($val) && \method_exists($val, '__invoke')) {
+            if ($val instanceof \Closure) {
                 $val = $val($this);
             }
             $this->{$property} = $val;
             return $val;
-        } elseif (isset($this->cfg['factories'][$property])) {
+        }
+        if (isset($this->cfg['factories'][$property])) {
             $val = $this->cfg['factories'][$property];
-            if (\is_object($val) && \method_exists($val, '__invoke')) {
+            if ($val instanceof \Closure) {
                 $val = $val($this);
             }
             return $val;
@@ -278,6 +301,13 @@ class Debug
         $getter = 'get'.\ucfirst($property);
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
+        }
+        if (\strpos($property, 'output') === 0) {
+            $classname = '\\bdk\\Debug\\Output\\'.\substr($property, 6);
+            $val = new $classname($this);
+            $val->setCfg($this->config->getValues($property));
+            $this->{$property} = $val;
+            return $val;
         }
         return null;
     }
@@ -1143,7 +1173,7 @@ class Debug
         $isPlugin = false;
         if ($plugin instanceof AssetProviderInterface) {
             $isPlugin = true;
-            $this->rootInstance->output->addAssetProvider($plugin);
+            $this->rootInstance->outputHtml->addAssetProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
             $isPlugin = true;
@@ -1172,13 +1202,14 @@ class Debug
     /**
      * Retrieve a configuration value
      *
-     * @param string $path what to get
+     * @param string $path    what to get
+     * @param mixed  $default (optional) default value
      *
      * @return mixed
      */
-    public function getCfg($path = null)
+    public function getCfg($path = null, $default = null)
     {
-        return $this->config->getCfg($path);
+        return $this->config->getValue($path, $default);
     }
 
     /**
@@ -1205,7 +1236,6 @@ class Debug
             $cfg = \array_diff_key($cfg, \array_flip(array(
                 'errorEmailer',
                 'errorHandler',
-                'output',
             )));
             unset($cfg['debug']['onBootstrap']);
             // set channel values
@@ -1304,7 +1334,7 @@ class Debug
      * "metafy" value/values
      *
      * accepts
-     *   array()
+     *   array('key'=>value)
      *   'cfg', option, value  (shortcut for setting single config value)
      *   key, value
      *   key                   (value defaults to true)
@@ -1362,18 +1392,18 @@ class Debug
      */
     public function output($options = array())
     {
-        $cfgRestore = $this->config->setCfg($options);
+        $cfgRestore = $this->config->setValues($options);
         if (!$this->cfg['output']) {
-            $this->config->setCfg($cfgRestore);
+            $this->config->setValues($cfgRestore);
             return null;
         }
         /*
             I'd like to put this outputAs setting bit inside Output::onOutput
             but, adding a debug.output subscriber from within a debug.output subscriber = fail
         */
-        $outputAs = $this->output->getCfg('outputAs');
+        $outputAs = $this->getCfg('outputAs');
         if (\is_string($outputAs)) {
-            $this->output->setCfg('outputAs', $outputAs);
+            $this->setCfg('outputAs', $outputAs);
         }
         /*
             Publish debug.output on all descendant channels and then ourself
@@ -1405,7 +1435,7 @@ class Debug
         if (!$this->parentInstance) {
             $this->data['outputSent'] = true;
         }
-        $this->config->setCfg($cfgRestore);
+        $this->config->setValues($cfgRestore);
         return $event['return'];
     }
 
@@ -1441,7 +1471,9 @@ class Debug
      */
     public function setCfg($path, $newVal = null)
     {
-        return $this->config->setCfg($path, $newVal);
+        return \is_array($path)
+            ? $this->config->setValues($path)
+            : $this->config->setValue($path, $newVal);
     }
 
     /**
@@ -1565,7 +1597,7 @@ class Debug
         }
         $cfgRestore = array();
         if (isset($logEntry['meta']['cfg'])) {
-            $cfgRestore = $this->config->setCfg($logEntry['meta']['cfg']);
+            $cfgRestore = $this->config->setValues($logEntry['meta']['cfg']);
             $logEntry->setMeta('cfg', null);
         }
         foreach ($logEntry['args'] as $i => $v) {
@@ -1575,7 +1607,7 @@ class Debug
         }
         $this->internal->publishBubbleEvent('debug.log', $logEntry);
         if ($cfgRestore) {
-            $this->config->setCfg($cfgRestore);
+            $this->config->setValues($cfgRestore);
         }
         if ($logEntry['appendLog']) {
             $this->rootInstance->logRef[] = $logEntry;
@@ -1729,13 +1761,13 @@ class Debug
     {
         return array(
             'abstracter' => function (Debug $debug) {
-                return new Abstracter($debug, $debug->config->getCfgLazy('abstracter'));
+                return new Abstracter($debug, $debug->config->getValues('abstracter'));
             },
             'config' => function (Debug $debug) {
                 return new Debug\Config($debug, $debug->cfg);    // cfg is passed by reference
             },
             'errorEmailer' => function (Debug $debug) {
-                return new ErrorEmailer($debug->config->getCfgLazy('errorEmailer'));
+                return new ErrorEmailer($debug->config->getValues('errorEmailer'));
             },
             'errorHandler' => function (Debug $debug) {
                 if (ErrorHandler::getInstance()) {
@@ -1763,11 +1795,6 @@ class Debug
             },
             'methodTable' => function () {
                 return new Debug\MethodTable();
-            },
-            'output' => function (Debug $debug) {
-                $output = new Debug\Output($debug, $debug->config->getCfgLazy('output'));
-                $debug->eventManager->addSubscriberInterface($output);
-                return $output;
             },
             'utf8' => function () {
                 return new Debug\Utf8();

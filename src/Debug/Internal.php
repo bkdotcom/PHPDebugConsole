@@ -235,7 +235,7 @@ class Internal implements SubscriberInterface
         if ($this->debug->parentInstance) {
             // all channels should subscribe
             return array(
-                'debug.output' => array('onOutputCleanup', 1),
+                'debug.output' => array('onOutput', 1),
                 'debug.config' => array('onConfig', PHP_INT_MAX),
             );
         } else {
@@ -248,10 +248,7 @@ class Internal implements SubscriberInterface
                 'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
                 'debug.config' => array('onConfig', PHP_INT_MAX),
                 'debug.dumpCustom' => 'onDumpCustom',
-                'debug.output' => array(
-                    array('onOutputCleanup', 1),
-                    'onOutputLogRuntime'
-                ),
+                'debug.output' => array('onOutput', 1),
                 'errorHandler.error' => 'onError',
                 'php.shutdown' => array(
                     array('onShutdownHigh', PHP_INT_MAX),
@@ -424,51 +421,18 @@ class Internal implements SubscriberInterface
      *
      * @return void
      */
-    public function onOutputCleanup(Event $event)
+    public function onOutput(Event $event)
     {
-        if (!$event['isTarget']) {
+        if ($event['isTarget']) {
             /*
                 All channels share the same data.
                 We only need to do this via the channel that called output
             */
-            return;
+            $this->onOutputCleanup();
         }
-        $this->closeOpenGroups();
-        $data = $this->debug->getData();
-        $this->removeHideIfEmptyGroups($data['log']);
-        $this->uncollapseErrors($data['log']);
-        foreach ($data['logSummary'] as &$log) {
-            $this->removeHideIfEmptyGroups($log);
-            $this->uncollapseErrors($log);
+        if (!$this->debug->parentInstance) {
+            $this->onOutputLogRuntime();
         }
-        $this->debug->setData($data);
-    }
-
-    /**
-     * debug.output event subscriber
-     * Log our runtime info in a summary group
-     *
-     * As we're only subscribed to root debug instance's debug.output event,  this info
-     *   will not be output for any sub-channels output directly
-     *
-     * @return void
-     */
-    public function onOutputLogRuntime()
-    {
-        $vals = $this->runtimeVals();
-        $this->debug->groupSummary(1);
-        $this->debug->info('Built In '.$vals['runtime'].' sec');
-        $this->debug->info(
-            'Peak Memory Usage'
-                .(\get_class($this->debug->getCfg('outputAs')) == 'bdk\\Debug\\Output\\Html'
-                    ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
-                    : '')
-                .': '
-                .$this->debug->utilities->getBytes($vals['memoryPeakUsage']).' / '
-                .$this->debug->utilities->getBytes($vals['memoryLimit']),
-            $this->debug->meta('sanitize', false)
-        );
-        $this->debug->groupEnd();
     }
 
     /**
@@ -478,8 +442,8 @@ class Internal implements SubscriberInterface
      */
     public function onShutdownHigh()
     {
-        $this->closeOpenGroups();
         $this->inShutdown = true;
+        $this->closeOpenGroups();
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLogShutdown'));
     }
 
@@ -596,6 +560,53 @@ class Internal implements SubscriberInterface
             }
         }
         $this->debug->setData($data);
+    }
+
+    /**
+     * "cleanup"
+     *    close open groups
+     *    remove "hide-if-empty" groups
+     *    uncollapse errors
+     *
+     * @return void
+     */
+    private function onOutputCleanup()
+    {
+        $this->closeOpenGroups();
+        $data = $this->debug->getData();
+        $this->removeHideIfEmptyGroups($data['log']);
+        $this->uncollapseErrors($data['log']);
+        foreach ($data['logSummary'] as &$log) {
+            $this->removeHideIfEmptyGroups($log);
+            $this->uncollapseErrors($log);
+        }
+        $this->debug->setData($data);
+    }
+
+    /**
+     * Log our runtime info in a summary group
+     *
+     * As we're only subscribed to root debug instance's debug.output event,  this info
+     *   will not be output for any sub-channels output directly
+     *
+     * @return void
+     */
+    private function onOutputLogRuntime()
+    {
+        $vals = $this->runtimeVals();
+        $this->debug->groupSummary(1);
+        $this->debug->info('Built In '.$vals['runtime'].' sec');
+        $this->debug->info(
+            'Peak Memory Usage'
+                .(\get_class($this->debug->getCfg('outputAs')) == 'bdk\\Debug\\Output\\Html'
+                    ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
+                    : '')
+                .': '
+                .$this->debug->utilities->getBytes($vals['memoryPeakUsage']).' / '
+                .$this->debug->utilities->getBytes($vals['memoryLimit']),
+            $this->debug->meta('sanitize', false)
+        );
+        $this->debug->groupEnd();
     }
 
     /**

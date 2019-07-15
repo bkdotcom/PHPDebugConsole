@@ -48,7 +48,7 @@ class Script extends Base
     public function onOutput(Event $event)
     {
         $this->data = $this->debug->getData();
-        $errorStats = $this->debug->internal->errorStats();
+        $errorStats = $this->debug->errorStats();
         $errorStr = '';
         if ($errorStats['inConsole']) {
             $errorStr = 'Errors: ';

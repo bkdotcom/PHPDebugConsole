@@ -252,12 +252,12 @@ class Config
     {
         $interface = $this->debug->utilities->getInterface();
         if ($interface == 'ajax') {
-            $ret = $this->cfg['outputAsDefaultNonHtml'];
+            $ret = $this->values['outputAsDefaultNonHtml'];
         } elseif ($interface == 'http') {
             $ret = 'html';
             $contentType = $this->debug->utilities->getResponseHeader();
             if ($contentType && $contentType !== 'text/html') {
-                $ret = $this->cfg['outputAsDefaultNonHtml'];
+                $ret = $this->values['outputAsDefaultNonHtml'];
             }
         } else {
             $ret = 'stream';

@@ -143,8 +143,12 @@ class Manager
     /**
      * Subscribe to event
      *
+     * Callable may also be a "closure factory" which provides a means to lazy-load an object
+     *    [Closure, 'methodName'] - closure returns object
+     *    [Closure] - closure instantiates object that is callable (ie has __invoke)
+     *
      * @param string   $eventName event name
-     * @param callable $callable  callable
+     * @param callable $callable  callable or closure factory
      * @param integer  $priority  The higher this value, the earlier we handle event
      *
      * @return void
@@ -169,13 +173,12 @@ class Manager
             return;
         }
         if ($this->isClosureFactory($callable)) {
-            // factory / lazy subscriber
-            $callable[0] = $callable[0]();
+            $callable = $this->doClosureFactory($callable);
         }
         foreach ($this->subscribers[$eventName] as $priority => $subscribers) {
             foreach ($subscribers as $k => $v) {
                 if ($v !== $callable && $this->isClosureFactory($v)) {
-                    $v[0] = $v[0]();
+                    $v = $this->doClosureFactory($v);
                 }
                 if ($v === $callable) {
                     unset($subscribers[$k], $this->sorted[$eventName]);
@@ -189,6 +192,24 @@ class Manager
                 unset($this->subscribers[$eventName][$priority]);
             }
         }
+    }
+
+    /**
+     * Instantiate the object wrapped in the closure factory
+     * closure factory may be
+     *    [Closure, 'methodName'] - closure returns object
+     *    [Closure] - closure returns object that is callable (ie has __invoke)
+     *
+     * @param array $closureFactory "closure factory" lazy loads an object / subscriber
+     *
+     * @return callable
+     */
+    private function doClosureFactory($closureFactory = array())
+    {
+        $closureFactory[0] = $closureFactory[0]();
+        return count($closureFactory) === 1
+            ? $closureFactory[0]
+            : $closureFactory;
     }
 
     /**
@@ -272,7 +293,7 @@ class Manager
         foreach ($this->subscribers[$eventName] as $priority => $subscribers) {
             foreach ($subscribers as $k => $subscriber) {
                 if ($this->isClosureFactory($subscriber)) {
-                    $subscriber[0] = $subscriber[0]();
+                    $subscriber = $this->doClosureFactory($subscriber);
                     $this->subscribers[$eventName][$priority][$k] = $subscriber;
                 }
                 $this->sorted[$eventName][] = $subscriber;

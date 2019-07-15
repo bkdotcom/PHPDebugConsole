@@ -116,7 +116,7 @@ class Debug
             'onBootstrap' => null,          // callable
             'onLog' => null,                // callable
             'onOutput'  => null,            // callable
-            'outputAs'  => null,            // 'chromeLogger', 'firePhp', 'html', 'script', 'steam', 'text', or Object, if null, will be determined automatically
+            'outputAs'  => null,            // 'chromeLogger', 'firephp', 'html', 'script', 'steam', 'text', or Object, if null, will be determined automatically
             'outputAsDefaultNonHtml' => 'chromeLogger',
             'outputConstants' => true,
             'outputHeaders' => true,            // ie, ChromeLogger and/or firePHP headers

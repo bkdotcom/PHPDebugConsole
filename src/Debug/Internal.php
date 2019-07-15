@@ -281,7 +281,7 @@ class Internal implements SubscriberInterface
      */
     public function onBootstrap(Event $event)
     {
-        $onBootstrap = new onBootstrap();
+        $onBootstrap = new OnBootstrap();
         $onBootstrap($event);
     }
 

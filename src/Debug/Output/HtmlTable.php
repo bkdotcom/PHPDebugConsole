@@ -61,15 +61,17 @@ class HtmlTable
             );
         }
         if ($this->debug->abstracter->isAbstraction($rows, 'object')) {
+            $classname = $this->outputHtml->markupIdentifier(
+                $rows['className'],
+                'span',
+                array(
+                    'title' => $rows['phpDoc']['summary'] ?: null,
+                )
+            );
+            $options['caption'] = \strlen($options['caption'])
+                ? $options['caption'] . ' ('.$classname.')'
+                : $classname;
             if ($rows['traverseValues']) {
-                $options['caption'] .= ' ('.$this->outputHtml->markupIdentifier(
-                    $rows['className'],
-                    'span',
-                    array(
-                        'title' => $rows['phpDoc']['summary'] ?: null,
-                    )
-                ).')';
-                $options['caption'] = \trim($options['caption']);
                 $rows = $rows['traverseValues'];
             } else {
                 $rows = \array_map(

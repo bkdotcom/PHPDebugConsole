@@ -83,6 +83,7 @@
 .debug .m_warn, .debug :not(.expanded) > .level-warn { background-color: #fefbe5; color: #8a6d3b; }
 .debug .m_error.error-fatal:before { display: block; margin-left: 10px; margin-bottom: 5px; content: "Fatal error"; font-size: 1.2em; font-weight: bold; }
 .debug .debug-log .error-fatal { padding: 10px; border-left: solid 2px #d8000c; }
+.debug .debug-log .error-fatal .no-quotes { display: none; }
 .debug table { border-collapse: collapse; }
 .debug table caption { font-weight: bold; font-style: italic; padding-bottom: 0; padding-top: 2px; text-align: left; }
 .debug table thead th { text-align: center; }
@@ -218,6 +219,7 @@ color: #818a91
 .debug .debug-body > .expand-all { margin-bottom: .5em; }
 .debug .debug-body i.fa, .debug .debug-body .m_assert i { margin-right: .33em; }
 .debug .debug-body .m_assert > i { display: inline-block; margin-bottom: -0.2em; line-height: .6em; vertical-align: text-bottom; }
+.debug .debug-body .file-link.lpad { margin-left: .33em; }
 .debug .debug-body .file-link i { margin-right: 0; vertical-align: baseline; }
 .debug .error-fatal:before { padding-left: 1.25em; }
 .debug .error-fatal i.fa-times-circle { position: absolute; top: .7em; }

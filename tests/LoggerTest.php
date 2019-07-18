@@ -10,8 +10,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->emergency('Emergency broadcast system');
         $meta = array(
+            'detectFiles' => true,
             'file' => __FILE__,
-            'line' => __LINE__ - 3,
+            'line' => __LINE__ - 4,
             'psr3level' => 'emergency',
         );
         $this->assertSame(array(
@@ -25,8 +26,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->critical('Critical test');
         $metaExpect = array(
+            'detectFiles' => true,
             'file' => __FILE__,
-            'line' => __LINE__ - 3,
+            'line' => __LINE__ - 4,
             'psr3level' => 'critical',
         );
         $this->assertSame(array(
@@ -41,8 +43,9 @@ class LoggerTest extends DebugTestFramework
             'foo' => 'bar',
         ));
         $metaSubset = array(
+            'detectFiles' => true,
             'file' => 'file',
-            'line' => __LINE__ - 6, // line of Exception
+            'line' => __LINE__ - 7, // line of Exception
         );
         $metaActual = $this->debug->getData('log/__end__/meta');
         $this->assertSame('error', $this->debug->getData('log/__end__')['method']);
@@ -65,8 +68,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->error('Error test');
         $meta = array(
+            'detectFiles' => true,
             'file' => __FILE__,
-            'line' => __LINE__ - 3,
+            'line' => __LINE__ - 4,
             'psr3level' => 'error',
         );
         $this->assertSame(array(
@@ -80,8 +84,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->warning('You\'ve been warned');
         $meta = array(
+            'detectFiles' => true,
             'file' => __FILE__,
-            'line' => __LINE__ - 3,
+            'line' => __LINE__ - 4,
             'psr3level' => 'warning',
         );
         $this->assertSame(array(
@@ -95,8 +100,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->notice('Final Notice');
         $meta = array(
+            'detectFiles' => true,
             'file' => __FILE__,
-            'line' => __LINE__ - 3,
+            'line' => __LINE__ - 4,
             'psr3level' => 'notice',
         );
         $this->assertSame(array(

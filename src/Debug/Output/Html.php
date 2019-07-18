@@ -493,11 +493,14 @@ class Html extends Base
             'class' => 'alert-'.$meta['level'].' '.$this->logEntryAttribs['class'],
             'role' => 'alert',
         ));
-        $html = $this->dump($logEntry['args'][0], array(
-            'addQuotes' => false,
-            'sanitize' => $meta['sanitizeFirst'],
-            'visualWhiteSpace' => false,
-        ));
+        $html = $this->dump(
+            $logEntry['args'][0],
+            array(
+                'sanitize' => $meta['sanitizeFirst'],
+                'visualWhiteSpace' => false,
+            ),
+            false // don't wrap in span
+        );
         if ($meta['dismissible']) {
             $attribs['class'] .= ' alert-dismissible';
             $html = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
@@ -522,11 +525,15 @@ class Html extends Base
         $meta = \array_merge(array(
             'errorCat' => null,  //  should only be applicable for error & warn methods
         ), $logEntry['meta']);
-        $attribs = \array_merge($this->logEntryAttribs, array(
-            'title' => isset($meta['file']) && $logEntry->getChannel() !== 'phpError'
-                ? $meta['file'].': line '.$meta['line']
-                : null,
-        ));
+        $attribs = $this->logEntryAttribs;
+        if (isset($meta['file']) && $logEntry->getChannel() !== 'phpError') {
+            // PHP errors will have file & line as one of the arguments
+            //    so no need to store file & line as data args
+            $attribs = \array_merge(array(
+                'data-file' => $meta['file'],
+                'data-line' => $meta['line'],
+            ), $attribs);
+        }
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if ($meta['errorCat']) {
                 $attribs['class'] .= ' error-'.$meta['errorCat'];

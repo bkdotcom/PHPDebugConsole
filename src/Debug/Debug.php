@@ -546,7 +546,10 @@ class Debug
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args()
+            \func_get_args(),
+            array(
+                'detectFiles' => true,
+            )
         );
         // file & line meta may already be set (ie coming via errorHandler)
         // file & line may also be defined as null
@@ -1102,6 +1105,7 @@ class Debug
             \func_get_args(),
             array(
                 'columns' => array('file','line','function'),
+                'detectFiles' => true,
             ),
             array(
                 'caption' => 'trace',
@@ -1138,7 +1142,10 @@ class Debug
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args()
+            \func_get_args(),
+            array(
+                'detectFiles' => true,
+            )
         );
         // file & line meta may already be set (ie coming via errorHandler)
         // file & line may also be defined as null

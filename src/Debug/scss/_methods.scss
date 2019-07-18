@@ -51,4 +51,7 @@
 .debug-log .error-fatal {
 	padding: 10px;
 	border-left: solid 2px $error-fg;
+	.no-quotes {
+		display: none;
+	}
 }

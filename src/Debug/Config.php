@@ -72,9 +72,9 @@ class Config
                 return $val;
             }
         }
-        if (isset($this->values['services'][$classname])) {
-            // getting value of uninitialized obj
-            // inititalize obj and retry
+        $obj = $this->debug->{$classname};
+        if ($obj) {
+            // getting value of previously uninitialized obj
             $pathRel = \implode('/', $path);
             return $this->debug->{$classname}->getCfg($pathRel, $default);
         }

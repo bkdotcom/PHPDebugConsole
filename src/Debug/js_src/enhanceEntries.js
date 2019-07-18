@@ -150,71 +150,19 @@ function buildFileLink(file, line) {
  * Create text editor links for error, warn, & trace
  */
 function createFileLinks($entry, $strings, remove) {
-	var dataDetectFiles = $entry.data("detectFiles"),
+	var detectFiles = $entry.data("detectFiles") === true,
 		dataFoundFiles = $entry.data("foundFiles") || [],
 		isUpdate = false;
 	if (!config.linkFiles && !remove) {
 		return;
 	}
-	if (dataDetectFiles === false) {
+	if (detectFiles === false) {
 		return;
 	}
-	if ($entry.is(".m_error, .m_warn") || dataDetectFiles) {
-		$strings.each(function(){
-			var $replace,
-				$string = $(this),
-				attr = $string[0].attributes,
-				text = $.trim($string.text()),
-				matches = [];
-			if ($string.closest(".m_trace").length) {
-				createFileLinks($string.closest(".m_trace"));
-				return false;
-			}
-			if ($string.data("file")) {
-				// filepath specified in data attr
-				matches = [null, $string.data("file"), 1];
-			} else if (dataFoundFiles.indexOf(text) === 0 || $string.is(".file")) {
-				matches = [null, text, 1];
-			} else {
-				matches = text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/);
-			}
-			if (matches) {
-				$replace = remove
-					? $("<span>", {
-							html: text,
-						})
-					: $('<a>', {
-							html: text + ' <i class="fa fa-external-link"></i>',
-							href: buildFileLink(matches[1], matches[2]),
-							title: "Open in editor"
-						});
-				if ($string.is("td")) {
-					$string.html(remove
-						? text
-						: $replace
-					);
-				} else {
-					/*
-						attr is not a plain object, but an array of attribute nodes
-    					which contain both the name and value
-					*/
-					$.each(attr, function(){
-						var name = this.name;
-						if (["html","href","title"].indexOf(name) > -1) {
-							return;	// continue;
-						}
-						$replace.attr(name, this.value);
-					});
-					$string.replaceWith($replace);
-				}
-				if (!remove) {
-					$replace.addClass("file-link");
-				}
-			}
-		});
-		// don't remove data... link template may change
-		// $entry.removeData("detectFiles foundFiles");
-	} else if ($entry.is(".m_trace")) {
+	if (!$strings) {
+		$strings = [];
+	}
+	if ($entry.is(".m_trace")) {
 		isUpdate = $entry.find(".file-link").length > 0;
 		if (!isUpdate) {
 			$entry.find("table thead tr > *:last-child").after("<th></th>");
@@ -241,6 +189,76 @@ function createFileLinks($entry, $strings, remove) {
 				}));
 			}
 		});
+		return;
+	}
+	$.each($strings, function(){
+		// console.log('string', $(this).text());
+		var $replace,
+			$string = $(this),
+			attr = $string[0].attributes,
+			text = $.trim($string.text()),
+			matches = [];
+		if ($string.closest(".m_trace").length) {
+			createFileLinks($string.closest(".m_trace"));
+			return false;
+		}
+		if ($string.data("file")) {
+			// filepath specified in data attr
+			matches = [null, $string.data("file"), $string.data("line") || 1];
+		} else if (dataFoundFiles.indexOf(text) === 0 || $string.is(".file")) {
+			matches = [null, text, 1];
+		} else {
+			matches = text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || [];
+		}
+		if (matches.length) {
+			$replace = remove
+				? $("<span>", {
+						html: text,
+					})
+				: $('<a>', {
+						html: text + ' <i class="fa fa-external-link"></i>',
+						href: buildFileLink(matches[1], matches[2]),
+						title: "Open in editor"
+					});
+			if ($string.is("td")) {
+				$string.html(remove
+					? text
+					: $replace
+				);
+			} else {
+				/*
+					attr is not a plain object, but an array of attribute nodes
+					which contain both the name and value
+				*/
+				$.each(attr, function(){
+					var name = this.name;
+					if (["html","href","title"].indexOf(name) > -1) {
+						return;	// continue;
+					}
+					$replace.attr(name, this.value);
+				});
+				$string.replaceWith($replace);
+			}
+			if (!remove) {
+				$replace.addClass("file-link");
+			}
+		}
+	});
+	// don't remove data... link template may change
+	// $entry.removeData("detectFiles foundFiles");
+	if ($entry.is("[data-file]")) {
+		/*
+			Log entry link
+		*/
+		$entry.find("> .file-link").remove();
+		if (!remove) {
+			$entry.append($('<a>', {
+				html: '<i class="fa fa-external-link"></i>',
+				href: buildFileLink($entry.data("file"), $entry.data("line")),
+				title: "Open in editor",
+				class: "file-link lpad"
+			})[0].outerHTML);
+		}
 	}
 }
 
@@ -312,6 +330,12 @@ export function enhanceEntry($entry) {
 		addIcons($entry);
 	} else {
 		// regular log-type entry
+		if ($entry.data('file')) {
+			if (!$entry.attr("title")) {
+				$entry.attr("title", $entry.data("file") + ": line " + $entry.data("line"));
+			}
+			createFileLinks($entry);
+		}
 		$entry.children().each(function() {
 			enhanceValue($entry, this);
 		});
@@ -345,35 +369,6 @@ function enhanceGroup($group) {
 		$toggle.debugEnhance("collapse", true);
 	}
 }
-
-/*
-function enhanceLongStrings($node) {
-	var $entries = $node.is(".group-body")
-		? $node.children()	// .not(".m_group")
-		: $node;
-	// console.log('enhanceLongStrings', $entries);
-	$entries.each(function(){
-		var $entry = $(this),
-			$strings = $entry.find(".t_string");
-		if (!$entry.is(":visible")) {
-			// console.warn('not visible!!', this);
-			return;
-		}
-		if ($entry.is(".m_group")) {
-			enhanceLongStrings($entry.find("> .group-body"));
-			return;
-		}
-		if ($entry.is(".enhanced-strings")) {
-			return;
-		}
-		$entry.addClass("enhanced-strings");
-		$strings.each(function() {
-			enhanceLongString($(this));
-		});
-		createFileLinks($entry, $strings)
-	});
-}
-*/
 
 function enhanceLongString($node) {
 	var $container,
@@ -425,7 +420,7 @@ function enhanceValue($entry, node) {
  */
 function updateFileLinks($group) {
 	var remove = !config.linkFiles || config.linkFilesTemplate.length == 0;
-	$group.find("[data-detect-files], .m_error, .m_warn, .m_trace").each(function(){
+	$group.find("li[data-detect-files]").each(function(){
 		createFileLinks($(this), $(this).find(".t_string"), remove);
 	});
 }

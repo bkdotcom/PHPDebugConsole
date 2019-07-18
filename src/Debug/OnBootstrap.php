@@ -158,6 +158,7 @@ class OnBootstrap
             $args = array(\implode("\n", $msgLines));
             $args = \array_merge($args, $styles);
             $args[] = $this->debug->meta(array(
+                'detectFiles' => false,
                 'file' => null,
                 'line' => null,
             ));
@@ -179,8 +180,9 @@ class OnBootstrap
             $this->debug->log('$_COOKIE', $cookieVals);
         }
         // don't expect a request body for these methods
+        $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
         $noBody = !isset($_SERVER['REQUEST_METHOD'])
-            || \in_array($_SERVER['REQUEST_METHOD'], array('CONNECT','GET','HEAD','OPTIONS','TRACE'));
+            || \in_array($_SERVER['REQUEST_METHOD'], $noBodyMethods);
         if ($this->debug->getCfg('logEnvInfo.post') && !$noBody) {
             if ($_POST) {
                 $this->debug->log('$_POST', $_POST);

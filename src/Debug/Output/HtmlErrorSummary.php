@@ -79,7 +79,7 @@ class HtmlErrorSummary
                 )
             );
             $html .= '<li>'.$lastError['message'].'</li>';
-            $html .= '<li class="m_trace">'.$table.'</li>';
+            $html .= '<li class="m_trace" data-detect-files="true">'.$table.'</li>';
             if (!$isHtml) {
                 $html = \str_replace($lastError['message'], \htmlspecialchars($lastError['message']), $html);
             }

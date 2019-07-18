@@ -93,6 +93,7 @@ class DebugTest extends DebugTestFramework
                 array(
                     'backtrace' => $lastError['backtrace'],
                     'channel' => 'phpError',
+                    'detectFiles' => true,
                     'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],
                     'errorType' => version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
@@ -101,7 +102,7 @@ class DebugTest extends DebugTestFramework
                     'sanitize' => true,
                 ),
             ),
-            'html' => '<li class="error-'.$errCat.' m_warn" data-channel="phpError">'
+            'html' => '<li class="error-'.$errCat.' m_warn" data-channel="phpError" data-detect-files="true">'
                 .'<span class="no-quotes t_string">'.$args[0].' </span>'
                 .'<span class="t_string">'.$args[1].'</span>, '
                 .'<span class="t_string">'.$errMsg.'</span>'

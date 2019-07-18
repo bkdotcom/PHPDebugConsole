@@ -60,8 +60,8 @@ class ChannelTest extends DebugTestFramework
                     array('group', array('main: sum 0 / group 1 / group 2'), array()),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
                     array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('error', array('main: error'), array('file' => '', 'line' => '')),
-                    array('error', array('foo: error'), array('channel'=>'foo', 'file' => '', 'line' => '')),
+                    array('error', array('main: error'), array('detectFiles'=>true, 'file' => '', 'line' => '')),
+                    array('error', array('foo: error'), array('channel'=>'foo', 'detectFiles'=>true, 'file' => '', 'line' => '')),
                     array('groupEnd', array(), array()),
                     array('groupEnd', array(), array('channel' => 'foo')),
                 ),
@@ -133,7 +133,7 @@ class ChannelTest extends DebugTestFramework
                     array('group', array('main: sum 0 / group 1 / group 2'), array()),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
                     // array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('error', array('main: error'), array('file' => '', 'line' => '')),
+                    array('error', array('main: error'), array('detectFiles' => true, 'file' => '', 'line' => '')),
                     // array('error', array('foo: error'), array('channel' => 'foo', 'file' => '', 'line' => '')),
                     array('groupEnd', array(), array()),
                     // array('groupEnd', array(), array('channel' => 'foo')),
@@ -159,7 +159,7 @@ class ChannelTest extends DebugTestFramework
         <div class="debug" data-channel-root="general" data-channels="{&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
             <header class="debug-menu-bar">PHPDebugConsole</header>
             <div class="debug-body">
-                <div class="alert-danger m_alert" data-channel="foo" role="alert"><span class="no-quotes t_string">foo: alert</span></div>
+                <div class="alert-danger m_alert" data-channel="foo" role="alert">foo: alert</div>
                 <ul class="debug-log-summary group-body">
                     <li class="m_group" data-channel="foo">
                         <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
@@ -171,7 +171,7 @@ class ChannelTest extends DebugTestFramework
                         <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 0 / group 1</span></div>
                         <ul class="group-body">
                             <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
-                            <li class="m_error" data-channel="foo" title="%s: line %d"><span class="no-quotes t_string">foo: error</span></li>
+                            <li class="m_error" data-channel="foo" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">foo: error</span></li>
                         </ul>
                     </li>
                 </ul>
@@ -191,8 +191,8 @@ EOD;
         <div class="debug" data-channel-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}},&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
             <header class="debug-menu-bar">PHPDebugConsole</header>
             <div class="debug-body">
-                <div class="alert-danger m_alert" role="alert"><span class="no-quotes t_string">main: alert</span></div>
-                <div class="alert-danger m_alert" data-channel="foo" role="alert"><span class="no-quotes t_string">foo: alert</span></div>
+                <div class="alert-danger m_alert" role="alert">main: alert</div>
+                <div class="alert-danger m_alert" data-channel="foo" role="alert">foo: alert</div>
                 <ul class="debug-log-summary group-body">
                     <li class="m_group" data-channel="foo">
                         <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
@@ -216,8 +216,8 @@ EOD;
                                 <ul class="group-body">
                                     <li class="m_log"><span class="no-quotes t_string">main: sum 0 / group 1 / group 2 / log</span></li>
                                     <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
-                                    <li class="m_error" title="%s: line %d"><span class="no-quotes t_string">main: error</span></li>
-                                    <li class="m_error" data-channel="foo" title="%s: line %d"><span class="no-quotes t_string">foo: error</span></li>
+                                    <li class="m_error" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">main: error</span></li>
+                                    <li class="m_error" data-channel="foo" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">foo: error</span></li>
                                 </ul>
                             </li>
                         </ul>

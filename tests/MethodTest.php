@@ -1,5 +1,6 @@
 <?php
 
+use bdk\Debug;
 use bdk\Debug\LogEntry;
 
 /**
@@ -90,7 +91,7 @@ class MethodTest extends DebugTestFramework
         /*
             Now test it statically
         */
-        \bdk\Debug::_myCustom('called statically');
+        Debug::_myCustom('called statically');
         $this->testMethod(
             null,
             array('called statically'),
@@ -149,7 +150,8 @@ class MethodTest extends DebugTestFramework
      */
     public function testAlert()
     {
-        $message = 'Ballistic missle threat inbound to Hawaii.  Seek immediate shelter.  This is not a drill.';
+        $message = 'Ballistic missle threat inbound to Hawaii.  <b>Seek immediate shelter</b>.  This is not a drill.';
+        $messageEscaped = htmlspecialchars($message);
         $this->testMethod(
             'alert',
             array($message),
@@ -170,10 +172,10 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'html' => '<div class="alert-danger m_alert" role="alert"><span class="no-quotes t_string">'.$message.'</span></div>',
+                'html' => '<div class="alert-danger m_alert" role="alert">'.$messageEscaped.'</div>',
                 'text' => '》[Alert ⦻ danger] '.$message.'《',
-                'script' => str_replace('%c', '%%c', 'console.log("%c'.$message.'","padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
-                'firephp' => 'X-Wf-1-1-1-1: 108|[{"Type":"LOG"},"'.$message.'"]|',
+                'script' => str_replace('%c', '%%c', 'console.log('.json_encode('%c'.$message).',"padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},'.json_encode($message).']|',
             )
         );
 
@@ -263,7 +265,7 @@ class MethodTest extends DebugTestFramework
      *
      * @return void
      */
-    public function testClear()
+    public function testClearDefault()
     {
         $this->clearPrep();
         $this->testMethod(
@@ -280,7 +282,7 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared log (sans errors)'),
                     array(
-                        'bitmask' => \bdk\Debug::CLEAR_LOG,
+                        'bitmask' => Debug::CLEAR_LOG,
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
@@ -298,17 +300,25 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-quotes t_string">Cleared log (sans errors)</span></li>',
+                'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared log (sans errors)</span></li>',
                 'text' => '⌦ Cleared log (sans errors)',
                 'script' => 'console.log("Cleared log (sans errors)");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared log (sans errors)"]|',
             )
         );
+    }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testClearLogSilent()
+    {
         $this->clearPrep();
         $this->testMethod(
             'clear',
-            array(\bdk\Debug::CLEAR_LOG | \bdk\Debug::CLEAR_SILENT),
+            array(Debug::CLEAR_LOG | Debug::CLEAR_SILENT),
             array(
                 'custom' => function () {
                     $this->assertCount(1, $this->debug->getData('alerts'));
@@ -320,11 +330,19 @@ class MethodTest extends DebugTestFramework
                 },
             )
         );
+    }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testClearAlerts()
+    {
         $this->clearPrep();
         $this->testMethod(
             'clear',
-            array(\bdk\Debug::CLEAR_ALERTS),
+            array(Debug::CLEAR_ALERTS),
             array(
                 'custom' => function () {
                     $this->assertCount(0, $this->debug->getData('alerts'));
@@ -336,7 +354,7 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared alerts'),
                     array(
-                        'bitmask' => \bdk\Debug::CLEAR_ALERTS,
+                        'bitmask' => Debug::CLEAR_ALERTS,
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => true,
@@ -354,17 +372,25 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-quotes t_string">Cleared alerts</span></li>',
+                'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared alerts</span></li>',
                 'text' => '⌦ Cleared alerts',
                 'script' => 'console.log("Cleared alerts");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared alerts"]|',
             )
         );
+    }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testClearSummary()
+    {
         $this->clearPrep();
         $this->testMethod(
             'clear',
-            array(\bdk\Debug::CLEAR_SUMMARY),
+            array(Debug::CLEAR_SUMMARY),
             array(
                 'custom' => function () {
                     $this->assertCount(1, $this->debug->getData('alerts'));
@@ -386,7 +412,7 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared summary (sans errors)'),
                     array(
-                        'bitmask' => \bdk\Debug::CLEAR_SUMMARY,
+                        'bitmask' => Debug::CLEAR_SUMMARY,
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
@@ -404,17 +430,25 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-quotes t_string">Cleared summary (sans errors)</span></li>',
+                'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared summary (sans errors)</span></li>',
                 'text' => '⌦ Cleared summary (sans errors)',
                 'script' => 'console.log("Cleared summary (sans errors)");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (sans errors)"]|',
             )
         );
+    }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testClearErrors()
+    {
         $this->clearPrep();
         $this->testMethod(
             'clear',
-            array(\bdk\Debug::CLEAR_LOG_ERRORS),
+            array(Debug::CLEAR_LOG_ERRORS),
             array(
                 'custom' => function () {
                     $this->assertCount(1, $this->debug->getData('alerts'));
@@ -440,7 +474,7 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared errors'),
                     array(
-                        'bitmask' => \bdk\Debug::CLEAR_LOG_ERRORS,
+                        'bitmask' => Debug::CLEAR_LOG_ERRORS,
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
@@ -458,17 +492,25 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-quotes t_string">Cleared errors</span></li>',
+                'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared errors</span></li>',
                 'text' => '⌦ Cleared errors',
                 'script' => 'console.log("Cleared errors");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared errors"]|',
             )
         );
+    }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testClearAll()
+    {
         $this->clearPrep();
         $this->testMethod(
             'clear',
-            array(\bdk\Debug::CLEAR_ALL),
+            array(Debug::CLEAR_ALL),
             array(
                 'custom' => function () {
                     $this->assertCount(0, $this->debug->getData('alerts'));
@@ -492,7 +534,7 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared everything'),
                     array(
-                        'bitmask' => \bdk\Debug::CLEAR_ALL,
+                        'bitmask' => Debug::CLEAR_ALL,
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => true,
@@ -510,17 +552,25 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-quotes t_string">Cleared everything</span></li>',
+                'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared everything</span></li>',
                 'text' => '⌦ Cleared everything',
                 'script' => 'console.log("Cleared everything");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared everything"]|',
             )
         );
+    }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testClearSummaryInclErrors()
+    {
         $this->clearPrep();
         $this->testMethod(
             'clear',
-            array(\bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_SUMMARY_ERRORS),
+            array(Debug::CLEAR_SUMMARY | Debug::CLEAR_SUMMARY_ERRORS),
             array(
                 'custom' => function () {
                     $this->assertCount(1, $this->debug->getData('alerts'));
@@ -544,7 +594,7 @@ class MethodTest extends DebugTestFramework
                     'clear',
                     array('Cleared summary (incl errors)'),
                     array(
-                        'bitmask' => \bdk\Debug::CLEAR_SUMMARY | \bdk\Debug::CLEAR_SUMMARY_ERRORS,
+                        'bitmask' => Debug::CLEAR_SUMMARY | Debug::CLEAR_SUMMARY_ERRORS,
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,
@@ -562,15 +612,23 @@ class MethodTest extends DebugTestFramework
                     $this->file.': '.$this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-quotes t_string">Cleared summary (incl errors)</span></li>',
+                'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared summary (incl errors)</span></li>',
                 'text' => '⌦ Cleared summary (incl errors)',
                 'script' => 'console.log("Cleared summary (incl errors)");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (incl errors)"]|',
             )
         );
+    }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testClearCollectFalse()
+    {
         /*
-            assert cleared & logged event if collect is false
+            assert cleared & logged even if collect is false
         */
         $this->clearPrep();
         $this->debug->setCfg('collect', false);
@@ -585,20 +643,36 @@ class MethodTest extends DebugTestFramework
             )
         );
         $this->debug->setCfg('collect', true);
+    }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testClearLogAndSummary()
+    {
         $this->testMethod(
             'clear',
-            array(\bdk\Debug::CLEAR_LOG | \bdk\Debug::CLEAR_SUMMARY),
+            array(Debug::CLEAR_LOG | Debug::CLEAR_SUMMARY),
             array(
                 'custom' => function ($logEntry) {
                     $this->assertSame('Cleared log (sans errors) and summary (sans errors)', $logEntry['args'][0]);
                 }
             )
         );
+    }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testClearAlertsLogSummary()
+    {
         $this->testMethod(
             'clear',
-            array(\bdk\Debug::CLEAR_ALERTS | \bdk\Debug::CLEAR_LOG | \bdk\Debug::CLEAR_SUMMARY),
+            array(Debug::CLEAR_ALERTS | Debug::CLEAR_LOG | Debug::CLEAR_SUMMARY),
             array(
                 'custom' => function ($logEntry) {
                     $this->assertSame('Cleared alerts, log (sans errors), and summary (sans errors)', $logEntry['args'][0]);
@@ -645,18 +719,18 @@ class MethodTest extends DebugTestFramework
                 $this->debug->count();              // 1,2 (3,6)
             }
             $this->debug->count('count test');      // 2,3,4 (1,4,7)
-            $this->debug->count('count_inc test', \bdk\Debug::COUNT_NO_OUT);  //  1,2,3, but not logged
+            $this->debug->count('count_inc test', Debug::COUNT_NO_OUT);  //  1,2,3, but not logged
             $lines[1] = __LINE__ + 1;
-            \bdk\Debug::_count();                   // 1,2,3 (2,5,8)
+            Debug::_count();                   // 1,2,3 (2,5,8)
         }
         $this->debug->log(
             'count_inc test',
             $this->debug->count(
                 'count_inc test',
-                \bdk\Debug::COUNT_NO_INC | \bdk\Debug::COUNT_NO_OUT // only return
+                Debug::COUNT_NO_INC | Debug::COUNT_NO_OUT // only return
             )
         );
-        $this->debug->count('count_inc test', \bdk\Debug::COUNT_NO_INC);  // (9) //  doesn't increment
+        $this->debug->count('count_inc test', Debug::COUNT_NO_INC);  // (9) //  doesn't increment
 
         $this->assertSame(array(
             array('count', array('count test',1), array()),
@@ -703,7 +777,7 @@ class MethodTest extends DebugTestFramework
                     __FILE__.': '.$lines[1],
                     '',
                 ),
-                'html' => '<li class="m_count" title="'.__FILE__.': line '.$lines[1].'"><span class="no-quotes t_string">count</span> = <span class="t_int">1</span></li>',
+                'html' => '<li class="m_count" data-file="'.__FILE__.'" data-line="'.$lines[1].'"><span class="no-quotes t_string">count</span> = <span class="t_int">1</span></li>',
                 'text' => '✚ count = 1',
                 'script' => 'console.log("count",1);',
                 'firephp' => 'X-Wf-1-1-1-4: %d|[{"Type":"LOG","File":"'.str_replace('/', '\\/', __FILE__).'","Line":'.$lines[1].',"Label":"count"},1]|',
@@ -715,7 +789,7 @@ class MethodTest extends DebugTestFramework
         */
         $this->testMethod(
             'count',
-            array(\bdk\Debug::COUNT_NO_OUT),
+            array(Debug::COUNT_NO_OUT),
             array(
                 'notLogged' => true,
                 'return' => 1,
@@ -790,7 +864,7 @@ class MethodTest extends DebugTestFramework
         );
         $this->testMethod(
             'countReset',
-            array('noExisty', \bdk\Debug::COUNT_NO_OUT),
+            array('noExisty', Debug::COUNT_NO_OUT),
             array(
                 'notLogged' => true,
             )
@@ -828,7 +902,7 @@ class MethodTest extends DebugTestFramework
                     __DIR__.'/DebugTestFramework.php: %d',
                     'error',
                 )),
-                'html' => '<li class="m_error" title="%s: line %d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                'html' => '<li class="m_error" data-detect-files="true" data-file="'.__DIR__.'/DebugTestFramework.php" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
@@ -1537,7 +1611,7 @@ EOD;
         );
         $this->testMethod(
             'log',
-            array_merge($args, array(\bdk\Debug::_meta('sanitize', false))),
+            array_merge($args, array(Debug::_meta('sanitize', false))),
             array(
                 'entry' => array(
                     'log',
@@ -2084,7 +2158,7 @@ EOD;
                     __DIR__.'/DebugTestFramework.php: %d',
                     'warn',
                 )),
-                'html' => '<li class="m_warn" title="'.__DIR__.'/DebugTestFramework.php: line %d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                'html' => '<li class="m_warn" data-detect-files="true" data-file="'.__DIR__.'/DebugTestFramework.php" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>

@@ -39,7 +39,6 @@ use SplObjectStorage;
  * @property MethodClear   $methodClear   lazy-loaded MethodClear instance
  * @property MethodProfile $methodProfile lazy-loaded MethodProfile instance
  * @property MethodTable   $methodTable   lazy-loaded MethodTable instance
- * @property Output        $output        lazy-loaded Output instance
  * @property Utf8          $utf8          lazy-loaded Utf8 instance
  * @property Utilities     $utilities     lazy-loaded Utilities instance
  */
@@ -302,8 +301,8 @@ class Debug
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }
-        if (\strpos($property, 'output') === 0) {
-            $classname = '\\bdk\\Debug\\Output\\'.\substr($property, 6);
+        if (\strpos($property, 'route') === 0) {
+            $classname = '\\bdk\\Debug\\Route\\'.\substr($property, 5);
             $val = new $classname($this);
             $val->setCfg($this->config->getValues($property));
             $this->{$property} = $val;
@@ -1180,7 +1179,7 @@ class Debug
         $isPlugin = false;
         if ($plugin instanceof AssetProviderInterface) {
             $isPlugin = true;
-            $this->rootInstance->outputHtml->addAssetProvider($plugin);
+            $this->rootInstance->routeHtml->addAssetProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
             $isPlugin = true;

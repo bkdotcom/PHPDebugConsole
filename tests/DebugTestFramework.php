@@ -154,7 +154,7 @@ class DebugTestFramework extends DOMTestCase
         }
         $refProperties = &$this->getSharedVar('reflectionProperties');
         if (!isset($refProperties['textDepth'])) {
-            $depthRef = new \ReflectionProperty($this->debug->outputText, 'depth');
+            $depthRef = new \ReflectionProperty($this->debug->routeText, 'depth');
             $depthRef->setAccessible(true);
             $refProperties['textDepth'] = $depthRef;
         }
@@ -163,7 +163,7 @@ class DebugTestFramework extends DOMTestCase
             $registeredPluginsRef->setAccessible(true);
             $refProperties['registeredPlugins'] = $registeredPluginsRef;
         }
-        $refProperties['textDepth']->setValue($this->debug->outputText, 0);
+        $refProperties['textDepth']->setValue($this->debug->routeText, 0);
         $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
         $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
     }
@@ -272,8 +272,8 @@ class DebugTestFramework extends DOMTestCase
                 }
                 continue;
             }
-            $prop = 'output'.\ucfirst($test);
-            $outputObj = $this->debug->{$prop};
+            $prop = 'route'.\ucfirst($test);
+            $routeObj = $this->debug->{$prop};
             if (in_array($test, array('chromeLogger','firephp'))) {
                 // remove data - sans the logEntry we're interested in
                 $dataBackup = array(
@@ -293,7 +293,7 @@ class DebugTestFramework extends DOMTestCase
                         'return' => '',
                     )
                 );
-                $outputObj->onOutput($event, 'debug.output', $this->debug->eventManager);
+                $routeObj->onOutput($event, 'debug.output', $this->debug->eventManager);
                 $this->debug->setData($dataBackup);
                 $headers = $event['headers'];
                 if ($test == 'chromeLogger') {
@@ -325,11 +325,11 @@ class DebugTestFramework extends DOMTestCase
             } else {
                 $refMethods = &$this->getSharedVar('reflectionMethods');
                 if (!isset($refMethods[$test])) {
-                    $refMethod = new \ReflectionMethod($outputObj, 'processLogEntryViaEvent');
+                    $refMethod = new \ReflectionMethod($routeObj, 'processLogEntryViaEvent');
                     $refMethod->setAccessible(true);
                     $refMethods[$test] = $refMethod;
                 }
-                $output = $refMethods[$test]->invoke($outputObj, $logEntry);
+                $output = $refMethods[$test]->invoke($routeObj, $logEntry);
             }
             if (\is_callable($outputExpect)) {
                 $outputExpect($output);

@@ -9,7 +9,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Output;
+namespace bdk\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
@@ -21,7 +21,7 @@ use bdk\PubSub\Event;
 /**
  * Base output plugin
  */
-abstract class Base implements OutputInterface
+abstract class Base implements RouteInterface
 {
 
     public $debug;
@@ -488,7 +488,7 @@ abstract class Base implements OutputInterface
             if ($val === Abstracter::UNDEFINED) {
                 unset($values[$k2]);
             } elseif (\is_array($val)) {
-                $values[$k2] = $this->debug->outputText->dump($val);
+                $values[$k2] = $this->debug->routeText->dump($val);
             }
         }
         if (\count($values) == 1 && $k2 == MethodTable::SCALAR) {

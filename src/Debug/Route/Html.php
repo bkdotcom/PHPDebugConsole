@@ -9,7 +9,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Output;
+namespace bdk\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
@@ -755,7 +755,7 @@ class Html extends Base
     protected function dumpConst(Abstraction $abs)
     {
         $this->argAttribs['title'] = $abs['value']
-            ? 'value: '.$this->debug->outputText->dump($abs['value'])
+            ? 'value: '.$this->debug->routeText->dump($abs['value'])
             : null;
         return $this->markupIdentifier($abs['name']);
     }

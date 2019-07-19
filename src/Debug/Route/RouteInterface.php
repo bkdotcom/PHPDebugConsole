@@ -9,15 +9,15 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Output;
+namespace bdk\Debug\Route;
 
 use bdk\Debug\LogEntry;
 use bdk\PubSub\SubscriberInterface;
 
 /**
- * Base output plugin
+ * Route Interface
  */
-interface OutputInterface extends SubscriberInterface
+interface RouteInterface extends SubscriberInterface
 {
 
     /**

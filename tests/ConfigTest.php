@@ -21,8 +21,8 @@ class ConfigTest extends DebugTestFramework
             'abstracter',
             'errorEmailer',
             'errorHandler',
-            'outputHtml',
-            'outputStream',
+            'routeHtml',
+            'routeStream',
         );
         $abstracterKeys = array(
             'cacheMethods',

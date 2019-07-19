@@ -12,12 +12,12 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Output;
+namespace bdk\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Output\OutputInterface;
+use bdk\Debug\Route\RouteInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\WampPublisher;
@@ -25,7 +25,7 @@ use bdk\WampPublisher;
 /**
  * PHPDebugConsole plugin for routing debug messages thru WAMP router
  */
-class Wamp implements OutputInterface
+class Wamp implements RouteInterface
 {
 
     public $debug;

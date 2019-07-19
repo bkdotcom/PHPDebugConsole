@@ -159,9 +159,7 @@ function createFileLinks($entry, $strings, remove) {
 	if (detectFiles === false) {
 		return;
 	}
-	if (!$strings) {
-		$strings = [];
-	}
+	// console.info("createFileLinks", detectFiles, $entry);
 	if ($entry.is(".m_trace")) {
 		isUpdate = $entry.find(".file-link").length > 0;
 		if (!isUpdate) {
@@ -190,6 +188,26 @@ function createFileLinks($entry, $strings, remove) {
 			}
 		});
 		return;
+	}
+	// don't remove data... link template may change
+	// $entry.removeData("detectFiles foundFiles");
+	if ($entry.is("[data-file]")) {
+		/*
+			Log entry link
+		*/
+		$entry.find("> .file-link").remove();
+		if (!remove) {
+			$entry.append($('<a>', {
+				html: '<i class="fa fa-external-link"></i>',
+				href: buildFileLink($entry.data("file"), $entry.data("line")),
+				title: "Open in editor",
+				class: "file-link lpad"
+			})[0].outerHTML);
+		}
+		return;
+	}
+	if (!$strings) {
+		$strings = [];
 	}
 	$.each($strings, function(){
 		// console.log('string', $(this).text());
@@ -244,22 +262,6 @@ function createFileLinks($entry, $strings, remove) {
 			}
 		}
 	});
-	// don't remove data... link template may change
-	// $entry.removeData("detectFiles foundFiles");
-	if ($entry.is("[data-file]")) {
-		/*
-			Log entry link
-		*/
-		$entry.find("> .file-link").remove();
-		if (!remove) {
-			$entry.append($('<a>', {
-				html: '<i class="fa fa-external-link"></i>',
-				href: buildFileLink($entry.data("file"), $entry.data("line")),
-				title: "Open in editor",
-				class: "file-link lpad"
-			})[0].outerHTML);
-		}
-	}
 }
 
 /**

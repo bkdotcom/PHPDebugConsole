@@ -35,7 +35,7 @@ class Config
         $this->values = &$cfg;
         $this->debug = $debug;
         $this->valuesPending['errorEmailer']['emailBacktraceDumper'] = function ($backtrace) use ($debug) {
-            return $debug->outputText->dump($backtrace);
+            return $debug->routeText->dump($backtrace);
         };
     }
 
@@ -224,7 +224,7 @@ class Config
                 'emailTraceMask',
             ),
             'errorHandler' => \array_keys($this->debug->errorHandler->getCfg()),
-            'outputHtml' => array(
+            'routeHtml' => array(
                 'addBR',
                 'css',
                 'drawer',
@@ -235,7 +235,7 @@ class Config
                 'outputScript',
                 'sidebar',
             ),
-            'outputStream' => array(
+            'routeStream' => array(
                 'ansi',
                 'stream',
             )

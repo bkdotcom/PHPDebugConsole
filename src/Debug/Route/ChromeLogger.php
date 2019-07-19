@@ -11,7 +11,7 @@
  * @see https://craig.is/writing/chrome-logger/techspecs
  */
 
-namespace bdk\Debug\Output;
+namespace bdk\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;

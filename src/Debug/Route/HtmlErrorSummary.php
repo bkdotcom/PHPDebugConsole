@@ -9,10 +9,10 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Output;
+namespace bdk\Debug\Route;
 
 use bdk\ErrorHandler;
-use bdk\Debug\Output\Html as OutputHtml;
+use bdk\Debug\Route\Html as RouteHtml;
 
 /**
  * Output a summary of errors
@@ -20,19 +20,19 @@ use bdk\Debug\Output\Html as OutputHtml;
 class HtmlErrorSummary
 {
 
-    protected $outputHtml;
+    protected $routeHtml;
     protected $errorHandler;
     protected $stats = array();
 
     /**
      * Constructor
      *
-     * @param OutputHtml   $outputHtml   OutputHtml instance
+     * @param RouteHtml    $routeHtml    Route\Html instance
      * @param ErrorHandler $errorHandler ErrorHandler instance
      */
-    public function __construct(OutputHtml $outputHtml, ErrorHandler $errorHandler)
+    public function __construct(RouteHtml $routeHtml, ErrorHandler $errorHandler)
     {
-        $this->outputHtml = $outputHtml;
+        $this->routeHtml = $routeHtml;
         $this->errorHandler = $errorHandler;
     }
 
@@ -70,7 +70,7 @@ class HtmlErrorSummary
         $html .= '<ul class="list-unstyled">';
         if (\count($backtrace) > 1) {
             // more than one trace frame
-            $table = $this->outputHtml->table->build(
+            $table = $this->routeHtml->table->build(
                 $backtrace,
                 array(
                     'attribs' => 'trace table-bordered',
@@ -86,7 +86,7 @@ class HtmlErrorSummary
         } else {
             $keysKeep = array('typeStr','message','file','line');
             $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
-            $html .= '<li>'.$this->outputHtml->dump($lastError).'</li>';
+            $html .= '<li>'.$this->routeHtml->dump($lastError).'</li>';
             if ($isHtml) {
                 $html = \str_replace(\htmlspecialchars($lastError['message']), $lastError['message'], $html);
             }

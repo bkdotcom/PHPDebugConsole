@@ -17,17 +17,17 @@ class MethodTest extends DebugTestFramework
         $closure = function ($event) {
             if ($event['method'] == 'trace') {
                 $outputAs = get_class($event['outputAs']);
-                if ($outputAs == 'bdk\Debug\Output\ChromeLogger') {
+                if ($outputAs == 'bdk\Debug\Route\ChromeLogger') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($outputAs == 'bdk\Debug\Output\Firephp') {
+                } elseif ($outputAs == 'bdk\Debug\Route\Firephp') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($outputAs == 'bdk\Debug\Output\Html') {
+                } elseif ($outputAs == 'bdk\Debug\Route\Html') {
                     $event['return'] = '<li class="m_trace">this was a trace</li>';
-                } elseif ($outputAs == 'bdk\Debug\Output\Script') {
+                } elseif ($outputAs == 'bdk\Debug\Route\Script') {
                     $event['return'] = 'console.log("this was a trace");';
-                } elseif ($outputAs == 'bdk\Debug\Output\Text') {
+                } elseif ($outputAs == 'bdk\Debug\Route\Text') {
                     $event['return'] = 'this was a trace';
                 }
             }
@@ -56,7 +56,7 @@ class MethodTest extends DebugTestFramework
     public function testCustom()
     {
         $closure = function (LogEntry $logEntry) {
-            if ($logEntry['method'] == 'myCustom' && $logEntry['outputAs'] instanceof \bdk\Debug\Output\Html) {
+            if ($logEntry['method'] == 'myCustom' && $logEntry['outputAs'] instanceof \bdk\Debug\Route\Html) {
                 $lis = array();
                 foreach ($logEntry['args'] as $arg) {
                     $lis[] = '<li>'.htmlspecialchars($arg).'</li>';
@@ -2105,7 +2105,7 @@ EOD;
                 },
                 'text' => function ($logEntry) use ($values) {
                     $trace = $this->debug->getData('log/0/args/0');
-                    $expect = 'trace = '.$this->debug->outputText->dump($trace);
+                    $expect = 'trace = '.$this->debug->routeText->dump($trace);
                     $this->assertNotEmpty($trace);
                     $this->assertSame($expect, trim($logEntry));
                 },

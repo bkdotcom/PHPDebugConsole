@@ -15,7 +15,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\Output\OutputInterface;
+use bdk\Debug\Route\RouteInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -323,7 +323,7 @@ class Internal implements SubscriberInterface
             $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
         }
         if (isset($cfg['stream'])) {
-            $this->debug->addPlugin($this->debug->outputStream);
+            $this->debug->addPlugin($this->debug->routeStream);
         }
         if (!static::$profilingEnabled) {
             $cfg = $this->debug->getCfg('debug/*');
@@ -598,7 +598,7 @@ class Internal implements SubscriberInterface
         $this->debug->info('Built In '.$vals['runtime'].' sec');
         $this->debug->info(
             'Peak Memory Usage'
-                .(\get_class($this->debug->getCfg('outputAs')) == 'bdk\\Debug\\Output\\Html'
+                .(\get_class($this->debug->getCfg('outputAs')) == 'bdk\\Debug\\Route\\Html'
                     ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
                     : '')
                 .': '
@@ -693,15 +693,15 @@ class Internal implements SubscriberInterface
             $this->debug->removePlugin($outputAsPrev);
         }
         if (\is_string($outputAs)) {
-            $prop = 'output'.\ucfirst($outputAs);
+            $prop = 'route'.\ucfirst($outputAs);
             $outputAs = $this->debug->{$prop};
         }
-        if ($outputAs instanceof OutputInterface) {
+        if ($outputAs instanceof RouteInterface) {
             $this->debug->addPlugin($outputAs);
             $classname = \get_class($outputAs);
-            $prefix = __NAMESPACE__.'\\Output\\';
+            $prefix = __NAMESPACE__.'\\Route\\';
             if (\strpos($classname, $prefix) === 0) {
-                $prop = 'output'.\substr($classname, \strlen($prefix));
+                $prop = 'route'.\substr($classname, \strlen($prefix));
                 $this->debug->{$prop} = $outputAs;
             }
         } else {

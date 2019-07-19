@@ -150,11 +150,10 @@ class Yii11 implements SubscriberInterface
     public function onDebugOutputLogEntry(LogEntry $logEntry)
     {
         $debug = $logEntry->getSubject();
-        $outputAs = \get_class($logEntry['outputAs']);
         if ($logEntry['method'] == 'log' && $logEntry['args'][0] == 'files') {
             // let's embolden the primary files
             $root = \realpath(YII_PATH.'/..');
-            $html = $debug->outputHtml->processLogEntry($logEntry);
+            $html = $debug->routeHtml->processLogEntry($logEntry);
             $html = \preg_replace_callback('#(<span class="file t_string">)(.*?)(</span>)#', function ($matches) use ($root) {
                 $filepath = $matches[2];
                 $filepathRel = \str_replace($root, '.', $filepath);
@@ -172,7 +171,8 @@ class Yii11 implements SubscriberInterface
                     $filepathRel
                 );
             }, $html);
-            if (\in_array($outputAs, array('bdk\Debug\Output\Wamp', 'bdk\Debug\Output\Html'))) {
+            $outputAs = \get_class($logEntry['outputAs']);
+            if (\in_array($outputAs, array('bdk\Debug\Route\Wamp', 'bdk\Debug\Route\Html'))) {
                 $logEntry->setMeta('format', 'html');
                 $logEntry['return'] = $html;
             }

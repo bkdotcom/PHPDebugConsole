@@ -12,10 +12,7 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
 
 /**
@@ -26,13 +23,11 @@ abstract class Base implements RouteInterface
 
     public $debug;
     protected $cfg = array();
-    protected $data = array();
     protected $channelName = null;    // should be set by onOutput
     protected $channelNameRoot = null;
     protected $channelRegex;
+    protected $data = array();
     protected $isRootInstance = false;
-    protected $dumpType;
-    protected $dumpTypeMore;
     protected $name = '';
 
     /**
@@ -74,44 +69,6 @@ abstract class Base implements RouteInterface
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function dump($val)
-    {
-        $typeMore = null;
-        list($type, $typeMore) = $this->debug->abstracter->getType($val);
-        if ($typeMore == 'raw') {
-            $val = $this->debug->abstracter->getAbstraction($val);
-            $typeMore = null;
-        }
-        $method = 'dump'.\ucfirst($type);
-        if ($typeMore === 'abstraction') {
-            if (!\method_exists($this, $method)) {
-                $event = $this->debug->internal->publishBubbleEvent('debug.dumpCustom', new Event(
-                    $val,
-                    array(
-                        'output' => $this,
-                        'return' => '',
-                        'typeMore' => null,
-                    )
-                ));
-                $return = $event['return'];
-                $typeMore = $event['typeMore'];
-            } elseif (\in_array($type, array('string','bool','float','int','null'))) {
-                $return = $this->{$method}($val['value']);
-            } else {
-                $return = $this->{$method}($val);
-            }
-            $typeMore = null;
-        } else {
-            $return = $this->{$method}($val);
-        }
-        $this->dumpType = $type;
-        $this->dumpTypeMore = $typeMore;
-        return $return;
-    }
-
-    /**
      * Get config value(s)
      *
      * @param string $key (optional) key
@@ -137,6 +94,25 @@ abstract class Base implements RouteInterface
             'debug.output' => 'onOutput',
         );
     }
+
+    /**
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return mixed
+     */
+    public function processLogEntry(LogEntry $logEntry)
+    {
+        return $this->dump->processLogEntry($logEntry);
+    }
+
+    /**
+     * debug.output subscriber
+     *
+     * @param Event $event debug.output event object
+     *
+     * @return void
+     */
+    abstract public function onOutput(Event $event);
 
     /**
      * Set one or more config values
@@ -165,22 +141,13 @@ abstract class Base implements RouteInterface
     }
 
     /**
-     * debug.output subscriber
-     *
-     * @param Event $event debug.output event object
-     *
-     * @return void
-     */
-    abstract public function onOutput(Event $event);
-
-    /**
      * Process log entry without publishing `debug.outputLogEntry` event
      *
      * @param LogEntry $logEntry log entry instance
      *
      * @return mixed
      */
-    abstract public function processLogEntry(LogEntry $logEntry);
+    // abstract public function processLogEntry(LogEntry $logEntry);
 
     /**
      * Test channel for inclussion
@@ -189,7 +156,7 @@ abstract class Base implements RouteInterface
      *
      * @return boolean
      */
-    protected function channelTest($logEntry)
+    protected function channelTest(LogEntry $logEntry)
     {
         $channelName = $logEntry->getChannel();
         return $this->isRootInstance || \preg_match($this->channelRegex, $channelName);
@@ -203,298 +170,6 @@ abstract class Base implements RouteInterface
     protected function getName()
     {
         return $this->name;
-    }
-
-    /**
-     * Is value a timestamp?
-     *
-     * @param mixed $val value to check
-     *
-     * @return string|false
-     */
-    protected function checkTimestamp($val)
-    {
-        $secs = 86400 * 90; // 90 days worth o seconds
-        $tsNow = \time();
-        if ($val > $tsNow - $secs && $val < $tsNow + $secs) {
-            return \date('Y-m-d H:i:s', $val);
-        }
-        return false;
-    }
-
-    /**
-     * Dump array
-     *
-     * @param array $array array to dump
-     *
-     * @return array
-     */
-    protected function dumpArray($array)
-    {
-        foreach ($array as $key => $val) {
-            $array[$key] = $this->dump($val);
-        }
-        return $array;
-    }
-
-    /**
-     * Dump boolean
-     *
-     * @param boolean $val boolean value
-     *
-     * @return boolean
-     */
-    protected function dumpBool($val)
-    {
-        return (bool) $val;
-    }
-
-    /**
-     * Dump callable
-     *
-     * @param Abstraction $abs array/callable abstraction
-     *
-     * @return string
-     */
-    protected function dumpCallable(Abstraction $abs)
-    {
-        return 'callable: '.$abs['values'][0].'::'.$abs['values'][1];
-    }
-
-    /**
-     * Dump constant
-     *
-     * @param Abstraction $abs constant abstraction
-     *
-     * @return string
-     */
-    protected function dumpConst(Abstraction $abs)
-    {
-        return $abs['name'];
-    }
-
-    /**
-     * Dump float value
-     *
-     * @param float $val float value
-     *
-     * @return float|string
-     */
-    protected function dumpFloat($val)
-    {
-        $date = $this->checkTimestamp($val);
-        return $date
-            ? $val.' ('.$date.')'
-            : $val;
-    }
-
-    /**
-     * Dump integer value
-     *
-     * @param integer $val integer value
-     *
-     * @return integer|string
-     */
-    protected function dumpInt($val)
-    {
-        return $this->dumpFloat($val);
-    }
-
-    /**
-     * Dump non-inspected value (likely object)
-     *
-     * @return string
-     */
-    protected function dumpNotInspected()
-    {
-        return 'NOT INSPECTED';
-    }
-
-    /**
-     * Dump null value
-     *
-     * @return null
-     */
-    protected function dumpNull()
-    {
-        return null;
-    }
-
-    /**
-     * Dump object
-     *
-     * @param Abstraction $abs object abstraction
-     *
-     * @return mixed
-     */
-    protected function dumpObject(Abstraction $abs)
-    {
-        if ($abs['isRecursion']) {
-            $return = '(object) '.$abs['className'].' *RECURSION*';
-        } elseif ($abs['isExcluded']) {
-            $return = '(object) '.$abs['className'].' NOT INSPECTED';
-        } else {
-            $return = array(
-                '___class_name' => $abs['className'],
-            );
-            foreach ($abs['properties'] as $name => $info) {
-                $vis = (array) $info['visibility'];
-                foreach ($vis as $i => $v) {
-                    if (\in_array($v, array('magic','magic-read','magic-write'))) {
-                        $vis[$i] = '✨ '.$v;    // "sparkles": there is no magic-want unicode char
-                    } elseif ($v == 'private' && $info['inheritedFrom']) {
-                        $vis[$i] = '🔒 '.$v;
-                    }
-                }
-                if ($info['debugInfoExcluded']) {
-                    $vis[] = 'excluded';
-                }
-                $name = '('.\implode(' ', $vis).') '.$name;
-                $return[$name] = $this->dump($info['value']);
-            }
-        }
-        return $return;
-    }
-
-    /**
-     * Dump recursion (array recursion)
-     *
-     * @return string
-     */
-    protected function dumpRecursion()
-    {
-        return 'array *RECURSION*';
-    }
-
-    /**
-     * Dump resource
-     *
-     * @param Abstraction $abs resource abstraction
-     *
-     * @return string
-     */
-    protected function dumpResource(Abstraction $abs)
-    {
-        return $abs['value'];
-    }
-
-    /**
-     * Dump string
-     *
-     * @param string $val string value
-     *
-     * @return string
-     */
-    protected function dumpString($val)
-    {
-        if (\is_numeric($val)) {
-            $date = $this->checkTimestamp($val);
-            return $date
-                ? $val.' ('.$date.')'
-                : $val;
-        } else {
-            return $this->debug->utf8->dump($val);
-        }
-    }
-
-    /**
-     * Dump undefined
-     *
-     * @return null
-     */
-    protected function dumpUndefined()
-    {
-        return null;
-    }
-
-    /**
-     * Handle alert method
-     *
-     * @param array $args arguments
-     * @param array $meta meta info
-     *
-     * @return array array($method, $args)
-     */
-    protected function methodAlert($args, $meta)
-    {
-        $classToMethod = array(
-            'danger' => 'error',
-            'info' => 'info',
-            'success' => 'info',
-            'warning' => 'warn',
-        );
-        $msg = \str_replace('<br />', ", \n", $args[0]);
-        $method = $meta['level'];
-        if (isset($classToMethod[$method])) {
-            $method = $classToMethod[$method];
-        }
-        return array($method, array($msg));
-    }
-
-    /**
-     * Normalize table data
-     *
-     * Ensures each row has all key/values and that they're in the same order
-     * if any row is an object, each row will get a ___class_name value
-     *
-     * This builds table rows usable by ChromeLogger, Text, and <script>
-     *
-     * @param array $array   array to debug
-     * @param array $columns columns to output
-     *
-     * @return array
-     */
-    protected function methodTable($array, $columns = array())
-    {
-        $isTableable = \is_array($array) || $this->debug->abstracter->isAbstraction($array, 'object');
-        if (!$isTableable) {
-            return $this->dump($array);
-        }
-        $keys = $columns ?: $this->debug->methodTable->colKeys($array);
-        $table = array();
-        $classnames = array();
-        if ($this->debug->abstracter->isAbstraction($array) && $array['traverseValues']) {
-            $array = $array['traverseValues'];
-        }
-        foreach ($array as $k => $row) {
-            $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
-            $values = $this->methodTableCleanValues($values);
-            $table[$k] = $values;
-            $classnames[$k] = $objInfo['row']
-                ? $objInfo['row']['className']
-                : '';
-        }
-        if (\array_filter($classnames)) {
-            foreach ($classnames as $k => $classname) {
-                $table[$k] = \array_merge(
-                    array('___class_name' => $classname),
-                    $table[$k]
-                );
-            }
-        }
-        return $table;
-    }
-
-    /**
-     * Ready row value(s)
-     *
-     * @param array $values row values
-     *
-     * @return row values
-     */
-    private function methodTableCleanValues($values)
-    {
-        foreach ($values as $k2 => $val) {
-            if ($val === Abstracter::UNDEFINED) {
-                unset($values[$k2]);
-            } elseif (\is_array($val)) {
-                $values[$k2] = $this->debug->routeText->dump($val);
-            }
-        }
-        if (\count($values) == 1 && $k2 == MethodTable::SCALAR) {
-            $values = $val;
-        }
-        return $values;
     }
 
     /**
@@ -552,85 +227,6 @@ abstract class Base implements RouteInterface
     }
 
     /**
-     * Handle the not-well documented substitutions
-     *
-     * @param array   $args    arguments
-     * @param boolean $hasSubs set to true if substitutions/formatting applied
-     *
-     * @return array
-     *
-     * @see https://console.spec.whatwg.org/#formatter
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
-     */
-    protected function processSubstitutions($args, &$hasSubs)
-    {
-        $subRegex = '/%'
-            .'(?:'
-            .'[coO]|'               // c: css, o: obj with max info, O: obj w generic info
-            .'[+-]?'                // sign specifier
-            .'(?:[ 0]|\'.{1})?'     // padding specifier
-            .'-?'                   // alignment specifier
-            .'\d*'                  // width specifier
-            .'(?:\.\d+)?'           // precision specifier
-            .'[difs]'
-            .')'
-            .'/';
-        if (!\is_string($args[0])) {
-            return $args;
-        }
-        $index = 0;
-        $indexes = array(
-            'c' => array(),
-        );
-        $hasSubs = false;
-        $args[0] = \preg_replace_callback($subRegex, function ($matches) use (
-            &$args,
-            &$hasSubs,
-            &$index,
-            &$indexes
-        ) {
-            $hasSubs = true;
-            $index++;
-            $replacement = $matches[0];
-            $type = \substr($matches[0], -1);
-            if (\strpos('difs', $type) !== false) {
-                $format = $matches[0];
-                $sub = $args[$index];
-                if ($type == 'i') {
-                    $format = \substr_replace($format, 'd', -1, 1);
-                } elseif ($type === 's') {
-                    $sub = $this->substitutionAsString($sub);
-                }
-                $replacement = \sprintf($format, $sub);
-            } elseif ($type === 'c') {
-                $asHtml = \get_called_class() == __NAMESPACE__.'\\Html';
-                if (!$asHtml) {
-                    return '';
-                }
-                $replacement = '';
-                if ($indexes['c']) {
-                    // close prev
-                    $replacement = '</span>';
-                }
-                $replacement .= '<span'.$this->debug->utilities->buildAttribString(array(
-                    'style' => $args[$index],
-                )).'>';
-                $indexes['c'][] = $index;
-            } elseif (\strpos('oO', $type) !== false) {
-                $replacement = $this->dump($args[$index]);
-            }
-            return $replacement;
-        }, $args[0]);
-        if ($indexes['c']) {
-            $args[0] .= '</span>';
-        }
-        if ($hasSubs) {
-            $args = array($args[0]);
-        }
-        return $args;
-    }
-
-    /**
      * Process summary
      *
      * @return string
@@ -649,27 +245,5 @@ abstract class Base implements RouteInterface
             }
         }
         return $str;
-    }
-
-    /**
-     * Cooerce value to string
-     *
-     * @param mixed $val value
-     *
-     * @return string
-     */
-    protected function substitutionAsString($val)
-    {
-        // function array dereferencing = php 5.4
-        $type = $this->debug->abstracter->getType($val)[0];
-        if ($type == 'array') {
-            $count = \count($val);
-            $val = 'array('.$count.')';
-        } elseif ($type == 'object') {
-            $val = $val['className'];
-        } else {
-            $val = $this->dump($val);
-        }
-        return $val;
     }
 }

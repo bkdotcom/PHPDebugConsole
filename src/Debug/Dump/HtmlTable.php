@@ -9,9 +9,10 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Route;
+namespace bdk\Debug\Dump;
 
 use bdk\Debug;
+use bdk\Debug\Dump\Html;
 use bdk\Debug\MethodTable;
 
 /**
@@ -21,24 +22,24 @@ class HtmlTable
 {
 
     protected $debug;
-    protected $routeHtml;
+    protected $html;
     protected $tableInfo;
 
     /**
      * Constructor
      *
-     * @param Debug $debug debug instance
+     * @param Html $html html dumper
      */
-    public function __construct(Debug $debug)
+    public function __construct(Html $html)
     {
-        $this->debug = $debug;
-        $this->routeHtml = $debug->routeHtml;
+        $this->debug = $html->debug;
+        $this->html = $html;
     }
 
     /**
      * Formats an array as a table
      *
-     * @param array $rows    array of \Traversable
+     * @param mixed $rows    array of \Traversable or Abstraction
      * @param array $options options
      *                           'attribs' : key/val array (or string - interpreted as class value)
      *                           'caption' : optional caption
@@ -61,7 +62,7 @@ class HtmlTable
             );
         }
         if ($this->debug->abstracter->isAbstraction($rows, 'object')) {
-            $classname = $this->routeHtml->markupIdentifier(
+            $classname = $this->html->markupIdentifier(
                 $rows['className'],
                 'span',
                 array(
@@ -122,7 +123,7 @@ class HtmlTable
         foreach ($keys as $key) {
             $colHasTotal = isset($this->tableInfo['totals'][$key]);
             $cells[] = $colHasTotal
-                ? $this->routeHtml->dump(\round($this->tableInfo['totals'][$key], 6), true, 'td')
+                ? $this->html->dump(\round($this->tableInfo['totals'][$key], 6), true, 'td')
                 : '<td></td>';
             $haveTotal = $haveTotal || $colHasTotal;
         }
@@ -152,7 +153,7 @@ class HtmlTable
                 ? 'value'
                 : \htmlspecialchars($key);
             if ($this->tableInfo['colClasses'][$key]) {
-                $headers[$key] .= ' '.$this->routeHtml->markupIdentifier($this->tableInfo['colClasses'][$key]);
+                $headers[$key] .= ' '.$this->html->markupIdentifier($this->tableInfo['colClasses'][$key]);
             }
         }
         return '<thead>'."\n"
@@ -176,7 +177,7 @@ class HtmlTable
     {
         $str = '';
         $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
-        $parsed = $this->debug->utilities->parseTag($this->routeHtml->dump($rowKey));
+        $parsed = $this->debug->utilities->parseTag($this->html->dump($rowKey));
         $str .= '<tr>';
         $str .= $this->debug->utilities->buildTag(
             'th',
@@ -187,7 +188,7 @@ class HtmlTable
             $parsed['innerhtml']
         );
         if ($objInfo['row']) {
-            $str .= $this->routeHtml->markupIdentifier($objInfo['row']['className'], 'td', array(
+            $str .= $this->html->markupIdentifier($objInfo['row']['className'], 'td', array(
                 'title' => $objInfo['row']['phpDoc']['summary'] ?: null,
             ));
             $this->tableInfo['haveObjRow'] = true;
@@ -195,7 +196,7 @@ class HtmlTable
             $str .= '<td class="classname"></td>';
         }
         foreach ($values as $v) {
-            $str .= $this->routeHtml->dump($v, true, 'td');
+            $str .= $this->html->dump($v, true, 'td');
         }
         $str .= '</tr>'."\n";
         $str = \str_replace(' title=""', '', $str);

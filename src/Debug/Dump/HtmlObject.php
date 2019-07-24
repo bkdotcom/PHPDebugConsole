@@ -9,11 +9,11 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Route;
+namespace bdk\Debug\Dump;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Route\Html as RouteHtml;
+use bdk\Debug\Dump\Html;
 
 /**
  * Output object as HTML
@@ -22,17 +22,17 @@ class HtmlObject
 {
 
     protected $debug;
-    protected $routeHtml;
+    protected $html;
 
 	/**
      * Constructor
      *
-     * @param RouteHtml $routeHtml Route\Html instance
+     * @param Html $html Dump\Html instance
      */
-	public function __construct(RouteHtml $routeHtml)
+	public function __construct(Html $html)
 	{
-		$this->debug = $routeHtml->debug;
-        $this->routeHtml = $routeHtml;
+		$this->debug = $html->debug;
+        $this->html = $html;
 	}
 
     /**
@@ -45,7 +45,7 @@ class HtmlObject
 	public function dump(Abstraction $abs)
 	{
         $title = \trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
-        $strClassName = $this->routeHtml->markupIdentifier($abs['className'], 'span', array(
+        $strClassName = $this->html->markupIdentifier($abs['className'], 'span', array(
             'title' => $title ?: null,
         ));
         if ($abs['isRecursion']) {
@@ -62,11 +62,11 @@ class HtmlObject
             .'<dl class="object-inner">'."\n"
                 .'<dt>extends</dt>'."\n"
                     .\implode(\array_map(function ($classname) {
-                        return '<dd class="extends">'.$this->routeHtml->markupIdentifier($classname).'</dd>'."\n";
+                        return '<dd class="extends">'.$this->html->markupIdentifier($classname).'</dd>'."\n";
                     }, $abs['extends']))
                 .'<dt>implements</dt>'."\n"
                     .\implode(\array_map(function ($classname) {
-                        return '<dd class="interface">'.$this->routeHtml->markupIdentifier($classname).'</dd>'."\n";
+                        return '<dd class="interface">'.$this->html->markupIdentifier($classname).'</dd>'."\n";
                     }, $abs['implements']))
                 .$this->dumpConstants($abs['constants'])
                 .$this->dumpProperties($abs)
@@ -105,7 +105,7 @@ class HtmlObject
             $val = \substr($val, 0, 100);
             $valAppend = '&hellip; <i>('.($len - 100).' more chars)</i>';
         }
-        $toStringDump = $this->routeHtml->dump($val);
+        $toStringDump = $this->html->dump($val);
         $parsed = $this->debug->utilities->parseTag($toStringDump);
         $classArray = \explode(' ', $parsed['attribs']['class']);
         $classArray[] = 't_stringified';
@@ -143,7 +143,7 @@ class HtmlObject
             $str .= '<dd class="constant">'
                 .'<span class="t_identifier">'.$k.'</span>'
                 .' <span class="t_operator">=</span> '
-                .$this->routeHtml->dump($value)
+                .$this->html->dump($value)
                 .'</dd>'."\n";
         }
         return $str;
@@ -213,7 +213,7 @@ class HtmlObject
                 .$this->dumpMethodParams($info['params'])
                 .'<span class="t_punct">)</span>'
                 .($methodName == '__toString'
-                    ? '<br />'.$this->routeHtml->dump($info['returnValue'])
+                    ? '<br />'.$this->html->dump($info['returnValue'])
                     : '')
             )."\n";
         }
@@ -235,7 +235,7 @@ class HtmlObject
         foreach ($params as $info) {
             $paramStr .= '<span class="parameter">';
             if (!empty($info['type'])) {
-                $paramStr .= $this->routeHtml->markupIdentifier($info['type'], 'span', array(
+                $paramStr .= $this->html->markupIdentifier($info['type'], 'span', array(
                     'class' => 't_type',
                 )).' ';
             }
@@ -244,7 +244,7 @@ class HtmlObject
                 .'>'.\htmlspecialchars($info['name']).'</span>';
             if ($info['defaultValue'] !== Abstracter::UNDEFINED) {
                 $paramStr .= ' <span class="t_operator">=</span> ';
-                $parsed = $this->debug->utilities->parseTag($this->routeHtml->dump($info['defaultValue']));
+                $parsed = $this->debug->utilities->parseTag($this->html->dump($info['defaultValue']));
                 $parsed['attribs']['class'] .= ' t_parameter-default';
                 $paramStr .= $this->debug->utilities->buildTag(
                     'span',
@@ -342,7 +342,7 @@ class HtmlObject
                     return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
                 }, $modifiers))
                 .($isPrivateAncestor
-                    ? ' ('.$this->routeHtml->markupIdentifier($info['inheritedFrom'], 'i').')'
+                    ? ' ('.$this->html->markupIdentifier($info['inheritedFrom'], 'i').')'
                     : '')
                 .($info['type']
                     ? ' <span class="t_type">'.$info['type'].'</span>'
@@ -352,7 +352,7 @@ class HtmlObject
                     .'>'.$k.'</span>'
                 .($info['value'] !== Abstracter::UNDEFINED
                     ? ' <span class="t_operator">=</span> '
-                        .$this->routeHtml->dump($info['value'])
+                        .$this->html->dump($info['value'])
                     : '')
                 .'</dd>'."\n";
         }

@@ -65,7 +65,7 @@ class DebugTestFramework extends DOMTestCase
             : $count + 1;
         $GLOBALS['debugTest'] = $count == 10;
         if ($GLOBALS['debugTest']) {
-            $this->stdout(' ----------------- setUp -----------------');
+            $this->stderr(' ----------------- setUp -----------------');
         }
         */
         self::$allowError = false;
@@ -154,7 +154,7 @@ class DebugTestFramework extends DOMTestCase
         }
         $refProperties = &$this->getSharedVar('reflectionProperties');
         if (!isset($refProperties['textDepth'])) {
-            $depthRef = new \ReflectionProperty($this->debug->routeText, 'depth');
+            $depthRef = new \ReflectionProperty($this->debug->dumpText, 'depth');
             $depthRef->setAccessible(true);
             $refProperties['textDepth'] = $depthRef;
         }
@@ -163,7 +163,7 @@ class DebugTestFramework extends DOMTestCase
             $registeredPluginsRef->setAccessible(true);
             $refProperties['registeredPlugins'] = $registeredPluginsRef;
         }
-        $refProperties['textDepth']->setValue($this->debug->routeText, 0);
+        $refProperties['textDepth']->setValue($this->debug->dumpText, 0);
         $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
         $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
     }
@@ -171,17 +171,17 @@ class DebugTestFramework extends DOMTestCase
     /**
      * Util to output to console / help in creation of tests
      *
-     * @param string $label label
-     * @param mixed  $val   value
-     *
      * @return void
      */
-    public function stdout($label, $val = null)
+    public function stderr()
     {
-        $out = func_num_args() > 1
-            ? $label.' = '.print_r($val, true)
-            : print_r($label, true);
-        fwrite(STDOUT, $out . "\n");
+        $args = array_map(function ($val) {
+            return print_r($val, true);
+        }, func_get_args());
+        $glue = func_num_args() > 2
+            ? ', '
+            : ' = ';
+        fwrite(STDOUT, implode($glue, $args) . "\n");
     }
 
     /**
@@ -369,7 +369,7 @@ class DebugTestFramework extends DOMTestCase
         foreach ($tests as $test => $expectContains) {
             $debug->setCfg('outputAs', $test);
             $output = $debug->output();
-            // $this->stdout($test, $output);
+            // $this->stderr($test, $output);
             $output = \preg_replace($regexLtrim, '', $output);
             $expectContains = \preg_replace($regexLtrim, '', $expectContains);
             if ($expectContains) {

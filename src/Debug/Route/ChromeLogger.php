@@ -14,6 +14,7 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
@@ -30,7 +31,7 @@ class ChromeLogger extends Base
 
     protected $consoleMethods = array(
         'assert',
-        'count',    // output as log
+        // 'count',    // output as log
         'error',
         'group',
         'groupCollapsed',
@@ -38,7 +39,7 @@ class ChromeLogger extends Base
         'info',
         'log',
         'table',
-        'time',     // output as log
+        // 'time',     // output as log
         'timeEnd',  // PHPDebugConsole never generates a timeEnd entry
         'trace',
         'warn',
@@ -52,6 +53,17 @@ class ChromeLogger extends Base
         'columns' => array('log', 'backtrace', 'type'),
         'rows' => array()
     );
+
+    /**
+     * Constructor
+     *
+     * @param Debug $debug debug instance
+     */
+    public function __construct(Debug $debug)
+    {
+        parent::__construct($debug);
+        $this->dump = $debug->dumpBase;
+    }
 
     /**
      * Output the log as chromelogger headers
@@ -91,43 +103,16 @@ class ChromeLogger extends Base
         $this->json['rows'] = array();
     }
 
-    /**
-     * Process log entry
-     *
-     * Transmogrify log entry to chromelogger format
-     *
-     * @param LogEntry $logEntry log entry instance
-     *
-     * @return void
-     */
     public function processLogEntry(LogEntry $logEntry)
     {
+        $this->dump->processLogEntry($logEntry);
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
-        if ($method === 'alert') {
-            list($method, $args) = $this->methodAlert($args, $meta);
-        } elseif ($method == 'assert') {
+        if ($method == 'assert') {
             \array_unshift($args, false);
-        } elseif (\in_array($method, array('count','time'))) {
+        } elseif (!\in_array($method, $this->consoleMethods)) {
             $method = 'log';
-        } elseif (\in_array($method, array('profileEnd','table'))) {
-            $method = 'log';
-            if (\is_array($args[0])) {
-                $method = 'table';
-                $args = array($this->methodTable($args[0], $meta['columns']));
-            } elseif ($meta['caption']) {
-                \array_unshift($args, $meta['caption']);
-            }
-        } elseif ($method === 'trace') {
-            $method = 'table';
-            $args = array($this->methodTable($args[0], array('function','file','line')));
-        }
-        if (!\in_array($method, $this->consoleMethods)) {
-            $method = 'log';
-        }
-        foreach ($args as $i => $arg) {
-            $args[$i] = $this->dump($arg);
         }
         $this->json['rows'][] = array(
             $args,
@@ -145,53 +130,8 @@ class ChromeLogger extends Base
      */
     protected function encode($data)
     {
-        return \base64_encode(\utf8_encode(\json_encode($data)));
-    }
-
-    /**
-     * Handle alert method
-     *
-     * @param array $args arguments
-     * @param array $meta meta info
-     *
-     * @return array array($method, $args)
-     */
-    protected function methodAlert($args, $meta)
-    {
-        $args = array('%c'.$args[0], '');
-        $method = $meta['level'];
-        $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
-        switch ($method) {
-            case 'danger':
-                // Just use log method... Chrome adds backtrace to error(), which we don't want
-                $method = 'log';
-                $args[1] = $styleCommon
-                    .'background-color: #ffbaba;'
-                    .'border: 1px solid #d8000c;'
-                    .'color: #d8000c;';
-                break;
-            case 'info':
-                $args[1] = $styleCommon
-                    .'background-color: #d9edf7;'
-                    .'border: 1px solid #bce8f1;'
-                    .'color: #31708f;';
-                break;
-            case 'success':
-                $method = 'info';
-                $args[1] = $styleCommon
-                    .'background-color: #dff0d8;'
-                    .'border: 1px solid #d6e9c6;'
-                    .'color: #3c763d;';
-                break;
-            case 'warning':
-                // Just use log method... Chrome adds backtrace to warn(), which we don't want
-                $method = 'log';
-                $args[1] = $styleCommon
-                    .'background-color: #fcf8e3;'
-                    .'border: 1px solid #faebcc;'
-                    .'color: #8a6d3b;';
-                break;
-        }
-        return array($method, $args);
+        $data = \json_encode($data);
+        $data = str_replace(\json_encode(Abstracter::UNDEFINED), 'null', $data);
+        return \base64_encode(\utf8_encode($data));
     }
 }

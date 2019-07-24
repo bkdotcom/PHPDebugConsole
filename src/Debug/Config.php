@@ -35,7 +35,7 @@ class Config
         $this->values = &$cfg;
         $this->debug = $debug;
         $this->valuesPending['errorEmailer']['emailBacktraceDumper'] = function ($backtrace) use ($debug) {
-            return $debug->routeText->dump($backtrace);
+            return $debug->dumpText->dump($backtrace);
         };
     }
 

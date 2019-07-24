@@ -11,9 +11,10 @@
 
 namespace bdk\Debug\Route;
 
-use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\PubSub\Event;
 
 /**
@@ -37,6 +38,17 @@ class Firephp extends Base
 
     const FIREPHP_PROTO_VER = '0.3';
     const MESSAGE_LIMIT = 99999;
+
+    /**
+     * Constructor
+     *
+     * @param Debug $debug debug instance
+     */
+    public function __construct(Debug $debug)
+    {
+        parent::__construct($debug);
+        $this->dump = $debug->dumpBase;
+    }
 
     /**
      * Output the log via FirePHP headers
@@ -73,9 +85,9 @@ class Firephp extends Base
     }
 
     /**
-     * Output a log entry to Firephp
+     * LogEntry to firePhp header(s)
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */
@@ -83,131 +95,114 @@ class Firephp extends Base
     {
         $method = $logEntry['method'];
         $args = $logEntry['args'];
-        $meta = $logEntry['meta'];
+        $this->setFirephpMeta($logEntry);
         $value = null;
-        $firePhpMeta = $this->getMeta($method, $meta);
         if ($method == 'alert') {
-            list($method, $args) = $this->methodAlert($args, $meta);
-            $value = $args[0];
+            $value = $this->methodAlert($logEntry);
         } elseif (\in_array($method, array('group','groupCollapsed'))) {
-            $firePhpMeta['Label'] = $args[0];
-        } elseif (\in_array($method, array('profileEnd','table'))) {
-            $firePhpMeta['Type'] = \is_array($args[0]) || $this->debug->abstracter->isAbstraction($args[0], 'object')
-                ? $this->firephpMethods['table']
-                : $this->firephpMethods['log'];
-            $value = $this->methodTable($args[0], $meta['columns']);
-            if ($meta['caption']) {
-                $firePhpMeta['Label'] = $meta['caption'];
-            }
-        } elseif ($method == 'trace') {
-            $firePhpMeta['Type'] = $this->firephpMethods['table'];
-            $value = $this->methodTable($args[0], array('function','file','line'));
-            $firePhpMeta['Label'] = 'trace';
+            $logEntry['firephpMeta']['Label'] = $args[0];
+            $logEntry['firephpMeta']['Collapsed'] = $method == 'groupCollapsed'
+                // yes, strings
+                ? 'true'
+                : 'false';
+        } elseif (\in_array($method, array('profileEnd','table','trace'))) {
+            $value = $this->methodTabular($logEntry);
         } elseif (\count($args)) {
-            if (\count($args) == 1) {
-                $value = $args[0];
-                // no label;
-            } else {
-                $firePhpMeta['Label'] = \array_shift($args);
-                $value = \count($args) > 1
-                    ? $args // firephp only supports label/value...  we'll pass multiple values as an array
-                    : $args[0];
-            }
+            $value = $this->getValue($logEntry);
         }
-        $value = $this->dump($value);
         if ($this->messageIndex < self::MESSAGE_LIMIT) {
-            $this->setFirephpHeader($firePhpMeta, $value);
+            $this->setFirephpHeader($logEntry['firephpMeta'], $value);
         } elseif ($this->messageIndex === self::MESSAGE_LIMIT) {
             $this->setFirephpHeader(
                 array('Type'=>$this->firephpMethods['warn']),
                 'FirePhp\'s limit of '.\number_format(self::MESSAGE_LIMIT).' messages reached!'
             );
         }
-        return;
     }
 
     /**
-     * Initialize firephp's meta array
+     * Get firephp value
      *
-     * @param string $method PHPDebugConsole method
-     * @param array  $meta   PHPDebugConsole meta values
+     * @param LogEntry $logEntry LogEntry instance
      *
-     * @return array
+     * @return mixed firephp value
      */
-    private function getMeta($method, $meta)
+    private function getValue(LogEntry $logEntry)
     {
-        $firePhpMeta = array(
-            'Type' => isset($this->firephpMethods[$method])
-                ? $this->firephpMethods[$method]
-                : $this->firephpMethods['log'],
-            // Label
-            // File
-            // Line
-            // Collapsed  (for group)
+        $args = $logEntry['args'];
+        if (\count($args) == 1) {
+            $value = $args[0];
+            // no label;
+        } else {
+            $logEntry['firephpMeta']['Label'] = \array_shift($args);
+            $value = \count($args) > 1
+                ? $args // firephp only supports label/value...  we'll pass multiple values as an array
+                : $args[0];
+        }
+        $value = $this->dump->dump($value);
+        return $value;
+    }
+
+    /**
+     * handle alert
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return string
+     */
+    private function methodAlert(LogEntry $logEntry)
+    {
+        $level = $logEntry->getMeta('level');
+        $levelToMethod = array(
+            'danger' => 'error',
+            'info' => 'info',
+            'success' => 'info',
+            'warning' => 'warn',
         );
-        if (isset($meta['file'])) {
-            $firePhpMeta['File'] = $meta['file'];
-            $firePhpMeta['Line'] = $meta['line'];
-        }
-        if (\in_array($method, array('group','groupCollapsed'))) {
-            $firePhpMeta['Collapsed'] = $method == 'groupCollapsed'
-                // yes, strings
-                ? 'true'
-                : 'false';
-        }
-        return $firePhpMeta;
+        $method = isset($levelToMethod[$level])
+            ? $levelToMethod[$level]
+            : 'error';
+        // $logEntry['method'] = $method;
+        $logEntry['firephpMeta']['Type'] = $this->firephpMethods[$method];
+        return $logEntry['args'][0];
     }
 
     /**
-     * Build table rows
+     * handle tabular type log entry
      *
-     * @param array $array   array to debug
-     * @param array $columns columns to display
+     * @param LogEntry $logEntry logEntry instance
      *
-     * @return array
+     * @return mixed
      */
-    protected function methodTable($array, $columns = array())
+    private function methodTabular(LogEntry $logEntry)
     {
-        $isTableable = \is_array($array) || $this->debug->abstracter->isAbstraction($array, 'object');
-        if (!$isTableable) {
-            return $this->dump($array);
+        $logEntry->setMeta('undefinedAs', null);
+        if ($logEntry['method'] == 'trace') {
+            $logEntry['firephpMeta']['Label'] = 'trace';
         }
-        $table = array();
-        $keys = $columns ?: $this->debug->methodTable->colKeys($array);
-        $headerVals = $keys;
-        foreach ($headerVals as $i => $val) {
-            if ($val === MethodTable::SCALAR) {
-                $headerVals[$i] = 'value';
+        $this->dump->processLogEntry($logEntry);
+        $method = $logEntry['method'];
+        if ($method === 'table') {
+            $logEntry['firephpMeta']['Type'] = $this->firephpMethods['table'];
+            $caption = $logEntry->getMeta('caption');
+            if ($caption) {
+                $logEntry['firephpMeta']['Label'] = $caption;
             }
-        }
-        \array_unshift($headerVals, '');
-        $table[] = $headerVals;
-        $classNames = array();
-        if ($this->debug->abstracter->isAbstraction($array) && $array['traverseValues']) {
-            $array = $array['traverseValues'];
-        }
-        foreach ($array as $k => $row) {
-            $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
-            foreach ($values as $k2 => $val) {
-                if ($val === Abstracter::UNDEFINED) {
-                    $values[$k2] = null;
+            $firephpTable = true;
+            if ($firephpTable) {
+                $args = $logEntry['args'];
+                $value = array();
+                $value[] = \array_merge(array(''), \array_keys(\current($args[0])));
+                foreach ($args[0] as $k => $row) {
+                    $value[] = \array_merge(array($k), \array_values($row));
                 }
             }
-            $classNames[] = $objInfo['row']
-                ? $objInfo['row']['className']
-                : '';
-            \array_unshift($values, $k);
-            $table[] = \array_values($values);
+            $value = $this->dump->dump($value);
+        } else {
+            $logEntry['firephpMeta']['Type'] = $this->firephpMethods['log'];
+            $value = $this->getValue($logEntry);
         }
-        if (\array_filter($classNames)) {
-            \array_unshift($table[0], '');
-            // first col is row key.
-            // insert classname after key
-            foreach ($classNames as $i => $className) {
-                \array_splice($table[$i+1], 1, 0, $className);
-            }
-        }
-        return $table;
+        return $value;
     }
 
     /**
@@ -220,6 +215,7 @@ class Firephp extends Base
      */
     private function setFirephpHeader($meta, $value = null)
     {
+        \ksort($meta);  // for consistency / testing
         $msg = \json_encode(array(
             $meta,
             $value,
@@ -237,4 +233,32 @@ class Firephp extends Base
             $this->outputEvent['headers'][] = array($headerName, $headerValue);
         }
     }
+
+    /**
+     * Initialize firephp's meta array
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array
+     */
+    private function setFirephpMeta(LogEntry $logEntry)
+    {
+        $method = $logEntry['method'];
+        $meta = $logEntry['meta'];
+        $firephpMeta = array(
+            'Type' => isset($this->firephpMethods[$method])
+                ? $this->firephpMethods[$method]
+                : $this->firephpMethods['log'],
+            // Label
+            // File
+            // Line
+            // Collapsed  (for group)
+        );
+        if (isset($meta['file'])) {
+            $firephpMeta['File'] = $meta['file'];
+            $firephpMeta['Line'] = $meta['line'];
+        }
+        return $logEntry['firephpMeta'] = $firephpMeta;
+    }
 }
+

@@ -308,6 +308,13 @@ class Debug
             $this->{$property} = $val;
             return $val;
         }
+        if (\strpos($property, 'dump') === 0) {
+            $classname = '\\bdk\\Debug\\Dump\\'.\substr($property, 4);
+            $val = new $classname($this);
+            $val->setCfg($this->config->getValues($property));
+            $this->{$property} = $val;
+            return $val;
+        }
         return null;
     }
 

@@ -46,7 +46,7 @@ class MethodProfileTest extends DebugTestFramework
                     ), $logEntry['meta']);
                 },
                 'chromeLogger' => '[[{"MethodProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"MethodProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}}],null,"table"]',
-                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"TABLE","Label":"Profile \'Profile 1\' Results"},[["","calls","totalTime","ownTime"],["MethodProfileTest::a",1,%f,%f],["MethodProfileTest::b",1,%f,%f],["MethodProfileTest::c",2,%f,%f]]]|',
+                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Profile \'Profile 1\' Results","Type":"TABLE"},[["","calls","totalTime","ownTime"],["MethodProfileTest::a",1,%f,%f],["MethodProfileTest::b",1,%f,%f],["MethodProfileTest::c",2,%f,%f]]]|',
                 'html' => '<li class="m_profileEnd">
                     <table class="sortable table-bordered">
                     <caption>Profile \'Profile 1\' Results</caption>

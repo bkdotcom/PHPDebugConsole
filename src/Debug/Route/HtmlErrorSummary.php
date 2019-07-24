@@ -70,7 +70,7 @@ class HtmlErrorSummary
         $html .= '<ul class="list-unstyled">';
         if (\count($backtrace) > 1) {
             // more than one trace frame
-            $table = $this->routeHtml->table->build(
+            $table = $this->routeHtml->dump->table->build(
                 $backtrace,
                 array(
                     'attribs' => 'trace table-bordered',

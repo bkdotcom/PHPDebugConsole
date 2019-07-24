@@ -191,7 +191,7 @@ EOD;
                         .'</li>',
                     'text' => 'blah = null',
                     'script' => 'console.log("blah",null);',
-                    'firephp' => 'X-Wf-1-1-1-2: 36|[{"Type":"LOG","Label":"blah"},null]|',
+                    'firephp' => 'X-Wf-1-1-1-2: 36|[{"Label":"blah","Type":"LOG"},null]|',
                 ),
             ),
             array(
@@ -201,7 +201,7 @@ EOD;
                     'html' => $rowsAHtml,
                     'text' => $rowsAText,
                     'script' => 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
-                    'firephp' => 'X-Wf-1-1-1-3: 151|[{"Type":"TABLE","Label":"table caption"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
+                    'firephp' => 'X-Wf-1-1-1-3: 151|[{"Label":"table caption","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
                 ),
             ),
             array(
@@ -257,7 +257,7 @@ EOD;
                                 private: 1
                     )',
                     'script' => 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::providerTestMethod",{"___class_name":"Closure"}]);',
-                    'firephp' => 'X-Wf-1-1-1-4: %d|[{"Type":"TABLE","Label":"flat"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::providerTestMethod"],[4,{"___class_name":"Closure"}]]]|',
+                    'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::providerTestMethod"],[4,{"___class_name":"Closure"}]]]|',
                 ),
             ),
             array(
@@ -270,7 +270,7 @@ EOD;
                     'html' => str_replace('table caption', 'traversable (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)', $rowsAHtml),
                     'text' => str_replace('table caption', 'traversable', $rowsAText),
                     'script' => 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
-                    'firephp' => 'X-Wf-1-1-1-5: 149|[{"Type":"TABLE","Label":"traversable"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
+                    'firephp' => 'X-Wf-1-1-1-5: 149|[{"Label":"traversable","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
                 ),
             ),
             array(
@@ -313,7 +313,10 @@ EOD;
                             )
                         )',
                     'script' => 'console.table({"4":{"___class_name":"bdk\\\DebugTest\\\TestTraversable","name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"___class_name":"bdk\\\DebugTest\\\TestTraversable","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
-                    'firephp' => 'X-Wf-1-1-1-6: 237|[{"Type":"TABLE","Label":"traversable -o- traversables"},[["","","name","age","sex","Naughty","extracol"],[4,"bdk\\\DebugTest\\\TestTraversable","Bob","12","M",false,null],[2,"bdk\\\DebugTest\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
+                    'firephp' => 'X-Wf-1-1-1-6: 250|[{"Label":"traversable -o- traversables","Type":"TABLE"},['
+                        .'["","___class_name","name","age","sex","Naughty","extracol"],'
+                        .'[4,"bdk\\\DebugTest\\\TestTraversable","Bob","12","M",false,null],'
+                        .'[2,"bdk\\\DebugTest\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
                 ),
             ),
             array(
@@ -356,7 +359,10 @@ EOD;
                         )
                     )',
                     'script' => 'console.table({"4":{"___class_name":"stdClass","age":"12","name":"Bob","Naughty":false,"sex":"M"},"2":{"___class_name":"stdClass","age":"10","extracol":"yes","name":"Sally","Naughty":true,"sex":"F"}});',
-                    'firephp' => 'X-Wf-1-1-1-7: 180|[{"Type":"TABLE","Label":"array -o- objects"},[["","","age","extracol","name","Naughty","sex"],[4,"stdClass","12",null,"Bob",false,"M"],[2,"stdClass","10","yes","Sally",true,"F"]]]|',
+                    'firephp' => 'X-Wf-1-1-1-7: 193|[{"Label":"array -o- objects","Type":"TABLE"},['
+                        .'["","___class_name","age","extracol","name","Naughty","sex"],'
+                        .'[4,"stdClass","12",null,"Bob",false,"M"],'
+                        .'[2,"stdClass","10","yes","Sally",true,"F"]]]|',
                 ),
             ),
             array(
@@ -389,7 +395,7 @@ EOD;
                         )
                     )',
                     'script' => 'console.table([{"date":"1955-11-05T00:00:00%i","date2":"not a datetime"},{"date":"1985-10-26T00:00:00%i","date2":"2015-10-21T00:00:00%i"}]);',
-                    'firephp' => 'X-Wf-1-1-1-8: 188|[{"Type":"TABLE","Label":"not all col values of same type"},[["","date","date2"],[0,"1955-11-05T00:00:00%i","not a datetime"],[1,"1985-10-26T00:00:00%i","2015-10-21T00:00:00%i"]]]|',
+                    'firephp' => 'X-Wf-1-1-1-8: 188|[{"Label":"not all col values of same type","Type":"TABLE"},[["","date","date2"],[0,"1955-11-05T00:00:00%i","not a datetime"],[1,"1985-10-26T00:00:00%i","2015-10-21T00:00:00%i"]]]|',
                 ),
             ),
         );

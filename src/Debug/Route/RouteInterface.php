@@ -21,15 +21,6 @@ interface RouteInterface extends SubscriberInterface
 {
 
     /**
-     * Dump value
-     *
-     * @param mixed $val value to dump
-     *
-     * @return array|string
-     */
-	public function dump($val);
-
-    /**
      * Process log entry without publishing `debug.outputLogEntry` event
      *
      * @param LogEntry $logEntry log entry instance

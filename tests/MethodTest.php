@@ -175,7 +175,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<div class="alert-danger m_alert" role="alert">'.$messageEscaped.'</div>',
                 'text' => '》[Alert ⦻ danger] '.$message.'《',
                 'script' => str_replace('%c', '%%c', 'console.log('.json_encode('%c'.$message).',"padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
-                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},'.json_encode($message).']|',
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"ERROR"},'.json_encode($message).']|',
             )
         );
 
@@ -242,7 +242,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_assert" data-detect-files="true"><span class="no-quotes t_string">Assertion failed: </span><span class="t_string">'.$this->file.' (line '.$this->line.')</span></li>',
                 'text' => '≠ Assertion failed: "'.$this->file.' (line '.$this->line.')"',
                 'script' => 'console.assert(false,"Assertion failed:",'.json_encode($this->file.' (line '.$this->line.')').');',
-                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"LOG","Label":"Assertion failed:"},'.json_encode($this->file.' (line '.$this->line.')').']|',
+                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Assertion failed:","Type":"LOG"},'.json_encode($this->file.' (line '.$this->line.')').']|',
             )
         );
 
@@ -303,7 +303,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared log (sans errors)</span></li>',
                 'text' => '⌦ Cleared log (sans errors)',
                 'script' => 'console.log("Cleared log (sans errors)");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared log (sans errors)"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":'.json_encode($this->file).',"Line":'.$this->line.',"Type":"LOG"},"Cleared log (sans errors)"]|',
             )
         );
     }
@@ -375,7 +375,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared alerts</span></li>',
                 'text' => '⌦ Cleared alerts',
                 'script' => 'console.log("Cleared alerts");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared alerts"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":'.json_encode($this->file).',"Line":'.$this->line.',"Type":"LOG"},"Cleared alerts"]|',
             )
         );
     }
@@ -433,7 +433,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared summary (sans errors)</span></li>',
                 'text' => '⌦ Cleared summary (sans errors)',
                 'script' => 'console.log("Cleared summary (sans errors)");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (sans errors)"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":'.json_encode($this->file).',"Line":'.$this->line.',"Type":"LOG"},"Cleared summary (sans errors)"]|',
             )
         );
     }
@@ -495,7 +495,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared errors</span></li>',
                 'text' => '⌦ Cleared errors',
                 'script' => 'console.log("Cleared errors");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared errors"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":'.json_encode($this->file).',"Line":'.$this->line.',"Type":"LOG"},"Cleared errors"]|',
             )
         );
     }
@@ -555,7 +555,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared everything</span></li>',
                 'text' => '⌦ Cleared everything',
                 'script' => 'console.log("Cleared everything");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared everything"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":'.json_encode($this->file).',"Line":'.$this->line.',"Type":"LOG"},"Cleared everything"]|',
             )
         );
     }
@@ -615,7 +615,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="'.$this->file.'" data-line="'.$this->line.'"><span class="no-quotes t_string">Cleared summary (incl errors)</span></li>',
                 'text' => '⌦ Cleared summary (incl errors)',
                 'script' => 'console.log("Cleared summary (incl errors)");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (incl errors)"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":'.json_encode($this->file).',"Line":'.$this->line.',"Type":"LOG"},"Cleared summary (incl errors)"]|',
             )
         );
     }
@@ -761,7 +761,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_count"><span class="no-quotes t_string">count_inc test</span> = <span class="t_int">3</span></li>',
                 'text' => '✚ count_inc test = 3',
                 'script' => 'console.log("count_inc test",3);',
-                'firephp' => 'X-Wf-1-1-1-3: 43|[{"Type":"LOG","Label":"count_inc test"},3]|',
+                'firephp' => 'X-Wf-1-1-1-3: 43|[{"Label":"count_inc test","Type":"LOG"},3]|',
             )
         );
 
@@ -780,7 +780,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_count" data-file="'.__FILE__.'" data-line="'.$lines[1].'"><span class="no-quotes t_string">count</span> = <span class="t_int">1</span></li>',
                 'text' => '✚ count = 1',
                 'script' => 'console.log("count",1);',
-                'firephp' => 'X-Wf-1-1-1-4: %d|[{"Type":"LOG","File":"'.str_replace('/', '\\/', __FILE__).'","Line":'.$lines[1].',"Label":"count"},1]|',
+                'firephp' => 'X-Wf-1-1-1-4: %d|[{"File":"'.str_replace('/', '\\/', __FILE__).'","Label":"count","Line":'.$lines[1].',"Type":"LOG"},1]|',
             )
         );
 
@@ -836,7 +836,7 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'firephp' => 'X-Wf-1-1-1-70: 32|[{"Type":"LOG","Label":"foo"},0]|',
+                'firephp' => 'X-Wf-1-1-1-70: 32|[{"Label":"foo","Type":"LOG"},0]|',
                 'html' => '<li class="m_countReset"><span class="no-quotes t_string">foo</span> = <span class="t_int">0</span></li>',
                 'script' => 'console.log("foo",0);',
                 'text' => '✚ foo = 0',
@@ -912,7 +912,7 @@ class MethodTest extends DebugTestFramework
                     Properties: none!
                     Methods: none!, Resource id #%i: stream',
                 'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
-                'firephp' => 'X-Wf-1-1-1-3: %d|[{"Type":"ERROR","File":"%s","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-3: %d|[{"File":"%s","Label":"a string","Line":%d,"Type":"ERROR"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);
@@ -969,7 +969,7 @@ class MethodTest extends DebugTestFramework
                     <ul class="group-body">',
                 'text' => '▸ a("b", "c")',
                 'script' => 'console.group("a","b","c");',
-                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Type":"GROUP_START","Collapsed":"false","Label":"a"},null]|',
+                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -988,7 +988,6 @@ class MethodTest extends DebugTestFramework
                 console.log("after group");',
             // 'firephp' => '',
         ));
-
 
         /*
             Test default label
@@ -1023,7 +1022,7 @@ class MethodTest extends DebugTestFramework
                     <ul class="group-body">',
                 'text' => '▸ '.__CLASS__.'->methodWithGroup("foo", 10)',
                 'script' => 'console.group("'.__CLASS__.'->methodWithGroup","foo",10);',
-                'firephp' => 'X-Wf-1-1-1-6: %d|[{"Type":"GROUP_START","Collapsed":"false","Label":"'.__CLASS__.'->methodWithGroup"},null]|',
+                'firephp' => 'X-Wf-1-1-1-6: %d|[{"Collapsed":"false","Label":"'.__CLASS__.'->methodWithGroup","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -1053,7 +1052,7 @@ class MethodTest extends DebugTestFramework
                     <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase->testBasePublic");',
-                'firephp' => 'X-Wf-1-1-1-7: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase->testBasePublic"},null]|',
+                'firephp' => 'X-Wf-1-1-1-7: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase->testBasePublic","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -1083,7 +1082,7 @@ class MethodTest extends DebugTestFramework
                     <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\Test->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\Test->testBasePublic");',
-                'firephp' => 'X-Wf-1-1-1-8: 96|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\Test->testBasePublic"},null]|',
+                'firephp' => 'X-Wf-1-1-1-8: 96|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\Test->testBasePublic","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -1115,7 +1114,7 @@ class MethodTest extends DebugTestFramework
                     <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
-                'firephp' => 'X-Wf-1-1-1-9: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
+                'firephp' => 'X-Wf-1-1-1-9: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -1146,7 +1145,7 @@ class MethodTest extends DebugTestFramework
                     <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
-                'firephp' => 'X-Wf-1-1-1-10: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
+                'firephp' => 'X-Wf-1-1-1-10: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -1191,7 +1190,7 @@ class MethodTest extends DebugTestFramework
                     null,
                     'groupCollapsed',
                 ),
-                'firephp' => 'X-Wf-1-1-1-1: 60|[{"Type":"GROUP_START","Collapsed":"true","Label":"a"},null]|',
+                'firephp' => 'X-Wf-1-1-1-1: 60|[{"Collapsed":"true","Label":"a","Type":"GROUP_START"},null]|',
                 'html' => '<li class="m_group">
                     <div class="collapsed group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
                     <ul class="group-body">',
@@ -1334,7 +1333,7 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'firephp' => 'X-Wf-1-1-1-154: 39|[{"Type":"LOG","Label":"return"},"foo"]|',
+                'firephp' => 'X-Wf-1-1-1-154: 39|[{"Label":"return","Type":"LOG"},"foo"]|',
                 'html' => '<li class="m_groupEndValue"><span class="no-quotes t_string">return</span> = <span class="t_string">foo</span></li>',
                 'script' => 'console.log("return","foo");',
                 'text' => 'return = "foo"',
@@ -1523,7 +1522,7 @@ EOD;
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.info("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Type":"INFO","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"INFO"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);
@@ -1581,7 +1580,7 @@ EOD;
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.log("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Type":"LOG","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"LOG"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);
@@ -1631,7 +1630,7 @@ EOD;
                     null,
                     '',
                 ),
-                'firephp' => str_replace('%c', '%%c', 'X-Wf-1-1-1-19: 168|[{"Type":"LOG","Label":"%cLocation:%c <a href=\"%s\">%s<\/a>"},'.json_encode(array_slice($args, 1)).']|'),
+                'firephp' => str_replace('%c', '%%c', 'X-Wf-1-1-1-19: 168|[{"Label":"%cLocation:%c <a href=\"%s\">%s<\/a>","Type":"LOG"},'.json_encode(array_slice($args, 1)).']|'),
                 'html' => '<li class="m_log"><span class="no-quotes t_string"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></li>',
                 'script' => str_replace('%c', '%%c', 'console.log('.trim(json_encode($args), '[]').');'),
                 'text' => 'Location: "http://localhost/?foo=bar&jim=slim"',
@@ -1928,7 +1927,7 @@ EOD;
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-166: 46|[{"Type":"LOG","Label":"time: "},"%f sec"]|',
+                'firephp' => 'X-Wf-1-1-1-166: 46|[{"Label":"time: ","Type":"LOG"},"%f sec"]|',
                 'html' => '<li class="m_timeLog"><span class="no-quotes t_string">time: </span><span class="t_string">%f sec</span></li>',
                 'script' => 'console.log("time: ","%f sec");',
                 'text' => '⏱ time: "%f sec"',
@@ -1957,7 +1956,7 @@ EOD;
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-169: 66|[{"Type":"LOG","Label":"my label: "},["%f sec",{"foo":"bar"}]]|',
+                'firephp' => 'X-Wf-1-1-1-169: 66|[{"Label":"my label: ","Type":"LOG"},["%f sec",{"foo":"bar"}]]|',
                 'html' => '<li class="m_timeLog"><span class="no-quotes t_string">my label: </span><span class="t_string">%f sec</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                     <span class="array-inner">
                     <span class="key-value"><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></span>
@@ -2025,15 +2024,6 @@ EOD;
                 },
                 'chromeLogger' => function ($logEntry) {
                     $trace = $this->debug->getData('log/0/args/0');
-                    // reorder keys
-                    $order = array('function','file','line');
-                    foreach ($trace as $i => $row) {
-                        uksort($trace[$i], function ($a, $b) use ($order) {
-                            $posa = array_search($a, $order);
-                            $posb = array_search($b, $order);
-                            return $posa < $posb ? -1 : 1;
-                        });
-                    }
                     $this->assertSame(array($trace), $logEntry[0]);
                     $this->assertSame(null, $logEntry[1]);
                     $this->assertSame('table', $logEntry[2]);
@@ -2044,23 +2034,23 @@ EOD;
                     $logEntry = json_decode($matches[1], true);
                     list($logEntryMeta, $logEntryTable) = $logEntry;
                     $this->assertSame(array(
-                        'Type' => 'TABLE',
                         'Label' => 'trace',
+                        'Type' => 'TABLE',
                     ), $logEntryMeta);
                     $this->assertSame(array(
                         '',
-                        'function',
                         'file',
                         'line',
+                        'function',
                     ), $logEntryTable[0]);
                     $count = count($logEntryTable);
                     for ($i=1; $i<$count; $i++) {
                         $tracei = $i - 1;
                         $valuesExpect = array(
                             $tracei,
-                            isset($trace[$tracei]['function']) ? $trace[$tracei]['function'] : null,
                             $trace[$tracei]['file'],
                             $trace[$tracei]['line'],
+                            isset($trace[$tracei]['function']) ? $trace[$tracei]['function'] : null,
                         );
                         $this->assertSame($valuesExpect, $logEntryTable[$i]);
                     }
@@ -2091,21 +2081,12 @@ EOD;
                 },
                 'script' => function ($logEntry) {
                     $trace = $this->debug->getData('log/0/args/0');
-                    // reorder keys
-                    $order = array('function','file','line');
-                    foreach ($trace as $i => $row) {
-                        uksort($trace[$i], function ($a, $b) use ($order) {
-                            $posa = array_search($a, $order);
-                            $posb = array_search($b, $order);
-                            return $posa < $posb ? -1 : 1;
-                        });
-                    }
                     preg_match('#console.table\((.+)\);#', $logEntry, $matches);
                     $this->assertSame(json_encode($trace), $matches[1]);
                 },
                 'text' => function ($logEntry) use ($values) {
                     $trace = $this->debug->getData('log/0/args/0');
-                    $expect = 'trace = '.$this->debug->routeText->dump($trace);
+                    $expect = 'trace = '.$this->debug->dumpText->dump($trace);
                     $this->assertNotEmpty($trace);
                     $this->assertSame($expect, trim($logEntry));
                 },
@@ -2168,7 +2149,7 @@ EOD;
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php: line %d");',
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Type":"WARN","File":"'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);

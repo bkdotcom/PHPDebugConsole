@@ -35,18 +35,18 @@ class InternalTest extends DebugTestFramework
         $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
-        $this->debug->log('this is a test');
-        $this->debug->log(new \DateTime());
-
         /*
             Test that emailed if something logged
         */
+        $this->debug->log('this is a test');
+        $this->debug->log(new \DateTime());
         $this->expectedSubject = 'Debug Log';
         $this->debug->internal->onShutdownLow();
         $this->assertTrue($this->emailCalled);
         $this->emailCalled = false;
 
-        $this->debug->setCfg('emailLog', true);
+
+        $this->debug->setCfg('emailLog', 'onError');
 
         /*
             Test that not emailed if no error
@@ -57,7 +57,6 @@ class InternalTest extends DebugTestFramework
         /*
             Test that not emailed for notice
         */
-        // $notice[bar] = 'undefined constant';    // this is a warning in PHP 7.2
         $notice = $undefinedVar;
         $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
@@ -84,7 +83,7 @@ class InternalTest extends DebugTestFramework
         $this->emailCalled = true;
         $this->assertSame($this->debug->getCfg('emailTo'), $toAddr);
         $this->assertSame($this->expectedSubject, $subject);
-        $unserialized = $this->debug->utilities->unserializeLog($this->debug, $body);
+        $unserialized = $this->debug->routeEmail->unserializeLog($body, $this->debug);
         $expect = array(
             'alerts' => $this->debug->getData('alerts'),
             'log' => $this->debug->getData('log'),
@@ -156,7 +155,7 @@ class InternalTest extends DebugTestFramework
                     'notInConsole' => 0,
                 )
             ),
-        ), $this->debug->internal->errorStats());
+        ), $this->debug->errorStats());
     }
 
     public function testHasLog()

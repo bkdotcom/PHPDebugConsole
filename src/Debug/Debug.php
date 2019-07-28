@@ -17,6 +17,7 @@ namespace bdk;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
+use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utilities;
 use bdk\ErrorHandler;
@@ -96,9 +97,9 @@ class Debug
             'emailFunc' => 'mail',  // callable
             'emailLog'  => false,   // Whether to email a debug log.  (requires 'collect' to also be true)
                                     //
-                                    //   false:   email will not be sent
-                                    //   true or 'onError':   email will be sent (if log is not output)
-                                    //   'always':  email sent regardless of whether error occured or log output
+                                    //   false:             email will not be sent
+                                    //   true or 'always':  email sent (if log is not output)
+                                    //   'onError':         email sent if error occured (unless output)
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
@@ -301,21 +302,21 @@ class Debug
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }
+        $val = null;
         if (\strpos($property, 'route') === 0) {
             $classname = '\\bdk\\Debug\\Route\\'.\substr($property, 5);
             $val = new $classname($this);
-            $val->setCfg($this->config->getValues($property));
             $this->{$property} = $val;
-            return $val;
         }
         if (\strpos($property, 'dump') === 0) {
             $classname = '\\bdk\\Debug\\Dump\\'.\substr($property, 4);
             $val = new $classname($this);
-            $val->setCfg($this->config->getValues($property));
             $this->{$property} = $val;
-            return $val;
         }
-        return null;
+        if ($val instanceof ConfigurableInterface) {
+            $val->setCfg($this->config->getValues($property));
+        }
+        return $val;
     }
 
     /*

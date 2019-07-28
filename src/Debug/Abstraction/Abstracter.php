@@ -12,19 +12,19 @@
 namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
+use bdk\Debug\Component;
 use bdk\Debug\PhpDoc;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractArray;
 use bdk\Debug\Abstraction\AbstractObject;
 
 /**
- * Methods used store array/object/resource info
+ * Store array/object/resource info
  */
-class Abstracter
+class Abstracter extends Component
 {
 
     public $debug;
-    protected $cfg = array();
     protected $abstractArray;
     protected $abstractObject;
 
@@ -55,24 +55,6 @@ class Abstracter
         $this->setCfg($cfg);
         $this->abstractArray = new AbstractArray($this);
         $this->abstractObject = new AbstractObject($this, new PhpDoc());
-    }
-
-    /**
-     * Retrieve a config or data value
-     *
-     * @param string $path what to get
-     *
-     * @return mixed
-     */
-    public function getCfg($path = null)
-    {
-        if (!\strlen($path)) {
-            return $this->cfg;
-        }
-        if (isset($this->cfg[$path])) {
-            return $this->cfg[$path];
-        }
-        return null;
     }
 
     /**
@@ -182,33 +164,14 @@ class Abstracter
     }
 
     /**
-     * Set one or more config values
-     *
-     *    setCfg('key', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
-     *
-     * @param string $mixed  key=>value array or key
-     * @param mixed  $newVal value
-     *
-     * @return mixed old value(s)
+     * {@inheritDoc}
      */
-    public function setCfg($mixed, $newVal = null)
+    protected function postSetCfg($cfg = array())
     {
-        $ret = null;
-        if (\is_string($mixed)) {
-            $ret = isset($this->cfg[$mixed])
-                ? $this->cfg[$mixed]
-                : null;
-            $this->cfg[$mixed] = $newVal;
-        } elseif (\is_array($mixed)) {
-            $ret = \array_intersect_key($this->cfg, $mixed);
-            $this->cfg = \array_merge($this->cfg, $mixed);
-        }
         $debugClass = \get_class($this->debug);
         if (!\in_array($debugClass, $this->cfg['objectsExclude'])) {
             $this->cfg['objectsExclude'][] = $debugClass;
         }
-        return $ret;
     }
 
     /**

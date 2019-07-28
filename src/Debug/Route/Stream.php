@@ -98,58 +98,8 @@ class Stream extends Text
                 array('=========')
             );
         }
-        /*
-        if ($logEntry['args']) {
-            $str = $this->processLogEntryViaEvent($logEntry);
-            \fwrite($this->fileHandle, $str);
-        } elseif ($method == 'groupEnd' && $this->depth > 0) {
-            $this->depth --;
-        }
-        */
         $str = $this->processLogEntryViaEvent($logEntry);
         \fwrite($this->fileHandle, $str);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    /*
-    public function processLogEntry(LogEntry $logEntry)
-    {
-        $method = $logEntry['method'];
-        $escapeCode = '';
-        if ($this->ansi) {
-            if ($method == 'alert') {
-                $level = $logEntry['meta']['level'];
-                $escapeCode = $this->cfg['escapeCodesLevels'][$level];
-            } elseif (isset($this->cfg['escapeCodesMethods'][$method])) {
-                $escapeCode = $this->cfg['escapeCodesMethods'][$method];
-            }
-        }
-        $this->escapeReset = $escapeCode ?: "\e[0m";
-        $str = parent::processLogEntry($logEntry);
-        if ($str && $escapeCode) {
-            $strIndent = \str_repeat('    ', $this->depth);
-            $str = \preg_replace('#^('.$strIndent.')(.+)$#m', '$1'.$escapeCode.'$2'."\e[0m", $str);
-        }
-        return $str;
-    }
-    */
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setCfg($mixed, $val = null)
-    {
-        $return = parent::setCfg($mixed, $val);
-        if (!\is_array($mixed)) {
-            $mixed = array($mixed => $val);
-        }
-        if (\array_key_exists('stream', $mixed)) {
-            // changing stream?
-            $this->openStream($mixed['stream']);
-        }
-        return $return;
     }
 
     /**
@@ -199,6 +149,17 @@ class Stream extends Text
                 // we just created file
                 \chmod($stream, 0660);
             }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function postSetCfg($cfg = array())
+    {
+        if (\array_key_exists('stream', $cfg)) {
+            // changing stream?
+            $this->openStream($cfg['stream']);
         }
     }
 }

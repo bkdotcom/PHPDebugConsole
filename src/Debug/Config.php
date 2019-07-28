@@ -437,9 +437,6 @@ class Config
      */
     private function setDupeValues($values)
     {
-        if (isset($values['debug']['emailLog']) && $values['debug']['emailLog'] === true) {
-            $values['debug']['emailLog'] = 'onError';
-        }
         foreach (array('emailFrom','emailFunc','emailTo') as $key) {
             if (isset($values['debug'][$key]) && !isset($values['errorEmailer'][$key])) {
                 // also set for errorEmailer

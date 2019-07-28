@@ -167,6 +167,40 @@ class OnBootstrap
     }
 
     /**
+     * Log $_POST or php://input & $_FILES
+     *
+     * @return void
+     */
+    private function logPost()
+    {
+        if (!isset($_SERVER['REQUEST_METHOD'])) {
+            return;
+        }
+        $correctContentType = $this->testPostContentType($detected);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $correctContentType) {
+            // $_POST could be empty
+            $this->debug->log('$_POST', $_POST);
+        } else {
+            if ($detected) {
+                $this->debug->warn(
+                    'It appears '.$detected.' was posted with the wrong Content-Type'."\n"
+                    .'Pay no attention to $_POST and use php://input',
+                    $this->debug->meta('detectFiles', false)
+                );
+            }
+            $input = \file_get_contents('php://input');
+            if ($input) {
+                $this->debug->log('php://input', $input);
+            } elseif (empty($_FILES)) {
+                $this->debug->warn($_SERVER['REQUEST_METHOD'].' request with no body');
+            }
+        }
+        if (!empty($_FILES)) {
+            $this->debug->log('$_FILES', $_FILES);
+        }
+    }
+
+    /**
      * Log Cookie, Post, & Files data
      *
      * @return void
@@ -181,22 +215,10 @@ class OnBootstrap
         }
         // don't expect a request body for these methods
         $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
-        $noBody = !isset($_SERVER['REQUEST_METHOD'])
-            || \in_array($_SERVER['REQUEST_METHOD'], $noBodyMethods);
-        if ($this->debug->getCfg('logEnvInfo.post') && !$noBody) {
-            if ($_POST) {
-                $this->debug->log('$_POST', $_POST);
-            } else {
-                $input = \file_get_contents('php://input');
-                if ($input) {
-                    $this->debug->log('php://input', $input);
-                } elseif (isset($_SERVER['REQUEST_METHOD']) && empty($_FILES)) {
-                    $this->debug->warn($_SERVER['REQUEST_METHOD'].' request with no body');
-                }
-            }
-            if (!empty($_FILES)) {
-                $this->debug->log('$_FILES', $_FILES);
-            }
+        $expectBody = isset($_SERVER['REQUEST_METHOD'])
+            && !\in_array($_SERVER['REQUEST_METHOD'], $noBodyMethods);
+        if ($this->debug->getCfg('logEnvInfo.post') && $expectBody) {
+            $this->logPost();
         }
     }
 
@@ -256,5 +278,41 @@ class OnBootstrap
         }
         \ksort($vals, SORT_NATURAL);
         $this->debug->log('$_SERVER', $vals);
+    }
+
+    /**
+     * Test if $_POST is properly populated or not
+     *
+     * If JSON or XML is posted using the default application/x-www-form-urlencoded Content-Type
+     * $_POST will be improperly populated
+     *
+     * @param string $detected Will get populated with detected content type
+     *
+     * @return boolean
+     */
+    private function testPostContentType(&$detected)
+    {
+        if (!$_POST) {
+            // nothing in $_POST means it can't be wrong
+            return true;
+        }
+        /*
+        $_POST is populated...
+            which means Content-Type was application/x-www-form-urlencoded or multipart/form-data
+            if we detect php://input is json or XML, then must have been
+            posted with wrong Content-Type
+        */
+        $input = \file_get_contents('php://input');
+        $json = \json_decode($input, true);
+        $isJson = \json_last_error() === JSON_ERROR_NONE && \is_array($json);
+        if ($isJson) {
+            $detected = 'json';
+            return false;
+        }
+        if ($this->debug->utilities->isXml($input)) {
+            $detected = 'xml';
+            return false;
+        }
+        return true;
     }
 }

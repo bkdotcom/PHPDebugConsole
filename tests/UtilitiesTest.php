@@ -394,7 +394,7 @@ class UtilitiesTest extends DebugTestFramework
     /*
     public function testUnserializeLog($serialized, $unserialized)
     {
-        $log = Utilities::unserializeLog($this->debug, $serialized);
+        $log = Utilities::unserializeLog($serialized, $this->debug);
         $this->assertSame($unserialized, $log);
     }
     */

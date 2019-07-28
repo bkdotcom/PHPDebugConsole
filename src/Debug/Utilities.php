@@ -513,6 +513,24 @@ class Utilities
     }
 
     /**
+     * Test if string is valid xml
+     *
+     * @param string $str string to test
+     *
+     * @return boolean
+     */
+    public static function isXml($str)
+    {
+        if (!\is_string($str)) {
+            return false;
+        }
+        \libxml_use_internal_errors(true);
+        $xmlDoc = \simplexml_load_string($str);
+        \libxml_clear_errors();
+        return $xmlDoc !== false;
+    }
+
+    /**
      * Determine PHP's MemoryLimit
      *
      * @return string
@@ -608,79 +626,6 @@ class Utilities
                 .(isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : $_SERVER['REQUEST_TIME'])
                 .(isset($_SERVER['REMOTE_PORT']) ? $_SERVER['REMOTE_PORT'] : '')
         );
-    }
-
-    /**
-     * serialize log for emailing
-     *
-     * @param array $data log data to serialize
-     *
-     * @return string
-     */
-    public static function serializeLog($data)
-    {
-        foreach (array('alerts','log','logSummary') as $what) {
-            foreach ($data[$what] as $i => $v) {
-                if ($what == 'logSummary') {
-                    foreach ($v as $i2 => $v2) {
-                        $v2 = $v2->export();
-                        $data['logSummary'][$i][$i2] = \array_values($v2);
-                    }
-                } else {
-                    $v = $v->export();
-                    $data[$what][$i] = \array_values($v);
-                }
-            }
-        }
-        $str = \serialize($data);
-        if (\function_exists('gzdeflate')) {
-            $str = \gzdeflate($str);
-        }
-        $str = \chunk_split(\base64_encode($str), 124);
-        return "START DEBUG\n"
-            .$str    // chunk_split appends a "\r\n"
-            .'END DEBUG';
-    }
-
-    /**
-     * Use to unserialize the log serialized by emailLog
-     *
-     * @param Debug  $debug debug instance
-     * @param string $str   serialized log data
-     *
-     * @return array | false
-     */
-    public static function unserializeLog(Debug $debug, $str)
-    {
-        $strStart = 'START DEBUG';
-        $strEnd = 'END DEBUG';
-        if (\preg_match('/'.$strStart.'[\r\n]+(.+)[\r\n]+'.$strEnd.'/s', $str, $matches)) {
-            $str = $matches[1];
-        }
-        $str = self::isBase64Encoded($str)
-            ? \base64_decode($str)
-            : false;
-        if ($str && \function_exists('gzinflate')) {
-            $strInflated = \gzinflate($str);
-            if ($strInflated) {
-                $str = $strInflated;
-            }
-        }
-        $data = self::unserializeSafe($str, array(
-            'bdk\\Debug\\Abstraction\\Abstraction',
-        ));
-        foreach (array('alerts','log','logSummary') as $what) {
-            foreach ($data[$what] as $i => $v) {
-                if ($what == 'logSummary') {
-                    foreach ($v as $i2 => $v2) {
-                        $data['logSummary'][$i][$i2] = new LogEntry($debug, $v2[0], $v2[1], $v2[2]);
-                    }
-                } else {
-                    $data[$what][$i] = new LogEntry($debug, $v[0], $v[1], $v[2]);
-                }
-            }
-        }
-        return $data;
     }
 
     /**
@@ -800,34 +745,5 @@ class Utilities
     private static function isCallable($array)
     {
         return \is_callable($array, true) && \is_object($array[0]);
-    }
-
-    /**
-     * Unserialize while only allowing the specified classes to be unserialized
-     *
-     * @param string $str            serialized string
-     * @param array  $allowedClasses allowed class names
-     *
-     * @return mixed
-     */
-    private static function unserializeSafe($str, $allowedClasses = array())
-    {
-        if (\version_compare(PHP_VERSION, '7.0', '>=')) {
-            // 2nd param is PHP >= 7.0 (get a warning: unserialize() expects exactly 1 parameter, 2 given)
-            return \unserialize($str, array(
-                'allowed_classes' => $allowedClasses,
-            ));
-        }
-        // There's a possibility this pattern may be found inside a string (false positive)
-        $regex = '#[CO]:(\d+):"([\w\\\\]+)":\d+:#';
-        \preg_match_all($regex, $str, $matches, PREG_SET_ORDER);
-        foreach ($matches as $set) {
-            if (\strlen($set[2]) !== $set[1]) {
-                continue;
-            } elseif (!\in_array($set[2], $allowedClasses)) {
-                return false;
-            }
-        }
-        return \unserialize($str);
     }
 }

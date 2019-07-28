@@ -13,6 +13,8 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug;
+use bdk\Debug\Component;
+use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\Debug\Abstraction\Abstracter;
@@ -21,11 +23,10 @@ use bdk\Debug\Abstraction\Abstraction;
 /**
  * Base output plugin
  */
-class Base
+class Base extends Component implements ConfigurableInterface
 {
 
     public $debug;
-    protected $cfg = array();
     protected $dumpType;
     protected $dumpTypeMore;
 
@@ -38,21 +39,6 @@ class Base
     {
         $this->debug = $debug;
         $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
-    }
-
-    /**
-     * Magic getter
-     *
-     * @param string $prop property to get
-     *
-     * @return mixed
-     */
-    public function __get($prop)
-    {
-        $getter = 'get'.\ucfirst($prop);
-        if (\method_exists($this, $getter)) {
-            return $this->{$getter}();
-        }
     }
 
     /**
@@ -94,23 +80,6 @@ class Base
     }
 
     /**
-     * Get config value(s)
-     *
-     * @param string $key (optional) key
-     *
-     * @return mixed
-     */
-    public function getCfg($key = null)
-    {
-        if ($key === null) {
-            return $this->cfg;
-        }
-        return isset($this->cfg[$key])
-            ? $this->cfg[$key]
-            : null;
-    }
-
-    /**
      * Extend me to format classname/constant, etc
      *
      * @param string $str classname or classname(::|->)name (method/property/const)
@@ -143,32 +112,6 @@ class Base
         } else {
             $this->methodDefault($logEntry);
         }
-    }
-
-    /**
-     * Set one or more config values
-     *
-     *    setCfg('key', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
-     *
-     * @param string $mixed key=>value array or key
-     * @param mixed  $val   new value
-     *
-     * @return mixed returns previous value(s)
-     */
-    public function setCfg($mixed, $val = null)
-    {
-        $ret = null;
-        if (\is_string($mixed)) {
-            $ret = isset($this->cfg[$mixed])
-                ? $this->cfg[$mixed]
-                : null;
-            $this->cfg[$mixed] = $val;
-        } elseif (\is_array($mixed)) {
-            $ret = \array_intersect_key($this->cfg, $mixed);
-            $this->cfg = \array_merge($this->cfg, $mixed);
-        }
-        return $ret;
     }
 
     /**

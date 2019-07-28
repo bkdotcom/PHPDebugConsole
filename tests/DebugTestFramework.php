@@ -109,7 +109,7 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->setData($resetValues);
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
-        $this->debug->errorHandler->setData('lastError', null);
+        $this->debug->errorHandler->setData('lastErrors', array());
         if (!isset($this->file)) {
             /*
             this dummy test won't do any assertions, but will set

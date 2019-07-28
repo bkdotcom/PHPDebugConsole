@@ -400,7 +400,7 @@ class Internal implements SubscriberInterface
         $this->debug->eventManager->unsubscribe('debug.log', array($this, 'onDebugLogShutdown'));
         if ($this->testEmailLog()) {
             $this->runtimeVals();
-            $this->emailLog();
+            $this->debug->routeEmail->emailLog();
         }
         if (!$this->debug->getData('outputSent')) {
             echo $this->debug->output();
@@ -639,10 +639,12 @@ class Internal implements SubscriberInterface
         if (!$this->hasLog()) {
             return false;
         }
-        if ($this->debug->getCfg('emailLog') === 'always') {
+        $emailLog = $this->debug->getCfg('emailLog');
+        if (\in_array($emailLog, array(true, 'always'), true)) {
             return true;
         }
         if ($this->debug->getCfg('emailLog') === 'onError') {
+            // see if we handled any unsupressed errors of types specified with emailMask
             $errors = $this->debug->errorHandler->get('errors');
             $emailMask = $this->debug->errorEmailer->getCfg('emailMask');
             $emailableErrors = \array_filter($errors, function ($error) use ($emailMask) {

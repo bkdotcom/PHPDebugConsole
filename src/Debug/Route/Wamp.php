@@ -29,7 +29,6 @@ class Wamp implements RouteInterface
 {
 
     public $debug;
-    protected $name = 'wamp';
     public $requestId;
     public $topic = 'bdk.debug';
     public $wamp;

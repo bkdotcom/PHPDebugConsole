@@ -131,7 +131,7 @@ class ChromeLogger extends Base
     protected function encode($data)
     {
         $data = \json_encode($data);
-        $data = str_replace(\json_encode(Abstracter::UNDEFINED), 'null', $data);
+        $data = \str_replace(\json_encode(Abstracter::UNDEFINED), 'null', $data);
         return \base64_encode(\utf8_encode($data));
     }
 }

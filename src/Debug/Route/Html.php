@@ -148,7 +148,7 @@ class Html extends Base
         // $this->channels = array();
         $this->data = $this->debug->getData();
         // this could go in an extended processAlerts method
-        $errorSummary = $this->errorSummary->build($this->debug->internal->errorStats());
+        $errorSummary = $this->errorSummary->build($this->debug->errorStats());
         if ($errorSummary) {
             \array_unshift($this->data['alerts'], new LogEntry(
                 $this->debug,
@@ -219,23 +219,13 @@ class Html extends Base
     }
 
     /**
-     * Set one or more config values
-     *
-     *    setCfg('key', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
-     *
-     * @param string $mixed key=>value array or key
-     * @param mixed  $val   new value
-     *
-     * @return mixed returns previous value(s)
+     * {@inheritDoc}
      */
-    public function setCfg($mixed, $val = null)
+    protected function postSetCfg($cfg = array())
     {
-        $ret = parent::setCfg($mixed, $val);
         foreach (array('filepathCss', 'filepathScript') as $k) {
             $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__.'/../', $this->cfg[$k]);
         }
-        return $ret;
     }
 
     /**

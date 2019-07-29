@@ -58,6 +58,11 @@ class Text extends Base
             $str = $this->methodGroup($logEntry);
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
             $this->depth --;
+            if ($logEntry->getMeta('closesSummary')) {
+                $str = '=======';
+            }
+        } elseif ($method == 'groupSummary') {
+            $str = '=======';
         } elseif (\in_array($method, array('profileEnd','table','trace'))) {
             $str = $this->methodTabular($logEntry);
         } else {

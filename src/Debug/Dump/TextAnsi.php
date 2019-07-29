@@ -104,6 +104,8 @@ class TextAnsi extends Text
             $escapeCode = $this->cfg['escapeCodesLevels'][$level];
         } elseif (isset($this->cfg['escapeCodesMethods'][$method])) {
             $escapeCode = $this->cfg['escapeCodesMethods'][$method];
+        } elseif ($method == 'groupSummary' || $logEntry->getMeta('closesSummary')) {
+            $escapeCode = "\e[2m";
         }
         $this->escapeReset = $escapeCode ?: "\e[0m";
         $str = parent::processLogEntry($logEntry);

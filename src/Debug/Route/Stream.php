@@ -80,24 +80,6 @@ class Stream extends Text
         if ($method == 'groupUncollapse') {
             return;
         }
-        $isSummaryBookend = $method == 'groupSummary' || $logEntry->getMeta('closesSummary');
-        if ($isSummaryBookend) {
-            /*
-            $strIndent = \str_repeat('    ', $this->depth);
-            $str = '========='."\n";
-            if ($this->ansi) {
-                $str = "\e[2m{$str}\e[0m";
-            }
-            $str = $strIndent.$str;
-            \fwrite($this->fileHandle, $str);
-            return;
-            */
-            $logEntry = new LogEntry(
-                $logEntry->getSubject(),
-                'log',
-                array('=========')
-            );
-        }
         $str = $this->processLogEntryViaEvent($logEntry);
         \fwrite($this->fileHandle, $str);
     }

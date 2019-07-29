@@ -104,7 +104,15 @@ class OnBootstrap
             return !\extension_loaded($extension);
         });
         if ($extensionsCheck) {
-            $this->debug->warn('These common extensions are not loaded:', $extensionsCheck);
+            $this->debug->warn(
+                'These common extensions are not loaded:',
+                $extensionsCheck,
+                $this->debug->meta(array(
+                    'detectFiles' => false,
+                    'file' => null,
+                    'line' => null,
+                ))
+            );
         }
         $this->logPhpInfoEr();
     }
@@ -185,14 +193,25 @@ class OnBootstrap
                 $this->debug->warn(
                     'It appears '.$detected.' was posted with the wrong Content-Type'."\n"
                     .'Pay no attention to $_POST and use php://input',
-                    $this->debug->meta('detectFiles', false)
+                    $this->debug->meta(array(
+                        'detectFiles' => false,
+                        'file' => null,
+                        'line' => null,
+                    ))
                 );
             }
             $input = \file_get_contents('php://input');
             if ($input) {
                 $this->debug->log('php://input', $input);
             } elseif (empty($_FILES)) {
-                $this->debug->warn($_SERVER['REQUEST_METHOD'].' request with no body');
+                $this->debug->warn(
+                    $_SERVER['REQUEST_METHOD'].' request with no body',
+                    $this->debug->meta(array(
+                        'detectFiles' => false,
+                        'file' => null,
+                        'line' => null,
+                    ))
+                );
             }
         }
         if (!empty($_FILES)) {

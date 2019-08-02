@@ -1411,10 +1411,6 @@ class Debug
             $this->config->setValues($cfgRestore);
             return null;
         }
-        /*
-            I'd like to put this outputAs setting bit inside Output::onOutput
-            but, adding a debug.output subscriber from within a debug.output subscriber = fail
-        */
         $outputAs = $this->getCfg('outputAs');
         if (\is_string($outputAs)) {
             $this->setCfg('outputAs', $outputAs);

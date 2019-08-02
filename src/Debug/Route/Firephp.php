@@ -57,7 +57,7 @@ class Firephp extends Base
      *
      * @return void
      */
-    public function onOutput(Event $event)
+    public function processLogEntries(Event $event)
     {
         $this->outputEvent = $event;
         $this->data = $this->debug->getData();
@@ -108,6 +108,7 @@ class Firephp extends Base
         } elseif (\in_array($method, array('profileEnd','table','trace'))) {
             $value = $this->methodTabular($logEntry);
         } elseif (\count($args)) {
+            $this->dump->processLogEntry($logEntry);
             $value = $this->getValue($logEntry);
         }
         if ($this->messageIndex < self::MESSAGE_LIMIT) {
@@ -139,7 +140,6 @@ class Firephp extends Base
                 ? $args // firephp only supports label/value...  we'll pass multiple values as an array
                 : $args[0];
         }
-        $value = $this->dump->dump($value);
         return $value;
     }
 

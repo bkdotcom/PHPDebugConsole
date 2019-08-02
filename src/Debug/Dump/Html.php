@@ -13,6 +13,7 @@ namespace bdk\Debug\Dump;
 
 use bdk\Debug\LogEntry;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 
 /**
  * Dump val as HTML
@@ -24,7 +25,6 @@ class Html extends Base
 {
 
     protected $argAttribs = array();
-    protected $argStringOpts = array();     // per-argument string options
     protected $channels = array();
     protected $detectFiles = false;
     protected $logEntryAttribs = array();
@@ -47,28 +47,10 @@ class Html extends Base
             'class' => array(),
             'title' => null,
         );
-        $optsDefault = array(
-            'addQuotes' => true,
-            'sanitize' => true,
-            'visualWhiteSpace' => true,
-        );
-        if (\is_bool($opts)) {
-            $keys = \array_keys($optsDefault);
-            $opts = \array_fill_keys($keys, $opts);
-        } else {
-            $opts = \array_merge($optsDefault, $opts);
-        }
-        $absAttribs = array();
-        if ($val instanceof Abstraction) {
-            $absAttribs = $val['attribs'];
-            foreach (\array_keys($opts) as $k) {
-                if ($val[$k] !== null) {
-                    $opts[$k] = $val[$k];
-                }
-            }
-        }
-        $this->argStringOpts = $opts;
-        $val = parent::dump($val);
+        $absAttribs = $val instanceof Abstraction
+            ? $val['attribs']
+            : array();
+        $val = parent::dump($val, $opts);
         if ($tagName && !\in_array($this->dumpType, array('recursion'))) {
             $argAttribs = $this->debug->utilities->arrayMergeDeep(
                 array(
@@ -495,7 +477,10 @@ class Html extends Base
             }
             if (\count($args) > 1 && \is_string($args[0])) {
                 $hasSubs = false;
-                $args = $this->processSubstitutions($args, $hasSubs);
+                $args = $this->processSubstitutions($args, $hasSubs, array(
+                    'replace' => true,
+                    'style' => true,
+                ));
                 if ($hasSubs) {
                     $meta['sanitizeFirst'] = false;
                     $args = array( \implode('', $args) );
@@ -645,13 +630,19 @@ class Html extends Base
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
         if ($type == 'string') {
+            // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
             $val = $this->dump($val, true, false);
         } elseif ($type == 'array') {
             $count = \count($val);
             $val = '<span class="t_keyword">array</span>'
                 .'<span class="t_punct">(</span>'.$count.'<span class="t_punct">)</span>';
         } elseif ($type == 'object') {
-            $val = $this->markupIdentifier($val['className']);
+            $toStr = AbstractObject::toString($val);
+            if ($toStr) {
+                $val = $this->dump($toStr, true, false);
+            } else {
+                $val = $this->markupIdentifier($val['className']);
+            }
         } else {
             $val = $this->dump($val);
         }

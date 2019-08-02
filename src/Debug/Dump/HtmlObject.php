@@ -13,6 +13,7 @@ namespace bdk\Debug\Dump;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Dump\Html;
 
 /**
@@ -90,12 +91,7 @@ class HtmlObject
      */
     protected function dumpToString(Abstraction $abs)
     {
-        $val = '';
-        if ($abs['stringified']) {
-            $val = $abs['stringified'];
-        } elseif (isset($abs['methods']['__toString']['returnValue'])) {
-            $val = $abs['methods']['__toString']['returnValue'];
-        }
+        $val = AbstractObject::toString($abs);
         if (!$val) {
             return '';
         }

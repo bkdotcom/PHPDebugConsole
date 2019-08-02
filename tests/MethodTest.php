@@ -908,7 +908,7 @@ class MethodTest extends DebugTestFramework
                     <dt class="methods">no methods</dt>
                     </dl>
                     </span>, <span class="t_resource">Resource id #%d: stream</span></li>',
-                'text' => '⦻ a string, array(), (object) stdClass
+                'text' => '⦻ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%i: stream',
                 'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
@@ -1518,7 +1518,7 @@ EOD;
                     <dt class="methods">no methods</dt>
                     </dl>
                     </span>, <span class="t_resource">Resource id #%d: stream</span></li>',
-                'text' => 'ℹ a string, array(), (object) stdClass
+                'text' => 'ℹ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.info("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
@@ -1576,11 +1576,14 @@ EOD;
                     <dt class="methods">no methods</dt>
                     </dl>
                     </span>, <span class="t_resource">Resource id #%d: stream</span></li>',
-                'text' => 'a string, array(), (object) stdClass
+                'text' => 'a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.log("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
                 'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"LOG"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'streamAnsi' => "a string\e[38;5;245m, \e[0m\e[38;5;45marray\e[38;5;245m(\e[0m\e[38;5;245m)\e[0m\e[38;5;245m, \e[0mstdClass
+                    Properties: none!
+                    Methods: none!\e[38;5;245m, \e[0mResource id #%d: stream",
             )
         );
         fclose($resource);
@@ -1593,49 +1596,205 @@ EOD;
         );
     }
 
+
+    public function providerTestLogSubstitution()
+    {
+        $location = 'http://localhost/?foo=bar&jim=slim';
+        $datetime = new \DateTime();
+        $binary = base64_decode('j/v9wNrF5i1abMXFW/4vVw==');
+        $binaryStr = \trim(\chunk_split(\bin2hex($binary), 2, ' '));
+        $time = time();
+        $timeStr = date('Y-m-d H:i:s', $time);
+        return array(
+            array(
+                'log',
+                array(
+                    '%cLocation:%c <a href="%s">%s</a>',
+                    'font-weight:bold;',
+                    '',
+                    $location,
+                    $location,
+                    'ignored',
+                    Debug::_meta('sanitize', false),
+                ),
+                array(
+                    'entry' => array(
+                        'log',
+                        '{{args}}',
+                        array(
+                            'sanitize' => false,
+                        ),
+                    ),
+                    'chromeLogger' => array(
+                        '{{args}}',
+                        null,
+                        '',
+                    ),
+                    'firephp' => 'X-Wf-1-1-1-19: %d|[{"Label":{{label}},"Type":"LOG"},{{args}}]|',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></li>',
+                    'script' => 'console.log({{args}});',
+                    'text' => 'Location: http://localhost/?foo=bar&jim=slim',
+                ),
+            ),
+            array(
+                'log',
+                array(
+                    '%s %s %s %s %s',
+                    array(0),
+                    array(),
+                    null,
+                    true,
+                    false,
+                ),
+                array(
+                    'chromeLogger' => array(
+                        '{{args}}',
+                        null,
+                        '',
+                    ),
+                    'firephp' => 'X-Wf-1-1-1-19: %d|[{"Label":{{label}},"Type":"LOG"},{{args}}]|',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">'
+                        .'<span class="t_keyword">array</span><span class="t_punct">(</span>1<span class="t_punct">)</span>'
+                        .' <span class="t_keyword">array</span><span class="t_punct">(</span>0<span class="t_punct">)</span>'
+                        .' <span class="t_null">null</span>'
+                        .' <span class="t_bool true">true</span>'
+                        .' <span class="false t_bool">false</span>'
+                        .'</span></li>',
+                    'script' => 'console.log({{args}});',
+                    'text' => 'array(1) array(0) null true false',
+                ),
+            ),
+            array(
+                'log',
+                array(
+                    '%s %s %s %s %s',
+                    123.45,
+                    42,
+                    $time,
+                    '<i>boring</i>',
+                    $binary, // binary
+                ),
+                array(
+                    'entry' => array(
+                        'log',
+                        '{{args}}',
+                        array(),
+                    ),
+                    'chromeLogger' => array(
+                        array(
+                            '%s %s %s %s %s',
+                            123.45,
+                            42,
+                            $time.' ('.$timeStr.')',
+                            '<i>boring</i>',
+                            $binaryStr, // binary
+                        ),
+                        null,
+                        '',
+                    ),
+                    'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":{{label}},"Type":"LOG"},[123.45,42,"'.$time.' ('.$timeStr.')","<i>boring<\/i>","'.$binaryStr.'"]]|',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">'
+                        .'<span class="t_float">123.45</span>'
+                        .' <span class="t_int">42</span>'
+                        .' <span class="t_int timestamp" title="'.$timeStr.'">'.$time.'</span>'
+                        .' &lt;i&gt;boring&lt;/i&gt;'
+                        .' <span class="binary">'.$binaryStr.'</span>'
+                        .'</span></li>',
+                    'script' => 'console.log("%%s %%s %%s %%s %%s",123.45,42,"'.$time.' ('.$timeStr.')","<i>boring<\/i>","'.$binaryStr.'");',
+                    'text' => '123.45 42 📅 '.$time.' ('.$timeStr.') boring '.$binaryStr,
+                ),
+            ),
+            /*
+                // 'object' => $test,
+                // 'object2' => $test2,
+                'resource closed' => $resource,
+                'resource open' => $resource2,
+                'string numeric' => '42',
+                'string timestamp' => (string) time(),
+            */
+            array(
+                'log',
+                array(
+                    '%s %s %s',
+                    array($this, __FUNCTION__), // callable
+                    function ($foo, $bar) {
+                        return $foo.$bar;
+                    },
+                    $datetime,
+                ),
+                array(
+                    'chromeLogger' => array(
+                        array(
+                            '%s %s %s',
+                            'callable: MethodTest::providerTestLogSubstitution',
+                            'Closure',
+                            $datetime->format(\DateTime::ISO8601),
+                        ),
+                        null,
+                        '',
+                    ),
+                    'firephp' => 'X-Wf-1-1-1-19: %d|[{"Label":{{label}},"Type":"LOG"},['
+                        .'"callable: MethodTest::providerTestLogSubstitution",'
+                        .'"Closure",'
+                        .'"'.$datetime->format(\DateTime::ISO8601).'"'
+                        .']]|',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">'
+                        .'<span class="t_callable"><span class="t_type">callable</span> <span class="classname">MethodTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestLogSubstitution</span></span>'
+                        .' <span class="classname">Closure</span>'
+                        .' '.$datetime->format(\DateTime::ISO8601)
+                        .'</span></li>',
+                    'script' => 'console.log("%%s %%s %%s","callable: MethodTest::providerTestLogSubstitution","Closure","'.$datetime->format(\DateTime::ISO8601).'");',
+                    'text' => 'callable: MethodTest::providerTestLogSubstitution Closure '.$datetime->format(\DateTime::ISO8601),
+                )
+            ),
+        );
+    }
+
     /**
      * Test
      *
+     * @dataProvider providerTestLogSubstitution
+     *
      * @return void
      */
-    public function testLogSubstitution()
+    public function testLogSubstitution($method, $args, $tests)
     {
-        $location = 'http://localhost/?foo=bar&jim=slim';
-        $args = array(
-            '%cLocation:%c <a href="%s">%s</a>',
-            'font-weight:bold;',
-            '',
-            $location,
-            $location,
+        $GLOBALS['turd'] = true;
+        $argsSansMeta = array();
+        foreach ($args as $arg) {
+            $isMeta = \is_array($arg) && isset($arg['debug']) && $arg['debug'] === Debug::META;
+            if (!$isMeta) {
+                $argsSansMeta[] = $arg;
+            }
+        }
+        $replace = array(
+            '%c' => '%%c',
+            '%s' => '%%s',
         );
-        $this->testMethod(
-            'log',
-            array_merge($args, array(Debug::_meta('sanitize', false))),
-            array(
-                'entry' => array(
-                    'log',
-                    array(
-                        '%cLocation:%c <a href="%s">%s</a>',
-                        'font-weight:bold;',
-                        '',
-                        $location,
-                        $location,
-                    ),
-                    array(
-                        'sanitize' => false,
-                    ),
-                ),
-                'chromeLogger' => array(
-                    $args,
-                    null,
-                    '',
-                ),
-                'firephp' => str_replace('%c', '%%c', 'X-Wf-1-1-1-19: 168|[{"Label":"%cLocation:%c <a href=\"%s\">%s<\/a>","Type":"LOG"},'.json_encode(array_slice($args, 1)).']|'),
-                'html' => '<li class="m_log"><span class="no-quotes t_string"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></li>',
-                'script' => str_replace('%c', '%%c', 'console.log('.trim(json_encode($args), '[]').');'),
-                'text' => 'Location: "http://localhost/?foo=bar&jim=slim"',
-            )
-        );
+        $label = json_encode($argsSansMeta[0]);
+        $label = strtr($label, $replace);
+        foreach ($tests as $name => $test) {
+            if (is_array($test)) {
+                foreach ($test as $i => $val) {
+                    if ($val === '{{args}}') {
+                        $tests[$name][$i] = $argsSansMeta;
+                    }
+                }
+            } else {
+                $test = str_replace('{{label}}', $label, $test);
+                if (strpos($test, '{{args}}') !== false) {
+                    $argStr = $name == 'firephp'
+                        ? json_encode(array_slice($argsSansMeta, 1))
+                        : trim(json_encode($argsSansMeta), '[]');
+                    $argStr = strtr($argStr, $replace);
+                    $test = str_replace('{{args}}', $argStr, $test);
+                }
+                $tests[$name] = $test;
+                // $this->stderr('test', $test);
+            }
+        }
+        $this->testMethod($method, $args, $tests);
+        $GLOBALS['turd'] = false;
     }
 
     /*
@@ -2145,7 +2304,7 @@ EOD;
                     <dt class="methods">no methods</dt>
                     </dl>
                     </span>, <span class="t_resource">Resource id #%d: stream</span></li>',
-                'text' => '⚠ a string, array(), (object) stdClass
+                'text' => '⚠ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php: line %d");',

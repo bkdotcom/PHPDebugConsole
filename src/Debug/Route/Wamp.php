@@ -51,14 +51,6 @@ class Wamp implements RouteInterface
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function dump($val)
-    {
-        return $val;
-    }
-
-    /**
      * Return a list of event subscribers
      *
      * @return array The event names to subscribe to
@@ -87,7 +79,7 @@ class Wamp implements RouteInterface
     public function init(Event $event)
     {
         $this->publishMeta();
-        $this->processExistingData();
+        $this->processLogEntries($event);
     }
 
     /**
@@ -158,6 +150,47 @@ class Wamp implements RouteInterface
                 'responseCode' => \http_response_code(),
             )
         ));
+    }
+
+    /**
+     * ProcessLogEntries
+     *
+     * we use this interface method to process pre-existing log data
+     *
+     * @param Event $event debug event
+     *
+     * @return void
+     */
+    public function processLogEntries(Event $event)
+    {
+        $data = $this->debug->getData();
+        foreach ($data['alerts'] as $logEntry) {
+            $this->processLogEntryViaEvent($logEntry);
+        }
+        foreach ($data['logSummary'] as $priority => $entries) {
+            $this->processLogEntryViaEvent(new LogEntry(
+                $this->debug,
+                'groupSummary',
+                array(),
+                array(
+                    'priority' => $priority,
+                )
+            ));
+            foreach ($entries as $logEntry) {
+                $this->processLogEntryViaEvent($logEntry);
+            }
+            $this->processLogEntryViaEvent(new LogEntry(
+                $this->debug,
+                'groupEnd',
+                array(),
+                array(
+                    'closesSummary' => true,
+                )
+            ));
+        }
+        foreach ($data['log'] as $logEntry) {
+            $this->processLogEntryViaEvent($logEntry);
+        }
     }
 
     /**
@@ -277,43 +310,6 @@ class Wamp implements RouteInterface
             return $this->crateObject($mixed);
         }
         return $mixed;
-    }
-
-    /**
-     * Publish pre-existing log entries
-     *
-     * @return void
-     */
-    private function processExistingData()
-    {
-        $data = $this->debug->getData();
-        foreach ($data['alerts'] as $logEntry) {
-            $this->processLogEntryViaEvent($logEntry);
-        }
-        foreach ($data['logSummary'] as $priority => $entries) {
-            $this->processLogEntryViaEvent(new LogEntry(
-                $this->debug,
-                'groupSummary',
-                array(),
-                array(
-                    'priority' => $priority,
-                )
-            ));
-            foreach ($entries as $logEntry) {
-                $this->processLogEntryViaEvent($logEntry);
-            }
-            $this->processLogEntryViaEvent(new LogEntry(
-                $this->debug,
-                'groupEnd',
-                array(),
-                array(
-                    'closesSummary' => true,
-                )
-            ));
-        }
-        foreach ($data['log'] as $logEntry) {
-            $this->processLogEntryViaEvent($logEntry);
-        }
     }
 
     /**

@@ -272,8 +272,14 @@ class DebugTestFramework extends DOMTestCase
                 }
                 continue;
             }
-            $prop = 'route'.\ucfirst($test);
-            $routeObj = $this->debug->{$prop};
+            if ($test === 'streamAnsi') {
+                // $routeObj = new \bdk\Debug\Route\Stream($this->debug);
+                $routeObj = $this->debug->routeStream;
+                $routeObj->setCfg('stream', 'php://temp');
+            } else {
+                $prop = 'route'.\ucfirst($test);
+                $routeObj = $this->debug->{$prop};
+            }
             if (in_array($test, array('chromeLogger','firephp'))) {
                 // remove data - sans the logEntry we're interested in
                 $dataBackup = array(
@@ -284,7 +290,7 @@ class DebugTestFramework extends DOMTestCase
                 $this->debug->setData('alerts', array());
                 $this->debug->setData('log', array($logEntry));
                 /*
-                    We'll call onOutput directly
+                    We'll call processLogEntries directly
                 */
                 $event = new \bdk\PubSub\Event(
                     $this->debug,
@@ -293,7 +299,7 @@ class DebugTestFramework extends DOMTestCase
                         'return' => '',
                     )
                 );
-                $routeObj->onOutput($event, 'debug.output', $this->debug->eventManager);
+                $routeObj->processLogEntries($event, 'debug.output', $this->debug->eventManager);
                 $this->debug->setData($dataBackup);
                 $headers = $event['headers'];
                 if ($test == 'chromeLogger') {
@@ -335,9 +341,13 @@ class DebugTestFramework extends DOMTestCase
                 $outputExpect($output);
             } elseif (\is_array($outputExpect)) {
                 if (isset($outputExpect['contains'])) {
-                    $this->assertContains($outputExpect['contains'], $output, $test.' doesn\'t contain');
+                    $message = "\e[1m".$test." doesn't contain\e[0m";
+                    if ($test === 'streamAnsi') {
+                        $message .= "\nactual: ".str_replace("\e", '\e', $output);
+                    }
+                    $this->assertContains($outputExpect['contains'], $output, $message);
                 } else {
-                    $this->assertSame($outputExpect, $output, $test.' not same');
+                    $this->assertSame($outputExpect, $output, "\e[1m".$test." not same\e[0m");
                 }
             } else {
                 $output = \preg_replace("#^\s+#m", '', $output);
@@ -345,7 +355,11 @@ class DebugTestFramework extends DOMTestCase
                 // @see https://github.com/sebastianbergmann/phpunit/issues/3040
                 $output = \str_replace("\r", '[\\r]', $output);
                 $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
-                $this->assertStringMatchesFormat(trim($outputExpect), trim($output), $test.' not same');
+                $message = "\e[1m".$test." not same\e[0m";
+                if ($test === 'streamAnsi') {
+                    $message .= "\nactual: ".str_replace("\e", '\e', $output);
+                }
+                $this->assertStringMatchesFormat(trim($outputExpect), trim($output), $message);
             }
         }
     }

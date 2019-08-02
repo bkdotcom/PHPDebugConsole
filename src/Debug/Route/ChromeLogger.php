@@ -72,7 +72,7 @@ class ChromeLogger extends Base
      *
      * @return void
      */
-    public function onOutput(Event $event)
+    public function processLogEntries(Event $event)
     {
         $this->data = $this->debug->getData();
         $this->processAlerts();
@@ -103,6 +103,9 @@ class ChromeLogger extends Base
         $this->json['rows'] = array();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function processLogEntry(LogEntry $logEntry)
     {
         $this->dump->processLogEntry($logEntry);

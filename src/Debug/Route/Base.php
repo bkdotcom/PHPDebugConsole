@@ -50,12 +50,30 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
     public function getSubscriptions()
     {
         return array(
-            'debug.output' => 'onOutput',
+            'debug.output' => 'processLogEntries',
         );
     }
 
     /**
-     * Process log entry without publishing `debug.outputLogEntry` event
+     * Output the log as text
+     *
+     * @param Event $event event object
+     *
+     * @return string|void
+     */
+    public function processLogEntries(Event $event)
+    {
+        $this->data = $this->debug->getData();
+        $str = '';
+        $str .= $this->processAlerts();
+        $str .= $this->processSummary();
+        $str .= $this->processLog();
+        $this->data = array();
+        $event['return'] .= $str;
+    }
+
+    /**
+     * Process log entry
      *
      * @param LogEntry $logEntry LogEntry instance
      *
@@ -65,15 +83,6 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
     {
         return $this->dump->processLogEntry($logEntry);
     }
-
-    /**
-     * debug.output subscriber
-     *
-     * @param Event $event debug.output event object
-     *
-     * @return void
-     */
-    abstract public function onOutput(Event $event);
 
     /**
      * Test channel for inclussion

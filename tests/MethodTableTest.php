@@ -250,7 +250,7 @@ EOD;
                         [1] => "2233-03-22T00:00:00%i"
                         [2] => Resource id #%d: stream
                         [3] => callable: MethodTableTest::providerTestMethod
-                        [4] => (object) Closure
+                        [4] => Closure
                             Properties: none!
                             Methods:
                                 public: '.$dateTimePubMethods.'

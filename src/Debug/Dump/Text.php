@@ -14,6 +14,7 @@ namespace bdk\Debug\Dump;
 
 use bdk\Debug\LogEntry;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 
 /**
  * Base output plugin
@@ -36,6 +37,10 @@ class Text extends Base
             'timeLog' => '⏱ ',
             'group' => '▸ ',
             'groupCollapsed' => '▸ ',
+        ),
+        'glue' => array(
+            'multiple' => ', ',
+            'equal' => ' = ',
         ),
     );
 
@@ -89,16 +94,17 @@ class Text extends Base
     protected function buildArgString($args)
     {
         $numArgs = \count($args);
-        if ($numArgs == 1 && \is_string($args[0])) {
+        if ($numArgs == 1 && \is_string($args[0]) && \strpos($args[0], '<') !== false) {
             $args[0] = \strip_tags($args[0]);
         }
-        foreach ($args as $k => $v) {
-            if ($k > 0 || !\is_string($v)) {
-                $args[$k] = $this->dump($v);
-            }
+        foreach ($args as $i => $v) {
+            $args[$i] = $this->dump($v, array(
+                'addQuotes' => $i !== 0,
+                'visualWhiteSpace' => $i !== 0,
+            ));
             $this->valDepth = 0;
         }
-        $glue = ', ';
+        $glue = $this->cfg['glue']['multiple'];
         $glueAfterFirst = true;
         if ($numArgs && \is_string($args[0])) {
             if (\preg_match('/[=:] ?$/', $args[0])) {
@@ -106,7 +112,7 @@ class Text extends Base
                 $glueAfterFirst = false;
                 $args[0] = \rtrim($args[0]).' ';
             } elseif (\count($args) == 2) {
-                $glue = ' = ';
+                $glue = $this->cfg['glue']['equal'];
             }
         }
         if (!$glueAfterFirst) {
@@ -174,26 +180,24 @@ class Text extends Base
     protected function dumpMethods($methods)
     {
         $str = '';
-        if (!empty($methods)) {
-            $counts = array(
-                'public' => 0,
-                'protected' => 0,
-                'private' => 0,
-                'magic' => 0,
-            );
-            foreach ($methods as $info) {
-                $counts[ $info['visibility'] ] ++;
-            }
-            $str .= '  Methods:'."\n";
-            foreach ($counts as $vis => $count) {
-                if ($count) {
-                    $str .= '    '.$vis.': '.$count."\n";
-                }
-            }
-        } else {
-            $str .= '  Methods: none!'."\n";
+        $counts = array(
+            'public' => 0,
+            'protected' => 0,
+            'private' => 0,
+            'magic' => 0,
+        );
+        foreach ($methods as $info) {
+            $counts[ $info['visibility'] ] ++;
         }
-        return $str;
+        foreach ($counts as $vis => $count) {
+            if ($count) {
+                $str .= '    '.$vis.': '.$count."\n";
+            }
+        }
+        $header = $str
+            ? 'Methods:'
+            : 'Methods: none!';
+        return '  '.$header."\n".$str;
     }
 
     /**
@@ -218,11 +222,11 @@ class Text extends Base
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
         if ($abs['isRecursion']) {
-            $str = '(object) '.$abs['className'].' *RECURSION*';
+            $str = $abs['className'].' *RECURSION*';
         } elseif ($abs['isExcluded']) {
-            $str = '(object) '.$abs['className'].' NOT INSPECTED';
+            $str = $abs['className'].' NOT INSPECTED';
         } else {
-            $str = '(object) '.$abs['className']."\n";
+            $str = $abs['className']."\n";
             $str .= $this->dumpProperties($abs);
             if ($abs['collectMethods'] && $this->debug->getCfg('outputMethods')) {
                 $str .= $this->dumpMethods($abs['methods']);
@@ -280,11 +284,16 @@ class Text extends Base
     {
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
+            $val = '"'.$val.'"';
             return $date
-                ? '📅 "'.$val.'" ('.$date.')'
-                : '"'.$val.'"';
+                ? '📅 '.$val.' ('.$date.')'
+                : $val;
         } else {
-            return '"'.$this->debug->utf8->dump($val).'"';
+            $val = $this->debug->utf8->dump($val);
+            if ($this->argStringOpts['addQuotes']) {
+                $val = '"'.$val.'"';
+            }
+            return $val;
         }
     }
 
@@ -332,7 +341,10 @@ class Text extends Base
         $args = $logEntry['args'];
         if (\count($args) > 1 && \is_string($args[0])) {
             $hasSubs = false;
-            $args = $this->processSubstitutions($args, $hasSubs);
+            $args = $this->processSubstitutions($args, $hasSubs, array(
+                'replace' => true,
+                'style' => false,
+            ));
             if ($hasSubs) {
                 $args = array( \implode('', $args) );
             }
@@ -385,23 +397,34 @@ class Text extends Base
     protected function methodTabular(LogEntry $logEntry)
     {
         $meta = $logEntry['meta'];
-        /*
-        $args = $logEntry['args'];
-        $asTable = \is_array($args[0]) && (bool) $args[0] || $this->debug->abstracter->isAbstraction($args[0], 'object');
-        if ($asTable) {
-            // $args = array($this->methodTable($args[0], $meta['columns']));
-        }
-        if ($meta['caption']) {
-            \array_unshift($args, $meta['caption']);
-        }
-        return $this->buildArgString($args);
-        */
-        // $args = $logEntry['args'];
         $logEntry->setMeta('forceArray', false);
         parent::methodTabular($logEntry);
         if ($logEntry['method'] == 'table' && $meta['caption']) {
             \array_unshift($logEntry['args'], $meta['caption']);
         }
         return $this->buildArgString($logEntry['args']);
+    }
+
+    /**
+     * Cooerce value to string
+     *
+     * @param mixed $val value
+     *
+     * @return string
+     */
+    protected function substitutionAsString($val)
+    {
+        // function array dereferencing = php 5.4
+        $type = $this->debug->abstracter->getType($val)[0];
+        if ($type == 'array') {
+            $count = \count($val);
+            $val = 'array('.$count.')';
+        } elseif ($type == 'object') {
+            $toStr = AbstractObject::toString($val);
+            $val = $toStr ?: $val['className'];
+        } else {
+            $val = $this->dump($val, false);
+        }
+        return $val;
     }
 }

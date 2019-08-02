@@ -19,7 +19,7 @@ use bdk\PubSub\Event;
 /**
  * Email log
  */
-class Email
+class Email implements RouteInterface
 {
 
     /**
@@ -33,15 +33,33 @@ class Email
     }
 
     /**
+     * {@inheritDot}
+     */
+    public function getSubscriptions()
+    {
+        return array();
+    }
+
+    /**
      * Serializes and emails log
+     *
+     * @param event $event Generic event having Debug instance as subject
      *
      * @return void
      */
-    public function emailLog()
+    public function processLogEntries(Event $event = null)
     {
         $subject = $this->buildSubject();
         $body = $this->buildBody();
         $this->debug->email($this->debug->getCfg('emailTo'), $subject, $body);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function processLogEntry(LogEntry $logEntry)
+    {
+        return;
     }
 
     /**

@@ -139,13 +139,12 @@ class Html extends Base
     /**
      * Return the log as HTML
      *
-     * @param Event $event event object
+     * @param Event $event debug.output event object
      *
      * @return string|void
      */
-    public function onOutput(Event $event)
+    public function processLogEntries(Event $event)
     {
-        // $this->channels = array();
         $this->data = $this->debug->getData();
         // this could go in an extended processAlerts method
         $errorSummary = $this->errorSummary->build($this->debug->errorStats());

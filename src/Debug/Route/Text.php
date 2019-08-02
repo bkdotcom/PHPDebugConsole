@@ -12,14 +12,12 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\PubSub\Event;
 
 /**
  * Output log as plain-text
  */
 class Text extends Base
 {
-
     /**
      * Constructor
      *
@@ -31,23 +29,5 @@ class Text extends Base
         if (!$this->dump) {
             $this->dump = $debug->dumpText;
         }
-    }
-
-    /**
-     * Output the log as text
-     *
-     * @param Event $event event object
-     *
-     * @return string|void
-     */
-    public function onOutput(Event $event)
-    {
-        $this->data = $this->debug->getData();
-        $str = '';
-        $str .= $this->processAlerts();
-        $str .= $this->processSummary();
-        $str .= $this->processLog();
-        $this->data = array();
-        $event['return'] .= $str;
     }
 }

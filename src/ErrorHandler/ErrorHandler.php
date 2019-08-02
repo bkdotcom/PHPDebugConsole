@@ -662,7 +662,10 @@ class ErrorHandler
         $xdebugVer = \phpversion('xdebug');
         if (\version_compare($xdebugVer, '2.6.0', '<')) {
             foreach ($stack as $i => $frame) {
-                if ($frame['function'] === '__get') {
+                $function = isset($frame['function'])
+                    ? $frame['function']
+                    : null;
+                if ($function === '__get') {
                     // wrong file!
                     $class = $stack[$i-1]['class'];
                     $refClass = new ReflectionClass($class);

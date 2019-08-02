@@ -19,6 +19,7 @@ use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 
 /**
  * Base output plugin
@@ -27,6 +28,7 @@ class Base extends Component implements ConfigurableInterface
 {
 
     public $debug;
+    protected $argStringOpts;   // per-argument string options
     protected $dumpType;
     protected $dumpTypeMore;
 
@@ -42,10 +44,34 @@ class Base extends Component implements ConfigurableInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Dump value
+     *
+     * @param mixed $val  value to dump
+     * @param array $opts options for string values
+     *
+     * @return mixed
      */
-    public function dump($val)
+    public function dump($val, $opts = array())
     {
+        $optsDefault = array(
+            'addQuotes' => true,
+            'sanitize' => true,     // only applies to html
+            'visualWhiteSpace' => true,
+        );
+        if (\is_bool($opts)) {
+            $keys = \array_keys($optsDefault);
+            $opts = \array_fill_keys($keys, $opts);
+        } else {
+            $opts = \array_merge($optsDefault, $opts);
+        }
+        if ($val instanceof Abstraction) {
+            foreach (\array_keys($opts) as $k) {
+                if ($val[$k] !== null) {
+                    $opts[$k] = $val[$k];
+                }
+            }
+        }
+        $this->argStringOpts = $opts;
         $typeMore = null;
         list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($typeMore == 'raw') {
@@ -385,9 +411,18 @@ class Base extends Component implements ConfigurableInterface
      */
     protected function methodDefault(LogEntry $logEntry)
     {
+        $method = $logEntry['method'];
         $args = $logEntry['args'];
-        foreach ($args as $i => $arg) {
-            $args[$i] = $this->dump($arg);
+        $hasSubs = false;
+        if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
+            if (\count($args) > 1 && \is_string($args[0])) {
+                $args = $this->processSubstitutions($args, $hasSubs);
+            }
+        }
+        if (!$hasSubs) {
+            foreach ($args as $i => $arg) {
+                $args[$i] = $this->dump($arg);
+            }
         }
         $logEntry['args'] = $args;
     }
@@ -513,14 +548,26 @@ class Base extends Component implements ConfigurableInterface
      *
      * @param array   $args    arguments
      * @param boolean $hasSubs set to true if substitutions/formatting applied
+     * @param array   $options options
      *
      * @return array
      *
      * @see https://console.spec.whatwg.org/#formatter
      * @see https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
      */
-    protected function processSubstitutions($args, &$hasSubs)
+    protected function processSubstitutions($args, &$hasSubs, $options = array())
     {
+        if (!\is_string($args[0])) {
+            return $args;
+        }
+        $index = 0;
+        $indexes = array(
+            'c' => array(),
+        );
+        $options = \array_merge(array(
+            'replace' => false, // perform substitution, or just prep?
+            'style' => false,   // ie support %c
+        ), $options);
         $subRegex = '/%'
             .'(?:'
             .'[coO]|'               // c: css, o: obj with max info, O: obj w generic info
@@ -532,56 +579,49 @@ class Base extends Component implements ConfigurableInterface
             .'[difs]'
             .')'
             .'/';
-        if (!\is_string($args[0])) {
-            return $args;
-        }
-        $index = 0;
-        $indexes = array(
-            'c' => array(),
-        );
-        $hasSubs = false;
         $args[0] = \preg_replace_callback($subRegex, function ($matches) use (
             &$args,
             &$hasSubs,
             &$index,
-            &$indexes
+            &$indexes,
+            $options
         ) {
-            $hasSubs = true;
             $index++;
-            $replacement = $matches[0];
+            $replacement = '';
             $type = \substr($matches[0], -1);
+            $arg = $args[$index];
             if (\strpos('difs', $type) !== false) {
                 $format = $matches[0];
-                $sub = $args[$index];
                 if ($type == 'i') {
                     $format = \substr_replace($format, 'd', -1, 1);
                 } elseif ($type === 's') {
-                    $sub = $this->substitutionAsString($sub);
+                    $arg = $this->substitutionAsString($arg);
                 }
-                $replacement = \sprintf($format, $sub);
-            } elseif ($type === 'c') {
-                $asHtml = \get_called_class() == __NAMESPACE__.'\\Html';
-                if (!$asHtml) {
-                    return '';
-                }
-                $replacement = '';
+                $replacement = \is_array($arg)
+                    ? $arg
+                    : \sprintf($format, $arg);
+            } elseif ($type === 'c' && $options['style']) {
                 if ($indexes['c']) {
                     // close prev
                     $replacement = '</span>';
                 }
                 $replacement .= '<span'.$this->debug->utilities->buildAttribString(array(
-                    'style' => $args[$index],
+                    'style' => $arg,
                 )).'>';
                 $indexes['c'][] = $index;
             } elseif (\strpos('oO', $type) !== false) {
-                $replacement = $this->dump($args[$index]);
+                $replacement = $this->dump($arg);
             }
-            return $replacement;
+            $args[$index] = $arg;
+            return $options['replace']
+                ? $replacement
+                : $matches[0];
         }, $args[0]);
-        if ($indexes['c']) {
-            $args[0] .= '</span>';
-        }
-        if ($hasSubs) {
+        $hasSubs = $index > 0;
+        if ($hasSubs && $options['replace']) {
+            if ($indexes['c']) {
+                $args[0] .= '</span>';
+            }
             $args = array($args[0]);
         }
         return $args;
@@ -600,11 +640,13 @@ class Base extends Component implements ConfigurableInterface
         $type = $this->debug->abstracter->getType($val)[0];
         if ($type == 'array') {
             $count = \count($val);
-            $val = 'array('.$count.')';
+            // replace with dummy array so browser console will display native Array(length)
+            $val = array_fill(0, $count, 0);
         } elseif ($type == 'object') {
-            $val = $val['className'];
+            $toStr = AbstractObject::toString($val);
+            $val = $toStr ?: $val['className'];
         } else {
-            $val = $this->dump($val);
+            $val = $this->dump($val, false);
         }
         return $val;
     }

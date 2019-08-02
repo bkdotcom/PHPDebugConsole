@@ -400,7 +400,7 @@ class Internal implements SubscriberInterface
         $this->debug->eventManager->unsubscribe('debug.log', array($this, 'onDebugLogShutdown'));
         if ($this->testEmailLog()) {
             $this->runtimeVals();
-            $this->debug->routeEmail->emailLog();
+            $this->debug->routeEmail->processLogEntries();
         }
         if (!$this->debug->getData('outputSent')) {
             echo $this->debug->output();

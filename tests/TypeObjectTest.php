@@ -13,11 +13,11 @@ class TypeObjectTest extends DebugTestFramework
         // val, html, text, script
 
         $text = <<<'EOD'
-(object) bdk\DebugTest\Test
+bdk\DebugTest\Test
   Properties:
     ✨ This object has a __get() method
-    (public) debug = (object) bdk\Debug NOT INSPECTED
-    (public) instance = (object) bdk\DebugTest\Test *RECURSION*
+    (public) debug = bdk\Debug NOT INSPECTED
+    (public) instance = bdk\DebugTest\Test *RECURSION*
     (public) propPublic = "redefined in Test (public)"
     (public) propStatic = "I'm Static"
     (public) someArray = array(
@@ -42,8 +42,39 @@ class TypeObjectTest extends DebugTestFramework
     magic: 2
 EOD;
 
+        $ansi = <<<'EOD'
+\e[38;5;250mbdk\DebugTest\\e[0m\e[1mTest\e[22m
+    \e[4mProperties:\e[24m
+        \e[38;5;250m✨ This object has a __get() method\e[0m
+        (public) \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;9mNOT INSPECTED\e[0m
+        (public) \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;9m*RECURSION*\e[0m
+        (public) \e[38;5;83mpropPublic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
+        (public) \e[38;5;83mpropStatic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
+        (public) \e[38;5;83msomeArray\e[0m \e[38;5;130m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
+        \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;130m => \e[0m\e[96m123\e[0m
+        \e[38;5;245m[\e[38;5;83mnumeric\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[96m123\e[38;5;250m"\e[0m
+        \e[38;5;245m[\e[38;5;83mstring\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mcheese\e[38;5;250m"\e[0m
+        \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
+        \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250mnull\e[0m
+        \e[38;5;245m)\e[0m
+        (public) \e[38;5;83mtoString\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
+        (protected ✨ magic-read) \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
+        (protected) \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
+        (private excluded) \e[38;5;83mpropNoDebug\e[0m
+        (private) \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
+        (🔒 private) \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
+        (✨ magic excluded) \e[38;5;83mmagicProp\e[0m
+        (debug) \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
+    \e[4mMethods:\e[24m
+        public\e[38;5;245m:\e[0m \e[96m8\e[0m
+        protected\e[38;5;245m:\e[0m \e[96m1\e[0m
+        private\e[38;5;245m:\e[0m \e[96m1\e[0m
+        magic\e[38;5;245m:\e[0m \e[96m2\e[0m
+EOD;
+        $ansi = str_replace('\e', "\e", $ansi);
+
         $text2 = <<<'EOD'
-(object) bdk\DebugTest\Test2
+bdk\DebugTest\Test2
   Properties:
     ✨ This object has a __get() method
     (protected ✨ magic-read) magicReadProp = "not null"
@@ -147,8 +178,9 @@ EOD;
                             '</dl>',
                         )), $str);
                     },
+                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug NOT INSPECTED","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected \u2728 magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(\ud83d\udd12 private) testBasePrivate":"defined in TestBase (private)","(\u2728 magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
+                    'streamAnsi' => $ansi,
                     'text' => $text,
-                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug NOT INSPECTED","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected \u2728 magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(\ud83d\udd12 private) testBasePrivate":"defined in TestBase (private)","(\u2728 magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});'
                 )
             ),
             array(

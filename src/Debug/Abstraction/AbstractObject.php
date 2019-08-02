@@ -232,13 +232,31 @@ class AbstractObject
     }
 
     /**
+     * Return object's string representation
+     *
+     * @param Abstraction $abs object abstraction
+     *
+     * @return string
+     */
+    public static function toString(Abstraction $abs)
+    {
+        $val = '';
+        if ($abs['stringified']) {
+            $val = $abs['stringified'];
+        } elseif (isset($abs['methods']['__toString']['returnValue'])) {
+            $val = $abs['methods']['__toString']['returnValue'];
+        }
+        return $val;
+    }
+
+    /**
      * Get object's constants
      *
      * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    public function addConstants(Abstraction $abs)
+    private function addConstants(Abstraction $abs)
     {
         if (!$this->abstracter->getCfg('collectConstants')) {
             return;

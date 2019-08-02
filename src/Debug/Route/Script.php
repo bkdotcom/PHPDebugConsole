@@ -53,11 +53,11 @@ class Script extends Base
      * output the log as javascript
      *    which outputs the log to the console
      *
-     * @param Event $event event object
+     * @param Event $event debug.output event object
      *
      * @return string|void
      */
-    public function onOutput(Event $event)
+    public function processlogEntries(Event $event)
     {
         $this->data = $this->debug->getData();
         $errorStats = $this->debug->errorStats();

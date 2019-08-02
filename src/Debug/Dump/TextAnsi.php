@@ -26,16 +26,18 @@ class TextAnsi extends Text
     protected $ansiCfg = array(
         'ansi' => 'default',    // default | true | false  (STDOUT & STDERR streams will default to true)
         'escapeCodes' => array(
-            'arrayKey' => "\e[38;5;253m",
-            'excluded' => "\e[38;5;9m",
-            'false' => "\e[91m",
-            'keyword' => "\e[38;5;45m",
-            'muted' => "\e[38;5;250m",
-            'numeric' => "\e[96m",
-            'operator' => "\e[38;5;130m",
-            'punct' => "\e[38;5;245m",
-            'quote' => "\e[38;5;250m",
-            'true' => "\e[32m",
+            'excluded' => "\e[38;5;9m",     // red
+            'false' => "\e[91m",            // red
+            'keyword' => "\e[38;5;45m",     // blue
+            'arrayKey' => "\e[38;5;83m",    // yellow
+            'muted' => "\e[38;5;250m",      // dark grey
+            'numeric' => "\e[96m",          // blue
+            'operator' => "\e[38;5;130m",   // green
+            'punct' => "\e[38;5;245m",      // grey  (brackets)
+            'property' => "\e[38;5;83m",    // yellow
+            'quote' => "\e[38;5;250m",      // grey
+            'true' => "\e[32m",             // green
+            'recursion' => "\e[38;5;196m",  // red
         ),
         'escapeCodesLevels' => array(
             'danger' => "\e[38;5;88;48;5;203;1;4m",
@@ -48,9 +50,15 @@ class TextAnsi extends Text
             'info' => "\e[38;5;55;48;5;159m",
             'warn' => "\e[38;5;1;48;5;230m",
         ),
+        'glue' => array(
+            'multiple' => "\e[38;5;245m, \x00escapeReset\x00",
+            'equal' => " \e[38;5;245m=\x00escapeReset\x00 ",
+        ),
         'stream' => 'php://stderr',   // filepath/uri/resource
     );
     protected $escapeReset = "\e[0m";
+
+    const ESCAPE_RESET = "\x00escapeReset\x00";
 
     /**
      * Constructor
@@ -109,36 +117,11 @@ class TextAnsi extends Text
         }
         $this->escapeReset = $escapeCode ?: "\e[0m";
         $str = parent::processLogEntry($logEntry);
+        $str = str_replace(self::ESCAPE_RESET, $this->escapeReset, $str);
         if ($str && $escapeCode) {
             $strIndent = \str_repeat('    ', $this->depth);
             $str = \preg_replace('#^('.$strIndent.')(.+)$#m', '$1'.$escapeCode.'$2'."\e[0m", $str);
         }
-
-        /*
-        $method = $logEntry['method'];
-        $strIndent = \str_repeat('    ', $this->depth);
-        $str = '';
-        if ($method == 'alert') {
-            $str = $this->methodAlert($logEntry);
-        } elseif (\in_array($method, array('group','groupCollapsed'))) {
-            $this->depth ++;
-            $str = $this->methodGroup($logEntry);
-        } elseif ($method == 'groupEnd' && $this->depth > 0) {
-            $this->depth --;
-        } elseif (\in_array($method, array('profileEnd','table','trace'))) {
-            $str = $this->methodTabular($logEntry);
-        } else {
-            $str = $this->methodDefault($logEntry);
-        }
-        $str = \rtrim($str);
-        if ($str) {
-            $prefix = isset($this->cfg['prefixes'][$method])
-                ? $this->cfg['prefixes'][$method]
-                : '';
-            $str = $prefix.$str;
-            $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str)."\n";
-        }
-        */
         return $str;
     }
 
@@ -167,7 +150,7 @@ class TextAnsi extends Text
         }
         $str .= $this->cfg['escapeCodes']['punct'].')'.$this->escapeReset;
         if (!$array) {
-            $str = \str_replace("\n", '', $str)."\n";
+            $str = \str_replace("\n", '', $str);
         } elseif ($isNested) {
             $str = \str_replace("\n", "\n    ", $str);
         }
@@ -209,11 +192,44 @@ class TextAnsi extends Text
      */
     protected function dumpFloat($val)
     {
-        $val = $this->cfg['escapeCodes']['numeric'].$val.$this->escapeReset;
         $date = $this->checkTimestamp($val);
+        $val = $this->cfg['escapeCodes']['numeric'].$val.$this->escapeReset;
         return $date
-            ? '📅 '.$val.' ('.$date.')'
+            ? '📅 '.$val.' '.$this->cfg['escapeCodes']['muted'].'('.$date.')'.$this->escapeReset
             : $val;
+    }
+
+    /**
+     * Dump object methods as text
+     *
+     * @param array $methods methods as returned from getMethods
+     *
+     * @return string html
+     */
+    protected function dumpMethods($methods)
+    {
+        $str = '';
+        $counts = array(
+            'public' => 0,
+            'protected' => 0,
+            'private' => 0,
+            'magic' => 0,
+        );
+        foreach ($methods as $info) {
+            $counts[ $info['visibility'] ] ++;
+        }
+        foreach ($counts as $vis => $count) {
+            if ($count) {
+                $str .= '    '.$vis
+                    .$this->cfg['escapeCodes']['punct'].':'.$this->escapeReset.' '
+                    .$this->cfg['escapeCodes']['numeric'].$count
+                    .$this->escapeReset."\n";
+            }
+        }
+        $header = $str
+            ? "\e[4mMethods:\e[24m"
+            : 'Methods: none!';
+        return '  '.$header."\n".$str;
     }
 
     /**
@@ -244,9 +260,7 @@ class TextAnsi extends Text
             $str = $escapeCodes['excluded'].'NOT INSPECTED'.$this->escapeReset;
         } else {
             $str = $this->markupIdentifier($abs['className'])."\n";
-            $str .= $this->ansi
-                ? $this->dumpProperties($abs)
-                : $this->dumpProperties($abs);
+            $str .= $this->dumpProperties($abs);
             if ($abs['collectMethods'] && $this->debug->getCfg('outputMethods')) {
                 $str .= $this->dumpMethods($abs['methods']);
             }
@@ -268,9 +282,11 @@ class TextAnsi extends Text
     protected function dumpProperties(Abstraction $abs)
     {
         $str = '';
-        $propHeader = '';
         if (isset($abs['methods']['__get'])) {
-            $str .= "    \e[2m".'✨ This object has a __get() method'."\e[22m\n";
+            $str .= '    '.$this->cfg['escapeCodes']['muted']
+                .'✨ This object has a __get() method'
+                .$this->escapeReset
+                ."\n";
         }
         foreach ($abs['properties'] as $name => $info) {
             $vis = (array) $info['visibility'];
@@ -282,7 +298,7 @@ class TextAnsi extends Text
                 }
             }
             $vis = \implode(' ', $vis);
-            $name = "\e[1m".$name."\e[22m";
+            $name = $this->cfg['escapeCodes']['property'].$name.$this->escapeReset;
             if ($info['debugInfoExcluded']) {
                 $vis .= ' excluded';
                 $str .= '    ('.$vis.') '.$name."\n";
@@ -292,10 +308,22 @@ class TextAnsi extends Text
                     .$this->dump($info['value'])."\n";
             }
         }
-        $propHeader = $str
-            ? 'Properties:'
+        $header = $str
+            ? "\e[4mProperties:\e[24m"
             : 'Properties: none!';
-        return '  '.$propHeader."\n".$str;
+        return '  '.$header."\n".$str;
+    }
+
+    /**
+     * Dump recursion (array recursion)
+     *
+     * @return string
+     */
+    protected function dumpRecursion()
+    {
+        return $this->cfg['escapeCodes']['keyword'].'array '
+            .$this->cfg['escapeCodes']['recursion'].'*RECURSION*'
+            .$this->escapeReset;
     }
 
     /**
@@ -310,20 +338,20 @@ class TextAnsi extends Text
         $escapeCodes = $this->cfg['escapeCodes'];
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
-            $val = $this->ansi
-                ? $escapeCodes['quote'].'"'
-                    .$escapeCodes['numeric'].$val
-                    .$escapeCodes['quote'].'"'
-                    .$this->escapeReset
-                : '"'.$val.'"';
+            $val = $escapeCodes['quote'].'"'
+                .$escapeCodes['numeric'].$val
+                .$escapeCodes['quote'].'"'
+                .$this->escapeReset;
             return $date
-                ? '📅 '.$val.' ('.$date.')'
+                ? '📅 '.$val.' '.$escapeCodes['muted'].'('.$date.')'.$this->escapeReset
                 : $val;
         } else {
             $ansiQuote = $escapeCodes['quote'].'"'.$this->escapeReset;
-            return $this->ansi
-                ? $ansiQuote.$this->debug->utf8->dump($val).$ansiQuote
-                : '"'.$this->debug->utf8->dump($val).'"';
+            $val = $this->debug->utf8->dump($val);
+            if ($this->argStringOpts['addQuotes']) {
+                $val = $ansiQuote.$val.$ansiQuote;
+            }
+            return $val;
         }
     }
 

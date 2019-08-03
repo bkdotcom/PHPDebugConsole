@@ -94,9 +94,6 @@ class Text extends Base
     protected function buildArgString($args)
     {
         $numArgs = \count($args);
-        if ($numArgs == 1 && \is_string($args[0]) && \strpos($args[0], '<') !== false) {
-            $args[0] = \strip_tags($args[0]);
-        }
         foreach ($args as $i => $v) {
             $args[$i] = $this->dump($v, array(
                 'addQuotes' => $i !== 0,

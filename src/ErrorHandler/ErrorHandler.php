@@ -51,6 +51,7 @@ class ErrorHandler
         $this->cfg = array(
             'continueToPrevHandler' => true,    // whether to continue to previously defined handler (if there is/was a prev error handler)
                                                 //   will not continue if error event propagation stopped
+            'errorFactory' => array($this, 'errorFactory'),
             'errorReporting' => E_ALL | E_STRICT,   // what errors are handled by handler? bitmask or "system" to use runtime value
                                                     //   note that if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
             // shortcut for subscribing to errorHandler.error Event
@@ -58,11 +59,11 @@ class ErrorHandler
             'onError' => null,
             'onEUserError' => 'normal', // only applicable if we're not continuing to a prev error handler
                                     // (continueToPrevHandler = false, there's no previous handler, or propagation stopped)
-                                    //   'continue' : forces continueToNormal = false (script will continue)
+                                    //   'continue' : forces error[continueToNormal] = false (script will continue)
                                     //   'log' : if propagation not stopped, call error_log()
                                     //         continue script execution
-                                    //   'normal' : forces continueToNormal = true;
-                                    //   null : use error's continueToNormal value
+                                    //   'normal' : forces error[continueToNormal] = true;
+                                    //   null : use error's error[continueToNormal] value
         );
         // Initialize self::$instance if not set
         //    so that self::getInstance() will always return original instance
@@ -225,7 +226,7 @@ class ErrorHandler
      */
     public function handleError($errType, $errMsg, $file, $line, $vars = array())
     {
-        $error = new Error($this, $errType, $errMsg, $file, $line, $vars);
+        $error = $this->cfg['errorFactory']($this, $errType, $errMsg, $file, $line, $vars);
         if (!$this->isErrTypeHandled($errType)) {
             // not handled
             //   if cfg['errorReporting'] == 'system', error could simply be suppressed
@@ -529,6 +530,23 @@ class ErrorHandler
             $error['line'],
             $error['vars']
         );
+    }
+
+    /**
+     * Create Error instance
+     *
+     * @param self    $handler ErrorHandler instance
+     * @param integer $errType the level of the error
+     * @param string  $errMsg  the error message
+     * @param string  $file    filepath the error was raised in
+     * @param string  $line    the line the error was raised in
+     * @param array   $vars    active symbol table at point error occured
+     *
+     * @return Error
+     */
+    protected function errorFactory(self $handler, $errType, $errMsg, $file, $line, $vars)
+    {
+        return new Error($handler, $errType, $errMsg, $file, $line, $vars);
     }
 
     /**

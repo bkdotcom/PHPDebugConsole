@@ -117,7 +117,7 @@ class TextAnsi extends Text
         }
         $this->escapeReset = $escapeCode ?: "\e[0m";
         $str = parent::processLogEntry($logEntry);
-        $str = str_replace(self::ESCAPE_RESET, $this->escapeReset, $str);
+        $str = \str_replace(self::ESCAPE_RESET, $this->escapeReset, $str);
         if ($str && $escapeCode) {
             $strIndent = \str_repeat('    ', $this->depth);
             $str = \preg_replace('#^('.$strIndent.')(.+)$#m', '$1'.$escapeCode.'$2'."\e[0m", $str);
@@ -298,15 +298,17 @@ class TextAnsi extends Text
                 }
             }
             $vis = \implode(' ', $vis);
-            $name = $this->cfg['escapeCodes']['property'].$name.$this->escapeReset;
             if ($info['debugInfoExcluded']) {
                 $vis .= ' excluded';
-                $str .= '    ('.$vis.') '.$name."\n";
-            } else {
-                $str .= '    ('.$vis.') '.$name.' '
-                    .$this->cfg['escapeCodes']['operator'].'='.$this->escapeReset.' '
-                    .$this->dump($info['value'])."\n";
             }
+            $vis = $this->cfg['escapeCodes']['muted'].'('.$vis.')'.$this->escapeReset;
+            $name = $this->cfg['escapeCodes']['property'].$name.$this->escapeReset;
+            $str .= '    '.$vis.' '.$name.($info['debugInfoExcluded']
+                    ? "\n"
+                    : ' '
+                        .$this->cfg['escapeCodes']['operator'].'='.$this->escapeReset.' '
+                        .$this->dump($info['value'])."\n"
+            );
         }
         $header = $str
             ? "\e[4mProperties:\e[24m"

@@ -1633,7 +1633,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-19: %d|[{"Label":{{label}},"Type":"LOG"},{{args}}]|',
                     'html' => '<li class="m_log"><span class="no-quotes t_string"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></li>',
                     'script' => 'console.log({{args}});',
-                    'text' => 'Location: http://localhost/?foo=bar&jim=slim',
+                    'text' => 'Location: <a href="http://localhost/?foo=bar&jim=slim">http://localhost/?foo=bar&jim=slim</a>',
                 ),
             ),
             array(
@@ -1701,7 +1701,7 @@ EOD;
                         .' <span class="binary">'.$binaryStr.'</span>'
                         .'</span></li>',
                     'script' => 'console.log("%%s %%s %%s %%s %%s",123.45,42,"'.$time.' ('.$timeStr.')","<i>boring<\/i>","'.$binaryStr.'");',
-                    'text' => '123.45 42 📅 '.$time.' ('.$timeStr.') boring '.$binaryStr,
+                    'text' => '123.45 42 📅 '.$time.' ('.$timeStr.') <i>boring</i> '.$binaryStr,
                 ),
             ),
             /*

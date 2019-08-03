@@ -46,25 +46,25 @@ EOD;
 \e[38;5;250mbdk\DebugTest\\e[0m\e[1mTest\e[22m
     \e[4mProperties:\e[24m
         \e[38;5;250m✨ This object has a __get() method\e[0m
-        (public) \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;9mNOT INSPECTED\e[0m
-        (public) \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;9m*RECURSION*\e[0m
-        (public) \e[38;5;83mpropPublic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
-        (public) \e[38;5;83mpropStatic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
-        (public) \e[38;5;83msomeArray\e[0m \e[38;5;130m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
-        \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;130m => \e[0m\e[96m123\e[0m
-        \e[38;5;245m[\e[38;5;83mnumeric\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[96m123\e[38;5;250m"\e[0m
-        \e[38;5;245m[\e[38;5;83mstring\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mcheese\e[38;5;250m"\e[0m
-        \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
-        \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250mnull\e[0m
+        \e[38;5;250m(public)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;9mNOT INSPECTED\e[0m
+        \e[38;5;250m(public)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;9m*RECURSION*\e[0m
+        \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
+        \e[38;5;250m(public)\e[0m \e[38;5;83mpropStatic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
+        \e[38;5;250m(public)\e[0m \e[38;5;83msomeArray\e[0m \e[38;5;130m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
+            \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;130m => \e[0m\e[96m123\e[0m
+            \e[38;5;245m[\e[38;5;83mnumeric\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[96m123\e[38;5;250m"\e[0m
+            \e[38;5;245m[\e[38;5;83mstring\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mcheese\e[38;5;250m"\e[0m
+            \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
+            \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250mnull\e[0m
         \e[38;5;245m)\e[0m
-        (public) \e[38;5;83mtoString\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
-        (protected ✨ magic-read) \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
-        (protected) \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
-        (private excluded) \e[38;5;83mpropNoDebug\e[0m
-        (private) \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
-        (🔒 private) \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
-        (✨ magic excluded) \e[38;5;83mmagicProp\e[0m
-        (debug) \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
+        \e[38;5;250m(public)\e[0m \e[38;5;83mtoString\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
+        \e[38;5;250m(protected ✨ magic-read)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
+        \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
+        \e[38;5;250m(private excluded)\e[0m \e[38;5;83mpropNoDebug\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
+        \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
+        \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
+        \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
     \e[4mMethods:\e[24m
         public\e[38;5;245m:\e[0m \e[96m8\e[0m
         protected\e[38;5;245m:\e[0m \e[96m1\e[0m

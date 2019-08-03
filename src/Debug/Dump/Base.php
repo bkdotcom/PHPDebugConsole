@@ -641,7 +641,7 @@ class Base extends Component implements ConfigurableInterface
         if ($type == 'array') {
             $count = \count($val);
             // replace with dummy array so browser console will display native Array(length)
-            $val = array_fill(0, $count, 0);
+            $val = \array_fill(0, $count, 0);
         } elseif ($type == 'object') {
             $toStr = AbstractObject::toString($val);
             $val = $toStr ?: $val['className'];

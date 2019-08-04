@@ -162,7 +162,6 @@ class Firephp extends Base
         $method = isset($levelToMethod[$level])
             ? $levelToMethod[$level]
             : 'error';
-        // $logEntry['method'] = $method;
         $logEntry['firephpMeta']['Type'] = $this->firephpMethods[$method];
         return $logEntry['args'][0];
     }

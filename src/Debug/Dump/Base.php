@@ -20,6 +20,7 @@ use bdk\Debug\MethodTable;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\PubSub\Event;
 
 /**
  * Base output plugin
@@ -640,8 +641,10 @@ class Base extends Component implements ConfigurableInterface
         $type = $this->debug->abstracter->getType($val)[0];
         if ($type == 'array') {
             $count = \count($val);
-            // replace with dummy array so browser console will display native Array(length)
-            $val = \array_fill(0, $count, 0);
+            if ($count) {
+                // replace with dummy array so browser console will display native Array(length)
+                $val = \array_fill(0, $count, 0);
+            }
         } elseif ($type == 'object') {
             $toStr = AbstractObject::toString($val);
             $val = $toStr ?: $val['className'];

@@ -143,9 +143,9 @@ class Manager
     /**
      * Subscribe to event
      *
-     * Callable may also be a "closure factory" which provides a means to lazy-load an object
-     *    [Closure, 'methodName'] - closure returns object
-     *    [Closure] - closure instantiates object that is callable (ie has __invoke)
+     * Callable may also be a "closure factory" which provides a means to lazy-load the handler object
+     *    `[Closure, 'methodName']` - closure returns object
+     *    `[Closure]` - closure instantiates object that is callable (ie has __invoke)
      *
      * @param string   $eventName event name
      * @param callable $callable  callable or closure factory

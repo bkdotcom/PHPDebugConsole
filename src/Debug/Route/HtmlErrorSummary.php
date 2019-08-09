@@ -86,7 +86,7 @@ class HtmlErrorSummary
         } else {
             $keysKeep = array('typeStr','message','file','line');
             $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
-            $html .= '<li>'.$this->routeHtml->dump($lastError).'</li>';
+            $html .= '<li>'.$this->routeHtml->dump->dump($lastError).'</li>';
             if ($isHtml) {
                 $html = \str_replace(\htmlspecialchars($lastError['message']), $lastError['message'], $html);
             }

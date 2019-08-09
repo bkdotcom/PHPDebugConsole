@@ -41,7 +41,7 @@ class AbstractArray
      *
      * @return array
      */
-    public function getAbstraction(&$array, $method = null, &$hist = array())
+    public function getAbstraction(&$array, $method = null, $hist = array())
     {
         if (\in_array($array, $hist, true)) {
             return Abstracter::RECURSION;

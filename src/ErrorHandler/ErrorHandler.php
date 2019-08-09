@@ -30,7 +30,6 @@ class ErrorHandler
         'errors'        => array(),
         'lastErrors'     => array(),    // contains up to two errors: suppressed & unsuppressed
                                         // lastError[0] is the most recent error
-        'uncaughtException' => null,
     );
     protected $inShutdown = false;
     protected $registered = false;
@@ -73,16 +72,15 @@ class ErrorHandler
         }
         $this->setCfg($cfg);
         $this->register();
-        // easier to maintain subscription to php.shutdown event and check this->registered value
-        // than to subscribe with register() and unsub with unRegister()
         $this->eventManager->subscribe('php.shutdown', array($this, 'onShutdown'), PHP_INT_MAX);
         return;
     }
 
     /**
-     * Get backtrace
+     * Helper method to get backtrace
      *
-     * To get trace from within shutdown function utilizes xdebug_get_function_stack() if available
+     * Utilizes xdebug_get_function_stack() (if available) to get backtrace in shutdown phase
+     * When called internally, internal frames are removed
      *
      * @param Error|Exception $error (optional) Error instance if getting error backtrace
      *
@@ -214,7 +212,7 @@ class ErrorHandler
     /**
      * Error handler
      *
-     * @param integer $errType the level of the error
+     * @param integer $errType error lavel / type (one of PHP's E_* constants)
      * @param string  $errMsg  the error message
      * @param string  $file    filepath the error was raised in
      * @param string  $line    the line the error was raised in
@@ -259,9 +257,9 @@ class ErrorHandler
      * Handle uncaught exceptions
      *
      * This isn't strictly necesssary...  uncaught exceptions are a fatal error, which we can handle...
-     * However..  An backtrace sure is nice...
-     *    a) catching backtrace via shutdown function only possible if xdebug installed
-     *    b) xdebug_get_function_stack's magic doesn't seem to powerless for uncaught exceptions!
+     * However:
+     *   * catching backtrace via shutdown function only possible if xdebug installed
+     *   * xdebug_get_function_stack's magic seems powerless for uncaught exceptions!
      *
      * @param Exception|Throwable $exception exception to handle
      *
@@ -270,7 +268,6 @@ class ErrorHandler
     public function handleException($exception)
     {
         // lets store the exception so we can use the backtrace it provides
-        $this->data['uncaughtException'] = $exception;
         \http_response_code(500);
         $this->handleError(
             E_ERROR,
@@ -278,7 +275,6 @@ class ErrorHandler
             $exception->getFile(),
             $exception->getLine()
         );
-        $this->data['uncaughtException'] = null;
         if ($this->cfg['continueToPrevHandler'] && $this->prevExceptionHandler) {
             \call_user_func($this->prevErrorHandler, $exception);
         }
@@ -351,8 +347,8 @@ class ErrorHandler
     /**
      * Set one or more config values
      *
-     *    setCfg('key', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *    `setCfg('key', 'value')`
+     *    `setCfg(array('k1'=>'v1', 'k2'=>'v2'))`
      *
      * @param string $mixed  key=>value array or key
      * @param mixed  $newVal value
@@ -402,8 +398,8 @@ class ErrorHandler
     }
 
     /**
-     * Set the calling file/line for next error
-     * this override will apply until cleared or error occurs
+     * Set the calling file/line for next error.
+     * This override will apply until cleared or error occurs
      *
      * Example:  some wrapper function that is called often:
      *     Rather than reporting that an error occurred within the wrapper, you can use
@@ -441,12 +437,9 @@ class ErrorHandler
     }
 
     /**
-     * un-register this error handler and shutdown function
+     * Un-register this error handler
      *
-     * Note:  PHP conspicuously lacks an unregister_shutdown_function function.
-     *     Technically this will still be registered, however:
-     *     $this->registered will be used to keep track of whether
-     *     we're "registered" or not and behave accordingly
+     * Restores previous error handler
      *
      * @return void
      */

@@ -43,7 +43,7 @@ class PhpDoc
         }
         $return = array(
             'summary' => null,
-            'description' => null,
+            'desc' => null,
         );
         if (\preg_match('/^@/m', $comment, $matches, PREG_OFFSET_CAPTURE)) {
             // we have tags
@@ -243,7 +243,7 @@ class PhpDoc
                     '/{@inheritdoc}/i',
                     function () use ($reflector) {
                         $phpDoc =  self::findInheritedDoc($reflector);
-                        return $phpDoc['description'];
+                        return $phpDoc['desc'];
                     },
                     $docComment
                 );

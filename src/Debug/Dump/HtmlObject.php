@@ -45,7 +45,7 @@ class HtmlObject
      */
 	public function dump(Abstraction $abs)
 	{
-        $title = \trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
+        $title = \trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['desc']);
         $strClassName = $this->html->markupIdentifier($abs['className'], 'span', array(
             'title' => $title ?: null,
         ));
@@ -161,12 +161,6 @@ class HtmlObject
         $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
         $str .= $this->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {
-            if (!isset($info['phpDoc']['return'])) {
-                $info['phpDoc']['return'] = array(
-                    'desc' => null,
-                    'type' => null,
-                );
-            }
             $classes = \array_keys(\array_filter(array(
                 'deprecated' => $info['isDeprecated'],
                 'inherited' => $info['inheritedFrom'],
@@ -190,9 +184,9 @@ class HtmlObject
                     'span',
                     array(
                         'class' => 't_type',
-                        'title' => $info['phpDoc']['return']['desc'],
+                        'title' => $info['return']['desc'],
                     ),
-                    $info['phpDoc']['return']['type']
+                    $info['return']['type']
                 )
                 .' '.$this->debug->utilities->buildTag(
                     'span',
@@ -200,7 +194,7 @@ class HtmlObject
                         'class' => 't_identifier',
                         'title' => \trim($info['phpDoc']['summary']
                             .($this->debug->getCfg('outputMethodDescription')
-                                ? "\n\n".$info['phpDoc']['description']
+                                ? "\n\n".$info['phpDoc']['desc']
                                 : '')),
                     ),
                     $methodName
@@ -235,9 +229,14 @@ class HtmlObject
                     'class' => 't_type',
                 )).' ';
             }
-            $paramStr .= '<span class="t_parameter-name"'
-                .' title="'.\htmlspecialchars($info['desc']).'"'
-                .'>'.\htmlspecialchars($info['name']).'</span>';
+            $paramStr .= $this->debug->utilities->buildTag(
+                'span',
+                array(
+                    'class' => 't_parameter-name',
+                    'title' => $info['desc'],
+                ),
+                \htmlspecialchars($info['name'])
+            );
             if ($info['defaultValue'] !== Abstracter::UNDEFINED) {
                 $paramStr .= ' <span class="t_operator">=</span> ';
                 $parsed = $this->debug->utilities->parseTag($this->html->dump($info['defaultValue']));

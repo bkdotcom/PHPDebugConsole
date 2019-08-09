@@ -287,7 +287,7 @@ EOD;
         $this->assertArraySubset(
             array(
                 'summary' => 'PhpDoc Summary',
-                'description' => null,
+                'desc' => null,
             ),
             $abs['phpDoc']
         );
@@ -369,7 +369,7 @@ EOD;
         }
         $testVar = new \bdk\DebugTest\TestVariadic();
         $abs = $this->debug->abstracter->getAbstraction($testVar);
-        $this->assertSame('...$moreParams', $abs['methods']['methodVariadic']['params']['moreParams']['name']);
+        $this->assertSame('...$moreParams', $abs['methods']['methodVariadic']['params'][1]['name']);
     }
 
     public function testVariadicByReference()
@@ -382,7 +382,7 @@ EOD;
         }
         $testVarByRef = new \bdk\DebugTest\TestVariadicByReference();
         $abs = $this->debug->abstracter->getAbstraction($testVarByRef);
-        $this->assertSame('&...$moreParams', $abs['methods']['methodVariadicByReference']['params']['moreParams']['name']);
+        $this->assertSame('&...$moreParams', $abs['methods']['methodVariadicByReference']['params'][1]['name']);
     }
 
     /**

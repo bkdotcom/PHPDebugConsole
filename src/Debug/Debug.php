@@ -324,11 +324,11 @@ class Debug
     */
 
     /**
-     * Add an alert to top of log
+     * Display an alert at the top of the log
      *
      * @param string  $message     message
      * @param string  $level       (danger), info, success, warning
-     * @param boolean $dismissible (false)
+     * @param boolean $dismissible (false) Whether to display a close icon/button
      *
      * @return void
      */
@@ -354,9 +354,7 @@ class Debug
     }
 
     /**
-     * Log a message and stack trace to console if first argument is false.
-     *
-     * Only appends log when assertion fails
+     * If first argument evaluates `false`, log the remaining paramaters
      *
      * Supports styling/substitutions
      *
@@ -438,9 +436,9 @@ class Debug
      * @param mixed   $label label
      * @param integer $flags (optional)
      *                          A bitmask of
-     *                          \bdk\Debug::COUNT_NO_INC : don't increment the counter
+     *                          `\bdk\Debug::COUNT_NO_INC` : don't increment the counter
      *                                                       (ie, just get the current count)
-     *                          \bdk\Debug::COUNT_NO_OUT : don't output/log
+     *                          `\bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
      * @return integer The count
      */
@@ -498,9 +496,8 @@ class Debug
      * Resets the counter.
      *
      * @param mixed   $label label
-     * @param integer $flags (optional)
-     *                          currently only one option
-     *                          \bdk\Debug::COUNT_NO_OUT : don't output/log
+     * @param integer $flags (optional) currently only one option :
+     *                          `\bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
      * @return void
      */

@@ -86,6 +86,10 @@ class HtmlTable
             }
         }
         $keys = $options['columns'] ?: $this->debug->methodTable->colKeys($rows);
+        $keyIndex = $index = \array_search('__key', $keys);
+        if ($keyIndex !== false) {
+            unset($keys[$index]);
+        }
         $this->tableInfo = array(
             'colClasses' => \array_fill_keys($keys, null),
             'haveObjRow' => false,
@@ -93,8 +97,10 @@ class HtmlTable
         );
         $tBody = '';
         foreach ($rows as $k => $row) {
+            // row may be array or Traversable
             $tBody .= $this->buildRow($row, $keys, $k);
         }
+        $tBody = \str_replace(' title=""', '', $tBody);
         if (!$this->tableInfo['haveObjRow']) {
             $tBody = \str_replace('<td class="classname"></td>', '', $tBody);
         }
@@ -167,7 +173,7 @@ class HtmlTable
     /**
      * Returns table row
      *
-     * @param mixed $row    should be array or abstraction
+     * @param mixed $row    should be array or object abstraction
      * @param array $keys   column keys
      * @param array $rowKey row key
      *
@@ -176,17 +182,27 @@ class HtmlTable
     protected function buildRow($row, $keys, $rowKey)
     {
         $str = '';
+        if (\is_array($row) && isset($row['__key'])) {
+            $rowKey = $row['__key'];
+            unset($row['__key']);
+        }
         $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
-        $parsed = $this->debug->utilities->parseTag($this->html->dump($rowKey));
+        $rowKeyParsed = $this->debug->utilities->parseTag($this->html->dump($rowKey));
         $str .= '<tr>';
+        /*
+            Output key
+        */
         $str .= $this->debug->utilities->buildTag(
             'th',
             array(
-                'class' => 't_key text-right '.$parsed['attribs']['class'],
+                'class' => 't_key text-right '.$rowKeyParsed['attribs']['class'],
                 'scope' => 'row',
             ),
-            $parsed['innerhtml']
+            $rowKeyParsed['innerhtml']
         );
+        /*
+            Output row's classname (if row is an object)
+        */
         if ($objInfo['row']) {
             $str .= $this->html->markupIdentifier($objInfo['row']['className'], 'td', array(
                 'title' => $objInfo['row']['phpDoc']['summary'] ?: null,
@@ -195,11 +211,13 @@ class HtmlTable
         } else {
             $str .= '<td class="classname"></td>';
         }
+        /*
+            Output values
+        */
         foreach ($values as $v) {
             $str .= $this->html->dump($v, true, 'td');
         }
         $str .= '</tr>'."\n";
-        $str = \str_replace(' title=""', '', $str);
         foreach (\array_keys($this->tableInfo['totals']) as $k) {
             $this->tableInfo['totals'][$k] += $values[$k];
         }

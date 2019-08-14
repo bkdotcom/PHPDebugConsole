@@ -30,6 +30,7 @@ class ErrorHandler
         'errors'        => array(),
         'lastErrors'     => array(),    // contains up to two errors: suppressed & unsuppressed
                                         // lastError[0] is the most recent error
+        'uncaughtException' => null,    // error constructor will pull this
     );
     protected $inShutdown = false;
     protected $registered = false;
@@ -268,6 +269,8 @@ class ErrorHandler
     public function handleException($exception)
     {
         // lets store the exception so we can use the backtrace it provides
+        //   error constructor will pull this
+        $this->data['uncaughtException'] = $exception;
         \http_response_code(500);
         $this->handleError(
             E_ERROR,
@@ -275,6 +278,7 @@ class ErrorHandler
             $exception->getFile(),
             $exception->getLine()
         );
+        $this->data['uncaughtException'] = null;
         if ($this->cfg['continueToPrevHandler'] && $this->prevExceptionHandler) {
             \call_user_func($this->prevErrorHandler, $exception);
         }
@@ -678,9 +682,10 @@ class ErrorHandler
                     : null;
                 if ($function === '__get') {
                     // wrong file!
-                    $class = $stack[$i-1]['class'];
-                    $refClass = new ReflectionClass($class);
-                    $stack[$i]['file'] = $refClass->getFileName();
+                    $prev = $stack[$i-1];
+                    $stack[$i]['file'] = isset($prev['include_filename'])
+                        ? $prev['include_filename']
+                        : $prev['file'];
                 }
             }
         }

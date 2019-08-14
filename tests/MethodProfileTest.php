@@ -54,9 +54,9 @@ class MethodProfileTest extends DebugTestFramework
                         <tr><th>&nbsp;</th><th>calls</th><th scope="col">totalTime</th><th scope="col">ownTime</th></tr>
                     </thead>
                     <tbody>
-                        <tr><th class="t_key t_string text-right" scope="row">MethodProfileTest::a</th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_key t_string text-right" scope="row">MethodProfileTest::b</th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_key t_string text-right" scope="row">MethodProfileTest::c</th><td class="t_int">2</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname">MethodProfileTest</span><span class="t_operator">::</span><span class="t_identifier">a</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname">MethodProfileTest</span><span class="t_operator">::</span><span class="t_identifier">b</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname">MethodProfileTest</span><span class="t_operator">::</span><span class="t_identifier">c</span></th><td class="t_int">2</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
                     </tbody>
                     <tfoot>
                         <tr><td>&nbsp;</td><td></td><td></td><td class="t_float">%f</td></tr>

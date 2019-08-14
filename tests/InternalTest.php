@@ -78,6 +78,130 @@ class InternalTest extends DebugTestFramework
         $this->assertFalse($this->emailCalled);
     }
 
+    public function testLogPost()
+    {
+        $onBootstrap = new \bdk\Debug\OnBootstrap();
+        $reflect = new ReflectionObject($onBootstrap);
+        $debugProp = $reflect->getProperty('debug');
+        $debugProp->setAccessible(true);
+        $debugProp->setValue($onBootstrap, $this->debug);
+        $inputProp = $reflect->getProperty('input');
+        $inputProp->setAccessible(true);
+        $logPostMeth = $reflect->getMethod('logPost');
+        $logPostMeth->setAccessible(true);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        // valid form post
+        $_POST = array('foo'=>'bar');
+        $inputProp->setValue($onBootstrap, http_build_query($_POST));
+        $logPostMeth->invoke($onBootstrap);
+        $this->assertSame(
+            array('log', array('$_POST', $_POST), array()),
+            $this->logEntryToArray($this->debug->getData('log/0'))
+        );
+        $this->debug->setData('log', array());
+
+        // json properly posted
+        $_POST = array();
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+        $input = json_encode(array('foo'=>'bar=baz'));
+        // parse_str($input, $_POST);
+        $inputProp->setValue($onBootstrap, $input);
+        $logPostMeth->invoke($onBootstrap);
+        $this->assertEquals(
+            array(
+                'log',
+                array('php://input (formatted)', new \bdk\Debug\Abstraction\Abstraction(array(
+                    'type' => 'string',
+                    'attribs' => array(
+                        'class' => 'language-json prism',
+                    ),
+                    'addQuotes' => false,
+                    'visualWhiteSpace' => false,
+                    'value' => json_encode(json_decode($input), JSON_PRETTY_PRINT),
+                ))),
+                array()
+            ),
+            $this->logEntryToArray($this->debug->getData('log/0'))
+        );
+        $this->debug->setData('log', array());
+
+        // json improperly posted
+        $input = json_encode(array('foo'=>'bar=baz'));
+        parse_str($input, $_POST);
+        $inputProp->setValue($onBootstrap, $input);
+        $logPostMeth->invoke($onBootstrap);
+        $this->assertSame(
+            array('warn',
+                array('It appears application/json was posted with the wrong Content-Type'."\n"
+                .'Pay no attention to $_POST and instead use php://input'),
+                array('detectFiles'=>false,'file'=>null,'line'=>null),
+            ),
+            $this->logEntryToArray($this->debug->getData('log/0'))
+        );
+        $this->assertEquals(
+            array(
+                'log',
+                array('php://input (formatted)', new \bdk\Debug\Abstraction\Abstraction(array(
+                    'type' => 'string',
+                    'attribs' => array(
+                        'class' => 'language-json prism',
+                    ),
+                    'addQuotes' => false,
+                    'visualWhiteSpace' => false,
+                    'value' => json_encode(json_decode($input), JSON_PRETTY_PRINT),
+                ))),
+                array(),
+            ),
+            $this->logEntryToArray($this->debug->getData('log/1'))
+        );
+        $this->debug->setData('log', array());
+
+        // post with just $_FILES
+        $input = '';
+        $_POST = array();
+        $_FILES = array(array('foo'=>'bar'));
+        $inputProp->setValue($onBootstrap, $input);
+        $logPostMeth->invoke($onBootstrap);
+        $this->assertSame(
+            array('log',
+                array('$_FILES', $_FILES),
+                array(),
+            ),
+            $this->logEntryToArray($this->debug->getData('log/0'))
+        );
+        $this->debug->setData('log', array());
+
+        // post with no body
+        $input = '';
+        $_POST = array();
+        $_FILES = array();
+        $inputProp->setValue($onBootstrap, $input);
+        $logPostMeth->invoke($onBootstrap);
+        $this->assertSame(
+            array('warn',
+                array('POST request with no body'),
+                array('detectFiles'=>false,'file'=>null,'line'=>null),
+            ),
+            $this->logEntryToArray($this->debug->getData('log/0'))
+        );
+        $this->debug->setData('log', array());
+
+        // put method
+        $_SERVER['REQUEST_METHOD'] = 'PUT';
+        $input = json_encode(array('foo'=>'bar=baz'));
+        $_POST = array();
+        // parse_str($input, $_POST);
+        $inputProp->setValue($onBootstrap, $input);
+        $logPostMeth->invoke($onBootstrap);
+        $this->assertSame(
+            array('log', array('php://input', $input), array()),
+            $this->logEntryToArray($this->debug->getData('log/0'))
+        );
+        $this->debug->setData('log', array());
+    }
+
     public function emailMock($toAddr, $subject, $body)
     {
         $this->emailCalled = true;
@@ -91,16 +215,12 @@ class InternalTest extends DebugTestFramework
             'requestId' => $this->debug->getData('requestId'),
             'runtime' => $this->debug->getData('runtime'),
             'rootChannel' => $this->debug->getCfg('channelName'),
-            'channels' => array(
-                'foo' => array(
-                    'channelIcon' => null,
-                    'channelShow' => true,
-                ),
-                'phpError' => array(
-                    'channelIcon' => null,
-                    'channelShow' => true,
-                ),
-            )
+            'channels' => \array_map(function (Debug $channel) {
+                return array(
+                    'channelIcon' => $channel->getCfg('channelIcon'),
+                    'channelShow' => $channel->getCfg('channelShow'),
+                );
+            }, $this->debug->getChannels(true)),
         );
         $this->assertEquals($this->deObjectify($expect), $this->deObjectify($unserialized));
     }

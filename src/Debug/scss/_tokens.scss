@@ -10,7 +10,19 @@
 		font-weight: normal;
 	}
 }
-.t_const { color:#039; font-family:monospace; }
+.t_const {
+	color: #039;
+	font-family: monospace;
+	.t_identifier {
+		color: inherit;
+	}
+}
+//
+// property-name, constant-name, method-name
+//
+.t_identifier {
+	font-weight: bold;
+}
 .t_int,
 .t_float,
 .numeric {

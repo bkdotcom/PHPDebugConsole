@@ -356,10 +356,11 @@ class Debug
     /**
      * If first argument evaluates `false`, log the remaining paramaters
      *
-     * Supports styling/substitutions
+     * Supports styling & substitutions
      *
      * @param boolean $assertion argument checked for truthyness
-     * @param mixed   $msg,...   (optional) variable num of addititional values to output
+     * @param mixed   $msg,...   (optional) variable num of values to output if assertion fails
+     *                             if none provided, will use calling file & line num
      *
      * @return void
      */
@@ -429,18 +430,16 @@ class Debug
     /**
      * Log the number of times this has been called with the given label.
      *
-     * If `label` is omitted, logs the number of times `count()` has been called at this particular line.
-     *
      * Count is maintained even when `collect` is false
      *
-     * @param mixed   $label label
+     * @param mixed   $label Label.  If omitted, logs the number of times `count()` has been called at this particular line.
      * @param integer $flags (optional)
      *                          A bitmask of
      *                          `\bdk\Debug::COUNT_NO_INC` : don't increment the counter
      *                                                       (ie, just get the current count)
      *                          `\bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
-     * @return integer The count
+     * @return integer The new count (current count when using `COUNT_NO_INC`)
      */
     public function count($label = null, $flags = 0)
     {
@@ -539,9 +538,9 @@ class Debug
     /**
      * Log an error message.
      *
-     * Supports styling/substitutions
+     * Supports styling & substitutions
      *
-     * @param mixed $label,... error message / values
+     * @param mixed $arg,... message / values
      *
      * @return void
      */
@@ -571,7 +570,9 @@ class Debug
     /**
      * Create a new inline group
      *
-     * @param mixed $label,... label / values
+     * Supports styling & substitutions
+     *
+     * @param mixed $arg,... label / values
      *
      * @return void
      */
@@ -583,7 +584,7 @@ class Debug
     /**
      * Create a new inline group
      *
-     * @param mixed $label,... label / values
+     * @param mixed $arg,... label / values
      *
      * @return void
      */
@@ -646,12 +647,11 @@ class Debug
     }
 
     /**
-     * Initiate the beginning of "summary" log entries
+     * Open a "summary" group
      *
-     * Debug methods called while a groupSummary is open will appear at the top of the log
-     * call groupEnd() to close summary
+     * Debug methods called while a groupSummary is open will appear at the top of the log.
+     * Call groupEnd() to close the summary group
      *
-     * groupSummary can be used multiple times
      * All groupSummary groups will appear together in a single group
      *
      * @param integer $priority (0) The higher the priority, the ealier it will appear.
@@ -719,7 +719,9 @@ class Debug
     /**
      * Log some informative information
      *
-     * Supports styling/substitutions
+     * Supports styling & substitutions
+     *
+     * @param mixed $arg,... message / values
      *
      * @return void
      */
@@ -735,7 +737,9 @@ class Debug
     /**
      * Log general information
      *
-     * Supports styling/substitutions
+     * Supports styling & substitutions
+     *
+     * @param mixed $arg,... message / values
      *
      * @return void
      */
@@ -836,6 +840,17 @@ class Debug
         if (isset($this->data['profileInstances'][$name])) {
             $instance = $this->data['profileInstances'][$name];
             $data = $instance->end();
+            /*
+                So that our row keys can receive'callable' formatting,
+                set special '__key' value
+            */
+            foreach ($data as $k => &$row) {
+                $row['__key'] = new Abstraction(array(
+                    'type' => 'callable',
+                    'value' => $k,
+                    'hideType' => true, // don't output 'callable'
+                ));
+            }
             $caption = 'Profile \''.$name.'\' Results';
             if ($data) {
                 $args = array( $data );
@@ -864,10 +879,12 @@ class Debug
      *
      * Accepts array of arrays or array of objects
      *
-     * Arguments:
+     * Parameters:
      *   1st encountered array (or traversable) is the data
      *   2nd encountered array (optional) specifies columns to output
      *   1st encountered string is a label/caption
+     *
+     * @param mixed $arg,... traversable, [option array], [caption] in no particular order
      *
      * @return void
      */
@@ -1092,6 +1109,8 @@ class Debug
     /**
      * Log a stack trace
      *
+     * Essentially PHP\'s <code>debug_backtrace()</code>, but displayed as a table<
+     *
      * @param string $caption (optional) "trace"
      *
      * @return void
@@ -1137,7 +1156,9 @@ class Debug
     /**
      * Log a warning
      *
-     * Supports styling/substitutions
+     * Supports styling & substitutions
+     *
+     * @param mixed $arg,... message / values
      *
      * @return void
      */
@@ -1345,10 +1366,10 @@ class Debug
      * "metafy" value/values
      *
      * accepts
-     *   array('key'=>value)
-     *   'cfg', option, value  (shortcut for setting single config value)
-     *   key, value
-     *   key                   (value defaults to true)
+     *  * `array('key'=>value)`
+     *  * 'cfg', option, value  (shortcut for setting single config value)
+     *  * 'key', value
+     *  * 'key'                 (value defaults to true)
      *
      * @param mixed $args,... arguments
      *

@@ -2,12 +2,21 @@
 // array & objects
 //
 
+$color-classname: #8d0c4c;
+$color-param: #263;
+$color-static: #00529B;
+
 .namespace { opacity:0.5; }
 
 .array-inner,
 .object-inner {
 	display: block;
 	margin-left: 1em;
+}
+
+.classname {
+	font-weight: bold;
+	color: $color-classname;
 }
 
 span.key-value {
@@ -23,12 +32,6 @@ span.key-value {
 	}
 }
 .t_object {
-	> .classname {
-		font-weight: bold;
-	}
-	.t_identifier {
-		font-weight: bold;
-	}
 	.method .parameter [title],
 	.t_identifier[title],
 	.t_stringified,
@@ -50,18 +53,17 @@ span.key-value {
 			color: inherit;
 		}
 		.t_parameter-name {
-			color: #263;
+			color: $color-param;
 		}
 	}
 	.property {
-		&.private-ancestory {
-			color: #F39;
-			&:hover { color: inherit; }
+		&.private-ancestor:not(:hover) {
+			> * { opacity: 0.5; }
 		}
 	}
 	.t_modifier_static {
 		font-style: italic;
-		color: #00529B;
+		color: $color-static;
 	}
 	.info {
 		display: inline-block;

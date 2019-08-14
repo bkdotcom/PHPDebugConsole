@@ -81,32 +81,58 @@ class Html extends Base
      * if namespaced additionally wrap namespace in span.namespace
      * If callable, also wrap with .t_operator and .t_identifier
      *
-     * @param string $str     classname or classname(::|->)name (method/property/const)
+     * @param mixed  $val     classname or classname(::|->)name (method/property/const)
      * @param string $tagName ("span") html tag to use
      * @param array  $attribs (optional) additional html attributes
      *
      * @return string
      */
-    public function markupIdentifier($str, $tagName = 'span', $attribs = array())
+    public function markupIdentifier($val, $tagName = 'span', $attribs = array())
     {
-        if (\preg_match('/^(.+)(::|->)(.+)$/', $str, $matches)) {
+        $classname = '';
+        $operator = '::';
+        $identifier = '';
+        $regex = '/^(.+)(::|->)(.+)$/';
+        if ($val instanceof Abstraction) {
+            $value = $val['value'];
+            if (\is_array($value)) {
+                list($classname, $identifier) = $value;
+            } else {
+                if (\preg_match($regex, $value, $matches)) {
+                    $classname = $matches[1];
+                    $operator = $matches[2];
+                    $identifier = $matches[3];
+                } else {
+                    $identifier = $value;
+                }
+            }
+        } elseif (\preg_match($regex, $val, $matches)) {
             $classname = $matches[1];
-            $opIdentifier = '<span class="t_operator">'.\htmlspecialchars($matches[2]).'</span>'
-                    . '<span class="t_identifier">'.$matches[3].'</span>';
+            $operator = $matches[2];
+            $identifier = $matches[3];
         } else {
-            $classname = $str;
-            $opIdentifier = '';
+            $classname = $val;
         }
-        $idx = \strrpos($classname, '\\');
-        if ($idx) {
-            $classname = '<span class="namespace">'.\substr($classname, 0, $idx + 1).'</span>'
-                . \substr($classname, $idx + 1);
+        $operator = '<span class="t_operator">'.\htmlspecialchars($operator).'</span>';
+        if ($classname) {
+            $idx = \strrpos($classname, '\\');
+            if ($idx) {
+                $classname = '<span class="namespace">'.\substr($classname, 0, $idx + 1).'</span>'
+                    . \substr($classname, $idx + 1);
+            }
+            $attribs = \array_merge(array(
+                'class' => 'classname',
+            ), $attribs);
+            $classname = $this->debug->utilities->buildTag($tagName, $attribs, $classname);
+        } else {
+            $operator = '';
         }
-        $attribs = \array_merge(array(
-            'class' => 'classname',
-        ), $attribs);
-        return $this->debug->utilities->buildTag($tagName, $attribs, $classname)
-            .$opIdentifier;
+        if ($identifier) {
+            $identifier = '<span class="t_identifier">'.$identifier.'</span>';
+        } else {
+            $operator = '';
+        }
+        return \implode($operator, array($classname, $identifier));
     }
 
     /**
@@ -257,18 +283,20 @@ class Html extends Base
     /**
      * Dump "Callable" as html
      *
-     * @param Abstraction $abs array/callable abstraction
+     * @param Abstraction $abs callable abstraction
      *
      * @return string
      */
     protected function dumpCallable(Abstraction $abs)
     {
-        return '<span class="t_type">callable</span> '
-            .$this->markupIdentifier($abs['values'][0].'::'.$abs['values'][1]);
+        return (!$abs['hideType'] ? '<span class="t_type">callable</span> ' : '')
+            .$this->markupIdentifier($abs);
     }
 
     /**
      * Dump "const" abstration as html
+     *
+     * Object constant or method param's default value
      *
      * @param Abstraction $abs const abstraction
      *

@@ -14,8 +14,10 @@
 
 namespace bdk\Debug;
 
-use bdk\PubSub\Event;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Plugin\Prism;
+use bdk\PubSub\Event;
 
 /**
  * Log eenvironent info
@@ -24,6 +26,7 @@ class OnBootstrap
 {
 
     private $debug;
+    private static $input;  // populate me for unit tests in lieu of php://input
 
     /**
      * Magic callable method
@@ -52,6 +55,21 @@ class OnBootstrap
         $this->debug->groupEnd();
         $this->debug->groupEnd();
         $this->debug->setCfg('collect', $collectWas);
+        self::$input = null;
+    }
+
+    /**
+     * returns self::$input or php://input contents
+     *
+     * @return string;
+     */
+    private function getInput()
+    {
+        if (self::$input) {
+            return self::$input;
+        }
+        self::$input = \file_get_contents('php://input');
+        return self::$input;
     }
 
     /**
@@ -79,6 +97,40 @@ class OnBootstrap
                 $this->debug->meta('icon', 'fa fa-github fa-lg')
             );
             $this->debug->groupEnd();
+        }
+    }
+
+    /**
+     * log php://input
+     *
+     * @param string $contentType Content-Type
+     *
+     * @return void
+     */
+    private function logInput($contentType = null)
+    {
+        if (\preg_match('#\b(xml|json)\b#', $contentType, $matches)) {
+            $this->debug->addPlugin(new Prism());
+            $type = $matches[1];
+            if ($type === 'json') {
+                self::$input = $this->debug->utilities->prettyJson(self::$input);
+            } elseif ($type === 'xml') {
+                self::$input = $this->debug->utilities->prettyXml(self::$input);
+            }
+            $this->debug->log(
+                'php://input (formatted)',
+                new Abstraction(array(
+                    'type' => 'string',
+                    'attribs' => array(
+                        'class' => 'language-'.$type.' prism',
+                    ),
+                    'addQuotes' => false,
+                    'visualWhiteSpace' => false,
+                    'value' => self::$input,
+                ))
+            );
+        } else {
+            $this->debug->log('php://input', self::$input);
         }
     }
 
@@ -184,25 +236,30 @@ class OnBootstrap
         if (!isset($_SERVER['REQUEST_METHOD'])) {
             return;
         }
-        $correctContentType = $this->testPostContentType($detected);
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $correctContentType) {
-            // $_POST could be empty
-            $this->debug->log('$_POST', $_POST);
-        } else {
-            if ($detected) {
+        $havePostVals = false;
+        $contentType = null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $correctContentType = $this->testPostContentType($contentType);
+            if (!$correctContentType) {
                 $this->debug->warn(
-                    'It appears '.$detected.' was posted with the wrong Content-Type'."\n"
-                    .'Pay no attention to $_POST and use php://input',
+                    'It appears '.$contentType.' was posted with the wrong Content-Type'."\n"
+                    .'Pay no attention to $_POST and instead use php://input',
                     $this->debug->meta(array(
                         'detectFiles' => false,
                         'file' => null,
                         'line' => null,
                     ))
                 );
+            } elseif ($_POST) {
+                $havePostVals = true;
+                $this->debug->log('$_POST', $_POST);
             }
-            $input = \file_get_contents('php://input');
+        }
+        if (!$havePostVals) {
+            // Not POST, empty $_POST, or not application/x-www-form-urlencoded or multipart/form-data
+            $input = $this->getInput();
             if ($input) {
-                $this->debug->log('php://input', $input);
+                $this->logInput($contentType);
             } elseif (empty($_FILES)) {
                 $this->debug->warn(
                     $_SERVER['REQUEST_METHOD'].' request with no body',
@@ -305,12 +362,16 @@ class OnBootstrap
      * If JSON or XML is posted using the default application/x-www-form-urlencoded Content-Type
      * $_POST will be improperly populated
      *
-     * @param string $detected Will get populated with detected content type
+     * @param string $contentType Will get populated with detected content type
      *
      * @return boolean
      */
-    private function testPostContentType(&$detected)
+    private function testPostContentType(&$contentType)
     {
+        if (!empty($_SERVER['CONTENT_TYPE'])) {
+            \preg_match('#^([^;]+)#', $_SERVER['CONTENT_TYPE'], $matches);
+            $contentType = $matches[1];
+        }
         if (!$_POST) {
             // nothing in $_POST means it can't be wrong
             return true;
@@ -321,15 +382,15 @@ class OnBootstrap
             if we detect php://input is json or XML, then must have been
             posted with wrong Content-Type
         */
-        $input = \file_get_contents('php://input');
+        $input = $this->getInput();
         $json = \json_decode($input, true);
         $isJson = \json_last_error() === JSON_ERROR_NONE && \is_array($json);
         if ($isJson) {
-            $detected = 'json';
+            $contentType = 'application/json';
             return false;
         }
         if ($this->debug->utilities->isXml($input)) {
-            $detected = 'xml';
+            $contentType = 'text/xml';
             return false;
         }
         return true;

@@ -12,9 +12,9 @@
 namespace bdk\Debug\Collector;
 
 use Exception;
-use SqlFormatter;       // optional library
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Utilities;
 
 /**
  * Holds information about a statement
@@ -60,15 +60,7 @@ class StatementInfo
      */
     public function __construct($sql, $params = null, $types = null)
     {
-        if (\class_exists('\SqlFormatter')) {
-            // whitespace only, don't hightlight
-            $sql = SqlFormatter::format($sql, false);
-            // SqlFormatter borks bound params
-            $sql = \strtr($sql, array(
-                ' : ' => ' :',
-                ' =: ' => ' = :',
-            ));
-        }
+        $sql = Utilities::prettySql($sql);
         if (!self::$constants) {
             $ref = new \ReflectionClass('PDO');
             $consts = array();

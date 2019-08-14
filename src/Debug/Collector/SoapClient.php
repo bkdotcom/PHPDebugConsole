@@ -52,6 +52,7 @@ class SoapClient extends \SoapClient
     public function __doRequest($request, $location, $action, $version, $one_way = 0)
     {
         $return = parent::__doRequest($request, $location, $action, $version, $one_way);
+        $debug = $this->debug;
 
         $dom = new \DOMDocument();
         $dom->preserveWhiteSpace = false;
@@ -66,7 +67,6 @@ class SoapClient extends \SoapClient
         $dom->loadXML($return);
         $xmlResponse = $dom->saveXML();
 
-        $debug = $this->debug;
         $debug->groupCollapsed('soap', $action, $debug->meta('icon', $this->icon));
 
         /*

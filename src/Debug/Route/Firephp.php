@@ -218,7 +218,7 @@ class Firephp extends Base
         $msg = \json_encode(array(
             $meta,
             $value,
-        ));
+        ), JSON_UNESCAPED_SLASHES);
         $structureIndex = 1;    // refers to X-Wf-1-Structure-1
         $parts = \explode("\n", \rtrim(\chunk_split($msg, 5000, "\n")));
         $numParts = \count($parts);

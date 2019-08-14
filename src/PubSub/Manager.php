@@ -35,7 +35,9 @@ class Manager
     }
 
     /**
-     * Subscribe to all of the event subscribers defined in passed obj
+     * Subscribe to all of the event subscribers provided by passed object
+     *
+     * Calls `$interface`'s `getInterfaceSubscribers` method and subscribes accordingly
      *
      * @param SubscriberInterface $interface object implementing subscriber interface
      *
@@ -124,12 +126,14 @@ class Manager
     }
 
     /**
-     * Unsubscribe from all of the event subscribers defined in passed obj
+     * Unsubscribe from all of the event subscribers provided by passed object
+     *
+     * Calls `$interface`'s `getInterfaceSubscribers` method and unsubscribes accordingly
      *
      * @param SubscriberInterface $interface object implementing subscriber interface
      *
-     * @return array a normalized list of subscriptions removed.
-     *      each returned is array(eventName, callable, priority)
+     * @return array[] normalized list of subscriptions removed.
+     *      each returned is `array(eventName, callable, priority)`
      */
     public function removeSubscriberInterface(SubscriberInterface $interface)
     {
@@ -143,9 +147,16 @@ class Manager
     /**
      * Subscribe to event
      *
-     * Callable may also be a "closure factory" which provides a means to lazy-load the handler object
-     *    `[Closure, 'methodName']` - closure returns object
-     *    `[Closure]` - closure instantiates object that is callable (ie has __invoke)
+     * # Lazy-load the subscriber
+     *   It's possible to lazy load the subscriber object via a "closure factory"
+     *    `array(Closure, 'methodName')` - closure returns object
+     *    `array(Closure)` - closure returns object that is callable (ie has __invoke method)
+     *   The closure will be called the first time the event occurs
+     *
+     * # Callable will receive 3 params:
+     *  * Event
+     *  * (string) eventName
+     *  * EventManager
      *
      * @param string   $eventName event name
      * @param callable $callable  callable or closure factory

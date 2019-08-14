@@ -153,6 +153,11 @@ class DebugTestFramework extends DOMTestCase
             $this->debug->eventManager->unsubscribe('debug.outputLogEntry', $subscriber);
         }
         $refProperties = &$this->getSharedVar('reflectionProperties');
+        if (!isset($refProperties['channels'])) {
+            $channelProp = new \ReflectionProperty($this->debug, 'channels');
+            $channelProp->setAccessible(true);
+            $refProperties['channels'] = $channelProp;
+        }
         if (!isset($refProperties['textDepth'])) {
             $depthRef = new \ReflectionProperty($this->debug->dumpText, 'depth');
             $depthRef->setAccessible(true);
@@ -163,6 +168,7 @@ class DebugTestFramework extends DOMTestCase
             $registeredPluginsRef->setAccessible(true);
             $refProperties['registeredPlugins'] = $registeredPluginsRef;
         }
+        $refProperties['channels']->setValue($this->debug, array());
         $refProperties['textDepth']->setValue($this->debug->dumpText, 0);
         $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
         $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())

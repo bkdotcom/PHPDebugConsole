@@ -337,7 +337,8 @@ class HtmlObject
                     return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
                 }, $modifiers))
                 .($isPrivateAncestor
-                    ? ' ('.$this->html->markupIdentifier($info['inheritedFrom'], 'i').')'
+                    // wrapped in span for css rule `.private-ancestor > *`
+                    ? ' <span>('.$this->html->markupIdentifier($info['inheritedFrom'], 'i').')</span>'
                     : '')
                 .($info['type']
                     ? ' <span class="t_type">'.$info['type'].'</span>'

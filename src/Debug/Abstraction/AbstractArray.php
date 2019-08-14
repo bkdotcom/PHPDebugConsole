@@ -50,7 +50,7 @@ class AbstractArray
             // this appears to be a "callable"
             return new Abstraction(array(
                 'type' => 'callable',
-                'values' => array(\get_class($array[0]), $array[1]),
+                'value' => array(\get_class($array[0]), $array[1]),
             ));
         }
         $return = array();

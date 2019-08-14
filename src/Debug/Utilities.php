@@ -13,12 +13,16 @@ namespace bdk\Debug;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
+use SqlFormatter;       // optional library
+use DOMDocument;
 
 /**
  * Utility methods
  */
 class Utilities
 {
+
+    protected static $domDocument;
 
     const INCL_ARGS = 1;
 
@@ -611,6 +615,67 @@ class Utilities
             );
         }
         return $return;
+    }
+
+    /**
+     * Prettify JSON string
+     *
+     * @param string $json JSON string to prettify
+     *
+     * @return string
+     */
+    public static function prettyJson($json)
+    {
+        $opts = JSON_PRETTY_PRINT;
+        if (\strpos($json, '\\/') === false) {
+            // json doesn't appear to contain escaped slashes
+            $opts |= JSON_UNESCAPED_SLASHES;
+        }
+        if (\strpos($json, '/u') === false) {
+            // json doesn't appear to contain encoded unicode
+            $opts |= JSON_UNESCAPED_UNICODE;
+        }
+        return \json_encode(\json_decode($json), $opts);
+    }
+
+    /**
+     * Prettify SQL string
+     *
+     * @param string $sql SQL string to prettify
+     *
+     * @return string
+     */
+    public static function prettySql($sql)
+    {
+        if (!\class_exists('\SqlFormatter')) {
+            return $sql;
+        }
+        // whitespace only, don't hightlight
+        $sql = SqlFormatter::format($sql, false);
+        // SqlFormatter borks bound params
+        $sql = \strtr($sql, array(
+            ' : ' => ' :',
+            ' =: ' => ' = :',
+        ));
+        return $sql;
+    }
+
+    /**
+     * Prettify XML string
+     *
+     * @param string $xml XML string to prettify
+     *
+     * @return string
+     */
+    public static function prettyXml($xml)
+    {
+        if (!self::$domDocument) {
+            self::$domDocument = new DOMDocument();
+            self::$domDocument->preserveWhiteSpace = false;
+            self::$domDocument->formatOutput = true;
+        }
+        self::$domDocument->loadXML($xml);
+        return self::$domDocument->saveXML();
     }
 
     /**

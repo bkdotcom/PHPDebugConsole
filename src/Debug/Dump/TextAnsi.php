@@ -74,26 +74,55 @@ class TextAnsi extends Text
     /**
      * Add ansi escape sequences for classname type strings
      *
-     * @param string $str classname or classname(::|->)name (method/property/const)
+     * @param mixed $val classname or classname(::|->)name (method/property/const)
      *
      * @return string
      */
-    public function markupIdentifier($str)
+    public function markupIdentifier($val)
     {
-        if (\preg_match('/^(.+)(::|->)(.+)$/', $str, $matches)) {
+        $classname = '';
+        $operator = '::';
+        $identifier = '';
+        $regex = '/^(.+)(::|->)(.+)$/';
+        if ($val instanceof Abstraction) {
+            $value = $val['value'];
+            if (\is_array($value)) {
+                list($classname, $identifier) = $value;
+            } else {
+                if (\preg_match($regex, $value, $matches)) {
+                    $classname = $matches[1];
+                    $operator = $matches[2];
+                    $identifier = $matches[3];
+                } else {
+                    $identifier = $value;
+                }
+            }
+        } elseif (\preg_match($regex, $val, $matches)) {
             $classname = $matches[1];
-            $opIdentifier = $this->cfg['escapeCodes']['operator'].$matches[2].$this->escapeReset
-                    . "\e[1m".$matches[3]."\e[22m";
+            $operator = $matches[2];
+            $identifier = $matches[3];
         } else {
-            $classname = $str;
-            $opIdentifier = '';
+            $classname = $val;
+            // $opIdentifier = '';
         }
-        $idx = \strrpos($classname, '\\');
-        if ($idx) {
-            $classname = $this->cfg['escapeCodes']['muted'].\substr($classname, 0, $idx + 1).$this->escapeReset
-                ."\e[1m".\substr($classname, $idx + 1)."\e[22m";
+        $operator = $this->cfg['escapeCodes']['operator'].$operator.$this->escapeReset;
+        if ($classname) {
+            $idx = \strrpos($classname, '\\');
+            if ($idx) {
+                $classname = $this->cfg['escapeCodes']['muted'].\substr($classname, 0, $idx + 1).$this->escapeReset
+                    ."\e[1m".\substr($classname, $idx + 1)."\e[22m";
+            } else {
+                $classname = "\e[1m".$classname."\e[22m";
+            }
+        } else {
+            $operator = '';
         }
-        return $classname.$opIdentifier;
+        if ($identifier) {
+            $identifier = "\e[1m".$identifier."\e[22m";
+        } else {
+            $operator = '';
+        }
+        return \implode($operator, array($classname, $identifier));
     }
 
     /**
@@ -169,18 +198,6 @@ class TextAnsi extends Text
         return $val
             ? $this->cfg['escapeCodes']['true'].'true'.$this->escapeReset
             : $this->cfg['escapeCodes']['false'].'false'.$this->escapeReset;
-    }
-
-    /**
-     * Dump callable
-     *
-     * @param Abstraction $abs array/callable abstraction
-     *
-     * @return string
-     */
-    protected function dumpCallable(Abstraction $abs)
-    {
-        return 'callable: '.$this->markupIdentifier($abs['values'][0].'::'.$abs['values'][1]);
     }
 
     /**

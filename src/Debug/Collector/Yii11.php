@@ -226,25 +226,32 @@ class Yii11 implements SubscriberInterface
     /**
      * errorHandler.error event subscriber
      *
-     * @param Error $event Error instance
+     * @param Error $error Error instance
      *
      * @return void
      */
-    public function onError(Error $event)
+    public function onError(Error $error)
     {
         if (!\class_exists('Yii') || !Yii::app()) {
             return;
         }
-        if ($event['exception']) {
-            Yii11LogRoute::toggle(false);
-            $this->yiiApp->handleException($event['exception']);
-        } elseif ($event['category'] === 'fatal') {
-            // Yii's  error handler exits (for reasons)
-            //    exit within shutdown procedure = immediate exit
-            //    manually publish the shutdown event before calling yii's error handler
-            $this->debug->rootInstance->errorHandler->unregister(); // don't get caught in a loop
+        // Yii's handler will log the error.. we can ignore that
+        Yii11LogRoute::toggle(false);
+        if ($error['exception']) {
+            $this->yiiApp->handleException($error['exception']);
+        } elseif ($error['category'] === 'fatal') {
+            // Yii's error handler exits (for reasons)
+            //    exit within shutdown procedure (that's us) = immediate exit
+            //    so... unsubscribe the callables that have already been called and
+            //    re-publish the shutdown event before calling yii's error handler
+            foreach ($this->debug->rootInstance->eventManager->getSubscribers('php.shutdown') as $callable) {
+                $this->debug->rootInstance->eventManager->unsubscribe('php.shutdown', $callable);
+                if (\is_array($callable) && $callable[0] == $this->debug->rootInstance->errorHandler) {
+                    break;
+                }
+            }
             $this->debug->rootInstance->eventManager->publish('php.shutdown');
-            $this->yiiApp->handleError($event['type'], $event['message'], $event['file'], $event['line']);
+            $this->yiiApp->handleError($error['type'], $error['message'], $error['file'], $error['line']);
         }
     }
 

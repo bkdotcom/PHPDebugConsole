@@ -109,13 +109,19 @@ class Base extends Component implements ConfigurableInterface
     /**
      * Extend me to format classname/constant, etc
      *
-     * @param string $str classname or classname(::|->)name (method/property/const)
+     * @param mixed $val classname or classname(::|->)name (method/property/const)
      *
      * @return string
      */
-    public function markupIdentifier($str)
+    public function markupIdentifier($val)
     {
-        return $str;
+        if ($val instanceof Abstraction) {
+            $val = $val['value'];
+            if (\is_array($val)) {
+                $val = $val[0].'::'.$val[1];
+            }
+        }
+        return $val;
     }
 
     /**
@@ -194,7 +200,8 @@ class Base extends Component implements ConfigurableInterface
      */
     protected function dumpCallable(Abstraction $abs)
     {
-        return 'callable: '.$abs['values'][0].'::'.$abs['values'][1];
+        return (!$abs['hideType'] ? 'callable: ' : '')
+            .$this->markupIdentifier($abs);
     }
 
     /**
@@ -494,6 +501,9 @@ class Base extends Component implements ConfigurableInterface
                 'undefinedAs' => $undefinedAs,
                 'forceArray' => $forceArray,
             ));
+            if (\is_array($values)) {
+                unset($values['__key']);
+            }
             $table[$k] = $values;
             $classnames[$k] = $objInfo['row']
                 ? $objInfo['row']['className']

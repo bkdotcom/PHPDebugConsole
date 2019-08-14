@@ -59,17 +59,15 @@
 .debug .alert-warning .alert-link { color: #66512c; }
 .debug .namespace { opacity: 0.5; }
 .debug .array-inner, .debug .object-inner { display: block; margin-left: 1em; }
+.debug .classname { font-weight: bold; color: #8d0c4c; }
 .debug span.key-value { display: block; padding-left: 10px; text-indent: -10px; }
 .debug span.key-value > .t_operator { margin: 0 .25em; }
-.debug .t_object > .classname { font-weight: bold; }
-.debug .t_object .t_identifier { font-weight: bold; }
 .debug .t_object .method .parameter [title], .debug .t_object .t_identifier[title], .debug .t_object .t_stringified, .debug .t_object .t_type[title] { text-decoration: underline; }
 .debug .t_object .method.deprecated { opacity: .66; }
 .debug .t_object .method.deprecated i { opacity: .66; color: #d8000c; border-bottom: 0; }
 .debug .t_object .method > .t_punct { opacity: 1; font-weight: bold; color: inherit; }
 .debug .t_object .method .t_parameter-name { color: #263; }
-.debug .t_object .property.private-ancestory { color: #F39; }
-.debug .t_object .property.private-ancestory:hover { color: inherit; }
+.debug .t_object .property.private-ancestor:not(:hover) > * { opacity: 0.5; }
 .debug .t_object .t_modifier_static { font-style: italic; color: #00529B; }
 .debug .t_object .info { display: inline-block; background-color: #d9edf7; color: #31708f; }
 .debug .m_assert, .debug .m_clear, .debug .m_count, .debug .m_error, .debug .m_groupEndValue, .debug .m_info, .debug .m_log, .debug .m_warn { position: relative; display: table; padding-left: 10px; text-indent: -10px; padding-right: .33em; word-break: break-word; }
@@ -112,6 +110,8 @@
 .debug .t_callable { font-weight: bold; }
 .debug .t_callable .t_type, .debug .t_callable .namespace { font-weight: normal; }
 .debug .t_const { color: #039; font-family: monospace; }
+.debug .t_const .t_identifier { color: inherit; }
+.debug .t_identifier { font-weight: bold; }
 .debug .t_int, .debug .t_float, .debug .numeric { font-family: Courier New, monospace, Ariel; color: #009; font-size: 1.15em; line-height: 1.15em; }
 .debug .t_int:before, .debug .t_int:after, .debug .t_float:before, .debug .t_float:after, .debug .numeric:before, .debug .numeric:after { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 0.8695em; }
 .debug .t_key { opacity: .75; }

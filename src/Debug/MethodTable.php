@@ -78,8 +78,9 @@ class MethodTable
      *
      * @param array $row     should be array or abstraction
      * @param array $keys    column keys
-     * @param array $objInfo Will be populated with className and phpDoc
-     *                           if row is an objects, $objInfo['row'] will be populated
+     * @param array $objInfo Will be populated with object info
+     *                           if row is an object, $objInfo['row'] will be populated with
+     *                               'className' & 'phpDoc'
      *                           if a value is an object being displayed as a string,
      *                               $objInfo['cols'][key] will be populated
      *

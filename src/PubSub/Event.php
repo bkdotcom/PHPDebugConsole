@@ -141,7 +141,7 @@ class Event implements ArrayAccess, IteratorAggregate
     /**
      * Clears existing values and sets new values
      *
-     * @param array $values values
+     * @param array $values key=>value array of values
      *
      * @return $this
      */
@@ -154,7 +154,7 @@ class Event implements ArrayAccess, IteratorAggregate
     /**
      * Stops the propagation of the event
      *
-     * No further event subscribers will be called after stopPropagation is called
+     * No further event subscribers will be called
      *
      * @return void
      */

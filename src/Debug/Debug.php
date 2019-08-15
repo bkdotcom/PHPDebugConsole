@@ -358,7 +358,7 @@ class Debug
      *
      * Supports styling & substitutions
      *
-     * @param boolean $assertion argument checked for truthyness
+     * @param boolean $assertion Any boolean expression. If the assertion is false, the message is logged
      * @param mixed   $msg,...   (optional) variable num of values to output if assertion fails
      *                             if none provided, will use calling file & line num
      *
@@ -395,14 +395,14 @@ class Debug
      *
      * This method executes even if `collect` is false
      *
-     * @param integer $flags (self::CLEAR_LOG) specify what to clear (bitmask)
-     *                         CLEAR_ALERTS
-     *                         CLEAR_LOG (excluding warn & error)
-     *                         CLEAR_LOG_ERRORS
-     *                         CLEAR_SUMMARY (excluding warn & error)
-     *                         CLEAR_SUMMARY_ERRORS
-     *                         CLEAR_ALL
-     *                         CLEAR_SILENT (don't add log entry)
+     * @param integer $flags A bitmask of options
+     *                         `self::CLEAR_ALERTS` : Clear alerts generated with `alert()`
+     *                         `self::CLEAR_LOG` : **default** Clear log entries (excluding warn & error)
+     *                         `self::CLEAR_LOG_ERRORS` : Clear log warn & error
+     *                         `self::CLEAR_SUMMARY` : Clear summary entries (excluding warn & error)
+     *                         `self::CLEAR_SUMMARY_ERRORS` : Clear summary warn & error
+     *                         `self::CLEAR_ALL` :  clear all everything
+     *                         `self::CLEAR_SILENT` : Don't add log entry
      *
      * @return void
      */
@@ -431,17 +431,17 @@ class Debug
      * Log the number of times this has been called with the given label.
      *
      * Count is maintained even when `collect` is false
+     * If collect = false, `count()` will be performed "silently"
      *
      * @param mixed   $label Label.  If omitted, logs the number of times `count()` has been called at this particular line.
-     * @param integer $flags (optional)
-     *                          A bitmask of
+     * @param integer $flags (optional) A bitmask of
      *                          `\bdk\Debug::COUNT_NO_INC` : don't increment the counter
      *                                                       (ie, just get the current count)
      *                          `\bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
-     * @return integer The new count (current count when using `COUNT_NO_INC`)
+     * @return integer The new count (or current count when using `COUNT_NO_INC`)
      */
-    public function count($label = null, $flags = 0)
+    public function count($label = null, $flags = null)
     {
         $logEntry = new LogEntry(
             $this,
@@ -492,9 +492,11 @@ class Debug
     }
 
     /**
-     * Resets the counter.
+     * Resets the counter
      *
-     * @param mixed   $label label
+     * Counter is reset even when debugging is disabled (ie collect = false).
+     *
+     * @param mixed   $label (optional) specify the counter to reset
      * @param integer $flags (optional) currently only one option :
      *                          `\bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
@@ -596,7 +598,11 @@ class Debug
     /**
      * Close current group
      *
-     * @param mixed $value Value
+     * Every call to `group()` and `groupCollapsed()` should be paired with `groupEnd()`
+     *
+     * The optional return value will be visible when the group is both expanded and collapsed.
+     *
+     * @param mixed $value (optional) "return" value
      *
      * @return void
      */
@@ -684,9 +690,9 @@ class Debug
     }
 
     /**
-     * Set ancestor groups to uncollapsed
+     * Uncollapse ancestor groups
      *
-     * This will only occur if `cfg['collect']` is currently true
+     * This will only occur if `cfg['collect']` is currently `true`
      *
      * @return void
      */
@@ -905,13 +911,14 @@ class Debug
     /**
      * Start a timer identified by label
      *
-     * Label passed
-     *    if doesn't exist: starts timer
-     *    if does exist: unpauses (does not reset)
-     * Label not passed
-     *    timer will be added to a no-label stack
+     * ## Label passed
+     *  * if doesn't exist: starts timer
+     *  * if does exist: unpauses (does not reset)
      *
-     * Does not append log (unless duration is passed).  Use timeEnd or timeGet to get time
+     * ## Label not passed
+     *  * timer will be added to a no-label stack
+     *
+     * Does not append log (unless duration is passed).  Use `timeEnd` or `timeGet` to get time
      *
      * @param string $label    unique label
      * @param float  $duration (optional) duration
@@ -1063,11 +1070,9 @@ class Debug
     }
 
     /**
-     * Log the running time without stopping/pausing the timer
-     * also logs additional arguments
+     * Logs the current value of a timer that was previously started via `time()`
      *
-     * Added to web console api in Firefox 62
-     * Added to PHPDebugConsole in v2.3
+     * also logs additional arguments
      *
      * @param string $label   (optional) unique label
      * @param mixed  $arg,... (optional) additional values to be logged with time
@@ -1111,7 +1116,7 @@ class Debug
      *
      * Essentially PHP\'s <code>debug_backtrace()</code>, but displayed as a table<
      *
-     * @param string $caption (optional) "trace"
+     * @param string $caption (optional) Specify caption for the trace table
      *
      * @return void
      */
@@ -1488,14 +1493,14 @@ class Debug
      *
      * Setting/updating 'key' will also set 'collect' and 'output'
      *
-     *    setCfg('key', 'value')
-     *    setCfg('level1.level2', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *   `setCfg('key', 'value')`
+     *   `setCfg('level1.level2', 'value')`
+     *   `setCfg(array('k1'=>'v1', 'k2'=>'v2'))`
      *
      * @param string|array $path   path
      * @param mixed        $newVal value
      *
-     * @return mixed
+     * @return mixed previous value(s)
      */
     public function setCfg($path, $newVal = null)
     {

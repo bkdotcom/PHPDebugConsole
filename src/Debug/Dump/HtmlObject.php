@@ -180,14 +180,9 @@ class HtmlObject
                 \implode(' ', \array_map(function ($modifier) {
                     return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
                 }, $modifiers))
-                .' '.$this->debug->utilities->buildTag(
-                    'span',
-                    array(
-                        'class' => 't_type',
-                        'title' => $info['return']['desc'],
-                    ),
-                    $info['return']['type']
-                )
+                .' '.$this->html->markupType($info['return']['type'], 'span', array(
+                    'title' => $info['return']['desc'],
+                ))
                 .' '.$this->debug->utilities->buildTag(
                     'span',
                     array(
@@ -225,9 +220,7 @@ class HtmlObject
         foreach ($params as $info) {
             $paramStr .= '<span class="parameter">';
             if (!empty($info['type'])) {
-                $paramStr .= $this->html->markupIdentifier($info['type'], 'span', array(
-                    'class' => 't_type',
-                )).' ';
+                $paramStr .= $this->html->markupType($info['type']).' ';
             }
             $paramStr .= $this->debug->utilities->buildTag(
                 'span',
@@ -247,7 +240,7 @@ class HtmlObject
                     $parsed['innerhtml']
                 );
             }
-            $paramStr .= '</span>, '; // end .parameter
+            $paramStr .= '</span>, ';
         }
         $paramStr = \trim($paramStr, ', ');
         return $paramStr;
@@ -341,7 +334,7 @@ class HtmlObject
                     ? ' <span>('.$this->html->markupIdentifier($info['inheritedFrom'], 'i').')</span>'
                     : '')
                 .($info['type']
-                    ? ' <span class="t_type">'.$info['type'].'</span>'
+                    ? ' '.$this->html->markupType($info['type'])
                     : '')
                 .' <span class="t_identifier"'
                     .' title="'.\htmlspecialchars($info['desc']).'"'

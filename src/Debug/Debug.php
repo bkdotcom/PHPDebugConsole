@@ -276,7 +276,7 @@ class Debug
      *
      * @param string $property property name
      *
-     * @return property value
+     * @return mixed property value
      */
     public function __get($property)
     {
@@ -1199,7 +1199,7 @@ class Debug
      *
      * @param AssetProviderInterface|SubscriberInterface $plugin object implementing SubscriberInterface and/or AssetProviderInterface
      *
-     * @return Debug self for chaining
+     * @return $this
      * @throws \InvalidArgumentException
      */
     public function addPlugin($plugin)
@@ -1242,7 +1242,7 @@ class Debug
      * @param string $path    what to get
      * @param mixed  $default (optional) default value
      *
-     * @return mixed
+     * @return mixed value
      */
     public function getCfg($path = null, $default = null)
     {
@@ -1258,7 +1258,7 @@ class Debug
      * @param string $channelName channel name
      * @param array  $config      channel specific configuration
      *
-     * @return Debug
+     * @return static new or existing `Debug` instance
      */
     public function getChannel($channelName, $config = array())
     {
@@ -1298,7 +1298,7 @@ class Debug
      *
      * @param boolean $allDescendants (false) include all descendants?
      *
-     * @return array
+     * @return static[]
      */
     public function getChannels($allDescendants = false)
     {
@@ -1340,7 +1340,7 @@ class Debug
     /**
      * Get and clear headers that need to be output
      *
-     * @return [name, value][]
+     * @return array headerName=>value array
      */
     public function getHeaders()
     {
@@ -1354,7 +1354,7 @@ class Debug
      *
      * @param array $cfg optional config
      *
-     * @return object
+     * @return static
      */
     public static function getInstance($cfg = array())
     {
@@ -1378,7 +1378,7 @@ class Debug
      *
      * @param mixed $args,... arguments
      *
-     * @return array
+     * @return array special array storing "meta" values
      */
     public static function meta()
     {
@@ -1477,7 +1477,7 @@ class Debug
      *
      * @param SubscriberInterface $plugin object implementing SubscriberInterface
      *
-     * @return Debug self for chaining
+     * @return $this
      */
     public function removePlugin(SubscriberInterface $plugin)
     {

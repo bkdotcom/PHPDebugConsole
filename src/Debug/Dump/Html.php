@@ -120,10 +120,13 @@ class Html extends Base
                 $classname = '<span class="namespace">'.\substr($classname, 0, $idx + 1).'</span>'
                     . \substr($classname, $idx + 1);
             }
-            $attribs = \array_merge(array(
-                'class' => 'classname',
-            ), $attribs);
-            $classname = $this->debug->utilities->buildTag($tagName, $attribs, $classname);
+            $classname = $this->debug->utilities->buildTag(
+                $tagName,
+                \array_merge(array(
+                    'class' => 'classname',
+                ), $attribs),
+                $classname
+            );
         } else {
             $operator = '';
         }
@@ -133,6 +136,45 @@ class Html extends Base
             $operator = '';
         }
         return \implode($operator, array($classname, $identifier));
+    }
+
+    /**
+     * Markup type-hint / type declaration
+     *
+     * @param string $type    type declaration
+     * @param string $tagName ("span") html tag to use
+     * @param array  $attribs (optional) additional html attributes
+     *
+     * @return string
+     */
+    public function markupType($type, $tagName = 'span', $attribs = array())
+    {
+        $keywords = array(
+            'array','bool','callable','float','int','iterable','null','object','self','string',
+            '$this','false','mixed','resource','static','true','void',
+        );
+        $types = \preg_split('#\s*\|\s*#', $type);
+        foreach ($types as $i => $type) {
+            $isArray = false;
+            if (\substr($type, -2) == '[]') {
+                $isArray = true;
+                $type = \substr($type, 0, -2);
+            }
+            if (!\in_array($type, $keywords)) {
+                $type = $this->markupIdentifier($type);
+            }
+            if ($isArray) {
+                $type .= '<span class="t_punct">[]</span>';
+            }
+            $types[$i] = $type;
+        }
+        return $this->debug->utilities->buildtag(
+            $tagName,
+            \array_merge(array(
+                'class' => 't_type',
+            ), $attribs),
+            \implode('<span class="t_punct">|</span>', $types)
+        );
     }
 
     /**

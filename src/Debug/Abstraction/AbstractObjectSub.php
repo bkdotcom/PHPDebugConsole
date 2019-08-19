@@ -76,12 +76,11 @@ abstract class AbstractObjectSub implements SubscriberInterface
             return $type;
         }
         $keywords = array(
-            'array','bool','callable','float','int','iterable','object','self','string',
+            'array','bool','callable','float','int','iterable','null','object','self','string',
             '$this','false','mixed','resource','static','true','void',
         );
         $types = \preg_split('#\s*\|\s*#', $type);
         foreach ($types as $i => $type) {
-            // $types[$i] = $this->resolvePhpDocTypeDoer($type);
             if (\strpos($type, '\\') === 0) {
                 $types[$i] = \substr($type, 1);
                 continue;

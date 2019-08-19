@@ -464,7 +464,6 @@ class PhpDoc
                     break;
                 case 'self':
                     $type = \end(self::$reflectorStack)->getName();
-                    \bdk\Debug::_warn('type', $type);
                     break;
             }
             if ($isArray) {

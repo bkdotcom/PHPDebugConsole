@@ -6,78 +6,48 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v3,0
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Abstraction;
 
-use bdk\Debug\PhpDoc;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\PubSub\SubscriberInterface;
 use ReflectionMethod;
 use ReflectionParameter;
 
 /**
  * Get object method info
  */
-class AbstractObjectMethods implements SubscriberInterface
+class AbstractObjectMethods extends AbstractObjectSub
 {
 
-    protected $abstracter;
     static private $methodCache = array();
-    protected $phpDoc;
-
-    /**
-     * Constructor
-     *
-     * @param Abstracter $abstracter abstracter instance
-     * @param PhpDoc     $phpDoc     phpDoc instance
-     */
-    public function __construct(Abstracter $abstracter, PhpDoc $phpDoc)
-    {
-        $this->abstracter = $abstracter;
-        $this->phpDoc = $phpDoc;
-    }
 
     /**
      * {@inheritdoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            'debug.objAbstractEnd' => array('onAbstractEnd', PHP_INT_MAX),
-        );
-    }
-
-    /**
-     * debug.objAbstracctStart listener
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
      */
     public function onAbstractEnd(Abstraction $abs)
     {
         if ($abs['isTraverseOnly']) {
             return;
         }
+        $this->abs = $abs;
         if ($abs['collectMethods']) {
-            $this->addMethods($abs);
+            $this->addMethods();
         } else {
-            $this->addMethodsMin($abs);
+            $this->addMethodsMin();
         }
     }
 
     /**
      * Adds methods to abstraction
      *
-     * @param Abstraction $abs Abstraction instance
-     *
      * @return void
      */
-    private function addMethods(Abstraction $abs)
+    private function addMethods()
     {
+        $abs = $this->abs;
         $obj = $abs->getSubject();
         if ($this->abstracter->getCfg('cacheMethods') && isset(static::$methodCache[$abs['className']])) {
             $abs['methods'] = static::$methodCache[$abs['className']];
@@ -123,12 +93,11 @@ class AbstractObjectMethods implements SubscriberInterface
     /**
      * Add minimal method information to abstraction
      *
-     * @param Abstraction $abs Abstraction event object
-     *
      * @return void
      */
-    private function addMethodsMin(Abstraction $abs)
+    private function addMethodsMin()
     {
+        $abs = $this->abs;
         $obj = $abs->getSubject();
         if (\method_exists($obj, '__toString')) {
             $abs['methods']['__toString'] = array(
@@ -149,14 +118,13 @@ class AbstractObjectMethods implements SubscriberInterface
      * "Magic" methods may be defined in a class' doc-block
      * If so... move this information to method info
      *
-     * @param Abstraction $abs Abstraction event object
-     *
      * @return void
      *
      * @see http://docs.phpdoc.org/references/phpdoc/tags/method.html
      */
-    private function addMethodsPhpDoc(Abstraction $abs)
+    private function addMethodsPhpDoc()
     {
+        $abs = $this->abs;
         $inheritedFrom = null;
         if (empty($abs['phpDoc']['method'])) {
             // phpDoc doesn't contain any @method tags,
@@ -186,13 +154,13 @@ class AbstractObjectMethods implements SubscriberInterface
                 'isDeprecated' => false,
                 'isFinal' => false,
                 'isStatic' => $phpDocMethod['static'],
-                'params' => \array_map(function ($param) use ($className) {
+                'params' => \array_map(function ($phpDocParam) use ($className) {
                     return array(
-                        'defaultValue' => $this->phpDocParamValue($param, $className),
+                        'defaultValue' => $this->phpDocParamValue($phpDocParam, $className),
                         'desc' => null,
-                        'name' => $param['name'],
+                        'name' => $phpDocParam['name'],
                         'optional' => false,
-                        'type' => $param['type'],
+                        'type' => $this->resolvePhpDocType($phpDocParam['type']),
                     );
                 }, $phpDocMethod['param']),
                 'phpDoc' => array(
@@ -200,7 +168,7 @@ class AbstractObjectMethods implements SubscriberInterface
                     'desc' => null,
                 ),
                 'return' => array(
-                    'type' => $phpDocMethod['type'],
+                    'type' => $this->resolvePhpDocType($phpDocMethod['type']),
                     'desc' => null,
                 ),
                 'visibility' => 'magic',
@@ -262,7 +230,7 @@ class AbstractObjectMethods implements SubscriberInterface
                 'desc' => $phpDocParam['desc'],
                 'isOptional' => true,
                 'name' => $name,
-                'type' => $phpDocParam['type'],
+                'type' => $this->resolvePhpDocType($phpDocParam['type']),
             );
         }
         return $paramArray;
@@ -347,10 +315,7 @@ class AbstractObjectMethods implements SubscriberInterface
             $type = $matches[1];
         }
         if (!$type && isset($phpDoc['type'])) {
-            $type = \strtr($phpDoc['type'], array(
-                'integer' => 'int',
-                'boolean' => 'bool',
-            ));
+            $type = $this->resolvePhpDocType($phpDoc['type']);
         }
         return $type;
     }
@@ -371,12 +336,7 @@ class AbstractObjectMethods implements SubscriberInterface
         );
         if (!empty($phpDoc['return'])) {
             $return = \array_merge($return, $phpDoc['return']);
-            if ($return['type']) {
-                $return['type'] = \strtr($return['type'], array(
-                    'integer' => 'int',
-                    'boolean' => 'bool',
-                ));
-            }
+            $return['type'] = $this->resolvePhpDocType($return['type']);
         }
         if (\version_compare(PHP_VERSION, '7.0', '>=')) {
             $type = $reflectionMethod->getReturnType();

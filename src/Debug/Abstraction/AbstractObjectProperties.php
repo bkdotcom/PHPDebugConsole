@@ -6,23 +6,21 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v3,0
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Abstraction;
 
-use bdk\Debug\PhpDoc;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\PubSub\SubscriberInterface;
+use ReflectionProperty;
 
 /**
  * Get object property info
  */
-class AbstractObjectProperties implements SubscriberInterface
+class AbstractObjectProperties extends AbstractObjectSub
 {
 
-    protected $abstracter;
     static private $basePropInfo = array(
         'debugInfoExcluded' => false,   // true if not included in __debugInfo
         'desc' => null,
@@ -38,42 +36,16 @@ class AbstractObjectProperties implements SubscriberInterface
         'visibility' => 'public',       // public, private, protected, magic, magic-read, magic-write, debug
                                         //   may also be an array (ie: ['private', 'magic-read'])
     );
-    protected $phpDoc;
-
-    /**
-     * Constructor
-     *
-     * @param Abstracter $abstracter abstracter instance
-     * @param PhpDoc     $phpDoc     phpDoc instance
-     */
-    public function __construct(Abstracter $abstracter, PhpDoc $phpDoc)
-    {
-        $this->abstracter = $abstracter;
-        $this->phpDoc = $phpDoc;
-    }
 
     /**
      * {@inheritdoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            'debug.objAbstractEnd' => array('onAbstractEnd', PHP_INT_MAX),
-        );
-    }
-
-    /**
-     * debug.objAbstracctStart listener
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
      */
     public function onAbstractEnd(Abstraction $abs)
     {
         if ($abs['isTraverseOnly']) {
             return;
         }
+        $this->abs = $abs;
         $this->addProperties($abs);
     }
 
@@ -86,6 +58,7 @@ class AbstractObjectProperties implements SubscriberInterface
      */
     private function addProperties(Abstraction $abs)
     {
+        $abs = $this->abs;
         $obj = $abs->getSubject();
         $reflectionObject = $abs['reflector'];
         /*
@@ -331,7 +304,7 @@ class AbstractObjectProperties implements SubscriberInterface
                         : self::$basePropInfo,
                     array(
                         'desc' => $phpDocProp['desc'],
-                        'type' => $phpDocProp['type'],
+                        'type' => $this->resolvePhpDocType($phpDocProp['type']),
                         'inheritedFrom' => $inheritedFrom,
                         'visibility' => $exists
                             ? array($properties[ $phpDocProp['name'] ]['visibility'], $vis)
@@ -349,62 +322,13 @@ class AbstractObjectProperties implements SubscriberInterface
     }
 
     /**
-     * Get property info
-     *
-     * @param Abstraction         $abs                Abstraction event object
-     * @param \ReflectionProperty $reflectionProperty reflection property
-     *
-     * @return array
-     */
-    private function getPropInfo(Abstraction $abs, \ReflectionProperty $reflectionProperty)
-    {
-        $obj = $abs->getSubject();
-        $reflectionProperty->setAccessible(true); // only accessible via reflection
-        $className = \get_class($obj); // prop->class is equiv to getDeclaringClass
-        // get type and comment from phpdoc
-        $commentInfo = $this->getPropCommentInfo($reflectionProperty);
-        /*
-            getDeclaringClass returns "LAST-declared/overriden"
-        */
-        $declaringClassName = $reflectionProperty->getDeclaringClass()->getName();
-        $propInfo = \array_merge(static::$basePropInfo, array(
-            'desc' => $commentInfo['desc'],
-            'inheritedFrom' => $declaringClassName !== $className
-                ? $declaringClassName
-                : null,
-            'isStatic' => $reflectionProperty->isStatic(),
-            'type' => $commentInfo['type'],
-        ));
-        if ($reflectionProperty->isPrivate()) {
-            $propInfo['visibility'] = 'private';
-        } elseif ($reflectionProperty->isProtected()) {
-            $propInfo['visibility'] = 'protected';
-        }
-        if ($abs['collectPropertyValues']) {
-            $propName = $reflectionProperty->getName();
-            if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
-                $value = $abs['propertyOverrideValues'][$propName];
-                if (\is_array($value) && \array_intersect_key($value, static::$basePropInfo)) {
-                    $propInfo = $value;
-                } else {
-                    $propInfo['value'] = $value;
-                }
-                $propInfo['valueFrom'] = 'debug';
-            } else {
-                $propInfo['value'] = $reflectionProperty->getValue($obj);
-            }
-        }
-        return $propInfo;
-    }
-
-    /**
      * Get property type and description from phpDoc comment
      *
-     * @param \ReflectionProperty $reflectionProperty reflection property object
+     * @param ReflectionProperty $reflectionProperty reflection property object
      *
      * @return array
      */
-    private function getPropCommentInfo(\ReflectionProperty $reflectionProperty)
+    private function getPhpDoc(ReflectionProperty $reflectionProperty)
     {
         $name = $reflectionProperty->name;
         $phpDoc = $this->phpDoc->getParsed($reflectionProperty);
@@ -439,6 +363,55 @@ class AbstractObjectProperties implements SubscriberInterface
     }
 
     /**
+     * Get property info
+     *
+     * @param Abstraction        $abs                Abstraction event object
+     * @param ReflectionProperty $reflectionProperty reflectionProperty instance
+     *
+     * @return array
+     */
+    private function getPropInfo(Abstraction $abs, ReflectionProperty $reflectionProperty)
+    {
+        $obj = $abs->getSubject();
+        $reflectionProperty->setAccessible(true); // only accessible via reflection
+        $className = \get_class($obj); // prop->class is equiv to getDeclaringClass
+        // get type and comment from phpdoc
+        $phpDoc = $this->getPhpDoc($reflectionProperty);
+        /*
+            getDeclaringClass returns "LAST-declared/overriden"
+        */
+        $declaringClassName = $reflectionProperty->getDeclaringClass()->getName();
+        $propInfo = \array_merge(static::$basePropInfo, array(
+            'desc' => $phpDoc['desc'],
+            'inheritedFrom' => $declaringClassName !== $className
+                ? $declaringClassName
+                : null,
+            'isStatic' => $reflectionProperty->isStatic(),
+            'type' => $this->resolvePhpDocType($phpDoc['type']),
+        ));
+        if ($reflectionProperty->isPrivate()) {
+            $propInfo['visibility'] = 'private';
+        } elseif ($reflectionProperty->isProtected()) {
+            $propInfo['visibility'] = 'protected';
+        }
+        if ($abs['collectPropertyValues']) {
+            $propName = $reflectionProperty->getName();
+            if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
+                $value = $abs['propertyOverrideValues'][$propName];
+                if (\is_array($value) && \array_intersect_key($value, static::$basePropInfo)) {
+                    $propInfo = $value;
+                } else {
+                    $propInfo['value'] = $value;
+                }
+                $propInfo['valueFrom'] = 'debug';
+            } else {
+                $propInfo['value'] = $reflectionProperty->getValue($obj);
+            }
+        }
+        return $propInfo;
+    }
+
+    /**
      * Check if a Dom* class  where properties aren't avail to reflection
      *
      * @param object $obj object to check
@@ -455,13 +428,13 @@ class AbstractObjectProperties implements SubscriberInterface
      *
      * This is the classname of previous ancestor where property is defined
      *
-     * @param \ReflectionProperty $reflectionProperty Reflection Property
-     * @param array               $propInfo           Property Info
-     * @param string              $className          className of object being inspected
+     * @param ReflectionProperty $reflectionProperty Reflection Property
+     * @param array              $propInfo           Property Info
+     * @param string             $className          className of object being inspected
      *
      * @return string|null
      */
-    private function propOverrides(\ReflectionProperty $reflectionProperty, $propInfo, $className)
+    private function propOverrides(ReflectionProperty $reflectionProperty, $propInfo, $className)
     {
         if (empty($propInfo['overrides'])
             && empty($propInfo['inheritedFrom'])

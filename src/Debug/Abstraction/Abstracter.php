@@ -51,6 +51,7 @@ class Abstracter extends Component
             ),
             'objectSort' => 'visibility',   // none, visibility, or name
             'useDebugInfo' => true,
+            'fullyQualifyPhpDocType' => false,
         );
         $this->setCfg($cfg);
         $this->abstractArray = new AbstractArray($this);
@@ -164,17 +165,6 @@ class Abstracter extends Component
     }
 
     /**
-     * {@inheritDoc}
-     */
-    protected function postSetCfg($cfg = array())
-    {
-        $debugClass = \get_class($this->debug);
-        if (!\in_array($debugClass, $this->cfg['objectsExclude'])) {
-            $this->cfg['objectsExclude'][] = $debugClass;
-        }
-    }
-
-    /**
      * Get string's type.
      * String could actually be "undefined" or "recursion"
      * Further, check if numeric
@@ -197,5 +187,16 @@ class Abstracter extends Component
             $type = 'notInspected';
         }
         return array($type, $typeMore);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function postSetCfg($cfg = array())
+    {
+        $debugClass = \get_class($this->debug);
+        if (!\in_array($debugClass, $this->cfg['objectsExclude'])) {
+            $this->cfg['objectsExclude'][] = $debugClass;
+        }
     }
 }

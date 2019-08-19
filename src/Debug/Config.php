@@ -206,6 +206,7 @@ class Config
                 'cacheMethods',
                 'collectConstants',
                 'collectMethods',
+                'fullyQualifyPhpDocType',
                 'objectsExclude',
                 'objectSort',
                 'useDebugInfo',

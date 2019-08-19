@@ -103,7 +103,6 @@ class TextAnsi extends Text
             $identifier = $matches[3];
         } else {
             $classname = $val;
-            // $opIdentifier = '';
         }
         $operator = $this->cfg['escapeCodes']['operator'].$operator.$this->escapeReset;
         if ($classname) {

@@ -94,6 +94,7 @@ class AbstractObject
             'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && $reflector->hasMethod('__debugInfo'),
             // these are temporary values available during abstraction
             'collectPropertyValues' => true,
+            'fullyQualifyPhpDocType' => $this->abstracter->getCfg('fullyQualifyPhpDocType'),
             'hist' => $hist,
             'isTraverseOnly' => false,
             'propertyOverrideValues' => array(),
@@ -202,7 +203,14 @@ class AbstractObject
      */
     private function absClean(Abstraction $abs)
     {
-        $keysTemp = array('collectPropertyValues','hist','isTraverseOnly','propertyOverrideValues','reflector');
+        $keysTemp = array(
+            'collectPropertyValues',
+            'fullyQualifyPhpDocType',
+            'hist',
+            'isTraverseOnly',
+            'propertyOverrideValues',
+            'reflector',
+        );
         $values = \array_diff_key($abs->getValues(), \array_flip($keysTemp));
         if (!$abs['isRecursion'] && !$abs['isExcluded']) {
             $this->sort($values['properties']);

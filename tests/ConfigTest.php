@@ -31,6 +31,7 @@ class ConfigTest extends DebugTestFramework
             'objectsExclude',
             'objectSort',
             'useDebugInfo',
+            'fullyQualifyPhpDocType',
         );
         $debugKeys = array(
             'collect',

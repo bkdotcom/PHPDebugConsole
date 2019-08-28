@@ -12,6 +12,8 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Utilities;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
@@ -131,6 +133,12 @@ class Email implements RouteInterface
                 'channelShow' => $channel->getCfg('channelShow'),
             );
         }, $this->debug->getChannels(true));
+        $data['config'] = array(
+            'logRuntime' => $this->debug->getCfg('logRuntime'),
+        );
+        $debugClass = \get_class($this->debug);
+        $data['version'] = $debugClass::VERSION;
+        \ksort($data);
         $body .= self::serializeLog($data);
         return $body;
     }
@@ -219,6 +227,35 @@ class Email implements RouteInterface
     }
 
     /**
+     * Convert pre 3.0 serialized log entry args to 3.0
+     *
+     * Prior to to v3.0, abstractions were stored as an array
+     * Find these arrays and convert them to Abstraction objects
+     *
+     * @param array $args log entry args (unserialized)
+     *
+     * @return array
+     */
+    private static function unserializeLogBackward($args)
+    {
+        foreach ($args as $k => $v) {
+            if (!\is_array($v)) {
+                continue;
+            }
+            if (isset($v['debug']) && $v['debug'] === Abstracter::ABSTRACTION) {
+                unset($v['debug']);
+                if ($v['type'] == 'object') {
+                    $v['properties'] = self::unserializeLogBackward($v['properties']);
+                }
+                $args[$k] = new Abstraction($v);
+                continue;
+            }
+            $args[$k] = self::unserializeLogBackward($v);
+        }
+        return $args;
+    }
+
+    /**
      * for unserialized log, Convert logEntry arrays to log entry objects
      *
      * @param Debug $debug Debug instance
@@ -228,13 +265,23 @@ class Email implements RouteInterface
      */
     private static function unserializeLogLogEntrify(Debug $debug, $data)
     {
+        $ver = isset($data['version'])
+            ? $data['version']
+            : '2.3' ;
+        $backward = \version_compare($ver, '3.0', '<');
         foreach (array('alerts','log','logSummary') as $what) {
             foreach ($data[$what] as $i => $v) {
                 if ($what == 'logSummary') {
                     foreach ($v as $i2 => $v2) {
+                        if ($backward) {
+                            $v2[1] = self::unserializeLogBackward($v2[1]);
+                        }
                         $data['logSummary'][$i][$i2] = new LogEntry($debug, $v2[0], $v2[1], $v2[2]);
                     }
                 } else {
+                    if ($backward) {
+                        $v[1] = self::unserializeLogBackward($v[1]);
+                    }
                     $data[$what][$i] = new LogEntry($debug, $v[0], $v[1], $v[2]);
                 }
             }

@@ -1,6 +1,7 @@
 <?php
 
 use bdk\Debug\LogEntry;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\PubSub\Event;
 use bdk\CssXpath\DOMTestCase;
 
@@ -35,12 +36,27 @@ class DebugTestFramework extends DOMTestCase
     protected function checkAbstractionType($var, $type)
     {
         $return = false;
-        if (!$var instanceof \bdk\Debug\Abstraction\Abstraction) {
+        if (!$var instanceof Abstraction) {
             return false;
         }
         if ($type == 'object') {
-            $keys = array('collectMethods','viaDebugInfo','isExcluded','isRecursion',
-                'extends','implements','constants','properties','methods','scopeClass','stringified');
+            $keys = array(
+                'className',
+                'constants',
+                'definition',
+                'extends',
+                'flags',
+                'implements',
+                'isExcluded',
+                'isRecursion',
+                'methods',
+                'phpDoc',
+                'properties',
+                'scopeClass',
+                'stringified',
+                'traverseValues',
+                'viaDebugInfo',
+            );
             $keysMissing = array_diff($keys, array_keys($var->getValues()));
             $return = $var['type'] === 'object'
                 && $var['className'] === 'stdClass'
@@ -74,6 +90,7 @@ class DebugTestFramework extends DOMTestCase
             'emailLog' => false,
             'emailTo' => null,
             'logEnvInfo' => false,
+            'logRuntime' => true,
             'output' => true,
             'outputCss' => false,
             'outputHeaders' => false,

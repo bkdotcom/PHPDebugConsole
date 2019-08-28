@@ -79,6 +79,9 @@
 		}
 		&.debug-log-summary {
 			margin-bottom: 0.75em;
+			&:empty {
+				margin-bottom: 0;
+			}
 		}
 	}
 	// specific log entry created in Output to separate entries occuring after shutdown

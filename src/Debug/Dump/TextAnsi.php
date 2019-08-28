@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utilities;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 
 /**
  * Base output plugin
@@ -218,12 +219,17 @@ class TextAnsi extends Text
     /**
      * Dump object methods as text
      *
-     * @param array $methods methods as returned from getMethods
+     * @param Abstraction $abs object "abstraction"
      *
      * @return string html
      */
-    protected function dumpMethods($methods)
+    protected function dumpMethods(Abstraction $abs)
     {
+        $collectMethods = $abs['flags'] & AbstractObject::COLLECT_METHODS;
+        $outputMethods = $abs['flags'] & AbstractObject::OUTPUT_METHODS;
+        if (!$collectMethods || !$outputMethods) {
+            return '';
+        }
         $str = '';
         $counts = array(
             'public' => 0,
@@ -231,7 +237,7 @@ class TextAnsi extends Text
             'private' => 0,
             'magic' => 0,
         );
-        foreach ($methods as $info) {
+        foreach ($abs['methods'] as $info) {
             $counts[ $info['visibility'] ] ++;
         }
         foreach ($counts as $vis => $count) {
@@ -277,9 +283,7 @@ class TextAnsi extends Text
         } else {
             $str = $this->markupIdentifier($abs['className'])."\n";
             $str .= $this->dumpProperties($abs);
-            if ($abs['collectMethods'] && $this->debug->getCfg('outputMethods')) {
-                $str .= $this->dumpMethods($abs['methods']);
-            }
+            $str .= $this->dumpMethods($abs);
         }
         $str = \trim($str);
         if ($isNested) {

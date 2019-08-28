@@ -209,6 +209,9 @@ class Config
                 'fullyQualifyPhpDocType',
                 'objectsExclude',
                 'objectSort',
+                'outputConstants',
+                'outputMethodDesc',
+                'outputMethods',
                 'useDebugInfo',
             ),
             'errorEmailer' => array(
@@ -253,12 +256,12 @@ class Config
     {
         $interface = $this->debug->utilities->getInterface();
         if ($interface == 'ajax') {
-            $ret = $this->values['outputAsDefaultNonHtml'];
+            $ret = $this->values['outputAsNonHtml'];
         } elseif ($interface == 'http') {
             $ret = 'html';
             $contentType = $this->debug->utilities->getResponseHeader();
             if ($contentType && $contentType !== 'text/html') {
-                $ret = $this->values['outputAsDefaultNonHtml'];
+                $ret = $this->values['outputAsNonHtml'];
             }
         } else {
             $ret = 'stream';

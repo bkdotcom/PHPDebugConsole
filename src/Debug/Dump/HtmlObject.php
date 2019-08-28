@@ -69,11 +69,9 @@ class HtmlObject
                     .\implode(\array_map(function ($classname) {
                         return '<dd class="interface">'.$this->html->markupIdentifier($classname).'</dd>'."\n";
                     }, $abs['implements']))
-                .$this->dumpConstants($abs['constants'])
+                .$this->dumpConstants($abs)
                 .$this->dumpProperties($abs)
-                .($abs['collectMethods'] && $this->debug->getCfg('outputMethods')
-                    ? $this->dumpMethods($abs['methods'])
-                    : '')
+                .$this->dumpMethods($abs)
                 .$this->dumpPhpDoc($abs['phpDoc'])
             .'</dl>'."\n";
         // remove <dt>'s that have no <dd>'
@@ -125,13 +123,14 @@ class HtmlObject
     /**
      * dump object constants as html
      *
-     * @param array $constants array of name=>value
+     * @param Abstraction $abs object "abstraction"
      *
      * @return string html
      */
-    protected function dumpConstants($constants)
+    protected function dumpConstants(Abstraction $abs)
     {
-        if (!$constants || !$this->debug->getCfg('outputConstants')) {
+        $constants = $abs['constants'];
+        if (!$constants || !($abs['flags'] & AbstractObject::OUTPUT_CONSTANTS)) {
             return '';
         }
         $str = '<dt class="constants">constants</dt>'."\n";
@@ -148,12 +147,18 @@ class HtmlObject
     /**
      * Dump object methods as html
      *
-     * @param array $methods methods as returned from getMethods
+     * @param Abstraction $abs object "abstraction"
      *
      * @return string html
      */
-    protected function dumpMethods($methods)
+    protected function dumpMethods(Abstraction $abs)
     {
+        $collectMethods = $abs['flags'] & AbstractObject::COLLECT_METHODS;
+        $outputMethods = $abs['flags'] & AbstractObject::OUTPUT_METHODS;
+        if (!$collectMethods || !$outputMethods) {
+            return '';
+        }
+        $methods = $abs['methods'];
         $label = \count($methods)
             ? 'methods'
             : 'no methods';
@@ -188,7 +193,7 @@ class HtmlObject
                     array(
                         'class' => 't_identifier',
                         'title' => \trim($info['phpDoc']['summary']
-                            .($this->debug->getCfg('outputMethodDescription')
+                            .($abs['flags'] & AbstractObject::OUTPUT_METHOD_DESC
                                 ? "\n\n".$info['phpDoc']['desc']
                                 : '')),
                     ),

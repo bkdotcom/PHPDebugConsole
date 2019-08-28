@@ -43,9 +43,13 @@
 	function enhance($node) {
 		$node.find("> .classname").each(function() {
 			var $toggle = $(this),
-				$target = $toggle.next();
+				$target = $toggle.next(),
+				isEnhanced = $toggle.data("toggle") == "object";
 			if ($target.is(".t_recursion, .excluded")) {
 				$toggle.addClass("empty");
+				return;
+			}
+			if (isEnhanced) {
 				return;
 			}
 			$toggle.append(' <i class="fa ' + config.iconsExpand.expand + '"></i>');
@@ -582,11 +586,10 @@
 	 * we don't enhance strings by default (add showmore).. needs to be visible to calc height
 	 */
 	function enhanceEntry($entry) {
-		// console.log("enhanceEntry", $entry[0]);
 		if ($entry.is(".enhanced")) {
 			return;
 		}
-		// console.log('enhanceEntry', this);
+		// console.log('enhanceEntry', $entry[0]);
 		if ($entry.is(".m_group")) {
 			enhanceGroup($entry);
 		} else if ($entry.is(".m_trace")) {
@@ -860,7 +863,11 @@
 		}
 	];
 
-	function init$3($delegateNode) {
+	function init$3($delegateNode, config) {
+
+		if (!config.get("sidebar")) {
+			return;
+		}
 
 		$delegateNode.on("change", "input[type=checkbox]", function() {
 			var $this = $(this),
@@ -1366,7 +1373,7 @@
 		// addPersistOption();
 		enhanceErrorSummary();
 		init$2($root$3, conf);
-		init$3($root$3);
+		init$3($root$3, conf);
 		init$5($root$3, conf);
 		init$4($root$3, conf);
 		addErrorIcons();

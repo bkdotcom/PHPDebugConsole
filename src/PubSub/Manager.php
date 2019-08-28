@@ -218,7 +218,7 @@ class Manager
     private function doClosureFactory($closureFactory = array())
     {
         $closureFactory[0] = $closureFactory[0]();
-        return count($closureFactory) === 1
+        return \count($closureFactory) === 1
             ? $closureFactory[0]
             : $closureFactory;
     }

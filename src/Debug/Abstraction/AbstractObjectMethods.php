@@ -13,6 +13,7 @@ namespace bdk\Debug\Abstraction;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionMethod;
 use ReflectionParameter;
 
@@ -33,7 +34,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             return;
         }
         $this->abs = $abs;
-        if ($abs['collectMethods']) {
+        if ($abs['flags'] & AbstractObject::COLLECT_METHODS) {
             $this->addMethods();
         } else {
             $this->addMethodsMin();

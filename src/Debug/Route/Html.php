@@ -213,8 +213,50 @@ class Html extends Base
         $str = \strtr($str, array(
             '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
         ));
+        $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
         $this->data = array();
         $event['return'] .= $str;
+    }
+
+    /**
+     * Add/register css or javascript
+     *
+     * @param string $what  "css" or "script"
+     * @param string $mixed css, javascript, or filepath
+     *
+     * @return boolean
+     */
+    public function removeAsset($what, $mixed)
+    {
+        foreach ($this->assets[$what] as $k => $v) {
+            if ($mixed === $v) {
+                unset($this->assets[$what][$k]);
+                $this->assets[$what] = \array_values($this->assets[$what]);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get and register assets from passed provider
+     *
+     * @param AssetProviderInterface $assetProvider Asset provider
+     *
+     * @return void
+     */
+    public function removeAssetProvider(AssetProviderInterface $assetProvider)
+    {
+        $assets = \array_merge(array(
+            'css' => array(),
+            'script' => array(),
+        ), $assetProvider->getAssets());
+        foreach ((array) $assets['css'] as $css) {
+            $this->removeAsset('css', $css);
+        }
+        foreach ((array) $assets['script'] as $script) {
+            $this->removeAsset('script', $script);
+        }
     }
 
     /**

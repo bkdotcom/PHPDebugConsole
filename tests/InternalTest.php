@@ -47,7 +47,6 @@ class InternalTest extends DebugTestFramework
         $this->assertTrue($this->emailCalled);
         $this->emailCalled = false;
 
-
         $this->debug->setCfg('emailLog', 'onError');
 
         /*
@@ -223,6 +222,10 @@ class InternalTest extends DebugTestFramework
                     'channelShow' => $channel->getCfg('channelShow'),
                 );
             }, $this->debug->getChannels(true)),
+            'config' => array(
+                'logRuntime' => $this->debug->getCfg('logRuntime'),
+            ),
+            'version' => \bdk\Debug::VERSION,
         );
         $this->assertEquals($this->deObjectify($expect), $this->deObjectify($unserialized));
     }

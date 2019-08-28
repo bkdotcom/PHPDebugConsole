@@ -277,7 +277,7 @@ class OnBootstrap
     }
 
     /**
-     * Log Cookie, Post, & Files data
+     * Log request headers, Cookie, Post, & Files data
      *
      * @return void
      */

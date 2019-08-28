@@ -320,11 +320,10 @@ export function enhanceEntries($node) {
  * we don't enhance strings by default (add showmore).. needs to be visible to calc height
  */
 export function enhanceEntry($entry) {
-	// console.log("enhanceEntry", $entry[0]);
 	if ($entry.is(".enhanced")) {
 		return;
 	}
-	// console.log('enhanceEntry', this);
+	// console.log('enhanceEntry', $entry[0]);
 	if ($entry.is(".m_group")) {
 		enhanceGroup($entry);
 	} else if ($entry.is(".m_trace")) {

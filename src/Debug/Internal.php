@@ -505,6 +505,9 @@ class Internal implements SubscriberInterface
      */
     private function onOutputLogRuntime()
     {
+        if (!$this->debug->getCfg('logRuntime')) {
+            return;
+        }
         $vals = $this->runtimeVals();
         $this->debug->groupSummary(1);
         $this->debug->info('Built In '.$vals['runtime'].' sec');

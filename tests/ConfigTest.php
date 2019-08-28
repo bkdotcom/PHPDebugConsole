@@ -30,6 +30,9 @@ class ConfigTest extends DebugTestFramework
             'collectMethods',
             'objectsExclude',
             'objectSort',
+            'outputConstants',
+            'outputMethodDesc',
+            'outputMethods',
             'useDebugInfo',
             'fullyQualifyPhpDocType',
         );
@@ -49,16 +52,14 @@ class ConfigTest extends DebugTestFramework
             'emailTo',
             'factories',
             'logEnvInfo',
+            'logRuntime',
             'logServerKeys',
             'onBootstrap',
             'onLog',
             'onOutput',
             'outputAs',
-            'outputAsDefaultNonHtml',
-            'outputConstants',
+            'outputAsNonHtml',
             'outputHeaders',
-            'outputMethodDescription',
-            'outputMethods',
             'services',
         );
 

@@ -40,9 +40,13 @@ function addIcons($node) {
 export function enhance($node) {
 	$node.find("> .classname").each(function() {
 		var $toggle = $(this),
-			$target = $toggle.next();
+			$target = $toggle.next(),
+			isEnhanced = $toggle.data("toggle") == "object";
 		if ($target.is(".t_recursion, .excluded")) {
 			$toggle.addClass("empty");
+			return;
+		}
+		if (isEnhanced) {
 			return;
 		}
 		$toggle.append(' <i class="fa ' + config.iconsExpand.expand + '"></i>');

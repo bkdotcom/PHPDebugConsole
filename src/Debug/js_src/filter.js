@@ -26,7 +26,11 @@ var preFilterCallbacks = [
 	}
 ];
 
-export function init($delegateNode) {
+export function init($delegateNode, config) {
+
+	if (!config.get("sidebar")) {
+		return;
+	}
 
 	$delegateNode.on("change", "input[type=checkbox]", function() {
 		var $this = $(this),

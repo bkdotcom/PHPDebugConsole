@@ -28,6 +28,12 @@ class AbstractObject
 	protected $abstracter;
 	protected $phpDoc;
 
+    const COLLECT_CONSTANTS = 1;
+    const COLLECT_METHODS = 2;
+    const OUTPUT_CONSTANTS = 4;
+    const OUTPUT_METHODS = 8;
+    const OUTPUT_METHOD_DESC = 16;
+
     /**
      * Constructor
      *
@@ -68,7 +74,6 @@ class AbstractObject
         \sort($interfaceNames);
         $abs = new Abstraction(array(
             'className' => $className,
-            'collectMethods' => $this->abstracter->getCfg('collectMethods'),
             'constants' => array(),
             'debugMethod' => $method,
             'definition' => array(
@@ -77,6 +82,7 @@ class AbstractObject
                 'extensionName' => $reflector->getExtensionName(),
             ),
             'extends' => array(),
+            'flags' => $this->getFlags(),
             'implements' => $interfaceNames,
             'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
             'isRecursion' => \in_array($obj, $hist, true),
@@ -109,7 +115,7 @@ class AbstractObject
             debug.objAbstractStart subscriber may
             set isExcluded
             set collectPropertyValues (boolean)
-            set collectMethods (boolean)
+            set flags (int / bitmask)
             set propertyOverrideValues
             set stringified
             set traverseValues
@@ -230,7 +236,7 @@ class AbstractObject
      */
     private function addConstants(Abstraction $abs)
     {
-        if (!$this->abstracter->getCfg('collectConstants')) {
+        if (!($abs['flags'] & self::COLLECT_CONSTANTS)) {
             return;
         }
         $reflector = $abs['reflector'];
@@ -287,6 +293,28 @@ class AbstractObject
                 ? $this->abstracter->getAbstraction($v, $abs['debugMethod'], $abs['hist'])
                 : $v;
         }
+    }
+
+    /**
+     * Get configuration flags
+     *
+     * @return [type] [description]
+     */
+    private function getFlags()
+    {
+        $flags = array(
+            'collectConstants' => self::COLLECT_CONSTANTS,
+            'collectMethods' => self::COLLECT_METHODS,
+            'outputConstants' => self::OUTPUT_CONSTANTS,
+            'outputMethodDesc' => self::OUTPUT_METHOD_DESC,
+            'outputMethods' => self::OUTPUT_METHODS,
+        );
+        $config = $this->abstracter->getCfg();
+        $config = \array_intersect_key($flags, \array_filter($config));
+        $bitmask = \array_reduce($config, function ($carry, $val) {
+            return $carry | $val;
+        }, 0);
+        return $bitmask;
     }
 
     /**
@@ -354,7 +382,7 @@ class AbstractObject
         if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 2) {
             $obj = $abs->getSubject();
             if ($obj instanceof \Traversable) {
-                $abs['collectMethods'] = false;
+                $abs['flags'] &= ~self::COLLECT_METHODS;  // set collect methods to "false"
                 return true;
             }
         }

@@ -1405,8 +1405,7 @@ class MethodTest extends DebugTestFramework
             <li class="m_info"><span class="no-quotes t_string">Built In %f sec</span></li>
             <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
         </ul>
-        <ul class="debug-log group-body">
-        </ul>
+        <ul class="debug-log group-body"></ul>
     </div>
 </div>
 EOD;

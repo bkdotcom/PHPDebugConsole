@@ -22,7 +22,7 @@ export function init($debugRoot, conf) {
 	// addPersistOption();
 	enhanceErrorSummary();
 	drawer.init($root, conf);
-	filter.init($root);
+	filter.init($root, conf);
 	sidebar.init($root, conf);
 	optionsMenu.init($root, conf);
 	addErrorIcons();

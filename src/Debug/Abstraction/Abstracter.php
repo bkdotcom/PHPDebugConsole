@@ -50,6 +50,9 @@ class Abstracter extends Component
                 __NAMESPACE__,
             ),
             'objectSort' => 'visibility',   // none, visibility, or name
+            'outputConstants' => true,
+            'outputMethodDesc' => true,     // (or just summary)
+            'outputMethods' => true,
             'useDebugInfo' => true,
             'fullyQualifyPhpDocType' => false,
         );

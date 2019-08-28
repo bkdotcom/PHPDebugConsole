@@ -112,16 +112,14 @@ class Debug
                 'post' => true,
                 'serverVals' => true,
             ),
+            'logRuntime' => true,
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
             'onBootstrap' => null,          // callable
             'onLog' => null,                // callable
             'onOutput'  => null,            // callable
             'outputAs'  => null,            // 'chromeLogger', 'firephp', 'html', 'script', 'steam', 'text', or Object, if null, will be determined automatically
-            'outputAsDefaultNonHtml' => 'chromeLogger',
-            'outputConstants' => true,
-            'outputHeaders' => true,            // ie, ChromeLogger and/or firePHP headers
-            'outputMethodDescription' => true,  // (or just summary)
-            'outputMethods' => true,
+            'outputAsNonHtml' => 'chromeLogger',
+            'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
             'services' => $this->getDefaultServices(),
         );
         $this->data = array(
@@ -1482,7 +1480,12 @@ class Debug
     public function removePlugin(SubscriberInterface $plugin)
     {
         $this->registeredPlugins->detach($plugin);
-        $this->eventManager->RemoveSubscriberInterface($plugin);
+        if ($plugin instanceof AssetProviderInterface) {
+            $this->rootInstance->routeHtml->removeAssetProvider($plugin);
+        }
+        if ($plugin instanceof SubscriberInterface) {
+            $this->eventManager->RemoveSubscriberInterface($plugin);
+        }
         return $this;
     }
 

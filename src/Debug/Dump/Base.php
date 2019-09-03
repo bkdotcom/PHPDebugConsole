@@ -376,7 +376,7 @@ class Base extends Component implements ConfigurableInterface
         $method = $logEntry->getMeta('level');
         $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
         switch ($method) {
-            case 'danger':
+            case 'error':
                 // Just use log method... Chrome adds backtrace to error(), which we don't want
                 $method = 'log';
                 $args[1] = $styleCommon
@@ -397,7 +397,7 @@ class Base extends Component implements ConfigurableInterface
                     .'border: 1px solid #d6e9c6;'
                     .'color: #3c763d;';
                 break;
-            case 'warning':
+            case 'warn':
                 // Just use log method... Chrome adds backtrace to warn(), which we don't want
                 $method = 'log';
                 $args[1] = $styleCommon
@@ -421,16 +421,13 @@ class Base extends Component implements ConfigurableInterface
     {
         $method = $logEntry['method'];
         $args = $logEntry['args'];
-        $hasSubs = false;
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if (\count($args) > 1 && \is_string($args[0])) {
-                $args = $this->processSubstitutions($args, $hasSubs);
+                $args = $this->processSubstitutions($args);
             }
         }
-        if (!$hasSubs) {
-            foreach ($args as $i => $arg) {
-                $args[$i] = $this->dump($arg);
-            }
+        foreach ($args as $i => $arg) {
+            $args[$i] = $this->dump($arg);
         }
         $logEntry['args'] = $args;
     }
@@ -557,26 +554,25 @@ class Base extends Component implements ConfigurableInterface
     /**
      * Handle the not-well documented substitutions
      *
-     * @param array   $args    arguments
-     * @param boolean $hasSubs set to true if substitutions/formatting applied
-     * @param array   $options options
+     * @param array $args    arguments
+     * @param array $options options
      *
      * @return array
      *
      * @see https://console.spec.whatwg.org/#formatter
      * @see https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
      */
-    protected function processSubstitutions($args, &$hasSubs, $options = array())
+    protected function processSubstitutions($args, $options = array())
     {
         if (!\is_string($args[0])) {
             return $args;
         }
         $index = 0;
-        $indexes = array(
-            'c' => array(),
-        );
+        $typeCounts = \array_fill_keys(\str_split('coOdifs'), 0);
         $options = \array_merge(array(
+            'addQuotes' => false,
             'replace' => false, // perform substitution, or just prep?
+            'sanitize' => true,
             'style' => false,   // ie support %c
         ), $options);
         $subRegex = '/%'
@@ -594,46 +590,55 @@ class Base extends Component implements ConfigurableInterface
             &$args,
             &$hasSubs,
             &$index,
-            &$indexes,
-            $options
+            $options,
+            &$typeCounts
         ) {
             $index++;
-            $replacement = '';
-            $type = \substr($matches[0], -1);
+            $replace = $matches[0];
+            if (!\array_key_exists($index, $args)) {
+                return $replace;
+            }
             $arg = $args[$index];
+            $replacement = '';
+            $type = \substr($replace, -1);
             if (\strpos('difs', $type) !== false) {
-                $format = $matches[0];
+                $format = $replace;
                 if ($type == 'i') {
                     $format = \substr_replace($format, 'd', -1, 1);
                 } elseif ($type === 's') {
-                    $arg = $this->substitutionAsString($arg);
+                    $arg = $this->substitutionAsString($arg, $options);
                 }
                 $replacement = \is_array($arg)
                     ? $arg
                     : \sprintf($format, $arg);
             } elseif ($type === 'c' && $options['style']) {
-                if ($indexes['c']) {
+                if ($typeCounts['c']) {
                     // close prev
                     $replacement = '</span>';
                 }
                 $replacement .= '<span'.$this->debug->utilities->buildAttribString(array(
                     'style' => $arg,
                 )).'>';
-                $indexes['c'][] = $index;
             } elseif (\strpos('oO', $type) !== false) {
                 $replacement = $this->dump($arg);
             }
+            $typeCounts[$type] ++;
             $args[$index] = $arg;
-            return $options['replace']
-                ? $replacement
-                : $matches[0];
+            if ($options['replace']) {
+                unset($args[$index]);
+                return $replacement;
+            }
+            return $replace;
         }, $args[0]);
-        $hasSubs = $index > 0;
+        if (!$options['style']) {
+            $typeCounts['c'] = 0;
+        }
+        $hasSubs = \array_sum($typeCounts);
         if ($hasSubs && $options['replace']) {
-            if ($indexes['c']) {
+            if ($typeCounts['c']) {
                 $args[0] .= '</span>';
             }
-            $args = array($args[0]);
+            $args = \array_values($args);
         }
         return $args;
     }
@@ -641,11 +646,12 @@ class Base extends Component implements ConfigurableInterface
     /**
      * Cooerce value to string
      *
-     * @param mixed $val value
+     * @param mixed $val  value
+     * @param array $opts $options passed to dump
      *
      * @return string
      */
-    protected function substitutionAsString($val)
+    protected function substitutionAsString($val, $opts)
     {
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
@@ -659,7 +665,7 @@ class Base extends Component implements ConfigurableInterface
             $toStr = AbstractObject::toString($val);
             $val = $toStr ?: $val['className'];
         } else {
-            $val = $this->dump($val, false);
+            $val = $this->dump($val, $opts);
         }
         return $val;
     }

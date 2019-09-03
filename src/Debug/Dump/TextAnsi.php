@@ -41,10 +41,10 @@ class TextAnsi extends Text
             'recursion' => "\e[38;5;196m",  // red
         ),
         'escapeCodesLevels' => array(
-            'danger' => "\e[38;5;88;48;5;203;1;4m",
+            'error' => "\e[38;5;88;48;5;203;1;4m",
             'info' => "\e[38;5;55;48;5;159;1;4m",
             'success' => "\e[38;5;22;48;5;121;1;4m",
-            'warning' => "\e[38;5;1;48;5;230;1;4m",
+            'warn' => "\e[38;5;1;48;5;230;1;4m",
         ),
         'escapeCodesMethods' => array(
             'error' => "\e[38;5;88;48;5;203m",

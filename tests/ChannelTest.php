@@ -33,8 +33,8 @@ class ChannelTest extends DebugTestFramework
     {
         $dataExpect = array(
             'alerts' => array(
-                array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'danger')),
-                array('alert', array('foo: alert'), array('channel' => 'foo', 'dismissible' => false, 'level' => 'danger')),
+                array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
+                array('alert', array('foo: alert'), array('channel' => 'foo', 'dismissible' => false, 'level' => 'error')),
             ),
             'groupStacks' => array(
                 'main' => array(
@@ -84,8 +84,7 @@ class ChannelTest extends DebugTestFramework
 
         $dataFooClearedExpect = array(
             'alerts' => array(
-                array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'danger')),
-                // array('alert', array('foo: alert'), array('channel' => 'foo', 'level' => 'danger', 'dismissible' => false)),
+                array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
             ),
             'groupStacks' => array(
                 'main' => array(
@@ -159,7 +158,7 @@ class ChannelTest extends DebugTestFramework
         <div class="debug" data-channel-root="general" data-channels="{&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
             <header class="debug-menu-bar">PHPDebugConsole</header>
             <div class="debug-body">
-                <div class="alert-danger m_alert" data-channel="foo" role="alert">foo: alert</div>
+                <div class="alert-error m_alert" data-channel="foo" role="alert">foo: alert</div>
                 <ul class="debug-log-summary group-body">
                     <li class="m_group" data-channel="foo">
                         <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
@@ -191,8 +190,8 @@ EOD;
         <div class="debug" data-channel-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}},&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
             <header class="debug-menu-bar">PHPDebugConsole</header>
             <div class="debug-body">
-                <div class="alert-danger m_alert" role="alert">main: alert</div>
-                <div class="alert-danger m_alert" data-channel="foo" role="alert">foo: alert</div>
+                <div class="alert-error m_alert" role="alert">main: alert</div>
+                <div class="alert-error m_alert" data-channel="foo" role="alert">foo: alert</div>
                 <ul class="debug-log-summary group-body">
                     <li class="m_group" data-channel="foo">
                         <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
@@ -206,7 +205,7 @@ EOD;
                             </li>
                         </ul>
                     </li>
-                    <li class="m_info"><span class="no-quotes t_string">Built In %f sec</span></li>
+                    <li class="m_info"><span class="no-quotes t_string">Built In %f ms</span></li>
                     <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
                     <li class="m_group" data-channel="foo">
                         <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 0 / group 1</span></div>

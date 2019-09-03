@@ -510,7 +510,7 @@ class Internal implements SubscriberInterface
         }
         $vals = $this->runtimeVals();
         $this->debug->groupSummary(1);
-        $this->debug->info('Built In '.$vals['runtime'].' sec');
+        $this->debug->info('Built In '.$this->debug->utilities->formatDuration($vals['runtime']));
         $this->debug->info(
             'Peak Memory Usage'
                 .(\get_class($this->debug->getCfg('outputAs')) == 'bdk\\Debug\\Route\\Html'
@@ -581,7 +581,7 @@ class Internal implements SubscriberInterface
             $vals = array(
                 'memoryPeakUsage' => \memory_get_peak_usage(true),
                 'memoryLimit' => $this->debug->utilities->memoryLimit(),
-                'runtime' => $this->debug->timeEnd('debugInit', true),
+                'runtime' => $this->debug->timeEnd('debugInit', $this->debug->meta('silent')),
             );
             $this->debug->setData('runtime', $vals);
         }

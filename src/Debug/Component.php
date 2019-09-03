@@ -80,6 +80,7 @@ abstract class Component
 
     /**
      * Called by setCfg
+     *
      * extend me to perform class specific config operations
      *
      * @param array $cfg new config values

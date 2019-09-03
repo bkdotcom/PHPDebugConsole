@@ -57,10 +57,10 @@ class DebugTestFramework extends DOMTestCase
                 'traverseValues',
                 'viaDebugInfo',
             );
-            $keysMissing = array_diff($keys, array_keys($var->getValues()));
+            $keysMissing = \array_diff($keys, \array_keys($var->getValues()));
             $return = $var['type'] === 'object'
                 && $var['className'] === 'stdClass'
-                && count($keysMissing) == 0;
+                && \count($keysMissing) == 0;
         } elseif ($type == 'resource') {
             $return = $var['type'] === 'resource' && isset($var['value']);
         }
@@ -117,7 +117,7 @@ class DebugTestFramework extends DOMTestCase
                         0,
                         isset($_SERVER['REQUEST_TIME_FLOAT']) // php 5.4
                             ? $_SERVER['REQUEST_TIME_FLOAT']
-                            : microtime(true)
+                            : \microtime(true)
                     ),
                 ),
                 'stack' => array(),
@@ -158,7 +158,7 @@ class DebugTestFramework extends DOMTestCase
             $unsub = false;
             if ($subscriber instanceof \Closure) {
                 $unsub = true;
-            } elseif (is_array($subscriber) && strpos(get_class($subscriber[0]), 'bdk\\Debug') === false) {
+            } elseif (\is_array($subscriber) && \strpos(\get_class($subscriber[0]), 'bdk\\Debug') === false) {
                 $unsub = true;
             }
             if ($unsub) {
@@ -200,13 +200,15 @@ class DebugTestFramework extends DOMTestCase
      */
     public function stderr()
     {
-        $args = array_map(function ($val) {
-            return print_r($val, true);
-        }, func_get_args());
-        $glue = func_num_args() > 2
+        $args = \array_map(function ($val) {
+            return $val === null
+                ? 'null'
+                : \print_r($val, true);
+        }, \func_get_args());
+        $glue = \func_num_args() > 2
             ? ', '
             : ' = ';
-        fwrite(STDOUT, implode($glue, $args) . "\n");
+        \fwrite(STDOUT, \implode($glue, $args) . "\n");
     }
 
     /**
@@ -251,7 +253,7 @@ class DebugTestFramework extends DOMTestCase
             ? 'alerts/__end__'
             : 'log/__end__';
         $logCountBefore = $this->debug->getData($countPath);
-        if (is_array($method)) {
+        if (\is_array($method)) {
             if (isset($method['dataPath'])) {
                 $dataPath = $method['dataPath'];
             }
@@ -271,9 +273,9 @@ class DebugTestFramework extends DOMTestCase
                 $logEntryTemp = $logEntry;
                 if (\is_callable($outputExpect)) {
                     \call_user_func($outputExpect, $logEntryTemp);
-                } elseif (is_string($outputExpect)) {
+                } elseif (\is_string($outputExpect)) {
                     $logEntryTemp = $this->logEntryToArray($logEntryTemp);
-                    $this->assertStringMatchesFormat($outputExpect, json_encode($logEntryTemp), 'log entry does not match format');
+                    $this->assertStringMatchesFormat($outputExpect, \json_encode($logEntryTemp), 'log entry does not match format');
                 } else {
                     $logEntryTemp = $this->logEntryToArray($logEntryTemp);
                     if (isset($outputExpect[2]['file']) && $outputExpect[2]['file'] === '*') {
@@ -290,8 +292,8 @@ class DebugTestFramework extends DOMTestCase
                 $this->assertSame($logCountBefore, $this->debug->getData($countPath), 'failed asserting nothing logged');
                 continue;
             } elseif ($test == 'return') {
-                if (is_string($outputExpect)) {
-                    $this->assertStringMatchesFormat($outputExpect, $return, 'return value does not match format');
+                if (\is_string($outputExpect)) {
+                    $this->assertStringMatchesFormat($outputExpect, (string) $return, 'return value does not match format');
                 } else {
                     $this->assertSame($outputExpect, $return, 'return value not same');
                 }
@@ -305,7 +307,7 @@ class DebugTestFramework extends DOMTestCase
                 $prop = 'route'.\ucfirst($test);
                 $routeObj = $this->debug->{$prop};
             }
-            if (in_array($test, array('chromeLogger','firephp'))) {
+            if (\in_array($test, array('chromeLogger','firephp'))) {
                 // remove data - sans the logEntry we're interested in
                 $dataBackup = array(
                     'alerts' => $this->debug->getData('alerts'),
@@ -331,22 +333,22 @@ class DebugTestFramework extends DOMTestCase
                     /*
                         Decode the chromelogger header and get rows data
                     */
-                    $rows = json_decode(base64_decode($headers[0][1]), true)['rows'];
+                    $rows = \json_decode(\base64_decode($headers[0][1]), true)['rows'];
                     // entry is nested inside a group
                     $output = $rows[\count($rows)-2];
-                    if (is_string($outputExpect)) {
-                        $output = json_encode($output);
+                    if (\is_string($outputExpect)) {
+                        $output = \json_encode($output);
                     }
                 } else {
-                    if (is_string($outputExpect)) {
-                        $outputExpect = preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
+                    if (\is_string($outputExpect)) {
+                        $outputExpect = \preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
                     }
                     /*
                         Filter just the log entry headers
                     */
                     $headersNew = array();
                     foreach ($headers as $header) {
-                        if (strpos($header[0], 'X-Wf-1-1-1') === 0) {
+                        if (\strpos($header[0], 'X-Wf-1-1-1') === 0) {
                             $headersNew[] = $header[0].': '.$header[1];
                         }
                     }
@@ -368,7 +370,7 @@ class DebugTestFramework extends DOMTestCase
                 if (isset($outputExpect['contains'])) {
                     $message = "\e[1m".$test." doesn't contain\e[0m";
                     if ($test === 'streamAnsi') {
-                        $message .= "\nactual: ".str_replace("\e", '\e', $output);
+                        $message .= "\nactual: ".\str_replace("\e", '\e', $output);
                     }
                     $this->assertContains($outputExpect['contains'], $output, $message);
                 } else {
@@ -382,9 +384,9 @@ class DebugTestFramework extends DOMTestCase
                 $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
                 $message = "\e[1m".$test." not same\e[0m";
                 if ($test === 'streamAnsi') {
-                    $message .= "\nactual: ".str_replace("\e", '\e', $output);
+                    $message .= "\nactual: ".\str_replace("\e", '\e', $output);
                 }
-                $this->assertStringMatchesFormat(trim($outputExpect), trim($output), $message);
+                $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
             }
         }
     }
@@ -420,7 +422,7 @@ class DebugTestFramework extends DOMTestCase
 
     protected function logEntryToArray(LogEntry $logEntry)
     {
-        $return = array_values($logEntry->export());
+        $return = \array_values($logEntry->export());
         \ksort($return[2]);
         return $return;
     }

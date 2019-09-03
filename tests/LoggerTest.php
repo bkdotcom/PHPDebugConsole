@@ -120,7 +120,7 @@ class LoggerTest extends DebugTestFramework
             array('Alert'),
             array(
                 'dismissible' => false,
-                'level' => 'danger',
+                'level' => 'error',
             ),
         ), $this->logEntryToArray($this->debug->getData('alerts/0')));
     }

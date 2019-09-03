@@ -115,8 +115,8 @@ class Wamp implements RouteInterface
             array(
                 'attribs' => array(
                     'class' => $error['type'] & $this->debug->getCfg('errorMask')
-                        ? 'danger'
-                        : 'warning',
+                        ? 'error'
+                        : 'warn',
                 )
             )
         ));

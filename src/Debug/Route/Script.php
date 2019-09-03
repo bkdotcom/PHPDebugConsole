@@ -121,7 +121,7 @@ class Script extends Base
             $method = 'log';
         }
         foreach ($args as $k => $arg) {
-            $arg = \json_encode($this->dump->dump($arg), JSON_UNESCAPED_SLASHES);
+            $arg = \json_encode($this->dump->dump($arg), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
             // ensure - however unlikely - that </script> doesn't appear inside our <script>
             $arg = \str_replace('</script>', '<\\/script>', $arg);
             $args[$k] = $arg;

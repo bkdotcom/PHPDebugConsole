@@ -325,15 +325,16 @@ class Debug
      * Display an alert at the top of the log
      *
      * @param string  $message     message
-     * @param string  $level       (danger), info, success, warning
+     * @param string  $level       (error), info, success, warn
+     *                               "danger" and "warning" are still accepted, however deprecated
      * @param boolean $dismissible (false) Whether to display a close icon/button
      *
      * @return void
      */
-    public function alert($message, $level = 'danger', $dismissible = false)
+    public function alert($message, $level = 'error', $dismissible = false)
     {
         // "use" our function params so things (ie phpmd) don't complain
-        array($message, $level, $dismissible);
+        array($message, $dismissible);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -341,11 +342,25 @@ class Debug
             array(),
             array(
                 'message' => null,
-                'level' => 'danger',
+                'level' => 'error',
                 'dismissible' => false,
             ),
             array('level','dismissible')
         );
+        $level = $logEntry->getMeta('level');
+        /*
+            Continue to allow bootstrap "levels"
+        */
+        $levelTrans = array(
+            'danger' => 'error',
+            'warning' => 'warn',
+        );
+        if (isset($levelTrans[$level])) {
+            $level = $levelTrans[$level];
+        } elseif (!\in_array($level, array('error','info','success','warn'))) {
+            $level = 'error';
+        }
+        $logEntry->setMeta('level', $level);
         $this->setLogDest('alerts');
         $this->appendLog($logEntry);
         $this->setLogDest('auto');
@@ -570,6 +585,8 @@ class Debug
     /**
      * Create a new inline group
      *
+     * Groups generally get indented and will receive an expand/collapse toggle.
+     *
      * Supports styling & substitutions
      *
      * @param mixed $arg,... label / values
@@ -583,6 +600,8 @@ class Debug
 
     /**
      * Create a new inline group
+     *
+     * Unline group(), groupCollapsed(), will initially be collapsed
      *
      * @param mixed $arg,... label / values
      *
@@ -658,7 +677,7 @@ class Debug
      *
      * All groupSummary groups will appear together in a single group
      *
-     * @param integer $priority (0) The higher the priority, the ealier it will appear.
+     * @param integer $priority (0) The higher the priority, the earlier it will appear.
      *
      * @return void
      */
@@ -879,7 +898,7 @@ class Debug
     }
 
     /**
-     * Output array as a table
+     * Output array or object as a table
      *
      * Accepts array of arrays or array of objects
      *
@@ -916,10 +935,12 @@ class Debug
      * ## Label not passed
      *  * timer will be added to a no-label stack
      *
-     * Does not append log (unless duration is passed).  Use `timeEnd` or `timeGet` to get time
+     * Does not append log (unless duration is passed).
+     *
+     * Use `timeEnd` or `timeGet` to get time
      *
      * @param string $label    unique label
-     * @param float  $duration (optional) duration
+     * @param float  $duration (optional) duration (in seconds)
      *
      * @return void
      */
@@ -929,7 +950,13 @@ class Debug
             $this,
             __FUNCTION__,
             \func_get_args(),
-            array(),
+            array(
+                // these meta values are used if duration is passed
+                'precision' => 4,
+                'silent' => false,
+                'template' => '%label: %time',
+                'unit' => 'auto',
+            ),
             array(
                 'label' => null,
                 'duration' => null,
@@ -943,7 +970,8 @@ class Debug
         $label = $args[0];
         if ($floats) {
             $duration = \reset($floats);
-            $this->doTime($label, $duration, 4, false, $logEntry['meta']);
+            $logEntry['args'] = array($label);
+            $this->doTime($duration, $logEntry);
             return;
         }
         if (isset($label)) {
@@ -962,38 +990,36 @@ class Debug
 
     /**
      * Behaves like a stopwatch.. returns running time
-     *    If label is passed, timer is "paused"
+     *
+     *    If label is passed, timer is "paused" (not ended/cleared)
      *    If label is not passed, timer is removed from timer stack
      *
-     * @param string         $label            unique label
-     * @param string|boolean $returnOrTemplate string: "%label: %time"
-     *                                         boolean:  If true, only return time, rather than log it
-     * @param integer        $precision        rounding precision (pass null for no rounding)
+     * @param string $label unique label
      *
      * @return float|string (numeric)
      */
-    public function timeEnd($label = null, $returnOrTemplate = false, $precision = 4)
+    public function timeEnd($label = null)
     {
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
             \func_get_args(),
-            array(),
+            array(
+                'precision' => 4,
+                'silent' => false,
+                'template' => '%label: %time',
+                'unit' => 'auto',
+            ),
             array(
                 'label' => null,
-                'returnOrTemplate' => false,
-                'precision' => 4,
             )
         );
-        list($label, $returnOrTemplate, $precision) = $logEntry['args'];
-        if (\is_bool($label) || \strpos($label, '%time') !== false) {
-            if (\is_numeric($returnOrTemplate)) {
-                $precision = $returnOrTemplate;
-            }
-            $returnOrTemplate = $label;
-            $label = null;
-        }
-        $ret = $this->timeGet($label, true, null); // get non-rounded running time
+        $label = $logEntry['args'][0];
+        // get non-rounded running time (in seconds)
+        $ret = $this->timeGet($label, $this->meta(array(
+            'silent' => true,
+            'precision' => null,
+        )));
         if (isset($label)) {
             if (isset($this->data['timers']['labels'][$label])) {
                 $this->data['timers']['labels'][$label] = array(
@@ -1004,7 +1030,7 @@ class Debug
         } else {
             \array_pop($this->data['timers']['stack']);
         }
-        return $this->doTime($label, $ret, $precision, $returnOrTemplate, $logEntry['meta']);
+        return $this->doTime($ret, $logEntry);
     }
 
     /**
@@ -1012,34 +1038,27 @@ class Debug
      *
      * This method does not have a web console API equivalent
      *
-     * @param string         $label            (optional) unique label
-     * @param string|boolean $returnOrTemplate string: "%label: %time"
-     *                                         boolean:  If true, only return time, rather than log it
-     * @param integer        $precision        rounding precision (pass null for no rounding)
+     * @param string $label (optional) unique label
      *
      * @return float|string|false returns false if specified label does not exist
      */
-    public function timeGet($label = null, $returnOrTemplate = false, $precision = 4)
+    public function timeGet($label = null)
     {
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
             \func_get_args(),
-            array(),
+            array(
+                'precision' => 4,
+                'silent' => false,
+                'template' => '%label: %time',
+                'unit' => 'auto',
+            ),
             array(
                 'label' => null,
-                'returnOrTemplate' => false,
-                'precision' => 4,
             )
         );
-        list($label, $returnOrTemplate, $precision) = $logEntry['args'];
-        if (\is_bool($label) || \strpos($label, '%time') !== false) {
-            if (\is_numeric($returnOrTemplate)) {
-                $precision = $returnOrTemplate;
-            }
-            $returnOrTemplate = $label;
-            $label = null;
-        }
+        $label = $logEntry['args'][0];
         $microT = 0;
         $elapsed = 0;
         if ($label === null) {
@@ -1051,7 +1070,7 @@ class Debug
         } elseif (isset($this->data['timers']['labels'][$label])) {
             list($elapsed, $microT) = $this->data['timers']['labels'][$label];
         } else {
-            if ($returnOrTemplate !== true) {
+            if ($logEntry->getMeta('silent') == false) {
                 $this->appendLog(new LogEntry(
                     $this,
                     __FUNCTION__,
@@ -1064,7 +1083,7 @@ class Debug
         if ($microT) {
             $elapsed += \microtime(true) - $microT;
         }
-        return $this->doTime($label, $elapsed, $precision, $returnOrTemplate, $logEntry['meta']);
+        return $this->doTime($elapsed, $logEntry);
     }
 
     /**
@@ -1082,12 +1101,19 @@ class Debug
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args()
+            \func_get_args(),
+            array(
+                'precision' => 4,
+                'unit' => 'auto',
+            )
         );
         $args = $logEntry['args'];
+        $label = isset($args[0])
+            ? $args[0]
+            : null;
         $microT = 0;
         $elapsed = 0;
-        if (\count($args) === 0) {
+        if ($label === null) {
             $args[0] = 'time';
             if (!$this->data['timers']['stack']) {
                 list($elapsed, $microT) = $this->data['timers']['labels']['debugInit'];
@@ -1099,13 +1125,18 @@ class Debug
         } else {
             $args = array('Timer \''.$label.'\' does not exist');
         }
+        $meta = $logEntry['meta'];
         if ($microT) {
             $args[0] .= ': ';
-            $elapsed += \microtime(true) - $microT;
-            $elapsed = \number_format($elapsed, 4, '.', '');
-            \array_splice($args, 1, 0, $elapsed.' sec');
+            $elapsed = $this->utilities->formatDuration(
+                $elapsed + \microtime(true) - $microT,
+                $meta['unit'],
+                $meta['precision']
+            );
+            \array_splice($args, 1, 0, $elapsed);
         }
         $logEntry['args'] = $args;
+        $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision','unit')));
         $this->appendLog($logEntry);
     }
 
@@ -1722,40 +1753,30 @@ class Debug
     /**
      * Log timeEnd() and timeGet()
      *
-     * @param string  $label            label
-     * @param float   $elapsed          elapsed time in seconds
-     * @param integer $precision        rounding precision (pass null for no rounding)
-     * @param mixed   $returnOrTemplate false: log the time with default template (default)
-     *                                  true: do not log
-     *                                  string: log using passed template
-     * @param array   $meta             meta values
+     * @param float    $elapsed  elapsed time in seconds
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return mixed
      */
-    protected function doTime($label, $elapsed, $precision = 4, $returnOrTemplate = false, $meta = array())
+    protected function doTime($elapsed, LogEntry $logEntry)
     {
-        if ($label === null) {
-            $label = 'time';
+        $meta = $logEntry['meta'];
+        if ($meta['silent']) {
+            return $elapsed;
         }
-        if (\is_int($precision)) {
-            // use number_format rather than round(), which may still run decimals-a-plenty
-            $elapsed = \number_format($elapsed, $precision, '.', '');
-        }
-        if ($returnOrTemplate !== true) {
-            if (\is_string($returnOrTemplate)) {
-                $str = $returnOrTemplate;
-                $str = \str_replace('%label', $label, $str);
-                $str = \str_replace('%time', $elapsed, $str);
-            } else {
-                $str = $label.': '.$elapsed.' sec';
-            }
-            $this->appendLog(new LogEntry(
-                $this,
-                'time',
-                array($str),
-                $meta
-            ));
-        }
+        $label = isset($logEntry['args'][0])
+            ? $logEntry['args'][0]
+            : 'time';
+        $str = \strtr($meta['template'], array(
+            '%label' => $label,
+            '%time' => $this->utilities->formatDuration($elapsed, $meta['unit'], $meta['precision']),
+        ));
+        $this->appendLog(new LogEntry(
+            $this,
+            'time',
+            array($str),
+            \array_diff_key($meta, \array_flip(array('precision','silent','template','unit')))
+        ));
         return $elapsed;
     }
 

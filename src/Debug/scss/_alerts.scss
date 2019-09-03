@@ -34,7 +34,7 @@
 	h3:last-child { margin-bottom:0; }
 }
 
-.alert-danger {
+.alert-error {
 	background-color: $error-bg;
 	border-color: $error-fg;
 	color: $error-fg;
@@ -58,7 +58,7 @@
 		color: #2b542c;
 	}
 }
-.alert-warning {
+.alert-warn {
 	background-color: $warn-bg;
 	border-color: #faebcc;
 	color: $warn-fg;

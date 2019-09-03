@@ -318,10 +318,10 @@ class Text extends Base
     {
         $level = $logEntry->getMeta('level');
         $levelToMethod = array(
-            'danger' => 'error',
+            'error' => 'error',
             'info' => 'info',
             'success' => 'info',
-            'warning' => 'warn',
+            'warn' => 'warn',
         );
         $prefix = $this->cfg['prefixes'][$levelToMethod[$level]];
         $prefix = '[Alert '.$prefix.$level.'] ';
@@ -340,14 +340,10 @@ class Text extends Base
     {
         $args = $logEntry['args'];
         if (\count($args) > 1 && \is_string($args[0])) {
-            $hasSubs = false;
-            $args = $this->processSubstitutions($args, $hasSubs, array(
+            $args = $this->processSubstitutions($args, array(
                 'replace' => true,
                 'style' => false,
             ));
-            if ($hasSubs) {
-                $args = array( \implode('', $args) );
-            }
         }
         return $this->buildArgString($args);
     }
@@ -408,11 +404,12 @@ class Text extends Base
     /**
      * Cooerce value to string
      *
-     * @param mixed $val value
+     * @param mixed $val  value
+     * @param array $opts $options passed to dump
      *
      * @return string
      */
-    protected function substitutionAsString($val)
+    protected function substitutionAsString($val, $opts)
     {
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
@@ -423,7 +420,7 @@ class Text extends Base
             $toStr = AbstractObject::toString($val);
             $val = $toStr ?: $val['className'];
         } else {
-            $val = $this->dump($val, false);
+            $val = $this->dump($val, $opts);
         }
         return $val;
     }

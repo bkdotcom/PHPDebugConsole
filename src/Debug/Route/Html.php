@@ -160,7 +160,7 @@ class Html extends Base
                         'class' => 'error-summary',
                     ),
                     'dismissible' => false,
-                    'level' => 'danger',
+                    'level' => 'error',
                     'sanitize' => false,
                 )
             ));

@@ -286,6 +286,70 @@ class Utilities
     }
 
     /**
+     * Format duration
+     *
+     * @param float        $duration  duration in seconds
+     * @param string       $format    DateInterval format string, or 'us', 'ms', 's'
+     * @param integer|null $precision decimal precision
+     *
+     * @return string
+     */
+    public static function formatDuration($duration, $format = 'auto', $precision = 4)
+    {
+        if ($format == 'auto') {
+            if ($duration < 1/1000) {
+                $format = 'us';
+            } elseif ($duration < 1) {
+                $format = 'ms';
+            } elseif ($duration < 60) {
+                $format = 's';
+            } elseif ($duration < 3600) {
+                $format = '%im %Ss'; // M:SS
+            } else {
+                $format = '%hh %Im %Ss'; // H:MM:SS
+            }
+        }
+        if (\preg_match('/%[YyMmDdaHhIiSsFf]/', $format)) {
+            // php < 7.1 DateInterval doesn't support fraction..   we'll work around that
+            $hours = \floor($duration / 3600);
+            $sec = $duration - $hours * 3600;
+            $min = \floor($sec / 60);
+            $sec = $sec - $min * 60;
+            $sec = \round($sec, 6);
+            if (\preg_match('/%[Ff]/', $format)) {
+                $secWhole = \floor($sec);
+                $secFraction = $secWhole - $sec;
+                $sec = $secWhole;
+                $micros = $secFraction * 1000000;
+                $format = \strtr($format, array(
+                    '%F' => \sprintf('%06d', $micros),  // Microseconds: 6 digits with leading 0
+                    '%f' => $micros,                    // Microseconds: w/o leading zeros
+                ));
+            }
+            $format = \preg_replace('/%[Ss]/', $sec, $format);
+            $dateInterval = new \DateInterval('PT0S');
+            $dateInterval->h = $hours;
+            $dateInterval->i = $min;
+            $dateInterval->sec = $sec;
+            return $dateInterval->format($format);
+        }
+        if ($format == 'us') {
+            $val = $duration * 1000000;
+            $unit = 'μs';
+        } elseif ($format == 'ms') {
+            $val = $duration * 1000;
+            $unit = 'ms';
+        } else {
+            $val = $duration;
+            $unit = 'sec';
+        }
+        if ($precision) {
+            $val = \round($val, $precision);
+        }
+        return $val.' '.$unit;
+    }
+
+    /**
      * Get all HTTP header key/values as an associative array for the current request.
      *
      * @return string[string] The HTTP header key/value pairs.

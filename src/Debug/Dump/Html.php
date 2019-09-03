@@ -545,16 +545,17 @@ class Html extends Base
             if ($meta['errorCat']) {
                 $attribs['class'] .= ' error-'.$meta['errorCat'];
             }
-            if (\count($args) > 1 && \is_string($args[0])) {
-                $hasSubs = false;
-                $args = $this->processSubstitutions($args, $hasSubs, array(
+            $argCount = \count($args);
+            if ($argCount > 1 && \is_string($args[0])) {
+                $args[0] = $this->dump($args[0], array(
+                    'sanitize' => $meta['sanitizeFirst'],
+                ), false);
+                $args = $this->processSubstitutions($args, array(
                     'replace' => true,
+                    'sanitize' => $meta['sanitize'],
                     'style' => true,
                 ));
-                if ($hasSubs) {
-                    $meta['sanitizeFirst'] = false;
-                    $args = array( \implode('', $args) );
-                }
+                $meta['sanitizeFirst'] = false;
             }
         }
         return $this->debug->utilities->buildTag(
@@ -691,17 +692,18 @@ class Html extends Base
     /**
      * Coerce value to string
      *
-     * @param mixed $val value
+     * @param mixed $val  value
+     * @param array $opts $options passed to dump
      *
      * @return string
      */
-    protected function substitutionAsString($val)
+    protected function substitutionAsString($val, $opts)
     {
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
         if ($type == 'string') {
             // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
-            $val = $this->dump($val, true, false);
+            $val = $this->dump($val, $opts, false);
         } elseif ($type == 'array') {
             $count = \count($val);
             $val = '<span class="t_keyword">array</span>'
@@ -709,7 +711,7 @@ class Html extends Base
         } elseif ($type == 'object') {
             $toStr = AbstractObject::toString($val);
             if ($toStr) {
-                $val = $this->dump($toStr, true, false);
+                $val = $this->dump($toStr, $opts, false);
             } else {
                 $val = $this->markupIdentifier($val['className']);
             }

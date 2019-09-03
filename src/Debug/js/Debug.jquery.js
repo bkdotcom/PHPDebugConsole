@@ -932,15 +932,14 @@
 			}
 			unhiding = show && $node.is(".filter-hidden");
 			$node.toggleClass("filter-hidden", !show);
-			if (unhiding) {
+			if (unhiding && $node.is(":visible")) {
 				$node.debugEnhance();
 			}
 		});
 		/*
 			Collapsed groups may get filter-hidden..
-			this may result in exposing entries in that group that have yet to be enhanced
 		*/
-		$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body").debugEnhance();
+		// $root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body").debugEnhance();
 	}
 
 	function updateFilterStatus($debugRoot) {

@@ -154,10 +154,10 @@ class Firephp extends Base
     {
         $level = $logEntry->getMeta('level');
         $levelToMethod = array(
-            'danger' => 'error',
+            'error' => 'error',
             'info' => 'info',
             'success' => 'info',
-            'warning' => 'warn',
+            'warn' => 'warn',
         );
         $method = isset($levelToMethod[$level])
             ? $levelToMethod[$level]
@@ -218,7 +218,7 @@ class Firephp extends Base
         $msg = \json_encode(array(
             $meta,
             $value,
-        ), JSON_UNESCAPED_SLASHES);
+        ), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
         $structureIndex = 1;    // refers to X-Wf-1-Structure-1
         $parts = \explode("\n", \rtrim(\chunk_split($msg, 5000, "\n")));
         $numParts = \count($parts);

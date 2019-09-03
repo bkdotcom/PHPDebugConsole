@@ -161,7 +161,7 @@ class MethodTest extends DebugTestFramework
                     array($message),
                     array(
                         'dismissible' => false,
-                        'level' => 'danger',
+                        'level' => 'error',
                     ),
                 ),
                 'chromeLogger' => array(
@@ -172,8 +172,8 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'html' => '<div class="alert-danger m_alert" role="alert">'.$messageEscaped.'</div>',
-                'text' => '》[Alert ⦻ danger] '.$message.'《',
+                'html' => '<div class="alert-error m_alert" role="alert">'.$messageEscaped.'</div>',
+                'text' => '》[Alert ⦻ error] '.$message.'《',
                 'script' => str_replace('%c', '%%c', 'console.log('.json_encode('%c'.$message, JSON_UNESCAPED_SLASHES).',"padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"ERROR"},'.json_encode($message, JSON_UNESCAPED_SLASHES).']|',
             )
@@ -1402,7 +1402,7 @@ class MethodTest extends DebugTestFramework
                     <li class="m_log"><span class="no-quotes t_string">in inner</span></li>
                 </ul>
             </li>
-            <li class="m_info"><span class="no-quotes t_string">Built In %f sec</span></li>
+            <li class="m_info"><span class="no-quotes t_string">Built In %f ms</span></li>
             <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
         </ul>
         <ul class="debug-log group-body"></ul>
@@ -1595,205 +1595,6 @@ EOD;
         );
     }
 
-
-    public function providerTestLogSubstitution()
-    {
-        $location = 'http://localhost/?foo=bar&jim=slim';
-        $datetime = new \DateTime();
-        $binary = base64_decode('j/v9wNrF5i1abMXFW/4vVw==');
-        $binaryStr = \trim(\chunk_split(\bin2hex($binary), 2, ' '));
-        $time = time();
-        $timeStr = date('Y-m-d H:i:s', $time);
-        return array(
-            array(
-                'log',
-                array(
-                    '%cLocation:%c <a href="%s">%s</a>',
-                    'font-weight:bold;',
-                    '',
-                    $location,
-                    $location,
-                    'ignored',
-                    Debug::_meta('sanitize', false),
-                ),
-                array(
-                    'entry' => array(
-                        'log',
-                        '{{args}}',
-                        array(
-                            'sanitize' => false,
-                        ),
-                    ),
-                    'chromeLogger' => array(
-                        '{{args}}',
-                        null,
-                        '',
-                    ),
-                    'firephp' => 'X-Wf-1-1-1-19: %d|[{"Label":{{label}},"Type":"LOG"},{{args}}]|',
-                    'html' => '<li class="m_log"><span class="no-quotes t_string"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></li>',
-                    'script' => 'console.log({{args}});',
-                    'text' => 'Location: <a href="http://localhost/?foo=bar&jim=slim">http://localhost/?foo=bar&jim=slim</a>',
-                ),
-            ),
-            array(
-                'log',
-                array(
-                    '%s %s %s %s %s',
-                    array(0),
-                    array(),
-                    null,
-                    true,
-                    false,
-                ),
-                array(
-                    'chromeLogger' => array(
-                        '{{args}}',
-                        null,
-                        '',
-                    ),
-                    'firephp' => 'X-Wf-1-1-1-19: %d|[{"Label":{{label}},"Type":"LOG"},{{args}}]|',
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">'
-                        .'<span class="t_keyword">array</span><span class="t_punct">(</span>1<span class="t_punct">)</span>'
-                        .' <span class="t_keyword">array</span><span class="t_punct">(</span>0<span class="t_punct">)</span>'
-                        .' <span class="t_null">null</span>'
-                        .' <span class="t_bool true">true</span>'
-                        .' <span class="false t_bool">false</span>'
-                        .'</span></li>',
-                    'script' => 'console.log({{args}});',
-                    'text' => 'array(1) array(0) null true false',
-                ),
-            ),
-            array(
-                'log',
-                array(
-                    '%s %s %s %s %s',
-                    123.45,
-                    42,
-                    $time,
-                    '<i>boring</i>',
-                    $binary, // binary
-                ),
-                array(
-                    'entry' => array(
-                        'log',
-                        '{{args}}',
-                        array(),
-                    ),
-                    'chromeLogger' => array(
-                        array(
-                            '%s %s %s %s %s',
-                            123.45,
-                            42,
-                            $time.' ('.$timeStr.')',
-                            '<i>boring</i>',
-                            $binaryStr, // binary
-                        ),
-                        null,
-                        '',
-                    ),
-                    'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":{{label}},"Type":"LOG"},[123.45,42,"'.$time.' ('.$timeStr.')","<i>boring</i>","'.$binaryStr.'"]]|',
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">'
-                        .'<span class="t_float">123.45</span>'
-                        .' <span class="t_int">42</span>'
-                        .' <span class="t_int timestamp" title="'.$timeStr.'">'.$time.'</span>'
-                        .' &lt;i&gt;boring&lt;/i&gt;'
-                        .' <span class="binary">'.$binaryStr.'</span>'
-                        .'</span></li>',
-                    'script' => 'console.log("%%s %%s %%s %%s %%s",123.45,42,"'.$time.' ('.$timeStr.')","<i>boring</i>","'.$binaryStr.'");',
-                    'text' => '123.45 42 📅 '.$time.' ('.$timeStr.') <i>boring</i> '.$binaryStr,
-                ),
-            ),
-            /*
-                // 'object' => $test,
-                // 'object2' => $test2,
-                'resource closed' => $resource,
-                'resource open' => $resource2,
-                'string numeric' => '42',
-                'string timestamp' => (string) time(),
-            */
-            array(
-                'log',
-                array(
-                    '%s %s %s',
-                    array($this, __FUNCTION__), // callable
-                    function ($foo, $bar) {
-                        return $foo.$bar;
-                    },
-                    $datetime,
-                ),
-                array(
-                    'chromeLogger' => array(
-                        array(
-                            '%s %s %s',
-                            'callable: MethodTest::providerTestLogSubstitution',
-                            'Closure',
-                            $datetime->format(\DateTime::ISO8601),
-                        ),
-                        null,
-                        '',
-                    ),
-                    'firephp' => 'X-Wf-1-1-1-19: %d|[{"Label":{{label}},"Type":"LOG"},['
-                        .'"callable: MethodTest::providerTestLogSubstitution",'
-                        .'"Closure",'
-                        .'"'.$datetime->format(\DateTime::ISO8601).'"'
-                        .']]|',
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">'
-                        .'<span class="t_callable"><span class="t_type">callable</span> <span class="classname">MethodTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestLogSubstitution</span></span>'
-                        .' <span class="classname">Closure</span>'
-                        .' '.$datetime->format(\DateTime::ISO8601)
-                        .'</span></li>',
-                    'script' => 'console.log("%%s %%s %%s","callable: MethodTest::providerTestLogSubstitution","Closure","'.$datetime->format(\DateTime::ISO8601).'");',
-                    'text' => 'callable: MethodTest::providerTestLogSubstitution Closure '.$datetime->format(\DateTime::ISO8601),
-                )
-            ),
-        );
-    }
-
-    /**
-     * Test
-     *
-     * @dataProvider providerTestLogSubstitution
-     *
-     * @return void
-     */
-    public function testLogSubstitution($method, $args, $tests)
-    {
-        $argsSansMeta = array();
-        foreach ($args as $arg) {
-            $isMeta = \is_array($arg) && isset($arg['debug']) && $arg['debug'] === Debug::META;
-            if (!$isMeta) {
-                $argsSansMeta[] = $arg;
-            }
-        }
-        $replace = array(
-            '%c' => '%%c',
-            '%s' => '%%s',
-        );
-        $label = json_encode($argsSansMeta[0], JSON_UNESCAPED_SLASHES);
-        $label = strtr($label, $replace);
-        foreach ($tests as $name => $test) {
-            if (is_array($test)) {
-                foreach ($test as $i => $val) {
-                    if ($val === '{{args}}') {
-                        $tests[$name][$i] = $argsSansMeta;
-                    }
-                }
-            } else {
-                $test = str_replace('{{label}}', $label, $test);
-                if (strpos($test, '{{args}}') !== false) {
-                    $argStr = $name == 'firephp'
-                        ? json_encode(array_slice($argsSansMeta, 1), JSON_UNESCAPED_SLASHES)
-                        : trim(json_encode($argsSansMeta, JSON_UNESCAPED_SLASHES), '[]');
-                    $argStr = strtr($argStr, $replace);
-                    $test = str_replace('{{args}}', $argStr, $test);
-                }
-                $tests[$name] = $test;
-                // $this->stderr('test', $test);
-            }
-        }
-        $this->testMethod($method, $args, $tests);
-    }
-
     /*
         table() method tested in MethodTableTest
     */
@@ -1833,28 +1634,28 @@ EOD;
                 'entry' => json_encode(array(
                     'time',
                     array(
-                        'time: %f sec',
+                        'time: %f μs',
                     ),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'time: %f sec',
+                        'time: %f μs',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">time: %f sec</span></li>',
-                'script' => 'console.log("time: %f sec");',
-                'text' => '⏱ time: %f sec',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f μs"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">time: %f μs</span></li>',
+                'script' => 'console.log("time: %f μs");',
+                'text' => '⏱ time: %f μs',
             )
         );
         $this->testMethod(
             'timeEnd',
             array(
                 'my label',
-                true,
+                $this->debug->meta('silent'),
             ),
             array(
                 'return' => '%f',
@@ -1870,50 +1671,57 @@ EOD;
                 'entry' => json_encode(array(
                     'time',
                     array(
-                        'my label: %f sec',
+                        'my label: %f ms',
                     ),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'my label: %f sec',
+                        'my label: %f ms',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f sec</span></li>',
-                'script' => 'console.log("my label: %f sec");',
-                'text' => '⏱ my label: %f sec',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f ms"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f ms</span></li>',
+                'script' => 'console.log("my label: %f ms");',
+                'text' => '⏱ my label: %f ms',
             )
         );
         $this->testMethod(
             'timeEnd',
             array(
                 'my label',
-                'blah%labelblah%timeblah',
+                $this->debug->meta('template', 'blah%labelblah%timeblah'),
             ),
             array(
+                /*
                 'entry' => function ($logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
-                        array("blahmy labelblah%fblah"),
+                        array("blahmy labelblah%f msblah"),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'chromeLogger not same');
                 },
+                */
+                'entry' => json_encode(array(
+                    'time',
+                    array("blahmy labelblah%f msblah"),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'blahmy labelblah%fblah',
+                        'blahmy labelblah%f msblah',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%fblah</span></li>',
-                'script' => 'console.log("blahmy labelblah%fblah");',
-                'text' => '⏱ blahmy labelblah%fblah',
+                'firephp' => 'X-Wf-1-1-1-22: %d|[{"Type":"LOG"},"blahmy labelblah%f msblah"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f msblah</span></li>',
+                'script' => 'console.log("blahmy labelblah%f msblah");',
+                'text' => '⏱ blahmy labelblah%f msblah',
             )
         );
 
@@ -1948,26 +1756,33 @@ EOD;
                     // test stack is still 1
                     $this->assertCount(1, $this->debug->getData('timers/stack'));
                 },
+                /*
                 'entry' => function ($logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
-                        array('time: %f sec'),
+                        array('time: %f μs'),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
+                */
+                'entry' => json_encode(array(
+                    'time',
+                    array('time: %f μs'),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'time: %f sec',
+                        'time: %f μs',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">time: %f sec</span></li>',
-                'script' => 'console.log("time: %f sec");',
-                'text' => '⏱ time: %f sec',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f μs"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">time: %f μs</span></li>',
+                'script' => 'console.log("time: %f μs");',
+                'text' => '⏱ time: %f μs',
             )
         );
 
@@ -1978,21 +1793,21 @@ EOD;
                 'entry' => json_encode(array(
                     'time',
                     array(
-                        'my label: %f sec',
+                        'my label: %f ms',
                     ),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'my label: %f sec',
+                        'my label: %f ms',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f sec</span></li>',
-                'script' => 'console.log("my label: %f sec");',
-                'text' => '⏱ my label: %f sec',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f ms"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f ms</span></li>',
+                'script' => 'console.log("my label: %f ms");',
+                'text' => '⏱ my label: %f ms',
             )
         );
 
@@ -2000,7 +1815,7 @@ EOD;
             'timeGet',
             array(
                 'my label',
-                true,
+                $this->debug->meta('silent'),
             ),
             array(
                 'notLogged' => true,  // not logged because 2nd param = true
@@ -2018,29 +1833,36 @@ EOD;
             'timeGet',
             array(
                 'my label',
-                'blah%labelblah%timeblah',
+                $this->debug->meta('template', 'blah%labelblah%timeblah'),
             ),
             array(
+                /*
                 'entry' => function ($logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
-                        array("blahmy labelblah%fblah"),
+                        array("blahmy labelblah%f msblah"),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'entry as expected');
                 },
+                */
+                'entry' => json_encode(array(
+                    'time',
+                    array("blahmy labelblah%f msblah"),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'blahmy labelblah%fblah',
+                        'blahmy labelblah%f msblah',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%fblah</span></li>',
-                'script' => 'console.log("blahmy labelblah%fblah");',
-                'text' => '⏱ blahmy labelblah%fblah',
+                'firephp' => 'X-Wf-1-1-1-22: %d|[{"Type":"LOG"},"blahmy labelblah%f msblah"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f msblah</span></li>',
+                'script' => 'console.log("blahmy labelblah%f msblah");',
+                'text' => '⏱ blahmy labelblah%f msblah',
             )
         );
 
@@ -2066,27 +1888,34 @@ EOD;
             'timeLog',
             array(),
             array(
+                /*
                 'entry' => function ($logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
-                        array('time: ', '%f sec'),
+                        array('time: ', '%f μs'),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
+                */
+                'entry' => json_encode(array(
+                    'timeLog',
+                    array('time: ', '%f μs'),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
                         'time: ',
-                        '%f sec',
+                        '%f μs',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-166: 46|[{"Label":"time: ","Type":"LOG"},"%f sec"]|',
-                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">time: </span><span class="t_string">%f sec</span></li>',
-                'script' => 'console.log("time: ","%f sec");',
-                'text' => '⏱ time: "%f sec"',
+                'firephp' => 'X-Wf-1-1-1-166: %d|[{"Label":"time: ","Type":"LOG"},"%f μs"]|',
+                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">time: </span><span class="t_string">%f μs</span></li>',
+                'script' => 'console.log("time: ","%f μs");',
+                'text' => '⏱ time: "%f μs"',
             )
         );
 
@@ -2094,31 +1923,38 @@ EOD;
             'timeLog',
             array('my label', array('foo'=>'bar')),
             array(
+                /*
                 'entry' => function ($logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
-                        array('my label: ', '%f sec', array('foo'=>'bar')),
+                        array('my label: ', '%f ms', array('foo'=>'bar')),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
+                */
+                'entry' => json_encode(array(
+                    'timeLog',
+                    array('my label: ', '%f ms', array('foo'=>'bar')),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
                         'my label: ',
-                        '%f sec',
+                        '%f ms',
                         array('foo'=>'bar'),
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-169: 66|[{"Label":"my label: ","Type":"LOG"},["%f sec",{"foo":"bar"}]]|',
-                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">my label: </span><span class="t_string">%f sec</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                'firephp' => 'X-Wf-1-1-1-169: %d|[{"Label":"my label: ","Type":"LOG"},["%f ms",{"foo":"bar"}]]|',
+                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">my label: </span><span class="t_string">%f ms</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                     <span class="array-inner">
                     <span class="key-value"><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></span>
                     </span><span class="t_punct">)</span></span></li>',
-                'script' => 'console.log("my label: ","%f sec",{"foo":"bar"});',
-                'text' => '⏱ my label: "%f sec", array(
+                'script' => 'console.log("my label: ","%f ms",{"foo":"bar"});',
+                'text' => '⏱ my label: "%f ms", array(
                     [foo] => "bar"
                     )',
             )
@@ -2128,6 +1964,7 @@ EOD;
             'timeLog',
             array('bogus'),
             array(
+                /*
                 'entry' => function ($logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
@@ -2137,6 +1974,12 @@ EOD;
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
+                */
+                'entry' => json_encode(array(
+                    'timeLog',
+                    array('Timer \'bogus\' does not exist'),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array('Timer \'bogus\' does not exist'),
                     null,

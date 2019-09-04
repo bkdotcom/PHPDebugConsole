@@ -1070,7 +1070,7 @@ class Debug
         } elseif (isset($this->data['timers']['labels'][$label])) {
             list($elapsed, $microT) = $this->data['timers']['labels'][$label];
         } else {
-            if ($logEntry->getMeta('silent') == false) {
+            if ($logEntry->getMeta('silent') === false) {
                 $this->appendLog(new LogEntry(
                     $this,
                     __FUNCTION__,

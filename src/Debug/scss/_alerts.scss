@@ -1,9 +1,17 @@
+.alert,
 .m_alert {
-	font-size: 125%;
 	padding: .66em;
 	margin-bottom: 10px;
-	border: 1px solid transparent;
 	border-radius: 4px;
+	border: 1px solid transparent;
+}
+.m_alert {
+	font-size: 125%;
+	&.error-summary {
+		.filter-hidden + h3 {
+			margin-top: 0;
+		}
+	}
 	&.alert-dismissible {
 		padding-right: 35px;
 		.close {

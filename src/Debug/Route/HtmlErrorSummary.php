@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Route;
 
+use bdk\Debug\LogEntry;
 use bdk\ErrorHandler;
 use bdk\Debug\Route\Html as RouteHtml;
 
@@ -41,15 +42,37 @@ class HtmlErrorSummary
      *
      * @param array $stats error statistics
      *
-     * @return string html
+     * @return LogEntry
      */
     public function build($stats)
     {
         $this->stats = $stats;
-        return ''
+        $summary = ''
             .$this->buildFatal()
             .$this->buildInConsole()
             .$this->buildNotInConsole();
+        if ($summary) {
+            $classes = \array_keys(\array_filter(array(
+                'error-summary' => true,
+                'have-fatal' => isset($this->stats['counts']['fatal']),
+            )));
+            $summary = new LogEntry(
+                $this->routeHtml->debug->getChannel('phpError'),
+                'alert',
+                array(
+                    $summary
+                ),
+                array(
+                    'attribs' => array(
+                        'class' => \implode(' ', $classes),
+                    ),
+                    'dismissible' => false,
+                    'level' => 'error',
+                    'sanitize' => false,
+                )
+            );
+        }
+        return $summary;
     }
 
     /**
@@ -66,8 +89,9 @@ class HtmlErrorSummary
         $lastError = $this->errorHandler->get('lastError');
         $isHtml = $lastError['isHtml'];
         $backtrace = $lastError['backtrace'];
-        $html = '<h3>Fatal Error</h3>';
-        $html .= '<ul class="list-unstyled">';
+        $html = '<div class="error-fatal">'
+            .'<h3>Fatal Error</h3>'
+            .'<ul class="list-unstyled">';
         if (\count($backtrace) > 1) {
             // more than one trace frame
             $table = $this->routeHtml->dump->table->build(
@@ -94,7 +118,8 @@ class HtmlErrorSummary
         if (!\extension_loaded('xdebug')) {
             $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
         }
-        $html .= '</ul>';
+        $html .= '</ul>'
+            .'</div>';
         return $html;
     }
 
@@ -226,10 +251,7 @@ class HtmlErrorSummary
         }
         $count = \count($lis);
         $header = \sprintf(
-            '%s %s captured while not collecting debug log',
-            $this->stats['inConsole'] || isset($this->stats['counts']['fatal'])
-                ? 'Additionally, there'
-                : 'There',
+            'There %s captured while not collecting debug log',
             $count === 1
                 ? 'was 1 error'
                 : 'were '.$count.' errors'

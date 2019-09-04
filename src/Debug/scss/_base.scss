@@ -81,7 +81,7 @@ fieldset {
 }
 h3 {
 	margin-top: .66em;
-	margin-bottom: 0;
+	margin-bottom: .5em;
 	font-size: 1.15em;
 	font-weight: bold;
 	&:first-child { margin-top:0; }
@@ -126,6 +126,10 @@ pre {
 ul {
 	margin-top: 0;
 	margin-bottom: 0;
+	&.list-unstyled > li {
+		text-indent: -1em;
+		padding-left: 1em;
+	}
 }
 .close {
 	opacity: 1;

@@ -149,21 +149,7 @@ class Html extends Base
         // this could go in an extended processAlerts method
         $errorSummary = $this->errorSummary->build($this->debug->errorStats());
         if ($errorSummary) {
-            \array_unshift($this->data['alerts'], new LogEntry(
-                $this->debug,
-                'alert',
-                array(
-                    $errorSummary
-                ),
-                array(
-                    'attribs' => array(
-                        'class' => 'error-summary',
-                    ),
-                    'dismissible' => false,
-                    'level' => 'error',
-                    'sanitize' => false,
-                )
-            ));
+            \array_unshift($this->data['alerts'], $errorSummary);
         }
         $lftDefault = \strtr(\ini_get('xdebug.file_link_format'), array('%f'=>'%file','%l'=>'%line'));
         $str = '<div'.$this->debug->utilities->buildAttribString(array(

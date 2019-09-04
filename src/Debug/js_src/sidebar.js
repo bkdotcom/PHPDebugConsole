@@ -63,11 +63,13 @@ export function init($debugRoot, conf) {
 		var $input = $(this),
 			$toggle = $input.closest(".toggle"),
 			$nested = $toggle.next("ul").find(".toggle"),
-			isActive = $input.is(":checked");
+			isActive = $input.is(":checked"),
+			$errorSummary = $(".m_alert.error-summary.have-fatal");
 		$toggle.toggleClass("active", isActive);
 		$nested.toggleClass("active", isActive);
 		if ($input.val() == "fatal") {
-			$(".m_alert.error-summary").toggle(isActive);
+			$errorSummary.find(".error-fatal").toggleClass("filter-hidden", !isActive);
+			$errorSummary.toggleClass("filter-hidden", $errorSummary.children().not(".filter-hidden").length == 0);
 		}
 	});
 }
@@ -187,7 +189,7 @@ function moveChannelToggles($node) {
 function phpErrorToggles($node) {
 	var $togglesUl = $node.find(".debug-sidebar .php-errors ul"),
 		$errorSummary = $node.closest(".debug").find(".m_alert.error-summary"),
-		haveFatal = $node.closest(".debug").find(".m_error.error-fatal").length > 0;
+		haveFatal = $errorSummary.hasClass("have-fatal");
 	if (haveFatal) {
 		$togglesUl.append('<li><label class="toggle active">\
 			<input type="checkbox" checked data-toggle="error" value="fatal" />fatal <span class="badge">1</span>\
@@ -206,6 +208,9 @@ function phpErrorToggles($node) {
 		);
 		$li.remove();
 	});
+	$errorSummary.find("ul").filter(function(){
+		return $(this).children().length === 0;
+	}).remove();
 	if ($togglesUl.children().length === 0) {
 		$togglesUl.parent().hide();
 	}

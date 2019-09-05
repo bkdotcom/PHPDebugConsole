@@ -4,6 +4,7 @@
  */
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
 
 /**
  * PHPUnit tests for Debug class
@@ -113,15 +114,20 @@ class InternalTest extends DebugTestFramework
         $this->assertEquals(
             array(
                 'log',
-                array('php://input (prettified)', new \bdk\Debug\Abstraction\Abstraction(array(
-                    'type' => 'string',
-                    'attribs' => array(
-                        'class' => 'language-json prism',
-                    ),
-                    'addQuotes' => false,
-                    'visualWhiteSpace' => false,
-                    'value' => json_encode(json_decode($input), JSON_PRETTY_PRINT),
-                ))),
+                array(
+                    'php://input %c%s',
+                    'font-style: italic; opacity: 0.8;',
+                    '(prettified)',
+                    new Abstraction(array(
+                        'type' => 'string',
+                        'attribs' => array(
+                            'class' => 'language-json prism',
+                        ),
+                        'addQuotes' => false,
+                        'visualWhiteSpace' => false,
+                        'value' => json_encode(json_decode($input), JSON_PRETTY_PRINT),
+                    ))
+                ),
                 array()
             ),
             $this->logEntryToArray($this->debug->getData('log/0'))
@@ -144,15 +150,20 @@ class InternalTest extends DebugTestFramework
         $this->assertEquals(
             array(
                 'log',
-                array('php://input (prettified)', new \bdk\Debug\Abstraction\Abstraction(array(
-                    'type' => 'string',
-                    'attribs' => array(
-                        'class' => 'language-json prism',
-                    ),
-                    'addQuotes' => false,
-                    'visualWhiteSpace' => false,
-                    'value' => json_encode(json_decode($input), JSON_PRETTY_PRINT),
-                ))),
+                array(
+                    'php://input %c%s',
+                    'font-style: italic; opacity: 0.8;',
+                    '(prettified)',
+                    new Abstraction(array(
+                        'type' => 'string',
+                        'attribs' => array(
+                            'class' => 'language-json prism',
+                        ),
+                        'addQuotes' => false,
+                        'visualWhiteSpace' => false,
+                        'value' => json_encode(json_decode($input), JSON_PRETTY_PRINT),
+                    ))
+                ),
                 array(),
             ),
             $this->logEntryToArray($this->debug->getData('log/1'))
@@ -197,7 +208,16 @@ class InternalTest extends DebugTestFramework
         $inputProp->setValue($onBootstrap, $input);
         $logPostMeth->invoke($onBootstrap);
         $this->assertSame(
-            array('log', array('php://input', $input), array()),
+            array(
+                'log',
+                array(
+                    'php://input %c%s',
+                    'font-style: italic; opacity: 0.8;',
+                    '',
+                    $input
+                ),
+                array()
+            ),
             $this->logEntryToArray($this->debug->getData('log/0'))
         );
         $this->debug->setData('log', array());

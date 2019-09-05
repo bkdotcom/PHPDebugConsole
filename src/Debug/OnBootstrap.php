@@ -16,7 +16,6 @@ namespace bdk\Debug;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Plugin\Prism;
 use bdk\PubSub\Event;
 
 /**
@@ -109,29 +108,15 @@ class OnBootstrap
      */
     private function logInput($contentType = null)
     {
-        if (\preg_match('#\b(xml|json)\b#', $contentType, $matches)) {
-            $this->debug->addPlugin(new Prism());
-            $type = $matches[1];
-            if ($type === 'json') {
-                self::$input = $this->debug->utilities->prettyJson(self::$input);
-            } elseif ($type === 'xml') {
-                self::$input = $this->debug->utilities->prettyXml(self::$input);
-            }
-            $this->debug->log(
-                'php://input (prettified)',
-                new Abstraction(array(
-                    'type' => 'string',
-                    'attribs' => array(
-                        'class' => 'language-'.$type.' prism',
-                    ),
-                    'addQuotes' => false,
-                    'visualWhiteSpace' => false,
-                    'value' => self::$input,
-                ))
-            );
-        } else {
-            $this->debug->log('php://input', self::$input);
-        }
+        $input = $this->debug->prettify(self::$input, $contentType);
+        $this->debug->log(
+            'php://input %c%s',
+            'font-style: italic; opacity: 0.8;',
+            $input instanceof Abstraction
+                ? '(prettified)'
+                : '',
+            $input
+        );
     }
 
     /**

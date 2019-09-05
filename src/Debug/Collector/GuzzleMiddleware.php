@@ -14,7 +14,6 @@ namespace bdk\Debug\Collector;
 
 use Exception;
 use bdk\Debug;
-use bdk\Debug\Plugin\Prism;
 use bdk\Debug\Abstraction\Abstraction;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -37,8 +36,6 @@ class GuzzleMiddleware
         'prettyRequestBody' => true,
         'prettyResponseBody' => true,
     );
-
-    private $prismAdded = false;
 
     /**
      * Constructor
@@ -203,30 +200,12 @@ class GuzzleMiddleware
         $prettify = $msg instanceof RequestInterface
             ? $this->cfg['prettyRequestBody']
             : $this->cfg['prettyResponseBody'];
-        if ($prettify && \preg_match('#\b(html|json|xml)\b#', $contentType, $matches)) {
-            $lang = $type = $matches[1];
-            if ($type === 'html') {
-                $lang = 'markup';
-            } elseif ($type === 'json') {
-                $body = $this->debug->utilities->prettyJson($body);
-            } elseif ($type === 'xml') {
-                $body = $this->debug->utilities->prettyXml($body);
-            }
-            if (!$this->prismAdded) {
-                $this->debug->addPlugin(new Prism());
-                $this->prismAdded = true;
-            }
-            return new Abstraction(array(
-                'type' => 'string',
-                'attribs' => array(
-                    'class' => 'language-'.$lang.' prism',
-                ),
-                'addQuotes' => false,
-                'visualWhiteSpace' => false,
-                'value' => $body,
-            ));
-        } else {
-            return $body;
+        if (\strlen($body) === 0) {
+            return null;
         }
+        if ($prettify) {
+            return $this->debug->prettify($body, $contentType);
+        }
+        return $body;
     }
 }

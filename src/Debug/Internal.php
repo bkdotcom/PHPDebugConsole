@@ -15,6 +15,8 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Plugin\Prism;
 use bdk\Debug\Route\RouteInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -35,6 +37,7 @@ class Internal implements SubscriberInterface
     private $debug;
     private $inShutdown = false;
     private static $profilingEnabled = false;
+    private $prismAdded = false;
 
     /**
      * Constructor
@@ -406,6 +409,44 @@ class Internal implements SubscriberInterface
             echo $this->debug->output();
         }
         return;
+    }
+
+    /**
+     * Pretty a string if we know how
+     *
+     * Will return formatted Abstraction if html/json/xml
+     *
+     * @param string $str         String to prettify
+     * @param string $contentType Content / mime type
+     *
+     * @return Abstraction|string
+     */
+    public function prettify($str, $contentType)
+    {
+        if (\preg_match('#\b(html|json|xml)\b#', $contentType, $matches)) {
+            $lang = $type = $matches[1];
+            if ($type === 'html') {
+                $lang = 'markup';
+            } elseif ($type === 'json') {
+                $str = $this->debug->utilities->prettyJson($str);
+            } elseif ($type === 'xml') {
+                $str = $this->debug->utilities->prettyXml($str);
+            }
+            if (!$this->prismAdded) {
+                $this->debug->addPlugin(new Prism());
+                $this->prismAdded = true;
+            }
+            return new Abstraction(array(
+                'type' => 'string',
+                'attribs' => array(
+                    'class' => 'language-'.$lang.' prism',
+                ),
+                'addQuotes' => false,
+                'visualWhiteSpace' => false,
+                'value' => $str,
+            ));
+        }
+        return $str;
     }
 
     /**

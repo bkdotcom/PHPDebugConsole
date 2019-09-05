@@ -113,7 +113,7 @@ class InternalTest extends DebugTestFramework
         $this->assertEquals(
             array(
                 'log',
-                array('php://input (formatted)', new \bdk\Debug\Abstraction\Abstraction(array(
+                array('php://input (prettified)', new \bdk\Debug\Abstraction\Abstraction(array(
                     'type' => 'string',
                     'attribs' => array(
                         'class' => 'language-json prism',
@@ -144,7 +144,7 @@ class InternalTest extends DebugTestFramework
         $this->assertEquals(
             array(
                 'log',
-                array('php://input (formatted)', new \bdk\Debug\Abstraction\Abstraction(array(
+                array('php://input (prettified)', new \bdk\Debug\Abstraction\Abstraction(array(
                     'type' => 'string',
                     'attribs' => array(
                         'class' => 'language-json prism',

@@ -118,7 +118,7 @@ class OnBootstrap
                 self::$input = $this->debug->utilities->prettyXml(self::$input);
             }
             $this->debug->log(
-                'php://input (formatted)',
+                'php://input (prettified)',
                 new Abstraction(array(
                     'type' => 'string',
                     'attribs' => array(

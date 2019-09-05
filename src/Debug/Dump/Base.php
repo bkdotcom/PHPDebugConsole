@@ -623,10 +623,11 @@ class Base extends Component implements ConfigurableInterface
                 $replacement = $this->dump($arg);
             }
             $typeCounts[$type] ++;
-            $args[$index] = $arg;
             if ($options['replace']) {
                 unset($args[$index]);
                 return $replacement;
+            } else {
+                $args[$index] = $arg;
             }
             return $replace;
         }, $args[0]);

@@ -11,9 +11,11 @@
 
 namespace bdk\Debug\Collector;
 
-use bdk\Debug;
-use bdk\PubSub\Event;
+
 use Exception;
+use bdk\Debug;
+use bdk\Debug\Plugin\Prism;
+use bdk\Debug\Abstraction\Abstraction;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\MessageInterface;
@@ -29,15 +31,26 @@ class GuzzleMiddleware
     private $debug;
     private $icon = 'fa fa-exchange';
 
+    private $cfg = array(
+        'inclRequestBody' => false,
+        'inclResponseBody' => false,
+        'prettyRequestBody' => true,
+        'prettyResponseBody' => true,
+    );
+
+    private $prismAdded = false;
+
     /**
      * Constructor
      *
+     * @param array $cfg   configuration
      * @param Debug $debug (optional) Specify PHPDebugConsole instance
      *                       if not passed, will create Guzzle channnel on singleton instance
      *                       if root channel is specified, will create a Guzzle channel
      */
-    public function __construct(Debug $debug = null)
+    public function __construct($cfg = array(), Debug $debug = null)
     {
+        $this->cfg = \array_merge($this->cfg, $cfg);
         if (!$debug) {
             $debug = Debug::_getChannel('Guzzle', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -74,6 +87,17 @@ class GuzzleMiddleware
             $this->debug->meta('icon', $this->icon)
         );
         $this->debug->log('request headers', $this->buildHeadersString($request));
+        if ($this->cfg['inclRequestBody']) {
+            $body = $this->getBody($request);
+            $this->debug->log(
+                'request body %c%s',
+                'font-style: italic; opacity: 0.8;',
+                $body instanceof Abstraction
+                    ? '(prettified)'
+                    : '',
+                $body
+            );
+        }
         $func = $this->nextHandler;
         return $func($request, $options)->then(
             array($this, 'onFulfilled'),
@@ -91,6 +115,17 @@ class GuzzleMiddleware
     public function onFulfilled(ResponseInterface $response)
     {
         $this->debug->log('response headers', $this->buildHeadersString($response));
+        if ($this->cfg['inclResponseBody']) {
+            $body = $this->getBody($response);
+            $this->debug->log(
+                'response body %c%s',
+                'font-style: italic; opacity: 0.8;',
+                $body instanceof Abstraction
+                    ? '(prettified)'
+                    : '',
+                $body
+            );
+        }
         $this->debug->groupEnd();
         return $response;
     }
@@ -143,5 +178,55 @@ class GuzzleMiddleware
             $result .= $name . ': ' . \implode(', ', $values) . "\r\n";
         }
         return \rtrim($result);
+    }
+
+    /**
+     * Get the request/response body
+     *
+     * Will return formatted Abstraction if html/json/xml
+     *
+     * @param MessageInterface $msg request or response
+     *
+     * @return Abstraction|string|null
+     */
+    private function getBody(MessageInterface $msg)
+    {
+        $bodySize = $msg->getBody()->getSize();
+        if ($bodySize === 0) {
+            return null;
+        }
+        $contentType = $msg->getHeader('Content-Type');
+        $contentType = $contentType
+            ? $contentType[0]
+            : null;
+        $body = (string) $msg->getBody();
+        $prettify = $msg instanceof RequestInterface
+            ? $this->cfg['prettyRequestBody']
+            : $this->cfg['prettyResponseBody'];
+        if ($prettify && \preg_match('#\b(html|json|xml)\b#', $contentType, $matches)) {
+            $lang = $type = $matches[1];
+            if ($type === 'html') {
+                $lang = 'markup';
+            } elseif ($type === 'json') {
+                $body = $this->debug->utilities->prettyJson($body);
+            } elseif ($type === 'xml') {
+                $body = $this->debug->utilities->prettyXml($body);
+            }
+            if (!$this->prismAdded) {
+                $this->debug->addPlugin(new Prism());
+                $this->prismAdded = true;
+            }
+            return new Abstraction(array(
+                'type' => 'string',
+                'attribs' => array(
+                    'class' => 'language-'.$lang.' prism',
+                ),
+                'addQuotes' => false,
+                'visualWhiteSpace' => false,
+                'value' => $body,
+            ));
+        } else {
+            return $body;
+        }
     }
 }

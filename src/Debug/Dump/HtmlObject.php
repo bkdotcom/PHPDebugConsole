@@ -185,7 +185,7 @@ class HtmlObject
                 \implode(' ', \array_map(function ($modifier) {
                     return '<span class="t_modifier_'.$modifier.'">'.$modifier.'</span>';
                 }, $modifiers))
-                .' '.$this->html->markupType($info['return']['type'], 'span', array(
+                .' '.$this->html->markupType($info['return']['type'], array(
                     'title' => $info['return']['desc'],
                 ))
                 .' '.$this->debug->utilities->buildTag(

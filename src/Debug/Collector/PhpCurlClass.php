@@ -12,7 +12,10 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Plugin\Prism;
+use bdk\Debug\Abstraction\Abstraction;
 use Curl\Curl;
+use ReflectionMethod;
 
 /**
  * Extend php-curl-class to log each request
@@ -23,8 +26,16 @@ class PhpCurlClass extends Curl
 {
     private $debug;
     private $icon = 'fa fa-exchange';
-    private $optionsDebug = array();
+    private $optionsDebug = array(
+        'inclResponseBody' => false,
+        'prettyResponseBody' => true,
+        'inclInfo' => false,
+        'verbose' => false,
+    );
     private $optionsConstDebug = array();
+    private $prismAdded = false;
+
+    public $rawRequestHeaders = '';
 
     /**
      * @var array constant value to array of names
@@ -41,10 +52,7 @@ class PhpCurlClass extends Curl
      */
     public function __construct($options = array(), Debug $debug = null)
     {
-        $this->optionsDebug = \array_merge(array(
-            'inclInfo' => false,
-            'verbose' => false,
-        ), $options);
+        $this->optionsDebug = \array_merge($this->optionsDebug, $options);
         if (!$debug) {
             $debug = Debug::_getChannel('Curl', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -81,18 +89,49 @@ class PhpCurlClass extends Curl
         );
         $this->debug->log('options', $options);
         $return = parent::exec($ch);
+        $verboseOutput = null;
+        if (!empty($options['CURLOPT_VERBOSE'])) {
+            /*
+                CURLINFO_HEADER_OUT doesn't work with verbose...
+                but we can get the request headers from the verbose output
+            */
+            $pointer = $options['CURLOPT_STDERR'];
+            \rewind($pointer);
+            $verboseOutput = \stream_get_contents($pointer);
+            \preg_match_all('/> (.*?)\r\n\r\n/s', $verboseOutput, $matches);
+            $this->rawRequestHeaders = \end($matches[1]);
+            $reflectionMethod = new ReflectionMethod($this, 'parseRequestHeaders');
+            $reflectionMethod->setAccessible(true);
+            $this->requestHeaders = $reflectionMethod->invoke($this, $this->rawRequestHeaders);
+        } else {
+            $this->rawRequestHeaders = $this->getInfo(CURLINFO_HEADER_OUT);
+        }
         if ($this->error) {
             $this->debug->warn($this->errorCode, $this->errorMessage);
         }
-        $this->debug->log('request headers', $this->getInfo(CURLINFO_HEADER_OUT));
+        if ($this->effectiveUrl !== $options['CURLOPT_URL']) {
+            \preg_match_all('/^(Location:|URI: )(.*?)\r\n/im', $this->rawResponseHeaders, $matches);
+            $this->debug->log('Redirect(s)', $matches[2]);
+        }
+        $this->debug->log('request headers', $this->rawRequestHeaders);
+        // Curl provides no means to get the request body
         $this->debug->log('response headers', $this->rawResponseHeaders);
+        if ($this->optionsDebug['inclResponseBody']) {
+            $body = $this->getResponseBody();
+            $this->debug->log(
+                'response body %c%s',
+                'font-style: italic; opacity: 0.8;',
+                $body instanceof Abstraction
+                    ? '(prettified)'
+                    : '',
+                $body
+            );
+        }
         if ($this->optionsDebug['inclInfo']) {
             $this->debug->log('info', $this->getInfo());
         }
-        if ($this->optionsDebug['verbose']) {
-            $pointer = $options['CURLOPT_STDERR'];
-            \rewind($pointer);
-            $this->debug->log('verbose', \stream_get_contents($pointer));
+        if ($verboseOutput) {
+            $this->debug->log('verbose', $verboseOutput);
         }
         $this->debug->groupEnd();
         return $return;
@@ -171,5 +210,48 @@ class PhpCurlClass extends Curl
         }
         \ksort($opts);
         return $opts;
+    }
+
+    /**
+     * Get the response body
+     *
+     * Will return formatted Abstraction if html/json/xml
+     *
+     * @return Abstraction|string|null
+     */
+    private function getResponseBody()
+    {
+        // $bodySize = $msg->getBody()->getSize();
+        $body = $this->rawResponse;
+        if (\strlen($body) === 0) {
+            return null;
+        }
+        $contentType = $this->responseHeaders['content-type'];
+        $prettify = $this->optionsDebug['prettyResponseBody'];
+        if ($prettify && \preg_match('#\b(html|json|xml)\b#', $contentType, $matches)) {
+            $lang = $type = $matches[1];
+            if ($type === 'html') {
+                $lang = 'markup';
+            } elseif ($type === 'json') {
+                $body = $this->debug->utilities->prettyJson($body);
+            } elseif ($type === 'xml') {
+                $body = $this->debug->utilities->prettyXml($body);
+            }
+            if (!$this->prismAdded) {
+                $this->debug->addPlugin(new Prism());
+                $this->prismAdded = true;
+            }
+            return new Abstraction(array(
+                'type' => 'string',
+                'attribs' => array(
+                    'class' => 'language-'.$lang.' prism',
+                ),
+                'addQuotes' => false,
+                'visualWhiteSpace' => false,
+                'value' => $body,
+            ));
+        } else {
+            return $body;
+        }
     }
 }

@@ -989,14 +989,20 @@ class Debug
     }
 
     /**
-     * Behaves like a stopwatch.. returns running time
+     * Behaves like a stopwatch.. logs and returns running time
      *
      *    If label is passed, timer is "paused" (not ended/cleared)
      *    If label is not passed, timer is removed from timer stack
      *
+     * Meta options
+     *    precision: 4 (how many decimal places)
+     *    silent: (false) only return / don't log
+     *    template: '%label: %time'
+     *    unit: ('auto'), 'sec', 'ms', or 'us'
+     *
      * @param string $label unique label
      *
-     * @return float|string (numeric)
+     * @return float The duration (in sec).
      */
     public function timeEnd($label = null)
     {
@@ -1036,11 +1042,17 @@ class Debug
     /**
      * Log/get the running time without stopping/pausing the timer
      *
+     * Meta options
+     *    precision: 4 (how many decimal places)
+     *    silent: (false) only return / don't log
+     *    template: '%label: %time'
+     *    unit: ('auto'), 'sec', 'ms', or 'us'
+     *
      * This method does not have a web console API equivalent
      *
      * @param string $label (optional) unique label
      *
-     * @return float|string|false returns false if specified label does not exist
+     * @return float|false The duration (in sec).  `false` if specified label does not exist
      */
     public function timeGet($label = null)
     {

@@ -142,17 +142,24 @@ class Html extends Base
      * Markup type-hint / type declaration
      *
      * @param string $type    type declaration
-     * @param string $tagName ("span") html tag to use
      * @param array  $attribs (optional) additional html attributes
      *
      * @return string
      */
-    public function markupType($type, $tagName = 'span', $attribs = array())
+    public function markupType($type, $attribs = array())
     {
-        $keywords = array(
-            'array','bool','callable','float','int','iterable','null','object','self','string',
-            '$this','false','mixed','resource','static','true','void',
+        $phpPrimatives = array(
+            // scalar
+            'bool', 'int', 'float', 'string',
+            // compound
+            'array', 'object', 'callable', 'iterable',
+            // "special"
+            'resource', 'null',
         );
+        $typesOther = array(
+            '$this','false','mixed','static','self','true','void',
+        );
+        $typesPrimative = \array_merge($phpPrimatives, $typesOther);
         $types = \preg_split('#\s*\|\s*#', $type);
         foreach ($types as $i => $type) {
             $isArray = false;
@@ -160,21 +167,24 @@ class Html extends Base
                 $isArray = true;
                 $type = \substr($type, 0, -2);
             }
-            if (!\in_array($type, $keywords)) {
+            if (!\in_array($type, $typesPrimative)) {
                 $type = $this->markupIdentifier($type);
             }
             if ($isArray) {
                 $type .= '<span class="t_punct">[]</span>';
             }
-            $types[$i] = $type;
+            $types[$i] = '<span class="t_type">'.$type.'</span>';
         }
-        return $this->debug->utilities->buildtag(
-            $tagName,
-            \array_merge(array(
-                'class' => 't_type',
-            ), $attribs),
-            \implode('<span class="t_punct">|</span>', $types)
-        );
+        $types = \implode('<span class="t_punct">|</span>', $types);
+        $attribs = \array_filter($attribs);
+        if ($attribs) {
+            $type = $this->debug->utilities->buildtag(
+                'span',
+                $attribs,
+                $types
+            );
+        }
+        return $types;
     }
 
     /**

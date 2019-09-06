@@ -61,18 +61,10 @@ class Base extends Component implements ConfigurableInterface
         );
         if (\is_bool($opts)) {
             $keys = \array_keys($optsDefault);
-            $opts = \array_fill_keys($keys, $opts);
+            $this->argStringOpts = \array_fill_keys($keys, $opts);
         } else {
-            $opts = \array_merge($optsDefault, $opts);
+            $this->argStringOpts = \array_merge($optsDefault, $opts);
         }
-        if ($val instanceof Abstraction) {
-            foreach (\array_keys($opts) as $k) {
-                if ($val[$k] !== null) {
-                    $opts[$k] = $val[$k];
-                }
-            }
-        }
-        $this->argStringOpts = $opts;
         $typeMore = null;
         list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($typeMore == 'raw') {
@@ -81,6 +73,11 @@ class Base extends Component implements ConfigurableInterface
         }
         $method = 'dump'.\ucfirst($type);
         if ($typeMore === 'abstraction') {
+            foreach (\array_keys($this->argStringOpts) as $k) {
+                if ($val[$k] !== null) {
+                    $this->argStringOpts[$k] = $val[$k];
+                }
+            }
             if (!\method_exists($this, $method)) {
                 $event = $this->debug->internal->publishBubbleEvent('debug.dumpCustom', new Event(
                     $val,

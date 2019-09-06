@@ -224,7 +224,11 @@ class PhpCurlClass extends Curl
             return null;
         }
         if ($this->optionsDebug['prettyResponseBody']) {
-            return $this->debug->prettify($body, $this->responseHeaders['content-type']);
+            $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this, array(
+                'value' => $body,
+                'contentType' => $this->responseHeaders['content-type'],
+            ));
+            return $event['value'];
         }
         return $body;
     }

@@ -193,6 +193,7 @@ class Internal implements SubscriberInterface
                 'debug.config' => array('onConfig', PHP_INT_MAX),
                 'debug.dumpCustom' => 'onDumpCustom',
                 'debug.output' => array('onOutput', 1),
+                'debug.prettify' => array('onPrettify', -1),
                 'errorHandler.error' => 'onError',
                 'php.shutdown' => array(
                     array('onShutdownHigh', PHP_INT_MAX),
@@ -380,6 +381,42 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Prettify a string if known content-type
+     *
+     * @param Event $event debug.prettyify event object
+     *
+     * @return void
+     */
+    public function onPrettify(Event $event)
+    {
+        if (\preg_match('#\b(html|json|xml)\b#', $event['contentType'], $matches)) {
+            $string = $event['value'];
+            $lang = $type = $matches[1];
+            if ($type === 'html') {
+                $lang = 'markup';
+            } elseif ($type === 'json') {
+                $string = $this->debug->utilities->prettyJson($string);
+            } elseif ($type === 'xml') {
+                $string = $this->debug->utilities->prettyXml($string);
+            }
+            if (!$this->prismAdded) {
+                $this->debug->addPlugin(new Prism());
+                $this->prismAdded = true;
+            }
+            $event['value'] = new Abstraction(array(
+                'type' => 'string',
+                'attribs' => array(
+                    'class' => 'language-'.$lang.' prism',
+                ),
+                'addQuotes' => false,
+                'visualWhiteSpace' => false,
+                'value' => $string,
+            ));
+            $event->stopPropagation();
+        }
+    }
+
+    /**
      * php.shutdown subscriber (high priority)
      *
      * @return void
@@ -409,44 +446,6 @@ class Internal implements SubscriberInterface
             echo $this->debug->output();
         }
         return;
-    }
-
-    /**
-     * Pretty a string if we know how
-     *
-     * Will return formatted Abstraction if html/json/xml
-     *
-     * @param string $str         String to prettify
-     * @param string $contentType Content / mime type
-     *
-     * @return Abstraction|string
-     */
-    public function prettify($str, $contentType)
-    {
-        if (\preg_match('#\b(html|json|xml)\b#', $contentType, $matches)) {
-            $lang = $type = $matches[1];
-            if ($type === 'html') {
-                $lang = 'markup';
-            } elseif ($type === 'json') {
-                $str = $this->debug->utilities->prettyJson($str);
-            } elseif ($type === 'xml') {
-                $str = $this->debug->utilities->prettyXml($str);
-            }
-            if (!$this->prismAdded) {
-                $this->debug->addPlugin(new Prism());
-                $this->prismAdded = true;
-            }
-            return new Abstraction(array(
-                'type' => 'string',
-                'attribs' => array(
-                    'class' => 'language-'.$lang.' prism',
-                ),
-                'addQuotes' => false,
-                'visualWhiteSpace' => false,
-                'value' => $str,
-            ));
-        }
-        return $str;
     }
 
     /**

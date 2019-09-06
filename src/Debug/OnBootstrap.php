@@ -108,7 +108,11 @@ class OnBootstrap
      */
     private function logInput($contentType = null)
     {
-        $input = $this->debug->prettify(self::$input, $contentType);
+        $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
+            'value' => self::$input,
+            'contentType' => $contentType,
+        ));
+        $input = $event['value'];
         $this->debug->log(
             'php://input %c%s',
             'font-style: italic; opacity: 0.8;',

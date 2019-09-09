@@ -40,8 +40,8 @@ class ErrorEmailer implements SubscriberInterface
             'emailThrottledSummary' => true,    // if errors have been throttled, should we email a summary email of throttled errors?
                                                 //    (first occurance of error is never throttled)
             'emailThrottleFile' => __DIR__.'/error_emails.json',
-            'emailThrottleRead' => null,    // callable that returns throttle data
-            'emailThrottleWrite' => null,   // callable that writes throttle data.  receives single array param
+            'emailThrottleRead' => array($this, 'throttleDataReader'),    // callable that returns throttle data
+            'emailThrottleWrite' => array($this, 'throttleDataWriter'),   // callable that writes throttle data.  receives single array param
             'emailTo' => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
@@ -364,13 +364,9 @@ class ErrorEmailer implements SubscriberInterface
             // already imported
             return;
         }
-        $throttleData = array();
-        if ($this->cfg['emailThrottleRead'] && \is_callable($this->cfg['emailThrottleRead'])) {
-            $throttleData = \call_user_func($this->cfg['emailThrottleRead']);
-        } elseif ($this->cfg['emailThrottleFile'] && \is_readable($this->cfg['emailThrottleFile'])) {
-            $throttleData = \file_get_contents($this->cfg['emailThrottleFile']);
-            $throttleData = \json_decode($throttleData, true);
-        }
+        $throttleData = \is_callable($this->cfg['emailThrottleRead'])
+            ? \call_user_func($this->cfg['emailThrottleRead'])
+            : array();
         if (!\is_array($throttleData)) {
             $throttleData = array();
         }
@@ -379,6 +375,24 @@ class ErrorEmailer implements SubscriberInterface
             'errors' => array(),
         ), $throttleData);
         return;
+    }
+
+    /**
+     * Read throttle data from file
+     *
+     * This is the default callable for reading throttle data
+     *
+     * @return array
+     */
+    protected function throttleDataReader()
+    {
+        $throttleData = array();
+        $file = $this->cfg['emailThrottleFile'];
+        if ($file && \is_readable($file)) {
+            $throttleData = \file_get_contents($file);
+            $throttleData = \json_decode($throttleData, true);
+        }
+        return $throttleData;
     }
 
     /**
@@ -423,18 +437,31 @@ class ErrorEmailer implements SubscriberInterface
      */
     protected function throttleDataWrite()
     {
-        $return = true;
+        $return = false;
         $this->throttleDataGarbageCollection();
-        if ($this->cfg['emailThrottleWrite'] && \is_callable($this->cfg['emailThrottleWrite'])) {
+        if (\is_callable($this->cfg['emailThrottleWrite'])) {
             $return = \call_user_func($this->cfg[''], $this->throttleData);
             if (!$return) {
                 \error_log('ErrorEmailer: emailThrottleWrite() returned false');
             }
-        } elseif ($this->cfg['emailThrottleFile']) {
-            $wrote = $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($this->throttleData, JSON_PRETTY_PRINT));
-            if (!$wrote) {
-                $return = false;
-                \error_log('Unable to write to '.$this->cfg['emailThrottleFile']);
+        }
+        return $return;
+    }
+
+    /**
+     * Write throttle data to file
+     *
+     * @param array $throttleData throttle data
+     *
+     * @return boolean
+     */
+    protected function throttleDataWriter($throttleData)
+    {
+        $return = false;
+        if ($this->cfg['emailThrottleFile']) {
+            $wrote = $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($throttleData, JSON_PRETTY_PRINT));
+            if (!$wrote !== false) {
+                $return = true;
             }
         }
         return $return;

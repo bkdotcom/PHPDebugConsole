@@ -14,7 +14,9 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use Curl\Curl;
+use ReflectionClass;
 use ReflectionMethod;
+use ReflectionProperty;
 
 /**
  * Extend php-curl-class to log each request
@@ -31,7 +33,6 @@ class PhpCurlClass extends Curl
         'inclInfo' => false,
         'verbose' => false,
     );
-    private $optionsConstDebug = array();
 
     public $rawRequestHeaders = '';
 
@@ -67,15 +68,6 @@ class PhpCurlClass extends Curl
     /**
      * {@inheritDoc}
      */
-    public function close()
-    {
-        parent::close();
-        $this->optionsConstDebug = array();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function exec($ch = null)
     {
         $options = $this->buildDebugOptions();
@@ -98,9 +90,9 @@ class PhpCurlClass extends Curl
             $verboseOutput = \stream_get_contents($pointer);
             \preg_match_all('/> (.*?)\r\n\r\n/s', $verboseOutput, $matches);
             $this->rawRequestHeaders = \end($matches[1]);
-            $reflectionMethod = new ReflectionMethod($this, 'parseRequestHeaders');
-            $reflectionMethod->setAccessible(true);
-            $this->requestHeaders = $reflectionMethod->invoke($this, $this->rawRequestHeaders);
+            $parseReqHeadersRef = new ReflectionMethod($this, 'parseRequestHeaders');
+            $parseReqHeadersRef->setAccessible(true);
+            $this->requestHeaders = $parseReqHeadersRef->invoke($this, $this->rawRequestHeaders);
         } else {
             $this->rawRequestHeaders = $this->getInfo(CURLINFO_HEADER_OUT);
         }
@@ -132,36 +124,6 @@ class PhpCurlClass extends Curl
             $this->debug->log('verbose', $verboseOutput);
         }
         $this->debug->groupEnd();
-        return $return;
-    }
-
-    /**
-     * Get the http method used (GET, POST, etc)
-     *
-     * @param array $options our human readable curl options
-     *
-     * @return string
-     */
-    private function getHttpMethod($options)
-    {
-        $method = 'GET';
-        if (isset($options['CURLOPT_CUSTOMREQUEST'])) {
-            $method = $options['CURLOPT_CUSTOMREQUEST'];
-        } elseif (!empty($options['CURLOPT_POST'])) {
-            $method = 'POST';
-        }
-        return $method;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setOpt($option, $value)
-    {
-        $return = parent::setOpt($option, $value);
-        if ($return) {
-            $this->optionsConstDebug[$option] = $value;
-        }
         return $return;
     }
 
@@ -198,8 +160,14 @@ class PhpCurlClass extends Curl
      */
     private function buildDebugOptions()
     {
+        $classRef = new ReflectionClass($this);
+        $parent = $classRef->getParentClass()->getName();
+        $optionsRef = new ReflectionProperty($parent, 'options');
+        $optionsRef->setAccessible(true);
+        $options = $optionsRef->getValue($this);
+
         $opts = array();
-        foreach ($this->optionsConstDebug as $constVal => $val) {
+        foreach ($options as $constVal => $val) {
             $name = \implode(' / ', self::$optionConstants[$constVal]);
             $opts[$name] = $val;
         }
@@ -208,6 +176,24 @@ class PhpCurlClass extends Curl
         }
         \ksort($opts);
         return $opts;
+    }
+
+    /**
+     * Get the http method used (GET, POST, etc)
+     *
+     * @param array $options our human readable curl options
+     *
+     * @return string
+     */
+    private function getHttpMethod($options)
+    {
+        $method = 'GET';
+        if (isset($options['CURLOPT_CUSTOMREQUEST'])) {
+            $method = $options['CURLOPT_CUSTOMREQUEST'];
+        } elseif (!empty($options['CURLOPT_POST'])) {
+            $method = 'POST';
+        }
+        return $method;
     }
 
     /**

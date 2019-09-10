@@ -511,7 +511,7 @@ class Utilities
         $return = 'http';
         $isCliOrCron = \count(\array_filter(array(
             \defined('STDIN'),
-            isset($_SERVER['argv']),
+            !empty($_SERVER['argv']),
             !\array_key_exists('REQUEST_METHOD', $_SERVER),
         ))) > 0;
         if ($isCliOrCron) {

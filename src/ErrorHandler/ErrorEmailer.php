@@ -440,7 +440,7 @@ class ErrorEmailer implements SubscriberInterface
         $return = false;
         $this->throttleDataGarbageCollection();
         if (\is_callable($this->cfg['emailThrottleWrite'])) {
-            $return = \call_user_func($this->cfg[''], $this->throttleData);
+            $return = \call_user_func($this->cfg['emailThrottleWrite'], $this->throttleData);
             if (!$return) {
                 \error_log('ErrorEmailer: emailThrottleWrite() returned false');
             }

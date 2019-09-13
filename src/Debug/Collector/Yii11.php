@@ -39,7 +39,7 @@ class Yii11 implements SubscriberInterface
             'debug.log' => 'onDebugLog',
             'debug.objAbstractStart' => 'onDebugObjAbstractStart',
             'debug.objAbstractEnd' => 'onDebugObjAbstractEnd',
-            'debug.output' => 'onDebugOutput',
+            'debug.output' => array('onDebugOutput', 1),
             'debug.outputLogEntry' => 'onDebugOutputLogEntry',
             'debug.pluginInit' => 'init',
             'errorHandler.error' => array('onError', -1),
@@ -109,6 +109,8 @@ class Yii11 implements SubscriberInterface
     }
 
     /**
+     * debug.output subscriber
+     *
      * Log included files before outputting
      *
      * @param Event $event Event instance

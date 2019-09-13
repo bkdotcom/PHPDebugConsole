@@ -72,7 +72,7 @@ class Twig extends Twig_Environment
         }
         $this->twig = $twig;
         $this->debug = $debug;
-        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'));
+        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'), 1);
     }
 
     /**

@@ -60,6 +60,8 @@ class ConfigTest extends DebugTestFramework
             'outputAs',
             'outputAsNonHtml',
             'outputHeaders',
+            'redactKeys',
+            'redactReplace',
             'services',
         );
 

@@ -362,15 +362,15 @@ class Wamp implements RouteInterface
             $this->debug,
             'meta',
             array(
-                $metaVals,
-                array(
-                    'drawer' => $this->debug->getCfg('outputHtml.drawer'),
-                    'channelRoot' => $this->debug->rootInstance->getCfg('channelName'),
-                    'linkFilesTemplateDefault' => \strtr(
-                        \ini_get('xdebug.file_link_format'),
-                        array('%f'=>'%file', '%l'=>'%line')
-                    ) ?: null,
-                ),
+                $this->debug->redact($metaVals),
+            ),
+            array(
+                'drawer' => $this->debug->getCfg('outputHtml.drawer'),
+                'channelRoot' => $this->debug->rootInstance->getCfg('channelName'),
+                'linkFilesTemplateDefault' => \strtr(
+                    \ini_get('xdebug.file_link_format'),
+                    array('%f'=>'%file', '%l'=>'%line')
+                ) ?: null,
             )
         ));
     }

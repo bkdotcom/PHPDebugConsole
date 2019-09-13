@@ -44,7 +44,7 @@ class SimpleCache implements CacheInterface
         }
         $this->cache = $cache;
         $this->debug = $debug;
-        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'));
+        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'), 1);
     }
 
     /**

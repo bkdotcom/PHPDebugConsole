@@ -509,6 +509,10 @@ class Utilities
     public static function getInterface()
     {
         $return = 'http';
+        /*
+            note: $_SERVER['argv'] could be populated with query string if
+            register_argc_argv = On
+        */
         $isCliOrCron = \count(\array_filter(array(
             \defined('STDIN'),
             isset($_SERVER['argv']) && \count($_SERVER['argv']) > 1,

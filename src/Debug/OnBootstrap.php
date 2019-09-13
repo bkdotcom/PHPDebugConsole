@@ -119,7 +119,8 @@ class OnBootstrap
             $input instanceof Abstraction
                 ? '(prettified)'
                 : '',
-            $input
+            $input,
+            $this->debug->meta('redact')
         );
     }
 
@@ -241,7 +242,7 @@ class OnBootstrap
                 );
             } elseif ($_POST) {
                 $havePostVals = true;
-                $this->debug->log('$_POST', $_POST);
+                $this->debug->log('$_POST', $_POST, $this->debug->meta('redact'));
             }
         }
         if (!$havePostVals) {
@@ -276,7 +277,7 @@ class OnBootstrap
         if ($this->debug->getCfg('logEnvInfo.cookies')) {
             $cookieVals = $_COOKIE;
             \ksort($cookieVals, SORT_NATURAL);
-            $this->debug->log('$_COOKIE', $cookieVals);
+            $this->debug->log('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
         }
         // don't expect a request body for these methods
         $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
@@ -302,7 +303,7 @@ class OnBootstrap
         }
         $headers = $this->debug->utilities->getAllHeaders();
         \ksort($headers, SORT_NATURAL);
-        $this->debug->log('request headers', $headers);
+        $this->debug->log('request headers', $headers, $this->debug->meta('redact'));
     }
 
     /**
@@ -342,7 +343,7 @@ class OnBootstrap
             }
         }
         \ksort($vals, SORT_NATURAL);
-        $this->debug->log('$_SERVER', $vals);
+        $this->debug->log('$_SERVER', $vals, $this->debug->meta('redact'));
     }
 
     /**

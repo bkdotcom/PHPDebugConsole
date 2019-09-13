@@ -53,7 +53,7 @@ class DoctrineLogger implements SQLLogger
         }
         $this->connection = $connection;
         $this->debug = $debug;
-        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'));
+        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'), 1);
         $this->debug->addPlugin(new Prism());
     }
 

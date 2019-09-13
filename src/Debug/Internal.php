@@ -15,6 +15,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use bdk\Debug\LogEntry;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Plugin\Prism;
 use bdk\Debug\Route\RouteInterface;
@@ -38,6 +39,13 @@ class Internal implements SubscriberInterface
     private $inShutdown = false;
     private static $profilingEnabled = false;
     private $prismAdded = false;
+    private $bootstraped = false;
+
+    // duplicate/store frequently used cfg vals here
+    private $cfg = array(
+        'redactKeys' => array(),
+        'redactReplace' => null,
+    );
 
     /**
      * Constructor
@@ -177,9 +185,12 @@ class Internal implements SubscriberInterface
     public function getSubscriptions()
     {
         if ($this->debug->parentInstance) {
-            // all channels should subscribe
+            // we are a child channel
             return array(
-                'debug.output' => array('onOutput', 1),
+                'debug.output' => array(
+                    array('onOutput', 1),
+                    array('onOutputHeaders', -1),
+                ),
                 'debug.config' => array('onConfig', PHP_INT_MAX),
             );
         } else {
@@ -192,7 +203,11 @@ class Internal implements SubscriberInterface
                 'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
                 'debug.config' => array('onConfig', PHP_INT_MAX),
                 'debug.dumpCustom' => 'onDumpCustom',
-                'debug.output' => array('onOutput', 1),
+                'debug.log' => array('onLog', PHP_INT_MAX),
+                'debug.output' => array(
+                    array('onOutput', 1),
+                    array('onOutputHeaders', -1),
+                ),
                 'debug.prettify' => array('onPrettify', -1),
                 'errorHandler.error' => 'onError',
                 'php.shutdown' => array(
@@ -228,6 +243,7 @@ class Internal implements SubscriberInterface
     {
         $onBootstrap = new OnBootstrap();
         $onBootstrap($event);
+        $this->bootstraped = true;
     }
 
     /**
@@ -245,11 +261,11 @@ class Internal implements SubscriberInterface
             return;
         }
         $cfg = $cfg['debug'];
-        if (isset($cfg['outputAs'])) {
+        if (\array_key_exists('outputAs', $cfg)) {
             $event['debug']['outputAs'] = $this->setOutputAs($cfg['outputAs']);
         }
         if (isset($cfg['onBootstrap'])) {
-            if (!$this->debug->data) {
+            if (!$this->bootstraped) {
                 // we're initializing
                 $this->debug->eventManager->subscribe('debug.bootstrap', $cfg['onBootstrap']);
             } else {
@@ -257,6 +273,17 @@ class Internal implements SubscriberInterface
                 \call_user_func($cfg['onBootstrap'], new Event($this->debug));
             }
         }
+        if (isset($cfg['redactKeys'])) {
+            $keys = array();
+            foreach ($cfg['redactKeys'] as $key) {
+                $keys[$key] = $this->redactBuildRegex($key);
+            }
+            $cfg['redactKeys'] = $keys;
+        }
+        $this->cfg = \array_merge(
+            $this->cfg,
+            \array_intersect_key($cfg, \array_flip(array('redactKeys', 'redactReplace')))
+        );
         if (isset($cfg['onLog'])) {
             /*
                 Replace - not append - subscriber set via setCfg
@@ -360,6 +387,20 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * debug.log subscriber
+     *
+     * @param LogEntry $logEntry log entry instance
+     *
+     * @return void
+     */
+    public function onLog(LogEntry $logEntry)
+    {
+        if ($logEntry->getMeta('redact')) {
+            $logEntry['args'] = $this->redact($logEntry['args']);
+        }
+    }
+
+    /**
      * debug.output subscriber
      *
      * @param Event $event debug.output event object
@@ -377,6 +418,30 @@ class Internal implements SubscriberInterface
         }
         if (!$this->debug->parentInstance) {
             $this->onOutputLogRuntime();
+        }
+    }
+
+    /**
+     * debug.output subscriber
+     *
+     * Merge event headers into data['headers'] or output them
+     *
+     * @param Event $event debug.output event object
+     *
+     * @return void
+     */
+    public function onOutputHeaders(Event $event)
+    {
+        $headers = $event['headers'];
+        $outputHeaders = $event->getSubject()->getCfg('outputHeaders');
+        if (!$outputHeaders || !$headers) {
+            $event->getSubject()->setData('headers', \array_merge($event->getSubject()->getData('headers'), $headers));
+        } elseif (\headers_sent($file, $line)) {
+            \trigger_error('PHPDebugConsole: headers already sent: '.$file.', line '.$line, E_USER_NOTICE);
+        } else {
+            foreach ($headers as $nameVal) {
+                \header($nameVal[0].': '.$nameVal[1]);
+            }
         }
     }
 
@@ -479,6 +544,42 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Redact
+     *
+     * @param mixed $val value to scrub
+     * @param mixed $key array key, or property name
+     *
+     * @return mixed
+     */
+    public function redact($val, $key = null)
+    {
+        if (\is_string($val)) {
+            return $this->redactString($val, $key);
+        }
+        if ($val instanceof Abstraction) {
+            if ($val['type'] == 'object') {
+                $props = $val['properties'];
+                foreach ($props as $name => $prop) {
+                    $props[$name]['value'] = $this->redact($prop['value'], $name);
+                }
+                $val['properties'] = $props;
+                $val['stringified'] = $this->redact($val['stringified']);
+                if (isset($val['methods']['__toString']['returnValue'])) {
+                    $val['methods']['__toString']['returnValue'] = $this->redact($val['methods']['__toString']['returnValue']);
+                }
+            } elseif ($val['value']) {
+                $val['value'] = $this->redact($val['value']);
+            }
+        }
+        if (\is_array($val)) {
+            foreach ($val as $k => $v) {
+                $val[$k] = $this->redact($v, $k);
+            }
+        }
+        return $val;
+    }
+
+    /**
      * Close any unclosed groups
      *
      * We may have forgotten to end a group or the script may have exited
@@ -526,6 +627,7 @@ class Internal implements SubscriberInterface
     {
         $this->closeOpenGroups();
         $data = $this->debug->getData();
+        $data['headers'] = array();
         $this->removeHideIfEmptyGroups($data['log']);
         $this->uncollapseErrors($data['log']);
         foreach ($data['logSummary'] as &$log) {
@@ -538,7 +640,7 @@ class Internal implements SubscriberInterface
     /**
      * Log our runtime info in a summary group
      *
-     * As we're only subscribed to root debug instance's debug.output event,  this info
+     * As we're only subscribed to root debug instance's debug.output event, this info
      *   will not be output for any sub-channels output directly
      *
      * @return void
@@ -562,6 +664,56 @@ class Internal implements SubscriberInterface
             $this->debug->meta('sanitize', false)
         );
         $this->debug->groupEnd();
+    }
+
+    /**
+     * Build Regex that will search for key=val in string
+     *
+     * @param string $key key to redact
+     *
+     * @return string
+     */
+    private function redactBuildRegex($key)
+    {
+        return '#(?:'
+            // xml
+            .'<'.$key.'\b.*?>\s*([^<]*?)\s*</'.$key.'>'
+            .'|'
+            // json
+            .\json_encode($key).'\s*:\s*"((?:[^"]|\\")+)"'
+            .'|'
+            // url encoded
+            .'\b'.$key.'=([^\s&]+\b)'
+            .')#';
+    }
+
+    /**
+     * Redact string or portions within
+     *
+     * @param string $val string to redact
+     * @param key    $key if string is array value: the key. if object property: the prop name
+     *
+     * @return string
+     */
+    protected function redactString($val, $key)
+    {
+        if (\is_string($key)) {
+            foreach (\array_keys($this->cfg['redactKeys']) as $redactKey) {
+                if ($redactKey == $key) {
+                    return \call_user_func($this->cfg['redactReplace'], $val, $key);
+                }
+            }
+        } else {
+            $key = null;
+        }
+        foreach ($this->cfg['redactKeys'] as $regex) {
+            $val = \preg_replace_callback($regex, function ($matches) use ($key) {
+                $substr = \end((\array_filter($matches, 'strlen')));
+                $replacement = \call_user_func($this->cfg['redactReplace'], $substr, $key);
+                return \str_replace($substr, $replacement, $matches[0]);
+            }, $val);
+        }
+        return $val;
     }
 
     /**

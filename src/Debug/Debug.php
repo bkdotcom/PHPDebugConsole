@@ -120,6 +120,10 @@ class Debug
             'outputAs'  => null,            // 'chromeLogger', 'firephp', 'html', 'script', 'steam', 'text', or Object, if null, will be determined automatically
             'outputAsNonHtml' => 'chromeLogger',
             'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
+            'redactKeys' => array(),    // case-insensitive
+            'redactReplace' => function ($str, $key) {
+                return '█████████';
+            },
             'services' => $this->getDefaultServices(),
         );
         $this->data = array(
@@ -864,7 +868,7 @@ class Debug
             $instance = $this->data['profileInstances'][$name];
             $data = $instance->end();
             /*
-                So that our row keys can receive'callable' formatting,
+                So that our row keys can receive 'callable' formatting,
                 set special '__key' value
             */
             foreach ($data as $k => &$row) {
@@ -1464,13 +1468,13 @@ class Debug
     /**
      * Publishes debug.output event and returns result
      *
-     * @param array $options Override any output options
+     * @param array $cfg Override any config values
      *
      * @return string|null
      */
-    public function output($options = array())
+    public function output($cfg = array())
     {
-        $cfgRestore = $this->config->setValues($options);
+        $cfgRestore = $this->config->setValues($cfg);
         if (!$this->cfg['output']) {
             $this->config->setValues($cfgRestore);
             return null;
@@ -1484,7 +1488,6 @@ class Debug
         */
         $channels = $this->getChannels(true);
         $channels[] = $this;
-        $headers = array();
         foreach ($channels as $channel) {
             $event = $channel->eventManager->publish(
                 'debug.output',
@@ -1495,16 +1498,6 @@ class Debug
                     'return' => '',
                 )
             );
-            $headers = \array_merge($headers, $event['headers']);
-        }
-        if (!$this->getCfg('outputHeaders') || !$headers) {
-            $this->data['headers'] = \array_merge($this->data['headers'], $event['headers']);
-        } elseif (\headers_sent($file, $line)) {
-            \trigger_error('PHPDebugConsole: headers already sent: '.$file.', line '.$line, E_USER_NOTICE);
-        } else {
-            foreach ($headers as $nameVal) {
-                \header($nameVal[0].': '.$nameVal[1]);
-            }
         }
         if (!$this->parentInstance) {
             $this->data['outputSent'] = true;

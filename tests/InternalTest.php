@@ -99,7 +99,11 @@ class InternalTest extends DebugTestFramework
         $inputProp->setValue($onBootstrap, http_build_query($_POST));
         $logPostMeth->invoke($onBootstrap);
         $this->assertSame(
-            array('log', array('$_POST', $_POST), array()),
+            array(
+                'log',
+                array('$_POST', $_POST),
+                array('redact' => true)
+            ),
             $this->logEntryToArray($this->debug->getData('log/0'))
         );
         $this->debug->setData('log', array());
@@ -128,7 +132,9 @@ class InternalTest extends DebugTestFramework
                         'value' => json_encode(json_decode($input), JSON_PRETTY_PRINT),
                     ))
                 ),
-                array()
+                array(
+                    'redact' => true,
+                )
             ),
             $this->logEntryToArray($this->debug->getData('log/0'))
         );
@@ -164,7 +170,9 @@ class InternalTest extends DebugTestFramework
                         'value' => json_encode(json_decode($input), JSON_PRETTY_PRINT),
                     ))
                 ),
-                array(),
+                array(
+                    'redact' => true,
+                ),
             ),
             $this->logEntryToArray($this->debug->getData('log/1'))
         );
@@ -177,7 +185,8 @@ class InternalTest extends DebugTestFramework
         $inputProp->setValue($onBootstrap, $input);
         $logPostMeth->invoke($onBootstrap);
         $this->assertSame(
-            array('log',
+            array(
+                'log',
                 array('$_FILES', $_FILES),
                 array(),
             ),
@@ -192,7 +201,8 @@ class InternalTest extends DebugTestFramework
         $inputProp->setValue($onBootstrap, $input);
         $logPostMeth->invoke($onBootstrap);
         $this->assertSame(
-            array('warn',
+            array(
+                'warn',
                 array('POST request with no body'),
                 array('detectFiles'=>false,'file'=>null,'line'=>null),
             ),
@@ -216,7 +226,7 @@ class InternalTest extends DebugTestFramework
                     '',
                     $input
                 ),
-                array()
+                array('redact' => true)
             ),
             $this->logEntryToArray($this->debug->getData('log/0'))
         );

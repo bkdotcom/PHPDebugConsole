@@ -1004,11 +1004,13 @@ class Debug
      *    template: '%label: %time'
      *    unit: ('auto'), 'sec', 'ms', or 'us'
      *
-     * @param string $label unique label
+     * @param string  $label (optional) unique label
+     * @param boolean $log   (true) log it, or return only
+     *                           if passed, takes precedence over silent meta val
      *
      * @return float The duration (in sec).
      */
-    public function timeEnd($label = null)
+    public function timeEnd($label = null, $log = true)
     {
         $logEntry = new LogEntry(
             $this,
@@ -1022,9 +1024,20 @@ class Debug
             ),
             array(
                 'label' => null,
+                'log' => true,
             )
         );
-        $label = $logEntry['args'][0];
+        $numArgs = $logEntry['numArgs'];
+        $args = $logEntry['args'];
+        $label = $args[0];
+        $log = $args[1];
+        if ($numArgs == 1 && \is_bool($label)) {
+            // log passed as single arg
+            $logEntry->setMeta('silent', !$label);
+            $label = null;
+        } elseif ($numArgs == 2) {
+            $logEntry->setMeta('silent', !$log);
+        }
         // get non-rounded running time (in seconds)
         $ret = $this->timeGet($label, $this->meta(array(
             'silent' => true,
@@ -1054,11 +1067,13 @@ class Debug
      *
      * This method does not have a web console API equivalent
      *
-     * @param string $label (optional) unique label
+     * @param string  $label (optional) unique label
+     * @param boolean $log   (true) log it, or return only
+     *                           if passed, takes precedence over silent meta val
      *
      * @return float|false The duration (in sec).  `false` if specified label does not exist
      */
-    public function timeGet($label = null)
+    public function timeGet($label = null, $log = true)
     {
         $logEntry = new LogEntry(
             $this,
@@ -1072,9 +1087,20 @@ class Debug
             ),
             array(
                 'label' => null,
+                'log' => true,
             )
         );
-        $label = $logEntry['args'][0];
+        $numArgs = $logEntry['numArgs'];
+        $args = $logEntry['args'];
+        $label = $args[0];
+        $log = $args[1];
+        if ($numArgs == 1 && \is_bool($label)) {
+            // log passed as single arg
+            $logEntry->setMeta('silent', !$label);
+            $label = null;
+        } elseif ($numArgs == 2) {
+            $logEntry->setMeta('silent', !$log);
+        }
         $microT = 0;
         $elapsed = 0;
         if ($label === null) {

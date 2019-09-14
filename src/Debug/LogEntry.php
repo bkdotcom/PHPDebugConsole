@@ -23,6 +23,11 @@ class LogEntry extends Event
     /**
      * Construct a log entry
      *
+     * meta precedence low to high
+     *   $meta
+     *   $argsToMeta
+     *   meta extracted from $args
+     *
      * @param Debug  $subject     Debug instance
      * @param string $method      Debug method
      * @param array  $args        arguments passed to method (may include meta args)
@@ -37,6 +42,7 @@ class LogEntry extends Event
             'method' => $method,
             'args' => $args ?: array(),
             'meta' => $meta,
+            'numArgs' => 0,     // number of non-meta aargs passed
             'appendLog' => true,
             'return' => null,
         );
@@ -136,7 +142,7 @@ class LogEntry extends Event
      *
      * @return array meta values
      */
-    private static function metaExtract(&$array)
+    private function metaExtract(&$array)
     {
         $meta = array();
         foreach ($array as $i => $v) {
@@ -147,6 +153,7 @@ class LogEntry extends Event
             }
         }
         $array = \array_values($array);
+        $this->values['numArgs'] = \count($array);
         return $meta;
     }
 }

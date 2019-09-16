@@ -18,15 +18,16 @@ use bdk\Debug\Utilities;
 use bdk\PubSub\Event;
 
 /**
- * Output log to file
+ * Output log to a stream
  */
-class Stream extends Text
+class Stream extends Base
 {
 
     protected $fileHandle;
-    protected $streamCfg = array(
-        'ansi' => 'default',    // default | true | false  (STDOUT & STDERR streams will default to true)
-        'stream' => 'php://stderr',   // filepath/uri/resource
+    protected $cfg = array(
+        'ansi' => 'default',        // default | true | false  (STDOUT & STDERR streams will default to true)
+        'output' => false,          // kept in sync with Debug->cfg['output']
+        'stream' => 'php://stderr', // filepath/uri/resource
     );
 
     /**
@@ -37,7 +38,10 @@ class Stream extends Text
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->cfg = Utilities::arrayMergeDeep($this->cfg, $this->streamCfg);
+        if (!$this->dump) {
+            $this->dump = $debug->dumpText;
+        }
+        $this->cfg['output'] = $this->debug->getCfg('output');
     }
 
     /**
@@ -46,6 +50,7 @@ class Stream extends Text
     public function getSubscriptions()
     {
         return array(
+            'debug.config' => 'onConfig',
             'debug.log' => 'onLog',
             'debug.pluginInit' => 'init',
         );
@@ -58,9 +63,25 @@ class Stream extends Text
      */
     public function init()
     {
+        $this->cfg['output'] = $this->debug->getCfg('output');
         $stream = $this->cfg['stream'];
         if ($stream) {
             $this->openStream($stream);
+        }
+    }
+
+    /**
+     * debug.config subscriber
+     *
+     * @param Event $event event instance
+     *
+     * @return void
+     */
+    public function onConfig(Event $event)
+    {
+        $cfg = $event->getValues();
+        if (isset($cfg['debug']['output'])) {
+            $this->cfg['output'] = $cfg['debug']['output'];
         }
     }
 
@@ -74,6 +95,9 @@ class Stream extends Text
     public function onLog(LogEntry $logEntry)
     {
         if (!$this->fileHandle) {
+            return;
+        }
+        if (!$this->cfg['output']) {
             return;
         }
         $method = $logEntry['method'];

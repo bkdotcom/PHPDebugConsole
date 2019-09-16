@@ -32,10 +32,14 @@ class Wamp implements RouteInterface
     public $requestId;
     public $topic = 'bdk.debug';
     public $wamp;
+    protected $cfg = array(
+        'output' => false,      // kept in sync with debug->cfg['output']
+    );
     protected $channelName = '';
+    protected $channelNames = array();
     protected $detectFiles = false;
     protected $foundFiles = array();
-    protected $channelNames = array();
+    protected $metaPublished = false;
 
     /**
      * Constructor
@@ -78,8 +82,11 @@ class Wamp implements RouteInterface
      */
     public function init(Event $event)
     {
-        $this->publishMeta();
-        $this->processLogEntries($event);
+        $this->cfg['output'] = $this->debug->getCfg('output');
+        if ($this->cfg['output']) {
+            $this->publishMeta();
+            $this->processLogEntries($event);
+        }
     }
 
     /**
@@ -90,6 +97,25 @@ class Wamp implements RouteInterface
     public function isConnected()
     {
         return $this->wamp->connected;
+    }
+
+    /**
+     * debug.config subscriber
+     *
+     * @param Event $event event instance
+     *
+     * @return void
+     */
+    public function onConfig(Event $event)
+    {
+        $cfg = $event->getValues();
+        if (isset($cfg['debug']['output'])) {
+            $this->cfg['output'] = $cfg['debug']['output'];
+        }
+        if ($this->cfg['output'] && !$this->metaPublished) {
+            $this->publishMeta();
+            $this->processLogEntries();
+        }
     }
 
     /**
@@ -131,6 +157,9 @@ class Wamp implements RouteInterface
      */
     public function onLog(LogEntry $logEntry)
     {
+        if (!$this->cfg['output']) {
+            return;
+        }
         $this->processLogEntryViaEvent($logEntry);
     }
 
@@ -155,7 +184,7 @@ class Wamp implements RouteInterface
     /**
      * ProcessLogEntries
      *
-     * we use this interface method to process pre-existing log data
+     * We use this interface method to process pre-existing log data
      *
      * @param Event $event debug event
      *
@@ -336,6 +365,7 @@ class Wamp implements RouteInterface
      */
     private function publishMeta()
     {
+        $this->metaPublished = true;
         $debugClass = \get_class($this->debug);
         $metaVals = array(
             'debug_version' => $debugClass::VERSION,

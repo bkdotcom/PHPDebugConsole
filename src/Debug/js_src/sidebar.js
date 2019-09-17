@@ -137,14 +137,14 @@ export function close($node) {
 		.removeClass("show")
 		.attr("style", "")
 		.trigger("close.debug.sidebar");
-	$node.closest(".debug").data("config").set("openSidebar", false);
+	config.set("openSidebar", false);
 }
 
 export function open($node) {
 	$node.find(".debug-sidebar")
 		.addClass("show")
 		.trigger("open.debug.sidebar");
-	$node.closest(".debug").data("config").set("openSidebar", true);
+	config.set("openSidebar", true);
 }
 
 function addMethodToggles($node) {

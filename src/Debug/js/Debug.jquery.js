@@ -1271,14 +1271,14 @@
 			.removeClass("show")
 			.attr("style", "")
 			.trigger("close.debug.sidebar");
-		$node.closest(".debug").data("config").set("openSidebar", false);
+		config$4.set("openSidebar", false);
 	}
 
 	function open$2($node) {
 		$node.find(".debug-sidebar")
 			.addClass("show")
 			.trigger("open.debug.sidebar");
-		$node.closest(".debug").data("config").set("openSidebar", true);
+		config$4.set("openSidebar", true);
 	}
 
 	function addMethodToggles($node) {

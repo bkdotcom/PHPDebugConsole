@@ -843,7 +843,7 @@
 	var channels = [];
 	var tests = [
 		function ($node) {
-			var channel = $node.data("channel") || "general";
+			var channel = $node.data("channel");
 			return channels.indexOf(channel) > -1;
 		}
 	];

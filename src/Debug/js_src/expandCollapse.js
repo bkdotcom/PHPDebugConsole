@@ -6,8 +6,8 @@ import $ from "jquery";
 
 var config;
 
-export function init($delegateNode, conf) {
-	config = conf.config;
+export function init($delegateNode) {
+	config = $delegateNode.data("config").get();
 	$delegateNode.on("click", "[data-toggle=array]", function() {
 		toggle(this);
 		return false;

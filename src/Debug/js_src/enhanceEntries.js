@@ -6,9 +6,9 @@ var config,
 	expandStack = [],
 	strings = [];
 
-export function init($root, conf) {
-	config = conf.config;
-	enhanceObject.init($root, conf);
+export function init($root) {
+	config = $root.data("config").get();
+	enhanceObject.init($root);
 	$root.on("click", ".close[data-dismiss=alert]", function() {
 		$(this).parent().remove();
 	});

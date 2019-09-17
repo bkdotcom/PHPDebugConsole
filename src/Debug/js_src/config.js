@@ -56,29 +56,3 @@ Config.prototype.set = function(key, val) {
     }
     this.haveSavedConfig = true;
 }
-
-/*
-function setLocalStorageItem(key, val) {
-    if (val === null) {
-        localStorage.removeItem(key);
-        return;
-    }
-    if (typeof val !== "string") {
-        val = JSON.stringify(val);
-    }
-    localStorage.setItem(key, val);
-}
-
-function getLocalStorageItem(key) {
-    var val = localStorage.getItem(key);
-    if (typeof val !== "string" || val.length < 1) {
-        return null;
-    } else {
-        try {
-            return JSON.parse(val);
-        } catch (e) {
-            return val;
-        }
-    }
-}
-*/

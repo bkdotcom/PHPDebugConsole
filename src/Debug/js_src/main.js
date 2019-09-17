@@ -156,15 +156,17 @@ $.fn.debugEnhance = function(method, arg1, arg2) {
 	} else if (method === "expand") {
 		expandCollapse.expand($self);
 	} else if (method === "init") {
-		config.set($self.eq(0).data("options") || {});
+		var conf = new Config(config.get(), "phpDebugConsole");
+		$self.data("config", conf);
+		conf.set($self.eq(0).data("options") || {});
 		if (typeof arg1 == "object") {
-			config.set(arg1);
+			conf.set(arg1);
 		}
-		enhanceEntries.init($self, config);
-		expandCollapse.init($self, config);
+		enhanceEntries.init($self);
+		expandCollapse.init($self);
 		registerListeners($self);
-		enhanceMain.init($self, config);
-		if (!config.get("drawer")) {
+		enhanceMain.init($self);
+		if (!conf.get("drawer")) {
 			$self.debugEnhance();
 		}
 	} else if (method == "setConfig") {

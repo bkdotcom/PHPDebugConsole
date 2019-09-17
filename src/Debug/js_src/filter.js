@@ -7,7 +7,7 @@ import $ from "jquery";
 var channels = [];
 var tests = [
 	function ($node) {
-		var channel = $node.data("channel");
+		var channel = $node.data("channel") || "general";
 		return channels.indexOf(channel) > -1;
 	}
 ];
@@ -26,11 +26,7 @@ var preFilterCallbacks = [
 	}
 ];
 
-export function init($delegateNode, config) {
-
-	if (!config.get("sidebar")) {
-		return;
-	}
+export function init($delegateNode) {
 
 	$delegateNode.on("change", "input[type=checkbox]", function() {
 		var $this = $(this),

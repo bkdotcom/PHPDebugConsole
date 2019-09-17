@@ -36,10 +36,9 @@ $.fn.scrollLock = function(enable){
 		: this.off("DOMMouseScroll mousewheel wheel");
 }
 
-export function init($debugRoot, conf) {
-	// console.warn('drawer.init', $debugRoot[0]);
+export function init($debugRoot) {
 	$root = $debugRoot;
-	config = conf;
+	config = $root.data("config");
 	if (!config.get("drawer")) {
 		return;
 	}

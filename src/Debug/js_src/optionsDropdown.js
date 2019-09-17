@@ -5,9 +5,9 @@ var $root, config;
 
 var KEYCODE_ESC = 27;
 
-export function init($debugRoot, conf) {
+export function init($debugRoot) {
 	$root = $debugRoot;
-	config = conf;
+	config = $root.data("config");
 
 	addDropdown();
 

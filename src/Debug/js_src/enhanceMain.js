@@ -12,19 +12,18 @@ import {cookieGet,cookieRemove,cookieSet} from "./http.js";
 var config;
 var $root;
 
-export function init($debugRoot, conf) {
-	config = conf.config;
+export function init($debugRoot) {
 	$root = $debugRoot;
+	config = $root.data("config").get();
 	$root.find(".debug-menu-bar").append($('<div />', {class:"pull-right"}));
 	addChannelToggles();
 	addExpandAll();
 	addNoti($("body"));
-	// addPersistOption();
 	enhanceErrorSummary();
-	drawer.init($root, conf);
-	filter.init($root, conf);
-	sidebar.init($root, conf);
-	optionsMenu.init($root, conf);
+	drawer.init($root);
+	filter.init($root);
+	sidebar.init($root);
+	optionsMenu.init($root);
 	addErrorIcons();
 	$root.find(".loading").hide();
 	$root.addClass("enhanced");

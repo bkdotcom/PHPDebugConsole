@@ -4,10 +4,11 @@ import {addTest as addFilterTest, addPreFilter} from "./filter.js";
 var config;
 var methods;	// method filters
 var $root;
+var initialized = false;
 
-export function init($debugRoot, conf) {
+export function init($debugRoot) {
+	config = $debugRoot.data("config");
 	$root = $debugRoot;
-	config = conf;
 
 	// console.warn('sidebar.init');
 
@@ -18,26 +19,6 @@ export function init($debugRoot, conf) {
 	if (config.get("persistDrawer") && !config.get("openSidebar")) {
 		close($root);
 	}
-
-	addPreFilter(function($root){
-		methods = [];
-		$root.find("input[data-toggle=method]:checked").each(function(){
-			methods.push($(this).val());
-		});
-	});
-
-	addFilterTest(function($node){
-		var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
-		if (method == "group" && $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)) {
-			method = $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)[1];
-			$node.toggleClass("filter-hidden-body", methods.indexOf(method) < 0);
-		}
-		if (["alert","error","warn","info"].indexOf(method) > -1) {
-			return methods.indexOf(method) > -1;
-		} else {
-			return methods.indexOf("other") > -1;
-		}
-	});
 
 	$root.on("click", ".close[data-dismiss=alert]", function() {
 		// setTimeout -> new thread -> executed after event bubbled
@@ -72,6 +53,37 @@ export function init($debugRoot, conf) {
 			$errorSummary.toggleClass("filter-hidden", $errorSummary.children().not(".filter-hidden").length == 0);
 		}
 	});
+
+	if (initialized) {
+		return;
+	}
+
+	addPreFilter(function($delegateRoot){
+		$root = $delegateRoot;
+		config = $root.data("config");
+		methods = [];
+		$root.find("input[data-toggle=method]:checked").each(function(){
+			methods.push($(this).val());
+		});
+	});
+
+	addFilterTest(function($node){
+		var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
+		if (!config.get("sidebar")) {
+			return true;
+		}
+		if (method == "group" && $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)) {
+			method = $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)[1];
+			$node.toggleClass("filter-hidden-body", methods.indexOf(method) < 0);
+		}
+		if (["alert","error","warn","info"].indexOf(method) > -1) {
+			return methods.indexOf(method) > -1;
+		} else {
+			return methods.indexOf("other") > -1;
+		}
+	});
+
+	initialized = true;
 }
 
 export function addMarkup($node) {
@@ -125,14 +137,14 @@ export function close($node) {
 		.removeClass("show")
 		.attr("style", "")
 		.trigger("close.debug.sidebar");
-	config.set("openSidebar", false);
+	$node.closest(".debug").data("config").set("openSidebar", false);
 }
 
 export function open($node) {
 	$node.find(".debug-sidebar")
 		.addClass("show")
 		.trigger("open.debug.sidebar");
-	config.set("openSidebar", true);
+	$node.closest(".debug").data("config").set("openSidebar", true);
 }
 
 function addMethodToggles($node) {

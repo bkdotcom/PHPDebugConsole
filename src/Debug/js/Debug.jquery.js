@@ -5,8 +5,8 @@
 
 	var config;
 
-	function init($delegateNode, conf) {
-		config = conf.config;
+	function init($delegateNode) {
+		config = $delegateNode.data("config").get();
 		$delegateNode.on("click", "[data-toggle=vis]", function() {
 			toggleVis(this);
 			return false;
@@ -273,9 +273,9 @@
 		expandStack = [],
 		strings = [];
 
-	function init$1($root, conf) {
-		config$1 = conf.config;
-		init($root, conf);
+	function init$1($root) {
+		config$1 = $root.data("config").get();
+		init($root);
 		$root.on("click", ".close[data-dismiss=alert]", function() {
 			$(this).parent().remove();
 		});
@@ -728,10 +728,9 @@
 			: this.off("DOMMouseScroll mousewheel wheel");
 	};
 
-	function init$2($debugRoot, conf) {
-		// console.warn('drawer.init', $debugRoot[0]);
+	function init$2($debugRoot) {
 		$root = $debugRoot;
-		config$2 = conf;
+		config$2 = $root.data("config");
 		if (!config$2.get("drawer")) {
 			return;
 		}
@@ -844,7 +843,7 @@
 	var channels = [];
 	var tests = [
 		function ($node) {
-			var channel = $node.data("channel");
+			var channel = $node.data("channel") || "general";
 			return channels.indexOf(channel) > -1;
 		}
 	];
@@ -863,11 +862,7 @@
 		}
 	];
 
-	function init$3($delegateNode, config) {
-
-		if (!config.get("sidebar")) {
-			return;
-		}
+	function init$3($delegateNode) {
 
 		$delegateNode.on("change", "input[type=checkbox]", function() {
 			var $this = $(this),
@@ -1036,9 +1031,9 @@
 
 	var KEYCODE_ESC = 27;
 
-	function init$4($debugRoot, conf) {
+	function init$4($debugRoot) {
 		$root$1 = $debugRoot;
-		config$3 = conf;
+		config$3 = $root$1.data("config");
 
 		addDropdown();
 
@@ -1143,10 +1138,11 @@
 	var config$4;
 	var methods;	// method filters
 	var $root$2;
+	var initialized = false;
 
-	function init$5($debugRoot, conf) {
+	function init$5($debugRoot) {
+		config$4 = $debugRoot.data("config");
 		$root$2 = $debugRoot;
-		config$4 = conf;
 
 		// console.warn('sidebar.init');
 
@@ -1157,26 +1153,6 @@
 		if (config$4.get("persistDrawer") && !config$4.get("openSidebar")) {
 			close$2($root$2);
 		}
-
-		addPreFilter(function($root){
-			methods = [];
-			$root.find("input[data-toggle=method]:checked").each(function(){
-				methods.push($(this).val());
-			});
-		});
-
-		addTest(function($node){
-			var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
-			if (method == "group" && $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)) {
-				method = $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)[1];
-				$node.toggleClass("filter-hidden-body", methods.indexOf(method) < 0);
-			}
-			if (["alert","error","warn","info"].indexOf(method) > -1) {
-				return methods.indexOf(method) > -1;
-			} else {
-				return methods.indexOf("other") > -1;
-			}
-		});
 
 		$root$2.on("click", ".close[data-dismiss=alert]", function() {
 			// setTimeout -> new thread -> executed after event bubbled
@@ -1211,6 +1187,37 @@
 				$errorSummary.toggleClass("filter-hidden", $errorSummary.children().not(".filter-hidden").length == 0);
 			}
 		});
+
+		if (initialized) {
+			return;
+		}
+
+		addPreFilter(function($delegateRoot){
+			$root$2 = $delegateRoot;
+			config$4 = $root$2.data("config");
+			methods = [];
+			$root$2.find("input[data-toggle=method]:checked").each(function(){
+				methods.push($(this).val());
+			});
+		});
+
+		addTest(function($node){
+			var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
+			if (!config$4.get("sidebar")) {
+				return true;
+			}
+			if (method == "group" && $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)) {
+				method = $node.find("> .group-body")[0].className.match(/level-(error|info|warn)/)[1];
+				$node.toggleClass("filter-hidden-body", methods.indexOf(method) < 0);
+			}
+			if (["alert","error","warn","info"].indexOf(method) > -1) {
+				return methods.indexOf(method) > -1;
+			} else {
+				return methods.indexOf("other") > -1;
+			}
+		});
+
+		initialized = true;
 	}
 
 	function addMarkup$1($node) {
@@ -1264,14 +1271,14 @@
 			.removeClass("show")
 			.attr("style", "")
 			.trigger("close.debug.sidebar");
-		config$4.set("openSidebar", false);
+		$node.closest(".debug").data("config").set("openSidebar", false);
 	}
 
 	function open$2($node) {
 		$node.find(".debug-sidebar")
 			.addClass("show")
 			.trigger("open.debug.sidebar");
-		config$4.set("openSidebar", true);
+		$node.closest(".debug").data("config").set("openSidebar", true);
 	}
 
 	function addMethodToggles($node) {
@@ -1367,19 +1374,18 @@
 	var config$5;
 	var $root$3;
 
-	function init$6($debugRoot, conf) {
-		config$5 = conf.config;
+	function init$6($debugRoot) {
 		$root$3 = $debugRoot;
+		config$5 = $root$3.data("config").get();
 		$root$3.find(".debug-menu-bar").append($('<div />', {class:"pull-right"}));
 		addChannelToggles();
 		addExpandAll();
 		addNoti($("body"));
-		// addPersistOption();
 		enhanceErrorSummary();
-		init$2($root$3, conf);
-		init$3($root$3, conf);
-		init$5($root$3, conf);
-		init$4($root$3, conf);
+		init$2($root$3);
+		init$3($root$3);
+		init$5($root$3);
+		init$4($root$3);
 		addErrorIcons();
 		$root$3.find(".loading").hide();
 		$root$3.addClass("enhanced");
@@ -1567,8 +1573,8 @@
 
 	var config$6;
 
-	function init$7($delegateNode, conf) {
-		config$6 = conf.config;
+	function init$7($delegateNode) {
+		config$6 = $delegateNode.data("config").get();
 		$delegateNode.on("click", "[data-toggle=array]", function() {
 			toggle(this);
 			return false;
@@ -1781,32 +1787,6 @@
 	    this.haveSavedConfig = true;
 	};
 
-	/*
-	function setLocalStorageItem(key, val) {
-	    if (val === null) {
-	        localStorage.removeItem(key);
-	        return;
-	    }
-	    if (typeof val !== "string") {
-	        val = JSON.stringify(val);
-	    }
-	    localStorage.setItem(key, val);
-	}
-
-	function getLocalStorageItem(key) {
-	    var val = localStorage.getItem(key);
-	    if (typeof val !== "string" || val.length < 1) {
-	        return null;
-	    } else {
-	        try {
-	            return JSON.parse(val);
-	        } catch (e) {
-	            return val;
-	        }
-	    }
-	}
-	*/
-
 	function loadDeps(deps) {
 		var checkInterval,
 			intervalCounter = 1;
@@ -2016,15 +1996,17 @@
 		} else if (method === "expand") {
 			expand($self);
 		} else if (method === "init") {
-			config$7.set($self.eq(0).data("options") || {});
+			var conf = new Config(config$7.get(), "phpDebugConsole");
+			$self.data("config", conf);
+			conf.set($self.eq(0).data("options") || {});
 			if (typeof arg1 == "object") {
-				config$7.set(arg1);
+				conf.set(arg1);
 			}
-			init$1($self, config$7);
-			init$7($self, config$7);
+			init$1($self);
+			init$7($self);
 			registerListeners($self);
-			init$6($self, config$7);
-			if (!config$7.get("drawer")) {
+			init$6($self);
+			if (!conf.get("drawer")) {
 				$self.debugEnhance();
 			}
 		} else if (method == "setConfig") {

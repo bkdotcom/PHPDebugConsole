@@ -227,9 +227,8 @@ class Internal implements SubscriberInterface
     {
         $entryCountInitial = $this->debug->getData('entryCountInitial');
         $entryCountCurrent = $this->debug->getData('log/__count__');
-        $haveLog = $entryCountCurrent > $entryCountInitial;
         $lastEntryMethod = $this->debug->getData('log/__end__/method');
-        return $haveLog && $lastEntryMethod !== 'clear';
+        return $entryCountCurrent > $entryCountInitial && $lastEntryMethod !== 'clear';
     }
 
     /**
@@ -256,6 +255,9 @@ class Internal implements SubscriberInterface
     public function onConfig(Event $event)
     {
         $cfg = $event->getValues();
+        if (isset($cfg['routeStream']['stream'])) {
+            $this->debug->addPlugin($this->debug->routeStream);
+        }
         if (!isset($cfg['debug'])) {
             // no debug config values have changed
             return;
@@ -293,9 +295,6 @@ class Internal implements SubscriberInterface
                 $this->debug->eventManager->unsubscribe('debug.log', $onLogPrev);
             }
             $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
-        }
-        if (isset($cfg['stream'])) {
-            $this->debug->addPlugin($this->debug->routeStream);
         }
         if (!static::$profilingEnabled) {
             $cfg = $this->debug->getCfg('debug/*');

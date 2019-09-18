@@ -39,7 +39,9 @@ class Email implements RouteInterface
      */
     public function getSubscriptions()
     {
-        return array();
+        return array(
+            'debug.output' => 'processLogEntries',
+        );
     }
 
     /**

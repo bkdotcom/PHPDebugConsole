@@ -144,6 +144,11 @@ class Stream extends Base
             return;
         }
         $uriExists = \file_exists($stream);
+        $isWritable = !\is_file($stream) || \is_writable($stream);
+        if (!$isWritable) {
+            \trigger_error($stream.' is not writable', E_USER_NOTICE);
+            return;
+        }
         $this->fileHandle = \fopen($stream, 'a');
         $this->dump = $this->ansiCheck()
             ? $this->debug->dumpTextAnsi

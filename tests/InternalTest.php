@@ -217,14 +217,22 @@ class InternalTest extends DebugTestFramework
         // parse_str($input, $_POST);
         $inputProp->setValue($onBootstrap, $input);
         $logPostMeth->invoke($onBootstrap);
-        $this->assertSame(
+        $this->assertEquals(
             array(
                 'log',
                 array(
                     'php://input %c%s',
                     'font-style: italic; opacity: 0.8;',
-                    '',
-                    $input
+                    '(prettified)',
+                    new Abstraction(array(
+                        'type' => 'string',
+                        'attribs' => array(
+                            'class' => 'language-json prism',
+                        ),
+                        'addQuotes' => false,
+                        'visualWhiteSpace' => false,
+                        'value' => json_encode(json_decode($input), JSON_PRETTY_PRINT),
+                    ))
                 ),
                 array('redact' => true)
             ),

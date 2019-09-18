@@ -227,7 +227,9 @@ class OnBootstrap
             return;
         }
         $havePostVals = false;
-        $contentType = null;
+        $contentType = isset($_SERVER['CONTENT_TYPE'])
+            ? $_SERVER['CONTENT_TYPE']
+            : null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $correctContentType = $this->testPostContentType($contentType);
             if (!$correctContentType) {

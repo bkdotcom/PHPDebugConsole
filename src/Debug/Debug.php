@@ -1492,7 +1492,7 @@ class Debug
     }
 
     /**
-     * Publishes debug.output event and returns result
+     * Publishes debug.output event and returns event's 'return' value
      *
      * @param array $cfg Override any config values
      *

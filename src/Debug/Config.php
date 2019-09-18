@@ -94,11 +94,14 @@ class Config
             return $this->values;
         }
         if ($classname === '*') {
-            $values = $this->valuesPending;
             foreach (\array_keys($this->configKeys) as $classname) {
-                $values[$classname] = isset($this->debug->{$classname})
-                    ? $this->debug->{$classname}->getCfg()
-                    : array();
+                if (isset($this->debug->{$classname})) {
+                    $values[$classname] = $this->debug->{$classname}->getCfg();
+                } elseif (isset($this->valuesPending[$classname])) {
+                    $values[$classname] = $this->valuesPending[$classname];
+                } else {
+                    $values[$classname] = array();
+                }
             }
             \ksort($values);
             $values = array('debug'=>$this->values) + $values;

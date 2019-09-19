@@ -24,7 +24,7 @@
 .debug h3 { margin-top: .66em; margin-bottom: .5em; font-size: 1.15em; font-weight: bold; }
 .debug h3:first-child { margin-top: 0; }
 .debug img { border: 0; }
-.debug input[type=checkbox] { cursor: pointer; margin: 0; }
+.debug input[type=checkbox] { margin: 0 .33em 0 0; cursor: pointer; }
 .debug label { display: block; margin: 0; cursor: pointer; font-weight: bold; max-width: none; }
 .debug label.disabled { cursor: default; pointer-events: none; }
 .debug legend { padding: 0; float: left; margin-bottom: .5em; border: 0; width: 100%; font-size: 144%; font-weight: bold; }
@@ -199,8 +199,8 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-sidebar .sidebar-toggle > div { margin: auto; padding-left: 1px; }
 .debug .debug-sidebar .debug-filters { position: relative; margin: 0 -4px 10px -4px; }
 .debug .debug-sidebar .debug-filters ul { margin-left: 0; }
-.debug .debug-sidebar .debug-filters li { padding-left: 10px; }
-.debug .debug-sidebar .debug-filters > li { padding-left: 8px; }
+.debug .debug-sidebar .debug-filters li { text-indent: 0; padding-left: 10px; }
+.debug .debug-sidebar .debug-filters > li { padding-left: 4px; }
 .debug .debug-sidebar .debug-filters label { padding: 2px 0 2px 100%; white-space: nowrap; }
 .debug .debug-sidebar .debug-filters label.disabled span { /*
 color: #818a91
@@ -221,8 +221,7 @@ color: #818a91
 .debug .debug-sidebar .toggle:hover, .debug .debug-sidebar .toggle:hover + ul { background: #DDE6F0; }
 .debug .debug-sidebar .toggle:hover .toggle.active, .debug .debug-sidebar .toggle:hover + ul .toggle.active { background: #bacce0; }
 .debug .debug-body > .expand-all { margin-bottom: .5em; }
-.debug .debug-body i.fa, .debug .debug-body .m_assert i { margin-right: .33em; }
-.debug .debug-body .m_assert > i { display: inline-block; margin-bottom: -0.2em; line-height: .6em; vertical-align: text-bottom; }
+.debug .debug-body .m_assert > i { margin-right: .33em; margin-bottom: -0.2em; display: inline-block; line-height: .6em; vertical-align: text-bottom; }
 .debug .debug-body .file-link.lpad { margin-left: .33em; }
 .debug .debug-body .file-link i { margin-right: 0; vertical-align: baseline; }
 .debug .m_error.error-fatal:before { padding-left: 1.25em; }
@@ -232,6 +231,7 @@ color: #818a91
 .debug .filter-hidden.m_group > .group-header { display: none; }
 .debug .filter-hidden.m_group > .group-body { display: block !important; margin-left: 0; border-left: 0; padding-left: 0; }
 .debug .filter-hidden.m_group.filter-hidden-body > .group-body { display: none !important; }
+.debug i.fa { margin-right: .33em; }
 .debug i.fa-lg { font-size: 1.33em; }
 .debug i.fa-plus-circle { opacity: 0.42; }
 .debug i.fa-calendar { font-size: 1.1em; }

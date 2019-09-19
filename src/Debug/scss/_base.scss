@@ -87,7 +87,11 @@ h3 {
 	&:first-child { margin-top:0; }
 }
 img { border:0; }
-input[type=checkbox] { cursor:pointer; margin:0; }
+input[type=checkbox] {
+	margin: 0 .33em 0 0;
+	cursor: pointer;
+}
+
 label {
 	display: block;
 	margin: 0;
@@ -126,6 +130,7 @@ pre {
 ul {
 	margin-top: 0;
 	margin-bottom: 0;
+	// error summary & channel-list
 	&.list-unstyled > li {
 		text-indent: -1em;
 		padding-left: 1em;

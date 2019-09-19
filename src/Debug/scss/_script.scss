@@ -2,11 +2,10 @@
 	> .expand-all {
 		margin-bottom: .5em;
 	}
-	i.fa,
-	.m_assert i { margin-right:.33em; }
 	.m_assert > i {
-		display: inline-block;
+		margin-right:.33em;
 		margin-bottom: -0.2em;
+		display: inline-block;
 		line-height: .6em;
 		vertical-align: text-bottom;
 	}
@@ -43,6 +42,7 @@
 	}
 }
 
+i.fa { margin-right: .33em; }
 i.fa-lg { font-size:1.33em; }
 i.fa-plus-circle { opacity:0.42; }
 i.fa-calendar { font-size:1.1em; }

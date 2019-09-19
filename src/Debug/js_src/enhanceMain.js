@@ -147,11 +147,11 @@ export function buildChannelList(channels, channelRoot, checkedChannels, prepend
 				"data-toggle": "channel",
 				type: "checkbox",
 				value: prepend + channelName
-			})).append(" " + channelName);
+			})).append(channelName);
 		$label.toggleClass("active", isChecked);
 		$li = $("<li>").append($label);
 		if (channel.options.icon) {
-			$li.find('label').prepend($('<i>', {"class": channel.options.icon}));
+			$li.find('input').after($('<i>', {"class": channel.options.icon}));
 		}
 		if (Object.keys(channel.channels).length) {
 			$li.append(buildChannelList(channel.channels, channelRoot, checkedChannels, prepend + channelName + "."));

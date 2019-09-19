@@ -105,12 +105,12 @@ export function addMarkup($node) {
 		<div class="sidebar-content">\
 			<ul class="list-unstyled debug-filters">\
 				<li class="php-errors">\
-					<span><i class="fa fa-fw fa-lg fa-code"></i> PHP Errors</span>\
+					<span><i class="fa fa-fw fa-lg fa-code"></i>PHP Errors</span>\
 					<ul class="list-unstyled">\
 					</ul>\
 				</li>\
 				<li class="channels">\
-					<span><i class="fa fa-fw fa-lg fa-list-ul"></i> Channels</span>\
+					<span><i class="fa fa-fw fa-lg fa-list-ul"></i>Channels</span>\
 					<ul class="list-unstyled">\
 					</ul>\
 				</li>\
@@ -152,11 +152,11 @@ function addMethodToggles($node) {
 		$entries = $node.find("> .debug-body .m_alert, .group-body > *"),
 		val,
 		labels = {
-			alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i> Alerts',
-			error: '<i class="fa fa-fw fa-lg fa-times-circle"></i> Error',
-			warn: '<i class="fa fa-fw fa-lg fa-warning"></i> Warning',
-			info: '<i class="fa fa-fw fa-lg fa-info-circle"></i> Info',
-			other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i> Other'
+			alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
+			error: '<i class="fa fa-fw fa-lg fa-times-circle"></i>Error',
+			warn: '<i class="fa fa-fw fa-lg fa-warning"></i>Warning',
+			info: '<i class="fa fa-fw fa-lg fa-info-circle"></i>Info',
+			other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i>Other'
 		},
 		haveEntry;
 	for (val in labels) {

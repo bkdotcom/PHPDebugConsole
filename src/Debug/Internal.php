@@ -650,11 +650,13 @@ class Internal implements SubscriberInterface
             return;
         }
         $vals = $this->runtimeVals();
+        $outputAs = $this->debug->getCfg('outputAs');
+        $outputAsHtml = $outputAs && \get_class($outputAs) == 'bdk\\Debug\\Route\\Html';
         $this->debug->groupSummary(1);
         $this->debug->info('Built In '.$this->debug->utilities->formatDuration($vals['runtime']));
         $this->debug->info(
             'Peak Memory Usage'
-                .(\get_class($this->debug->getCfg('outputAs')) == 'bdk\\Debug\\Route\\Html'
+                .($outputAsHtml
                     ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
                     : '')
                 .': '
@@ -783,7 +785,7 @@ class Internal implements SubscriberInterface
      * Set outputAs value
      * instantiate object if necessary & addPlugin if not already subscribed
      *
-     * @param OutputInterface|string $outputAs OutputInterface instance, or (short) classname
+     * @param RouteInterface|string $outputAs RouteInterface instance, or (short) classname
      *
      * @return OutputInterface|null
      */
@@ -798,7 +800,7 @@ class Internal implements SubscriberInterface
             */
             $this->debug->removePlugin($outputAsPrev);
         }
-        if (\is_string($outputAs)) {
+        if (\is_string($outputAs) && $outputAs !== 'auto') {
             $prop = 'route'.\ucfirst($outputAs);
             $outputAs = $this->debug->{$prop};
         }
@@ -811,7 +813,7 @@ class Internal implements SubscriberInterface
                 $this->debug->{$prop} = $outputAs;
             }
         } else {
-            $outputAs = null;
+            $outputAs = 'auto';
         }
         return $outputAs;
     }

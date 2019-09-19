@@ -47,9 +47,9 @@ class TextAnsi extends Text
             'warn' => "\e[38;5;1;48;5;230;1;4m",
         ),
         'escapeCodesMethods' => array(
-            'error' => "\e[38;5;88;48;5;203m",
-            'info' => "\e[38;5;55;48;5;159m",
-            'warn' => "\e[38;5;1;48;5;230m",
+            'error' => "\e[38;5;9m",
+            'info' => "\e[38;5;159m",
+            'warn' => "\e[38;5;148m",
         ),
         'glue' => array(
             'multiple' => "\e[38;5;245m, \x00escapeReset\x00",

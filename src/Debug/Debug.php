@@ -117,7 +117,9 @@ class Debug
             'onBootstrap' => null,          // callable
             'onLog' => null,                // callable
             'onOutput'  => null,            // callable
-            'outputAs'  => null,            // 'chromeLogger', 'firephp', 'html', 'script', 'steam', 'text', or Object, if null, will be determined automatically
+            'outputAs'  => 'auto',          // 'auto', chromeLogger', 'firephp', 'html', 'script', 'steam', 'text', or RouteInterface,
+                                            //   if 'auto', will be determined automatically
+                                            //   if null, no output (unless output plugin added manually)
             'outputAsNonHtml' => 'chromeLogger',
             'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
             'redactKeys' => array(),    // case-insensitive

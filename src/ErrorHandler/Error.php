@@ -94,8 +94,8 @@ class Error extends Event
         }
         $errorCaller = $errHandler->get('errorCaller');
         if ($errorCaller) {
-            $values['file'] = $errorCaller['file'];
-            $values['line'] = $errorCaller['line'];
+            $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file','line')));
+            $values = \array_merge($values, $errorCallerVals);
         }
         $this->values = \array_merge($values, array(
             'continueToNormal' => !$isSuppressed && !$prevOccurance,

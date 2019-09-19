@@ -62,9 +62,10 @@ class Text extends Base
             $this->depth ++;
             $str = $this->methodGroup($logEntry);
         } elseif ($method == 'groupEnd' && $this->depth > 0) {
-            $this->depth --;
             if ($logEntry->getMeta('closesSummary')) {
                 $str = '=======';
+            } else {
+                $this->depth --;
             }
         } elseif ($method == 'groupSummary') {
             $str = '=======';

@@ -56,7 +56,7 @@ class Config
         }
         $classname = \array_shift($path);
         if ($classname == 'debug') {
-            if ($path === array('outputAs') && !$this->values['outputAs']) {
+            if ($path === array('outputAs') && $this->values['outputAs'] == 'auto') {
                 return $this->getDefaultOutputAs();
             }
             return $this->debug->utilities->arrayPathGet($this->values, $path);
@@ -421,7 +421,8 @@ class Config
      */
     private function setDebugValues($values)
     {
-        if (isset($values['key'])) {
+        $isCli = \in_array($this->debug->utilities->getInterface(), array('cli', 'cron'));
+        if (isset($values['key']) && !$isCli) {
             $values = \array_merge($values, $this->setDebugKeyValues($values['key']));
         }
         if (isset($values['logEnvInfo']) && \is_bool($values['logEnvInfo'])) {

@@ -14,7 +14,6 @@ namespace bdk\Debug\Route;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utilities;
 use bdk\PubSub\Event;
 
 /**
@@ -41,7 +40,6 @@ class Stream extends Base
         if (!$this->dump) {
             $this->dump = $debug->dumpText;
         }
-        $this->cfg['output'] = $this->debug->getCfg('output');
     }
 
     /**
@@ -63,7 +61,10 @@ class Stream extends Base
      */
     public function init()
     {
-        $this->cfg['output'] = $this->debug->getCfg('output');
+        $isCli = $this->debug->utilities->getInterface() == 'cli';
+        $this->cfg['output'] = $isCli
+            ? $this->debug->getCfg('output')    // if cli, only output if explicitly true
+            : true;                             //  otherwise push to stream
         $stream = $this->cfg['stream'];
         if ($stream) {
             $this->openStream($stream);
@@ -80,7 +81,9 @@ class Stream extends Base
     public function onConfig(Event $event)
     {
         $cfg = $event->getValues();
-        if (isset($cfg['debug']['output'])) {
+        $isCli = $this->debug->utilities->getInterface() == 'cli';
+        if (isset($cfg['debug']['output']) && $isCli) {
+            // if cli, abide by global output config
             $this->cfg['output'] = $cfg['debug']['output'];
         }
     }

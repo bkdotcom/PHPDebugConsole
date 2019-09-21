@@ -571,12 +571,17 @@
 	 */
 	function enhanceEntries($node) {
 		// console.warn('enhanceEntries', $node[0]);
+		var $prev = $node.prev(),
+			show = !$prev.hasClass("group-header") || $prev.hasClass("expanded");
 		expandStack.push($node);
+		// temporarily hide when enhancing... minimize redraws
 		$node.hide();
 		$node.children().each(function() {
 			enhanceEntry($(this));
 		});
-		$node.show();
+		if (show) {
+			$node.show();
+		}
 		$node.addClass("enhanced");
 		$node.trigger("expanded.debug.group");
 	}
@@ -931,10 +936,7 @@
 				$node.debugEnhance();
 			}
 		});
-		/*
-			Collapsed groups may get filter-hidden..
-		*/
-		// $root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body").debugEnhance();
+		$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body").debugEnhance();
 	}
 
 	function updateFilterStatus($debugRoot) {
@@ -1194,7 +1196,7 @@
 
 		addPreFilter(function($delegateRoot){
 			$root$2 = $delegateRoot;
-			config$4 = $root$2.data("config");
+			config$4 = $root$2.data("config") || $("body").data("config"); // @todo embetter this
 			methods = [];
 			$root$2.find("input[data-toggle=method]:checked").each(function(){
 				methods.push($(this).val());

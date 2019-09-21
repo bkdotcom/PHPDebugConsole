@@ -678,7 +678,7 @@ class Debug
     /**
      * Open a "summary" group
      *
-     * Debug methods called while a groupSummary is open will appear at the top of the log.
+     * Debug methods called from within a groupSummary will appear at the top of the log.
      * Call groupEnd() to close the summary group
      *
      * All groupSummary groups will appear together in a single group
@@ -1187,7 +1187,7 @@ class Debug
     /**
      * Log a stack trace
      *
-     * Essentially PHP\'s <code>debug_backtrace()</code>, but displayed as a table<
+     * Essentially PHP's `debug_backtrace()`, but displayed as a table
      *
      * @param string $caption (optional) Specify caption for the trace table
      *
@@ -1494,6 +1494,8 @@ class Debug
     }
 
     /**
+     * Return debug log output
+     *
      * Publishes debug.output event and returns event's 'return' value
      *
      * @param array $cfg Override any config values
@@ -1556,13 +1558,9 @@ class Debug
     /**
      * Set one or more config values
      *
-     * If setting a value via method a or b, old value is returned
-     *
-     * Setting/updating 'key' will also set 'collect' and 'output'
-     *
-     *   `setCfg('key', 'value')`
-     *   `setCfg('level1.level2', 'value')`
-     *   `setCfg(array('k1'=>'v1', 'k2'=>'v2'))`
+     * `setCfg('key', 'value')`
+     * `setCfg('level1.level2', 'value')`
+     * `setCfg(array('k1'=>'v1', 'k2'=>'v2'))`
      *
      * @param string|array $path   path
      * @param mixed        $newVal value

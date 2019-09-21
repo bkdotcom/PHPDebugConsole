@@ -305,12 +305,17 @@ function enhanceArray($node) {
  */
 export function enhanceEntries($node) {
 	// console.warn('enhanceEntries', $node[0]);
+	var $prev = $node.prev(),
+		show = !$prev.hasClass("group-header") || $prev.hasClass("expanded");
 	expandStack.push($node);
+	// temporarily hide when enhancing... minimize redraws
 	$node.hide();
 	$node.children().each(function() {
 		enhanceEntry($(this));
 	});
-	$node.show();
+	if (show) {
+		$node.show();
+	}
 	$node.addClass("enhanced");
 	$node.trigger("expanded.debug.group");
 }

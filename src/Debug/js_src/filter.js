@@ -95,10 +95,7 @@ function applyFilter($root) {
 			$node.debugEnhance();
 		}
 	});
-	/*
-		Collapsed groups may get filter-hidden..
-	*/
-	// $root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body").debugEnhance();
+	$root.find(".m_group.filter-hidden > .group-header:not(.expanded) + .group-body").debugEnhance();
 }
 
 function updateFilterStatus($debugRoot) {

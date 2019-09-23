@@ -679,7 +679,7 @@ class Debug
      * Open a "summary" group
      *
      * Debug methods called from within a groupSummary will appear at the top of the log.
-     * Call groupEnd() to close the summary group
+     * Call `groupEnd()` to close the summary group
      *
      * All groupSummary groups will appear together in a single group
      *
@@ -946,7 +946,7 @@ class Debug
      * Use `timeEnd` or `timeGet` to get time
      *
      * @param string $label    unique label
-     * @param float  $duration (optional) duration (in seconds)
+     * @param float  $duration (optional) duration (in seconds).  Use this param to log a duration obtained externally.
      *
      * @return void
      */

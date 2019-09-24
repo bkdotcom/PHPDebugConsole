@@ -7,6 +7,8 @@ define('WORD', 'swordfish');
 /**
  * TestBase
  *
+ * TestBase description
+ *
  * @property      boolean $magicProp     I'm avail via __get()
  * @property-read boolean $magicReadProp Read Only!
  *
@@ -58,6 +60,8 @@ class Test2Base
 
 /**
  * Test
+ *
+ * {@inheritDoc}
  *
  * \@notatag make sure this isn't interpreted as a tag
  */

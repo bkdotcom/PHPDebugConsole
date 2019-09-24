@@ -60,7 +60,7 @@ export function init($debugRoot) {
 
 	addPreFilter(function($delegateRoot){
 		$root = $delegateRoot;
-		config = $root.data("config") || $("body").data("config"); // @todo embetter this
+		config = $root.data("config") || $("body").data("config");
 		methods = [];
 		$root.find("input[data-toggle=method]:checked").each(function(){
 			methods.push($(this).val());

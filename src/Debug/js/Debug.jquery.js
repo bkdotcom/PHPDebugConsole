@@ -1196,7 +1196,7 @@
 
 		addPreFilter(function($delegateRoot){
 			$root$2 = $delegateRoot;
-			config$4 = $root$2.data("config") || $("body").data("config"); // @todo embetter this
+			config$4 = $root$2.data("config") || $("body").data("config");
 			methods = [];
 			$root$2.find("input[data-toggle=method]:checked").each(function(){
 				methods.push($(this).val());

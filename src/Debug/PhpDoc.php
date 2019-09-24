@@ -217,19 +217,38 @@ class PhpDoc
      */
     public static function findInheritedDoc(Reflector $reflector)
     {
-        $name = $reflector->getName();
-        $reflectionClass = $reflector->getDeclaringClass();
-        $interfaces = $reflectionClass->getInterfaceNames();
-        foreach ($interfaces as $className) {
-            $reflectionClass2 = new ReflectionClass($className);
-            if ($reflectionClass2->hasMethod($name)) {
-                return self::getParsed($reflectionClass2->getMethod($name));
+        if ($reflector instanceof ReflectionClass) {
+            /*
+                Class comment
+            */
+            $parentClass = $reflector->getParentClass();
+            if ($parentClass) {
+                return self::getParsed($parentClass);
+            }
+            $interfaces = $reflector->getInterfaceNames();
+            foreach ($interfaces as $className) {
+                $reflectionClass = new ReflectionClass($className);
+                return self::getParsed($reflectionClass);
+            }
+        } else {
+            /*
+                Method or Property comment
+            */
+            $name = $reflector->getName();
+            $reflectionClass = $reflector->getDeclaringClass();
+            $interfaces = $reflectionClass->getInterfaceNames();
+            foreach ($interfaces as $className) {
+                $reflectionClass2 = new ReflectionClass($className);
+                if ($reflectionClass2->hasMethod($name)) {
+                    return self::getParsed($reflectionClass2->getMethod($name));
+                }
+            }
+            $reflectionClass = $reflectionClass->getParentClass();
+            if ($reflectionClass && $reflectionClass->hasMethod($name)) {
+                return self::getParsed($reflectionClass->getMethod($name));
             }
         }
-        $reflectionClass = $reflectionClass->getParentClass();
-        if ($reflectionClass && $reflectionClass->hasMethod($name)) {
-            return self::getParsed($reflectionClass->getMethod($name));
-        }
+        return self::getParsed('');
     }
 
     /**

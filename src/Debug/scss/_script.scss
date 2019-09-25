@@ -103,10 +103,10 @@ i.fa-calendar { font-size:1.1em; }
 	position:absolute;
 	bottom: -1px;
 	width:100%; height:55px;
-	background-image: linear-gradient(to bottom, transparent, white);
+	background-image: linear-gradient(to bottom, rgba(white, 0), white);
 	pointer-events: none;
 }
-[title]:hover .show-more-fade { background-image: linear-gradient(to bottom, transparent, #c9c9c9); }
+[title]:hover .show-more-fade { background-image: linear-gradient(to bottom, rgba(#c9c9c9, 0), #c9c9c9); }
 .show-more, .show-less {
     display: table;
 	box-shadow: 1px 1px 0px 0px rgba(0,0,0, 0.20);
@@ -115,11 +115,11 @@ i.fa-calendar { font-size:1.1em; }
 	background-color: #EEE;
 }
 .level-error .show-more-fade,
-.m_error .show-more-fade { background-image: linear-gradient(to bottom, transparent, $error-bg); }
+.m_error .show-more-fade { background-image: linear-gradient(to bottom, rgba($error-bg, 0), $error-bg); }
 .level-info .show-more-fade,
-.m_info .show-more-fade { background-image: linear-gradient(to bottom, transparent, $info-bg); }
+.m_info .show-more-fade { background-image: linear-gradient(to bottom, rgba($info-bg, 0), $info-bg); }
 .level-warn .show-more-fade,
-.m_warn .show-more-fade { background-image: linear-gradient(to bottom, transparent, $warn-bg); }
+.m_warn .show-more-fade { background-image: linear-gradient(to bottom, rgba($warn-bg, 0), $warn-bg); }
 
 //
 // notifications

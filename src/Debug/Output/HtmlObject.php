@@ -40,7 +40,7 @@ class HtmlObject
      */
 	public function dump($abs)
 	{
-        $title = \trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['description']);
+        $title = \trim($abs['phpDoc']['summary']."\n\n".$abs['phpDoc']['desc']);
         $strClassName = $this->debug->output->html->markupClassname($abs['className'], 'span', array(
             'title' => $title ?: null,
         ));
@@ -195,7 +195,7 @@ class HtmlObject
                         'class' => 'method-name',
                         'title' => \trim($info['phpDoc']['summary']
                             .($this->debug->output->getCfg('outputMethodDescription')
-                                ? "\n\n".$info['phpDoc']['description']
+                                ? "\n\n".$info['phpDoc']['desc']
                                 : '')),
                     ),
                     $methodName

@@ -44,7 +44,7 @@ class Debug
     private $channels = array();
     protected $cfg = array();
     protected $data = array();
-    protected $groupStackRef;   // points to $this->groupStacks[x] (where ex = 'main' or (int) priority)
+    protected $groupStackRef;   // points to $this->groupStacks[x] (where x = 'main' or (int) priority)
     protected $logRef;          // points to either log or logSummary[priority]
     protected $config;          // config instance
     protected $parentInstance;
@@ -79,7 +79,7 @@ class Debug
             'file'      => null,            // if a filepath, will receive log data
             'key'       => null,
             'output'    => false,           // output the log?
-            'channel'   => 'general',
+            'channelName' => 'general',
             'enableProfiling' => false,
             // which error types appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
@@ -88,9 +88,9 @@ class Debug
             'emailFunc' => 'mail',  // callable
             'emailLog'  => false,   // Whether to email a debug log.  (requires 'collect' to also be true)
                                     //
-                                    //   false:   email will not be sent
+                                    //   false:               email will not be sent
                                     //   true or 'onError':   email will be sent (if log is not output)
-                                    //   'always':  email sent regardless of whether error occured or log output
+                                    //   'always':            email sent regardless of whether error occured or log output
             'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
@@ -101,43 +101,18 @@ class Debug
                 'post' => true,
                 'serverVals' => true,
             ),
+            'logRuntime' => true,
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
             'onLog' => null,    // callable
             'factories' => $this->getDefaultFactories(),
             'services' => $this->getDefaultServices(),
         );
-        if (!isset(self::$instance)) {
-            /*
-               self::getInstance() will always return initial/first instance
-            */
-            self::$instance = $this;
-            /*
-                Only register autloader:
-                  a. on initial instance (even though re-registering function does't re-register)
-                  b. if we're unable to to find our Config class (must not be using Composer)
-            */
-            if (!\class_exists('\\bdk\\Debug\\Config')) {
-                \spl_autoload_register(array($this, 'autoloader'));
-            }
-        }
-        if ($eventManager) {
-            $cfg['services']['eventManager'] = $eventManager;
-        }
-        if ($errorHandler) {
-            $cfg['services']['errorHandler'] = $errorHandler;
-        }
-        $this->internal;
-        $this->__get('config')->setCfg($cfg);   // since is defined (albeit null), we need to call __get to initialize
-        if (isset($this->cfg['parent'])) {
-            $this->parentInstance = $this->cfg['parent'];
-            unset($this->cfg['parent']);
-        }
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method
             'entryCountInitial' => 0,       // store number of log entries created during init
             'groupStacks' => array(
-                'main' => array(),  // array('channel' => xxx, 'collect' => xxx)[]
+                'main' => array(),  // array('channel' => Debug, 'collect' => bool)[]
             ),
             'groupPriorityStack' => array(), // array of priorities
                                             //   used to return to the previous summary when groupEnd()ing out of a summary
@@ -165,16 +140,48 @@ class Debug
                 'stack' => array(),
             ),
         );
+        if (!isset(self::$instance)) {
+            /*
+               self::getInstance() will always return initial/first instance
+            */
+            self::$instance = $this;
+            /*
+                Only register autoloader:
+                  a. on initial instance (even though re-registering function does't re-register)
+                  b. if we're unable to to find our Config class (must not be using Composer)
+            */
+            if (!\class_exists('\\bdk\\Debug\\Config')) {
+                \spl_autoload_register(array($this, 'autoloader'));
+            }
+        }
+        if ($eventManager) {
+            $cfg['services']['eventManager'] = $eventManager;
+        }
+        if ($errorHandler) {
+            $cfg['services']['errorHandler'] = $errorHandler;
+        }
+        /*
+            Order is important
+            a) setCfg (so that this->parentInstance gets set
+            b) initialize this->internal after all properties have been initialized
+        */
+        $this->__get('config')->setCfg($cfg);   // since is defined (albeit null), we need to call __get to initialize
         $this->rootInstance = $this;
-        if (!$this->parentInstance) {
-            $this->setLogDest();
-            $this->data['entryCountInitial'] = \count($this->data['log']);
-        } else {
+        if (isset($this->cfg['parent'])) {
+            $this->parentInstance = $this->cfg['parent'];
             while ($this->rootInstance->parentInstance) {
                 $this->rootInstance = $this->rootInstance->parentInstance;
             }
             $this->data = &$this->rootInstance->data;
+            unset($this->cfg['parent']);
+        } else {
+            $this->setLogDest();
+            $this->data['entryCountInitial'] = \count($this->data['log']);
         }
+        /*
+            Initialize Internal
+        */
+        $this->internal;
         /*
             Publish bootstrap event
         */
@@ -194,7 +201,7 @@ class Debug
     public function __call($methodName, $args)
     {
         if (\method_exists($this->internal, $methodName)) {
-            \call_user_func_array(array($this->internal, $methodName), $args);
+            return \call_user_func_array(array($this->internal, $methodName), $args);
         }
         return $this->appendLog(
             $methodName,
@@ -218,7 +225,21 @@ class Debug
     {
         $methodName = \ltrim($methodName, '_');
         if (!self::$instance) {
-            new static();
+            if ($methodName == 'setCfg') {
+                /*
+                    Treat as a special case
+                    Want to initialize with the passed config vs initialize, then setCfg
+                    ie _setCfg(array('outputAs'=>'html')) via command line
+                    we don't want to first initialize with default STDERR output
+                */
+                $cfg = \is_array($args[0])
+                    ? $args[0]
+                    : array($args[0] => $args[1]);
+                new static($cfg);
+                return;
+            } else {
+                new static();
+            }
         }
         /*
             Add 'statically' meta arg
@@ -242,14 +263,15 @@ class Debug
     {
         if (isset($this->cfg['services'][$property])) {
             $val = $this->cfg['services'][$property];
-            if (\is_object($val) && \method_exists($val, '__invoke')) {
+            if ($val instanceof \Closure) {
                 $val = $val($this);
             }
             $this->{$property} = $val;
             return $val;
-        } elseif (isset($this->cfg['factories'][$property])) {
+        }
+        if (isset($this->cfg['factories'][$property])) {
             $val = $this->cfg['factories'][$property];
-            if (\is_object($val) && \method_exists($val, '__invoke')) {
+            if ($val instanceof \Closure) {
                 $val = $val($this);
             }
             return $val;
@@ -284,7 +306,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel']),
+            array('channel' => $this->cfg['channelName']),
             array(
                 'message' => null,
                 'class' => 'danger',
@@ -323,8 +345,12 @@ class Debug
         $assertion = \array_shift($args);
         if (!$assertion) {
             if (!$args) {
+                // add default message
                 $callerInfo = $this->utilities->getCallerInfo();
-                $args[] = 'Assertion failed in '.$callerInfo['file'].' on line '.$callerInfo['line'];
+                $args = array(
+                    'Assertion failed:',
+                    $callerInfo['file'].' (line '.$callerInfo['line'].')',
+                );
             }
             $this->appendLog('assert', $args, $meta);
         }
@@ -353,7 +379,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel']),
+            array('channel' => $this->cfg['channelName']),
             array('flags' => self::CLEAR_LOG),
             array('flags' => 'bitmask')
         );
@@ -366,7 +392,7 @@ class Debug
         $this->setLogDest('log');
         $collect = $this->cfg['collect'];
         $this->cfg['collect'] = true;
-        if ($event['log']) {
+        if ($event['appendLog']) {
             $this->appendLog(
                 $event['method'],
                 $event['args'],
@@ -404,7 +430,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel'])
+            array('channel' => $this->cfg['channelName'])
         );
         // label may be ommitted and only flags passed as a single argument
         //   (excluding potential meta argument)
@@ -465,7 +491,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel'])
+            array('channel' => $this->cfg['channelName'])
         );
         // label may be ommitted and only flags passed as a single argument
         //   (excluding potential meta argument)
@@ -551,22 +577,15 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel']),
+            array('channel' => $this->cfg['channelName']),
             array('value' => \bdk\Debug\Abstracter::UNDEFINED)
         );
         \extract($args);
         $groupStackWas = $this->rootInstance->groupStackRef;
-        $appendLog = false;
+        $haveOpenGroup = false;
         if ($groupStackWas && \end($groupStackWas)['collect'] == $this->cfg['collect']) {
             \array_pop($this->rootInstance->groupStackRef);
-            $appendLog = $this->cfg['collect'];
-        }
-        if ($appendLog && $value !== \bdk\Debug\Abstracter::UNDEFINED) {
-            $this->appendLog(
-                'groupEndValue',
-                array('return', $value),
-                $meta
-            );
+            $haveOpenGroup = $this->cfg['collect'];
         }
         if ($this->data['groupPriorityStack'] && !$groupStackWas) {
             // we're closing a summary group
@@ -585,7 +604,13 @@ class Debug
                 'meta' => $meta,
             ));
             $this->internal->publishBubbleEvent('debug.log', $event);
-        } elseif ($appendLog) {
+        } elseif ($haveOpenGroup) {
+            if ($value !== \bdk\Debug\Abstracter::UNDEFINED) {
+                $this->appendLog(
+                    'groupEndValue',
+                    array('return', $value)
+                );
+            }
             $this->appendLog('groupEnd', array(), $meta);
         }
         $errorCaller = $this->errorHandler->get('errorCaller');
@@ -614,7 +639,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel']),
+            array('channel' => $this->cfg['channelName']),
             array('priority' => 0),
             array('priority')
         );
@@ -647,7 +672,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel'])
+            array('channel' => $this->cfg['channelName'])
         );
         $curDepth = 0;
         foreach ($this->rootInstance->groupStackRef as $group) {
@@ -716,7 +741,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel']),
+            array('channel' => $this->cfg['channelName']),
             array('name' => null),
             array('name')   // move name to meta
         );
@@ -763,7 +788,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel']),
+            array('channel' => $this->cfg['channelName']),
             array('name' => null),
             array('name')
         );
@@ -819,7 +844,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel'])
+            array('channel' => $this->cfg['channelName'])
         );
         $event = $this->methodTable->onLog(new Event($this, array(
             'method' => __FUNCTION__,
@@ -888,7 +913,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel']),
+            array('channel' => $this->cfg['channelName']),
             array(
                 'label' => null,
                 'returnOrTemplate' => false,
@@ -940,7 +965,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel']),
+            array('channel' => $this->cfg['channelName']),
             array(
                 'label' => null,
                 'returnOrTemplate' => false,
@@ -1004,7 +1029,7 @@ class Debug
         $args = \func_get_args();
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel'])
+            array('channel' => $this->cfg['channelName'])
         );
         $microT = 0;
         $ellapsed = 0;
@@ -1048,7 +1073,7 @@ class Debug
             $args,
             array(
                 'caption' => 'trace',
-                'channel' => $this->cfg['channel'],
+                'channel' => $this->cfg['channelName'],
                 'columns' => array('file','line','function'),
             )
         );
@@ -1120,7 +1145,7 @@ class Debug
      * @param string $channelName channel name
      * @param array  $config      channel specific configuration
      *
-     * @return Debug
+     * @return static new or existing `Debug` instance
      */
     public function getChannel($channelName, $config = array())
     {
@@ -1139,17 +1164,15 @@ class Debug
             )));
             unset($cfg['debug']['onBootstrap']);
             // set channel values
-            $cfg['debug']['channel'] = $this->parentInstance
-                ? $this->cfg['channel'].'.'.$channelName
+            $cfg['debug']['channelName'] = $this->parentInstance
+                ? $this->cfg['channelName'].'.'.$channelName
                 : $channelName;
             $cfg['debug']['parent'] = $this;
             // instantiate channel
             $this->channels[$channelName] = new static($cfg);
-            // now update config with passed config
-            //   since passed config not yet "normalized", merging above not possible
-            if ($config) {
-                $this->channels[$channelName]->setCfg($config);
-            }
+        }
+        if ($config) {
+            $this->channels[$channelName]->setCfg($config);
         }
         return $this->channels[$channelName];
     }
@@ -1163,7 +1186,7 @@ class Debug
      *
      * @param boolean $allDescendants (false) include all descendants?
      *
-     * @return array
+     * @return static[]
      */
     public function getChannels($allDescendants = false)
     {
@@ -1172,7 +1195,7 @@ class Debug
             foreach ($this->channels as $channel) {
                 $channels = \array_merge(
                     $channels,
-                    array($channel->getCfg('channel') => $channel),
+                    array($channel->getCfg('channelName') => $channel),
                     $channel->getChannels(true)
                 );
             }
@@ -1204,7 +1227,7 @@ class Debug
     /**
      * Get and clear headers that need to be output
      *
-     * @return [name, value][]
+     * @return array headerName=>value array
      */
     public function getHeaders()
     {
@@ -1218,7 +1241,7 @@ class Debug
      *
      * @param array $cfg optional config
      *
-     * @return object
+     * @return static
      */
     public static function getInstance($cfg = array())
     {
@@ -1235,14 +1258,14 @@ class Debug
      * "metafy" value/values
      *
      * accepts
-     *   array()
-     *   'cfg', option, value  (shortcut for setting single config value)
-     *   key, value
-     *   key                   (value defaults to true)
+     *  * `array('key'=>value)`
+     *  * 'cfg', option, value  (shortcut for setting single config value)
+     *  * 'key', value
+     *  * 'key'                 (value defaults to true)
      *
      * @param mixed $args,... arguments
      *
-     * @return array
+     * @return array special array storing "meta" values
      */
     public static function meta()
     {
@@ -1285,7 +1308,9 @@ class Debug
     }
 
     /**
-     * Publishes debug.output event and returns result
+     * Return debug log output
+     *
+     * Publishes debug.output event and returns event's 'return' value
      *
      * @param array $options Override any output options
      *
@@ -1298,10 +1323,6 @@ class Debug
             $this->config->setCfg($cfgRestore);
             return null;
         }
-        /*
-            I'd like to put this outputAs setting bit inside Output::onOutput
-            but, adding a debug.output subscriber from within a debug.output subscriber = fail
-        */
         $outputAs = $this->output->getCfg('outputAs');
         if (\is_string($outputAs)) {
             $this->output->setCfg('outputAs', $outputAs);
@@ -1318,20 +1339,10 @@ class Debug
                 $channel,
                 array(
                     'headers' => array(),
-                    'return' => '',
                     'isTarget' => $channel === $this,
+                    'return' => '',
                 )
             );
-            $headers = \array_merge($headers, $event['headers']);
-        }
-        if (!$this->getCfg('outputHeaders') || !$headers) {
-            $this->data['headers'] = \array_merge($this->data['headers'], $event['headers']);
-        } elseif (\headers_sent($file, $line)) {
-            \trigger_error('PHPDebugConsole: headers already sent: '.$file.', line '.$line, E_USER_NOTICE);
-        } else {
-            foreach ($headers as $nameVal) {
-                \header($nameVal[0].': '.$nameVal[1]);
-            }
         }
         if (!$this->parentInstance) {
             $this->data['outputSent'] = true;
@@ -1495,7 +1506,7 @@ class Debug
         }
         $cfgRestore = array();
         $meta = \array_merge(
-            array('channel' => $this->cfg['channel']),
+            array('channel' => $this->cfg['channelName']),
             $meta,
             $this->internal->getMetaVals($args)
         );
@@ -1536,7 +1547,7 @@ class Debug
             $event->getValue('method'),
             $event->getValue('args'),
             \array_diff_assoc($event->getValue('meta'), array(
-                'channel' => $this->cfg['channel'],
+                'channel' => $this->cfg['channelName'],
             )),
         );
         return $event->getValue('return');
@@ -1554,7 +1565,7 @@ class Debug
     {
         $meta = $this->internal->getMetaVals(
             $args,
-            array('channel' => $this->cfg['channel'])
+            array('channel' => $this->cfg['channelName'])
         );
         $this->rootInstance->groupStackRef[] = array(
             'channel' => $meta['channel'],

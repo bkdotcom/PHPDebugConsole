@@ -49,8 +49,8 @@ abstract class Base implements OutputInterface
             }
             $this->name = $name;
         }
-        $this->channelName = $this->debug->getCfg('channel');
-        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channel');
+        $this->channelName = $this->debug->getCfg('channelName');
+        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
         $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
     }

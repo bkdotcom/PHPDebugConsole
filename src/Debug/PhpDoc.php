@@ -6,10 +6,17 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3
+ * @version   v3.0
  */
 
 namespace bdk\Debug;
+
+use Reflector;
+use ReflectionClass;
+use ReflectionFunction;
+use ReflectionMethod;
+use ReflectionObject;
+use ReflectionProperty;
 
 /**
  * Get and parse phpDoc block
@@ -18,30 +25,37 @@ class PhpDoc
 {
 
     protected static $cache = array();
+    protected static $reflectorStack = [];
 
     /**
      * Rudimentary doc-block parsing
      *
-     * @param string|object|\Reflector $what doc-block string, object, or reflector object
+     * @param string|object|Reflector $what doc-block string, object, or Reflector instance
      *
      * @return array
      */
     public static function getParsed($what)
     {
-        $hash = null;
-        if (\is_object($what)) {
-            $hash = self::getHash($what);
-            if (isset(self::$cache[$hash])) {
-                return self::$cache[$hash];
-            }
+        $hash = self::getHash($what);
+        if (isset(self::$cache[$hash])) {
+            return self::$cache[$hash];
         }
-        $comment = self::getCommentContent($what);
+        $reflector = self::getReflector($what);
+        if ($reflector) {
+            self::$reflectorStack[] = $reflector;
+            $comment = self::getCommentContent($reflector);
+        } else {
+            $comment = self::getCommentContent($what);
+        }
         if (\is_array($comment)) {
+            if ($reflector) {
+                \array_pop(self::$reflectorStack);
+            }
             return $comment;
         }
         $return = array(
             'summary' => null,
-            'description' => null,
+            'desc' => null,
         );
         if (\preg_match('/^@/m', $comment, $matches, PREG_OFFSET_CAPTURE)) {
             // we have tags
@@ -73,6 +87,9 @@ class PhpDoc
             // cache it
             self::$cache[$hash] = $return;
         }
+        if ($reflector) {
+            \array_pop(self::$reflectorStack);
+        }
         return $return;
     }
 
@@ -103,7 +120,7 @@ class PhpDoc
                     .'(?:&?\$?(?P<name>\S+)\s+)?'
                     .'(?P<desc>.*)?'
                     .'$/s',
-                'callable' => function ($tag, $parsed) {
+                'callable' => function ($parsed) {
                     if (\strpos($parsed['desc'], ' ') === false) {
                         if (!$parsed['type']) {
                             $parsed['type'] = $parsed['desc'];
@@ -113,6 +130,7 @@ class PhpDoc
                             $parsed['desc'] = null;
                         }
                     }
+                    $parsed['type'] = self::typeEdit($parsed['type']);
                     return $parsed;
                 },
             ),
@@ -126,17 +144,30 @@ class PhpDoc
                     .'\((?P<param>((?>[^()]+)|(?R))*)\)'  // see http://php.net/manual/en/regexp.reference.recursive.php
                     .'(?:\s+(?P<desc>.*))?'
                     .'/s',
-                'callable' => function ($tag, $parsed) {
-                    $parsed['static'] = $parsed['static'] !== null;
+                'callable' => function ($parsed) {
                     $parsed['param'] = self::parseParams($parsed['param']);
+                    $parsed['static'] = $parsed['static'] !== null;
+                    $parsed['type'] = self::typeEdit($parsed['type']);
                     return $parsed;
                 },
             ),
             array(
-                'tags' => array('return'),
+                'tags' => array('return', 'throws'),
                 'parts' => array('type','desc'),
                 'regex' => '/^(?P<type>.*?)'
                     .'(?:\s+(?P<desc>.*))?$/s',
+                'callable' => function ($parsed) {
+                    $parsed['type'] = self::typeEdit($parsed['type']);
+                    return $parsed;
+                }
+            ),
+            array(
+                'tags' => array('author'),
+                'parts' => array('name', 'email','desc'),
+                'regex' => '/^(?P<name>[^<]+)'
+                    .'(?:\s+<(?P<email>\S*)>)?'
+                    .'(?:\s+(?P<desc>.*))?'
+                    .'$/s',
             ),
             array(
                 'tags' => array('link'),
@@ -171,7 +202,7 @@ class PhpDoc
                 : null;
         }
         if (isset($parser['callable'])) {
-            $parsed = \call_user_func($parser['callable'], $tag, $parsed);
+            $parsed = \call_user_func($parser['callable'], $parsed, $tag);
         }
         $parsed['desc'] = self::trimDesc($parsed['desc']);
         return $parsed;
@@ -180,44 +211,61 @@ class PhpDoc
     /**
      * Find "parent" phpDoc
      *
-     * @param \Reflector $reflector reflectionMethod
+     * @param Reflector $reflector Reflector interface
      *
      * @return array
      */
-    public static function findInheritedDoc(\Reflector $reflector)
+    public static function findInheritedDoc(Reflector $reflector)
     {
-        $name = $reflector->getName();
-        $reflectionClass = $reflector->getDeclaringClass();
-        $interfaces = $reflectionClass->getInterfaceNames();
-        foreach ($interfaces as $className) {
-            $reflectionClass2 = new \ReflectionClass($className);
-            if ($reflectionClass2->hasMethod($name)) {
-                return self::getParsed($reflectionClass2->getMethod($name));
+        if ($reflector instanceof ReflectionClass) {
+            /*
+                Class comment
+            */
+            $parentClass = $reflector->getParentClass();
+            if ($parentClass) {
+                return self::getParsed($parentClass);
+            }
+            $interfaces = $reflector->getInterfaceNames();
+            foreach ($interfaces as $className) {
+                $reflectionClass = new ReflectionClass($className);
+                return self::getParsed($reflectionClass);
+            }
+        } else {
+            /*
+                Method or Property comment
+            */
+            $name = $reflector->getName();
+            $reflectionClass = $reflector->getDeclaringClass();
+            $interfaces = $reflectionClass->getInterfaceNames();
+            foreach ($interfaces as $className) {
+                $reflectionClass2 = new ReflectionClass($className);
+                if ($reflectionClass2->hasMethod($name)) {
+                    return self::getParsed($reflectionClass2->getMethod($name));
+                }
+            }
+            $reflectionClass = $reflectionClass->getParentClass();
+            if ($reflectionClass && $reflectionClass->hasMethod($name)) {
+                return self::getParsed($reflectionClass->getMethod($name));
             }
         }
-        $reflectionClass = $reflectionClass->getParentClass();
-        if ($reflectionClass && $reflectionClass->hasMethod($name)) {
-            return self::getParsed($reflectionClass->getMethod($name));
-        }
+        return self::getParsed('');
     }
 
     /**
      * Get comment contents
      *
-     * @param string|object|\Reflector $what doc-block string, object, or reflector object
+     * @param Reflector|string $what doc-block string, object, or reflector object
      *
-     * @return string|array may return array if comment contains an cached inheritdoc
+     * @return string|array may return array if comment contains cached inheritdoc
      */
     private static function getCommentContent($what)
     {
         $reflector = null;
-        if (\is_object($what)) {
-            $reflector = $what instanceof \Reflector
-                ? $what
-                : new \ReflectionObject($what);
+        if ($what instanceof Reflector) {
+            $reflector = $what;
             $docComment = $reflector->getDocComment();
         } else {
-            // assume string
+            // assume code string
             $docComment = $what;
         }
         // remove opening "/**" and closing "*/"
@@ -233,7 +281,7 @@ class PhpDoc
                     '/{@inheritdoc}/i',
                     function () use ($reflector) {
                         $phpDoc =  self::findInheritedDoc($reflector);
-                        return $phpDoc['description'];
+                        return $phpDoc['desc'];
                     },
                     $docComment
                 );
@@ -254,20 +302,40 @@ class PhpDoc
     private static function getHash($what)
     {
         $str = null;
-        if (!($what instanceof \Reflector)) {
+        if (\is_object($what) && !($what instanceof Reflector)) {
             $str = \get_class($what);
-        } elseif ($what instanceof \ReflectionClass) {
+        } elseif ($what instanceof ReflectionClass) {
             $str = $what->getName();
-        } elseif ($what instanceof \ReflectionMethod) {
+        } elseif ($what instanceof ReflectionMethod) {
             $str = $what->getDeclaringClass()->getName().'::'.$what->getName().'()';
-        } elseif ($what instanceof \ReflectionFunction) {
+        } elseif ($what instanceof ReflectionFunction) {
             $str = $what->getName().'()';
-        } elseif ($what instanceof \ReflectionProperty) {
+        } elseif ($what instanceof ReflectionProperty) {
             $str = $what->getDeclaringClass()->getName().'::'.$what->getName();
+        } elseif (\is_string($what)) {
+            $str = $what;
         }
         return $str
             ? \md5($str)
             : null;
+    }
+
+    /**
+     * [getReflector description]
+     *
+     * @param mixed $what string|Reflector|object
+     *
+     * @return Reflector|null
+     */
+    private static function getReflector($what)
+    {
+        $reflector = null;
+        if ($what instanceof Reflector) {
+            $reflector = $what;
+        } elseif (\is_object($what)) {
+            $reflector = new ReflectionObject($what);
+        }
+        return $reflector;
     }
 
     /**
@@ -285,7 +353,7 @@ class PhpDoc
         foreach ($params as $i => $str) {
             \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(\S+))?$/', $str, $matches);
             $info = array(
-                'type' => $matches[1] ?: null,
+                'type' => self::typeEdit($matches[1]) ?: null,
                 'name' => $matches[2],
             );
             if (!empty($matches[3])) {
@@ -388,5 +456,39 @@ class PhpDoc
         }
         $desc = \implode("\n", $lines);
         return $desc;
+    }
+
+    /**
+     * Convert "boolean" & "integer" to "bool" & "int"
+     *
+     * @param string $type type hint
+     *
+     * @return string
+     */
+    private static function typeEdit($type)
+    {
+        $types = \preg_split('/\s*\|\s*/', $type);
+        foreach ($types as &$type) {
+            $isArray = false;
+            if (\substr($type, -2) == '[]') {
+                $isArray = true;
+                $type = \substr($type, 0, -2);
+            }
+            switch ($type) {
+                case 'boolean':
+                    $type = 'bool';
+                    break;
+                case 'integer':
+                    $type = 'int';
+                    break;
+                case 'self':
+                    $type = \end(self::$reflectorStack)->getName();
+                    break;
+            }
+            if ($isArray) {
+                $type .= '[]';
+            }
+        }
+        return \implode('|', $types);
     }
 }

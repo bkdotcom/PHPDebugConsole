@@ -41,7 +41,7 @@ class Event implements ArrayAccess, IteratorAggregate
     /**
      * Construct an event with optional subject and values
      *
-     * @param mixed $subject The subject of the event, usually an object
+     * @param mixed $subject The subject of the event (usually an object)
      * @param array $values  Values to store in the event
      */
     public function __construct($subject = null, array $values = array())
@@ -67,7 +67,7 @@ class Event implements ArrayAccess, IteratorAggregate
     }
 
     /**
-     * Getter for subject property.
+     * Get Event's "subject"
      *
      * @return mixed $subject The observer subject
      */
@@ -99,7 +99,7 @@ class Event implements ArrayAccess, IteratorAggregate
     }
 
     /**
-     * Has value.
+     * Does specified key have a value?
      *
      * @param string $key Value name
      *
@@ -111,7 +111,9 @@ class Event implements ArrayAccess, IteratorAggregate
     }
 
     /**
-     * Returns whether further event subscribers should be called
+     * Has propagation been stopped?
+     *
+     * If stopped, no further event subscribers will be called
      *
      * @see Event::stopPropagation()
      *
@@ -139,7 +141,7 @@ class Event implements ArrayAccess, IteratorAggregate
     /**
      * Clears existing values and sets new values
      *
-     * @param array $values values
+     * @param array $values key=>value array of values
      *
      * @return $this
      */
@@ -152,7 +154,7 @@ class Event implements ArrayAccess, IteratorAggregate
     /**
      * Stops the propagation of the event
      *
-     * No further event subscribers will be called after stopPropagation is called
+     * No further event subscribers will be called
      *
      * @return void
      */
@@ -170,7 +172,7 @@ class Event implements ArrayAccess, IteratorAggregate
      */
     public function offsetExists($key)
     {
-        return $this->hasValue($key);
+        return isset($this->values[$key]);
     }
 
     /**

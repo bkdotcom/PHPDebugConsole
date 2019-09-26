@@ -87,7 +87,7 @@ class AbstractObject
             'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
             'phpDoc' => array(
                 'summary' => null,
-                'description' => null,
+                'desc' => null,
                 // additional tags
             ),
             'properties' => array(),
@@ -371,7 +371,7 @@ class AbstractObject
                 }, $phpDocMethod['param']),
                 'phpDoc' => array(
                     'summary' => $phpDocMethod['desc'],
-                    'description' => null,
+                    'desc' => null,
                     'return' => array(
                         'type' => $phpDocMethod['type'],
                         'desc' => null,

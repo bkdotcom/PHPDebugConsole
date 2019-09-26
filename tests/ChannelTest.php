@@ -221,7 +221,7 @@ EOD;
 EOD;
         $this->eventCounter = array();
         $this->debugFoo->eventManager->subscribe('debug.output', function (Event $event) {
-            $channel = $event->getSubject()->getCfg('channel');
+            $channel = $event->getSubject()->getCfg('channelName');
             $this->eventCounter[$channel.'.debug.output'] = isset($this->eventCounter[$channel.'.debug.output'])
                 ? $this->eventCounter[$channel.'.debug.output'] + 1
                 : 1;

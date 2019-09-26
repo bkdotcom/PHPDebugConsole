@@ -45,7 +45,7 @@ class Script extends Base
      */
     public function onOutput(Event $event)
     {
-        $this->channelName = $this->debug->getCfg('channel');
+        $this->channelName = $this->debug->getCfg('channelName');
         $this->data = $this->debug->getData();
         $errorStats = $this->debug->internal->errorStats();
         $errorStr = '';

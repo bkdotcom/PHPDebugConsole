@@ -134,7 +134,7 @@ class Wamp implements OutputInterface
             array(),
             array(
                 'responseCode' => \http_response_code(),
-                'channel' => $this->debug->getCfg('channel'),
+                'channel' => $this->debug->getCfg('channelName'),
             )
         );
     }
@@ -154,7 +154,7 @@ class Wamp implements OutputInterface
             'format' => 'raw',
             'requestId' => $this->requestId,
         ), $meta);
-        if ($meta['channel'] == $this->debug->getCfg('channel')) {
+        if ($meta['channel'] == $this->debug->getCfg('channelName')) {
             unset($meta['channel']);
         }
         if ($meta['format'] == 'raw') {
@@ -216,7 +216,7 @@ class Wamp implements OutputInterface
     private function processExistingData()
     {
         $data = $this->debug->getData();
-        $channelName = $this->debug->getCfg('channel');
+        $channelName = $this->debug->getCfg('channelName');
         foreach ($data['alerts'] as $entry) {
             $this->processLogEntryWEvent($entry[0], $entry[1], $entry[2]);
         }
@@ -308,11 +308,11 @@ class Wamp implements OutputInterface
             array(
                 $metaVals,
                 array(
-                    'channelRoot' => $this->debug->rootInstance->getCfg('channel'),
+                    'channelRoot' => $this->debug->rootInstance->getCfg('channelName'),
                 ),
             ),
             array(
-                'channel' => $this->debug->getCfg('channel'),
+                'channel' => $this->debug->getCfg('channelName'),
             )
         );
     }

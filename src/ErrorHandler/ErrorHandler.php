@@ -60,6 +60,7 @@ class ErrorHandler
         E_USER_NOTICE,
         E_USER_WARNING,
     );
+    protected $inShutdown = false;
     protected $registered = false;
     protected $prevDisplayErrors = null;
     protected $prevErrorHandler = null;
@@ -132,8 +133,11 @@ class ErrorHandler
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
             ));
-        } elseif ($isFatalError && \extension_loaded('xdebug')) {
-            $backtrace = \xdebug_get_function_stack();
+        } elseif ($this->inShutdown) {
+            if (!\extension_loaded('xdebug')) {
+                return array();
+            }
+            $backtrace = $this->xdebugGetFunctionStack();
             $backtrace = \array_reverse($backtrace);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
             $errorFileLine = array(
@@ -147,9 +151,6 @@ class ErrorHandler
             if (\array_intersect_assoc($errorFileLine, $backtrace[0]) !== $errorFileLine) {
                 \array_unshift($backtrace, $errorFileLine);
             }
-        } elseif ($isFatalError) {
-            // backtrace unavailable
-            $backtrace = array();
         } else {
             $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
@@ -239,17 +240,7 @@ class ErrorHandler
         if (!$isHandledType) {
             // not handled
             //   if cfg['errorReporting'] == 'system', error could simply be suppressed
-            if ($error['continueToPrevHandler']) {
-                return \call_user_func(
-                    $this->prevErrorHandler,
-                    $error['type'],
-                    $error['message'],
-                    $error['file'],
-                    $error['line'],
-                    $vars
-                );
-            }
-            return false;   // return false to continue to "normal" error handler
+            return $this->continueToPrev($error);
         }
         if (!$error['isSuppressed']) {
             // suppressed error should not clear error caller
@@ -259,14 +250,7 @@ class ErrorHandler
         }
         $this->data['errors'][ $error['hash'] ] = $error;
         if ($error['continueToPrevHandler'] && $this->prevErrorHandler && !$error->isPropagationStopped()) {
-            return \call_user_func(
-                $this->prevErrorHandler,
-                $error['type'],
-                $error['message'],
-                $error['file'],
-                $error['line'],
-                $vars
-            );
+            return $this->continueToPrev($error);
         }
         if (\in_array($error['type'], array(E_USER_ERROR, E_RECOVERABLE_ERROR))) {
             $this->onUserError($error);
@@ -334,6 +318,7 @@ class ErrorHandler
      */
     public function onShutdown(Event $event)
     {
+        $this->inShutdown = true;
         if (!$this->registered) {
             return;
         }
@@ -407,6 +392,7 @@ class ErrorHandler
                 $key => $newVal,
             );
         } elseif (\is_array($mixed)) {
+            $ret = \array_intersect_key($this->cfg, $mixed);
             $values = $mixed;
         }
         if (isset($values['onError'])) {
@@ -542,6 +528,28 @@ class ErrorHandler
         }
         $i++;
         return \array_slice($backtrace, $i);
+    }
+
+    /**
+     * Pass error to prevErrorHandler (if there was one)
+     *
+     * @param Error $error Error instance
+     *
+     * @return boolean
+     */
+    protected function continueToPrev(Error $error)
+    {
+        if (!$this->prevErrorHandler) {
+            return false;
+        }
+        return \call_user_func(
+            $this->prevErrorHandler,
+            $error['type'],
+            $error['message'],
+            $error['file'],
+            $error['line'],
+            $error['vars']
+        );
     }
 
     /**
@@ -712,5 +720,33 @@ class ErrorHandler
                     script will be halted
                 */
         }
+    }
+
+    /**
+     * wrapper for xdebug_get_function_stack
+     * accounts for bug 1529 (may report incorrect file)
+     *
+     * @return array
+     * @see    https://bugs.xdebug.org/view.php?id=1529
+     */
+    protected function xdebugGetFunctionStack()
+    {
+        $stack = \xdebug_get_function_stack();
+        $xdebugVer = \phpversion('xdebug');
+        if (\version_compare($xdebugVer, '2.6.0', '<')) {
+            foreach ($stack as $i => $frame) {
+                $function = isset($frame['function'])
+                    ? $frame['function']
+                    : null;
+                if ($function === '__get') {
+                    // wrong file!
+                    $prev = $stack[$i-1];
+                    $stack[$i]['file'] = isset($prev['include_filename'])
+                        ? $prev['include_filename']
+                        : $prev['file'];
+                }
+            }
+        }
+        return $stack;
     }
 }

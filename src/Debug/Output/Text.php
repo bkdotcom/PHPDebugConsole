@@ -31,7 +31,7 @@ class Text extends Base
      */
     public function onOutput(Event $event)
     {
-        $this->channelName = $this->debug->getCfg('channel');
+        $this->channelName = $this->debug->getCfg('channelName');
         $this->data = $this->debug->getData();
         $str = '';
         $str .= $this->processAlerts();
@@ -137,6 +137,7 @@ class Text extends Base
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
                 $glueAfterFirst = false;
+                $args[0] = \rtrim($args[0]).' ';
             } elseif (\count($args) == 2) {
                 $glue = ' = ';
             }

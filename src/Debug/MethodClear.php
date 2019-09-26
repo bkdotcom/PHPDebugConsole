@@ -29,8 +29,8 @@ class MethodClear
     /**
      * Constructor
      *
-     * @param \bdk\Debug $debug Debug instance
-     * @param array      $data  debug data
+     * @param Debug $debug Debug instance
+     * @param array $data  debug data
      */
     public function __construct(Debug $debug, &$data)
     {
@@ -79,7 +79,7 @@ class MethodClear
                     'silent' =>  (bool) ($bitmask & Debug::CLEAR_SILENT),
                 ),
             ), $event['meta']),
-            'log' => $args && !($bitmask & Debug::CLEAR_SILENT),
+            'appendLog' => $args && !($bitmask & Debug::CLEAR_SILENT),
             'publish' => (bool) $args,
         ));
         return $event;
@@ -88,13 +88,14 @@ class MethodClear
     /**
      * Test channel for inclussion
      *
-     * @param string $channel channel name to test against
+     * @param array $logEntry log entry
      *
      * @return boolean
      */
-    private function channelTest($channel)
+    private function channelTest($logEntry)
     {
-        return $this->isRootInstance || \preg_match($this->channelRegex, $channel);
+        $channelName = isset($logEntry[2]['channel']) ? $logEntry[2]['channel'] : null;
+        return $this->isRootInstance || \preg_match($this->channelRegex, $channelName);
     }
 
     /**
@@ -111,9 +112,8 @@ class MethodClear
             return null;
         }
         if ($this->channelName) {
-            foreach ($this->data['alerts'] as $i => $entry) {
-                $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
-                if ($this->channelTest($channel)) {
+            foreach ($this->data['alerts'] as $i => $logEntry) {
+                if ($this->channelTest($logEntry)) {
                     unset($this->data['alerts'][$i]);
                 }
             }
@@ -174,19 +174,19 @@ class MethodClear
     private function clearErrorsHelper(&$log, $clear = true)
     {
         $errorsNotCleared = array();
-        foreach ($log as $k => $entry) {
-            if (!\in_array($entry[0], array('error','warn'))) {
+        foreach ($log as $k => $logEntry) {
+            if (!\in_array($logEntry[0], array('error','warn'))) {
                 continue;
             }
             $clear2 = $clear;
             if ($this->channelName) {
-                $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
-                $clear2 = $clear && $channel === $this->channelName;
+                $channelName = isset($logEntry[2]['channel']) ? $logEntry[2]['channel'] : null;
+                $clear2 = $clear && $channelName === $this->channelName;
             }
             if ($clear2) {
                 unset($log[$k]);
-            } elseif (isset($entry[2]['errorHash'])) {
-                $errorsNotCleared[] = $entry[2]['errorHash'];
+            } elseif (isset($logEnntry[2]['errorHash'])) {
+                $errorsNotCleared[] = $logEntry[2]['errorHash'];
             }
         }
         $log = \array_values($log);
@@ -219,7 +219,7 @@ class MethodClear
     }
 
     /**
-     * [clearLogHelper description]
+     * Clear log data
      *
      * @param array   $log         log to clear (passed by reference)
      * @param boolean $clearErrors whether or not to clear errors
@@ -234,11 +234,11 @@ class MethodClear
             : array('error','warn');
         if ($keep || $this->channelName) {
             // we need to go through and filter based on method and/or channel
-            foreach ($log as $k => $entry) {
-                $channel = isset($entry[2]['channel']) ? $entry[2]['channel'] : null;
-                $channelMatch = !$this->channelName || $channel === $this->channelName;
-                if (\in_array($entry[0], $keep) || !$channelMatch) {
-                    $entriesKeep[$k] = $entry;
+            foreach ($log as $k => $logEntry) {
+                $channelName = isset($logEntry[2]['channel']) ? $logEntry[2]['channel'] : null;
+                $channelMatch = !$this->channelName || $channelName === $this->channelName;
+                if (\in_array($logEntry[0], $keep) || !$channelMatch) {
+                    $entriesKeep[$k] = $logEntry;
                 }
             }
         }

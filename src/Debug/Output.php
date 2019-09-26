@@ -120,36 +120,7 @@ class Output implements SubscriberInterface
      */
     public function getSubscriptions()
     {
-        return array(
-            'debug.output' => array('onOutput', 1),
-        );
-    }
-
-    /**
-     * debug.output subscriber
-     *
-     * @param Event $event debug.output event object
-     *
-     * @return void
-     */
-    public function onOutput(Event $event)
-    {
-        if (!$event['isTarget']) {
-            /*
-                All channels share the same data.
-                We only need to do this via the channel that called output
-            */
-            return;
-        }
-        $this->data = $this->debug->getData();
-        $this->closeOpenGroups();
-        foreach ($this->data['logSummary'] as &$log) {
-            $this->removeHideIfEmptyGroups($log);
-            $this->uncollapseErrors($log);
-        }
-        $this->removeHideIfEmptyGroups($this->data['log']);
-        $this->uncollapseErrors($this->data['log']);
-        $this->debug->setData($this->data);
+        return array();
     }
 
     /**
@@ -195,34 +166,6 @@ class Output implements SubscriberInterface
     }
 
     /**
-     * Close any unclosed groups
-     *
-     * We may have forgotten to end a group or the script may have exited
-     *
-     * @return void
-     */
-    private function closeOpenGroups()
-    {
-        $this->data['groupPriorityStack'][] = 'main';
-        while ($this->data['groupPriorityStack']) {
-            $priority = \array_pop($this->data['groupPriorityStack']);
-            foreach ($this->data['groupStacks'][$priority] as $i => $info) {
-                if ($info['collect']) {
-                    unset($this->data['groupStacks'][$priority][$i]);
-                    $meta = array(
-                        'channel' => $info['channel'],
-                    );
-                    if ($priority === 'main') {
-                        $this->data['log'][] = array('groupEnd', array(), $meta);
-                    } else {
-                        $this->data['logSummary'][$priority][] = array('groupEnd', array(), $meta);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Determine default outputAs
      *
      * @return string
@@ -242,51 +185,6 @@ class Output implements SubscriberInterface
             $ret = 'text';
         }
         return $ret;
-    }
-
-    /**
-     * Remove empty groups with 'hideIfEmpty' meta value
-     *
-     * @param array $log log or summary
-     *
-     * @return void
-     */
-    private function removeHideIfEmptyGroups(&$log)
-    {
-        $groupStack = array();
-        $groupStackCount = 0;
-        $removed = false;
-        for ($i = 0, $count = \count($log); $i < $count; $i++) {
-            $entry = $log[$i];
-            $method = $entry[0];
-            /*
-                pushing/popping to/from groupStack led to unexplicable warning:
-                "Cannot add element to the array as the next element is already occupied"
-            */
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[$groupStackCount] = array(
-                    'i' => $i,
-                    'meta' => !empty($entry[2]) ? $entry[2] : array(),
-                    'hasEntries' => false,
-                );
-                $groupStackCount ++;
-            } elseif ($groupStackCount) {
-                if ($method == 'groupEnd') {
-                    $groupStackCount--;
-                    $group = $groupStack[$groupStackCount];
-                    if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
-                        unset($log[$group['i']]);   // remove open entry
-                        unset($log[$i]);            // remove end entry
-                        $removed = true;
-                    }
-                } else {
-                    $groupStack[$groupStackCount - 1]['hasEntries'] = true;
-                }
-            }
-        }
-        if ($removed) {
-            $log = \array_values($log);
-        }
     }
 
     /**
@@ -332,30 +230,6 @@ class Output implements SubscriberInterface
             $this->cfg['outputAs'] = $obj;
             if ($prop) {
                 $this->{$prop} = $obj;
-            }
-        }
-    }
-
-    /**
-     * Uncollapse groups containing errors.
-     *
-     * @param array $log log or summary
-     *
-     * @return void
-     */
-    private function uncollapseErrors(&$log)
-    {
-        $groupStack = array();
-        for ($i = 0, $count = \count($log); $i < $count; $i++) {
-            $method = $log[$i][0];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[] = $i;
-            } elseif ($method == 'groupEnd') {
-                \array_pop($groupStack);
-            } elseif (\in_array($method, array('error', 'warn'))) {
-                foreach ($groupStack as $i2) {
-                    $log[$i2][0] = 'group';
-                }
             }
         }
     }

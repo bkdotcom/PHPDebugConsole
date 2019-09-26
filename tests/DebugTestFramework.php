@@ -216,11 +216,13 @@ class DebugTestFramework extends DOMTestCase
                 } elseif (is_string($outputExpect)) {
                     $this->assertStringMatchesFormat($outputExpect, json_encode($logEntryTemp), 'log entry does not match format');
                 } else {
+                    ksort($outputExpect[2]);
+                    ksort($logEntryTemp[2]);
                     if (isset($outputExpect[2]['file']) && $outputExpect[2]['file'] === '*') {
                         unset($outputExpect[2]['file']);
                         unset($logEntryTemp[2]['file']);
                     }
-                    $this->assertSame($outputExpect, $logEntryTemp);
+                    $this->assertEquals($outputExpect, $logEntryTemp);
                 }
                 continue;
             } elseif ($test == 'custom') {

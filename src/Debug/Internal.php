@@ -31,8 +31,9 @@ class Internal implements SubscriberInterface
 {
 
     private $debug;
+    private $bootstraped = false;
     private $error;     // store error object when logging an error
-
+    private $inShutdown = false;
     private static $profilingEnabled = false;
 
     /**
@@ -43,10 +44,10 @@ class Internal implements SubscriberInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
+        $this->debug->eventManager->addSubscriberInterface($this);
         if ($debug->parentInstance) {
             return;
         }
-        $this->debug->eventManager->addSubscriberInterface($this);
         $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
@@ -120,7 +121,7 @@ class Internal implements SubscriberInterface
             'requestId',
             'runtime',
         )));
-        $data['rootChannel'] = $this->debug->getCfg('channel');
+        $data['rootChannel'] = $this->debug->getCfg('channelName');
         $body .= $this->debug->utilities->serializeLog($data);
         /*
             Now email
@@ -288,13 +289,31 @@ class Internal implements SubscriberInterface
      */
     public function getSubscriptions()
     {
-        return array(
-            'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
-            'debug.config' => array('onConfig', PHP_INT_MAX),
-            'debug.output' => 'onOutput',
-            'errorHandler.error' => 'onError',
-            'php.shutdown' => 'onShutdown',
-        );
+        if ($this->debug->parentInstance) {
+            // we are a child channel
+            return array(
+                'debug.output' => array(
+                    array('onOutput', 1),
+                    array('onOutputHeaders', -1),
+                ),
+                'debug.config' => array('onConfig', PHP_INT_MAX),
+            );
+        } else {
+            return array(
+                'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
+                'debug.config' => array('onConfig', PHP_INT_MAX),
+                'debug.dumpCustom' => 'onDumpCustom',
+                'debug.output' => array(
+                    array('onOutput', 1),
+                    array('onOutputHeaders', -1),
+                ),
+                'errorHandler.error' => 'onError',
+                'php.shutdown' => array(
+                    array('onShutdownHigh', PHP_INT_MAX),
+                    array('onShutdownLow', PHP_INT_MAX * -1)
+                ),
+            );
+        }
     }
 
     /**
@@ -306,34 +325,22 @@ class Internal implements SubscriberInterface
     {
         $entryCountInitial = $this->debug->getData('entryCountInitial');
         $entryCountCurrent = $this->debug->getData('log/__count__');
-        $haveLog = $entryCountCurrent > $entryCountInitial;
         $lastEntryMethod = $this->debug->getData('log/__end__/0');
-        return $haveLog && $lastEntryMethod !== 'clear';
+        return $entryCountCurrent > $entryCountInitial && $lastEntryMethod !== 'clear';
     }
 
     /**
-     * debug.init subscriber
+     * debug.bootstrap subscriber
+     *
+     * @param Event $event debug.bootstrap event instance
      *
      * @return void
      */
-    public function onBootstrap()
+    public function onBootstrap(Event $event)
     {
-        if ($this->debug->parentInstance) {
-            // only recored php/request info for root instance
-            return;
-        }
-        $collectWas = $this->debug->setCfg('collect', true);
-        $this->debug->groupSummary();
-        $this->debug->group('environment', $this->debug->meta(array(
-            'hideIfEmpty' => true,
-            'level' => 'info',
-        )));
-        $this->logPhpInfo();
-        $this->logServerVals();
-        $this->logRequest();    // headers, cookies, post
-        $this->debug->groupEnd();
-        $this->debug->groupEnd();
-        $this->debug->setCfg('collect', $collectWas);
+        $onBootstrap = new OnBootstrap();
+        $onBootstrap($event);
+        $this->bootstraped = true;
     }
 
     /**
@@ -367,8 +374,9 @@ class Internal implements SubscriberInterface
             /*
                 Replace - not append - subscriber set via setCfg
             */
-            if (isset($this->cfg['onLog'])) {
-                $this->debug->eventManager->unsubscribe('debug.log', $this->cfg['onLog']);
+            $onLogPrev = $this->debug->getCfg('onLog');
+            if ($onLogPrev) {
+                $this->debug->eventManager->unsubscribe('debug.log', $onLogPrev);
             }
             $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
         }
@@ -382,6 +390,24 @@ class Internal implements SubscriberInterface
                 FileStreamWrapper::register($pathsExclude);
             }
         }
+    }
+
+    /**
+     * debug.dumpCustom subscriber
+     *
+     * @param Event $event event instance
+     *
+     * @return void
+     */
+    public function onDumpCustom(Event $event)
+    {
+        $abs = $event->getSubject();
+        if ($abs['return']) {
+            // return already defined..   prev subscriber should have stopped propagation
+            return;
+        }
+        $event['return'] = \print_r($abs->getValues(), true);
+        $event['typeMore'] = 't_string';
     }
 
     /**
@@ -423,41 +449,74 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * debug.output event subscriber
+     * debug.output subscriber
+     *
+     * @param Event $event debug.output event object
      *
      * @return void
      */
-    public function onOutput()
+    public function onOutput(Event $event)
     {
-        if ($this->debug->parentInstance) {
-            // only record runtime info for root instance
-            return;
+        if ($event['isTarget']) {
+            /*
+                All channels share the same data.
+                We only need to do this via the channel that called output
+            */
+            $this->onOutputCleanup();
         }
-        $vals = $this->runtimeVals();
-        $this->debug->groupSummary(1);
-        $this->debug->info('Built In '.$vals['runtime'].' sec');
-        $this->debug->info(
-            'Peak Memory Usage'
-                .($this->debug->getCfg('output/outputAs') == 'html'
-                    ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
-                    : '')
-                .': '
-                .$this->debug->utilities->getBytes($vals['memoryPeakUsage']).' / '
-                .$this->debug->utilities->getBytes($vals['memoryLimit'])
-        );
-        $this->debug->groupEnd();
+        if (!$this->debug->parentInstance) {
+            $this->onOutputLogRuntime();
+        }
     }
 
     /**
+     * debug.output subscriber
+     *
+     * Merge event headers into data['headers'] or output them
+     *
+     * @param Event $event debug.output event object
+     *
+     * @return void
+     */
+    public function onOutputHeaders(Event $event)
+    {
+        $headers = $event['headers'];
+        $outputHeaders = $event->getSubject()->getCfg('outputHeaders');
+        if (!$outputHeaders || !$headers) {
+            $event->getSubject()->setData('headers', \array_merge($event->getSubject()->getData('headers'), $headers));
+        } elseif (\headers_sent($file, $line)) {
+            \trigger_error('PHPDebugConsole: headers already sent: '.$file.', line '.$line, E_USER_NOTICE);
+        } else {
+            foreach ($headers as $nameVal) {
+                \header($nameVal[0].': '.$nameVal[1]);
+            }
+        }
+    }
+
+    /**
+     * php.shutdown subscriber (high priority)
+     *
+     * @return void
+     */
+    public function onShutdownHigh()
+    {
+        $this->inShutdown = true;
+        $this->closeOpenGroups();
+        $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLogShutdown'));
+    }
+
+    /**
+     * php.shutdown subscriber (low priority)
      * Email Log if emailLog is 'always' or 'onError'
      * output log if not already output
      *
      * @return void
      */
-    public function onShutdown()
+    public function onShutdownLow()
     {
-        $this->runtimeVals();
+        $this->debug->eventManager->unsubscribe('debug.log', array($this, 'onDebugLogShutdown'));
         if ($this->testEmailLog()) {
+            $this->runtimeVals();
             $this->emailLog();
         }
         if (!$this->debug->getData('outputSent')) {
@@ -474,15 +533,15 @@ class Internal implements SubscriberInterface
      * @param mixed  $eventOrSubject passed to subscribers
      * @param array  $values         values to attach to event
      *
-     * @return mixed
+     * @return Event
      */
     public function publishBubbleEvent($eventName, Event $event, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = $event->getSubject();
-            if (!$debug instanceof Debug) {
-                $debug = $this->debug;
-            }
+            $subject = $event->getSubject();
+            $debug = $subject instanceof Debug
+                ? $subject
+                : $this->debug;
         }
         do {
             $debug->eventManager->publish($eventName, $event);
@@ -524,177 +583,136 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Log some PHP info
+     * Close any unclosed groups
+     *
+     * We may have forgotten to end a group or the script may have exited
      *
      * @return void
      */
-    private function logPhpInfo()
+    private function closeOpenGroups()
     {
-        if (!$this->debug->getCfg('logEnvInfo.phpInfo')) {
+        if ($this->inShutdown) {
+            // we already closed
             return;
         }
-        $this->debug->log('PHP Version', PHP_VERSION);
-        $this->debug->log('ini location', \php_ini_loaded_file());
-        $this->debug->log('memory_limit', $this->debug->utilities->getBytes($this->debug->utilities->memoryLimit()));
-        $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
-        if (\session_module_name() === 'files') {
-            $this->debug->log('session_save_path', \session_save_path() ?: \sys_get_temp_dir());
-        }
-        $extensionsCheck = array('curl','mbstring');
-        $extensionsCheck = \array_filter($extensionsCheck, function ($extension) {
-            return !\extension_loaded($extension);
-        });
-        if ($extensionsCheck) {
-            $this->debug->warn('These common extensions are not loaded:', $extensionsCheck);
-        }
-        $this->logPhpInfoEr();
-    }
-
-    /**
-     * Log if
-     * PHP's error reporting !== (E_ALL | E_STRICT)
-     * PHPDebugConsole is not logging (E_ALL | E_STRICT)
-     *
-     * @return void
-     */
-    private function logPhpInfoEr()
-    {
-        $errorReportingRaw = $this->debug->getCfg('errorReporting');
-        $errorReporting = $errorReportingRaw === 'system'
-            ? \error_reporting()
-            : $errorReportingRaw;
-        $msgLines = array();
-        $styles = array();
-        $styleMono = 'font-family:monospace; opacity:0.8;';
-        $styleReset = 'font-family:inherit; white-space:pre-wrap;';
-        if (\error_reporting() !== (E_ALL | E_STRICT)) {
-            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c'.ErrorLevel::toConstantString().'%c` rather than `%cE_ALL | E_STRICT%c`';
-            $styles = array(
-                $styleMono, $styleReset, // wraps "error_reporting"
-                $styleMono, $styleReset, // wraps actual
-                $styleMono, $styleReset, // wraps E_ALL | E_STRICT
-            );
-            if ($errorReporting === (E_ALL | E_STRICT)) {
-                $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
-                $styles[] = $styleMono;
-                $styles[] = $styleReset;
-            }
-        }
-        if ($errorReporting !== (E_ALL | E_STRICT)) {
-            if ($errorReportingRaw === 'system') {
-                $msgLines[] = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
-            } elseif ($errorReporting === \error_reporting()) {
-                $msgLines[] = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
-                    .'`%c'.ErrorLevel::toConstantString($errorReporting).'%c`';
-                $styles[] = $styleMono;
-                $styles[] = $styleReset;
-            } else {
-                $msgLines[] = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
-                    .'`%c'.ErrorLevel::toConstantString($errorReporting).'%c`';
-                $styles[] = $styleMono;
-                $styles[] = $styleReset;
-            }
-        }
-        if ($msgLines) {
-            $args = array(\implode("\n", $msgLines));
-            $args = \array_merge($args, $styles);
-            $args[] = $this->debug->meta(array(
-                'file' => null,
-                'line' => null,
-            ));
-            \call_user_func_array(array($this->debug, 'warn'), $args);
-        }
-    }
-
-    /**
-     * Log Cookie, Post, & Files data
-     *
-     * @return void
-     */
-    private function logRequest()
-    {
-        $this->logRequestHeaders();
-        if ($this->debug->getCfg('logEnvInfo.cookies')) {
-            $cookieVals = $_COOKIE;
-            \ksort($cookieVals, SORT_NATURAL);
-            $this->debug->log('$_COOKIE', $cookieVals);
-        }
-        // don't expect a request body for these methods
-        $noBody = !isset($_SERVER['REQUEST_METHOD'])
-            || \in_array($_SERVER['REQUEST_METHOD'], array('CONNECT','GET','HEAD','OPTIONS','TRACE'));
-        if ($this->debug->getCfg('logEnvInfo.post') && !$noBody) {
-            if ($_POST) {
-                $this->debug->log('$_POST', $_POST);
-            } else {
-                $input = \file_get_contents('php://input');
-                if ($input) {
-                    $this->debug->log('php://input', $input);
-                } elseif (isset($_SERVER['REQUEST_METHOD']) && empty($_FILES)) {
-                    $this->debug->warn($_SERVER['REQUEST_METHOD'].' request with no body');
+        $data = $this->debug->getData();
+        $data['groupPriorityStack'][] = 'main';
+        while ($data['groupPriorityStack']) {
+            $priority = \array_pop($data['groupPriorityStack']);
+            foreach ($data['groupStacks'][$priority] as $i => $info) {
+                if (!$info['collect']) {
+                    continue;
+                }
+                unset($data['groupStacks'][$priority][$i]);
+                $meta = array(
+                    'channel' => $info['channel'],
+                );
+                if ($priority === 'main') {
+                    $data['log'][] = array('groupEnd', array(), $meta);
+                } else {
+                    $data['logSummary'][$priority][] = array('groupEnd', array(), $meta);
                 }
             }
-            if (!empty($_FILES)) {
-                $this->debug->log('$_FILES', $_FILES);
-            }
         }
+        $this->debug->setData($data);
     }
 
     /**
-     * Log Request Headers
+     * "cleanup"
+     *    close open groups
+     *    remove "hide-if-empty" groups
+     *    uncollapse errors
      *
      * @return void
      */
-    private function logRequestHeaders()
+    private function onOutputCleanup()
     {
-        if (!$this->debug->getCfg('logEnvInfo.headers')) {
-            return;
+        $this->closeOpenGroups();
+        $data = $this->debug->getData();
+        $data['headers'] = array();
+        $this->removeHideIfEmptyGroups($data['log']);
+        $this->uncollapseErrors($data['log']);
+        foreach ($data['logSummary'] as &$log) {
+            $this->removeHideIfEmptyGroups($log);
+            $this->uncollapseErrors($log);
         }
-        if (!empty($_SERVER['argv'])) {
-            return;
-        }
-        $headers = $this->debug->utilities->getAllHeaders();
-        \ksort($headers, SORT_NATURAL);
-        $this->debug->log('request headers', $headers);
+        $this->debug->setData($data);
     }
 
     /**
-     * Log $_SERVER values specified by `logServerKeys` config option
+     * Log our runtime info in a summary group
+     *
+     * As we're only subscribed to root debug instance's debug.output event, this info
+     *   will not be output for any sub-channels output directly
      *
      * @return void
      */
-    private function logServerVals()
+    private function onOutputLogRuntime()
     {
-        $logEnvInfo = $this->debug->getCfg('logEnvInfo');
-        if (!$logEnvInfo['serverVals']) {
+        if (!$this->debug->getCfg('logRuntime')) {
             return;
         }
-        $logServerKeys = $this->debug->getCfg('logServerKeys');
-        if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] !== 'GET') {
-            $logServerKeys[] = 'REQUEST_METHOD';
-        }
-        if (isset($_SERVER['CONTENT_LENGTH'])) {
-            $logServerKeys[] = 'CONTENT_LENGTH';
-            $logServerKeys[] = 'CONTENT_TYPE';
-        }
-        if (!$logEnvInfo['headers']) {
-            $logServerKeys[] = 'HTTP_HOST';
-        }
-        $logServerKeys = \array_unique($logServerKeys);
-        if (!$logServerKeys) {
-            return;
-        }
-        $vals = array();
-        foreach ($logServerKeys as $k) {
-            if (!\array_key_exists($k, $_SERVER)) {
-                $vals[$k] = $this->debug->abstracter->UNDEFINED;
-            } elseif ($k == 'REQUEST_TIME') {
-                $vals[$k] = \date('Y-m-d H:i:s T', $_SERVER['REQUEST_TIME']);
-            } else {
-                $vals[$k] = $_SERVER[$k];
+        $vals = $this->runtimeVals();
+        $outputAs = $this->debug->getCfg('outputAs');
+        $outputAsHtml = $outputAs && \get_class($outputAs) == 'bdk\\Debug\\Route\\Html';
+        $this->debug->groupSummary(1);
+        $this->debug->info('Built In '.$vals['runtime'].' sec');
+        $this->debug->info(
+            'Peak Memory Usage'
+                .($outputAsHtml
+                    ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
+                    : '')
+                .': '
+                .$this->debug->utilities->getBytes($vals['memoryPeakUsage']).' / '
+                .$this->debug->utilities->getBytes($vals['memoryLimit']),
+            $this->debug->meta('sanitize', false)
+        );
+        $this->debug->groupEnd();
+    }
+
+    /**
+     * Remove empty groups with 'hideIfEmpty' meta value
+     *
+     * @param array $log log or summary
+     *
+     * @return void
+     */
+    private function removeHideIfEmptyGroups(&$log)
+    {
+        $groupStack = array();
+        $groupStackCount = 0;
+        $removed = false;
+        for ($i = 0, $count = \count($log); $i < $count; $i++) {
+            $logEntry = $log[$i];
+            $method = $logEntry[0];
+            /*
+                pushing/popping to/from groupStack led to unexplicable warning:
+                "Cannot add element to the array as the next element is already occupied"
+            */
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $groupStack[$groupStackCount] = array(
+                    'i' => $i,
+                    'meta' => !empty($logEntry[2]) ? $logEntry[2] : array(),
+                    'hasEntries' => false,
+                );
+                $groupStackCount ++;
+            } elseif ($groupStackCount) {
+                if ($method == 'groupEnd') {
+                    $groupStackCount--;
+                    $group = $groupStack[$groupStackCount];
+                    if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
+                        unset($log[$group['i']]);   // remove open entry
+                        unset($log[$i]);            // remove end entry
+                        $removed = true;
+                    }
+                } else {
+                    $groupStack[$groupStackCount - 1]['hasEntries'] = true;
+                }
             }
         }
-        \ksort($vals, SORT_NATURAL);
-        $this->debug->log('$_SERVER', $vals);
+        if ($removed) {
+            $log = \array_values($log);
+        }
     }
 
     /**
@@ -737,6 +755,7 @@ class Internal implements SubscriberInterface
             return true;
         }
         if ($this->debug->getCfg('emailLog') === 'onError') {
+            // see if we handled any unsupressed errors of types specified with emailMask
             $errors = $this->debug->errorHandler->get('errors');
             $emailMask = $this->debug->errorEmailer->getCfg('emailMask');
             $emailableErrors = \array_filter($errors, function ($error) use ($emailMask) {
@@ -745,5 +764,29 @@ class Internal implements SubscriberInterface
             return !empty($emailableErrors);
         }
         return false;
+    }
+
+    /**
+     * Uncollapse groups containing errors.
+     *
+     * @param array $log log or summary
+     *
+     * @return void
+     */
+    private function uncollapseErrors(&$log)
+    {
+        $groupStack = array();
+        for ($i = 0, $count = \count($log); $i < $count; $i++) {
+            $method = $log[$i][0];
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $groupStack[] = $i;
+            } elseif ($method == 'groupEnd') {
+                \array_pop($groupStack);
+            } elseif (\in_array($method, array('error', 'warn'))) {
+                foreach ($groupStack as $i2) {
+                    $log[$i2][0] = 'group';
+                }
+            }
+        }
     }
 }

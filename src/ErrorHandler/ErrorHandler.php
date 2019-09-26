@@ -119,13 +119,11 @@ class ErrorHandler
     public function backtrace($error = null)
     {
         $exception = null;
-        $isFatalError = false;
         if ($error instanceof \Exception) {
             $exception = $error;
         } elseif ($error) {
             // array or Event
             $exception = $error['exception'];
-            $isFatalError = \in_array($error['type'], $this->errCategories['fatal']);
         }
         if ($exception) {
             $backtrace = $exception->getTrace();
@@ -533,11 +531,11 @@ class ErrorHandler
     /**
      * Pass error to prevErrorHandler (if there was one)
      *
-     * @param Error $error Error instance
+     * @param Event $error Event instance
      *
      * @return boolean
      */
-    protected function continueToPrev(Error $error)
+    protected function continueToPrev(Event $error)
     {
         if (!$this->prevErrorHandler) {
             return false;

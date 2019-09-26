@@ -1332,7 +1332,6 @@ class Debug
         */
         $channels = $this->getChannels(true);
         $channels[] = $this;
-        $headers = array();
         foreach ($channels as $channel) {
             $event = $channel->eventManager->publish(
                 'debug.output',

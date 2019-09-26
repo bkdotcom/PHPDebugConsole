@@ -23,7 +23,6 @@ class OnBootstrap
 {
 
     private $debug;
-    private static $input;  // populate me for unit tests in lieu of php://input
 
     /**
      * Magic callable method
@@ -51,7 +50,6 @@ class OnBootstrap
         $this->debug->groupEnd();
         $this->debug->groupEnd();
         $this->debug->setCfg('collect', $collectWas);
-        self::$input = null;
     }
 
 

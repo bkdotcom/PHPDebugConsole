@@ -362,7 +362,7 @@ class Internal implements SubscriberInterface
             $this->debug->addPlugin($this->debug->output->file);
         }
         if (isset($cfg['onBootstrap'])) {
-            if (!$this->debug->parentInstance) {
+            if (!$this->bootstraped) {
                 // we're initializing
                 $this->debug->eventManager->subscribe('debug.bootstrap', $cfg['onBootstrap']);
             } else {

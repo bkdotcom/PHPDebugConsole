@@ -81,7 +81,7 @@ class Abstracter extends Component
     {
         if (\is_array($mixed)) {
             return $this->abstractArray->getAbstraction($mixed, $method, $hist);
-        } elseif (\is_object($mixed)) {
+        } elseif (\is_object($mixed) || \is_string($mixed) && (\class_exists($mixed) || \interface_exists($mixed))) {
             return $this->abstractObject->getAbstraction($mixed, $method, $hist);
         } elseif (\is_resource($mixed) || \strpos(\print_r($mixed, true), 'Resource') === 0) {
             return new Abstraction(array(

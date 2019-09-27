@@ -86,7 +86,9 @@ class AbstractObjectMethods extends AbstractObjectSub
             static::$methodCache[$abs['className']] = $abs['methods'];
         }
         if (isset($abs['methods']['__toString'])) {
-            $abs['methods']['__toString']['returnValue'] = $obj->__toString();
+            $abs['methods']['__toString']['returnValue'] = \is_object($obj)
+                ? $obj->__toString()
+                : null;
         }
         return;
     }
@@ -102,7 +104,9 @@ class AbstractObjectMethods extends AbstractObjectSub
         $obj = $abs->getSubject();
         if (\method_exists($obj, '__toString')) {
             $abs['methods']['__toString'] = array(
-                'returnValue' => $obj->__toString(),
+                'returnValue' => \is_object($obj)
+                    ? $obj->__toString()
+                    : null,
                 'visibility' => 'public',
             );
         }
@@ -351,7 +355,7 @@ class AbstractObjectMethods extends AbstractObjectSub
     /**
      * Get method info
      *
-     * @param object           $obj              object method belongs to
+     * @param object|string    $obj              object (or classname) method belongs to
      * @param ReflectionMethod $reflectionMethod ReflectionMethod instance
      *
      * @return array
@@ -359,6 +363,9 @@ class AbstractObjectMethods extends AbstractObjectSub
     private function methodInfo($obj, ReflectionMethod $reflectionMethod)
     {
         // getDeclaringClass() returns LAST-declared/overridden
+        $className = \is_object($obj)
+            ? \get_class($obj)
+            : $obj;
         $declaringClassName = $reflectionMethod->getDeclaringClass()->getName();
         $phpDoc = $this->phpDoc->getParsed($reflectionMethod);
         $vis = 'public';
@@ -369,7 +376,7 @@ class AbstractObjectMethods extends AbstractObjectSub
         }
         $info = array(
             'implements' => null,
-            'inheritedFrom' => $declaringClassName != \get_class($obj)
+            'inheritedFrom' => $declaringClassName != $className
                 ? $declaringClassName
                 : null,
             'isAbstract' => $reflectionMethod->isAbstract(),

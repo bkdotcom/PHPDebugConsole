@@ -309,7 +309,7 @@ class Wamp implements RouteInterface
      * Associative arrays get JSON encoded to js objects...
      *     Javascript doesn't maintain order for object properties
      *     in practice this seems to only be an issue with int/numeric keys
-     *     store property order
+     *     store key order if needed
      *
      * @param mixed $mixed value to crate
      *
@@ -318,14 +318,14 @@ class Wamp implements RouteInterface
     private function crateValues($mixed)
     {
         if (\is_array($mixed)) {
-            $prevIntK = null;
+            $prevK = null;
             $storeKeyOrder = false;
             foreach ($mixed as $k => $v) {
-                if (!$storeKeyOrder && \is_int($k)) {
-                    if ($k < $prevIntK) {
+                if (!$storeKeyOrder) {
+                    if (\is_int($k) && ($k < $prevK || \is_string($prevK))) {
                         $storeKeyOrder = true;
                     }
-                    $prevIntK = $k;
+                    $prevK = $k;
                 }
                 $mixed[$k] = $this->crateValues($v);
             }

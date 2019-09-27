@@ -1345,9 +1345,14 @@ class MethodTest extends DebugTestFramework
     {
         /*
         Internal debug.output subscribers
-            1: Output::onOutput:  closes open groups / remoes hideIfEmpty groups
-            0: Internal::onOutput opens and closes groupSummary
-            0: Output plugin's onOutput()
+             1: Internal::onOutput:  closes open groups / remoes hideIfEmpty groups
+                onOutputCleanup
+                    closeOpenGroups
+                    removeHideIfEmptyGroups
+                    uncollapseErrors
+                onOutputLogRuntime
+             0: Routes & plugins
+            -1: Internal::onOutputHeaders
 
         This also tests that the values returned by getData have been dereferenced
         */

@@ -80,7 +80,7 @@ class ErrorHandler
     /**
      * Helper method to get backtrace
      *
-     * Utilizes xdebug_get_function_stack() (if available) to get backtrace in shutdown phase
+     * Utilizes `xdebug_get_function_stack()` (if available) to get backtrace in shutdown phase
      * When called internally, internal frames are removed
      *
      * @param Error|Exception $error (optional) Error instance if getting error backtrace
@@ -306,7 +306,16 @@ class ErrorHandler
             return;
         }
         if (\is_array($error)) {
-            $error = new Error($this, $error['type'], $error['message'], $error['file'], $error['line']);
+            $error = $this->cfg['errorFactory'](
+                $this,
+                $error['type'],
+                $error['message'],
+                $error['file'],
+                $error['line'],
+                isset($error['vars'])
+                    ? $error['vars']
+                    : array()
+            );
         }
         if ($error->isFatal()) {
             /*
@@ -541,7 +550,7 @@ class ErrorHandler
      *
      * @return Error
      */
-    protected function errorFactory(self $handler, $errType, $errMsg, $file, $line, $vars)
+    protected function errorFactory(self $handler, $errType, $errMsg, $file, $line, $vars = array())
     {
         return new Error($handler, $errType, $errMsg, $file, $line, $vars);
     }

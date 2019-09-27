@@ -120,7 +120,7 @@ class Error extends Event
     }
 
     /**
-     * Send error to error_log()
+     * Send error to `error_log()`
      *
      * @return boolean
      */

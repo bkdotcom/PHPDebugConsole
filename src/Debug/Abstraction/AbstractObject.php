@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
+use ReflectionClass;
 use ReflectionObject;
 
 /**
@@ -66,9 +67,15 @@ class AbstractObject
     public function getAbstraction($obj, $method = null, $hist = array())
     {
         if (!\is_object($obj)) {
-            return $obj;
+            if (\is_string($obj) && (\class_exists($obj) || \interface_exists($obj))) {
+                \bdk\Debug::_warn('woot', $obj);
+                $reflector = new ReflectionClass($obj);
+            } else {
+                return $obj;
+            }
+        } else {
+            $reflector = new ReflectionObject($obj);
         }
-        $reflector = new ReflectionObject($obj);
         $className = $reflector->getName();
         $interfaceNames = $reflector->getInterfaceNames();
         \sort($interfaceNames);

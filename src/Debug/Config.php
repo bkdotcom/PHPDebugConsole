@@ -398,9 +398,9 @@ class Config
         $values = array();
         // update 'collect and output'
         $requestKey = null;
-        if (isset($_REQUEST['debug'])) {
+        if (isset($_GET['debug'])) {
             $requestKey = $_REQUEST['debug'];
-        } elseif (isset($_COOKIE['debug'])) {
+        } elseif (isset($_GET['debug'])) {
             $requestKey = $_COOKIE['debug'];
         }
         $isValidKey = $requestKey == $key;

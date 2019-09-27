@@ -147,16 +147,16 @@ class Manager
     /**
      * Subscribe to event
      *
-     * # Lazy-load the subscriber
-     *   It's possible to lazy load the subscriber object via a "closure factory"
-     *    `array(Closure, 'methodName')` - closure returns object
-     *    `array(Closure)` - closure returns object that is callable (ie has __invoke method)
-     *   The closure will be called the first time the event occurs
-     *
      * # Callable will receive 3 params:
      *  * Event
      *  * (string) eventName
      *  * EventManager
+     *
+     * # Lazy-load the subscriber
+     *   It's possible to lazy load the subscriber object via a "closure factory"
+     *    `array(Closure, 'methodName')` - closure returns object
+     *    `array(Closure)` - closure returns object that is callable (ie has `__invoke` method)
+     *   The closure will be called the first time the event occurs
      *
      * @param string   $eventName event name
      * @param callable $callable  callable or closure factory

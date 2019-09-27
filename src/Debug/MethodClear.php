@@ -184,8 +184,8 @@ class MethodClear
             }
             if ($clear2) {
                 unset($log[$k]);
-            } elseif (isset($logEntry[2]['errorHash'])) {
-                $errorsNotCleared[] = $logEntry[2]['errorHash'];
+            } elseif (isset($logEntry['meta']['errorHash'])) {
+                $errorsNotCleared[] = $logEntry['meta']['errorHash'];
             }
         }
         $log = \array_values($log);

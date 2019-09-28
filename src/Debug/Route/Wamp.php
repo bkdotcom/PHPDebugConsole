@@ -170,6 +170,9 @@ class Wamp implements RouteInterface
      */
     public function onShutdown()
     {
+        if (!$this->metaPublished) {
+            return;
+        }
         // publish a "we're done" message
         $this->processLogEntry(new LogEntry(
             $this->debug,

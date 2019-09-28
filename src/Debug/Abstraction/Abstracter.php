@@ -77,7 +77,7 @@ class Abstracter extends Component
      *
      * @return array
      */
-    public function getAbstraction(&$mixed, $method = null, $hist = array())
+    public function getAbstraction($mixed, $method = null, $hist = array())
     {
         if (\is_array($mixed)) {
             return $this->abstractArray->getAbstraction($mixed, $method, $hist);

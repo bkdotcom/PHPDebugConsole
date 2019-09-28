@@ -400,7 +400,7 @@ class Config
         $requestKey = null;
         if (isset($_GET['debug'])) {
             $requestKey = $_REQUEST['debug'];
-        } elseif (isset($_GET['debug'])) {
+        } elseif (isset($_COOKIE['debug'])) {
             $requestKey = $_COOKIE['debug'];
         }
         $isValidKey = $requestKey == $key;

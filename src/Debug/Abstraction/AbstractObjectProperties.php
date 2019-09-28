@@ -84,9 +84,13 @@ class AbstractObjectProperties extends AbstractObjectSub
             }
             $reflectionObject = $reflectionObject->getParentClass();
         }
-        $this->addPropertiesDom($abs);
-        $this->addPropertiesPhpDoc($abs);   // magic properties documented via phpDoc
-        $this->addPropertiesDebug($abs);    // use __debugInfo() values if useDebugInfo' && method exists
+        if (\is_object($obj)) {
+            $this->addPropertiesDom($abs);
+            $this->addPropertiesPhpDoc($abs);   // magic properties documented via phpDoc
+            $this->addPropertiesDebug($abs);    // use __debugInfo() values if useDebugInfo' && method exists
+        } else {
+            $this->addPropertiesPhpDoc($abs);
+        }
         $properties = $abs['properties'];
         $abs['hist'][] = $obj;
         foreach ($properties as $name => $info) {
@@ -374,7 +378,10 @@ class AbstractObjectProperties extends AbstractObjectSub
     {
         $obj = $abs->getSubject();
         $reflectionProperty->setAccessible(true); // only accessible via reflection
-        $className = \get_class($obj); // prop->class is equiv to getDeclaringClass
+        $isInstance = \is_object($obj);
+        $className = $isInstance
+            ? \get_class($obj) // prop->class is equiv to getDeclaringClass
+            : $obj;
         // get type and comment from phpdoc
         $phpDoc = $this->getPhpDoc($reflectionProperty);
         /*
@@ -404,7 +411,7 @@ class AbstractObjectProperties extends AbstractObjectSub
                     $propInfo['value'] = $value;
                 }
                 $propInfo['valueFrom'] = 'debug';
-            } else {
+            } elseif ($isInstance) {
                 $propInfo['value'] = $reflectionProperty->getValue($obj);
             }
         }

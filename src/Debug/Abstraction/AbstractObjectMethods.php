@@ -83,7 +83,9 @@ class AbstractObjectMethods extends AbstractObjectSub
             }
             $abs['methods'] = $methodArray;
             $this->addMethodsPhpDoc($abs);
-            static::$methodCache[$abs['className']] = $abs['methods'];
+            if ($abs['className'] !== 'Closure') {
+                static::$methodCache[$abs['className']] = $abs['methods'];
+            }
         }
         if (isset($abs['methods']['__toString'])) {
             $abs['methods']['__toString']['returnValue'] = \is_object($obj)

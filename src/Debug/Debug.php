@@ -112,6 +112,7 @@ class Debug
                 'post' => true,
                 'serverVals' => true,
             ),
+            'logResponse' => 'auto',
             'logRuntime' => true,
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
             'onBootstrap' => null,          // callable

@@ -43,6 +43,7 @@ class Internal implements SubscriberInterface
 
     // duplicate/store frequently used cfg vals here
     private $cfg = array(
+        'logResponse' => false,
         'redactKeys' => array(),
         'redactReplace' => null,
     );
@@ -263,42 +264,23 @@ class Internal implements SubscriberInterface
             return;
         }
         $cfg = $cfg['debug'];
-        if (\array_key_exists('outputAs', $cfg)) {
-            $event['debug']['outputAs'] = $this->setOutputAs($cfg['outputAs']);
-        }
-        if (isset($cfg['onBootstrap'])) {
-            if (!$this->bootstraped) {
-                // we're initializing
-                $this->debug->eventManager->subscribe('debug.bootstrap', $cfg['onBootstrap']);
-            } else {
-                // boostrap has already occured, so go ahead and call
-                \call_user_func($cfg['onBootstrap'], new Event($this->debug));
-            }
-        }
-        if (isset($cfg['redactKeys'])) {
-            $keys = array();
-            foreach ($cfg['redactKeys'] as $key) {
-                $keys[$key] = $this->redactBuildRegex($key);
-            }
-            $cfg['redactKeys'] = $keys;
-        }
-        $this->cfg = \array_merge(
-            $this->cfg,
-            \array_intersect_key($cfg, \array_flip(array('redactKeys', 'redactReplace')))
+        $valActions = array(
+            'logResponse' => array($this, 'onCfgLogResponse'),
+            'onBootstrap' => array($this, 'onCfgOnBootstrap'),
+            'onLog' => array($this, 'onCfgOnLog'),
+            'outputAs' => function ($val, $event) {
+                $event['debug']['outputAs'] = $this->setOutputAs($val);
+            },
+            'redactKeys' => array($this, 'onCfgRedactKeys'),
         );
-        if (isset($cfg['onLog'])) {
-            /*
-                Replace - not append - subscriber set via setCfg
-            */
-            $onLogPrev = $this->debug->getCfg('onLog');
-            if ($onLogPrev) {
-                $this->debug->eventManager->unsubscribe('debug.log', $onLogPrev);
+        foreach ($valActions as $key => $callable) {
+            if (isset($cfg[$key])) {
+                $callable($cfg[$key], $event);
             }
-            $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
         }
         if (!static::$profilingEnabled) {
-            $cfg = $this->debug->getCfg('debug/*');
-            if ($cfg['enableProfiling'] && $cfg['collect']) {
+            $cfgAll = $this->debug->getCfg('debug/*');
+            if ($cfgAll['enableProfiling'] && $cfgAll['collect']) {
                 static::$profilingEnabled = true;
                 $pathsExclude = array(
                     __DIR__,
@@ -306,6 +288,10 @@ class Internal implements SubscriberInterface
                 FileStreamWrapper::register($pathsExclude);
             }
         }
+        $this->cfg = \array_merge(
+            $this->cfg,
+            \array_intersect_key($cfg, \array_flip(array('redactReplace')))
+        );
     }
 
     /**
@@ -489,6 +475,7 @@ class Internal implements SubscriberInterface
     {
         $this->inShutdown = true;
         $this->closeOpenGroups();
+        $this->logResponse();
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLogShutdown'));
     }
 
@@ -612,6 +599,123 @@ class Internal implements SubscriberInterface
             }
         }
         $this->debug->setData($data);
+    }
+
+    /**
+     * log response
+     *
+     * @return void
+     */
+    private function logResponse()
+    {
+        if (!$this->cfg['logResponse']) {
+            return;
+        }
+        $contentType = $this->debug->utilities->getResponseHeader();
+        if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
+            ob_end_flush();
+            return;
+        }
+        $response = ob_get_clean();
+        $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
+            'value' => $response,
+            'contentType' => $contentType,
+        ));
+        $this->debug->log(
+            'response (%c%s) %c%s',
+            'font-family: monospace;',
+            $contentType,
+            'font-style: italic; opacity: 0.8;',
+            $event['value'] instanceof Abstraction
+                ? '(prettified)'
+                : '',
+            $event['value'],
+            $this->debug->meta('redact')
+        );
+        echo $response;
+    }
+
+    /**
+     * Handle "logResponse" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgLogResponse($val)
+    {
+        if ($val == 'auto') {
+            $val = $this->debug->utilities->getInterface() == 'ajax';
+        }
+        if ($val) {
+            if (!$this->cfg['logResponse']) {
+                ob_start();
+            }
+        } elseif ($this->cfg['logResponse']) {
+            ob_end_flush();
+        }
+        $this->cfg['logResponse'] = $val;
+    }
+
+    /**
+     * Handle "onBootstrap" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgOnBootstrap($val)
+    {
+        if (!$this->bootstraped) {
+            // we're initializing
+            $this->debug->eventManager->subscribe('debug.bootstrap', $val);
+        } else {
+            // boostrap has already occured, so go ahead and call
+            \call_user_func($val, new Event($this->debug));
+        }
+    }
+
+    /**
+     * Handle "onLog" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgOnLog($val)
+    {
+        /*
+            Replace - not append - subscriber set via setCfg
+        */
+        $onLogPrev = $this->debug->getCfg('onLog');
+        if ($onLogPrev) {
+            $this->debug->eventManager->unsubscribe('debug.log', $onLogPrev);
+        }
+        $this->debug->eventManager->subscribe('debug.log', $val);
+    }
+
+    /**
+     * Handle "redactKeys" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgRedactKeys($val)
+    {
+        $keys = array();
+        foreach ($val as $key) {
+            $keys[$key] = $this->redactBuildRegex($key);
+        }
+        $this->cfg['redactKeys'] = $keys;
     }
 
     /**

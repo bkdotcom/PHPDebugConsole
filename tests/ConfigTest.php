@@ -52,6 +52,7 @@ class ConfigTest extends DebugTestFramework
             'emailTo',
             'factories',
             'logEnvInfo',
+            'logResponse',
             'logRuntime',
             'logServerKeys',
             'onBootstrap',

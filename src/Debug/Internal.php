@@ -268,7 +268,7 @@ class Internal implements SubscriberInterface
             'logResponse' => array($this, 'onCfgLogResponse'),
             'onBootstrap' => array($this, 'onCfgOnBootstrap'),
             'onLog' => array($this, 'onCfgOnLog'),
-            'outputAs' => function ($val, $event) {
+            'outputAs' => function ($val, Event $event) {
                 $event['debug']['outputAs'] = $this->setOutputAs($val);
             },
             'redactKeys' => array($this, 'onCfgRedactKeys'),
@@ -613,10 +613,10 @@ class Internal implements SubscriberInterface
         }
         $contentType = $this->debug->utilities->getResponseHeader();
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
-            ob_end_flush();
+            \ob_end_flush();
             return;
         }
-        $response = ob_get_clean();
+        $response = \ob_get_clean();
         $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
             'value' => $response,
             'contentType' => $contentType,
@@ -651,10 +651,10 @@ class Internal implements SubscriberInterface
         }
         if ($val) {
             if (!$this->cfg['logResponse']) {
-                ob_start();
+                \ob_start();
             }
         } elseif ($this->cfg['logResponse']) {
-            ob_end_flush();
+            \ob_end_flush();
         }
         $this->cfg['logResponse'] = $val;
     }

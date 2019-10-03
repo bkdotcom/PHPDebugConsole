@@ -103,9 +103,9 @@ class PhpCurlClass extends Curl
             \preg_match_all('/^(Location:|URI: )(.*?)\r\n/im', $this->rawResponseHeaders, $matches);
             $this->debug->log('Redirect(s)', $matches[2]);
         }
-        $this->debug->log('request headers', $this->rawRequestHeaders);
+        $this->debug->log('request headers', $this->rawRequestHeaders, $this->debug->meta('redact'));
         // Curl provides no means to get the request body
-        $this->debug->log('response headers', $this->rawResponseHeaders);
+        $this->debug->log('response headers', $this->rawResponseHeaders, $this->debug->meta('redact'));
         if ($this->optionsDebug['inclResponseBody']) {
             $body = $this->getResponseBody();
             $this->debug->log(
@@ -114,7 +114,8 @@ class PhpCurlClass extends Curl
                 $body instanceof Abstraction
                     ? '(prettified)'
                     : '',
-                $body
+                $body,
+                $this->debug->meta('redact')
             );
         }
         if ($this->optionsDebug['inclInfo']) {

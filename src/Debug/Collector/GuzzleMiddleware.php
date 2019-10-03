@@ -83,7 +83,7 @@ class GuzzleMiddleware
             (string) $request->getUri(),
             $this->debug->meta('icon', $this->icon)
         );
-        $this->debug->log('request headers', $this->buildHeadersString($request));
+        $this->debug->log('request headers', $this->buildHeadersString($request), $this->debug->meta('redact'));
         if ($this->cfg['inclRequestBody']) {
             $body = $this->getBody($request);
             $this->debug->log(
@@ -92,7 +92,8 @@ class GuzzleMiddleware
                 $body instanceof Abstraction
                     ? '(prettified)'
                     : '',
-                $body
+                $body,
+                $this->debug->meta('redact')
             );
         }
         $func = $this->nextHandler;
@@ -111,7 +112,7 @@ class GuzzleMiddleware
      */
     public function onFulfilled(ResponseInterface $response)
     {
-        $this->debug->log('response headers', $this->buildHeadersString($response));
+        $this->debug->log('response headers', $this->buildHeadersString($response), $this->debug->meta('redact'));
         if ($this->cfg['inclResponseBody']) {
             $body = $this->getBody($response);
             $this->debug->log(
@@ -120,7 +121,8 @@ class GuzzleMiddleware
                 $body instanceof Abstraction
                     ? '(prettified)'
                     : '',
-                $body
+                $body,
+                $this->debug->meta('redact')
             );
         }
         $this->debug->groupEnd();

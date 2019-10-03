@@ -36,10 +36,10 @@ class Internal implements SubscriberInterface
 {
 
     private $debug;
-    private $inShutdown = false;
-    private static $profilingEnabled = false;
-    private $prismAdded = false;
     private $bootstraped = false;
+    private $inShutdown = false;
+    private $prismAdded = false;
+    private static $profilingEnabled = false;
 
     // duplicate/store frequently used cfg vals here
     private $cfg = array(
@@ -807,15 +807,14 @@ class Internal implements SubscriberInterface
     protected function redactString($val, $key)
     {
         if (\is_string($key)) {
+            // do exact match against array key or object property
             foreach (\array_keys($this->cfg['redactKeys']) as $redactKey) {
                 if ($redactKey == $key) {
                     return \call_user_func($this->cfg['redactReplace'], $val, $key);
                 }
             }
-        } else {
-            $key = null;
         }
-        foreach ($this->cfg['redactKeys'] as $regex) {
+        foreach ($this->cfg['redactKeys'] as $key => $regex) {
             $val = \preg_replace_callback($regex, function ($matches) use ($key) {
                 $substr = \end((\array_filter($matches, 'strlen')));
                 $replacement = \call_user_func($this->cfg['redactReplace'], $substr, $key);

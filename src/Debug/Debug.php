@@ -123,7 +123,7 @@ class Debug
                                             //   if null, no output (unless output plugin added manually)
             'outputAsNonHtml' => 'chromeLogger',
             'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
-            'redactKeys' => array(),    // case-insensitive
+            'redactKeys' => array(),        // case-insensitive
             'redactReplace' => function ($str, $key) {
                 return '█████████';
             },

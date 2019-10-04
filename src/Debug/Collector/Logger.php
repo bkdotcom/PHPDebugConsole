@@ -72,7 +72,7 @@ class Logger extends AbstractLogger
     }
 
     /**
-     * Exctract potential meta values from $context
+     * Extract potential meta values from $context
      *
      * @param string $level   log level
      * @param array  $context context array

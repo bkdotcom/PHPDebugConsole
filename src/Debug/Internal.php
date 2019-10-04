@@ -646,7 +646,7 @@ class Internal implements SubscriberInterface
      */
     private function onCfgLogResponse($val)
     {
-        if ($val == 'auto') {
+        if ($val === 'auto') {
             $val = \count(\array_filter(array(
                 $this->debug->utilities->getInterface() == 'ajax',
                 !empty($_SERVER['HTTP_SOAPACTION']),

@@ -186,7 +186,7 @@ class Abstracter extends Component
             $type = 'undefined';    // not a native php type!
         } elseif ($val === self::RECURSION) {
             $type = 'recursion';    // not a native php type!
-        } elseif ($val == self::NOT_INSPECTED) {
+        } elseif ($val === self::NOT_INSPECTED) {
             $type = 'notInspected';
         }
         return array($type, $typeMore);

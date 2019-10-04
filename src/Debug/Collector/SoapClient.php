@@ -82,7 +82,7 @@ class SoapClient extends \SoapClient
             $debug->warn('soapFault', $vals);
         }
 
-        $debug->log('request headers', $this->__getLastRequestHeaders());
+        $debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
         $debug->log(
             'request body',
             new Abstraction(array(
@@ -98,9 +98,10 @@ class SoapClient extends \SoapClient
                 'attribs' => array(
                     'class' => 'no-indent',
                 ),
+                'redact' => true,
             ))
         );
-        $debug->log('response headers', $this->__getLastResponseHeaders());
+        $debug->log('response headers', $this->__getLastResponseHeaders(), $this->debug->meta('redact'));
         $debug->log(
             'response body',
             new Abstraction(array(
@@ -116,6 +117,7 @@ class SoapClient extends \SoapClient
                 'attribs' => array(
                     'class' => 'no-indent',
                 ),
+                'redact' => true,
             ))
         );
         $debug->groupEnd();

@@ -17,7 +17,7 @@ var listenersRegistered = false;
 var config = new Config({
 	fontAwesomeCss: "//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
 	// jQuerySrc: "//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
-	clipboardSrc: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
+	clipboardSrc: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js",
 	iconsExpand: {
 		expand : "fa-plus-square-o",
 		collapse : "fa-minus-square-o",
@@ -111,10 +111,19 @@ loadDeps([
 			/*
 				Copy strings/floats/ints to clipboard when clicking
 			*/
-			var clipboard = window.ClipboardJS;
-			new clipboard('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
+			new ClipboardJS('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
 				target: function (trigger) {
-					if ($(trigger).is("a") || getSelectedText().length) {
+					var range;
+					if ($(trigger).is("a")) {
+						return $('<div>')[0];
+					}
+					if (window.getSelection().toString().length) {
+						// text was being selected vs a click
+						range = window.getSelection().getRangeAt(0);
+						setTimeout(function(){
+							// re-select
+							window.getSelection().addRange(range);
+						});
 						return $('<div>')[0];
 					}
 					notify("Copied to clipboard");
@@ -125,6 +134,7 @@ loadDeps([
 	}
 ]);
 
+/*
 function getSelectedText() {
 	var text = "";
 	if (typeof window.getSelection != "undefined") {
@@ -134,6 +144,7 @@ function getSelectedText() {
 	}
 	return text;
 }
+*/
 
 $.fn.debugEnhance = function(method, arg1, arg2) {
 	// console.warn("debugEnhance", method, this);

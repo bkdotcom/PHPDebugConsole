@@ -647,10 +647,16 @@ class Internal implements SubscriberInterface
     private function onCfgLogResponse($val)
     {
         if ($val === 'auto') {
+            $server = \array_merge(array(
+                'HTTP_ACCEPT' => null,
+                'HTTP_SOAPACTION' => null,
+                'HTTP_USER_AGENT' => null,
+            ), $_SERVER);
             $val = \count(\array_filter(array(
                 $this->debug->utilities->getInterface() == 'ajax',
-                !empty($_SERVER['HTTP_SOAPACTION']),
-                !empty($_SERVER['HTTP_ACCEPT']) && \strpos($_SERVER['HTTP_ACCEPT'], 'html') === 0,
+                \strpos($server['HTTP_ACCEPT'], 'html') === 0,
+                $server['HTTP_SOAPACTION'],
+                \stripos($server['HTTP_USER_AGENT'], 'curl') !== 0,
             ))) > 0;
         }
         if ($val) {

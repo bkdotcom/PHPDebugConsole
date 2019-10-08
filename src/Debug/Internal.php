@@ -268,10 +268,10 @@ class Internal implements SubscriberInterface
             'logResponse' => array($this, 'onCfgLogResponse'),
             'onBootstrap' => array($this, 'onCfgOnBootstrap'),
             'onLog' => array($this, 'onCfgOnLog'),
-            'outputAs' => function ($val, Event $event) {
-                $event['debug']['outputAs'] = $this->setOutputAs($val);
-            },
             'redactKeys' => array($this, 'onCfgRedactKeys'),
+            'route' => function ($val, Event $event) {
+                $event['debug']['route'] = $this->setRoute($val);
+            },
         );
         foreach ($valActions as $key => $callable) {
             if (isset($cfg[$key])) {
@@ -764,13 +764,13 @@ class Internal implements SubscriberInterface
             return;
         }
         $vals = $this->runtimeVals();
-        $outputAs = $this->debug->getCfg('outputAs');
-        $outputAsHtml = $outputAs && \get_class($outputAs) == 'bdk\\Debug\\Route\\Html';
+        $route = $this->debug->getCfg('route');
+        $isRouteHtml = $route && \get_class($route) == 'bdk\\Debug\\Route\\Html';
         $this->debug->groupSummary(1);
         $this->debug->info('Built In '.$this->debug->utilities->formatDuration($vals['runtime']));
         $this->debug->info(
             'Peak Memory Usage'
-                .($outputAsHtml
+                .($isRouteHtml
                     ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
                     : '')
                 .': '
@@ -895,40 +895,40 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Set outputAs value
+     * Set route value
      * instantiate object if necessary & addPlugin if not already subscribed
      *
-     * @param RouteInterface|string $outputAs RouteInterface instance, or (short) classname
+     * @param RouteInterface|string $route RouteInterface instance, or (short) classname
      *
      * @return OutputInterface|null
      */
-    private function setOutputAs($outputAs)
+    private function setRoute($route)
     {
-        $outputAsPrev = $this->debug->getCfg('outputAs');
-        if (\is_object($outputAsPrev)) {
+        $routePrev = $this->debug->getCfg('route');
+        if (\is_object($routePrev)) {
             /*
                 unsubscribe current OutputInterface
-                there can only be one 'outputAs' at a time
+                there can only be one 'route' at a time
                 if multiple output routes are desired, use debug->addPlugin()
             */
-            $this->debug->removePlugin($outputAsPrev);
+            $this->debug->removePlugin($routePrev);
         }
-        if (\is_string($outputAs) && $outputAs !== 'auto') {
-            $prop = 'route'.\ucfirst($outputAs);
-            $outputAs = $this->debug->{$prop};
+        if (\is_string($route) && $route !== 'auto') {
+            $prop = 'route'.\ucfirst($route);
+            $route = $this->debug->{$prop};
         }
-        if ($outputAs instanceof RouteInterface) {
-            $this->debug->addPlugin($outputAs);
-            $classname = \get_class($outputAs);
+        if ($route instanceof RouteInterface) {
+            $this->debug->addPlugin($route);
+            $classname = \get_class($route);
             $prefix = __NAMESPACE__.'\\Route\\';
             if (\strpos($classname, $prefix) === 0) {
                 $prop = 'route'.\substr($classname, \strlen($prefix));
-                $this->debug->{$prop} = $outputAs;
+                $this->debug->{$prop} = $route;
             }
         } else {
-            $outputAs = 'auto';
+            $route = 'auto';
         }
-        return $outputAs;
+        return $route;
     }
 
     /**

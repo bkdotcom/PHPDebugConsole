@@ -37,9 +37,9 @@ class OnBootstrap
     public function __invoke(Event $event)
     {
         $this->debug = $event->getSubject();
-        $outputAs = $this->debug->getCfg("outputAs");
-        if ($outputAs === 'stream') {
-            $this->debug->setCfg('outputAs', $outputAs);
+        $route = $this->debug->getCfg('route');
+        if ($route === 'stream') {
+            $this->debug->setCfg('route', $route);
         }
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
@@ -276,7 +276,8 @@ class OnBootstrap
     private function logRequest()
     {
         $this->logRequestHeaders();
-        if ($this->debug->getCfg('logEnvInfo.cookies')) {
+        $logEnvInfo = $this->debug->getCfg('logEnvInfo');
+        if ($logEnvInfo['cookies']) {
             $cookieVals = $_COOKIE;
             \ksort($cookieVals, SORT_NATURAL);
             $this->debug->log('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
@@ -285,7 +286,7 @@ class OnBootstrap
         $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
         $expectBody = isset($_SERVER['REQUEST_METHOD'])
             && !\in_array($_SERVER['REQUEST_METHOD'], $noBodyMethods);
-        if ($this->debug->getCfg('logEnvInfo.post') && $expectBody) {
+        if ($logEnvInfo['cookies'] && $expectBody) {
             $this->logPost();
         }
     }

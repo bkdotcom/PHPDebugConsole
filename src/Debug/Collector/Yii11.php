@@ -173,8 +173,8 @@ class Yii11 implements SubscriberInterface
                     $filepathRel
                 );
             }, $html);
-            $outputAs = \get_class($logEntry['outputAs']);
-            if (\in_array($outputAs, array('bdk\Debug\Route\Wamp', 'bdk\Debug\Route\Html'))) {
+            $route = \get_class($logEntry['route']);
+            if (\in_array($route, array('bdk\Debug\Route\Wamp', 'bdk\Debug\Route\Html'))) {
                 $logEntry->setMeta('format', 'html');
                 $logEntry['return'] = $html;
             }

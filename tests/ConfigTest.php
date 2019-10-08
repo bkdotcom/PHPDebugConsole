@@ -51,6 +51,8 @@ class ConfigTest extends DebugTestFramework
             'emailLog',
             'emailTo',
             'factories',
+            'headerMaxAll',
+            'headerMaxPer',
             'logEnvInfo',
             'logResponse',
             'logRuntime',
@@ -58,11 +60,11 @@ class ConfigTest extends DebugTestFramework
             'onBootstrap',
             'onLog',
             'onOutput',
-            'outputAs',
-            'outputAsNonHtml',
             'outputHeaders',
             'redactKeys',
             'redactReplace',
+            'route',
+            'routeNonHtml',
             'services',
         );
 

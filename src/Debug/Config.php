@@ -56,8 +56,8 @@ class Config
         }
         $classname = \array_shift($path);
         if ($classname == 'debug') {
-            if ($path === array('outputAs') && $this->values['outputAs'] == 'auto') {
-                return $this->getDefaultOutputAs();
+            if ($path === array('route') && $this->values['route'] == 'auto') {
+                return $this->getDefaultRoute();
             }
             return $this->debug->utilities->arrayPathGet($this->values, $path);
         }
@@ -232,7 +232,6 @@ class Config
             ),
             'errorHandler' => \array_keys($this->debug->errorHandler->getCfg()),
             'routeHtml' => array(
-                'addBR',
                 'css',
                 'drawer',
                 'filepathCss',
@@ -251,20 +250,20 @@ class Config
     }
 
     /**
-     * Determine default outputAs
+     * Determine default route
      *
      * @return string
      */
-    private function getDefaultOutputAs()
+    private function getDefaultRoute()
     {
         $interface = $this->debug->utilities->getInterface();
         if ($interface == 'ajax') {
-            $ret = $this->values['outputAsNonHtml'];
+            $ret = $this->values['routeNonHtml'];
         } elseif ($interface == 'http') {
             $ret = 'html';
             $contentType = $this->debug->utilities->getResponseHeader();
             if ($contentType && $contentType !== 'text/html') {
-                $ret = $this->values['outputAsNonHtml'];
+                $ret = $this->values['routeNonHtml'];
             }
         } else {
             $ret = 'stream';
@@ -425,9 +424,16 @@ class Config
         if (isset($values['key']) && !$isCli) {
             $values = \array_merge($values, $this->setDebugKeyValues($values['key']));
         }
-        if (isset($values['logEnvInfo']) && \is_bool($values['logEnvInfo'])) {
+        if (isset($values['logEnvInfo'])) {
             $keys = \array_keys($this->values['logEnvInfo']);
-            $values['logEnvInfo'] = \array_fill_keys($keys, $values['logEnvInfo']);
+            if (\is_bool($values['logEnvInfo'])) {
+                $values['logEnvInfo'] = \array_fill_keys($keys, $values['logEnvInfo']);
+            } elseif ($this->debug->utilities->isList($values['logEnvInfo'])) {
+                $values['logEnvInfo'] = \array_merge(
+                    \array_fill_keys($keys, false),
+                    \array_fill_keys($values['logEnvInfo'], true)
+                );
+            }
         }
         if (isset($values['logServerKeys'])) {
             // don't append, replace

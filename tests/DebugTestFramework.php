@@ -91,18 +91,18 @@ class DebugTestFramework extends DOMTestCase
             'emailTo' => null,
             'logEnvInfo' => false,
             'logRuntime' => true,
-            'output' => true,
-            'outputCss' => false,
-            'outputHeaders' => false,
-            'outputScript' => false,
-            'outputAs' => 'html',
             'onError' => function (Event $event) {
                 if (self::$allowError) {
                     $event['continueToNormal'] = false;
                     return;
                 }
                 throw new \PHPUnit\Framework\Exception($event['message'], 500);
-            }
+            },
+            'output' => true,
+            'outputCss' => false,
+            'outputHeaders' => false,
+            'outputScript' => false,
+            'route' => 'html',
         ));
         $resetValues = array(
             'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
@@ -208,7 +208,7 @@ class DebugTestFramework extends DOMTestCase
         $glue = \func_num_args() > 2
             ? ', '
             : ' = ';
-        \fwrite(STDOUT, \implode($glue, $args) . "\n");
+        \fwrite(STDERR, \implode($glue, $args) . "\n");
     }
 
     /**
@@ -236,7 +236,7 @@ class DebugTestFramework extends DOMTestCase
      *
      * @param string|null $method debug method to call or null/false to just test against last log entry
      * @param array       $args   method arguments
-     * @param array|false $tests  array of 'outputAs' => 'string
+     * @param array|false $tests  array of 'route' => 'string
      *                          ie array('html'=>'expected html')
      *                          pass false to test that nothing was logged
      *
@@ -394,7 +394,7 @@ class DebugTestFramework extends DOMTestCase
     /**
      * Test output
      *
-     * @param array $tests array of 'outputAs' => 'string
+     * @param array $tests array of 'route' => 'string
      *                         ie array('html'=>'expected html')
      * @param Debug $debug Debug instance
      *
@@ -405,10 +405,10 @@ class DebugTestFramework extends DOMTestCase
         if (!$debug) {
             $debug = $this->debug;
         }
-        $backupOutputAs = $debug->getCfg('outputAs');
+        $backupRoute = $debug->getCfg('route');
         $regexLtrim = '#^\s+#m';
         foreach ($tests as $test => $expectContains) {
-            $debug->setCfg('outputAs', $test);
+            $debug->setCfg('route', $test);
             $output = $debug->output();
             // $this->stderr($test, $output);
             $output = \preg_replace($regexLtrim, '', $output);
@@ -417,7 +417,7 @@ class DebugTestFramework extends DOMTestCase
                 $this->assertStringMatchesFormat('%A'.$expectContains.'%A', $output);
             }
         }
-        $debug->setCfg('outputAs', $backupOutputAs);
+        $debug->setCfg('route', $backupRoute);
     }
 
     protected function logEntryToArray(LogEntry $logEntry)

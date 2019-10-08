@@ -104,7 +104,9 @@ class Debug
                 ? $_SERVER['SERVER_ADMIN']
                 : null,
             'factories' => $this->getDefaultFactories(),
-            'logEnvInfo' => array(
+            'headerMaxAll' => 250000,
+            'headerMaxPer' => null,
+            'logEnvInfo' => array(      // may be set by passing a list
                 'cookies' => true,
                 'gitInfo' => true,
                 'headers' => true,
@@ -117,16 +119,16 @@ class Debug
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
             'onBootstrap' => null,          // callable
             'onLog' => null,                // callable
-            'onOutput'  => null,            // callable
-            'outputAs'  => 'auto',          // 'auto', chromeLogger', 'firephp', 'html', 'script', 'steam', 'text', or RouteInterface,
-                                            //   if 'auto', will be determined automatically
-                                            //   if null, no output (unless output plugin added manually)
-            'outputAsNonHtml' => 'chromeLogger',
+            'onOutput' => null,             // callable
             'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
             'redactKeys' => array(),        // case-insensitive
             'redactReplace' => function ($str, $key) {
                 return '█████████';
             },
+            'route' => 'auto',              // 'auto', chromeLogger', 'firephp', 'html', 'script', 'steam', 'text', or RouteInterface,
+                                            //   if 'auto', will be determined automatically
+                                            //   if null, no output (unless output plugin added manually)
+            'routeNonHtml' => 'chromeLogger',
             'services' => $this->getDefaultServices(),
         );
         $this->data = array(
@@ -253,7 +255,7 @@ class Debug
                 /*
                     Treat as a special case
                     Want to initialize with the passed config vs initialize, then setCfg
-                    ie _setCfg(array('outputAs'=>'html')) via command line
+                    ie _setCfg(array('route'=>'html')) via command line
                     we don't want to first initialize with default STDERR output
                 */
                 $cfg = \is_array($args[0])
@@ -1510,9 +1512,9 @@ class Debug
             $this->config->setValues($cfgRestore);
             return null;
         }
-        $outputAs = $this->getCfg('outputAs');
-        if (\is_string($outputAs)) {
-            $this->setCfg('outputAs', $outputAs);
+        $route = $this->getCfg('route');
+        if (\is_string($route)) {
+            $this->setCfg('route', $route);
         }
         /*
             Publish debug.output on all descendant channels and then ourself

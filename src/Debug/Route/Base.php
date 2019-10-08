@@ -153,7 +153,7 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
     protected function processLogEntryViaEvent(LogEntry $logEntry)
     {
         $logEntry = new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta']);
-        $logEntry['outputAs'] = $this;
+        $logEntry['route'] = $this;
         $this->debug->internal->publishBubbleEvent('debug.outputLogEntry', $logEntry);
         if ($logEntry['return'] !== null) {
             return $logEntry['return'];

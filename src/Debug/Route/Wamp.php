@@ -356,7 +356,7 @@ class Wamp implements RouteInterface
     protected function processLogEntryViaEvent(LogEntry $logEntry)
     {
         $logEntry = new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta']);
-        $logEntry['outputAs'] = $this;
+        $logEntry['route'] = $this;
         $this->debug->internal->publishBubbleEvent('debug.outputLogEntry', $logEntry);
         $this->processLogEntry($logEntry);
     }

@@ -28,9 +28,6 @@ class Html extends Base
     protected $channels = array();
     protected $detectFiles = false;
     protected $logEntryAttribs = array();
-    protected $cfg = array(
-        'addBR' => false,
-    );
 
     /**
      * Dump value as html
@@ -756,9 +753,8 @@ class Html extends Base
      */
     protected function visualWhiteSpaceCallback($matches)
     {
-        $strBr = $this->cfg['addBR'] ? '<br />' : '';
         $search = array("\r","\n");
-        $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>'.$strBr."\n");
+        $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>'."\n");
         return \str_replace($search, $replace, $matches[1]);
     }
 }

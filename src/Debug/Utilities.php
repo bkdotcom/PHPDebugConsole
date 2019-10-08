@@ -392,11 +392,12 @@ class Utilities
     /**
      * Convert size int into "1.23 kB"
      *
-     * @param integer|string $size bytes or similar to "1.23M"
+     * @param integer|string $size      bytes or similar to "1.23M"
+     * @param boolean        $returnInt return integer?
      *
      * @return string
      */
-    public static function getBytes($size)
+    public static function getBytes($size, $returnInt = false)
     {
         if (\is_string($size) && \preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
             $size = \str_replace(',', '', $matches[1]);
@@ -416,6 +417,9 @@ class Utilities
                 case 'k':
                     $size *= 1024;
             }
+        }
+        if ($returnInt) {
+            return (int) $size;
         }
         $units = array('B','kB','MB','GB','TB','PB');
         $i = \floor(\log($size, 1024));
@@ -442,6 +446,7 @@ class Utilities
      *    type will always be "::", even if called with an ->
      *
      * @param integer $offset Adjust how far to go back
+     * @param integer $flags  optional INCL_ARGS
      *
      * @return array
      */

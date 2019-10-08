@@ -75,29 +75,27 @@ class ChromeLogger extends Base
     public function processLogEntries(Event $event)
     {
         $this->data = $this->debug->getData();
-        $this->processAlerts();
-        $this->processSummary();
-        $this->processLog();
+        $this->buildJson();
         if ($this->json['rows']) {
-            \array_unshift($this->json['rows'], array(
-                array('PHP', isset($_SERVER['REQUEST_METHOD'])
-                    ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
-                    : '$: '. \implode(' ', $_SERVER['argv'])
-                ),
-                null,
-                'groupCollapsed',
-            ));
-            \array_push($this->json['rows'], array(
-                array(),
-                null,
-                'groupEnd',
-            ));
+            $max = $this->getMaxLength();
             $encoded = $this->encode($this->json);
-            if (\strlen($encoded) > 250000) {
-                $this->debug->warn('chromeLogger: output limit exceeded');
-            } else {
-                $event['headers'][] = array(self::HEADER_NAME, $encoded);
+            if ($max) {
+                if (\strlen($encoded) > $max) {
+                    $this->reduceJson(\strlen($encoded), $max);
+                    $encoded = $this->encode($this->json);
+                }
+                if (\strlen($encoded) > $max) {
+                    $this->json['rows'] = array(
+                        array(
+                            array('chromeLogger: unable to abridge log to ' . $this->debug->utilities->getBytes($max)),
+                            null,
+                            'warn',
+                        )
+                    );
+                    $encoded = $this->encode($this->json);
+                }
             }
+            $event['headers'][] = array(self::HEADER_NAME, $encoded);
         }
         $this->data = array();
         $this->json['rows'] = array();
@@ -125,6 +123,34 @@ class ChromeLogger extends Base
     }
 
     /**
+     * Build Chromelogger JSON
+     *
+     * @return void
+     */
+    protected function buildJson()
+    {
+        $this->json['rows'] = array();
+        $this->processAlerts();
+        $this->processSummary();
+        $this->processLog();
+        if ($this->json) {
+            \array_unshift($this->json['rows'], array(
+                array('PHP', isset($_SERVER['REQUEST_METHOD'])
+                    ? $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']
+                    : '$: ' . \implode(' ', $_SERVER['argv'])
+                ),
+                null,
+                'groupCollapsed',
+            ));
+            \array_push($this->json['rows'], array(
+                array(),
+                null,
+                'groupEnd',
+            ));
+        }
+    }
+
+    /**
      * Encode data for header
      *
      * @param array $data log data
@@ -136,5 +162,35 @@ class ChromeLogger extends Base
         $data = \json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
         $data = \str_replace(\json_encode(Abstracter::UNDEFINED), 'null', $data);
         return \base64_encode($data);
+    }
+
+    /**
+     * Get maximum allowed header length
+     *
+     * @return integer
+     */
+    protected function getMaxLength()
+    {
+        $maxVals = \array_filter(array(
+            $this->debug->utilities->getBytes($this->debug->getCfg('headerMaxAll'), true),
+            $this->debug->utilities->getBytes($this->debug->getCfg('headerMaxPer'), true),
+        ));
+        $max = $maxVals
+            ? \min($maxVals)
+            : 0;
+        return $max;
+    }
+
+    /**
+     * Attempt to remove log entries to get header length < max
+     *
+     * @param integer $max         maximum header length
+     * @param integer $sizeEncoded encoded size of last attempt
+     *
+     * @return void
+     */
+    protected function reduceJson($max, $sizeEncoded)
+    {
+        $this->buildJson();
     }
 }

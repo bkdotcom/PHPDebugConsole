@@ -125,8 +125,14 @@ class DebugTest extends DebugTestFramework
     {
         $this->destroyDebug();
 
-        // explicitly set outputAs, so that stream/cli output does not initiate
-        Debug::_setCfg(array('collect'=>true, 'output'=>true, 'outputAs'=>'html', 'initViaSetCfg'=>true));
+        // explicitly set route, so that stream/cli output does not initiate
+        Debug::_setCfg(array(
+            'collect' => true,
+            'initViaSetCfg' => true,
+            'logResponse' => false,
+            'output' => true,
+            'route' => 'html',
+        ));
         $this->assertSame(true, Debug::getInstance()->getCfg('initViaSetCfg'));
 
         /*

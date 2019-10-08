@@ -16,18 +16,18 @@ class MethodTest extends DebugTestFramework
     {
         $closure = function ($event) {
             if ($event['method'] == 'trace') {
-                $outputAs = get_class($event['outputAs']);
-                if ($outputAs == 'bdk\Debug\Route\ChromeLogger') {
+                $route = get_class($event['route']);
+                if ($route == 'bdk\Debug\Route\ChromeLogger') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($outputAs == 'bdk\Debug\Route\Firephp') {
+                } elseif ($route == 'bdk\Debug\Route\Firephp') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($outputAs == 'bdk\Debug\Route\Html') {
+                } elseif ($route == 'bdk\Debug\Route\Html') {
                     $event['return'] = '<li class="m_trace">this was a trace</li>';
-                } elseif ($outputAs == 'bdk\Debug\Route\Script') {
+                } elseif ($route == 'bdk\Debug\Route\Script') {
                     $event['return'] = 'console.log("this was a trace");';
-                } elseif ($outputAs == 'bdk\Debug\Route\Text') {
+                } elseif ($route == 'bdk\Debug\Route\Text') {
                     $event['return'] = 'this was a trace';
                 }
             }
@@ -56,7 +56,7 @@ class MethodTest extends DebugTestFramework
     public function testCustom()
     {
         $closure = function (LogEntry $logEntry) {
-            if ($logEntry['method'] == 'myCustom' && $logEntry['outputAs'] instanceof \bdk\Debug\Route\Html) {
+            if ($logEntry['method'] == 'myCustom' && $logEntry['route'] instanceof \bdk\Debug\Route\Html) {
                 $lis = array();
                 foreach ($logEntry['args'] as $arg) {
                     $lis[] = '<li>'.htmlspecialchars($arg).'</li>';

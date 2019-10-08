@@ -79,7 +79,7 @@
 .debug .m_assert { background-color: rgba(255, 204, 204, 0.75); }
 .debug .m_group .group-header { display: table; white-space: nowrap; }
 .debug .m_group .group-label-bold { font-weight: bold; }
-.debug .m_group > ul { list-style: none; margin-left: 1em; border-left: 1px solid rgba(0, 0, 0, 0.25); padding-left: 1px; }
+.debug .m_group > ul { list-style: none; margin-left: 1em; border-left: 1px solid rgba(0, 0, 0, 0.25); padding-left: 0.25rem; }
 .debug .m_error, .debug :not(.expanded) > .level-error { background-color: #ffbaba; color: #d8000c; }
 .debug .m_info, .debug :not(.expanded) > .level-info { background-color: #d9edf7; color: #31708f; }
 .debug .m_warn, .debug :not(.expanded) > .level-warn { background-color: #fefbe5; color: #8a6d3b; }
@@ -87,7 +87,7 @@
 .debug .debug-log .error-fatal { padding: 10px; border-left: solid 2px #d8000c; }
 .debug .debug-log .error-fatal .no-quotes { display: none; }
 .debug table { border-collapse: collapse; }
-.debug table caption { font-weight: bold; font-style: italic; padding-bottom: 0; padding-top: 2px; text-align: left; }
+.debug table caption { caption-side: top; font-weight: bold; font-style: italic; padding-bottom: 0; padding-top: 2px; text-align: left; }
 .debug table thead th { text-align: center; }
 .debug table thead th .classname { opacity: .50; font-style: italic; }
 .debug table thead th .classname:before { content: "("; }

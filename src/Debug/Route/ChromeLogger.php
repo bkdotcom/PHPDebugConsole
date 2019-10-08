@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -117,7 +118,7 @@ class ChromeLogger extends Base
         }
         $this->json['rows'][] = array(
             $args,
-            isset($meta['file']) ? $meta['file'].': '.$meta['line'] : null,
+            isset($meta['file']) ? $meta['file'] . ': ' . $meta['line'] : null,
             $method === 'log' ? '' : $method,
         );
     }
@@ -159,7 +160,7 @@ class ChromeLogger extends Base
      */
     protected function encode($data)
     {
-        $data = \json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        $data = \json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $data = \str_replace(\json_encode(Abstracter::UNDEFINED), 'null', $data);
         return \base64_encode($data);
     }

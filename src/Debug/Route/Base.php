@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -40,7 +41,7 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
         $this->debug = $debug;
         $this->channelName = $this->debug->getCfg('channelName');
         $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
-        $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
+        $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
     }
 

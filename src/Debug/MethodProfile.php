@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -42,7 +43,7 @@ class MethodProfile
     public function __construct($namespacesIgnore = array())
     {
         $namespacesIgnore = \array_merge(array(__NAMESPACE__), $namespacesIgnore);
-        $this->nsIgnoreRegex = \str_replace('\\', '\\\\', '#^('.\implode('|', $namespacesIgnore).')(\\|$)#');
+        $this->nsIgnoreRegex = \str_replace('\\', '\\\\', '#^(' . \implode('|', $namespacesIgnore) . ')(\\|$)#');
         $this->start();
     }
 
@@ -86,8 +87,8 @@ class MethodProfile
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
         $backtrace = $this->backtraceRemoveInternal($backtrace);
         foreach ($backtrace as $frame) {
-            $class = isset($frame['class']) ? $frame['class'].'::' : '';
-            $this->rootStack[] = $class.$frame['function'];
+            $class = isset($frame['class']) ? $frame['class'] . '::' : '';
+            $this->rootStack[] = $class . $frame['function'];
         }
         \register_tick_function(array($this, 'tickFunction'));
         $this->isProfiling = true;
@@ -107,7 +108,7 @@ class MethodProfile
         $stackCountInternal = \count($this->funcStack);
         $class = isset($trace[1]['class']) ? $trace[1]['class'] : null;
         if ($stackCount === 0 && $this->data) {
-            $function = \ltrim($class.'::'.$trace[1]['function'], ':');
+            $function = \ltrim($class . '::' . $trace[1]['function'], ':');
             if ($function !== $this->rootStack[0]) {
                 // We've traveled up the stack above where we started
                 \array_shift($this->rootStack);
@@ -116,11 +117,12 @@ class MethodProfile
             $this->timeLastTick = \microtime(true);
             return;
         }
-        if (\array_filter(array(
+        $conditionsMet = \array_filter(array(
             $stackCount < 1,
             $stackCount === $stackCountInternal,        // no change in stack
             \preg_match($this->nsIgnoreRegex, $class)
-        ))) {
+        ));
+        if ($conditionsMet) {
             $this->timeLastTick = \microtime(true);
             return;
         }
@@ -131,7 +133,7 @@ class MethodProfile
                 if (\preg_match($this->nsIgnoreRegex, $class)) {
                     break;
                 }
-                $function = \ltrim($class.'::'.$trace[$i]['function'], ':');
+                $function = \ltrim($class . '::' . $trace[$i]['function'], ':');
                 $this->pushStack($function);
             }
         } else {
@@ -176,7 +178,7 @@ class MethodProfile
             $this->data[$funcPopped]['calls'] ++;
         }
         if ($this->funcStack) {
-            $this->funcStack[\count($this->funcStack)-1]['subTime'] += $timeElapsed;
+            $this->funcStack[\count($this->funcStack) - 1]['subTime'] += $timeElapsed;
         }
         return $stackInfo['function'];
     }

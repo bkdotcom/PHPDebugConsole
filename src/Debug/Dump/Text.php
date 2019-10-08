@@ -79,8 +79,8 @@ class Text extends Base
             $prefix = isset($this->cfg['prefixes'][$method])
                 ? $this->cfg['prefixes'][$method]
                 : '';
-            $str = $prefix.$str;
-            $str = $strIndent.\str_replace("\n", "\n".$strIndent, $str)."\n";
+            $str = $prefix . $str;
+            $str = $strIndent . \str_replace("\n", "\n" . $strIndent, $str) . "\n";
         }
         return $str;
     }
@@ -108,13 +108,13 @@ class Text extends Base
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
                 $glueAfterFirst = false;
-                $args[0] = \rtrim($args[0]).' ';
+                $args[0] = \rtrim($args[0]) . ' ';
             } elseif (\count($args) == 2) {
                 $glue = $this->cfg['glue']['equal'];
             }
         }
         if (!$glueAfterFirst) {
-            return $args[0].\implode($glue, \array_slice($args, 1));
+            return $args[0] . \implode($glue, \array_slice($args, 1));
         } else {
             return \implode($glue, $args);
         }
@@ -164,7 +164,7 @@ class Text extends Base
     {
         $date = $this->checkTimestamp($val);
         return $date
-            ? '📅 '.$val.' ('.$date.')'
+            ? '📅 ' . $val . ' (' . $date . ')'
             : $val;
     }
 
@@ -194,13 +194,13 @@ class Text extends Base
         }
         foreach ($counts as $vis => $count) {
             if ($count) {
-                $str .= '    '.$vis.': '.$count."\n";
+                $str .= '    ' . $vis . ': ' . $count . "\n";
             }
         }
         $header = $str
             ? 'Methods:'
             : 'Methods: none!';
-        return '  '.$header."\n".$str;
+        return '  ' . $header . "\n" . $str;
     }
 
     /**
@@ -225,11 +225,11 @@ class Text extends Base
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
         if ($abs['isRecursion']) {
-            $str = $abs['className'].' *RECURSION*';
+            $str = $abs['className'] . ' *RECURSION*';
         } elseif ($abs['isExcluded']) {
-            $str = $abs['className'].' NOT INSPECTED';
+            $str = $abs['className'] . ' NOT INSPECTED';
         } else {
-            $str = $abs['className']."\n";
+            $str = $abs['className'] . "\n";
             $str .= $this->dumpProperties($abs);
             $str .= $this->dumpMethods($abs);
         }
@@ -252,26 +252,26 @@ class Text extends Base
         $str = '';
         $propHeader = '';
         if (isset($abs['methods']['__get'])) {
-            $str .= '    ✨ This object has a __get() method'."\n";
+            $str .= '    ✨ This object has a __get() method' . "\n";
         }
         foreach ($abs['properties'] as $name => $info) {
             $vis = (array) $info['visibility'];
             foreach ($vis as $i => $v) {
                 if (\in_array($v, array('magic','magic-read','magic-write'))) {
-                    $vis[$i] = '✨ '.$v;    // "sparkles" there is no magic-wand unicode char
+                    $vis[$i] = '✨ ' . $v;    // "sparkles" there is no magic-wand unicode char
                 } elseif ($v == 'private' && $info['inheritedFrom']) {
-                    $vis[$i] = '🔒 '.$v;
+                    $vis[$i] = '🔒 ' . $v;
                 }
             }
             $vis = \implode(' ', $vis);
             $str .= $info['debugInfoExcluded']
-                ? '    ('.$vis.' excluded) '.$name."\n"
-                : '    ('.$vis.') '.$name.' = '.$this->dump($info['value'])."\n";
+                ? '    (' . $vis . ' excluded) ' . $name . "\n"
+                : '    (' . $vis . ') ' . $name . ' = ' . $this->dump($info['value']) . "\n";
         }
         $propHeader = $str
             ? 'Properties:'
             : 'Properties: none!';
-        return '  '.$propHeader."\n".$str;
+        return '  ' . $propHeader . "\n" . $str;
     }
 
     /**
@@ -285,14 +285,14 @@ class Text extends Base
     {
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
-            $val = '"'.$val.'"';
+            $val = '"' . $val . '"';
             return $date
-                ? '📅 '.$val.' ('.$date.')'
+                ? '📅 ' . $val . ' (' . $date . ')'
                 : $val;
         } else {
             $val = $this->debug->utf8->dump($val);
             if ($this->argStringOpts['addQuotes']) {
-                $val = '"'.$val.'"';
+                $val = '"' . $val . '"';
             }
             return $val;
         }
@@ -325,9 +325,9 @@ class Text extends Base
             'warn' => 'warn',
         );
         $prefix = $this->cfg['prefixes'][$levelToMethod[$level]];
-        $prefix = '[Alert '.$prefix.$level.'] ';
+        $prefix = '[Alert ' . $prefix . $level . '] ';
         $wrap = array('》','《');
-        return $wrap[0].$prefix.$logEntry['args'][0].$wrap[1];
+        return $wrap[0] . $prefix . $logEntry['args'][0] . $wrap[1];
     }
 
     /**
@@ -377,9 +377,9 @@ class Text extends Base
         if (!$argStr) {
             $str = $label;
         } elseif ($meta['argsAsParams']) {
-            $str = $label.'('.$argStr.')';
+            $str = $label . '(' . $argStr . ')';
         } else {
-            $str = $label.': '.$argStr;
+            $str = $label . ': ' . $argStr;
         }
         return $str;
     }
@@ -416,7 +416,7 @@ class Text extends Base
         $type = $this->debug->abstracter->getType($val)[0];
         if ($type == 'array') {
             $count = \count($val);
-            $val = 'array('.$count.')';
+            $val = 'array(' . $count . ')';
         } elseif ($type == 'object') {
             $toStr = AbstractObject::toString($val);
             $val = $toStr ?: $val['className'];

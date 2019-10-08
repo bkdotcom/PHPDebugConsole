@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -120,8 +121,8 @@ class Utilities
         self::$callerBreakers[$what] = \array_unique(self::$callerBreakers[$what]);
         if ($what == 'classes') {
             self::$callerBreakers['classesRegex'] = '/^('
-                .\implode('|', \array_map('preg_quote', self::$callerBreakers['classes']))
-                .')\b/';
+                . \implode('|', \array_map('preg_quote', self::$callerBreakers['classes']))
+                . ')\b/';
         }
     }
 
@@ -235,7 +236,7 @@ class Utilities
     public static function buildAttribString($attribs)
     {
         if (\is_string($attribs)) {
-            return \rtrim(' '.\trim($attribs));
+            return \rtrim(' ' . \trim($attribs));
         }
         $attribPairs = array();
         foreach ($attribs as $k => $v) {
@@ -253,18 +254,21 @@ class Utilities
             } elseif (\is_array($v) || $k === 'class') {
                 $v = self::buildAttribArrayVal($k, $v);
             }
-            if (\array_filter(array(
-                $v === null,
-                $v === '' && \in_array($k, array('class', 'style'))
-            ))) {
+            if (
+                \array_filter(array(
+                    $v === null,
+                    $v === ''
+                        && \in_array($k, array('class', 'style'))
+                ))
+            ) {
                 // don't include
                 continue;
             }
             $v = \trim($v);
-            $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
+            $attribPairs[] = $k . '="' . \htmlspecialchars($v) . '"';
         }
         \sort($attribPairs);
-        return \rtrim(' '.\implode(' ', $attribPairs));
+        return \rtrim(' ' . \implode(' ', $attribPairs));
     }
 
     /**
@@ -281,8 +285,8 @@ class Utilities
         $tagName = \strtolower($tagName);
         $attribStr = self::buildAttribString($attribs);
         return \in_array($tagName, self::$htmlEmptyTags)
-            ? '<'.$tagName.$attribStr.' />'
-            : '<'.$tagName.$attribStr.'>'.$innerhtml.'</'.$tagName.'>';
+            ? '<' . $tagName . $attribStr . ' />'
+            : '<' . $tagName . $attribStr . '>' . $innerhtml . '</' . $tagName . '>';
     }
 
     /**
@@ -297,7 +301,7 @@ class Utilities
     public static function formatDuration($duration, $format = 'auto', $precision = 4)
     {
         if ($format == 'auto') {
-            if ($duration < 1/1000) {
+            if ($duration < 1 / 1000) {
                 $format = 'us';
             } elseif ($duration < 1) {
                 $format = 'ms';
@@ -346,7 +350,7 @@ class Utilities
         if ($precision) {
             $val = \round($val, $precision);
         }
-        return $val.' '.$unit;
+        return $val . ' ' . $unit;
     }
 
     /**
@@ -426,7 +430,7 @@ class Utilities
         $pow = \pow(1024, $i);
         $size = $pow == 0
             ? '0 B'
-            : \round($size/$pow, 2).' '.$units[$i];
+            : \round($size / $pow, 2) . ' ' . $units[$i];
         return $size;
     }
 
@@ -547,7 +551,7 @@ class Utilities
         $value = null;
         $headers = \headers_list();
         foreach ($headers as $header) {
-            if (\preg_match('/^'.$key.':\s*([^;]*)/i', $header, $matches)) {
+            if (\preg_match('/^' . $key . ':\s*([^;]*)/i', $header, $matches)) {
                 $value = $matches[1];
                 break;
             }
@@ -564,7 +568,7 @@ class Utilities
      */
     public static function isBase64Encoded($str)
     {
-        return (boolean) \preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', \trim($str));
+        return (bool) \preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', \trim($str));
     }
 
     /**
@@ -649,7 +653,7 @@ class Utilities
                 $val = $attribs[$k];
                 $attribs[$k] = \json_decode($attribs[$k], true);
                 if ($attribs[$k] === null && $val !== 'null') {
-                    $attribs[$k] = \json_decode('"'.$val.'"', true);
+                    $attribs[$k] = \json_decode('"' . $val . '"', true);
                 }
             }
         }
@@ -761,8 +765,8 @@ class Utilities
         return \hash(
             'crc32b',
             (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'terminal')
-                .(isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : $_SERVER['REQUEST_TIME'])
-                .(isset($_SERVER['REMOTE_PORT']) ? $_SERVER['REMOTE_PORT'] : '')
+                . (isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : $_SERVER['REQUEST_TIME'])
+                . (isset($_SERVER['REMOTE_PORT']) ? $_SERVER['REMOTE_PORT'] : '')
         );
     }
 
@@ -789,7 +793,7 @@ class Utilities
         } elseif ($key == 'style') {
             $keyValues = array();
             foreach ($value as $k => $v) {
-                $keyValues[] = $k.':'.$v.';';
+                $keyValues[] = $k . ':' . $v . ';';
             }
             \sort($keyValues);
             $value = \implode('', $keyValues);
@@ -848,8 +852,10 @@ class Utilities
             $class = isset($backtrace[$iFunc]['class'])
                 ? $backtrace[$iFunc]['class']
                 : null;
-            if (\in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array')) ||
-                $class == 'ReflectionMethod' && $backtrace[$iFunc]['function'] == 'invoke'
+            if (
+                \in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))
+                || $class == 'ReflectionMethod'
+                    && $backtrace[$iFunc]['function'] == 'invoke'
             ) {
                 $iLine++;
                 $iFunc++;
@@ -866,7 +872,7 @@ class Utilities
             $return['file'] = $backtrace[$iLine]['file'];
             $return['line'] = $backtrace[$iLine]['line'];
         } else {
-            $return['file'] = $backtrace[$numFrames-1]['file'];
+            $return['file'] = $backtrace[$numFrames - 1]['file'];
             $return['line'] = 0;
         }
         return $return;

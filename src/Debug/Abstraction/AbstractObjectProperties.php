@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -21,7 +22,7 @@ use ReflectionProperty;
 class AbstractObjectProperties extends AbstractObjectSub
 {
 
-    static private $basePropInfo = array(
+    private static $basePropInfo = array(
         'debugInfoExcluded' => false,   // true if not included in __debugInfo
         'desc' => null,
         'inheritedFrom' => null,        // populated only if inherited
@@ -360,7 +361,7 @@ class AbstractObjectProperties extends AbstractObjectSub
             if (!$info['desc']) {
                 $info['desc'] = $var['desc'];
             } elseif ($var['desc']) {
-                $info['desc'] = $info['desc'].': '.$var['desc'];
+                $info['desc'] = $info['desc'] . ': ' . $var['desc'];
             }
         }
         return $info;
@@ -443,7 +444,8 @@ class AbstractObjectProperties extends AbstractObjectSub
      */
     private function propOverrides(ReflectionProperty $reflectionProperty, $propInfo, $className)
     {
-        if (empty($propInfo['overrides'])
+        if (
+            empty($propInfo['overrides'])
             && empty($propInfo['inheritedFrom'])
             && $reflectionProperty->getDeclaringClass()->getName() == $className
         ) {

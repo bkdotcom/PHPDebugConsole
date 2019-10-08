@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -52,7 +53,7 @@ class Html extends Base
             $argAttribs = $this->debug->utilities->arrayMergeDeep(
                 array(
                     'class' => array(
-                        't_'.$this->dumpType,
+                        't_' . $this->dumpType,
                         $this->dumpTypeMore,
                     ),
                 ),
@@ -110,11 +111,11 @@ class Html extends Base
         } else {
             $classname = $val;
         }
-        $operator = '<span class="t_operator">'.\htmlspecialchars($operator).'</span>';
+        $operator = '<span class="t_operator">' . \htmlspecialchars($operator) . '</span>';
         if ($classname) {
             $idx = \strrpos($classname, '\\');
             if ($idx) {
-                $classname = '<span class="namespace">'.\substr($classname, 0, $idx + 1).'</span>'
+                $classname = '<span class="namespace">' . \substr($classname, 0, $idx + 1) . '</span>'
                     . \substr($classname, $idx + 1);
             }
             $classname = $this->debug->utilities->buildTag(
@@ -128,7 +129,7 @@ class Html extends Base
             $operator = '';
         }
         if ($identifier) {
-            $identifier = '<span class="t_identifier">'.$identifier.'</span>';
+            $identifier = '<span class="t_identifier">' . $identifier . '</span>';
         } else {
             $operator = '';
         }
@@ -170,7 +171,7 @@ class Html extends Base
             if ($isArray) {
                 $type .= '<span class="t_punct">[]</span>';
             }
-            $types[$i] = '<span class="t_type">'.$type.'</span>';
+            $types[$i] = '<span class="t_type">' . $type . '</span>';
         }
         $types = \implode('<span class="t_punct">|</span>', $types);
         $attribs = \array_filter($attribs);
@@ -220,7 +221,7 @@ class Html extends Base
             'data-detect-files' => $meta['detectFiles'],
             'data-icon' => $meta['icon'],
         ), $meta['attribs']);
-        $this->logEntryAttribs['class'] .= ' m_'.$method;
+        $this->logEntryAttribs['class'] .= ' m_' . $method;
         if ($method == 'alert') {
             $str = $this->methodAlert($logEntry);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
@@ -255,7 +256,7 @@ class Html extends Base
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
                 $glueAfterFirst = false;
-                $args[0] = \rtrim($args[0]).' ';
+                $args[0] = \rtrim($args[0]) . ' ';
             } elseif (\count($args) == 2) {
                 $glue = ' = ';
             }
@@ -270,7 +271,7 @@ class Html extends Base
             ));
         }
         if (!$glueAfterFirst) {
-            return $args[0].\implode($glue, \array_slice($args, 1));
+            return $args[0] . \implode($glue, \array_slice($args, 1));
         } else {
             return \implode($glue, $args);
         }
@@ -287,26 +288,26 @@ class Html extends Base
     {
         if (empty($array)) {
             $html = '<span class="t_keyword">array</span>'
-                .'<span class="t_punct">()</span>';
+                . '<span class="t_punct">()</span>';
         } else {
             $showKeys = $this->debug->getCfg('arrayShowListKeys') || !$this->debug->utilities->isList($array);
             $html = '<span class="t_keyword">array</span>'
-                .'<span class="t_punct">(</span>'."\n";
+                . '<span class="t_punct">(</span>' . "\n";
             if ($showKeys) {
-                $html .= '<span class="array-inner">'."\n";
+                $html .= '<span class="array-inner">' . "\n";
                 foreach ($array as $key => $val) {
-                    $html .= "\t".'<span class="key-value">'
-                            .'<span class="t_key'.(\is_int($key) ? ' t_int' : '').'">'
-                                .$this->dump($key, true, false) // don't wrap it
-                            .'</span>'
-                            .'<span class="t_operator">=&gt;</span>'
-                            .$this->dump($val)
-                        .'</span>'."\n";
+                    $html .= "\t" . '<span class="key-value">'
+                            . '<span class="t_key' . (\is_int($key) ? ' t_int' : '') . '">'
+                                . $this->dump($key, true, false) // don't wrap it
+                            . '</span>'
+                            . '<span class="t_operator">=&gt;</span>'
+                            . $this->dump($val)
+                        . '</span>' . "\n";
                 }
                 $html .= '</span>';
             } else {
                 // display as list
-                $html .= '<ul class="array-inner list-unstyled">'."\n";
+                $html .= '<ul class="array-inner list-unstyled">' . "\n";
                 foreach ($array as $val) {
                     $html .= $this->dump($val, true, 'li');
                 }
@@ -339,7 +340,7 @@ class Html extends Base
     protected function dumpCallable(Abstraction $abs)
     {
         return (!$abs['hideType'] ? '<span class="t_type">callable</span> ' : '')
-            .$this->markupIdentifier($abs);
+            . $this->markupIdentifier($abs);
     }
 
     /**
@@ -354,7 +355,7 @@ class Html extends Base
     protected function dumpConst(Abstraction $abs)
     {
         $this->argAttribs['title'] = $abs['value']
-            ? 'value: '.$this->debug->dumpText->dump($abs['value'])
+            ? 'value: ' . $this->debug->dumpText->dump($abs['value'])
             : null;
         return $this->markupIdentifier($abs['name']);
     }
@@ -504,7 +505,7 @@ class Html extends Base
     {
         $meta = $logEntry['meta'];
         $attribs = \array_merge($this->logEntryAttribs, array(
-            'class' => 'alert-'.$meta['level'].' '.$this->logEntryAttribs['class'],
+            'class' => 'alert-' . $meta['level'] . ' ' . $this->logEntryAttribs['class'],
             'role' => 'alert',
         ));
         $html = $this->dump(
@@ -518,9 +519,9 @@ class Html extends Base
         if ($meta['dismissible']) {
             $attribs['class'] .= ' alert-dismissible';
             $html = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
-                .'<span aria-hidden="true">&times;</span>'
-                .'</button>'
-                .$html;
+                . '<span aria-hidden="true">&times;</span>'
+                . '</button>'
+                . $html;
         }
         return $this->debug->utilities->buildTag('div', $attribs, $html);
     }
@@ -550,7 +551,7 @@ class Html extends Base
         }
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if ($meta['errorCat']) {
-                $attribs['class'] .= ' error-'.$meta['errorCat'];
+                $attribs['class'] .= ' error-' . $meta['errorCat'];
             }
             $argCount = \count($args);
             if ($argCount > 1 && \is_string($args[0])) {
@@ -583,7 +584,7 @@ class Html extends Base
     {
         $method = $logEntry['method'];
         if ($method == 'groupEnd') {
-            return '</ul>'."\n".'</li>';
+            return '</ul>' . "\n" . '</li>';
         }
         $args = $logEntry['args'];
         $meta = \array_merge(array(
@@ -602,24 +603,24 @@ class Html extends Base
             'group-label-bold' => $meta['boldLabel'],
         ))));
         $levelClass = $meta['level']
-            ? 'level-'.$meta['level']
+            ? 'level-' . $meta['level']
             : null;
         foreach ($args as $k => $v) {
             $args[$k] = $this->dump($v);
         }
         $argStr = \implode(', ', $args);
         if (!$argStr) {
-            $headerStr = '<span class="'.$labelClasses.'">'.$label.'</span>';
+            $headerStr = '<span class="' . $labelClasses . '">' . $label . '</span>';
         } elseif ($meta['argsAsParams']) {
-            $headerStr = '<span class="'.$labelClasses.'">'.$label.'(</span>'
-                .$argStr
-                .'<span class="'.$labelClasses.'">)</span>';
+            $headerStr = '<span class="' . $labelClasses . '">' . $label . '(</span>'
+                . $argStr
+                . '<span class="' . $labelClasses . '">)</span>';
         } else {
-            $headerStr = '<span class="'.$labelClasses.'">'.$label.':</span> '
-                .$argStr;
+            $headerStr = '<span class="' . $labelClasses . '">' . $label . ':</span> '
+                . $argStr;
         }
-        $this->logEntryAttribs['class'] = \str_replace('m_'.$method, 'm_group', $this->logEntryAttribs['class']);
-        $str = '<li'.$this->debug->utilities->buildAttribString($this->logEntryAttribs).'>'."\n";
+        $this->logEntryAttribs['class'] = \str_replace('m_' . $method, 'm_group', $this->logEntryAttribs['class']);
+        $str = '<li' . $this->debug->utilities->buildAttribString($this->logEntryAttribs) . '>' . "\n";
         /*
             Header / label / toggle
         */
@@ -635,16 +636,16 @@ class Html extends Base
                 ),
             ),
             $headerStr
-        )."\n";
+        ) . "\n";
         /*
             Group open
         */
-        $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
+        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
             'class' => array(
                 'group-body',
                 $levelClass,
             ),
-        )).'>';
+        )) . '>';
         return $str;
     }
 
@@ -678,7 +679,7 @@ class Html extends Base
             $this->logEntryAttribs,
             $asTable
                 ? "\n"
-                    .$this->table->build(
+                    . $this->table->build(
                         $args[0],
                         array(
                             'attribs' => array(
@@ -691,7 +692,7 @@ class Html extends Base
                             'columns' => $meta['columns'],
                             'totalCols' => $meta['totalCols'],
                         )
-                    )."\n"
+                    ) . "\n"
                 : $this->buildArgString($args, $meta)
         );
     }
@@ -714,7 +715,7 @@ class Html extends Base
         } elseif ($type == 'array') {
             $count = \count($val);
             $val = '<span class="t_keyword">array</span>'
-                .'<span class="t_punct">(</span>'.$count.'<span class="t_punct">)</span>';
+                . '<span class="t_punct">(</span>' . $count . '<span class="t_punct">)</span>';
         } elseif ($type == 'object') {
             $toStr = AbstractObject::toString($val);
             if ($toStr) {
@@ -740,7 +741,7 @@ class Html extends Base
         // display \r, \n, & \t
         $str = \preg_replace_callback('/(\r\n|\r|\n)/', array($this, 'visualWhiteSpaceCallback'), $str);
         $str = \preg_replace('#(<br />)?\n$#', '', $str);
-        $str = \str_replace("\t", '<span class="ws_t">'."\t".'</span>', $str);
+        $str = \str_replace("\t", '<span class="ws_t">' . "\t" . '</span>', $str);
         return $str;
     }
 
@@ -754,7 +755,7 @@ class Html extends Base
     protected function visualWhiteSpaceCallback($matches)
     {
         $search = array("\r","\n");
-        $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>'."\n");
+        $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>' . "\n");
         return \str_replace($search, $replace, $matches[1]);
     }
 }

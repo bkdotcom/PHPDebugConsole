@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -149,7 +150,7 @@ class Stream extends Base
         $uriExists = \file_exists($stream);
         $isWritable = !\is_file($stream) || \is_writable($stream);
         if (!$isWritable) {
-            \trigger_error($stream.' is not writable', E_USER_NOTICE);
+            \trigger_error($stream . ' is not writable', E_USER_NOTICE);
             return;
         }
         $this->fileHandle = \fopen($stream, 'a');
@@ -158,7 +159,7 @@ class Stream extends Base
             : $this->debug->dumpText;
         $meta = \stream_get_meta_data($this->fileHandle);
         if ($this->fileHandle && $meta['wrapper_type'] === 'plainfile') {
-            \fwrite($this->fileHandle, '***** '.\date('Y-m-d H:i:s').' *****'."\n");
+            \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s') . ' *****' . "\n");
             if (!$uriExists) {
                 // we just created file
                 \chmod($stream, 0660);

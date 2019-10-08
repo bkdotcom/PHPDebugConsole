@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -104,7 +105,7 @@ class Config
                 }
             }
             \ksort($values);
-            $values = array('debug'=>$this->values) + $values;
+            $values = array('debug' => $this->values) + $values;
             return $values;
         }
         if (!isset($this->valuesPending[$classname])) {

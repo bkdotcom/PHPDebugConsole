@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -65,19 +66,19 @@ class Script extends Base
         if ($errorStats['inConsole']) {
             $errorStr = 'Errors: ';
             foreach ($errorStats['counts'] as $category => $vals) {
-                $errorStr .= $vals['inConsole'].' '.$category.', ';
+                $errorStr .= $vals['inConsole'] . ' ' . $category . ', ';
             }
             $errorStr = \substr($errorStr, 0, -2);
         }
         $str = '';
-        $str .= '<script type="text/javascript">'."\n";
+        $str .= '<script type="text/javascript">' . "\n";
         $str .= $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupCollapsed',
             array(
                 'PHP',
                 (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])
-                    ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
+                    ? $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']
                     : ''),
                 $errorStr,
             )
@@ -89,7 +90,7 @@ class Script extends Base
             $this->debug,
             'groupEnd'
         ));
-        $str .= '</script>'."\n";
+        $str .= '</script>' . "\n";
         $this->data = array();
         $event['return'] .= $str;
     }
@@ -115,18 +116,18 @@ class Script extends Base
             \array_unshift($args, false);
         } elseif (\in_array($method, array('error','warn'))) {
             if (isset($meta['file'])) {
-                $args[] = $meta['file'].': line '.$meta['line'];
+                $args[] = $meta['file'] . ': line ' . $meta['line'];
             }
         } elseif (!\in_array($method, $this->consoleMethods)) {
             $method = 'log';
         }
         foreach ($args as $k => $arg) {
-            $arg = \json_encode($this->dump->dump($arg), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+            $arg = \json_encode($this->dump->dump($arg), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             // ensure - however unlikely - that </script> doesn't appear inside our <script>
             $arg = \str_replace('</script>', '<\\/script>', $arg);
             $args[$k] = $arg;
         }
-        $str = 'console.'.$method.'('.\implode(',', $args).');'."\n";
+        $str = 'console.' . $method . '(' . \implode(',', $args) . ');' . "\n";
         $str = \str_replace(\json_encode(Abstracter::UNDEFINED), 'undefined', $str);
         return $str;
     }

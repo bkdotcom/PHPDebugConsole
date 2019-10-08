@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -23,7 +24,7 @@ use ReflectionParameter;
 class AbstractObjectMethods extends AbstractObjectSub
 {
 
-    static private $methodCache = array();
+    private static $methodCache = array();
 
     /**
      * {@inheritdoc}
@@ -228,9 +229,9 @@ class AbstractObjectMethods extends AbstractObjectSub
             : 0;
         for ($i = \count($params); $i < $phpDocCount; $i++) {
             $phpDocParam = $phpDoc['param'][$i];
-            $name = '$'.$phpDocParam['name'];
+            $name = '$' . $phpDocParam['name'];
             if (\substr($name, -4) === ',...') {
-                $name = '...'.\substr($name, 0, -4);
+                $name = '...' . \substr($name, 0, -4);
             }
             $paramArray[] = array(
                 'defaultValue' => $this->phpDocParamValue($phpDocParam),
@@ -282,16 +283,16 @@ class AbstractObjectMethods extends AbstractObjectSub
      */
     private function getParamName(ReflectionParameter $reflectionParameter, $phpDoc = array())
     {
-        $name = '$'.$reflectionParameter->getName();
+        $name = '$' . $reflectionParameter->getName();
         if (\method_exists($reflectionParameter, 'isVariadic') && $reflectionParameter->isVariadic()) {
             // php >= 5.6
-            $name = '...'.$name;
+            $name = '...' . $name;
         } elseif (isset($phpDoc['name']) && \substr($phpDoc['name'], -4) === ',...') {
             // phpDoc indicates variadic...
-            $name = '...'.$name;
+            $name = '...' . $name;
         }
         if ($reflectionParameter->isPassedByReference()) {
-            $name = '&'.$name;
+            $name = '&' . $name;
         }
         return $name;
     }
@@ -423,12 +424,12 @@ class AbstractObjectMethods extends AbstractObjectSub
             $defaultValue = array();
         } elseif (\preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
             // appears to be a constant
-            if ($matches[1] && \defined($className.'::'.$matches[2])) {
+            if ($matches[1] && \defined($className . '::' . $matches[2])) {
                 // self
                 $defaultValue = new Abstraction(array(
                     'type' => 'const',
                     'name' => $matches[0],
-                    'value' => \constant($className.'::'.$matches[2]),
+                    'value' => \constant($className . '::' . $matches[2]),
                 ));
             } elseif (\defined($defaultValue)) {
                 $defaultValue = new Abstraction(array(

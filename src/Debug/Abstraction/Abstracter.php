@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -86,7 +87,7 @@ class Abstracter extends Component
         } elseif (\is_resource($mixed) || \strpos(\print_r($mixed, true), 'Resource') === 0) {
             return new Abstraction(array(
                 'type' => 'resource',
-                'value' => \print_r($mixed, true).': '.\get_resource_type($mixed),
+                'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
             ));
         }
     }

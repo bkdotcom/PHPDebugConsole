@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -64,7 +65,7 @@ class PhpDoc
             $return = \array_merge($return, self::parseTags($strTags));
             // remove tags from comment
             $comment = $pos > 0
-                ? \substr($comment, 0, $pos-1)
+                ? \substr($comment, 0, $pos - 1)
                 : '';
         }
         /*
@@ -80,7 +81,7 @@ class PhpDoc
         $split = \array_replace(array('','',''), $split);
         // assume that summary and desc won't be "0"..  remove empty value and merge
         $return = \array_merge($return, \array_filter(array(
-            'summary' => \trim($split[0].$split[1]),    // split[1] is the ".\n"
+            'summary' => \trim($split[0] . $split[1]),    // split[1] is the ".\n"
             'desc' => \trim($split[2]),
         )));
         if ($hash) {
@@ -116,10 +117,10 @@ class PhpDoc
                 'tags' => array('param','property','property-read', 'property-write', 'var'),
                 'parts' => array('type','name','desc'),
                 'regex' => '/^'
-                    .'(?:(?P<type>[^\$].*?)\s+)?'
-                    .'(?:&?\$?(?P<name>\S+)\s+)?'
-                    .'(?P<desc>.*)?'
-                    .'$/s',
+                    . '(?:(?P<type>[^\$].*?)\s+)?'
+                    . '(?:&?\$?(?P<name>\S+)\s+)?'
+                    . '(?P<desc>.*)?'
+                    . '$/s',
                 'callable' => function ($parsed) {
                     if (\strpos($parsed['desc'], ' ') === false) {
                         if (!$parsed['type']) {
@@ -138,12 +139,12 @@ class PhpDoc
                 'tags' => array('method'),
                 'parts' => array('static', 'type', 'name', 'param', 'desc'),
                 'regex' => '/'
-                    .'(?:(?P<static>static)\s+)?'
-                    .'(?:(?P<type>.*?)\s+)?'
-                    .'(?P<name>\S+)'
-                    .'\((?P<param>((?>[^()]+)|(?R))*)\)'  // see http://php.net/manual/en/regexp.reference.recursive.php
-                    .'(?:\s+(?P<desc>.*))?'
-                    .'/s',
+                    . '(?:(?P<static>static)\s+)?'
+                    . '(?:(?P<type>.*?)\s+)?'
+                    . '(?P<name>\S+)'
+                    . '\((?P<param>((?>[^()]+)|(?R))*)\)'  // see http://php.net/manual/en/regexp.reference.recursive.php
+                    . '(?:\s+(?P<desc>.*))?'
+                    . '/s',
                 'callable' => function ($parsed) {
                     $parsed['param'] = self::parseParams($parsed['param']);
                     $parsed['static'] = $parsed['static'] !== null;
@@ -155,7 +156,7 @@ class PhpDoc
                 'tags' => array('return', 'throws'),
                 'parts' => array('type','desc'),
                 'regex' => '/^(?P<type>.*?)'
-                    .'(?:\s+(?P<desc>.*))?$/s',
+                    . '(?:\s+(?P<desc>.*))?$/s',
                 'callable' => function ($parsed) {
                     $parsed['type'] = self::typeEdit($parsed['type']);
                     return $parsed;
@@ -165,23 +166,23 @@ class PhpDoc
                 'tags' => array('author'),
                 'parts' => array('name', 'email','desc'),
                 'regex' => '/^(?P<name>[^<]+)'
-                    .'(?:\s+<(?P<email>\S*)>)?'
-                    .'(?:\s+(?P<desc>.*))?'
-                    .'$/s',
+                    . '(?:\s+<(?P<email>\S*)>)?'
+                    . '(?:\s+(?P<desc>.*))?'
+                    . '$/s',
             ),
             array(
                 'tags' => array('link'),
                 'parts' => array('uri', 'desc'),
                 'regex' => '/^(?P<uri>\S+)'
-                    .'(?:\s+(?P<desc>.*))?$/s',
+                    . '(?:\s+(?P<desc>.*))?$/s',
             ),
             array(
                 'tags' => array('see'),
                 'parts' => array('uri', 'fqsen', 'desc'),
                 'regex' => '/^(?:'
-                    .'(?P<uri>https?:\/\/\S+)|(?P<fqsen>\S+)'
-                    .')'
-                    .'(?:\s+(?P<desc>.*))?$/s',
+                    . '(?P<uri>https?:\/\/\S+)|(?P<fqsen>\S+)'
+                    . ')'
+                    . '(?:\s+(?P<desc>.*))?$/s',
             ),
             array(
                 // default
@@ -307,11 +308,11 @@ class PhpDoc
         } elseif ($what instanceof ReflectionClass) {
             $str = $what->getName();
         } elseif ($what instanceof ReflectionMethod) {
-            $str = $what->getDeclaringClass()->getName().'::'.$what->getName().'()';
+            $str = $what->getDeclaringClass()->getName() . '::' . $what->getName() . '()';
         } elseif ($what instanceof ReflectionFunction) {
-            $str = $what->getName().'()';
+            $str = $what->getName() . '()';
         } elseif ($what instanceof ReflectionProperty) {
-            $str = $what->getDeclaringClass()->getName().'::'.$what->getName();
+            $str = $what->getDeclaringClass()->getName() . '::' . $what->getName();
         } elseif (\is_string($what)) {
             $str = $what;
         }
@@ -374,7 +375,7 @@ class PhpDoc
     private static function parseTags($str)
     {
         $regexNotTag = '(?P<value>(?:(?!^@).)*)';
-        $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*'.$regexNotTag.'#sim';
+        $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*' . $regexNotTag . '#sim';
         \preg_match_all($regexTags, $str, $matches, PREG_SET_ORDER);
         $singleTags = array('return');
         foreach ($matches as $match) {
@@ -408,21 +409,21 @@ class PhpDoc
             switch ($char) {
                 case ',':
                     if ($depth === 0) {
-                        $params[] = \trim(\substr($paramStr, $startPos, $pos-$startPos));
+                        $params[] = \trim(\substr($paramStr, $startPos, $pos - $startPos));
                         $startPos = $pos + 1;
                     }
                     break;
                 case '[':
                 case '(':
-                    $depth ++;
+                    $depth++;
                     break;
                 case ']':
                 case ')':
-                    $depth --;
+                    $depth--;
                     break;
             }
         }
-        $params[] = \trim(\substr($paramStr, $startPos, $pos+1-$startPos));
+        $params[] = \trim(\substr($paramStr, $startPos, $pos + 1 - $startPos));
         return $params;
     }
 

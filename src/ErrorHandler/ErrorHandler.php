@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -274,7 +275,7 @@ class ErrorHandler
         \http_response_code(500);
         $this->handleError(
             E_ERROR,
-            'Uncaught exception \''.\get_class($exception).'\' with message '.$exception->getMessage(),
+            'Uncaught exception \'' . \get_class($exception) . '\' with message ' . $exception->getMessage(),
             $exception->getFile(),
             $exception->getLine()
         );
@@ -431,12 +432,12 @@ class ErrorHandler
             $backtrace = \version_compare(PHP_VERSION, '5.4.0', '>=')
                 ? \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3)
                 : \debug_backtrace(false);   // don't provide object
-            $i = isset($backtrace[$offset+1])
+            $i = isset($backtrace[$offset + 1])
                 ? $offset + 1
                 : \count($backtrace) - 1;
             $caller = isset($backtrace[$i]['file'])
                 ? $backtrace[$i]
-                : $backtrace[$i+1]; // likely called via call_user_func.. need to go one more to get calling file & line
+                : $backtrace[$i + 1]; // likely called via call_user_func.. need to go one more to get calling file & line
             $caller = array(
                 'file' => $caller['file'],
                 'line' => $caller['line'],
@@ -508,7 +509,7 @@ class ErrorHandler
             */
             $refObj = new ReflectionObject($this->eventManager);
             $filepath = $refObj->getFilename();
-            while (isset($backtrace[$i+1]['file']) && $backtrace[$i+1]['file'] == $filepath) {
+            while (isset($backtrace[$i + 1]['file']) && $backtrace[$i + 1]['file'] == $filepath) {
                 $i++;
             }
         }
@@ -590,8 +591,8 @@ class ErrorHandler
             'type' => null,
         );
         $funcsSkip = array('call_user_func','call_user_func_array');
-        $funcsSkipRegex = '/^('.\implode('|', $funcsSkip).')[:\(\{]/';
-        for ($i = 0, $count=\count($backtrace); $i < $count; $i++) {
+        $funcsSkipRegex = '/^(' . \implode('|', $funcsSkip) . ')[:\(\{]/';
+        for ($i = 0, $count = \count($backtrace); $i < $count; $i++) {
             $frame = \array_merge($frameDefault, $backtrace[$i]);
             $frame = \array_intersect_key($frame, $frameDefault);
             if (\in_array($frame['function'], $funcsSkip) || \preg_match($funcsSkipRegex, $frame['function'])) {
@@ -609,7 +610,7 @@ class ErrorHandler
             } else {
                 $frame['function'] = \preg_match('/\{closure\}$/', $frame['function'])
                     ? $frame['function']
-                    : $frame['class'].$frame['type'].$frame['function'];
+                    : $frame['class'] . $frame['type'] . $frame['function'];
             }
             if (!$frame['function']) {
                 unset($frame['function']);
@@ -691,7 +692,7 @@ class ErrorHandler
                     : null;
                 if ($function === '__get') {
                     // wrong file!
-                    $prev = $stack[$i-1];
+                    $prev = $stack[$i - 1];
                     $stack[$i]['file'] = isset($prev['include_filename'])
                         ? $prev['include_filename']
                         : $prev['file'];

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -73,7 +74,7 @@ class Yii11 implements SubscriberInterface
         $db = $this->yiiApp->db;
         $pdo = $db->pdoInstance;
         // nest the PDO channel under our Yii channel
-        $pdoChannel = $this->debug->getChannel('PDO', array('channelIcon'=>'fa fa-database'));
+        $pdoChannel = $this->debug->getChannel('PDO', array('channelIcon' => 'fa fa-database'));
         $pdoCollector = new \bdk\Debug\Collector\Pdo($pdo, $pdoChannel);
         $pdoProp = new \ReflectionProperty($db, '_pdo');
         $pdoProp->setAccessible(true);
@@ -154,7 +155,7 @@ class Yii11 implements SubscriberInterface
         $debug = $logEntry->getSubject();
         if ($logEntry['method'] == 'log' && $logEntry['args'][0] == 'files') {
             // let's embolden the primary files
-            $root = \realpath(YII_PATH.'/..');
+            $root = \realpath(YII_PATH . '/..');
             $html = $debug->dumpHtml->processLogEntry($logEntry);
             $html = \preg_replace_callback('#(<span class="file t_string">)(.*?)(</span>)#', function ($matches) use ($root) {
                 $filepath = $matches[2];
@@ -201,7 +202,7 @@ class Yii11 implements SubscriberInterface
             $refProp->setAccessible(true);
             $event['propertyOverrideValues'] = array(
                 '_models' => \array_map(function ($val) {
-                    return \get_class($val).' (not inspected)';
+                    return \get_class($val) . ' (not inspected)';
                 }, $refProp->getValue($model)),
             );
             \ksort($event['propertyOverrideValues']['_models']);

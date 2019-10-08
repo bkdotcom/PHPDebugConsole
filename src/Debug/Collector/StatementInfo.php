@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -67,7 +68,7 @@ class StatementInfo
             $constsAll = $ref->getConstants();
             foreach ($constsAll as $name => $val) {
                 if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
-                    $consts[$val] = '\\PDO::'.$name;
+                    $consts[$val] = '\\PDO::' . $name;
                 }
             }
             if (\class_exists('\\Doctrine\\DBAL\\Connection')) {
@@ -112,7 +113,7 @@ class StatementInfo
      */
     public function __get($name)
     {
-        $getter = 'get'.\ucfirst($name);
+        $getter = 'get' . \ucfirst($name);
         if (\method_exists($this, $getter)) {
             return $this->$getter();
         } elseif (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {
@@ -122,23 +123,6 @@ class StatementInfo
         } else {
             return null;
         }
-    }
-
-    /**
-     * @param Exception|null $exception (optional) Exception (if statement threw exception)
-     * @param integer        $rowCount  (optional) Number of rows affected by the last DELETE, INSERT, or UPDATE statement
-     *
-     * @return void
-     */
-    public function end(Exception $exception = null, $rowCount = null)
-    {
-        $this->exception = $exception;
-        $this->rowCount = $rowCount;
-        $this->timeEnd = \microtime(true);
-        $this->memoryEnd = \memory_get_usage(false);
-        $this->duration = $this->timeEnd - $this->timeStart;
-        $this->memoryUsage = \max($this->memoryEnd - $this->memoryStart, 0);
-        $this->isSuccess = $exception === null;
     }
 
     /**
@@ -152,16 +136,17 @@ class StatementInfo
     {
         $logSql = true;
         $label = $this->sql;
-        if (\preg_match('/^(
-            (?:DROP|SHOW).+$|
-            CREATE(?:\sTEMPORARY)?\s+TABLE(?:\sIF\sNOT\sEXISTS)?\s+\S+|
-            DELETE.*?FROM\s+\S+|
-            INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
-            SELECT\s*(?P<select>.*?)\s+FROM\s+\S+|
-            UPDATE\s+\S+
-        )(?P<more>.*)/imsx', $label, $matches)) {
+        $regex = '/^(
+                (?:DROP|SHOW).+$|
+                CREATE(?:\sTEMPORARY)?\s+TABLE(?:\sIF\sNOT\sEXISTS)?\s+\S+|
+                DELETE.*?FROM\s+\S+|
+                INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
+                SELECT\s*(?P<select>.*?)\s+FROM\s+\S+|
+                UPDATE\s+\S+
+            )(?P<more>.*)/imsx';
+        if (\preg_match($regex, $label, $matches)) {
             $logSql = !empty($matches['more']);
-            $label = $matches[1].($logSql ? '…' : '');
+            $label = $matches[1] . ($logSql ? '…' : '');
             if (\strlen($matches['select']) > 100) {
                 $label = \str_replace($matches['select'], '(…)', $label);
             }
@@ -196,6 +181,25 @@ class StatementInfo
             $debug->log('rowCount', $this->rowCount);
         }
         $debug->groupEnd();
+    }
+
+    /**
+     * End the statement
+     *
+     * @param Exception|null $exception (optional) Exception (if statement threw exception)
+     * @param integer        $rowCount  (optional) Number of rows affected by the last DELETE, INSERT, or UPDATE statement
+     *
+     * @return void
+     */
+    public function end(Exception $exception = null, $rowCount = null)
+    {
+        $this->exception = $exception;
+        $this->rowCount = $rowCount;
+        $this->timeEnd = \microtime(true);
+        $this->memoryEnd = \memory_get_usage(false);
+        $this->duration = $this->timeEnd - $this->timeStart;
+        $this->memoryUsage = \max($this->memoryEnd - $this->memoryStart, 0);
+        $this->isSuccess = $exception === null;
     }
 
     /**
@@ -243,10 +247,10 @@ class StatementInfo
         foreach ($this->params as $k => $v) {
             $v = "$quoteLeft$v$quoteRight";
             if (!\is_numeric($k)) {
-                $sql = \preg_replace('/'.$k.'\b/', $v, $sql);
+                $sql = \preg_replace('/' . $k . '\b/', $v, $sql);
             } else {
                 $p = \strpos($sql, '?');
-                $sql = \substr($sql, 0, $p) . $v. \substr($sql, $p + 1);
+                $sql = \substr($sql, 0, $p) . $v . \substr($sql, $p + 1);
             }
         }
         return $sql;

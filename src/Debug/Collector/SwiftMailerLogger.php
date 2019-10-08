@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -113,7 +114,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
         $this->messages[] = $entry;
         $debugArgs = array($entry);
         if (\preg_match('#^(([-+><])\2) (.+)$#s', $entry, $matches)) {
-            $debugArgs = array($matches[1].':', $matches[3]);
+            $debugArgs = array($matches[1] . ':', $matches[3]);
         }
         if ($this->useIcon) {
             $debugArgs[] = $this->iconMeta;
@@ -267,9 +268,9 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
         $e = $evt->getException();
         $message = $e->getMessage();
         $code = $e->getCode();
-        $this->debug->warn($code.':', $message);
+        $this->debug->warn($code . ':', $message);
         $message .= PHP_EOL;
-        $message .= 'Log data:'.PHP_EOL;
+        $message .= 'Log data:' . PHP_EOL;
         $message .= $this->dump();
         $evt->cancelBubble();
         throw new Swift_TransportException($message, $code, $e->getPrevious());
@@ -286,7 +287,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     {
         $return = array();
         foreach ($addrs as $addr => $name) {
-            $return[] = ($name ? $name.' ' : '') . '<'.$addr.'>';
+            $return[] = ($name ? $name . ' ' : '') . '<' . $addr . '>';
         }
         return \implode(', ', $return);
     }

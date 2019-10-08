@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -40,8 +41,8 @@ class Html extends Base
         $this->cfg = array(
             'css' => '',            // additional "override" css
             'drawer' => true,
-            'filepathCss' => __DIR__.'/../css/Debug.css',
-            'filepathScript' => __DIR__.'/../js/Debug.jquery.min.js',
+            'filepathCss' => __DIR__ . '/../css/Debug.css',
+            'filepathScript' => __DIR__ . '/../js/Debug.jquery.min.js',
             'jqueryUrl' => '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
             'outputCss' => true,
             'outputScript' => true,
@@ -151,8 +152,11 @@ class Html extends Base
         if ($errorSummary) {
             \array_unshift($this->data['alerts'], $errorSummary);
         }
-        $lftDefault = \strtr(\ini_get('xdebug.file_link_format'), array('%f'=>'%file','%l'=>'%line'));
-        $str = '<div'.$this->debug->utilities->buildAttribString(array(
+        $lftDefault = \strtr(\ini_get('xdebug.file_link_format'), array(
+            '%f' => '%file',
+            '%l' => '%line',
+        ));
+        $str = '<div' . $this->debug->utilities->buildAttribString(array(
             'class' => 'debug',
             'data-options' => array(
                 'drawer' => $this->cfg['drawer'],
@@ -162,20 +166,20 @@ class Html extends Base
             // channel list gets built as log processed...  we'll str_replace this...
             'data-channels' => '{{channels}}',
             'data-channel-root' => $this->channelNameRoot,
-        )).">\n";
+        )) . ">\n";
         if ($this->cfg['outputCss']) {
-            $str .= '<style type="text/css">'."\n"
-                    .$this->getCss()."\n"
-                .'</style>'."\n";
+            $str .= '<style type="text/css">' . "\n"
+                    . $this->getCss() . "\n"
+                . '</style>' . "\n";
         }
         if ($this->cfg['outputScript']) {
-            $str .= '<script>window.jQuery || document.write(\'<script src="'.$this->cfg['jqueryUrl'].'"><\/script>\')</script>'."\n";
+            $str .= '<script>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n";
             $str .= '<script type="text/javascript">'
-                    .$this->getScript()."\n"
-                .'</script>'."\n";
+                    . $this->getScript() . "\n"
+                . '</script>' . "\n";
         }
-        $str .= '<header class="debug-menu-bar">PHPDebugConsole</header>'."\n";
-        $str .= '<div class="debug-body">'."\n";
+        $str .= '<header class="debug-menu-bar">PHPDebugConsole</header>' . "\n";
+        $str .= '<div class="debug-body">' . "\n";
         $str .= $this->processAlerts();
         /*
             If outputing script, initially hide the output..
@@ -183,19 +187,19 @@ class Html extends Base
         */
         $style = null;
         if ($this->cfg['outputScript']) {
-            $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>'."\n";
+            $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n";
             $style = 'display:none;';
         }
-        $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
+        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
             'class' => 'debug-log-summary group-body',
             'style' => $style,
-        )).">\n".$this->processSummary().'</ul>'."\n";
-        $str .= '<ul'.$this->debug->utilities->buildAttribString(array(
+        )) . ">\n" . $this->processSummary() . '</ul>' . "\n";
+        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
             'class' => 'debug-log group-body',
             'style' => $style,
-        )).">\n".$this->processLog().'</ul>'."\n";
-        $str .= '</div>'."\n";  // close .debug-body
-        $str .= '</div>'."\n";  // close .debug
+        )) . ">\n" . $this->processLog() . '</ul>' . "\n";
+        $str .= '</div>' . "\n";  // close .debug-body
+        $str .= '</div>' . "\n";  // close .debug
         $str = \strtr($str, array(
             '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
         ));
@@ -251,7 +255,7 @@ class Html extends Base
     protected function postSetCfg($cfg = array())
     {
         foreach (array('filepathCss', 'filepathScript') as $k) {
-            $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__.'/../', $this->cfg[$k]);
+            $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__ . '/../', $this->cfg[$k]);
         }
     }
 
@@ -269,14 +273,14 @@ class Html extends Base
         foreach ($assets as $asset) {
             if (!\preg_match('#[\r\n]#', $asset)) {
                 // single line... potential filepath
-                $asset = \preg_replace('#^\./?#', __DIR__.'/../', $asset);
+                $asset = \preg_replace('#^\./?#', __DIR__ . '/../', $asset);
                 if (\file_exists($asset)) {
                     $asset = \file_get_contents($asset);
                 }
             }
             $hash = \md5($asset);
             if (!\in_array($hash, $hashes)) {
-                $return .= $asset."\n";
+                $return .= $asset . "\n";
                 $hashes[] = $hash;
             }
         }

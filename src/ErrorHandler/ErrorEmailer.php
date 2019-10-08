@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -39,7 +40,7 @@ class ErrorEmailer implements SubscriberInterface
             'emailMin' => 15,               // 0 = no throttle
             'emailThrottledSummary' => true,    // if errors have been throttled, should we email a summary email of throttled errors?
                                                 //    (first occurance of error is never throttled)
-            'emailThrottleFile' => __DIR__.'/error_emails.json',
+            'emailThrottleFile' => __DIR__ . '/error_emails.json',
             'emailThrottleRead' => array($this, 'throttleDataReader'),    // callable that returns throttle data
             'emailThrottleWrite' => array($this, 'throttleDataWriter'),   // callable that writes throttle data.  receives single array param
             'emailTo' => !empty($_SERVER['SERVER_ADMIN'])
@@ -215,7 +216,7 @@ class ErrorEmailer implements SubscriberInterface
         $addHeadersStr = '';
         $fromAddr = $this->cfg['emailFrom'];
         if ($fromAddr) {
-            $addHeadersStr .= 'From: '.$fromAddr;
+            $addHeadersStr .= 'From: ' . $fromAddr;
         }
         \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
     }
@@ -238,36 +239,36 @@ class ErrorEmailer implements SubscriberInterface
         $countSince = $error['stats']['countSince'];
         $isCli = $this->isCli();
         $subject = $isCli
-            ? 'Error: '.\implode(' ', $_SERVER['argv'])
-            : 'Website Error: '.$_SERVER['SERVER_NAME'];
-        $subject .= ': '.$errMsg.($countSince ? ' ('.$countSince.'x)' : '');
+            ? 'Error: ' . \implode(' ', $_SERVER['argv'])
+            : 'Website Error: ' . $_SERVER['SERVER_NAME'];
+        $subject .= ': ' . $errMsg . ($countSince ? ' (' . $countSince . 'x)' : '');
         $emailBody = '';
         if (!empty($countSince)) {
             $dateTimePrev = \date($dateTimeFmt, $error['stats']['tsEmailed']);
-            $emailBody .= 'Error has occurred '.$countSince.' times since last email ('.$dateTimePrev.').'."\n\n";
+            $emailBody .= 'Error has occurred ' . $countSince . ' times since last email (' . $dateTimePrev . ').' . "\n\n";
         }
         $emailBody .= ''
-            .'datetime: '.\date($dateTimeFmt)."\n"
-            .'errormsg: '.$errMsg."\n"
-            .'errortype: '.$error['type'].' ('.$error['typeStr'].')'."\n"
-            .'file: '.$error['file']."\n"
-            .'line: '.$error['line']."\n"
-            .'';
+            . 'datetime: ' . \date($dateTimeFmt) . "\n"
+            . 'errormsg: ' . $errMsg . "\n"
+            . 'errortype: ' . $error['type'] . ' (' . $error['typeStr'] . ')' . "\n"
+            . 'file: ' . $error['file'] . "\n"
+            . 'line: ' . $error['line'] . "\n"
+            . '';
         if (!$isCli) {
             $emailBody .= ''
-                .'remote_addr: '.$_SERVER['REMOTE_ADDR']."\n"
-                .'http_host: '.$_SERVER['HTTP_HOST']."\n"
-                .'referer: '.(isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'null')."\n"
-                .'request_uri: '.$_SERVER['REQUEST_URI']."\n"
-                .'';
+                . 'remote_addr: ' . $_SERVER['REMOTE_ADDR'] . "\n"
+                . 'http_host: ' . $_SERVER['HTTP_HOST'] . "\n"
+                . 'referer: ' . (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'null') . "\n"
+                . 'request_uri: ' . $_SERVER['REQUEST_URI'] . "\n"
+                . '';
         }
         if (!empty($_POST)) {
-            $emailBody .= 'post params: '.\var_export($_POST, true)."\n";
+            $emailBody .= 'post params: ' . \var_export($_POST, true) . "\n";
         }
         if ($error['type'] & $this->cfg['emailTraceMask']) {
             $backtraceStr = $this->backtraceStr($error);
-            $emailBody .= "\n".($backtraceStr
-                ? 'backtrace: '.$backtraceStr
+            $emailBody .= "\n" . ($backtraceStr
+                ? 'backtrace: ' . $backtraceStr
                 : 'no backtrace');
         }
         $this->email($this->cfg['emailTo'], $subject, $emailBody);
@@ -330,7 +331,7 @@ class ErrorEmailer implements SubscriberInterface
             // it's been a while since this error was emailed
             if ($err['emailedTo'] != $this->cfg['emailTo']) {
                 // it was emailed to a different address
-                if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60*60*24) {
+                if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60 * 60 * 24) {
                     unset($this->throttleData['errors'][$k]);
                 }
                 continue;
@@ -339,15 +340,15 @@ class ErrorEmailer implements SubscriberInterface
             if ($err['countSince'] > 0) {
                 $dateLastEmailed = \date('Y-m-d H:i:s', $err['tsEmailed']);
                 $emailBody .= ''
-                    .'File: '.$err['file']."\n"
-                    .'Line: '.$err['line']."\n"
-                    .'Error: '.$this->errTypes[ $err['errType'] ].': '.$err['errMsg']."\n"
-                    .'Has occured '.$err['countSince'].' times since '.$dateLastEmailed."\n\n";
+                    . 'File: ' . $err['file'] . "\n"
+                    . 'Line: ' . $err['line'] . "\n"
+                    . 'Error: ' . $this->errTypes[ $err['errType'] ] . ': ' . $err['errMsg'] . "\n"
+                    . 'Has occured ' . $err['countSince'] . ' times since ' . $dateLastEmailed . "\n\n";
                 $sendEmailSummary = $this->cfg['emailThrottledSummary'];
             }
         }
         if ($sendEmailSummary) {
-            $this->email($this->cfg['emailTo'], 'Website Errors: '.$_SERVER['SERVER_NAME'], $emailBody);
+            $this->email($this->cfg['emailTo'], 'Website Errors: ' . $_SERVER['SERVER_NAME'], $emailBody);
         }
     }
 

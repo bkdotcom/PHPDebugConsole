@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -62,15 +63,15 @@ class Firephp extends Base
         $this->outputEvent = $event;
         $this->data = $this->debug->getData();
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
-        $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/'.self::FIREPHP_PROTO_VER);
+        $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER);
         $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
         $heading = isset($_SERVER['REQUEST_METHOD'])
-            ? $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
-            : '$: '. \implode(' ', $_SERVER['argv']);
+            ? $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']
+            : '$: ' . \implode(' ', $_SERVER['argv']);
         $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupCollapsed',
-            array('PHP: '.$heading)
+            array('PHP: ' . $heading)
         ));
         $this->processAlerts();
         $this->processSummary();
@@ -115,8 +116,8 @@ class Firephp extends Base
             $this->setFirephpHeader($logEntry['firephpMeta'], $value);
         } elseif ($this->messageIndex === self::MESSAGE_LIMIT) {
             $this->setFirephpHeader(
-                array('Type'=>$this->firephpMethods['warn']),
-                'FirePhp\'s limit of '.\number_format(self::MESSAGE_LIMIT).' messages reached!'
+                array('Type' => $this->firephpMethods['warn']),
+                'FirePhp\'s limit of ' . \number_format(self::MESSAGE_LIMIT) . ' messages reached!'
             );
         }
     }
@@ -218,17 +219,17 @@ class Firephp extends Base
         $msg = \json_encode(array(
             $meta,
             $value,
-        ), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $structureIndex = 1;    // refers to X-Wf-1-Structure-1
         $parts = \explode("\n", \rtrim(\chunk_split($msg, 5000, "\n")));
         $numParts = \count($parts);
-        for ($i=0; $i<$numParts; $i++) {
+        for ($i = 0; $i < $numParts; $i++) {
             $part = $parts[$i];
             $this->messageIndex++;
-            $headerName = 'X-Wf-1-'.$structureIndex.'-1-'.$this->messageIndex;
-            $headerValue = ($i==0 ? \strlen($msg) : '')
+            $headerName = 'X-Wf-1-' . $structureIndex . '-1-' . $this->messageIndex;
+            $headerValue = ($i == 0 ? \strlen($msg) : '')
                 . '|' . $part . '|'
-                . ($i<$numParts-1 ? '\\' : '');
+                . ($i < $numParts - 1 ? '\\' : '');
             $this->outputEvent['headers'][] = array($headerName, $headerValue);
         }
     }
@@ -260,4 +261,3 @@ class Firephp extends Base
         return $logEntry['firephpMeta'] = $firephpMeta;
     }
 }
-

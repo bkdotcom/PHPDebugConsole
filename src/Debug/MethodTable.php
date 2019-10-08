@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -56,8 +57,8 @@ class MethodTable
                     if ($lastKeys && $curKey === $lastKeys[0]) {
                         \array_push($newKeys, $curKey);
                         \array_shift($lastKeys);
-                    } elseif (false !== $position = \array_search($curKey, $lastKeys, true)) {
-                        $segment = \array_splice($lastKeys, 0, $position+1);
+                    } elseif (($position = \array_search($curKey, $lastKeys, true)) !== false) {
+                        $segment = \array_splice($lastKeys, 0, $position + 1);
                         \array_splice($newKeys, \count($newKeys), 0, $segment);
                     } elseif (!\in_array($curKey, $newKeys, true)) {
                         \array_push($newKeys, $curKey);

@@ -71,7 +71,7 @@ class Base extends Component implements ConfigurableInterface
             $val = $this->debug->abstracter->getAbstraction($val);
             $typeMore = null;
         }
-        $method = 'dump'.\ucfirst($type);
+        $method = 'dump' . \ucfirst($type);
         if ($typeMore === 'abstraction') {
             foreach (\array_keys($this->argStringOpts) as $k) {
                 if ($val[$k] !== null) {
@@ -115,7 +115,7 @@ class Base extends Component implements ConfigurableInterface
         if ($val instanceof Abstraction) {
             $val = $val['value'];
             if (\is_array($val)) {
-                $val = $val[0].'::'.$val[1];
+                $val = $val[0] . '::' . $val[1];
             }
         }
         return $val;
@@ -198,7 +198,7 @@ class Base extends Component implements ConfigurableInterface
     protected function dumpCallable(Abstraction $abs)
     {
         return (!$abs['hideType'] ? 'callable: ' : '')
-            .$this->markupIdentifier($abs);
+             . $this->markupIdentifier($abs);
     }
 
     /**
@@ -224,7 +224,7 @@ class Base extends Component implements ConfigurableInterface
     {
         $date = $this->checkTimestamp($val);
         return $date
-            ? $val.' ('.$date.')'
+            ? $val . ' (' . $date . ')'
             : $val;
     }
 
@@ -270,9 +270,9 @@ class Base extends Component implements ConfigurableInterface
     protected function dumpObject(Abstraction $abs)
     {
         if ($abs['isRecursion']) {
-            $return = '(object) '.$abs['className'].' *RECURSION*';
+            $return = '(object) ' . $abs['className'] . ' *RECURSION*';
         } elseif ($abs['isExcluded']) {
-            $return = '(object) '.$abs['className'].' NOT INSPECTED';
+            $return = '(object) ' . $abs['className'] . ' NOT INSPECTED';
         } else {
             $return = array(
                 '___class_name' => $abs['className'],
@@ -295,15 +295,15 @@ class Base extends Component implements ConfigurableInterface
             $vis = (array) $info['visibility'];
             foreach ($vis as $i => $v) {
                 if (\in_array($v, array('magic','magic-read','magic-write'))) {
-                    $vis[$i] = '✨ '.$v;    // "sparkles": there is no magic-wand unicode char
+                    $vis[$i] = '✨ ' . $v;    // "sparkles": there is no magic-wand unicode char
                 } elseif ($v == 'private' && $info['inheritedFrom']) {
-                    $vis[$i] = '🔒 '.$v;
+                    $vis[$i] = '🔒 ' . $v;
                 }
             }
             if ($info['debugInfoExcluded']) {
                 $vis[] = 'excluded';
             }
-            $name = '('.\implode(' ', $vis).') '.$name;
+            $name = '(' . \implode(' ', $vis) . ') ' . $name;
             $return[$name] = $this->dump($info['value']);
         }
         return $return;
@@ -343,7 +343,7 @@ class Base extends Component implements ConfigurableInterface
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
             return $date
-                ? $val.' ('.$date.')'
+                ? $val . ' (' . $date . ')'
                 : $val;
         } else {
             return $this->debug->utf8->dump($val);
@@ -365,11 +365,11 @@ class Base extends Component implements ConfigurableInterface
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return LogEntry
+     * @return void
      */
     protected function methodAlert(LogEntry $logEntry)
     {
-        $args = array('%c'.$logEntry['args'][0], '');
+        $args = array('%c' . $logEntry['args'][0], '');
         $method = $logEntry->getMeta('level');
         $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
         switch ($method) {
@@ -377,30 +377,30 @@ class Base extends Component implements ConfigurableInterface
                 // Just use log method... Chrome adds backtrace to error(), which we don't want
                 $method = 'log';
                 $args[1] = $styleCommon
-                    .'background-color: #ffbaba;'
-                    .'border: 1px solid #d8000c;'
-                    .'color: #d8000c;';
+                    . 'background-color: #ffbaba;'
+                    . 'border: 1px solid #d8000c;'
+                    . 'color: #d8000c;';
                 break;
             case 'info':
                 $args[1] = $styleCommon
-                    .'background-color: #d9edf7;'
-                    .'border: 1px solid #bce8f1;'
-                    .'color: #31708f;';
+                    . 'background-color: #d9edf7;'
+                    . 'border: 1px solid #bce8f1;'
+                    . 'color: #31708f;';
                 break;
             case 'success':
                 $method = 'info';
                 $args[1] = $styleCommon
-                    .'background-color: #dff0d8;'
-                    .'border: 1px solid #d6e9c6;'
-                    .'color: #3c763d;';
+                    . 'background-color: #dff0d8;'
+                    . 'border: 1px solid #d6e9c6;'
+                    . 'color: #3c763d;';
                 break;
             case 'warn':
                 // Just use log method... Chrome adds backtrace to warn(), which we don't want
                 $method = 'log';
                 $args[1] = $styleCommon
-                    .'background-color: #fcf8e3;'
-                    .'border: 1px solid #faebcc;'
-                    .'color: #8a6d3b;';
+                    . 'background-color: #fcf8e3;'
+                    . 'border: 1px solid #faebcc;'
+                    . 'color: #8a6d3b;';
                 break;
         }
         $logEntry['method'] = $method;
@@ -573,16 +573,16 @@ class Base extends Component implements ConfigurableInterface
             'style' => false,   // ie support %c
         ), $options);
         $subRegex = '/%'
-            .'(?:'
-            .'[coO]|'               // c: css, o: obj with max info, O: obj w generic info
-            .'[+-]?'                // sign specifier
-            .'(?:[ 0]|\'.{1})?'     // padding specifier
-            .'-?'                   // alignment specifier
-            .'\d*'                  // width specifier
-            .'(?:\.\d+)?'           // precision specifier
-            .'[difs]'
-            .')'
-            .'/';
+            . '(?:'
+            . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
+            . '[+-]?'                // sign specifier
+            . '(?:[ 0]|\'.{1})?'     // padding specifier
+            . '-?'                   // alignment specifier
+            . '\d*'                  // width specifier
+            . '(?:\.\d+)?'           // precision specifier
+            . '[difs]'
+            . ')'
+            . '/';
         $args[0] = \preg_replace_callback($subRegex, function ($matches) use (
             &$args,
             &$hasSubs,
@@ -613,9 +613,9 @@ class Base extends Component implements ConfigurableInterface
                     // close prev
                     $replacement = '</span>';
                 }
-                $replacement .= '<span'.$this->debug->utilities->buildAttribString(array(
+                $replacement .= '<span' . $this->debug->utilities->buildAttribString(array(
                     'style' => $arg,
-                )).'>';
+                )) . '>';
             } elseif (\strpos('oO', $type) !== false) {
                 $replacement = $this->dump($arg);
             }

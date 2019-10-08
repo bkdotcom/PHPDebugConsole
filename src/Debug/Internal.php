@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -92,7 +93,7 @@ class Internal implements SubscriberInterface
         $addHeadersStr = '';
         $fromAddr = $this->debug->getCfg('emailFrom');
         if ($fromAddr) {
-            $addHeadersStr .= 'From: '.$fromAddr;
+            $addHeadersStr .= 'From: ' . $fromAddr;
         }
         \call_user_func($this->debug->getCfg('emailFunc'), $toAddr, $subject, $body, $addHeadersStr);
     }
@@ -339,7 +340,7 @@ class Internal implements SubscriberInterface
     public function onError(Error $error)
     {
         if ($this->debug->getCfg('collect')) {
-            $errLoc = $error['file'].' (line '.$error['line'].')';
+            $errLoc = $error['file'] . ' (line ' . $error['line'] . ')';
             $meta = $this->debug->meta(array(
                 'backtrace' => $error['backtrace'],
                 'errorCat' => $error['category'],
@@ -353,7 +354,7 @@ class Internal implements SubscriberInterface
                 ? 'error'
                 : 'warn';
             $this->debug->getChannel('phpError')->{$method}(
-                $error['typeStr'].':',
+                $error['typeStr'] . ':',
                 $errLoc,
                 $error['message'],
                 $meta
@@ -422,10 +423,10 @@ class Internal implements SubscriberInterface
         if (!$outputHeaders || !$headers) {
             $event->getSubject()->setData('headers', \array_merge($event->getSubject()->getData('headers'), $headers));
         } elseif (\headers_sent($file, $line)) {
-            \trigger_error('PHPDebugConsole: headers already sent: '.$file.', line '.$line, E_USER_NOTICE);
+            \trigger_error('PHPDebugConsole: headers already sent: ' . $file . ', line ' . $line, E_USER_NOTICE);
         } else {
             foreach ($headers as $nameVal) {
-                \header($nameVal[0].': '.$nameVal[1]);
+                \header($nameVal[0] . ': ' . $nameVal[1]);
             }
         }
     }
@@ -456,7 +457,7 @@ class Internal implements SubscriberInterface
             $event['value'] = new Abstraction(array(
                 'type' => 'string',
                 'attribs' => array(
-                    'class' => 'language-'.$lang.' prism',
+                    'class' => 'language-' . $lang . ' prism',
                 ),
                 'addQuotes' => false,
                 'visualWhiteSpace' => false,
@@ -767,15 +768,15 @@ class Internal implements SubscriberInterface
         $route = $this->debug->getCfg('route');
         $isRouteHtml = $route && \get_class($route) == 'bdk\\Debug\\Route\\Html';
         $this->debug->groupSummary(1);
-        $this->debug->info('Built In '.$this->debug->utilities->formatDuration($vals['runtime']));
+        $this->debug->info('Built In ' . $this->debug->utilities->formatDuration($vals['runtime']));
         $this->debug->info(
             'Peak Memory Usage'
-                .($isRouteHtml
+                . ($isRouteHtml
                     ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
                     : '')
-                .': '
-                .$this->debug->utilities->getBytes($vals['memoryPeakUsage']).' / '
-                .$this->debug->utilities->getBytes($vals['memoryLimit']),
+                . ': '
+                . $this->debug->utilities->getBytes($vals['memoryPeakUsage']) . ' / '
+                . $this->debug->utilities->getBytes($vals['memoryLimit']),
             $this->debug->meta('sanitize', false)
         );
         $this->debug->groupEnd();
@@ -792,14 +793,14 @@ class Internal implements SubscriberInterface
     {
         return '#(?:'
             // xml
-            .'<'.$key.'\b.*?>\s*([^<]*?)\s*</'.$key.'>'
-            .'|'
+            . '<' . $key . '\b.*?>\s*([^<]*?)\s*</' . $key . '>'
+            . '|'
             // json
-            .\json_encode($key).'\s*:\s*"((?:[^"]|\\")+)"'
-            .'|'
+            . \json_encode($key) . '\s*:\s*"((?:[^"]|\\")+)"'
+            . '|'
             // url encoded
-            .'\b'.$key.'=([^\s&]+\b)'
-            .')#';
+            . '\b' . $key . '=([^\s&]+\b)'
+            . ')#';
     }
 
     /**
@@ -855,7 +856,7 @@ class Internal implements SubscriberInterface
                     'meta' => $logEntry['meta'],
                     'hasEntries' => false,
                 );
-                $groupStackCount ++;
+                $groupStackCount++;
             } elseif ($groupStackCount) {
                 if ($method == 'groupEnd') {
                     $groupStackCount--;
@@ -914,15 +915,15 @@ class Internal implements SubscriberInterface
             $this->debug->removePlugin($routePrev);
         }
         if (\is_string($route) && $route !== 'auto') {
-            $prop = 'route'.\ucfirst($route);
+            $prop = 'route' . \ucfirst($route);
             $route = $this->debug->{$prop};
         }
         if ($route instanceof RouteInterface) {
             $this->debug->addPlugin($route);
             $classname = \get_class($route);
-            $prefix = __NAMESPACE__.'\\Route\\';
+            $prefix = __NAMESPACE__ . '\\Route\\';
             if (\strpos($classname, $prefix) === 0) {
-                $prop = 'route'.\substr($classname, \strlen($prefix));
+                $prop = 'route' . \substr($classname, \strlen($prefix));
                 $this->debug->{$prop} = $route;
             }
         } else {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -70,7 +71,7 @@ class HtmlTable
                 )
             );
             $options['caption'] = \strlen($options['caption'])
-                ? $options['caption'] . ' ('.$classname.')'
+                ? $options['caption'] . ' (' . $classname . ')'
                 : $classname;
             if ($rows['traverseValues']) {
                 $rows = $rows['traverseValues'];
@@ -108,10 +109,10 @@ class HtmlTable
             'table',
             $options['attribs'],
             "\n"
-                .($options['caption'] ? '<caption>'.$options['caption'].'</caption>'."\n" : '')
-                .$this->buildHeader($keys)
-                .'<tbody>'."\n".$tBody.'</tbody>'."\n"
-                .$this->buildFooter($keys)
+                . ($options['caption'] ? '<caption>' . $options['caption'] . '</caption>' . "\n" : '')
+                . $this->buildHeader($keys)
+                . '<tbody>' . "\n" . $tBody . '</tbody>' . "\n"
+                . $this->buildFooter($keys)
         );
     }
 
@@ -136,12 +137,12 @@ class HtmlTable
         if (!$haveTotal) {
             return '';
         }
-        return '<tfoot>'."\n"
-            .'<tr><td>&nbsp;</td>'
-                .($this->tableInfo['haveObjRow'] ? '<td>&nbsp;</td>' : '')
-                .\implode('', $cells)
-            .'</tr>'."\n"
-            .'</tfoot>'."\n";
+        return '<tfoot>' . "\n"
+            . '<tr><td>&nbsp;</td>'
+                . ($this->tableInfo['haveObjRow'] ? '<td>&nbsp;</td>' : '')
+                . \implode('', $cells)
+            . '</tr>' . "\n"
+            . '</tfoot>' . "\n";
     }
 
     /**
@@ -159,15 +160,15 @@ class HtmlTable
                 ? 'value'
                 : \htmlspecialchars($key);
             if ($this->tableInfo['colClasses'][$key]) {
-                $headers[$key] .= ' '.$this->html->markupIdentifier($this->tableInfo['colClasses'][$key]);
+                $headers[$key] .= ' ' . $this->html->markupIdentifier($this->tableInfo['colClasses'][$key]);
             }
         }
-        return '<thead>'."\n"
-            .'<tr><th>&nbsp;</th>'
-                .($this->tableInfo['haveObjRow'] ? '<th>&nbsp;</th>' : '')
-                .'<th>'.\implode('</th><th scope="col">', $headers).'</th>'
-            .'</tr>'."\n"
-            .'</thead>'."\n";
+        return '<thead>' . "\n"
+            . '<tr><th>&nbsp;</th>'
+                . ($this->tableInfo['haveObjRow'] ? '<th>&nbsp;</th>' : '')
+                . '<th>' . \implode('</th><th scope="col">', $headers) . '</th>'
+            . '</tr>' . "\n"
+            . '</thead>' . "\n";
     }
 
     /**
@@ -195,7 +196,7 @@ class HtmlTable
         $str .= $this->debug->utilities->buildTag(
             'th',
             array(
-                'class' => 't_key text-right '.$rowKeyParsed['attribs']['class'],
+                'class' => 't_key text-right ' . $rowKeyParsed['attribs']['class'],
                 'scope' => 'row',
             ),
             $rowKeyParsed['innerhtml']
@@ -217,7 +218,7 @@ class HtmlTable
         foreach ($values as $v) {
             $str .= $this->html->dump($v, true, 'td');
         }
-        $str .= '</tr>'."\n";
+        $str .= '</tr>' . "\n";
         foreach (\array_keys($this->tableInfo['totals']) as $k) {
             $this->tableInfo['totals'][$k] += $values[$k];
         }

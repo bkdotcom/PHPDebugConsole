@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Route PHPDebugConsole method calls to
  * WAMP (Web Application Messaging Protocol) router
@@ -136,7 +137,7 @@ class Wamp implements RouteInterface
             $this->debug->getChannel('phpError'),
             'errorNotConsoled',
             array(
-                $error['typeStr'].': '.$error['file'].' (line '.$error['line'].'): '.$error['message']
+                $error['typeStr'] . ': ' . $error['file'] . ' (line ' . $error['line'] . '): ' . $error['message']
             ),
             array(
                 'attribs' => array(
@@ -296,7 +297,7 @@ class Wamp implements RouteInterface
         if (!$str) {
             return $str;
         } elseif (!$this->debug->utf8->isUtf8($str)) {
-            $str = '_b64_:'.\base64_encode($str);
+            $str = '_b64_:' . \base64_encode($str);
         } elseif ($this->detectFiles && !\preg_match('/[\r\n\x00]/', $str) && \is_file($str)) {
             $this->foundFiles[] = $str;
         }
@@ -389,7 +390,7 @@ class Wamp implements RouteInterface
                 : null;
         }
         if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
-            $metaVals['REQUEST_URI'] = '$: '. \implode(' ', $_SERVER['argv']);
+            $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $_SERVER['argv']);
         }
         $this->processLogEntry(new LogEntry(
             $this->debug,
@@ -402,7 +403,10 @@ class Wamp implements RouteInterface
                 'channelRoot' => $this->debug->rootInstance->getCfg('channelName'),
                 'linkFilesTemplateDefault' => \strtr(
                     \ini_get('xdebug.file_link_format'),
-                    array('%f'=>'%file', '%l'=>'%line')
+                    array(
+                        '%f' => '%file',
+                        '%l' => '%line',
+                    )
                 ) ?: null,
             )
         ));

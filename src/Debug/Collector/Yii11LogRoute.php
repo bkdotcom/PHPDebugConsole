@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -54,7 +55,7 @@ class Yii11LogRoute extends CLogRoute
             $debug = $debug->getChannel('Yii');
         }
         foreach ($opts as $k => $v) {
-            $setter = 'set'.\ucfirst($k);
+            $setter = 'set' . \ucfirst($k);
             if (\method_exists($this, $setter)) {
                 $this->{$setter}($v);
             } else {
@@ -127,7 +128,7 @@ class Yii11LogRoute extends CLogRoute
             'meta' => array(),
             'trace' => array(),
         ));
-        if ($logEntry['level'] == CLogger::LEVEL_TRACE || YII_DEBUG && YII_TRACE_LEVEL>0) {
+        if ($logEntry['level'] == CLogger::LEVEL_TRACE || YII_DEBUG && YII_TRACE_LEVEL > 0) {
             // if YII_DEBUG is on, we may have trace info
             $regex = '#^in (.+) \((\d+)\)$#m';
             \preg_match_all($regex, $logEntry['message'], $matches, PREG_SET_ORDER);
@@ -231,7 +232,7 @@ class Yii11LogRoute extends CLogRoute
                 return true;
             }
             //  Check for regex
-            if ('/' == $excludedCat[0] && \preg_match($excludedCat, $category)) {
+            if ($excludedCat[0] == '/' && \preg_match($excludedCat, $category)) {
                 return true;
             }
         }
@@ -306,7 +307,7 @@ class Yii11LogRoute extends CLogRoute
             } else {
                 $logEntryBegin = \array_pop($this->stack);
                 $message = $logEntryBegin['category']
-                    ? $logEntryBegin['category'].': '.$logEntryBegin['message']
+                    ? $logEntryBegin['category'] . ': ' . $logEntryBegin['message']
                     : $logEntryBegin['message'];
                 $duration = $logEntry['time'] - $logEntryBegin['time'];
                 $debug->time($message, $duration);
@@ -315,7 +316,7 @@ class Yii11LogRoute extends CLogRoute
         }
         if ($logEntry['level'] == CLogger::LEVEL_TRACE) {
             $caption = $logEntry['category']
-                ? $logEntry['category'].': '.$logEntry['message']
+                ? $logEntry['category'] . ': ' . $logEntry['message']
                 : $logEntry['message'];
             $logEntry['meta']['caption'] = $caption;
             $logEntry['meta']['columns'] = array('file','line');
@@ -332,7 +333,7 @@ class Yii11LogRoute extends CLogRoute
         $method = $this->levelToMethod($logEntry['level']);
         $args = array();
         if ($logEntry['category']) {
-            $args[] = $logEntry['category'].':';
+            $args[] = $logEntry['category'] . ':';
         }
         $args[] = $logEntry['message'];
         if ($logEntry['meta']) {

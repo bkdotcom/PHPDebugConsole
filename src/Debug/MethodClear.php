@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -50,7 +51,7 @@ class MethodClear
         $this->channelName = $this->debug->parentInstance
             ? $logEntry->getChannel() // just clear this specific channel
             : null;
-        $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
+        $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
         $bitmask = $logEntry['meta']['bitmask'];
         $callerInfo = $this->debug->utilities->getCallerInfo();
@@ -76,7 +77,7 @@ class MethodClear
                     'logErrors' => (bool) ($bitmask & Debug::CLEAR_LOG_ERRORS),
                     'summary' => (bool) ($bitmask & Debug::CLEAR_SUMMARY),
                     'summaryErrors' => (bool) ($bitmask & Debug::CLEAR_SUMMARY_ERRORS),
-                    'silent' =>  (bool) ($bitmask & Debug::CLEAR_SILENT),
+                    'silent' => (bool) ($bitmask & Debug::CLEAR_SILENT),
                 ),
             ), $logEntry['meta']),
             'appendLog' => $args && !($bitmask & Debug::CLEAR_SILENT),
@@ -204,7 +205,7 @@ class MethodClear
         $return = null;
         $clearErrors = $flags & Debug::CLEAR_LOG_ERRORS;
         if ($flags & Debug::CLEAR_LOG) {
-            $return = 'log ('.($clearErrors ? 'incl errors' : 'sans errors').')';
+            $return = 'log (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
             $curDepth = 0;
             foreach ($this->data['groupStacks']['main'] as $group) {
                 $curDepth += (int) $group['collect'];
@@ -257,7 +258,7 @@ class MethodClear
         $return = null;
         $clearErrors = $flags & Debug::CLEAR_SUMMARY_ERRORS;
         if ($flags & Debug::CLEAR_SUMMARY) {
-            $return = 'summary ('.($clearErrors ? 'incl errors' : 'sans errors').')';
+            $return = 'summary (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
             $curPriority = \end($this->data['groupPriorityStack']);  // false if empty
             foreach (\array_keys($this->data['logSummary']) as $priority) {
                 $entriesKeep = array();
@@ -299,12 +300,12 @@ class MethodClear
             ? ' and '
             : ', ';
         if ($count > 2) {
-            $cleared[$count-1] = 'and '.$cleared[$count-1];
+            $cleared[$count - 1] = 'and ' . $cleared[$count - 1];
         }
-        $msg = 'Cleared '.\implode($glue, $cleared);
+        $msg = 'Cleared ' . \implode($glue, $cleared);
         if ($this->channelName) {
             return array(
-                $msg.' %c(%s)',
+                $msg . ' %c(%s)',
                 'background-color:#c0c0c0; padding:0 .33em;',
                 $this->channelName,
             );

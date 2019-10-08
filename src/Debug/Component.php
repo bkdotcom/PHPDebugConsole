@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -28,7 +29,7 @@ abstract class Component
      */
     public function __get($prop)
     {
-        $getter = 'get'.\ucfirst($prop);
+        $getter = 'get' . \ucfirst($prop);
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }

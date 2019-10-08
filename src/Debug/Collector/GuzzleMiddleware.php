@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -10,7 +11,6 @@
  */
 
 namespace bdk\Debug\Collector;
-
 
 use Exception;
 use bdk\Debug;
@@ -164,14 +164,14 @@ class GuzzleMiddleware
         $result = '';
         if ($message instanceof RequestInterface) {
             $result = \trim($message->getMethod()
-                . ' '.$message->getRequestTarget())
+                . ' ' . $message->getRequestTarget())
                 . ' HTTP/' . $message->getProtocolVersion() . "\r\n";
         } else {
             $result = 'HTTP/'
-                .' '.$message->getProtocolVersion()
-                .' '.$message->getStatusCode()
-                .' '.$message->getReasonPhrase()
-                ."\r\n";
+                . ' ' . $message->getProtocolVersion()
+                . ' ' . $message->getStatusCode()
+                . ' ' . $message->getReasonPhrase()
+                . "\r\n";
         }
         foreach ($message->getHeaders() as $name => $values) {
             $result .= $name . ': ' . \implode(', ', $values) . "\r\n";

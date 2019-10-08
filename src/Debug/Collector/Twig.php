@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -98,7 +99,7 @@ class Twig extends Twig_Environment
     public function addRenderedTemplate(array $info)
     {
         $this->renderedTemplates[] = $info;
-        $this->debug->time('Rendered Template: '.$info['name'], $info['duration'], $this->debug->meta(array(
+        $this->debug->time('Rendered Template: ' . $info['name'], $info['duration'], $this->debug->meta(array(
             'icon' => $this->icon,
         )));
     }

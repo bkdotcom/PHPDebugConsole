@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -305,18 +306,18 @@ class Debug
         if (isset($this->{$property})) {
             return $this->{$property};
         }
-        $getter = 'get'.\ucfirst($property);
+        $getter = 'get' . \ucfirst($property);
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }
         $val = null;
         if (\strpos($property, 'route') === 0) {
-            $classname = '\\bdk\\Debug\\Route\\'.\substr($property, 5);
+            $classname = '\\bdk\\Debug\\Route\\' . \substr($property, 5);
             $val = new $classname($this);
             $this->{$property} = $val;
         }
         if (\strpos($property, 'dump') === 0) {
-            $classname = '\\bdk\\Debug\\Dump\\'.\substr($property, 4);
+            $classname = '\\bdk\\Debug\\Dump\\' . \substr($property, 4);
             $val = new $classname($this);
             $this->{$property} = $val;
         }
@@ -403,7 +404,7 @@ class Debug
                 $callerInfo = $this->utilities->getCallerInfo();
                 $args = array(
                     'Assertion failed:',
-                    $callerInfo['file'].' (line '.$callerInfo['line'].')',
+                    $callerInfo['file'] . ' (line ' . $callerInfo['line'] . ')',
                 );
                 $logEntry->setMeta('detectFiles', true);
             }
@@ -494,7 +495,7 @@ class Debug
                 'line' => $callerInfo['line'],
             ), $logEntry['meta']);
             $label = 'count';
-            $dataLabel = $logEntry['meta']['file'].': '.$logEntry['meta']['line'];
+            $dataLabel = $logEntry['meta']['file'] . ': ' . $logEntry['meta']['line'];
         }
         if (!isset($this->data['counts'][$dataLabel])) {
             $this->data['counts'][$dataLabel] = 0;
@@ -552,7 +553,7 @@ class Debug
                 0,
             );
         } else {
-            $logEntry['args'] = array('Counter \''.$label.'\' doesn\'t exist.');
+            $logEntry['args'] = array('Counter \'' . $label . '\' doesn\'t exist.');
         }
         if (!($flags & self::COUNT_NO_OUT)) {
             $this->appendLog($logEntry);
@@ -805,7 +806,7 @@ class Debug
             $this->appendLog(new LogEntry(
                 $this,
                 __FUNCTION__,
-                array('Profile: Unable to start - enableProfiling opt not set.  ' . $callerInfo['file'] .' on line ' . $callerInfo['line'] . '.')
+                array('Profile: Unable to start - enableProfiling opt not set.  ' . $callerInfo['file'] . ' on line ' . $callerInfo['line'] . '.')
             ));
             return;
         }
@@ -820,7 +821,7 @@ class Debug
             array('name')
         );
         if ($logEntry['meta']['name'] === null) {
-            $logEntry['meta']['name'] = 'Profile '.$this->data['profileAutoInc'];
+            $logEntry['meta']['name'] = 'Profile ' . $this->data['profileAutoInc'];
             $this->data['profileAutoInc']++;
         }
         $name = $logEntry['meta']['name'];
@@ -832,10 +833,10 @@ class Debug
             // move it to end (last started)
             unset($this->data['profileInstances'][$name]);
             $this->data['profileInstances'][$name] = $instance;
-            $message = 'Profile \''.$name.'\' restarted';
+            $message = 'Profile \'' . $name . '\' restarted';
         } else {
             $this->data['profileInstances'][$name] = $this->methodProfile; // factory
-            $message = 'Profile \''.$name.'\' started';
+            $message = 'Profile \'' . $name . '\' started';
         }
         $logEntry['args'] = array($message);
         $this->appendLog($logEntry);
@@ -883,7 +884,7 @@ class Debug
                     'hideType' => true, // don't output 'callable'
                 ));
             }
-            $caption = 'Profile \''.$name.'\' Results';
+            $caption = 'Profile \'' . $name . '\' Results';
             if ($data) {
                 $args = array( $data );
                 $logEntry->setMeta(array(
@@ -898,7 +899,7 @@ class Debug
             unset($this->data['profileInstances'][$name]);
         } else {
             $args = array( $name !== null
-                ? 'profileEnd: No such Profile: '.$name
+                ? 'profileEnd: No such Profile: ' . $name
                 : 'profileEnd: Not currently profiling'
             );
         }
@@ -1121,7 +1122,7 @@ class Debug
                 $this->appendLog(new LogEntry(
                     $this,
                     __FUNCTION__,
-                    array('Timer \''.$label.'\' does not exist'),
+                    array('Timer \'' . $label . '\' does not exist'),
                     $logEntry['meta']
                 ));
             }
@@ -1170,7 +1171,7 @@ class Debug
         } elseif (isset($this->data['timers']['labels'][$label])) {
             list($elapsed, $microT) = $this->data['timers']['labels'][$label];
         } else {
-            $args = array('Timer \''.$label.'\' does not exist');
+            $args = array('Timer \'' . $label . '\' does not exist');
         }
         $meta = $logEntry['meta'];
         if ($microT) {
@@ -1220,14 +1221,14 @@ class Debug
         );
         $backtrace = $this->errorHandler->backtrace();
         // toss "internal" frames
-        for ($i = 1, $count = \count($backtrace)-1; $i < $count; $i++) {
+        for ($i = 1, $count = \count($backtrace) - 1; $i < $count; $i++) {
             $frame = $backtrace[$i];
             $function = isset($frame['function']) ? $frame['function'] : '';
-            if (!\preg_match('/^'.\preg_quote(__CLASS__).'(::|->)/', $function)) {
+            if (!\preg_match('/^' . \preg_quote(__CLASS__) . '(::|->)/', $function)) {
                 break;
             }
         }
-        $backtrace = \array_slice($backtrace, $i-1);
+        $backtrace = \array_slice($backtrace, $i - 1);
         // keep the calling file & line, but toss ->trace or ::_trace
         unset($backtrace[0]['function']);
         $logEntry['args'] = array($backtrace);
@@ -1353,7 +1354,7 @@ class Debug
             unset($cfg['debug']['onBootstrap']);
             // set channel values
             $cfg['debug']['channelName'] = $this->parentInstance
-                ? $this->cfg['channelName'].'.'.$channelName
+                ? $this->cfg['channelName'] . '.' . $channelName
                 : $channelName;
             $cfg['debug']['parent'] = $this;
             // instantiate channel
@@ -1659,19 +1660,19 @@ class Debug
         }
         $psr4Map = array(
             'bdk\\Debug\\' => __DIR__,
-            'bdk\\PubSub\\' => __DIR__.'/../PubSub',
-            'bdk\\ErrorHandler\\' => __DIR__.'/../ErrorHandler',
+            'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
+            'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
         );
         foreach ($psr4Map as $namespace => $dir) {
             if (\strpos($className, $namespace) === 0) {
                 $rel = \substr($className, \strlen($namespace));
                 $rel = \str_replace('\\', '/', $rel);
-                require $dir.'/'.$rel.'.php';
+                require $dir . '/' . $rel . '.php';
                 return;
             }
         }
         $classMap = array(
-            'bdk\\ErrorHandler' => __DIR__.'/../ErrorHandler/ErrorHandler.php',
+            'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
         );
         if (isset($classMap[$className])) {
             require $classMap[$className];
@@ -1745,7 +1746,7 @@ class Debug
             $caller = $this->utilities->getCallerInfo(0, Utilities::INCL_ARGS);
             if (isset($caller['function'])) {
                 $args[] = isset($caller['class'])
-                    ? $caller['class'].$caller['type'].$caller['function']
+                    ? $caller['class'] . $caller['type'] . $caller['function']
                     : $caller['function'];
                 $args = \array_merge($args, $caller['args']);
                 $logEntry->setMeta('isFuncName', true);

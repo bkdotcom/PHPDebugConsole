@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -428,7 +429,7 @@ class FileStreamWrapper
         $isRequire = !\in_array($backtrace[1]['function'], array('file_get_contents'));
         if (!$this->declaredTicks && $isRequire) {
             foreach (self::$pathsExclude as $excludePath) {
-                if (\strpos($this->filepath, $excludePath.DIRECTORY_SEPARATOR) === 0) {
+                if (\strpos($this->filepath, $excludePath . DIRECTORY_SEPARATOR) === 0) {
                     $this->declaredTicks = true;
                 }
             }
@@ -444,7 +445,7 @@ class FileStreamWrapper
             $this->declaredTicks = true;
             self::$filesModified[] = $this->filepath;
         }
-        $buffer = $this->bufferPrepend.$buffer;
+        $buffer = $this->bufferPrepend . $buffer;
         $bufferLenAfter = \strlen($buffer);
         $diff = $bufferLenAfter - $bufferLen;
         $this->bufferPrepend = '';

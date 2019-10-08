@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -177,7 +178,7 @@ class OnBootstrap
         $styleMono = 'font-family:monospace; opacity:0.8;';
         $styleReset = 'font-family:inherit; white-space:pre-wrap;';
         if (\error_reporting() !== (E_ALL | E_STRICT)) {
-            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c'.ErrorLevel::toConstantString().'%c` rather than `%cE_ALL | E_STRICT%c`';
+            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . ErrorLevel::toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
             $styles = array(
                 $styleMono, $styleReset, // wraps "error_reporting"
                 $styleMono, $styleReset, // wraps actual
@@ -194,12 +195,12 @@ class OnBootstrap
                 $msgLines[] = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
             } elseif ($errorReporting === \error_reporting()) {
                 $msgLines[] = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
-                    .'`%c'.ErrorLevel::toConstantString($errorReporting).'%c`';
+                    . '`%c' . ErrorLevel::toConstantString($errorReporting) . '%c`';
                 $styles[] = $styleMono;
                 $styles[] = $styleReset;
             } else {
                 $msgLines[] = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
-                    .'`%c'.ErrorLevel::toConstantString($errorReporting).'%c`';
+                    . '`%c' . ErrorLevel::toConstantString($errorReporting) . '%c`';
                 $styles[] = $styleMono;
                 $styles[] = $styleReset;
             }
@@ -234,8 +235,8 @@ class OnBootstrap
             $correctContentType = $this->testPostContentType($contentType);
             if (!$correctContentType) {
                 $this->debug->warn(
-                    'It appears '.$contentType.' was posted with the wrong Content-Type'."\n"
-                    .'Pay no attention to $_POST and instead use php://input',
+                    'It appears ' . $contentType . ' was posted with the wrong Content-Type' . "\n"
+                        . 'Pay no attention to $_POST and instead use php://input',
                     $this->debug->meta(array(
                         'detectFiles' => false,
                         'file' => null,
@@ -254,7 +255,7 @@ class OnBootstrap
                 $this->logInput($contentType);
             } elseif (empty($_FILES)) {
                 $this->debug->warn(
-                    $_SERVER['REQUEST_METHOD'].' request with no body',
+                    $_SERVER['REQUEST_METHOD'] . ' request with no body',
                     $this->debug->meta(array(
                         'detectFiles' => false,
                         'file' => null,

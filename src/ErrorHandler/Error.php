@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
@@ -127,7 +128,7 @@ class Error extends Event
     public function log()
     {
         $error = $this->values;
-        $str = 'PHP '.$error['typeStr'].':  '.$error['message'].' in '.$error['file'].' on line '.$error['line'];
+        $str = 'PHP ' . $error['typeStr'] . ':  ' . $error['message'] . ' in ' . $error['file'] . ' on line ' . $error['line'];
         return \error_log($str);
     }
 
@@ -149,7 +150,7 @@ class Error extends Event
         $errMsg = \preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errMsg);
         // remove "comments"..  this allows throttling email, while still adding unique info to user errors
         $errMsg = \preg_replace('/\s*##.+$/', '', $errMsg);
-        $hash = \md5($errorValues['file'].$errorValues['line'].$errorValues['type'].$errMsg);
+        $hash = \md5($errorValues['file'] . $errorValues['line'] . $errorValues['type'] . $errMsg);
         return $hash;
     }
 

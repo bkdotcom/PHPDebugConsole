@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -48,9 +49,9 @@ class HtmlErrorSummary
     {
         $this->stats = $stats;
         $summary = ''
-            .$this->buildFatal()
-            .$this->buildInConsole()
-            .$this->buildNotInConsole();
+            . $this->buildFatal()
+            . $this->buildInConsole()
+            . $this->buildNotInConsole();
         if ($summary) {
             $classes = \array_keys(\array_filter(array(
                 'error-summary' => true,
@@ -90,8 +91,8 @@ class HtmlErrorSummary
         $isHtml = $lastError['isHtml'];
         $backtrace = $lastError['backtrace'];
         $html = '<div class="error-fatal">'
-            .'<h3>Fatal Error</h3>'
-            .'<ul class="list-unstyled">';
+            . '<h3>Fatal Error</h3>'
+            . '<ul class="list-unstyled">';
         if (\count($backtrace) > 1) {
             // more than one trace frame
             $table = $this->routeHtml->dump->table->build(
@@ -102,15 +103,15 @@ class HtmlErrorSummary
                     'columns' => array('file','line','function'),
                 )
             );
-            $html .= '<li>'.$lastError['message'].'</li>';
-            $html .= '<li class="m_trace" data-detect-files="true">'.$table.'</li>';
+            $html .= '<li>' . $lastError['message'] . '</li>';
+            $html .= '<li class="m_trace" data-detect-files="true">' . $table . '</li>';
             if (!$isHtml) {
                 $html = \str_replace($lastError['message'], \htmlspecialchars($lastError['message']), $html);
             }
         } else {
             $keysKeep = array('typeStr','message','file','line');
             $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
-            $html .= '<li>'.$this->routeHtml->dump->dump($lastError).'</li>';
+            $html .= '<li>' . $this->routeHtml->dump->dump($lastError) . '</li>';
             if ($isHtml) {
                 $html = \str_replace(\htmlspecialchars($lastError['message']), $lastError['message'], $html);
             }
@@ -119,7 +120,7 @@ class HtmlErrorSummary
             $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
         }
         $html .= '</ul>'
-            .'</div>';
+            . '</div>';
         return $html;
     }
 
@@ -145,15 +146,15 @@ class HtmlErrorSummary
         } elseif ($this->stats['inConsoleCategories'] === 1) {
             return $this->buildInConsoleOneCat();
         } else {
-            $header = 'There were '.$this->stats['inConsole'].' errors';
+            $header = 'There were ' . $this->stats['inConsole'] . ' errors';
         }
-        $html = '<h3>'.$header.':</h3>'."\n";
+        $html = '<h3>' . $header . ':</h3>' . "\n";
         $html .= '<ul class="list-unstyled">';
         foreach ($this->stats['counts'] as $category => $a) {
             if (!$a['inConsole'] || $category == 'fatal') {
                 continue;
             }
-            $html .= '<li class="error-'.$category.'" data-count="'.$a['inConsole'].'">'.$category.': '.$a['inConsole'].'</li>';
+            $html .= '<li class="error-' . $category . '" data-count="' . $a['inConsole'] . '">' . $category . ': ' . $a['inConsole'] . '</li>';
         }
         $html .= '</ul>';
         return $html;
@@ -204,18 +205,18 @@ class HtmlErrorSummary
         if ($countInCat == 1) {
             $header = \ucfirst($category);
             $error = $this->getErrorsInCategory($category)[0];
-            $msg = $error['file']. '(line '.$error['line'].'): '
-                .($error['isHtml']
+            $msg = $error['file'] . '(line ' . $error['line'] . '): '
+                . ($error['isHtml']
                     ? $error['message']
                     : \htmlspecialchars($error['message']));
         } else {
             $header = $catStrings[$category]['header'];
             $msg = \sprintf($catStrings[$category]['msg'], $countInCat);
         }
-        $html = '<h3>'.$header.'</h3>'
-            .'<ul class="list-unstyled">'
-                .'<li class="error-'.$category.'" data-count="'.$countInCat.'">'.$msg.'</li>'
-                .'</ul>';
+        $html = '<h3>' . $header . '</h3>'
+            . '<ul class="list-unstyled">'
+                . '<li class="error-' . $category . '" data-count="' . $countInCat . '">' . $msg . '</li>'
+                . '</ul>';
         return $html;
     }
 
@@ -232,19 +233,21 @@ class HtmlErrorSummary
         $errors = $this->errorHandler->get('errors');
         $lis = array();
         foreach ($errors as $err) {
-            if (\array_intersect_assoc(array(
-                // at least one of these is true
-                'category' => 'fatal',
-                'inConsole' => true,
-                'isSuppressed' => true,
-            ), $err->getValues())) {
+            if (
+                \array_intersect_assoc(array(
+                    // at least one of these is true
+                    'category' => 'fatal',
+                    'inConsole' => true,
+                    'isSuppressed' => true,
+                ), $err->getValues())
+            ) {
                 continue;
             }
-            $lis[] = '<li>'.$err['typeStr'].': '.$err['file'].' (line '.$err['line'].'): '
-                .($err['isHtml']
+            $lis[] = '<li>' . $err['typeStr'] . ': ' . $err['file'] . ' (line ' . $err['line'] . '): '
+                . ($err['isHtml']
                     ? $err['message']
                     : \htmlspecialchars($err['message']))
-                .'</li>';
+                . '</li>';
         }
         if (!$lis) {
             return '';
@@ -254,12 +257,12 @@ class HtmlErrorSummary
             'There %s captured while not collecting debug log',
             $count === 1
                 ? 'was 1 error'
-                : 'were '.$count.' errors'
+                : 'were ' . $count . ' errors'
         );
-        $html = '<h3>'.$header.'</h3>'
-            .'<ul class="list-unstyled">'."\n"
-            .\implode("\n", $lis)."\n"
-            .'</ul>';
+        $html = '<h3>' . $header . '</h3>'
+            . '<ul class="list-unstyled">' . "\n"
+            . \implode("\n", $lis) . "\n"
+            . '</ul>';
         return $html;
     }
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -216,7 +217,7 @@ class SimpleCache implements CacheInterface
     {
         $this->loggedActions[] = $info;
         $this->debug->log(
-            $info->method.'('.\json_encode($info->keyOrKeys).') took '.\number_format($info->duration, 5) .'sec',
+            $info->method . '(' . \json_encode($info->keyOrKeys) . ') took ' . \number_format($info->duration, 5) . 'sec',
             $this->debug->meta('icon', $this->icon)
         );
     }

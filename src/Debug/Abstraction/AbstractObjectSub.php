@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -115,7 +116,7 @@ abstract class AbstractObjectSub implements SubscriberInterface
         $namespace = \substr($this->abs['className'], 0, \strrpos($this->abs['className'], '\\'));
         $useStatements = UseStatements::getUseStatements($this->abs['reflector'])['class'];
         if (isset($useStatements[$first])) {
-            $type = $useStatements[$first].\substr($type, \strlen($first));
+            $type = $useStatements[$first] . \substr($type, \strlen($first));
         } elseif ($namespace) {
             /*
                 Truly relative?  Or, does PhpDoc omit '\' ?
@@ -124,7 +125,7 @@ abstract class AbstractObjectSub implements SubscriberInterface
             */
             $type = \class_exists($type)
                 ? $type
-                : $namespace.'\\'.$type;
+                : $namespace . '\\' . $type;
         }
         return $type;
     }

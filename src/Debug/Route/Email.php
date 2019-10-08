@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -47,7 +48,7 @@ class Email implements RouteInterface
     /**
      * Serializes and emails log
      *
-     * @param event $event Generic event having Debug instance as subject
+     * @param Event $event Generic event having Debug instance as subject
      *
      * @return void
      */
@@ -94,8 +95,8 @@ class Email implements RouteInterface
         }
         $str = \chunk_split(\base64_encode($str), 124);
         return "START DEBUG\n"
-            .$str    // chunk_split appends a "\r\n"
-            .'END DEBUG';
+            . $str    // chunk_split appends a "\r\n"
+            . 'END DEBUG';
     }
 
     /**
@@ -106,17 +107,17 @@ class Email implements RouteInterface
     private function buildBody()
     {
         $body = (!isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv'])
-            ? 'Command: '. \implode(' ', $_SERVER['argv'])
-            : 'Request: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
-        )."\n\n";
+            ? 'Command: ' . \implode(' ', $_SERVER['argv'])
+            : 'Request: ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']
+        ) . "\n\n";
 
         /*
             List errors that occured
         */
         $errorStr = $this->buildErrorList();
         if ($errorStr) {
-            $body .= 'Error(s):'."\n"
-                .$errorStr."\n";
+            $body .= 'Error(s):' . "\n"
+                . $errorStr . "\n";
         }
         /*
             "attach" serialized log to body
@@ -156,12 +157,12 @@ class Email implements RouteInterface
         $subjectMore = '';
         $haveError = (bool) $this->debug->errorHandler->getLastError();
         if (!empty($_SERVER['HTTP_HOST'])) {
-            $subjectMore .= ' '.$_SERVER['HTTP_HOST'];
+            $subjectMore .= ' ' . $_SERVER['HTTP_HOST'];
         }
         if ($haveError) {
-            $subjectMore .= ' '.($subjectMore ? '(Error)' : 'Error');
+            $subjectMore .= ' ' . ($subjectMore ? '(Error)' : 'Error');
         }
-        $subject = \rtrim($subject.':'.$subjectMore, ':');
+        $subject = \rtrim($subject . ':' . $subjectMore, ':');
         return $subject;
     }
 
@@ -180,7 +181,8 @@ class Email implements RouteInterface
         }
         $strStart = 'START DEBUG';
         $strEnd = 'END DEBUG';
-        if (\preg_match('/'.$strStart.'[\r\n]+(.+)[\r\n]+'.$strEnd.'/s', $str, $matches)) {
+        $regex = '/' . $strStart . '[\r\n]+(.+)[\r\n]+' . $strEnd . '/s';
+        if (\preg_match($regex, $str, $matches)) {
             $str = $matches[1];
         }
         $str = Utilities::isBase64Encoded($str)
@@ -209,7 +211,7 @@ class Email implements RouteInterface
         $errorStr = '';
         $errors = $this->debug->errorHandler->get('errors');
         \uasort($errors, function ($err1, $err2) {
-            return \strcmp($err1['file'].$err1['line'], $err2['file'].$err2['line']);
+            return \strcmp($err1['file'] . $err1['line'], $err2['file'] . $err2['line']);
         });
         $lastFile = '';
         foreach ($errors as $error) {
@@ -217,13 +219,13 @@ class Email implements RouteInterface
                 continue;
             }
             if ($error['file'] !== $lastFile) {
-                $errorStr .= $error['file'].':'."\n";
+                $errorStr .= $error['file'] . ':' . "\n";
                 $lastFile = $error['file'];
             }
             $typeStr = $error['type'] === E_STRICT
                 ? 'Strict'
                 : $error['typeStr'];
-            $errorStr .= '  Line '.$error['line'].': ('.$typeStr.') '.$error['message']."\n";
+            $errorStr .= '  Line ' . $error['line'] . ': (' . $typeStr . ') ' . $error['message'] . "\n";
         }
         return $errorStr;
     }

@@ -298,7 +298,7 @@ class Wamp implements RouteInterface
             return $str;
         } elseif (!$this->debug->utf8->isUtf8($str)) {
             $str = '_b64_:' . \base64_encode($str);
-        } elseif ($this->detectFiles && !\preg_match('/[\r\n\x00]/', $str) && \is_file($str)) {
+        } elseif ($this->detectFiles && !\preg_match('#(://|[\r\n\x00])#', $str) && \is_file($str)) {
             $this->foundFiles[] = $str;
         }
         return $str;

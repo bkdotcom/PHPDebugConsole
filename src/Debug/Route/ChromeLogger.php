@@ -49,7 +49,7 @@ class ChromeLogger extends Base
     /**
      * @var array header data
      */
-    protected $json = array(
+    protected $jsonData = array(
         'version' => Debug::VERSION,
         'columns' => array('log', 'backtrace', 'type'),
         'rows' => array()
@@ -76,30 +76,31 @@ class ChromeLogger extends Base
     public function processLogEntries(Event $event)
     {
         $this->data = $this->debug->getData();
-        $this->buildJson();
-        if ($this->json['rows']) {
+        $this->buildJsonData();
+        if ($this->jsonData['rows']) {
             $max = $this->getMaxLength();
-            $encoded = $this->encode($this->json);
+            $encoded = $this->encode($this->jsonData);
             if ($max) {
                 if (\strlen($encoded) > $max) {
-                    $this->reduceJson(\strlen($encoded), $max);
-                    $encoded = $this->encode($this->json);
+                    $this->reduceData($max);
+                    $this->buildJsonData();
+                    $encoded = $this->encode($this->jsonData);
                 }
                 if (\strlen($encoded) > $max) {
-                    $this->json['rows'] = array(
+                    $this->jsonData['rows'] = array(
                         array(
                             array('chromeLogger: unable to abridge log to ' . $this->debug->utilities->getBytes($max)),
                             null,
                             'warn',
                         )
                     );
-                    $encoded = $this->encode($this->json);
+                    $encoded = $this->encode($this->jsonData);
                 }
             }
             $event['headers'][] = array(self::HEADER_NAME, $encoded);
         }
         $this->data = array();
-        $this->json['rows'] = array();
+        $this->jsonData['rows'] = array();
     }
 
     /**
@@ -116,7 +117,7 @@ class ChromeLogger extends Base
         } elseif (!\in_array($method, $this->consoleMethods)) {
             $method = 'log';
         }
-        $this->json['rows'][] = array(
+        $this->jsonData['rows'][] = array(
             $args,
             isset($meta['file']) ? $meta['file'] . ': ' . $meta['line'] : null,
             $method === 'log' ? '' : $method,
@@ -128,27 +129,39 @@ class ChromeLogger extends Base
      *
      * @return void
      */
-    protected function buildJson()
+    protected function buildJsonData()
     {
-        $this->json['rows'] = array();
+        $this->jsonData['rows'] = array();
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        if ($this->json) {
-            \array_unshift($this->json['rows'], array(
+        if ($this->jsonData) {
+            \array_unshift($this->jsonData['rows'], array(
                 array('PHP', isset($_SERVER['REQUEST_METHOD'])
-                    ? $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']
+                    ? $_SERVER['REQUEST_METHOD'] . ' ' . $this->debug->redact($_SERVER['REQUEST_URI'])
                     : '$: ' . \implode(' ', $_SERVER['argv'])
                 ),
                 null,
                 'groupCollapsed',
             ));
-            \array_push($this->json['rows'], array(
+            \array_push($this->jsonData['rows'], array(
                 array(),
                 null,
                 'groupEnd',
             ));
         }
+    }
+
+    /**
+     * Calculate header size
+     *
+     * @return integer
+     */
+    protected function calcHeaderSize()
+    {
+        $this->buildJsonData();
+        $encoded = $this->encode($this->jsonData);
+        return \strlen(self::HEADER_NAME . ': ') + \strlen($encoded);
     }
 
     /**
@@ -160,7 +173,7 @@ class ChromeLogger extends Base
      */
     protected function encode($data)
     {
-        $data = \json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $data = \json_encode($data, JSON_UNESCAPED_SLASHES);
         $data = \str_replace(\json_encode(Abstracter::UNDEFINED), 'null', $data);
         return \base64_encode($data);
     }
@@ -185,13 +198,112 @@ class ChromeLogger extends Base
     /**
      * Attempt to remove log entries to get header length < max
      *
-     * @param integer $max         maximum header length
-     * @param integer $sizeEncoded encoded size of last attempt
+     * @param integer $max maximum header length
      *
      * @return void
      */
-    protected function reduceJson($max, $sizeEncoded)
+    protected function reduceData($max)
     {
-        $this->buildJson();
+        \array_unshift($this->data['alerts'], new LogEntry(
+            $this->debug,
+            'alert',
+            array('Log abridged due to header size constraint'),
+            array('level' => 'info')
+        ));
+        /*
+            Remove non-essential summary entries
+        */
+        $summaryRemove = array(
+            '$_COOKIE',
+            '$_POST',
+            'Built In',
+            'ini location',
+            'git branch',
+            'memory_limit',
+            'Peak Memory Usage',
+            'PHP Version',
+            'php://input',
+            'session.cache_limiter',
+            'session_save_path',
+        );
+        $summaryRemoveRegex = '/^(' . \implode('|', \array_map(function ($val) {
+            return \preg_quote($val, '/');
+        }, $summaryRemove)) . ')/';
+        foreach ($this->data['logSummary'] as $priority => $logEntries) {
+            foreach ($logEntries as $i => $logEntry) {
+                if ($logEntry['args'] && \preg_match($summaryRemoveRegex, $logEntry['args'][0])) {
+                    unset($logEntries[$i]);
+                }
+            }
+            $this->data['logSummary'][$priority] = \array_values($logEntries);
+        }
+        /*
+            Remove all log entries sans assert, error, & warn
+        */
+        $logBack = array();
+        foreach ($this->data['log'] as $i => $logEntry) {
+            if (!\in_array($logEntry['method'], array('assert','error','warn'))) {
+                unset($this->data['log'][$i]);
+                $logBack[$i] = $logEntry;
+            }
+        }
+        /*
+            Data is now just alerts, summary, and errors
+        */
+        $strlen = $this->calcHeaderSize();
+        $avail = $max - $strlen;
+        if ($avail > 2048) {
+            // we've got enough room to fill with additional entries
+            $this->reduceDataFill($logBack);
+        }
+    }
+
+    /**
+     * Add back log entries un're out of space
+     *
+     * @param integer $max     maximum header length
+     * @param array   $logBack logEntries removed in initial pass
+     *
+     * @return void
+     */
+    protected function reduceDataFill($max, $logBack = array())
+    {
+        $indexes = \array_reverse(\array_keys($logBack));
+        $depth = 0;
+        $minDepth = 0;
+        $groupOnly = false;
+        /*
+            work our way backwards through the log until we fill the avail header length
+        */
+        foreach ($indexes as $i) {
+            $logEntry = $logBack[$i];
+            $method = $logEntry['method'];
+            if ($method == 'groupEnd') {
+                $depth++;
+            } elseif (\in_array($method, array('group', 'groupCollapsed'))) {
+                $depth--;
+            } elseif ($groupOnly) {
+                continue;
+            }
+            if ($groupOnly) {
+                if ($depth < $minDepth) {
+                    $minDepth = $depth;
+                } else {
+                    continue;
+                }
+            }
+            $this->data['log'][$i] = $logEntry;
+            $strlen = $this->calcHeaderSize();
+            if ($groupOnly && $depth === 0) {
+                break;
+            }
+            if ($strlen + (40 * $depth) > $max) {
+                $minDepth = $depth;
+                unset($this->data['log'][$i]);
+                $groupOnly = true;
+            }
+        }
+        \ksort($this->data['log']);
+        $this->data['log'] = \array_values($this->data['log']);
     }
 }

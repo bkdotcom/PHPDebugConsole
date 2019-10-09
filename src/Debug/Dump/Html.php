@@ -432,7 +432,7 @@ class Html extends Base
                 $this->argAttribs['title'] = $date;
             }
         } else {
-            if ($this->detectFiles && !\preg_match('/[\r\n]/', $val) && \is_file($val)) {
+            if ($this->detectFiles && !\preg_match('#(://|[\r\n\x00])#', $val) && \is_file($val)) {
                 $this->argAttribs['class'][] = 'file';
             }
             if ($this->argStringOpts['sanitize']) {

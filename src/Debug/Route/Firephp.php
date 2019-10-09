@@ -66,7 +66,7 @@ class Firephp extends Base
         $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER);
         $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
         $heading = isset($_SERVER['REQUEST_METHOD'])
-            ? $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']
+            ? $_SERVER['REQUEST_METHOD'] . ' ' . $this->debug->redact($_SERVER['REQUEST_URI'])
             : '$: ' . \implode(' ', $_SERVER['argv']);
         $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,

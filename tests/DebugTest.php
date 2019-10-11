@@ -1,6 +1,6 @@
 <?php
 
-use \bdk\Debug;
+use bdk\Debug;
 
 /**
  * PHPUnit tests for Debug class

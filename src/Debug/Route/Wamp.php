@@ -41,6 +41,7 @@ class Wamp implements RouteInterface
     protected $detectFiles = false;
     protected $foundFiles = array();
     protected $metaPublished = false;
+    protected $notConnectedAlert = false;
 
     /**
      * Constructor
@@ -63,7 +64,10 @@ class Wamp implements RouteInterface
     public function getSubscriptions()
     {
         if (!$this->isConnected()) {
-            $this->debug->alert('WAMP publisher not connected to WAMP router');
+            if (!$this->notConnectedAlert) {
+                $this->debug->alert('WAMP publisher not connected to WAMP router');
+                $this->notConnectedAlert = true;
+            }
             return array();
         }
         return array(

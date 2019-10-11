@@ -30,6 +30,13 @@ class UseStatements
         'const' => array(),
         'function' => array(),
     );
+
+    /**
+     * Maintain "group" namespace (PHP 7+)
+     *  ie `use function some\namespace\{fn_a, fn_b, fn_c};`
+     *
+     * @var string
+     */
     protected static $groupNamespace = null;
     protected static $namespace = null;
     protected static $record = null;        // 'namespace', 'class', 'function', 'const'
@@ -91,20 +98,20 @@ class UseStatements
                 switch ($token[0]) {
                     case T_AS:
                         self::$recordPart = 'alias';
-                        continue;
+                        break;
                     case T_CONST:
-                        // PHP 5.6+
+                        // PHP 5.6+     `use const My\Full\CONSTANT;`
                         self::$record = 'const';
-                        continue;
+                        break;
                     case T_FUNCTION:
-                        // PHP 5.6+
+                        // PHP 5.6+     `use function My\Full\functionName as func;`
                         self::$record = 'function';
-                        continue;
+                        break;
                 }
                 self::record($token);
             } else {
                 // check if we need to start recording
-                // $token may not be an array, but that's ok... $token[0] will jsut be first char of string
+                // $token may not be an array, but that's ok... $token[0] will just be first char of string
                 switch ($token[0]) {
                     case T_NAMESPACE:
                         self::$record = 'namespace';
@@ -171,23 +178,23 @@ class UseStatements
      */
     private static function handleStringToken($token)
     {
-        if ($token === '(') {
+        if ($token === '{') {
             // start group  (PHP 7.0+)
-            self::$groupNamespace = self::$currentUse['class'];
+            self::$groupNamespace = \ltrim(self::$currentUse['class'], '\\');
             return;
         }
-        if ($token === ')') {
+        if ($token === '}') {
             // end group
             self::$groupNamespace = null;
             return;
         }
         if (self::$currentUse) {
-            $class = self::$currentUse['class'];
+            $class = \ltrim(self::$currentUse['class'], '\\');
             $alias = self::$currentUse['alias'] ?: self::getShortName($class);
             if (!isset(self::$useStatements[self::$namespace])) {
                 self::$useStatements[self::$namespace] = self::$empty;
             }
-            self::$useStatements[self::$namespace][self::$record][$alias] = \ltrim($class, '\\');
+            self::$useStatements[self::$namespace][self::$record][$alias] = $class;
             self::$currentUse = null;
         }
         if ($token === ',') {

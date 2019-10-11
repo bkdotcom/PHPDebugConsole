@@ -37,7 +37,7 @@ class ErrorEmailer implements SubscriberInterface
             'emailFrom' => null,            // null = use php's default (php.ini: sendmail_from)
             'emailFunc' => 'mail',
             'emailMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-            'emailMin' => 15,               // 0 = no throttle
+            'emailMin' => 60,               // 0 = no throttle
             'emailThrottledSummary' => true,    // if errors have been throttled, should we email a summary email of throttled errors?
                                                 //    (first occurance of error is never throttled)
             'emailThrottleFile' => __DIR__ . '/error_emails.json',

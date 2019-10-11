@@ -855,7 +855,8 @@ class Internal implements SubscriberInterface
         }
         foreach ($this->cfg['redactKeys'] as $key => $regex) {
             $val = \preg_replace_callback($regex, function ($matches) use ($key) {
-                $substr = \end((\array_filter($matches, 'strlen')));
+                $matches = \array_filter($matches, 'strlen');
+                $substr = \end($matches);
                 $replacement = \call_user_func($this->cfg['redactReplace'], $substr, $key);
                 return \str_replace($substr, $replacement, $matches[0]);
             }, $val);

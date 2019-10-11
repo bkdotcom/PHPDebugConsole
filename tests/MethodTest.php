@@ -1407,7 +1407,7 @@ class MethodTest extends DebugTestFramework
                     <li class="m_log"><span class="no-quotes t_string">in inner</span></li>
                 </ul>
             </li>
-            <li class="m_info"><span class="no-quotes t_string">Built In %f ms</span></li>
+            <li class="m_info"><span class="no-quotes t_string">Built In %f %ss</span></li>
             <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
         </ul>
         <ul class="debug-log group-body"></ul>
@@ -1676,21 +1676,21 @@ EOD;
                 'entry' => json_encode(array(
                     'time',
                     array(
-                        'my label: %f ms',
+                        'my label: %f %ss',
                     ),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'my label: %f ms',
+                        'my label: %f %ss',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f ms"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f ms</span></li>',
-                'script' => 'console.log("my label: %f ms");',
-                'text' => '⏱ my label: %f ms',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f %ss"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f %ss</span></li>',
+                'script' => 'console.log("my label: %f %ss");',
+                'text' => '⏱ my label: %f %ss',
             )
         );
         $this->testMethod(
@@ -1713,20 +1713,20 @@ EOD;
                 */
                 'entry' => json_encode(array(
                     'time',
-                    array("blahmy labelblah%f msblah"),
+                    array("blahmy labelblah%f %ssblah"),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'blahmy labelblah%f msblah',
+                        'blahmy labelblah%f %ssblah',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-22: %d|[{"Type":"LOG"},"blahmy labelblah%f msblah"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f msblah</span></li>',
-                'script' => 'console.log("blahmy labelblah%f msblah");',
-                'text' => '⏱ blahmy labelblah%f msblah',
+                'firephp' => 'X-Wf-1-1-1-22: %d|[{"Type":"LOG"},"blahmy labelblah%f %ssblah"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f %ssblah</span></li>',
+                'script' => 'console.log("blahmy labelblah%f %ssblah");',
+                'text' => '⏱ blahmy labelblah%f %ssblah',
             )
         );
 
@@ -1798,21 +1798,21 @@ EOD;
                 'entry' => json_encode(array(
                     'time',
                     array(
-                        'my label: %f ms',
+                        'my label: %f %ss',
                     ),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'my label: %f ms',
+                        'my label: %f %ss',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f ms"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f ms</span></li>',
-                'script' => 'console.log("my label: %f ms");',
-                'text' => '⏱ my label: %f ms',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f %ss"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f %ss</span></li>',
+                'script' => 'console.log("my label: %f %ss");',
+                'text' => '⏱ my label: %f %ss',
             )
         );
 
@@ -1933,7 +1933,7 @@ EOD;
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
-                        array('my label: ', '%f ms', array('foo'=>'bar')),
+                        array('my label: ', '%f %ss', array('foo'=>'bar')),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
@@ -1941,25 +1941,25 @@ EOD;
                 */
                 'entry' => json_encode(array(
                     'timeLog',
-                    array('my label: ', '%f ms', array('foo'=>'bar')),
+                    array('my label: ', '%f %ss', array('foo'=>'bar')),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
                         'my label: ',
-                        '%f ms',
+                        '%f %ss',
                         array('foo'=>'bar'),
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-169: %d|[{"Label":"my label: ","Type":"LOG"},["%f ms",{"foo":"bar"}]]|',
-                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">my label: </span><span class="t_string">%f ms</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                'firephp' => 'X-Wf-1-1-1-169: %d|[{"Label":"my label: ","Type":"LOG"},["%f %ss",{"foo":"bar"}]]|',
+                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">my label: </span><span class="t_string">%f %ss</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                     <span class="array-inner">
                     <span class="key-value"><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></span>
                     </span><span class="t_punct">)</span></span></li>',
-                'script' => 'console.log("my label: ","%f ms",{"foo":"bar"});',
-                'text' => '⏱ my label: "%f ms", array(
+                'script' => 'console.log("my label: ","%f %ss",{"foo":"bar"});',
+                'text' => '⏱ my label: "%f %ss", array(
                     [foo] => "bar"
                     )',
             )

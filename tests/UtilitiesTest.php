@@ -198,6 +198,18 @@ class UtilitiesTest extends DebugTestFramework
         return Utilities::getCallerInfo();
     }
 
+    /**
+     * Test
+     *
+     * @return void
+     *
+     * @todo better test from cli
+     */
+    public function testGetEmittedHeader()
+    {
+        $this->assertSame('', Utilities::getEmittedHeader());
+    }
+
     public function testGetIncludedFiles()
     {
         $filesA = get_included_files();
@@ -210,18 +222,6 @@ class UtilitiesTest extends DebugTestFramework
     public function testGetInterface()
     {
         $this->assertSame('cli', Utilities::getInterface());
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     *
-     * @todo better test from cli
-     */
-    public function testGetResponseHeader()
-    {
-        $this->assertNull(Utilities::getResponseHeader());
     }
 
     /**

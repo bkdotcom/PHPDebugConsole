@@ -493,6 +493,27 @@ class Utilities
     }
 
     /**
+     * Returns a sent/pending response header value
+     *
+     * @param string $key default = 'Content-Type', header to return
+     *
+     * @return string (empty string if not emitted)
+     * @req    php >= 5
+     */
+    public static function getEmittedHeader($key = 'Content-Type')
+    {
+        $value = '';
+        $headers = \headers_list();
+        foreach ($headers as $header) {
+            if (\preg_match('/^' . $key . ':\s*([^;]*)/i', $header, $matches)) {
+                $value = $matches[1];
+                break;
+            }
+        }
+        return $value;
+    }
+
+    /**
      * returns required/included files sorted by directory
      *
      * @return array
@@ -536,27 +557,6 @@ class Utilities
             $return = 'ajax';
         }
         return $return;
-    }
-
-    /**
-     * Returns a sent/pending response header value
-     *
-     * @param string $key default = 'Content-Type', header to return
-     *
-     * @return string
-     * @req    php >= 5
-     */
-    public static function getResponseHeader($key = 'Content-Type')
-    {
-        $value = null;
-        $headers = \headers_list();
-        foreach ($headers as $header) {
-            if (\preg_match('/^' . $key . ':\s*([^;]*)/i', $header, $matches)) {
-                $value = $matches[1];
-                break;
-            }
-        }
-        return $value;
     }
 
     /**

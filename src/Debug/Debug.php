@@ -26,6 +26,7 @@ use bdk\ErrorHandler\ErrorEmailer;
 use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
+use Psr\Http\Message\ResponseInterface; // PSR-7
 use ReflectionMethod;
 use SplObjectStorage;
 
@@ -58,6 +59,11 @@ class Debug
     protected $registeredPlugins;   // SplObjectHash
     protected $rootInstance;
     protected static $methodDefaultArgs = array();
+
+    /**
+     * @var ResponseInterface
+     */
+    protected $response;
 
     const CLEAR_ALERTS = 1;
     const CLEAR_LOG = 2;
@@ -1314,6 +1320,21 @@ class Debug
     }
 
     /**
+     * Emit headers queued for output directly using `header()`
+     *
+     * @return void
+     */
+    public function emitHeaders()
+    {
+        if (\headers_sent($file, $line)) {
+            \trigger_error('PHPDebugConsole: headers already sent: ' . $file . ', line ' . $line, E_USER_NOTICE);
+        }
+        foreach ($this->getHeaders() as $nameVal) {
+            \header($nameVal[0] . ': ' . $nameVal[1]);
+        }
+    }
+
+    /**
      * Retrieve a configuration value
      *
      * @param string $path    what to get
@@ -1640,6 +1661,32 @@ class Debug
         $this->errorHandler->setErrorCaller($caller);
     }
 
+    /**
+     * Appends debug output (if applicable) and adds headers (if applicable)
+     *
+     * You should call this at the end of the request/response cycle in your PSR-7 project,
+     * e.g. immediately before emitting the Response.
+     *
+     * @param ResponseInterface $response PSR-7 Response
+     *
+     * @return ResponseInterface
+     */
+    public function writeToResponse(ResponseInterface $response)
+    {
+        $this->response = $response;
+        $this->cfg['outputHeaders'] = false;
+        $output = $this->output();
+        $stream = $response->getBody();
+        $stream->seek(0, SEEK_END);
+        $stream->write($output);
+        $stream->rewind();
+        $headers = $this->getHeaders();
+        foreach ($headers as $nameVal) {
+            $response = $response->withHeader($nameVal[0], $nameVal[1]);
+        }
+        return $response;
+    }
+
     /*
         Non-Public methods
     */
@@ -1887,6 +1934,9 @@ class Debug
             },
             'methodTable' => function () {
                 return new Debug\MethodTable();
+            },
+            'middleware' => function (Debug $debug) {
+                return new Debug\Middleware($debug);
             },
             'utf8' => function () {
                 return new Debug\Utf8();

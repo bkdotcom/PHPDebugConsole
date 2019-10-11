@@ -23,6 +23,7 @@ use bdk\Debug\Route\RouteInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
+use Exception;
 
 /**
  * Methods that are internal to the debug class
@@ -179,6 +180,21 @@ class Internal implements SubscriberInterface
             }
         }
         return $entries;
+    }
+
+    /**
+     * Return the response Content-Type
+     *
+     * Content type is pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
+     * otherwise, content-type is pulled from emitted headers via `headers_list()`
+     *
+     * @return string (empty string if Content-Type header not found)
+     */
+    public function getResponseContentType()
+    {
+        return $this->debug->response
+            ? $this->debug->response->getHeaderLine('Content-Type')
+            : $this->debug->utilities->getEmittedHeader();
     }
 
     /**
@@ -421,7 +437,10 @@ class Internal implements SubscriberInterface
         $headers = $event['headers'];
         $outputHeaders = $event->getSubject()->getCfg('outputHeaders');
         if (!$outputHeaders || !$headers) {
-            $event->getSubject()->setData('headers', \array_merge($event->getSubject()->getData('headers'), $headers));
+            $event->getSubject()->setData('headers', \array_merge(
+                $event->getSubject()->getData('headers'),
+                $headers
+            ));
         } elseif (\headers_sent($file, $line)) {
             \trigger_error('PHPDebugConsole: headers already sent: ' . $file . ', line ' . $line, E_USER_NOTICE);
         } else {
@@ -612,12 +631,25 @@ class Internal implements SubscriberInterface
         if (!$this->cfg['logResponse']) {
             return;
         }
-        $contentType = $this->debug->utilities->getResponseHeader();
+        $contentType = $this->getResponseContentType();
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
+            // we're not interested in logging response
             \ob_end_flush();
             return;
         }
         $response = \ob_get_clean();
+        if ($this->debug->response) {
+            try {
+                $response = $this->debug->response->getBody()->getContents();
+            } catch (Exception $e) {
+                $this->debug->warn('Exception', array(
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ));
+                return;
+            }
+        }
         $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
             'value' => $response,
             'contentType' => $contentType,
@@ -905,14 +937,17 @@ class Internal implements SubscriberInterface
      */
     private function setRoute($route)
     {
-        $routePrev = $this->debug->getCfg('route');
-        if (\is_object($routePrev)) {
+        if ($this->bootstraped) {
             /*
+                Only need to wory about previous route if we're bootstrapped
+                There can only be one 'route' at a time:
+                If multiple output routes are desired, use debug->addPlugin()
                 unsubscribe current OutputInterface
-                there can only be one 'route' at a time
-                if multiple output routes are desired, use debug->addPlugin()
             */
-            $this->debug->removePlugin($routePrev);
+            $routePrev = $this->debug->getCfg('route');
+            if (\is_object($routePrev)) {
+                $this->debug->removePlugin($routePrev);
+            }
         }
         if (\is_string($route) && $route !== 'auto') {
             $prop = 'route' . \ucfirst($route);

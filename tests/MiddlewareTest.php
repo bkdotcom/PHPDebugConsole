@@ -11,11 +11,11 @@ use mindplay\middleman\Dispatcher;
 class MiddlewareTest extends DebugTestFramework
 {
 
-    /**
-     * @requires PHP >= 7.0
-     */
     public function testMiddleware()
     {
+        if (version_compare(PHP_VERSION, '7.0', '<')) {
+            return;
+        }
         $this->debug->addPlugin($this->debug->routeChromeLogger);
         // $debugMiddleware = new Middleware($this->debug);
         $mockMiddleware = new MockMiddleware($this->debug);

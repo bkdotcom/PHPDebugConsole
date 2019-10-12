@@ -44,13 +44,6 @@
 		"swiftmailer/swiftmailer": "^5.0",
 		"twig/twig": "^1.0"
 	},
-	"require-dev-php" : {
-		"NOTE": "guzzle requires php 5.5",
-		"guzzlehttp/guzzle": "^6.3",
-		"NOTE": "middleware requires PHP 7",
-		"mindplay/middleman": "^3.0.3",
-		"psr/http-server-middleware": "^1.0"
-	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",
 		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",

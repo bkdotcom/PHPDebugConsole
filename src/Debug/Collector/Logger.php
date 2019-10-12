@@ -57,19 +57,35 @@ class Logger extends AbstractLogger
         if (!$this->isValidLevel($level)) {
             throw new InvalidArgumentException();
         }
+        $levelMap = array(
+            LogLevel::EMERGENCY => 'error',
+            LogLevel::ALERT => 'alert',
+            LogLevel::CRITICAL => 'error',
+            LogLevel::ERROR => 'error',
+            LogLevel::WARNING => 'warn',
+            LogLevel::NOTICE => 'warn',
+            LogLevel::INFO => 'info',
+            LogLevel::DEBUG => 'log',
+        );
+        $method = $levelMap[$level];
         $str = $this->interpolate($message, $context);
         $meta = $this->getMeta($level, $context);
-        if (\in_array($level, array('emergency','critical','error'))) {
-            $this->debug->error($str, $context, $meta);
-        } elseif (\in_array($level, array('warning','notice'))) {
-            $this->debug->warn($str, $context, $meta);
-        } elseif ($level == 'alert') {
-            $this->debug->alert($str);
-        } elseif ($level == 'info') {
-            $this->debug->info($str, $context);
-        } else {
-            $this->debug->log($str, $context);
+        if (\in_array($method, array('info','log'))) {
+            foreach ($context as $key => $value) {
+                if ($key === 'table' && \is_array($value)) {
+                    $method = 'table';
+                    $metaMerge = \array_intersect_key($context, \array_flip(array(
+                        'columns',
+                        'sortable',
+                        'totalCols',
+                    )));
+                    $meta = \array_merge($meta, $metaMerge);
+                    $context = $value;
+                    break;
+                }
+            }
         }
+        $this->debug->{$method}($str, $context, $meta);
     }
 
     /**
@@ -83,11 +99,12 @@ class Logger extends AbstractLogger
      */
     protected function getMeta($level, &$context)
     {
-        $haveException = isset($context['exception']) &&
-            ($context['exception'] instanceof \Exception
+        $haveException = isset($context['exception'])
+            && ($context['exception'] instanceof \Exception
                 || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable);
         $metaVals = \array_intersect_key($context, \array_flip(array('file','line')));
         $metaVals['psr3level'] = $level;
+        // remove meta from context
         $context = \array_diff_key($context, $metaVals);
         if ($haveException) {
             $exception = $context['exception'];

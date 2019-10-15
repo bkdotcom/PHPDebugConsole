@@ -689,7 +689,7 @@ class Internal implements SubscriberInterface
                 $this->debug->utilities->getInterface() == 'ajax',
                 \strpos($server['HTTP_ACCEPT'], 'html') === 0,
                 $server['HTTP_SOAPACTION'],
-                \stripos($server['HTTP_USER_AGENT'], 'curl') !== 0,
+                \stripos($server['HTTP_USER_AGENT'], 'curl') !== false,
             ))) > 0;
         }
         if ($val) {

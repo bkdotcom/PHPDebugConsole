@@ -217,7 +217,7 @@ class ErrorHandler
      * @param integer $errType error lavel / type (one of PHP's E_* constants)
      * @param string  $errMsg  the error message
      * @param string  $file    filepath the error was raised in
-     * @param string  $line    the line the error was raised in
+     * @param integer $line    the line the error was raised in
      * @param array   $vars    active symbol table at point error occured
      *
      * @return boolean
@@ -263,7 +263,7 @@ class ErrorHandler
      *   * catching backtrace via shutdown function only possible if xdebug installed
      *   * xdebug_get_function_stack's magic seems powerless for uncaught exceptions!
      *
-     * @param Exception|Throwable $exception exception to handle
+     * @param \Exception|\Throwable $exception exception to handle
      *
      * @return void
      */
@@ -351,7 +351,7 @@ class ErrorHandler
         if ($this->registered) {
             return;
         }
-        $this->prevDisplayErrors = \ini_set('display_errors', 0);
+        $this->prevDisplayErrors = \ini_set('display_errors', '0');
         $this->prevErrorHandler = \set_error_handler(array($this, 'handleError'));
         $this->prevExceptionHandler = \set_exception_handler(array($this, 'handleException'));
         $this->registered = true;   // used by this->onShutdown()
@@ -364,8 +364,8 @@ class ErrorHandler
      *    `setCfg('key', 'value')`
      *    `setCfg(array('k1'=>'v1', 'k2'=>'v2'))`
      *
-     * @param string $mixed  key=>value array or key
-     * @param mixed  $newVal value
+     * @param string|array $mixed  key=>value array or key
+     * @param mixed        $newVal value
      *
      * @return mixed old value(s)
      */
@@ -686,7 +686,9 @@ class ErrorHandler
         $stack = \xdebug_get_function_stack();
         $xdebugVer = \phpversion('xdebug');
         if (\version_compare($xdebugVer, '2.6.0', '<')) {
-            foreach ($stack as $i => $frame) {
+            $count = \count($stack);
+            for ($i = 0; $i < $count; $count++) {
+                $frame = $stack[$i];
                 $function = isset($frame['function'])
                     ? $frame['function']
                     : null;

@@ -33,7 +33,7 @@ class MySqliStmt extends mysqliStmtBase
      * @param MySqli $mysqli mysqli instance
      * @param string $query  SQL query
      */
-    public function __construct(MySqli $mysqli, $query)
+    public function __construct(MySqli $mysqli, $query = null)
     {
         parent::__construct($mysqli, $query);
         $this->mysqli = $mysqli;

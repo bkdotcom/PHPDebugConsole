@@ -74,7 +74,7 @@ class FileStreamWrapper
                 a) want to make sure we modify required files
                 b) don't want to cache modified files
         */
-        \ini_set('opcache.enable', 0);
+        \ini_set('opcache.enable', '0');
     }
 
     /**

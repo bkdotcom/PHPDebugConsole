@@ -231,7 +231,7 @@ class PhpDoc
                 $reflectionClass = new ReflectionClass($className);
                 return self::getParsed($reflectionClass);
             }
-        } else {
+        } elseif ($reflector instanceof ReflectionMethod || $reflector instanceof ReflectionProperty) {
             /*
                 Method or Property comment
             */
@@ -378,6 +378,7 @@ class PhpDoc
         $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*' . $regexNotTag . '#sim';
         \preg_match_all($regexTags, $str, $matches, PREG_SET_ORDER);
         $singleTags = array('return');
+        $return = array();
         foreach ($matches as $match) {
             $value = $match['value'];
             $value = \preg_replace('/\n\s*\*\s*/', "\n", $value);
@@ -401,10 +402,11 @@ class PhpDoc
      */
     private static function splitParams($paramStr)
     {
-        $depth = 0;
-        $startPos = 0;
         $chars = \str_split($paramStr);
+        $depth = 0;
         $params = array();
+        $pos = 0;
+        $startPos = 0;
         foreach ($chars as $pos => $char) {
             switch ($char) {
                 case ',':

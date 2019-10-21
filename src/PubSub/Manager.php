@@ -140,7 +140,7 @@ class Manager
     {
         $subscribers = $this->getInterfaceSubscribers($interface);
         foreach ($subscribers as $row) {
-            $this->unsubscribe($row[0], $row[1], $row[2]);
+            $this->unsubscribe($row[0], $row[1]);
         }
         return $subscribers;
     }
@@ -174,8 +174,8 @@ class Manager
     /**
      * Removes an event subscriber from the specified event.
      *
-     * @param string   $eventName The event we're unsubscribing from
-     * @param callable $callable  The subscriber to remove
+     * @param string         $eventName The event we're unsubscribing from
+     * @param callable|array $callable  The subscriber to remove
      *
      * @return void
      */

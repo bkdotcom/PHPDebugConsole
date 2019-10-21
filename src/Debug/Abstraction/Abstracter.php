@@ -76,7 +76,7 @@ class Abstracter extends Component
      * @param string $method Method requesting abstraction
      * @param array  $hist   (@internal) array/object history (used to test for recursion)
      *
-     * @return array
+     * @return Abstraction|array|string
      */
     public function getAbstraction($mixed, $method = null, $hist = array())
     {
@@ -101,6 +101,7 @@ class Abstracter extends Component
      */
     public static function getType($val)
     {
+        $type = null;
         $typeMore = null;
         if ($val instanceof Abstraction) {
             $type = $val['type'];

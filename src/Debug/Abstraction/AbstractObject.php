@@ -59,9 +59,9 @@ class AbstractObject
     /**
      * returns information about an object
      *
-     * @param object $obj    Object to inspect
-     * @param string $method Method requesting abstraction
-     * @param array  $hist   (@internal) array & object history
+     * @param object|string $obj    Object (or classname) to inspect
+     * @param string        $method Method requesting abstraction
+     * @param array         $hist   (@internal) array & object history
      *
      * @return Abstraction
      */
@@ -69,7 +69,6 @@ class AbstractObject
     {
         if (!\is_object($obj)) {
             if (\is_string($obj) && (\class_exists($obj) || \interface_exists($obj))) {
-                \bdk\Debug::_warn('woot', $obj);
                 $reflector = new ReflectionClass($obj);
             } else {
                 return $obj;
@@ -306,7 +305,7 @@ class AbstractObject
     /**
      * Get configuration flags
      *
-     * @return [type] [description]
+     * @return integer bitmask
      */
     private function getFlags()
     {
@@ -360,13 +359,16 @@ class AbstractObject
     /**
      * Is the passed object excluded from debugging?
      *
-     * @param object $obj object to test
+     * @param object|string $obj object (or classname) to test
      *
      * @return boolean
      */
     private function isExcluded($obj)
     {
-        if (\in_array(\get_class($obj), $this->abstracter->getCfg('objectsExclude'))) {
+        $classname = \is_object($obj)
+            ? \get_class($obj)
+            : $obj;
+        if (\in_array($classname, $this->abstracter->getCfg('objectsExclude'))) {
             return true;
         }
         // now test "instanceof"

@@ -112,8 +112,8 @@ abstract class AbstractObjectSub implements SubscriberInterface
      */
     private function resolvePhpDocTypeClass($type)
     {
-        $first = \substr($type, 0, \strpos($type, '\\')) ?: $type;
-        $namespace = \substr($this->abs['className'], 0, \strrpos($this->abs['className'], '\\'));
+        $first = \substr($type, 0, \strpos($type, '\\') ?: 0) ?: $type;
+        $namespace = \substr($this->abs['className'], 0, \strrpos($this->abs['className'], '\\') ?: 0);
         $useStatements = UseStatements::getUseStatements($this->abs['reflector'])['class'];
         if (isset($useStatements[$first])) {
             $type = $useStatements[$first] . \substr($type, \strlen($first));

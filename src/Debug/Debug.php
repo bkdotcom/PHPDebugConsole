@@ -470,7 +470,7 @@ class Debug
      *
      * @return integer The new count (or current count when using `COUNT_NO_INC`)
      */
-    public function count($label = null, $flags = null)
+    public function count($label = null, $flags = 0)
     {
         $logEntry = new LogEntry(
             $this,

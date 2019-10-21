@@ -162,10 +162,10 @@ class Pdo extends PdoBase
     }
 
     /**
-     * Fetch extended error information associated with the last operation on the database handle
+     * Fetch the SQLSTATE associated with the last operation on the database handle
      *
      * @link   http://php.net/manual/en/pdo.errorinfo.php
-     * @return array PDO::errorInfo returns an array of error information
+     * @return string a five characters alphanumeric identifier defined in the ANSI SQL-92 standard
      */
     public function errorCode()
     {
@@ -189,7 +189,7 @@ class Pdo extends PdoBase
      * @param string $statement The SQL statement to prepare and execute.
      *
      * @link   http://php.net/manual/en/pdo.exec.php
-     * @return integer|boolean PDO::exec returns the number of rows that were modified or deleted by the
+     * @return integer|false PDO::exec returns the number of rows that were modified or deleted by the
      *    SQL statement you issued. If no rows were affected, PDO::exec returns 0. This function may
      *    return Boolean FALSE, but may also return a non-Boolean value which evaluates to FALSE.
      *    Please read the section on Booleans for more information
@@ -245,7 +245,7 @@ class Pdo extends PdoBase
      * @param array  $driverOptions [optional] This array holds one or more key=&gt;value pairs to
      * set attribute values for the PDOStatement object that this method returns.
      *
-     * @return TraceablePDOStatement|boolean If the database server successfully prepares the statement,
+     * @return PDOStatement|false If the database server successfully prepares the statement,
      * @link   http://php.net/manual/en/pdo.prepare.php
      *   PDO::prepare returns a PDOStatement object. If the database server cannot successfully prepare
      *   the statement, PDO::prepare returns FALSE or emits PDOException (depending on error handling).
@@ -260,8 +260,7 @@ class Pdo extends PdoBase
      *
      * @param string $statement The SQL statement to prepare and execute.
      *
-     * @return TraceablePDOStatement|boolean PDO::query returns a PDOStatement object, or FALSE on
-     * failure.
+     * @return PDOStatement|false PDO::query returns a PDOStatement object, or `false` on failure.
      * @link   http://php.net/manual/en/pdo.query.php
      */
     public function query($statement)
@@ -276,8 +275,8 @@ class Pdo extends PdoBase
      * @param integer $parameterType (optional) Provides a data type hint for drivers that have
      *                                   alternate quoting styles.
      *
-     * @return string|boolean A quoted string that is theoretically safe to pass into an SQL statement.
-     *   Returns FALSE if the driver does not support quoting in this way.
+     * @return string|false A quoted string that is theoretically safe to pass into an SQL statement.
+     *   Returns `false` if the driver does not support quoting in this way.
      * @link   http://php.net/manual/en/pdo.quote.php
      */
     public function quote($string, $parameterType = PdoBase::PARAM_STR)

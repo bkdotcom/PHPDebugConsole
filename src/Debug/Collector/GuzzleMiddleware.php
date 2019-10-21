@@ -29,6 +29,7 @@ class GuzzleMiddleware
 
     private $debug;
     private $icon = 'fa fa-exchange';
+    private $nextHandler;
 
     private $cfg = array(
         'inclRequestBody' => false,
@@ -83,7 +84,7 @@ class GuzzleMiddleware
             (string) $request->getUri(),
             $this->debug->meta('icon', $this->icon)
         );
-        $this->debug->log('request headers', $this->buildHeadersString($request), $this->debug->meta('redact'));
+        $this->debug->log('request headers', $this->buildRequestHeadersString($request), $this->debug->meta('redact'));
         if ($this->cfg['inclRequestBody']) {
             $body = $this->getBody($request);
             $this->debug->log(
@@ -112,7 +113,7 @@ class GuzzleMiddleware
      */
     public function onFulfilled(ResponseInterface $response)
     {
-        $this->debug->log('response headers', $this->buildHeadersString($response), $this->debug->meta('redact'));
+        $this->debug->log('response headers', $this->buildResponseHeadersString($response), $this->debug->meta('redact'));
         if ($this->cfg['inclResponseBody']) {
             $body = $this->getBody($response);
             $this->debug->log(
@@ -146,33 +147,44 @@ class GuzzleMiddleware
             $response = $reason->getResponse();
         }
         if ($response) {
-            $this->debug->log('response headers', $this->buildHeadersString($response));
+            $this->debug->log('response headers', $this->buildResponseHeadersString($response));
         }
         $this->debug->groupEnd();
         return \GuzzleHttp\Promise\rejection_for($reason);
     }
 
     /**
-     * Build request/response header string
+     * Build request header string
      *
-     * @param MessageInterface $message Request or Response
+     * @param RequestInterface $message Request or Response
      *
      * @return string
      */
-    private function buildHeadersString(MessageInterface $message)
+    private function buildRequestHeadersString(RequestInterface $message)
     {
-        $result = '';
-        if ($message instanceof RequestInterface) {
-            $result = \trim($message->getMethod()
-                . ' ' . $message->getRequestTarget())
-                . ' HTTP/' . $message->getProtocolVersion() . "\r\n";
-        } else {
-            $result = 'HTTP/'
-                . ' ' . $message->getProtocolVersion()
-                . ' ' . $message->getStatusCode()
-                . ' ' . $message->getReasonPhrase()
-                . "\r\n";
+        $result = \trim($message->getMethod()
+            . ' ' . $message->getRequestTarget())
+            . ' HTTP/' . $message->getProtocolVersion() . "\r\n";
+        foreach ($message->getHeaders() as $name => $values) {
+            $result .= $name . ': ' . \implode(', ', $values) . "\r\n";
         }
+        return \rtrim($result);
+    }
+
+    /**
+     * Build response header string
+     *
+     * @param ResponseInterface $message Request or Response
+     *
+     * @return string
+     */
+    private function buildResponseHeadersString(ResponseInterface $message)
+    {
+        $result = 'HTTP/'
+            . ' ' . $message->getProtocolVersion()
+            . ' ' . $message->getStatusCode()
+            . ' ' . $message->getReasonPhrase()
+            . "\r\n";
         foreach ($message->getHeaders() as $name => $values) {
             $result .= $name . ': ' . \implode(', ', $values) . "\r\n";
         }

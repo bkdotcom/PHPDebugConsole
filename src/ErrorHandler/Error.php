@@ -159,7 +159,7 @@ class Error extends Event
      *
      * @param integer $errType error type
      *
-     * @return string
+     * @return string|null
      */
     protected static function getCategory($errType)
     {

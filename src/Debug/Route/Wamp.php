@@ -198,7 +198,7 @@ class Wamp implements RouteInterface
      *
      * @return void
      */
-    public function processLogEntries(Event $event)
+    public function processLogEntries(Event $event = null)
     {
         $data = $this->debug->getData();
         foreach ($data['alerts'] as $logEntry) {
@@ -321,7 +321,7 @@ class Wamp implements RouteInterface
      *
      * @param mixed $mixed value to crate
      *
-     * @return array
+     * @return array|string
      */
     private function crateValues($mixed)
     {

@@ -45,7 +45,7 @@ class Logger extends AbstractLogger
     /**
      * Logs with an arbitrary level.
      *
-     * @param string        $level   debug, info, notice, warning, error, critical, alert, emergency
+     * @param mixed         $level   debug, info, notice, warning, error, critical, alert, emergency
      * @param string|object $message message
      * @param array         $context array
      *
@@ -70,6 +70,7 @@ class Logger extends AbstractLogger
         $method = $levelMap[$level];
         $str = $this->interpolate($message, $context);
         $meta = $this->getMeta($level, $context);
+        $newContext = array();
         if (\in_array($method, array('info','log'))) {
             foreach ($context as $key => $value) {
                 if ($key === 'table' && \is_array($value)) {
@@ -80,12 +81,12 @@ class Logger extends AbstractLogger
                         'totalCols',
                     )));
                     $meta = \array_merge($meta, $metaMerge);
-                    $context = $value;
+                    $newContext = $value;
                     break;
                 }
             }
         }
-        $this->debug->{$method}($str, $context, $meta);
+        $this->debug->{$method}($str, $newContext ?: $context, $meta);
     }
 
     /**
@@ -123,8 +124,8 @@ class Logger extends AbstractLogger
     /**
      * Interpolates context values into the message placeholders.
      *
-     * @param string $message message
-     * @param array  $context optional array of key/values
+     * @param string|object $message message (string, or obj with __toString)
+     * @param array         $context optional array of key/values
      *                                    interpolated values get removed
      *
      * @return string
@@ -132,7 +133,7 @@ class Logger extends AbstractLogger
     protected function interpolate($message, array &$context = array())
     {
         // build a replacement array with braces around the context keys
-        \preg_match_all('/\{([a-z0-9_.]+)\}/', $message, $matches);
+        \preg_match_all('/\{([a-z0-9_.]+)\}/', (string) $message, $matches);
         $placeholders = \array_unique($matches[1]);
         $replace = array();
         foreach ($placeholders as $key) {
@@ -148,7 +149,7 @@ class Logger extends AbstractLogger
         if (!$context) {
             $context = $this->debug->meta();
         }
-        return \strtr($message, $replace);
+        return \strtr((string) $message, $replace);
     }
 
     /**

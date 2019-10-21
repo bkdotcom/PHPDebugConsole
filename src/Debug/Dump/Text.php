@@ -301,7 +301,7 @@ class Text extends Base
     /**
      * Dump undefined
      *
-     * @return null
+     * @return string
      */
     protected function dumpUndefined()
     {

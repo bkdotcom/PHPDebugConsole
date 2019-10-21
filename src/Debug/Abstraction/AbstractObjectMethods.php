@@ -83,7 +83,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                 $methodArray[$methodName] = $info;
             }
             $abs['methods'] = $methodArray;
-            $this->addMethodsPhpDoc($abs);
+            $this->addMethodsPhpDoc();
             if ($abs['className'] !== 'Closure') {
                 static::$methodCache[$abs['className']] = $abs['methods'];
             }

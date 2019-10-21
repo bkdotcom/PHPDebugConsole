@@ -254,12 +254,12 @@ class ChromeLogger extends Base
         $avail = $max - $strlen;
         if ($avail > 2048) {
             // we've got enough room to fill with additional entries
-            $this->reduceDataFill($logBack);
+            $this->reduceDataFill($max, $logBack);
         }
     }
 
     /**
-     * Add back log entries un're out of space
+     * Add back log entries until we're out of space
      *
      * @param integer $max     maximum header length
      * @param array   $logBack logEntries removed in initial pass

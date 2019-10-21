@@ -120,6 +120,7 @@ class Utf8
                 return true;
             }
         }
+        return false;
     }
 
     /**

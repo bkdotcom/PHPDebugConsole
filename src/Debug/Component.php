@@ -44,7 +44,7 @@ abstract class Component
      */
     public function getCfg($key = null)
     {
-        if (\strlen($key) == 0) {
+        if ($key === null || \strlen($key) == 0) {
             return $this->cfg;
         }
         return isset($this->cfg[$key])
@@ -58,8 +58,8 @@ abstract class Component
      *    setCfg('key', 'value')
      *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
-     * @param string $mixed key=>value array or key
-     * @param mixed  $val   new value
+     * @param array|string $mixed key=>value array or key
+     * @param mixed        $val   new value
      *
      * @return mixed returns previous value(s)
      */

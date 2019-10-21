@@ -128,7 +128,7 @@ class Base extends Component implements ConfigurableInterface
      *
      * @param LogEntry $logEntry log entry instance
      *
-     * @return void
+     * @return void|string
      */
     public function processLogEntry(LogEntry $logEntry)
     {
@@ -353,7 +353,7 @@ class Base extends Component implements ConfigurableInterface
     /**
      * Dump undefined
      *
-     * @return null
+     * @return string
      */
     protected function dumpUndefined()
     {

@@ -147,24 +147,29 @@ class Stream extends Base
         if (!$stream) {
             return;
         }
-        $uriExists = \file_exists($stream);
-        $isWritable = !\is_file($stream) || \is_writable($stream);
-        if (!$isWritable) {
-            \trigger_error($stream . ' is not writable', E_USER_NOTICE);
-            return;
+        $uriExists = false;
+        if (\is_resource($stream)) {
+            $this->fileHandle = $stream;
+        } else {
+            $uriExists = \file_exists($stream);
+            $isWritable = !\is_file($stream) || \is_writable($stream);
+            if (!$isWritable) {
+                \trigger_error($stream . ' is not writable', E_USER_NOTICE);
+                return;
+            }
+            $this->fileHandle = \fopen($stream, 'a');
+            $meta = \stream_get_meta_data($this->fileHandle);
+            if ($this->fileHandle && $meta['wrapper_type'] === 'plainfile') {
+                \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s') . ' *****' . "\n");
+                if (!$uriExists) {
+                    // we just created file
+                    \chmod($stream, 0660);
+                }
+            }
         }
-        $this->fileHandle = \fopen($stream, 'a');
         $this->dump = $this->ansiCheck()
             ? $this->debug->dumpTextAnsi
             : $this->debug->dumpText;
-        $meta = \stream_get_meta_data($this->fileHandle);
-        if ($this->fileHandle && $meta['wrapper_type'] === 'plainfile') {
-            \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s') . ' *****' . "\n");
-            if (!$uriExists) {
-                // we just created file
-                \chmod($stream, 0660);
-            }
-        }
     }
 
     /**

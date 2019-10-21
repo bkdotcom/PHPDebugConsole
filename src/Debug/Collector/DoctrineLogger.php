@@ -42,8 +42,6 @@ class DoctrineLogger implements SQLLogger
      * @param Connection $connection Optional Doctrine DBAL connection instance
      *                                  pass to log connection info
      * @param Debug      $debug      Optional DebugInstance
-     *
-     * @throws Exception
      */
     public function __construct(Connection $connection = null, Debug $debug = null)
     {

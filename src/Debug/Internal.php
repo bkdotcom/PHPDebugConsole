@@ -839,16 +839,16 @@ class Internal implements SubscriberInterface
      * Redact string or portions within
      *
      * @param string $val string to redact
-     * @param key    $key if string is array value: the key. if object property: the prop name
+     * @param string $key if array value: the key. if object property: the prop name
      *
      * @return string
      */
-    protected function redactString($val, $key)
+    protected function redactString($val, $key = null)
     {
         if (\is_string($key)) {
             // do exact match against array key or object property
             foreach (\array_keys($this->cfg['redactKeys']) as $redactKey) {
-                if ($redactKey == $key) {
+                if ($redactKey === $key) {
                     return \call_user_func($this->cfg['redactReplace'], $val, $key);
                 }
             }
@@ -934,7 +934,7 @@ class Internal implements SubscriberInterface
      *
      * @param RouteInterface|string $route RouteInterface instance, or (short) classname
      *
-     * @return OutputInterface|null
+     * @return RouteInterface|string
      */
     private function setRoute($route)
     {

@@ -177,7 +177,7 @@ class AbstractObjectProperties extends AbstractObjectSub
         }
         // use var_dump to get the property names
         // get_object_vars() doesn't work
-        $iniWas = \ini_set('xdebug.overload_var_dump', false);
+        $iniWas = \ini_set('xdebug.overload_var_dump', '0');
         \ob_start();
         \var_dump($obj);
         $dump = \ob_get_clean();
@@ -344,9 +344,8 @@ class AbstractObjectProperties extends AbstractObjectSub
                 : null,
         );
         if (isset($phpDoc['var'])) {
-            if (\count($phpDoc['var']) == 1) {
-                $var = $phpDoc['var'][0];
-            } else {
+            $var = $phpDoc['var'][0];
+            if (\count($phpDoc['var']) > 1) {
                 /*
                     php's getDocComment doesn't play nice with compound statements
                     https://www.phpdoc.org/docs/latest/references/phpdoc/tags/var.html

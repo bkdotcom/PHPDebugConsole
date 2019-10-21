@@ -189,7 +189,7 @@ class MySqli extends mysqliBase
         $return = \call_user_func_array(array('parent', $method), $args);
         $exception = null;
         if (!$return) {
-            $exception = new Exception($this->error, $this->errorno);
+            $exception = new Exception($this->error, $this->errno);
         }
         $affectedRows = $method !== 'multi_query'
             ? $this->affected_rows
@@ -236,6 +236,6 @@ class MySqli extends mysqliBase
      */
     public function stmt_init()
     {
-        return new MySqliStmt($this, null, $this->debug);
+        return new MySqliStmt($this, null);
     }
 }

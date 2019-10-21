@@ -76,8 +76,10 @@ class ErrorEmailer implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            'errorHandler.error' => array('onErrorHighPri', PHP_INT_MAX),
-            'errorHandler.error' => array('onErrorLowPri', PHP_INT_MAX * -1),
+            'errorHandler.error' => array(
+                array('onErrorHighPri', PHP_INT_MAX),
+                array('onErrorLowPri', PHP_INT_MAX * -1),
+            ),
         );
     }
 
@@ -132,8 +134,8 @@ class ErrorEmailer implements SubscriberInterface
      *    setCfg('key', 'value')
      *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
-     * @param string $mixed  key=>value array or key
-     * @param mixed  $newVal value
+     * @param string|array $mixed  key=>value array or key
+     * @param mixed        $newVal value
      *
      * @return mixed old value(s)
      */

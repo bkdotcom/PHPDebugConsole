@@ -40,7 +40,7 @@ class AbstractArray
      * @param string $method Method requesting abstraction
      * @param array  $hist   (@internal) array/object history
      *
-     * @return array
+     * @return array|Abstraction|string
      */
     public function getAbstraction(&$array, $method = null, $hist = array())
     {

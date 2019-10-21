@@ -25,6 +25,8 @@ use bdk\PubSub\Event;
 class Email implements RouteInterface
 {
 
+    public $debug;
+
     /**
      * Constructor
      *
@@ -172,7 +174,7 @@ class Email implements RouteInterface
      * @param string $str   serialized log data
      * @param Debug  $debug (optional) Debug instance
      *
-     * @return array | false
+     * @return array|false
      */
     public static function unserializeLog($str, Debug $debug = null)
     {
@@ -197,8 +199,7 @@ class Email implements RouteInterface
         $data = self::unserializeSafe($str, array(
             'bdk\\Debug\\Abstraction\\Abstraction',
         ));
-        $data = self::unserializeLogLogEntrify($debug, $data);
-        return $data;
+        return self::unserializeLogLogEntrify($debug, $data);
     }
 
     /**
@@ -265,7 +266,7 @@ class Email implements RouteInterface
      * @param Debug $debug Debug instance
      * @param array $data  unserialized log data
      *
-     * @return log data
+     * @return array log data
      */
     private static function unserializeLogLogEntrify(Debug $debug, $data)
     {

@@ -30,6 +30,7 @@ class Yii11 implements SubscriberInterface
 {
 
     public $yiiApp;
+    public $debug;
 
     /**
      * {@inheritdoc}

@@ -29,6 +29,7 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
     protected $channelNameRoot = null;
     protected $channelRegex;
     protected $data = array();
+    protected $dump;
     protected $isRootInstance = false;
 
     /**
@@ -78,7 +79,7 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return mixed
+     * @return mixed|void
      */
     public function processLogEntry(LogEntry $logEntry)
     {

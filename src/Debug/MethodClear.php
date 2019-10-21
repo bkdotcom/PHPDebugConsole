@@ -107,7 +107,7 @@ class MethodClear
      */
     private function clearAlerts($flags)
     {
-        $clearAlerts = $flags & Debug::CLEAR_ALERTS;
+        $clearAlerts = (bool) ($flags & Debug::CLEAR_ALERTS);
         if (!$clearAlerts) {
             return null;
         }
@@ -143,7 +143,7 @@ class MethodClear
         */
         $errorsNotCleared = $this->clearErrorsHelper(
             $this->data['log'],
-            $flags & Debug::CLEAR_LOG_ERRORS
+            (bool) ($flags & Debug::CLEAR_LOG_ERRORS)
         );
         /*
             Clear Summary Errors
@@ -151,7 +151,7 @@ class MethodClear
         foreach (\array_keys($this->data['logSummary']) as $priority) {
             $errorsNotCleared = \array_merge($this->clearErrorsHelper(
                 $this->data['logSummary'][$priority],
-                $flags & Debug::CLEAR_SUMMARY_ERRORS
+                (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS)
             ));
         }
         $errorsNotCleared = \array_unique($errorsNotCleared);
@@ -203,7 +203,7 @@ class MethodClear
     private function clearLog($flags)
     {
         $return = null;
-        $clearErrors = $flags & Debug::CLEAR_LOG_ERRORS;
+        $clearErrors = (bool) ($flags & Debug::CLEAR_LOG_ERRORS);
         if ($flags & Debug::CLEAR_LOG) {
             $return = 'log (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
             $curDepth = 0;
@@ -256,7 +256,7 @@ class MethodClear
     private function clearSummary($flags)
     {
         $return = null;
-        $clearErrors = $flags & Debug::CLEAR_SUMMARY_ERRORS;
+        $clearErrors = (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS);
         if ($flags & Debug::CLEAR_SUMMARY) {
             $return = 'summary (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
             $curPriority = \end($this->data['groupPriorityStack']);  // false if empty
@@ -283,11 +283,11 @@ class MethodClear
     }
 
     /**
-     * Build message that gets appended to log
+     * Build log arguments
      *
      * @param array $cleared array of things that were cleared
      *
-     * @return string
+     * @return array
      */
     private function getLogArgs($cleared)
     {

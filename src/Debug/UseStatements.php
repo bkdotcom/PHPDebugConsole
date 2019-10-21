@@ -35,7 +35,7 @@ class UseStatements
      * Maintain "group" namespace (PHP 7+)
      *  ie `use function some\namespace\{fn_a, fn_b, fn_c};`
      *
-     * @var string
+     * @var string|null
      */
     protected static $groupNamespace = null;
     protected static $namespace = null;

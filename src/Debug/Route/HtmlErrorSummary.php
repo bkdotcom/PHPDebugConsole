@@ -43,7 +43,7 @@ class HtmlErrorSummary
      *
      * @param array $stats error statistics
      *
-     * @return LogEntry
+     * @return LogEntry|false
      */
     public function build($stats)
     {
@@ -52,28 +52,28 @@ class HtmlErrorSummary
             . $this->buildFatal()
             . $this->buildInConsole()
             . $this->buildNotInConsole();
-        if ($summary) {
-            $classes = \array_keys(\array_filter(array(
-                'error-summary' => true,
-                'have-fatal' => isset($this->stats['counts']['fatal']),
-            )));
-            $summary = new LogEntry(
-                $this->routeHtml->debug->getChannel('phpError'),
-                'alert',
-                array(
-                    $summary
-                ),
-                array(
-                    'attribs' => array(
-                        'class' => \implode(' ', $classes),
-                    ),
-                    'dismissible' => false,
-                    'level' => 'error',
-                    'sanitize' => false,
-                )
-            );
+        if (!$summary) {
+            return false;
         }
-        return $summary;
+        $classes = \array_keys(\array_filter(array(
+            'error-summary' => true,
+            'have-fatal' => isset($this->stats['counts']['fatal']),
+        )));
+        return new LogEntry(
+            $this->routeHtml->debug->getChannel('phpError'),
+            'alert',
+            array(
+                $summary
+            ),
+            array(
+                'attribs' => array(
+                    'class' => \implode(' ', $classes),
+                ),
+                'dismissible' => false,
+                'level' => 'error',
+                'sanitize' => false,
+            )
+        );
     }
 
     /**
@@ -170,6 +170,8 @@ class HtmlErrorSummary
      */
     protected function buildInConsoleOneCat()
     {
+        $category = null;
+        $catStats = array();
         // find category
         foreach ($this->stats['counts'] as $category => $catStats) {
             if ($catStats['inConsole']) {
@@ -271,7 +273,7 @@ class HtmlErrorSummary
      *
      * @param string $category error category
      *
-     * @return Event[]
+     * @return \bdk\ErrorHandler\Error[]
      */
     protected function getErrorsInCategory($category)
     {

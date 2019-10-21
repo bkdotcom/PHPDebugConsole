@@ -380,7 +380,7 @@ class TextAnsi extends Text
     /**
      * Dump undefined
      *
-     * @return null
+     * @return string
      */
     protected function dumpUndefined()
     {

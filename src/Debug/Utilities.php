@@ -130,8 +130,8 @@ class Utilities
      * "dereference" array
      * returns a copy of the array with references removed
      *
-     * @param array $source source array
-     * @param array $deep   (true) deep copy
+     * @param array   $source source array
+     * @param boolean $deep   (true) deep copy
      *
      * @return array
      */
@@ -228,7 +228,7 @@ class Utilities
      * data-* attributes will be json-encoded (if non-string)
      * non data attribs with null value will not be output
      *
-     * @param array $attribs key/values
+     * @param array|string $attribs key/values
      *
      * @return string
      * @see    https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#autofilling-form-controls:-the-autocomplete-attribute
@@ -330,7 +330,7 @@ class Utilities
                     '%f' => $micros,                    // Microseconds: w/o leading zeros
                 ));
             }
-            $format = \preg_replace('/%[Ss]/', $sec, $format);
+            $format = \preg_replace('/%[Ss]/', (string) $sec, $format);
             $dateInterval = new \DateInterval('PT0S');
             $dateInterval->h = $hours;
             $dateInterval->i = $min;
@@ -399,12 +399,12 @@ class Utilities
      * @param integer|string $size      bytes or similar to "1.23M"
      * @param boolean        $returnInt return integer?
      *
-     * @return string
+     * @return string|integer
      */
     public static function getBytes($size, $returnInt = false)
     {
         if (\is_string($size) && \preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
-            $size = \str_replace(',', '', $matches[1]);
+            $size = (float) \str_replace(',', '', $matches[1]);
             switch (\strtolower($matches[2])) {
                 case 'p':
                     $size *= 1024;
@@ -426,7 +426,7 @@ class Utilities
             return (int) $size;
         }
         $units = array('B','kB','MB','GB','TB','PB');
-        $i = \floor(\log($size, 1024));
+        $i = \floor(\log((float) $size, 1024));
         $pow = \pow(1024, $i);
         $size = $pow == 0
             ? '0 B'
@@ -575,7 +575,7 @@ class Utilities
      * Is passed argument a simple array with all-integer in sequence from 0 to n?
      * empty array returns true
      *
-     * @param [mixed $val value to check
+     * @param mixed $val value to check
      *
      * @return boolean
      */
@@ -671,7 +671,7 @@ class Utilities
      *
      * @param string $tag html tag to parse
      *
-     * @return array
+     * @return array|false
      */
     public static function parseTag($tag)
     {
@@ -690,6 +690,8 @@ class Utilities
                 'attribs' => self::parseAttribString($matches[2]),
                 'innerhtml' => null,
             );
+        } else {
+            $return = false;
         }
         return $return;
     }
@@ -779,7 +781,7 @@ class Utilities
      * @param string $key   attribute name (class|style)
      * @param array  $value classnames for class, key/value for style
      *
-     * @return string
+     * @return string|null
      */
     private static function buildAttribArrayVal($key, $value = array())
     {
@@ -809,7 +811,7 @@ class Utilities
      * @param string  $key   attribute name
      * @param boolean $value true|false
      *
-     * @return string
+     * @return string|null
      */
     private static function buildAttribBoolVal($key, $value = true)
     {

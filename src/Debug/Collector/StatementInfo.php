@@ -57,7 +57,7 @@ class StatementInfo
     /**
      * @param string $sql    SQL
      * @param array  $params bound params
-     * @param string $types  bound types
+     * @param array  $types  bound types
      */
     public function __construct($sql, $params = null, $types = null)
     {
@@ -237,8 +237,9 @@ class StatementInfo
     {
         $len = \strlen($quotationChars);
         if ($len > 1) {
-            $quoteLeft = \substr($quotationChars, 0, $len / 2);
-            $quoteRight = \substr($quotationChars, $len / 2);
+            $len = \floor($len / 2);
+            $quoteLeft = \substr($quotationChars, 0, $len);
+            $quoteRight = \substr($quotationChars, $len);
         } else {
             $quoteLeft = $quoteRight = $quotationChars;
         }
@@ -249,7 +250,7 @@ class StatementInfo
             if (!\is_numeric($k)) {
                 $sql = \preg_replace('/' . $k . '\b/', $v, $sql);
             } else {
-                $p = \strpos($sql, '?');
+                $p = \strpos($sql, '?') ?: 0;
                 $sql = \substr($sql, 0, $p) . $v . \substr($sql, $p + 1);
             }
         }

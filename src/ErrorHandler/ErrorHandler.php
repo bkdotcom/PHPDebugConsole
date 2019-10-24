@@ -687,7 +687,7 @@ class ErrorHandler
         $xdebugVer = \phpversion('xdebug');
         if (\version_compare($xdebugVer, '2.6.0', '<')) {
             $count = \count($stack);
-            for ($i = 0; $i < $count; $count++) {
+            for ($i = 0; $i < $count; $i++) {
                 $frame = $stack[$i];
                 $function = isset($frame['function'])
                     ? $frame['function']

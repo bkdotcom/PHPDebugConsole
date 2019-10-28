@@ -828,7 +828,7 @@ class Internal implements SubscriberInterface
             . '<' . $key . '\b.*?>\s*([^<]*?)\s*</' . $key . '>'
             . '|'
             // json
-            . \json_encode($key) . '\s*:\s*"((?:[^"]|\\")+)"'
+            . \json_encode($key) . '\s*:\s*"([^"]*?)"'
             . '|'
             // url encoded
             . '\b' . $key . '=([^\s&]+\b)'

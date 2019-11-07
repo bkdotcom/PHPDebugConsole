@@ -135,7 +135,7 @@ class AbstractObject
         /*
             debug.objAbstractEnd subscriber has free reign to modify abtraction array
         */
-        $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractEnd', $abs, $this->abstracter->debug)->getValues();
+        $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractEnd', $abs, $this->abstracter->debug);
         return $this->absClean($abs);
     }
 

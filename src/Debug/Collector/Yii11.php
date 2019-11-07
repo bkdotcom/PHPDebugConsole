@@ -161,8 +161,9 @@ class Yii11 implements SubscriberInterface
             $html = \preg_replace_callback('#(<span class="file t_string">)(.*?)(</span>)#', function ($matches) use ($root) {
                 $filepath = $matches[2];
                 $filepathRel = \str_replace($root, '.', $filepath);
-                $embolden = \preg_match('#/protected/controllers/.+.php#', $filepathRel);
-                $embolden = $embolden || \preg_match('#/protected/views(?:(?!/_|/layout).)+.php#', $filepathRel);
+                $isController = \preg_match('#/protected/controllers/.+.php#', $filepathRel);
+                $isView = \preg_match('#/protected/views(?:(?!/layout).)+.php#', $filepathRel);
+                $embolden = $isController || $isView;
                 return \bdk\Debug\Utilities::buildTag(
                     'span',
                     array(

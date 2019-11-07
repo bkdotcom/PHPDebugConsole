@@ -88,6 +88,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                 static::$methodCache[$abs['className']] = $abs['methods'];
             }
         }
+        unset($abs['phpDoc']['method']);
         if (isset($abs['methods']['__toString'])) {
             $abs['methods']['__toString']['returnValue'] = \is_object($obj)
                 ? $obj->__toString()
@@ -182,7 +183,6 @@ class AbstractObjectMethods extends AbstractObjectSub
                 'visibility' => 'magic',
             );
         }
-        unset($abs['phpDoc']['method']);
         return;
     }
 

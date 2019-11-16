@@ -640,7 +640,8 @@ class Internal implements SubscriberInterface
         $response = \ob_get_clean();
         if ($this->debug->response) {
             try {
-                $response = $this->debug->response->getBody()->getContents();
+                $stream = $this->debug->response->getBody();
+                $response = $this->debug->utilities->getStreamContents($stream);
             } catch (Exception $e) {
                 $this->debug->warn('Exception', array(
                     'message' => $e->getMessage(),

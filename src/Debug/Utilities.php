@@ -14,8 +14,10 @@ namespace bdk\Debug;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use SqlFormatter;       // optional library
+use Psr\Http\Message\StreamInterface;
 use DOMDocument;
+use Exception;
+use SqlFormatter;       // optional library
 
 /**
  * Utility methods
@@ -557,6 +559,25 @@ class Utilities
             $return = 'ajax';
         }
         return $return;
+    }
+
+    /**
+     * Get stream contents without affecting pointer
+     *
+     * @param StreamInterface $stream StreamInteface
+     *
+     * @return string
+     */
+    public static function getStreamContents(StreamInterface $stream)
+    {
+        try {
+            $pos = $stream->tell();
+            $body = (string) $stream; // __toString() is like getContents(), but without throwing exceptions
+            $stream->seek($pos);
+            return $body;
+        } catch (Exception $e) {
+            return '';
+        }
     }
 
     /**

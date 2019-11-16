@@ -131,6 +131,7 @@ class Pdo extends PdoBase
             'level' => 'info',
         ));
         \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
+        $debug->log($this->pdo->query('select database()')->fetchColumn());
         $debug->log('logged operations: ', \count($this->loggedStatements));
         $debug->time('total time', $this->getTimeSpent());
         $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));

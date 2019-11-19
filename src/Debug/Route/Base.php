@@ -100,13 +100,13 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
     }
 
     /**
-     * Get name property
+     * Get dumper
      *
-     * @return string
+     * @return \bdk\Debug\Dump\Base
      */
-    protected function getName()
+    protected function getDump()
     {
-        return $this->name;
+        return $this->dump;
     }
 
     /**

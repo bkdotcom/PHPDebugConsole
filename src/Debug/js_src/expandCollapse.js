@@ -21,7 +21,6 @@ export function init($delegateNode) {
 		return false;
 	});
 	$delegateNode.on("collapsed.debug.group", function(e){
-		// console.warn('collapsed.debug.group');
 		groupErrorIconUpdate($(e.target).prev());
 	});
 }
@@ -106,11 +105,20 @@ export function expand($toggleOrTarget) {
 	}
 }
 
-function groupErrorIconGet($container) {
+function groupErrorIconGet($group) {
 	var icon = "";
-	if ($container.find(".m_error").not(".filter-hidden").length) {
+	var channel = $group.data("channel");
+	var filter = function(i, node) {
+		var $node = $(node);
+		if ($node.hasClass("filter-hidden")) {
+			// only collect hidden errors if of the same channel & channel also hidden
+			return $group.hasClass("filter-hidden") && $node.data("channel") === channel;
+		}
+		return true;
+	};
+	if ($group.find(".m_error").filter(filter).length) {
 		icon = config.iconsMethods[".m_error"];
-	} else if ($container.find(".m_warn").not(".filter-hidden").length) {
+	} else if ($group.find(".m_warn").filter(filter).length) {
 		icon = config.iconsMethods[".m_warn"];
 	}
 	return icon;
@@ -120,7 +128,7 @@ function groupErrorIconUpdate($toggle) {
 	var selector = ".fa-times-circle, .fa-warning",
 		$group = $toggle.parent(),
 		$target = $toggle.next(),
-		icon = groupErrorIconGet($target),
+		icon = groupErrorIconGet($group),
 		isExpanded = $toggle.is(".expanded");
 	$group.removeClass("empty");	// "empty" class just affects cursor
 	if (icon) {

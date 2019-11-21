@@ -177,7 +177,14 @@ class StatementInfo
         $this->logParams($debug);
         $debug->time('duration', $this->duration);
         $debug->log('memory usage', $debug->utilities->getBytes($this->memoryUsage));
-        if ($this->rowCount !== null) {
+        if ($this->exception) {
+            $code = $this->exception->getCode();
+            $msg = $this->exception->getMessage();
+            if (\strpos($msg, $code) === false) {
+                $msg .= ' (code ' . $code . ')';
+            }
+            $debug->warn(get_class($this->exception) . ': ' . $msg);
+        } elseif ($this->rowCount !== null) {
             $debug->log('rowCount', $this->rowCount);
         }
         $debug->groupEnd();

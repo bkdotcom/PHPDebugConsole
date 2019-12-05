@@ -55,6 +55,7 @@ class ConfigTest extends DebugTestFramework
             'headerMaxPer',
             'logEnvInfo',
             'logResponse',
+            'logResponseMaxLen',
             'logRuntime',
             'logServerKeys',
             'onBootstrap',

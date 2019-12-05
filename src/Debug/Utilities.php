@@ -396,7 +396,7 @@ class Utilities
     }
 
     /**
-     * Convert size int into "1.23 kB"
+     * Convert size int into "1.23 kB" or vice versa
      *
      * @param integer|string $size      bytes or similar to "1.23M"
      * @param boolean        $returnInt return integer?

@@ -122,6 +122,7 @@ class Debug
                 'serverVals' => true,
             ),
             'logResponse' => 'auto',
+            'logResponseMaxLen' => '1 MB',
             'logRuntime' => true,
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
             'onBootstrap' => null,          // callable

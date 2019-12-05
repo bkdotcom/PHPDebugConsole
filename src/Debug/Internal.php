@@ -192,9 +192,10 @@ class Internal implements SubscriberInterface
      */
     public function getResponseContentType()
     {
-        return $this->debug->response
+        $contentType = $this->debug->response
             ? $this->debug->response->getHeaderLine('Content-Type')
             : $this->debug->utilities->getEmittedHeader();
+        return $contentType ?: 'text/html';
     }
 
     /**
@@ -631,17 +632,27 @@ class Internal implements SubscriberInterface
         if (!$this->cfg['logResponse']) {
             return;
         }
+        $maxLen = $this->debug->getCfg('logResponseMaxLen');
+        $maxLen = $this->debug->utilities->getBytes($maxLen, true);
         $contentType = $this->getResponseContentType();
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
             // we're not interested in logging response
+            $this->debug->log('response', array(
+                'Content-Type' => $contentType,
+            ));
             \ob_end_flush();
             return;
         }
         $response = \ob_get_clean();
+        $contentLength = \strlen($response);
         if ($this->debug->response) {
             try {
                 $stream = $this->debug->response->getBody();
-                $response = $this->debug->utilities->getStreamContents($stream);
+                $contentLength = $stream->getSize(); // likely returns null (unknown)
+                if ($contentLength <= $maxLen) {
+                    $response = $this->debug->utilities->getStreamContents($stream);
+                    $contentLength = \strlen($response);
+                }
             } catch (Exception $e) {
                 $this->debug->warn('Exception', array(
                     'message' => $e->getMessage(),
@@ -651,21 +662,28 @@ class Internal implements SubscriberInterface
                 return;
             }
         }
-        $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
-            'value' => $response,
-            'contentType' => $contentType,
-        ));
-        $this->debug->log(
-            'response (%c%s) %c%s',
-            'font-family: monospace;',
-            $contentType,
-            'font-style: italic; opacity: 0.8;',
-            $event['value'] instanceof Abstraction
-                ? '(prettified)'
-                : '',
-            $event['value'],
-            $this->debug->meta('redact')
-        );
+        if (!$maxLen || $contentLength < $maxLen) {
+            $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
+                'value' => $response,
+                'contentType' => $contentType,
+            ));
+            $this->debug->log(
+                'response (%c%s) %c%s',
+                'font-family: monospace;',
+                $contentType,
+                'font-style: italic; opacity: 0.8;',
+                $event['value'] instanceof Abstraction
+                    ? '(prettified)'
+                    : '',
+                $event['value'],
+                $this->debug->meta('redact')
+            );
+        } else {
+            $this->debug->log('response', array(
+                'Content-Type' => $contentType,
+                'Content-Length' => $contentLength,
+            ));
+        }
         echo $response;
     }
 
@@ -688,7 +706,7 @@ class Internal implements SubscriberInterface
             ), $_SERVER);
             $val = \count(\array_filter(array(
                 $this->debug->utilities->getInterface() == 'ajax',
-                \strpos($server['HTTP_ACCEPT'], 'html') === 0,
+                \strpos($server['HTTP_ACCEPT'], 'html') !== false,
                 $server['HTTP_SOAPACTION'],
                 \stripos($server['HTTP_USER_AGENT'], 'curl') !== false,
             ))) > 0;

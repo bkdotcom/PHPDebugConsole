@@ -74,7 +74,8 @@ class AbstractArray
      */
     public static function isCallable($array)
     {
-        return \array_keys($array) == array(0,1)
+        return \count($array) == 2
+            && \array_keys($array) === array(0,1)
             && \is_object($array[0])
             && \is_string($array[1])
             && \method_exists($array[0], $array[1]);

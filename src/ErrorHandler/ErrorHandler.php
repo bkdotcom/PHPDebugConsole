@@ -94,6 +94,7 @@ class ErrorHandler
         if ($error instanceof \Exception) {
             $exception = $error;
         } elseif ($error instanceof Error) {
+            // may be null
             $exception = $error['exception'];
         }
         if ($exception) {
@@ -106,7 +107,7 @@ class ErrorHandler
             if (!\extension_loaded('xdebug')) {
                 return array();
             }
-            $backtrace = $this->xdebugGetFunctionStack();
+            $backtrace = static::xdebugGetFunctionStack();
             $backtrace = \array_reverse($backtrace);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
             $errorFileLine = array(
@@ -124,7 +125,7 @@ class ErrorHandler
             $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
         }
-        return $this->normalizeTrace($backtrace);
+        return static::normalizeTrace($backtrace);
     }
 
     /**
@@ -580,7 +581,7 @@ class ErrorHandler
      *
      * @return array
      */
-    protected function normalizeTrace($backtrace)
+    protected static function normalizeTrace($backtrace)
     {
         $backtraceNew = array();
         $frameDefault = array(
@@ -681,7 +682,7 @@ class ErrorHandler
      * @return array
      * @see    https://bugs.xdebug.org/view.php?id=1529
      */
-    protected function xdebugGetFunctionStack()
+    protected static function xdebugGetFunctionStack()
     {
         $stack = \xdebug_get_function_stack();
         $xdebugVer = \phpversion('xdebug');

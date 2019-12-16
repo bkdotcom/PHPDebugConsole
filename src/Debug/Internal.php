@@ -494,9 +494,9 @@ class Internal implements SubscriberInterface
      */
     public function onShutdownHigh()
     {
-        $this->inShutdown = true;
         $this->closeOpenGroups();
         $this->logResponse();
+        $this->inShutdown = true;
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLogShutdown'));
     }
 
@@ -599,27 +599,18 @@ class Internal implements SubscriberInterface
             // we already closed
             return;
         }
-        $data = $this->debug->getData();
-        $data['groupPriorityStack'][] = 'main';
-        while ($data['groupPriorityStack']) {
-            $priority = \array_pop($data['groupPriorityStack']);
-            foreach ($data['groupStacks'][$priority] as $i => $info) {
-                if (!$info['collect']) {
-                    continue;
-                }
-                unset($data['groupStacks'][$priority][$i]);
-                $logEntry = new LogEntry(
-                    $info['channel'],
-                    'groupEnd'
-                );
-                if ($priority === 'main') {
-                    $data['log'][] = $logEntry;
-                } else {
-                    $data['logSummary'][$priority][] = $logEntry;
-                }
+        $groupPriorityStack = \array_merge(array('main'), $this->debug->getData('groupPriorityStack'));
+        $groupStacks = $this->debug->getData('groupStacks');
+        while ($groupPriorityStack) {
+            $priority = \array_pop($groupPriorityStack);
+            foreach ($groupStacks[$priority] as $info) {
+                $info['channel']->groupEnd();
+            }
+            if (\is_int($priority)) {
+                // close the summary
+                $this->debug->groupEnd();
             }
         }
-        $this->debug->setData($data);
     }
 
     /**
@@ -679,7 +670,7 @@ class Internal implements SubscriberInterface
                 $this->debug->meta('redact')
             );
         } else {
-            $this->debug->log('response', array(
+            $this->debug->log('response (too large to output)', array(
                 'Content-Type' => $contentType,
                 'Content-Length' => $contentLength,
             ));
@@ -705,8 +696,7 @@ class Internal implements SubscriberInterface
                 'HTTP_USER_AGENT' => null,
             ), $_SERVER);
             $val = \count(\array_filter(array(
-                $this->debug->utilities->getInterface() == 'ajax',
-                \strpos($server['HTTP_ACCEPT'], 'html') !== false,
+                \in_array($this->debug->utilities->getInterface(), array('ajax','http')),
                 $server['HTTP_SOAPACTION'],
                 \stripos($server['HTTP_USER_AGENT'], 'curl') !== false,
             ))) > 0;

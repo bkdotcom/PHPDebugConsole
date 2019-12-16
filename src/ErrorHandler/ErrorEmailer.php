@@ -463,7 +463,7 @@ class ErrorEmailer implements SubscriberInterface
         $return = false;
         if ($this->cfg['emailThrottleFile']) {
             $wrote = $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($throttleData, JSON_PRETTY_PRINT));
-            if (!$wrote !== false) {
+            if ($wrote !== false) {
                 $return = true;
             }
         }

@@ -769,6 +769,10 @@ class Utilities
      */
     public static function prettyXml($xml)
     {
+        if (!$xml) {
+            // avoid "empty string supplied" error
+            return $xml;
+        }
         if (!self::$domDocument) {
             self::$domDocument = new DOMDocument();
             self::$domDocument->preserveWhiteSpace = false;
@@ -894,7 +898,7 @@ class Utilities
         if (isset($backtrace[$iLine])) {
             $return['file'] = $backtrace[$iLine]['file'];
             $return['line'] = $backtrace[$iLine]['line'];
-        } else {
+        } elseif (isset($backtrace[$numFrames - 1])) {
             $return['file'] = $backtrace[$numFrames - 1]['file'];
             $return['line'] = 0;
         }

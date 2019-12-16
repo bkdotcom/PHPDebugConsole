@@ -1793,12 +1793,24 @@ class Debug
             $args = array();
             $caller = $this->utilities->getCallerInfo(0, Utilities::INCL_ARGS);
             if (isset($caller['function'])) {
-                $args[] = isset($caller['class'])
-                    ? $caller['class'] . $caller['type'] . $caller['function']
-                    : $caller['function'];
-                $args = \array_merge($args, $caller['args']);
-                $logEntry->setMeta('isFuncName', true);
-            } else {
+                // default args if first call inside function... and debugGroup is likely first call
+                if ($caller['class']) {
+                    $refClass = new \ReflectionClass($caller['class']);
+                    $refMethod = $refClass->getMethod($caller['function']);
+                    $callerStartLine = $refMethod->getStartLine();
+                    $function = $caller['class'] . $caller['type'] . $caller['function'];
+                } else {
+                    $refFunction = new \ReflectionFunction($caller['function']);
+                    $callerStartLine = $refFunction->getStartLine();
+                    $function = $caller['function'];
+                }
+                if ($caller['line'] <= $callerStartLine + 2) {
+                    $args[] = $function;
+                    $args = \array_merge($args, $caller['args']);
+                    $logEntry->setMeta('isFuncName', true);
+                }
+            }
+            if (!$args) {
                 $args[] = 'group';
             }
             $logEntry['args'] = $args;
@@ -1976,7 +1988,7 @@ class Debug
     /**
      * Set where appendLog appends to
      *
-     * @param string $where ('auto'), 'alerts', log', or 'summary'
+     * @param string $where ('auto'), 'alerts', log', 'summary', or integer (specify summary priority)
      *
      * @return void
      */
@@ -1993,7 +2005,9 @@ class Debug
         } elseif ($where == 'alerts') {
             $this->rootInstance->logRef = &$this->rootInstance->data['alerts'];
         } else {
-            $priority = \end($this->data['groupPriorityStack']);
+            $priority = \is_int($where)
+                ? $where
+                : \end($this->data['groupPriorityStack']);
             if (!isset($this->data['logSummary'][$priority])) {
                 $this->data['logSummary'][$priority] = array();
                 $this->data['groupStacks'][$priority] = array();

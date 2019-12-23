@@ -1790,35 +1790,50 @@ class Debug
         }
         if (!$logEntry['args']) {
             // give a default label
-            $args = array();
             $caller = $this->utilities->getCallerInfo(0, Utilities::INCL_ARGS);
-            if (isset($caller['function'])) {
-                // default args if first call inside function... and debugGroup is likely first call
-                if ($caller['class']) {
-                    $refClass = new \ReflectionClass($caller['class']);
-                    $refMethod = $refClass->getMethod($caller['function']);
-                    $callerStartLine = $refMethod->getStartLine();
-                    $function = $caller['class'] . $caller['type'] . $caller['function'];
-                } else {
-                    $refFunction = new \ReflectionFunction($caller['function']);
-                    $callerStartLine = $refFunction->getStartLine();
-                    $function = $caller['function'];
-                }
-                if ($caller['line'] <= $callerStartLine + 2) {
-                    $args[] = $function;
-                    $args = \array_merge($args, $caller['args']);
-                    $logEntry->setMeta('isFuncName', true);
-                }
+            $args = $this->doGroupAutoArgs($caller);
+            if ($args) {
+                $logEntry['args'] = $args;
+                $logEntry->setMeta('isFuncName', true);
+            } else {
+                $logEntry['args'] = array( 'group' );
             }
-            if (!$args) {
-                $args[] = 'group';
-            }
-            $logEntry['args'] = $args;
         }
         $appended = $this->appendLog($logEntry);
         if ($appended) {
             $this->doGroupStringify($logEntry);
         }
+    }
+
+    /**
+     * Automatic group/groupCollapsed arguments
+     *
+     * @param array $caller CallerInfo
+     *
+     * @return array
+     */
+    private function doGroupAutoArgs($caller = array())
+    {
+        $args = array();
+        if (isset($caller['function'])) {
+            // default args if first call inside function... and debugGroup is likely first call
+            $function = null;
+            if ($caller['class']) {
+                $refClass = new \ReflectionClass($caller['class']);
+                $refMethod = $refClass->getMethod($caller['function']);
+                $callerStartLine = $refMethod->getStartLine();
+                $function = $caller['class'] . $caller['type'] . $caller['function'];
+            } elseif (!\in_array($caller['function'], array('include', 'include_once', 'require', 'require_once'))) {
+                $refFunction = new \ReflectionFunction($caller['function']);
+                $callerStartLine = $refFunction->getStartLine();
+                $function = $caller['function'];
+            }
+            if ($function && $caller['line'] <= $callerStartLine + 2) {
+                $args[] = $function;
+                $args = \array_merge($args, $caller['args']);
+            }
+        }
+        return $args;
     }
 
     /**

@@ -37,7 +37,7 @@ class Utilities
      */
     private static $callerBreakers = array(
         'classes' => array('bdk\\Debug'),
-        'classesRegex' => '/^bdk\\\\Debug\b/',  // we cache a regex of the classes
+        'classesRegex' => '/^bdk\\\\Debug(?!\\\\Collector)\b/',  // we cache a regex of the classes
         'paths' => array(),
     );
 

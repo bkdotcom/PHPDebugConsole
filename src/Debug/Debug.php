@@ -428,7 +428,7 @@ class Debug
      * @param integer $flags A bitmask of options
      *                         `self::CLEAR_ALERTS` : Clear alerts generated with `alert()`
      *                         `self::CLEAR_LOG` : **default** Clear log entries (excluding warn & error)
-     *                         `self::CLEAR_LOG_ERRORS` : Clear log warn & error
+     *                         `self::CLEAR_LOG_ERRORS` : Clear log, warn, & error
      *                         `self::CLEAR_SUMMARY` : Clear summary entries (excluding warn & error)
      *                         `self::CLEAR_SUMMARY_ERRORS` : Clear summary warn & error
      *                         `self::CLEAR_ALL` :  clear all everything

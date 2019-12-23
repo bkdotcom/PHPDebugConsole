@@ -93,15 +93,15 @@ EOD;
                 array(
                     'html' => function ($str) {
                         $this->assertStringStartsWith(
-                            '<li class="m_log"><span class="t_object" data-accessible="public">'
-                            .'<span class="t_string t_stringified" title="__toString()">abracadabra</span>'."\n"
-                            .'<span class="classname" title="PhpDoc Summary"><span class="namespace">bdk\DebugTest\</span>Test</span>',
+                            '<li class="m_log"><div class="t_object" data-accessible="public">'
+                            . '<span class="t_string t_stringified" title="__toString()">abracadabra</span>' . "\n"
+                            . '<span class="classname" title="PhpDoc Summary"><span class="namespace">bdk\DebugTest\</span>Test</span>',
                             $str
                         );
                         $this->assertSelectCount('dl.object-inner', 1, $str);
 
                         // extends
-                        $this->assertContains('<dt>extends</dt>'."\n".
+                        $this->assertContains('<dt>extends</dt>' . "\n" .
                             '<dd class="extends"><span class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span></dd>', $str);
 
                         // implements
@@ -117,9 +117,9 @@ EOD;
 
                         // constants
                         $this->assertContains(
-                            '<dt class="constants">constants</dt>'."\n"
-                            .'<dd class="constant"><span class="t_identifier">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>'."\n"
-                            .'<dd class="constant"><span class="t_identifier">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>',
+                            '<dt class="constants">constants</dt>' . "\n"
+                            . '<dd class="constant"><span class="t_identifier">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
+                            . '<dd class="constant"><span class="t_identifier">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>',
                             $str
                         );
 
@@ -127,18 +127,18 @@ EOD;
                         $this->assertContains(implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
                             '<dd class="magic info">This object has a <code>__get</code> method</dd>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
-                            '<span class="excluded">NOT INSPECTED</span></span></dd>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <span class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\DebugTest\</span>Test</span> <span class="t_recursion">*RECURSION*</span></span></dd>',
+                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
+                            '<span class="excluded">NOT INSPECTED</span></div></dd>',
+                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\DebugTest\</span>Test</span> <span class="t_recursion">*RECURSION*</span></div></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
                             '<span class="array-inner">',
-                            "\t".'<span class="key-value"><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">123</span></span>',
-                            "\t".'<span class="key-value"><span class="t_key">numeric</span><span class="t_operator">=&gt;</span><span class="numeric t_string">123</span></span>',
-                            "\t".'<span class="key-value"><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></span>',
-                            "\t".'<span class="key-value"><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool true">true</span></span>',
-                            "\t".'<span class="key-value"><span class="t_key">obj</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></span>',
+                            "\t" . '<span class="key-value"><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">123</span></span>',
+                            "\t" . '<span class="key-value"><span class="t_key">numeric</span><span class="t_operator">=&gt;</span><span class="numeric t_string">123</span></span>',
+                            "\t" . '<span class="key-value"><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></span>',
+                            "\t" . '<span class="key-value"><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool true">true</span></span>',
+                            "\t" . '<span class="key-value"><span class="t_key">obj</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></span>',
                             '</span><span class="t_punct">)</span></span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
                             '<dd class="property protected magic-read"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
@@ -219,7 +219,7 @@ EOD;
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
                             version_compare(PHP_VERSION, '5.4.6', '>=')
-                                ? '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;">'.$constName.'</span></span><span class="t_punct">)</span></dd>'
+                                ? '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;">' . $constName . '</span></span><span class="t_punct">)</span></dd>'
                                 : '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">bird</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited magic method"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="test constant as param">methConstTest</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$mode</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">WORD</span></span></span><span class="t_punct">)</span></dd>',
                             '</dl>',
@@ -494,7 +494,7 @@ EOD;
             > .property
             > .t_array .array-inner > .key-value'
             // > .t_array
-            .'> .t_recursion';
+            . '> .t_recursion';
         $this->assertSelectCount($select, 1, $output);
     }
 

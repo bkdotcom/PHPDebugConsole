@@ -39,7 +39,7 @@ class Html extends Base
      *
      * @return string
      */
-    public function dump($val, $opts = array(), $tagName = 'span')
+    public function dump($val, $opts = array(), $tagName = '__default__')
     {
         $this->argAttribs = array(
             'class' => array(),
@@ -50,6 +50,11 @@ class Html extends Base
             : array();
         $val = parent::dump($val, $opts);
         if ($tagName && !\in_array($this->dumpType, array('recursion'))) {
+            if ($tagName == '__default__') {
+                $tagName = $this->dumpType == 'object'
+                    ? 'div'
+                    : 'span';
+            }
             $argAttribs = $this->debug->utilities->arrayMergeDeep(
                 array(
                     'class' => array(

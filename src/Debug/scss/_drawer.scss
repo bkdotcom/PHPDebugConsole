@@ -6,6 +6,7 @@
 	width: 100%;
 	font-family: arial;
 	background-color: #fff;
+	z-index: 1049;
 
 	// debug-drawer is closed (pushed offscreen) by default
 	height: 100px;
@@ -19,7 +20,7 @@
 	&.debug-drawer-open {
 		transform: translateY(0px);
 		height: auto;
-		z-index: 1049;
+		// z-index: 1049;
 		.debug-pull-tab {
 			opacity: 0;
 			transform: translateY(25px);
@@ -54,7 +55,6 @@
 		background: $lite-grey;
 		cursor: pointer;
 		transition: all 0.5s;
-		z-index: -1;
 		&:hover {
 			background: darken($lite-grey, 10%);
 		}

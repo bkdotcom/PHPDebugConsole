@@ -71,7 +71,7 @@ class Script extends Base
             $errorStr = \substr($errorStr, 0, -2);
         }
         $str = '';
-        $str .= '<script type="text/javascript">' . "\n";
+        $str .= '<script>' . "\n";
         $str .= $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupCollapsed',

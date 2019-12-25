@@ -147,15 +147,15 @@
 .debug .ws_t:before { content: "\203A"; display: inline-block; width: 1em; }
 .debug .ws_r:before { content: "\\r"; }
 .debug .ws_n:before { content: "\\n"; }
-.debug.debug-drawer { position: fixed; bottom: 0; left: 0; width: 100%; font-family: arial; background-color: #fff; height: 100px; transform: translateY(100px); transition: all 0.5s; }
+.debug.debug-drawer { position: fixed; bottom: 0; left: 0; width: 100%; font-family: arial; background-color: #fff; z-index: 1049; height: 100px; transform: translateY(100px); transition: all 0.5s; }
 .debug.debug-drawer > * { box-sizing: border-box; }
-.debug.debug-drawer.debug-drawer-open { transform: translateY(0px); height: auto; z-index: 1049; }
+.debug.debug-drawer.debug-drawer-open { transform: translateY(0px); height: auto; }
 .debug.debug-drawer.debug-drawer-open .debug-pull-tab { opacity: 0; transform: translateY(25px); }
 .debug.debug-drawer.debug-drawer-open .debug-pull-tab .fa-bug { display: none; }
 .debug.debug-drawer.debug-drawer-open .debug-pull-tab .fa-spinner { display: inline-block; }
 .debug.debug-drawer.debug-drawer-open .debug-resize-handle { cursor: ns-resize; }
 .debug.debug-drawer.debug-drawer-open .debug-resize-handle:hover { opacity: 1; }
-.debug.debug-drawer .debug-pull-tab { display: inline-block; opacity: 1; position: absolute; height: 25px; top: -25px; margin-left: 20px; border: 1px solid #000; border-bottom-width: 0; border-radius: 5px 5px 0 0; padding: 4px 14px; font-size: 16px; background: #f3f3f3; cursor: pointer; transition: all 0.5s; z-index: -1; }
+.debug.debug-drawer .debug-pull-tab { display: inline-block; opacity: 1; position: absolute; height: 25px; top: -25px; margin-left: 20px; border: 1px solid #000; border-bottom-width: 0; border-radius: 5px 5px 0 0; padding: 4px 14px; font-size: 16px; background: #f3f3f3; cursor: pointer; transition: all 0.5s; }
 .debug.debug-drawer .debug-pull-tab:hover { background: #dadada; }
 .debug.debug-drawer .debug-pull-tab .debug-error-counts { margin-left: .5em; }
 .debug.debug-drawer .debug-pull-tab .badge { display: none; }

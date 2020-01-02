@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of bdk\PubSub
  *
@@ -69,7 +70,7 @@ class Event implements ArrayAccess, IteratorAggregate
     /**
      * Get Event's "subject"
      *
-     * @return mixed $subject The observer subject
+     * @return mixed The observer subject
      */
     public function getSubject()
     {

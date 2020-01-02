@@ -14,9 +14,10 @@ Browser/javascript like console class for PHP
     * &lt;script&gt;
     * WebSocket (WAMP)
     * "plugin"
+* [PSR-3](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md) (Logger) Implementation
 * custom error handler
-	* errors (even fatal) are captured / logged / displayed
-	* send error notices via email (throttled as to not to send out a flood of emails)
+    * errors (even fatal) are captured / logged / displayed
+    * send error notices via email (throttled as to not to send out a flood of emails)
 * password protected
 * send debug log via email
 
@@ -34,13 +35,34 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
     }
 }
 ```
-Alternatively, [download a release](https://github.com/bkdotcom/debug/releases) or clone this repository, then require `src/Debug/Debug.php`
+Alternatively, [download a release](https://github.com/bkdotcom/PHPDebugConsole/releases) or clone this repository, then require `src/Debug/Debug.php`
 
 See http://www.bradkent.com/php/debug for more information
 
 ### Usage
 
 See http://www.bradkent.com/php/debug
+
+### PSR-3 Usage
+
+PHPDebugConsole includes a [PSR-3](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md) implementation (which can be used as a [monolog](https://github.com/Seldaek/monolog) PSR handler).  If you're using a application or library that uses these standards, drop PHPDebugConsole right in.
+
+(this library includes neither psr/log or monolog/monolog.  Include separately if needed.)
+
+PSR-3:
+```php
+// instantiate PHPDebugLogger / get instance
+$debug = \bdk\Debug::getInstance();
+$psr3logger = $debug->logger;
+$psr3logger->emergency('fallen and can\'t get up');
+```
+
+monolog:
+```php
+$monolog = new Monolog\Logger('myApplication');
+$monolog->pushHandler(new Monolog\Handler\PsrHandler($debug->logger));
+$monolog->critical('all your base are belong to them');
+```
 
 ### Methods
 
@@ -51,12 +73,16 @@ See http://www.bradkent.com/php/debug
 * assert
 * clear
 * count
+* countReset
 * group
 * groupCollapsed
 * groupEnd
+* profile
+* profileEnd
 * table
 * time
 * timeEnd
+* timeLog
 * trace
 * *&hellip; [more](http://www.bradkent.com/php/debug#methods)*
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Manage event subscriptions
  *
@@ -139,7 +140,7 @@ class Manager
     {
         $subscribers = $this->getInterfaceSubscribers($interface);
         foreach ($subscribers as $row) {
-            $this->unsubscribe($row[0], $row[1], $row[2]);
+            $this->unsubscribe($row[0], $row[1]);
         }
         return $subscribers;
     }
@@ -147,16 +148,16 @@ class Manager
     /**
      * Subscribe to event
      *
-     * # Lazy-load the subscriber
-     *   It's possible to lazy load the subscriber object via a "closure factory"
-     *    `array(Closure, 'methodName')` - closure returns object
-     *    `array(Closure)` - closure returns object that is callable (ie has __invoke method)
-     *   The closure will be called the first time the event occurs
-     *
      * # Callable will receive 3 params:
      *  * Event
      *  * (string) eventName
      *  * EventManager
+     *
+     * # Lazy-load the subscriber
+     *   It's possible to lazy load the subscriber object via a "closure factory"
+     *    `array(Closure, 'methodName')` - closure returns object
+     *    `array(Closure)` - closure returns object that is callable (ie has `__invoke` method)
+     *   The closure will be called the first time the event occurs
      *
      * @param string   $eventName event name
      * @param callable $callable  callable or closure factory
@@ -173,8 +174,8 @@ class Manager
     /**
      * Removes an event subscriber from the specified event.
      *
-     * @param string   $eventName The event we're unsubscribing from
-     * @param callable $callable  The subscriber to remove
+     * @param string         $eventName The event we're unsubscribing from
+     * @param callable|array $callable  The subscriber to remove
      *
      * @return void
      */

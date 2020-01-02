@@ -727,18 +727,20 @@ class ErrorHandler
      * @return array
      * @see    https://bugs.xdebug.org/view.php?id=1529
      */
-    protected function xdebugGetFunctionStack()
+    protected static function xdebugGetFunctionStack()
     {
         $stack = \xdebug_get_function_stack();
         $xdebugVer = \phpversion('xdebug');
         if (\version_compare($xdebugVer, '2.6.0', '<')) {
-            foreach ($stack as $i => $frame) {
+            $count = \count($stack);
+            for ($i = 0; $i < $count; $i++) {
+                $frame = $stack[$i];
                 $function = isset($frame['function'])
                     ? $frame['function']
                     : null;
                 if ($function === '__get') {
                     // wrong file!
-                    $prev = $stack[$i-1];
+                    $prev = $stack[$i - 1];
                     $stack[$i]['file'] = isset($prev['include_filename'])
                         ? $prev['include_filename']
                         : $prev['file'];

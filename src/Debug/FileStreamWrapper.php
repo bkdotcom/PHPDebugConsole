@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -73,7 +74,7 @@ class FileStreamWrapper
                 a) want to make sure we modify required files
                 b) don't want to cache modified files
         */
-        \ini_set('opcache.enable', 0);
+        \ini_set('opcache.enable', '0');
     }
 
     /**
@@ -428,7 +429,7 @@ class FileStreamWrapper
         $isRequire = !\in_array($backtrace[1]['function'], array('file_get_contents'));
         if (!$this->declaredTicks && $isRequire) {
             foreach (self::$pathsExclude as $excludePath) {
-                if (\strpos($this->filepath, $excludePath.DIRECTORY_SEPARATOR) === 0) {
+                if (\strpos($this->filepath, $excludePath . DIRECTORY_SEPARATOR) === 0) {
                     $this->declaredTicks = true;
                 }
             }
@@ -444,7 +445,7 @@ class FileStreamWrapper
             $this->declaredTicks = true;
             self::$filesModified[] = $this->filepath;
         }
-        $buffer = $this->bufferPrepend.$buffer;
+        $buffer = $this->bufferPrepend . $buffer;
         $bufferLenAfter = \strlen($buffer);
         $diff = $bufferLenAfter - $bufferLen;
         $this->bufferPrepend = '';
@@ -476,6 +477,40 @@ class FileStreamWrapper
         $success = $result !== -1;
         self::register();
         return $success;
+    }
+
+    /**
+     * Change stream options
+     *
+     * @param integer $option [description]
+     * @param integer $arg1   [description]
+     * @param integer $arg2   [description]
+     *
+     * @return boolean
+     */
+    public function stream_set_option($option, $arg1, $arg2)
+    {
+        if (!$this->handle || \get_resource_type($this->handle) !== 'stream') {
+            \trigger_error(\sprintf('The "$handle" property of "%s" need to be a stream.', __CLASS__), E_USER_WARNING);
+            return false;
+        }
+        self::restorePrev();
+        switch ($option) {
+            case STREAM_OPTION_BLOCKING:
+                $return = \stream_set_blocking($this->handle, $arg1);
+                break;
+            case STREAM_OPTION_READ_TIMEOUT:
+                $return = \stream_set_timeout($this->handle, $arg1, $arg2);
+                break;
+            case STREAM_OPTION_WRITE_BUFFER:
+                $return = \stream_set_write_buffer($this->handle, $arg1);
+                break;
+            default:
+                \trigger_error(\sprintf('The option "%s" is unknown for "stream_set_option" method', $option), E_ERROR);
+                $return = false;
+        }
+        self::register();
+        return $return;
     }
 
     /**

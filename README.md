@@ -24,7 +24,7 @@ Browser/javascript like console class for PHP
 ![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/php/screenshot_1.4.png)
 
 ### Installation
-This library requires PHP 5.4 (function array dereferencing, closure $this support) or later and has no userland dependencies.
+This library requires PHP 5.4 (function array dereferencing, closure `$this` support) or later and has no userland dependencies.
 
 It is installable and autoloadable via [Composer](https://getcomposer.org/) as [bdk/debug](https://packagist.org/packages/bdk/debug).
 
@@ -88,7 +88,7 @@ $monolog->critical('all your base are belong to them');
 
 ### Tests / Quality
 ![No Dependencies](https://img.shields.io/badge/dependencies-none-333333.svg)
-[![Build Status](https://img.shields.io/travis/bkdotcom/PHPDebugConsole/master.svg)](https://travis-ci.org/bkdotcom/PHPDebugConsole)
+[![Build Status](https://img.shields.io/travis/bkdotcom/PHPDebugConsole/v2.3.svg)](https://travis-ci.org/bkdotcom/PHPDebugConsole)
 [![SensioLabsInsight](https://img.shields.io/sensiolabs/i/789295b4-6040-4367-8fd5-b04a6f0d7a0c.svg)](https://insight.sensiolabs.com/projects/789295b4-6040-4367-8fd5-b04a6f0d7a0c)
 
 ### Changelog

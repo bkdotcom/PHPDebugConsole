@@ -1,0 +1,25 @@
+{
+  "name": "PHPDebugConsole",
+  "version": "3.0.0",
+  "description": "Build CSS & Javascript for PHPDebugConsole",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx npm-run-all --parallel build:*",
+    "build:js": "npx rollup -c",
+    "build:css": "scss -t compact --sourcemap=none scss/Debug.scss css/Debug.css",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "npx npm-run-all --parallel watch:*",
+    "watch:js": "NODE_ENV=watch npx nodemon --watch js_src/ --ext js --exec \"npm run build:js\"",
+    "watch:scss": "npx nodemon --watch scss/ --ext scss --exec \"npm run build:css\""
+  },
+  "keywords": [
+    "PHP",
+    "Debug"
+  ],
+  "devDependencies": {
+    "nodemon": "^1.18.10",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^1.4.1",
+    "rollup-plugin-uglify": "^6.0.2"
+  }
+}

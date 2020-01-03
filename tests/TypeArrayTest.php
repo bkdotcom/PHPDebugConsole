@@ -1,5 +1,7 @@
 <?php
 
+use bdk\Debug\Abstraction\Abstracter;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -10,12 +12,12 @@ class TypeArrayTest extends DebugTestFramework
     {
 		// indented with tab
         $arrayDumpHtml = <<<'EOD'
-<div class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+<li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <span class="array-inner">
-	<span class="key-value"><span class="t_key t_int">0</span> <span class="t_operator">=&gt;</span> <span class="t_string">a</span></span>
-	<span class="key-value"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
-	<span class="key-value"><span class="t_key t_int">1</span> <span class="t_operator">=&gt;</span> <span class="t_string">c</span></span>
-</span><span class="t_punct">)</span></span></div>
+	<span class="key-value"><span class="t_key t_int">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></span>
+	<span class="key-value"><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></span>
+	<span class="key-value"><span class="t_key t_int">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></span>
+</span><span class="t_punct">)</span></span></li>
 EOD;
 		// indented with 4 spaces
 		$arrayDumpText = <<<'EOD'
@@ -79,9 +81,9 @@ EOD;
         $array = array();
         $array[] = &$array;
         $this->debug->log('array', $array);
-        $abstraction = $this->debug->getData('log/0/1/1');
+        $abstraction = $this->debug->getData('log/0/args/1');
         $this->assertEquals(
-            \bdk\Debug\Abstracter::RECURSION,
+            Abstracter::RECURSION,
             $abstraction[0],
             'Did not find expected recursion'
         );
@@ -112,6 +114,7 @@ EOD;
                 },
                 'text' => array('contains' => '    [val] => array *RECURSION*'),
                 'script' => 'console.log({"foo":"bar","val":"array *RECURSION*"});',
+                'streamAnsi' => array('contains' => "    \e[38;5;245m[\e[38;5;83mval\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;45marray \e[38;5;196m*RECURSION*\e[0m"),
             )
         );
     }

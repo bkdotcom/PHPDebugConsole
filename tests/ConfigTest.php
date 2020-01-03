@@ -16,9 +16,58 @@ class ConfigTest extends DebugTestFramework
      */
     public function testGetCfg()
     {
-        $configKeys = array('debug', 'abstracter', 'errorEmailer', 'errorHandler', 'output');
-        $abstracterKeys = array('cacheMethods', 'collectConstants', 'collectMethods', 'objectsExclude', 'objectSort', 'useDebugInfo');
-        $debugKeys = array('collect', 'file', 'key', 'output', 'channelName', 'enableProfiling', 'errorMask', 'emailFrom', 'emailFunc', 'emailLog', 'emailTo', 'logEnvInfo', 'logRuntime', 'logServerKeys', 'onLog', 'factories', 'services');
+        $configKeys = array(
+            'debug',
+            'abstracter',
+            'errorEmailer',
+            'errorHandler',
+            'routeHtml',
+            'routeStream',
+        );
+        $abstracterKeys = array(
+            'cacheMethods',
+            'collectConstants',
+            'collectMethods',
+            'objectsExclude',
+            'objectSort',
+            'outputConstants',
+            'outputMethodDesc',
+            'outputMethods',
+            'useDebugInfo',
+            'fullyQualifyPhpDocType',
+        );
+        $debugKeys = array(
+            'collect',
+            'key',
+            'output',
+            'arrayShowListKeys',
+            'channelIcon',
+            'channelName',
+            'channelShow',
+            'enableProfiling',
+            'errorMask',
+            'emailFrom',
+            'emailFunc',
+            'emailLog',
+            'emailTo',
+            'factories',
+            'headerMaxAll',
+            'headerMaxPer',
+            'logEnvInfo',
+            'logResponse',
+            'logResponseMaxLen',
+            'logRuntime',
+            'logServerKeys',
+            'onBootstrap',
+            'onLog',
+            'onOutput',
+            'outputHeaders',
+            'redactKeys',
+            'redactReplace',
+            'route',
+            'routeNonHtml',
+            'services',
+        );
 
         $this->assertSame(true, $this->debug->getCfg('collect'));
         $this->assertSame(true, $this->debug->getCfg('debug.collect'));
@@ -31,7 +80,7 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame(null, $this->debug->getCfg('abstracter'));
         $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter/*')));
         $this->assertInternalType('boolean', $this->debug->getCfg('output'));       // debug/output
-        $this->assertInternalType('array', $this->debug->getCfg('output/*'));
+
         $this->assertSame($configKeys, array_keys($this->debug->getCfg()));
         $this->assertSame($configKeys, array_keys($this->debug->getCfg('*')));
         $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug/*')));

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -34,7 +35,7 @@ class ErrorLevel
             version_compare considers 1 < 1.0 < 1.0.0
         */
         $phpVer = \preg_match('/^\d+\.\d+$/', $phpVer)
-            ? $phpVer.'.0'
+            ? $phpVer . '.0'
             : $phpVer;
         $constants = array(
             'E_ERROR' => 1,
@@ -42,7 +43,7 @@ class ErrorLevel
             'E_PARSE' => 4,
             'E_NOTICE' => 8,
             'E_CORE_ERROR' => 16,
-            'E_CORE_WARNING' =>32,
+            'E_CORE_WARNING' => 32,
             'E_COMPILE_ERROR' => 64,
             'E_COMPILE_WARNING' => 128,
             'E_USER_ERROR' => 256,
@@ -71,7 +72,7 @@ class ErrorLevel
     }
 
     /**
-     * [toConstantString description]
+     * Convert PHP error-level integer (bitmask) to constant bitwise representation
      *
      * @param integer $level          Error Level (bitmask) value
      * @param string  $phpVer         (PHP_VERSION) php Version
@@ -132,10 +133,10 @@ class ErrorLevel
     }
 
     /**
-     * [isConstantSetInLevel description]
+     * Test if value is incl in bitmask
      *
-     * @param integer $value   [description]
-     * @param integer $bitmask [description]
+     * @param integer $value   value to check
+     * @param integer $bitmask bitmask
      *
      * @return boolean
      */

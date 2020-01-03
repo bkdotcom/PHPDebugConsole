@@ -1,5 +1,6 @@
 <?php
 
+use bdk\Debug;
 use bdk\PubSub\Event;
 
 /**
@@ -32,8 +33,8 @@ class ChannelTest extends DebugTestFramework
     {
         $dataExpect = array(
             'alerts' => array(
-                array('alert', array('main: alert'), array('class' => 'danger', 'dismissible' => false)),
-                array('alert', array('foo: alert'), array('channel' => 'foo', 'class' => 'danger', 'dismissible' => false)),
+                array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
+                array('alert', array('foo: alert'), array('channel' => 'foo', 'dismissible' => false, 'level' => 'error')),
             ),
             'groupStacks' => array(
                 'main' => array(
@@ -59,8 +60,8 @@ class ChannelTest extends DebugTestFramework
                     array('group', array('main: sum 0 / group 1 / group 2'), array()),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
                     array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('error', array('main: error'), array('file' => '', 'line' => '')),
-                    array('error', array('foo: error'), array('channel' => 'foo', 'file' => '', 'line' => '')),
+                    array('error', array('main: error'), array('detectFiles'=>true, 'file' => '', 'line' => '')),
+                    array('error', array('foo: error'), array('channel'=>'foo', 'detectFiles'=>true, 'file' => '', 'line' => '')),
                     array('groupEnd', array(), array()),
                     array('groupEnd', array(), array('channel' => 'foo')),
                 ),
@@ -74,6 +75,7 @@ class ChannelTest extends DebugTestFramework
                 ),
             ),
         );
+
         $data = $this->genLog($this->debug);
         $this->assertSame($dataExpect, $data);
 
@@ -82,8 +84,7 @@ class ChannelTest extends DebugTestFramework
 
         $dataFooClearedExpect = array(
             'alerts' => array(
-                array('alert', array('main: alert'), array('class' => 'danger', 'dismissible' => false)),
-                // array('alert', array('foo: alert'), array('channel' => 'foo', 'class' => 'danger', 'dismissible' => false)),
+                array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
             ),
             'groupStacks' => array(
                 'main' => array(
@@ -100,17 +101,16 @@ class ChannelTest extends DebugTestFramework
                 array('log', array('main: group / group / log'), array()),
                 // array('log', array('foo: group / group / log'), array('channel' => 'foo')),
                 array(
-                   'clear',
+                    'clear',
                     array(
                         'Cleared everything %c(%s)',
                         'background-color:#c0c0c0; padding:0 .33em;',
                         'foo',
                     ),
                     array(
+                        'bitmask' => 31,
                         'channel' => 'foo',
                         'file' => '',
-                        'line' => '',
-                        'bitmask' => 31,
                         'flags' => array(
                             'alerts' => true,
                             'log' => true,
@@ -119,6 +119,7 @@ class ChannelTest extends DebugTestFramework
                             'summaryErrors' => true,
                             'silent' => false,
                         ),
+                        'line' => '',
                     ),
                 ),
                 array('groupEnd', array(), array('channel' => 'foo')),
@@ -131,7 +132,7 @@ class ChannelTest extends DebugTestFramework
                     array('group', array('main: sum 0 / group 1 / group 2'), array()),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
                     // array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('error', array('main: error'), array('file' => '', 'line' => '')),
+                    array('error', array('main: error'), array('detectFiles' => true, 'file' => '', 'line' => '')),
                     // array('error', array('foo: error'), array('channel' => 'foo', 'file' => '', 'line' => '')),
                     array('groupEnd', array(), array()),
                     // array('groupEnd', array(), array('channel' => 'foo')),
@@ -154,68 +155,90 @@ class ChannelTest extends DebugTestFramework
     {
         $this->genLog();
         $htmlFoo = <<<EOD
-        <div class="debug" data-channel-root="general" data-channels="{&quot;foo&quot;:{}}">
-            <div class="debug-bar"><h3>Debug Log</h3></div>
-            <div class="alert alert-danger" data-channel="foo" role="alert">foo: alert</div>
-            <div class="debug-header m_group">
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: sum 1 / group 1</span></div>
-                <div class="m_group">
-                    <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 1 / group 1 / group 2 / log</span></div>
-                </div>
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: sum 0 / group 1</span></div>
-                <div class="m_group">
-                    <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 0 / group 1 / group 2 / log</span></div>
-                    <div class="m_error" data-channel="foo" title="%s: line %d"><span class="no-pseudo t_string">foo: error</span></div>
-                </div>
-            </div>
-            <div class="debug-content m_group">
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: group / group</span></div>
-                <div class="m_group">
-                    <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / log</span></div>
-                    <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / after summaries</span></div>
-                </div>
+        <div class="debug" data-channel-root="general" data-channels="{&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
+            <header class="debug-menu-bar">PHPDebugConsole</header>
+            <div class="debug-body">
+                <div class="alert-error m_alert" data-channel="foo" role="alert">foo: alert</div>
+                <ul class="debug-log-summary group-body">
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
+                        <ul class="group-body">
+                            <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: sum 1 / group 1 / group 2 / log</span></li>
+                        </ul>
+                    </li>
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 0 / group 1</span></div>
+                        <ul class="group-body">
+                            <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
+                            <li class="m_error" data-channel="foo" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">foo: error</span></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="debug-log group-body">
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label group-label-bold">foo: group / group</span></div>
+                        <ul class="group-body">
+                            <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: group / group / log</span></li>
+                            <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: group / group / after summaries</span></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
 EOD;
         $html = <<<EOD
-        <div class="debug" data-channel-root="general" data-channels="{&quot;general&quot;:{},&quot;foo&quot;:{}}">
-            <div class="debug-bar"><h3>Debug Log</h3></div>
-            <div class="alert alert-danger" role="alert">main: alert</div>
-            <div class="alert alert-danger" data-channel="foo" role="alert">foo: alert</div>
-            <div class="debug-header m_group">
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: sum 1 / group 1</span></div>
-                <div class="m_group">
-                    <div class="expanded group-header"><span class="group-label">main: sum 1 / group 1 / group 2</span></div>
-                    <div class="m_group">
-                        <div class="m_log"><span class="no-pseudo t_string">main: sum 1 / group 1 / group 2 / log</span></div>
-                        <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 1 / group 1 / group 2 / log</span></div>
-                    </div>
-                </div>
-                <div class="m_info"><span class="no-pseudo t_string">Built In %f sec</span></div>
-                <div class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d %cB</span></div>
-                <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: sum 0 / group 1</span></div>
-                <div class="m_group">
-                    <div class="expanded group-header"><span class="group-label">main: sum 0 / group 1 / group 2</span></div>
-                    <div class="m_group">
-                        <div class="m_log"><span class="no-pseudo t_string">main: sum 0 / group 1 / group 2 / log</span></div>
-                        <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: sum 0 / group 1 / group 2 / log</span></div>
-                        <div class="m_error" title="%s: line %d"><span class="no-pseudo t_string">main: error</span></div>
-                        <div class="m_error" data-channel="foo" title="%s: line %d"><span class="no-pseudo t_string">foo: error</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="debug-content m_group">
-                <div class="m_log"><span class="no-pseudo t_string">main: log</span></div>
-                <div class="expanded group-header"><span class="group-label">main: group</span></div>
-                <div class="m_group">
-                    <div class="m_log"><span class="no-pseudo t_string">main: group / log</span></div>
-                    <div class="expanded group-header" data-channel="foo"><span class="group-label">foo: group / group</span></div>
-                    <div class="m_group">
-                        <div class="m_log"><span class="no-pseudo t_string">main: group / group / log</span></div>
-                        <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / log</span></div>
-                        <div class="m_log" data-channel="foo"><span class="no-pseudo t_string">foo: group / group / after summaries</span></div>
-                    </div>
-                </div>
+        <div class="debug" data-channel-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}},&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
+            <header class="debug-menu-bar">PHPDebugConsole</header>
+            <div class="debug-body">
+                <div class="alert-error m_alert" role="alert">main: alert</div>
+                <div class="alert-error m_alert" data-channel="foo" role="alert">foo: alert</div>
+                <ul class="debug-log-summary group-body">
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
+                        <ul class="group-body">
+                            <li class="m_group">
+                                <div class="expanded group-header"><span class="group-label group-label-bold">main: sum 1 / group 1 / group 2</span></div>
+                                <ul class="group-body">
+                                    <li class="m_log"><span class="no-quotes t_string">main: sum 1 / group 1 / group 2 / log</span></li>
+                                    <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: sum 1 / group 1 / group 2 / log</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="m_info"><span class="no-quotes t_string">Built In %f %ss</span></li>
+                    <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
+                    <li class="m_group" data-channel="foo">
+                        <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 0 / group 1</span></div>
+                        <ul class="group-body">
+                            <li class="m_group">
+                                <div class="expanded group-header"><span class="group-label group-label-bold">main: sum 0 / group 1 / group 2</span></div>
+                                <ul class="group-body">
+                                    <li class="m_log"><span class="no-quotes t_string">main: sum 0 / group 1 / group 2 / log</span></li>
+                                    <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
+                                    <li class="m_error" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">main: error</span></li>
+                                    <li class="m_error" data-channel="foo" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">foo: error</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="debug-log group-body">
+                    <li class="m_log"><span class="no-quotes t_string">main: log</span></li>
+                    <li class="m_group">
+                        <div class="expanded group-header"><span class="group-label group-label-bold">main: group</span></div>
+                        <ul class="group-body">
+                            <li class="m_log"><span class="no-quotes t_string">main: group / log</span></li>
+                            <li class="m_group" data-channel="foo">
+                                <div class="expanded group-header"><span class="group-label group-label-bold">foo: group / group</span></div>
+                                <ul class="group-body">
+                                    <li class="m_log"><span class="no-quotes t_string">main: group / group / log</span></li>
+                                    <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: group / group / log</span></li>
+                                    <li class="m_log" data-channel="foo"><span class="no-quotes t_string">foo: group / group / after summaries</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
 EOD;
@@ -235,7 +258,7 @@ EOD;
         $this->assertSame(2, $this->eventCounter['foo.debug.output']);
     }
 
-    protected function genLog(\bdk\Debug $clearer = null, $bitmask = null)
+    protected function genLog(Debug $clearer = null, $bitmask = null)
     {
         if (!$clearer) {
             $clearer = $this->debug;
@@ -276,16 +299,41 @@ EOD;
                 $this->debugFoo->log('foo: group / group / after summaries');
             // $this->debugFoo->groupEnd(); // foo group
         // $this->debug->groupEnd(); // main group
+
         $data = array_intersect_key($this->debug->getData(), array_flip(array(
             'alerts',
-            'groupStacks',
             'groupPriorityStack',
+            'groupStacks',
             'log',
             'logSummary',
         )));
-        $data = json_encode($data);
-        $data = preg_replace('/"(file)":"[^",]+"/', '"$1":""', $data);
-        $data = preg_replace('/"(line)":\d+/', '"$1":""', $data);
-        return json_decode($data, true);
+        foreach (array('alerts','log','logSummary') as $what) {
+            if ($what == 'logSummary') {
+                foreach ($data['logSummary'] as $i => $group) {
+                    foreach ($group as $i2 => $v2) {
+                        $export = $v2->export();
+                        ksort($export['meta']);
+                        $data['logSummary'][$i][$i2] = array_values($export);
+                    }
+                }
+            } else {
+                foreach ($data[$what] as $i => $v) {
+                    $export = $v->export();
+                    ksort($export['meta']);
+                    $data[$what][$i] = array_values($export);
+                }
+            }
+            $temp = json_encode($data[$what]);
+            $temp = preg_replace('/"(file)":"[^",]+"/', '"$1":""', $temp);
+            $temp = preg_replace('/"(line)":\d+/', '"$1":""', $temp);
+            $data[$what] = json_decode($temp, true);
+        }
+        foreach ($data['groupStacks'] as $k => $stack) {
+            foreach ($stack as $k2 => $info) {
+                $channelName = $info['channel']->getCfg('channelName');
+                $data['groupStacks'][$k][$k2]['channel'] = $channelName;
+            }
+        }
+        return $data;
     }
 }

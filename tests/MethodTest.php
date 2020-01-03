@@ -1,6 +1,7 @@
 <?php
 
 use bdk\Debug;
+use bdk\Debug\LogEntry;
 
 /**
  * PHPUnit tests for Debug Methods
@@ -15,18 +16,18 @@ class MethodTest extends DebugTestFramework
     {
         $closure = function ($event) {
             if ($event['method'] == 'trace') {
-                $plugin = get_class($event->getSubject());
-                if ($plugin == 'bdk\Debug\Output\ChromeLogger') {
+                $route = get_class($event['route']);
+                if ($route == 'bdk\Debug\Route\ChromeLogger') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($plugin == 'bdk\Debug\Output\Firephp') {
+                } elseif ($route == 'bdk\Debug\Route\Firephp') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($plugin == 'bdk\Debug\Output\Html') {
-                    $event['return'] = '<div class="m_trace">this was a trace</div>';
-                } elseif ($plugin == 'bdk\Debug\Output\Script') {
+                } elseif ($route == 'bdk\Debug\Route\Html') {
+                    $event['return'] = '<li class="m_trace">this was a trace</li>';
+                } elseif ($route == 'bdk\Debug\Route\Script') {
                     $event['return'] = 'console.log("this was a trace");';
-                } elseif ($plugin == 'bdk\Debug\Output\Text') {
+                } elseif ($route == 'bdk\Debug\Route\Text') {
                     $event['return'] = 'this was a trace';
                 }
             }
@@ -42,7 +43,7 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: 35|[{"Type":"LOG"},"this was a trace"]|',
-                'html' => '<div class="m_trace">this was a trace</div>',
+                'html' => '<li class="m_trace">this was a trace</li>',
                 'script' => 'console.log("this was a trace");',
                 'text' => 'this was a trace',
             )
@@ -54,13 +55,13 @@ class MethodTest extends DebugTestFramework
      */
     public function testCustom()
     {
-        $closure = function ($event) {
-            if ($event['method'] == 'myCustom' && $event->getSubject() instanceof \bdk\Debug\Output\Html) {
+        $closure = function (LogEntry $logEntry) {
+            if ($logEntry['method'] == 'myCustom' && $logEntry['route'] instanceof \bdk\Debug\Route\Html) {
                 $lis = array();
-                foreach ($event['args'] as $arg) {
-                    $lis[] = '<li>'.htmlspecialchars($arg).'</li>';
+                foreach ($logEntry['args'] as $arg) {
+                    $lis[] = '<li>' . htmlspecialchars($arg) . '</li>';
                 }
-                $event['return'] = '<div class="m_myCustom"><ul>'.implode('', $lis).'</ul></div>';
+                $logEntry['return'] = '<li class="m_myCustom"><ul>' . implode('', $lis) . '</ul></li>';
             }
         };
         $this->debug->eventManager->subscribe('debug.outputLogEntry', $closure);
@@ -71,7 +72,9 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'myCustom',
                     array('How\'s it goin?'),
-                    array('isCustomMethod' => true),
+                    array(
+                        'isCustomMethod' => true,
+                    ),
                 ),
                 'chromeLogger' => array(
                     array('How\'s it goin?'),
@@ -79,7 +82,7 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
-                'html' => '<div class="m_myCustom"><ul><li>How\'s it goin?</li></ul></div>',
+                'html' => '<li class="m_myCustom"><ul><li>How\'s it goin?</li></ul></li>',
                 'script' => 'console.log("How\'s it goin?");',
                 'text' => 'How\'s it goin?',
             )
@@ -88,7 +91,7 @@ class MethodTest extends DebugTestFramework
         /*
             Now test it statically
         */
-        \bdk\Debug::_myCustom('called statically');
+        Debug::_myCustom('called statically');
         $this->testMethod(
             null,
             array('called statically'),
@@ -107,7 +110,7 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"called statically"]|',
-                'html' => '<div class="m_myCustom"><ul><li>called statically</li></ul></div>',
+                'html' => '<li class="m_myCustom"><ul><li>called statically</li></ul></li>',
                 'script' => 'console.log("called statically");',
                 'text' => 'called statically',
             )
@@ -128,10 +131,12 @@ class MethodTest extends DebugTestFramework
                 'entry' => array(
                     'myCustom',
                     array('How\'s it goin?'),
-                    array('isCustomMethod' => true),
+                    array(
+                        'isCustomMethod' => true,
+                    ),
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
-                'html' => '<div class="m_myCustom"><span class="no-pseudo t_string">How\'s it goin?</span></div>',
+                'html' => '<li class="m_myCustom"><span class="no-quotes t_string">How\'s it goin?</span></li>',
                 'script' => 'console.log("How\'s it goin?");',
                 'text' => 'How\'s it goin?',
             )
@@ -145,7 +150,8 @@ class MethodTest extends DebugTestFramework
      */
     public function testAlert()
     {
-        $message = 'Ballistic missle threat inbound to Hawaii.  Seek immediate shelter.  This is not a drill.';
+        $message = 'Ballistic missle threat inbound to Hawaii.  <b>Seek immediate shelter</b>.  This is not a drill.';
+        $messageEscaped = htmlspecialchars($message);
         $this->testMethod(
             'alert',
             array($message),
@@ -154,22 +160,22 @@ class MethodTest extends DebugTestFramework
                     'alert',
                     array($message),
                     array(
-                        'class' => 'danger',
                         'dismissible' => false,
+                        'level' => 'error',
                     ),
                 ),
                 'chromeLogger' => array(
                     array(
-                        '%c'.$message,
+                        '%c' . $message,
                         'padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;',
                     ),
                     null,
                     '',
                 ),
-                'html' => '<div class="alert alert-danger" role="alert">'.$message.'</div>',
-                'text' => '[Alert ⦻ danger] '.$message,
-                'script' => str_replace('%c', '%%c', 'console.log("%c'.$message.'","padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
-                'firephp' => 'X-Wf-1-1-1-1: 108|[{"Type":"LOG"},"'.$message.'"]|',
+                'html' => '<div class="alert-error m_alert" role="alert">' . $messageEscaped . '</div>',
+                'text' => '》[Alert ⦻ error] ' . $message . '《',
+                'script' => str_replace('%c', '%%c', 'console.log(' . json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"ERROR"},' . json_encode($message, JSON_UNESCAPED_SLASHES) . ']|',
             )
         );
 
@@ -202,7 +208,7 @@ class MethodTest extends DebugTestFramework
                     null,
                     'assert',
                 ),
-                'html' => '<div class="m_assert"><span class="no-pseudo t_string">this is false</span></div>',
+                'html' => '<li class="m_assert"><span class="no-quotes t_string">this is false</span></li>',
                 'text' => '≠ this is false',
                 'script' => 'console.assert(false,"this is false");',
                 'firephp' => 'X-Wf-1-1-1-2: 32|[{"Type":"LOG"},"this is false"]|',
@@ -218,19 +224,25 @@ class MethodTest extends DebugTestFramework
                     'assert',
                     array(
                         'Assertion failed:',
-                        $this->file.' (line '.$this->line.')',
+                        $this->file . ' (line ' . $this->line . ')',
                     ),
-                    array(),
+                    array(
+                        'detectFiles' => true,
+                    ),
                 ),
                 'chromeLogger' => array(
-                    array(false, 'Assertion failed:', $this->file.' (line '.$this->line.')'),
+                    array(
+                        false,
+                        'Assertion failed:',
+                        $this->file . ' (line ' . $this->line . ')',
+                    ),
                     null,
                     'assert',
                 ),
-                'html' => '<div class="m_assert"><span class="no-pseudo t_string">Assertion failed: </span><span class="t_string">'.$this->file.' (line '.$this->line.')</span></div>',
-                'text' => '≠ Assertion failed: "'.$this->file.' (line '.$this->line.')"',
-                'script' => 'console.assert(false,"Assertion failed:","'.trim(json_encode($this->file), '"').' (line '.$this->line.')");',
-                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"LOG","Label":"Assertion failed:"},"'.trim(json_encode($this->file), '"').' (line '.$this->line.')"]|',
+                'html' => '<li class="m_assert" data-detect-files="true"><span class="no-quotes t_string">Assertion failed: </span><span class="t_string">' . $this->file . ' (line ' . $this->line . ')</span></li>',
+                'text' => '≠ Assertion failed: "' . $this->file . ' (line ' . $this->line . ')"',
+                'script' => 'console.assert(false,"Assertion failed:",' . json_encode($this->file . ' (line ' . $this->line . ')', JSON_UNESCAPED_SLASHES) . ');',
+                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Assertion failed:","Type":"LOG"},' . json_encode($this->file . ' (line ' . $this->line . ')', JSON_UNESCAPED_SLASHES) . ']|',
             )
         );
 
@@ -285,13 +297,13 @@ class MethodTest extends DebugTestFramework
                 ),
                 'chromeLogger' => array(
                     array('Cleared log (sans errors)'),
-                    $this->file.': '.$this->line,
+                    $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared log (sans errors)</span></div>',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared log (sans errors)</span></li>',
                 'text' => '⌦ Cleared log (sans errors)',
                 'script' => 'console.log("Cleared log (sans errors)");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared log (sans errors)"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared log (sans errors)"]|',
             )
         );
     }
@@ -313,7 +325,7 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(3, $this->debug->getData('logSummary/0'));
                     $this->assertCount(3, $this->debug->getData('logSummary/1'));
                     $this->assertCount(3, $this->debug->getData('log'));
-                    $lastMethod = $this->debug->getData('log/__end__/0');
+                    $lastMethod = $this->debug->getData('log/__end__/method');
                     $this->assertSame('warn', $lastMethod);
                 },
             )
@@ -357,13 +369,13 @@ class MethodTest extends DebugTestFramework
                 ),
                 'chromeLogger' => array(
                     array('Cleared alerts'),
-                    $this->file.': '.$this->line,
+                    $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared alerts</span></div>',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared alerts</span></li>',
                 'text' => '⌦ Cleared alerts',
                 'script' => 'console.log("Cleared alerts");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared alerts"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared alerts"]|',
             )
         );
     }
@@ -387,12 +399,12 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(6, $this->debug->getData('log'));
                     $this->assertSame(array(
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         0 => array(),
                         1 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -415,13 +427,13 @@ class MethodTest extends DebugTestFramework
                 ),
                 'chromeLogger' => array(
                     array('Cleared summary (sans errors)'),
-                    $this->file.': '.$this->line,
+                    $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared summary (sans errors)</span></div>',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared summary (sans errors)</span></li>',
                 'text' => '⌦ Cleared summary (sans errors)',
                 'script' => 'console.log("Cleared summary (sans errors)");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (sans errors)"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared summary (sans errors)"]|',
             )
         );
     }
@@ -447,14 +459,14 @@ class MethodTest extends DebugTestFramework
                         // 0 => array(1, 1),
                         // 1 => array(1, 1),
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         0 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         1 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -477,13 +489,13 @@ class MethodTest extends DebugTestFramework
                 ),
                 'chromeLogger' => array(
                     array('Cleared errors'),
-                    $this->file.': '.$this->line,
+                    $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared errors</span></div>',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared errors</span></li>',
                 'text' => '⌦ Cleared errors',
                 'script' => 'console.log("Cleared errors");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared errors"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared errors"]|',
             )
         );
     }
@@ -509,12 +521,12 @@ class MethodTest extends DebugTestFramework
                         // 0 => array(0, 0),
                         // 1 => array(1, 1),
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         0 => array(),
                         1 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -537,13 +549,13 @@ class MethodTest extends DebugTestFramework
                 ),
                 'chromeLogger' => array(
                     array('Cleared everything'),
-                    $this->file.': '.$this->line,
+                    $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared everything</span></div>',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared everything</span></li>',
                 'text' => '⌦ Cleared everything',
                 'script' => 'console.log("Cleared everything");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared everything"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared everything"]|',
             )
         );
     }
@@ -569,12 +581,12 @@ class MethodTest extends DebugTestFramework
                         // 0 => array(0, 0),
                         // 1 => array(1, 1),
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                         0 => array(),
                         1 => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -597,13 +609,13 @@ class MethodTest extends DebugTestFramework
                 ),
                 'chromeLogger' => array(
                     array('Cleared summary (incl errors)'),
-                    $this->file.': '.$this->line,
+                    $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<div class="m_clear" title="'.$this->file.': line '.$this->line.'"><span class="no-pseudo t_string">Cleared summary (incl errors)</span></div>',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared summary (incl errors)</span></li>',
                 'text' => '⌦ Cleared summary (incl errors)',
                 'script' => 'console.log("Cleared summary (incl errors)");',
-                'firephp' => 'X-Wf-1-1-1-14: %d|[{"Type":"LOG","File":'.json_encode($this->file).',"Line":'.$this->line.'},"Cleared summary (incl errors)"]|',
+                'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared summary (incl errors)"]|',
             )
         );
     }
@@ -625,7 +637,7 @@ class MethodTest extends DebugTestFramework
             array(),
             array(
                 'custom' => function ($logEntry) {
-                    $this->assertSame('Cleared log (sans errors)', $logEntry[1][0]);
+                    $this->assertSame('Cleared log (sans errors)', $logEntry['args'][0]);
                     $this->assertCount(4, $this->debug->getData('log'));    // clear-summary gets added
                 }
             )
@@ -645,7 +657,7 @@ class MethodTest extends DebugTestFramework
             array(Debug::CLEAR_LOG | Debug::CLEAR_SUMMARY),
             array(
                 'custom' => function ($logEntry) {
-                    $this->assertSame('Cleared log (sans errors) and summary (sans errors)', $logEntry[1][0]);
+                    $this->assertSame('Cleared log (sans errors) and summary (sans errors)', $logEntry['args'][0]);
                 }
             )
         );
@@ -663,7 +675,7 @@ class MethodTest extends DebugTestFramework
             array(Debug::CLEAR_ALERTS | Debug::CLEAR_LOG | Debug::CLEAR_SUMMARY),
             array(
                 'custom' => function ($logEntry) {
-                    $this->assertSame('Cleared alerts, log (sans errors), and summary (sans errors)', $logEntry[1][0]);
+                    $this->assertSame('Cleared alerts, log (sans errors), and summary (sans errors)', $logEntry['args'][0]);
                 }
             )
         );
@@ -701,38 +713,40 @@ class MethodTest extends DebugTestFramework
     {
         $lines = array();
         $this->debug->count('count test');          // 1 (0)
-        for ($i=0; $i<3; $i++) {
+        for ($i = 0; $i < 3; $i++) {
             if ($i > 0) {
                 $lines[0] = __LINE__ + 1;
                 $this->debug->count();              // 1,2 (3,6)
             }
             $this->debug->count('count test');      // 2,3,4 (1,4,7)
-            $this->debug->count('count_inc test', \bdk\Debug::COUNT_NO_OUT);  //  1,2,3, but not logged
+            $this->debug->count('count_inc test', Debug::COUNT_NO_OUT);  //  1,2,3, but not logged
             $lines[1] = __LINE__ + 1;
-            \bdk\Debug::_count();                   // 1,2,3 (2,5,8)
+            Debug::_count();                   // 1,2,3 (2,5,8)
         }
         $this->debug->log(
             'count_inc test',
             $this->debug->count(
                 'count_inc test',
-                \bdk\Debug::COUNT_NO_INC | \bdk\Debug::COUNT_NO_OUT // only return
+                Debug::COUNT_NO_INC | Debug::COUNT_NO_OUT // only return
             )
         );
-        $this->debug->count('count_inc test', \bdk\Debug::COUNT_NO_INC);  // (9) //  doesn't increment
+        $this->debug->count('count_inc test', Debug::COUNT_NO_INC);  // (9) //  doesn't increment
 
         $this->assertSame(array(
             array('count', array('count test',1), array()),
             array('count', array('count test',2), array()),
-            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
-            array('count', array('count',1), array('file'=>__FILE__,'line'=>$lines[0])),
+            array('count', array('count',1), array('file' => __FILE__,'line' => $lines[1],'statically' => true)),
+            array('count', array('count',1), array('file' => __FILE__,'line' => $lines[0])),
             array('count', array('count test', 3), array()),
-            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
-            array('count', array('count',2), array('file'=>__FILE__,'line'=>$lines[0])),
+            array('count', array('count',2), array('file' => __FILE__,'line' => $lines[1],'statically' => true)),
+            array('count', array('count',2), array('file' => __FILE__,'line' => $lines[0])),
             array('count', array('count test', 4), array()),
-            array('count', array('count',3), array('file'=>__FILE__,'line'=>$lines[1],'statically'=>true)),
+            array('count', array('count',3), array('file' => __FILE__,'line' => $lines[1],'statically' => true)),
             array('log', array('count_inc test', 3), array()),
             array('count', array('count_inc test',3), array()),
-        ), $this->debug->getData('log'));
+        ), array_map(function ($logEntry) {
+            return $this->logEntryToArray($logEntry);
+        }, $this->debug->getData('log')));
 
         // test label provided output
         $this->testMethod(
@@ -744,10 +758,10 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'html' => '<div class="m_count"><span class="no-pseudo t_string">count_inc test</span> = <span class="t_int">3</span></div>',
+                'html' => '<li class="m_count"><span class="no-quotes t_string">count_inc test</span> = <span class="t_int">3</span></li>',
                 'text' => '✚ count_inc test = 3',
                 'script' => 'console.log("count_inc test",3);',
-                'firephp' => 'X-Wf-1-1-1-3: 43|[{"Type":"LOG","Label":"count_inc test"},3]|',
+                'firephp' => 'X-Wf-1-1-1-3: 43|[{"Label":"count_inc test","Type":"LOG"},3]|',
             )
         );
 
@@ -760,13 +774,13 @@ class MethodTest extends DebugTestFramework
             array(
                 'chromeLogger' => array(
                     array('count', 1),
-                    __FILE__.': '.$lines[1],
+                    __FILE__ . ': ' . $lines[1],
                     '',
                 ),
-                'html' => '<div class="m_count" title="'.__FILE__.': line '.$lines[1].'"><span class="no-pseudo t_string">count</span> = <span class="t_int">1</span></div>',
+                'html' => '<li class="m_count" data-file="' . __FILE__ . '" data-line="' . $lines[1] . '"><span class="no-quotes t_string">count</span> = <span class="t_int">1</span></li>',
                 'text' => '✚ count = 1',
                 'script' => 'console.log("count",1);',
-                'firephp' => 'X-Wf-1-1-1-4: %d|[{"Type":"LOG","File":"'.str_replace('/', '\\/', __FILE__).'","Line":'.$lines[1].',"Label":"count"},1]|',
+                'firephp' => 'X-Wf-1-1-1-4: %d|[{"File":"' . __FILE__ . '","Label":"count","Line":' . $lines[1] . ',"Type":"LOG"},1]|',
             )
         );
 
@@ -775,7 +789,7 @@ class MethodTest extends DebugTestFramework
         */
         $this->testMethod(
             'count',
-            array(\bdk\Debug::COUNT_NO_OUT),
+            array(Debug::COUNT_NO_OUT),
             array(
                 'notLogged' => true,
                 'return' => 1,
@@ -822,8 +836,8 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'firephp' => 'X-Wf-1-1-1-70: 32|[{"Type":"LOG","Label":"foo"},0]|',
-                'html' => '<div class="m_countReset"><span class="no-pseudo t_string">foo</span> = <span class="t_int">0</span></div>',
+                'firephp' => 'X-Wf-1-1-1-70: 32|[{"Label":"foo","Type":"LOG"},0]|',
+                'html' => '<li class="m_countReset"><span class="no-quotes t_string">foo</span> = <span class="t_int">0</span></li>',
                 'script' => 'console.log("foo",0);',
                 'text' => '✚ foo = 0',
             )
@@ -843,14 +857,14 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-73: 52|[{"Type":"LOG"},"Counter \'noExisty\' doesn\'t exist."]|',
-                'html' => '<div class="m_countReset"><span class="no-pseudo t_string">Counter \'noExisty\' doesn\'t exist.</span></div>',
+                'html' => '<li class="m_countReset"><span class="no-quotes t_string">Counter \'noExisty\' doesn\'t exist.</span></li>',
                 'script' => 'console.log("Counter \'noExisty\' doesn\'t exist.");',
                 'text' => '✚ Counter \'noExisty\' doesn\'t exist.',
             )
         );
         $this->testMethod(
             'countReset',
-            array('noExisty', \bdk\Debug::COUNT_NO_OUT),
+            array('noExisty', Debug::COUNT_NO_OUT),
             array(
                 'notLogged' => true,
             )
@@ -870,11 +884,11 @@ class MethodTest extends DebugTestFramework
             array('a string', array(), new stdClass(), $resource),
             array(
                 'entry' => function ($entry) {
-                    $this->assertSame('error', $entry[0]);
-                    $this->assertSame('a string', $entry[1][0]);
-                    $this->assertSame(array(), $entry[1][1]);
-                    $this->assertTrue($this->checkAbstractionType($entry[1][2], 'object'));
-                    $this->assertTrue($this->checkAbstractionType($entry[1][3], 'resource'));
+                    $this->assertSame('error', $entry['method']);
+                    $this->assertSame('a string', $entry['args'][0]);
+                    $this->assertSame(array(), $entry['args'][1]);
+                    $this->assertTrue($this->checkAbstractionType($entry['args'][2], 'object'));
+                    $this->assertTrue($this->checkAbstractionType($entry['args'][3], 'resource'));
                 },
                 'chromeLogger' => json_encode(array(
                     array(
@@ -885,20 +899,20 @@ class MethodTest extends DebugTestFramework
                         ),
                         'Resource id #%d: stream',
                     ),
-                    __DIR__.'/DebugTestFramework.php: %d',
+                    __DIR__ . '/DebugTestFramework.php: %d',
                     'error',
                 )),
-                'html' => '<div class="m_error" title="%s: line %d"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                'html' => '<li class="m_error" data-detect-files="true" data-file="' . __DIR__ . '/DebugTestFramework.php" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
-                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
-                'text' => '⦻ a string, array(), (object) stdClass
+                    </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'text' => '⦻ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%i: stream',
                 'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
-                'firephp' => 'X-Wf-1-1-1-3: %d|[{"Type":"ERROR","File":"%s","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-3: %d|[{"File":"%s","Label":"a string","Line":%d,"Type":"ERROR"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);
@@ -933,11 +947,15 @@ class MethodTest extends DebugTestFramework
             'group',
             array('a','b','c'),
             array(
-                'entry' => array('group',array('a','b','c'), array()),
+                'entry' => array(
+                    'group',
+                    array('a','b','c'),
+                    array(),
+                ),
                 'custom' => function () {
                     $this->assertSame(array(
                         'main' => array(
-                            array('channel' => 'general', 'collect' => true),
+                            array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -946,11 +964,12 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-                    <div class="m_group">',
-                'text' => '▸ a, "b", "c"',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
+                    <ul class="group-body">',
+                'text' => '▸ a("b", "c")',
                 'script' => 'console.group("a","b","c");',
-                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Type":"GROUP_START","Collapsed":"false","Label":"a"},null]|',
+                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -961,8 +980,8 @@ class MethodTest extends DebugTestFramework
         $this->debug->log('after group');
         $this->outputTest(array(
             // @todo chromeLogger & firephp
-            'html' => '<div class="m_log"><span class="no-pseudo t_string">before group</span></div>
-                <div class="m_log"><span class="no-pseudo t_string">after group</span></div>',
+            'html' => '<li class="m_log"><span class="no-quotes t_string">before group</span></li>
+                <li class="m_log"><span class="no-quotes t_string">after group</span></li>',
             'text' => 'before group
                 after group',
             'script' => 'console.log("before group");
@@ -973,32 +992,44 @@ class MethodTest extends DebugTestFramework
         /*
             Test default label
         */
+        $this->methodWithGroup('foo', 10);
         $this->testMethod(
-            'group',
+            array(),    // test last called method
             array(),
             array(
                 'entry' => array(
                     'group',
-                    array(__CLASS__.'->testMethod'),
-                    array('isMethodName' => true),
+                    array(
+                        __CLASS__ . '->methodWithGroup',
+                        'foo',
+                        10
+                    ),
+                    array(
+                        'isFuncName' => true,
+                    ),
                 ),
                 'chromeLogger' => array(
-                    array(__CLASS__.'->testMethod'),
+                    array(
+                        __CLASS__ . '->methodWithGroup',
+                        'foo',
+                        10,
+                    ),
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname">'.__CLASS__.'</span><span class="t_operator">-&gt;</span><span class="method-name">testMethod</span></span></div>
-                    <div class="m_group">',
-                'text' => '▸ '.__CLASS__.'->testMethod',
-                'script' => 'console.group("'.__CLASS__.'->testMethod");',
-                'firephp' => 'X-Wf-1-1-1-6: 82|[{"Type":"GROUP_START","Collapsed":"false","Label":"'.__CLASS__.'->testMethod"},null]|',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname">' . __CLASS__ . '</span><span class="t_operator">-&gt;</span><span class="t_identifier">methodWithGroup</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="group-label group-label-bold">)</span></div>
+                    <ul class="group-body">',
+                'text' => '▸ ' . __CLASS__ . '->methodWithGroup("foo", 10)',
+                'script' => 'console.group("' . __CLASS__ . '->methodWithGroup","foo",10);',
+                'firephp' => 'X-Wf-1-1-1-6: %d|[{"Collapsed":"false","Label":"' . __CLASS__ . '->methodWithGroup","Type":"GROUP_START"},null]|',
             )
         );
 
         $this->debug->setData('log', array());
         $testBase->testBasePublic();
         $this->testMethod(
-            array('dataPath'=>'log/0'),
+            array('dataPath' => 'log/0'),
             array(),
             array(
                 'entry' => array(
@@ -1007,8 +1038,8 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\TestBase->testBasePublic'
                     ),
                     array(
+                        'isFuncName' => true,
                         'statically' => true,
-                        'isMethodName' => true,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -1016,18 +1047,19 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
+                    <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase->testBasePublic");',
-                'firephp' => 'X-Wf-1-1-1-7: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase->testBasePublic"},null]|',
+                'firephp' => 'X-Wf-1-1-1-7: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase->testBasePublic","Type":"GROUP_START"},null]|',
             )
         );
 
         $this->debug->setData('log', array());
         $test->testBasePublic();
         $this->testMethod(
-            array('dataPath'=>'log/0'),
+            array('dataPath' => 'log/0'),
             array(),
             array(
                 'entry' => array(
@@ -1036,8 +1068,8 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\Test->testBasePublic'
                     ),
                     array(
+                        'isFuncName' => true,
                         'statically' => true,
-                        'isMethodName' => true,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -1045,11 +1077,12 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="method-name">testBasePublic</span></span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
+                    <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\Test->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\Test->testBasePublic");',
-                'firephp' => 'X-Wf-1-1-1-8: 96|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\Test->testBasePublic"},null]|',
+                'firephp' => 'X-Wf-1-1-1-8: 96|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\Test->testBasePublic","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -1058,7 +1091,7 @@ class MethodTest extends DebugTestFramework
         $this->debug->setData('log', array());
         \bdk\DebugTest\Test::testBaseStatic();
         $this->testMethod(
-            array('dataPath'=>'log/0'),
+            array('dataPath' => 'log/0'),
             array(),
             array(
                 'entry' => array(
@@ -1067,8 +1100,8 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\TestBase::testBaseStatic'
                     ),
                     array(
+                        'isFuncName' => true,
                         'statically' => true,
-                        'isMethodName' => true,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -1076,11 +1109,12 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
+                    <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
-                'firephp' => 'X-Wf-1-1-1-9: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
+                'firephp' => 'X-Wf-1-1-1-9: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -1088,7 +1122,7 @@ class MethodTest extends DebugTestFramework
         $this->debug->setData('log', array());
         $test->testBaseStatic();
         $this->testMethod(
-            array('dataPath'=>'log/0'),
+            array('dataPath' => 'log/0'),
             array(),
             array(
                 'entry' => array(
@@ -1097,8 +1131,8 @@ class MethodTest extends DebugTestFramework
                         'bdk\DebugTest\TestBase::testBaseStatic'
                     ),
                     array(
+                        'isFuncName' => true,
                         'statically' => true,
-                        'isMethodName' => true,
                     ),
                 ),
                 'chromeLogger' => array(
@@ -1106,11 +1140,12 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
-                'html' => '<div class="expanded group-header"><span class="group-label"><span class="t_classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="method-name">testBaseStatic</span></span></div>
-                    <div class="m_group">',
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
+                    <ul class="group-body">',
                 'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
-                'firephp' => 'X-Wf-1-1-1-10: 100|[{"Type":"GROUP_START","Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic"},null]|',
+                'firephp' => 'X-Wf-1-1-1-10: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
             )
         );
 
@@ -1120,6 +1155,11 @@ class MethodTest extends DebugTestFramework
             array('not logged'),
             false
         );
+    }
+
+    private function methodWithGroup()
+    {
+        $this->debug->group();
     }
 
     /**
@@ -1133,11 +1173,15 @@ class MethodTest extends DebugTestFramework
             'groupCollapsed',
             array('a', 'b', 'c'),
             array(
-                'entry' => array('groupCollapsed', array('a','b','c'), array()),
+                'entry' => array(
+                    'groupCollapsed',
+                    array('a','b','c'),
+                    array(),
+                ),
                 'custom' => function () {
                     $this->assertSame(array(
                         'main' => array(
-                            0 => array('channel' => 'general', 'collect' => true),
+                            0 => array('channel' => $this->debug, 'collect' => true),
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
@@ -1146,24 +1190,26 @@ class MethodTest extends DebugTestFramework
                     null,
                     'groupCollapsed',
                 ),
-                'firephp' => 'X-Wf-1-1-1-1: 60|[{"Type":"GROUP_START","Collapsed":"true","Label":"a"},null]|',
-                'html' => '<div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-                    <div class="m_group">',
+                'firephp' => 'X-Wf-1-1-1-1: 60|[{"Collapsed":"true","Label":"a","Type":"GROUP_START"},null]|',
+                'html' => '<li class="m_group">
+                    <div class="collapsed group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
+                    <ul class="group-body">',
                 'script' => 'console.groupCollapsed("a","b","c");',
-                'text' => '▸ a, "b", "c"',
+                'text' => '▸ a("b", "c")',
             )
         );
 
-        // add a nested gorup that will get removed on output
+        // add a nested group that will get removed on output
         $this->debug->groupCollapsed($this->debug->meta('hideIfEmpty'));
         $this->debug->groupEnd();
         $this->debug->log('after nested group');
         $this->outputTest(array(
-            'html' => '<div class="collapsed group-header"><span class="group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label">)</span></div>
-                <div class="m_group">
-                    <div class="m_log"><span class="no-pseudo t_string">after nested group</span></div>
-                </div>',
-            'text' => '▸ a, "b", "c"
+            'html' => '<li class="m_group">
+                <div class="collapsed group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
+                <ul class="group-body">
+                    <li class="m_log"><span class="no-quotes t_string">after nested group</span></li>
+                </ul>',
+            'text' => '▸ a("b", "c")
                 after nested group',
             'script' => 'console.groupCollapsed("a","b","c");
                 console.log("after nested group");',
@@ -1198,7 +1244,9 @@ class MethodTest extends DebugTestFramework
         $this->assertSame(array(
             array('group', array('a','b','c'), array()),
             array('groupEnd', array(), array()),
-        ), $log);
+        ), array_map(function ($logEntry) {
+            return $this->logEntryToArray($logEntry);
+        }, $log));
 
         // reset log
         $this->debug->setData('log', array());
@@ -1225,7 +1273,11 @@ class MethodTest extends DebugTestFramework
             'groupEnd',
             array(),
             array(
-                'entry' => array('groupEnd', array(), array()),
+                'entry' => array(
+                    'groupEnd',
+                    array(),
+                    array(),
+                ),
                 'custom' => function () {
                     // $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
                 },
@@ -1235,7 +1287,7 @@ class MethodTest extends DebugTestFramework
                     'groupEnd',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: 27|[{"Type":"GROUP_END"},null]|',
-                'html' => '</div>',
+                'html' => '</ul>' . "\n" . '</li>',
                 'script' => 'console.groupEnd();',
                 'text' => '',
             )
@@ -1260,7 +1312,7 @@ class MethodTest extends DebugTestFramework
                     'groupEnd',
                 ),
                 'firephp' => 'X-Wf-1-1-1-151: 27|[{"Type":"GROUP_END"},null]|',
-                'html' => '</div>',
+                'html' => '</ul>' . "\n" . '</li>',
                 'script' => 'console.groupEnd();',
                 'text' => '',
             )
@@ -1281,8 +1333,8 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'firephp' => 'X-Wf-1-1-1-154: 39|[{"Type":"LOG","Label":"return"},"foo"]|',
-                'html' => '<div class="m_groupEndValue"><span class="no-pseudo t_string">return</span> = <span class="t_string">foo</span></div>',
+                'firephp' => 'X-Wf-1-1-1-154: 39|[{"Label":"return","Type":"LOG"},"foo"]|',
+                'html' => '<li class="m_groupEndValue"><span class="no-quotes t_string">return</span> = <span class="t_string">foo</span></li>',
                 'script' => 'console.log("return","foo");',
                 'text' => 'return = "foo"',
             )
@@ -1293,9 +1345,14 @@ class MethodTest extends DebugTestFramework
     {
         /*
         Internal debug.output subscribers
-            1: Output::onOutput:  closes open groups / remoes hideIfEmpty groups
-            0: Internal::onOutput opens and closes groupSummary
-            0: Output plugin's onOutput()
+             1: Internal::onOutput:  closes open groups / remoes hideIfEmpty groups
+                onOutputCleanup
+                    closeOpenGroups
+                    removeHideIfEmptyGroups
+                    uncollapseErrors
+                onOutputLogRuntime
+             0: Routes & plugins
+            -1: Internal::onOutputHeaders
 
         This also tests that the values returned by getData have been dereferenced
         */
@@ -1321,7 +1378,7 @@ class MethodTest extends DebugTestFramework
             $debug = $event->getSubject();
             $onOutputVals['groupPriorityStackB'] = $debug->getData('groupPriorityStack');
             $onOutputVals['groupStacksB'] = $debug->getData('groupStacks');
-        }, -2);
+        }, -1);
         $output = $this->debug->output();
 
         $this->assertSame(array(1), $onOutputVals['groupPriorityStackA']);
@@ -1329,7 +1386,7 @@ class MethodTest extends DebugTestFramework
             'main' => array(),
             1 => array(
                 array(
-                    'channel' => 'general',
+                    'channel' => $this->debug,
                     'collect' => true,
                 ),
             ),
@@ -1339,18 +1396,21 @@ class MethodTest extends DebugTestFramework
             'main' => array(),
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
-<div class="debug" data-channel-root="general" data-channels="{}">
-    <div class="debug-bar"><h3>Debug Log</h3></div>
-    <div class="debug-header m_group">
-        <div class="m_log"><span class="no-pseudo t_string">in summary</span></div>
-        <div class="expanded group-header"><span class="group-label">inner group opened but not closed</span></div>
-        <div class="m_group">
-            <div class="m_log"><span class="no-pseudo t_string">in inner</span></div>
-        </div>
-        <div class="m_info"><span class="no-pseudo t_string">Built In %f sec</span></div>
-        <div class="m_info"><span class="no-pseudo t_string">Peak Memory Usage: %f MB / %d %cB</span></div>
-    </div>
-    <div class="debug-content m_group">
+<div class="debug" data-channel-root="general" data-channels="{}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
+    <header class="debug-menu-bar">PHPDebugConsole</header>
+    <div class="debug-body">
+        <ul class="debug-log-summary group-body">
+            <li class="m_log"><span class="no-quotes t_string">in summary</span></li>
+            <li class="m_group">
+                <div class="expanded group-header"><span class="group-label group-label-bold">inner group opened but not closed</span></div>
+                <ul class="group-body">
+                    <li class="m_log"><span class="no-quotes t_string">in inner</span></li>
+                </ul>
+            </li>
+            <li class="m_info"><span class="no-quotes t_string">Built In %f %ss</span></li>
+            <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
+        </ul>
+        <ul class="debug-log group-body"></ul>
     </div>
 </div>
 EOD;
@@ -1389,12 +1449,16 @@ EOD;
             array('groupEnd',array(), array()),
             array('log',array('I\'m still in the summary!'), array()),
             array('log',array('I\'m staying in the summary!'), array()),
-        ), $logSummary);
+        ), array_map(function ($logEntry) {
+            return $this->logEntryToArray($logEntry);
+        }, $logSummary));
         $log = $this->debug->getData('log');
         $this->assertSame(array(
             array('log',array('I\'m not in the summary'), array()),
             array('log',array('the end'), array()),
-        ), $log);
+        ), array_map(function ($logEntry) {
+            return $this->logEntryToArray($logEntry);
+        }, $log));
     }
 
     /**
@@ -1411,9 +1475,9 @@ EOD;
         $this->debug->groupCollapsed('level2 (test)');  // 5
         $this->debug->groupUncollapse();
         $log = $this->debug->getData('log');
-        $this->assertSame('group', $log[0][0]); // groupCollapsed converted to group
-        $this->assertSame('groupCollapsed', $log[1][0]);
-        $this->assertSame('group', $log[5][0]); // groupCollapsed converted to group
+        $this->assertSame('group', $log[0]['method']); // groupCollapsed converted to group
+        $this->assertSame('groupCollapsed', $log[1]['method']);
+        $this->assertSame('group', $log[5]['method']); // groupCollapsed converted to group
         $this->assertCount(6, $log);    // assert that entry not added
     }
 
@@ -1430,12 +1494,12 @@ EOD;
             array('a string', array(), new stdClass(), $resource),
             array(
                 'entry' => function ($logEntry) {
-                    $this->assertSame('info', $logEntry[0]);
-                    $this->assertSame('a string', $logEntry[1][0]);
+                    $this->assertSame('info', $logEntry['method']);
+                    $this->assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
                     // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-                    $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-                    $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+                    $isObject = $this->checkAbstractionType($logEntry['args'][2], 'object');
+                    $isResource = $this->checkAbstractionType($logEntry['args'][3], 'resource');
                     // $this->assertTrue($isArray);
                     $this->assertTrue($isObject);
                     $this->assertTrue($isResource);
@@ -1452,17 +1516,17 @@ EOD;
                     null,
                     'info',
                 )),
-                'html' => '<div class="m_info"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                'html' => '<li class="m_info"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
-                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
-                'text' => 'ℹ a string, array(), (object) stdClass
+                    </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'text' => 'ℹ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.info("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Type":"INFO","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"INFO"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);
@@ -1488,12 +1552,12 @@ EOD;
             array('a string', array(), new stdClass(), $resource),
             array(
                 'entry' => function ($logEntry) {
-                    $this->assertSame('log', $logEntry[0]);
-                    $this->assertSame('a string', $logEntry[1][0]);
+                    $this->assertSame('log', $logEntry['method']);
+                    $this->assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
                     // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-                    $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-                    $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+                    $isObject = $this->checkAbstractionType($logEntry['args'][2], 'object');
+                    $isResource = $this->checkAbstractionType($logEntry['args'][3], 'resource');
                     // $this->assertTrue($isArray);
                     $this->assertTrue($isObject);
                     $this->assertTrue($isResource);
@@ -1510,17 +1574,20 @@ EOD;
                     null,
                     '',
                 )),
-                'html' => '<div class="m_log"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                'html' => '<li class="m_log"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
-                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
-                'text' => 'a string, array(), (object) stdClass
+                    </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'text' => 'a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
                 'script' => 'console.log("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Type":"LOG","Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"LOG"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'streamAnsi' => "a string\e[38;5;245m, \e[0m\e[38;5;45marray\e[38;5;245m(\e[0m\e[38;5;245m)\e[0m\e[38;5;245m, \e[0m\e[1mstdClass\e[22m
+                    Properties: none!
+                    Methods: none!\e[38;5;245m, \e[0mResource id #%d: stream",
             )
         );
         fclose($resource);
@@ -1530,49 +1597,6 @@ EOD;
             'log',
             array('log message'),
             false
-        );
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testLogSubstitution()
-    {
-        $location = 'http://localhost/?foo=bar&jim=slim';
-        $args = array(
-            '%cLocation:%c <a href="%s">%s</a>',
-            'font-weight:bold;',
-            '',
-            $location,
-            $location,
-        );
-        $this->testMethod(
-            'log',
-            $args,
-            array(
-                'entry' => array(
-                    'log',
-                    array(
-                        '%cLocation:%c <a href="%s">%s</a>',
-                        'font-weight:bold;',
-                        '',
-                        $location,
-                        $location,
-                    ),
-                    array(),
-                ),
-                'chromeLogger' => array(
-                    $args,
-                    null,
-                    '',
-                ),
-                'firephp' => str_replace('%c', '%%c', 'X-Wf-1-1-1-19: 168|[{"Type":"LOG","Label":"%cLocation:%c <a href=\"%s\">%s<\/a>"},'.json_encode(array_slice($args, 1)).']|'),
-                'html' => '<div class="m_log"><span class="no-pseudo t_string"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&amp;jim=slim">http://localhost/?foo=bar&amp;jim=slim</a></span></span></div>',
-                'script' => str_replace('%c', '%%c', 'console.log('.trim(json_encode($args), '[]').');'),
-                'text' => 'Location: "http://localhost/?foo=bar&jim=slim"',
-            )
         );
     }
 
@@ -1615,28 +1639,28 @@ EOD;
                 'entry' => json_encode(array(
                     'time',
                     array(
-                        'time: %f sec',
+                        'time: %f μs',
                     ),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'time: %f sec',
+                        'time: %f μs',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
-                'script' => 'console.log("time: %f sec");',
-                'text' => '⏱ time: %f sec',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f μs"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">time: %f μs</span></li>',
+                'script' => 'console.log("time: %f μs");',
+                'text' => '⏱ time: %f μs',
             )
         );
         $this->testMethod(
             'timeEnd',
             array(
                 'my label',
-                true,
+                $this->debug->meta('silent'),
             ),
             array(
                 'return' => '%f',
@@ -1652,49 +1676,57 @@ EOD;
                 'entry' => json_encode(array(
                     'time',
                     array(
-                        'my label: %f sec',
+                        'my label: %f %ss',
                     ),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'my label: %f sec',
+                        'my label: %f %ss',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
-                'script' => 'console.log("my label: %f sec");',
-                'text' => '⏱ my label: %f sec',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f %ss"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f %ss</span></li>',
+                'script' => 'console.log("my label: %f %ss");',
+                'text' => '⏱ my label: %f %ss',
             )
         );
         $this->testMethod(
             'timeEnd',
             array(
                 'my label',
-                'blah%labelblah%timeblah',
+                $this->debug->meta('template', 'blah%labelblah%timeblah'),
             ),
             array(
+                /*
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
-                        array("blahmy labelblah%fblah"),
+                        array("blahmy labelblah%f msblah"),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'chromeLogger not same');
                 },
+                */
+                'entry' => json_encode(array(
+                    'time',
+                    array("blahmy labelblah%f %ssblah"),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'blahmy labelblah%fblah',
+                        'blahmy labelblah%f %ssblah',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
-                'script' => 'console.log("blahmy labelblah%fblah");',
-                'text' => '⏱ blahmy labelblah%fblah',
+                'firephp' => 'X-Wf-1-1-1-22: %d|[{"Type":"LOG"},"blahmy labelblah%f %ssblah"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f %ssblah</span></li>',
+                'script' => 'console.log("blahmy labelblah%f %ssblah");',
+                'text' => '⏱ blahmy labelblah%f %ssblah',
             )
         );
 
@@ -1729,25 +1761,33 @@ EOD;
                     // test stack is still 1
                     $this->assertCount(1, $this->debug->getData('timers/stack'));
                 },
+                /*
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
-                        array('time: %f sec'),
+                        array('time: %f μs'),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
+                */
+                'entry' => json_encode(array(
+                    'time',
+                    array('time: %f μs'),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'time: %f sec',
+                        'time: %f μs',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">time: %f sec</span></div>',
-                'script' => 'console.log("time: %f sec");',
-                'text' => '⏱ time: %f sec',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"time: %f μs"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">time: %f μs</span></li>',
+                'script' => 'console.log("time: %f μs");',
+                'text' => '⏱ time: %f μs',
             )
         );
 
@@ -1758,21 +1798,21 @@ EOD;
                 'entry' => json_encode(array(
                     'time',
                     array(
-                        'my label: %f sec',
+                        'my label: %f %ss',
                     ),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'my label: %f sec',
+                        'my label: %f %ss',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f sec"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">my label: %f sec</span></div>',
-                'script' => 'console.log("my label: %f sec");',
-                'text' => '⏱ my label: %f sec',
+                'firephp' => 'X-Wf-1-1-1-20: %d|[{"Type":"LOG"},"my label: %f %ss"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f %ss</span></li>',
+                'script' => 'console.log("my label: %f %ss");',
+                'text' => '⏱ my label: %f %ss',
             )
         );
 
@@ -1780,7 +1820,7 @@ EOD;
             'timeGet',
             array(
                 'my label',
-                true,
+                $this->debug->meta('silent'),
             ),
             array(
                 'notLogged' => true,  // not logged because 2nd param = true
@@ -1798,28 +1838,36 @@ EOD;
             'timeGet',
             array(
                 'my label',
-                'blah%labelblah%timeblah',
+                $this->debug->meta('template', 'blah%labelblah%timeblah'),
             ),
             array(
+                /*
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
-                        array("blahmy labelblah%fblah"),
+                        array("blahmy labelblah%f msblah"),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'entry as expected');
                 },
+                */
+                'entry' => json_encode(array(
+                    'time',
+                    array("blahmy labelblah%f msblah"),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'blahmy labelblah%fblah',
+                        'blahmy labelblah%f msblah',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-22: 45|[{"Type":"LOG"},"blahmy labelblah%fblah"]|',
-                'html' => '<div class="m_time"><span class="no-pseudo t_string">blahmy labelblah%fblah</span></div>',
-                'script' => 'console.log("blahmy labelblah%fblah");',
-                'text' => '⏱ blahmy labelblah%fblah',
+                'firephp' => 'X-Wf-1-1-1-22: %d|[{"Type":"LOG"},"blahmy labelblah%f msblah"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f msblah</span></li>',
+                'script' => 'console.log("blahmy labelblah%f msblah");',
+                'text' => '⏱ blahmy labelblah%f msblah',
             )
         );
 
@@ -1845,57 +1893,73 @@ EOD;
             'timeLog',
             array(),
             array(
+                /*
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
-                        array('time: ', '%f sec'),
+                        array('time: ', '%f μs'),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
+                */
+                'entry' => json_encode(array(
+                    'timeLog',
+                    array('time: ', '%f μs'),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
                         'time: ',
-                        '%f sec',
+                        '%f μs',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-166: 46|[{"Type":"LOG","Label":"time: "},"%f sec"]|',
-                'html' => '<div class="m_timeLog"><span class="no-pseudo t_string">time: </span><span class="t_string">%f sec</span></div>',
-                'script' => 'console.log("time: ","%f sec");',
-                'text' => '⏱ time: "%f sec"',
+                'firephp' => 'X-Wf-1-1-1-166: %d|[{"Label":"time: ","Type":"LOG"},"%f μs"]|',
+                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">time: </span><span class="t_string">%f μs</span></li>',
+                'script' => 'console.log("time: ","%f μs");',
+                'text' => '⏱ time: "%f μs"',
             )
         );
 
         $this->testMethod(
             'timeLog',
-            array('my label', array('foo'=>'bar')),
+            array('my label', array('foo' => 'bar')),
             array(
+                /*
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
-                        array('my label: ', '%f sec', array('foo'=>'bar')),
+                        array('my label: ', '%f %ss', array('foo'=>'bar')),
                         array(),
                     ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
+                */
+                'entry' => json_encode(array(
+                    'timeLog',
+                    array('my label: ', '%f %ss', array('foo' => 'bar')),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array(
                         'my label: ',
-                        '%f sec',
-                        array('foo'=>'bar'),
+                        '%f %ss',
+                        array('foo' => 'bar'),
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-169: 66|[{"Type":"LOG","Label":"my label: "},["%f sec",{"foo":"bar"}]]|',
-                'html' => '<div class="m_timeLog"><span class="no-pseudo t_string">my label: </span><span class="t_string">%f sec</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                'firephp' => 'X-Wf-1-1-1-169: %d|[{"Label":"my label: ","Type":"LOG"},["%f %ss",{"foo":"bar"}]]|',
+                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">my label: </span><span class="t_string">%f %ss</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                     <span class="array-inner">
-                    <span class="key-value"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></span>
-                    </span><span class="t_punct">)</span></span></div>',
-                'script' => 'console.log("my label: ","%f sec",{"foo":"bar"});',
-                'text' => '⏱ my label: "%f sec", array(
+                    <span class="key-value"><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></span>
+                    </span><span class="t_punct">)</span></span></li>',
+                'script' => 'console.log("my label: ","%f %ss",{"foo":"bar"});',
+                'text' => '⏱ my label: "%f %ss", array(
                     [foo] => "bar"
                     )',
             )
@@ -1905,27 +1969,33 @@ EOD;
             'timeLog',
             array('bogus'),
             array(
+                /*
                 'entry' => function ($logEntry) {
+                    $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
                         array('Timer \'bogus\' does not exist'),
                         array(),
-                ));
+                    ));
                     $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
+                */
+                'entry' => json_encode(array(
+                    'timeLog',
+                    array('Timer \'bogus\' does not exist'),
+                    array(),
+                )),
                 'chromeLogger' => json_encode(array(
                     array('Timer \'bogus\' does not exist'),
                     null,
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-172: 47|[{"Type":"LOG"},"Timer \'bogus\' does not exist"]|',
-                'html' => '<div class="m_timeLog"><span class="no-pseudo t_string">Timer \'bogus\' does not exist</span></div>',
+                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">Timer \'bogus\' does not exist</span></li>',
                 'script' => 'console.log("Timer \'bogus\' does not exist");',
                 'text' => '⏱ Timer \'bogus\' does not exist',
             )
         );
-
-
     }
 
     /**
@@ -1939,7 +2009,7 @@ EOD;
         $values = array(
             'file0' => __FILE__,
             'line0' => __LINE__ - 3,
-            'function1' => __CLASS__.'->'.__FUNCTION__,
+            'function1' => __CLASS__ . '->' . __FUNCTION__,
         );
 
         $this->testMethod(
@@ -1949,7 +2019,7 @@ EOD;
             array(),
             array(
                 'custom' => function ($logEntry) use ($values) {
-                    $trace = $logEntry[1][0];
+                    $trace = $logEntry['args'][0];
                     $this->assertSame($values['file0'], $trace[0]['file']);
                     $this->assertSame($values['line0'], $trace[0]['line']);
                     $this->assertInternalType('integer', $trace[0]['line']);
@@ -1957,62 +2027,53 @@ EOD;
                     $this->assertSame($values['function1'], $trace[1]['function']);
                 },
                 'chromeLogger' => function ($logEntry) {
-                    $trace = $this->debug->getData('log/0/1/0');
-                    // reorder keys
-                    $order = array('function','file','line');
-                    foreach ($trace as $i => $row) {
-                        uksort($trace[$i], function ($a, $b) use ($order) {
-                            $posa = array_search($a, $order);
-                            $posb = array_search($b, $order);
-                            return $posa < $posb ? -1 : 1;
-                        });
-                    }
+                    $trace = $this->debug->getData('log/0/args/0');
                     $this->assertSame(array($trace), $logEntry[0]);
                     $this->assertSame(null, $logEntry[1]);
                     $this->assertSame('table', $logEntry[2]);
                 },
                 'firephp' => function ($logEntry) {
-                    $trace = $this->debug->getData('log/0/1/0');
+                    $trace = $this->debug->getData('log/0/args/0');
                     preg_match('#\|(.+)\|#', $logEntry, $matches);
                     $logEntry = json_decode($matches[1], true);
                     list($logEntryMeta, $logEntryTable) = $logEntry;
                     $this->assertSame(array(
-                        'Type' => 'TABLE',
                         'Label' => 'trace',
+                        'Type' => 'TABLE',
                     ), $logEntryMeta);
                     $this->assertSame(array(
                         '',
-                        'function',
                         'file',
                         'line',
+                        'function',
                     ), $logEntryTable[0]);
                     $count = count($logEntryTable);
-                    for ($i=1; $i<$count; $i++) {
+                    for ($i = 1; $i < $count; $i++) {
                         $tracei = $i - 1;
                         $valuesExpect = array(
                             $tracei,
-                            isset($trace[$tracei]['function']) ? $trace[$tracei]['function'] : null,
                             $trace[$tracei]['file'],
                             $trace[$tracei]['line'],
+                            isset($trace[$tracei]['function']) ? $trace[$tracei]['function'] : null,
                         );
                         $this->assertSame($valuesExpect, $logEntryTable[$i]);
                     }
                 },
                 'html' => function ($logEntry) {
                     // $this->assertSame('', $logEntry);
-                    $trace = $this->debug->getData('log/0/1/0');
-                    $this->assertContains('<caption>trace</caption>'."\n"
-                        .'<thead>'."\n"
-                        .'<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>'."\n"
-                        .'</thead>', $logEntry);
+                    $trace = $this->debug->getData('log/0/args/0');
+                    $this->assertContains('<caption>trace</caption>' . "\n"
+                        . '<thead>' . "\n"
+                        . '<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>' . "\n"
+                        . '</thead>', $logEntry);
                     preg_match_all('#<tr>'
-                        .'<th.*?>(.*?)</th>'
-                        .'<td.*?>(.*?)</td>'
-                        .'<td.*?>(.*?)</td>'
-                        .'<td.*?>(.*?)</td>'
-                        .'</tr>#is', $logEntry, $matches, PREG_SET_ORDER);
+                        . '<th.*?>(.*?)</th>'
+                        . '<td.*?>(.*?)</td>'
+                        . '<td.*?>(.*?)</td>'
+                        . '<td.*?>(.*?)</td>'
+                        . '</tr>#is', $logEntry, $matches, PREG_SET_ORDER);
                     $count = count($matches);
-                    for ($i=1; $i<$count; $i++) {
+                    for ($i = 1; $i < $count; $i++) {
                         $valuesExpect = array_merge(array((string) $i), array_values($trace[$i]));
                         $valuesExpect[1] = is_null($valuesExpect[1]) ? 'null' : $valuesExpect[1];
                         $valuesExpect[2] = is_null($valuesExpect[2]) ? 'null' : (string) $valuesExpect[2];
@@ -2023,22 +2084,13 @@ EOD;
                     }
                 },
                 'script' => function ($logEntry) {
-                    $trace = $this->debug->getData('log/0/1/0');
-                    // reorder keys
-                    $order = array('function','file','line');
-                    foreach ($trace as $i => $row) {
-                        uksort($trace[$i], function ($a, $b) use ($order) {
-                            $posa = array_search($a, $order);
-                            $posb = array_search($b, $order);
-                            return $posa < $posb ? -1 : 1;
-                        });
-                    }
+                    $trace = $this->debug->getData('log/0/args/0');
                     preg_match('#console.table\((.+)\);#', $logEntry, $matches);
-                    $this->assertSame(json_encode($trace), $matches[1]);
+                    $this->assertSame(json_encode($trace, JSON_UNESCAPED_SLASHES), $matches[1]);
                 },
                 'text' => function ($logEntry) use ($values) {
-                    $trace = $this->debug->getData('log/0/1/0');
-                    $expect = 'trace = '.$this->debug->output->text->dump($trace);
+                    $trace = $this->debug->getData('log/0/args/0');
+                    $expect = 'trace = ' . $this->debug->dumpText->dump($trace);
                     $this->assertNotEmpty($trace);
                     $this->assertSame($expect, trim($logEntry));
                 },
@@ -2066,18 +2118,18 @@ EOD;
             array('a string', array(), new stdClass(), $resource),
             array(
                 'entry' => function ($logEntry) {
-                    $this->assertSame('warn', $logEntry[0]);
-                    $this->assertSame('a string', $logEntry[1][0]);
+                    $this->assertSame('warn', $logEntry['method']);
+                    $this->assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
                     // $isArray = $this->checkAbstractionType($logEntry[2], 'array');
-                    $isObject = $this->checkAbstractionType($logEntry[1][2], 'object');
-                    $isResource = $this->checkAbstractionType($logEntry[1][3], 'resource');
+                    $isObject = $this->checkAbstractionType($logEntry['args'][2], 'object');
+                    $isResource = $this->checkAbstractionType($logEntry['args'][3], 'resource');
                     // $this->assertTrue($isArray);
                     $this->assertTrue($isObject);
                     $this->assertTrue($isResource);
 
-                    $this->assertArrayHasKey('file', $logEntry[2]);
-                    $this->assertArrayHasKey('line', $logEntry[2]);
+                    $this->assertArrayHasKey('file', $logEntry['meta']);
+                    $this->assertArrayHasKey('line', $logEntry['meta']);
                 },
                 'chromeLogger' => json_encode(array(
                     array(
@@ -2088,20 +2140,20 @@ EOD;
                         ),
                         'Resource id #%d: stream',
                     ),
-                    __DIR__.'/DebugTestFramework.php: %d',
+                    __DIR__ . '/DebugTestFramework.php: %d',
                     'warn',
                 )),
-                'html' => '<div class="m_warn" title="'.__DIR__.'/DebugTestFramework.php: line %d"><span class="no-pseudo t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <span class="t_object" data-accessible="public"><span class="t_classname">stdClass</span>
+                'html' => '<li class="m_warn" data-detect-files="true" data-file="' . __DIR__ . '/DebugTestFramework.php" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
-                    </span>, <span class="t_resource">Resource id #%d: stream</span></div>',
-                'text' => '⚠ a string, array(), (object) stdClass
+                    </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'text' => '⚠ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
-                'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php: line %d");',
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Type":"WARN","File":"'.str_replace('/', '\\/', __DIR__.'/').'DebugTestFramework.php","Line":%d,"Label":"a string"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","' . __DIR__ . '/DebugTestFramework.php: line %d");',
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . __DIR__ . '/' . 'DebugTestFramework.php","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -6,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3
+ * @version   v3.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -15,8 +16,14 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use bdk\Debug\LogEntry;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Plugin\Prism;
+use bdk\Debug\Route\RouteInterface;
+use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
+use Exception;
 
 /**
  * Methods that are internal to the debug class
@@ -32,9 +39,16 @@ class Internal implements SubscriberInterface
 
     private $debug;
     private $bootstraped = false;
-    private $error;     // store error object when logging an error
     private $inShutdown = false;
+    private $prismAdded = false;
     private static $profilingEnabled = false;
+
+    // duplicate/store frequently used cfg vals here
+    private $cfg = array(
+        'logResponse' => false,
+        'redactKeys' => array(),
+        'redactReplace' => null,
+    );
 
     /**
      * Constructor
@@ -56,6 +70,14 @@ class Internal implements SubscriberInterface
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
         }, 'onErrorLowPri'), PHP_INT_MAX * -1);
+        /*
+            Initial setCfg has already occured... so we missed the initial debug.config event
+            manually call onConfig here
+        */
+        $this->onConfig(new Event(
+            $this->debug,
+            $this->debug->getCfg()
+        ));
     }
 
     /**
@@ -72,62 +94,9 @@ class Internal implements SubscriberInterface
         $addHeadersStr = '';
         $fromAddr = $this->debug->getCfg('emailFrom');
         if ($fromAddr) {
-            $addHeadersStr .= 'From: '.$fromAddr;
+            $addHeadersStr .= 'From: ' . $fromAddr;
         }
         \call_user_func($this->debug->getCfg('emailFunc'), $toAddr, $subject, $body, $addHeadersStr);
-    }
-
-    /**
-     * Serializes and emails log
-     *
-     * @return void
-     */
-    public function emailLog()
-    {
-        /*
-            List errors that occured
-        */
-        $errorStr = $this->buildErrorList();
-        /*
-            Build Subject
-        */
-        $subject = 'Debug Log';
-        $subjectMore = '';
-        if (!empty($_SERVER['HTTP_HOST'])) {
-            $subjectMore .= ' '.$_SERVER['HTTP_HOST'];
-        }
-        if ($errorStr) {
-            $subjectMore .= ' '.($subjectMore ? '(Error)' : 'Error');
-        }
-        $subject = \rtrim($subject.':'.$subjectMore, ':');
-        /*
-            Build body
-        */
-        $body = (!isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv'])
-            ? 'Command: '. \implode(' ', $_SERVER['argv'])
-            : 'Request: '.$_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI']
-        )."\n\n";
-        if ($errorStr) {
-            $body .= 'Error(s):'."\n"
-                .$errorStr."\n";
-        }
-        /*
-            "attach" serialized log to body
-        */
-        $data = \array_intersect_key($this->debug->getData(), \array_flip(array(
-            'alerts',
-            'log',
-            'logSummary',
-            'requestId',
-            'runtime',
-        )));
-        $data['rootChannel'] = $this->debug->getCfg('channelName');
-        $body .= $this->debug->utilities->serializeLog($data);
-        /*
-            Now email
-        */
-        $this->email($this->debug->getCfg('emailTo'), $subject, $body);
-        return;
     }
 
     /**
@@ -180,40 +149,12 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Get calling line/file for error and warn
-     *
-     * @return array
-     */
-    public function getErrorCaller()
-    {
-        $meta = array();
-        if ($this->error) {
-            // no need to store originating file/line... it's part of error message
-            $meta = array(
-                'errorType' => $this->error['type'],
-                'errorCat' => $this->error['category'],
-                'errorHash' => $this->error['hash'],
-                'backtrace' => $this->error['backtrace'] ?: array(),
-                'sanitize' => $this->error['isHtml'] === false,
-                'channel' => 'phpError',
-            );
-        } else {
-            $meta = $this->debug->utilities->getCallerInfo();
-            $meta = array(
-                'file' => $meta['file'],
-                'line' => $meta['line'],
-            );
-        }
-        return $meta;
-    }
-
-    /**
      * Return the group & groupCollapsed ("ancestors")
      *
      * @param array   $logEntries log entries
      * @param integer $curDepth   current group depth
      *
-     * @return array key => logEntry array
+     * @return LogEntry[] kwys are maintained
      */
     public static function getCurrentGroups(&$logEntries, $curDepth)
     {
@@ -227,7 +168,7 @@ class Internal implements SubscriberInterface
             if ($curDepth < 1) {
                 break;
             }
-            $method = $logEntries[$i][0];
+            $method = $logEntries[$i]['method'];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $curDepth--;
                 if ($curDepth < $minDepth) {
@@ -242,46 +183,19 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Extracts meta-data from args
+     * Return the response Content-Type
      *
-     * Extract meta-data added via meta() method..
-     * all meta args are merged together and returned
-     * meta args are removed from passed args
+     * Content type is pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
+     * otherwise, content-type is pulled from emitted headers via `headers_list()`
      *
-     * @param array $args        args to check
-     * @param array $defaultMeta default meta values
-     * @param array $defaultArgs default arg values
-     * @param array $argsToMeta  args to convert to meta
-     *
-     * @return array meta values
+     * @return string (empty string if Content-Type header not found)
      */
-    public static function getMetaVals(&$args, $defaultMeta = array(), $defaultArgs = array(), $argsToMeta = array())
+    public function getResponseContentType()
     {
-        $meta = array();
-        foreach ($args as $i => $v) {
-            if (\is_array($v) && isset($v['debug']) && $v['debug'] === Debug::META) {
-                unset($v['debug']);
-                $meta = \array_merge($meta, $v);
-                unset($args[$i]);
-            }
-        }
-        $args = \array_values($args);
-        if ($defaultArgs) {
-            $args = \array_slice($args, 0, \count($defaultArgs));
-            $args = \array_combine(
-                \array_keys($defaultArgs),
-                \array_replace(\array_values($defaultArgs), $args)
-            );
-        }
-        foreach ($argsToMeta as $argk => $metak) {
-            if (\is_int($argk)) {
-                $argk = $metak;
-            }
-            $defaultMeta[$metak] = $args[$argk];
-            unset($args[$argk]);
-        }
-        $meta = \array_merge($defaultMeta, $meta);
-        return $meta;
+        $contentType = $this->debug->response
+            ? $this->debug->response->getHeaderLine('Content-Type')
+            : $this->debug->utilities->getEmittedHeader();
+        return $contentType ?: 'text/html';
     }
 
     /**
@@ -299,14 +213,21 @@ class Internal implements SubscriberInterface
                 'debug.config' => array('onConfig', PHP_INT_MAX),
             );
         } else {
+            /*
+                OnShutDownHigh subscribes to 'debug.log' (onDebugLogShutdown)
+                  so... if any log entry is added in php's shutdown phase, we'll have a
+                  "php.shutdown" log entry
+            */
             return array(
                 'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
                 'debug.config' => array('onConfig', PHP_INT_MAX),
                 'debug.dumpCustom' => 'onDumpCustom',
+                'debug.log' => array('onLog', PHP_INT_MAX),
                 'debug.output' => array(
                     array('onOutput', 1),
                     array('onOutputHeaders', -1),
                 ),
+                'debug.prettify' => array('onPrettify', -1),
                 'errorHandler.error' => 'onError',
                 'php.shutdown' => array(
                     array('onShutdownHigh', PHP_INT_MAX),
@@ -325,7 +246,7 @@ class Internal implements SubscriberInterface
     {
         $entryCountInitial = $this->debug->getData('entryCountInitial');
         $entryCountCurrent = $this->debug->getData('log/__count__');
-        $lastEntryMethod = $this->debug->getData('log/__end__/0');
+        $lastEntryMethod = $this->debug->getData('log/__end__/method');
         return $entryCountCurrent > $entryCountInitial && $lastEntryMethod !== 'clear';
     }
 
@@ -352,37 +273,32 @@ class Internal implements SubscriberInterface
      */
     public function onConfig(Event $event)
     {
-        $cfg = $event['config'];
+        $cfg = $event->getValues();
+        if (isset($cfg['routeStream']['stream'])) {
+            $this->debug->addPlugin($this->debug->routeStream);
+        }
         if (!isset($cfg['debug'])) {
             // no debug config values have changed
             return;
         }
         $cfg = $cfg['debug'];
-        if (isset($cfg['file'])) {
-            $this->debug->addPlugin($this->debug->output->file);
-        }
-        if (isset($cfg['onBootstrap'])) {
-            if (!$this->bootstraped) {
-                // we're initializing
-                $this->debug->eventManager->subscribe('debug.bootstrap', $cfg['onBootstrap']);
-            } else {
-                // boostrap has already occured, so go ahead and call
-                \call_user_func($cfg['onBootstrap'], new Event($this->debug));
+        $valActions = array(
+            'logResponse' => array($this, 'onCfgLogResponse'),
+            'onBootstrap' => array($this, 'onCfgOnBootstrap'),
+            'onLog' => array($this, 'onCfgOnLog'),
+            'redactKeys' => array($this, 'onCfgRedactKeys'),
+            'route' => function ($val, Event $event) {
+                $event['debug']['route'] = $this->setRoute($val);
+            },
+        );
+        foreach ($valActions as $key => $callable) {
+            if (isset($cfg[$key])) {
+                $callable($cfg[$key], $event);
             }
-        }
-        if (isset($cfg['onLog'])) {
-            /*
-                Replace - not append - subscriber set via setCfg
-            */
-            $onLogPrev = $this->debug->getCfg('onLog');
-            if ($onLogPrev) {
-                $this->debug->eventManager->unsubscribe('debug.log', $onLogPrev);
-            }
-            $this->debug->eventManager->subscribe('debug.log', $cfg['onLog']);
         }
         if (!static::$profilingEnabled) {
-            $cfg = $this->debug->getCfg('debug/*');
-            if ($cfg['enableProfiling'] && $cfg['collect']) {
+            $cfgAll = $this->debug->getCfg('debug/*');
+            if ($cfgAll['enableProfiling'] && $cfgAll['collect']) {
                 static::$profilingEnabled = true;
                 $pathsExclude = array(
                     __DIR__,
@@ -390,6 +306,26 @@ class Internal implements SubscriberInterface
                 FileStreamWrapper::register($pathsExclude);
             }
         }
+        $this->cfg = \array_merge(
+            $this->cfg,
+            \array_intersect_key($cfg, \array_flip(array('redactReplace')))
+        );
+    }
+
+    /**
+     * Listen for a log entry occuring after php.shutdown...
+     *
+     * @return void
+     */
+    public function onDebugLogShutdown()
+    {
+        $this->debug->eventManager->unsubscribe('debug.log', array($this, __FUNCTION__));
+        $this->debug->info('php.shutdown', $this->debug->meta(array(
+            'attribs' => array(
+                'class' => 'php-shutdown',
+            ),
+            'icon' => 'fa fa-power-off',
+        )));
     }
 
     /**
@@ -414,37 +350,56 @@ class Internal implements SubscriberInterface
      * errorHandler.error event subscriber
      * adds error to console as error or warn
      *
-     * @param Event $error error/event object
+     * @param Error $error error/event object
      *
      * @return void
      */
-    public function onError(Event $error)
+    public function onError(Error $error)
     {
         if ($this->debug->getCfg('collect')) {
-            /*
-                temporarily store error so that we can easily determine error/warn
-                 a) came via error handler
-                 b) calling info
-            */
-            $this->error = $error;
-            $errInfo = $error['typeStr'].': '.$error['file'].' (line '.$error['line'].')';
-            $errMsg = $error['message'];
-            if ($error['type'] & $this->debug->getCfg('errorMask')) {
-                $this->debug->error($errInfo.': ', $errMsg);
-            } else {
-                $this->debug->warn($errInfo.': ', $errMsg);
-            }
+            $errLoc = $error['file'] . ' (line ' . $error['line'] . ')';
+            $meta = $this->debug->meta(array(
+                'backtrace' => $error['backtrace'],
+                'errorCat' => $error['category'],
+                'errorHash' => $error['hash'],
+                'errorType' => $error['type'],
+                'file' => $error['file'],
+                'line' => $error['line'],
+                'sanitize' => $error['isHtml'] === false,
+            ));
+            $method = $error['type'] & $this->debug->getCfg('errorMask')
+                ? 'error'
+                : 'warn';
+            $this->debug->getChannel('phpError')->{$method}(
+                $error['typeStr'] . ':',
+                $errLoc,
+                $error['message'],
+                $meta
+            );
             $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
             $error['inConsole'] = true;
             // Prevent ErrorHandler\ErrorEmailer from sending email.
             // Since we're collecting log info, we send email on shutdown
             $error['email'] = false;
-            $this->error = null;
         } elseif ($this->debug->getCfg('output')) {
             $error['email'] = false;
             $error['inConsole'] = false;
         } else {
             $error['inConsole'] = false;
+        }
+    }
+
+    /**
+     * debug.log subscriber
+     *
+     * @param LogEntry $logEntry log entry instance
+     *
+     * @return void
+     */
+    public function onLog(LogEntry $logEntry)
+    {
+        if ($logEntry->getMeta('redact')) {
+            $logEntry['args'] = $this->redact($logEntry['args']);
         }
     }
 
@@ -483,13 +438,52 @@ class Internal implements SubscriberInterface
         $headers = $event['headers'];
         $outputHeaders = $event->getSubject()->getCfg('outputHeaders');
         if (!$outputHeaders || !$headers) {
-            $event->getSubject()->setData('headers', \array_merge($event->getSubject()->getData('headers'), $headers));
+            $event->getSubject()->setData('headers', \array_merge(
+                $event->getSubject()->getData('headers'),
+                $headers
+            ));
         } elseif (\headers_sent($file, $line)) {
-            \trigger_error('PHPDebugConsole: headers already sent: '.$file.', line '.$line, E_USER_NOTICE);
+            \trigger_error('PHPDebugConsole: headers already sent: ' . $file . ', line ' . $line, E_USER_NOTICE);
         } else {
             foreach ($headers as $nameVal) {
-                \header($nameVal[0].': '.$nameVal[1]);
+                \header($nameVal[0] . ': ' . $nameVal[1]);
             }
+        }
+    }
+
+    /**
+     * Prettify a string if known content-type
+     *
+     * @param Event $event debug.prettyify event object
+     *
+     * @return void
+     */
+    public function onPrettify(Event $event)
+    {
+        if (\preg_match('#\b(html|json|xml)\b#', $event['contentType'], $matches)) {
+            $string = $event['value'];
+            $lang = $type = $matches[1];
+            if ($type === 'html') {
+                $lang = 'markup';
+            } elseif ($type === 'json') {
+                $string = $this->debug->utilities->prettyJson($string);
+            } elseif ($type === 'xml') {
+                $string = $this->debug->utilities->prettyXml($string);
+            }
+            if (!$this->prismAdded) {
+                $this->debug->addPlugin(new Prism());
+                $this->prismAdded = true;
+            }
+            $event['value'] = new Abstraction(array(
+                'type' => 'string',
+                'attribs' => array(
+                    'class' => 'language-' . $lang . ' prism',
+                ),
+                'addQuotes' => false,
+                'visualWhiteSpace' => false,
+                'value' => $string,
+            ));
+            $event->stopPropagation();
         }
     }
 
@@ -500,8 +494,9 @@ class Internal implements SubscriberInterface
      */
     public function onShutdownHigh()
     {
-        $this->inShutdown = true;
         $this->closeOpenGroups();
+        $this->logResponse();
+        $this->inShutdown = true;
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLogShutdown'));
     }
 
@@ -517,7 +512,7 @@ class Internal implements SubscriberInterface
         $this->debug->eventManager->unsubscribe('debug.log', array($this, 'onDebugLogShutdown'));
         if ($this->testEmailLog()) {
             $this->runtimeVals();
-            $this->emailLog();
+            $this->debug->routeEmail->processLogEntries();
         }
         if (!$this->debug->getData('outputSent')) {
             echo $this->debug->output();
@@ -529,9 +524,11 @@ class Internal implements SubscriberInterface
      * Publish/Trigger/Dispatch event
      * Event will get published on ancestor channels if propagation not stopped
      *
-     * @param string $eventName      event name
-     * @param mixed  $eventOrSubject passed to subscribers
-     * @param array  $values         values to attach to event
+     * @param string $eventName event name
+     * @param Event  $event     event instance
+     * @param Debug  $debug     specify Debug instance to start on
+     *                            if not specified will check if getSubject returns Debug instance
+     *                            fallback this->debug
      *
      * @return Event
      */
@@ -554,32 +551,39 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Build list of errors for email
+     * Redact
      *
-     * @return string
+     * @param mixed $val value to scrub
+     * @param mixed $key array key, or property name
+     *
+     * @return mixed
      */
-    private function buildErrorList()
+    public function redact($val, $key = null)
     {
-        $errorStr = '';
-        $errors = $this->debug->errorHandler->get('errors');
-        \uasort($errors, function ($a1, $a2) {
-            return \strcmp($a1['file'].$a1['line'], $a2['file'].$a2['line']);
-        });
-        $lastFile = '';
-        foreach ($errors as $error) {
-            if ($error['isSuppressed']) {
-                continue;
-            }
-            if ($error['file'] !== $lastFile) {
-                $errorStr .= $error['file'].':'."\n";
-                $lastFile = $error['file'];
-            }
-            $typeStr = $error['type'] === E_STRICT
-                ? 'Strict'
-                : $error['typeStr'];
-            $errorStr .= '  Line '.$error['line'].': ('.$typeStr.') '.$error['message']."\n";
+        if (\is_string($val)) {
+            return $this->redactString($val, $key);
         }
-        return $errorStr;
+        if ($val instanceof Abstraction) {
+            if ($val['type'] == 'object') {
+                $props = $val['properties'];
+                foreach ($props as $name => $prop) {
+                    $props[$name]['value'] = $this->redact($prop['value'], $name);
+                }
+                $val['properties'] = $props;
+                $val['stringified'] = $this->redact($val['stringified']);
+                if (isset($val['methods']['__toString']['returnValue'])) {
+                    $val['methods']['__toString']['returnValue'] = $this->redact($val['methods']['__toString']['returnValue']);
+                }
+            } elseif ($val['value']) {
+                $val['value'] = $this->redact($val['value']);
+            }
+        }
+        if (\is_array($val)) {
+            foreach ($val as $k => $v) {
+                $val[$k] = $this->redact($v, $k);
+            }
+        }
+        return $val;
     }
 
     /**
@@ -595,26 +599,175 @@ class Internal implements SubscriberInterface
             // we already closed
             return;
         }
-        $data = $this->debug->getData();
-        $data['groupPriorityStack'][] = 'main';
-        while ($data['groupPriorityStack']) {
-            $priority = \array_pop($data['groupPriorityStack']);
-            foreach ($data['groupStacks'][$priority] as $i => $info) {
-                if (!$info['collect']) {
-                    continue;
-                }
-                unset($data['groupStacks'][$priority][$i]);
-                $meta = array(
-                    'channel' => $info['channel'],
-                );
-                if ($priority === 'main') {
-                    $data['log'][] = array('groupEnd', array(), $meta);
-                } else {
-                    $data['logSummary'][$priority][] = array('groupEnd', array(), $meta);
-                }
+        $groupPriorityStack = \array_merge(array('main'), $this->debug->getData('groupPriorityStack'));
+        $groupStacks = $this->debug->getData('groupStacks');
+        while ($groupPriorityStack) {
+            $priority = \array_pop($groupPriorityStack);
+            foreach ($groupStacks[$priority] as $info) {
+                $info['channel']->groupEnd();
+            }
+            if (\is_int($priority)) {
+                // close the summary
+                $this->debug->groupEnd();
             }
         }
-        $this->debug->setData($data);
+    }
+
+    /**
+     * log response
+     *
+     * @return void
+     */
+    private function logResponse()
+    {
+        if (!$this->cfg['logResponse']) {
+            return;
+        }
+        $maxLen = $this->debug->getCfg('logResponseMaxLen');
+        $maxLen = $this->debug->utilities->getBytes($maxLen, true);
+        $contentType = $this->getResponseContentType();
+        if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
+            // we're not interested in logging response
+            $this->debug->log('response', array(
+                'Content-Type' => $contentType,
+            ));
+            \ob_end_flush();
+            return;
+        }
+        $response = \ob_get_clean();
+        $contentLength = \strlen($response);
+        if ($this->debug->response) {
+            try {
+                $stream = $this->debug->response->getBody();
+                $contentLength = $stream->getSize(); // likely returns null (unknown)
+                if ($contentLength <= $maxLen) {
+                    $response = $this->debug->utilities->getStreamContents($stream);
+                    $contentLength = \strlen($response);
+                }
+            } catch (Exception $e) {
+                $this->debug->warn('Exception', array(
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ));
+                return;
+            }
+        }
+        if (!$maxLen || $contentLength < $maxLen) {
+            $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
+                'value' => $response,
+                'contentType' => $contentType,
+            ));
+            $this->debug->log(
+                'response (%c%s) %c%s',
+                'font-family: monospace;',
+                $contentType,
+                'font-style: italic; opacity: 0.8;',
+                $event['value'] instanceof Abstraction
+                    ? '(prettified)'
+                    : '',
+                $event['value'],
+                $this->debug->meta('redact')
+            );
+        } else {
+            $this->debug->log('response (too large to output)', array(
+                'Content-Type' => $contentType,
+                'Content-Length' => $contentLength,
+            ));
+        }
+        echo $response;
+    }
+
+    /**
+     * Handle "logResponse" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgLogResponse($val)
+    {
+        if ($val === 'auto') {
+            $server = \array_merge(array(
+                'HTTP_ACCEPT' => null,
+                'HTTP_SOAPACTION' => null,
+                'HTTP_USER_AGENT' => null,
+            ), $_SERVER);
+            $val = \count(\array_filter(array(
+                \in_array($this->debug->utilities->getInterface(), array('ajax','http')),
+                $server['HTTP_SOAPACTION'],
+                \stripos($server['HTTP_USER_AGENT'], 'curl') !== false,
+            ))) > 0;
+        }
+        if ($val) {
+            if (!$this->cfg['logResponse']) {
+                \ob_start();
+            }
+        } elseif ($this->cfg['logResponse']) {
+            \ob_end_flush();
+        }
+        $this->cfg['logResponse'] = $val;
+    }
+
+    /**
+     * Handle "onBootstrap" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgOnBootstrap($val)
+    {
+        if (!$this->bootstraped) {
+            // we're initializing
+            $this->debug->eventManager->subscribe('debug.bootstrap', $val);
+        } else {
+            // boostrap has already occured, so go ahead and call
+            \call_user_func($val, new Event($this->debug));
+        }
+    }
+
+    /**
+     * Handle "onLog" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgOnLog($val)
+    {
+        /*
+            Replace - not append - subscriber set via setCfg
+        */
+        $onLogPrev = $this->debug->getCfg('onLog');
+        if ($onLogPrev) {
+            $this->debug->eventManager->unsubscribe('debug.log', $onLogPrev);
+        }
+        $this->debug->eventManager->subscribe('debug.log', $val);
+    }
+
+    /**
+     * Handle "redactKeys" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgRedactKeys($val)
+    {
+        $keys = array();
+        foreach ($val as $key) {
+            $keys[$key] = $this->redactBuildRegex($key);
+        }
+        $this->cfg['redactKeys'] = $keys;
     }
 
     /**
@@ -653,21 +806,71 @@ class Internal implements SubscriberInterface
             return;
         }
         $vals = $this->runtimeVals();
-        $outputAs = $this->debug->getCfg('outputAs');
-        $outputAsHtml = $outputAs && \get_class($outputAs) == 'bdk\\Debug\\Route\\Html';
+        $route = $this->debug->getCfg('route');
+        $isRouteHtml = $route && \get_class($route) == 'bdk\\Debug\\Route\\Html';
         $this->debug->groupSummary(1);
-        $this->debug->info('Built In '.$vals['runtime'].' sec');
+        $this->debug->info('Built In ' . $this->debug->utilities->formatDuration($vals['runtime']));
         $this->debug->info(
             'Peak Memory Usage'
-                .($outputAsHtml
+                . ($isRouteHtml
                     ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
                     : '')
-                .': '
-                .$this->debug->utilities->getBytes($vals['memoryPeakUsage']).' / '
-                .$this->debug->utilities->getBytes($vals['memoryLimit']),
+                . ': '
+                . $this->debug->utilities->getBytes($vals['memoryPeakUsage']) . ' / '
+                . $this->debug->utilities->getBytes($vals['memoryLimit']),
             $this->debug->meta('sanitize', false)
         );
         $this->debug->groupEnd();
+    }
+
+    /**
+     * Build Regex that will search for key=val in string
+     *
+     * @param string $key key to redact
+     *
+     * @return string
+     */
+    private function redactBuildRegex($key)
+    {
+        return '#(?:'
+            // xml
+            . '<' . $key . '\b.*?>\s*([^<]*?)\s*</' . $key . '>'
+            . '|'
+            // json
+            . \json_encode($key) . '\s*:\s*"([^"]*?)"'
+            . '|'
+            // url encoded
+            . '\b' . $key . '=([^\s&]+\b)'
+            . ')#';
+    }
+
+    /**
+     * Redact string or portions within
+     *
+     * @param string $val string to redact
+     * @param string $key if array value: the key. if object property: the prop name
+     *
+     * @return string
+     */
+    protected function redactString($val, $key = null)
+    {
+        if (\is_string($key)) {
+            // do exact match against array key or object property
+            foreach (\array_keys($this->cfg['redactKeys']) as $redactKey) {
+                if ($redactKey === $key) {
+                    return \call_user_func($this->cfg['redactReplace'], $val, $key);
+                }
+            }
+        }
+        foreach ($this->cfg['redactKeys'] as $key => $regex) {
+            $val = \preg_replace_callback($regex, function ($matches) use ($key) {
+                $matches = \array_filter($matches, 'strlen');
+                $substr = \end($matches);
+                $replacement = \call_user_func($this->cfg['redactReplace'], $substr, $key);
+                return \str_replace($substr, $replacement, $matches[0]);
+            }, $val);
+        }
+        return $val;
     }
 
     /**
@@ -684,7 +887,7 @@ class Internal implements SubscriberInterface
         $removed = false;
         for ($i = 0, $count = \count($log); $i < $count; $i++) {
             $logEntry = $log[$i];
-            $method = $logEntry[0];
+            $method = $logEntry['method'];
             /*
                 pushing/popping to/from groupStack led to unexplicable warning:
                 "Cannot add element to the array as the next element is already occupied"
@@ -692,10 +895,10 @@ class Internal implements SubscriberInterface
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $groupStack[$groupStackCount] = array(
                     'i' => $i,
-                    'meta' => !empty($logEntry[2]) ? $logEntry[2] : array(),
+                    'meta' => $logEntry['meta'],
                     'hasEntries' => false,
                 );
-                $groupStackCount ++;
+                $groupStackCount++;
             } elseif ($groupStackCount) {
                 if ($method == 'groupEnd') {
                     $groupStackCount--;
@@ -727,11 +930,51 @@ class Internal implements SubscriberInterface
             $vals = array(
                 'memoryPeakUsage' => \memory_get_peak_usage(true),
                 'memoryLimit' => $this->debug->utilities->memoryLimit(),
-                'runtime' => $this->debug->timeEnd('debugInit', true),
+                'runtime' => $this->debug->timeEnd('debugInit', $this->debug->meta('silent')),
             );
             $this->debug->setData('runtime', $vals);
         }
         return $vals;
+    }
+
+    /**
+     * Set route value
+     * instantiate object if necessary & addPlugin if not already subscribed
+     *
+     * @param RouteInterface|string $route RouteInterface instance, or (short) classname
+     *
+     * @return RouteInterface|string
+     */
+    private function setRoute($route)
+    {
+        if ($this->bootstraped) {
+            /*
+                Only need to wory about previous route if we're bootstrapped
+                There can only be one 'route' at a time:
+                If multiple output routes are desired, use debug->addPlugin()
+                unsubscribe current OutputInterface
+            */
+            $routePrev = $this->debug->getCfg('route');
+            if (\is_object($routePrev)) {
+                $this->debug->removePlugin($routePrev);
+            }
+        }
+        if (\is_string($route) && $route !== 'auto') {
+            $prop = 'route' . \ucfirst($route);
+            $route = $this->debug->{$prop};
+        }
+        if ($route instanceof RouteInterface) {
+            $this->debug->addPlugin($route);
+            $classname = \get_class($route);
+            $prefix = __NAMESPACE__ . '\\Route\\';
+            if (\strpos($classname, $prefix) === 0) {
+                $prop = 'route' . \substr($classname, \strlen($prefix));
+                $this->debug->{$prop} = $route;
+            }
+        } else {
+            $route = 'auto';
+        }
+        return $route;
     }
 
     /**
@@ -751,7 +994,8 @@ class Internal implements SubscriberInterface
         if (!$this->hasLog()) {
             return false;
         }
-        if ($this->debug->getCfg('emailLog') === 'always') {
+        $emailLog = $this->debug->getCfg('emailLog');
+        if (\in_array($emailLog, array(true, 'always'), true)) {
             return true;
         }
         if ($this->debug->getCfg('emailLog') === 'onError') {
@@ -777,14 +1021,14 @@ class Internal implements SubscriberInterface
     {
         $groupStack = array();
         for ($i = 0, $count = \count($log); $i < $count; $i++) {
-            $method = $log[$i][0];
+            $method = $log[$i]['method'];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $groupStack[] = $i;
             } elseif ($method == 'groupEnd') {
                 \array_pop($groupStack);
             } elseif (\in_array($method, array('error', 'warn'))) {
                 foreach ($groupStack as $i2) {
-                    $log[$i2][0] = 'group';
+                    $log[$i2]['method'] = 'group';
                 }
             }
         }

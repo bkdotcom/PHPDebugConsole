@@ -40,6 +40,7 @@ class OnBootstrapTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
+                    'detectFiles' => false,
                     'file' => null,
                     'line' => null,
                 ),
@@ -65,6 +66,7 @@ class OnBootstrapTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
+                    'detectFiles' => false,
                     'file' => null,
                     'line' => null,
                 ),
@@ -92,6 +94,7 @@ class OnBootstrapTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
+                    'detectFiles' => false,
                     'file' => null,
                     'line' => null,
                 ),
@@ -119,6 +122,7 @@ class OnBootstrapTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 array(
+                    'detectFiles' => false,
                     'file' => null,
                     'line' => null,
                 ),

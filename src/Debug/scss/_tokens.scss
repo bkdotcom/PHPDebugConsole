@@ -1,0 +1,129 @@
+//
+// data types and "tokens"
+//
+
+$color-const: #039;
+$color-keyword: #07A;
+$color-type: #693;
+$color-key-bracket: #999;
+$color-punct: #999;
+$color-operator: #A67F59;
+
+$color-true: #993;
+$color-true-shadow: rgba(153, 153, 51, 0.5);
+$color-false: #C33;
+$color-false-shadow: rgba(204, 51, 51, 0.5);
+$color-numeric: #009;
+$color-recursion: #F00;
+$color-string: #333;
+$color-stringified: rgba(0, 200, 200, 0.6);
+$color-timestamp: #009;
+$color-bg-specialchar: #c0c0c0;
+$color-specialchar: #003;
+$color-bg-unicode: #c0c0ff;
+
+.t_bool.true { color:$color-true; text-shadow:1px 1px 2px $color-true-shadow; }
+.t_bool.false { color:$color-false; text-shadow:1px 1px 2px $color-false-shadow; }
+.t_callable {
+	font-weight: bold;
+	.t_type,
+	.namespace {
+		font-weight: normal;
+	}
+}
+.t_const {
+	color: $color-const;
+	font-family: monospace;
+	.t_identifier {
+		color: inherit;
+	}
+}
+//
+// property-name, constant-name, method-name
+//
+.t_identifier {
+	font-weight: bold;
+}
+.t_int,
+.t_float,
+.numeric {
+	font-family: $font-family-numeric;
+	color: $color-numeric;
+	font-size: 1.15em;
+	line-height: 1.15em;
+	&:before,
+	&:after {
+		// undo font-size increase got
+		font-family: $font-family;
+		font-size: 0.8695em;
+	}
+}
+
+.t_key {
+	opacity:.75;
+	&:before,
+	&:after {
+		font-family: $font-family;
+		color: $color-key-bracket;
+	}
+	&:before { content:'['; margin-right:1px; }
+	&:after { content:']'; margin-left:1px; }
+	&.t_int { white-space: nowrap; }
+}
+.t_keyword { color: $color-keyword; }
+.t_null { opacity: 0.3; }
+.t_operator { color: $color-operator; }
+.t_punct { color: $color-punct; }
+.excluded,
+.t_notInspected,
+.t_recursion { font-weight:bold; color:$color-recursion; }
+.t_resource { font-style:italic; }
+.t_string {
+	white-space: pre-wrap;
+	word-break: break-all;
+	&:before,
+	&:after {
+		font-family: $font-family;
+		opacity: 0.33;
+		color: $color-string;
+	}
+	&:before { content: open-quote; }
+	&:after { content: close-quote; }
+	> * {
+		white-space: normal;
+		word-break: break-word;
+	}
+	pre {
+		white-space: pre;
+	}
+}
+.t_stringified { text-shadow: 0 0 2px $color-stringified; }
+.t_type { color: $color-type; }
+.t_undefined:after { content:"undefined"; opacity:0.3; }
+
+.timestamp { color: $color-timestamp; }
+.binary,
+.unicode {
+	margin: 0 .1em;
+	padding: 0 .3em;
+	background-color: $color-bg-specialchar;
+	color: $color-specialchar;
+	font-weight: bold;
+}
+.unicode {
+	background-color: $color-bg-unicode;
+}
+.c1-control {
+    display: inline-block;
+    vertical-align: baseline;
+	clip-path: inset(30% 0px);
+	transform: scale(2);
+}
+
+//
+// Whitespace
+//
+.ws_s, .ws_t, .ws_r, .ws_n, .ws_p { opacity: 0.33; }
+.ws_t:before { content: "\203A"; display: inline-block; width: 1em; }   // &rsaquo;
+.ws_r:before { content: "\\r"; }
+.ws_n:before { content: "\\n"; }

@@ -1,5 +1,7 @@
 <?php
 
+use bdk\Debug;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -72,6 +74,42 @@ class DebugTest extends DebugTestFramework
         }
     }
 
+    public function testPhpError()
+    {
+        parent::$allowError = true;
+        $strict = array_pop(explode('-', 'hello-world'));   // Only variables should be passed by reference
+        $lastError = $this->debug->errorHandler->get('lastError');
+        $errCat = version_compare(PHP_VERSION, '7.0', '>=')
+            ? 'notice'
+            : 'strict';
+        $errMsg = 'Only variables should be passed by reference';
+        $args = version_compare(PHP_VERSION, '7.0', '>=')
+            ? array('Notice:', __FILE__.' (line '.$lastError['line'].')', $errMsg)
+            : array('Runtime Notice (E_STRICT):', __FILE__.' (line '.$lastError['line'].')', $errMsg);
+        $this->testMethod(null, array(), array(
+            'entry' => array(
+                'warn',
+                $args,
+                array(
+                    'backtrace' => $lastError['backtrace'],
+                    'channel' => 'phpError',
+                    'detectFiles' => true,
+                    'errorCat' => $errCat,
+                    'errorHash' => $lastError['hash'],
+                    'errorType' => version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
+                    'file' => __FILE__,
+                    'line' => $lastError['line'],
+                    'sanitize' => true,
+                ),
+            ),
+            'html' => '<li class="error-'.$errCat.' m_warn" data-channel="phpError" data-detect-files="true">'
+                .'<span class="no-quotes t_string">'.$args[0].' </span>'
+                .'<span class="t_string">'.$args[1].'</span>, '
+                .'<span class="t_string">'.$errMsg.'</span>'
+                .'</li>',
+        ));
+    }
+
     /**
      * Assert that calling \bdk\Debug::_setCfg() before an instance has been instantiated creates an instance
      *
@@ -87,14 +125,21 @@ class DebugTest extends DebugTestFramework
     {
         $this->destroyDebug();
 
-        \bdk\Debug::_setCfg(array('collect'=>true, 'output'=>true, 'initViaSetCfg'=>true));
-        $this->assertSame(true, \bdk\Debug::getInstance()->getCfg('initViaSetCfg'));
+        // explicitly set route, so that stream/cli output does not initiate
+        Debug::_setCfg(array(
+            'collect' => true,
+            'initViaSetCfg' => true,
+            'logResponse' => false,
+            'output' => true,
+            'route' => 'html',
+        ));
+        $this->assertSame(true, Debug::getInstance()->getCfg('initViaSetCfg'));
 
         /*
             The new debug instance got a new eventManager
             Lets clear all of its subscribers
         */
-        $eventManager = \bdk\Debug::getInstance()->eventManager;
+        $eventManager = Debug::getInstance()->eventManager;
         foreach ($eventManager->getSubscribers() as $eventName => $subs) {
             foreach ($subs as $sub) {
                 $eventManager->unsubscribe($eventName, $sub);
@@ -112,10 +157,12 @@ class DebugTest extends DebugTestFramework
     public function testShutDownSubscribers()
     {
         $subscribers = $this->debug->eventManager->getSubscribers('php.shutdown');
-        $this->assertSame($this->debug->errorHandler, $subscribers[0][0]);
-        $this->assertSame('onShutdown', $subscribers[0][1]);
-        $this->assertSame($this->debug->internal, $subscribers[1][0]);
-        $this->assertSame('onShutdownHigh', $subscribers[1][1]);
+        $subscribersExpect = array(
+            array($this->debug->errorHandler, 'onShutdown'),
+            array($this->debug->internal, 'onShutdownHigh'),
+            array($this->debug->internal, 'onShutdownLow'),
+        );
+        $this->assertSame($subscribersExpect, $subscribers);
     }
 
     /*
@@ -128,12 +175,12 @@ class DebugTest extends DebugTestFramework
         $this->debug->warn('token log entry 2');
         $this->assertArrayHasKey('log', $this->debug->getData());
         $this->assertSame(2, $this->debug->getData('log/__count__'));
-        $this->assertSame('info', $this->debug->getData('log.0.0'));
-        $this->assertSame('warn', $this->debug->getData('log/1/0'));
-        $this->assertSame('warn', $this->debug->getData('log/__end__/0'));
+        $this->assertSame('info', $this->debug->getData('log.0.method'));
+        $this->assertSame('warn', $this->debug->getData('log/1/method'));
+        $this->assertSame('warn', $this->debug->getData('log/__end__/method'));
         $this->assertSame(null, $this->debug->getData('log/bogus'));
         $this->assertSame(null, $this->debug->getData('log/bogus/more'));
-        $this->assertSame(null, $this->debug->getData('log/0/0/notArray'));
+        $this->assertSame(null, $this->debug->getData('log/0/method/notArray'));
     }
 
     public function testMeta()
@@ -142,35 +189,35 @@ class DebugTest extends DebugTestFramework
             Test cfg shortcut...
         */
         $this->assertSame(array(
-            'cfg'=>array('foo'=>'bar'),
-            'debug'=>\bdk\Debug::META,
+            'cfg' => array('foo'=>'bar'),
+            'debug' => Debug::META,
         ), $this->debug->meta('cfg', array('foo'=>'bar')));
         $this->assertSame(array(
-            'cfg'=>array('foo'=>'bar'),
-            'debug'=>\bdk\Debug::META,
+            'cfg' => array('foo'=>'bar'),
+            'debug' => Debug::META,
         ), $this->debug->meta('cfg', 'foo', 'bar'));
         $this->assertSame(array(
-            'cfg'=>array('foo'=>true),
-            'debug'=>\bdk\Debug::META,
+            'cfg' => array('foo'=>true),
+            'debug' => Debug::META,
         ), $this->debug->meta('cfg', 'foo'));
         // invalid cfg val... empty meta
         $this->assertSame(array(
-            'debug'=>\bdk\Debug::META,
+            'debug' => Debug::META,
         ), $this->debug->meta('cfg'));
         /*
             non cfg shortcut
         */
         $this->assertSame(array(
             'foo' => 'bar',
-            'debug'=>\bdk\Debug::META,
+            'debug' => Debug::META,
         ), $this->debug->meta(array('foo'=>'bar')));
         $this->assertSame(array(
             'foo' => 'bar',
-            'debug'=>\bdk\Debug::META,
+            'debug' => Debug::META,
         ), $this->debug->meta('foo', 'bar'));
         $this->assertSame(array(
             'foo' => true,
-            'debug'=>\bdk\Debug::META,
+            'debug' => Debug::META,
         ), $this->debug->meta('foo'));
     }
 
@@ -243,7 +290,7 @@ class DebugTest extends DebugTestFramework
     private function setErrorCallerHelper($static = false)
     {
         if ($static) {
-            \bdk\Debug::_setErrorCaller();
+            Debug::_setErrorCaller();
         } else {
             $this->debug->setErrorCaller();
         }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -119,6 +120,7 @@ class Utf8
                 return true;
             }
         }
+        return false;
     }
 
     /**
@@ -186,7 +188,7 @@ class Utf8
         if (self::$stats['strLen']) {
             $percentOther = (self::$stats['bytesOther']) / self::$stats['strLen'] * 100;
             if ($percentOther > 33) {
-                $strNew = self::dumpBlock($str, 'other', array('prefix'=>false));
+                $strNew = self::dumpBlock($str, 'other', array('prefix' => false));
             } else {
                 $subStr = \substr(self::$str, $curBlockStart, $len);
                 $strNew .= self::dumpBlock($subStr, $curBlockType);
@@ -297,68 +299,95 @@ class Utf8
      * @param string $blockType "utf8", "utf8special", or "other"
      * @param array  $options   options
      *
-     * @return [type] [description]
+     * @return string hidden/special chars converted to visible human-readable
      */
     private static function dumpBlock($str, $blockType, $options = array())
     {
         if ($str === '') {
             return '';
         }
-        $options = \array_merge(array(
-            'prefix' => true,
-        ), $options);
         if ($blockType == 'utf8' && self::$sanitizeNonBinary) {
             $str = \htmlspecialchars($str);
         } elseif ($blockType == 'utf8special') {
-            $strNew = '';
-            $i = 0;
-            $length = \strlen($str);
-            while ($i < $length) {
-                $ord = self::ordUtf8($str, $i, $char);
-                $ordHex = \dechex($ord);
-                $ordHex = \str_pad($ordHex, 4, "0", STR_PAD_LEFT);
-                if (self::$useHtml) {
-                    $chars = \str_split($char);
-                    $utf8Hex = \array_map('bin2hex', $chars);
-                    $utf8Hex = '\x'.\implode(' \x', $utf8Hex);
-                    $title = $utf8Hex;
-                    if (isset(self::$charDesc[$ord])) {
-                        $title = self::$charDesc[$ord].': '.$utf8Hex;
-                    }
-                    $strNew = '<a class="unicode" href="https://unicode-table.com/en/'.$ordHex.'" target="unicode-table" title="'.$title.'">\u'.$ordHex.'</a>';
-                } else {
-                    $strNew .= '\u{'.$ordHex.'}';
-                }
-            }
-            $str = $strNew;
+            $str = self::dumpBlockSpecial($str);
         } elseif ($blockType == 'other') {
-            if (!$options['prefix']) {
-                $str = \bin2hex($str);
-                $str = \trim(\chunk_split($str, 2, ' '));
-            } else {
-                $chars = \str_split($str);
-                foreach ($chars as $i => $char) {
-                    $ord = \ord($char);
-                    $hex = \bin2hex($char); // could use dechex($ord), but would require padding
-                    if (self::$useHtml && isset(self::$charDesc[$ord])) {
-                        if ($ord < 0x20 || $ord == 0x7f) {
-                            // lets use the control pictures
-                            $chr = $ord == 0x7f
-                                ? "\xe2\x90\xa1"            // "del" char
-                                : "\xe2\x90".\chr($ord+128); // chars for 0x00 - 0x1F
-                            $chars[$i] = '<span class="c1-control" title="'.self::$charDesc[$ord].': \x'.$hex.'">'.$chr.'</span>';
-                        } else {
-                            $chars[$i] = '<span title="'.self::$charDesc[$ord].'">\x'.$hex.'</span>';
-                        }
-                    } else {
-                        $chars[$i] = '\x'.$hex;
-                    }
-                }
-                $str = \implode(' ', $chars);
-            }
+            $str = self::dumpBlockOther($str, $options);
+        }
+        return $str;
+    }
+
+    /**
+     * Dump a "special" char  (ie hidden/whitespace)
+     *
+     * @param string $str string/char
+     *
+     * @return string
+     */
+    private static function dumpBlockSpecial($str)
+    {
+        $strNew = '';
+        $i = 0;
+        $length = \strlen($str);
+        while ($i < $length) {
+            $ord = self::ordUtf8($str, $i, $char);
+            $ordHex = \dechex($ord);
+            $ordHex = \str_pad($ordHex, 4, "0", STR_PAD_LEFT);
             if (self::$useHtml) {
-                $str = '<span class="binary">'.$str.'</span>';
+                $chars = \str_split($char);
+                $utf8Hex = \array_map('bin2hex', $chars);
+                $utf8Hex = '\x' . \implode(' \x', $utf8Hex);
+                $title = $utf8Hex;
+                if (isset(self::$charDesc[$ord])) {
+                    $title = self::$charDesc[$ord] . ': ' . $utf8Hex;
+                }
+                $url = 'https://unicode-table.com/en/' . $ordHex;
+                $strNew = '<a class="unicode" href="' . $url . '" target="unicode-table" title="' . $title . '">\u' . $ordHex . '</a>';
+            } else {
+                $strNew .= '\u{' . $ordHex . '}';
             }
+        }
+        return $strNew;
+    }
+
+    /**
+     * Dump "other" characters (ie control char)
+     *
+     * @param string $str     string/char
+     * @param array  $options options
+     *
+     * @return string
+     */
+    private static function dumpBlockOther($str, $options = array())
+    {
+        $options = \array_merge(array(
+            'prefix' => true,
+        ), $options);
+        if (!$options['prefix']) {
+            $str = \bin2hex($str);
+            $str = \trim(\chunk_split($str, 2, ' '));
+        } else {
+            $chars = \str_split($str);
+            foreach ($chars as $i => $char) {
+                $ord = \ord($char);
+                $hex = \bin2hex($char); // could use dechex($ord), but would require padding
+                if (self::$useHtml && isset(self::$charDesc[$ord])) {
+                    if ($ord < 0x20 || $ord == 0x7f) {
+                        // lets use the control pictures
+                        $chr = $ord == 0x7f
+                            ? "\xe2\x90\xa1"            // "del" char
+                            : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
+                        $chars[$i] = '<span class="c1-control" title="' . self::$charDesc[$ord] . ': \x' . $hex . '">' . $chr . '</span>';
+                    } else {
+                        $chars[$i] = '<span title="' . self::$charDesc[$ord] . '">\x' . $hex . '</span>';
+                    }
+                } else {
+                    $chars[$i] = '\x' . $hex;
+                }
+            }
+            $str = \implode(' ', $chars);
+        }
+        if (self::$useHtml) {
+            $str = '<span class="binary">' . $str . '</span>';
         }
         return $str;
     }
@@ -376,7 +405,7 @@ class Utf8
         if ($stat == 'utf8special') {
             $stat = 'bytesSpecial';
         } else {
-            $stat = 'bytes'.\ucfirst($stat);
+            $stat = 'bytes' . \ucfirst($stat);
         }
         self::$stats[$stat] += $inc;
     }
@@ -396,41 +425,49 @@ class Utf8
         $i = self::$curI;
         $special = false;
         $byte1 = \ord(self::$str[$i]);
-        $byte2 = $i + 1 < self::$stats['strLen'] ? \ord(self::$str[$i+1]) : null;
-        $byte3 = $i + 2 < self::$stats['strLen'] ? \ord(self::$str[$i+2]) : null;
-        $byte4 = $i + 3 < self::$stats['strLen'] ? \ord(self::$str[$i+3]) : null;
+        $byte2 = $i + 1 < self::$stats['strLen'] ? \ord(self::$str[$i + 1]) : null;
+        $byte3 = $i + 2 < self::$stats['strLen'] ? \ord(self::$str[$i + 2]) : null;
+        $byte4 = $i + 3 < self::$stats['strLen'] ? \ord(self::$str[$i + 3]) : null;
         if ($byte1 < 0x80) {                 # 0bbbbbbb
             if (($byte1 < 0x20 || $byte1 == 0x7f) && !\in_array($byte1, array(0x09,0x0a,0x0d))) {
                 $special = true;
             }
             self::$curI += 1;    // advance to next byte
         } elseif (($byte1 & 0xe0) == 0xc0) { # 110bbbbb 10bbbbbb
-            if ($i + 1 >= self::$stats['strLen'] ||
-                ($byte2 & 0xc0) !== 0x80 ||
-                ($byte1 & 0xfe) === 0xc0  // overlong
+            if (
+                $i + 1 >= self::$stats['strLen']
+                || ($byte2 & 0xc0) !== 0x80
+                || ($byte1 & 0xfe) === 0xc0  // overlong
             ) {
                 self::$curI += 1;
                 return false;
             }
             self::$curI += 2;    // skip the next byte
         } elseif (($byte1 & 0xf0) == 0xe0) { # 3-byte sequence 1110bbbb 10bbbbbb 10bbbbbb
-            if ($i + 2 >= self::$stats['strLen'] ||
-                ($byte2 & 0xc0) !== 0x80 ||
-                ($byte3 & 0xc0) !== 0x80 ||
-                $byte1 === 0xe0 && ($byte2 & 0xe0) === 0x80 ||  // overlong
-                $byte1 === 0xed && ($byte2 & 0xe0) === 0xa0     // UTF-16 surrogate (U+D800 - U+DFFF)
+            if (
+                $i + 2 >= self::$stats['strLen']
+                || ($byte2 & 0xc0) !== 0x80
+                || ($byte3 & 0xc0) !== 0x80
+                || $byte1 === 0xe0
+                    && ($byte2 & 0xe0) === 0x80  // overlong
+                || $byte1 === 0xed
+                    && ($byte2 & 0xe0) === 0xa0  // UTF-16 surrogate (U+D800 - U+DFFF)
             ) {
                 self::$curI += 1;
                 return false;
             }
             self::$curI += 3;    // skip the next 2 bytes
         } elseif (($byte1 & 0xf8) == 0xf0) { # 4-byte sequence: 11110bbb 10bbbbbb 10bbbbbb 10bbbbbb
-            if ($i + 3 >= self::$stats['strLen'] ||
-                ($byte2 & 0xc0) !== 0x80 ||
-                ($byte3 & 0xc0) !== 0x80 ||
-                ($byte4 & 0xc0) !== 0x80 ||
-                $byte1 === 0xf0 && ($byte2 & 0xf0) === 0x80 ||      // overlong
-                $byte1 === 0xf4 && $byte2 > 0x8f || $byte1 > 0xf4   // > U+10FFFF
+            if (
+                $i + 3 >= self::$stats['strLen']
+                || ($byte2 & 0xc0) !== 0x80
+                || ($byte3 & 0xc0) !== 0x80
+                || ($byte4 & 0xc0) !== 0x80
+                || $byte1 === 0xf0
+                    && ($byte2 & 0xf0) === 0x80          // overlong
+                || $byte1 === 0xf4
+                    && $byte2 > 0x8f
+                    || $byte1 > 0xf4    // > U+10FFFF
             ) {
                 self::$curI += 1;
                 return false;
@@ -441,7 +478,7 @@ class Utf8
             return false;
         }
         if ($checkSpecial) {
-            $subStr = \substr(self::$str, $i, self::$curI-$i);
+            $subStr = \substr(self::$str, $i, self::$curI - $i);
             $special = $special || self::hasSpecial($subStr);
         }
         return true;

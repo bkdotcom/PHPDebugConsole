@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -6,16 +7,27 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3
+ * @version   v3.0
  */
 
 namespace bdk\Debug;
+
+use bdk\Debug;
+use bdk\Debug\LogEntry;
+use Psr\Http\Message\StreamInterface;
+use DOMDocument;
+use Exception;
+use SqlFormatter;       // optional library
 
 /**
  * Utility methods
  */
 class Utilities
 {
+
+    protected static $domDocument;
+
+    const INCL_ARGS = 1;
 
     /**
      * Used to determine caller info...
@@ -24,7 +36,8 @@ class Utilities
      * @var array
      */
     private static $callerBreakers = array(
-        'classesRegex' => '/^bdk\\\\Debug\b/',
+        'classes' => array('bdk\\Debug'),
+        'classesRegex' => '/^bdk\\\\Debug(?!\\\\Collector)\b/',  // we cache a regex of the classes
         'paths' => array(),
     );
 
@@ -88,6 +101,54 @@ class Utilities
         'seamless', // <iframe> - removed from draft
         'sortable', // <table> - removed from draft
     );
+
+    /**
+     * add a new namespace, classname or filepath to be used to determine when to
+     * stop iterrating over the backtrace when determining calling info
+     *
+     * @param string       $what 'class' or 'path'
+     * @param string|array $val  'class' : classname(s)|namespace(s)
+     *                           'path' : path(s)
+     *
+     * @return void
+     */
+    public static function addCallerBreaker($what, $val)
+    {
+        if ($what == 'class') {
+            $what = 'classes';
+        } elseif ($what == 'path') {
+            $what = 'paths';
+        }
+        self::$callerBreakers[$what] = \array_merge(self::$callerBreakers[$what], (array) $val);
+        self::$callerBreakers[$what] = \array_unique(self::$callerBreakers[$what]);
+        if ($what == 'classes') {
+            self::$callerBreakers['classesRegex'] = '/^('
+                . \implode('|', \array_map('preg_quote', self::$callerBreakers['classes']))
+                . ')\b/';
+        }
+    }
+
+    /**
+     * "dereference" array
+     * returns a copy of the array with references removed
+     *
+     * @param array   $source source array
+     * @param boolean $deep   (true) deep copy
+     *
+     * @return array
+     */
+    public static function arrayCopy($source, $deep = true)
+    {
+        $arr = array();
+        foreach ($source as $key => $val) {
+            if ($deep && \is_array($val)) {
+                $arr[$key] = self::arrayCopy($val);
+            } else {
+                $arr[$key] = $val;
+            }
+        }
+        return $arr;
+    }
 
     /**
      * Recursively merge two arrays
@@ -169,7 +230,7 @@ class Utilities
      * data-* attributes will be json-encoded (if non-string)
      * non data attribs with null value will not be output
      *
-     * @param array $attribs key/values
+     * @param array|string $attribs key/values
      *
      * @return string
      * @see    https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#autofilling-form-controls:-the-autocomplete-attribute
@@ -177,7 +238,7 @@ class Utilities
     public static function buildAttribString($attribs)
     {
         if (\is_string($attribs)) {
-            return \rtrim(' '.\trim($attribs));
+            return \rtrim(' ' . \trim($attribs));
         }
         $attribPairs = array();
         foreach ($attribs as $k => $v) {
@@ -195,18 +256,21 @@ class Utilities
             } elseif (\is_array($v) || $k === 'class') {
                 $v = self::buildAttribArrayVal($k, $v);
             }
-            if (\array_filter(array(
-                $v === null,
-                $v === '' && \in_array($k, array('class', 'style'))
-            ))) {
+            if (
+                \array_filter(array(
+                    $v === null,
+                    $v === ''
+                        && \in_array($k, array('class', 'style'))
+                ))
+            ) {
                 // don't include
                 continue;
             }
             $v = \trim($v);
-            $attribPairs[] = $k.'="'.\htmlspecialchars($v).'"';
+            $attribPairs[] = $k . '="' . \htmlspecialchars($v) . '"';
         }
         \sort($attribPairs);
-        return \rtrim(' '.\implode(' ', $attribPairs));
+        return \rtrim(' ' . \implode(' ', $attribPairs));
     }
 
     /**
@@ -223,8 +287,72 @@ class Utilities
         $tagName = \strtolower($tagName);
         $attribStr = self::buildAttribString($attribs);
         return \in_array($tagName, self::$htmlEmptyTags)
-            ? '<'.$tagName.$attribStr.' />'
-            : '<'.$tagName.$attribStr.'>'.$innerhtml.'</'.$tagName.'>';
+            ? '<' . $tagName . $attribStr . ' />'
+            : '<' . $tagName . $attribStr . '>' . $innerhtml . '</' . $tagName . '>';
+    }
+
+    /**
+     * Format duration
+     *
+     * @param float        $duration  duration in seconds
+     * @param string       $format    DateInterval format string, or 'us', 'ms', 's'
+     * @param integer|null $precision decimal precision
+     *
+     * @return string
+     */
+    public static function formatDuration($duration, $format = 'auto', $precision = 4)
+    {
+        if ($format == 'auto') {
+            if ($duration < 1 / 1000) {
+                $format = 'us';
+            } elseif ($duration < 1) {
+                $format = 'ms';
+            } elseif ($duration < 60) {
+                $format = 's';
+            } elseif ($duration < 3600) {
+                $format = '%im %Ss'; // M:SS
+            } else {
+                $format = '%hh %Im %Ss'; // H:MM:SS
+            }
+        }
+        if (\preg_match('/%[YyMmDdaHhIiSsFf]/', $format)) {
+            // php < 7.1 DateInterval doesn't support fraction..   we'll work around that
+            $hours = \floor($duration / 3600);
+            $sec = $duration - $hours * 3600;
+            $min = \floor($sec / 60);
+            $sec = $sec - $min * 60;
+            $sec = \round($sec, 6);
+            if (\preg_match('/%[Ff]/', $format)) {
+                $secWhole = \floor($sec);
+                $secFraction = $secWhole - $sec;
+                $sec = $secWhole;
+                $micros = $secFraction * 1000000;
+                $format = \strtr($format, array(
+                    '%F' => \sprintf('%06d', $micros),  // Microseconds: 6 digits with leading 0
+                    '%f' => $micros,                    // Microseconds: w/o leading zeros
+                ));
+            }
+            $format = \preg_replace('/%[Ss]/', (string) $sec, $format);
+            $dateInterval = new \DateInterval('PT0S');
+            $dateInterval->h = $hours;
+            $dateInterval->i = $min;
+            $dateInterval->sec = $sec;
+            return $dateInterval->format($format);
+        }
+        if ($format == 'us') {
+            $val = $duration * 1000000;
+            $unit = 'μs';
+        } elseif ($format == 'ms') {
+            $val = $duration * 1000;
+            $unit = 'ms';
+        } else {
+            $val = $duration;
+            $unit = 'sec';
+        }
+        if ($precision) {
+            $val = \round($val, $precision);
+        }
+        return $val . ' ' . $unit;
     }
 
     /**
@@ -268,16 +396,17 @@ class Utilities
     }
 
     /**
-     * Convert size int into "1.23 kB"
+     * Convert size int into "1.23 kB" or vice versa
      *
-     * @param integer|string $size bytes or similar to "1.23M"
+     * @param integer|string $size      bytes or similar to "1.23M"
+     * @param boolean        $returnInt return integer?
      *
-     * @return string
+     * @return string|integer
      */
-    public static function getBytes($size)
+    public static function getBytes($size, $returnInt = false)
     {
         if (\is_string($size) && \preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
-            $size = \str_replace(',', '', $matches[1]);
+            $size = (float) \str_replace(',', '', $matches[1]);
             switch (\strtolower($matches[2])) {
                 case 'p':
                     $size *= 1024;
@@ -295,12 +424,15 @@ class Utilities
                     $size *= 1024;
             }
         }
+        if ($returnInt) {
+            return (int) $size;
+        }
         $units = array('B','kB','MB','GB','TB','PB');
-        $i = \floor(\log($size, 1024));
+        $i = \floor(\log((float) $size, 1024));
         $pow = \pow(1024, $i);
         $size = $pow == 0
             ? '0 B'
-            : \round($size/$pow, 2).' '.$units[$i];
+            : \round($size / $pow, 2) . ' ' . $units[$i];
         return $size;
     }
 
@@ -320,10 +452,11 @@ class Utilities
      *    type will always be "::", even if called with an ->
      *
      * @param integer $offset Adjust how far to go back
+     * @param integer $flags  optional INCL_ARGS
      *
      * @return array
      */
-    public static function getCallerInfo($offset = 0)
+    public static function getCallerInfo($offset = 0, $flags = 0)
     {
         /*
             backtrace:
@@ -333,7 +466,11 @@ class Utilities
 
             Must get at least backtrace 13 frames to account for potential framework loggers
         */
-        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT, 13);
+        $options = DEBUG_BACKTRACE_PROVIDE_OBJECT;
+        if (!($flags & self::INCL_ARGS)) {
+            $options = $options | DEBUG_BACKTRACE_IGNORE_ARGS;
+        }
+        $backtrace = \debug_backtrace($options, 13);
         $numFrames = \count($backtrace);
         for ($i = $numFrames - 1; $i > 1; $i--) {
             if (isset($backtrace[$i]['class']) && \preg_match(self::$callerBreakers['classesRegex'], $backtrace[$i]['class'])) {
@@ -355,6 +492,27 @@ class Utilities
             }
         }
         return self::getCallerInfoBuild(\array_slice($backtrace, $i));
+    }
+
+    /**
+     * Returns a sent/pending response header value
+     *
+     * @param string $key default = 'Content-Type', header to return
+     *
+     * @return string (empty string if not emitted)
+     * @req    php >= 5
+     */
+    public static function getEmittedHeader($key = 'Content-Type')
+    {
+        $value = '';
+        $headers = \headers_list();
+        foreach ($headers as $header) {
+            if (\preg_match('/^' . $key . ':\s*([^;]*)/i', $header, $matches)) {
+                $value = $matches[1];
+                break;
+            }
+        }
+        return $value;
     }
 
     /**
@@ -383,9 +541,13 @@ class Utilities
     public static function getInterface()
     {
         $return = 'http';
+        /*
+            note: $_SERVER['argv'] could be populated with query string if
+            register_argc_argv = On
+        */
         $isCliOrCron = \count(\array_filter(array(
             \defined('STDIN'),
-            isset($_SERVER['argv']),
+            isset($_SERVER['argv']) && \count($_SERVER['argv']) > 1,
             !\array_key_exists('REQUEST_METHOD', $_SERVER),
         ))) > 0;
         if ($isCliOrCron) {
@@ -400,24 +562,22 @@ class Utilities
     }
 
     /**
-     * Returns a sent/pending response header value
+     * Get stream contents without affecting pointer
      *
-     * @param string $key default = 'Content-Type', header to return
+     * @param StreamInterface $stream StreamInteface
      *
      * @return string
-     * @req    php >= 5
      */
-    public static function getResponseHeader($key = 'Content-Type')
+    public static function getStreamContents(StreamInterface $stream)
     {
-        $value = null;
-        $headers = \headers_list();
-        foreach ($headers as $header) {
-            if (\preg_match('/^'.$key.':\s*([^;]*)/i', $header, $matches)) {
-                $value = $matches[1];
-                break;
-            }
+        try {
+            $pos = $stream->tell();
+            $body = (string) $stream; // __toString() is like getContents(), but without throwing exceptions
+            $stream->seek($pos);
+            return $body;
+        } catch (Exception $e) {
+            return '';
         }
-        return $value;
     }
 
     /**
@@ -429,14 +589,14 @@ class Utilities
      */
     public static function isBase64Encoded($str)
     {
-        return (boolean) \preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', \trim($str));
+        return (bool) \preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', \trim($str));
     }
 
     /**
      * Is passed argument a simple array with all-integer in sequence from 0 to n?
      * empty array returns true
      *
-     * @param [mixed $val value to check
+     * @param mixed $val value to check
      *
      * @return boolean
      */
@@ -452,6 +612,24 @@ class Utilities
             }
         }
         return true;
+    }
+
+    /**
+     * Test if string is valid xml
+     *
+     * @param string $str string to test
+     *
+     * @return boolean
+     */
+    public static function isXml($str)
+    {
+        if (!\is_string($str)) {
+            return false;
+        }
+        \libxml_use_internal_errors(true);
+        $xmlDoc = \simplexml_load_string($str);
+        \libxml_clear_errors();
+        return $xmlDoc !== false;
     }
 
     /**
@@ -496,7 +674,7 @@ class Utilities
                 $val = $attribs[$k];
                 $attribs[$k] = \json_decode($attribs[$k], true);
                 if ($attribs[$k] === null && $val !== 'null') {
-                    $attribs[$k] = \json_decode('"'.$val.'"', true);
+                    $attribs[$k] = \json_decode('"' . $val . '"', true);
                 }
             }
         }
@@ -514,7 +692,7 @@ class Utilities
      *
      * @param string $tag html tag to parse
      *
-     * @return array
+     * @return array|false
      */
     public static function parseTag($tag)
     {
@@ -533,8 +711,75 @@ class Utilities
                 'attribs' => self::parseAttribString($matches[2]),
                 'innerhtml' => null,
             );
+        } else {
+            $return = false;
         }
         return $return;
+    }
+
+    /**
+     * Prettify JSON string
+     *
+     * @param string $json JSON string to prettify
+     *
+     * @return string
+     */
+    public static function prettyJson($json)
+    {
+        $opts = JSON_PRETTY_PRINT;
+        if (\strpos($json, '\\/') === false) {
+            // json doesn't appear to contain escaped slashes
+            $opts |= JSON_UNESCAPED_SLASHES;
+        }
+        if (\strpos($json, '/u') === false) {
+            // json doesn't appear to contain encoded unicode
+            $opts |= JSON_UNESCAPED_UNICODE;
+        }
+        return \json_encode(\json_decode($json), $opts);
+    }
+
+    /**
+     * Prettify SQL string
+     *
+     * @param string $sql SQL string to prettify
+     *
+     * @return string
+     */
+    public static function prettySql($sql)
+    {
+        if (!\class_exists('\SqlFormatter')) {
+            return $sql;
+        }
+        // whitespace only, don't hightlight
+        $sql = SqlFormatter::format($sql, false);
+        // SqlFormatter borks bound params
+        $sql = \strtr($sql, array(
+            ' : ' => ' :',
+            ' =: ' => ' = :',
+        ));
+        return $sql;
+    }
+
+    /**
+     * Prettify XML string
+     *
+     * @param string $xml XML string to prettify
+     *
+     * @return string
+     */
+    public static function prettyXml($xml)
+    {
+        if (!$xml) {
+            // avoid "empty string supplied" error
+            return $xml;
+        }
+        if (!self::$domDocument) {
+            self::$domDocument = new DOMDocument();
+            self::$domDocument->preserveWhiteSpace = false;
+            self::$domDocument->formatOutput = true;
+        }
+        self::$domDocument->loadXML($xml);
+        return self::$domDocument->saveXML();
     }
 
     /**
@@ -547,55 +792,9 @@ class Utilities
         return \hash(
             'crc32b',
             (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'terminal')
-                .(isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : $_SERVER['REQUEST_TIME'])
-                .(isset($_SERVER['REMOTE_PORT']) ? $_SERVER['REMOTE_PORT'] : '')
+                . (isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : $_SERVER['REQUEST_TIME'])
+                . (isset($_SERVER['REMOTE_PORT']) ? $_SERVER['REMOTE_PORT'] : '')
         );
-    }
-
-    /**
-     * serialize log for emailing
-     *
-     * @param array $data log data to serialize
-     *
-     * @return string
-     */
-    public static function serializeLog($data)
-    {
-        $str = \serialize($data);
-        if (\function_exists('gzdeflate')) {
-            $str = \gzdeflate($str);
-        }
-        $str = \chunk_split(\base64_encode($str), 124);
-        return "START DEBUG\n"
-            .$str    // chunk_split appends a "\r\n"
-            .'END DEBUG';
-    }
-
-    /**
-     * Use to unserialize the log serialized by emailLog
-     *
-     * @param string $str serialized log data
-     *
-     * @return array | false
-     */
-    public static function unserializeLog($str)
-    {
-        $strStart = 'START DEBUG';
-        $strEnd = 'END DEBUG';
-        if (\preg_match('/'.$strStart.'[\r\n]+(.+)[\r\n]+'.$strEnd.'/s', $str, $matches)) {
-            $str = $matches[1];
-        }
-        $str = self::isBase64Encoded($str)
-            ? \base64_decode($str)
-            : false;
-        if ($str && \function_exists('gzinflate')) {
-            $strInflated = \gzinflate($str);
-            if ($strInflated) {
-                $str = $strInflated;
-            }
-        }
-        $data = \unserialize($str);
-        return $data;
     }
 
     /**
@@ -607,7 +806,7 @@ class Utilities
      * @param string $key   attribute name (class|style)
      * @param array  $value classnames for class, key/value for style
      *
-     * @return string
+     * @return string|null
      */
     private static function buildAttribArrayVal($key, $value = array())
     {
@@ -621,7 +820,7 @@ class Utilities
         } elseif ($key == 'style') {
             $keyValues = array();
             foreach ($value as $k => $v) {
-                $keyValues[] = $k.':'.$v.';';
+                $keyValues[] = $k . ':' . $v . ';';
             }
             \sort($keyValues);
             $value = \implode('', $keyValues);
@@ -637,7 +836,7 @@ class Utilities
      * @param string  $key   attribute name
      * @param boolean $value true|false
      *
-     * @return string
+     * @return string|null
      */
     private static function buildAttribBoolVal($key, $value = true)
     {
@@ -680,15 +879,18 @@ class Utilities
             $class = isset($backtrace[$iFunc]['class'])
                 ? $backtrace[$iFunc]['class']
                 : null;
-            if (\in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array')) ||
-                $class == 'ReflectionMethod' && $backtrace[$iFunc]['function'] == 'invoke'
+            if (
+                \in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))
+                || $class == 'ReflectionMethod'
+                    && $backtrace[$iFunc]['function'] == 'invoke'
             ) {
                 $iLine++;
                 $iFunc++;
             }
         }
         if (isset($backtrace[$iFunc])) {
-            $return = \array_merge($return, \array_intersect_key($backtrace[$iFunc], $return));
+            $return = \array_merge($return, $backtrace[$iFunc]);
+            unset($return['object']);
             if ($return['type'] == '->') {
                 $return['class'] = \get_class($backtrace[$iFunc]['object']);
             }
@@ -696,8 +898,8 @@ class Utilities
         if (isset($backtrace[$iLine])) {
             $return['file'] = $backtrace[$iLine]['file'];
             $return['line'] = $backtrace[$iLine]['line'];
-        } else {
-            $return['file'] = $backtrace[$numFrames-1]['file'];
+        } elseif (isset($backtrace[$numFrames - 1])) {
+            $return['file'] = $backtrace[$numFrames - 1]['file'];
             $return['line'] = 0;
         }
         return $return;
@@ -709,7 +911,7 @@ class Utilities
      *
      * @param array $array variable to check
      *
-     * @return boolean [description]
+     * @return boolean
      */
     private static function isCallable($array)
     {

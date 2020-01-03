@@ -1,0 +1,143 @@
+& {
+	position: relative;
+	clear: both;
+	font-family: $font-family;
+	// font-size: .6em;
+	line-height: normal;
+	text-shadow: none;
+	color: #111;
+}
+
+* {
+	font-size: inherit;
+	line-height: normal;
+	text-indent: 0;
+	color: inherit;
+}
+
+a {
+	text-decoration: none;
+	color: #00e;
+	&:visited { color: #551a8b; }
+	&:focus, &:hover { text-decoration: underline; }
+	&:active, &:hover { outline: 0; color: #e00; }
+	&.file-link { color: inherit; }
+}
+button {
+	color: inherit;
+	cursor: pointer;
+	font-family: inherit;
+	outline: none;
+	vertical-align: baseline;
+	&:hover {
+		background-color: $lite-blue;
+	}
+}
+code {
+	padding: 2px 4px;
+	background-color: transparent;
+	font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+}
+pre code {
+	display: block;
+}
+/**
+ * Quite unusual, but experienced site css that modified div css...  reset
+ */
+&,
+div {
+	margin: 0;
+	width: auto;
+	padding: 0;
+	background-color: transparent;
+	border-radius: 0;
+}
+dl {
+	margin-top: 0;
+	margin-bottom: 0;
+	dt { font-weight:bold; }
+	&:not(.dl-horizontal) dd {
+		margin-left: 20px;
+		padding-left: 10px;
+		text-indent: -10px;
+	}
+}
+li.no-indent,
+dl dd.no-indent {
+	padding-left: 0;
+	text-indent: 0;
+}
+
+fieldset {
+	// channels is the only component that uses fieldset
+	padding: .66em;
+	margin: 0 0 10px 0;
+	min-width: 0;
+	border: 1px solid black;
+	border-radius: 4px;
+	> ul {
+		font-size:125%;
+	}
+}
+h3 {
+	margin-top: .66em;
+	margin-bottom: .5em;
+	font-size: 1.15em;
+	font-weight: bold;
+	&:first-child { margin-top:0; }
+}
+img { border:0; }
+input[type=checkbox] {
+	margin: 0 .33em 0 0;
+	cursor: pointer;
+}
+
+label {
+	display: block;
+	margin: 0;
+	cursor: pointer;
+	font-weight: bold;
+	max-width: none;
+	&.disabled {
+		cursor: default;
+		pointer-events: none;
+	}
+}
+legend {
+	// channels is the only component that uses fieldset/legend
+	padding: 0;
+	float: left;
+	margin-bottom: .5em;
+	border: 0;
+	width: 100%;
+	font-size: 144%;
+	font-weight: bold;
+}
+p {
+	margin-top: .25em;
+	margin-bottom: 0;
+	&:first-child { margin-top:0; }
+}
+pre {
+	padding: 0;
+	border: 0;
+	margin: 0;
+	white-space: pre;
+	-moz-tab-size: 3;
+	  -o-tag-size: 3;
+		-tab-size: 3;
+}
+ul {
+	margin-top: 0;
+	margin-bottom: 0;
+	// error summary & channel-list
+	&.list-unstyled > li {
+		text-indent: -1em;
+		padding-left: 1em;
+	}
+}
+.close {
+	opacity: 1;
+	float: none;
+
+}

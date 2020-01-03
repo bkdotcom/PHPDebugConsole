@@ -1,0 +1,75 @@
+//
+// array & objects
+//
+
+$color-classname: #8d0c4c;
+$color-param: #263;
+$color-static: #00529B;
+
+.namespace { opacity:0.5; }
+
+.array-inner,
+.object-inner {
+	display: block;
+	margin-left: 1em;
+}
+
+.classname {
+	font-weight: bold;
+	color: $color-classname;
+}
+
+span.key-value {
+	display: block;
+	padding-left: 10px;
+	text-indent: -10px;
+	// :nth-child(-n+2) {
+		// first two elements (_key & t_operator)
+		// white-space: nowrap;
+	// }
+	> .t_operator {
+		margin: 0 .25em;
+	}
+}
+.t_object {
+	display: inline;
+
+	.method .parameter [title],
+	.t_identifier[title],
+	.t_stringified,
+	.t_type[title] {
+		text-decoration: underline;
+	}
+	.method {
+		&.deprecated {
+			opacity: .66;
+			i {
+				opacity: .66;	// inherits, want even lighter
+				color: $error-fg;
+				border-bottom: 0;
+			}
+		}
+		> .t_punct {
+			opacity: 1;
+			font-weight: bold;
+			color: inherit;
+		}
+		.t_parameter-name {
+			color: $color-param;
+		}
+	}
+	.property {
+		&.private-ancestor:not(:hover) {
+			> * { opacity: 0.5; }
+		}
+	}
+	.t_modifier_static {
+		font-style: italic;
+		color: $color-static;
+	}
+	.info {
+		display: inline-block;
+		background-color: $info-bg;
+		color: $info-fg;
+	}
+}

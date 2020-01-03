@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -6,14 +7,12 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3
+ * @version   v3.0
  */
 
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\FileStreamWrapper;
-use bdk\PubSub\Event;
 
 /**
  * Configuration manager
@@ -21,78 +20,99 @@ use bdk\PubSub\Event;
 class Config
 {
 
-    protected $cfg = array();
-    protected $cfgLazy = array();  // store config for child classes that haven't been loaded yet
     protected $debug;
     protected $configKeys;
+    protected $values = array();
+    protected $valuesPending = array();
 
     /**
      * Constructor
      *
-     * @param \bdk\Debug $debug debug object
-     * @param array      $cfg   configuration
+     * @param Debug $debug debug instance
+     * @param array $cfg   configuration
      */
-    public function __construct(Debug $debug, &$cfg)
+    public function __construct(Debug $debug, &$cfg = array())
     {
-        $this->cfg = &$cfg;
+        $this->values = &$cfg;
         $this->debug = $debug;
-        $this->cfgLazy['errorEmailer']['emailBacktraceDumper'] = function ($backtrace) use ($debug) {
-            return $debug->output->text->dump($backtrace);
+        $this->valuesPending['errorEmailer']['emailBacktraceDumper'] = function ($backtrace) use ($debug) {
+            return $debug->dumpText->dump($backtrace);
         };
     }
 
     /**
      * Get debug or child configuration value(s)
      *
-     * @param string $path what to get
+     * @param string $path    what to get
+     * @param mixed  $default default value
      *
      * @return mixed
      */
-    public function getCfg($path = '')
+    public function getValue($path, $default = null)
     {
         $path = $this->normalizePath($path);
         $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
         if (empty($path)) {
-            return $this->getCfgAll();
+            return $this->getValues('*');
         }
         $classname = \array_shift($path);
         if ($classname == 'debug') {
-            return $this->debug->utilities->arrayPathGet($this->cfg, $path);
-        } elseif (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
-            $pathRel = \implode('/', $path);
-            return $this->debug->{$classname}->getCfg($pathRel);
+            if ($path === array('route') && $this->values['route'] == 'auto') {
+                return $this->getDefaultRoute();
+            }
+            return $this->debug->utilities->arrayPathGet($this->values, $path);
         }
-        if (isset($this->cfgLazy[$classname]) && $path) {
+        if (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
+            $pathRel = \implode('/', $path);
+            return $this->debug->{$classname}->getCfg($pathRel, $default);
+        }
+        if (isset($this->valuesPending[$classname]) && $path) {
             // want a config value of obj that has not yet been instantiated...
-            // value may in cfgLazy
-            $val = $this->debug->utilities->arrayPathGet($this->cfgLazy[$classname], $path);
+            $val = $this->debug->utilities->arrayPathGet($this->valuesPending[$classname], $path);
             if ($val !== null) {
                 return $val;
             }
         }
-        if (isset($this->cfg['services'][$classname])) {
-            // getting value of uninitialized obj
-            // inititalize obj and retry
+        $obj = $this->debug->{$classname};
+        if ($obj) {
+            // getting value of previously uninitialized obj
             $pathRel = \implode('/', $path);
-            return $this->debug->{$classname}->getCfg($pathRel);
+            return $this->debug->{$classname}->getCfg($pathRel, $default);
         }
-        return null;
+        return $default;
     }
 
     /**
-     * Get config for lazy-loaded class
+     * Get all values
      *
-     * @param string $name name of property being lazy loaded
+     * @param string $classname (optional) classname
      *
      * @return array
      */
-    public function getCfgLazy($name)
+    public function getValues($classname = null)
     {
-        if (!isset($this->cfgLazy[$name])) {
+        if (!$classname) {
+            return $this->values;
+        }
+        if ($classname === '*') {
+            foreach (\array_keys($this->configKeys) as $classname) {
+                if (isset($this->debug->{$classname})) {
+                    $values[$classname] = $this->debug->{$classname}->getCfg();
+                } elseif (isset($this->valuesPending[$classname])) {
+                    $values[$classname] = $this->valuesPending[$classname];
+                } else {
+                    $values[$classname] = array();
+                }
+            }
+            \ksort($values);
+            $values = array('debug' => $this->values) + $values;
+            return $values;
+        }
+        if (!isset($this->valuesPending[$classname])) {
             return array();
         }
-        $return = $this->cfgLazy[$name];
-        unset($this->cfgLazy[$name]);
+        $return = $this->valuesPending[$classname];
+        unset($this->valuesPending[$classname]);
         return $return;
     }
 
@@ -107,70 +127,33 @@ class Config
      *
      * Triggers a debug.config event that contains all changed values
      *
-     * @param string|array $pathOrVals key/path or cfg array
-     * @param mixed        $val        (optional) value
+     * @param string $path key/path or cfg array
+     * @param mixed  $val  (optional) value
      *
      * @return mixed
      */
-    public function setCfg($pathOrVals, $val = null)
+    public function setValue($path, $val = null)
     {
-        if (\is_array($pathOrVals)) {
-            $cfg = $this->normalizeArray($pathOrVals);
-        } else {
-            $path = $this->normalizePath($pathOrVals);
-            $cfg = $this->keyValToArray($path, $val);
-        }
-        $cfg = $this->setCopyValues($cfg);
-        $return = $this->doSetCfg($cfg);
-        if (isset($this->cfgLazy['output']['outputAs'])) {
-            $lazyPlugins = array('chromeLogger','firephp','html','script','text');
-            if (\is_object($this->cfgLazy['output']['outputAs']) || !\in_array($this->cfgLazy['output']['outputAs'], $lazyPlugins)) {
-                // output is likely a dependency
-                $outputAs = $this->cfgLazy['output']['outputAs'];
-                unset($this->cfgLazy['output']['outputAs']);
-                // this will autoload output, which will pull in cfgLazy...
-                //   we then set outputAs
-                $this->debug->output->setCfg('outputAs', $outputAs);
-            }
-        }
-        if (\is_string($pathOrVals)) {
-            $return = $this->debug->utilities->arrayPathGet($return, $path);
-        }
-        if ($cfg) {
-            $this->debug->eventManager->publish(
-                'debug.config',
-                $this->debug,
-                array('config'=>$cfg)
-            );
-        }
-        return $return;
+        $path = $this->normalizePath($path);
+        $values = $this->keyValToArray($path, $val);
+        $values = $this->setDupeValues($values);
+        $return = $this->doSetCfg($values);
+        return $this->debug->utilities->arrayPathGet($return, $path);
     }
 
     /**
-     * Test $_REQUEST['debug'] against passed key
-     * return collect & output values
+     * Set multiple config values
      *
-     * @param string $key secret key
+     * @param array $values key/value array
+     *                         may be organized by classname
      *
      * @return array
      */
-    private function debugKeyValues($key)
+    public function setValues(array $values = array())
     {
-        $values = array();
-        // update 'collect and output'
-        $requestKey = null;
-        if (isset($_REQUEST['debug'])) {
-            $requestKey = $_REQUEST['debug'];
-        } elseif (isset($_COOKIE['debug'])) {
-            $requestKey = $_COOKIE['debug'];
-        }
-        $isValidKey = $requestKey == $key;
-        if ($isValidKey) {
-            // only enable collect / don't disable it
-            $values['collect'] = true;
-        }
-        $values['output'] = $isValidKey;
-        return $values;
+        $values = $this->normalizeArray($values);
+        $values = $this->setDupeValues($values);
+        return $this->doSetCfg($values);
     }
 
     /**
@@ -183,43 +166,30 @@ class Config
     private function doSetCfg($cfg)
     {
         $return = array();
-        foreach ($cfg as $k => $v) {
-            if ($k == 'debug') {
-                $return[$k] = \array_intersect_key($this->cfg, $v);
-                $this->setDebugCfg($v);
-            } elseif (isset($this->debug->{$k}) && \is_object($this->debug->{$k})) {
-                $return[$k] = \array_intersect_key($this->getCfg($k.'/*'), $v);
-                $this->debug->{$k}->setCfg($v);
-            } elseif (isset($this->cfgLazy[$k])) {
-                $return[$k] = \array_intersect_key($this->cfgLazy[$k], $v);
-                $this->cfgLazy[$k] = \array_merge($this->cfgLazy[$k], $v);
+        if ($cfg) {
+            $event = $this->debug->eventManager->publish(
+                'debug.config',
+                $this->debug,
+                $cfg
+            );
+            $cfg = $event->getValues();
+        }
+        foreach ($cfg as $classname => $v) {
+            if ($classname == 'debug') {
+                $return[$classname] = \array_intersect_key($this->values, $v);
+                $this->setDebugValues($v);
+            } elseif (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
+                $return[$classname] = \array_intersect_key($this->debug->{$classname}->getCfg(), $v);
+                $this->debug->{$classname}->setCfg($v);
+            } elseif (isset($this->valuesPending[$classname])) {
+                $return[$classname] = \array_intersect_key($this->valuesPending[$classname], $v);
+                $this->valuesPending[$classname] = \array_merge($this->valuesPending[$classname], $v);
             } else {
-                $return[$k] = array();
-                $this->cfgLazy[$k] = $v;
+                $return[$classname] = array();
+                $this->valuesPending[$classname] = $v;
             }
         }
         return $return;
-    }
-
-    /**
-     * Get config for debug.
-     * If no path specified, config for debug and dependencies is returned
-     *
-     * @return mixed
-     */
-    private function getCfgAll()
-    {
-        $cfg = array();
-        foreach (\array_keys($this->configKeys) as $classname) {
-            if ($classname === 'debug') {
-                $cfg['debug'] = $this->cfg;
-            } elseif (isset($this->debug->{$classname})) {
-                $cfg[$classname] = $this->debug->{$classname}->getCfg();
-            } elseif (isset($this->cfgLazy[$classname])) {
-                $cfg[$classname] = $this->cfgLazy[$classname];
-            }
-        }
-        return $cfg;
     }
 
     /**
@@ -240,8 +210,12 @@ class Config
                 'cacheMethods',
                 'collectConstants',
                 'collectMethods',
+                'fullyQualifyPhpDocType',
                 'objectsExclude',
                 'objectSort',
+                'outputConstants',
+                'outputMethodDesc',
+                'outputMethods',
                 'useDebugInfo',
             ),
             'errorEmailer' => array(
@@ -258,24 +232,44 @@ class Config
                 'emailTraceMask',
             ),
             'errorHandler' => \array_keys($this->debug->errorHandler->getCfg()),
-            'output' => array(
-                'addBR',
+            'routeHtml' => array(
                 'css',
-                'displayListKeys',
+                'drawer',
                 'filepathCss',
                 'filepathScript',
-                'onOutput',
-                'outputAs',
-                'outputAsDefaultNonHtml',
-                'outputConstants',
+                'jqueryUrl',
                 'outputCss',
-                'outputHeaders',
-                'outputMethodDescription',
-                'outputMethods',
                 'outputScript',
+                'sidebar',
             ),
+            'routeStream' => array(
+                'ansi',
+                'stream',
+            )
         );
         return $this->configKeys;
+    }
+
+    /**
+     * Determine default route
+     *
+     * @return string
+     */
+    private function getDefaultRoute()
+    {
+        $interface = $this->debug->utilities->getInterface();
+        if ($interface == 'ajax') {
+            $ret = $this->values['routeNonHtml'];
+        } elseif ($interface == 'http') {
+            $ret = 'html';
+            $contentType = $this->debug->getResponseContentType();
+            if ($contentType && $contentType !== 'text/html') {
+                $ret = $this->values['routeNonHtml'];
+            }
+        } else {
+            $ret = 'stream';
+        }
+        return $ret;
     }
 
     /**
@@ -392,17 +386,72 @@ class Config
     }
 
     /**
+     * Test $_REQUEST['debug'] against passed key
+     * return collect & output values
+     *
+     * @param string $key secret key
+     *
+     * @return array
+     */
+    private function setDebugKeyValues($key)
+    {
+        $values = array();
+        // update 'collect and output'
+        $requestKey = null;
+        if (isset($_GET['debug'])) {
+            $requestKey = $_REQUEST['debug'];
+        } elseif (isset($_COOKIE['debug'])) {
+            $requestKey = $_COOKIE['debug'];
+        }
+        $isValidKey = $requestKey == $key;
+        if ($isValidKey) {
+            // only enable collect / don't disable it
+            $values['collect'] = true;
+        }
+        $values['output'] = $isValidKey;
+        return $values;
+    }
+
+    /**
+     * Set Debug config
+     *
+     * @param array $values Debug config values
+     *
+     * @return void
+     */
+    private function setDebugValues($values)
+    {
+        $isCli = \in_array($this->debug->utilities->getInterface(), array('cli', 'cron'));
+        if (isset($values['key']) && !$isCli) {
+            $values = \array_merge($values, $this->setDebugKeyValues($values['key']));
+        }
+        if (isset($values['logEnvInfo'])) {
+            $keys = \array_keys($this->values['logEnvInfo']);
+            if (\is_bool($values['logEnvInfo'])) {
+                $values['logEnvInfo'] = \array_fill_keys($keys, $values['logEnvInfo']);
+            } elseif ($this->debug->utilities->isList($values['logEnvInfo'])) {
+                $values['logEnvInfo'] = \array_merge(
+                    \array_fill_keys($keys, false),
+                    \array_fill_keys($values['logEnvInfo'], true)
+                );
+            }
+        }
+        if (isset($values['logServerKeys'])) {
+            // don't append, replace
+            $this->values['logServerKeys'] = array();
+        }
+        $this->values = $this->debug->utilities->arrayMergeDeep($this->values, $values);
+    }
+
+    /**
      * some config values exist in multiple modules
      *
      * @param array $values values
      *
      * @return array
      */
-    private function setCopyValues($values)
+    private function setDupeValues($values)
     {
-        if (isset($values['debug']['emailLog']) && $values['debug']['emailLog'] === true) {
-            $values['debug']['emailLog'] = 'onError';
-        }
         foreach (array('emailFrom','emailFunc','emailTo') as $key) {
             if (isset($values['debug'][$key]) && !isset($values['errorEmailer'][$key])) {
                 // also set for errorEmailer
@@ -410,28 +459,5 @@ class Config
             }
         }
         return $values;
-    }
-
-    /**
-     * Set Debug config
-     *
-     * @param array $cfg Debug config values
-     *
-     * @return void
-     */
-    private function setDebugCfg($cfg)
-    {
-        if (isset($cfg['key'])) {
-            $cfg = \array_merge($cfg, $this->debugKeyValues($cfg['key']));
-        }
-        if (isset($cfg['logEnvInfo']) && \is_bool($cfg['logEnvInfo'])) {
-            $keys = \array_keys($this->cfg['logEnvInfo']);
-            $cfg['logEnvInfo'] = \array_fill_keys($keys, $cfg['logEnvInfo']);
-        }
-        if (isset($cfg['logServerKeys'])) {
-            // don't append, replace
-            $this->cfg['logServerKeys'] = array();
-        }
-        $this->cfg = $this->debug->utilities->arrayMergeDeep($this->cfg, $cfg);
     }
 }

@@ -1,0 +1,48 @@
+// We control visibility via max-height
+// max-height only applies to content (border-box is ignored)
+// therefore we need to apply border & padding to a nested div
+
+#debug-options-toggle {
+	position: relative;
+	top: -1px;
+}
+
+.debug-options {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	max-height: 0;
+	box-sizing:	border-box;
+	z-index: 1000;
+	float: right;
+	min-width: 12em;
+	background: $lite-grey;
+	box-shadow: 0 4px 8px rgba(0,0,0, 0.25);
+	transition: all 0.25s ease-out;
+	overflow: hidden;
+	font-size: 13px;
+	.debug-options-body {
+		background-clip: padding-box;
+		border: 1px solid $border-color;
+		padding: .5em 5px .5em 15px;
+	}
+	&.show {
+		max-height: 150px;
+	}
+	label {
+		font-weight: normal;
+		padding: 0.25em 0;
+		&.disabled {
+			color: #999;
+		}
+	}
+	hr.dropdown-divider {
+		margin: .5em -5px .5em -15px;
+		background: $border-color;
+		height: 1px;
+		border: none;
+	}
+	.form-group {
+		margin: 0;
+	}
+}

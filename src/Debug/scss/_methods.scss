@@ -1,0 +1,57 @@
+.m_assert,
+.m_clear,
+.m_count,
+.m_error,
+.m_groupEndValue,
+.m_info,
+.m_log,
+.m_warn {
+	// We use display: table so that background-color doesn't fill entire width;
+	position: relative;
+	display: table;
+	padding-left: 10px;
+	text-indent: -10px;
+	padding-right: .33em;
+	word-break: break-word;
+}
+.m_table td,
+.m_trace td {
+	word-break: break-word;
+}
+.m_assert { background-color:rgba(255,204,204,.75); }
+.m_group {
+	.group-header { display:table; white-space:nowrap; }
+	.group-label-bold { font-weight:bold; }
+	> ul {
+		list-style: none;
+		margin-left: 1em;
+		border-left: 1px solid rgba(0, 0, 0, 0.25);
+		padding-left: 0.25rem;
+	}
+}
+
+.m_error,
+:not(.expanded) > .level-error { background-color:$error-bg; color:$error-fg; }
+
+.m_info,
+:not(.expanded) > .level-info { background-color:$info-bg; color:$info-fg; }
+
+.m_warn,
+:not(.expanded) > .level-warn { background-color:$warn-bg; color:$warn-fg; }
+
+// emphasize the fatal error
+.m_error.error-fatal:before {
+	display: block;
+	margin-left:10px;
+	margin-bottom: 5px;
+	content: "Fatal error";
+	font-size: 1.2em;
+	font-weight: bold;
+}
+.debug-log .error-fatal {
+	padding: 10px;
+	border-left: solid 2px $error-fg;
+	.no-quotes {
+		display: none;
+	}
+}

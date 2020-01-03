@@ -71,7 +71,7 @@ class TestBase
 
 
 /**
- * Test
+ * PhpDoc Summary
  *
  * @link http://www.bradkent.com/php/debug PHPDebugConsole Homepage
  */

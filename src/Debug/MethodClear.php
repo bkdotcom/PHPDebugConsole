@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -6,13 +7,13 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2019 Brad Kent
- * @version   v2.3
+ * @version   v3.0
  */
 
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\PubSub\Event;
+use bdk\Debug\LogEntry;
 
 /**
  * Clear method
@@ -41,18 +42,18 @@ class MethodClear
     /**
      * Handle clear() call
      *
-     * @param Event $event event object
+     * @param LogEntry $logEntry log entry instance
      *
-     * @return Event
+     * @return void
      */
-    public function onLog(Event $event)
+    public function onLog(LogEntry $logEntry)
     {
         $this->channelName = $this->debug->parentInstance
-            ? $event['meta']['channel'] // just clear this specific channel
+            ? $logEntry->getChannel() // just clear this specific channel
             : null;
-        $this->channelRegex = '#^'.\preg_quote($this->channelName, '#').'(\.|$)#';
+        $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
-        $bitmask = $event['meta']['bitmask'];
+        $bitmask = $logEntry['meta']['bitmask'];
         $callerInfo = $this->debug->utilities->getCallerInfo();
         $cleared = array();
         $cleared[] = $this->clearAlerts($bitmask);
@@ -63,7 +64,7 @@ class MethodClear
             $cleared = array('everything');
         }
         $args = $this->getLogArgs($cleared);
-        $event->setValues(array(
+        $logEntry->setValues(array(
             'method' => 'clear',
             'args' => $args,
             'meta' =>  \array_merge(array(
@@ -76,25 +77,24 @@ class MethodClear
                     'logErrors' => (bool) ($bitmask & Debug::CLEAR_LOG_ERRORS),
                     'summary' => (bool) ($bitmask & Debug::CLEAR_SUMMARY),
                     'summaryErrors' => (bool) ($bitmask & Debug::CLEAR_SUMMARY_ERRORS),
-                    'silent' =>  (bool) ($bitmask & Debug::CLEAR_SILENT),
+                    'silent' => (bool) ($bitmask & Debug::CLEAR_SILENT),
                 ),
-            ), $event['meta']),
+            ), $logEntry['meta']),
             'appendLog' => $args && !($bitmask & Debug::CLEAR_SILENT),
             'publish' => (bool) $args,
         ));
-        return $event;
     }
 
     /**
      * Test channel for inclussion
      *
-     * @param array $logEntry log entry
+     * @param LogEntry $logEntry logEntry instance
      *
      * @return boolean
      */
-    private function channelTest($logEntry)
+    private function channelTest(LogEntry $logEntry)
     {
-        $channelName = isset($logEntry[2]['channel']) ? $logEntry[2]['channel'] : null;
+        $channelName = $logEntry->getChannel();
         return $this->isRootInstance || \preg_match($this->channelRegex, $channelName);
     }
 
@@ -107,7 +107,7 @@ class MethodClear
      */
     private function clearAlerts($flags)
     {
-        $clearAlerts = $flags & Debug::CLEAR_ALERTS;
+        $clearAlerts = (bool) ($flags & Debug::CLEAR_ALERTS);
         if (!$clearAlerts) {
             return null;
         }
@@ -143,7 +143,7 @@ class MethodClear
         */
         $errorsNotCleared = $this->clearErrorsHelper(
             $this->data['log'],
-            $flags & Debug::CLEAR_LOG_ERRORS
+            (bool) ($flags & Debug::CLEAR_LOG_ERRORS)
         );
         /*
             Clear Summary Errors
@@ -151,7 +151,7 @@ class MethodClear
         foreach (\array_keys($this->data['logSummary']) as $priority) {
             $errorsNotCleared = \array_merge($this->clearErrorsHelper(
                 $this->data['logSummary'][$priority],
-                $flags & Debug::CLEAR_SUMMARY_ERRORS
+                (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS)
             ));
         }
         $errorsNotCleared = \array_unique($errorsNotCleared);
@@ -175,18 +175,18 @@ class MethodClear
     {
         $errorsNotCleared = array();
         foreach ($log as $k => $logEntry) {
-            if (!\in_array($logEntry[0], array('error','warn'))) {
+            if (!\in_array($logEntry['method'], array('error','warn'))) {
                 continue;
             }
             $clear2 = $clear;
             if ($this->channelName) {
-                $channelName = isset($logEntry[2]['channel']) ? $logEntry[2]['channel'] : null;
+                $channelName = $logEntry->getChannel();
                 $clear2 = $clear && $channelName === $this->channelName;
             }
             if ($clear2) {
                 unset($log[$k]);
-            } elseif (isset($logEnntry[2]['errorHash'])) {
-                $errorsNotCleared[] = $logEntry[2]['errorHash'];
+            } elseif (isset($logEntry['meta']['errorHash'])) {
+                $errorsNotCleared[] = $logEntry['meta']['errorHash'];
             }
         }
         $log = \array_values($log);
@@ -203,9 +203,9 @@ class MethodClear
     private function clearLog($flags)
     {
         $return = null;
-        $clearErrors = $flags & Debug::CLEAR_LOG_ERRORS;
+        $clearErrors = (bool) ($flags & Debug::CLEAR_LOG_ERRORS);
         if ($flags & Debug::CLEAR_LOG) {
-            $return = 'log ('.($clearErrors ? 'incl errors' : 'sans errors').')';
+            $return = 'log (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
             $curDepth = 0;
             foreach ($this->data['groupStacks']['main'] as $group) {
                 $curDepth += (int) $group['collect'];
@@ -235,9 +235,9 @@ class MethodClear
         if ($keep || $this->channelName) {
             // we need to go through and filter based on method and/or channel
             foreach ($log as $k => $logEntry) {
-                $channelName = isset($logEntry[2]['channel']) ? $logEntry[2]['channel'] : null;
+                $channelName = $logEntry->getChannel();
                 $channelMatch = !$this->channelName || $channelName === $this->channelName;
-                if (\in_array($logEntry[0], $keep) || !$channelMatch) {
+                if (\in_array($logEntry['method'], $keep) || !$channelMatch) {
                     $entriesKeep[$k] = $logEntry;
                 }
             }
@@ -256,9 +256,9 @@ class MethodClear
     private function clearSummary($flags)
     {
         $return = null;
-        $clearErrors = $flags & Debug::CLEAR_SUMMARY_ERRORS;
+        $clearErrors = (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS);
         if ($flags & Debug::CLEAR_SUMMARY) {
-            $return = 'summary ('.($clearErrors ? 'incl errors' : 'sans errors').')';
+            $return = 'summary (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
             $curPriority = \end($this->data['groupPriorityStack']);  // false if empty
             foreach (\array_keys($this->data['logSummary']) as $priority) {
                 $entriesKeep = array();
@@ -283,11 +283,11 @@ class MethodClear
     }
 
     /**
-     * Build message that gets appended to log
+     * Build log arguments
      *
      * @param array $cleared array of things that were cleared
      *
-     * @return string
+     * @return array
      */
     private function getLogArgs($cleared)
     {
@@ -300,12 +300,12 @@ class MethodClear
             ? ' and '
             : ', ';
         if ($count > 2) {
-            $cleared[$count-1] = 'and '.$cleared[$count-1];
+            $cleared[$count - 1] = 'and ' . $cleared[$count - 1];
         }
-        $msg = 'Cleared '.\implode($glue, $cleared);
+        $msg = 'Cleared ' . \implode($glue, $cleared);
         if ($this->channelName) {
             return array(
-                $msg.' %c(%s)',
+                $msg . ' %c(%s)',
                 'background-color:#c0c0c0; padding:0 .33em;',
                 $this->channelName,
             );

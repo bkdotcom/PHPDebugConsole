@@ -198,6 +198,18 @@ class UtilitiesTest extends DebugTestFramework
         return Utilities::getCallerInfo();
     }
 
+    /**
+     * Test
+     *
+     * @return void
+     *
+     * @todo better test from cli
+     */
+    public function testGetEmittedHeader()
+    {
+        $this->assertSame('', Utilities::getEmittedHeader());
+    }
+
     public function testGetIncludedFiles()
     {
         $filesA = get_included_files();
@@ -210,18 +222,6 @@ class UtilitiesTest extends DebugTestFramework
     public function testGetInterface()
     {
         $this->assertSame('cli', Utilities::getInterface());
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     *
-     * @todo better test from cli
-     */
-    public function testGetResponseHeader()
-    {
-        $this->assertNull(Utilities::getResponseHeader());
     }
 
     /**
@@ -366,7 +366,8 @@ class UtilitiesTest extends DebugTestFramework
      *
      * @return array of serialized logs
      */
-    public function testSerializeLog()
+    /*
+    public function serializeLogProvider()
     {
         $log = array(
             array('log', 'What rolls down stairs'),
@@ -378,20 +379,23 @@ class UtilitiesTest extends DebugTestFramework
             array($serialized, $log)
         );
     }
+    */
 
     /**
      * Test
      *
-     * @param string $serialized   string provided by testSerializeLog dataProvider
+     * @param string $serialized   string provided by serializeLogProvider dataProvider
      * @param array  $unserialized the unserialized array
      *
      * @return void
      *
-     * @dataProvider testSerializeLog
+     * @dataProvider serializeLogProvider
      */
+    /*
     public function testUnserializeLog($serialized, $unserialized)
     {
-        $log = Utilities::unserializeLog($serialized);
+        $log = Utilities::unserializeLog($serialized, $this->debug);
         $this->assertSame($unserialized, $log);
     }
+    */
 }

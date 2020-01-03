@@ -1,7 +1,7 @@
 {
 	"name": "bdk/debug",
 	"description": "Browser/javascript like console class for PHP",
-	"keywords": ["debug", "chromelogger", "debugging", "firephp", "var_dump", "inspect", "errorhandler", "phpdebugconsole", "logger", "PSR-3"],
+	"keywords": ["debug", "chromelogger", "debugging", "firephp", "var_dump", "inspect", "errorhandler", "phpdebugconsole", "php-debugbar", "whoops", "logger", "PSR-3"],
 	"homepage": "http://github.com/bkdotcom/PHPDebugConsole",
 	"license": "MIT",
 	"authors": [
@@ -35,11 +35,19 @@
 	},
 	"require-dev": {
 		"bdk/css-xpath": "^1.0",
-		"psr/log": "^1.0"
+		"doctrine/dbal": "^2.5.0",
+		"guzzlehttp/psr7": "^1.6",
+		"monolog/monolog": "^1.0",
+		"php-curl-class/php-curl-class": "^8.6",
+		"psr/log": "^1.0",
+		"slim/slim": "^2.0",
+		"swiftmailer/swiftmailer": "^5.0",
+		"twig/twig": "^1.0"
 	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",
 		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",
-		"psr/log": "PSR-3 : Common interface for logging libraries"
+		"psr/log": "PSR-3 : Common interface for logging libraries",
+		"jdorn/sql-formatter": "A PHP class for formatting and highlighting SQL statements"
 	}
 }

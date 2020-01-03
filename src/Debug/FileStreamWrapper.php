@@ -480,6 +480,40 @@ class FileStreamWrapper
     }
 
     /**
+     * Change stream options
+     *
+     * @param integer $option [description]
+     * @param integer $arg1   [description]
+     * @param integer $arg2   [description]
+     *
+     * @return boolean
+     */
+    public function stream_set_option($option, $arg1, $arg2)
+    {
+        if (!$this->handle || \get_resource_type($this->handle) !== 'stream') {
+            \trigger_error(\sprintf('The "$handle" property of "%s" need to be a stream.', __CLASS__), E_USER_WARNING);
+            return false;
+        }
+        self::restorePrev();
+        switch ($option) {
+            case STREAM_OPTION_BLOCKING:
+                $return = \stream_set_blocking($this->handle, $arg1);
+                break;
+            case STREAM_OPTION_READ_TIMEOUT:
+                $return = \stream_set_timeout($this->handle, $arg1, $arg2);
+                break;
+            case STREAM_OPTION_WRITE_BUFFER:
+                $return = \stream_set_write_buffer($this->handle, $arg1);
+                break;
+            default:
+                \trigger_error(\sprintf('The option "%s" is unknown for "stream_set_option" method', $option), E_ERROR);
+                $return = false;
+        }
+        self::register();
+        return $return;
+    }
+
+    /**
      * Retrieve information about a file resource
      *
      * @return array

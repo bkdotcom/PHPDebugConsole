@@ -158,8 +158,11 @@ class Stream extends Base
                 return;
             }
             $this->fileHandle = \fopen($stream, 'a');
+            if (!$this->fileHandle) {
+                return;
+            }
             $meta = \stream_get_meta_data($this->fileHandle);
-            if ($this->fileHandle && $meta['wrapper_type'] === 'plainfile') {
+            if ($meta['wrapper_type'] === 'plainfile') {
                 \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s') . ' *****' . "\n");
                 if (!$uriExists) {
                     // we just created file

@@ -286,6 +286,8 @@ class Internal implements SubscriberInterface
             'logResponse' => array($this, 'onCfgLogResponse'),
             'onBootstrap' => array($this, 'onCfgOnBootstrap'),
             'onLog' => array($this, 'onCfgOnLog'),
+            'onMiddleware' => array($this, 'onCfgOnMiddleware'),
+            'onOutput' => array($this, 'onCfgOnOutput'),
             'redactKeys' => array($this, 'onCfgRedactKeys'),
             'route' => function ($val, Event $event) {
                 $event['debug']['route'] = $this->setRoute($val);
@@ -631,7 +633,9 @@ class Internal implements SubscriberInterface
             $this->debug->log('response', array(
                 'Content-Type' => $contentType,
             ));
-            \ob_end_flush();
+            if (\ob_get_level()) {
+                \ob_end_flush();
+            }
             return;
         }
         $response = \ob_get_clean();
@@ -745,11 +749,53 @@ class Internal implements SubscriberInterface
         /*
             Replace - not append - subscriber set via setCfg
         */
-        $onLogPrev = $this->debug->getCfg('onLog');
-        if ($onLogPrev) {
-            $this->debug->eventManager->unsubscribe('debug.log', $onLogPrev);
+        $prev = $this->debug->getCfg('onLog');
+        if ($prev) {
+            $this->debug->eventManager->unsubscribe('debug.log', $prev);
         }
         $this->debug->eventManager->subscribe('debug.log', $val);
+    }
+
+    /**
+     * Handle "onOutput" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgOnOutput($val)
+    {
+        /*
+            Replace - not append - subscriber set via setCfg
+        */
+        $prev = $this->debug->getCfg('onOutput');
+        if ($prev) {
+            $this->debug->eventManager->unsubscribe('debug.output', $prev);
+        }
+        $this->debug->eventManager->subscribe('debug.output', $val);
+    }
+
+    /**
+     * Handle "onMiddleware" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgOnMiddleware($val)
+    {
+        /*
+            Replace - not append - subscriber set via setCfg
+        */
+        $prev = $this->debug->getCfg('onMiddleware');
+        if ($prev) {
+            $this->debug->eventManager->unsubscribe('debug.middleware', $prev);
+        }
+        $this->debug->eventManager->subscribe('debug.middleware', $val);
     }
 
     /**

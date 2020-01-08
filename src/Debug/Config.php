@@ -263,7 +263,7 @@ class Config
         } elseif ($interface == 'http') {
             $ret = 'html';
             $contentType = $this->debug->getResponseContentType();
-            if ($contentType && $contentType !== 'text/html') {
+            if ($contentType && \strpos($contentType, 'text/html') === false) {
                 $ret = $this->values['routeNonHtml'];
             }
         } else {

@@ -52,6 +52,10 @@ class Middleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = $handler->handle($request);
+        $this->debug->eventManager->publish('debug.middleware', $this->debug, array(
+            'request' => $request,
+            'response' => $response,
+        ));
         return $this->debug->writeToResponse($response);
     }
 }

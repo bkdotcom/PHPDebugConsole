@@ -15,12 +15,12 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use Curl\Curl;
-use ReflectionClass;
-use ReflectionMethod;
-use ReflectionProperty;
+use ReflectionObject;
 
 /**
  * Extend php-curl-class to log each request
+ *
+ * Decorator (that extends Curl) would be prefered..  however unable to handle Curl's public properties
  *
  * @see https://github.com/php-curl-class/php-curl-class
  */
@@ -28,12 +28,13 @@ class PhpCurlClass extends Curl
 {
     private $debug;
     private $icon = 'fa fa-exchange';
-    private $optionsDebug = array(
+    private $debugOptions = array(
         'inclResponseBody' => false,
         'prettyResponseBody' => true,
         'inclInfo' => false,
         'verbose' => false,
     );
+    private $reflection = array();
 
     public $rawRequestHeaders = '';
 
@@ -52,7 +53,7 @@ class PhpCurlClass extends Curl
      */
     public function __construct($options = array(), Debug $debug = null)
     {
-        $this->optionsDebug = \array_merge($this->optionsDebug, $options);
+        $this->debugOptions = \array_merge($this->debugOptions, $options);
         if (!$debug) {
             $debug = Debug::_getChannel('Curl', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -64,6 +65,18 @@ class PhpCurlClass extends Curl
         if ($options['verbose']) {
             $this->verbose(true, \fopen('php://temp', 'rw'));
         }
+        /*
+            Do some reflection
+        */
+        $classRef = (new ReflectionObject($this))->getParentClass();
+        $optionsRef = $classRef->getProperty('options');
+        $optionsRef->setAccessible(true);
+        $parseReqHeadersRef = $classRef->getMethod('parseRequestHeaders');
+        $parseReqHeadersRef->setAccessible(true);
+        $this->reflection = array(
+            'options' => $optionsRef,
+            'parseReqHeaders' => $parseReqHeadersRef,
+        );
     }
 
     /**
@@ -71,7 +84,7 @@ class PhpCurlClass extends Curl
      */
     public function exec($ch = null)
     {
-        $options = $this->buildDebugOptions();
+        $options = $this->buildOptionsDebug();
         $this->debug->groupCollapsed(
             'Curl',
             $this->getHttpMethod($options),
@@ -91,9 +104,7 @@ class PhpCurlClass extends Curl
             $verboseOutput = \stream_get_contents($pointer);
             \preg_match_all('/> (.*?)\r\n\r\n/s', $verboseOutput, $matches);
             $this->rawRequestHeaders = \end($matches[1]);
-            $parseReqHeadersRef = new ReflectionMethod($this, 'parseRequestHeaders');
-            $parseReqHeadersRef->setAccessible(true);
-            $this->requestHeaders = $parseReqHeadersRef->invoke($this, $this->rawRequestHeaders);
+            $this->requestHeaders = $this->reflection['parseReqHeaders']->invoke($this, $this->rawRequestHeaders);
         } else {
             $this->rawRequestHeaders = $this->getInfo(CURLINFO_HEADER_OUT);
         }
@@ -107,7 +118,7 @@ class PhpCurlClass extends Curl
         $this->debug->log('request headers', $this->rawRequestHeaders, $this->debug->meta('redact'));
         // Curl provides no means to get the request body
         $this->debug->log('response headers', $this->rawResponseHeaders, $this->debug->meta('redact'));
-        if ($this->optionsDebug['inclResponseBody']) {
+        if ($this->debugOptions['inclResponseBody']) {
             $body = $this->getResponseBody();
             $this->debug->log(
                 'response body %c%s',
@@ -119,7 +130,7 @@ class PhpCurlClass extends Curl
                 $this->debug->meta('redact')
             );
         }
-        if ($this->optionsDebug['inclInfo']) {
+        if ($this->debugOptions['inclInfo']) {
             $this->debug->log('info', $this->getInfo());
         }
         if ($verboseOutput) {
@@ -160,13 +171,9 @@ class PhpCurlClass extends Curl
      *
      * @return array
      */
-    private function buildDebugOptions()
+    private function buildOptionsDebug()
     {
-        $classRef = new ReflectionClass($this);
-        $parent = $classRef->getParentClass()->getName();
-        $optionsRef = new ReflectionProperty($parent, 'options');
-        $optionsRef->setAccessible(true);
-        $options = $optionsRef->getValue($this);
+        $options = $this->reflection['options']->getValue($this);
 
         $opts = array();
         foreach ($options as $constVal => $val) {
@@ -211,7 +218,7 @@ class PhpCurlClass extends Curl
         if (\strlen($body) === 0) {
             return null;
         }
-        if ($this->optionsDebug['prettyResponseBody']) {
+        if ($this->debugOptions['prettyResponseBody']) {
             $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this, array(
                 'value' => $body,
                 'contentType' => $this->responseHeaders['content-type'],

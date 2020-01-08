@@ -20,7 +20,7 @@ use bdk\Debug\Plugin\Prism;
 use bdk\PubSub\Event;
 
 /**
- * A PDO proxy which traces statements
+ * A PDO decorator/proxy which traces statements
  */
 class Pdo extends PdoBase
 {

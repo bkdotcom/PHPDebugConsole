@@ -2025,7 +2025,7 @@
 			}
 			init$1($self);
 			init$7($self);
-			registerListeners($self);
+			registerListeners();
 			init$6($self);
 			if (!conf.get("drawer")) {
 				$self.debugEnhance();

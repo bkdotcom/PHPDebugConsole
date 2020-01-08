@@ -1677,10 +1677,12 @@ class Debug
         $this->response = $response;
         $this->cfg['outputHeaders'] = false;
         $output = $this->output();
-        $stream = $response->getBody();
-        $stream->seek(0, SEEK_END);
-        $stream->write($output);
-        $stream->rewind();
+        if ($output) {
+            $stream = $response->getBody();
+            $stream->seek(0, SEEK_END);
+            $stream->write($output);
+            $stream->rewind();
+        }
         $headers = $this->getHeaders();
         foreach ($headers as $nameVal) {
             $response = $response->withHeader($nameVal[0], $nameVal[1]);

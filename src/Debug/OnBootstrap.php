@@ -82,7 +82,10 @@ class OnBootstrap
         if (!$this->debug->getCfg('logEnvInfo.gitInfo')) {
             return;
         }
-        \exec('git branch', $outputLines, $returnStatus);
+        $redirect = \stripos(PHP_OS, 'WIN') !== 0
+            ? '2>/dev/null'
+            : '2> nul';
+        \exec('git branch ' . $redirect, $outputLines, $returnStatus);
         if ($returnStatus === 0) {
             $lines = \implode("\n", $outputLines);
             \preg_match('#^\* (.+)$#m', $lines, $matches);

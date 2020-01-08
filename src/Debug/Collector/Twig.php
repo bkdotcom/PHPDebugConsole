@@ -46,7 +46,7 @@ use Twig\TokenParser\TokenParserInterface;
 use Twig\TokenStream;
 
 /**
- * A Twig proxy
+ * A Twig decorator that adds logging
  */
 class Twig extends Twig_Environment
 {

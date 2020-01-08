@@ -33,6 +33,8 @@ class FileStreamWrapper
 
     private $filepath;
 
+    private $sizeAdjust = null;
+
     /**
      * @var resource
      */
@@ -411,47 +413,43 @@ class FileStreamWrapper
     /**
      * Read from stream
      *
-     * @param integer $count How many bytes of data from the current position should be returned.
+     * @param integer $bytes How many bytes of data from the current position should be returned.
      *
      * @return string
      *
      * @see http://php.net/manual/en/streamwrapper.stream-read.php
      */
-    public function stream_read($count)
+    public function stream_read($bytes)
     {
         if (!$this->handle) {
             return false;
         }
         self::restorePrev();
-        $buffer = \fread($this->handle, $count);
+        $buffer = \fread($this->handle, $bytes);
         $bufferLen = \strlen($buffer);
-        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        $isRequire = !\in_array($backtrace[1]['function'], array('file_get_contents'));
-        if (!$this->declaredTicks && $isRequire) {
-            foreach (self::$pathsExclude as $excludePath) {
-                if (\strpos($this->filepath, $excludePath . DIRECTORY_SEPARATOR) === 0) {
-                    $this->declaredTicks = true;
-                }
-            }
-        }
-        if (!$this->declaredTicks && $isRequire) {
-            // insert declare(ticks=1);  without adding any new lines
+        if (!$this->declaredTicks && $this->isTargeted()) {
+            // insert declare(ticks=1);  without adding/removing any lines
+            $declare = 'declare(ticks=1);';
             $buffer = \preg_replace(
-                '/^(<\?php\s*)$/m',
-                '$0 declare(ticks=1);',
+                '/^(<\?php)\s*$/m',
+                '$0 ' . $declare,
                 $buffer,
-                1
+                1,
+                $count
             );
-            $this->declaredTicks = true;
-            self::$filesModified[] = $this->filepath;
+            if ($count) {
+                $this->declaredTicks = true;
+                self::$filesModified[] = $this->filepath;
+                $this->sizeAdjust = \strlen($buffer) - $bufferLen;
+            }
         }
         $buffer = $this->bufferPrepend . $buffer;
         $bufferLenAfter = \strlen($buffer);
         $diff = $bufferLenAfter - $bufferLen;
         $this->bufferPrepend = '';
         if ($diff) {
-            $this->bufferPrepend = \substr($buffer, $count);
-            $buffer = \substr($buffer, 0, $count);
+            $this->bufferPrepend = \substr($buffer, $bytes);
+            $buffer = \substr($buffer, 0, $bytes);
         }
         self::register();
         return $buffer;
@@ -495,6 +493,7 @@ class FileStreamWrapper
             return false;
         }
         self::restorePrev();
+        $return = false;
         switch ($option) {
             case STREAM_OPTION_BLOCKING:
                 $return = \stream_set_blocking($this->handle, $arg1);
@@ -502,12 +501,12 @@ class FileStreamWrapper
             case STREAM_OPTION_READ_TIMEOUT:
                 $return = \stream_set_timeout($this->handle, $arg1, $arg2);
                 break;
-            case STREAM_OPTION_WRITE_BUFFER:
-                $return = \stream_set_write_buffer($this->handle, $arg1);
+            case STREAM_OPTION_READ_BUFFER:
+                // poorly documented / unsure how to implement / return false to not implement
                 break;
-            default:
-                \trigger_error(\sprintf('The option "%s" is unknown for "stream_set_option" method', $option), E_ERROR);
-                $return = false;
+            case STREAM_OPTION_WRITE_BUFFER:
+                // poorly documented / unsure how to implement / return false to not implement
+                break;
         }
         self::register();
         return $return;
@@ -526,9 +525,23 @@ class FileStreamWrapper
             return false;
         }
         self::restorePrev();
-        $array = \fstat($this->handle);
+        $stats = \fstat($this->handle);
+        /*
+            PHP 7.4 seems to require adjusted size to be returned or we get
+              parse error, unexpected EOL..
+              (ie only pre-modifed length used even though stream_read returning entire file)
+              perhaps STREAM_OPTION_READ_BUFFER related
+        */
+        $sizeAdjust = 0;
+        if ($this->isTargeted()) {
+            $sizeAdjust = $this->sizeAdjust !== null
+                ? $this->sizeAdjust
+                : 50;
+        }
+        $stats[7] += $sizeAdjust;
+        $stats['size'] += $sizeAdjust;
         self::register();
-        return $array;
+        return $stats;
     }
 
     /**
@@ -632,5 +645,28 @@ class FileStreamWrapper
         }
         self::register();
         return $info;
+    }
+
+    /**
+     * Check whether this file has been, or should beinjected with declare ticks
+     *
+     * @return boolean
+     */
+    public function isTargeted()
+    {
+        if ($this->declaredTicks) {
+            return true;
+        }
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+        $isRequire = !\in_array($backtrace[2]['function'], array('file_get_contents'));
+        if (!$isRequire) {
+            return false;
+        }
+        foreach (self::$pathsExclude as $excludePath) {
+            if (\strpos($this->filepath, $excludePath . DIRECTORY_SEPARATOR) === 0) {
+                return false;
+            }
+        }
+        return true;
     }
 }

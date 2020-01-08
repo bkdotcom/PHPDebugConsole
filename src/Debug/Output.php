@@ -178,8 +178,8 @@ class Output implements SubscriberInterface
             $ret = $this->cfg['outputAsDefaultNonHtml'];
         } elseif ($interface == 'http') {
             $contentType = $this->debug->utilities->getResponseHeader();
-            if ($contentType && $contentType !== 'text/html') {
-                $ret = $this->cfg['outputAsDefaultNonHtml'];
+            if ($contentType && \strpos($contentType, 'text/html') === false) {
+                $ret = $this->values['routeNonHtml'];
             }
         } else {
             $ret = 'text';

@@ -50,8 +50,8 @@ class ErrorHandler
     {
         $this->eventManager = $eventManager;
         $this->cfg = array(
-            'continueToPrevHandler' => true,    // whether to continue to previously defined handler (if there is/was a prev error handler)
-                                                //   will not continue if error event propagation stopped
+            'continueToPrevHandler' => true,    // whether to continue to previously defined handler (if there is/was a prev handler)
+                                                //   prev handler will not be called if error event propagation stopped
             'errorFactory' => array($this, 'errorFactory'),
             'errorReporting' => E_ALL | E_STRICT,   // what errors are handled by handler? bitmask or "system" to use runtime value
                                                     //   note that if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
@@ -232,7 +232,7 @@ class ErrorHandler
             // not handled
             //   if cfg['errorReporting'] == 'system', error could simply be suppressed
             // return false to continue to "normal" error handler
-            return $this->continueToPrev($error);
+            return $this->continueToPrevHandler($error);
         }
         $this->storeLastError($error);
         if (!$error['isSuppressed']) {
@@ -242,18 +242,7 @@ class ErrorHandler
             $this->eventManager->publish('errorHandler.error', $error);
         }
         $this->data['errors'][ $error['hash'] ] = $error;
-        if ($error['continueToPrevHandler'] && $this->prevErrorHandler && !$error->isPropagationStopped()) {
-            return $this->continueToPrev($error);
-        }
-        if (\in_array($error['type'], array(E_USER_ERROR, E_RECOVERABLE_ERROR))) {
-            $this->onUserError($error);
-        }
-        if ($error['continueToNormal']) {
-            // PHP will log the error
-            // if E_USER_ERROR, php will exit()
-            return false;
-        }
-        return true;
+        return $this->continueToPrevHandler($error);
     }
 
     /**
@@ -281,9 +270,6 @@ class ErrorHandler
             $exception->getLine()
         );
         $this->data['uncaughtException'] = null;
-        if ($this->cfg['continueToPrevHandler'] && $this->prevExceptionHandler) {
-            \call_user_func($this->prevErrorHandler, $exception);
-        }
     }
 
     /**
@@ -519,25 +505,42 @@ class ErrorHandler
     }
 
     /**
-     * Pass error to prevErrorHandler (if there was one)
+     * Conditioanlly pass error or exception to previously defined handler
      *
      * @param Error $error Error instance
      *
      * @return boolean
      */
-    protected function continueToPrev(Error $error)
+    protected function continueToPrevHandler(Error $error)
     {
-        if (!$this->prevErrorHandler) {
-            return false;
+        if (\in_array($error['type'], array(E_USER_ERROR, E_RECOVERABLE_ERROR))) {
+            // set error['continueToNormal']
+            $this->handleUserError($error);
         }
-        return \call_user_func(
-            $this->prevErrorHandler,
-            $error['type'],
-            $error['message'],
-            $error['file'],
-            $error['line'],
-            $error['vars']
-        );
+        if (!$error['continueToPrevHandler'] || $error->isPropagationStopped()) {
+            return !$error['continueToNormal'];
+        }
+        if ($error['exception']) {
+            if (!$this->prevExceptionHandler) {
+                return !$error['continueToNormal'];
+            }
+            return \call_user_func(
+                $this->prevExceptionHandler,
+                $error['exception']
+            );
+        } else {
+            if (!$this->prevErrorHandler) {
+                return !$error['continueToNormal'];
+            }
+            return \call_user_func(
+                $this->prevErrorHandler,
+                $error['type'],
+                $error['message'],
+                $error['file'],
+                $error['line'],
+                $error['vars']
+            );
+        }
     }
 
     /**
@@ -623,7 +626,7 @@ class ErrorHandler
     }
 
     /**
-     * Handle E_USER_ERROR
+     * Handle E_USER_ERROR and E_RECOVERABLE_ERROR
      *
      * Should script terminate, or continue?
      *
@@ -631,7 +634,7 @@ class ErrorHandler
      *
      * @return void
      */
-    protected function onUserError(Error $error)
+    protected function handleUserError(Error $error)
     {
         switch ($this->cfg['onEUserError']) {
             case 'continue':
@@ -646,13 +649,12 @@ class ErrorHandler
                 break;
             case 'normal':
                 // force continueToNormal
+                // for a userError, php will log error and script will halt
                 $error['continueToNormal'] = true;
                 break;
             default:
                 /*
-                    no special consideration
-                    unless errorHandler.error subscriber changes `continueToNormal` value,
-                    script will be halted
+                don't change continueToNormal value
                 */
         }
     }

@@ -10,7 +10,7 @@
 .debug a:focus, .debug a:hover { text-decoration: underline; }
 .debug a:active, .debug a:hover { outline: 0; color: #e00; }
 .debug a.file-link { color: inherit; }
-.debug button { color: inherit; cursor: pointer; font-family: inherit; outline: none; vertical-align: baseline; }
+.debug button { color: inherit; cursor: pointer; background-color: #f0f0f0; border-color: #afafaf; font-family: inherit; font-weight: inherit; height: auto; letter-spacing: initial; line-height: initial; outline: none; padding: 1px 7px 2px; text-align: center; text-transform: none; vertical-align: baseline; white-space: initial; }
 .debug button:hover { background-color: #DDE6F0; }
 .debug code { padding: 2px 4px; background-color: transparent; font-family: Menlo,Monaco,Consolas,"Courier New",monospace; }
 .debug pre code { display: block; }
@@ -31,6 +31,7 @@
 .debug p { margin-top: .25em; margin-bottom: 0; }
 .debug p:first-child { margin-top: 0; }
 .debug pre { padding: 0; border: 0; margin: 0; white-space: pre; -moz-tab-size: 3; -o-tag-size: 3; -tab-size: 3; }
+.debug table { width: auto; }
 .debug ul { margin-top: 0; margin-bottom: 0; }
 .debug ul.list-unstyled > li { text-indent: -1em; padding-left: 1em; }
 .debug .close { opacity: 1; float: none; }

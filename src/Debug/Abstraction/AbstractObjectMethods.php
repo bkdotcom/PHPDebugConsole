@@ -15,7 +15,9 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use Exception;
 use ReflectionMethod;
+use ReflectionNamedType;
 use ReflectionParameter;
 
 /**
@@ -90,9 +92,16 @@ class AbstractObjectMethods extends AbstractObjectSub
         }
         unset($abs['phpDoc']['method']);
         if (isset($abs['methods']['__toString'])) {
-            $abs['methods']['__toString']['returnValue'] = \is_object($obj)
-                ? $obj->__toString()
-                : null;
+            $val = null;
+            try {
+                if (\is_object($obj) && !$abs['methods']['__toString']['isDeprecated']) {
+                    $val = $obj->__toString();
+                }
+            } catch (Exception $e) {
+                // yes, __toString can throw exception..
+                // example: SplFileObject->__toString will throw exception if file doesn't exist
+            }
+            $abs['methods']['__toString']['returnValue'] = $val;
         }
         return;
     }
@@ -107,10 +116,17 @@ class AbstractObjectMethods extends AbstractObjectSub
         $abs = $this->abs;
         $obj = $abs->getSubject();
         if (\method_exists($obj, '__toString')) {
+            $val = null;
+            try {
+                if (\is_object($obj)) {
+                    $val = $obj->__toString();
+                }
+            } catch (Exception $e) {
+                // yes, __toString can throw exception..
+                // example: SplFileObject->__toString will throw exception if file doesn't exist
+            }
             $abs['methods']['__toString'] = array(
-                'returnValue' => \is_object($obj)
-                    ? $obj->__toString()
-                    : null,
+                'returnValue' => $val,
                 'visibility' => 'public',
             );
         }
@@ -310,9 +326,9 @@ class AbstractObjectMethods extends AbstractObjectSub
         $type = null;
         if ($reflectionParameter->isArray()) {
             $type = 'array';
-        } elseif (\version_compare(PHP_VERSION, '7.0.0', '>=')) {
+        } elseif (\version_compare(PHP_VERSION, '7.0', '>=')) {
             $type = $reflectionParameter->getType();
-            if ($type instanceof \ReflectionNamedType) {
+            if ($type instanceof ReflectionNamedType) {
                 $type = $type->getName();
             } elseif ($type) {
                 $type = (string) $type;
@@ -348,8 +364,10 @@ class AbstractObjectMethods extends AbstractObjectSub
         }
         if (\version_compare(PHP_VERSION, '7.0', '>=')) {
             $type = $reflectionMethod->getReturnType();
-            if ($type !== null) {
-                $return['type'] = (string) $type;
+            if ($type instanceof ReflectionNamedType) {
+                $type = $type->getName();
+            } elseif ($type) {
+                $type = (string) $type;
             }
         }
         return $return;

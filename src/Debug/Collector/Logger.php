@@ -70,10 +70,13 @@ class Logger extends AbstractLogger
         $method = $levelMap[$level];
         $str = $this->interpolate($message, $context);
         $meta = $this->getMeta($level, $context);
-        $newContext = array();
         if (\in_array($method, array('info','log'))) {
             foreach ($context as $key => $value) {
                 if ($key === 'table' && \is_array($value)) {
+                    /*
+                        context['table'] is table data
+                        context may contain other meta values
+                    */
                     $method = 'table';
                     $metaMerge = \array_intersect_key($context, \array_flip(array(
                         'columns',
@@ -81,12 +84,17 @@ class Logger extends AbstractLogger
                         'totalCols',
                     )));
                     $meta = \array_merge($meta, $metaMerge);
-                    $newContext = $value;
+                    $context = $value;
                     break;
                 }
             }
         }
-        $this->debug->{$method}($str, $newContext ?: $context, $meta);
+        $args = array($str);
+        if ($context) {
+            $args[] = $context;
+        }
+        $args[] = $meta;
+        \call_user_func_array(array($this->debug, $method), $args);
     }
 
     /**
@@ -105,6 +113,7 @@ class Logger extends AbstractLogger
                 || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable);
         $metaVals = \array_intersect_key($context, \array_flip(array('file','line')));
         $metaVals['psr3level'] = $level;
+        $metaVals['glue'] = ', ';   // override automatic " = " when only to args
         // remove meta from context
         $context = \array_diff_key($context, $metaVals);
         if ($haveException) {

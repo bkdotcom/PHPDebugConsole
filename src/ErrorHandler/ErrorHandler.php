@@ -510,6 +510,7 @@ class ErrorHandler
      * @param Error $error Error instance
      *
      * @return boolean
+     * @throws Exception
      */
     protected function continueToPrevHandler(Error $error)
     {
@@ -524,10 +525,11 @@ class ErrorHandler
             if (!$this->prevExceptionHandler) {
                 return !$error['continueToNormal'];
             }
-            return \call_user_func(
-                $this->prevExceptionHandler,
-                $error['exception']
-            );
+            /*
+                re-throw exception vs calling handler directly
+            */
+            \restore_exception_handler();
+            throw $error['exception'];
         } else {
             if (!$this->prevErrorHandler) {
                 return !$error['continueToNormal'];

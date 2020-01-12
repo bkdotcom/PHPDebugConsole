@@ -204,6 +204,7 @@ class Html extends Base
         $meta = \array_merge(array(
             'attribs' => array(),
             'detectFiles' => null,
+            'glue' => null,
             'icon' => null,
             'sanitize' => true,         // apply htmlspecialchars (to non-first arg)?
             'sanitizeFirst' => null,    // if null, use meta.sanitize
@@ -278,6 +279,7 @@ class Html extends Base
         if (!$glueAfterFirst) {
             return $args[0] . \implode($glue, \array_slice($args, 1));
         } else {
+            $glue = $meta['glue'] ?: $glue;
             return \implode($glue, $args);
         }
     }

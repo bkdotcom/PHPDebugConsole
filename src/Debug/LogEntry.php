@@ -16,7 +16,7 @@ use bdk\PubSub\Event;
 use bdk\Debug;
 
 /**
- * Error object
+ * Represents a log entry
  */
 class LogEntry extends Event
 {
@@ -43,7 +43,7 @@ class LogEntry extends Event
             'method' => $method,
             'args' => $args ?: array(),
             'meta' => $meta,
-            'numArgs' => 0,     // number of non-meta aargs passed
+            'numArgs' => 0,     // number of non-meta aargs passed (does not include added default values)
             'appendLog' => true,
             'return' => null,
         );

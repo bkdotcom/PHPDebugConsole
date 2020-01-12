@@ -84,6 +84,7 @@ class Logger extends AbstractLogger
                         'totalCols',
                     )));
                     $meta = \array_merge($meta, $metaMerge);
+                    unset($meta['glue']);
                     $context = $value;
                     break;
                 }
@@ -113,7 +114,6 @@ class Logger extends AbstractLogger
                 || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable);
         $metaVals = \array_intersect_key($context, \array_flip(array('file','line')));
         $metaVals['psr3level'] = $level;
-        $metaVals['glue'] = ', ';   // override automatic " = " when only to args
         // remove meta from context
         $context = \array_diff_key($context, $metaVals);
         if ($haveException) {
@@ -124,8 +124,8 @@ class Logger extends AbstractLogger
                 'line' => $exception->getLine(),
             ), $metaVals);
         }
-        if (!$context) {
-            $context = $this->debug->meta();
+        if ($context) {
+            $metaVals['glue'] = ', ';   // override automatic " = " when only two args
         }
         return $this->debug->meta($metaVals);
     }
@@ -155,9 +155,6 @@ class Logger extends AbstractLogger
             }
         }
         $context = \array_diff_key($context, \array_flip($placeholders));
-        if (!$context) {
-            $context = $this->debug->meta();
-        }
         return \strtr((string) $message, $replace);
     }
 

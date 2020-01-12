@@ -31,6 +31,7 @@ class LoggerTest extends DebugTestFramework
                 array('foo' => 'bar'),
             ),
             array(
+                'glue' => ', ',
                 'psr3level' => 'debug',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));

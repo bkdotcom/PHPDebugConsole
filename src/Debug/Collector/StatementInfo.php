@@ -180,10 +180,10 @@ class StatementInfo
         if ($this->exception) {
             $code = $this->exception->getCode();
             $msg = $this->exception->getMessage();
-            if (\strpos($msg, $code) === false) {
+            if (\strpos($msg, (string) $code) === false) {
                 $msg .= ' (code ' . $code . ')';
             }
-            $debug->warn(get_class($this->exception) . ': ' . $msg);
+            $debug->warn(\get_class($this->exception) . ': ' . \trim($msg));
         } elseif ($this->rowCount !== null) {
             $debug->log('rowCount', $this->rowCount);
         }

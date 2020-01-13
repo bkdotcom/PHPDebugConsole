@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use Exception;
+use RuntimeException;
 use mysqli as mysqliBase;
 use bdk\Debug;
 use bdk\Debug\Collector\StatementInfo;
@@ -29,6 +30,7 @@ class MySqli extends mysqliBase
     private $debug;
     protected $loggedStatements = array();
     protected $icon = 'fa fa-database';
+    public $connectionAttempted = false;
 
     /**
      * Constructor
@@ -68,6 +70,7 @@ class MySqli extends mysqliBase
                     $params[$k] = $paramsDefault[$k];
                 }
             }
+            $this->connectionAttempted = true;
             parent::__construct($params['host'], $params['username'], $params['passwd'], $params['dbname'], $params['port'], $params['socket']);
         } else {
             /*
@@ -145,32 +148,43 @@ class MySqli extends mysqliBase
     public function onDebugOutput(Event $event)
     {
         $debug = $event->getSubject();
-
-        // parse server info
-        \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat, $matches);
-        $serverInfo = \array_map(function ($val) {
-            return $val * 1;
-        }, \array_combine($matches[1], $matches[2]));
-        $serverInfo['Version'] = $this->server_info;
-        \ksort($serverInfo);
-
         $debug->groupSummary(0);
-        $groupParams = array(
-            'MySqli info',
-            $this->host_info
-        );
-        $groupParams[] = $debug->meta(array(
-            'argsAsParams' => false,
-            'icon' => $this->icon,
-            'level' => 'info',
-        ));
-        \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
-        $debug->log('logged operations: ', \count($this->loggedStatements));
-        $debug->time('total time', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));
-        $debug->log('server info', $serverInfo);
+        \set_error_handler(function ($errno, $errstr) {
+            throw new RuntimeException($errstr, $errno);
+        }, E_ALL);
+        try {
+            $groupParams = array(
+                'MySqli info',
+                $this->host_info
+            );
+            $groupParams[] = $debug->meta(array(
+                'argsAsParams' => false,
+                'icon' => $this->icon,
+                'level' => 'info',
+            ));
+            \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
+
+            $debug->log('logged operations: ', \count($this->loggedStatements));
+            $debug->time('total time', $this->getTimeSpent());
+            $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));
+
+            // parse server info
+            \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat(), $matches);
+            $serverInfo = \array_map(function ($val) {
+                return $val * 1;
+            }, \array_combine($matches[1], $matches[2]));
+            $serverInfo['Version'] = $this->server_info;
+            \ksort($serverInfo);
+            $debug->log('server info', $serverInfo);
+
+            $debug->groupEnd(); // groupCollapsed
+        } catch (Exception $e) {
+            $debug->group('MySqli Error', $debug->meta(array('level' => 'error')));
+            $debug->log('Connection Error');
+        }
+        \restore_error_handler();
         $debug->groupEnd();
-        $debug->groupEnd();
+        $debug->groupEnd(); // groupSummary
     }
 
     /**
@@ -186,14 +200,19 @@ class MySqli extends mysqliBase
     private function profileCall($method, $sql, array $args)
     {
         $info = new StatementInfo($sql);
-        $return = \call_user_func_array(array('parent', $method), $args);
-        $exception = null;
-        if (!$return) {
-            $exception = new Exception($this->error, $this->errno);
+        if ($this->connectionAttempted) {
+            $return = \call_user_func_array(array('parent', $method), $args);
+            $exception = !$return
+                ? new Exception($this->error, $this->errno)
+                : null;
+            $affectedRows = $method !== 'multi_query' && $return
+                ? $this->affected_rows
+                : null;
+        } else {
+            $return = false;
+            $exception = new Exception('Not connected');
+            $affectedRows = null;
         }
-        $affectedRows = $method !== 'multi_query'
-            ? $this->affected_rows
-            : null;
         $info->end($exception, $affectedRows);
         $this->addStatementInfo($info);
         return $return;
@@ -221,6 +240,15 @@ class MySqli extends mysqliBase
     public function query($query, $resultmode = MYSQLI_STORE_RESULT)
     {
         return $this->profileCall('query', $query, \func_get_args());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function real_connect($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, $flags = null)
+    {
+        $this->connectionAttempted = true;
+        return parent::real_connect($host, $username, $passwd, $dbname, $port, $socket, $flags);
     }
 
     /**

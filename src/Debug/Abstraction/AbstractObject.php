@@ -20,6 +20,7 @@ use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
 use ReflectionClass;
 use ReflectionObject;
+use RuntimeException;
 
 /**
  * Abstracter:  Methods used to abstract objects
@@ -151,9 +152,20 @@ class AbstractObject
         $obj = $abs->getSubject();
         if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
             $abs['stringified'] = $obj->format(\DateTime::ISO8601);
-        } elseif ($obj instanceof \mysqli && ($obj->connect_errno || !$obj->stat)) {
-            // avoid "Property access is not allowed yet"
-            $abs['collectPropertyValues'] = false;
+        } elseif ($obj instanceof \mysqli) {
+            \set_error_handler(function ($errno, $errstr) {
+                throw new RuntimeException($errstr, $errno);
+            }, E_ALL);
+            try {
+                $obj->stat();
+            } catch (RuntimeException $e) {
+                /*
+                    stat() threw an error, so we'll not collect property values to
+                    avoid "Property access is not allowed yet"
+                */
+                $abs['collectPropertyValues'] = false;
+            }
+            \restore_error_handler();
         } elseif ($obj instanceof Debug) {
             $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
         } elseif ($obj instanceof PhpDoc) {
@@ -183,8 +195,11 @@ class AbstractObject
             );
             $reflectionObject = $abs['reflector'];
             foreach ($propsAlwaysAvail as $name) {
-                $reflectionProperty = $reflectionObject->getProperty($name);
-                $abs['properties'][$name]['value'] = $reflectionProperty->getValue($obj);
+                if (!isset($abs['properties'][$name])) {
+                    // stat property may be missing in php 7.4??
+                    continue;
+                }
+                $abs['properties'][$name]['value'] = $reflectionObject->getProperty($name)->getValue($obj);
             }
         }
     }
@@ -428,6 +443,9 @@ class AbstractObject
                 $sortData['name'][$name] = $name == '__construct'
                     ? '0'     // always place __construct at the top
                     : $name;
+                if (!isset($info['visibility'])) {
+                    \bdk\Debug::_warn('poop', $name, $info);
+                }
                 $vis = \is_array($info['visibility'])
                     ? $info['visibility'][0]
                     : $info['visibility'];

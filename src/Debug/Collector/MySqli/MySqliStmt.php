@@ -11,6 +11,7 @@
 
 namespace bdk\Debug\Collector\MySqli;
 
+use Exception;
 use mysqli_stmt as mysqliStmtBase;
 use bdk\Debug;
 use bdk\Debug\Collector\MySqli;
@@ -47,6 +48,9 @@ class MySqliStmt extends mysqliStmtBase
      */
     public function bind_param($types, &...$vals)
     {
+        if (!$this->mysqli->connectionAttempted) {
+            return false;
+        }
         $this->params = $vals;
         $this->types = \str_split($types);
         return parent::bind_param($types, ...$vals);
@@ -58,8 +62,14 @@ class MySqliStmt extends mysqliStmtBase
     public function execute()
     {
         $statementInfo = new StatementInfo($this->query, $this->params, $this->types);
-        $return = parent::execute();
-        $statementInfo->end(null, $this->affected_rows);
+        $exception = null;
+        $return = false;
+        if ($this->mysqli->connectionAttempted) {
+            $return = parent::execute();
+        } else {
+            $exception = new Exception('Not connected');
+        }
+        $statementInfo->end($exception, $return ? $this->affected_rows : null);
         $this->mysqli->addStatementInfo($statementInfo);
         return $return;
     }

@@ -55,6 +55,7 @@ class HtmlTable
             'attribs' => array(),
             'caption' => null,
             'columns' => array(),
+            'onBuildRow' => null,   // callable
             'totalCols' => array(),
         ), $options);
         if (\is_string($options['attribs'])) {
@@ -99,7 +100,11 @@ class HtmlTable
         $tBody = '';
         foreach ($rows as $k => $row) {
             // row may be array or Traversable
-            $tBody .= $this->buildRow($row, $keys, $k);
+            $tr = $this->buildRow($row, $keys, $k);
+            if (\is_callable($options['onBuildRow'])) {
+                $tr = $options['onBuildRow']($row, $tr, $k);
+            }
+            $tBody .= $tr;
         }
         $tBody = \str_replace(' title=""', '', $tBody);
         if (!$this->tableInfo['haveObjRow']) {

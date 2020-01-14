@@ -1841,33 +1841,22 @@ EOD;
                 $this->debug->meta('template', 'blah%labelblah%timeblah'),
             ),
             array(
-                /*
-                'entry' => function ($logEntry) {
-                    $logEntry = $this->logEntryToArray($logEntry);
-                    $expectFormat = json_encode(array(
-                        'time',
-                        array("blahmy labelblah%f msblah"),
-                        array(),
-                    ));
-                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'entry as expected');
-                },
-                */
                 'entry' => json_encode(array(
                     'time',
-                    array("blahmy labelblah%f msblah"),
+                    array("blahmy labelblah%f %ssblah"),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
                     array(
-                        'blahmy labelblah%f msblah',
+                        'blahmy labelblah%f %ssblah',
                     ),
                     null,
                     '',
                 )),
-                'firephp' => 'X-Wf-1-1-1-22: %d|[{"Type":"LOG"},"blahmy labelblah%f msblah"]|',
-                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f msblah</span></li>',
-                'script' => 'console.log("blahmy labelblah%f msblah");',
-                'text' => '⏱ blahmy labelblah%f msblah',
+                'firephp' => 'X-Wf-1-1-1-22: %d|[{"Type":"LOG"},"blahmy labelblah%f %ssblah"]|',
+                'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f %ssblah</span></li>',
+                'script' => 'console.log("blahmy labelblah%f %ssblah");',
+                'text' => '⏱ blahmy labelblah%f %ssblah',
             )
         );
 

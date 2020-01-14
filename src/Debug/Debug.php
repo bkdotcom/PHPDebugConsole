@@ -1200,17 +1200,18 @@ class Debug
      *
      * Essentially PHP's `debug_backtrace()`, but displayed as a table
      *
-     * @param string $caption (optional) Specify caption for the trace table
+     * @param boolean $inclContext Include code snippet
+     * @param string  $caption     (optional) Specify caption for the trace table
      *
      * @return void
      */
-    public function trace($caption = 'trace')
+    public function trace($inclContext = false, $caption = 'trace')
     {
         if (!$this->cfg['collect']) {
             return;
         }
         // "use" our function params so things (ie phpmd) don't complain
-        array($caption);
+        array($inclContext, $caption);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -1220,10 +1221,12 @@ class Debug
                 'detectFiles' => true,
             ),
             array(
+                'inclContext' => false,
                 'caption' => 'trace',
             ),
             array(
                 'caption',
+                'inclContext',
             )
         );
         $backtrace = $this->errorHandler->backtrace();
@@ -1236,6 +1239,9 @@ class Debug
             }
         }
         $backtrace = \array_slice($backtrace, $i - 1);
+        if ($logEntry->getMeta('inclContext')) {
+            $backtrace = $this->errorHandler->backtraceAddContext($backtrace);
+        }
         // keep the calling file & line, but toss ->trace or ::_trace
         unset($backtrace[0]['function']);
         $logEntry['args'] = array($backtrace);

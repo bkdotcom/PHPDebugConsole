@@ -84,11 +84,13 @@ class ErrorHandler
      * Utilizes `xdebug_get_function_stack()` (if available) to get backtrace in shutdown phase
      * When called internally, internal frames are removed
      *
-     * @param Error|Exception $error (optional) Error instance if getting error backtrace
+     * @param Error|Exception $error       (optional) Error instance if getting error backtrace
+     * @param boolean|'auto'  $inclContext [auto]|true|false include surrounding lines?
+     *                                       auto: true for fatal errors
      *
      * @return array
      */
-    public function backtrace($error = null)
+    public function backtrace($error = null, $inclContext = 'auto')
     {
         $exception = null;
         if ($error instanceof \Exception) {
@@ -125,7 +127,61 @@ class ErrorHandler
             $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
         }
-        return static::normalizeTrace($backtrace);
+        $backtrace = static::normalizeTrace($backtrace);
+        if ($inclContext === 'auto') {
+            $inclContext = $error instanceof Error && $error->isFatal();
+        }
+        if ($inclContext) {
+            $backtrace = $this->backtraceAddContext($backtrace);
+        }
+        return $backtrace;
+    }
+
+    /**
+     * Get lines surrounding error
+     *
+     * @param array   $backtrace backtrace frames
+     * @param integer $length    number of lines to include
+     *
+     * @return array
+     */
+    public function backtraceAddContext($backtrace, $length = 19)
+    {
+        if ($length <= 0) {
+            $length = 19;
+        }
+        $sub = \floor($length  / 2);
+        foreach ($backtrace as $i => $frame) {
+            $backtrace[$i]['context'] = \file_exists($frame['file'])
+                ? $this->getFileLines($frame['file'], \max($frame['line'] - $sub, 0), $length)
+                : null;
+        }
+        return $backtrace;
+    }
+
+    /**
+     * Get lines from a file
+     *
+     * @param string  $file   filepath
+     * @param integer $start  line to start on (1-indexed; 1 = line; 1 = first line)
+     *                         0 also = first line
+     * @param integer $length number of lines to return
+     *
+     * @return array
+     */
+    private function getFileLines($file, $start = 1, $length = null)
+    {
+        $start  = (int) $start;
+        $length = (int) $length;
+        $lines = \array_merge(array(null), \file($file));
+        if ($start === 0) {
+            $start = 1;
+        }
+        if ($start > 1 || $length) {
+            // Get a subset of lines from $start to $end
+            $lines = \array_slice($lines, $start, $length, true);
+        }
+        return $lines;
     }
 
     /**

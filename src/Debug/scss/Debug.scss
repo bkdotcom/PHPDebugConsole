@@ -115,6 +115,7 @@
 		&:before { content: none; }
 		&:after { content: none; }
 	}
+	.p0 { padding: 0 !important; }
 	.text-center { text-align: center; }
 	.text-muted { color: $text-muted; }
 	// .text-nowrap { white-space: nowrap; }

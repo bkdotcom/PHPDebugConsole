@@ -98,9 +98,27 @@ class HtmlErrorSummary
             $table = $this->routeHtml->dump->table->build(
                 $backtrace,
                 array(
-                    'attribs' => 'trace table-bordered',
+                    'attribs' => 'trace table-bordered table-hover',
                     'caption' => 'trace',
                     'columns' => array('file','line','function'),
+                    'onBuildRow' => function ($row, $tr, $k) {
+                        $tr = str_replace('<tr>', '<tr data-toggle="next">', $tr);
+                        $tr .= '<tr class="context" ' . ($k === 0 ? 'style="display:table-row;"' : '' ) . '>'
+                            . $this->routeHtml->dump->dump(new \bdk\Debug\Abstraction\Abstraction(array(
+                                'type' => 'string',
+                                'attribs' => array(
+                                    'class' => 'language-php line-numbers p0 prism',
+                                    'colspan' => 4,
+                                    'data-start' => \key($row['context']),
+                                    'data-line' => $row['line'],
+                                ),
+                                'addQuotes' => false,
+                                'visualWhiteSpace' => false,
+                                'value' => \implode($row['context']),
+                            )), array(), 'td')
+                            . '</tr>' . "\n";
+                        return $tr;
+                    }
                 )
             );
             $html .= '<li>' . $lastError['message'] . '</li>';
@@ -116,7 +134,7 @@ class HtmlErrorSummary
                 $html = \str_replace(\htmlspecialchars($lastError['message']), $lastError['message'], $html);
             }
         }
-        if (!\extension_loaded('xdebug')) {
+        if (!$backtrace && !\extension_loaded('xdebug')) {
             $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
         }
         $html .= '</ul>'

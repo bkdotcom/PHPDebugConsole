@@ -181,10 +181,14 @@ function createFileLinks($entry, $strings, remove) {
 			if (isUpdate) {
 				$tr.find(".file-link").replaceWith($a);
 			} else {
-				$tds.last().after($("<td/>", {
-					class: "text-center",
-					html: $a
-				}));
+				if ($tr.hasClass("context")) {
+					$tds.eq(0).attr("colspan", parseInt($tds.eq(0).attr("colspan")) + 1);
+				} else {
+					$tds.last().after($("<td/>", {
+						class: "text-center",
+						html: $a
+					}));
+				}
 			}
 		});
 		return;

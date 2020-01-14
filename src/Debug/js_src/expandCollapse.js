@@ -20,6 +20,13 @@ export function init($delegateNode) {
 		toggle(this);
 		return false;
 	});
+	$delegateNode.on("click", "[data-toggle=next]", function(e) {
+		if ($(e.target).closest("a,button").length) {
+			return;
+		}
+		toggle(this);
+		return false;
+	})
 	$delegateNode.on("collapsed.debug.group", function(e){
 		groupErrorIconUpdate($(e.target).prev());
 	});
@@ -74,12 +81,7 @@ export function expand($toggleOrTarget) {
 		$target = isToggle
 			? $toggleOrTarget.next()
 			: $toggleOrTarget,
-		what = "array";
-	if ($toggle.is("[data-toggle=group]")) {
-		what = "group";
-	} else if ($toggle.is("[data-toggle=object]")) {
-		what = "object";
-	}
+		what = $toggle.data("toggle");
 	// trigger while still hidden!
 	//    no redraws
 	$target.trigger("expand.debug." + what);

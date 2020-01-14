@@ -54,6 +54,18 @@ table {
 	}
 }
 
+table.table-hover {
+	tbody {
+		tr {
+			cursor: default;
+			&:hover {
+			    color: #212529;
+			    background-color: rgba(0,0,0,.075);
+			}
+		}
+	}
+}
+
 // sortable table
 table.table-sort {
 	> thead th {
@@ -75,4 +87,10 @@ table.table-sort {
 	}
 	.sort-asc .fa-caret-down { opacity: 1; }
 	.sort-desc .fa-caret-up { opacity: 1; }
+}
+
+table.trace {
+	.context {
+		display: none;
+	}
 }

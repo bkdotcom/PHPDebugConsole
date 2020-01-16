@@ -42,7 +42,7 @@ class ErrorLevel
             'E_PARSE' => 4,
             'E_NOTICE' => 8,
             'E_CORE_ERROR' => 16,
-            'E_CORE_WARNING' =>32,
+            'E_CORE_WARNING' => 32,
             'E_COMPILE_ERROR' => 64,
             'E_COMPILE_WARNING' => 128,
             'E_USER_ERROR' => 256,
@@ -71,7 +71,7 @@ class ErrorLevel
     }
 
     /**
-     * [toConstantString description]
+     * Convert PHP error-level integer (bitmask) to constant bitwise representation
      *
      * @param integer $level          Error Level (bitmask) value
      * @param string  $phpVer         (PHP_VERSION) php Version
@@ -90,21 +90,28 @@ class ErrorLevel
         $eAll = $allConstants['E_ALL'];
         unset($allConstants['E_ALL']);
         if (\count($levelConstants) > \count($allConstants) / 2) {
-            $string = 'E_ALL';
+            $on = array('E_ALL');
+            $off = array();
             foreach ($allConstants as $constantName => $value) {
-                $isExplicit = $explicitStrict
-                    && $constantName == 'E_STRICT';
+                $isExplicit = $explicitStrict && $constantName == 'E_STRICT';
                 if (self::inBitmask($value, $level)) {
                     if (!self::inBitmask($value, $eAll) || $isExplicit) {
                         // only thing that wouldn't be in E_ALL is E_STRICT
-                        $string .= ' | ' . $constantName;
+                        $on[] = $constantName;
                     }
                 } else {
                     if (self::inBitmask($value, $eAll) || $isExplicit) {
-                        $string .= ' & ~' . $constantName;
+                        $off[] = $constantName;
                     }
                 }
             }
+            $on = \count($on) > 1 && $off
+                ? '( ' . \implode(' | ', $on) . ' )'
+                : \implode(' | ', $on);
+            $off = \join('', \array_map(function ($constantName) {
+                return ' & ~' . $constantName;
+            }, $off));
+            $string = $on . $off;
         } else {
             $string = \implode(' | ', \array_keys($levelConstants));
         }
@@ -132,10 +139,10 @@ class ErrorLevel
     }
 
     /**
-     * [isConstantSetInLevel description]
+     * Test if value is incl in bitmask
      *
-     * @param integer $value   [description]
-     * @param integer $bitmask [description]
+     * @param integer $value   value to check
+     * @param integer $bitmask bitmask
      *
      * @return boolean
      */

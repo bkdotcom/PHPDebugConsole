@@ -447,7 +447,7 @@ class Utilities
         }
         $keys = \array_keys($val);
         foreach ($keys as $i => $key) {
-            if ($i != $key) {
+            if ($key !== $i) {
                 return false;
             }
         }

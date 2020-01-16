@@ -115,6 +115,7 @@ class Debug
             'headerMaxPer' => null,
             'logEnvInfo' => array(      // may be set by passing a list
                 'cookies' => true,
+                'errorReporting' => true,
                 'gitInfo' => true,
                 'headers' => true,
                 'phpInfo' => true,

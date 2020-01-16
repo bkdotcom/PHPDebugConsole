@@ -91,21 +91,28 @@ class ErrorLevel
         $eAll = $allConstants['E_ALL'];
         unset($allConstants['E_ALL']);
         if (\count($levelConstants) > \count($allConstants) / 2) {
-            $string = 'E_ALL';
+            $on = array('E_ALL');
+            $off = array();
             foreach ($allConstants as $constantName => $value) {
-                $isExplicit = $explicitStrict
-                    && $constantName == 'E_STRICT';
+                $isExplicit = $explicitStrict && $constantName == 'E_STRICT';
                 if (self::inBitmask($value, $level)) {
                     if (!self::inBitmask($value, $eAll) || $isExplicit) {
                         // only thing that wouldn't be in E_ALL is E_STRICT
-                        $string .= ' | ' . $constantName;
+                        $on[] = $constantName;
                     }
                 } else {
                     if (self::inBitmask($value, $eAll) || $isExplicit) {
-                        $string .= ' & ~' . $constantName;
+                        $off[] = $constantName;
                     }
                 }
             }
+            $on = \count($on) > 1 && $off
+                ? '( ' . \implode(' | ', $on) . ' )'
+                : \implode(' | ', $on);
+            $off = \join('', \array_map(function ($constantName) {
+                return ' & ~' . $constantName;
+            }, $off));
+            $string = $on . $off;
         } else {
             $string = \implode(' | ', \array_keys($levelConstants));
         }

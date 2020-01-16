@@ -172,6 +172,9 @@ class OnBootstrap
      */
     private function logPhpInfoEr()
     {
+        if (!$this->debug->getCfg('logEnvInfo.errorReporting')) {
+            return;
+        }
         $errorReportingRaw = $this->debug->getCfg('errorReporting');
         $errorReporting = $errorReportingRaw === 'system'
             ? \error_reporting()

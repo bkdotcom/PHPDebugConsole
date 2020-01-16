@@ -366,6 +366,7 @@ class Internal implements SubscriberInterface
                 'errorHash' => $error['hash'],
                 'errorType' => $error['type'],
                 'file' => $error['file'],
+                'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
                 'line' => $error['line'],
                 'sanitize' => $error['isHtml'] === false,
             ));

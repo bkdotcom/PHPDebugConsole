@@ -31,6 +31,7 @@ class Yii11 implements SubscriberInterface
 
     public $yiiApp;
     public $debug;
+    protected $ignoredErrors = array();
 
     /**
      * {@inheritdoc}
@@ -44,7 +45,7 @@ class Yii11 implements SubscriberInterface
             'debug.output' => array('onDebugOutput', 1),
             'debug.outputLogEntry' => 'onDebugOutputLogEntry',
             'debug.pluginInit' => 'init',
-            'errorHandler.error' => array('onError', -1),
+            'errorHandler.error' => array('onError', 1),
         );
     }
 
@@ -125,10 +126,9 @@ class Yii11 implements SubscriberInterface
         $files = $debug->utilities->getIncludedFiles();
         $files = \array_filter($files, function ($file) {
             $exclude = array(
-                '/vendor/',
                 '/framework/',
                 '/protected/components/system/',
-                // '/protected/extensions',
+                '/vendor/',
             );
             $return = true;
             foreach ($exclude as $str) {
@@ -141,6 +141,22 @@ class Yii11 implements SubscriberInterface
         });
         $files = \array_values($files);
         $debug->log('files', $files, $debug->meta('detectFiles', true));
+        if ($this->ignoredErrors) {
+            $hashes = \array_unique($this->ignoredErrors);
+            $count = \count($hashes);
+            $debug->groupSummary();
+            $debug->group(
+                $count == 1
+                    ? '1 ignored error'
+                    : $count . ' ignored errors'
+            );
+            foreach ($hashes as $hash) {
+                $error = $this->debug->errorHandler->get('error', $hash);
+                $debug->onError($error);
+            }
+            $debug->groupEnd();
+            $debug->groupEnd();
+        }
     }
 
     /**
@@ -256,6 +272,20 @@ class Yii11 implements SubscriberInterface
             }
             $this->debug->rootInstance->eventManager->publish('php.shutdown');
             $this->yiiApp->handleError($error['type'], $error['message'], $error['file'], $error['line']);
+        } elseif (in_array($error['category'], array('deprecated','strict'))) {
+            $pathsIgnore = array(
+                Yii::getPathOfAlias('system'),
+                Yii::getPathOfAlias('webroot') . '/protected/extensions',
+                Yii::getPathOfAlias('webroot') . '/protected/components',
+            );
+            foreach ($pathsIgnore as $pathIgnore) {
+                if (\strpos($error['file'], $pathIgnore) === 0) {
+                    $error->stopPropagation();          // don't log it now
+                    $error['isSuppressed'] = true;
+                    $this->ignoredErrors[] = $error['hash'];
+                    break;
+                }
+            }
         }
     }
 

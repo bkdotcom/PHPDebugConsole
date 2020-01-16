@@ -33,10 +33,10 @@ class Prism implements AssetProviderInterface
                     margin: 0;
                 }
                 .debug pre[data-line] {
-                    padding: .75em 0 .75em 3em;
+                    padding-left: 3em;
                 }
                 .debug pre[data-line] .line-highlight {
-                    margin-top: .75em;
+                    margin-top: 0;
                 }
                 .debug code[class*="language-"],
                 .debug code[class*="language-"] span,
@@ -66,29 +66,33 @@ class Prism implements AssetProviderInterface
                                 lang,
                                 length,
                                 i;
-                            for (i = 0, length = classes.length; i < length; i++) {
-                                if (classes[i].match(/^language-/)) {
-                                    lang = classes[i];
-                                    $prism.removeClass(lang);
-                                } else if (["line-numbers"].indexOf(classes[i]) >= 0) {
-                                    $prism.removeClass(classes[i]);
-                                    classesPre.push(classes[i]);
-                                }
-                            }
-                            $prism.wrapInner(\'<pre><code class="\'+lang+\'"></code></pre>\');
-                            $pre = $prism.find("pre").addClass(classesPre.join(" "));
-                            $.each($prism[0].attributes, function() {
-                                if (!this.name.length) {
-                                    return; // continue;
-                                }
-                                if (["class","colspan"].indexOf(this.name) < 0) {
-                                    $pre.attr(this.name, this.value);
-                                    if (this.name.indexOf("data") < 0) {
-                                        // dont remove data attr... seems to remove all data attrs & only 1st data attr will get moved
-                                        $prism.removeAttr(this.name);
+                            if ($prism.is("pre")) {
+                                $pre = $prism;
+                            } else {
+                                for (i = 0, length = classes.length; i < length; i++) {
+                                    if (classes[i].match(/^language-/)) {
+                                        lang = classes[i];
+                                        $prism.removeClass(lang);
+                                    } else if (["line-numbers"].indexOf(classes[i]) >= 0) {
+                                        $prism.removeClass(classes[i]);
+                                        classesPre.push(classes[i]);
                                     }
                                 }
-                            });
+                                $prism.wrapInner(\'<pre><code class="\'+lang+\'"></code></pre>\');
+                                $pre = $prism.find("pre").addClass(classesPre.join(" "));
+                                $.each($prism[0].attributes, function() {
+                                    if (!this.name.length) {
+                                        return; // continue;
+                                    }
+                                    if (["class","colspan"].indexOf(this.name) < 0) {
+                                        $pre.attr(this.name, this.value);
+                                        if (this.name.indexOf("data") < 0) {
+                                            // dont remove data attr... seems to remove all data attrs & only 1st data attr will get moved
+                                            $prism.removeAttr(this.name);
+                                        }
+                                    }
+                                });
+                            }
                             if ($pre.is(":visible")) {
                                 Prism.highlightElement($pre.find("> code")[0]);
                             }

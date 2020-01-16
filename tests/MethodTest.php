@@ -2016,8 +2016,11 @@ EOD;
                     $this->assertSame($values['function1'], $trace[1]['function']);
                 },
                 'chromeLogger' => function ($logEntry) {
-                    $trace = $this->debug->getData('log/0/args/0');
-                    $this->assertSame(array($trace), $logEntry[0]);
+                    $trace = array_map(function ($row) {
+                        return array_intersect_key($row, array_flip(array('file','line','function')));
+                    }, $this->debug->getData('log/0/args/0'));
+                    $chromeTable = $logEntry[0][0];
+                    $this->assertSame($trace, $chromeTable);
                     $this->assertSame(null, $logEntry[1]);
                     $this->assertSame('table', $logEntry[2]);
                 },
@@ -2063,6 +2066,7 @@ EOD;
                         . '</tr>#is', $logEntry, $matches, PREG_SET_ORDER);
                     $count = count($matches);
                     for ($i = 1; $i < $count; $i++) {
+                        $trace[$i] = array_intersect_key($trace[$i], array_flip(array('file','line','function')));
                         $valuesExpect = array_merge(array((string) $i), array_values($trace[$i]));
                         $valuesExpect[1] = is_null($valuesExpect[1]) ? 'null' : $valuesExpect[1];
                         $valuesExpect[2] = is_null($valuesExpect[2]) ? 'null' : (string) $valuesExpect[2];
@@ -2073,12 +2077,16 @@ EOD;
                     }
                 },
                 'script' => function ($logEntry) {
-                    $trace = $this->debug->getData('log/0/args/0');
+                    $trace = array_map(function ($row) {
+                        return array_intersect_key($row, array_flip(array('file','line','function')));
+                    }, $this->debug->getData('log/0/args/0'));
                     preg_match('#console.table\((.+)\);#', $logEntry, $matches);
                     $this->assertSame(json_encode($trace, JSON_UNESCAPED_SLASHES), $matches[1]);
                 },
                 'text' => function ($logEntry) use ($values) {
-                    $trace = $this->debug->getData('log/0/args/0');
+                    $trace = array_map(function ($row) {
+                        return array_intersect_key($row, array_flip(array('file','line','function')));
+                    }, $this->debug->getData('log/0/args/0'));
                     $expect = 'trace = ' . $this->debug->dumpText->dump($trace);
                     $this->assertNotEmpty($trace);
                     $this->assertSame($expect, trim($logEntry));

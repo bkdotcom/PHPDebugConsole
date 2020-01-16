@@ -383,7 +383,7 @@ class AbstractObject
         $classname = \is_object($obj)
             ? \get_class($obj)
             : $obj;
-        if (\in_array($classname, $this->abstracter->getCfg('objectsExclude'))) {
+        if (\array_intersect(array('*', $classname), $this->abstracter->getCfg('objectsExclude'))) {
             return true;
         }
         // now test "instanceof"
@@ -443,9 +443,6 @@ class AbstractObject
                 $sortData['name'][$name] = $name == '__construct'
                     ? '0'     // always place __construct at the top
                     : $name;
-                if (!isset($info['visibility'])) {
-                    \bdk\Debug::_warn('poop', $name, $info);
-                }
                 $vis = \is_array($info['visibility'])
                     ? $info['visibility'][0]
                     : $info['visibility'];

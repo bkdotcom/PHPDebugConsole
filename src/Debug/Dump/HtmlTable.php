@@ -102,7 +102,7 @@ class HtmlTable
             // row may be array or Traversable
             $tr = $this->buildRow($row, $keys, $k);
             if (\is_callable($options['onBuildRow'])) {
-                $tr = $options['onBuildRow']($row, $tr, $k);
+                $tr = $options['onBuildRow']($tr, $row, $k);
             }
             $tBody .= $tr;
         }

@@ -648,9 +648,11 @@ class ErrorHandler
         $frameDefault = array(
             'file' => null,
             'line' => null,
-            'function' => null,
-            'class' => null,
-            'type' => null,
+            'function' => null,     // function, Class::function, or Class->function
+            'class' => null,        // will get removed
+            'type' => null,         // will get removed
+            'args' => array(),
+            'evalLine' => null,
         );
         $funcsSkip = array('call_user_func','call_user_func_array');
         $funcsSkipRegex = '/^(' . \implode('|', $funcsSkip) . ')[:\(\{]/';
@@ -666,6 +668,13 @@ class ErrorHandler
                 // xdebug_get_function_stack
                 $frame['type'] = $frame['type'] === 'dynamic' ? '->' : '::';
             }
+            if (\preg_match('/^(.+)\((\d+)\) : eval\(\)\'d code$/', $frame['file'], $matches)) {
+                // reported line = line within eval
+                // line inside paren is the line `eval` is on
+                $frame['evalLine'] = $frame['line'];
+                $frame['file'] = $matches[1];
+                $frame['line'] = (int) $matches[2];
+            }
             if (isset($backtrace[$i]['include_filename'])) {
                 // xdebug_get_function_stack
                 $frame['function'] = 'include or require';
@@ -673,9 +682,6 @@ class ErrorHandler
                 $frame['function'] = \preg_match('/\{closure\}$/', $frame['function'])
                     ? $frame['function']
                     : $frame['class'] . $frame['type'] . $frame['function'];
-            }
-            if (!$frame['function']) {
-                unset($frame['function']);
             }
             unset($frame['class'], $frame['type']);
             $backtraceNew[] = $frame;

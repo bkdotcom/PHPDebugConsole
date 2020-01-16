@@ -23,6 +23,7 @@
 .debug fieldset > ul { font-size: 125%; }
 .debug h3 { margin-top: .66em; margin-bottom: .5em; font-size: 1.15em; font-weight: bold; }
 .debug h3:first-child { margin-top: 0; }
+.debug hr { color: #111; background-color: #111; border: 0; height: 1px; }
 .debug img { border: 0; }
 .debug input[type=checkbox] { margin: 0 .33em 0 0; cursor: pointer; }
 .debug label { display: block; margin: 0; cursor: pointer; font-weight: bold; max-width: none; }
@@ -31,7 +32,6 @@
 .debug p { margin-top: .25em; margin-bottom: 0; }
 .debug p:first-child { margin-top: 0; }
 .debug pre { padding: 0; border: 0; margin: 0; white-space: pre; -moz-tab-size: 3; -o-tag-size: 3; -tab-size: 3; }
-.debug table { width: auto; }
 .debug ul { margin-top: 0; margin-bottom: 0; }
 .debug ul.list-unstyled > li { text-indent: -1em; padding-left: 1em; }
 .debug .close { opacity: 1; float: none; }
@@ -88,7 +88,7 @@
 .debug .m_error.error-fatal:before { display: block; margin-left: 10px; margin-bottom: 5px; content: "Fatal error"; font-size: 1.2em; font-weight: bold; }
 .debug .debug-log .error-fatal { padding: 10px; border-left: solid 2px #d8000c; }
 .debug .debug-log .error-fatal .no-quotes { display: none; }
-.debug table { border-collapse: collapse; }
+.debug table { width: auto; border-collapse: collapse; }
 .debug table caption { caption-side: top; font-weight: bold; font-style: italic; padding-bottom: 0; padding-top: 2px; text-align: left; }
 .debug table thead th { text-align: center; }
 .debug table thead th .classname { opacity: .50; font-style: italic; }
@@ -96,6 +96,8 @@
 .debug table thead th .classname:after { content: ")"; }
 .debug table th, .debug table tfoot td { font-weight: bold; background-color: rgba(0, 0, 0, 0.1); }
 .debug table th, .debug table td { padding: 0 .25em; vertical-align: top; }
+.debug table tr[data-toggle] { cursor: default; }
+.debug table tr[data-toggle]:hover { color: #212529; background-color: rgba(0, 0, 0, 0.075); }
 .debug table tbody th.t_int, .debug table td.numeric, .debug table td.t_int { text-align: right; white-space: nowrap; }
 .debug table th.t_key { white-space: nowrap; }
 .debug table th.t_key:before, .debug table th.t_key:after { content: none; }
@@ -113,7 +115,10 @@
 .debug table.table-sort .sort-arrows .fa-caret-up { top: -1px; }
 .debug table.table-sort .sort-asc .fa-caret-down { opacity: 1; }
 .debug table.table-sort .sort-desc .fa-caret-up { opacity: 1; }
-.debug table.trace .context { display: none; }
+.debug table.trace-context { width: 100%; }
+.debug table.trace-context tr.context { display: none; }
+.debug table.trace-context tr.context td { color: #111; max-width: 1px; background-color: #f5f2f0; padding: 0.75em; }
+.debug table.trace-context tr.context td hr { margin: 1em 0; }
 .debug .t_bool.true { color: #993; text-shadow: 1px 1px 2px rgba(153, 153, 51, 0.5); }
 .debug .t_bool.false { color: #C33; text-shadow: 1px 1px 2px rgba(204, 51, 51, 0.5); }
 .debug .t_callable { font-weight: bold; }

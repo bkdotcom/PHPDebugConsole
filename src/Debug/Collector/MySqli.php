@@ -178,7 +178,7 @@ class MySqli extends mysqliBase
             $debug->log('server info', $serverInfo);
 
             $debug->groupEnd(); // groupCollapsed
-        } catch (Exception $e) {
+        } catch (RuntimeException $e) {
             $debug->group('MySqli Error', $debug->meta(array('level' => 'error')));
             $debug->log('Connection Error');
         }

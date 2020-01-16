@@ -95,32 +95,41 @@ class HtmlErrorSummary
             . '<ul class="list-unstyled">';
         if (\count($backtrace) > 1) {
             // more than one trace frame
+            \bdk\Debug::getInstance()->addPlugin(new \bdk\Debug\Plugin\Prism());
+            // Don't inspect objects when dumping trace arguments...  potentially huge objects
+            $objectsExclude = \bdk\Debug::_getCfg('objectsExclude');
+            \bdk\Debug::_setCfg('objectsExclude', \array_merge($objectsExclude, array('*')));
             $table = $this->routeHtml->dump->table->build(
                 $backtrace,
                 array(
-                    'attribs' => 'trace table-bordered table-hover',
+                    'attribs' => 'trace trace-context table-bordered',
                     'caption' => 'trace',
                     'columns' => array('file','line','function'),
-                    'onBuildRow' => function ($row, $tr, $k) {
-                        $tr = str_replace('<tr>', '<tr data-toggle="next">', $tr);
+                    'onBuildRow' => function ($tr, $row, $k) {
+                        if (!$row['context']) {
+                            return $tr;
+                        }
+                        $tr = \str_replace('<tr>', '<tr' . ($k === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $tr);
                         $tr .= '<tr class="context" ' . ($k === 0 ? 'style="display:table-row;"' : '' ) . '>'
-                            . $this->routeHtml->dump->dump(new \bdk\Debug\Abstraction\Abstraction(array(
-                                'type' => 'string',
-                                'attribs' => array(
-                                    'class' => 'language-php line-numbers p0 prism',
-                                    'colspan' => 4,
-                                    'data-start' => \key($row['context']),
-                                    'data-line' => $row['line'],
-                                ),
-                                'addQuotes' => false,
-                                'visualWhiteSpace' => false,
-                                'value' => \implode($row['context']),
-                            )), array(), 'td')
+                            . '<td colspan="4">'
+                                . '<pre class="line-numbers prism" data-line="' . $row['line'] . '" data-start="' . \key($row['context']) . '">'
+                                    . '<code class="language-php">'
+                                        . \htmlspecialchars(\implode($row['context']))
+                                    . '</code>'
+                                . '</pre>'
+                                . '{{arguments}}'
+                            . '</td>' . "\n"
                             . '</tr>' . "\n";
+                        $args = $row['args']
+                            ? '<hr />Arguments = ' . $this->routeHtml->dump->dump($row['args'])
+                            : '';
+                        $tr = \str_replace('{{arguments}}', $args, $tr);
                         return $tr;
-                    }
+                    } // onBuildRow
                 )
             );
+            // restore previous objectsExclude
+            \bdk\Debug::_setCfg('objectsExclude', $objectsExclude);
             $html .= '<li>' . $lastError['message'] . '</li>';
             $html .= '<li class="m_trace" data-detect-files="true">' . $table . '</li>';
             if (!$isHtml) {

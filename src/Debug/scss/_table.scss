@@ -1,4 +1,8 @@
+$hover-bg: rgba(0,0,0,.075);
+$hover-fg: #212529;
+
 table {
+	width: auto;
 	border-collapse: collapse;
 	caption {
 		caption-side: top;
@@ -25,6 +29,14 @@ table {
 	th, td {
 		padding: 0 .25em;
 		vertical-align: top;
+	}
+	tr[data-toggle] {
+		cursor: default;
+		&:hover {
+			color: $hover-fg;
+			background-color: $hover-bg;
+		}
+
 	}
 	tbody th.t_int,
 	td.numeric,
@@ -59,8 +71,8 @@ table.table-hover {
 		tr {
 			cursor: default;
 			&:hover {
-			    color: #212529;
-			    background-color: rgba(0,0,0,.075);
+				color: $hover-fg;
+				background-color: $hover-bg;
 			}
 		}
 	}
@@ -89,8 +101,18 @@ table.table-sort {
 	.sort-desc .fa-caret-up { opacity: 1; }
 }
 
-table.trace {
-	.context {
+table.trace-context {
+	width: 100%;
+	tr.context {
 		display: none;
+		td {
+			color: $default-fg;
+			max-width: 1px;   // prevents content expanding ¯\_(ツ)_/¯
+			background-color: #f5f2f0;
+			padding: 0.75em;
+			hr {
+				margin: 1em 0;
+			}
+		}
 	}
 }

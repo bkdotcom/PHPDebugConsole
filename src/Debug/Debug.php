@@ -1232,8 +1232,7 @@ class Debug
         $backtrace = $this->errorHandler->backtrace();
         // toss "internal" frames
         for ($i = 1, $count = \count($backtrace) - 1; $i < $count; $i++) {
-            $frame = $backtrace[$i];
-            $function = isset($frame['function']) ? $frame['function'] : '';
+            $function = $backtrace[$i]['function'];
             if (!\preg_match('/^' . \preg_quote(__CLASS__) . '(::|->)/', $function)) {
                 break;
             }

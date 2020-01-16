@@ -5,7 +5,7 @@
 	// font-size: .6em;
 	line-height: normal;
 	text-shadow: none;
-	color: #111;
+	color: $default-fg;
 }
 
 * {
@@ -97,6 +97,12 @@ h3 {
 	font-weight: bold;
 	&:first-child { margin-top:0; }
 }
+hr {
+	color: $default-fg;
+	background-color: $default-fg;
+	border: 0;
+	height: 1px;
+}
 img { border:0; }
 input[type=checkbox] {
 	margin: 0 .33em 0 0;
@@ -137,9 +143,6 @@ pre {
 	-moz-tab-size: 3;
 	  -o-tag-size: 3;
 		-tab-size: 3;
-}
-table {
-	width: auto;
 }
 ul {
 	margin-top: 0;

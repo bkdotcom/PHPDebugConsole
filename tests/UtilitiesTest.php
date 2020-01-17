@@ -207,7 +207,7 @@ class UtilitiesTest extends DebugTestFramework
      */
     public function testGetEmittedHeader()
     {
-        $this->assertSame('', Utilities::getEmittedHeader());
+        $this->assertSame(array(), Utilities::getEmittedHeader());
     }
 
     public function testGetIncludedFiles()

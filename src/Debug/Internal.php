@@ -183,19 +183,55 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Return the response Content-Type
+     * Get HTTP response code
      *
-     * Content type is pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
-     * otherwise, content-type is pulled from emitted headers via `headers_list()`
+     * Status code pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
+     * otherwise, code pulled via `http_response_code()`
      *
-     * @return string (empty string if Content-Type header not found)
+     * @return integer Status code
      */
-    public function getResponseContentType()
+    public function getResponseCode()
     {
-        $contentType = $this->debug->response
-            ? $this->debug->response->getHeaderLine('Content-Type')
-            : $this->debug->utilities->getEmittedHeader();
-        return $contentType ?: 'text/html';
+        return $this->debug->response
+            ? $this->debug->response->getStatusCode()
+            : \http_response_code();
+    }
+
+    /**
+     * Return the response header value(s) for specified header
+     *
+     * Header value is pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
+     * otherwise, value is pulled from emitted headers via `headers_list()`
+     *
+     * @param string $header    ('Content-Type') header to return
+     * @param string $delimiter Optional.  If specified, join values.  Otherwise, array is returned
+     *
+     * @return array|string
+     */
+    public function getResponseHeader($header = 'Content-Type', $delimiter = false)
+    {
+        $headers = static::getResponseHeaders();
+        $header = isset($headers[$header])
+            ? $headers[$header]
+            : array();
+        return \is_string($delimiter)
+            ? \implode($delimiter, $header)
+            : $header;
+    }
+
+    /**
+     * Return all header values
+     *
+     * Header values are pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
+     * otherwise, values are pulled from emitted headers via `headers_list()`
+     *
+     * @return array
+     */
+    public function getResponseHeaders()
+    {
+        return $this->debug->response
+            ? $this->debug->response->getHeaders()
+            : $this->debug->utilities->getEmittedHeaders();
     }
 
     /**
@@ -626,19 +662,32 @@ class Internal implements SubscriberInterface
         if (!$this->cfg['logResponse']) {
             return;
         }
-        $maxLen = $this->debug->getCfg('logResponseMaxLen');
-        $maxLen = $this->debug->utilities->getBytes($maxLen, true);
-        $contentType = $this->getResponseContentType();
+        $headers = $this->getResponseHeaders();
+        $contentType = isset($headers['Content-Type'])
+            ? \implode('', $headers['Content-Type'])
+            : '';
+        $protocol = isset($_SERVER['SERVER_PROTOCOL'])
+            ? $_SERVER['SERVER_PROTOCOL']
+            : 'HTTP/1.0';
+        $responseCode = $this->getResponseCode();
+        $headersAll = array(
+            $protocol . ' ' . $responseCode . ' ' . $this->debug->utilities->httpStatusPhrase($responseCode),
+        );
+        foreach ($headers as $k => $vals) {
+            foreach ($vals as $val) {
+                $headersAll[] = $k . ': ' . $val;
+            }
+        }
+        $this->debug->log('response headers', \join("\n", $headersAll));
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
             // we're not interested in logging response
-            $this->debug->log('response', array(
-                'Content-Type' => $contentType,
-            ));
             if (\ob_get_level()) {
                 \ob_end_flush();
             }
             return;
         }
+        $maxLen = $this->debug->getCfg('logResponseMaxLen');
+        $maxLen = $this->debug->utilities->getBytes($maxLen, true);
         $response = \ob_get_clean();
         $contentLength = \strlen($response);
         if ($this->debug->response) {
@@ -664,7 +713,7 @@ class Internal implements SubscriberInterface
                 'contentType' => $contentType,
             ));
             $this->debug->log(
-                'response (%c%s) %c%s',
+                'response content (%c%s) %c%s',
                 'font-family: monospace;',
                 $contentType,
                 'font-style: italic; opacity: 0.8;',
@@ -675,10 +724,7 @@ class Internal implements SubscriberInterface
                 $this->debug->meta('redact')
             );
         } else {
-            $this->debug->log('response (too large to output)', array(
-                'Content-Type' => $contentType,
-                'Content-Length' => $contentLength,
-            ));
+            $this->debug->log('response too large to output (' . $contentLength . ')');
         }
         echo $response;
     }

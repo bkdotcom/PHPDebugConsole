@@ -93,9 +93,11 @@ class Prism implements AssetProviderInterface
                                     }
                                 });
                             }
-                            if ($pre.is(":visible")) {
-                                Prism.highlightElement($pre.find("> code")[0]);
-                            }
+                            setTimeout(function(){
+                                if ($pre.is(":visible")) {
+                                    Prism.highlightElement($pre.find("> code")[0]);
+                                }
+                            }, 100);
                         });
                     });
                     $("body").on("expanded.debug.next", ".context", function(e){

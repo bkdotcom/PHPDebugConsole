@@ -19,14 +19,15 @@ use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 use CActiveRecord;
+use CApplicationComponent;
 use CDbCommand;
 use CEvent;
 use Yii;
 
 /**
- * Yii v1.1 debug helper
+ * Yii v1.1 Component
  */
-class Yii11 implements SubscriberInterface
+class Yii11 extends CApplicationComponent implements SubscriberInterface
 {
 
     public $yiiApp;
@@ -50,15 +51,12 @@ class Yii11 implements SubscriberInterface
     }
 
     /**
-     * debug.pluginInit subscriber
-     *
-     * @param Event $event Event instance
-     *
-     * @return void
+     * {@inheritDoc}
      */
-    public function init(Event $event)
+    public function init()
     {
-        $this->debug = $event->getSubject()->getChannel('Yii');
+        $this->debug = Debug::getInstance()->getChannel('Yii');
+        Debug::getInstance()->eventManager->addSubscriberInterface($this);
         $this->yiiApp = Yii::app();
         $this->usePdoCollector();
         $this->addDebugProp();
@@ -272,7 +270,7 @@ class Yii11 implements SubscriberInterface
             }
             $this->debug->rootInstance->eventManager->publish('php.shutdown');
             $this->yiiApp->handleError($error['type'], $error['message'], $error['file'], $error['line']);
-        } elseif (in_array($error['category'], array('deprecated','strict'))) {
+        } elseif (in_array($error['category'], array('deprecated','notice','strict'))) {
             $pathsIgnore = array(
                 Yii::getPathOfAlias('system'),
                 Yii::getPathOfAlias('webroot') . '/protected/extensions',

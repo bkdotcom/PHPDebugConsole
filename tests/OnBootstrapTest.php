@@ -19,6 +19,9 @@ class OnBootstrapTest extends DebugTestFramework
 
         $refMethod = new \ReflectionMethod($onBootstrap, 'logPhpInfoEr');
         $refMethod->setAccessible(true);
+
+        $this->debug->setCfG('logEnvInfo.errorReporting', true);
+
         /*
             Test error_reporting != "all" but debug is "all"
         */
@@ -28,8 +31,8 @@ class OnBootstrapTest extends DebugTestFramework
             'entry' => array(
                 'warn',
                 array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`'."\n"
-                        .'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)',
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
+                        . 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -56,8 +59,8 @@ class OnBootstrapTest extends DebugTestFramework
             'entry' => array(
                 'warn',
                 array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`'."\n"
-                        .'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)',
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
+                        . 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -82,8 +85,8 @@ class OnBootstrapTest extends DebugTestFramework
             'entry' => array(
                 'warn',
                 array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`'."\n"
-                        .'PHPDebugConsole\'s errorHandler is also using a errorReporting value of `%cE_ALL & ~E_STRICT%c`',
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
+                        . 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of `%cE_ALL & ~E_STRICT%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -110,8 +113,8 @@ class OnBootstrapTest extends DebugTestFramework
             'entry' => array(
                 'warn',
                 array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`'."\n"
-                        .'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%cE_ALL & ~E_STRICT & ~E_DEPRECATED%c`',
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
+                        . 'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%cE_ALL & ~E_STRICT & ~E_DEPRECATED%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -134,5 +137,6 @@ class OnBootstrapTest extends DebugTestFramework
         */
         error_reporting(E_ALL | E_STRICT);
         $this->debug->setCfg('errorReporting', E_ALL | E_STRICT);
+        $this->debug->setCfG('logEnvInfo.errorReporting', false);
     }
 }

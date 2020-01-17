@@ -84,8 +84,8 @@ class DebugTest extends DebugTestFramework
             : 'strict';
         $errMsg = 'Only variables should be passed by reference';
         $args = version_compare(PHP_VERSION, '7.0', '>=')
-            ? array('Notice:', __FILE__.' (line '.$lastError['line'].')', $errMsg)
-            : array('Runtime Notice (E_STRICT):', __FILE__.' (line '.$lastError['line'].')', $errMsg);
+            ? array('Notice:', __FILE__ . ' (line ' . $lastError['line'] . ')', $errMsg)
+            : array('Runtime Notice (E_STRICT):', __FILE__ . ' (line ' . $lastError['line'] . ')', $errMsg);
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'warn',
@@ -100,13 +100,14 @@ class DebugTest extends DebugTestFramework
                     'file' => __FILE__,
                     'line' => $lastError['line'],
                     'sanitize' => true,
+                    'isSuppressed' => false,
                 ),
             ),
-            'html' => '<li class="error-'.$errCat.' m_warn" data-channel="phpError" data-detect-files="true">'
-                .'<span class="no-quotes t_string">'.$args[0].' </span>'
-                .'<span class="t_string">'.$args[1].'</span>, '
-                .'<span class="t_string">'.$errMsg.'</span>'
-                .'</li>',
+            'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="phpError" data-detect-files="true">'
+                . '<span class="no-quotes t_string">' . $args[0] . ' </span>'
+                . '<span class="t_string">' . $args[1] . '</span>, '
+                . '<span class="t_string">' . $errMsg . '</span>'
+                . '</li>',
         ));
     }
 

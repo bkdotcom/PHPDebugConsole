@@ -10,11 +10,13 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Collector;
+namespace bdk\Debug\Framework;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Collector\Yii11LogRoute;
+use bdk\Debug\Collector\Pdo;
+use bdk\Debug\Framework\Yii11LogRoute;
+use bdk\Debug\Utilities;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -75,7 +77,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
         $pdo = $db->pdoInstance;
         // nest the PDO channel under our Yii channel
         $pdoChannel = $this->debug->getChannel('PDO', array('channelIcon' => 'fa fa-database'));
-        $pdoCollector = new \bdk\Debug\Collector\Pdo($pdo, $pdoChannel);
+        $pdoCollector = new Pdo($pdo, $pdoChannel);
         $pdoProp = new \ReflectionProperty($db, '_pdo');
         $pdoProp->setAccessible(true);
         $pdoProp->setValue($db, $pdoCollector);
@@ -177,7 +179,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
                 $isController = \preg_match('#/protected/controllers/.+.php#', $filepathRel);
                 $isView = \preg_match('#/protected/views(?:(?!/layout).)+.php#', $filepathRel);
                 $embolden = $isController || $isView;
-                return \bdk\Debug\Utilities::buildTag(
+                return Utilities::buildTag(
                     'span',
                     array(
                         'class' => 'file t_string',

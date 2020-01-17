@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Collector;
+namespace bdk\Debug\Framework;
 
 use Yii;
 use CLogger;

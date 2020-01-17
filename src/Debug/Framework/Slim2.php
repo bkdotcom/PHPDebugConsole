@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Collector;
+namespace bdk\Debug\Framework;
 
 use bdk\Debug;
 use Slim\Log;
@@ -18,7 +18,7 @@ use Slim\Log;
 /**
  * A Slim v2 log writer
  *
- * `$app->log->setWriter(new \bdk\Debug\Collector\Slim2($debug));`
+ * `$app->log->setWriter(new \bdk\Debug\Framework\Slim2($debug));`
  *
  */
 class Slim2

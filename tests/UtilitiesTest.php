@@ -71,7 +71,7 @@ class UtilitiesTest extends DebugTestFramework
         $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.rock.comfy'), false);
         $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.comfy.foo'), null);
         $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.comfy.0'), null);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed'), array('comfy'=>true));
+        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed'), array('comfy' => true));
         $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.foo'), null);
         $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.__count__'), 2);
         $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.__end__.comfy'), false);
@@ -96,7 +96,7 @@ class UtilitiesTest extends DebugTestFramework
                     'class' => array('test','dupe','dupe'),
                     'title' => 'Pork & Beans',
                     'value' => '',      // value=""
-                    'style' => array('position'=>'absolute','display'=>'inline-block'),
+                    'style' => array('position' => 'absolute','display' => 'inline-block'),
                     'dingus' => array('unknown array'),
                     'hidden' => false,
                     'foo' => false,     // not a valid boolean attrib - we'll not output regardless
@@ -111,22 +111,22 @@ class UtilitiesTest extends DebugTestFramework
                     'data-obj' => (object) array('key' => 'val'),
                 ),
                 'expect' => ''
-                    .' autocomplete="on"'
-                    .' bar="bar"'
-                    .' class="dupe test"'
-                    .' data-array="{&quot;foo&quot;:&quot;bar&quot;}"'
-                    .' data-false="false"'
-                    .' data-null="null"'
-                    .' data-obj="{&quot;key&quot;:&quot;val&quot;}"'
-                    .' data-string="wassup?"'
-                    .' data-true="true"'
-                    .' disabled="disabled"'
-                    .' height="100"'
-                    .' src="/path/to/image.png"'
-                    .' style="display:inline-block;position:absolute;"'
-                    .' title="Pork &amp; Beans"'
-                    .' value=""'
-                    .' width="80"',
+                    . ' autocomplete="on"'
+                    . ' bar="bar"'
+                    . ' class="dupe test"'
+                    . ' data-array="{&quot;foo&quot;:&quot;bar&quot;}"'
+                    . ' data-false="false"'
+                    . ' data-null="null"'
+                    . ' data-obj="{&quot;key&quot;:&quot;val&quot;}"'
+                    . ' data-string="wassup?"'
+                    . ' data-true="true"'
+                    . ' disabled="disabled"'
+                    . ' height="100"'
+                    . ' src="/path/to/image.png"'
+                    . ' style="display:inline-block;position:absolute;"'
+                    . ' title="Pork &amp; Beans"'
+                    . ' value=""'
+                    . ' width="80"',
             ),
             array(
                 'attribs' => array(
@@ -240,8 +240,8 @@ class UtilitiesTest extends DebugTestFramework
     {
         $this->assertFalse(Utilities::isList("string"));
         $this->assertTrue(Utilities::isList(array()));     // empty array = "list"
-        $this->assertFalse(Utilities::isList(array(3=>'foo',2=>'bar',1=>'baz',0=>'nope')));
-        $this->assertTrue(Utilities::isList(array(0=>'nope',1=>'baz',2=>'bar',3=>'foo')));
+        $this->assertFalse(Utilities::isList(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope')));
+        $this->assertTrue(Utilities::isList(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo')));
     }
 
     /**
@@ -269,22 +269,22 @@ class UtilitiesTest extends DebugTestFramework
             array(
                 'params' => array(
                     ' '
-                    .' placeholder="&quot;quotes&quot; &amp; ampersands"'
-                    .' autocomplete=off'
-                    .' required=required'
-                    .' autofocus'
-                    .' notabool'
-                    .' value=""'
-                    .' data-null="null"'
-                    .' data-obj="{&quot;foo&quot;:&quot;bar&quot;}"'
-                    .' data-str = "foo"'
-                    .' data-zero="0"',
+                    . ' placeholder="&quot;quotes&quot; &amp; ampersands"'
+                    . ' autocomplete=off'
+                    . ' required=required'
+                    . ' autofocus'
+                    . ' notabool'
+                    . ' value=""'
+                    . ' data-null="null"'
+                    . ' data-obj="{&quot;foo&quot;:&quot;bar&quot;}"'
+                    . ' data-str = "foo"'
+                    . ' data-zero="0"',
                 ),
                 'expect' => array(
                     'autocomplete' => 'off',
                     'autofocus' => true,
                     'data-null' => null,
-                    'data-obj' => array('foo'=>'bar'),
+                    'data-obj' => array('foo' => 'bar'),
                     'data-str' => 'foo',
                     'data-zero' => 0,
                     'notabool' => '',
@@ -322,11 +322,11 @@ class UtilitiesTest extends DebugTestFramework
             array(
                 'tag' => '<div class="test" ><i>stuff</i> &amp; things</div>',
                 'expect' => array(
-                    'tagname'=>'div',
+                    'tagname' => 'div',
                     'attribs' => array(
-                        'class'=>'test',
+                        'class' => 'test',
                     ),
-                    'innerhtml'=>'<i>stuff</i> &amp; things',
+                    'innerhtml' => '<i>stuff</i> &amp; things',
                 ),
             ),
             array(

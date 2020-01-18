@@ -671,6 +671,7 @@ class Html extends Base
             'columns' => array(),
             'sortable' => false,
             'totalCols' => array(),
+            'inclContext' => false,
         ), $logEntry['meta']);
         $asTable = false;
         if (\is_array($args[0])) {
@@ -693,10 +694,14 @@ class Html extends Base
                                 'class' => array(
                                     'table-bordered',
                                     $meta['sortable'] ? 'sortable' : null,
+                                    $meta['inclContext'] ? 'trace-context' : null,
                                 ),
                             ),
                             'caption' => $meta['caption'],
                             'columns' => $meta['columns'],
+                            'onBuildRow' => $meta['inclContext']
+                                ? array($this, 'tableAddContextRow')
+                                : null,
                             'totalCols' => $meta['totalCols'],
                         )
                     ) . "\n"
@@ -734,6 +739,38 @@ class Html extends Base
             $val = $this->dump($val);
         }
         return $val;
+    }
+
+    /**
+     * Insert a row containing code snip & arguments after the given row
+     *
+     * @param string  $tr  <tr>...</tr> html
+     * @param array   $row backtrace frame
+     * @param integer $i   row index
+     *
+     * @return string
+     */
+    public function tableAddContextRow($tr, $row, $i)
+    {
+        if (!$row['context']) {
+            return $tr;
+        }
+        $tr = \str_replace('<tr>', '<tr' . ($i === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $tr);
+        $tr .= '<tr class="context" ' . ($i === 0 ? 'style="display:table-row;"' : '' ) . '>'
+            . '<td colspan="4">'
+                . '<pre class="line-numbers prism" data-line="' . $row['line'] . '" data-start="' . \key($row['context']) . '">'
+                    . '<code class="language-php">'
+                        . \htmlspecialchars(\implode($row['context']))
+                    . '</code>'
+                . '</pre>'
+                . '{{arguments}}'
+            . '</td>' . "\n"
+            . '</tr>' . "\n";
+        $args = $row['args']
+            ? '<hr />Arguments = ' . $this->dump($row['args'])
+            : '';
+        $tr = \str_replace('{{arguments}}', $args, $tr);
+        return $tr;
     }
 
     /**

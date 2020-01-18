@@ -1230,7 +1230,8 @@ class Debug
                 'inclContext',
             )
         );
-        $backtrace = $this->errorHandler->backtrace();
+        // Get trace and include args if we're including context
+        $backtrace = $this->errorHandler->backtrace(null, $logEntry->getMeta('inclContext'));
         // toss "internal" frames
         for ($i = 1, $count = \count($backtrace) - 1; $i < $count; $i++) {
             $function = $backtrace[$i]['function'];
@@ -1241,6 +1242,8 @@ class Debug
         $backtrace = \array_slice($backtrace, $i - 1);
         if ($logEntry->getMeta('inclContext')) {
             $backtrace = $this->errorHandler->backtraceAddContext($backtrace);
+            $backtrace[0]['args'] = array(); // don't incl args passed to trace()
+            $this->addPlugin(new \bdk\Debug\Plugin\Prism());
         }
         // keep the calling file & line, but toss ->trace or ::_trace
         unset($backtrace[0]['function']);

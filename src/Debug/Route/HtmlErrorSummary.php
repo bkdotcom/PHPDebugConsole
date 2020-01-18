@@ -105,27 +105,7 @@ class HtmlErrorSummary
                     'attribs' => 'trace trace-context table-bordered',
                     'caption' => 'trace',
                     'columns' => array('file','line','function'),
-                    'onBuildRow' => function ($tr, $row, $k) {
-                        if (!$row['context']) {
-                            return $tr;
-                        }
-                        $tr = \str_replace('<tr>', '<tr' . ($k === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $tr);
-                        $tr .= '<tr class="context" ' . ($k === 0 ? 'style="display:table-row;"' : '' ) . '>'
-                            . '<td colspan="4">'
-                                . '<pre class="line-numbers prism" data-line="' . $row['line'] . '" data-start="' . \key($row['context']) . '">'
-                                    . '<code class="language-php">'
-                                        . \htmlspecialchars(\implode($row['context']))
-                                    . '</code>'
-                                . '</pre>'
-                                . '{{arguments}}'
-                            . '</td>' . "\n"
-                            . '</tr>' . "\n";
-                        $args = $row['args']
-                            ? '<hr />Arguments = ' . $this->routeHtml->dump->dump($row['args'])
-                            : '';
-                        $tr = \str_replace('{{arguments}}', $args, $tr);
-                        return $tr;
-                    } // onBuildRow
+                    'onBuildRow' => array($this->routeHtml->dump, 'tableAddContextRow'),
                 )
             );
             // restore previous objectsExclude

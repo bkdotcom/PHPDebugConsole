@@ -106,7 +106,9 @@ class Error extends Event
         ));
         if (\in_array($errType, array(E_ERROR, E_USER_ERROR))) {
             // will return empty unless xdebug extension installed/enabled
-            $this->values['backtrace'] = $errHandler->backtrace($this);
+            $this->values['backtrace'] = $errHandler->backtraceAddContext(
+                $errHandler->backtrace($values['exception'])
+            );
         }
     }
 

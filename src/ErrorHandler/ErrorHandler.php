@@ -84,21 +84,13 @@ class ErrorHandler
      * Utilizes `xdebug_get_function_stack()` (if available) to get backtrace in shutdown phase
      * When called internally, internal frames are removed
      *
-     * @param Error|Exception $error       (optional) Error instance if getting error backtrace
-     * @param boolean|'auto'  $inclContext [auto]|true|false include surrounding lines?
-     *                                       auto: true for fatal errors
+     * @param Exception $exception (optional) Exception to get get backtrace
+     * @param boolean   $inclArgs  (false) whether to include arguments
      *
      * @return array
      */
-    public function backtrace($error = null, $inclContext = 'auto')
+    public function backtrace($exception = null, $inclArgs = false)
     {
-        $exception = null;
-        if ($error instanceof \Exception) {
-            $exception = $error;
-        } elseif ($error instanceof Error) {
-            // may be null
-            $exception = $error['exception'];
-        }
         if ($exception) {
             $backtrace = $exception->getTrace();
             \array_unshift($backtrace, array(
@@ -124,17 +116,10 @@ class ErrorHandler
                 \array_unshift($backtrace, $errorFileLine);
             }
         } else {
-            $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            $backtrace = \debug_backtrace($inclArgs ? null : DEBUG_BACKTRACE_IGNORE_ARGS);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
         }
-        $backtrace = static::normalizeTrace($backtrace);
-        if ($inclContext === 'auto') {
-            $inclContext = $error instanceof Error && $error->isFatal();
-        }
-        if ($inclContext) {
-            $backtrace = $this->backtraceAddContext($backtrace);
-        }
-        return $backtrace;
+        return static::normalizeTrace($backtrace);
     }
 
     /**

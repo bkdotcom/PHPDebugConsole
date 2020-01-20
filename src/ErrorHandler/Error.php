@@ -51,6 +51,7 @@ class Error extends Event
         E_USER_NOTICE,
         E_USER_WARNING,
     );
+    protected $backtrace = false;  // store fatal non-Exception backtrace
 
     /**
      * Constructor
@@ -73,7 +74,6 @@ class Error extends Event
             'file'      => $file,
             'line'      => $line,
             'vars'      => $vars,
-            'backtrace' => array(), // only for fatal type errors, and only if xdebug is enabled
             'continueToNormal' => false,    // aka, let PHP do its thing (log error)
             'continueToPrevHandler' => $errHandler->getCfg('continueToPrevHandler'),
             'exception' => $errHandler->get('uncaughtException'),  // non-null if error is uncaught-exception
@@ -90,6 +90,10 @@ class Error extends Event
         $isSuppressed = $prevOccurance && !$prevOccurance['isSuppressed']
             ? false
             : \error_reporting() === 0;
+        if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && !$values['exception']) {
+            // will return empty unless xdebug extension installed/enabled
+            $this->backtrace = $errHandler->backtrace(null, true);
+        }
         if ($values['isHtml']) {
             $values['message'] = \str_replace('<a ', '<a target="phpRef" ', $values['message']);
         }
@@ -104,12 +108,29 @@ class Error extends Event
             'isFirstOccur' => !$prevOccurance,
             'isSuppressed' => $isSuppressed,
         ));
-        if (\in_array($errType, array(E_ERROR, E_USER_ERROR))) {
-            // will return empty unless xdebug extension installed/enabled
-            $this->values['backtrace'] = $errHandler->backtraceAddContext(
-                $errHandler->backtrace($values['exception'])
-            );
+    }
+
+    /**
+     * Get backtrace
+     *
+     * Backtrace is avail for fatal errors (incl uncaught exceptions)
+     *
+     * @param boolean $withContext (auto) Whether to include code snippets
+     *
+     * @return array
+     */
+    public function getTrace($withContext = 'auto')
+    {
+        $trace = $this->values['exception']
+            ? $this->values['exception']->getTrace()
+            : $this->backtrace;
+        if (!$trace) {
+            return false;
         }
+        if ($withContext === 'auto') {
+            $withContext = $this->isFatal();
+        }
+        return $this->subject->backtraceAddContext($trace);
     }
 
     /**
@@ -132,6 +153,24 @@ class Error extends Event
         $error = $this->values;
         $str = 'PHP ' . $error['typeStr'] . ':  ' . $error['message'] . ' in ' . $error['file'] . ' on line ' . $error['line'];
         return \error_log($str);
+    }
+
+    /**
+     * ArrayAccess getValue.
+     *
+     * special-case for backtrace... will pull from exception if applicable
+     *
+     * @param string $key Array key
+     *
+     * @return mixed
+     */
+    public function &offsetGet($key)
+    {
+        if ($key == 'backtrace') {
+            $trace = $this->getTrace();
+            return $trace;
+        }
+        return parent::offsetGet($key);
     }
 
     /**

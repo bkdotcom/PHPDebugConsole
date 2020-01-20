@@ -372,13 +372,6 @@ class ErrorHandler
         if ($this->registered) {
             return;
         }
-        /*
-            xdebug.collect_params must collecting at runtime
-            changing just before calling xdebug_get_function_stack is insufficient
-        */
-        if (!\ini_get('xdebug.collect_params')) {
-            \ini_set('xdebug.collect_params', 3);
-        }
         $this->prevDisplayErrors = \ini_set('display_errors', '0');
         $this->prevErrorHandler = \set_error_handler(array($this, 'handleError'));
         $this->prevExceptionHandler = \set_exception_handler(array($this, 'handleException'));
@@ -735,8 +728,11 @@ class ErrorHandler
      * wrapper for xdebug_get_function_stack
      * accounts for bug 1529 (may report incorrect file)
      *
+     * xdebug.collect_params ini must be set prior to running code to be backtraced for params (args) to be collected
+     *
      * @return array
      * @see    https://bugs.xdebug.org/view.php?id=1529
+     * @see    https://xdebug.org/docs/all_settings#xdebug.collect_params
      */
     protected static function xdebugGetFunctionStack()
     {

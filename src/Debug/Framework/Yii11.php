@@ -23,8 +23,10 @@ use bdk\PubSub\SubscriberInterface;
 use CActiveRecord;
 use CApplicationComponent;
 use CDbCommand;
+use CDbConnection;
 use CEvent;
 use Yii;
+use ReflectionObject;
 
 /**
  * Yii v1.1 Component
@@ -48,7 +50,11 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             'debug.output' => array('onDebugOutput', 1),
             'debug.outputLogEntry' => 'onDebugOutputLogEntry',
             'debug.pluginInit' => 'init',
-            'errorHandler.error' => array('onError', 1),
+            'errorHandler.error' => array(
+                array('onErrorLow', -1),
+                array('onErrorHigh', 1),
+            ),
+            'yii.componentInit' => 'onComponentInit',
         );
     }
 
@@ -66,21 +72,23 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
-     * Setup up PDO collector
-     * Log to PDO channel
+     * Handle our custom yii event
+     *
+     * Optionally update YiiBase::createComponent to
+     * `Debug::getInstance()->eventManager->publish('yii.componentInit', $object, is_array($config) ? $config : array());`
+     * Before returning $object
+     *
+     * We can now tweak component behavior when they're created
+     *
+     * @param Event $event Event instance
      *
      * @return void
      */
-    public function usePdoCollector()
+    public function onComponentInit(Event $event)
     {
-        $db = $this->yiiApp->db;
-        $pdo = $db->pdoInstance;
-        // nest the PDO channel under our Yii channel
-        $pdoChannel = $this->debug->getChannel('PDO', array('channelIcon' => 'fa fa-database'));
-        $pdoCollector = new Pdo($pdo, $pdoChannel);
-        $pdoProp = new \ReflectionProperty($db, '_pdo');
-        $pdoProp->setAccessible(true);
-        $pdoProp->setValue($db, $pdoCollector);
+        if ($event->getSubject() instanceof CDbConnection) {
+            $this->usePdoCollector($event->getSubject());
+        }
     }
 
     /**
@@ -244,13 +252,39 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
+     * Intercept minor framework issues and ignore them
+     *
+     * @param Error $error Error instance
+     *
+     * @return void
+     */
+    public function onErrorHigh(Error $error)
+    {
+        if (in_array($error['category'], array('deprecated','notice','strict'))) {
+            $pathsIgnore = array(
+                Yii::getPathOfAlias('system'),
+                Yii::getPathOfAlias('webroot') . '/protected/extensions',
+                Yii::getPathOfAlias('webroot') . '/protected/components',
+            );
+            foreach ($pathsIgnore as $pathIgnore) {
+                if (\strpos($error['file'], $pathIgnore) === 0) {
+                    $error->stopPropagation();          // don't log it now
+                    $error['isSuppressed'] = true;
+                    $this->ignoredErrors[] = $error['hash'];
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
      * errorHandler.error event subscriber
      *
      * @param Error $error Error instance
      *
      * @return void
      */
-    public function onError(Error $error)
+    public function onErrorLow(Error $error)
     {
         if (!\class_exists('Yii') || !Yii::app()) {
             return;
@@ -272,21 +306,37 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             }
             $this->debug->rootInstance->eventManager->publish('php.shutdown');
             $this->yiiApp->handleError($error['type'], $error['message'], $error['file'], $error['line']);
-        } elseif (in_array($error['category'], array('deprecated','notice','strict'))) {
-            $pathsIgnore = array(
-                Yii::getPathOfAlias('system'),
-                Yii::getPathOfAlias('webroot') . '/protected/extensions',
-                Yii::getPathOfAlias('webroot') . '/protected/components',
-            );
-            foreach ($pathsIgnore as $pathIgnore) {
-                if (\strpos($error['file'], $pathIgnore) === 0) {
-                    $error->stopPropagation();          // don't log it now
-                    $error['isSuppressed'] = true;
-                    $this->ignoredErrors[] = $error['hash'];
-                    break;
-                }
+        }
+    }
+
+    /**
+     * Setup up PDO collector
+     * Log to PDO channel
+     *
+     * @return void
+     */
+    public function usePdoCollector(CDbConnection $db = null)
+    {
+        $db = $db ?: $this->yiiApp->db;
+        $db->active = true; // creates pdo obj
+        $pdo = $db->pdoInstance;
+        if ($pdo instanceof Pdo) {
+            // already wrapped
+            return;
+        }
+        // nest the PDO channel under our Yii channel
+        $pdoChannel = $this->debug->getChannel('PDO', array('channelIcon' => 'fa fa-database'));
+        $pdoCollector = new Pdo($pdo, $pdoChannel);
+        $dbRef = new ReflectionObject($db);
+        while (!$dbRef->hasProperty('_pdo')) {
+            $dbRef = $dbRef->getParentClass();
+            if ($dbRef === false) {
+                $this->debug->warn('unable initiate PDO collector');
             }
         }
+        $pdoProp = $dbRef->getProperty('_pdo');
+        $pdoProp->setAccessible(true);
+        $pdoProp->setValue($db, $pdoCollector);
     }
 
     /**

@@ -142,7 +142,7 @@ class ErrorHandler
         }
         $sub = \floor($length  / 2);
         foreach ($backtrace as $i => $frame) {
-            $backtrace[$i]['context'] = \file_exists($frame['file'])
+            $backtrace[$i]['context'] = isset($frame['file']) && \file_exists($frame['file'])
                 ? $this->getFileLines($frame['file'], \max($frame['line'] - $sub, 0), $length)
                 : null;
         }

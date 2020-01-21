@@ -658,7 +658,7 @@ class FileStreamWrapper
             return true;
         }
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
-        $isRequire = !\in_array($backtrace[2]['function'], array('file_get_contents'));
+        $isRequire = !\in_array($backtrace[2]['function'], array('file','file_get_contents','readfile'));
         if (!$isRequire) {
             return false;
         }

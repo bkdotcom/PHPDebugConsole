@@ -106,16 +106,19 @@ class ErrorHandler
             $backtrace = static::xdebugGetFunctionStack();
             $backtrace = \array_reverse($backtrace);
             $backtrace = $this->backtraceRemoveInternal($backtrace);
-            $errorFileLine = array(
-                'file' => $this->shutdownError['file'],
-                'line' => $this->shutdownError['line'],
-            );
-            \array_pop($backtrace);   // pointless entry that xdebug_get_function_stack() includes
-            if (empty($backtrace)) {
-                return array();
-            }
-            if (\array_intersect_assoc($errorFileLine, $backtrace[0]) !== $errorFileLine) {
-                \array_unshift($backtrace, $errorFileLine);
+
+            \end($backtrace);
+            $key = \key($backtrace);
+            unset($backtrace[$key]['function']);
+
+            if ($this->shutdownError) {
+                $errorFileLine = array(
+                    'file' => $this->shutdownError['file'],
+                    'line' => $this->shutdownError['line'],
+                );
+                if (\array_intersect_assoc($errorFileLine, $backtrace[0]) !== $errorFileLine) {
+                    \array_unshift($backtrace, $errorFileLine);
+                }
             }
         } else {
             $backtrace = \debug_backtrace($inclArgs ? null : DEBUG_BACKTRACE_IGNORE_ARGS);

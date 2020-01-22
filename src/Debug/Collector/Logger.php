@@ -36,7 +36,7 @@ class Logger extends AbstractLogger
             $debug = Debug::_getInstance();
         }
         $this->debug = $debug;
-        \bdk\Debug\Utilities::addCallerBreaker('class', array(
+        $debug->backtrace->addInternalClass(array(
             'Monolog\\Logger',
             'Psr\\Log\\AbstractLogger',
         ));
@@ -119,7 +119,7 @@ class Logger extends AbstractLogger
         if ($haveException) {
             $exception = $context['exception'];
             $metaVals = \array_merge(array(
-                'backtrace' => $this->debug->errorHandler->backtrace($exception),
+                'backtrace' => $this->debug->backtrace->get($exception),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
             ), $metaVals);

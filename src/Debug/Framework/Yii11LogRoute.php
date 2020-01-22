@@ -62,7 +62,10 @@ class Yii11LogRoute extends CLogRoute
                 $this->{$k} = $v;
             }
         }
-        \bdk\Debug\Utilities::addCallerBreaker('class', array('CLogger','YiiBase'));
+        $debug->backtrace->addInternalClass(array(
+            'CLogger',
+            'YiiBase',
+        ));
         $this->debug = $debug;
     }
 

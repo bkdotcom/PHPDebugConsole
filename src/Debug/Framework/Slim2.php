@@ -43,10 +43,9 @@ class Slim2
             $debug = $debug->getChannel('Slim');
         }
         /*
-            Determine filepath for slim's logger so we skipp over it when determining where warn/errors originate
+            Determine filepath for slim's logger so we skip over it when determining where warn/errors originate
         */
-        $refClass = new \ReflectionClass(\Slim\Slim::getInstance()->log);
-        \bdk\Debug\Utilities::addCallerBreaker('path', $refClass->getFileName());
+        $debug->backtrace->addInternalClass(\get_class(\Slim\Slim::getInstance()->log));
         $this->debug = $debug;
         $this->prevWriter = $prevWriter;
     }

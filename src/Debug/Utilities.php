@@ -27,20 +27,6 @@ class Utilities
 
     protected static $domDocument;
 
-    const INCL_ARGS = 1;
-
-    /**
-     * Used to determine caller info...
-     * backtrace is walked and we stop when frame matches on of the set classes or filepaths
-     *
-     * @var array
-     */
-    private static $callerBreakers = array(
-        'classes' => array('bdk\\Debug'),
-        'classesRegex' => '/^bdk\\\\Debug(?!\\\\Collector)\b/',  // we cache a regex of the classes
-        'paths' => array(),
-    );
-
     /**
      * self closing / empty / void html tags
      *
@@ -101,32 +87,6 @@ class Utilities
         'seamless', // <iframe> - removed from draft
         'sortable', // <table> - removed from draft
     );
-
-    /**
-     * add a new namespace, classname or filepath to be used to determine when to
-     * stop iterrating over the backtrace when determining calling info
-     *
-     * @param string       $what 'class' or 'path'
-     * @param string|array $val  'class' : classname(s)|namespace(s)
-     *                           'path' : path(s)
-     *
-     * @return void
-     */
-    public static function addCallerBreaker($what, $val)
-    {
-        if ($what == 'class') {
-            $what = 'classes';
-        } elseif ($what == 'path') {
-            $what = 'paths';
-        }
-        self::$callerBreakers[$what] = \array_merge(self::$callerBreakers[$what], (array) $val);
-        self::$callerBreakers[$what] = \array_unique(self::$callerBreakers[$what]);
-        if ($what == 'classes') {
-            self::$callerBreakers['classesRegex'] = '/^('
-                . \implode('|', \array_map('preg_quote', self::$callerBreakers['classes']))
-                . ')\b/';
-        }
-    }
 
     /**
      * "dereference" array
@@ -434,64 +394,6 @@ class Utilities
             ? '0 B'
             : \round($size / $pow, 2) . ' ' . $units[$i];
         return $size;
-    }
-
-    /**
-     * Returns information regarding previous call stack position
-     * call_user_func() and call_user_func_array() are skipped
-     *
-     * Information returned:
-     *     function : function/method name
-     *     class :    fully qualified classname
-     *     file :     file
-     *     line :     line number
-     *     type :     "->": instance call, "::": static call, null: not object oriented
-     *
-     * If a method is defined as static:
-     *    the class value will always be the class in which the method was defined,
-     *    type will always be "::", even if called with an ->
-     *
-     * @param integer $offset Adjust how far to go back
-     * @param integer $flags  optional INCL_ARGS
-     *
-     * @return array
-     */
-    public static function getCallerInfo($offset = 0, $flags = 0)
-    {
-        /*
-            backtrace:
-            index 0 is current position
-            file/line are calling _from_
-            function/class are what's getting called
-
-            Must get at least backtrace 13 frames to account for potential framework loggers
-        */
-        $options = DEBUG_BACKTRACE_PROVIDE_OBJECT;
-        if (!($flags & self::INCL_ARGS)) {
-            $options = $options | DEBUG_BACKTRACE_IGNORE_ARGS;
-        }
-        $backtrace = \debug_backtrace($options, 13);
-        $numFrames = \count($backtrace);
-        for ($i = $numFrames - 1; $i > 1; $i--) {
-            if (isset($backtrace[$i]['class']) && \preg_match(self::$callerBreakers['classesRegex'], $backtrace[$i]['class'])) {
-                break;
-            }
-            foreach (self::$callerBreakers['paths'] as $path) {
-                if (isset($backtrace[$i]['file']) && \strpos($backtrace[$i]['file'], $path) === 0) {
-                    $i++;
-                    break 2;
-                }
-            }
-        }
-        /*
-            file/line values may be missing... if frame called via core PHP function/method
-        */
-        for ($i = $i + $offset; $i < $numFrames; $i++) {
-            if (isset($backtrace[$i]['line'])) {
-                break;
-            }
-        }
-        return self::getCallerInfoBuild(\array_slice($backtrace, $i));
     }
 
     /**
@@ -927,56 +829,6 @@ class Utilities
             $value = null;
         }
         return $value;
-    }
-
-    /**
-     * Build callerInfo array from given backtrace segment
-     *
-     * @param array $backtrace backtrace
-     *
-     * @return array
-     */
-    private static function getCallerInfoBuild($backtrace)
-    {
-        $return = array(
-            'file' => null,
-            'line' => null,
-            'function' => null,
-            'class' => null,
-            'type' => null,
-        );
-        $numFrames = \count($backtrace);
-        $iLine = 0;
-        $iFunc = 1;
-        if (isset($backtrace[$iFunc])) {
-            // skip over call_user_func / call_user_func_array / invoke
-            $class = isset($backtrace[$iFunc]['class'])
-                ? $backtrace[$iFunc]['class']
-                : null;
-            if (
-                \in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))
-                || $class == 'ReflectionMethod'
-                    && $backtrace[$iFunc]['function'] == 'invoke'
-            ) {
-                $iLine++;
-                $iFunc++;
-            }
-        }
-        if (isset($backtrace[$iFunc])) {
-            $return = \array_merge($return, $backtrace[$iFunc]);
-            unset($return['object']);
-            if ($return['type'] == '->') {
-                $return['class'] = \get_class($backtrace[$iFunc]['object']);
-            }
-        }
-        if (isset($backtrace[$iLine])) {
-            $return['file'] = $backtrace[$iLine]['file'];
-            $return['line'] = $backtrace[$iLine]['line'];
-        } elseif (isset($backtrace[$numFrames - 1])) {
-            $return['file'] = $backtrace[$numFrames - 1]['file'];
-            $return['line'] = 0;
-        }
-        return $return;
     }
 
     /**

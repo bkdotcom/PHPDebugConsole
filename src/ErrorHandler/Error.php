@@ -10,6 +10,7 @@
 
 namespace bdk\ErrorHandler;
 
+use bdk\Backtrace;
 use bdk\ErrorHandler;
 use bdk\PubSub\Event;
 
@@ -92,7 +93,7 @@ class Error extends Event
             : \error_reporting() === 0;
         if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && !$values['exception']) {
             // will return empty unless xdebug extension installed/enabled
-            $this->backtrace = $errHandler->backtrace(null, true);
+            $this->backtrace = Backtrace::get();
         }
         if ($values['isHtml']) {
             $values['message'] = \str_replace('<a ', '<a target="phpRef" ', $values['message']);
@@ -130,7 +131,9 @@ class Error extends Event
         if ($withContext === 'auto') {
             $withContext = $this->isFatal();
         }
-        return $this->subject->backtraceAddContext($trace);
+        return $withContext
+            ? Backtrace::addContext($trace)
+            : $trace;
     }
 
     /**

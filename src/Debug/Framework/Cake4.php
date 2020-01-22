@@ -163,7 +163,7 @@ class Cake4 extends BasePlugin
      */
     protected function addLogRoute()
     {
-        \bdk\Debug\Utilities::addCallerBreaker('class', array('Cake\\Log\\Log'));
+        $this->debug->backtrace->addInternalClass('Cake\\Log\\Log');
         \Cake\Log\Log::setConfig('PHPDebugConsole', function () {
             $logChannel = $this->debug->getChannel('log');
             $logChannel->eventManager->subscribe('debug.log', function ($event) {

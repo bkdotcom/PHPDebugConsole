@@ -81,100 +81,6 @@ class ErrorHandler
     }
 
     /**
-     * Helper method to get backtrace
-     *
-     * Utilizes `xdebug_get_function_stack()` (if available) to get backtrace in shutdown phase
-     * When called internally, internal frames are removed
-     *
-     * @param Exception $exception (optional) Exception from which to get backtrace
-     * @param boolean   $inclArgs  (false) whether to include arguments
-     *
-     * @return array
-     */
-    public function backtrace(Exception $exception = null, $inclArgs = false)
-    {
-        if ($exception) {
-            $backtrace = $exception->getTrace();
-            \array_unshift($backtrace, array(
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-            ));
-        } elseif ($this->inShutdown) {
-            if (!\extension_loaded('xdebug')) {
-                return array();
-            }
-            $backtrace = static::xdebugGetFunctionStack();
-            $backtrace = \array_reverse($backtrace);
-            $backtrace = $this->backtraceRemoveInternal($backtrace);
-
-            \end($backtrace);
-            $key = \key($backtrace);
-            unset($backtrace[$key]['function']);
-
-            if ($this->shutdownError) {
-                $errorFileLine = array(
-                    'file' => $this->shutdownError['file'],
-                    'line' => $this->shutdownError['line'],
-                );
-                if (\array_intersect_assoc($errorFileLine, $backtrace[0]) !== $errorFileLine) {
-                    \array_unshift($backtrace, $errorFileLine);
-                }
-            }
-        } else {
-            $backtrace = \debug_backtrace($inclArgs ? null : DEBUG_BACKTRACE_IGNORE_ARGS);
-            $backtrace = $this->backtraceRemoveInternal($backtrace);
-        }
-        return static::normalizeTrace($backtrace);
-    }
-
-    /**
-     * Get lines surrounding error
-     *
-     * @param array   $backtrace backtrace frames
-     * @param integer $length    number of lines to include
-     *
-     * @return array
-     */
-    public function backtraceAddContext($backtrace, $length = 19)
-    {
-        if ($length <= 0) {
-            $length = 19;
-        }
-        $sub = \floor($length  / 2);
-        foreach ($backtrace as $i => $frame) {
-            $backtrace[$i]['context'] = isset($frame['file']) && \file_exists($frame['file'])
-                ? $this->getFileLines($frame['file'], \max($frame['line'] - $sub, 0), $length)
-                : null;
-        }
-        return $backtrace;
-    }
-
-    /**
-     * Get lines from a file
-     *
-     * @param string  $file   filepath
-     * @param integer $start  line to start on (1-indexed; 1 = line; 1 = first line)
-     *                         0 also = first line
-     * @param integer $length number of lines to return
-     *
-     * @return array
-     */
-    private function getFileLines($file, $start = 1, $length = null)
-    {
-        $start  = (int) $start;
-        $length = (int) $length;
-        $lines = \array_merge(array(null), \file($file));
-        if ($start === 0) {
-            $start = 1;
-        }
-        if ($start > 1 || $length) {
-            // Get a subset of lines from $start to $end
-            $lines = \array_slice($lines, $start, $length, true);
-        }
-        return $lines;
-    }
-
-    /**
      * Retrieve a data value or property
      *
      * @param string $key  what to get
@@ -512,36 +418,6 @@ class ErrorHandler
     }
 
     /**
-     * Remove internal frames from backtrace
-     *
-     * @param array $backtrace backtrace
-     *
-     * @return array
-     */
-    protected function backtraceRemoveInternal($backtrace)
-    {
-        for ($i = \count($backtrace) - 1; $i > 0; $i--) {
-            $frame = $backtrace[$i];
-            if (isset($frame['class']) && $frame['class'] === __CLASS__) {
-                break;
-            }
-        }
-        if ($backtrace[$i]['function'] == 'onShutdown') {
-            /*
-                We got here via php.shutdown event (fatal error)
-                skip over PubSub internals
-            */
-            $refObj = new ReflectionObject($this->eventManager);
-            $filepath = $refObj->getFilename();
-            while (isset($backtrace[$i + 1]['file']) && $backtrace[$i + 1]['file'] == $filepath) {
-                $i++;
-            }
-        }
-        $i++;
-        return \array_slice($backtrace, $i);
-    }
-
-    /**
      * Conditioanlly pass error or exception to previously defined handler
      *
      * @param Error $error Error instance
@@ -617,65 +493,6 @@ class ErrorHandler
     }
 
     /**
-     * "Normalize" backtrace from debug_backtrace() or xdebug_get_function_stack();
-     *
-     * @param array $backtrace trace/stack from debug_backtrace() or xdebug_Get_function_stack()
-     *
-     * @return array
-     */
-    protected static function normalizeTrace($backtrace)
-    {
-        $backtraceNew = array();
-        $frameDefault = array(
-            'file' => null,
-            'line' => null,
-            'function' => null,     // function, Class::function, or Class->function
-            'class' => null,        // will get removed
-            'type' => null,         // will get removed
-            'args' => array(),
-            'evalLine' => null,
-        );
-        $funcsSkip = array('call_user_func','call_user_func_array');
-        $funcsSkipRegex = '/^(' . \implode('|', $funcsSkip) . ')[:\(\{]/';
-        for ($i = 0, $count = \count($backtrace); $i < $count; $i++) {
-            $frame = \array_merge($frameDefault, $backtrace[$i]);
-            $frame = \array_intersect_key($frame, $frameDefault);
-            if (\in_array($frame['function'], $funcsSkip) || \preg_match($funcsSkipRegex, $frame['function'])) {
-                $backtraceNew[count($backtraceNew) - 1]['file'] = $frame['file'];
-                $backtraceNew[count($backtraceNew) - 1]['line'] = $frame['line'];
-                continue;
-            }
-            if (\in_array($frame['type'], array('dynamic','static'))) {
-                // xdebug_get_function_stack
-                $frame['type'] = $frame['type'] === 'dynamic' ? '->' : '::';
-            }
-            if (\preg_match('/^(.+)\((\d+)\) : eval\(\)\'d code$/', $frame['file'], $matches)) {
-                // reported line = line within eval
-                // line inside paren is the line `eval` is on
-                $frame['evalLine'] = $frame['line'];
-                $frame['file'] = $matches[1];
-                $frame['line'] = (int) $matches[2];
-            }
-            if (isset($backtrace[$i]['params'])) {
-                $frame['args'] = $backtrace[$i]['params'];
-            }
-            if (isset($backtrace[$i]['include_filename'])) {
-                // xdebug_get_function_stack
-                $frame['function'] = 'include or require';
-            } elseif ($frame['function']) {
-                $frame['function'] = \preg_match('/\{closure\}$/', $frame['function'])
-                    ? $frame['function']
-                    : $frame['class'] . $frame['type'] . $frame['function'];
-            } else {
-                unset($frame['function']);
-            }
-            unset($frame['class'], $frame['type']);
-            $backtraceNew[] = $frame;
-        }
-        return $backtraceNew;
-    }
-
-    /**
      * Handle E_USER_ERROR and E_RECOVERABLE_ERROR
      *
      * Should script terminate, or continue?
@@ -725,38 +542,5 @@ class ErrorHandler
         });
         $this->data['lastErrors'] = \array_slice($this->data['lastErrors'], 0, 1);
         \array_unshift($this->data['lastErrors'], $error);
-    }
-
-    /**
-     * wrapper for xdebug_get_function_stack
-     * accounts for bug 1529 (may report incorrect file)
-     *
-     * xdebug.collect_params ini must be set prior to running code to be backtraced for params (args) to be collected
-     *
-     * @return array
-     * @see    https://bugs.xdebug.org/view.php?id=1529
-     * @see    https://xdebug.org/docs/all_settings#xdebug.collect_params
-     */
-    protected static function xdebugGetFunctionStack()
-    {
-        $stack = \xdebug_get_function_stack();
-        $xdebugVer = \phpversion('xdebug');
-        if (\version_compare($xdebugVer, '2.6.0', '<')) {
-            $count = \count($stack);
-            for ($i = 0; $i < $count; $i++) {
-                $frame = $stack[$i];
-                $function = isset($frame['function'])
-                    ? $frame['function']
-                    : null;
-                if ($function === '__get') {
-                    // wrong file!
-                    $prev = $stack[$i - 1];
-                    $stack[$i]['file'] = isset($prev['include_filename'])
-                        ? $prev['include_filename']
-                        : $prev['file'];
-                }
-            }
-        }
-        return $stack;
     }
 }

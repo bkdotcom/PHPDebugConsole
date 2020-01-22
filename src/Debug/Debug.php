@@ -15,6 +15,7 @@
 
 namespace bdk;
 
+use bdk\Backtrace;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
@@ -34,6 +35,7 @@ use SplObjectStorage;
  * Web-browser/javascript like console class for PHP
  *
  * @property Abstracter    $abstracter    lazy-loaded Abstracter instance
+ * @property Backtrace     $backtrace     lazy-loaded Backtrace instance
  * @property ErrorEmailer  $errorEmailer  lazy-loaded ErrorEmailer instance
  * @property ErrorHandler  $errorHandler  lazy-loaded ErrorHandler instance
  * @property EventManager  $eventManager  lazy-loaded EventManager instance
@@ -409,7 +411,7 @@ class Debug
         if (!$assertion) {
             if (!$args) {
                 // add default message
-                $callerInfo = $this->utilities->getCallerInfo();
+                $callerInfo = $this->backtrace->getCallerInfo();
                 $args = array(
                     'Assertion failed:',
                     $callerInfo['file'] . ' (line ' . $callerInfo['line'] . ')',
@@ -497,7 +499,7 @@ class Debug
             $dataLabel = (string) $label;
         } else {
             // determine calling file & line
-            $callerInfo = $this->utilities->getCallerInfo();
+            $callerInfo = $this->backtrace->getCallerInfo();
             $logEntry['meta'] = \array_merge(array(
                 'file' => $callerInfo['file'],
                 'line' => $callerInfo['line'],
@@ -591,7 +593,7 @@ class Debug
         // file & line may also be defined as null
         $default = "\x00default\x00";
         if ($logEntry->getMeta('file', $default) === $default) {
-            $callerInfo = $this->utilities->getCallerInfo();
+            $callerInfo = $this->backtrace->getCallerInfo();
             $logEntry->setMeta(array(
                 'file' => $callerInfo['file'],
                 'line' => $callerInfo['line'],
@@ -810,7 +812,7 @@ class Debug
             return;
         }
         if (!$this->cfg['enableProfiling']) {
-            $callerInfo = $this->utilities->getCallerInfo();
+            $callerInfo = $this->backtrace->getCallerInfo();
             $this->appendLog(new LogEntry(
                 $this,
                 __FUNCTION__,
@@ -1231,22 +1233,11 @@ class Debug
             )
         );
         // Get trace and include args if we're including context
-        $backtrace = $this->errorHandler->backtrace(null, $logEntry->getMeta('inclContext'));
-        // toss "internal" frames
-        for ($i = 1, $count = \count($backtrace) - 1; $i < $count; $i++) {
-            $function = $backtrace[$i]['function'];
-            if (!\preg_match('/^' . \preg_quote(__CLASS__) . '(::|->)/', $function)) {
-                break;
-            }
-        }
-        $backtrace = \array_slice($backtrace, $i - 1);
+        $backtrace = $this->backtrace->get(null, $logEntry->getMeta('inclContext'));
         if ($logEntry->getMeta('inclContext')) {
-            $backtrace = $this->errorHandler->backtraceAddContext($backtrace);
-            $backtrace[0]['args'] = array(); // don't incl args passed to trace()
+            $backtrace = $this->backtrace->addContext($backtrace);
             $this->addPlugin(new \bdk\Debug\Plugin\Prism());
         }
-        // keep the calling file & line, but toss ->trace or ::_trace
-        unset($backtrace[0]['function']);
         $logEntry['args'] = array($backtrace);
         $this->appendLog($logEntry);
     }
@@ -1274,7 +1265,7 @@ class Debug
         // file & line may also be defined as null
         $default = "\x00default\x00";
         if ($logEntry->getMeta('file', $default) === $default) {
-            $callerInfo = $this->utilities->getCallerInfo();
+            $callerInfo = $this->backtrace->getCallerInfo();
             $logEntry->setMeta(array(
                 'file' => $callerInfo['file'],
                 'line' => $callerInfo['line'],
@@ -1658,7 +1649,7 @@ class Debug
     public function setErrorCaller($caller = null)
     {
         if ($caller === null) {
-            $caller = $this->utilities->getCallerInfo(1);
+            $caller = $this->backtrace->getCallerInfo(1);
             $caller = array(
                 'file' => $caller['file'],
                 'line' => $caller['line'],
@@ -1731,6 +1722,7 @@ class Debug
             }
         }
         $classMap = array(
+            'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
             'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
         );
         if (isset($classMap[$className])) {
@@ -1801,7 +1793,7 @@ class Debug
         }
         if (!$logEntry['args']) {
             // give a default label
-            $caller = $this->utilities->getCallerInfo(0, Utilities::INCL_ARGS);
+            $caller = $this->backtrace->getCallerInfo(0, Backtrace::INCL_ARGS);
             $args = $this->doGroupAutoArgs($caller);
             if ($args) {
                 $logEntry['args'] = $args;
@@ -1940,6 +1932,15 @@ class Debug
         return array(
             'abstracter' => function (Debug $debug) {
                 return new Abstracter($debug, $debug->config->getValues('abstracter'));
+            },
+            'backtrace' => function () {
+                $backtrace = new Backtrace();
+                $backtrace->addInternalClass(array(
+                    'bdk\\Debug',
+                    'bdk\\ErrorHandler',
+                    'bdk\\PubSub',
+                ));
+                return $backtrace;
             },
             'config' => function (Debug $debug) {
                 return new Debug\Config($debug, $debug->cfg);    // cfg is passed by reference

@@ -54,7 +54,7 @@ class MethodClear
         $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
         $bitmask = $logEntry['meta']['bitmask'];
-        $callerInfo = $this->debug->utilities->getCallerInfo();
+        $callerInfo = $this->debug->backtrace->getCallerInfo();
         $cleared = array();
         $cleared[] = $this->clearAlerts($bitmask);
         $cleared[] = $this->clearLog($bitmask);

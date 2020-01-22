@@ -325,7 +325,13 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             return;
         }
         // nest the PDO channel under our Yii channel
-        $pdoChannel = $this->debug->getChannel('PDO', array('channelIcon' => 'fa fa-database'));
+        $channelName = 'PDO';
+        if (strpos($db->connectionString, 'master')) {
+            $channelName .= ' (master)';
+        } elseif (strpos($db->connectionString, 'slave')) {
+            $channelName .= ' (slave)';
+        }
+        $pdoChannel = $this->debug->getChannel($channelName, array('channelIcon' => 'fa fa-database'));
         $pdoCollector = new Pdo($pdo, $pdoChannel);
         $dbRef = new ReflectionObject($db);
         while (!$dbRef->hasProperty('_pdo')) {

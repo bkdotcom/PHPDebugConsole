@@ -375,9 +375,7 @@ class Wamp implements RouteInterface
     {
         $this->metaPublished = true;
         $debugClass = \get_class($this->debug);
-        $metaVals = array(
-            'debug_version' => $debugClass::VERSION,
-        );
+        $metaVals = array();
         $keys = array(
             'HTTP_HOST',
             'HTTPS',
@@ -403,8 +401,10 @@ class Wamp implements RouteInterface
                 $this->debug->redact($metaVals),
             ),
             array(
-                'drawer' => $this->debug->getCfg('outputHtml.drawer'),
                 'channelRoot' => $this->debug->rootInstance->getCfg('channelName'),
+                'debugVersion' => $debugClass::VERSION,
+                'drawer' => $this->debug->getCfg('outputHtml.drawer'),
+                'interface' => $this->debug->utilities->getInterface(),
                 'linkFilesTemplateDefault' => \strtr(
                     \ini_get('xdebug.file_link_format'),
                     array(

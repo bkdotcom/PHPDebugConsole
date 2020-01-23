@@ -168,7 +168,13 @@ function channelsToTree(channels) {
 		i, i2,
 		path;
 	channels = channels.sort(function(a,b){
-		return a.name < b.name;
+		if (a.name < b.name) {
+			return -1;
+		}
+		if (a.name > a.name) {
+			return 1;
+		}
+		return 0;
 	});
 	for (i = 0; i < channels.length; i++) {
 		ref = channelTree;

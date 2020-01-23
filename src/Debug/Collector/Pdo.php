@@ -119,7 +119,7 @@ class Pdo extends PdoBase
 
         $debug->groupSummary(0);
         $groupParams = array(
-            'PDO info',
+            $debug->getCfg('channelName') . ' info',
             $driverName,
         );
         if ($status) {

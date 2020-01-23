@@ -93,7 +93,18 @@ class Error extends Event
             : \error_reporting() === 0;
         if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && !$values['exception']) {
             // will return empty unless xdebug extension installed/enabled
+            Backtrace::addInternalClass(array(
+                'bdk\\ErrorHandler',
+                'bdk\\PubSub',
+            ));
             $this->backtrace = Backtrace::get();
+            $errorFileLine = array(
+                'file' => $file,
+                'line' => $line,
+            );
+            if (\array_intersect_assoc($errorFileLine, $this->backtrace[0]) !== $errorFileLine) {
+                $this->backtrace[0] = $errorFileLine + array('args' => array(), 'evalLine' => null);
+            }
         }
         if ($values['isHtml']) {
             $values['message'] = \str_replace('<a ', '<a target="phpRef" ', $values['message']);

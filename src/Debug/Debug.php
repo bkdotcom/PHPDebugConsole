@@ -1935,11 +1935,7 @@ class Debug
             },
             'backtrace' => function () {
                 $backtrace = new Backtrace();
-                $backtrace->addInternalClass(array(
-                    'bdk\\Debug',
-                    'bdk\\ErrorHandler',
-                    'bdk\\PubSub',
-                ));
+                $backtrace->addInternalClass('bdk\\Debug');
                 return $backtrace;
             },
             'config' => function (Debug $debug) {

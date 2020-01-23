@@ -10,6 +10,7 @@
 
 namespace bdk;
 
+use bdk\Backtrace;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
@@ -187,6 +188,12 @@ class ErrorHandler
             return $this->continueToPrevHandler($error);
         }
         $this->storeLastError($error);
+        if (!$this->data['errors']) {
+            Backtrace::addInternalClass(array(
+                'bdk\\ErrorHandler',
+                'bdk\\PubSub',
+            ));
+        }
         if (!$error['isSuppressed']) {
             // only clear error caller via non-suppressed error
             $this->data['errorCaller'] = array();

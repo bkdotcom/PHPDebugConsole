@@ -5,7 +5,7 @@
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2020 Brad Kent
  * @version   v1
- * @link      http://www.github.com/bkdotcom/PubSub
+ * @link      http://www.github.com/bkdotcom/Backtrace
  */
 
 namespace bdk;
@@ -149,7 +149,7 @@ class Backtrace
             if (
                 \in_array($frame['function'], array('call_user_func', 'call_user_func_array'))
                 || $class == 'ReflectionMethod'
-                    && $frame['function'] == 'invoke'
+                    && \in_array($frame['function'], array('invoke','invokeArgs'))
             ) {
                 continue;
             }
@@ -317,6 +317,12 @@ class Backtrace
                 $backtraceNew[count($backtraceNew) - 1]['line'] = $frame['line'];
                 continue;
             }
+            if (
+                $frame['class'] == 'ReflectionMethod'
+                    && \in_array($frame['function'], array('invoke','invokeArgs'))
+            ) {
+                continue;
+            }
             if (\in_array($frame['type'], array('dynamic','static'))) {
                 // xdebug_get_function_stack
                 $frame['type'] = $frame['type'] === 'dynamic' ? '->' : '::';
@@ -329,7 +335,12 @@ class Backtrace
                 $frame['line'] = (int) $matches[2];
             }
             if (isset($backtrace[$i]['params'])) {
+                // xdebug_get_function_stack
                 $frame['args'] = $backtrace[$i]['params'];
+            }
+            if ($frame['file'] === null) {
+                // use file/line from next frame
+                $frame = \array_merge($frame, \array_intersect_key($backtrace[$i + 1], \array_flip(array('file','line'))));
             }
             if (isset($backtrace[$i]['include_filename'])) {
                 // xdebug_get_function_stack
@@ -357,8 +368,9 @@ class Backtrace
     private static function removeInternalFrames($backtrace)
     {
         $count = \count($backtrace);
+        $i = 1;
         if (static::$internalClasses['regex']) {
-            for ($i = 1; $i < $count; $i++) {
+            for (; $i < $count; $i++) {
                 if (!\preg_match(static::$internalClasses['regex'], $backtrace[$i]['function'])) {
                     break;
                 }

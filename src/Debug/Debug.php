@@ -1802,10 +1802,8 @@ class Debug
                 $logEntry['args'] = array( 'group' );
             }
         }
-        $appended = $this->appendLog($logEntry);
-        if ($appended) {
-            $this->doGroupStringify($logEntry);
-        }
+        $this->doGroupStringify($logEntry);
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -1850,6 +1848,15 @@ class Debug
     {
         $args = $logEntry['args'];
         foreach ($args as $k => $v) {
+            /*
+                doGroupStringify is called before appendLog.
+                values have not yet been abstracted.
+                abstract now
+            */
+            if ($this->abstracter->needsAbstraction($v)) {
+                $v = $this->abstracter->getAbstraction($v, $logEntry['method']);
+                $args[$k] = $v;
+            }
             if (!$this->abstracter->isAbstraction($v, 'object')) {
                 continue;
             }

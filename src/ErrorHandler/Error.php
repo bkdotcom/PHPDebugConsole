@@ -98,13 +98,6 @@ class Error extends Event
                 'bdk\\PubSub',
             ));
             $this->backtrace = Backtrace::get();
-            $errorFileLine = array(
-                'file' => $file,
-                'line' => $line,
-            );
-            if (\array_intersect_assoc($errorFileLine, $this->backtrace[0]) !== $errorFileLine) {
-                $this->backtrace[0] = $errorFileLine + array('args' => array(), 'evalLine' => null);
-            }
         }
         if ($values['isHtml']) {
             $values['message'] = \str_replace('<a ', '<a target="phpRef" ', $values['message']);

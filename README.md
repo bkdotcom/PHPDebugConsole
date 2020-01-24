@@ -5,8 +5,8 @@ Browser/javascript like console class for PHP
 
 **Website/Usage/Examples:** http://www.bradkent.com/php/debug
 
-* PHP port of the [javascript web console api](https://developer.mozilla.org/en-US/docs/Web/API/console)
-* multiple simultaneous output options
+  * PHP port of the [javascript web console api](https://developer.mozilla.org/en-US/docs/Web/API/console)
+  * multiple simultaneous output options
     * [ChromeLogger](https://craig.is/writing/chrome-logger/techspecs)
     * [FirePHP](http://www.firephp.org/)  (no FirePHP dependency!)
     * HTML
@@ -14,12 +14,12 @@ Browser/javascript like console class for PHP
     * &lt;script&gt;
     * WebSocket (WAMP)
     * "plugin"
-* [PSR-3](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md) (Logger) Implementation
-* custom error handler
+  * [PSR-3](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md) (Logger) Implementation
+  * custom error handler
     * errors (even fatal) are captured / logged / displayed
     * send error notices via email (throttled as to not to send out a flood of emails)
-* password protected
-* send debug log via email
+  * password protected
+  * send debug log via email
 
 ![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/php/screenshot_1.4.png)
 
@@ -66,25 +66,25 @@ $monolog->critical('all your base are belong to them');
 
 ### Methods
 
-* log
-* info
-* warn
-* error
-* assert
-* clear
-* count
-* countReset
-* group
-* groupCollapsed
-* groupEnd
-* profile
-* profileEnd
-* table
-* time
-* timeEnd
-* timeLog
-* trace
-* *&hellip; [more](http://www.bradkent.com/php/debug#methods)*
+  * log
+  * info
+  * warn
+  * error
+  * assert
+  * clear
+  * count
+  * countReset
+  * group
+  * groupCollapsed
+  * groupEnd
+  * profile
+  * profileEnd
+  * table
+  * time
+  * timeEnd
+  * timeLog
+  * trace
+  * *&hellip; [more](http://www.bradkent.com/php/debug#methods)*
 
 ### Tests / Quality
 ![No Dependencies](https://img.shields.io/badge/dependencies-none-333333.svg)

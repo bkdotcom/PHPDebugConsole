@@ -34,7 +34,7 @@ $.fn.scrollLock = function(enable){
 			}
 		})
 		: this.off("DOMMouseScroll mousewheel wheel");
-}
+};
 
 export function init($debugRoot) {
 	$root = $debugRoot;

@@ -21,7 +21,7 @@ Config.prototype.get = function(key) {
     return typeof(this.config[key]) !== "undefined"
         ? this.config[key]
         : null;
-}
+};
 
 Config.prototype.set = function(key, val) {
     var lsObj = {},
@@ -55,4 +55,4 @@ Config.prototype.set = function(key, val) {
         }
     }
     this.haveSavedConfig = true;
-}
+};

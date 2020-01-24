@@ -65,7 +65,7 @@ function addDropdown() {
 	var $menuBar = $root.find(".debug-menu-bar");
 	$menuBar.find(".pull-right").prepend('<button id="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">\
 			<i class="fa fa-ellipsis-v fa-fw"></i>\
-		</button>')
+		</button>');
 	$menuBar.append('<div class="debug-options" aria-labelledby="debug-options-toggle">\
 			<div class="debug-options-body">\
 				<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>\

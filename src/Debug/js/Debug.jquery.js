@@ -1383,7 +1383,7 @@
 	function init$6($debugRoot) {
 		$root$3 = $debugRoot;
 		config$5 = $root$3.data("config").get();
-		$root$3.find(".debug-menu-bar").append($('<div />', {class:"pull-right"}));
+		$root$3.find(".debug-menu-bar").append($("<div />", {class:"pull-right"}));
 		addChannelToggles();
 		addExpandAll();
 		addNoti($("body"));
@@ -1404,7 +1404,7 @@
 		$toggles = $("<fieldset />", {
 				"class": "channels",
 			})
-			.append('<legend>Channels</legend>')
+			.append("<legend>Channels</legend>")
 			.append($ul);
 		if ($ul.html().length) {
 			$root$3.find(".debug-body").prepend($toggles);
@@ -1449,7 +1449,7 @@
 		}
 		$root$3.on("click", ".expand-all", function(){
 			$(this).closest(".debug").find(".group-header").not(".expanded").each(function() {
-				$(this).debugEnhance('expand');
+				$(this).debugEnhance("expand");
 			});
 			return false;
 		});
@@ -1462,8 +1462,8 @@
 		$root.append('<div class="debug-noti-wrap">' +
 				'<div class="debug-noti-table">' +
 					'<div class="debug-noti"></div>' +
-				'</div>' +
-			'</div>');
+				"</div>" +
+			"</div>");
 	}
 
 	/*
@@ -1492,7 +1492,7 @@
 			$li,
 			$label,
 			channel,
-			channelName = '',
+			channelName = "",
 			isChecked = true;
 		prepend = prepend || "";
 		if ($.isArray(channels)) {
@@ -1507,7 +1507,7 @@
 			isChecked = checkedChannels !== undefined
 				? checkedChannels.indexOf(prepend + channelName) > -1
 				: channel.options.show;
-			$label = $('<label>', {
+			$label = $("<label>", {
 					"class": "toggle",
 				}).append($("<input>", {
 					checked: isChecked,
@@ -1519,7 +1519,7 @@
 			$label.toggleClass("active", isChecked);
 			$li = $("<li>").append($label);
 			if (channel.options.icon) {
-				$li.find('input').after($('<i>', {"class": channel.options.icon}));
+				$li.find("input").after($("<i>", {"class": channel.options.icon}));
 			}
 			if (Object.keys(channel.channels).length) {
 				$li.append(buildChannelList(channel.channels, channelRoot, checkedChannels, prepend + channelName + "."));
@@ -1547,7 +1547,7 @@
 		for (i = 0; i < channels.length; i++) {
 			ref = channelTree;
 			channel = channels[i];
-			path = channel.name.split('.');
+			path = channel.name.split(".");
 			for (i2 = 0; i2 < path.length; i2++) {
 				if (!ref[ path[i2] ]) {
 					ref[ path[i2] ] = {
@@ -1570,10 +1570,10 @@
 		$errorSummary.find("li[class*=error-]").each(function() {
 			var category = $(this).attr("class").replace("error-", ""),
 				html = $(this).html(),
-				htmlReplace = '<li><label>' +
+				htmlReplace = "<li><label>" +
 					'<input type="checkbox" checked data-toggle="error" data-count="'+$(this).data("count")+'" value="' + category + '" /> ' +
 					html +
-					'</label></li>';
+					"</label></li>";
 			$(this).replaceWith(htmlReplace);
 		});
 		$errorSummary.find(".m_trace").debugEnhance();
@@ -1862,10 +1862,10 @@
 			}
 			if (dep.status != "loading" && !checkOnly) {
 				dep.status = "loading";
-				type = dep.type || 'script';
-				if (type == 'script') {
+				type = dep.type || "script";
+				if (type == "script") {
 					addScript(dep.src);
-				} else if (type == 'stylesheet') {
+				} else if (type == "stylesheet") {
 					addStylesheet(dep.src);
 				}
 			}

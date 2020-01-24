@@ -51,10 +51,10 @@ function loadDepsDoer(deps, checkOnly) {
 		}
 		if (dep.status != "loading" && !checkOnly) {
 			dep.status = "loading";
-			type = dep.type || 'script';
-			if (type == 'script') {
+			type = dep.type || "script";
+			if (type == "script") {
 				addScript(dep.src);
-			} else if (type == 'stylesheet') {
+			} else if (type == "stylesheet") {
 				addStylesheet(dep.src);
 			}
 		}

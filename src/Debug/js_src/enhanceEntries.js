@@ -65,7 +65,7 @@ export function init($root) {
 		$node.find("> .constant > :last-child,\
 			> .property > :last-child,\
 			> .method .t_string").each(function(){
-				enhanceValue($entry, this)
+				enhanceValue($entry, this);
 			});
 		enhanceObject.enhanceInner($node);
 	});

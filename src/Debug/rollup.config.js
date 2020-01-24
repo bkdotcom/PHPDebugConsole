@@ -39,4 +39,4 @@ if (process.env.NODE_ENV !== 'watch') {
 	});
 }
 
-export default tasks
+export default tasks;

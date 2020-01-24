@@ -15,7 +15,7 @@ var $root;
 export function init($debugRoot) {
 	$root = $debugRoot;
 	config = $root.data("config").get();
-	$root.find(".debug-menu-bar").append($('<div />', {class:"pull-right"}));
+	$root.find(".debug-menu-bar").append($("<div />", {class:"pull-right"}));
 	addChannelToggles();
 	addExpandAll();
 	addNoti($("body"));
@@ -36,7 +36,7 @@ function addChannelToggles() {
 	$toggles = $("<fieldset />", {
 			"class": "channels",
 		})
-		.append('<legend>Channels</legend>')
+		.append("<legend>Channels</legend>")
 		.append($ul);
 	if ($ul.html().length) {
 		$root.find(".debug-body").prepend($toggles);
@@ -47,7 +47,7 @@ function addErrorIcons() {
 	var counts = {
 		error : $root.find(".m_error[data-channel=phpError]").length,
 		warn : $root.find(".m_warn[data-channel=phpError]").length
-	}
+	};
 	var $icon;
 	var $icons = $("<span>", {class: "debug-error-counts"});
 	// var $badge = $("<span>", {class: "badge"});
@@ -81,7 +81,7 @@ function addExpandAll() {
 	}
 	$root.on("click", ".expand-all", function(){
 		$(this).closest(".debug").find(".group-header").not(".expanded").each(function() {
-			$(this).debugEnhance('expand');
+			$(this).debugEnhance("expand");
 		});
 		return false;
 	});
@@ -94,8 +94,8 @@ function addNoti($root) {
 	$root.append('<div class="debug-noti-wrap">' +
 			'<div class="debug-noti-table">' +
 				'<div class="debug-noti"></div>' +
-			'</div>' +
-		'</div>');
+			"</div>" +
+		"</div>");
 }
 
 /*
@@ -124,7 +124,7 @@ export function buildChannelList(channels, channelRoot, checkedChannels, prepend
 		$li,
 		$label,
 		channel,
-		channelName = '',
+		channelName = "",
 		isChecked = true;
 	prepend = prepend || "";
 	if ($.isArray(channels)) {
@@ -139,7 +139,7 @@ export function buildChannelList(channels, channelRoot, checkedChannels, prepend
 		isChecked = checkedChannels !== undefined
 			? checkedChannels.indexOf(prepend + channelName) > -1
 			: channel.options.show;
-		$label = $('<label>', {
+		$label = $("<label>", {
 				"class": "toggle",
 			}).append($("<input>", {
 				checked: isChecked,
@@ -151,7 +151,7 @@ export function buildChannelList(channels, channelRoot, checkedChannels, prepend
 		$label.toggleClass("active", isChecked);
 		$li = $("<li>").append($label);
 		if (channel.options.icon) {
-			$li.find('input').after($('<i>', {"class": channel.options.icon}));
+			$li.find("input").after($("<i>", {"class": channel.options.icon}));
 		}
 		if (Object.keys(channel.channels).length) {
 			$li.append(buildChannelList(channel.channels, channelRoot, checkedChannels, prepend + channelName + "."));
@@ -179,7 +179,7 @@ function channelsToTree(channels) {
 	for (i = 0; i < channels.length; i++) {
 		ref = channelTree;
 		channel = channels[i];
-		path = channel.name.split('.');
+		path = channel.name.split(".");
 		for (i2 = 0; i2 < path.length; i2++) {
 			if (!ref[ path[i2] ]) {
 				ref[ path[i2] ] = {
@@ -202,10 +202,10 @@ function enhanceErrorSummary() {
 	$errorSummary.find("li[class*=error-]").each(function() {
 		var category = $(this).attr("class").replace("error-", ""),
 			html = $(this).html(),
-			htmlReplace = '<li><label>' +
+			htmlReplace = "<li><label>" +
 				'<input type="checkbox" checked data-toggle="error" data-count="'+$(this).data("count")+'" value="' + category + '" /> ' +
 				html +
-				'</label></li>';
+				"</label></li>";
 		$(this).replaceWith(htmlReplace);
 	});
 	$errorSummary.find(".m_trace").debugEnhance();

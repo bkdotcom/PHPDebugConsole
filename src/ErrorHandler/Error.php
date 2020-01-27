@@ -127,24 +127,13 @@ class Error extends Event
     public function getTrace($withContext = 'auto')
     {
         $trace = $this->values['exception']
-            ? $this->values['exception']->getTrace()
+            ? Backtrace::get($this->values['exception']) // adds Exception's file/line as frame and "normalizes"
             : $this->backtrace;
         if (!$trace) {
             return false;
         }
         if ($withContext === 'auto') {
             $withContext = $this->isFatal();
-        }
-        /*
-            Exception backtrace may not include the file/line that the exception was thrown from
-        */
-        $errorFileLine = array(
-            'file' => $this->values['file'],
-            'line' => $this->values['line'],
-        );
-        if (\array_intersect_assoc($errorFileLine, $trace[0]) !== $errorFileLine) {
-            $frameInsert = $errorFileLine + array('args' => array(), 'evalLine' => null);
-            \array_unshift($trace, $frameInsert);
         }
         return $withContext
             ? Backtrace::addContext($trace)

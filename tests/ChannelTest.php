@@ -60,8 +60,8 @@ class ChannelTest extends DebugTestFramework
                     array('group', array('main: sum 0 / group 1 / group 2'), array()),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
                     array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'foo')),
-                    array('error', array('main: error'), array('detectFiles'=>true, 'file' => '', 'line' => '')),
-                    array('error', array('foo: error'), array('channel'=>'foo', 'detectFiles'=>true, 'file' => '', 'line' => '')),
+                    array('error', array('main: error'), array('detectFiles' => true, 'file' => '', 'line' => '')),
+                    array('error', array('foo: error'), array('channel' => 'foo', 'detectFiles' => true, 'file' => '', 'line' => '')),
                     array('groupEnd', array(), array()),
                     array('groupEnd', array(), array('channel' => 'foo')),
                 ),
@@ -245,8 +245,8 @@ EOD;
         $this->eventCounter = array();
         $this->debugFoo->eventManager->subscribe('debug.output', function (Event $event) {
             $channel = $event->getSubject()->getCfg('channelName');
-            $this->eventCounter[$channel.'.debug.output'] = isset($this->eventCounter[$channel.'.debug.output'])
-                ? $this->eventCounter[$channel.'.debug.output'] + 1
+            $this->eventCounter[$channel . '.debug.output'] = isset($this->eventCounter[$channel . '.debug.output'])
+                ? $this->eventCounter[$channel . '.debug.output'] + 1
                 : 1;
         });
         $this->outputTest(array(

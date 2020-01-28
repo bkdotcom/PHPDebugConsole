@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
@@ -666,8 +666,9 @@ class Internal implements SubscriberInterface
         $contentType = isset($headers['Content-Type'])
             ? \implode('', $headers['Content-Type'])
             : '';
-        $protocol = isset($_SERVER['SERVER_PROTOCOL'])
-            ? $_SERVER['SERVER_PROTOCOL']
+        $serverParams = $this->debug->request->getServerParams();
+        $protocol = isset($serverParams['SERVER_PROTOCOL'])
+            ? $serverParams['SERVER_PROTOCOL']
             : 'HTTP/1.0';
         $responseCode = $this->getResponseCode();
         $headersAll = array(
@@ -745,7 +746,7 @@ class Internal implements SubscriberInterface
                 'HTTP_ACCEPT' => null,
                 'HTTP_SOAPACTION' => null,
                 'HTTP_USER_AGENT' => null,
-            ), $_SERVER);
+            ), $this->debug->request->getServerParams());
             $val = \count(\array_filter(array(
                 \in_array($this->debug->utilities->getInterface(), array('ajax','http')),
                 $server['HTTP_SOAPACTION'],

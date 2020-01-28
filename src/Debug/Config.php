@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -398,10 +398,12 @@ class Config
         $values = array();
         // update 'collect and output'
         $requestKey = null;
-        if (isset($_GET['debug'])) {
-            $requestKey = $_REQUEST['debug'];
-        } elseif (isset($_COOKIE['debug'])) {
-            $requestKey = $_COOKIE['debug'];
+        $queryParams = $this->debug->request->getQueryParams();
+        $cookieParams = $this->debug->request->getCookieParams();
+        if (isset($queryParams['debug'])) {
+            $requestKey = $queryParams['debug'];
+        } elseif (isset($cookieParams['debug'])) {
+            $requestKey = $cookieParams['debug'];
         }
         $isValidKey = $requestKey == $key;
         if ($isValidKey) {

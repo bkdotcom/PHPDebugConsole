@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
@@ -230,16 +230,16 @@ class OnBootstrap
      */
     private function logPost()
     {
-        if (!isset($_SERVER['REQUEST_METHOD'])) {
+        $method = $this->debug->request->getMethod();
+        $contentType = $this->debug->request->getHeaderLine('Content-Type');
+        if ($method === 'GET') {
             return;
         }
         $havePostVals = false;
-        $contentType = isset($_SERVER['CONTENT_TYPE'])
-            ? $_SERVER['CONTENT_TYPE']
-            : null;
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $correctContentType = $this->testPostContentType($contentType);
-            if (!$correctContentType) {
+        if ($method === 'POST') {
+            $isCorrectContentType = $this->testPostContentType($contentType);
+            $post = $this->debug->request->getParsedBody();
+            if (!$isCorrectContentType) {
                 $this->debug->warn(
                     'It appears ' . $contentType . ' was posted with the wrong Content-Type' . "\n"
                         . 'Pay no attention to $_POST and instead use php://input',
@@ -249,9 +249,9 @@ class OnBootstrap
                         'line' => null,
                     ))
                 );
-            } elseif ($_POST) {
+            } elseif ($post) {
                 $havePostVals = true;
-                $this->debug->log('$_POST', $_POST, $this->debug->meta('redact'));
+                $this->debug->log('$_POST', $post, $this->debug->meta('redact'));
             }
         }
         if (!$havePostVals) {
@@ -259,9 +259,9 @@ class OnBootstrap
             $input = $this->getInput();
             if ($input) {
                 $this->logInput($contentType);
-            } elseif (empty($_FILES)) {
+            } elseif (!$this->debug->request->getUploadedFiles()) {
                 $this->debug->warn(
-                    $_SERVER['REQUEST_METHOD'] . ' request with no body',
+                    $method . ' request with no body',
                     $this->debug->meta(array(
                         'detectFiles' => false,
                         'file' => null,
@@ -270,8 +270,8 @@ class OnBootstrap
                 );
             }
         }
-        if (!empty($_FILES)) {
-            $this->debug->log('$_FILES', $_FILES);
+        if ($this->debug->request->getUploadedFiles()) {
+            $this->debug->log('$_FILES', $this->debug->request->getUploadedFiles());
         }
     }
 
@@ -285,14 +285,13 @@ class OnBootstrap
         $this->logRequestHeaders();
         $logEnvInfo = $this->debug->getCfg('logEnvInfo');
         if ($logEnvInfo['cookies']) {
-            $cookieVals = $_COOKIE;
+            $cookieVals = $this->debug->request->getCookieParams();
             \ksort($cookieVals, SORT_NATURAL);
             $this->debug->log('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
         }
         // don't expect a request body for these methods
         $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
-        $expectBody = isset($_SERVER['REQUEST_METHOD'])
-            && !\in_array($_SERVER['REQUEST_METHOD'], $noBodyMethods);
+        $expectBody = !\in_array($this->debug->request->getMethod(), $noBodyMethods);
         if ($logEnvInfo['cookies'] && $expectBody) {
             $this->logPost();
         }
@@ -308,12 +307,13 @@ class OnBootstrap
         if (!$this->debug->getCfg('logEnvInfo.headers')) {
             return;
         }
-        if (!empty($_SERVER['argv'])) {
-            return;
+        $headers = \array_map(function ($vals) {
+            return \join(', ', $vals);
+        }, $this->debug->request->getHeaders());
+        if ($headers) {
+            \ksort($headers, SORT_NATURAL);
+            $this->debug->log('request headers', $headers, $this->debug->meta('redact'));
         }
-        $headers = $this->debug->utilities->getAllHeaders();
-        \ksort($headers, SORT_NATURAL);
-        $this->debug->log('request headers', $headers, $this->debug->meta('redact'));
     }
 
     /**
@@ -328,10 +328,11 @@ class OnBootstrap
             return;
         }
         $logServerKeys = $this->debug->getCfg('logServerKeys');
-        if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+        $serverParams = $this->debug->request->getServerParams();
+        if ($this->debug->request->getMethod() !== 'GET') {
             $logServerKeys[] = 'REQUEST_METHOD';
         }
-        if (isset($_SERVER['CONTENT_LENGTH'])) {
+        if (isset($serverParams['CONTENT_LENGTH'])) {
             $logServerKeys[] = 'CONTENT_LENGTH';
             $logServerKeys[] = 'CONTENT_TYPE';
         }
@@ -344,12 +345,12 @@ class OnBootstrap
         }
         $vals = array();
         foreach ($logServerKeys as $k) {
-            if (!\array_key_exists($k, $_SERVER)) {
+            if (!\array_key_exists($k, $serverParams)) {
                 $vals[$k] = Abstracter::UNDEFINED;
             } elseif ($k == 'REQUEST_TIME') {
-                $vals[$k] = \date('Y-m-d H:i:s T', $_SERVER['REQUEST_TIME']);
+                $vals[$k] = \date('Y-m-d H:i:s T', $serverParams['REQUEST_TIME']);
             } else {
-                $vals[$k] = $_SERVER[$k];
+                $vals[$k] = $serverParams[$k];
             }
         }
         \ksort($vals, SORT_NATURAL);
@@ -368,11 +369,12 @@ class OnBootstrap
      */
     private function testPostContentType(&$contentType)
     {
-        if (!empty($_SERVER['CONTENT_TYPE'])) {
-            \preg_match('#^([^;]+)#', $_SERVER['CONTENT_TYPE'], $matches);
+        $contentTypeRaw = $this->debug->request->getHeaderLine('Content-Type');
+        if ($contentTypeRaw) {
+            \preg_match('#^([^;]+)#', $contentTypeRaw, $matches);
             $contentType = $matches[1];
         }
-        if (!$_POST) {
+        if (!$this->debug->request->getParsedBody()) {
             // nothing in $_POST means it can't be wrong
             return true;
         }

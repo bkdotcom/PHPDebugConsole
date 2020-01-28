@@ -1,0 +1,403 @@
+<?php
+
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2020 Brad Kent
+ * @version   v3.0
+ */
+
+namespace bdk\Debug;
+
+use InvalidArgumentException;
+
+/**
+ * Just looking to encapsulate the superglobals... not backbone an application or create a dependency on psr/http-message
+ */
+class ServerRequestLite
+{
+
+    /**
+     * @var array $_COOKIE
+     */
+    private $cookie = array();
+
+    /**
+     * @var array $_FILES
+     */
+    private $files = array();
+
+    /**
+     * @var array $_GET
+     */
+    private $get = array();
+
+    /**
+     * @var array Map of all registered headers, as name => array of values
+     */
+    private $headers = array();
+
+    private $method = 'GET';
+
+    /**
+     * @var array $_POST
+     */
+    private $post = array();
+
+    /**
+     * @var array $_SERVER
+     */
+    private $server = array();
+
+    /**
+     * Constructor
+     *
+     * @param array $headers headers
+     * @param array $server  $_SERVER superglobal
+     */
+    public function __construct($headers = array(), $server = array())
+    {
+        $this->setHeaders($headers);
+        $this->server = $server;
+        $this->method = isset($server['REQUEST_METHOD'])
+            ? $server['REQUEST_METHOD']
+            : 'GET';
+    }
+
+    public static function fromGlobals()
+    {
+        $headers = static::getAllHeaders();
+        $serverRequest = new static($headers, $_SERVER);
+        return $serverRequest
+            ->withCookieParams($_COOKIE)
+            ->withParsedBody($_POST)
+            ->withQueryParams($_GET)
+            ->withUploadedFiles($_FILES);
+    }
+
+    public function getCookieParams()
+    {
+        return $this->cookie;
+    }
+
+    /**
+     * @param string $name header name
+     *
+     * @return string[] An array of string values as provided for the given
+     *    header. If the header does not appear in the message, an empty array is returned.
+     */
+    public function getHeader($name)
+    {
+        return isset($this->headers[$name])
+            ? $this->headers[$name]
+            : array();
+    }
+
+    /**
+     * Retrieves a comma-separated string of the values for a single header.
+     *
+     * This method returns all of the header values of the given
+     * case-insensitive header name as a string concatenated together using
+     * a comma.
+     *
+     * NOTE: Not all header values may be appropriately represented using
+     * comma concatenation. For such headers, use getHeader() instead
+     * and supply your own delimiter when concatenating.
+     *
+     * If the header does not appear in the message, this method will return
+     * an empty string.
+     *
+     * @param string $name Case-insensitive header field name.
+     *
+     * @return string A string of values as provided for the given header
+     *    concatenated together using a comma. If the header does not appear in
+     *    the message, this method will return an empty string.
+     */
+    public function getHeaderLine($name)
+    {
+        return \implode(', ', $this->getHeader($name));
+    }
+
+    /**
+     * @return string[][] Returns an associative array of the message's headers. Each
+     *     key is a header name, and each value is an array of strings for that header.
+     */
+    public function getHeaders()
+    {
+        return $this->headers;
+    }
+
+    /**
+     * Retrieves the HTTP method of the request.
+     *
+     * @return string Returns the request method.
+     */
+    public function getMethod()
+    {
+        return $this->method;
+    }
+
+    public function getParsedBody()
+    {
+        return $this->post;
+    }
+
+    public function getQueryParams()
+    {
+        return $this->get;
+    }
+
+    public function getServerParams()
+    {
+        return $this->server;
+    }
+
+    public function getUploadedFiles()
+    {
+        return $this->files;
+    }
+
+    /**
+     * @param array $cookies $_COOKIE
+     *
+     * @return static
+     */
+    public function withCookieParams($cookies)
+    {
+        $new = clone $this;
+        $new->cookie = $cookies;
+        return $new;
+    }
+
+    /**
+     * Return an instance with the provided value replacing the specified header.
+     *
+     * @param string          $name  Case-insensitive header field name.
+     * @param string|string[] $value Header value(s).
+     *
+     * @return static
+     * @throws InvalidArgumentException for invalid header names or values.
+     */
+    public function withHeader($name, $value)
+    {
+        $this->assertHeader($name);
+        $value = $this->normalizeHeaderValue($value);
+        $new = clone $this;
+        $new->headers[$name] = $value;
+        return $new;
+    }
+
+    /**
+     * Return an instance with the provided HTTP method.
+     *
+     * While HTTP method names are typically all uppercase characters, HTTP
+     * method names are case-sensitive and thus implementations SHOULD NOT
+     * modify the given string.
+     *
+     * @param string $method Case-sensitive method.
+     *
+     * @return static
+     * @throws InvalidArgumentException for invalid HTTP methods.
+     */
+    public function withMethod($method)
+    {
+        if (!\is_string($method) || $method === '') {
+            throw new InvalidArgumentException('Method must be a non-empty string.');
+        }
+        $new = clone $this;
+        $new->method = $method;
+        return $new;
+    }
+
+    /**
+     * @param array $post $_POST
+     *
+     * @return static
+     */
+    public function withParsedBody($post)
+    {
+        $new = clone $this;
+        $new->post = $post;
+        return $new;
+    }
+
+    /**
+     * @param array $get $_GET
+     *
+     * @return static
+     */
+    public function withQueryParams($get)
+    {
+        $new = clone $this;
+        $new->get = $get;
+        return $new;
+    }
+
+    /**
+     * @param array $files $_FILES
+     *
+     * @return static
+     */
+    public function withUploadedFiles($files)
+    {
+        $new = clone $this;
+        $new->files = $files;
+        return $new;
+    }
+
+    /**
+     * Test valid header name
+     *
+     * @param string $header header name
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private static function assertHeader($header)
+    {
+        if (!\is_string($header)) {
+            throw new InvalidArgumentException(\sprintf(
+                'Header name must be a string but %s provided.',
+                \is_object($header) ? \get_class($header) : \gettype($header)
+            ));
+        }
+        if ($header === '') {
+            throw new InvalidArgumentException('Header name can not be empty.');
+        }
+    }
+
+    /**
+     * Get all HTTP header key/values as an associative array for the current request.
+     *
+     * Uses getallheaders (aka apache_request_headers) if avail / falls back to $_SERVER vals
+     *
+     * @return string[string] The HTTP header key/value pairs.
+     */
+    private static function getAllHeaders()
+    {
+        if (\function_exists('getallheaders')) {
+            return \getallheaders();
+        }
+        $headers = array();
+        $keysSansHttp = array(
+            'CONTENT_TYPE'   => 'Content-Type',
+            'CONTENT_LENGTH' => 'Content-Length',
+            'CONTENT_MD5'    => 'Content-Md5',
+        );
+        foreach ($this->server as $key => $value) {
+            if (\substr($key, 0, 5) === 'HTTP_') {
+                $key = \substr($key, 5);
+                if (!isset($keysSansHttp[$key]) || !isset($this->server[$key])) {
+                    $key = \str_replace(' ', '-', \ucwords(\strtolower(\str_replace('_', ' ', $key))));
+                    $headers[$key] = $value;
+                }
+            } elseif (isset($keysSansHttp[$key])) {
+                $headers[$keysSansHttp[$key]] = $value;
+            }
+        }
+        if (!isset($headers['Authorization'])) {
+            $auth = self::getAuthorizationHeader();
+            if ($auth) {
+                $headers['Authorization'] = $auth;
+            }
+        }
+        return $headers;
+    }
+
+    /**
+     * Build Authorization header from $_SERVER values
+     *
+     * @return [type] [description]
+     */
+    private static function getAuthorizationHeader()
+    {
+        $auth = null;
+        if (isset($this->server['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $auth = $this->server['REDIRECT_HTTP_AUTHORIZATION'];
+        } elseif (isset($this->server['PHP_AUTH_USER'])) {
+            $basicPass = isset($this->server['PHP_AUTH_PW']) ? $this->server['PHP_AUTH_PW'] : '';
+            $auth = 'Basic ' . \base64_encode($this->server['PHP_AUTH_USER'] . ':' . $basicPass);
+        } elseif (isset($this->server['PHP_AUTH_DIGEST'])) {
+            $auth = $this->server['PHP_AUTH_DIGEST'];
+        }
+        return $auth;
+    }
+
+    /**
+     * [normalizeHeaderValue description]
+     *
+     * @param string|array $value header value
+     *
+     * @return array
+     * @throws InvalidArgumentException
+     */
+    private static function normalizeHeaderValue($value)
+    {
+        if (!\is_array($value)) {
+            return self::trimHeaderValues([$value]);
+        }
+        if (\count($value) === 0) {
+            throw new InvalidArgumentException('Header value can not be an empty array.');
+        }
+        return self::trimHeaderValues($value);
+    }
+
+    /**
+     * Set header values
+     *
+     * @param array $headers header name/value pairs
+     *
+     * @return void
+     */
+    private function setHeaders($headers = array())
+    {
+        // $this->headerNames = $this->headers = [];
+        foreach ($headers as $name => $value) {
+            if (\is_int($name)) {
+                // Numeric array keys are converted to int by PHP but having a header name '123' is not forbidden by the spec
+                // and also allowed in withHeader(). So we need to cast it to string again for the following assertion to pass.
+                $name = (string) $name;
+            }
+            self::assertHeader($name);
+            $value = $this->normalizeHeaderValue($value);
+            // $normalized = \strtolower($header);
+            if (isset($this->headers[$name])) {
+                // $header = $this->headerNames[$normalized];
+                $this->headers[$name] = \array_merge($this->headers[$name], $value);
+            } else {
+                // $this->headerNames[$normalized] = $header;
+                $this->headers[$name] = $value;
+            }
+        }
+    }
+
+    /**
+     * Trims whitespace from the header values.
+     *
+     * Spaces and tabs ought to be excluded by parsers when extracting the field value from a header field.
+     *
+     * header-field = field-name ":" OWS field-value OWS
+     * OWS          = *( SP / HTAB )
+     *
+     * @param string[] $values Header values
+     *
+     * @return string[] Trimmed header values
+     *
+     * @see https://tools.ietf.org/html/rfc7230#section-3.2.4
+     */
+    private static function trimHeaderValues(array $values)
+    {
+        return \array_map(function ($value) {
+            if (!\is_scalar($value) && $value !== null) {
+                throw new InvalidArgumentException(\sprintf(
+                    'Header value must be scalar or null but %s provided.',
+                    \is_object($value) ? \get_class($value) : \gettype($value)
+                ));
+            }
+            return \trim((string) $value, " \t");
+        }, $values);
+    }
+}

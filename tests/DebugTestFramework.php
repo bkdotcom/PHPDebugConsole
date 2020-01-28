@@ -189,8 +189,11 @@ class DebugTestFramework extends DOMTestCase
         $refProperties['textDepth']->setValue($this->debug->dumpText, 0);
         $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
         $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
-        unset($_SERVER['REQUEST_METHOD']);
-        unset($_SERVER['REQUEST_URI']);
+        // unset($_SERVER['REQUEST_METHOD']);
+        // unset($_SERVER['REQUEST_URI']);
+        $this->debug->setCfg('services', array(
+            'request' => \bdk\Debug\ServerRequestLite::fromGlobals(),
+        ));
     }
 
     /**

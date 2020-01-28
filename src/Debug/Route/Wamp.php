@@ -9,7 +9,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -386,13 +386,14 @@ class Wamp implements RouteInterface
             'SERVER_ADDR',
             'SERVER_NAME',
         );
+        $serverParams = $this->debug->request->getServerParams();
         foreach ($keys as $k) {
-            $metaVals[$k] = isset($_SERVER[$k])
-                ? $_SERVER[$k]
+            $metaVals[$k] = isset($serverParams[$k])
+                ? $serverParams[$k]
                 : null;
         }
-        if (!isset($metaVals['REQUEST_URI']) && !empty($_SERVER['argv'])) {
-            $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $_SERVER['argv']);
+        if (!isset($metaVals['REQUEST_URI']) && !empty($serverParams['argv'])) {
+            $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $serverParams['argv']);
         }
         $this->processLogEntry(new LogEntry(
             $this->debug,

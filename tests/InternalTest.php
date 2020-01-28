@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Run with --process-isolation option
  */
@@ -32,15 +33,15 @@ class InternalTest extends DebugTestFramework
             'emailFunc' => array($this, 'emailMock'),
         ));
 
-        /*
-            Test that not emailed if nothing logged
-        */
+        //
+        // Test that not emailed if nothing logged
+        //
         $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
-        /*
-            Test that emailed if something logged
-        */
+        //
+        // Test that emailed if something logged
+        //
         $this->debug->log('this is a test');
         $this->debug->log(new \DateTime());
         $this->expectedSubject = 'Debug Log';
@@ -50,31 +51,31 @@ class InternalTest extends DebugTestFramework
 
         $this->debug->setCfg('emailLog', 'onError');
 
-        /*
-            Test that not emailed if no error
-        */
+        //
+        // Test that not emailed if no error
+        //
         $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
-        /*
-            Test that not emailed for notice
-        */
-        $notice = $undefinedVar;
+        //
+        // Test that not emailed for notice
+        //
+        $undefinedVar;  // notice
         $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
-        /*
-            Test that emailed if there's an error
-        */
-        $warning = 1/0; // warning
+        //
+        // Test that emailed if there's an error
+        //
+        1 / 0; // warning
         $this->expectedSubject = 'Debug Log: Error';
         $this->debug->internal->onShutdownLow();
         $this->assertTrue($this->emailCalled);
         $this->emailCalled = false;
 
-        /*
-            Test that not emailed if disabled
-        */
+        //
+        // Test that not emailed if disabled
+        //
         $this->debug->setCfg('emailLog', false);
         $this->debug->internal->onShutdownLow();
         $this->assertFalse($this->emailCalled);
@@ -92,16 +93,19 @@ class InternalTest extends DebugTestFramework
         $logPostMeth = $reflect->getMethod('logPost');
         $logPostMeth->setAccessible(true);
 
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-
         // valid form post
-        $_POST = array('foo'=>'bar');
-        $inputProp->setValue($onBootstrap, http_build_query($_POST));
+        $post = array('foo' => 'bar');
+        $this->debug->setCfg('services', array(
+            'request' => $this->debug->request
+                ->withMethod('POST')
+                ->withParsedBody($post),
+        ));
+        $inputProp->setValue($onBootstrap, http_build_query($post));
         $logPostMeth->invoke($onBootstrap);
         $this->assertSame(
             array(
                 'log',
-                array('$_POST', $_POST),
+                array('$_POST', $post),
                 array('redact' => true)
             ),
             $this->logEntryToArray($this->debug->getData('log/0'))
@@ -109,9 +113,15 @@ class InternalTest extends DebugTestFramework
         $this->debug->setData('log', array());
 
         // json properly posted
-        $_POST = array();
-        $_SERVER['CONTENT_TYPE'] = 'application/json';
-        $input = json_encode(array('foo'=>'bar=baz'));
+        $input = json_encode(array('foo' => 'bar=baz'));
+        $this->debug->setCfg('services', array(
+            'request' => function () {
+                $request = new \bdk\Debug\ServerRequestLite(array(
+                    'Content-Type' => 'application/json',
+                ));
+                return $request->withMethod('POST');
+            }
+        ));
         // parse_str($input, $_POST);
         $inputProp->setValue($onBootstrap, $input);
         $logPostMeth->invoke($onBootstrap);
@@ -141,15 +151,24 @@ class InternalTest extends DebugTestFramework
         $this->debug->setData('log', array());
 
         // json improperly posted
-        $input = json_encode(array('foo'=>'bar=baz'));
-        parse_str($input, $_POST);
+        $input = json_encode(array('foo' => 'bar=baz'));
+        $this->debug->setCfg('services', array(
+            'request' => function () use ($input) {
+                parse_str($input, $post);
+                $request = new \bdk\Debug\ServerRequestLite(array(
+                    'Content-Type' => 'application/json',
+                ));
+                return $request->withMethod('POST')
+                    ->withParsedBody($post);
+            }
+        ));
         $inputProp->setValue($onBootstrap, $input);
         $logPostMeth->invoke($onBootstrap);
         $this->assertSame(
             array('warn',
-                array('It appears application/json was posted with the wrong Content-Type'."\n"
-                .'Pay no attention to $_POST and instead use php://input'),
-                array('detectFiles'=>false,'file'=>null,'line'=>null),
+                array('It appears application/json was posted with the wrong Content-Type' . "\n"
+                . 'Pay no attention to $_POST and instead use php://input'),
+                array('detectFiles' => false, 'file' => null, 'line' => null),
             ),
             $this->logEntryToArray($this->debug->getData('log/0'))
         );
@@ -179,15 +198,21 @@ class InternalTest extends DebugTestFramework
         $this->debug->setData('log', array());
 
         // post with just $_FILES
+        $files = array(array('foo' => 'bar'));
+        $this->debug->setCfg('services', array(
+            'request' => function () use ($files) {
+                $request = new \bdk\Debug\ServerRequestLite(array(), array());
+                return $request->withMethod('POST')
+                    ->withUploadedFiles($files);
+            },
+        ));
         $input = '';
-        $_POST = array();
-        $_FILES = array(array('foo'=>'bar'));
         $inputProp->setValue($onBootstrap, $input);
         $logPostMeth->invoke($onBootstrap);
         $this->assertSame(
             array(
                 'log',
-                array('$_FILES', $_FILES),
+                array('$_FILES', $files),
                 array(),
             ),
             $this->logEntryToArray($this->debug->getData('log/0'))
@@ -196,25 +221,34 @@ class InternalTest extends DebugTestFramework
 
         // post with no body
         $input = '';
-        $_POST = array();
-        $_FILES = array();
+        $this->debug->setCfg('services', array(
+            'request' => function () {
+                $request = new \bdk\Debug\ServerRequestLite(array(), array());
+                return $request->withMethod('POST');
+            },
+        ));
         $inputProp->setValue($onBootstrap, $input);
         $logPostMeth->invoke($onBootstrap);
         $this->assertSame(
             array(
                 'warn',
                 array('POST request with no body'),
-                array('detectFiles'=>false,'file'=>null,'line'=>null),
+                array('detectFiles' => false, 'file' => null, 'line' => null),
             ),
             $this->logEntryToArray($this->debug->getData('log/0'))
         );
         $this->debug->setData('log', array());
 
         // put method
-        $_SERVER['REQUEST_METHOD'] = 'PUT';
-        $input = json_encode(array('foo'=>'bar=baz'));
-        $_POST = array();
-        // parse_str($input, $_POST);
+        $input = json_encode(array('foo' => 'bar=bazy'));
+        $this->debug->setCfg('services', array(
+            'request' => function () {
+                $request = new \bdk\Debug\ServerRequestLite(array(
+                    'Content-Type' => 'application/json',
+                ));
+                return $request->withMethod('PUT');
+            },
+        ));
         $inputProp->setValue($onBootstrap, $input);
         $logPostMeth->invoke($onBootstrap);
         $this->assertEquals(
@@ -265,32 +299,46 @@ class InternalTest extends DebugTestFramework
             ),
             'version' => \bdk\Debug::VERSION,
         );
-        $this->assertEquals($this->deObjectify($expect), $this->deObjectify($unserialized));
+        // var_dump($this->deObjectify($expect)['logSummary']);
+        // $this->assertEquals($this->deObjectify($expect), $this->deObjectify($unserialized));
+        // var_dump($this->deObjectify($expect)['logSummary']);
+        $this->assertEquals($this->deObjectify($expect)['logSummary'], $this->deObjectify($unserialized)['logSummary']);
     }
 
     protected function deObjectify($data)
     {
-        foreach ($data['alerts'] as $i => $v) {
-            $data['alerts'][$i] = array(
-                $v['method'],
-                $v['args'],
-                $v['meta'],
-            );
-        }
-        foreach ($data['log'] as $i => $v) {
-            $data['log'][$i] = array(
-                $v['method'],
-                $v['args'],
-                $v['meta'],
-            );
-        }
-        foreach ($data['logSummary'] as $i => $group) {
-            foreach ($group as $i2 => $v) {
-                $data['logSummary'][$i][$i2] = array(
+        /*
+        foreach ($data as $i => $v) {
+            if ($v instanceof \bdk\Debug\LogEntry) {
+                $data[$i] = array(
                     $v['method'],
                     $v['args'],
                     $v['meta'],
                 );
+            }
+        }
+        */
+        foreach (array('alerts','log') as $what) {
+            if (!isset($data[$what])) {
+                continue;
+            }
+            foreach ($data[$what] as $i => $v) {
+                $data[$what][$i] = array(
+                    $v['method'],
+                    $v['args'],
+                    $v['meta'],
+                );
+            }
+        }
+        if (isset($data['logSummary'])) {
+            foreach ($data['logSummary'] as $i => $group) {
+                foreach ($group as $i2 => $v) {
+                    $data['logSummary'][$i][$i2] = array(
+                        $v['method'],
+                        $v['args'],
+                        $v['meta'],
+                    );
+                }
             }
         }
         return $data;
@@ -306,7 +354,7 @@ class InternalTest extends DebugTestFramework
 
         parent::$allowError = true;
 
-        1/0;    // warning
+        1 / 0;    // warning
 
         $this->assertSame(array(
             'inConsole' => 1,

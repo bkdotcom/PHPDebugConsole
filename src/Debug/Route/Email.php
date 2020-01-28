@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -108,9 +108,10 @@ class Email implements RouteInterface
      */
     private function buildBody()
     {
-        $body = (!isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['argv'])
-            ? 'Command: ' . \implode(' ', $_SERVER['argv'])
-            : 'Request: ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']
+        $serverParams = $this->debug->request->getServerParams();
+        $body = (isset($serverParams['REQUEST_METHOD'])
+            ? 'Request: ' . $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact($serverParams['REQUEST_URI'])
+            : 'Command: ' . \implode(' ', $serverParams['argv'])
         ) . "\n\n";
 
         /*
@@ -158,8 +159,9 @@ class Email implements RouteInterface
         $subject = 'Debug Log';
         $subjectMore = '';
         $haveError = (bool) $this->debug->errorHandler->getLastError();
-        if (!empty($_SERVER['HTTP_HOST'])) {
-            $subjectMore .= ' ' . $_SERVER['HTTP_HOST'];
+        $serverParams = $this->debug->request->getServerParams();
+        if (!empty($serverParams['HTTP_HOST'])) {
+            $subjectMore .= ' ' . $serverParams['HTTP_HOST'];
         }
         if ($haveError) {
             $subjectMore .= ' ' . ($subjectMore ? '(Error)' : 'Error');

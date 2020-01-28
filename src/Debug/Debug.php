@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
@@ -44,6 +44,7 @@ use SplObjectStorage;
  * @property MethodClear   $methodClear   lazy-loaded MethodClear instance
  * @property MethodProfile $methodProfile lazy-loaded MethodProfile instance
  * @property MethodTable   $methodTable   lazy-loaded MethodTable instance
+ * @property ServerRequestLite $request   lazy-loaded ServerRequest
  * @property Utf8          $utf8          lazy-loaded Utf8 instance
  * @property Utilities     $utilities     lazy-loaded Utilities instance
  */
@@ -56,7 +57,6 @@ class Debug
     protected $data = array();
     protected $groupStackRef;   // points to $this->groupStacks[x] (where x = 'main' or (int) priority)
     protected $logRef;          // points to either log or logSummary[priority]
-    protected $config;          // config instance
     protected $parentInstance;
     protected $registeredPlugins;   // SplObjectHash
     protected $rootInstance;
@@ -82,13 +82,9 @@ class Debug
     /**
      * Constructor
      *
-     * @param array        $cfg          config
-     * @param EventManager $eventManager optional - specify EventManager instance
-     *                                      will use new instance if not specified
-     * @param ErrorHandler $errorHandler optional - specify ErrorHandler instance
-     *                                      if not specified, will use singleton or new instance
+     * @param array $cfg config
      */
-    public function __construct($cfg = array(), EventManager $eventManager = null, ErrorHandler $errorHandler = null)
+    public function __construct($cfg = array())
     {
         $this->cfg = array(
             'collect'   => false,
@@ -190,18 +186,12 @@ class Debug
                 \spl_autoload_register(array($this, 'autoloader'));
             }
         }
-        if ($eventManager) {
-            $cfg['services']['eventManager'] = $eventManager;
-        }
-        if ($errorHandler) {
-            $cfg['services']['errorHandler'] = $errorHandler;
-        }
         /*
             Order is important
-            a) setCfg (so that this->parentInstance gets set
+            a) set cfg (so that this->parentInstance gets set
             b) initialize this->internal after all properties have been initialized
         */
-        $this->__get('config')->setValues($cfg);   // since it's defined (albeit null), we need to call __get to initialize
+        $this->config->setValues($cfg);
         $this->rootInstance = $this;
         if (isset($this->cfg['parent'])) {
             $this->parentInstance = $this->cfg['parent'];
@@ -302,8 +292,8 @@ class Debug
             $val = $this->cfg['services'][$property];
             if ($val instanceof \Closure) {
                 $val = $val($this);
+                $this->cfg['services'][$property] = $val;
             }
-            $this->{$property} = $val;
             return $val;
         }
         if (isset($this->cfg['factories'][$property])) {
@@ -313,6 +303,9 @@ class Debug
             }
             return $val;
         }
+        /*
+            Allow read-only access to private/protected properties
+        */
         if (isset($this->{$property})) {
             return $this->{$property};
         }
@@ -1374,6 +1367,14 @@ class Debug
                 'errorHandler',
             )));
             unset($cfg['debug']['onBootstrap']);
+            $cfg['debug']['services'] = \array_intersect_key($cfg['debug']['services'], \array_flip(array(
+                // these services aren't tied to a debug instance... allow inheritance
+                'backtrace',
+                'methodTable',
+                'request',
+                'utf8',
+                'utilities',
+            )));
             // set channel values
             $cfg['debug']['channelName'] = $this->parentInstance
                 ? $this->cfg['channelName'] . '.' . $channelName
@@ -1980,6 +1981,12 @@ class Debug
             },
             'middleware' => function (Debug $debug) {
                 return new Debug\Middleware($debug);
+            },
+            'request' => function () {
+                /*
+                    This can return Psr\Http\Message\ServerRequestInterface
+                */
+                return Debug\ServerRequestLite::fromGlobals();
             },
             'utf8' => function () {
                 return new Debug\Utf8();

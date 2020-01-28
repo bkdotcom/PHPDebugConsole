@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -303,6 +303,9 @@ class ErrorEmailer implements SubscriberInterface
      */
     protected static function isCli()
     {
+        /*
+            note: $_SERVER['argv'] could be populated with query string if register_argc_argv = On
+        */
         return \defined('STDIN') || isset($_SERVER['argv']) && \count($_SERVER['argv']) > 1 || !\array_key_exists('REQUEST_METHOD', $_SERVER);
     }
 

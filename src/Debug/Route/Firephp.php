@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -65,9 +65,10 @@ class Firephp extends Base
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER);
         $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
-        $heading = isset($_SERVER['REQUEST_METHOD'])
-            ? $_SERVER['REQUEST_METHOD'] . ' ' . $this->debug->redact($_SERVER['REQUEST_URI'])
-            : '$: ' . \implode(' ', $_SERVER['argv']);
+        $serverParams = $this->debug->request->getServerParams();
+        $heading = isset($serverParams['REQUEST_METHOD'])
+            ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact($serverParams['REQUEST_URI'])
+            : '$: ' . \implode(' ', $serverParams['argv']);
         $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupCollapsed',

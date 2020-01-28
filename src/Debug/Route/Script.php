@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -62,6 +62,7 @@ class Script extends Base
     {
         $this->data = $this->debug->getData();
         $errorStats = $this->debug->errorStats();
+        $serverParams = $this->debug->request->getServerParams();
         $errorStr = '';
         if ($errorStats['inConsole']) {
             $errorStr = 'Errors: ';
@@ -77,8 +78,8 @@ class Script extends Base
             'groupCollapsed',
             array(
                 'PHP',
-                (isset($_SERVER['REQUEST_METHOD']) && isset($_SERVER['REQUEST_URI'])
-                    ? $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']
+                (isset($serverParams['REQUEST_METHOD']) && isset($serverParams['REQUEST_URI'])
+                    ? $serverParams['REQUEST_METHOD'] . ' ' . $serverParams['REQUEST_URI']
                     : ''),
                 $errorStr,
             )

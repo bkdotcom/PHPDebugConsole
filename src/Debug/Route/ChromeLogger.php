@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  *
  * @see https://craig.is/writing/chrome-logger/techspecs
@@ -135,11 +135,12 @@ class ChromeLogger extends Base
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
+        $serverParams = $this->debug->request->getServerParams();
         if ($this->jsonData) {
             \array_unshift($this->jsonData['rows'], array(
-                array('PHP', isset($_SERVER['REQUEST_METHOD'])
-                    ? $_SERVER['REQUEST_METHOD'] . ' ' . $this->debug->redact($_SERVER['REQUEST_URI'])
-                    : '$: ' . \implode(' ', $_SERVER['argv'])
+                array('PHP', isset($serverParams['REQUEST_METHOD'])
+                    ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact($serverParams['REQUEST_URI'])
+                    : '$: ' . \implode(' ', $serverParams['argv'])
                 ),
                 null,
                 'groupCollapsed',

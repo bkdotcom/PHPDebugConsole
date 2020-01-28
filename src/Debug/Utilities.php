@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -316,46 +316,6 @@ class Utilities
     }
 
     /**
-     * Get all HTTP header key/values as an associative array for the current request.
-     *
-     * @return string[string] The HTTP header key/value pairs.
-     */
-    public static function getAllHeaders()
-    {
-        if (\function_exists('getallheaders')) {
-            return \getallheaders();
-        }
-        $headers = array();
-        $copyServer = array(
-            'CONTENT_TYPE'   => 'Content-Type',
-            'CONTENT_LENGTH' => 'Content-Length',
-            'CONTENT_MD5'    => 'Content-Md5',
-        );
-        foreach ($_SERVER as $key => $value) {
-            if (\substr($key, 0, 5) === 'HTTP_') {
-                $key = \substr($key, 5);
-                if (!isset($copyServer[$key]) || !isset($_SERVER[$key])) {
-                    $key = \str_replace(' ', '-', \ucwords(\strtolower(\str_replace('_', ' ', $key))));
-                    $headers[$key] = $value;
-                }
-            } elseif (isset($copyServer[$key])) {
-                $headers[$copyServer[$key]] = $value;
-            }
-        }
-        if (!isset($headers['Authorization'])) {
-            if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
-                $headers['Authorization'] = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
-            } elseif (isset($_SERVER['PHP_AUTH_USER'])) {
-                $basicPass = isset($_SERVER['PHP_AUTH_PW']) ? $_SERVER['PHP_AUTH_PW'] : '';
-                $headers['Authorization'] = 'Basic ' . \base64_encode($_SERVER['PHP_AUTH_USER'] . ':' . $basicPass);
-            } elseif (isset($_SERVER['PHP_AUTH_DIGEST'])) {
-                $headers['Authorization'] = $_SERVER['PHP_AUTH_DIGEST'];
-            }
-        }
-        return $headers;
-    }
-
-    /**
      * Convert size int into "1.23 kB" or vice versa
      *
      * @param integer|string $size      bytes or similar to "1.23M"
@@ -461,8 +421,7 @@ class Utilities
     {
         $return = 'http';
         /*
-            note: $_SERVER['argv'] could be populated with query string if
-            register_argc_argv = On
+            note: $_SERVER['argv'] could be populated with query string if register_argc_argv = On
         */
         $isCliOrCron = \count(\array_filter(array(
             \defined('STDIN'),

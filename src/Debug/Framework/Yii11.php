@@ -260,7 +260,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
      */
     public function onErrorHigh(Error $error)
     {
-        if (in_array($error['category'], array('deprecated','notice','strict'))) {
+        if (\in_array($error['category'], array('deprecated','notice','strict'))) {
             $pathsIgnore = array(
                 Yii::getPathOfAlias('system'),
                 Yii::getPathOfAlias('webroot') . '/protected/extensions',
@@ -326,12 +326,15 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
         }
         // nest the PDO channel under our Yii channel
         $channelName = 'PDO';
-        if (strpos($db->connectionString, 'master=true')) {
+        if (\strpos($db->connectionString, 'master=true')) {
             $channelName .= ' (master)';
-        } elseif (strpos($db->connectionString, 'slave=true')) {
+        } elseif (\strpos($db->connectionString, 'slave=true')) {
             $channelName .= ' (slave)';
         }
-        $pdoChannel = $this->debug->getChannel($channelName, array('channelIcon' => 'fa fa-database'));
+        $pdoChannel = $this->debug->getChannel($channelName, array(
+            'channelIcon' => 'fa fa-database',
+            'channelShow' => false,
+        ));
         $pdoCollector = new Pdo($pdo, $pdoChannel);
         $dbRef = new ReflectionObject($db);
         while (!$dbRef->hasProperty('_pdo')) {

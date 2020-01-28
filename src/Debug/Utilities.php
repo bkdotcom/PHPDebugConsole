@@ -13,7 +13,6 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
 use Psr\Http\Message\StreamInterface;
 use DOMDocument;
 use Exception;
@@ -415,7 +414,7 @@ class Utilities
     /**
      * Returns cli, cron, ajax, or http
      *
-     * @return string cli | cron | ajax | http
+     * @return string cli | cron | http | "http ajax"
      */
     public static function getInterface()
     {
@@ -423,18 +422,19 @@ class Utilities
         /*
             note: $_SERVER['argv'] could be populated with query string if register_argc_argv = On
         */
+        $serverParams = Debug::getInstance()->request->getServerParams();
         $isCliOrCron = \count(\array_filter(array(
             \defined('STDIN'),
-            isset($_SERVER['argv']) && \count($_SERVER['argv']) > 1,
-            !\array_key_exists('REQUEST_METHOD', $_SERVER),
+            isset($serverParams['argv']) && \count($serverParams['argv']) > 1,
+            !\array_key_exists('REQUEST_METHOD', $serverParams),
         ))) > 0;
         if ($isCliOrCron) {
             // TERM is a linux/unix thing
-            $return = isset($_SERVER['TERM']) || \array_key_exists('PATH', $_SERVER)
+            $return = isset($serverParams['TERM']) || \array_key_exists('PATH', $serverParams)
                 ? 'cli'
                 : 'cron';
-        } elseif (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
-            $return = 'ajax';
+        } elseif (isset($serverParams['HTTP_X_REQUESTED_WITH']) && $serverParams['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+            $return = 'http ajax';
         }
         return $return;
     }
@@ -724,11 +724,12 @@ class Utilities
      */
     public static function requestId()
     {
+        $serverParams = Debug::getInstance()->request->getServerParams();
         return \hash(
             'crc32b',
-            (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'terminal')
-                . (isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : $_SERVER['REQUEST_TIME'])
-                . (isset($_SERVER['REMOTE_PORT']) ? $_SERVER['REMOTE_PORT'] : '')
+            (isset($serverParams['REMOTE_ADDR']) ? $serverParams['REMOTE_ADDR'] : 'terminal')
+                . (isset($serverParams['REQUEST_TIME_FLOAT']) ? $serverParams['REQUEST_TIME_FLOAT'] : $serverParams['REQUEST_TIME'])
+                . (isset($serverParams['REMOTE_PORT']) ? $serverParams['REMOTE_PORT'] : '')
         );
     }
 

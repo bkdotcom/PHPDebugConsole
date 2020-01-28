@@ -100,14 +100,12 @@ class Debug
                             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
             'emailFrom' => null,    // null = use php's default (php.ini: sendmail_from)
             'emailFunc' => 'mail',  // callable
-            'emailLog'  => false,   // Whether to email a debug log.  (requires 'collect' to also be true)
+            'emailLog' => false,    // Whether to email a debug log.  (requires 'collect' to also be true)
                                     //
                                     //   false:             email will not be sent
                                     //   true or 'always':  email sent (if log is not output)
                                     //   'onError':         email sent if error occured (unless output)
-            'emailTo'   => !empty($_SERVER['SERVER_ADMIN'])
-                ? $_SERVER['SERVER_ADMIN']
-                : null,
+            'emailTo' => 'default', // will default to $_SERVER['SERVER_ADMIN'] if non-empty, null otherwise
             'factories' => $this->getDefaultFactories(),
             'headerMaxAll' => 250000,
             'headerMaxPer' => null,
@@ -163,9 +161,7 @@ class Debug
                     // label => array(accumulatedTime, lastStartedTime|null)
                     'debugInit' => array(
                         0,
-                        isset($_SERVER['REQUEST_TIME_FLOAT'])
-                            ? $_SERVER['REQUEST_TIME_FLOAT']
-                            : \microtime(true)
+                        \microtime(true),   // will get replaced with $_SERVER['REQUEST_TIME_FLOAT'] if exists
                     ),
                 ),
                 'stack' => array(),
@@ -193,6 +189,15 @@ class Debug
         */
         $this->config->setValues($cfg);
         $this->rootInstance = $this;
+        $serverParams = $this->request->getServerParams();
+        if ($this->cfg['emailTo'] === 'default') {
+            $this->cfg['emailTo'] = isset($serverParams['SERVER_ADMIN'])
+                ? $serverParams['SERVER_ADMIN']
+                : null;
+        }
+        if (isset($serverParams['REQUEST_TIME_FLOAT'])) {
+            $this->data['times']['labels']['debugInit'][1] = $serverParams['REQUEST_TIME_FLOAT'];
+        }
         if (isset($this->cfg['parent'])) {
             $this->parentInstance = $this->cfg['parent'];
             while ($this->rootInstance->parentInstance) {

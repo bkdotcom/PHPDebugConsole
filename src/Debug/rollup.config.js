@@ -7,11 +7,12 @@ import { uglify } from 'rollup-plugin-uglify';
 var tasks = [
 	{
 		input: "js_src/main.js",
-		external: ['jquery'],
+		external: ['clipboardjs', 'jquery'],
 		output: {
 			file: "js/Debug.jquery.js",
 			format: "iife", // immediately invoked function expression
 			globals: {
+				clipboardjs: 'window.ClipboardJS',
 				jquery: 'window.jQuery'
 			}
 		}
@@ -21,11 +22,12 @@ var tasks = [
 if (process.env.NODE_ENV !== 'watch') {
 	tasks.push({
 		input: "js_src/main.js",
-		external: ['jquery'],
+		external: ['clipboardjs', 'jquery'],
 		output: {
 			file: "js/Debug.jquery.min.js",
 			format: "iife", // immediately invoked function expression
 			globals: {
+				clipboardjs: 'window.ClipboardJS',
 				jquery: 'window.jQuery'
 			}
 		},

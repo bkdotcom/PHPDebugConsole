@@ -66,7 +66,6 @@ class Backtrace
                 }
                 $backtrace = static::xdebugGetFunctionStack();
                 $backtrace = \array_reverse($backtrace);
-                // var_dump($backtrace);
                 $backtrace = static::normalize($backtrace);
                 $backtrace = static::removeInternalFrames($backtrace);
                 $error = \error_get_last();

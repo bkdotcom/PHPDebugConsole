@@ -40,6 +40,9 @@ class ServerRequestLite
      */
     private $headers = array();
 
+    /**
+     * @var string
+     */
     private $method = 'GET';
 
     /**
@@ -67,9 +70,14 @@ class ServerRequestLite
             : 'GET';
     }
 
+    /**
+     * Instantiate self from superglobals
+     *
+     * @return static
+     */
     public static function fromGlobals()
     {
-        $headers = static::getAllHeaders();
+        $headers = static::getAllHeaders($_SERVER);
         $serverRequest = new static($headers, $_SERVER);
         return $serverRequest
             ->withCookieParams($_COOKIE)
@@ -78,6 +86,11 @@ class ServerRequestLite
             ->withUploadedFiles($_FILES);
     }
 
+    /**
+     * Get Cookie values
+     *
+     * @return array
+     */
     public function getCookieParams()
     {
         return $this->cookie;
@@ -140,21 +153,41 @@ class ServerRequestLite
         return $this->method;
     }
 
+    /**
+     * Get $_POST data
+     *
+     * @return array
+     */
     public function getParsedBody()
     {
         return $this->post;
     }
 
+    /**
+     * Get $_GET data
+     *
+     * @return array
+     */
     public function getQueryParams()
     {
         return $this->get;
     }
 
+    /**
+     * Get $_SERVER values
+     *
+     * @return array
+     */
     public function getServerParams()
     {
         return $this->server;
     }
 
+    /**
+     * Get $_FILES data
+     *
+     * @return array
+     */
     public function getUploadedFiles()
     {
         return $this->files;
@@ -274,9 +307,11 @@ class ServerRequestLite
      *
      * Uses getallheaders (aka apache_request_headers) if avail / falls back to $_SERVER vals
      *
+     * @param array $serverParams $_SERVER
+     *
      * @return string[string] The HTTP header key/value pairs.
      */
-    private static function getAllHeaders()
+    private static function getAllHeaders($serverParams)
     {
         if (\function_exists('getallheaders')) {
             return \getallheaders();
@@ -287,10 +322,10 @@ class ServerRequestLite
             'CONTENT_LENGTH' => 'Content-Length',
             'CONTENT_MD5'    => 'Content-Md5',
         );
-        foreach ($this->server as $key => $value) {
+        foreach ($serverParams as $key => $value) {
             if (\substr($key, 0, 5) === 'HTTP_') {
                 $key = \substr($key, 5);
-                if (!isset($keysSansHttp[$key]) || !isset($this->server[$key])) {
+                if (!isset($keysSansHttp[$key]) || !isset($serverParams[$key])) {
                     $key = \str_replace(' ', '-', \ucwords(\strtolower(\str_replace('_', ' ', $key))));
                     $headers[$key] = $value;
                 }
@@ -310,18 +345,18 @@ class ServerRequestLite
     /**
      * Build Authorization header from $_SERVER values
      *
-     * @return [type] [description]
+     * @return null|string
      */
-    private static function getAuthorizationHeader()
+    private static function getAuthorizationHeader($serverParams)
     {
         $auth = null;
-        if (isset($this->server['REDIRECT_HTTP_AUTHORIZATION'])) {
-            $auth = $this->server['REDIRECT_HTTP_AUTHORIZATION'];
-        } elseif (isset($this->server['PHP_AUTH_USER'])) {
-            $basicPass = isset($this->server['PHP_AUTH_PW']) ? $this->server['PHP_AUTH_PW'] : '';
-            $auth = 'Basic ' . \base64_encode($this->server['PHP_AUTH_USER'] . ':' . $basicPass);
-        } elseif (isset($this->server['PHP_AUTH_DIGEST'])) {
-            $auth = $this->server['PHP_AUTH_DIGEST'];
+        if (isset($serverParams['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $auth = $serverParams['REDIRECT_HTTP_AUTHORIZATION'];
+        } elseif (isset($serverParams['PHP_AUTH_USER'])) {
+            $basicPass = isset($serverParams['PHP_AUTH_PW']) ? $serverParams['PHP_AUTH_PW'] : '';
+            $auth = 'Basic ' . \base64_encode($serverParams['PHP_AUTH_USER'] . ':' . $basicPass);
+        } elseif (isset($serverParams['PHP_AUTH_DIGEST'])) {
+            $auth = $serverParams['PHP_AUTH_DIGEST'];
         }
         return $auth;
     }
@@ -354,7 +389,6 @@ class ServerRequestLite
      */
     private function setHeaders($headers = array())
     {
-        // $this->headerNames = $this->headers = [];
         foreach ($headers as $name => $value) {
             if (\is_int($name)) {
                 // Numeric array keys are converted to int by PHP but having a header name '123' is not forbidden by the spec
@@ -363,12 +397,9 @@ class ServerRequestLite
             }
             self::assertHeader($name);
             $value = $this->normalizeHeaderValue($value);
-            // $normalized = \strtolower($header);
             if (isset($this->headers[$name])) {
-                // $header = $this->headerNames[$normalized];
                 $this->headers[$name] = \array_merge($this->headers[$name], $value);
             } else {
-                // $this->headerNames[$normalized] = $header;
                 $this->headers[$name] = $value;
             }
         }

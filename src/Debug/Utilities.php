@@ -414,7 +414,7 @@ class Utilities
     /**
      * Returns cli, cron, ajax, or http
      *
-     * @return string cli | cron | http | "http ajax"
+     * @return string cli | "cli cron" | http | "http ajax"
      */
     public static function getInterface()
     {
@@ -422,7 +422,7 @@ class Utilities
         /*
             note: $_SERVER['argv'] could be populated with query string if register_argc_argv = On
         */
-        $serverParams = Debug::getInstance()->request->getServerParams();
+        $serverParams = $_SERVER;
         $isCliOrCron = \count(\array_filter(array(
             \defined('STDIN'),
             isset($serverParams['argv']) && \count($serverParams['argv']) > 1,
@@ -432,7 +432,7 @@ class Utilities
             // TERM is a linux/unix thing
             $return = isset($serverParams['TERM']) || \array_key_exists('PATH', $serverParams)
                 ? 'cli'
-                : 'cron';
+                : 'cli cron';
         } elseif (isset($serverParams['HTTP_X_REQUESTED_WITH']) && $serverParams['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
             $return = 'http ajax';
         }
@@ -724,7 +724,7 @@ class Utilities
      */
     public static function requestId()
     {
-        $serverParams = Debug::getInstance()->request->getServerParams();
+        $serverParams = $_SERVER;
         return \hash(
             'crc32b',
             (isset($serverParams['REMOTE_ADDR']) ? $serverParams['REMOTE_ADDR'] : 'terminal')

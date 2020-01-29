@@ -742,16 +742,18 @@ class Internal implements SubscriberInterface
     private function onCfgLogResponse($val)
     {
         if ($val === 'auto') {
-            $server = \array_merge(array(
+            $serverParams = \array_merge(array(
                 'HTTP_ACCEPT' => null,
                 'HTTP_SOAPACTION' => null,
                 'HTTP_USER_AGENT' => null,
             ), $this->debug->request->getServerParams());
-            $val = \count(\array_filter(array(
-                \in_array($this->debug->utilities->getInterface(), array('ajax','http')),
-                $server['HTTP_SOAPACTION'],
-                \stripos($server['HTTP_USER_AGENT'], 'curl') !== false,
-            ))) > 0;
+            $val = \count(
+                \array_filter(array(
+                    \strpos($this->debug->utilities->getInterface(), 'http') !== false,
+                    $serverParams['HTTP_SOAPACTION'],
+                    \stripos($serverParams['HTTP_USER_AGENT'], 'curl') !== false,
+                ))
+            ) > 0;
         }
         if ($val) {
             if (!$this->cfg['logResponse']) {

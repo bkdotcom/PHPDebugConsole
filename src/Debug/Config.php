@@ -258,7 +258,7 @@ class Config
     private function getDefaultRoute()
     {
         $interface = $this->debug->utilities->getInterface();
-        if ($interface == 'ajax') {
+        if (\strpos($interface, 'ajax') !== false) {
             $ret = $this->values['routeNonHtml'];
         } elseif ($interface == 'http') {
             $ret = 'html';
@@ -423,7 +423,7 @@ class Config
      */
     private function setDebugValues($values)
     {
-        $isCli = \in_array($this->debug->utilities->getInterface(), array('cli', 'cron'));
+        $isCli = \strpos($this->debug->utilities->getInterface(), 'cli') !== false;
         if (isset($values['key']) && !$isCli) {
             $values = \array_merge($values, $this->setDebugKeyValues($values['key']));
         }

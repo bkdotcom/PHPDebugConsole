@@ -62,7 +62,7 @@ class Stream extends Base
      */
     public function init()
     {
-        $isCli = $this->debug->utilities->getInterface() == 'cli';
+        $isCli = \strpos($this->debug->utilities->getInterface(), 'cli') !== false;
         $this->cfg['output'] = $isCli
             ? $this->debug->getCfg('output')    // if cli, only output if explicitly true
             : true;                             //  otherwise push to stream
@@ -82,7 +82,7 @@ class Stream extends Base
     public function onConfig(Event $event)
     {
         $cfg = $event->getValues();
-        $isCli = $this->debug->utilities->getInterface() == 'cli';
+        $isCli = \strpos($this->debug->utilities->getInterface(), 'cli') !== false;
         if (isset($cfg['debug']['output']) && $isCli) {
             // if cli, abide by global output config
             $this->cfg['output'] = $cfg['debug']['output'];

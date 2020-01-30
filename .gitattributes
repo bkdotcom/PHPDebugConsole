@@ -2,12 +2,12 @@
 * text eol=lf
 
 /.editorconfig export-ignore
+/.eslintrc.json
 /.gitattributes export-ignore
 /.gitignore export-ignore
 /.travis.yml export-ignore
 /phpcs.xml.dist export-ignore
 /phpunit.xml.dist export-ignore
-/src/Debug/.eslintrc.json
 /src/Debug/js_src export-ignore
 /src/Debug/package-lock.json export-ignore
 /src/Debug/package.json export-ignore

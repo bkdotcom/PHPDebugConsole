@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v2.1.0
  */
 
@@ -149,9 +149,9 @@ class Utf8
             $curI = self::$curI;
             $isUtf8 = self::isOffsetUtf8($isSpecial, true);
             if ($isUtf8 && $isSpecial && $controlCharAs !== 'utf8special' && \ord($str[$curI]) < 0x80) {
-                if ($controlCharAs == 'other') {
+                if ($controlCharAs === 'other') {
                     $isUtf8 = false;
-                } elseif ($controlCharAs == 'utf8') {
+                } elseif ($controlCharAs === 'utf8') {
                     $isSpecial = false;
                 }
             }
@@ -306,11 +306,11 @@ class Utf8
         if ($str === '') {
             return '';
         }
-        if ($blockType == 'utf8' && self::$sanitizeNonBinary) {
+        if ($blockType === 'utf8' && self::$sanitizeNonBinary) {
             $str = \htmlspecialchars($str);
-        } elseif ($blockType == 'utf8special') {
+        } elseif ($blockType === 'utf8special') {
             $str = self::dumpBlockSpecial($str);
-        } elseif ($blockType == 'other') {
+        } elseif ($blockType === 'other') {
             $str = self::dumpBlockOther($str, $options);
         }
         return $str;
@@ -331,7 +331,7 @@ class Utf8
         while ($i < $length) {
             $ord = self::ordUtf8($str, $i, $char);
             $ordHex = \dechex($ord);
-            $ordHex = \str_pad($ordHex, 4, "0", STR_PAD_LEFT);
+            $ordHex = \str_pad($ordHex, 4, '0', STR_PAD_LEFT);
             if (self::$useHtml) {
                 $chars = \str_split($char);
                 $utf8Hex = \array_map('bin2hex', $chars);
@@ -371,9 +371,9 @@ class Utf8
                 $ord = \ord($char);
                 $hex = \bin2hex($char); // could use dechex($ord), but would require padding
                 if (self::$useHtml && isset(self::$charDesc[$ord])) {
-                    if ($ord < 0x20 || $ord == 0x7f) {
+                    if ($ord < 0x20 || $ord === 0x7f) {
                         // lets use the control pictures
-                        $chr = $ord == 0x7f
+                        $chr = $ord === 0x7f
                             ? "\xe2\x90\xa1"            // "del" char
                             : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
                         $chars[$i] = '<span class="c1-control" title="' . self::$charDesc[$ord] . ': \x' . $hex . '">' . $chr . '</span>';
@@ -402,7 +402,7 @@ class Utf8
      */
     private static function incStat($stat, $inc)
     {
-        if ($stat == 'utf8special') {
+        if ($stat === 'utf8special') {
             $stat = 'bytesSpecial';
         } else {
             $stat = 'bytes' . \ucfirst($stat);
@@ -429,21 +429,21 @@ class Utf8
         $byte3 = $i + 2 < self::$stats['strLen'] ? \ord(self::$str[$i + 2]) : null;
         $byte4 = $i + 3 < self::$stats['strLen'] ? \ord(self::$str[$i + 3]) : null;
         if ($byte1 < 0x80) {                 # 0bbbbbbb
-            if (($byte1 < 0x20 || $byte1 == 0x7f) && !\in_array($byte1, array(0x09,0x0a,0x0d))) {
+            if (($byte1 < 0x20 || $byte1 === 0x7f) && !\in_array($byte1, array(0x09,0x0a,0x0d))) {
                 $special = true;
             }
-            self::$curI += 1;    // advance to next byte
-        } elseif (($byte1 & 0xe0) == 0xc0) { # 110bbbbb 10bbbbbb
+            self::$curI++;    // advance to next byte
+        } elseif (($byte1 & 0xe0) === 0xc0) { # 110bbbbb 10bbbbbb
             if (
                 $i + 1 >= self::$stats['strLen']
                 || ($byte2 & 0xc0) !== 0x80
                 || ($byte1 & 0xfe) === 0xc0  // overlong
             ) {
-                self::$curI += 1;
+                self::$curI++;
                 return false;
             }
             self::$curI += 2;    // skip the next byte
-        } elseif (($byte1 & 0xf0) == 0xe0) { # 3-byte sequence 1110bbbb 10bbbbbb 10bbbbbb
+        } elseif (($byte1 & 0xf0) === 0xe0) { // 3-byte sequence 1110bbbb 10bbbbbb 10bbbbbb
             if (
                 $i + 2 >= self::$stats['strLen']
                 || ($byte2 & 0xc0) !== 0x80
@@ -453,28 +453,28 @@ class Utf8
                 || $byte1 === 0xed
                     && ($byte2 & 0xe0) === 0xa0  // UTF-16 surrogate (U+D800 - U+DFFF)
             ) {
-                self::$curI += 1;
+                self::$curI++;
                 return false;
             }
             self::$curI += 3;    // skip the next 2 bytes
-        } elseif (($byte1 & 0xf8) == 0xf0) { # 4-byte sequence: 11110bbb 10bbbbbb 10bbbbbb 10bbbbbb
+        } elseif (($byte1 & 0xf8) === 0xf0) { // 4-byte sequence: 11110bbb 10bbbbbb 10bbbbbb 10bbbbbb
             if (
                 $i + 3 >= self::$stats['strLen']
                 || ($byte2 & 0xc0) !== 0x80
                 || ($byte3 & 0xc0) !== 0x80
                 || ($byte4 & 0xc0) !== 0x80
                 || $byte1 === 0xf0
-                    && ($byte2 & 0xf0) === 0x80          // overlong
+                    && ($byte2 & 0xf0) === 0x80  // overlong
                 || $byte1 === 0xf4
                     && $byte2 > 0x8f
                     || $byte1 > 0xf4    // > U+10FFFF
             ) {
-                self::$curI += 1;
+                self::$curI++;
                 return false;
             }
             self::$curI += 4;    // skip the next 3 bytes
-        } else {                            # Does not match any model
-            self::$curI += 1;
+        } else {                            // Does not match any model
+            self::$curI++;
             return false;
         }
         if ($checkSpecial) {

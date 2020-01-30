@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -78,7 +78,6 @@ class ErrorHandler
         $this->setCfg($cfg);
         $this->register();
         $this->eventManager->subscribe('php.shutdown', array($this, 'onShutdown'), PHP_INT_MAX);
-        return;
     }
 
     /**
@@ -91,12 +90,12 @@ class ErrorHandler
      */
     public function get($key = null, $hash = null)
     {
-        if ($key == 'error') {
+        if ($key === 'error') {
             return isset($this->data['errors'][$hash])
                 ? $this->data['errors'][$hash]
                 : false;
         }
-        if ($key == 'lastError') {
+        if ($key === 'lastError') {
             return $this->getLastError();
         }
         if (isset($this->data[$key])) {
@@ -275,7 +274,6 @@ class ErrorHandler
                 }
             }
         }
-        return;
     }
 
     /**
@@ -292,7 +290,6 @@ class ErrorHandler
         $this->prevErrorHandler = \set_error_handler(array($this, 'handleError'));
         $this->prevExceptionHandler = \set_exception_handler(array($this, 'handleException'));
         $this->registered = true;   // used by this->onShutdown()
-        return;
     }
 
     /**
@@ -384,7 +381,6 @@ class ErrorHandler
             $caller = array();
         }
         $this->data['errorCaller'] = $caller;
-        return;
     }
 
     /**
@@ -404,7 +400,7 @@ class ErrorHandler
         */
         $errHandlerCur = \set_error_handler(array($this, 'handleError'));
         \restore_error_handler();
-        if ($errHandlerCur == array($this, 'handleError')) {
+        if ($errHandlerCur === array($this, 'handleError')) {
             // we are the current error handler
             \restore_error_handler();
         }
@@ -413,7 +409,7 @@ class ErrorHandler
         */
         $exHandlerCur = \set_exception_handler(array($this, 'handleException'));
         \restore_exception_handler();
-        if ($exHandlerCur == array($this, 'handleException')) {
+        if ($exHandlerCur === array($this, 'handleException')) {
             // we are the current exception handler
             \restore_exception_handler();
         }
@@ -421,7 +417,6 @@ class ErrorHandler
         $this->prevErrorHandler = null;
         $this->prevExceptionHandler = null;
         $this->registered = false;  // used by $this->onShutdown()
-        return;
     }
 
     /**

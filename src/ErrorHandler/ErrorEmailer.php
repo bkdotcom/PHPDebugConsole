@@ -49,7 +49,6 @@ class ErrorEmailer implements SubscriberInterface
             'emailTraceMask' => E_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
         );
         $this->setCfg($cfg);
-        return;
     }
 
     /**
@@ -106,7 +105,6 @@ class ErrorEmailer implements SubscriberInterface
             $stats = \array_intersect_key($this->throttleData['errors'][$hash], $error['stats']);
             $error['stats'] = \array_merge($error['stats'], $stats);
         }
-        return;
     }
 
     /**
@@ -272,7 +270,6 @@ class ErrorEmailer implements SubscriberInterface
                 : 'no backtrace');
         }
         $this->email($this->cfg['emailTo'], $subject, $emailBody);
-        return;
     }
 
     /**
@@ -332,7 +329,7 @@ class ErrorEmailer implements SubscriberInterface
                 continue;
             }
             // it's been a while since this error was emailed
-            if ($err['emailedTo'] != $this->cfg['emailTo']) {
+            if ($err['emailedTo'] !== $this->cfg['emailTo']) {
                 // it was emailed to a different address
                 if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60 * 60 * 24) {
                     unset($this->throttleData['errors'][$k]);
@@ -378,7 +375,6 @@ class ErrorEmailer implements SubscriberInterface
             'tsGarbageCollection' => \time(),
             'errors' => array(),
         ), $throttleData);
-        return;
     }
 
     /**

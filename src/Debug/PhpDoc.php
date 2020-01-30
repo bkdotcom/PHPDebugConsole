@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v2.3
  */
 
@@ -275,7 +275,7 @@ class PhpDoc
         $docComment = \preg_replace('#^[ \t]*\*[ ]?#m', '', $docComment);
         $docComment = \trim($docComment);
         if ($reflector) {
-            if (\strtolower($docComment) == '{@inheritdoc}') {
+            if (\strtolower($docComment) === '{@inheritdoc}') {
                 return self::findInheritedDoc($reflector);
             } else {
                 $docComment = \preg_replace_callback(
@@ -473,7 +473,7 @@ class PhpDoc
         $types = \preg_split('/\s*\|\s*/', $type);
         foreach ($types as &$type) {
             $isArray = false;
-            if (\substr($type, -2) == '[]') {
+            if (\substr($type, -2) === '[]') {
                 $isArray = true;
                 $type = \substr($type, 0, -2);
             }

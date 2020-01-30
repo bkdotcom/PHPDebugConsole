@@ -347,7 +347,7 @@ class OnBootstrap
         foreach ($logServerKeys as $k) {
             if (!\array_key_exists($k, $serverParams)) {
                 $vals[$k] = Abstracter::UNDEFINED;
-            } elseif ($k == 'REQUEST_TIME') {
+            } elseif ($k === 'REQUEST_TIME') {
                 $vals[$k] = \date('Y-m-d H:i:s T', $serverParams['REQUEST_TIME']);
             } else {
                 $vals[$k] = $serverParams[$k];

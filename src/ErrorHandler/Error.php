@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -173,7 +173,7 @@ class Error extends Event
      */
     public function &offsetGet($key)
     {
-        if ($key == 'backtrace') {
+        if ($key === 'backtrace') {
             $trace = $this->getTrace();
             return $trace;
         }

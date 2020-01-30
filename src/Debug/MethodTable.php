@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -49,7 +49,7 @@ class MethodTable
             $curKeys = self::keys($row);
             if (empty($lastKeys)) {
                 $lastKeys = $curKeys;
-            } elseif ($curKeys != $lastKeys) {
+            } elseif ($curKeys !== $lastKeys) {
                 $newKeys = array();
                 $count = \count($curKeys);
                 for ($i = 0; $i < $count; $i++) {
@@ -57,7 +57,10 @@ class MethodTable
                     if ($lastKeys && $curKey === $lastKeys[0]) {
                         \array_push($newKeys, $curKey);
                         \array_shift($lastKeys);
-                    } elseif (($position = \array_search($curKey, $lastKeys, true)) !== false) {
+                        continue;
+                    }
+                    $position = \array_search($curKey, $lastKeys, true);
+                    if ($position !== false) {
                         $segment = \array_splice($lastKeys, 0, $position + 1);
                         \array_splice($newKeys, \count($newKeys), 0, $segment);
                     } elseif (!\in_array($curKey, $newKeys, true)) {
@@ -94,7 +97,7 @@ class MethodTable
             'cols' => array(),
         );
         if (Abstracter::isAbstraction($row)) {
-            if ($row['type'] == 'object') {
+            if ($row['type'] === 'object') {
                 $objInfo['row'] = array(
                     'className' => $row['className'],
                     'phpDoc' => $row['phpDoc'],
@@ -195,7 +198,7 @@ class MethodTable
     {
         if (Abstracter::isAbstraction($val)) {
             // abstraction
-            if ($val['type'] == 'object') {
+            if ($val['type'] === 'object') {
                 if ($val['traverseValues']) {
                     // probably Traversable
                     $val = $val['traverseValues'];

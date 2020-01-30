@@ -175,7 +175,7 @@ class Internal implements SubscriberInterface
                     $minDepth--;
                     $entries[$i] = $logEntries[$i];
                 }
-            } elseif ($method == 'groupEnd') {
+            } elseif ($method === 'groupEnd') {
                 $curDepth++;
             }
         }
@@ -248,29 +248,28 @@ class Internal implements SubscriberInterface
                 ),
                 'debug.config' => array('onConfig', PHP_INT_MAX),
             );
-        } else {
-            /*
-                OnShutDownHigh subscribes to 'debug.log' (onDebugLogShutdown)
-                  so... if any log entry is added in php's shutdown phase, we'll have a
-                  "php.shutdown" log entry
-            */
-            return array(
-                'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
-                'debug.config' => array('onConfig', PHP_INT_MAX),
-                'debug.dumpCustom' => 'onDumpCustom',
-                'debug.log' => array('onLog', PHP_INT_MAX),
-                'debug.output' => array(
-                    array('onOutput', 1),
-                    array('onOutputHeaders', -1),
-                ),
-                'debug.prettify' => array('onPrettify', -1),
-                'errorHandler.error' => 'onError',
-                'php.shutdown' => array(
-                    array('onShutdownHigh', PHP_INT_MAX),
-                    array('onShutdownLow', PHP_INT_MAX * -1)
-                ),
-            );
         }
+        /*
+            OnShutDownHigh subscribes to 'debug.log' (onDebugLogShutdown)
+              so... if any log entry is added in php's shutdown phase, we'll have a
+              "php.shutdown" log entry
+        */
+        return array(
+            'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
+            'debug.config' => array('onConfig', PHP_INT_MAX),
+            'debug.dumpCustom' => 'onDumpCustom',
+            'debug.log' => array('onLog', PHP_INT_MAX),
+            'debug.output' => array(
+                array('onOutput', 1),
+                array('onOutputHeaders', -1),
+            ),
+            'debug.prettify' => array('onPrettify', -1),
+            'errorHandler.error' => 'onError',
+            'php.shutdown' => array(
+                array('onShutdownHigh', PHP_INT_MAX),
+                array('onShutdownLow', PHP_INT_MAX * -1)
+            ),
+        );
     }
 
     /**
@@ -501,7 +500,8 @@ class Internal implements SubscriberInterface
     {
         if (\preg_match('#\b(html|json|xml)\b#', $event['contentType'], $matches)) {
             $string = $event['value'];
-            $lang = $type = $matches[1];
+            $type = $matches[1];
+            $lang = $type;
             if ($type === 'html') {
                 $lang = 'markup';
             } elseif ($type === 'json') {
@@ -556,7 +556,6 @@ class Internal implements SubscriberInterface
         if (!$this->debug->getData('outputSent')) {
             echo $this->debug->output();
         }
-        return;
     }
 
     /**
@@ -603,7 +602,7 @@ class Internal implements SubscriberInterface
             return $this->redactString($val, $key);
         }
         if ($val instanceof Abstraction) {
-            if ($val['type'] == 'object') {
+            if ($val['type'] === 'object') {
                 $props = $val['properties'];
                 foreach ($props as $name => $prop) {
                     $props[$name]['value'] = $this->redact($prop['value'], $name);
@@ -903,7 +902,7 @@ class Internal implements SubscriberInterface
         }
         $vals = $this->runtimeVals();
         $route = $this->debug->getCfg('route');
-        $isRouteHtml = $route && \get_class($route) == 'bdk\\Debug\\Route\\Html';
+        $isRouteHtml = $route && \get_class($route) === 'bdk\\Debug\\Route\\Html';
         $this->debug->groupSummary(1);
         $this->debug->info('Built In ' . $this->debug->utilities->formatDuration($vals['runtime']));
         $this->debug->info(
@@ -996,7 +995,7 @@ class Internal implements SubscriberInterface
                 );
                 $groupStackCount++;
             } elseif ($groupStackCount) {
-                if ($method == 'groupEnd') {
+                if ($method === 'groupEnd') {
                     $groupStackCount--;
                     $group = $groupStack[$groupStackCount];
                     if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
@@ -1120,7 +1119,7 @@ class Internal implements SubscriberInterface
             $method = $log[$i]['method'];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $groupStack[] = $i;
-            } elseif ($method == 'groupEnd') {
+            } elseif ($method === 'groupEnd') {
                 \array_pop($groupStack);
             } elseif (\in_array($method, array('error', 'warn'))) {
                 foreach ($groupStack as $i2) {

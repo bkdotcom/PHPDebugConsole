@@ -16,7 +16,7 @@ use bdk\Debug;
 use Psr\Http\Message\StreamInterface;
 use DOMDocument;
 use Exception;
-use SqlFormatter;       // optional library
+use SqlFormatter;
 
 /**
  * Utility methods
@@ -166,12 +166,12 @@ class Utilities
                 return null;
             } elseif (isset($array[$key])) {
                 $array = $array[$key];
-            } elseif ($key == '__count__') {
+            } elseif ($key === '__count__') {
                 return \count($array);
-            } elseif ($key == '__end__') {
+            } elseif ($key === '__end__') {
                 \end($array);
                 $path[] = \key($array);
-            } elseif ($key == '__reset__') {
+            } elseif ($key === '__reset__') {
                 \reset($array);
                 $path[] = \key($array);
             } else {
@@ -261,19 +261,7 @@ class Utilities
      */
     public static function formatDuration($duration, $format = 'auto', $precision = 4)
     {
-        if ($format == 'auto') {
-            if ($duration < 1 / 1000) {
-                $format = 'us';
-            } elseif ($duration < 1) {
-                $format = 'ms';
-            } elseif ($duration < 60) {
-                $format = 's';
-            } elseif ($duration < 3600) {
-                $format = '%im %Ss'; // M:SS
-            } else {
-                $format = '%hh %Im %Ss'; // H:MM:SS
-            }
-        }
+        $format = self::formatDurationGetFormat($duration, $format);
         if (\preg_match('/%[YyMmDdaHhIiSsFf]/', $format)) {
             // php < 7.1 DateInterval doesn't support fraction..   we'll work around that
             $hours = \floor($duration / 3600);
@@ -298,10 +286,10 @@ class Utilities
             $dateInterval->sec = $sec;
             return $dateInterval->format($format);
         }
-        if ($format == 'us') {
+        if ($format === 'us') {
             $val = $duration * 1000000;
             $unit = 'μs';
-        } elseif ($format == 'ms') {
+        } elseif ($format === 'ms') {
             $val = $duration * 1000;
             $unit = 'ms';
         } else {
@@ -349,7 +337,7 @@ class Utilities
         $units = array('B','kB','MB','GB','TB','PB');
         $i = \floor(\log((float) $size, 1024));
         $pow = \pow(1024, $i);
-        $size = $pow == 0
+        $size = $pow === 0
             ? '0 B'
             : \round($size / $pow, 2) . ' ' . $units[$i];
         return $size;
@@ -404,7 +392,7 @@ class Utilities
         \usort($includedFiles, function ($valA, $valB) {
             $dirA = \dirname($valA);
             $dirB = \dirname($valB);
-            return $dirA == $dirB
+            return $dirA === $dirB
                 ? \strnatcasecmp($valA, $valB)
                 : \strnatcasecmp($dirA, $dirB);
         });
@@ -433,7 +421,7 @@ class Utilities
             $return = isset($serverParams['TERM']) || \array_key_exists('PATH', $serverParams)
                 ? 'cli'
                 : 'cli cron';
-        } elseif (isset($serverParams['HTTP_X_REQUESTED_WITH']) && $serverParams['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+        } elseif (isset($serverParams['HTTP_X_REQUESTED_WITH']) && $serverParams['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
             $return = 'http ajax';
         }
         return $return;
@@ -746,14 +734,14 @@ class Utilities
      */
     private static function buildAttribArrayVal($key, $value = array())
     {
-        if ($key == 'class') {
+        if ($key === 'class') {
             if (!\is_array($value)) {
                 $value = \explode(' ', $value);
             }
             $value = \array_filter(\array_unique($value));
             \sort($value);
             $value = \implode(' ', $value);
-        } elseif ($key == 'style') {
+        } elseif ($key === 'style') {
             $keyValues = array();
             foreach ($value as $k => $v) {
                 $keyValues[] = $k . ':' . $v . ';';
@@ -776,11 +764,11 @@ class Utilities
      */
     private static function buildAttribBoolVal($key, $value = true)
     {
-        if ($key == 'autocomplete') {
+        if ($key === 'autocomplete') {
             $value = $value ? 'on' : 'off';
-        } elseif ($key == 'spellcheck') {
+        } elseif ($key === 'spellcheck') {
             $value = $value ? 'true' : 'false';
-        } elseif ($key == 'translate') {
+        } elseif ($key === 'translate') {
             $value = $value ? 'yes' : 'no';
         } elseif ($value) {
             // even if not a recognized boolean attribute
@@ -789,6 +777,34 @@ class Utilities
             $value = null;
         }
         return $value;
+    }
+
+    /**
+     * Get Duration format
+     *
+     * @param float  $duration duration in seconds
+     * @param string $format   "auto", "us", "ms", "s", or DateInterval format string
+     *
+     * @return string
+     */
+    private static function formatDurationGetFormat($duration, $format)
+    {
+        if ($format !== 'auto') {
+            return $format;
+        }
+        if ($duration < 1 / 1000) {
+            return 'us';
+        }
+        if ($duration < 1) {
+            return 'ms';
+        }
+        if ($duration < 60) {
+            return 's';
+        }
+        if ($duration < 3600) {
+            return '%im %Ss'; // M:SS
+        }
+        return '%hh %Im %Ss'; // H:MM:SS
     }
 
     /**

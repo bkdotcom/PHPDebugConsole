@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -44,7 +44,7 @@ abstract class Component
      */
     public function getCfg($key = null)
     {
-        if ($key === null || \strlen($key) == 0) {
+        if ($key === null || \strlen($key) === 0) {
             return $this->cfg;
         }
         return isset($this->cfg[$key])
@@ -90,6 +90,7 @@ abstract class Component
      */
     protected function postSetCfg($cfg = array())
     {
-        return;
+        // avoid phpcs unused param found
+        array($cfg);
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @package   Backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2020 Brad Kent
@@ -147,7 +148,7 @@ class Backtrace
             }
             if (
                 \in_array($frame['function'], array('call_user_func', 'call_user_func_array'))
-                || $class == 'ReflectionMethod'
+                || $class === 'ReflectionMethod'
                     && \in_array($frame['function'], array('invoke','invokeArgs'))
             ) {
                 continue;
@@ -229,25 +230,9 @@ class Backtrace
         $numFrames = \count($backtrace);
         $iLine = 0;
         $iFunc = 1;
-        /*
-        if (isset($backtrace[$iFunc])) {
-            // skip over call_user_func / call_user_func_array / invoke
-            $class = isset($backtrace[$iFunc]['class'])
-                ? $backtrace[$iFunc]['class']
-                : null;
-            if (
-                \in_array($backtrace[$iFunc]['function'], array('call_user_func', 'call_user_func_array'))
-                || $class == 'ReflectionMethod'
-                    && $backtrace[$iFunc]['function'] == 'invoke'
-            ) {
-                $iLine++;
-                $iFunc++;
-            }
-        }
-        */
         if (isset($backtrace[$iFunc])) {
             $return = \array_merge($return, $backtrace[$iFunc]);
-            if ($return['type'] == '->') {
+            if ($return['type'] === '->') {
                 // class that debug_backtrace returns is the class the function is defined in vs the class that was called
                 $return['class'] = \get_class($backtrace[$iFunc]['object']);
             }
@@ -317,7 +302,7 @@ class Backtrace
                 continue;
             }
             if (
-                $frame['class'] == 'ReflectionMethod'
+                $frame['class'] === 'ReflectionMethod'
                     && \in_array($frame['function'], array('invoke','invokeArgs'))
             ) {
                 continue;

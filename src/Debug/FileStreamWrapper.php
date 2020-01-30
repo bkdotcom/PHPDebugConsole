@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v2.3
  */
 
@@ -405,7 +405,8 @@ class FileStreamWrapper
         if (!isset($meta['uri'])) {
             throw new \UnexpectedValueException('Uri not in meta data');
         }
-        $this->filepath = $openedPath = $meta['uri'];
+        $openedPath = $meta['uri'];
+        $this->filepath = $openedPath;
         $this->handle = $handle;
         return true;
     }

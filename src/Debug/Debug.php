@@ -257,7 +257,7 @@ class Debug
     {
         $methodName = \ltrim($methodName, '_');
         if (!self::$instance) {
-            if ($methodName == 'setCfg') {
+            if ($methodName === 'setCfg') {
                 /*
                     Treat as a special case
                     Want to initialize with the passed config vs initialize, then setCfg
@@ -482,7 +482,7 @@ class Debug
         // label may be ommitted and only flags passed as a single argument
         //   (excluding potential meta argument)
         $args = $logEntry['args'];
-        if (\count($args) == 1 && \is_int($args[0])) {
+        if (\count($args) === 1 && \is_int($args[0])) {
             $label = null;
             $flags = $args[0];
         } else {
@@ -543,7 +543,7 @@ class Debug
         // label may be ommitted and only flags passed as a single argument
         //   (excluding potential meta argument)
         $args = $logEntry['args'];
-        if (\count($args) == 1 && \is_int($args[0])) {
+        if (\count($args) === 1 && \is_int($args[0])) {
             $label = 'default';
             $flags = $args[0];
         } else {
@@ -654,7 +654,7 @@ class Debug
         $logEntry['args'] = array();
         $groupStackWas = $this->rootInstance->groupStackRef;
         $haveOpenGroup = false;
-        if ($groupStackWas && \end($groupStackWas)['collect'] == $this->cfg['collect']) {
+        if ($groupStackWas && \end($groupStackWas)['collect'] === $this->cfg['collect']) {
             \array_pop($this->rootInstance->groupStackRef);
             $haveOpenGroup = $this->cfg['collect'];
         }
@@ -1045,11 +1045,11 @@ class Debug
         $args = $logEntry['args'];
         $label = $args[0];
         $log = $args[1];
-        if ($numArgs == 1 && \is_bool($label)) {
+        if ($numArgs === 1 && \is_bool($label)) {
             // log passed as single arg
             $logEntry->setMeta('silent', !$label);
             $label = null;
-        } elseif ($numArgs == 2) {
+        } elseif ($numArgs === 2) {
             $logEntry->setMeta('silent', !$log);
         }
         // get non-rounded running time (in seconds)
@@ -1108,11 +1108,11 @@ class Debug
         $args = $logEntry['args'];
         $label = $args[0];
         $log = $args[1];
-        if ($numArgs == 1 && \is_bool($label)) {
+        if ($numArgs === 1 && \is_bool($label)) {
             // log passed as single arg
             $logEntry->setMeta('silent', !$label);
             $label = null;
-        } elseif ($numArgs == 2) {
+        } elseif ($numArgs === 2) {
             $logEntry->setMeta('silent', !$log);
         }
         $microT = 0;
@@ -2036,15 +2036,15 @@ class Debug
      */
     private function setLogDest($where = 'auto')
     {
-        if ($where == 'auto') {
+        if ($where === 'auto') {
             $where = $this->data['groupPriorityStack']
                 ? 'summary'
                 : 'log';
         }
-        if ($where == 'log') {
+        if ($where === 'log') {
             $this->rootInstance->logRef = &$this->rootInstance->data['log'];
             $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks']['main'];
-        } elseif ($where == 'alerts') {
+        } elseif ($where === 'alerts') {
             $this->rootInstance->logRef = &$this->rootInstance->data['alerts'];
         } else {
             $priority = \is_int($where)

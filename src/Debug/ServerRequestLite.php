@@ -345,6 +345,8 @@ class ServerRequestLite
     /**
      * Build Authorization header from $_SERVER values
      *
+     * @param array $serverParams $_SERVER vals
+     *
      * @return null|string
      */
     private static function getAuthorizationHeader($serverParams)

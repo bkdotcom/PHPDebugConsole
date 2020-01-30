@@ -56,8 +56,8 @@ class Config
             return $this->getValues('*');
         }
         $classname = \array_shift($path);
-        if ($classname == 'debug') {
-            if ($path === array('route') && $this->values['route'] == 'auto') {
+        if ($classname === 'debug') {
+            if ($path === array('route') && $this->values['route'] === 'auto') {
                 return $this->getDefaultRoute();
             }
             return $this->debug->utilities->arrayPathGet($this->values, $path);
@@ -175,7 +175,7 @@ class Config
             $cfg = $event->getValues();
         }
         foreach ($cfg as $classname => $v) {
-            if ($classname == 'debug') {
+            if ($classname === 'debug') {
                 $return[$classname] = \array_intersect_key($this->values, $v);
                 $this->setDebugValues($v);
             } elseif (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
@@ -260,7 +260,7 @@ class Config
         $interface = $this->debug->utilities->getInterface();
         if (\strpos($interface, 'ajax') !== false) {
             $ret = $this->values['routeNonHtml'];
-        } elseif ($interface == 'http') {
+        } elseif ($interface === 'http') {
             $ret = 'html';
             $contentType = $this->debug->getResponseHeader('Content-Type', ',');
             if ($contentType && \strpos($contentType, 'text/html') === false) {
@@ -320,7 +320,7 @@ class Config
         foreach ($cfg as $k => $v) {
             $translated = false;
             foreach ($configKeys as $objName => $objKeys) {
-                if ($k == $objName && \is_array($v)) {
+                if ($k === $objName && \is_array($v)) {
                     $return[$objName] = isset($return[$objName])
                         ? \array_merge($return[$objName], $v)
                         : $v;
@@ -359,7 +359,7 @@ class Config
     private function normalizePath($path)
     {
         $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
-        if (\count($path) == 0 || $path[0] == '*') {
+        if (\count($path) === 0 || $path[0] === '*') {
             return '';
         }
         $configKeys = $this->getConfigKeys();
@@ -370,7 +370,7 @@ class Config
                 \array_unshift($path, $objName);
                 break;
             }
-            if ($path[0] == $objName && !empty($path[1])) {
+            if ($path[0] === $objName && !empty($path[1])) {
                 $found = true;
                 break;
             }
@@ -379,7 +379,7 @@ class Config
             // we didn't find our key... assume debug
             \array_unshift($path, 'debug');
         }
-        if (\end($path) == '*') {
+        if (\end($path) === '*') {
             \array_pop($path);
         }
         return \implode('/', $path);
@@ -405,7 +405,7 @@ class Config
         } elseif (isset($cookieParams['debug'])) {
             $requestKey = $cookieParams['debug'];
         }
-        $isValidKey = $requestKey == $key;
+        $isValidKey = $requestKey === $key;
         if ($isValidKey) {
             // only enable collect / don't disable it
             $values['collect'] = true;

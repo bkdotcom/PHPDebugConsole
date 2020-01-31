@@ -100,7 +100,6 @@ class AbstractObjectProperties extends AbstractObjectSub
             }
         }
         $abs['properties'] = $properties;
-        return;
     }
 
     /**
@@ -323,7 +322,6 @@ class AbstractObjectProperties extends AbstractObjectSub
             unset($abs['phpDoc'][$tag]);
         }
         $abs['properties'] = $properties;
-        return;
     }
 
     /**

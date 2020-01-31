@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -77,7 +78,7 @@ class CallInfo
      */
     public function __get($name)
     {
-        $getter = 'get'.\ucfirst($name);
+        $getter = 'get' . \ucfirst($name);
         if (\method_exists($this, $getter)) {
             return $this->$getter();
         } elseif (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {

@@ -1,11 +1,12 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -83,7 +84,7 @@ class Template extends Twig_Template implements Twig_TemplateInterface
      */
     public function getBlockNames(array $context = null, array $blocks = array())
     {
-        return $this->template->getBlockNames();
+        return $this->template->getBlockNames($context, $blocks);
     }
 
     /**

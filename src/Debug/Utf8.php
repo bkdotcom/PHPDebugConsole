@@ -140,47 +140,19 @@ class Utf8
         self::$useHtml = $useHtml;
         self::$sanitizeNonBinary = $sanitizeNonBinary;
         self::setStr($str);
-        $controlCharAs = 'other'; // how should we treat ascii control chars?
         $curBlockType = 'utf8'; // utf8, utf8special, other
-        $newBlockType = null;
         $curBlockStart = 0; // string offset
         $strNew = '';
         while (self::$curI < self::$stats['strLen']) {
             $curI = self::$curI;
-            $isUtf8 = self::isOffsetUtf8($isSpecial, true);
-            if ($isUtf8 && $isSpecial && $controlCharAs !== 'utf8special' && \ord($str[$curI]) < 0x80) {
-                if ($controlCharAs === 'other') {
-                    $isUtf8 = false;
-                } elseif ($controlCharAs === 'utf8') {
-                    $isSpecial = false;
-                }
-            }
-            if ($isUtf8) {
-                if ($isSpecial) {
-                    // control-char or special
-                    if ($curBlockType !== 'utf8special') {
-                        $newBlockType = 'utf8special';
-                    }
-                } else {
-                    // plain-ol-utf8
-                    if ($curBlockType !== 'utf8') {
-                        $newBlockType = 'utf8';
-                    }
-                }
-            } else {
-                // not a valid utf-8 character
-                if ($curBlockType !== 'other') {
-                    $newBlockType = 'other';
-                }
-            }
-            if ($newBlockType) {
+            $charType = self::getCharType($str[$curI]);
+            if ($charType !== $curBlockType) {
                 $len = $curI - $curBlockStart;
                 self::incStat($curBlockType, $len);
                 $subStr = \substr(self::$str, $curBlockStart, $len);
                 $strNew .= self::dumpBlock($subStr, $curBlockType);
                 $curBlockStart = $curI;
-                $curBlockType = $newBlockType;
-                $newBlockType = null;
+                $curBlockType = $charType;
             }
         }
         $len = self::$stats['strLen'] - $curBlockStart;
@@ -390,6 +362,33 @@ class Utf8
             $str = '<span class="binary">' . $str . '</span>';
         }
         return $str;
+    }
+
+    /**
+     * get charater "category"
+     *
+     * @param string $char single byte
+     *
+     * @return string "utf8", "utf8special", or "other"
+     */
+    private static function getCharType($char)
+    {
+        $controlCharAs = 'other'; // how should we treat ascii control chars?
+        $isUtf8 = self::isOffsetUtf8($isSpecial, true);
+        if ($isUtf8 && $isSpecial && $controlCharAs !== 'utf8special' && \ord($char) < 0x80) {
+            if ($controlCharAs === 'other') {
+                $isUtf8 = false;
+            } elseif ($controlCharAs === 'utf8') {
+                $isSpecial = false;
+            }
+        }
+        $charType = 'other';
+        if ($isUtf8) {
+            $charType = $isSpecial
+                ? 'utf8special'
+                : 'utf8';
+        }
+        return $charType;
     }
 
     /**

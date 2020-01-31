@@ -5,7 +5,6 @@
  */
 
 import $ from 'jquery' // external global
-import ClipboardJS from 'clipboardjs' // external global
 import * as enhanceEntries from './enhanceEntries.js'
 import * as enhanceMain from './enhanceMain.js'
 import * as expandCollapse from './expandCollapse.js'
@@ -215,7 +214,7 @@ function initClipboardJs () {
   /*
     Copy strings/floats/ints to clipboard when clicking
   */
-  return new ClipboardJS('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
+  return new window.ClipboardJS('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
     target: function (trigger) {
       var range
       if ($(trigger).is('a')) {

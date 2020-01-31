@@ -187,7 +187,7 @@ function createFileLinks ($entry, $strings, remove) {
         $tr.find('.file-link').replaceWith($a)
       } else {
         if ($tr.hasClass('context')) {
-          $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan')) + 1)
+          $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1)
         } else {
           $tds.last().after($('<td/>', {
             class: 'text-center',

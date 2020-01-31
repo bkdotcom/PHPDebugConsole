@@ -39,7 +39,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     protected $ignoredErrors = array();
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getSubscriptions()
     {
@@ -312,6 +312,8 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     /**
      * Setup up PDO collector
      * Log to PDO channel
+     *
+     * @param CDbConnection $db CDbConnection instance
      *
      * @return void
      */

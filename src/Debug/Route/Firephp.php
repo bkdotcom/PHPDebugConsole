@@ -83,7 +83,6 @@ class Firephp extends Base
         ));
         $event['headers'][] = array('X-Wf-1-Index', $this->messageIndex);
         $this->data = array();
-        return;
     }
 
     /**
@@ -240,7 +239,7 @@ class Firephp extends Base
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return array
+     * @return void
      */
     private function setFirephpMeta(LogEntry $logEntry)
     {
@@ -259,6 +258,6 @@ class Firephp extends Base
             $firephpMeta['File'] = $meta['file'];
             $firephpMeta['Line'] = $meta['line'];
         }
-        return $logEntry['firephpMeta'] = $firephpMeta;
+        $logEntry['firephpMeta'] = $firephpMeta;
     }
 }

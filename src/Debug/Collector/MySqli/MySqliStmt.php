@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of PHPDebugConsole
  *
@@ -45,6 +46,11 @@ class MySqliStmt extends mysqliStmtBase
      * {@inheritDoc}
      *
      * Requires php >= 5.6 (variadic syntax)
+     *
+     * @param string $types   A string that contains one or more characters which specify the types for the corresponding bind variables
+     * @param mixed  ...$vals The number of variables and length of string types must match the parameters in the statement
+     *
+     * @return boolean
      */
     public function bind_param($types, &...$vals)
     {

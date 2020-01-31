@@ -1,8 +1,7 @@
-(function ($, ClipboardJS) {
+(function ($) {
   'use strict';
 
   $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
-  ClipboardJS = ClipboardJS && ClipboardJS.hasOwnProperty('default') ? ClipboardJS['default'] : ClipboardJS;
 
   var config;
 
@@ -454,7 +453,7 @@
           $tr.find('.file-link').replaceWith($a);
         } else {
           if ($tr.hasClass('context')) {
-            $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan')) + 1);
+            $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1);
           } else {
             $tds.last().after($('<td/>', {
               class: 'text-center',
@@ -2087,7 +2086,7 @@
     /*
       Copy strings/floats/ints to clipboard when clicking
     */
-    return new ClipboardJS('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
+    return new window.ClipboardJS('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
       target: function (trigger) {
         var range;
         if ($(trigger).is('a')) {
@@ -2122,4 +2121,4 @@
     $('.debug-noti').html(html).addClass('animate').closest('.debug-noti-wrap').show();
   }
 
-}(window.jQuery, window.ClipboardJS));
+}(window.jQuery));

@@ -239,7 +239,7 @@ class MySqli extends mysqliBase
      */
     public function query($query, $resultmode = MYSQLI_STORE_RESULT)
     {
-        return $this->profileCall('query', $query, \func_get_args());
+        return $this->profileCall('query', $query, array($query, $resultmode));
     }
 
     /**

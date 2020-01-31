@@ -88,7 +88,8 @@ class HtmlTable
             }
         }
         $keys = $options['columns'] ?: $this->debug->methodTable->colKeys($rows);
-        $keyIndex = $index = \array_search('__key', $keys);
+        $index = \array_search('__key', $keys);
+        $keyIndex = $index;
         if ($keyIndex !== false) {
             unset($keys[$index]);
         }

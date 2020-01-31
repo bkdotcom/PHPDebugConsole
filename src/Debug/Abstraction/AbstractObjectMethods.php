@@ -63,7 +63,6 @@ class AbstractObjectMethods extends AbstractObjectSub
                 'Countable' => array('count'),
                 'Iterator' => array('current','key','next','rewind','void'),
                 'IteratorAggregate' => array('getIterator'),
-                // 'Throwable' => array('getMessage','getCode','getFile','getLine','getTrace','getTraceAsString','getPrevious','__toString'),
             );
             $interfacesHide = \array_intersect($abs['implements'], \array_keys($interfaceMethods));
             foreach ($methods as $reflectionMethod) {
@@ -103,7 +102,6 @@ class AbstractObjectMethods extends AbstractObjectSub
             }
             $abs['methods']['__toString']['returnValue'] = $val;
         }
-        return;
     }
 
     /**
@@ -136,7 +134,6 @@ class AbstractObjectMethods extends AbstractObjectSub
         if (\method_exists($obj, '__set')) {
             $abs['methods']['__set'] = array('visibility' => 'public');
         }
-        return;
     }
 
     /**
@@ -199,7 +196,6 @@ class AbstractObjectMethods extends AbstractObjectSub
                 'visibility' => 'magic',
             );
         }
-        return;
     }
 
     /**

@@ -19,7 +19,6 @@ use Slim\Log;
  * A Slim v2 log writer
  *
  * `$app->log->setWriter(new \bdk\Debug\Framework\Slim2($debug));`
- *
  */
 class Slim2
 {

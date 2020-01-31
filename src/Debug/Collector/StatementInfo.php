@@ -248,12 +248,13 @@ class StatementInfo
             $quoteLeft = \substr($quotationChars, 0, $len);
             $quoteRight = \substr($quotationChars, $len);
         } else {
-            $quoteLeft = $quoteRight = $quotationChars;
+            $quoteRight = $quotationChars;
+            $quoteLeft = $quoteRight;
         }
 
         $sql = $this->sql;
         foreach ($this->params as $k => $v) {
-            $v = "$quoteLeft$v$quoteRight";
+            $v = $quoteLeft . $v . $quoteRight;
             if (!\is_numeric($k)) {
                 $sql = \preg_replace('/' . $k . '\b/', $v, $sql);
             } else {

@@ -7,16 +7,27 @@
         <exclude name="PSR12.Properties.ConstantVisibility.NotFound" />
     </rule>
 
+    <rule ref="./sniffs/">
+        <exclude name="bdk.Commenting.FunctionComment.EmptyThrows" />
+        <exclude name="bdk.Commenting.FunctionComment.ParamCommentFullStop" />
+        <exclude name="bdk.Commenting.FunctionComment.ParamCommentNotCapital" />
+        <exclude name="bdk.Commenting.FunctionComment.ScalarTypeHintMissing" />
+        <exclude name="bdk.Commenting.FunctionComment.ThrowsNoFullStop" />
+        <exclude name="bdk.Commenting.FunctionComment.ThrowsNotCapital" />
+        <exclude name="bdk.Commenting.FunctionComment.TypeHintMissing" />
+    </rule>
+
     <rule ref="Generic">
         <exclude name="Generic.Arrays.ArrayIndent.CloseBraceNotNewLine" />
         <exclude name="Generic.Arrays.DisallowLongArraySyntax.Found" /> <!-- short array syntax = php 5.4 -->
         <exclude name="Generic.Arrays.DisallowShortArraySyntax.Found" />
         <exclude name="Generic.Classes.OpeningBraceSameLine.BraceOnNewLine" />
+        <exclude name="Generic.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition" />
         <exclude name="Generic.CodeAnalysis.EmptyStatement.DetectedCATCH" />
         <exclude name="Generic.Commenting.DocComment.LongNotCapital" />
         <exclude name="Generic.Commenting.DocComment.MissingShort" />
         <exclude name="Generic.Commenting.DocComment.ShortNotCapital" />
-        <exclude name="Generic.Files.EndFileNewline.NotFound" /> <!-- handled by PSR2.Files -->
+        <exclude name="Generic.Files.EndFileNewline.NotFound" /> <!-- handled by PSR-12 -->
         <exclude name="Generic.Files.EndFileNoNewline.Found" />
         <exclude name="Generic.Files.InlineHTML.Found" />
         <exclude name="Generic.Files.LineLength.TooLong" />
@@ -26,6 +37,7 @@
         <exclude name="Generic.Formatting.SpaceAfterNot.Incorrect" />
         <exclude name="Generic.Formatting.SpaceBeforeCast.NoSpace" />
         <exclude name="Generic.Functions.OpeningFunctionBraceKernighanRitchie.BraceOnNewLine" />
+        <exclude name="Generic.NamingConventions.CamelCapsFunctionName.ScopeNotCamelCaps" /> <!-- Handled by PSR-12 -->
         <exclude name="Generic.PHP.ClosingPHPTag.NotFound" />
         <exclude name="Generic.PHP.RequireStrictTypes.MissingDeclaration" />
         <exclude name="Generic.PHP.Syntax.PHPSyntax" />
@@ -58,19 +70,21 @@
         <exclude name="Squiz.Commenting.FileComment.ShortFullStop" />
         <exclude name="Squiz.Commenting.FileComment.SpacingAfterOpen" /> <!-- conflicts with PSR12 -->
         <exclude name="Squiz.Commenting.FileComment.SubpackageTagOrder" />
-        <exclude name="Squiz.Commenting.FunctionComment.EmptyThrows" />
-        <exclude name="Squiz.Commenting.FunctionComment.ParamCommentFullStop" />
-        <exclude name="Squiz.Commenting.FunctionComment.ScalarTypeHintMissing" />
-        <exclude name="Squiz.Commenting.FunctionComment.ShortFullStop" />
-        <exclude name="Squiz.Commenting.FunctionComment.ShortSingleLine" />
-        <exclude name="Squiz.Commenting.FunctionComment.ThrowsNoFullStop" />
-        <exclude name="Squiz.Commenting.FunctionComment.ThrowsNotCapital" />
-        <exclude name="Squiz.Commenting.FunctionComment.TypeHintMissing" />
+
+        <!--
+            FunctionComment refuses to acknowledge @inheritdoc
+        -->
+        <exclude name="Squiz.Commenting.FunctionComment" />
+
+        <exclude name="Squiz.Commenting.FunctionCommentThrowTag.Missing" />
         <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar" />
         <exclude name="Squiz.Commenting.InlineComment.NotCapital" />
         <exclude name="Squiz.Commenting.InlineComment.SpacingAfter" />
         <exclude name="Squiz.Commenting.InlineComment.SpacingBefore" />
         <exclude name="Squiz.Commenting.InlineComment.WrongStyle" />
+        <!--
+            refuses to acknowledge @inheritdoc
+        -->
         <exclude name="Squiz.Commenting.LongConditionClosingComment.Missing" />
         <exclude name="Squiz.Commenting.PostStatementComment.Found" />
         <exclude name="Squiz.Commenting.VariableComment.Missing" />

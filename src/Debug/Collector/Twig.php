@@ -549,11 +549,13 @@ class Twig extends Twig_Environment
             return $template;
         }
         $cls = \get_class($template);
-        return $this->twig->loadedTemplates[$cls] = new Template($this, new $cls($this));
+        $template = new Template($this, new $cls($this));
+        $this->twig->loadedTemplates[$cls] = $template;
+        return $template;
     }
 
     /**
-     * {@inheritDoc} foo  Twig\TokenStream
+     * {@inheritDoc}
      */
     public function parse(TokenStream $tokens)
     {
@@ -657,7 +659,7 @@ class Twig extends Twig_Environment
     }
 
     /**
-     * {@inheritDoc} foo
+     * {@inheritDoc}
      */
     public function setLoader(LoaderInterface $loader)
     {

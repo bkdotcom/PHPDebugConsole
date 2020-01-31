@@ -38,7 +38,7 @@ class Email implements RouteInterface
     }
 
     /**
-     * {@inheritDot}
+     * {@inheritDoc}
      */
     public function getSubscriptions()
     {
@@ -56,9 +56,10 @@ class Email implements RouteInterface
      */
     public function processLogEntries(Event $event = null)
     {
+        $debug = $event->getSubject();
         $subject = $this->buildSubject();
         $body = $this->buildBody();
-        $this->debug->email($this->debug->getCfg('emailTo'), $subject, $body);
+        $this->debug->email($debug->getCfg('emailTo'), $subject, $body);
     }
 
     /**
@@ -66,7 +67,6 @@ class Email implements RouteInterface
      */
     public function processLogEntry(LogEntry $logEntry)
     {
-        return;
     }
 
     /**

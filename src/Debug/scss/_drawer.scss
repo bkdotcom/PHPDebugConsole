@@ -1,141 +1,139 @@
 &.debug-drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #fff;
+  z-index: 1049;
 
-	position: fixed;
-	bottom: 0;
-	left: 0;
-	width: 100%;
-	font-family: arial;
-	background-color: #fff;
-	z-index: 1049;
+  // debug-drawer is closed (pushed offscreen) by default
+  height: 100px;
+  transform: translateY(100px);
+  transition: all 0.5s;
 
-	// debug-drawer is closed (pushed offscreen) by default
-	height: 100px;
-	transform: translateY(100px);
-	transition: all 0.5s;
+  > * {
+    box-sizing: border-box;
+  }
 
-	> * {
-		box-sizing: border-box;
-	}
+  .debug-pull-tab {
+    display: inline-block;
+    opacity: 1;
+    position: absolute;
+    height: 25px;
+    top: -25px;
+    margin-left: 20px;
+    border: 1px solid #000;
+    border-bottom-width: 0;
+    border-radius: 5px 5px 0 0;
+    padding: 4px 14px;
+    font-size: 16px;
+    background: $lite-grey;
+    cursor: pointer;
+    transition: all 0.5s;
+    &:hover {
+      background: darken($lite-grey, 10%);
+    }
+    .debug-error-counts {
+      margin-left: 0.5em;
+    }
+    .badge {
+      display: none;
+    }
+    .fa-spinner {
+      display: none;
+    }
+  }
 
-	&.debug-drawer-open {
-		transform: translateY(0px);
-		height: auto;
-		// z-index: 1049;
-		.debug-pull-tab {
-			opacity: 0;
-			transform: translateY(25px);
-			.fa-bug {
-				display: none;
-			}
-			.fa-spinner {
-				display: inline-block;
-			}
+  .debug-resize-handle {
+    display: block;
+    position: absolute;
+    top: -3px;
+    height: 4px;
+    width: 100%;
+    opacity: 0;
+    border-top: 1px solid $border-color;
+    border-bottom: 1px solid $border-color;
+    background: darken($lite-grey, 10%);
+    transition: all 0.25s ease-out;
+    // transition-timing-function: ease-out;
+  }
 
-		}
-		& .debug-resize-handle {
-			cursor: ns-resize;
-			&:hover {
-				opacity: 1;
-			}
-		}
-	}
+  &.debug-drawer-open {
+    transform: translateY(0);
+    height: auto;
+    // z-index: 1049;
+    .debug-pull-tab {
+      opacity: 0;
+      transform: translateY(25px);
+      .fa-bug {
+        display: none;
+      }
+      .fa-spinner {
+        display: inline-block;
+      }
+    }
+    & .debug-resize-handle {
+      cursor: ns-resize;
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
 
-	.debug-pull-tab {
-		display: inline-block;
-		opacity: 1;
-		position: absolute;
-		height: 25px;
-		top: -25px;
-		margin-left: 20px;
-		border: 1px solid #000;
-		border-bottom-width: 0;
-		border-radius: 5px 5px 0 0;
-		padding: 4px 14px;
-		font-size: 16px;
-		background: $lite-grey;
-		cursor: pointer;
-		transition: all 0.5s;
-		&:hover {
-			background: darken($lite-grey, 10%);
-		}
-		.debug-error-counts {
-			margin-left: .5em;
-		}
-		.badge {
-			display: none;
-		}
-		.fa-spinner {
-			display: none;
-		}
-	}
+  @at-root html.debug-resizing {
+    cursor: ns-resize !important;
+    .debug-drawer {
+      // disable transition when resizing
+      transition: none;
+      .debug-resize-handle {
+        opacity: 1;
+      }
+    }
+  }
 
-	.debug-resize-handle {
-		display: block;
-		position: absolute;
-		top: -3px;
-		height: 4px;
-		width: 100%;
-		opacity: 0;
-		border-top: 1px solid $border-color;
-		border-bottom: 1px solid $border-color;
-		background: darken($lite-grey, 10%);
-		transition: all 0.25s ease-out;
-		// transition-timing-function: ease-out;
-	}
+  .debug-menu-bar {
+    height: 25px;
+    border-top: 1px solid $border-color;
+    border-bottom: 1px solid $border-color;
+    padding: 3px 6px;
+    background: $lite-grey;
+    font-size: 16px;
+    line-height: 1;
+    margin-bottom: 0;
+    &,
+    a {
+      // text-decoration: none;
+      color: $grey-text;
+    }
+    a,
+    button,
+    label {
+      &:focus,
+      &:hover {
+        color: #333;
+        text-decoration: none;
+      }
+    }
+    button.close {
+      font-size: 21px;
+      font-weight: 300;
+    }
+    .pull-right {
+      position: absolute;
+      top: 0;
+      right: 6px;
+    }
+    .debug-error-counts {
+      position: relative;
+      top: -2px;
+      font-size: 0.78em;
+    }
+  }
 
-	@at-root html.debug-resizing {
-		cursor: ns-resize !important;
-		.debug-drawer {
-			// disable transition when resizing
-			transition: none;
-			.debug-resize-handle {
-				opacity: 1;
-			}
-		}
-	}
-
-	.debug-menu-bar {
-		height: 25px;
-		border-top: 1px solid $border-color;
-		border-bottom: 1px solid $border-color;
-		padding: 3px 6px;
-		background: $lite-grey;
-		font-size: 16px;
-		line-height: 1;
-		margin-bottom: 0;
-		&,
-		a {
-			// text-decoration: none;
-			color: $grey-text;
-		}
-		a,
-		button,
-		label {
-			&:focus,
-			&:hover {
-				color: #333;
-				text-decoration: none;
-			}
-		}
-		button.close {
-			font-size: 21px;
-		    font-weight: 300;
-		}
-		.pull-right {
-			position: absolute;
-			top: 0;
-			right: 6px
-		}
-		.debug-error-counts {
-			position: relative;
-			top: -2px;
-			font-size: .78em;
-		}
-	}
-
-	.debug-body {
-		padding: 5px 10px;
-		background-color: #FFF;
-		overflow: auto;
-	}
+  .debug-body {
+    padding: 5px 10px;
+    background-color: #fff;
+    overflow: auto;
+  }
 }

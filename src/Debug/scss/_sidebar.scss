@@ -1,167 +1,165 @@
 & {
-	transform: scale(1); // so that sidebar gets attached here
+  transform: scale(1); // so that sidebar gets attached here
 }
 
 .badge {
-	display: inline-block;
-	padding: .25em .4em .16em;
-	font-size: 82%;
-	font-weight: 500;
-	line-height: 1;
-	text-align: center;
-	white-space: nowrap;
-	vertical-align: bottom;
-	border-radius: .25rem;
-	color: #fff;
-	background-color: #666;
+  display: inline-block;
+  padding: 0.25em 0.4em 0.16em;
+  font-size: 82%;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: bottom;
+  border-radius: 0.25rem;
+  color: #fff;
+  background-color: #666;
 }
 
 .debug-sidebar {
 
-	$sidebar-w: 119px;
-	$toggle-w: 7px;
-	$trans-time: .33s;
+  $sidebar-w: 119px;
+  $toggle-w: 7px;
+  $trans-time: 0.33s;
 
-	position: fixed;
-	box-sizing: border-box;
-	width: $sidebar-w + $toggle-w;
-	background: $lite-grey;
-	height: 100%;
-	transform: translateX(-$sidebar-w);
-	transition: transform $trans-time;
+  position: fixed;
+  box-sizing: border-box;
+  width: $sidebar-w + $toggle-w;
+  background: $lite-grey;
+  height: 100%;
+  transform: translateX(-$sidebar-w);
+  transition: transform $trans-time;
 
-	+ .debug-body {
-		margin-left: 6px;
-		padding-left: 10px;
-		transition: margin-left $trans-time;
-	}
+  button {
+    width: 100%;
+  }
+  input[type=checkbox] {
+    display: none;
+  }
+  label {
+    font-weight: normal;
+  }
 
-	&.no-transition + .debug-body {
-		transition: none;
-	}
+  + .debug-body {
+    margin-left: 6px;
+    padding-left: 10px;
+    transition: margin-left $trans-time;
+  }
 
-	.collapse { display: none; }
-	&.show {
-		transform: translateX(0);
-		.expand { display: none; }
-		.collapse { display: block; }
-		+ .debug-body {
-			margin-left: $sidebar-w + $toggle-w;
-		}
-		.sidebar-content {
-			opacity: 1;
-			transition: opacity .33s
-		}
-	}
+  &.no-transition + .debug-body {
+    transition: none;
+  }
 
-	.sidebar-content {
-		padding: 4px 11px 0 4px;
-		opacity: 0;
-		overflow: hidden;
-	}
+  .collapse { display: none; }
+  .sidebar-content {
+    padding: 4px 11px 0 4px;
+    opacity: 0;
+    overflow: hidden;
+  }
 
-	.sidebar-toggle {
-		position: absolute;
-		box-sizing: border-box;
-		right: 0;
-		top: 0;
-		height: 100%;
-		width: $toggle-w;
-		background: $lite-grey;
-		border-left: 1px solid $border-color;
-		border-right: 1px solid $border-color;
-		cursor: pointer;
-		display: flex;
-		color: $border-color;
-		text-align: center;
-		z-index: 1;
-		&:hover {
-			color: $grey-text;
-			background: darken($lite-grey, 10%);
-		}
-		> div {
-			margin: auto;
-			padding-left: 1px;
-		}
-	}
+  &.show {
+    transform: translateX(0);
+    .expand { display: none; }
+    .collapse { display: block; }
+    + .debug-body {
+      margin-left: $sidebar-w + $toggle-w;
+    }
+    .sidebar-content {
+      opacity: 1;
+      transition: opacity 0.33s;
+    }
+  }
 
-	// see https://stackoverflow.com/a/40678740/1371433
-	.debug-filters {
-		position: relative;
-		margin: 0 -4px 10px -4px;
-		ul {
-			margin-left: 0;
-		}
-		li {
-			text-indent: 0;
-			padding-left: 10px;
-		}
-		> li {
-			padding-left: 4px;
-		}
-		label {
-			padding: 2px 0 2px 100%;
-			white-space: nowrap;
-			&.disabled span {
-				/*
-				color: #818a91
-				*/
-				opacity: 0.5;
-			}
-		}
-		> li {
-			> *:first-child {
-				padding-top: 3px;
-				padding-bottom: 3px;
-			}
-			> ul {
-				margin-left: -10px;
-				> li {
-					padding-left: 32px;
-				}
-			}
-		}
-		label,
-		ul ul {
-			margin-left: -100%;
-			padding-left: 100%;
-		}
-	}
+  .sidebar-toggle {
+    position: absolute;
+    box-sizing: border-box;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: $toggle-w;
+    background: $lite-grey;
+    border-left: 1px solid $border-color;
+    border-right: 1px solid $border-color;
+    cursor: pointer;
+    display: flex;
+    color: $border-color;
+    text-align: center;
+    z-index: 1;
+    &:hover {
+      color: $grey-text;
+      background: darken($lite-grey, 10%);
+    }
+    > div {
+      margin: auto;
+      padding-left: 1px;
+    }
+  }
 
-	.fa-times-circle { color: $error-fg; }
-	.fa-warning { color: $warn-fg; }
-	.fa-info-circle { color: $info-fg; }
+  // see https://stackoverflow.com/a/40678740/1371433
+  .debug-filters {
+    position: relative;
+    margin: 0 -4px 10px -4px;
+    ul {
+      margin-left: 0;
+    }
+    li {
+      text-indent: 0;
+      padding-left: 10px;
+    }
+    > li {
+      padding-left: 4px;
+      > *:first-child {
+        padding-top: 3px;
+        padding-bottom: 3px;
+      }
+      > ul {
+        margin-left: -10px;
+        > li {
+          padding-left: 32px;
+        }
+      }
+    }
+    label {
+      padding: 2px 0 2px 100%;
+      white-space: nowrap;
+      &.disabled span {
+        /*
+        color: #818a91
+        */
+        opacity: 0.5;
+      }
+    }
+    label,
+    ul ul {
+      margin-left: -100%;
+      padding-left: 100%;
+    }
+  }
 
-	button {
-		width: 100%;
-	}
-	input[type=checkbox] {
-		display: none;
-	}
-	label {
-		font-weight: normal;
-	}
+  .fa-times-circle { color: $error-fg; }
+  .fa-warning { color: $warn-fg; }
+  .fa-info-circle { color: $info-fg; }
 
-	.toggle {
-		cursor: pointer;
-		&.active {
-			background: darken($lite-grey, 10%);
-			&:hover {
-				background: darken($lite-blue, 10%);
-			}
-		}
-		&:hover,
-		&:hover + ul {
-			background: $lite-blue;
-			.toggle.active {
-				background: darken($lite-blue, 10%);
-			}
-		}
-	}
+  .toggle {
+    cursor: pointer;
+    &.active {
+      background: darken($lite-grey, 10%);
+      &:hover {
+        background: darken($lite-blue, 10%);
+      }
+    }
+    &:hover,
+    &:hover + ul {
+      background: $lite-blue;
+      .toggle.active {
+        background: darken($lite-blue, 10%);
+      }
+    }
+  }
 
-	/*
-	.expand-all {
-		font-size: 1.25em;
-	}
-	*/
+  /*
+  .expand-all {
+    font-size: 1.25em;
+  }
+  */
 }

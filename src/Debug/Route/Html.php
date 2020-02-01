@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -62,9 +62,9 @@ class Html extends Base
      */
     public function addAsset($what, $mixed)
     {
-        if ($what == 'css') {
+        if ($what === 'css') {
             $this->assets['css'][] = $mixed;
-        } elseif ($what == 'script') {
+        } elseif ($what === 'script') {
             $this->assets['script'][] = $mixed;
         }
     }
@@ -295,7 +295,7 @@ class Html extends Base
     protected function buildChannelTree()
     {
         $channels = $this->dump->channels;
-        if (\array_keys($channels) == array($this->channelNameRoot)) {
+        if (\array_keys($channels) === array($this->channelNameRoot)) {
             return array();
         }
         \ksort($channels);

@@ -7,7 +7,10 @@
     "build": "npx npm-run-all --parallel build:*",
     "build:js": "npx rollup -c",
     "build:css": "scss -t compact --sourcemap=none scss/Debug.scss css/Debug.css",
-    "test": "npx eslint js_src/*",
+    "cs": "npx npm-run-all cs:*",
+    "cs:css": "npx stylelint ./scss",
+    "cs:js": "npx eslint js_src/*",
+    "cs:php": "phpcs . --extensions=php",
     "watch": "npx npm-run-all --parallel watch:*",
     "watch:js": "NODE_ENV=watch npx nodemon --watch js_src/ --ext js --exec \"npm run build:js\"",
     "watch:scss": "npx nodemon --watch scss/ --ext scss --exec \"npm run build:css\""

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -131,7 +131,7 @@ class Yii11LogRoute extends CLogRoute
             'meta' => array(),
             'trace' => array(),
         ));
-        if ($logEntry['level'] == CLogger::LEVEL_TRACE || YII_DEBUG && YII_TRACE_LEVEL > 0) {
+        if ($logEntry['level'] === CLogger::LEVEL_TRACE || YII_DEBUG && YII_TRACE_LEVEL > 0) {
             // if YII_DEBUG is on, we may have trace info
             $regex = '#^in (.+) \((\d+)\)$#m';
             \preg_match_all($regex, $logEntry['message'], $matches, PREG_SET_ORDER);
@@ -146,7 +146,7 @@ class Yii11LogRoute extends CLogRoute
             if ($logEntry['trace']) {
                 $logEntry['meta']['file'] = $logEntry['trace'][0]['file'];
                 $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
-                if ($logEntry['level'] == CLogger::LEVEL_ERROR) {
+                if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
                     $logEntry['meta']['backtrace'] = $logEntry['trace'];
                     unset($logEntry['trace']);
                 }
@@ -231,11 +231,11 @@ class Yii11LogRoute extends CLogRoute
     {
         foreach ($this->excludeCategories as $excludedCat) {
             //  If found, we skip
-            if (\trim(\strtolower($excludedCat)) == \trim(\strtolower($category))) {
+            if (\trim(\strtolower($excludedCat)) === \trim(\strtolower($category))) {
                 return true;
             }
             //  Check for regex
-            if ($excludedCat[0] == '/' && \preg_match($excludedCat, $category)) {
+            if ($excludedCat[0] === '/' && \preg_match($excludedCat, $category)) {
                 return true;
             }
         }
@@ -259,9 +259,9 @@ class Yii11LogRoute extends CLogRoute
         LEVEL_PROFILE
         */
         $method = 'log';
-        if ($type == CLogger::LEVEL_ERROR) {
+        if ($type === CLogger::LEVEL_ERROR) {
             $method = 'error';
-        } elseif ($type == CLogger::LEVEL_WARNING) {
+        } elseif ($type === CLogger::LEVEL_WARNING) {
             $method = 'warn';
         }
         return $method;
@@ -303,7 +303,7 @@ class Yii11LogRoute extends CLogRoute
     protected function processLogEntry(array $logEntry)
     {
         $debug = $logEntry['channel'];
-        if ($logEntry['level'] == CLogger::LEVEL_PROFILE) {
+        if ($logEntry['level'] === CLogger::LEVEL_PROFILE) {
             if (\strpos($logEntry['message'], 'begin:') === 0) {
                 // add to stack
                 $this->stack[] = $logEntry;
@@ -317,7 +317,7 @@ class Yii11LogRoute extends CLogRoute
             }
             return;
         }
-        if ($logEntry['level'] == CLogger::LEVEL_TRACE) {
+        if ($logEntry['level'] === CLogger::LEVEL_TRACE) {
             $caption = $logEntry['category']
                 ? $logEntry['category'] . ': ' . $logEntry['message']
                 : $logEntry['message'];

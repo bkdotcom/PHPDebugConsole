@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -136,12 +136,12 @@ class TextAnsi extends Text
     {
         $method = $logEntry['method'];
         $escapeCode = '';
-        if ($method == 'alert') {
+        if ($method === 'alert') {
             $level = $logEntry->getMeta('level');
             $escapeCode = $this->cfg['escapeCodesLevels'][$level];
         } elseif (isset($this->cfg['escapeCodesMethods'][$method])) {
             $escapeCode = $this->cfg['escapeCodesMethods'][$method];
-        } elseif ($method == 'groupSummary' || $logEntry->getMeta('closesSummary')) {
+        } elseif ($method === 'groupSummary' || $logEntry->getMeta('closesSummary')) {
             $escapeCode = "\e[2m";
         }
         $this->escapeReset = $escapeCode ?: "\e[0m";
@@ -313,7 +313,7 @@ class TextAnsi extends Text
             foreach ($vis as $i => $v) {
                 if (\in_array($v, array('magic','magic-read','magic-write'))) {
                     $vis[$i] = '✨ ' . $v;    // "sparkles" there is no magic-wand unicode char
-                } elseif ($v == 'private' && $info['inheritedFrom']) {
+                } elseif ($v === 'private' && $info['inheritedFrom']) {
                     $vis[$i] = '🔒 ' . $v;
                 }
             }

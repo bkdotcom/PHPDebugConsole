@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -349,7 +349,7 @@ class AbstractObjectProperties extends AbstractObjectSub
                     https://www.phpdoc.org/docs/latest/references/phpdoc/tags/var.html
                 */
                 foreach ($phpDoc['var'] as $var) {
-                    if ($var['name'] == $name) {
+                    if ($var['name'] === $name) {
                         break;
                     }
                 }
@@ -444,7 +444,7 @@ class AbstractObjectProperties extends AbstractObjectSub
         if (
             empty($propInfo['overrides'])
             && empty($propInfo['inheritedFrom'])
-            && $reflectionProperty->getDeclaringClass()->getName() == $className
+            && $reflectionProperty->getDeclaringClass()->getName() === $className
         ) {
             return $className;
         }

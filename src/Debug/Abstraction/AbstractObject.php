@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -266,7 +266,7 @@ class AbstractObject
         while ($reflector = $reflector->getParentClass()) {
             $constants = \array_merge($reflector->getConstants(), $constants);
         }
-        if ($this->abstracter->getCfg('objectSort') == 'name') {
+        if ($this->abstracter->getCfg('objectSort') === 'name') {
             \ksort($constants);
         }
         $abs['constants'] = $constants;
@@ -427,20 +427,20 @@ class AbstractObject
             return;
         }
         $sort = $this->abstracter->getCfg('objectSort');
-        if ($sort == 'name') {
+        if ($sort === 'name') {
             // rather than a simple key sort, use array_multisort so that __construct is always first
             $sortData = array();
             foreach (\array_keys($array) as $name) {
-                $sortData[$name] = $name == '__construct'
+                $sortData[$name] = $name === '__construct'
                     ? '0'
                     : $name;
             }
             \array_multisort($sortData, $array);
-        } elseif ($sort == 'visibility') {
+        } elseif ($sort === 'visibility') {
             $sortVisOrder = array('public', 'protected', 'private', 'magic', 'magic-read', 'magic-write', 'debug');
             $sortData = array();
             foreach ($array as $name => $info) {
-                $sortData['name'][$name] = $name == '__construct'
+                $sortData['name'][$name] = $name === '__construct'
                     ? '0'     // always place __construct at the top
                     : $name;
                 $vis = \is_array($info['visibility'])

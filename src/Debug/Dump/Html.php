@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -50,8 +50,8 @@ class Html extends Base
             : array();
         $val = parent::dump($val, $opts);
         if ($tagName && !\in_array($this->dumpType, array('recursion'))) {
-            if ($tagName == '__default__') {
-                $tagName = $this->dumpType == 'object'
+            if ($tagName === '__default__') {
+                $tagName = $this->dumpType === 'object'
                     ? 'div'
                     : 'span';
             }
@@ -166,7 +166,7 @@ class Html extends Base
         $types = \preg_split('#\s*\|\s*#', $type);
         foreach ($types as $i => $type) {
             $isArray = false;
-            if (\substr($type, -2) == '[]') {
+            if (\substr($type, -2) === '[]') {
                 $isArray = true;
                 $type = \substr($type, 0, -2);
             }
@@ -228,7 +228,7 @@ class Html extends Base
             'data-icon' => $meta['icon'],
         ), $meta['attribs']);
         $this->logEntryAttribs['class'] .= ' m_' . $method;
-        if ($method == 'alert') {
+        if ($method === 'alert') {
             $str = $this->methodAlert($logEntry);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $str = $this->methodGroup($logEntry);
@@ -263,7 +263,7 @@ class Html extends Base
                 // first arg ends with "=" or ":"
                 $glueAfterFirst = false;
                 $args[0] = \rtrim($args[0]) . ' ';
-            } elseif (\count($args) == 2) {
+            } elseif (\count($args) === 2) {
                 $glue = ' = ';
             }
         }
@@ -407,7 +407,7 @@ class Html extends Base
         /*
             Were we debugged from inside or outside of the object?
         */
-        $this->argAttribs['data-accessible'] = $abs['scopeClass'] == $abs['className']
+        $this->argAttribs['data-accessible'] = $abs['scopeClass'] === $abs['className']
             ? 'private'
             : 'public';
         return $dump;
@@ -590,7 +590,7 @@ class Html extends Base
     protected function methodGroup(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        if ($method == 'groupEnd') {
+        if ($method === 'groupEnd') {
             return '</ul>' . "\n" . '</li>';
         }
         $args = $logEntry['args'];
@@ -636,7 +636,7 @@ class Html extends Base
             array(
                 'class' => array(
                     'group-header',
-                    $method == 'groupCollapsed'
+                    $method === 'groupCollapsed'
                         ? 'collapsed'
                         : 'expanded',
                     $levelClass,
@@ -721,14 +721,14 @@ class Html extends Base
     {
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
-        if ($type == 'string') {
+        if ($type === 'string') {
             // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
             $val = $this->dump($val, $opts, false);
-        } elseif ($type == 'array') {
+        } elseif ($type === 'array') {
             $count = \count($val);
             $val = '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">(</span>' . $count . '<span class="t_punct">)</span>';
-        } elseif ($type == 'object') {
+        } elseif ($type === 'object') {
             $toStr = AbstractObject::toString($val);
             if ($toStr) {
                 $val = $this->dump($toStr, $opts, false);

@@ -257,7 +257,7 @@ class Wamp implements RouteInterface
         }
         $this->detectFiles = $logEntry->getMeta('detectFiles', false);
         $this->foundFiles = array();
-        if ($meta['format'] == 'raw') {
+        if ($meta['format'] === 'raw') {
             $args = $this->crateValues($args);
         }
         if (!empty($meta['backtrace'])) {

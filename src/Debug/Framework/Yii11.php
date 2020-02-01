@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -154,7 +154,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             $count = \count($hashes);
             $debug->groupSummary();
             $debug->group(
-                $count == 1
+                $count === 1
                     ? '1 ignored error'
                     : $count . ' ignored errors'
             );
@@ -177,7 +177,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     public function onDebugOutputLogEntry(LogEntry $logEntry)
     {
         $debug = $logEntry->getSubject();
-        if ($logEntry['method'] == 'log' && $logEntry['args'][0] == 'files') {
+        if ($logEntry['method'] === 'log' && $logEntry['args'][0] === 'files') {
             // let's embolden the primary files
             $root = \realpath(YII_PATH . '/..');
             $html = $debug->dumpHtml->processLogEntry($logEntry);
@@ -300,7 +300,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             //    re-publish the shutdown event before calling yii's error handler
             foreach ($this->debug->rootInstance->eventManager->getSubscribers('php.shutdown') as $callable) {
                 $this->debug->rootInstance->eventManager->unsubscribe('php.shutdown', $callable);
-                if (\is_array($callable) && $callable[0] == $this->debug->rootInstance->errorHandler) {
+                if (\is_array($callable) && $callable[0] === $this->debug->rootInstance->errorHandler) {
                     break;
                 }
             }

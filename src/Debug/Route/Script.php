@@ -106,14 +106,14 @@ class Script extends Base
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        if ($method == 'table') {
+        if ($method === 'table') {
             $logEntry->setMeta('forceArray', false);
         }
         $this->dump->processLogEntry($logEntry);
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
-        if ($method == 'assert') {
+        if ($method === 'assert') {
             \array_unshift($args, false);
         } elseif (\in_array($method, array('error','warn'))) {
             if (isset($meta['file'])) {

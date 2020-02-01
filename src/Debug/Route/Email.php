@@ -80,7 +80,7 @@ class Email implements RouteInterface
     {
         foreach (array('alerts','log','logSummary') as $what) {
             foreach ($data[$what] as $i => $v) {
-                if ($what == 'logSummary') {
+                if ($what === 'logSummary') {
                     foreach ($v as $i2 => $v2) {
                         $v2 = $v2->export();
                         $data['logSummary'][$i][$i2] = \array_values($v2);
@@ -251,7 +251,7 @@ class Email implements RouteInterface
             }
             if (isset($v['debug']) && $v['debug'] === Abstracter::ABSTRACTION) {
                 unset($v['debug']);
-                if ($v['type'] == 'object') {
+                if ($v['type'] === 'object') {
                     $v['properties'] = self::unserializeLogBackward($v['properties']);
                 }
                 $args[$k] = new Abstraction($v);
@@ -278,7 +278,7 @@ class Email implements RouteInterface
         $backward = \version_compare($ver, '3.0', '<');
         foreach (array('alerts','log','logSummary') as $what) {
             foreach ($data[$what] as $i => $v) {
-                if ($what == 'logSummary') {
+                if ($what === 'logSummary') {
                     foreach ($v as $i2 => $v2) {
                         if ($backward) {
                             $v2[1] = self::unserializeLogBackward($v2[1]);

@@ -112,7 +112,7 @@ class ChromeLogger extends Base
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
-        if ($method == 'assert') {
+        if ($method === 'assert') {
             \array_unshift($args, false);
         } elseif (!\in_array($method, $this->consoleMethods)) {
             $method = 'log';
@@ -279,7 +279,7 @@ class ChromeLogger extends Base
         foreach ($indexes as $i) {
             $logEntry = $logBack[$i];
             $method = $logEntry['method'];
-            if ($method == 'groupEnd') {
+            if ($method === 'groupEnd') {
                 $depth++;
             } elseif (\in_array($method, array('group', 'groupCollapsed'))) {
                 $depth--;

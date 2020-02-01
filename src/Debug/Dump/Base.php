@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -67,7 +67,7 @@ class Base extends Component implements ConfigurableInterface
         }
         $typeMore = null;
         list($type, $typeMore) = $this->debug->abstracter->getType($val);
-        if ($typeMore == 'raw') {
+        if ($typeMore === 'raw') {
             $val = $this->debug->abstracter->getAbstraction($val);
             $typeMore = null;
         }
@@ -133,7 +133,7 @@ class Base extends Component implements ConfigurableInterface
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        if ($method == 'alert') {
+        if ($method === 'alert') {
             $this->methodAlert($logEntry);
         } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
             $this->methodGroup($logEntry);
@@ -296,7 +296,7 @@ class Base extends Component implements ConfigurableInterface
             foreach ($vis as $i => $v) {
                 if (\in_array($v, array('magic','magic-read','magic-write'))) {
                     $vis[$i] = '✨ ' . $v;    // "sparkles": there is no magic-wand unicode char
-                } elseif ($v == 'private' && $info['inheritedFrom']) {
+                } elseif ($v === 'private' && $info['inheritedFrom']) {
                     $vis[$i] = '🔒 ' . $v;
                 }
             }
@@ -540,7 +540,7 @@ class Base extends Component implements ConfigurableInterface
                 $values[$k] = $val;
             }
         }
-        if (\count($values) == 1 && $k == MethodTable::SCALAR) {
+        if (\count($values) === 1 && $k === MethodTable::SCALAR) {
             $values = $opts['forceArray']
                 ? array('value' => $values[$k])
                 : $values[$k];
@@ -564,14 +564,17 @@ class Base extends Component implements ConfigurableInterface
         if (!\is_string($args[0])) {
             return $args;
         }
-        $index = 0;
-        $typeCounts = \array_fill_keys(\str_split('coOdifs'), 0);
-        $options = \array_merge(array(
-            'addQuotes' => false,
-            'replace' => false, // perform substitution, or just prep?
-            'sanitize' => true,
-            'style' => false,   // ie support %c
-        ), $options);
+        $this->subInfo = array(
+            'args' => $args,
+            'index' => 0,
+            'options' => \array_merge(array(
+                'addQuotes' => false,
+                'replace' => false, // perform substitution, or just prep?
+                'sanitize' => true,
+                'style' => false,   // ie support %c
+            ), $options),
+            'typeCounts' => \array_fill_keys(\str_split('coOdifs'), 0),
+        );
         $subRegex = '/%'
             . '(?:'
             . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
@@ -583,62 +586,68 @@ class Base extends Component implements ConfigurableInterface
             . '[difs]'
             . ')'
             . '/';
-        $args[0] = \preg_replace_callback($subRegex, function ($matches) use (
-            &$args,
-            &$hasSubs,
-            &$index,
-            $options,
-            &$typeCounts
-        ) {
-            $index++;
-            $replace = $matches[0];
-            if (!\array_key_exists($index, $args)) {
-                return $replace;
-            }
-            $arg = $args[$index];
-            $replacement = '';
-            $type = \substr($replace, -1);
-            if (\strpos('difs', $type) !== false) {
-                $format = $replace;
-                if ($type == 'i') {
-                    $format = \substr_replace($format, 'd', -1, 1);
-                } elseif ($type === 's') {
-                    $arg = $this->substitutionAsString($arg, $options);
-                }
-                $replacement = \is_array($arg)
-                    ? $arg
-                    : \sprintf($format, $arg);
-            } elseif ($type === 'c' && $options['style']) {
-                if ($typeCounts['c']) {
-                    // close prev
-                    $replacement = '</span>';
-                }
-                $replacement .= '<span' . $this->debug->utilities->buildAttribString(array(
-                    'style' => $arg,
-                )) . '>';
-            } elseif (\strpos('oO', $type) !== false) {
-                $replacement = $this->dump($arg);
-            }
-            $typeCounts[$type] ++;
-            if ($options['replace']) {
-                unset($args[$index]);
-                return $replacement;
-            } else {
-                $args[$index] = $arg;
-            }
-            return $replace;
-        }, $args[0]);
-        if (!$options['style']) {
-            $typeCounts['c'] = 0;
+        $string = \preg_replace_callback($subRegex, array($this, 'processSubsCallback'), $args[0]);
+        $args = $this->subInfo['args'];
+        if (!$this->subInfo['options']['style']) {
+            $this->subInfo['typeCounts']['c'] = 0;
         }
-        $hasSubs = \array_sum($typeCounts);
-        if ($hasSubs && $options['replace']) {
-            if ($typeCounts['c']) {
-                $args[0] .= '</span>';
+        $hasSubs = \array_sum($this->subInfo['typeCounts']);
+        if ($hasSubs && $this->subInfo['options']['replace']) {
+            if ($this->subInfo['typeCounts']['c']) {
+                $string .= '</span>';
             }
             $args = \array_values($args);
         }
+        $args[0] = $string;
         return $args;
+    }
+
+    /**
+     * [processSubsCallback description]
+     *
+     * @param array $matches [description]
+     *
+     * @return string
+     */
+    private function processSubsCallback($matches)
+    {
+        $index = ++$this->subInfo['index'];
+        $replace = $matches[0];
+        if (!\array_key_exists($index, $this->subInfo['args'])) {
+            return $replace;
+        }
+        $arg = $this->subInfo['args'][$index];
+        $replacement = '';
+        $type = \substr($replace, -1);
+        if (\strpos('difs', $type) !== false) {
+            $format = $replace;
+            if ($type === 'i') {
+                $format = \substr_replace($format, 'd', -1, 1);
+            } elseif ($type === 's') {
+                $arg = $this->substitutionAsString($arg, $this->subInfo['options']);
+            }
+            $replacement = \is_array($arg)
+                ? $arg
+                : \sprintf($format, $arg);
+        } elseif ($type === 'c' && $this->subInfo['options']['style']) {
+            if ($this->subInfo['typeCounts']['c']) {
+                // close prev
+                $replacement = '</span>';
+            }
+            $replacement .= '<span' . $this->debug->utilities->buildAttribString(array(
+                'style' => $arg,
+            )) . '>';
+        } elseif (\strpos('oO', $type) !== false) {
+            $replacement = $this->dump($arg);
+        }
+        $this->subInfo['typeCounts'][$type] ++;
+        if ($this->subInfo['options']['replace']) {
+            unset($this->subInfo['args'][$index]);
+            return $replacement;
+        } else {
+            $this->subInfo['args'][$index] = $arg;
+        }
+        return $replace;
     }
 
     /**
@@ -653,13 +662,13 @@ class Base extends Component implements ConfigurableInterface
     {
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
-        if ($type == 'array') {
+        if ($type === 'array') {
             $count = \count($val);
             if ($count) {
                 // replace with dummy array so browser console will display native Array(length)
                 $val = \array_fill(0, $count, 0);
             }
-        } elseif ($type == 'object') {
+        } elseif ($type === 'object') {
             $toStr = AbstractObject::toString($val);
             $val = $toStr ?: $val['className'];
         } else {

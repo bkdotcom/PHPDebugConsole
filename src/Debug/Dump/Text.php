@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -56,18 +56,18 @@ class Text extends Base
         $method = $logEntry['method'];
         $strIndent = \str_repeat('    ', $this->depth);
         $str = '';
-        if ($method == 'alert') {
+        if ($method === 'alert') {
             $str = $this->methodAlert($logEntry);
         } elseif (\in_array($method, array('group','groupCollapsed'))) {
             $this->depth ++;
             $str = $this->methodGroup($logEntry);
-        } elseif ($method == 'groupEnd' && $this->depth > 0) {
+        } elseif ($method === 'groupEnd' && $this->depth > 0) {
             if ($logEntry->getMeta('closesSummary')) {
                 $str = '=======';
             } else {
                 $this->depth --;
             }
-        } elseif ($method == 'groupSummary') {
+        } elseif ($method === 'groupSummary') {
             $str = '=======';
         } elseif (\in_array($method, array('profileEnd','table','trace'))) {
             $str = $this->methodTabular($logEntry);
@@ -109,7 +109,7 @@ class Text extends Base
                 // first arg ends with "=" or ":"
                 $glueAfterFirst = false;
                 $args[0] = \rtrim($args[0]) . ' ';
-            } elseif (\count($args) == 2) {
+            } elseif (\count($args) === 2) {
                 $glue = $this->cfg['glue']['equal'];
             }
         }
@@ -259,7 +259,7 @@ class Text extends Base
             foreach ($vis as $i => $v) {
                 if (\in_array($v, array('magic','magic-read','magic-write'))) {
                     $vis[$i] = '✨ ' . $v;    // "sparkles" there is no magic-wand unicode char
-                } elseif ($v == 'private' && $info['inheritedFrom']) {
+                } elseif ($v === 'private' && $info['inheritedFrom']) {
                     $vis[$i] = '🔒 ' . $v;
                 }
             }
@@ -396,7 +396,7 @@ class Text extends Base
         $meta = $logEntry['meta'];
         $logEntry->setMeta('forceArray', false);
         parent::methodTabular($logEntry);
-        if ($logEntry['method'] == 'table' && $meta['caption']) {
+        if ($logEntry['method'] === 'table' && $meta['caption']) {
             \array_unshift($logEntry['args'], $meta['caption']);
         }
         return $this->buildArgString($logEntry['args']);
@@ -414,10 +414,10 @@ class Text extends Base
     {
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
-        if ($type == 'array') {
+        if ($type === 'array') {
             $count = \count($val);
             $val = 'array(' . $count . ')';
-        } elseif ($type == 'object') {
+        } elseif ($type === 'object') {
             $toStr = AbstractObject::toString($val);
             $val = $toStr ?: $val['className'];
         } else {

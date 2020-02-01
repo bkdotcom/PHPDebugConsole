@@ -98,11 +98,11 @@ class Firephp extends Base
         $args = $logEntry['args'];
         $this->setFirephpMeta($logEntry);
         $value = null;
-        if ($method == 'alert') {
+        if ($method === 'alert') {
             $value = $this->methodAlert($logEntry);
         } elseif (\in_array($method, array('group','groupCollapsed'))) {
             $logEntry['firephpMeta']['Label'] = $args[0];
-            $logEntry['firephpMeta']['Collapsed'] = $method == 'groupCollapsed'
+            $logEntry['firephpMeta']['Collapsed'] = $method === 'groupCollapsed'
                 // yes, strings
                 ? 'true'
                 : 'false';
@@ -132,7 +132,7 @@ class Firephp extends Base
     private function getValue(LogEntry $logEntry)
     {
         $args = $logEntry['args'];
-        if (\count($args) == 1) {
+        if (\count($args) === 1) {
             $value = $args[0];
             // no label;
         } else {
@@ -177,7 +177,7 @@ class Firephp extends Base
     private function methodTabular(LogEntry $logEntry)
     {
         $logEntry->setMeta('undefinedAs', null);
-        if ($logEntry['method'] == 'trace') {
+        if ($logEntry['method'] === 'trace') {
             $logEntry['firephpMeta']['Label'] = 'trace';
         }
         $this->dump->processLogEntry($logEntry);
@@ -227,7 +227,7 @@ class Firephp extends Base
             $part = $parts[$i];
             $this->messageIndex++;
             $headerName = 'X-Wf-1-' . $structureIndex . '-1-' . $this->messageIndex;
-            $headerValue = ($i == 0 ? \strlen($msg) : '')
+            $headerValue = ($i === 0 ? \strlen($msg) : '')
                 . '|' . $part . '|'
                 . ($i < $numParts - 1 ? '\\' : '');
             $this->outputEvent['headers'][] = array($headerName, $headerValue);

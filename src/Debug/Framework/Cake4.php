@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -173,7 +173,7 @@ class Cake4 extends BasePlugin
                 if (empty($event['args'][1]['scope'])) {
                     unset($event['args'][1]['scope']);
                 }
-                if ($this->ignoreLogError && $event['method'] == 'error') {
+                if ($this->ignoreLogError && $event['method'] === 'error') {
                     $event['appendLog'] = false;
                     $event->stopPropagation();
                     $this->ignoreLogError = false;

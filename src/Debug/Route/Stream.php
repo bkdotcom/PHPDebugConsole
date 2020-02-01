@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -105,7 +105,7 @@ class Stream extends Base
             return;
         }
         $method = $logEntry['method'];
-        if ($method == 'groupUncollapse') {
+        if ($method === 'groupUncollapse') {
             return;
         }
         $str = $this->processLogEntryViaEvent($logEntry);

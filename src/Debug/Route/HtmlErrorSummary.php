@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -158,7 +158,7 @@ class HtmlErrorSummary
         $html = '<h3>' . $header . ':</h3>' . "\n";
         $html .= '<ul class="list-unstyled">';
         foreach ($this->stats['counts'] as $category => $a) {
-            if (!$a['inConsole'] || $category == 'fatal') {
+            if (!$a['inConsole'] || $category === 'fatal') {
                 continue;
             }
             $html .= '<li class="error-' . $category . '" data-count="' . $a['inConsole'] . '">' . $category . ': ' . $a['inConsole'] . '</li>';
@@ -185,7 +185,7 @@ class HtmlErrorSummary
                 break;
             }
         }
-        if ($category == 'fatal') {
+        if ($category === 'fatal') {
             return '';
         }
         $catStrings = array(
@@ -211,7 +211,7 @@ class HtmlErrorSummary
             ),
         );
         $countInCat = $catStats['inConsole'];
-        if ($countInCat == 1) {
+        if ($countInCat === 1) {
             $header = \ucfirst($category);
             $error = $this->getErrorsInCategory($category)[0];
             $msg = $error['file'] . '(line ' . $error['line'] . '): '
@@ -287,7 +287,7 @@ class HtmlErrorSummary
         $errors = $this->errorHandler->get('errors');
         $errorsInCat = array();
         foreach ($errors as $err) {
-            if ($err['category'] == $category && $err['inConsole']) {
+            if ($err['category'] === $category && $err['inConsole']) {
                 $errorsInCat[] = $err;
             }
         }

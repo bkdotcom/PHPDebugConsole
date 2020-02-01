@@ -13,6 +13,9 @@ namespace bdk\Sniffs\Commenting;
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Standards\Squiz\Sniffs\Commenting\FunctionCommentThrowTagSniff as SquizFunctionCommentThrowTagSniff;
 
+/**
+ * Extend Squiz FunctionCommentThrowTagSniff to exclude comments consisting solely of "{@inheritDoc}"
+ */
 class FunctionCommentThrowTagSniff extends SquizFunctionCommentThrowTagSniff
 {
 

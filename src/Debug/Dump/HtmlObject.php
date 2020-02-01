@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -203,7 +203,7 @@ class HtmlObject
                 . '<span class="t_punct">(</span>'
                 . $this->dumpMethodParams($info['params'])
                 . '<span class="t_punct">)</span>'
-                . ($methodName == '__toString'
+                . ($methodName === '__toString'
                     ? '<br />' . $this->html->dump($info['returnValue'])
                     : '')
             ) . "\n";
@@ -267,7 +267,7 @@ class HtmlObject
                 continue;
             }
             foreach ($values as $value) {
-                if ($k == 'author') {
+                if ($k === 'author') {
                     $html = $value['name'];
                     if ($value['email']) {
                         $html .= ' &lt;<a href="mailto:' . $value['email'] . '">' . $value['email'] . '</a>&gt;';
@@ -276,11 +276,11 @@ class HtmlObject
                         $html .= ' ' . \htmlspecialchars($value['desc']);
                     }
                     $value = $html;
-                } elseif ($k == 'link') {
+                } elseif ($k === 'link') {
                     $value = '<a href="' . $value['uri'] . '" target="_blank">'
                         . \htmlspecialchars($value['desc'] ?: $value['uri'])
                         . '</a>';
-                } elseif ($k == 'see' && $value['uri']) {
+                } elseif ($k === 'see' && $value['uri']) {
                     $value = '<a href="' . $value['uri'] . '" target="_blank">'
                         . \htmlspecialchars($value['desc'] ?: $value['uri'])
                         . '</a>';
@@ -369,7 +369,7 @@ class HtmlObject
         foreach ($methods as $i => $method) {
             $methods[$i] = '<code>' . $method . '</code>';
         }
-        $methods = $i == 0
+        $methods = $i === 0
             ? 'a ' . $methods[0] . ' method'
             : \implode(' and ', $methods) . ' methods';
         return '<dd class="magic info">This object has ' . $methods . '</dd>' . "\n";

@@ -40,12 +40,12 @@ class Backtrace
      * Utilizes `xdebug_get_function_stack()` (if available) to get backtrace in shutdown phase
      * When called internally, internal frames are removed
      *
-     * @param Exception $exception (optional) Exception from which to get backtrace
-     * @param bool      $inclArgs  (false) whether to include arguments
+     * @param Exception|Throwable $exception (optional) Exception from which to get backtrace
+     * @param bool                $inclArgs  (false) whether to include arguments
      *
      * @return array
      */
-    public static function get(Exception $exception = null, $inclArgs = false)
+    public static function get($exception = null, $inclArgs = false)
     {
         if ($exception) {
             $backtrace = $exception->getTrace();

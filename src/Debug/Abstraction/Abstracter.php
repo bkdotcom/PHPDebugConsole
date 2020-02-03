@@ -101,37 +101,32 @@ class Abstracter extends Component
      */
     public static function getType($val)
     {
-        $type = null;
+        $type = \gettype($val);
         $typeMore = null;
-        if ($val instanceof Abstraction) {
-            $type = $val['type'];
-            $typeMore = 'abstraction';
-        } elseif (\is_string($val)) {
-            list($type, $typeMore) = self::getStringType($val);
-        } elseif (\is_array($val)) {
-            $type = 'array';
-            $typeMore = 'raw';  // needs abstracted (references removed / values abstracted if necessary)
-            if (AbstractArray::isCallable($val)) {
-                $type = 'callable';
-                $typeMore = 'raw';  // needs abstracted
-            }
-        } elseif (\is_bool($val)) {
-            $type = 'bool';
-            $typeMore = \json_encode($val);
-        } elseif (\is_float($val)) {
-            $type = 'float';
-        } elseif (\is_int($val)) {
-            $type = 'int';
-        } elseif (\is_null($val)) {
-            $type = 'null';
-        } elseif (\is_object($val)) {
-            $type = 'object';
-            $typeMore = 'raw';  // needs abstracted
-        } elseif (\is_resource($val) || \strpos(\print_r($val, true), 'Resource') === 0) {
-            // is_resource() returns false for a closed resource
-            // (it's also not a string)
-            $type = 'resource';
-            $typeMore = 'raw';  // needs abstracted
+        $map = array(
+            'boolean' => 'bool',
+            'double' => 'float',
+            'integer' => 'int',
+            'NULL' => 'null',
+        );
+        if (isset($map[$type])) {
+            $type = $map[$type];
+        }
+        switch ($type) {
+            case 'array':
+                return self::getTypeArray($val);
+            case 'bool':
+                $typeMore = \json_encode($val);
+                break;
+            case 'object':
+                return self::getTypeObject($val);
+            case 'resource':
+            case 'resource (closed)':
+                return array('resource', 'raw');
+            case 'string':
+                return self::getTypeString($val);
+            case 'unknown type':
+                return self::getTypeUnknown($val);
         }
         return array($type, $typeMore);
     }
@@ -170,6 +165,42 @@ class Abstracter extends Component
     }
 
     /**
+     * Get Array's type & typeMore
+     *
+     * @param array $val array value
+     *
+     * @return array
+     */
+    private static function getTypeArray($val)
+    {
+        $type = 'array';
+        $typeMore = 'raw';  // needs abstracted (references removed / values abstracted if necessary)
+        if (\count($val) === 2 && AbstractArray::isCallable($val)) {
+            $type = 'callable';
+            $typeMore = 'raw';  // needs abstracted
+        }
+        return array($type, $typeMore);
+    }
+
+    /**
+     * Get Object's type & typeMore
+     *
+     * @param object $object any object
+     *
+     * @return array type & typeMore
+     */
+    private static function getTypeObject($object)
+    {
+        $type = 'object';
+        $typeMore = 'raw';  // needs abstracted
+        if ($object instanceof Abstraction) {
+            $type = $object['type'];
+            $typeMore = 'abstraction';
+        }
+        return array($type, $typeMore);
+    }
+
+    /**
      * Get string's type.
      * String could actually be "undefined" or "recursion"
      * Further, check if numeric
@@ -178,7 +209,7 @@ class Abstracter extends Component
      *
      * @return array type and typeMore
      */
-    private static function getStringType($val)
+    private static function getTypeString($val)
     {
         $type = 'string';
         $typeMore = null;
@@ -190,6 +221,29 @@ class Abstracter extends Component
             $type = 'recursion';    // not a native php type!
         } elseif ($val === self::NOT_INSPECTED) {
             $type = 'notInspected';
+        }
+        return array($type, $typeMore);
+    }
+
+    /**
+     * Get "unknown" type & typeMore
+     *
+     * @param mixed $val value of unknown type (likely closed resource)
+     *
+     * @return array type and typeMore
+     */
+    private static function getTypeUnknown($val)
+    {
+        $type = 'unknown';
+        $typeMore = null;
+        /*
+            closed resource?
+            is_resource() returns false for a closed resource
+            gettype  returns 'unknown type' or 'resource (closed)'
+        */
+        if (\strpos(\print_r($val, true), 'Resource') === 0) {
+            $type = 'resource';
+            $typeMore = 'raw';  // needs abstracted
         }
         return array($type, $typeMore);
     }

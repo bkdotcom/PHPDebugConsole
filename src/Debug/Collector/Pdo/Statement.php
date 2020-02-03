@@ -6,17 +6,17 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Collector\Pdo;
 
+use bdk\Debug\Collector\Pdo as DebugCollectorPdo;
+use bdk\Debug\Collector\StatementInfo;
 use PDO as PdoBase;   // PDO conflicts with namespace
 use PDOException;
 use PDOStatement;
-use bdk\Debug\Collector\Pdo as DebugCollectorPdo;
-use bdk\Debug\Collector\StatementInfo;
 
 /**
  * Debuggable PDOStatement
@@ -41,13 +41,13 @@ class Statement extends PDOStatement
     /**
      * Bind a column to a PHP variable
      *
-     * @param mixed   $column     Number of the column (1-indexed) or name of the column in the result set
-     * @param mixed   $param      Name of the PHP variable to which the column will be bound.
-     * @param integer $type       [optional] Data type of the parameter, specified by the PDO::PARAM_* constants.
-     * @param integer $maxlen     [optional] A hint for pre-allocation.
-     * @param mixed   $driverdata [optional] Optional parameter(s) for the driver.
+     * @param mixed $column     Number of the column (1-indexed) or name of the column in the result set
+     * @param mixed $param      Name of the PHP variable to which the column will be bound.
+     * @param int   $type       [optional] Data type of the parameter, specified by the PDO::PARAM_* constants.
+     * @param int   $maxlen     [optional] A hint for pre-allocation.
+     * @param mixed $driverdata [optional] Optional parameter(s) for the driver.
      *
-     * @return boolean
+     * @return bool
      * @link   http://php.net/manual/en/pdostatement.bindcolumn.php
      */
     public function bindColumn($column, &$param, $type = null, $maxlen = null, $driverdata = null)
@@ -61,16 +61,16 @@ class Statement extends PDOStatement
     /**
      * Binds a parameter to the specified variable name
      *
-     * @param mixed   $parameter     Parameter identifier. For a prepared statement using named placeholders,
-     *                                 this will be a parameter name of the form :name. For a prepared statement using
-     *                                 question mark placeholders, this will be the 1-indexed position of the parameter.
-     * @param mixed   $variable      Name of the PHP variable to bind to the SQL statement parameter.
-     * @param integer $dataType      [optional] Explicit data type for the parameter using the PDO::PARAM_* constants.
-     * @param integer $length        [optional] Length of the data type. To indicate that a parameter is an OUT
-     *                                 parameter from a stored procedure, you must explicitly set the length.
-     * @param mixed   $driverOptions [optional]
+     * @param mixed $parameter     Parameter identifier. For a prepared statement using named placeholders,
+     *                               this will be a parameter name of the form :name. For a prepared statement using
+     *                               question mark placeholders, this will be the 1-indexed position of the parameter.
+     * @param mixed $variable      Name of the PHP variable to bind to the SQL statement parameter.
+     * @param int   $dataType      [optional] Explicit data type for the parameter using the PDO::PARAM_* constants.
+     * @param int   $length        [optional] Length of the data type. To indicate that a parameter is an OUT
+     *                               parameter from a stored procedure, you must explicitly set the length.
+     * @param mixed $driverOptions [optional]
      *
-     * @return boolean
+     * @return bool
      * @link   http://php.net/manual/en/pdostatement.bindparam.php
      */
     public function bindParam($parameter, &$variable, $dataType = PdoBase::PARAM_STR, $length = null, $driverOptions = null)
@@ -84,13 +84,13 @@ class Statement extends PDOStatement
     /**
      * Binds a value to a parameter
      *
-     * @param mixed   $parameter Parameter identifier. For a prepared statement using named placeholders,
+     * @param mixed $parameter Parameter identifier. For a prepared statement using named placeholders,
      *                             this will be a parameter name of the form :name. For a prepared statement using
      *                             question mark placeholders, this will be the 1-indexed position of the parameter.
-     * @param mixed   $value     The value to bind to the parameter.
-     * @param integer $dataType  [optional] Explicit data type for the parameter using the PDO::PARAM_* constants.
+     * @param mixed $value     The value to bind to the parameter.
+     * @param int   $dataType  [optional] Explicit data type for the parameter using the PDO::PARAM_* constants.
      *
-     * @return boolean
+     * @return bool
      * @link   http://php.net/manual/en/pdostatement.bindvalue.php
      */
     public function bindValue($parameter, $value, $dataType = PdoBase::PARAM_STR)
@@ -107,7 +107,7 @@ class Statement extends PDOStatement
      *   are bound parameters in the SQL statement being executed. All values are treated as
      *   PDO::PARAM_STR.
      *
-     * @return boolean
+     * @return bool
      * @link   http://php.net/manual/en/pdostatement.execute.php
      * @throws PDOException
      */

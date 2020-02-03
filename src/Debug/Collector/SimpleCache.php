@@ -6,15 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
-use bdk\PubSub\Event;
 use bdk\Debug\Collector\SimpleCache\CallInfo;
+use bdk\PubSub\Event;
 use Psr\SimpleCache\CacheInterface;
 use Traversable;
 
@@ -175,10 +175,10 @@ class SimpleCache implements CacheInterface
     /**
      * Profiles a call to a PDO method
      *
-     * @param string  $method            SimpleCache method
-     * @param array   $args              method args
-     * @param boolean $isSuccessResponse does the method return boolean success?
-     * @param boolean $keyOrKeys         key(s) being queried/set
+     * @param string $method            SimpleCache method
+     * @param array  $args              method args
+     * @param bool   $isSuccessResponse does the method return boolean success?
+     * @param bool   $keyOrKeys         key(s) being queried/set
      *
      * @return mixed The result of the call
      * @throws \Psr\SimpleCache\InvalidArgumentException
@@ -225,7 +225,7 @@ class SimpleCache implements CacheInterface
     /**
      * Returns the accumulated execution time of statements
      *
-     * @return integer
+     * @return int
      */
     public function getTimeSpent()
     {
@@ -238,7 +238,7 @@ class SimpleCache implements CacheInterface
     /**
      * Returns the peak memory usage while performing statements
      *
-     * @return integer
+     * @return int
      */
     public function getPeakMemoryUsage()
     {

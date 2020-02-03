@@ -364,7 +364,7 @@ class ServerRequestLite
     }
 
     /**
-     * [normalizeHeaderValue description]
+     * Trim header value(s)
      *
      * @param string|array $value header value
      *

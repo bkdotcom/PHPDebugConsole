@@ -104,7 +104,7 @@ class Event implements ArrayAccess, IteratorAggregate
      *
      * @param string $key Value name
      *
-     * @return boolean
+     * @return bool
      */
     public function hasValue($key)
     {
@@ -118,7 +118,7 @@ class Event implements ArrayAccess, IteratorAggregate
      *
      * @see Event::stopPropagation()
      *
-     * @return boolean Whether propagation is stopped for this event
+     * @return bool Whether propagation is stopped for this event
      */
     public function isPropagationStopped()
     {
@@ -169,7 +169,7 @@ class Event implements ArrayAccess, IteratorAggregate
      *
      * @param string $key Array key
      *
-     * @return boolean
+     * @return bool
      */
     public function offsetExists($key)
     {

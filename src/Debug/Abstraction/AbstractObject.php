@@ -13,11 +13,11 @@
 namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
-use bdk\Debug\PhpDoc;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
+use bdk\Debug\PhpDoc;
 use ReflectionClass;
 use ReflectionObject;
 use RuntimeException;
@@ -320,7 +320,7 @@ class AbstractObject
     /**
      * Get configuration flags
      *
-     * @return integer bitmask
+     * @return int bitmask
      */
     private function getFlags()
     {
@@ -333,10 +333,9 @@ class AbstractObject
         );
         $config = $this->abstracter->getCfg();
         $config = \array_intersect_key($flags, \array_filter($config));
-        $bitmask = \array_reduce($config, function ($carry, $val) {
+        return \array_reduce($config, function ($carry, $val) {
             return $carry | $val;
         }, 0);
-        return $bitmask;
     }
 
     /**
@@ -376,7 +375,7 @@ class AbstractObject
      *
      * @param object|string $obj object (or classname) to test
      *
-     * @return boolean
+     * @return bool
      */
     private function isExcluded($obj)
     {
@@ -400,7 +399,7 @@ class AbstractObject
      *
      * @param Abstraction $abs Abstraction instance
      *
-     * @return boolean
+     * @return bool
      */
     private function isTraverseOnly(Abstraction $abs)
     {

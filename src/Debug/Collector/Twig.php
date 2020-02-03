@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -31,19 +31,18 @@ foreach ($aliases as $old => $new) {
 }
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
 use bdk\Debug\Collector\Twig\Template;
 use bdk\PubSub\Event;
-use Twig_CompilerInterface;
-use Twig_Environment;
-use Twig_LexerInterface;
-use Twig_NodeInterface;
-use Twig_ParserInterface;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
 use Twig\NodeVisitor\NodeVisitorInterface;
 use Twig\TokenParser\TokenParserInterface;
 use Twig\TokenStream;
+use Twig_CompilerInterface;
+use Twig_Environment;
+use Twig_LexerInterface;
+use Twig_NodeInterface;
+use Twig_ParserInterface;
 
 /**
  * A Twig decorator that adds logging

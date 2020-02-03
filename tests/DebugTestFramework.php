@@ -1,9 +1,9 @@
 <?php
 
-use bdk\Debug\LogEntry;
-use bdk\Debug\Abstraction\Abstraction;
-use bdk\PubSub\Event;
 use bdk\CssXpath\DOMTestCase;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\LogEntry;
+use bdk\PubSub\Event;
 
 /**
  * PHPUnit tests for Debug class
@@ -31,7 +31,7 @@ class DebugTestFramework extends DOMTestCase
      * @param array  $var  abstracted $var
      * @param string $type array, object, or resource
      *
-     * @return boolean
+     * @return bool
      */
     protected function checkAbstractionType($var, $type)
     {
@@ -39,7 +39,7 @@ class DebugTestFramework extends DOMTestCase
         if (!$var instanceof Abstraction) {
             return false;
         }
-        if ($type == 'object') {
+        if ($type === 'object') {
             $keys = array(
                 'className',
                 'constants',
@@ -61,7 +61,7 @@ class DebugTestFramework extends DOMTestCase
             $return = $var['type'] === 'object'
                 && $var['className'] === 'stdClass'
                 && \count($keysMissing) == 0;
-        } elseif ($type == 'resource') {
+        } elseif ($type === 'resource') {
             $return = $var['type'] === 'resource' && isset($var['value']);
         }
         return $return;
@@ -249,10 +249,10 @@ class DebugTestFramework extends DOMTestCase
      */
     public function testMethod($method, $args = array(), $tests = array())
     {
-        $countPath = $method == 'alert'
+        $countPath = $method === 'alert'
             ? 'alerts/__count__'
             : 'log/__count__';
-        $dataPath = $method == 'alert'
+        $dataPath = $method === 'alert'
             ? 'alerts/__end__'
             : 'log/__end__';
         $logCountBefore = $this->debug->getData($countPath);
@@ -272,7 +272,7 @@ class DebugTestFramework extends DOMTestCase
             );
         }
         foreach ($tests as $test => $outputExpect) {
-            if ($test == 'entry') {
+            if ($test === 'entry') {
                 $logEntryTemp = $logEntry;
                 if (\is_callable($outputExpect)) {
                     \call_user_func($outputExpect, $logEntryTemp);
@@ -288,13 +288,13 @@ class DebugTestFramework extends DOMTestCase
                     $this->assertEquals($outputExpect, $logEntryTemp);
                 }
                 continue;
-            } elseif ($test == 'custom') {
+            } elseif ($test === 'custom') {
                 \call_user_func($outputExpect, $logEntry);
                 continue;
-            } elseif ($test == 'notLogged') {
+            } elseif ($test === 'notLogged') {
                 $this->assertSame($logCountBefore, $this->debug->getData($countPath), 'failed asserting nothing logged');
                 continue;
-            } elseif ($test == 'return') {
+            } elseif ($test === 'return') {
                 if (\is_string($outputExpect)) {
                     $this->assertStringMatchesFormat($outputExpect, (string) $return, 'return value does not match format');
                 } else {
@@ -307,7 +307,7 @@ class DebugTestFramework extends DOMTestCase
                 $routeObj = $this->debug->routeStream;
                 $routeObj->setCfg('stream', 'php://temp');
             } else {
-                $prop = 'route'.\ucfirst($test);
+                $prop = 'route' . \ucfirst($test);
                 $routeObj = $this->debug->{$prop};
             }
             if (\in_array($test, array('chromeLogger','firephp'))) {
@@ -332,13 +332,13 @@ class DebugTestFramework extends DOMTestCase
                 $routeObj->processLogEntries($event, 'debug.output', $this->debug->eventManager);
                 $this->debug->setData($dataBackup);
                 $headers = $event['headers'];
-                if ($test == 'chromeLogger') {
+                if ($test === 'chromeLogger') {
                     /*
                         Decode the chromelogger header and get rows data
                     */
                     $rows = \json_decode(\base64_decode($headers[0][1]), true)['rows'];
                     // entry is nested inside a group
-                    $output = $rows[\count($rows)-2];
+                    $output = $rows[\count($rows) - 2];
                     if (\is_string($outputExpect)) {
                         $output = \json_encode($output);
                     }
@@ -352,11 +352,11 @@ class DebugTestFramework extends DOMTestCase
                     $headersNew = array();
                     foreach ($headers as $header) {
                         if (\strpos($header[0], 'X-Wf-1-1-1') === 0) {
-                            $headersNew[] = $header[0].': '.$header[1];
+                            $headersNew[] = $header[0] . ': ' . $header[1];
                         }
                     }
                     // entry is nested inside a group
-                    $output = $headersNew[\count($headersNew)-2];
+                    $output = $headersNew[\count($headersNew) - 2];
                 }
             } else {
                 $refMethods = &$this->getSharedVar('reflectionMethods');
@@ -371,23 +371,23 @@ class DebugTestFramework extends DOMTestCase
                 $outputExpect($output);
             } elseif (\is_array($outputExpect)) {
                 if (isset($outputExpect['contains'])) {
-                    $message = "\e[1m".$test." doesn't contain\e[0m";
+                    $message = "\e[1m" . $test . " doesn't contain\e[0m";
                     if ($test === 'streamAnsi') {
-                        $message .= "\nactual: ".\str_replace("\e", '\e', $output);
+                        $message .= "\nactual: " . \str_replace("\e", '\e', $output);
                     }
                     $this->assertContains($outputExpect['contains'], $output, $message);
                 } else {
-                    $this->assertSame($outputExpect, $output, "\e[1m".$test." not same\e[0m");
+                    $this->assertSame($outputExpect, $output, "\e[1m" . $test . " not same\e[0m");
                 }
             } else {
-                $output = \preg_replace("#^\s+#m", '', $output);
+                $output = \preg_replace('#^\s+#m', '', $output);
                 $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);
                 // @see https://github.com/sebastianbergmann/phpunit/issues/3040
                 $output = \str_replace("\r", '[\\r]', $output);
                 $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
-                $message = "\e[1m".$test." not same\e[0m";
+                $message = "\e[1m" . $test . " not same\e[0m";
                 if ($test === 'streamAnsi') {
-                    $message .= "\nactual: ".\str_replace("\e", '\e', $output);
+                    $message .= "\nactual: " . \str_replace("\e", '\e', $output);
                 }
                 $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
             }
@@ -413,11 +413,10 @@ class DebugTestFramework extends DOMTestCase
         foreach ($tests as $test => $expectContains) {
             $debug->setCfg('route', $test);
             $output = $debug->output();
-            // $this->stderr($test, $output);
             $output = \preg_replace($regexLtrim, '', $output);
             $expectContains = \preg_replace($regexLtrim, '', $expectContains);
             if ($expectContains) {
-                $this->assertStringMatchesFormat('%A'.$expectContains.'%A', $output);
+                $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
             }
         }
         $debug->setCfg('route', $backupRoute);

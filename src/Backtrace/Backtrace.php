@@ -12,8 +12,6 @@
 namespace bdk;
 
 use Exception;
-use ReflectionClass;
-use ReflectionObject;
 
 /**
  * Utility for getting backtrace
@@ -43,7 +41,7 @@ class Backtrace
      * When called internally, internal frames are removed
      *
      * @param Exception $exception (optional) Exception from which to get backtrace
-     * @param boolean   $inclArgs  (false) whether to include arguments
+     * @param bool      $inclArgs  (false) whether to include arguments
      *
      * @return array
      */
@@ -116,8 +114,8 @@ class Backtrace
      *    the class value will always be the class in which the method was defined,
      *    type will always be "::", even if called with an ->
      *
-     * @param integer $offset Adjust how far to go back
-     * @param integer $flags  optional INCL_ARGS
+     * @param int $offset Adjust how far to go back
+     * @param int $flags  optional INCL_ARGS
      *
      * @return array
      */
@@ -192,8 +190,8 @@ class Backtrace
     /**
      * Get lines surrounding frame line
      *
-     * @param array   $backtrace backtrace frames
-     * @param integer $length    number of lines to include
+     * @param array $backtrace backtrace frames
+     * @param int   $length    number of lines to include
      *
      * @return array
      */
@@ -250,10 +248,10 @@ class Backtrace
     /**
      * Get lines from a file
      *
-     * @param string  $file   filepath
-     * @param integer $start  line to start on (1-indexed; 1 = line; 1 = first line)
+     * @param string $file   filepath
+     * @param int    $start  line to start on (1-indexed; 1 = line; 1 = first line)
      *                         0 also = first line
-     * @param integer $length number of lines to return
+     * @param int    $length number of lines to return
      *
      * @return array
      */
@@ -297,8 +295,8 @@ class Backtrace
             $frame = \array_merge($frameDefault, $backtrace[$i]);
             $frame = \array_intersect_key($frame, $frameDefault);
             if (\in_array($frame['function'], $funcsSkip) || \preg_match($funcsSkipRegex, $frame['function'])) {
-                $backtraceNew[count($backtraceNew) - 1]['file'] = $frame['file'];
-                $backtraceNew[count($backtraceNew) - 1]['line'] = $frame['line'];
+                $backtraceNew[\count($backtraceNew) - 1]['file'] = $frame['file'];
+                $backtraceNew[\count($backtraceNew) - 1]['line'] = $frame['line'];
                 continue;
             }
             if (

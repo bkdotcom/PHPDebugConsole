@@ -90,7 +90,7 @@ class MethodClear
      *
      * @param LogEntry $logEntry logEntry instance
      *
-     * @return boolean
+     * @return bool
      */
     private function channelTest(LogEntry $logEntry)
     {
@@ -101,7 +101,7 @@ class MethodClear
     /**
      * Clear alerts
      *
-     * @param integer $flags flags passed to clear()
+     * @param int $flags flags passed to clear()
      *
      * @return string|null
      */
@@ -127,7 +127,7 @@ class MethodClear
     /**
      * Remove error & warn from summary & log
      *
-     * @param integer $flags flags passed to clear()
+     * @param int $flags flags passed to clear()
      *
      * @return void
      */
@@ -166,8 +166,8 @@ class MethodClear
     /**
      * clear errors for given log
      *
-     * @param array   $log   reference to log to clear of errors
-     * @param boolean $clear clear errors, or return errors?
+     * @param array $log   reference to log to clear of errors
+     * @param bool  $clear clear errors, or return errors?
      *
      * @return string[] array of error-hashes not cleared
      */
@@ -196,7 +196,7 @@ class MethodClear
     /**
      * Clear log entries
      *
-     * @param integer $flags flags passed to clear()
+     * @param int $flags flags passed to clear()
      *
      * @return string|null
      */
@@ -221,9 +221,9 @@ class MethodClear
     /**
      * Clear log data
      *
-     * @param array   $log         log to clear (passed by reference)
-     * @param boolean $clearErrors whether or not to clear errors
-     * @param array   $entriesKeep log entries to keep
+     * @param array $log         log to clear (passed by reference)
+     * @param bool  $clearErrors whether or not to clear errors
+     * @param array $entriesKeep log entries to keep
      *
      * @return void
      */
@@ -249,7 +249,7 @@ class MethodClear
     /**
      * Clear summary entries
      *
-     * @param integer $flags flags passed to clear()
+     * @param int $flags flags passed to clear()
      *
      * @return string|null
      */

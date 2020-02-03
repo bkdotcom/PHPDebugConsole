@@ -97,7 +97,7 @@ class Wamp implements RouteInterface
     /**
      * Is WAMP publisher connected?
      *
-     * @return boolean
+     * @return bool
      */
     public function isConnected()
     {

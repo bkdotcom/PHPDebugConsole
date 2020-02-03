@@ -278,7 +278,7 @@ class ErrorEmailer implements SubscriberInterface
      * @param string $file filepath
      * @param string $str  string to write
      *
-     * @return integer|boolean number of bytes written or false on error
+     * @return int|false number of bytes written or false on error
      */
     protected function fileWrite($file, $str)
     {
@@ -296,7 +296,7 @@ class ErrorEmailer implements SubscriberInterface
     /**
      * Is script running from command line (or cron)?
      *
-     * @return boolean
+     * @return bool
      */
     protected static function isCli()
     {
@@ -400,7 +400,7 @@ class ErrorEmailer implements SubscriberInterface
      *
      * @param Event $error error event
      *
-     * @return boolean
+     * @return bool
      */
     protected function throttleDataSet(Event $error)
     {
@@ -433,7 +433,7 @@ class ErrorEmailer implements SubscriberInterface
      *
      * Uses cfg[emailThrottleWrite] callable if set, otherwise, writes to cfg['emailThrottleFile']
      *
-     * @return boolean
+     * @return bool
      */
     protected function throttleDataWrite()
     {
@@ -453,7 +453,7 @@ class ErrorEmailer implements SubscriberInterface
      *
      * @param array $throttleData throttle data
      *
-     * @return boolean
+     * @return bool
      */
     protected function throttleDataWriter($throttleData)
     {

@@ -14,8 +14,6 @@ namespace bdk\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\Debug\MethodTable;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\PubSub\Event;
 
 /**

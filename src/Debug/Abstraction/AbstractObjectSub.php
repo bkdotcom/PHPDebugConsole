@@ -12,10 +12,10 @@
 
 namespace bdk\Debug\Abstraction;
 
-use bdk\Debug\PhpDoc;
-use bdk\Debug\UseStatements;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\PhpDoc;
+use bdk\Debug\UseStatements;
 use bdk\PubSub\SubscriberInterface;
 
 /**

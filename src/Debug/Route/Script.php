@@ -13,9 +13,9 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\PubSub\Event;
-use bdk\Debug\LogEntry;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\LogEntry;
+use bdk\PubSub\Event;
 
 /**
  * Output log as <script> tag

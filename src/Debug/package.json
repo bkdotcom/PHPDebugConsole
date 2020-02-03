@@ -10,7 +10,7 @@
     "cs": "npx npm-run-all cs:*",
     "cs:css": "npx stylelint ./scss",
     "cs:js": "npx eslint js_src/*",
-    "cs:php": "phpcs . --extensions=php",
+    "cs:php": "vendor/bin/phpcs . --extensions=php",
     "watch": "npx npm-run-all --parallel watch:*",
     "watch:js": "NODE_ENV=watch npx nodemon --watch js_src/ --ext js --exec \"npm run build:js\"",
     "watch:scss": "npx nodemon --watch scss/ --ext scss --exec \"npm run build:css\""

@@ -107,7 +107,7 @@ class Utf8
      *
      * @param string $str String to check
      *
-     * @return boolean
+     * @return bool
      */
     public static function hasSpecial($str)
     {
@@ -129,9 +129,9 @@ class Utf8
      * control & non-utf-8 chars are displayed as hex
      * "special" unicode-characters are displayed with the \uxxxx representation
      *
-     * @param string  $str               string containing binary
-     * @param boolean $useHtml           (false) add html markup
-     * @param boolean $sanitizeNonBinary (false) apply htmlspecialchars to non-special chars?
+     * @param string $str               string containing binary
+     * @param bool   $useHtml           (false) add html markup
+     * @param bool   $sanitizeNonBinary (false) apply htmlspecialchars to non-special chars?
      *
      * @return string
      */
@@ -158,7 +158,7 @@ class Utf8
         $len = self::$stats['strLen'] - $curBlockStart;
         self::incStat($curBlockType, $len);
         if (self::$stats['strLen']) {
-            $percentOther = (self::$stats['bytesOther']) / self::$stats['strLen'] * 100;
+            $percentOther = self::$stats['bytesOther'] / self::$stats['strLen'] * 100;
             if ($percentOther > 33) {
                 $strNew = self::dumpBlock($str, 'other', array('prefix' => false));
             } else {
@@ -175,10 +175,10 @@ class Utf8
      * In addition, if valid UTF-8, will also report whether string contains
      * control, or other speical characters that could otherwise go unnoticed
      *
-     * @param string  $str     string to check
-     * @param boolean $special does valid utf-8 string control or "exotic" whitespace type character
+     * @param string $str     string to check
+     * @param bool   $special does valid utf-8 string control or "exotic" whitespace type character
      *
-     * @return boolean
+     * @return bool
      */
     public static function isUtf8($str, &$special = false)
     {
@@ -202,11 +202,11 @@ class Utf8
      *
      * Use dechex to convert to hex (ie \uxxxx)
      *
-     * @param string  $str    A string or single character
-     * @param integer $offset (0) Zero-based offset will be updated for offset of next char
-     * @param string  $char   will be populated with the character found at offset
+     * @param string $str    A string or single character
+     * @param int    $offset (0) Zero-based offset will be updated for offset of next char
+     * @param string $char   will be populated with the character found at offset
      *
-     * @return integer
+     * @return int
      */
     public static function ordUtf8($str, &$offset = 0, &$char = null)
     {
@@ -394,8 +394,8 @@ class Utf8
     /**
      * Increment statistic
      *
-     * @param string  $stat stat to increment
-     * @param integer $inc  increment ammount
+     * @param string $stat stat to increment
+     * @param int    $inc  increment ammount
      *
      * @return void
      */
@@ -414,10 +414,10 @@ class Utf8
      *
      * Increments the current offset
      *
-     * @param boolean $special      populated with whether offset is a control or "special" character
-     * @param boolean $checkSpecial test for user-defined special chars?
+     * @param bool $special      populated with whether offset is a control or "special" character
+     * @param bool $checkSpecial test for user-defined special chars?
      *
-     * @return boolean [description]
+     * @return bool
      */
     private static function isOffsetUtf8(&$special = false, $checkSpecial = false)
     {

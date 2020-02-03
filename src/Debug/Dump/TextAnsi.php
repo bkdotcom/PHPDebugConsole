@@ -13,10 +13,10 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
-use bdk\Debug\Utilities;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\LogEntry;
+use bdk\Debug\Utilities;
 
 /**
  * Base output plugin
@@ -189,7 +189,7 @@ class TextAnsi extends Text
     /**
      * Dump boolean
      *
-     * @param boolean $val boolean value
+     * @param bool $val boolean value
      *
      * @return string
      */

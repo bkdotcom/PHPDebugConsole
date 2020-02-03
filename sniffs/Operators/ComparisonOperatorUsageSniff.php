@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A Sniff to enforce the use of strict comparison
  *
@@ -14,6 +15,9 @@ use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
 
+/**
+ * The Squiz sniff, but with distinct rule names to allow specific inclusion/exclusion
+ */
 class ComparisonOperatorUsageSniff implements Sniff
 {
 
@@ -80,9 +84,8 @@ class ComparisonOperatorUsageSniff implements Sniff
     /**
      * Process the tokens that this sniff is listening for.
      *
-     * @param \PHP_CodeSniffer\Files\File $phpcsFile The file where the token was found.
-     * @param int                         $stackPtr  The position in the stack where the token
-     *                                               was found.
+     * @param File $phpcsFile The file where the token was found.
+     * @param int  $stackPtr  The position in the stack where the token was found.
      *
      * @return void
      */

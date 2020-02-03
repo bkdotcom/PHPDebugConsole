@@ -88,7 +88,7 @@ class Manager
      *
      * @param string $eventName The name of the event
      *
-     * @return boolean
+     * @return bool
      */
     public function hasSubscribers($eventName = null)
     {
@@ -161,7 +161,7 @@ class Manager
      *
      * @param string   $eventName event name
      * @param callable $callable  callable or closure factory
-     * @param integer  $priority  The higher this value, the earlier we handle event
+     * @param int      $priority  The higher this value, the earlier we handle event
      *
      * @return void
      */
@@ -249,7 +249,7 @@ class Manager
      *
      * @param mixed $val value to check
      *
-     * @return boolean
+     * @return bool
      */
     private function isClosureFactory($val)
     {

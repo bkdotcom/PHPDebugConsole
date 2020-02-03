@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v2.3
  */
 
@@ -74,9 +74,9 @@ class ErrorLevel
     /**
      * Convert PHP error-level integer (bitmask) to constant bitwise representation
      *
-     * @param integer $level          Error Level (bitmask) value
-     * @param string  $phpVer         (PHP_VERSION) php Version
-     * @param boolean $explicitStrict (true) if level === E_ALL, always include/exclude E_STRICT for disambiguation / portability
+     * @param int    $level          Error Level (bitmask) value
+     * @param string $phpVer         (PHP_VERSION) php Version
+     * @param bool   $explicitStrict (true) if level === E_ALL, always include/exclude E_STRICT for disambiguation / portability
      *
      * @return string
      */
@@ -123,8 +123,8 @@ class ErrorLevel
      * Get all constants included in specified error level
      * excludes E_ALL
      *
-     * @param array   $constants constantName => value array
-     * @param integer $level     error level
+     * @param array $constants constantName => value array
+     * @param int   $level     error level
      *
      * @return array
      */
@@ -142,10 +142,10 @@ class ErrorLevel
     /**
      * Test if value is incl in bitmask
      *
-     * @param integer $value   value to check
-     * @param integer $bitmask bitmask
+     * @param int $value   value to check
+     * @param int $bitmask bitmask
      *
-     * @return boolean
+     * @return bool
      */
     private static function inBitmask($value, $bitmask)
     {

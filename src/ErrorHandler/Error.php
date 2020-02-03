@@ -58,7 +58,7 @@ class Error extends Event
      * Constructor
      *
      * @param ErrorHandler $errHandler ErrorHandler instance
-     * @param integer      $errType    the level of the error
+     * @param int          $errType    the level of the error
      * @param string       $errMsg     the error message
      * @param string       $file       filepath the error was raised in
      * @param string       $line       the line the error was raised in
@@ -120,7 +120,7 @@ class Error extends Event
      *
      * Backtrace is avail for fatal errors (incl uncaught exceptions)
      *
-     * @param boolean $withContext (auto) Whether to include code snippets
+     * @param bool $withContext (auto) Whether to include code snippets
      *
      * @return array
      */
@@ -143,7 +143,7 @@ class Error extends Event
     /**
      * Is the error "fatal"?
      *
-     * @return boolean
+     * @return bool
      */
     public function isFatal()
     {
@@ -153,7 +153,7 @@ class Error extends Event
     /**
      * Send error to `error_log()`
      *
-     * @return boolean
+     * @return bool
      */
     public function log()
     {
@@ -198,14 +198,13 @@ class Error extends Event
         $errMsg = \preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errMsg);
         // remove "comments"..  this allows throttling email, while still adding unique info to user errors
         $errMsg = \preg_replace('/\s*##.+$/', '', $errMsg);
-        $hash = \md5($errorValues['file'] . $errorValues['line'] . $errorValues['type'] . $errMsg);
-        return $hash;
+        return \md5($errorValues['file'] . $errorValues['line'] . $errorValues['type'] . $errMsg);
     }
 
     /**
      * ErrType to category
      *
-     * @param integer $errType error type
+     * @param int $errType error type
      *
      * @return string|null
      */

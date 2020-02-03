@@ -13,7 +13,6 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
@@ -115,7 +114,7 @@ class Stream extends Base
     /**
      * Determine whether or not to use ANSI escape sequences (color output)
      *
-     * @return boolean
+     * @return bool
      */
     private function ansiCheck()
     {

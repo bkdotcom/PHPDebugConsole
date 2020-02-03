@@ -14,7 +14,6 @@ namespace bdk\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\AssetProviderInterface;
-use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
 /**
@@ -133,8 +132,7 @@ class Html extends Base
         /*
             add "plugin" scripts  (ie prism.js)
         */
-        $return .= $this->buildAssetOutput($this->assets['script']);
-        return $return;
+        return $return . $this->buildAssetOutput($this->assets['script']);
     }
 
     /**
@@ -214,7 +212,7 @@ class Html extends Base
      * @param string $what  "css" or "script"
      * @param string $mixed css, javascript, or filepath
      *
-     * @return boolean
+     * @return bool
      */
     public function removeAsset($what, $mixed)
     {

@@ -12,12 +12,12 @@
 
 namespace bdk\Debug;
 
-use Reflector;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionMethod;
 use ReflectionObject;
 use ReflectionProperty;
+use Reflector;
 
 /**
  * Get and parse phpDoc block
@@ -322,7 +322,7 @@ class PhpDoc
     }
 
     /**
-     * [getReflector description]
+     * Returns reflector for given object
      *
      * @param mixed $what string|Reflector|object
      *

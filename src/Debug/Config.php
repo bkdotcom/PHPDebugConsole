@@ -95,6 +95,7 @@ class Config
             return $this->values;
         }
         if ($classname === '*') {
+            $values = array();
             foreach (\array_keys($this->configKeys) as $classname) {
                 if (isset($this->debug->{$classname})) {
                     $values[$classname] = $this->debug->{$classname}->getCfg();

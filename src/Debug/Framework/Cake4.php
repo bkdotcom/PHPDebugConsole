@@ -22,9 +22,8 @@ use Cake\Core\PluginApplicationInterface;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
 use Cake\Event\EventList;
 use Cake\Http\MiddlewareQueue;
-use Cake\Http\Response;
-use Psr\Http\Message\ServerRequestInterface;
 use Exception;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Cake Plugin

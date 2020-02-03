@@ -1,11 +1,9 @@
 <?xml version="1.0"?>
-<ruleset name="PSR-12_Plus">
+<ruleset name="PHPDebugConsole">
 
-    <description>PSR-12 plus</description>
+    <description>PSR-12 plus commenting</description>
 
-    <rule ref="PSR12">
-        <exclude name="PSR12.Properties.ConstantVisibility.NotFound" />
-    </rule>
+    <config name="installed_paths" value="../../slevomat/coding-standard"/>
 
     <rule ref="./sniffs/">
         <exclude name="bdk.Commenting.FunctionComment.EmptyThrows" />
@@ -17,6 +15,10 @@
         <exclude name="bdk.Commenting.FunctionComment.TypeHintMissing" />
         <exclude name="bdk.Operators.ComparisonOperatorUsage.ImplicitTrue" />
         <exclude name="bdk.Operators.ComparisonOperatorUsage.!NotAllowed" />
+    </rule>
+
+    <rule ref="PSR12">
+        <exclude name="PSR12.Properties.ConstantVisibility.NotFound" />
     </rule>
 
     <rule ref="Generic">
@@ -55,6 +57,73 @@
     </rule>
 
     <rule ref="PEAR.Functions.ValidDefaultValue"/>
+
+
+    <rule ref="SlevomatCodingStandard.Arrays" />
+    <!--
+    <rule ref="SlevomatCodingStandard.Classes.ClassStructure">
+        <properties>
+            <property name="groups" type="array">
+                <element value="uses" />
+                <element value="public constants" />
+                <element value="protected constants" />
+                <element value="private constants" />
+                <element value="public static properties, public properties" />
+                <element value="protected properties, protected static properties, private properties, private static properties" />
+                <element value="constructor " />
+                <element value="magic methods" />
+                <element value="public methods, public static methods" />
+                <element value="protected methods, protected static methods, private methods, private static methods" />
+            </property>
+        </properties>
+    </rule>
+    -->
+    <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
+    <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
+    <!--
+    <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
+    -->
+    <rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure" />
+    <rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue" />
+    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses" />
+    <rule ref="SlevomatCodingStandard.Namespaces.UselessAlias" />
+    <rule ref="SlevomatCodingStandard.PHP.RequireExplicitAssertion" />
+    <rule ref="SlevomatCodingStandard.PHP.UselessParentheses" />
+    <rule ref="SlevomatCodingStandard.PHP.OptimizedFunctionsWithoutUnpacking" />
+    <rule ref="SlevomatCodingStandard.PHP.UselessSemicolon" />
+    <rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable" />
+    <rule ref="SlevomatCodingStandard.Variables.UselessVariable" />
+    <rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses" />
+    <rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses" />
+    <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
+    <rule ref="SlevomatCodingStandard.Files.TypeNameMatchesFileName">
+        <properties>
+            <property name="rootNamespaces" type="array">
+                <element key="src" value="bdk"/>
+            </property>
+        </properties>
+        <exclude-pattern>src/Backtrace/Backtrace.php</exclude-pattern>
+        <exclude-pattern>src/Debug/Debug.php</exclude-pattern>
+        <exclude-pattern>src/ErrorHandler/ErrorHandler.php</exclude-pattern>
+    </rule>
+    <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions" />
+    <rule ref="SlevomatCodingStandard.Namespaces.UseDoesNotStartWithBackslash" />
+    <!--
+    <rule ref="SlevomatCodingStandard.Commenting.ForbiddenAnnotations">
+        <property name="forbiddenAnnotations" type="array">
+            <element value="@author, @created, @version, @package, @copyright, @license, @throws" />
+        </property>
+    </rule>
+    -->
+    <rule ref="SlevomatCodingStandard.Commenting.ForbiddenComments">
+        <properties>
+            <property name="forbiddenCommentPatterns" type="array">
+                <element value="#\[\w+ description\]#" />
+            </property>
+        </properties>
+    </rule>
+    <rule ref="SlevomatCodingStandard.ControlStructures.UselessIfConditionWithReturn" />
+    <rule ref="SlevomatCodingStandard.ControlStructures.UselessTernaryOperator" />
 
     <rule ref="Squiz.Commenting">
         <exclude name="Squiz.Commenting.BlockComment.NoCapital" />

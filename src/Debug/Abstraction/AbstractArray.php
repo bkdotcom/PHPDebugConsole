@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v2.1.0
  */
 
@@ -70,7 +70,7 @@ class AbstractArray
      *
      * @param array $array array to check
      *
-     * @return boolean
+     * @return bool
      */
     public static function isCallable($array)
     {

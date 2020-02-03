@@ -13,13 +13,13 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Component;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Abstraction\AbstractObject;
 use bdk\PubSub\Event;
 
 /**
@@ -179,9 +179,9 @@ class Base extends Component implements ConfigurableInterface
     /**
      * Dump boolean
      *
-     * @param boolean $val boolean value
+     * @param bool $val boolean value
      *
-     * @return boolean
+     * @return bool
      */
     protected function dumpBool($val)
     {
@@ -231,9 +231,9 @@ class Base extends Component implements ConfigurableInterface
     /**
      * Dump integer value
      *
-     * @param integer $val integer value
+     * @param int $val integer value
      *
-     * @return integer|string
+     * @return int|string
      */
     protected function dumpInt($val)
     {
@@ -603,9 +603,9 @@ class Base extends Component implements ConfigurableInterface
     }
 
     /**
-     * [processSubsCallback description]
+     * Process string substitution regex callback
      *
-     * @param array $matches [description]
+     * @param array $matches regex matches array
      *
      * @return string
      */

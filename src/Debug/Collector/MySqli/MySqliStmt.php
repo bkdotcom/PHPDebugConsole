@@ -6,17 +6,16 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Collector\MySqli;
 
-use Exception;
-use mysqli_stmt as mysqliStmtBase;
-use bdk\Debug;
 use bdk\Debug\Collector\MySqli;
 use bdk\Debug\Collector\StatementInfo;
+use Exception;
+use mysqli_stmt as mysqliStmtBase;
 
 /**
  * A mysqli_stmt proxy which traces statements
@@ -50,7 +49,7 @@ class MySqliStmt extends mysqliStmtBase
      * @param string $types   A string that contains one or more characters which specify the types for the corresponding bind variables
      * @param mixed  ...$vals The number of variables and length of string types must match the parameters in the statement
      *
-     * @return boolean
+     * @return bool
      */
     public function bind_param($types, &...$vals)
     {

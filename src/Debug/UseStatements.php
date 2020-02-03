@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -133,8 +133,8 @@ class UseStatements
     /**
      * Read file source up to the line where our class is defined.
      *
-     * @param string  $file      filepath
-     * @param integer $startLine line to stop reading source
+     * @param string $file      filepath
+     * @param int    $startLine line to stop reading source
      *
      * @return string
      */

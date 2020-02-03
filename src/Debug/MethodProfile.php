@@ -6,13 +6,11 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug;
-
-use bdk\PubSub\Event;
 
 /**
  * Clear method
@@ -60,7 +58,7 @@ class MethodProfile
         }
         // sort by totalTime descending
         \uasort($this->data, function ($valA, $valB) {
-            return ($valA['totalTime'] < $valB['totalTime']) ? 1 : -1;
+            return $valA['totalTime'] < $valB['totalTime'] ? 1 : -1;
         });
         $data =  \array_map(function ($row) {
             $row['totalTime'] = \round($row['totalTime'], 6);
@@ -77,7 +75,7 @@ class MethodProfile
     /**
      * Set initial stack info
      *
-     * @return boolean
+     * @return bool
      */
     public function start()
     {

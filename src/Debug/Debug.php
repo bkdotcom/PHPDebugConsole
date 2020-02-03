@@ -21,12 +21,11 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utilities;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\ErrorEmailer;
-use bdk\PubSub\SubscriberInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
+use bdk\PubSub\SubscriberInterface;
 use Psr\Http\Message\ResponseInterface; // PSR-7
 use ReflectionMethod;
 use SplObjectStorage;
@@ -51,8 +50,18 @@ use SplObjectStorage;
 class Debug
 {
 
-    private static $instance;
-    private $channels = array();
+    const CLEAR_ALERTS = 1;
+    const CLEAR_LOG = 2;
+    const CLEAR_LOG_ERRORS = 4;
+    const CLEAR_SUMMARY = 8;
+    const CLEAR_SUMMARY_ERRORS = 16;
+    const CLEAR_ALL = 31;
+    const CLEAR_SILENT = 32;
+    const COUNT_NO_INC = 1;
+    const COUNT_NO_OUT = 2;
+    const META = "\x00meta\x00";
+    const VERSION = '3.0';
+
     protected $cfg = array();
     protected $data = array();
     protected $groupStackRef;   // points to $this->groupStacks[x] (where x = 'main' or (int) priority)
@@ -67,17 +76,8 @@ class Debug
      */
     protected $response;
 
-    const CLEAR_ALERTS = 1;
-    const CLEAR_LOG = 2;
-    const CLEAR_LOG_ERRORS = 4;
-    const CLEAR_SUMMARY = 8;
-    const CLEAR_SUMMARY_ERRORS = 16;
-    const CLEAR_ALL = 31;
-    const CLEAR_SILENT = 32;
-    const COUNT_NO_INC = 1;
-    const COUNT_NO_OUT = 2;
-    const META = "\x00meta\x00";
-    const VERSION = '3.0';
+    private static $instance;
+    private $channels = array();
 
     /**
      * Constructor
@@ -342,10 +342,10 @@ class Debug
     /**
      * Display an alert at the top of the log
      *
-     * @param string  $message     message
-     * @param string  $level       (error), info, success, warn
+     * @param string $message     message
+     * @param string $level       (error), info, success, warn
      *                               "danger" and "warning" are still accepted, however deprecated
-     * @param boolean $dismissible (false) Whether to display a close icon/button
+     * @param bool   $dismissible (false) Whether to display a close icon/button
      *
      * @return void
      */
@@ -389,9 +389,9 @@ class Debug
      *
      * Supports styling & substitutions
      *
-     * @param boolean $assertion Any boolean expression. If the assertion is false, the message is logged
-     * @param mixed   $msg,...   (optional) variable num of values to output if assertion fails
-     *                             if none provided, will use calling file & line num
+     * @param bool  $assertion Any boolean expression. If the assertion is false, the message is logged
+     * @param mixed $msg,...   (optional) variable num of values to output if assertion fails
+     *                           if none provided, will use calling file & line num
      *
      * @return void
      */
@@ -426,14 +426,14 @@ class Debug
      *
      * This method executes even if `collect` is false
      *
-     * @param integer $flags A bitmask of options
-     *                         `self::CLEAR_ALERTS` : Clear alerts generated with `alert()`
-     *                         `self::CLEAR_LOG` : **default** Clear log entries (excluding warn & error)
-     *                         `self::CLEAR_LOG_ERRORS` : Clear log, warn, & error
-     *                         `self::CLEAR_SUMMARY` : Clear summary entries (excluding warn & error)
-     *                         `self::CLEAR_SUMMARY_ERRORS` : Clear summary warn & error
-     *                         `self::CLEAR_ALL` :  clear all everything
-     *                         `self::CLEAR_SILENT` : Don't add log entry
+     * @param int $flags A bitmask of options
+     *                     `self::CLEAR_ALERTS` : Clear alerts generated with `alert()`
+     *                     `self::CLEAR_LOG` : **default** Clear log entries (excluding warn & error)
+     *                     `self::CLEAR_LOG_ERRORS` : Clear log, warn, & error
+     *                     `self::CLEAR_SUMMARY` : Clear summary entries (excluding warn & error)
+     *                     `self::CLEAR_SUMMARY_ERRORS` : Clear summary warn & error
+     *                     `self::CLEAR_ALL` :  clear all everything
+     *                     `self::CLEAR_SILENT` : Don't add log entry
      *
      * @return void
      */
@@ -464,13 +464,13 @@ class Debug
      * Count is maintained even when `collect` is false
      * If collect = false, `count()` will be performed "silently"
      *
-     * @param mixed   $label Label.  If omitted, logs the number of times `count()` has been called at this particular line.
-     * @param integer $flags (optional) A bitmask of
-     *                          `\bdk\Debug::COUNT_NO_INC` : don't increment the counter
-     *                                                       (ie, just get the current count)
-     *                          `\bdk\Debug::COUNT_NO_OUT` : don't output/log
+     * @param mixed $label Label.  If omitted, logs the number of times `count()` has been called at this particular line.
+     * @param int   $flags (optional) A bitmask of
+     *                        \bdk\Debug::COUNT_NO_INC` : don't increment the counter
+     *                                                     (ie, just get the current count)
+     *                        \bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
-     * @return integer The new count (or current count when using `COUNT_NO_INC`)
+     * @return int The new count (or current count when using `COUNT_NO_INC`)
      */
     public function count($label = null, $flags = 0)
     {
@@ -527,9 +527,9 @@ class Debug
      *
      * Counter is reset even when debugging is disabled (ie collect = false).
      *
-     * @param mixed   $label (optional) specify the counter to reset
-     * @param integer $flags (optional) currently only one option :
-     *                          `\bdk\Debug::COUNT_NO_OUT` : don't output/log
+     * @param mixed $label (optional) specify the counter to reset
+     * @param int   $flags (optional) currently only one option :
+     *                       \bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
      * @return void
      */
@@ -695,7 +695,7 @@ class Debug
      *
      * All groupSummary groups will appear together in a single group
      *
-     * @param integer $priority (0) The higher the priority, the earlier it will appear.
+     * @param int $priority (0) The higher the priority, the earlier it will appear.
      *
      * @return void
      */
@@ -1018,9 +1018,9 @@ class Debug
      *    template: '%label: %time'
      *    unit: ('auto'), 'sec', 'ms', or 'us'
      *
-     * @param string  $label (optional) unique label
-     * @param boolean $log   (true) log it, or return only
-     *                           if passed, takes precedence over silent meta val
+     * @param string $label (optional) unique label
+     * @param bool   $log   (true) log it, or return only
+     *                        if passed, takes precedence over silent meta val
      *
      * @return float The duration (in sec).
      */
@@ -1081,9 +1081,9 @@ class Debug
      *
      * This method does not have a web console API equivalent
      *
-     * @param string  $label (optional) unique label
-     * @param boolean $log   (true) log it, or return only
-     *                           if passed, takes precedence over silent meta val
+     * @param string $label (optional) unique label
+     * @param bool   $log   (true) log it, or return only
+     *                        if passed, takes precedence over silent meta val
      *
      * @return float|false The duration (in sec).  `false` if specified label does not exist
      */
@@ -1201,8 +1201,8 @@ class Debug
      *
      * Essentially PHP's `debug_backtrace()`, but displayed as a table
      *
-     * @param boolean $inclContext Include code snippet
-     * @param string  $caption     (optional) Specify caption for the trace table
+     * @param bool   $inclContext Include code snippet
+     * @param string $caption     (optional) Specify caption for the trace table
      *
      * @return void
      */
@@ -1401,7 +1401,7 @@ class Debug
      *
      * Does not return self
      *
-     * @param boolean $allDescendants (false) include all descendants?
+     * @param bool $allDescendants (false) include all descendants?
      *
      * @return static[]
      */
@@ -1745,9 +1745,9 @@ class Debug
      *   + appends log (if event propagation not stopped)
      *
      * @param LogEntry $logEntry     log entry instance
-     * @param boolean  $forcePublish (false) publish event event if collect is false
+     * @param bool     $forcePublish (false) publish event event if collect is false
      *
-     * @return boolean whether or not entry got appended
+     * @return bool whether or not entry got appended
      */
     protected function appendLog(LogEntry $logEntry, $forcePublish = false)
     {
@@ -1909,7 +1909,7 @@ class Debug
     /**
      * Calculate total group depth
      *
-     * @return integer
+     * @return int
      */
     protected function getGroupDepth()
     {

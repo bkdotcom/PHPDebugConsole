@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -52,8 +52,8 @@ class Slim2
     /**
      * "Write" a slim log message
      *
-     * @param mixed   $message message
-     * @param integer $level   slim error level
+     * @param mixed $message message
+     * @param int   $level   slim error level
      *
      * @return void
      */
@@ -69,7 +69,7 @@ class Slim2
     /**
      * Slim Log level to debug message
      *
-     * @param integer $level Slim Log level constant
+     * @param int $level Slim Log level constant
      *
      * @return string method name
      */

@@ -421,7 +421,7 @@ class AbstractObjectProperties extends AbstractObjectSub
      *
      * @param object $obj object to check
      *
-     * @return boolean
+     * @return bool
      */
     private function isDomObj($obj)
     {

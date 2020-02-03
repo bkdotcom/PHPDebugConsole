@@ -6,14 +6,13 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
-use bdk\PubSub\Event;
 use SplObjectStorage;
 use Swift_Events_CommandEvent;
 use Swift_Events_CommandListener;
@@ -25,7 +24,6 @@ use Swift_Events_TransportChangeEvent;
 use Swift_Events_TransportChangeListener;
 use Swift_Events_TransportExceptionEvent;
 use Swift_Events_TransportExceptionListener;
-use Swift_Mailer;
 use Swift_Plugins_Logger;
 use Swift_TransportException;
 

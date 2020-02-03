@@ -14,8 +14,8 @@ class TestVariadicByReference extends TestVariadic
     /**
      * This method is private
      *
-     * @param mixed   $param1     first param (passed by ref)
-     * @param boolean $moreParams variadic param by reference (PHP 5.6)
+     * @param mixed $param1     first param (passed by ref)
+     * @param mixed $moreParams variadic param by reference (PHP 5.6)
      *
      * @return void
      */

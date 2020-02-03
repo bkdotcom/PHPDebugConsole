@@ -97,7 +97,7 @@ class FileStreamWrapper
     /**
      * Close the directory
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.dir-closedir.php
      */
@@ -116,10 +116,10 @@ class FileStreamWrapper
     /**
      * Opens a directory for reading
      *
-     * @param string  $path    Specifies the URL that was passed to opendir().
-     * @param integer $options Whether or not to enforce safe_mode (0x04).
+     * @param string $path    Specifies the URL that was passed to opendir().
+     * @param int    $options Whether or not to enforce safe_mode (0x04).
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.dir-opendir.php
      */
@@ -139,7 +139,7 @@ class FileStreamWrapper
     /**
      * Read a single filename of a directory
      *
-     * @return string|boolean
+     * @return string|bool
      *
      * @see http://php.net/manual/en/streamwrapper.dir-readdir.php
      */
@@ -157,7 +157,7 @@ class FileStreamWrapper
     /**
      * Reset directory name pointer
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.dir-rewinddir.php
      */
@@ -175,11 +175,11 @@ class FileStreamWrapper
     /**
      * Create a directory
      *
-     * @param string  $path    Directory which should be created.
-     * @param integer $mode    The value passed to mkdir().
-     * @param integer $options A bitwise mask of values, such as STREAM_MKDIR_RECURSIVE.
+     * @param string $path    Directory which should be created.
+     * @param int    $mode    The value passed to mkdir().
+     * @param int    $options A bitwise mask of values, such as STREAM_MKDIR_RECURSIVE.
      *
-     * @return boolean
+     * @return bool
      */
     public function mkdir($path, $mode, $options = 0)
     {
@@ -195,7 +195,7 @@ class FileStreamWrapper
      * @param string $pathFrom existing path
      * @param string $pathTo   The URL which the path_from should be renamed to.
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.rename.php
      */
@@ -210,10 +210,10 @@ class FileStreamWrapper
     /**
      * Remove a directory
      *
-     * @param string  $path    directory to remove
-     * @param integer $options bitwise mask of values
+     * @param string $path    directory to remove
+     * @param int    $options bitwise mask of values
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.rmdir.php
      */
@@ -230,10 +230,10 @@ class FileStreamWrapper
     /**
      * Retrieve the underlying resource
      *
-     * @param integer $castAs STREAM_CAST_FOR_SELECT when stream_select() is calling stream_cast()
-     *                        STREAM_CAST_AS_STREAM when stream_cast() is called for other uses
+     * @param int $castAs STREAM_CAST_FOR_SELECT when stream_select() is calling stream_cast()
+     *                      STREAM_CAST_AS_STREAM when stream_cast() is called for other uses
      *
-     * @return resource|boolean
+     * @return resource|bool
      *
      * @see http://php.net/manual/en/streamwrapper.stream-cast.php
      */
@@ -266,7 +266,7 @@ class FileStreamWrapper
     /**
      * Tests for end-of-file on a file pointer
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.stream-eof.php
      */
@@ -284,7 +284,7 @@ class FileStreamWrapper
     /**
      * Flush the output
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.stream-flush.php
      */
@@ -302,12 +302,12 @@ class FileStreamWrapper
     /**
      * Advisory file locking
      *
-     * @param integer $operation is one of the following:
+     * @param int $operation is one of the following:
      *       LOCK_SH to acquire a shared lock (reader).
      *       LOCK_EX to acquire an exclusive lock (writer).
      *       LOCK_UN to release a lock (shared or exclusive).
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.stream-lock.php
      */
@@ -325,11 +325,11 @@ class FileStreamWrapper
     /**
      * Change file options
      *
-     * @param string  $path   filepath or URL
-     * @param integer $option What meta value is being set
-     * @param mixed   $value  Meta value
+     * @param string $path   filepath or URL
+     * @param int    $option What meta value is being set
+     * @param mixed  $value  Meta value
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.stream-metadata.php
      */
@@ -367,13 +367,12 @@ class FileStreamWrapper
     /**
      * Opens file or URL
      *
-     * @param string   $path       Specifies the file/URL that was passed to the original function.
-     * @param string   $mode       The mode used to open the file, as detailed for fopen().
-     * @param integers $options    Holds additional flags set by the streams API. I
-     * @param string   $openedPath the full path of the file/resource that was actually opened
+     * @param string $path       Specifies the file/URL that was passed to the original function.
+     * @param string $mode       The mode used to open the file, as detailed for fopen().
+     * @param int    $options    Holds additional flags set by the streams API. I
+     * @param string $openedPath the full path of the file/resource that was actually opened
      *
-     * @return boolean
-     *
+     * @return bool
      * @see    http://php.net/manual/en/streamwrapper.stream-open.php
      * @throws \UnexpectedValueException
      */
@@ -414,7 +413,7 @@ class FileStreamWrapper
     /**
      * Read from stream
      *
-     * @param integer $bytes How many bytes of data from the current position should be returned.
+     * @param int $bytes How many bytes of data from the current position should be returned.
      *
      * @return string
      *
@@ -459,10 +458,10 @@ class FileStreamWrapper
     /**
      * Seek to specific location in a stream
      *
-     * @param integer $offset The stream offset to seek to
-     * @param integer $whence [SEEK_SET] | SEEK_CUR | SEEK_END
+     * @param int $offset The stream offset to seek to
+     * @param int $whence [SEEK_SET] | SEEK_CUR | SEEK_END
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.stream-seek.php
      */
@@ -481,11 +480,11 @@ class FileStreamWrapper
     /**
      * Change stream options
      *
-     * @param integer $option [description]
-     * @param integer $arg1   [description]
-     * @param integer $arg2   [description]
+     * @param int $option [description]
+     * @param int $arg1   [description]
+     * @param int $arg2   [description]
      *
-     * @return boolean
+     * @return bool
      */
     public function stream_set_option($option, $arg1, $arg2)
     {
@@ -548,7 +547,7 @@ class FileStreamWrapper
     /**
      * Retrieve the current position of a stream
      *
-     * @return integer
+     * @return int
      *
      * @see http://php.net/manual/en/streamwrapper.stream-tell.php
      */
@@ -566,9 +565,9 @@ class FileStreamWrapper
     /**
      * Truncates a file to the given size
      *
-     * @param integer $size Truncate to this size
+     * @param int $size Truncate to this size
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.stream-truncate.php
      */
@@ -588,7 +587,7 @@ class FileStreamWrapper
      *
      * @param string $data data to write
      *
-     * @return integer
+     * @return int
      *
      * @see http://php.net/manual/en/streamwrapper.stream-write.php
      */
@@ -608,7 +607,7 @@ class FileStreamWrapper
      *
      * @param string $path filepath
      *
-     * @return boolean
+     * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.unlink.php
      */
@@ -623,8 +622,8 @@ class FileStreamWrapper
     /**
      * Retrieve information about a file
      *
-     * @param string  $path  The file path or URL to stat
-     * @param integer $flags Holds additional flags set by the streams API.
+     * @param string $path  The file path or URL to stat
+     * @param int    $flags Holds additional flags set by the streams API.
      *
      * @return array
      *
@@ -651,7 +650,7 @@ class FileStreamWrapper
     /**
      * Check whether this file has been, or should beinjected with declare ticks
      *
-     * @return boolean
+     * @return bool
      */
     public function isTargeted()
     {

@@ -156,7 +156,7 @@ class ChromeLogger extends Base
     /**
      * Calculate header size
      *
-     * @return integer
+     * @return int
      */
     protected function calcHeaderSize()
     {
@@ -182,7 +182,7 @@ class ChromeLogger extends Base
     /**
      * Get maximum allowed header length
      *
-     * @return integer
+     * @return int
      */
     protected function getMaxLength()
     {
@@ -190,16 +190,15 @@ class ChromeLogger extends Base
             $this->debug->utilities->getBytes($this->debug->getCfg('headerMaxAll'), true),
             $this->debug->utilities->getBytes($this->debug->getCfg('headerMaxPer'), true),
         ));
-        $max = $maxVals
+        return $maxVals
             ? \min($maxVals)
             : 0;
-        return $max;
     }
 
     /**
      * Attempt to remove log entries to get header length < max
      *
-     * @param integer $max maximum header length
+     * @param int $max maximum header length
      *
      * @return void
      */
@@ -262,8 +261,8 @@ class ChromeLogger extends Base
     /**
      * Add back log entries until we're out of space
      *
-     * @param integer $max     maximum header length
-     * @param array   $logBack logEntries removed in initial pass
+     * @param int   $max     maximum header length
+     * @param array $logBack logEntries removed in initial pass
      *
      * @return void
      */

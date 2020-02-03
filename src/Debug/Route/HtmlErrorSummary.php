@@ -13,8 +13,8 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug\LogEntry;
-use bdk\ErrorHandler;
 use bdk\Debug\Route\Html as RouteHtml;
+use bdk\ErrorHandler;
 
 /**
  * Output a summary of errors
@@ -222,11 +222,10 @@ class HtmlErrorSummary
             $header = $catStrings[$category]['header'];
             $msg = \sprintf($catStrings[$category]['msg'], $countInCat);
         }
-        $html = '<h3>' . $header . '</h3>'
+        return '<h3>' . $header . '</h3>'
             . '<ul class="list-unstyled">'
                 . '<li class="error-' . $category . '" data-count="' . $countInCat . '">' . $msg . '</li>'
                 . '</ul>';
-        return $html;
     }
 
     /**
@@ -268,11 +267,10 @@ class HtmlErrorSummary
                 ? 'was 1 error'
                 : 'were ' . $count . ' errors'
         );
-        $html = '<h3>' . $header . '</h3>'
+        return '<h3>' . $header . '</h3>'
             . '<ul class="list-unstyled">' . "\n"
             . \implode("\n", $lis) . "\n"
             . '</ul>';
-        return $html;
     }
 
     /**

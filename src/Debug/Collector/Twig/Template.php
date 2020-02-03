@@ -12,11 +12,10 @@
 
 namespace bdk\Debug\Collector\Twig;
 
-use bdk\Debug;
 use bdk\Debug\Collector\Twig;
+use Exception;
 use Twig_Template;
 use Twig_TemplateInterface;
-use Exception;
 
 /**
  * A Twig Template proxy

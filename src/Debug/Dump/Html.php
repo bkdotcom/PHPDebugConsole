@@ -12,9 +12,9 @@
 
 namespace bdk\Debug\Dump;
 
-use bdk\Debug\LogEntry;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\LogEntry;
 
 /**
  * Dump val as HTML
@@ -242,8 +242,7 @@ class Html extends Base
             ' data-detect-files="null"' => '',
             ' data-icon="null"' => '',
         ));
-        $str .= "\n";
-        return $str;
+        return $str . "\n";
     }
 
     /**
@@ -328,7 +327,7 @@ class Html extends Base
     /**
      * Dump boolean
      *
-     * @param boolean $val boolean value
+     * @param bool $val boolean value
      *
      * @return string
      */
@@ -370,7 +369,7 @@ class Html extends Base
     /**
      * Dump float value
      *
-     * @param integer $val float value
+     * @param int $val float value
      *
      * @return float
      */
@@ -744,9 +743,9 @@ class Html extends Base
     /**
      * Insert a row containing code snip & arguments after the given row
      *
-     * @param string  $tr  <tr>...</tr> html
-     * @param array   $row backtrace frame
-     * @param integer $i   row index
+     * @param string $tr  <tr>...</tr> html
+     * @param array  $row backtrace frame
+     * @param int    $i   row index
      *
      * @return string
      */

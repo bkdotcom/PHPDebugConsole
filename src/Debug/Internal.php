@@ -16,8 +16,8 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Prism;
 use bdk\Debug\Route\RouteInterface;
 use bdk\ErrorHandler\Error;
@@ -151,8 +151,8 @@ class Internal implements SubscriberInterface
     /**
      * Return the group & groupCollapsed ("ancestors")
      *
-     * @param array   $logEntries log entries
-     * @param integer $curDepth   current group depth
+     * @param array $logEntries log entries
+     * @param int   $curDepth   current group depth
      *
      * @return LogEntry[] kwys are maintained
      */
@@ -188,7 +188,7 @@ class Internal implements SubscriberInterface
      * Status code pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
      * otherwise, code pulled via `http_response_code()`
      *
-     * @return integer Status code
+     * @return int Status code
      */
     public function getResponseCode()
     {
@@ -275,7 +275,7 @@ class Internal implements SubscriberInterface
     /**
      * Do we have log entries?
      *
-     * @return boolean
+     * @return bool
      */
     public function hasLog()
     {
@@ -1075,7 +1075,7 @@ class Internal implements SubscriberInterface
     /**
      * Test if conditions are met to email the log
      *
-     * @return boolean
+     * @return bool
      */
     private function testEmailLog()
     {

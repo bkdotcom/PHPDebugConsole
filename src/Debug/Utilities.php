@@ -12,10 +12,9 @@
 
 namespace bdk\Debug;
 
-use bdk\Debug;
-use Psr\Http\Message\StreamInterface;
 use DOMDocument;
 use Exception;
+use Psr\Http\Message\StreamInterface;
 use SqlFormatter;
 
 /**
@@ -91,8 +90,8 @@ class Utilities
      * "dereference" array
      * returns a copy of the array with references removed
      *
-     * @param array   $source source array
-     * @param boolean $deep   (true) deep copy
+     * @param array $source source array
+     * @param bool  $deep   (true) deep copy
      *
      * @return array
      */
@@ -253,9 +252,9 @@ class Utilities
     /**
      * Format duration
      *
-     * @param float        $duration  duration in seconds
-     * @param string       $format    DateInterval format string, or 'us', 'ms', 's'
-     * @param integer|null $precision decimal precision
+     * @param float    $duration  duration in seconds
+     * @param string   $format    DateInterval format string, or 'us', 'ms', 's'
+     * @param int|null $precision decimal precision
      *
      * @return string
      */
@@ -305,10 +304,10 @@ class Utilities
     /**
      * Convert size int into "1.23 kB" or vice versa
      *
-     * @param integer|string $size      bytes or similar to "1.23M"
-     * @param boolean        $returnInt return integer?
+     * @param int|string $size      bytes or similar to "1.23M"
+     * @param bool       $returnInt return integer?
      *
-     * @return string|integer
+     * @return string|int
      */
     public static function getBytes($size, $returnInt = false)
     {
@@ -508,7 +507,7 @@ class Utilities
      *
      * @param string $str string to check
      *
-     * @return boolean
+     * @return bool
      */
     public static function isBase64Encoded($str)
     {
@@ -521,7 +520,7 @@ class Utilities
      *
      * @param mixed $val value to check
      *
-     * @return boolean
+     * @return bool
      */
     public static function isList($val)
     {
@@ -542,7 +541,7 @@ class Utilities
      *
      * @param string $str string to test
      *
-     * @return boolean
+     * @return bool
      */
     public static function isXml($str)
     {
@@ -569,8 +568,8 @@ class Utilities
     /**
      * Parse string -o- attributes into a key=>value array
      *
-     * @param string  $str        string to parse
-     * @param boolean $dataDecode (true) whether to json_decode data attributes
+     * @param string $str        string to parse
+     * @param bool   $dataDecode (true) whether to json_decode data attributes
      *
      * @return array
      */
@@ -757,8 +756,8 @@ class Utilities
     /**
      * Convert boolean attribute value to string
      *
-     * @param string  $key   attribute name
-     * @param boolean $value true|false
+     * @param string $key   attribute name
+     * @param bool   $value true|false
      *
      * @return string|null
      */
@@ -813,7 +812,7 @@ class Utilities
      *
      * @param array $array variable to check
      *
-     * @return boolean
+     * @return bool
      */
     private static function isCallable($array)
     {

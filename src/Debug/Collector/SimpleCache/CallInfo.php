@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -107,7 +107,7 @@ class CallInfo
     /**
      * Checks if the statement was successful
      *
-     * @return boolean
+     * @return bool
      */
     protected function isSuccess()
     {

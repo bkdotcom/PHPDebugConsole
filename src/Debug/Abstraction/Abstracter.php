@@ -6,18 +6,18 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v2.1.0
  */
 
 namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\AbstractArray;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Component;
 use bdk\Debug\PhpDoc;
-use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Abstraction\AbstractArray;
-use bdk\Debug\Abstraction\AbstractObject;
 
 /**
  * Store array/object/resource info
@@ -142,7 +142,7 @@ class Abstracter extends Component
      * @param mixed  $mixed value to check
      * @param string $type  additionally check type
      *
-     * @return boolean
+     * @return bool
      */
     public static function isAbstraction($mixed, $type = null)
     {
@@ -160,7 +160,7 @@ class Abstracter extends Component
      *
      * @param mixed $val value to check
      *
-     * @return boolean
+     * @return bool
      */
     public static function needsAbstraction($val)
     {

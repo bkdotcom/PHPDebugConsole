@@ -13,9 +13,9 @@
 namespace bdk\Debug\Framework;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii11LogRoute;
+use bdk\Debug\LogEntry;
 use bdk\Debug\Utilities;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -24,9 +24,8 @@ use CActiveRecord;
 use CApplicationComponent;
 use CDbCommand;
 use CDbConnection;
-use CEvent;
-use Yii;
 use ReflectionObject;
+use Yii;
 
 /**
  * Yii v1.1 Component

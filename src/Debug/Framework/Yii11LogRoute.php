@@ -12,12 +12,12 @@
 
 namespace bdk\Debug\Framework;
 
-use Yii;
+use bdk\Debug;
+use bdk\Debug\LogEntry;
 use CLogger;
 use CLogRoute;
 use Exception;
-use bdk\Debug;
-use bdk\Debug\LogEntry;
+use Yii;
 
 /**
  * Yii v1.1 log router
@@ -75,7 +75,7 @@ class Yii11LogRoute extends CLogRoute
      * Extends CLogRoute
      *
      * @param CLogger $logger      logger instance
-     * @param boolean $processLogs whether to process the logs after they are collected from the logger. ALWAYS TRUE NOW!
+     * @param bool    $processLogs whether to process the logs after they are collected from the logger. ALWAYS TRUE NOW!
      *
      * @return void
      */
@@ -103,7 +103,7 @@ class Yii11LogRoute extends CLogRoute
      *
      * If route isn't currently one of the log routes, it will be added
      *
-     * @param boolean $enable enable/disable this route
+     * @param bool $enable enable/disable this route
      *
      * @return void
      */
@@ -225,7 +225,7 @@ class Yii11LogRoute extends CLogRoute
      *
      * @param string $category log category
      *
-     * @return boolean
+     * @return bool
      */
     protected function isExcluded($category)
     {

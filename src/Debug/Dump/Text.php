@@ -12,9 +12,9 @@
 
 namespace bdk\Debug\Dump;
 
-use bdk\Debug\LogEntry;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\LogEntry;
 
 /**
  * Base output plugin
@@ -144,7 +144,7 @@ class Text extends Base
     /**
      * Dump boolean
      *
-     * @param boolean $val boolean value
+     * @param bool $val boolean value
      *
      * @return string
      */

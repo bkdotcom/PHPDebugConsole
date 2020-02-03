@@ -6,20 +6,20 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Collector;
 
-use Exception;
-use RuntimeException;
-use mysqli as mysqliBase;
 use bdk\Debug;
-use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Collector\MySqli\MySqliStmt;
+use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Plugin\Prism;
 use bdk\PubSub\Event;
+use Exception;
+use mysqli as mysqliBase;
+use RuntimeException;
 
 /**
  * mysqli extended with debugging
@@ -35,13 +35,13 @@ class MySqli extends mysqliBase
     /**
      * Constructor
      *
-     * @param string  $host     host name or IP
-     * @param string  $username MySQL user name
-     * @param string  $passwd   password
-     * @param string  $dbname   default database used wiehn performing queries
-     * @param integer $port     port number
-     * @param string  $socket   socket or named pipe that should be used
-     * @param Debug   $debug    (optional) Specify PHPDebugConsole instance
+     * @param string $host     host name or IP
+     * @param string $username MySQL user name
+     * @param string $passwd   password
+     * @param string $dbname   default database used wiehn performing queries
+     * @param int    $port     port number
+     * @param string $socket   socket or named pipe that should be used
+     * @param Debug  $debug    (optional) Specify PHPDebugConsole instance
      *                           if not passed, will create MySqli channnel on singleton instance
      *                           if root channel is specified, will create a MySqli channel
      */
@@ -116,7 +116,7 @@ class MySqli extends mysqliBase
     /**
      * Returns the peak memory usage while performing statements
      *
-     * @return integer
+     * @return int
      */
     public function getPeakMemoryUsage()
     {

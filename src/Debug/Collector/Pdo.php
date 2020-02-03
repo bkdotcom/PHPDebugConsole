@@ -6,18 +6,18 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Collector;
 
-use PDO as PdoBase;
-use PDOException;
 use bdk\Debug;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Plugin\Prism;
 use bdk\PubSub\Event;
+use PDO as PdoBase;
+use PDOException;
 
 /**
  * A PDO decorator/proxy which traces statements
@@ -144,7 +144,7 @@ class Pdo extends PdoBase
      * Initiates a transaction
      *
      * @link   http://php.net/manual/en/pdo.begintransaction.php
-     * @return boolean
+     * @return bool
      */
     public function beginTransaction()
     {
@@ -155,7 +155,7 @@ class Pdo extends PdoBase
      * Commits a transaction
      *
      * @link   http://php.net/manual/en/pdo.commit.php
-     * @return boolean
+     * @return bool
      */
     public function commit()
     {
@@ -190,7 +190,7 @@ class Pdo extends PdoBase
      * @param string $statement The SQL statement to prepare and execute.
      *
      * @link   http://php.net/manual/en/pdo.exec.php
-     * @return integer|false PDO::exec returns the number of rows that were modified or deleted by the
+     * @return int|false PDO::exec returns the number of rows that were modified or deleted by the
      *    SQL statement you issued. If no rows were affected, PDO::exec returns 0. This function may
      *    return Boolean FALSE, but may also return a non-Boolean value which evaluates to FALSE.
      *    Please read the section on Booleans for more information
@@ -203,7 +203,7 @@ class Pdo extends PdoBase
     /**
      * Retrieve a database connection attribute
      *
-     * @param integer $attribute One of the PDO::ATTR_* constants
+     * @param int $attribute One of the PDO::ATTR_* constants
      *
      * @link   http://php.net/manual/en/pdo.getattribute.php
      * @return mixed A successful call returns the value of the requested PDO attribute.
@@ -218,7 +218,7 @@ class Pdo extends PdoBase
      * Checks if inside a transaction
      *
      * @link   http://php.net/manual/en/pdo.intransaction.php
-     * @return boolean true if a transaction is currently active, and false if not.
+     * @return bool true if a transaction is currently active, and false if not.
      */
     public function inTransaction()
     {
@@ -272,8 +272,8 @@ class Pdo extends PdoBase
     /**
      * Quotes a string for use in a query.
      *
-     * @param string  $string        The string to be quoted.
-     * @param integer $parameterType (optional) Provides a data type hint for drivers that have
+     * @param string $string        The string to be quoted.
+     * @param int    $parameterType (optional) Provides a data type hint for drivers that have
      *                                   alternate quoting styles.
      *
      * @return string|false A quoted string that is theoretically safe to pass into an SQL statement.
@@ -288,7 +288,7 @@ class Pdo extends PdoBase
     /**
      * Rolls back a transaction
      *
-     * @return boolean
+     * @return bool
      * @link   http://php.net/manual/en/pdo.rollback.php
      */
     public function rollBack()
@@ -299,10 +299,10 @@ class Pdo extends PdoBase
     /**
      * Set an attribute
      *
-     * @param integer $attribute Attribute const
-     * @param mixed   $value     Attribute value
+     * @param int   $attribute Attribute const
+     * @param mixed $value     Attribute value
      *
-     * @return boolean
+     * @return bool
      * @link   http://php.net/manual/en/pdo.setattribute.php
      */
     public function setAttribute($attribute, $value)
@@ -374,7 +374,7 @@ class Pdo extends PdoBase
     /**
      * Returns the peak memory usage while performing statements
      *
-     * @return integer
+     * @return int
      */
     public function getPeakMemoryUsage()
     {

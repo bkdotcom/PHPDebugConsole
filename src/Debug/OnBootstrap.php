@@ -365,7 +365,7 @@ class OnBootstrap
      *
      * @param string $contentType Will get populated with detected content type
      *
-     * @return boolean
+     * @return bool
      */
     private function testPostContentType(&$contentType)
     {

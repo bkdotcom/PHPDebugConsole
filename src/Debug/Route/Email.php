@@ -15,8 +15,8 @@ namespace bdk\Debug\Route;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Utilities;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Utilities;
 use bdk\PubSub\Event;
 
 /**
@@ -145,8 +145,7 @@ class Email implements RouteInterface
         $debugClass = \get_class($this->debug);
         $data['version'] = $debugClass::VERSION;
         \ksort($data);
-        $body .= self::serializeLog($data);
-        return $body;
+        return $body . self::serializeLog($data);
     }
 
     /**

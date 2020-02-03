@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
@@ -91,7 +91,7 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return boolean
+     * @return bool
      */
     protected function channelTest(LogEntry $logEntry)
     {

@@ -6,16 +6,16 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2019 Brad Kent
+ * @copyright 2014-2020 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Collector;
 
-use Exception;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Utilities;
+use Exception;
 
 /**
  * Holds information about a statement
@@ -194,7 +194,7 @@ class StatementInfo
      * End the statement
      *
      * @param Exception|null $exception (optional) Exception (if statement threw exception)
-     * @param integer        $rowCount  (optional) Number of rows affected by the last DELETE, INSERT, or UPDATE statement
+     * @param int            $rowCount  (optional) Number of rows affected by the last DELETE, INSERT, or UPDATE statement
      *
      * @return void
      */

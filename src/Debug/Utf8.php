@@ -365,6 +365,24 @@ class Utf8
     }
 
     /**
+     * Get byte sequence from current string
+     *
+     * @param int $len length to get (1-4)
+     *
+     * @return array
+     */
+    private static function getBytes($len)
+    {
+        $bytes = array();
+        for ($i = 0; $i < $len; $i++) {
+            $bytes[] = self::$curI + $i < self::$stats['strLen']
+                ? \ord(self::$str[self::$curI + $i])
+                : null;
+        }
+        return $bytes;
+    }
+
+    /**
      * get charater "category"
      *
      * @param string $char single byte
@@ -421,64 +439,38 @@ class Utf8
      */
     private static function isOffsetUtf8(&$special = false, $checkSpecial = false)
     {
-        $i = self::$curI;
-        $special = false;
-        $byte1 = \ord(self::$str[$i]);
-        $byte2 = $i + 1 < self::$stats['strLen'] ? \ord(self::$str[$i + 1]) : null;
-        $byte3 = $i + 2 < self::$stats['strLen'] ? \ord(self::$str[$i + 2]) : null;
-        $byte4 = $i + 3 < self::$stats['strLen'] ? \ord(self::$str[$i + 3]) : null;
-        if ($byte1 < 0x80) {                 # 0bbbbbbb
-            if (($byte1 < 0x20 || $byte1 === 0x7f) && !\in_array($byte1, array(0x09,0x0a,0x0d))) {
-                $special = true;
-            }
-            self::$curI++;    // advance to next byte
-        } elseif (($byte1 & 0xe0) === 0xc0) { # 110bbbbb 10bbbbbb
-            if (
-                $i + 1 >= self::$stats['strLen']
-                || ($byte2 & 0xc0) !== 0x80
-                || ($byte1 & 0xfe) === 0xc0  // overlong
-            ) {
-                self::$curI++;
-                return false;
-            }
-            self::$curI += 2;    // skip the next byte
-        } elseif (($byte1 & 0xf0) === 0xe0) { // 3-byte sequence 1110bbbb 10bbbbbb 10bbbbbb
-            if (
-                $i + 2 >= self::$stats['strLen']
-                || ($byte2 & 0xc0) !== 0x80
-                || ($byte3 & 0xc0) !== 0x80
-                || $byte1 === 0xe0
-                    && ($byte2 & 0xe0) === 0x80  // overlong
-                || $byte1 === 0xed
-                    && ($byte2 & 0xe0) === 0xa0  // UTF-16 surrogate (U+D800 - U+DFFF)
-            ) {
-                self::$curI++;
-                return false;
-            }
-            self::$curI += 3;    // skip the next 2 bytes
-        } elseif (($byte1 & 0xf8) === 0xf0) { // 4-byte sequence: 11110bbb 10bbbbbb 10bbbbbb 10bbbbbb
-            if (
-                $i + 3 >= self::$stats['strLen']
-                || ($byte2 & 0xc0) !== 0x80
-                || ($byte3 & 0xc0) !== 0x80
-                || ($byte4 & 0xc0) !== 0x80
-                || $byte1 === 0xf0
-                    && ($byte2 & 0xf0) === 0x80  // overlong
-                || $byte1 === 0xf4
-                    && $byte2 > 0x8f
-                    || $byte1 > 0xf4    // > U+10FFFF
-            ) {
-                self::$curI++;
-                return false;
-            }
-            self::$curI += 4;    // skip the next 3 bytes
-        } else {                            // Does not match any model
+        $iStart = self::$curI;
+        $byte = \ord(self::$str[self::$curI]);
+        $inc = 1;
+        $isUtf8 = false;
+        $isSpecial = false;
+        if ($byte < 0x80) {
+            // single byte 0bbbbbbb
+            $inc = 1; // advance to next byte
+            $isUtf8 = true;
+            $isSpecial = self::test1byteSeq($byte);
+        } elseif (($byte & 0xe0) === 0xc0) {
+            // 2-byte sequence 110bbbbb 10bbbbbb
+            $inc = 2;   // skip the next byte
+            $isUtf8 = self::test2byteSeq();
+        } elseif (($byte & 0xf0) === 0xe0) {
+            // 3-byte sequence 1110bbbb 10bbbbbb 10bbbbbb
+            $inc = 3;   // skip the next 2 bytes
+            $isUtf8 = self::test3byteSeq();
+        } elseif (($byte & 0xf8) === 0xf0) {
+            // 4-byte sequence: 11110bbb 10bbbbbb 10bbbbbb 10bbbbbb
+            $inc = 4;   // skip the next 3 bytes
+            $isUtf8 = self::test4byteSeq();
+        }
+        if ($isUtf8) {
+            self::$curI += $inc;
+        } else {
             self::$curI++;
             return false;
         }
         if ($checkSpecial) {
-            $subStr = \substr(self::$str, $i, self::$curI - $i);
-            $special = $special || self::hasSpecial($subStr);
+            $subStr = \substr(self::$str, $iStart, self::$curI - $iStart);
+            $special = $isSpecial || self::hasSpecial($subStr);
         }
         return true;
     }
@@ -500,5 +492,69 @@ class Utf8
             'bytesUtf8' => 0,           // includes ASCII
             'strLen' => \strlen($str),
         );
+    }
+
+    /**
+     * TEst if single byte "sequence" is a "special" char
+     *
+     * @param int $byte $ordinal ordinal value of char
+     *
+     * @return bool
+     */
+    private static function test1byteSeq($byte)
+    {
+        return $byte < 0x20 && !\in_array($byte, array(0x09,0x0a,0x0d)) || $byte === 0x7f;
+    }
+
+    /**
+     * Test if current 2-byte sequence is valid UTF8 char
+     *
+     * @return bool
+     */
+    private static function test2byteSeq()
+    {
+        $bytes = self::getBytes(2);
+        return (self::$curI + 1 >= self::$stats['strLen']
+            || ($bytes[1] & 0xc0) !== 0x80
+            || ($bytes[0] & 0xfe) === 0xc0  // overlong
+        ) === false;
+    }
+
+    /**
+     * Test if current 3-byte sequence is valid UTF8 char
+     *
+     * @return bool
+     */
+    private static function test3byteSeq()
+    {
+        $bytes = self::getBytes(3);
+        return (self::$curI + 2 >= self::$stats['strLen']
+            || ($bytes[1] & 0xc0) !== 0x80
+            || ($bytes[2] & 0xc0) !== 0x80
+            || $bytes[0] === 0xe0
+                && ($bytes[1] & 0xe0) === 0x80  // overlong
+            || $bytes[0] === 0xed
+                && ($bytes[1] & 0xe0) === 0xa0  // UTF-16 surrogate (U+D800 - U+DFFF)
+        ) === false;
+    }
+
+    /**
+     * Test if current 4-byte sequence is valid UTF8 char
+     *
+     * @return bool
+     */
+    private static function test4byteSeq()
+    {
+        $bytes = self::getBytes(4);
+        return (self::$curI + 3 >= self::$stats['strLen']
+            || ($bytes[1] & 0xc0) !== 0x80
+            || ($bytes[2] & 0xc0) !== 0x80
+            || ($bytes[3] & 0xc0) !== 0x80
+            || $bytes[0] === 0xf0
+                && ($bytes[1] & 0xf0) === 0x80  // overlong
+            || $bytes[0] === 0xf4
+                && $bytes[1] > 0x8f
+            || $bytes[0] > 0xf4    // > U+10FFFF
+        ) === false;
     }
 }

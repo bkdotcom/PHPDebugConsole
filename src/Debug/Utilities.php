@@ -23,8 +23,6 @@ use SqlFormatter;
 class Utilities
 {
 
-    protected static $domDocument;
-
     /**
      * self closing / empty / void html tags
      *
@@ -85,6 +83,8 @@ class Utilities
         'seamless', // <iframe> - removed from draft
         'sortable', // <table> - removed from draft
     );
+
+    protected static $domDocument;
 
     /**
      * "dereference" array

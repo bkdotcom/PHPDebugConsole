@@ -24,6 +24,8 @@ use bdk\Debug\Utilities;
 class TextAnsi extends Text
 {
 
+    const ESCAPE_RESET = "\x00escapeReset\x00";
+
     protected $ansiCfg = array(
         'ansi' => 'default',    // default | true | false  (STDOUT & STDERR streams will default to true)
         'escapeCodes' => array(
@@ -58,8 +60,6 @@ class TextAnsi extends Text
         'stream' => 'php://stderr',   // filepath/uri/resource
     );
     protected $escapeReset = "\e[0m";
-
-    const ESCAPE_RESET = "\x00escapeReset\x00";
 
     /**
      * Constructor

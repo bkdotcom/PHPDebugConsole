@@ -25,14 +25,14 @@ use bdk\Debug\PhpDoc;
 class Abstracter extends Component
 {
 
-    public $debug;
-    protected $abstractArray;
-    protected $abstractObject;
-
     const ABSTRACTION = "\x00debug\x00";
     const NOT_INSPECTED = "\x00notInspected\x00";
     const RECURSION = "\x00recursion\x00";  // ie, array recursion
     const UNDEFINED = "\x00undefined\x00";
+
+    public $debug;
+    protected $abstractArray;
+    protected $abstractObject;
 
     /**
      * Constructor

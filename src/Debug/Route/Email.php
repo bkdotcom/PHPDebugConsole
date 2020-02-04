@@ -102,6 +102,40 @@ class Email implements RouteInterface
     }
 
     /**
+     * Use to unserialize the log serialized by emailLog
+     *
+     * @param string $str   serialized log data
+     * @param Debug  $debug (optional) Debug instance
+     *
+     * @return array|false
+     */
+    public static function unserializeLog($str, Debug $debug = null)
+    {
+        if (!$debug) {
+            $debug = Debug::getInstance();
+        }
+        $strStart = 'START DEBUG';
+        $strEnd = 'END DEBUG';
+        $regex = '/' . $strStart . '[\r\n]+(.+)[\r\n]+' . $strEnd . '/s';
+        if (\preg_match($regex, $str, $matches)) {
+            $str = $matches[1];
+        }
+        $str = Utilities::isBase64Encoded($str)
+            ? \base64_decode($str)
+            : false;
+        if ($str && \function_exists('gzinflate')) {
+            $strInflated = \gzinflate($str);
+            if ($strInflated) {
+                $str = $strInflated;
+            }
+        }
+        $data = self::unserializeSafe($str, array(
+            'bdk\\Debug\\Abstraction\\Abstraction',
+        ));
+        return self::unserializeLogLogEntrify($debug, $data);
+    }
+
+    /**
      * Build email body
      *
      * @return string
@@ -167,40 +201,6 @@ class Email implements RouteInterface
         }
         $subject = \rtrim($subject . ':' . $subjectMore, ':');
         return $subject;
-    }
-
-    /**
-     * Use to unserialize the log serialized by emailLog
-     *
-     * @param string $str   serialized log data
-     * @param Debug  $debug (optional) Debug instance
-     *
-     * @return array|false
-     */
-    public static function unserializeLog($str, Debug $debug = null)
-    {
-        if (!$debug) {
-            $debug = Debug::getInstance();
-        }
-        $strStart = 'START DEBUG';
-        $strEnd = 'END DEBUG';
-        $regex = '/' . $strStart . '[\r\n]+(.+)[\r\n]+' . $strEnd . '/s';
-        if (\preg_match($regex, $str, $matches)) {
-            $str = $matches[1];
-        }
-        $str = Utilities::isBase64Encoded($str)
-            ? \base64_decode($str)
-            : false;
-        if ($str && \function_exists('gzinflate')) {
-            $strInflated = \gzinflate($str);
-            if ($strInflated) {
-                $str = $strInflated;
-            }
-        }
-        $data = self::unserializeSafe($str, array(
-            'bdk\\Debug\\Abstraction\\Abstraction',
-        ));
-        return self::unserializeLogLogEntrify($debug, $data);
     }
 
     /**

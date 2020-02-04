@@ -11,8 +11,6 @@
 
 namespace bdk;
 
-use Exception;
-
 /**
  * Utility for getting backtrace
  *
@@ -77,13 +75,6 @@ class Backtrace
                         \array_unshift($backtrace, $errorFileLine);
                     }
                 }
-                /*
-                 else {
-                    $foo = \debug_backtrace($inclArgs ? null : DEBUG_BACKTRACE_IGNORE_ARGS, 1);
-                    unset($foo[0]['function']);
-                    \array_unshift($backtrace, $foo[0]);
-                }
-                */
                 \end($backtrace);
                 $key = \key($backtrace);
                 unset($backtrace[$key]['function']);  // remove "{main}"

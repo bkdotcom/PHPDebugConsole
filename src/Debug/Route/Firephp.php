@@ -22,6 +22,9 @@ use bdk\PubSub\Event;
 class Firephp extends Base
 {
 
+    const FIREPHP_PROTO_VER = '0.3';
+    const MESSAGE_LIMIT = 99999;
+
     protected $firephpMethods = array(
         'log' => 'LOG',
         'info' => 'INFO',
@@ -34,9 +37,6 @@ class Firephp extends Base
     );
     protected $messageIndex = 0;
     protected $outputEvent;
-
-    const FIREPHP_PROTO_VER = '0.3';
-    const MESSAGE_LIMIT = 99999;
 
     /**
      * Constructor

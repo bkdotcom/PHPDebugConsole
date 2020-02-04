@@ -26,6 +26,8 @@ use ReflectionObject;
  */
 class PhpCurlClass extends Curl
 {
+    public $rawRequestHeaders = '';
+
     private $debug;
     private $icon = 'fa fa-exchange';
     private $debugOptions = array(
@@ -35,8 +37,6 @@ class PhpCurlClass extends Curl
         'verbose' => false,
     );
     private $reflection = array();
-
-    public $rawRequestHeaders = '';
 
     /**
      * @var array constant value to array of names

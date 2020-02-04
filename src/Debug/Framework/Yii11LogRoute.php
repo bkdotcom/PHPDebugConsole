@@ -24,6 +24,7 @@ use Yii;
  */
 class Yii11LogRoute extends CLogRoute
 {
+    public $levels = 'error, info, profile, trace, warning';
 
     private $debug;
 
@@ -31,8 +32,6 @@ class Yii11LogRoute extends CLogRoute
      * @var array stack of yii begin-profile log entries
      */
     private $stack;
-
-    public $levels = 'error, info, profile, trace, warning';
 
     /**
      * @var array $excludeCategories An array of categories to exclude from logging.

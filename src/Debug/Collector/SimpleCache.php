@@ -173,40 +173,6 @@ class SimpleCache implements CacheInterface
     }
 
     /**
-     * Profiles a call to a PDO method
-     *
-     * @param string $method            SimpleCache method
-     * @param array  $args              method args
-     * @param bool   $isSuccessResponse does the method return boolean success?
-     * @param bool   $keyOrKeys         key(s) being queried/set
-     *
-     * @return mixed The result of the call
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     */
-    protected function profileCall($method, array $args = array(), $isSuccessResponse = false, $keyOrKeys = null)
-    {
-        $info = new CallInfo($method, $keyOrKeys);
-
-        $exception = null;
-        try {
-            $result = \call_user_func_array(array($this->cache, $method), $args);
-            if ($isSuccessResponse && $result === false) {
-                $exception = new \Exception();
-            }
-        } catch (\Psr\SimpleCache\InvalidArgumentException $e) {
-            $exception = $e;
-        }
-
-        $info->end($exception);
-        $this->addCallInfo($info);
-
-        if ($exception) {
-            throw $exception;
-        }
-        return $result;
-    }
-
-    /**
      * Logs CallInfo
      *
      * @param CallInfo $info statement info instance
@@ -258,5 +224,39 @@ class SimpleCache implements CacheInterface
     public function getLoggedActions()
     {
         return $this->loggedActions;
+    }
+
+    /**
+     * Profiles a call to a PDO method
+     *
+     * @param string $method            SimpleCache method
+     * @param array  $args              method args
+     * @param bool   $isSuccessResponse does the method return boolean success?
+     * @param bool   $keyOrKeys         key(s) being queried/set
+     *
+     * @return mixed The result of the call
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    protected function profileCall($method, array $args = array(), $isSuccessResponse = false, $keyOrKeys = null)
+    {
+        $info = new CallInfo($method, $keyOrKeys);
+
+        $exception = null;
+        try {
+            $result = \call_user_func_array(array($this->cache, $method), $args);
+            if ($isSuccessResponse && $result === false) {
+                $exception = new \Exception();
+            }
+        } catch (\Psr\SimpleCache\InvalidArgumentException $e) {
+            $exception = $e;
+        }
+
+        $info->end($exception);
+        $this->addCallInfo($info);
+
+        if ($exception) {
+            throw $exception;
+        }
+        return $result;
     }
 }

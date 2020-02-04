@@ -28,14 +28,14 @@ use RuntimeException;
 class AbstractObject
 {
 
-	protected $abstracter;
-	protected $phpDoc;
-
     const COLLECT_CONSTANTS = 1;
     const COLLECT_METHODS = 2;
     const OUTPUT_CONSTANTS = 4;
     const OUTPUT_METHODS = 8;
     const OUTPUT_METHOD_DESC = 16;
+
+	protected $abstracter;
+	protected $phpDoc;
 
     /**
      * Constructor

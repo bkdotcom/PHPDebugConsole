@@ -8,7 +8,6 @@
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
-// namespace PHP_CodeSniffer\Standards\Squiz\Sniffs\Operators;
 namespace bdk\Sniffs\Operators;
 
 use PHP_CodeSniffer\Files\File;

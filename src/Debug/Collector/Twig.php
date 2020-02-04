@@ -128,20 +128,6 @@ class Twig extends Twig_Environment
         $debug->groupEnd();
     }
 
-    /**
-     * Returns the accumulated rendering time of templates
-     *
-     * @return float
-     */
-    protected function getTimeSpent()
-    {
-        $totalTime = 0;
-        foreach ($this->renderedTemplates as $info) {
-            $totalTime += $info['duration'];
-        }
-        return $totalTime;
-    }
-
     /*
         Twig\Environment methods
     */
@@ -679,5 +665,19 @@ class Twig extends Twig_Environment
     public function tokenize($source, $name = null)
     {
         return $this->twig->tokenize($source, $name);
+    }
+
+    /**
+     * Returns the accumulated rendering time of templates
+     *
+     * @return float
+     */
+    protected function getTimeSpent()
+    {
+        $totalTime = 0;
+        foreach ($this->renderedTemplates as $info) {
+            $totalTime += $info['duration'];
+        }
+        return $totalTime;
     }
 }

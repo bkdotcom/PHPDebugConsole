@@ -311,42 +311,6 @@ class Pdo extends PdoBase
     }
 
     /**
-     * Profiles a call to a PDO method
-     *
-     * @param string $method PDO method
-     * @param string $sql    sql statement
-     * @param array  $args   method args
-     *
-     * @return mixed The result of the call
-     * @throws PDOException
-     */
-    protected function profileCall($method, $sql, array $args)
-    {
-        $info = new StatementInfo($sql);
-        $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;
-
-        $result = null;
-        $exception = null;
-        try {
-            $result = \call_user_func_array(array($this->pdo, $method), $args);
-            if (!$isExceptionMode && $result === false) {
-                $error = $this->pdo->errorInfo();
-                $exception = new PDOException($error[2], $error[0]);
-            }
-        } catch (PDOException $e) {
-            $exception = $e;
-        }
-
-        $info->end($exception);
-        $this->addStatementInfo($info);
-
-        if ($isExceptionMode && $exception !== null) {
-            throw $exception;
-        }
-        return $result;
-    }
-
-    /**
      * Logs StatementInfo
      *
      * @param StatementInfo $info statement info instance
@@ -394,5 +358,41 @@ class Pdo extends PdoBase
     public function getLoggedStatements()
     {
         return $this->loggedStatements;
+    }
+
+    /**
+     * Profiles a call to a PDO method
+     *
+     * @param string $method PDO method
+     * @param string $sql    sql statement
+     * @param array  $args   method args
+     *
+     * @return mixed The result of the call
+     * @throws PDOException
+     */
+    protected function profileCall($method, $sql, array $args)
+    {
+        $info = new StatementInfo($sql);
+        $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;
+
+        $result = null;
+        $exception = null;
+        try {
+            $result = \call_user_func_array(array($this->pdo, $method), $args);
+            if (!$isExceptionMode && $result === false) {
+                $error = $this->pdo->errorInfo();
+                $exception = new PDOException($error[2], $error[0]);
+            }
+        } catch (PDOException $e) {
+            $exception = $e;
+        }
+
+        $info->end($exception);
+        $this->addStatementInfo($info);
+
+        if ($isExceptionMode && $exception !== null) {
+            throw $exception;
+        }
+        return $result;
     }
 }

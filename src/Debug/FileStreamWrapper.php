@@ -23,6 +23,13 @@ namespace bdk\Debug;
 class FileStreamWrapper
 {
     /**
+     * @var string
+     */
+    const PROTOCOL = 'file';
+
+    public static $filesModified = array();
+
+    /**
      * @var resource
      */
     public $context;
@@ -44,13 +51,6 @@ class FileStreamWrapper
      * @var array paths to exclude from adding tick declaration
      */
     private static $pathsExclude = array();
-
-    public static $filesModified = array();
-
-    /**
-     * @var string
-     */
-    const PROTOCOL = 'file';
 
     /**
      * Register this stream wrapper
@@ -77,21 +77,6 @@ class FileStreamWrapper
                 b) don't want to cache modified files
         */
         \ini_set('opcache.enable', '0');
-    }
-
-    /**
-     * Restore previous wrapper
-     *
-     * @return void
-     *
-     * @throws \UnexpectedValueException
-     */
-    private static function restorePrev()
-    {
-        $result = \stream_wrapper_restore(static::PROTOCOL);
-        if ($result === false) {
-            throw new \UnexpectedValueException('Failed to restore');
-        }
     }
 
     /**
@@ -668,5 +653,20 @@ class FileStreamWrapper
             }
         }
         return true;
+    }
+
+    /**
+     * Restore previous wrapper
+     *
+     * @return void
+     *
+     * @throws \UnexpectedValueException
+     */
+    private static function restorePrev()
+    {
+        $result = \stream_wrapper_restore(static::PROTOCOL);
+        if ($result === false) {
+            throw new \UnexpectedValueException('Failed to restore');
+        }
     }
 }

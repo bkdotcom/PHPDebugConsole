@@ -27,10 +27,10 @@ use RuntimeException;
 class MySqli extends mysqliBase
 {
 
-    private $debug;
-    protected $loggedStatements = array();
-    protected $icon = 'fa fa-database';
     public $connectionAttempted = false;
+    protected $icon = 'fa fa-database';
+    protected $loggedStatements = array();
+    private $debug;
 
     /**
      * Constructor
@@ -188,37 +188,6 @@ class MySqli extends mysqliBase
     }
 
     /**
-     * Profiles a call to a mysqli method
-     *
-     * @param string $method PDO method
-     * @param string $sql    sql statement
-     * @param array  $args   method args
-     *
-     * @return mixed The result of the call
-     * @throws Exception
-     */
-    private function profileCall($method, $sql, array $args)
-    {
-        $info = new StatementInfo($sql);
-        if ($this->connectionAttempted) {
-            $return = \call_user_func_array(array('parent', $method), $args);
-            $exception = !$return
-                ? new Exception($this->error, $this->errno)
-                : null;
-            $affectedRows = $method !== 'multi_query' && $return
-                ? $this->affected_rows
-                : null;
-        } else {
-            $return = false;
-            $exception = new Exception('Not connected');
-            $affectedRows = null;
-        }
-        $info->end($exception, $affectedRows);
-        $this->addStatementInfo($info);
-        return $return;
-    }
-
-    /**
      * {@inheritDoc}
      */
     public function multi_query($query)
@@ -265,5 +234,36 @@ class MySqli extends mysqliBase
     public function stmt_init()
     {
         return new MySqliStmt($this, null);
+    }
+
+    /**
+     * Profiles a call to a mysqli method
+     *
+     * @param string $method PDO method
+     * @param string $sql    sql statement
+     * @param array  $args   method args
+     *
+     * @return mixed The result of the call
+     * @throws Exception
+     */
+    private function profileCall($method, $sql, array $args)
+    {
+        $info = new StatementInfo($sql);
+        if ($this->connectionAttempted) {
+            $return = \call_user_func_array(array('parent', $method), $args);
+            $exception = !$return
+                ? new Exception($this->error, $this->errno)
+                : null;
+            $affectedRows = $method !== 'multi_query' && $return
+                ? $this->affected_rows
+                : null;
+        } else {
+            $return = false;
+            $exception = new Exception('Not connected');
+            $affectedRows = null;
+        }
+        $info->end($exception, $affectedRows);
+        $this->addStatementInfo($info);
+        return $return;
     }
 }

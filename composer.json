@@ -46,8 +46,8 @@
 		"twig/twig": "^1.0"
 	},
 	"scripts": {
-		"post-install-cmd": [
-			"bdk\\Debug\\ComposerScripts::postInstall"
+		"post-update-cmd": [
+			"bdk\\Debug\\ComposerScripts::postUpdate"
 		]
 	},
 	"suggest": {

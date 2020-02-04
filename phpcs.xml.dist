@@ -58,9 +58,10 @@
 
     <rule ref="PEAR.Functions.ValidDefaultValue"/>
 
-
-    <rule ref="SlevomatCodingStandard.Arrays" />
     <!--
+        composer install slevomat/coding-standard
+    -->
+    <rule ref="SlevomatCodingStandard.Arrays" />
     <rule ref="SlevomatCodingStandard.Classes.ClassStructure">
         <properties>
             <property name="groups" type="array">
@@ -72,12 +73,11 @@
                 <element value="protected properties, protected static properties, private properties, private static properties" />
                 <element value="constructor " />
                 <element value="magic methods" />
-                <element value="public methods, public static methods" />
-                <element value="protected methods, protected static methods, private methods, private static methods" />
+                <element value="public methods, public static methods, static constructors, public abstract methods, public static abstract methods" />
+                <element value="protected methods, protected static methods, private methods, private static methods, protected abstract methods, protected static abstract methods" />
             </property>
         </properties>
     </rule>
-    -->
     <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
     <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
     <!--

@@ -43,8 +43,7 @@
 		"psr/log": "^1.0",
 		"slim/slim": "^2.0",
 		"swiftmailer/swiftmailer": "^5.0",
-		"twig/twig": "^1.0",
-		"slevomat/coding-standard": "^6.1"
+		"twig/twig": "^1.0"
 	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",

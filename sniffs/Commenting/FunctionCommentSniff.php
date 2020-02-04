@@ -78,7 +78,6 @@ class FunctionCommentSniff extends SquizFunctionCommentSniff
         if ($this->isInheritDoc) {
             return;
         }
-        // parent::processParams($phpcsFile, $stackPtr, $commentStart);
         if ($this->phpVersion === null) {
             $this->phpVersion = Config::getConfigData('php_version');
             if ($this->phpVersion === null) {
@@ -414,7 +413,6 @@ class FunctionCommentSniff extends SquizFunctionCommentSniff
         if ($this->isInheritDoc) {
             return;
         }
-        // parent::processReturn($phpcsFile, $stackPtr, $commentStart);
         $tokens = $phpcsFile->getTokens();
         $return = null;
 

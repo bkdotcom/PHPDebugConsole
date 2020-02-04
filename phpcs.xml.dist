@@ -3,7 +3,7 @@
 
     <description>PSR-12 plus commenting</description>
 
-    <config name="installed_paths" value="../../slevomat/coding-standard"/>
+    <config name="installed_paths" value="vendor/slevomat/coding-standard"/>
 
     <rule ref="./sniffs/">
         <exclude name="bdk.Commenting.FunctionComment.EmptyThrows" />

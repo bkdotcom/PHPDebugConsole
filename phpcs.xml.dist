@@ -59,7 +59,7 @@
     <rule ref="PEAR.Functions.ValidDefaultValue"/>
 
     <!--
-        composer install slevomat/coding-standard
+        composer require slevomat/coding-standard - -dev
     -->
     <rule ref="SlevomatCodingStandard.Arrays" />
     <rule ref="SlevomatCodingStandard.Classes.ClassStructure">

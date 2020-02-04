@@ -11,6 +11,7 @@
 /phpunit.xml.dist export-ignore
 /sniffs export-ignore
 /src/Debug/js_src export-ignore
+/src/Debug/ComposerScripts.php export-ignore
 /src/Debug/package-lock.json export-ignore
 /src/Debug/package.json export-ignore
 /src/Debug/rollup.config.js export-ignore

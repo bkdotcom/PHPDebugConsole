@@ -45,6 +45,11 @@
 		"swiftmailer/swiftmailer": "^5.0",
 		"twig/twig": "^1.0"
 	},
+	"scripts": {
+		"post-install-cmd": [
+			"bdk\\Debug\\ComposerScripts::postInstall"
+		]
+	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",
 		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",

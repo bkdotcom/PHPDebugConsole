@@ -26,6 +26,31 @@ class ComposerScripts
     {
         if ($event->isDevMode() && \version_compare(PHP_VERSION, '7.1', '>=')) {
             \exec('composer require slevomat/coding-standard --dev');
+            self::updatePhpcsXml();
         }
+    }
+
+    /**
+     * update phpcs.xml.dist
+     * convert relative dirs to absolute
+     *
+     * @return void
+     */
+    public static function updatePhpcsXml()
+    {
+        $phpcsPath = __DIR__ . '/../../phpcs.xml.dist';
+        $regex = '#(<config name="installed_paths" value=")([^"]+)#';
+        $xml = \file_get_contents($phpcsPath);
+        $xml = \preg_replace_callback($regex, function ($matches) {
+            $baseDir = \realpath(__DIR__ . '/../..') . '/';
+            $paths = \preg_split('/,\s*/', $matches[2]);
+            foreach ($paths as $i => $path) {
+                if (\strpos($path, 'vendor') === 0) {
+                    $paths[$i] = $baseDir . $path;
+                }
+            }
+            return $matches[1] . \join(', ', $paths);
+        }, $xml);
+        \file_put_contents($phpcsPath, $xml);
     }
 }

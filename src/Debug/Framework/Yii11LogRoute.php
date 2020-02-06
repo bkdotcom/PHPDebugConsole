@@ -175,7 +175,10 @@ class Yii11LogRoute extends CLogRoute
                 $logEntry['meta']['icon'] = $icon;
             } elseif ($logEntry['category'] === 'system.CModule') {
                 $icon = 'fa fa-puzzle-piece';
-                $logEntry['channel'] = $this->debug->getChannel('CModule', array('channelIcon' => $icon));
+                $logEntry['channel'] = $this->debug->getChannel('CModule', array(
+                    'channelIcon' => $icon,
+                    'channelShow' => false,
+                ));
                 $logEntry['meta']['icon'] = $icon;
             } else {
                 $icon = 'fa fa-cogs';

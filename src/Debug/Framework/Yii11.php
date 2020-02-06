@@ -62,8 +62,14 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
      */
     public function init()
     {
-        $this->debug = Debug::getInstance()->getChannel('Yii');
-        Debug::getInstance()->eventManager->addSubscriberInterface($this);
+        $debugRootInstance = Debug::getInstance();
+        $debugRootInstance->eventManager->addSubscriberInterface($this);
+        /*
+            Debug error handler may have been registered first -> reregister
+        */
+        $debugRootInstance->errorHandler->unregister();
+        $debugRootInstance->errorHandler->register();
+        $this->debug = $debugRootInstance->getChannel('Yii');
         $this->yiiApp = Yii::app();
         $this->usePdoCollector();
         $this->addDebugProp();
@@ -260,6 +266,9 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     public function onErrorHigh(Error $error)
     {
         if (\in_array($error['category'], array('deprecated','notice','strict'))) {
+            /*
+                "Ignore" minor internal framework errors
+            */
             $pathsIgnore = array(
                 Yii::getPathOfAlias('system'),
                 Yii::getPathOfAlias('webroot') . '/protected/extensions',
@@ -273,6 +282,12 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
                     break;
                 }
             }
+        }
+        if ($error['category'] !== 'fatal') {
+            /*
+                Don't pass error to Yii's handler... it will exit for #reasons
+            */
+            $error['continueToPrevHandler'] = false;
         }
     }
 

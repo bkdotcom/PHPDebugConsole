@@ -24,7 +24,12 @@ class ComposerScripts
      */
     public static function postUpdate(Event $event)
     {
-        if ($event->isDevMode() && \version_compare(PHP_VERSION, '7.1', '>=')) {
+        /*
+            Test if Continuous Integration / Travis
+            @see https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+        */
+        $isCi = \filter_var(\getenv('CI'), FILTER_VALIDATE_BOOLEAN);
+        if ($event->isDevMode() && \version_compare(PHP_VERSION, '7.1', '>=') && !$isCi) {
             \exec('composer require slevomat/coding-standard --dev');
             self::updatePhpcsXml();
         }

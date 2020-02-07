@@ -38,6 +38,27 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     protected $ignoredErrors = array();
 
     /**
+     * Magic setter
+     *
+     * Allows us to specify config values in the debug component config array
+     *
+     * @param string $name  property name
+     * @param mixed  $value property value
+     *
+     * @return void
+     */
+    public function __set($name, $value)
+    {
+        $cfg = $name === 'config'
+            ? $value
+            : array($name => $value);
+        if (!$this->isInitialized) {
+            $this->init();
+        }
+        $this->debug->rootInstance->setCfg($cfg);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getSubscriptions()

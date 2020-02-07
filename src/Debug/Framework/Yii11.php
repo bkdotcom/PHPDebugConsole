@@ -83,6 +83,10 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
      */
     public function init()
     {
+        if ($this->isInitialized) {
+            return;
+        }
+
         $debugRootInstance = Debug::getInstance();
         $debugRootInstance->eventManager->addSubscriberInterface($this);
         /*
@@ -95,6 +99,13 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
         $this->usePdoCollector();
         $this->addDebugProp();
         $this->debug->yiiRouteEnable();
+
+        /*
+            Since Yii doesn't use namespaces, we can usually use Debug::_log()
+        */
+        \class_alias('bdk\Debug', 'Debug');
+
+        parent::init();
     }
 
     /**

@@ -28,6 +28,7 @@
         <exclude name="Generic.Classes.OpeningBraceSameLine.BraceOnNewLine" />
         <exclude name="Generic.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition" />
         <exclude name="Generic.CodeAnalysis.EmptyStatement.DetectedCATCH" />
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface" />
         <exclude name="Generic.Commenting.DocComment.LongNotCapital" />
         <exclude name="Generic.Commenting.DocComment.MissingShort" />
         <exclude name="Generic.Commenting.DocComment.ShortNotCapital" />

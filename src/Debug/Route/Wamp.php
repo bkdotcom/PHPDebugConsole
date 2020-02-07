@@ -91,7 +91,6 @@ class Wamp implements RouteInterface
         $this->cfg['output'] = $this->debug->getCfg('output');
         if ($this->cfg['output']) {
             $this->publishMeta();
-            $this->processLogEntries($event);
         }
     }
 
@@ -118,9 +117,8 @@ class Wamp implements RouteInterface
         if (isset($cfg['debug']['output'])) {
             $this->cfg['output'] = $cfg['debug']['output'];
         }
-        if ($this->cfg['output'] && !$this->metaPublished) {
+        if ($this->cfg['output']) {
             $this->publishMeta();
-            $this->processLogEntries();
         }
     }
 
@@ -137,6 +135,15 @@ class Wamp implements RouteInterface
     {
         if ($error['inConsole'] || !$error['isFirstOccur']) {
             return;
+        }
+        if (!$this->cfg['output']) {
+            /*
+                We'll publish fatal errors even if output = false
+            */
+            if ($error['category'] !== 'fatal') {
+                return;
+            }
+            $this->publishMeta();
         }
         $this->processLogEntry(new LogEntry(
             $this->debug->getChannel('phpError'),
@@ -374,6 +381,9 @@ class Wamp implements RouteInterface
      */
     private function publishMeta()
     {
+        if ($this->metaPublished) {
+            return;
+        }
         $this->metaPublished = true;
         $debugClass = \get_class($this->debug);
         $metaVals = array();
@@ -416,5 +426,6 @@ class Wamp implements RouteInterface
                 ) ?: null,
             )
         ));
+        $this->processLogEntries();
     }
 }

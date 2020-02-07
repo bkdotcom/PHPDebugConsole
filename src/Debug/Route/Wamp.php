@@ -71,6 +71,7 @@ class Wamp implements RouteInterface
             return array();
         }
         return array(
+            'debug.config' => 'onConfig',
             'debug.log' => array('onLog', PHP_INT_MAX * -1),
             'debug.pluginInit' => 'init',
             'errorHandler.error' => 'onError',    // assumes errorhandler is using same dispatcher.. as should be

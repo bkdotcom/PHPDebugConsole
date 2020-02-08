@@ -2016,8 +2016,15 @@ EOD;
                     $this->assertSame($values['function1'], $trace[1]['function']);
                 },
                 'chromeLogger' => function ($logEntry) {
-                    $trace = array_map(function ($row) {
-                        return array_intersect_key($row, array_flip(array('file','line','function')));
+                    $trace = \array_map(function ($row) {
+                        $keys = array('file','line','function');
+                        $row = \array_intersect_key($row, \array_flip($keys));
+                        uksort($row, function($key1, $key2) use ($keys) {
+                            return array_search($key1, $keys) > array_search($key2, $keys)
+                                ? 1
+                                : -1;
+                        });
+                        return $row;
                     }, $this->debug->getData('log/0/args/0'));
                     $chromeTable = $logEntry[0][0];
                     $this->assertSame($trace, $chromeTable);
@@ -2066,7 +2073,14 @@ EOD;
                         . '</tr>#is', $logEntry, $matches, PREG_SET_ORDER);
                     $count = count($matches);
                     for ($i = 1; $i < $count; $i++) {
-                        $trace[$i] = array_intersect_key($trace[$i], array_flip(array('file','line','function')));
+                        $keys = array('file','line','function');
+                        $row = array_intersect_key($trace[$i], array_flip($keys));
+                        uksort($row, function($key1, $key2) use ($keys) {
+                            return array_search($key1, $keys) > array_search($key2, $keys)
+                                ? 1
+                                : -1;
+                        });
+                        $trace[$i] = $row;
                         $valuesExpect = array_merge(array((string) $i), array_values($trace[$i]));
                         $valuesExpect[1] = is_null($valuesExpect[1]) ? 'null' : $valuesExpect[1];
                         $valuesExpect[2] = is_null($valuesExpect[2]) ? 'null' : (string) $valuesExpect[2];
@@ -2078,14 +2092,28 @@ EOD;
                 },
                 'script' => function ($logEntry) {
                     $trace = array_map(function ($row) {
-                        return array_intersect_key($row, array_flip(array('file','line','function')));
+                        $keys = array('file','line','function');
+                        $row = array_intersect_key($row, array_flip($keys));
+                        uksort($row, function($key1, $key2) use ($keys) {
+                            return array_search($key1, $keys) > array_search($key2, $keys)
+                                ? 1
+                                : -1;
+                        });
+                        return $row;
                     }, $this->debug->getData('log/0/args/0'));
                     preg_match('#console.table\((.+)\);#', $logEntry, $matches);
                     $this->assertSame(json_encode($trace, JSON_UNESCAPED_SLASHES), $matches[1]);
                 },
                 'text' => function ($logEntry) use ($values) {
                     $trace = array_map(function ($row) {
-                        return array_intersect_key($row, array_flip(array('file','line','function')));
+                        $keys = array('file','line','function');
+                        $row = array_intersect_key($row, array_flip($keys));
+                        uksort($row, function($key1, $key2) use ($keys) {
+                            return array_search($key1, $keys) > array_search($key2, $keys)
+                                ? 1
+                                : -1;
+                        });
+                        return $row;
                     }, $this->debug->getData('log/0/args/0'));
                     $expect = 'trace = ' . $this->debug->dumpText->dump($trace);
                     $this->assertNotEmpty($trace);

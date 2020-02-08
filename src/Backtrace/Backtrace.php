@@ -29,7 +29,7 @@ class Backtrace
      */
     private static $internalClasses = array(
         'classes' => array(),
-        'regex' => '',
+        'regex' => '/^\b$/',  // start with a regex that will never match
     );
 
     /**
@@ -120,26 +120,12 @@ class Backtrace
             $options &= ~DEBUG_BACKTRACE_IGNORE_ARGS;
         }
         /*
-            Must get at least backtrace 13 frames to account for potential framework loggers
+            Must get at least 13 frames to account for potential framework loggers
         */
         $backtrace = \debug_backtrace($options, 13);
         $count = \count($backtrace);
         for ($i = 1; $i < $count; $i++) {
-            $frame = $backtrace[$i];
-            $class = isset($frame['class'])
-                ? $frame['class']
-                : null;
-            if (static::$internalClasses['regex'] && \preg_match(static::$internalClasses['regex'], $class)) {
-                continue;
-            }
-            if ($frame['function'] === '{closure}') {
-                continue;
-            }
-            if (
-                \in_array($frame['function'], array('call_user_func', 'call_user_func_array'))
-                || $class === 'ReflectionMethod'
-                    && \in_array($frame['function'], array('invoke','invokeArgs'))
-            ) {
+            if (self::isSkippable($backtrace[$i])) {
                 continue;
             }
             break;
@@ -210,10 +196,10 @@ class Backtrace
     private static function getCallerInfoBuild($backtrace)
     {
         $return = array(
-            'file' => null,
-            'line' => null,
-            'function' => null,
             'class' => null,
+            'file' => null,
+            'function' => null,
+            'line' => null,
             'type' => null,
         );
         $numFrames = \count($backtrace);
@@ -262,6 +248,33 @@ class Backtrace
     }
 
     /**
+     * Test if frame is skippable
+     *
+     * @param array $frame frame
+     *
+     * @return boolean
+     */
+    private static function isSkippable($frame)
+    {
+        $class = isset($frame['class'])
+            ? $frame['class']
+            : null;
+        if (\preg_match(static::$internalClasses['regex'], $class)) {
+            return true;
+        }
+        if ($frame['function'] === '{closure}') {
+            return true;
+        }
+        if (\in_array($frame['function'], array('call_user_func', 'call_user_func_array'))) {
+            return true;
+        }
+        if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * "Normalize" backtrace from debug_backtrace() or xdebug_get_function_stack();
      *
      * @param array $backtrace trace/stack from debug_backtrace() or xdebug_Get_function_stack()
@@ -272,63 +285,98 @@ class Backtrace
     {
         $backtraceNew = array();
         $frameDefault = array(
-            'file' => null,
-            'line' => null,
-            'function' => null,     // function, Class::function, or Class->function
-            'class' => null,        // will get removed
-            'type' => null,         // will get removed
             'args' => array(),
             'evalLine' => null,
+            'file' => null,
+            'function' => null,     // function, Class::function, or Class->function
+            'line' => null,
+        );
+        $frameTemp = array(
+            'class' => null,
+            'include_filename' => null,
+            'params' => null,
+            'type' => null,
         );
         $funcsSkip = array('call_user_func','call_user_func_array');
-        $funcsSkipRegex = '/^(' . \implode('|', $funcsSkip) . ')[:\(\{]/';
-        for ($i = 0, $count = \count($backtrace); $i < $count; $i++) {
-            $frame = \array_merge($frameDefault, $backtrace[$i]);
-            $frame = \array_intersect_key($frame, $frameDefault);
-            if (\in_array($frame['function'], $funcsSkip) || \preg_match($funcsSkipRegex, $frame['function'])) {
+        $funcsSkipRegex = '/^(' . \implode('|', $funcsSkip) . ')\b[:\(\{]?/';
+        $count = \count($backtrace);
+        $backtrace[] = array(); // add a frame so backtrace[$i + 1] is always a thing
+        for ($i = 0; $i < $count; $i++) {
+            $frame = \array_merge($frameDefault, $frameTemp, $backtrace[$i]);
+            if (\preg_match($funcsSkipRegex, $frame['function'])) {
+                // update previous frame's file & line
                 $backtraceNew[\count($backtraceNew) - 1]['file'] = $frame['file'];
                 $backtraceNew[\count($backtraceNew) - 1]['line'] = $frame['line'];
                 continue;
             }
-            if (
-                $frame['class'] === 'ReflectionMethod'
-                    && \in_array($frame['function'], array('invoke','invokeArgs'))
-            ) {
+            if ($frame['class'] === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
                 continue;
             }
-            if (\in_array($frame['type'], array('dynamic','static'))) {
-                // xdebug_get_function_stack
-                $frame['type'] = $frame['type'] === 'dynamic' ? '->' : '::';
-            }
-            if (\preg_match('/^(.+)\((\d+)\) : eval\(\)\'d code$/', $frame['file'], $matches)) {
-                // reported line = line within eval
-                // line inside paren is the line `eval` is on
-                $frame['evalLine'] = $frame['line'];
-                $frame['file'] = $matches[1];
-                $frame['line'] = (int) $matches[2];
-            }
-            if (isset($backtrace[$i]['params'])) {
-                // xdebug_get_function_stack
-                $frame['args'] = $backtrace[$i]['params'];
-            }
-            if ($frame['file'] === null) {
-                // use file/line from next frame
-                $frame = \array_merge($frame, \array_intersect_key($backtrace[$i + 1], \array_flip(array('file','line'))));
-            }
-            if (isset($backtrace[$i]['include_filename'])) {
-                // xdebug_get_function_stack
-                $frame['function'] = 'include or require';
-            } elseif ($frame['function']) {
-                $frame['function'] = \preg_match('/\{closure\}$/', $frame['function'])
-                    ? $frame['function']
-                    : $frame['class'] . $frame['type'] . $frame['function'];
-            } else {
-                unset($frame['function']);
-            }
-            unset($frame['class'], $frame['type']);
+            // $frame = self::normalizeFile($frame);
+            $frame = self::normalizeFrame($frame, $backtrace[$i + 1]);
+            $frame = \array_intersect_key($frame, $frameDefault);
             $backtraceNew[] = $frame;
         }
         return $backtraceNew;
+    }
+
+    /**
+     * Normalize frame
+     *
+     * Normalize file & line
+     * Normalize function: Combine class, type, & function
+     * Normalize args
+     *
+     * @param array $frame     current frame
+     * @param array $frameNext next frrame
+     *
+     * @return array
+     */
+    private static function normalizeFrame($frame, $frameNext)
+    {
+        /*
+            Normalize File
+        */
+        $regex = '/^(.+)\((\d+)\) : eval\(\)\'d code$/';
+        if (\preg_match($regex, $frame['file'], $matches)) {
+            // reported line = line within eval
+            // line inside paren is the line `eval` is on
+            $frame['evalLine'] = $frame['line'];
+            $frame['file'] = $matches[1];
+            $frame['line'] = (int) $matches[2];
+        }
+        if ($frame['file'] === null) {
+            // use file/line from next frame
+            $frame = \array_merge(
+                $frame,
+                \array_intersect_key($frameNext, \array_flip(array('file','line')))
+            );
+        }
+        /*
+            Normalize Function
+        */
+        $frame['type'] = \strtr($frame['type'], array(
+            'dynamic' => '->',
+            'static' => '::',
+        ));
+        if ($frame['include_filename']) {
+            // xdebug_get_function_stack
+            $frame['function'] = 'include or require';
+        } elseif ($frame['function']) {
+            $frame['function'] = \preg_match('/\{closure\}$/', $frame['function'])
+                ? $frame['function']
+                : $frame['class'] . $frame['type'] . $frame['function'];
+        } else {
+            unset($frame['function']);
+        }
+        /*
+            Normalize Params
+        */
+        if ($frame['params']) {
+            // xdebug_get_function_stack
+            $frame['args'] = $frame['params'];
+        }
+        return $frame;
     }
 
     /**

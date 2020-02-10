@@ -312,7 +312,6 @@ class Backtrace
             if ($frame['class'] === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
                 continue;
             }
-            // $frame = self::normalizeFile($frame);
             $frame = self::normalizeFrame($frame, $backtrace[$i + 1]);
             $frame = \array_intersect_key($frame, $frameDefault);
             $backtraceNew[] = $frame;

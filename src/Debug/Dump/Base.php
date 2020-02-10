@@ -459,10 +459,8 @@ class Base extends Component implements ConfigurableInterface
      */
     protected function methodTabular(LogEntry $logEntry)
     {
-        $rows = $logEntry['args'][0];
-        $columns = $logEntry->getMeta('columns');
-        $asTable = \is_array($rows) && $rows || $this->debug->abstracter->isAbstraction($rows, 'object');
-        if (!$asTable) {
+        $rows = $this->methodTableRows($logEntry);
+        if (!$rows) {
             $logEntry['method'] = 'log';
             $caption = $logEntry->getMeta('caption');
             if ($caption) {
@@ -472,20 +470,7 @@ class Base extends Component implements ConfigurableInterface
         }
         $table = array();
         $classnames = array();
-        if ($this->debug->abstracter->isAbstraction($rows, 'object')) {
-            if ($rows['traverseValues']) {
-                $rows = $rows['traverseValues'];
-            } else {
-                $rows = \array_map(
-                    function ($info) {
-                        return $info['value'];
-                    },
-                    \array_filter($rows['properties'], function ($info) {
-                        return !\in_array($info['visibility'], array('private', 'protected'));
-                    })
-                );
-            }
-        }
+        $columns = $logEntry->getMeta('columns');
         $keys = $columns ?: $this->debug->methodTable->colKeys($rows);
         $undefinedAs = $logEntry->getMeta('undefinedAs', 'unset');
         $forceArray = $logEntry->getMeta('forceArray', true);
@@ -546,6 +531,38 @@ class Base extends Component implements ConfigurableInterface
                 : $values[$k];
         }
         return $values;
+    }
+
+    /**
+     * Get table rows
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array|false
+     */
+    private function methodTableRows(LogEntry $logEntry)
+    {
+        $rows = $logEntry['args'][0];
+        $isObject = $this->debug->abstracter->isAbstraction($rows, 'object');
+        $asTable = \is_array($rows) && $rows || $isObject;
+        if (!$asTable) {
+            return false;
+        }
+        if ($isObject) {
+            if ($rows['traverseValues']) {
+                $rows = $rows['traverseValues'];
+            } else {
+                $rows = \array_map(
+                    function ($info) {
+                        return $info['value'];
+                    },
+                    \array_filter($rows['properties'], function ($info) {
+                        return $info['visibility'] === 'public';
+                    })
+                );
+            }
+        }
+        return $rows;
     }
 
     /**

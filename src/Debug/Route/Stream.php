@@ -123,7 +123,7 @@ class Stream extends Base
     }
 
     /**
-     * Set file/stream we will write to
+     * Open file/stream
      *
      * @param resource|string $stream file path, uri, or stream resource
      *
@@ -137,8 +137,6 @@ class Stream extends Base
                 // no change
                 return;
             }
-        }
-        if ($this->fileHandle) {
             // close existing file
             \fclose($this->fileHandle);
             $this->fileHandle = null;
@@ -146,32 +144,46 @@ class Stream extends Base
         if (!$stream) {
             return;
         }
-        $uriExists = false;
-        if (\is_resource($stream)) {
-            $this->fileHandle = $stream;
-        } else {
-            $uriExists = \file_exists($stream);
-            $isWritable = !\is_file($stream) || \is_writable($stream);
-            if (!$isWritable) {
-                \trigger_error($stream . ' is not writable', E_USER_NOTICE);
-                return;
-            }
-            $this->fileHandle = \fopen($stream, 'a');
-            if (!$this->fileHandle) {
-                return;
-            }
-            $meta = \stream_get_meta_data($this->fileHandle);
-            if ($meta['wrapper_type'] === 'plainfile') {
-                \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s') . ' *****' . "\n");
-                if (!$uriExists) {
-                    // we just created file
-                    \chmod($stream, 0660);
-                }
-            }
+        $this->setFilehandle($stream);
+        if (!$this->fileHandle) {
+            return;
         }
         $this->dump = $this->ansiCheck()
             ? $this->debug->dumpTextAnsi
             : $this->debug->dumpText;
+    }
+
+    /**
+     * Open stream
+     *
+     * @param resource|string $stream file path, uri, or stream resource
+     *
+     * @return void
+     */
+    private function setFilehandle($stream)
+    {
+        if (\is_resource($stream)) {
+            $this->fileHandle = $stream;
+            return;
+        }
+        $uriExists = \file_exists($stream);
+        $isWritable = !\is_file($stream) || \is_writable($stream);
+        if (!$isWritable) {
+            \trigger_error($stream . ' is not writable', E_USER_NOTICE);
+            return;
+        }
+        $this->fileHandle = \fopen($stream, 'a');
+        if (!$this->fileHandle) {
+            return;
+        }
+        $meta = \stream_get_meta_data($this->fileHandle);
+        if ($meta['wrapper_type'] === 'plainfile') {
+            \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s') . ' *****' . "\n");
+            if (!$uriExists) {
+                // we just created file
+                \chmod($stream, 0660);
+            }
+        }
     }
 
     /**

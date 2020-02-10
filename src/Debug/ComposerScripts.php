@@ -30,7 +30,7 @@ class ComposerScripts
         */
         $isCi = \filter_var(\getenv('CI'), FILTER_VALIDATE_BOOLEAN);
         if ($event->isDevMode() && \version_compare(PHP_VERSION, '7.1', '>=') && !$isCi) {
-            \exec('composer require slevomat/coding-standard --dev');
+            \exec('composer require slevomat/coding-standard --dev --no-scripts');
             self::updatePhpcsXml();
         }
     }
@@ -44,8 +44,16 @@ class ComposerScripts
     public static function updatePhpcsXml()
     {
         $phpcsPath = __DIR__ . '/../../phpcs.xml.dist';
-        $regex = '#(<config name="installed_paths" value=")([^"]+)#';
         $xml = \file_get_contents($phpcsPath);
+        /*
+            Uncomment
+        */
+        $regex = '#<!--[^<]+(<config name="installed_paths"[^>]+>)[^>]+-->#';
+        $xml = \preg_replace($regex, '$1', $xml);
+        /*
+            convert relative paths to absolute
+        */
+        $regex = '#(<config name="installed_paths" value=")([^"]+)#';
         $xml = \preg_replace_callback($regex, function ($matches) {
             $baseDir = \realpath(__DIR__ . '/../..') . '/';
             $paths = \preg_split('/,\s*/', $matches[2]);
@@ -56,6 +64,9 @@ class ComposerScripts
             }
             return $matches[1] . \join(', ', $paths);
         }, $xml);
+        /*
+            Write updated xml
+        */
         \file_put_contents($phpcsPath, $xml);
     }
 }

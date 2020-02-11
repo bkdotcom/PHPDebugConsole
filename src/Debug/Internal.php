@@ -264,6 +264,7 @@ class Internal implements SubscriberInterface
                 array('onOutputHeaders', -1),
             ),
             'debug.prettify' => array('onPrettify', -1),
+            'debug.streamWrap' => 'onStreamWrap',
             'errorHandler.error' => 'onError',
             'php.shutdown' => array(
                 array('onShutdownHigh', PHP_INT_MAX),
@@ -340,7 +341,9 @@ class Internal implements SubscriberInterface
                 $pathsExclude = array(
                     __DIR__,
                 );
-                FileStreamWrapper::register($pathsExclude);
+                FileStreamWrapper::setEventManager($this->debug->eventManager);
+                FileStreamWrapper::setPathsExclude($pathsExclude);
+                FileStreamWrapper::register();
             }
         }
         $this->cfg = \array_merge(
@@ -524,6 +527,24 @@ class Internal implements SubscriberInterface
             ));
             $event->stopPropagation();
         }
+    }
+
+    /**
+     * If profiling, inject `declare(ticks=1)`
+     *
+     * @param Event $event debug.streamWrap event object
+     *
+     * @return void
+     */
+    public function onStreamWrap(Event $event)
+    {
+        $declare = 'declare(ticks=1);';
+        $event['content'] = \preg_replace(
+            '/^(<\?php)\s*$/m',
+            '$0 ' . $declare,
+            $event['content'],
+            1
+        );
     }
 
     /**

@@ -4,7 +4,7 @@
     <description>PSR-12 plus commenting</description>
 
     <!--
-    ComposerScripts::postUpdate will uncommnet & update this
+    ComposerScripts::postUpdate will uncomment & update this
     <config name="installed_paths" value="vendor/slevomat/coding-standard" />
     -->
 
@@ -76,7 +76,7 @@
                 <element value="public static properties, public properties" />
                 <element value="protected properties, protected static properties, private properties, private static properties" />
                 <element value="constructor " />
-                <element value="magic methods" />
+                <element value="destructor, magic methods" />
                 <element value="public methods, public static methods, static constructors, public abstract methods, public static abstract methods" />
                 <element value="protected methods, protected static methods, private methods, private static methods, protected abstract methods, protected static abstract methods" />
             </property>

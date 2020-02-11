@@ -12,8 +12,13 @@
 
 namespace bdk\Debug;
 
+use bdk\PubSub\Manager;
+
 /**
- * Streamwrapper which injects `declare(ticks=1)`
+ * Generic stream-wrapper which publishes debug.streamWrap when file is required/included
+ *
+ * Event subscriber is able to modify file on-the-fly to monkey-path
+ *  or, in the case of PHPDebugConsole, inject `declare(ticks=1);`
  *
  * @see http://php.net/manual/en/class.streamwrapper.php
  *
@@ -22,30 +27,24 @@ namespace bdk\Debug;
  */
 class FileStreamWrapper
 {
-    /**
-     * @var string
-     */
-    const PROTOCOL = 'file';
 
-    public static $filesModified = array();
+    const OUTPUT_ACCESS_MODE = 'rb+';
+    const OUTPUT_DESTINATION = 'php://memory';
+    const STREAM_OPEN_FOR_INCLUDE = 128;
+
+    public static $filesTransformed = array();
 
     /**
      * @var resource
      */
     public $context;
 
-    private $bufferPrepend = '';
-
-    private $declaredTicks = false;
-
-    private $filepath;
-
-    private $sizeAdjust = null;
-
     /**
-     * @var resource
+     * @var string[]
      */
-    private $handle;
+    protected static $protocols = array('file', 'phar');
+
+    private static $eventManager;
 
     /**
      * @var array paths to exclude from adding tick declaration
@@ -53,30 +52,59 @@ class FileStreamWrapper
     private static $pathsExclude = array();
 
     /**
+     * @var resource
+     */
+    private $resource;
+
+    /**
      * Register this stream wrapper
-     *
-     * @param array $pathsExclude paths/directories to exclude
      *
      * @return void
      *
      * @throws \UnexpectedValueException
      */
-    public static function register($pathsExclude = array())
+    public static function register()
     {
-        $result = \stream_wrapper_unregister(static::PROTOCOL);
-        if ($result === false) {
-            throw new \UnexpectedValueException('Failed to unregister');
+        foreach (static::$protocols as $protocol) {
+            $result = \stream_wrapper_unregister($protocol);
+            if ($result === false) {
+                throw new \UnexpectedValueException('Failed to unregister stream wrapper for ' . $protocol);
+            }
+            $result = \stream_wrapper_register($protocol, \get_called_class());
+            if ($result === false) {
+                throw new \UnexpectedValueException('Failed to register stream wrapper for ' . $protocol);
+            }
         }
-        if ($pathsExclude) {
-            self::$pathsExclude = $pathsExclude;
-        }
-        \stream_wrapper_register(static::PROTOCOL, \get_called_class());
         /*
             Disable OPcache
                 a) want to make sure we modify required files
                 b) don't want to cache modified files
         */
         \ini_set('opcache.enable', '0');
+    }
+
+    /**
+     * Define EventManager
+     *
+     * @param Manager $eventManager [description]
+     *
+     * @return void
+     */
+    public static function setEventManager(Manager $eventManager)
+    {
+        static::$eventManager = $eventManager;
+    }
+
+    /**
+     * Set paths/directories to exclude
+     *
+     * @param array $pathsExclude paths/directories to exclude
+     *
+     * @return void
+     */
+    public static function setPathsExclude($pathsExclude)
+    {
+        static::$pathsExclude = $pathsExclude;
     }
 
     /**
@@ -88,13 +116,11 @@ class FileStreamWrapper
      */
     public function dir_closedir()
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        \closedir($this->handle);
-        self::register();
-        $this->handle = null;
+        \closedir($this->resource);
+        $this->resource = null;
         return true;
     }
 
@@ -110,33 +136,32 @@ class FileStreamWrapper
      */
     public function dir_opendir($path, $options = 0)
     {
-        if ($this->handle) {
+        if ($this->resource) {
             return false;
         }
         // "use" our function params so things don't complain
         array($options);
-        self::restorePrev();
-        $this->handle = \opendir($path);
-        self::register();
-        return $this->handle !== false;
+        static::unregister();
+        $this->resource = $this->context
+            ? \opendir($path, $this->context)
+            : \opendir($path);
+        static::register();
+        return $this->resource !== false;
     }
 
     /**
      * Read a single filename of a directory
      *
-     * @return string|bool
+     * @return string|false
      *
      * @see http://php.net/manual/en/streamwrapper.dir-readdir.php
      */
     public function dir_readdir()
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $success = \readdir($this->handle);
-        self::register();
-        return $success;
+        return \readdir($this->resource);
     }
 
     /**
@@ -148,12 +173,10 @@ class FileStreamWrapper
      */
     public function dir_rewinddir()
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        \rewinddir($this->handle);
-        self::register();
+        \rewinddir($this->resource);
         return true;
     }
 
@@ -168,10 +191,13 @@ class FileStreamWrapper
      */
     public function mkdir($path, $mode, $options = 0)
     {
-        self::restorePrev();
-        $success = \mkdir($path, $mode, (bool) ($options & STREAM_MKDIR_RECURSIVE));
-        self::register();
-        return $success;
+        static::unregister();
+        $isRecursive = (bool) ($options & STREAM_MKDIR_RECURSIVE);
+        $result = $this->context
+            ? \mkdir($path, $mode, $isRecursive, $this->context)
+            : \mkdir($path, $mode, $isRecursive);
+        static::register();
+        return $result;
     }
 
     /**
@@ -186,10 +212,12 @@ class FileStreamWrapper
      */
     public function rename($pathFrom, $pathTo)
     {
-        self::restorePrev();
-        $success = \rename($pathFrom, $pathTo);
-        self::register();
-        return $success;
+        static::unregister();
+        $result = $this->context
+            ? \rename($pathFrom, $pathTo, $this->context)
+            : \rename($pathFrom, $pathTo);
+        static::register();
+        return $result;
     }
 
     /**
@@ -206,10 +234,12 @@ class FileStreamWrapper
     {
         // "use" our function params so things don't complain
         array($options);
-        self::restorePrev();
-        $success = \rmdir($path);
-        self::register();
-        return $success;
+        static::unregister();
+        $result = $this->context
+            ? \rmdir($path, $this->context)
+            : \rmdir($path);
+        static::register();
+        return $result;
     }
 
     /**
@@ -224,10 +254,13 @@ class FileStreamWrapper
      */
     public function stream_cast($castAs)
     {
-        if ($this->handle && $castAs & STREAM_CAST_AS_STREAM) {
-            return $this->handle;
+        if (!$this->resource) {
+            return false;
         }
-        return false;
+        if ($castAs & STREAM_CAST_AS_STREAM !== STREAM_CAST_AS_STREAM) {
+            return false;
+        }
+        return $this->resource;
     }
 
     /**
@@ -239,13 +272,11 @@ class FileStreamWrapper
      */
     public function stream_close()
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return;
         }
-        self::restorePrev();
-        \fclose($this->handle);
-        $this->handle = null;
-        self::register();
+        \fclose($this->resource);
+        $this->resource = null;
     }
 
     /**
@@ -257,13 +288,10 @@ class FileStreamWrapper
      */
     public function stream_eof()
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $result = \feof($this->handle);
-        self::register();
-        return $result;
+        return \feof($this->resource);
     }
 
     /**
@@ -275,13 +303,10 @@ class FileStreamWrapper
      */
     public function stream_flush()
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $success = \fflush($this->handle);
-        self::register();
-        return $success;
+        return \fflush($this->resource);
     }
 
     /**
@@ -298,13 +323,10 @@ class FileStreamWrapper
      */
     public function stream_lock($operation)
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $success = \flock($this->handle, $operation);
-        self::register();
-        return $success;
+        return \flock($this->resource, $operation);
     }
 
     /**
@@ -320,33 +342,31 @@ class FileStreamWrapper
      */
     public function stream_metadata($path, $option, $value)
     {
-        self::restorePrev();
+        static::unregister();
         switch ($option) {
             case STREAM_META_TOUCH:
-                if (!empty($value)) {
-                    $success = \touch($path, $value[0], $value[1]);
-                } else {
-                    $success = \touch($path);
-                }
+                $result = empty($value)
+                    ? \touch($path)
+                    : \touch($path, $value[0], $value[1]);
                 break;
             case STREAM_META_OWNER_NAME:
                 // Fall through
             case STREAM_META_OWNER:
-                $success = \chown($path, $value);
+                $result = \chown($path, $value);
                 break;
             case STREAM_META_GROUP_NAME:
                 // Fall through
             case STREAM_META_GROUP:
-                $success = \chgrp($path, $value);
+                $result = \chgrp($path, $value);
                 break;
             case STREAM_META_ACCESS:
-                $success = \chmod($path, $value);
+                $result = \chmod($path, $value);
                 break;
             default:
-                $success = false;
+                $result = false;
         }
-        self::register();
-        return $success;
+        static::register();
+        return $result;
     }
 
     /**
@@ -354,7 +374,7 @@ class FileStreamWrapper
      *
      * @param string $path       Specifies the file/URL that was passed to the original function.
      * @param string $mode       The mode used to open the file, as detailed for fopen().
-     * @param int    $options    Holds additional flags set by the streams API. I
+     * @param int    $options    Holds additional flags set by the streams API.
      * @param string $openedPath the full path of the file/resource that was actually opened
      *
      * @return bool
@@ -363,36 +383,21 @@ class FileStreamWrapper
      */
     public function stream_open($path, $mode, $options, &$openedPath)
     {
-        if ($this->handle) {
-            return false;
-        }
-        $useIncludePath = (bool) $options & STREAM_USE_PATH;
-        $context = $this->context;
-        if ($context === null) {
-            $context = \stream_context_get_default();
-        }
-        self::restorePrev();
+        static::unregister();
         if (\strpos($mode, 'r') !== false && !\file_exists($path)) {
             return false;
-        } elseif (\strpos($mode, 'x') !== false && \file_exists($path)) {
+        }
+        if (\strpos($mode, 'x') !== false && \file_exists($path)) {
             return false;
         }
-        $handle = \fopen($path, $mode, $useIncludePath, $context);
-        self::register();
-        if ($handle === false) {
-            return false;
+        if (static::shouldTransform($path, $options)) {
+            static::$filesTransformed[] = $path;
+            $this->resource = static::getResourceTransformed($path, $options, $openedPath);
+        } else {
+            $this->resource = static::getResource($path, $mode, $options, $openedPath);
         }
-        /*
-            Determine opened path
-        */
-        $meta = \stream_get_meta_data($handle);
-        if (!isset($meta['uri'])) {
-            throw new \UnexpectedValueException('Uri not in meta data');
-        }
-        $openedPath = $meta['uri'];
-        $this->filepath = $openedPath;
-        $this->handle = $handle;
-        return true;
+        static::register();
+        return $this->resource !== false;
     }
 
     /**
@@ -406,38 +411,10 @@ class FileStreamWrapper
      */
     public function stream_read($bytes)
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $buffer = \fread($this->handle, $bytes);
-        $bufferLen = \strlen($buffer);
-        if (!$this->declaredTicks && $this->isTargeted()) {
-            // insert declare(ticks=1);  without adding/removing any lines
-            $declare = 'declare(ticks=1);';
-            $buffer = \preg_replace(
-                '/^(<\?php)\s*$/m',
-                '$0 ' . $declare,
-                $buffer,
-                1,
-                $count
-            );
-            if ($count) {
-                $this->declaredTicks = true;
-                self::$filesModified[] = $this->filepath;
-                $this->sizeAdjust = \strlen($buffer) - $bufferLen;
-            }
-        }
-        $buffer = $this->bufferPrepend . $buffer;
-        $bufferLenAfter = \strlen($buffer);
-        $diff = $bufferLenAfter - $bufferLen;
-        $this->bufferPrepend = '';
-        if ($diff) {
-            $this->bufferPrepend = \substr($buffer, $bytes);
-            $buffer = \substr($buffer, 0, $bytes);
-        }
-        self::register();
-        return $buffer;
+        return \fread($this->resource, $bytes);
     }
 
     /**
@@ -452,39 +429,35 @@ class FileStreamWrapper
      */
     public function stream_seek($offset, $whence = SEEK_SET)
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $result = \fseek($this->handle, $offset, $whence);
-        $success = $result !== -1;
-        self::register();
-        return $success;
+        $result = \fseek($this->resource, $offset, $whence);
+        return $result !== -1;
     }
 
     /**
      * Change stream options
      *
-     * @param int $option [description]
-     * @param int $arg1   [description]
-     * @param int $arg2   [description]
+     * @param int $option STREAM_OPTION_BLOCKING | STREAM_OPTION_READ_TIMEOUT | STREAM_OPTION_READ_BUFFER | STREAM_OPTION_WRITE_BUFFER
+     * @param int $arg1   @see https://www.php.net/manual/en/streamwrapper.stream-set-option.php
+     * @param int $arg2   @see https://www.php.net/manual/en/streamwrapper.stream-set-option.php
      *
      * @return bool
      */
     public function stream_set_option($option, $arg1, $arg2)
     {
-        if (!$this->handle || \get_resource_type($this->handle) !== 'stream') {
-            \trigger_error(\sprintf('The "$handle" property of "%s" need to be a stream.', __CLASS__), E_USER_WARNING);
+        if (!$this->resource || \get_resource_type($this->resource) !== 'stream') {
+            \trigger_error(\sprintf('The "$resource" property of "%s" needs to be a stream.', __CLASS__), E_USER_WARNING);
             return false;
         }
-        self::restorePrev();
         $return = false;
         switch ($option) {
             case STREAM_OPTION_BLOCKING:
-                $return = \stream_set_blocking($this->handle, $arg1);
+                $return = \stream_set_blocking($this->resource, $arg1);
                 break;
             case STREAM_OPTION_READ_TIMEOUT:
-                $return = \stream_set_timeout($this->handle, $arg1, $arg2);
+                $return = \stream_set_timeout($this->resource, $arg1, $arg2);
                 break;
             case STREAM_OPTION_READ_BUFFER:
                 // poorly documented / unsure how to implement / return false to not implement
@@ -493,7 +466,6 @@ class FileStreamWrapper
                 // poorly documented / unsure how to implement / return false to not implement
                 break;
         }
-        self::register();
         return $return;
     }
 
@@ -506,27 +478,10 @@ class FileStreamWrapper
      */
     public function stream_stat()
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $stats = \fstat($this->handle);
-        /*
-            PHP 7.4 seems to require adjusted size to be returned or we get
-              parse error, unexpected EOL..
-              (ie only pre-modifed length used even though stream_read returning entire file)
-              perhaps STREAM_OPTION_READ_BUFFER related
-        */
-        $sizeAdjust = 0;
-        if ($this->isTargeted()) {
-            $sizeAdjust = $this->sizeAdjust !== null
-                ? $this->sizeAdjust
-                : 50;
-        }
-        $stats[7] += $sizeAdjust;
-        $stats['size'] += $sizeAdjust;
-        self::register();
-        return $stats;
+        return \fstat($this->resource);
     }
 
     /**
@@ -538,13 +493,10 @@ class FileStreamWrapper
      */
     public function stream_tell()
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $position = \ftell($this->handle);
-        self::register();
-        return $position;
+        return \ftell($this->resource);
     }
 
     /**
@@ -558,13 +510,10 @@ class FileStreamWrapper
      */
     public function stream_truncate($size)
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $success = \ftruncate($this->handle, $size);
-        self::register();
-        return $success;
+        return \ftruncate($this->resource, $size);
     }
 
     /**
@@ -578,13 +527,10 @@ class FileStreamWrapper
      */
     public function stream_write($data)
     {
-        if (!$this->handle) {
+        if (!$this->resource) {
             return false;
         }
-        self::restorePrev();
-        $length = \fwrite($this->handle, $data);
-        self::register();
-        return $length;
+        return \fwrite($this->resource, $data);
     }
 
     /**
@@ -598,10 +544,12 @@ class FileStreamWrapper
      */
     public function unlink($path)
     {
-        self::restorePrev();
-        $success = \unlink($path);
-        self::register();
-        return $success;
+        static::unregister();
+        $result = $this->context
+            ? \unlink($path, $this->context)
+            : \unlink($path);
+        static::register();
+        return $result;
     }
 
     /**
@@ -616,43 +564,120 @@ class FileStreamWrapper
      */
     public function url_stat($path, $flags)
     {
-        self::restorePrev();
+        static::unregister();
         if (!\file_exists($path)) {
-            $info = false;
-        } elseif ($flags & STREAM_URL_STAT_LINK) {
-            $info = $flags & STREAM_URL_STAT_QUIET
-                ? @\lstat($path)
-                : \lstat($path);
+            $result = false;
+        } elseif ($flags & STREAM_URL_STAT_QUIET) {
+            /*
+                Temporary error handler to discard errors in silent mode
+            */
+            \set_error_handler(function () {
+            });
+            try {
+                $result = $flags & STREAM_URL_STAT_LINK
+                    ? \lstat($path)
+                    : \stat($path);
+            } catch (\Exception $e) {
+                $result = false;
+            }
+            \restore_error_handler();
         } else {
-            $info = $flags & STREAM_URL_STAT_QUIET
-                ? @\stat($path)
+            $result = $flags & STREAM_URL_STAT_LINK
+                ? \lstat($path)
                 : \stat($path);
         }
-        self::register();
-        return $info;
+        static::register();
+        return $result;
     }
 
     /**
-     * Check whether this file has been, or should beinjected with declare ticks
+     * Check whether this file should be transformed
+     *
+     * @param string $file file path
      *
      * @return bool
      */
-    public function isTargeted()
+    public static function isTargeted($file)
     {
-        if ($this->declaredTicks) {
-            return true;
-        }
-        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
-        $isRequire = !\in_array($backtrace[2]['function'], array('file','file_get_contents','readfile'));
-        if (!$isRequire) {
-            return false;
-        }
-        foreach (self::$pathsExclude as $excludePath) {
-            if (\strpos($this->filepath, $excludePath . DIRECTORY_SEPARATOR) === 0) {
+        foreach (static::$pathsExclude as $excludePath) {
+            if (\strpos($file, $excludePath . DIRECTORY_SEPARATOR) === 0) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Get file resource
+     *
+     * @param string $file       File path
+     * @param string $mode       The mode used to open the file, as detailed for fopen().
+     * @param int    $options    Holds additional flags set by the streams API.
+     * @param string $openedPath the full path of the file/resource that was actually opened
+     *
+     * @return resource
+     * @throws \UnexpectedValueException
+     */
+    private function getResource($file, $mode, $options, &$openedPath)
+    {
+        $useIncludePath = (bool) ($options & STREAM_USE_PATH);
+        $resource = $this->context
+            ? \fopen($file, $mode, $useIncludePath, $this->context)
+            : \fopen($file, $mode, $useIncludePath);
+        /*
+            Determine opened path
+        */
+        $meta = \stream_get_meta_data($resource);
+        if (!isset($meta['uri'])) {
+            throw new \UnexpectedValueException('Uri not in meta data');
+        }
+        $openedPath = $meta['uri'];
+        return $resource;
+    }
+
+    /**
+     * Return a resource with modified content
+     *
+     * @param string $file       File path
+     * @param int    $options    Holds additional flags set by the streams API.
+     * @param string $openedPath the full path of the file/resource that was actually opened
+     *
+     * @return resource
+     */
+    private function getResourceTransformed($file, $options, &$openedPath)
+    {
+        $resource = \fopen(static::OUTPUT_DESTINATION, static::OUTPUT_ACCESS_MODE);
+        $useIncludePath = (bool) ($options & STREAM_USE_PATH);
+        $content = $this->context
+            ? \file_get_contents($file, $useIncludePath, $this->context)
+            : \file_get_contents($file, $useIncludePath);
+        if ($useIncludePath) {
+            $openedPath = \stream_resolve_include_path($file);
+        }
+        if (static::$eventManager) {
+            $event = static::$eventManager->publish('debug.streamWrap', $resource, array(
+                'content' => $content,
+                'filepath' => $file,
+            ));
+            $content = $event['content'];
+        }
+        \fwrite($resource, $content);
+        \rewind($resource);
+        return $resource;
+    }
+
+    /**
+     * Test if file should be transformed
+     *
+     * @param string $file    Specifies the file/URL that was passed to the original function.
+     * @param int    $options Holds additional flags set by the streams API.
+     *
+     * @return bool
+     */
+    private static function shouldTransform($file, $options)
+    {
+        $including = (bool) ($options & static::STREAM_OPEN_FOR_INCLUDE);
+        return static::isTargeted($file) && ($including || \in_array($file, static::$filesTransformed));
     }
 
     /**
@@ -662,11 +687,13 @@ class FileStreamWrapper
      *
      * @throws \UnexpectedValueException
      */
-    private static function restorePrev()
+    private static function unregister()
     {
-        $result = \stream_wrapper_restore(static::PROTOCOL);
-        if ($result === false) {
-            throw new \UnexpectedValueException('Failed to restore');
+        foreach (static::$protocols as $protocol) {
+            $result = \stream_wrapper_restore($protocol);
+            if ($result === false) {
+                throw new \UnexpectedValueException('Failed to restore stream wrapper for ' . $protocol);
+            }
         }
     }
 }

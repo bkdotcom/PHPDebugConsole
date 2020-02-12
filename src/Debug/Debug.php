@@ -1364,22 +1364,8 @@ class Debug
             return $this;
         }
         if (!isset($this->channels[$channelName])) {
-            // get inherited config
             $cfg = $this->getCfg();
-            // remove config values that channel should not inherit
-            $cfg = \array_diff_key($cfg, \array_flip(array(
-                'errorEmailer',
-                'errorHandler',
-            )));
-            unset($cfg['debug']['onBootstrap']);
-            $cfg['debug']['services'] = \array_intersect_key($cfg['debug']['services'], \array_flip(array(
-                // these services aren't tied to a debug instance... allow inheritance
-                'backtrace',
-                'methodTable',
-                'request',
-                'utf8',
-                'utilities',
-            )));
+            $cfg = $this->config->getPropagateValues($cfg);
             // set channel values
             $cfg['debug']['channelName'] = $this->parentInstance
                 ? $this->cfg['channelName'] . '.' . $channelName

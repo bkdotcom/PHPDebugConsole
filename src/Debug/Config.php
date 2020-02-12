@@ -41,6 +41,33 @@ class Config
     }
 
     /**
+     * Remove config values that should not be propagated to children channels
+     *
+     * @param array $cfg config array
+     *
+     * @return array
+     */
+    public function getPropagateValues($cfg)
+    {
+        $cfg = \array_diff_key($cfg, \array_flip(array(
+            'errorEmailer',
+            'errorHandler',
+        )));
+        unset($cfg['debug']['onBootstrap']);
+        if (isset($cfg['debug']['services'])) {
+            $cfg['debug']['services'] = \array_intersect_key($cfg['debug']['services'], \array_flip(array(
+                // these services aren't tied to a debug instance... allow inheritance
+                'backtrace',
+                'methodTable',
+                'request',
+                'utf8',
+                'utilities',
+            )));
+        }
+        return $cfg;
+    }
+
+    /**
      * Get debug or child configuration value(s)
      *
      * @param string $path    what to get
@@ -167,14 +194,15 @@ class Config
     private function doSetCfg($cfg)
     {
         $return = array();
-        if ($cfg) {
-            $event = $this->debug->eventManager->publish(
-                'debug.config',
-                $this->debug,
-                $cfg
-            );
-            $cfg = $event->getValues();
+        if (!$cfg) {
+            return array();
         }
+        $event = $this->debug->eventManager->publish(
+            'debug.config',
+            $this->debug,
+            $cfg
+        );
+        $cfg = $event->getValues();
         foreach ($cfg as $classname => $v) {
             if ($classname === 'debug') {
                 $return[$classname] = \array_intersect_key($this->values, $v);
@@ -188,6 +216,13 @@ class Config
             } else {
                 $return[$classname] = array();
                 $this->valuesPending[$classname] = $v;
+            }
+        }
+        $channels = $this->debug->getChannels();
+        if ($channels) {
+            $cfg = $this->getPropagateValues($cfg);
+            foreach ($channels as $channel) {
+                $channel->config->doSetCfg($cfg);
             }
         }
         return $return;

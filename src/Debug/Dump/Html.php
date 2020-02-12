@@ -262,7 +262,7 @@ class Html extends Base
         $tr = \str_replace('<tr>', '<tr' . ($i === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $tr);
         $tr .= '<tr class="context" ' . ($i === 0 ? 'style="display:table-row;"' : '' ) . '>'
             . '<td colspan="4">'
-                . '<pre class="line-numbers prism" data-line="' . $row['line'] . '" data-start="' . \key($row['context']) . '">'
+                . '<pre class="highlight line-numbers" data-line="' . $row['line'] . '" data-start="' . \key($row['context']) . '">'
                     . '<code class="language-php">'
                         . \htmlspecialchars(\implode($row['context']))
                     . '</code>'

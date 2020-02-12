@@ -14,7 +14,7 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Plugin\Prism;
+use bdk\Debug\Plugin\Highlight;
 
 /**
  * A replacement SoapClient which traces requests
@@ -44,7 +44,7 @@ class SoapClient extends \SoapClient
             $debug = $debug->getChannel('Soap', array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
-        $this->debug->addPlugin(new Prism());
+        $this->debug->addPlugin(new Highlight());
         $options['trace'] = true;
         parent::__construct($wsdl, $options);
     }
@@ -91,7 +91,7 @@ class SoapClient extends \SoapClient
             new Abstraction(array(
                 'type' => 'string',
                 'attribs' => array(
-                    'class' => 'language-xml prism',
+                    'class' => 'highlight language-xml',
                 ),
                 'addQuotes' => false,
                 'visualWhiteSpace' => false,
@@ -110,7 +110,7 @@ class SoapClient extends \SoapClient
             new Abstraction(array(
                 'type' => 'string',
                 'attribs' => array(
-                    'class' => 'language-xml prism',
+                    'class' => 'highlight language-xml',
                 ),
                 'addQuotes' => false,
                 'visualWhiteSpace' => false,

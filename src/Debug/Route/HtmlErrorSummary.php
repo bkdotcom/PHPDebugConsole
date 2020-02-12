@@ -95,7 +95,7 @@ class HtmlErrorSummary
             . '<ul class="list-unstyled">';
         if (\count($backtrace) > 1) {
             // more than one trace frame
-            \bdk\Debug::getInstance()->addPlugin(new \bdk\Debug\Plugin\Prism());
+            \bdk\Debug::getInstance()->addPlugin(new \bdk\Debug\Plugin\Highlight());
             // Don't inspect objects when dumping trace arguments...  potentially huge objects
             $objectsExclude = \bdk\Debug::_getCfg('objectsExclude');
             \bdk\Debug::_setCfg('objectsExclude', \array_merge($objectsExclude, array('*')));

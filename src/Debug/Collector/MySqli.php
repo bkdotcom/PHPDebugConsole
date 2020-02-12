@@ -15,7 +15,7 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Collector\MySqli\MySqliStmt;
 use bdk\Debug\Collector\StatementInfo;
-use bdk\Debug\Plugin\Prism;
+use bdk\Debug\Plugin\Highlight;
 use bdk\PubSub\Event;
 use Exception;
 use mysqli as mysqliBase;
@@ -85,7 +85,7 @@ class MySqli extends mysqliBase
         }
         $this->debug = $debug;
         $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'), 1);
-        $this->debug->addPlugin(new Prism());
+        $this->debug->addPlugin(new Highlight());
     }
 
     /**

@@ -14,7 +14,7 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Collector\StatementInfo;
-use bdk\Debug\Plugin\Prism;
+use bdk\Debug\Plugin\Highlight;
 use bdk\PubSub\Event;
 use PDO as PdoBase;
 use PDOException;
@@ -49,7 +49,7 @@ class Pdo extends PdoBase
         $this->debug = $debug;
         $this->pdo->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, array('bdk\Debug\Collector\Pdo\Statement', array($this)));
         $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'), 1);
-        $this->debug->addPlugin(new Prism());
+        $this->debug->addPlugin(new Highlight());
     }
 
     /**

@@ -1234,7 +1234,7 @@ class Debug
         $backtrace = $this->backtrace->get(null, $logEntry->getMeta('inclContext'));
         if ($logEntry->getMeta('inclContext')) {
             $backtrace = $this->backtrace->addContext($backtrace);
-            $this->addPlugin(new \bdk\Debug\Plugin\Prism());
+            $this->addPlugin(new \bdk\Debug\Plugin\Highlight());
         }
         $logEntry['args'] = array($backtrace);
         $this->appendLog($logEntry);

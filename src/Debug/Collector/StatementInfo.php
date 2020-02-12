@@ -161,7 +161,7 @@ class StatementInfo
                 new Abstraction(array(
                     'type' => 'string',
                     'attribs' => array(
-                        'class' => 'language-sql prism',
+                        'class' => 'highlight language-sql',
                     ),
                     'addQuotes' => false,
                     'visualWhiteSpace' => false,

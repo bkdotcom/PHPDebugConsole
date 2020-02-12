@@ -672,7 +672,7 @@ class Utilities
         if (!\class_exists('\SqlFormatter')) {
             return $sql;
         }
-        // whitespace only, don't hightlight
+        // whitespace only, don't highlight
         $sql = SqlFormatter::format($sql, false);
         // SqlFormatter borks bound params
         $sql = \strtr($sql, array(

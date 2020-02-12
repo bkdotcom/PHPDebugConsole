@@ -18,7 +18,7 @@ namespace bdk\Debug;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Plugin\Prism;
+use bdk\Debug\Plugin\Highlight;
 use bdk\Debug\Route\RouteInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -40,7 +40,7 @@ class Internal implements SubscriberInterface
     private $debug;
     private $bootstraped = false;
     private $inShutdown = false;
-    private $prismAdded = false;
+    private $highlightAdded = false;
     private static $profilingEnabled = false;
 
     // duplicate/store frequently used cfg vals here
@@ -512,14 +512,14 @@ class Internal implements SubscriberInterface
             } elseif ($type === 'xml') {
                 $string = $this->debug->utilities->prettyXml($string);
             }
-            if (!$this->prismAdded) {
-                $this->debug->addPlugin(new Prism());
-                $this->prismAdded = true;
+            if (!$this->highlightAdded) {
+                $this->debug->addPlugin(new Highlight());
+                $this->highlightAdded = true;
             }
             $event['value'] = new Abstraction(array(
                 'type' => 'string',
                 'attribs' => array(
-                    'class' => 'language-' . $lang . ' prism',
+                    'class' => 'highlight language-' . $lang,
                 ),
                 'addQuotes' => false,
                 'visualWhiteSpace' => false,

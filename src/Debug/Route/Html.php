@@ -105,7 +105,7 @@ class Html extends Base
             }
         }
         /*
-            add "plugin" css  (ie prism.css)
+            add "plugin" css
         */
         $return .= $this->buildAssetOutput($this->assets['css']);
         if (!empty($this->cfg['css'])) {
@@ -130,7 +130,7 @@ class Html extends Base
             }
         }
         /*
-            add "plugin" scripts  (ie prism.js)
+            add "plugin" scripts
         */
         return $return . $this->buildAssetOutput($this->assets['script']);
     }

@@ -135,7 +135,7 @@ class InternalTest extends DebugTestFramework
                     new Abstraction(array(
                         'type' => 'string',
                         'attribs' => array(
-                            'class' => 'language-json prism',
+                            'class' => 'highlight language-json',
                         ),
                         'addQuotes' => false,
                         'visualWhiteSpace' => false,
@@ -182,7 +182,7 @@ class InternalTest extends DebugTestFramework
                     new Abstraction(array(
                         'type' => 'string',
                         'attribs' => array(
-                            'class' => 'language-json prism',
+                            'class' => 'highlight language-json',
                         ),
                         'addQuotes' => false,
                         'visualWhiteSpace' => false,
@@ -261,7 +261,7 @@ class InternalTest extends DebugTestFramework
                     new Abstraction(array(
                         'type' => 'string',
                         'attribs' => array(
-                            'class' => 'language-json prism',
+                            'class' => 'highlight language-json',
                         ),
                         'addQuotes' => false,
                         'visualWhiteSpace' => false,

@@ -17,7 +17,7 @@ use bdk\Debug\AssetProviderInterface;
 /**
  * Register prismjs' javascript & css
  */
-class Prism implements AssetProviderInterface
+class Highlight implements AssetProviderInterface
 {
 
     /**
@@ -58,29 +58,29 @@ class Prism implements AssetProviderInterface
                         if ($target.hasClass("m_group")) {
                             return;
                         }
-                        $target.find(".prism").removeClass("prism").each(function() {
-                            var $prism = $(this),
+                        $target.find(".highlight").removeClass("highlight").each(function() {
+                            var $high = $(this),
                                 $pre,
-                                classes = $prism.attr("class").split(" "),
+                                classes = $high.attr("class").split(" "),
                                 classesPre = [],
                                 lang,
                                 length,
                                 i;
-                            if ($prism.is("pre")) {
-                                $pre = $prism;
+                            if ($high.is("pre")) {
+                                $pre = $high;
                             } else {
                                 for (i = 0, length = classes.length; i < length; i++) {
                                     if (classes[i].match(/^language-/)) {
                                         lang = classes[i];
-                                        $prism.removeClass(lang);
+                                        $high.removeClass(lang);
                                     } else if (["line-numbers"].indexOf(classes[i]) >= 0) {
-                                        $prism.removeClass(classes[i]);
+                                        $high.removeClass(classes[i]);
                                         classesPre.push(classes[i]);
                                     }
                                 }
-                                $prism.wrapInner(\'<pre><code class="\'+lang+\'"></code></pre>\');
-                                $pre = $prism.find("pre").addClass(classesPre.join(" "));
-                                $.each($prism[0].attributes, function() {
+                                $high.wrapInner(\'<pre><code class="\'+lang+\'"></code></pre>\');
+                                $pre = $high.find("pre").addClass(classesPre.join(" "));
+                                $.each($high[0].attributes, function() {
                                     if (!this.name.length) {
                                         return; // continue;
                                     }
@@ -88,7 +88,7 @@ class Prism implements AssetProviderInterface
                                         $pre.attr(this.name, this.value);
                                         if (this.name.indexOf("data") < 0) {
                                             // dont remove data attr... seems to remove all data attrs & only 1st data attr will get moved
-                                            $prism.removeAttr(this.name);
+                                            $high.removeAttr(this.name);
                                         }
                                     }
                                 });

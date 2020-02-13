@@ -20,6 +20,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Highlight;
 use bdk\Debug\Route\RouteInterface;
+use bdk\Debug\Utility\FileStreamWrapper;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;

@@ -17,7 +17,7 @@ use bdk\Debug\Abstraction\AbstractArray;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Component;
-use bdk\Debug\PhpDoc;
+use bdk\Debug\Utility\PhpDoc;
 
 /**
  * Store array/object/resource info

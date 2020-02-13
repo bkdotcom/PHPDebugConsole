@@ -10,7 +10,7 @@
  * @version   v2.1.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Utility;
 
 /**
  * Validate Utf8 / "highlight" non-utf8, control, & whitespace characters
@@ -495,7 +495,7 @@ class Utf8
     }
 
     /**
-     * TEst if single byte "sequence" is a "special" char
+     * Test if single byte "sequence" is a "special" char
      *
      * @param int $byte $ordinal ordinal value of char
      *

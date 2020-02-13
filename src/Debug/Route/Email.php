@@ -16,7 +16,6 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utilities;
 use bdk\PubSub\Event;
 
 /**
@@ -120,7 +119,7 @@ class Email implements RouteInterface
         if (\preg_match($regex, $str, $matches)) {
             $str = $matches[1];
         }
-        $str = Utilities::isBase64Encoded($str)
+        $str = $debug->utilities->isBase64Encoded($str)
             ? \base64_decode($str)
             : false;
         if ($str && \function_exists('gzinflate')) {

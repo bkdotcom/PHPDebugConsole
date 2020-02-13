@@ -14,7 +14,7 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Utilities;
+use bdk\Debug\Utility\Utilities;
 use Exception;
 
 /**

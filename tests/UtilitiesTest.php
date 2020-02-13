@@ -3,7 +3,7 @@
  * Run with --process-isolation option
  */
 
-use bdk\Debug\Utilities;
+use bdk\Debug\Utility\Utilities;
 
 /**
  * PHPUnit tests for Debug class
@@ -67,17 +67,17 @@ class UtilitiesTest extends DebugTestFramework
                 )
             ),
         );
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.comfy'), true);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.rock.comfy'), false);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.comfy.foo'), null);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.comfy.0'), null);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed'), array('comfy' => true));
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.bed.foo'), null);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.__count__'), 2);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.__end__.comfy'), false);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.__reset__.comfy'), true);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, 'surfaces.sofa.comfy'), null);
-        $this->assertSame(\bdk\Debug\Utilities::arrayPathGet($array, array('surfaces','__end__','comfy')), false);
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed.comfy'), true);
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.rock.comfy'), false);
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed.comfy.foo'), null);
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed.comfy.0'), null);
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed'), array('comfy' => true));
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed.foo'), null);
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.__count__'), 2);
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.__end__.comfy'), false);
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.__reset__.comfy'), true);
+        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.sofa.comfy'), null);
+        $this->assertSame(Utilities::arrayPathGet($array, array('surfaces','__end__','comfy')), false);
     }
 
     /**
@@ -155,7 +155,7 @@ class UtilitiesTest extends DebugTestFramework
             ),
         );
         foreach ($testStack as $test) {
-            $ret = \bdk\Debug\Utilities::buildAttribString($test['attribs']);
+            $ret = Utilities::buildAttribString($test['attribs']);
             $this->assertSame($test['expect'], $ret);
         }
     }
@@ -278,7 +278,7 @@ class UtilitiesTest extends DebugTestFramework
             ),
         );
         foreach ($testStack as $test) {
-            $ret = call_user_func_array('\\bdk\\Debug\\Utilities::parseAttribString', $test['params']);
+            $ret = call_user_func_array('\\bdk\\Debug\\Utility\\Utilities::parseAttribString', $test['params']);
             $this->assertSame($test['expect'], $ret);
         }
     }
@@ -321,7 +321,7 @@ class UtilitiesTest extends DebugTestFramework
             ),
         );
         foreach ($testStack as $test) {
-            $ret = \bdk\Debug\Utilities::parseTag($test['tag']);
+            $ret = Utilities::parseTag($test['tag']);
             $this->assertSame($test['expect'], $ret);
         }
     }

@@ -16,7 +16,6 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utilities;
 
 /**
  * Base output plugin
@@ -69,7 +68,7 @@ class TextAnsi extends Text
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->cfg = Utilities::arrayMergeDeep($this->cfg, $this->ansiCfg);
+        $this->cfg = $debug->utilities->arrayMergeDeep($this->cfg, $this->ansiCfg);
     }
 
     /**

@@ -17,6 +17,7 @@ namespace bdk\Debug;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Utility\ErrorLevel;
 use bdk\PubSub\Event;
 
 /**

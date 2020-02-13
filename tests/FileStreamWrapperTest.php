@@ -1,6 +1,6 @@
 <?php
 
-use \bdk\Debug\FileStreamWrapper;
+use bdk\Debug\Utility\FileStreamWrapper;
 
 /**
  * PHPUnit tests for Debug class

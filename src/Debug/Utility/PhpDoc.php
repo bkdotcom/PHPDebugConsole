@@ -10,7 +10,7 @@
  * @version   v2.3
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Utility;
 
 use ReflectionClass;
 use ReflectionFunction;

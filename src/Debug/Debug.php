@@ -1980,10 +1980,10 @@ class Debug
                 return Debug\ServerRequestLite::fromGlobals();
             },
             'utf8' => function () {
-                return new Debug\Utf8();
+                return new Debug\Utility\Utf8();
             },
             'utilities' => function () {
-                return new Debug\Utilities();
+                return new Debug\Utility\Utilities();
             },
         );
     }

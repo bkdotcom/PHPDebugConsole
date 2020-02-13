@@ -10,7 +10,7 @@
  * @version   v2.3
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Utility;
 
 /**
  * Utility to convert error level mask to user friendly string
@@ -74,48 +74,28 @@ class ErrorLevel
     /**
      * Convert PHP error-level integer (bitmask) to constant bitwise representation
      *
-     * @param int    $level          Error Level (bitmask) value
-     * @param string $phpVer         (PHP_VERSION) php Version
-     * @param bool   $explicitStrict (true) if level === E_ALL, always include/exclude E_STRICT for disambiguation / portability
+     * @param int    $errorReportingLevel Error Level (bitmask) value
+     * @param string $phpVer              (PHP_VERSION) php Version
+     * @param bool   $explicitStrict      (true) if level === E_ALL, always include/exclude E_STRICT for disambiguation / portability
      *
      * @return string
      */
-    public static function toConstantString($level = null, $phpVer = null, $explicitStrict = true)
+    public static function toConstantString($errorReportingLevel = null, $phpVer = null, $explicitStrict = true)
     {
-        $string = '';
-        $level = $level === null
+        $errorReportingLevel = $errorReportingLevel === null
             ? \error_reporting()
-            : $level;
+            : $errorReportingLevel;
         $allConstants = self::getConstants($phpVer); // includes E_ALL
-        $levelConstants = self::filterConstantsByLevel($allConstants, $level); // excludes E_ALL
+        $flags = array(
+            'on' => \array_keys(self::filterConstantsByLevel($allConstants, $errorReportingLevel)), // excludes E_ALL
+            'off' => array(),
+        );
         $eAll = $allConstants['E_ALL'];
         unset($allConstants['E_ALL']);
-        if (\count($levelConstants) > \count($allConstants) / 2) {
-            $on = array('E_ALL');
-            $off = array();
-            foreach ($allConstants as $constantName => $value) {
-                $isExplicit = $explicitStrict && $constantName == 'E_STRICT';
-                if (self::inBitmask($value, $level)) {
-                    if (!self::inBitmask($value, $eAll) || $isExplicit) {
-                        // only thing that wouldn't be in E_ALL is E_STRICT
-                        $on[] = $constantName;
-                    }
-                } else {
-                    if (self::inBitmask($value, $eAll) || $isExplicit) {
-                        $off[] = $constantName;
-                    }
-                }
-            }
-            $on = \count($on) > 1 && $off
-                ? '( ' . \implode(' | ', $on) . ' )'
-                : \implode(' | ', $on);
-            $off = \join('', \array_map(function ($constantName) {
-                return ' & ~' . $constantName;
-            }, $off));
-            $string = $on . $off;
-        } else {
-            $string = \implode(' | ', \array_keys($levelConstants));
+        if (\count($flags['on']) > \count($allConstants) / 2) {
+            $flags = self::getNegateFlags($errorReportingLevel, $allConstants, $eAll, $explicitStrict);
         }
+        $string = self::joinOnOff($flags['on'], $flags['off']);
         return $string ?: '0';
     }
 
@@ -123,20 +103,52 @@ class ErrorLevel
      * Get all constants included in specified error level
      * excludes E_ALL
      *
-     * @param array $constants constantName => value array
+     * @param array $constants constName => value array
      * @param int   $level     error level
      *
      * @return array
      */
     private static function filterConstantsByLevel($constants, $level)
     {
-        foreach ($constants as $constantName => $value) {
-            if (!self::inBitmask($value, $level)) {
-                unset($constants[$constantName]);
+        foreach ($constants as $constName => $constValue) {
+            if (!self::inBitmask($constValue, $level)) {
+                unset($constants[$constName]);
             }
         }
         unset($constants['E_ALL']);
         return $constants;
+    }
+
+    /**
+     * Get on/off flags starting with E_ALL
+     *
+     * @param int   $errorReportingLevel Error Level (bitmask) value
+     * @param array $allConstants        constName => $constValue array
+     * @param int   $eAll                E_ALL value for specified php version
+     * @param bool  $explicitStrict      explicitly specify E_STRICT?
+     *
+     * @return array
+     */
+    private static function getNegateFlags($errorReportingLevel, $allConstants, $eAll, $explicitStrict)
+    {
+        $flags = array(
+            'on' => array('E_ALL'),
+            'off' => array(),
+        );
+        foreach ($allConstants as $constName => $constValue) {
+            $isExplicit = $explicitStrict && $constName === 'E_STRICT';
+            // only thing that may not be in E_ALL is E_STRICT
+            $inclInEall = self::inBitmask($constValue, $eAll);
+            $inclInLevel = self::inBitmask($constValue, $errorReportingLevel);
+            $incl = $inclInEall !== $inclInLevel || $isExplicit;
+            if ($incl) {
+                $onOrOff = $inclInLevel
+                    ? 'on'
+                    : 'off';
+                $flags[$onOrOff][] = $constName;
+            }
+        }
+        return $flags;
     }
 
     /**
@@ -150,5 +162,24 @@ class ErrorLevel
     private static function inBitmask($value, $bitmask)
     {
         return ($bitmask & $value) === $value;
+    }
+
+    /**
+     * Build error-level string representation from on & off flags
+     *
+     * @param array $flagsOn  constant names
+     * @param array $flagsOff constant names
+     *
+     * @return string
+     */
+    private function joinOnOff($flagsOn, $flagsOff)
+    {
+        $flagsOn = \count($flagsOn) > 1 && $flagsOff
+            ? '( ' . \implode(' | ', $flagsOn) . ' )'
+            : \implode(' | ', $flagsOn);
+        $flagsOff = \implode('', \array_map(function ($flag) {
+            return ' & ~' . $flag;
+        }, $flagsOff));
+        return $flagsOn . $flagsOff;
     }
 }

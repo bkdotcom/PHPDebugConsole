@@ -16,7 +16,6 @@ use bdk\Debug;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii11LogRoute;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utilities;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -84,6 +83,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     public function init()
     {
         if ($this->isInitialized) {
+            // we may have initialized via __set()
             return;
         }
 
@@ -224,7 +224,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
                 $isController = \preg_match('#/protected/controllers/.+.php#', $filepathRel);
                 $isView = \preg_match('#/protected/views(?:(?!/layout).)+.php#', $filepathRel);
                 $embolden = $isController || $isView;
-                return Utilities::buildTag(
+                return $debug->utilities->buildTag(
                     'span',
                     array(
                         'class' => 'file t_string',

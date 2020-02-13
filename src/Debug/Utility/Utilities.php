@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Utility;
 
 use DOMDocument;
 use Exception;

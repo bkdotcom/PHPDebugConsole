@@ -17,7 +17,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
-use bdk\Debug\PhpDoc;
+use bdk\Debug\Utility\PhpDoc;
 use ReflectionClass;
 use ReflectionObject;
 use RuntimeException;

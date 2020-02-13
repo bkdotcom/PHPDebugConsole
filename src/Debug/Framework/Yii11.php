@@ -217,8 +217,9 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
         if ($logEntry['method'] === 'log' && $logEntry['args'][0] === 'files') {
             // let's embolden the primary files
             $root = \realpath(YII_PATH . '/..');
+            $regex = '#(<span class="file t_string">)(.*?)(</span>)#';
             $html = $debug->dumpHtml->processLogEntry($logEntry);
-            $html = \preg_replace_callback('#(<span class="file t_string">)(.*?)(</span>)#', function ($matches) use ($root) {
+            $html = \preg_replace_callback($regex, function ($matches) use ($debug, $root) {
                 $filepath = $matches[2];
                 $filepathRel = \str_replace($root, '.', $filepath);
                 $isController = \preg_match('#/protected/controllers/.+.php#', $filepathRel);

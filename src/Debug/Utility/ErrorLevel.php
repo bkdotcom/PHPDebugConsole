@@ -172,7 +172,7 @@ class ErrorLevel
      *
      * @return string
      */
-    private function joinOnOff($flagsOn, $flagsOff)
+    private static function joinOnOff($flagsOn, $flagsOff)
     {
         $flagsOn = \count($flagsOn) > 1 && $flagsOff
             ? '( ' . \implode(' | ', $flagsOn) . ' )'

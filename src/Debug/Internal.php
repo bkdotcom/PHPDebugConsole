@@ -211,7 +211,7 @@ class Internal implements SubscriberInterface
      */
     public function getResponseHeader($header = 'Content-Type', $delimiter = false)
     {
-        $headers = static::getResponseHeaders();
+        $headers = $this->getResponseHeaders();
         $header = isset($headers[$header])
             ? $headers[$header]
             : array();
@@ -226,13 +226,32 @@ class Internal implements SubscriberInterface
      * Header values are pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
      * otherwise, values are pulled from emitted headers via `headers_list()`
      *
+     * @param string $asString return as a single string/block of headers?
+     *
      * @return array
      */
-    public function getResponseHeaders()
+    public function getResponseHeaders($asString = false)
     {
-        return $this->debug->response
+        $headers = $this->debug->response
             ? $this->debug->response->getHeaders()
             : $this->debug->utilities->getEmittedHeaders();
+        if (!$asString) {
+            return $headers;
+        }
+        $serverParams = $this->debug->request->getServerParams();
+        $protocol = isset($serverParams['SERVER_PROTOCOL'])
+            ? $serverParams['SERVER_PROTOCOL']
+            : 'HTTP/1.0';
+        $responseCode = $this->getResponseCode();
+        $headersAll = array(
+            $protocol . ' ' . $responseCode . ' ' . $this->debug->utilities->httpStatusPhrase($responseCode),
+        );
+        foreach ($headers as $k => $vals) {
+            foreach ($vals as $val) {
+                $headersAll[] = $k . ': ' . $val;
+            }
+        }
+        return \join("\n", $headersAll);
     }
 
     /**
@@ -674,7 +693,7 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * log response
+     * log response headers & body/content
      *
      * @return void
      */
@@ -683,24 +702,8 @@ class Internal implements SubscriberInterface
         if (!$this->cfg['logResponse']) {
             return;
         }
-        $headers = $this->getResponseHeaders();
-        $contentType = isset($headers['Content-Type'])
-            ? \implode('', $headers['Content-Type'])
-            : '';
-        $serverParams = $this->debug->request->getServerParams();
-        $protocol = isset($serverParams['SERVER_PROTOCOL'])
-            ? $serverParams['SERVER_PROTOCOL']
-            : 'HTTP/1.0';
-        $responseCode = $this->getResponseCode();
-        $headersAll = array(
-            $protocol . ' ' . $responseCode . ' ' . $this->debug->utilities->httpStatusPhrase($responseCode),
-        );
-        foreach ($headers as $k => $vals) {
-            foreach ($vals as $val) {
-                $headersAll[] = $k . ': ' . $val;
-            }
-        }
-        $this->debug->log('response headers', \join("\n", $headersAll));
+        $this->debug->log('response headers', $this->getResponseHeaders(true));
+        $contentType = $this->getResponseHeader('Content-Type', ', ');
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
             // we're not interested in logging response
             if (\ob_get_level()) {
@@ -708,11 +711,25 @@ class Internal implements SubscriberInterface
             }
             return;
         }
+        $this->logResponseContent();
+    }
+
+    /**
+     * log response body/content
+     *
+     * @return void
+     */
+    private function logResponseContent()
+    {
         $maxLen = $this->debug->getCfg('logResponseMaxLen');
         $maxLen = $this->debug->utilities->getBytes($maxLen, true);
+        // get the contents of the output buffer we started to collect response
         $response = \ob_get_clean();
+        echo $response;
         $contentLength = \strlen($response);
         if ($this->debug->response) {
+            $response = '';
+            $contentLength = 0;
             try {
                 $stream = $this->debug->response->getBody();
                 $contentLength = $stream->getSize(); // likely returns null (unknown)
@@ -748,7 +765,6 @@ class Internal implements SubscriberInterface
         } else {
             $this->debug->log('response too large to output (' . $contentLength . ')');
         }
-        echo $response;
     }
 
     /**

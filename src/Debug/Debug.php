@@ -1944,16 +1944,16 @@ class Debug
                 return new ErrorEmailer($debug->config->getValues('errorEmailer'));
             },
             'errorHandler' => function (Debug $debug) {
-                if (ErrorHandler::getInstance()) {
-                    return ErrorHandler::getInstance();
-                } else {
-                    $errorHandler = new ErrorHandler($debug->eventManager);
-                    /*
-                        log E_USER_ERROR to system_log without halting script
-                    */
-                    $errorHandler->setCfg('onEUserError', 'log');
-                    return $errorHandler;
+                $existingInstance = ErrorHandler::getInstance();
+                if ($existingInstance) {
+                    return $existingInstance;
                 }
+                $errorHandler = new ErrorHandler($debug->eventManager);
+                /*
+                    log E_USER_ERROR to system_log without halting script
+                */
+                $errorHandler->setCfg('onEUserError', 'log');
+                return $errorHandler;
             },
             'eventManager' => function () {
                 return new EventManager();
@@ -2027,21 +2027,24 @@ class Debug
                 ? 'summary'
                 : 'log';
         }
-        if ($where === 'log') {
-            $this->rootInstance->logRef = &$this->rootInstance->data['log'];
-            $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks']['main'];
-        } elseif ($where === 'alerts') {
-            $this->rootInstance->logRef = &$this->rootInstance->data['alerts'];
-        } else {
-            $priority = \is_int($where)
-                ? $where
-                : \end($this->data['groupPriorityStack']);
-            if (!isset($this->data['logSummary'][$priority])) {
-                $this->data['logSummary'][$priority] = array();
-                $this->data['groupStacks'][$priority] = array();
-            }
-            $this->rootInstance->logRef = &$this->rootInstance->data['logSummary'][$priority];
-            $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks'][$priority];
+        switch ($where) {
+            case 'log':
+                $this->rootInstance->logRef = &$this->rootInstance->data['log'];
+                $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks']['main'];
+                break;
+            case 'alerts':
+                $this->rootInstance->logRef = &$this->rootInstance->data['alerts'];
+                break;
+            default:
+                $priority = \is_int($where)
+                    ? $where
+                    : \end($this->data['groupPriorityStack']);
+                if (!isset($this->data['logSummary'][$priority])) {
+                    $this->data['logSummary'][$priority] = array();
+                    $this->data['groupStacks'][$priority] = array();
+                }
+                $this->rootInstance->logRef = &$this->rootInstance->data['logSummary'][$priority];
+                $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks'][$priority];
         }
     }
 }

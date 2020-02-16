@@ -360,24 +360,24 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
      * Setup up PDO collector
      * Log to PDO channel
      *
-     * @param CDbConnection $db CDbConnection instance
+     * @param CDbConnection $dbConnection CDbConnection instance
      *
      * @return void
      */
-    public function usePdoCollector(CDbConnection $db = null)
+    public function usePdoCollector(CDbConnection $dbConnection = null)
     {
-        $db = $db ?: $this->yiiApp->db;
-        $db->active = true; // creates pdo obj
-        $pdo = $db->pdoInstance;
+        $dbConnection = $dbConnection ?: $this->yiiApp->db;
+        $dbConnection->active = true; // creates pdo obj
+        $pdo = $dbConnection->pdoInstance;
         if ($pdo instanceof Pdo) {
             // already wrapped
             return;
         }
         // nest the PDO channel under our Yii channel
         $channelName = 'PDO';
-        if (\strpos($db->connectionString, 'master=true')) {
+        if (\strpos($dbConnection->connectionString, 'master=true')) {
             $channelName .= ' (master)';
-        } elseif (\strpos($db->connectionString, 'slave=true')) {
+        } elseif (\strpos($dbConnection->connectionString, 'slave=true')) {
             $channelName .= ' (slave)';
         }
         $pdoChannel = $this->debug->getChannel($channelName, array(
@@ -385,7 +385,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             'channelShow' => false,
         ));
         $pdoCollector = new Pdo($pdo, $pdoChannel);
-        $dbRef = new ReflectionObject($db);
+        $dbRef = new ReflectionObject($dbConnection);
         while (!$dbRef->hasProperty('_pdo')) {
             $dbRef = $dbRef->getParentClass();
             if ($dbRef === false) {
@@ -394,7 +394,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
         }
         $pdoProp = $dbRef->getProperty('_pdo');
         $pdoProp->setAccessible(true);
-        $pdoProp->setValue($db, $pdoCollector);
+        $pdoProp->setValue($dbConnection, $pdoCollector);
     }
 
     /**

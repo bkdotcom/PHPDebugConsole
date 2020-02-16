@@ -103,7 +103,7 @@ class Highlight implements AssetProviderInterface
                     $("body").on("expanded.debug.next", ".context", function(e){
                         var $target = $(e.target),
                             $code = $target.find("code");
-                        if ($code.children().length == 0) {
+                        if ($code.children().length === 0) {
                             Prism.highlightElement($code[0]);
                         }
                     });

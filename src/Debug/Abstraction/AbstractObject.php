@@ -205,24 +205,6 @@ class AbstractObject
     }
 
     /**
-     * Return object's string representation
-     *
-     * @param Abstraction $abs object abstraction
-     *
-     * @return string
-     */
-    public static function toString(Abstraction $abs)
-    {
-        $val = '';
-        if ($abs['stringified']) {
-            $val = $abs['stringified'];
-        } elseif (isset($abs['methods']['__toString']['returnValue'])) {
-            $val = $abs['methods']['__toString']['returnValue'];
-        }
-        return $val;
-    }
-
-    /**
      * Sort things and remove temporary values
      *
      * @param Abstraction $abs Abstraction instance

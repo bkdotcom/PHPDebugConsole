@@ -295,17 +295,16 @@ class Config
     {
         $interface = $this->debug->utilities->getInterface();
         if (\strpos($interface, 'ajax') !== false) {
-            $ret = $this->values['routeNonHtml'];
-        } elseif ($interface === 'http') {
-            $ret = 'html';
+            return $this->values['routeNonHtml'];
+        }
+        if ($interface === 'http') {
             $contentType = $this->debug->getResponseHeader('Content-Type', ',');
             if ($contentType && \strpos($contentType, 'text/html') === false) {
-                $ret = $this->values['routeNonHtml'];
+                return $this->values['routeNonHtml'];
             }
-        } else {
-            $ret = 'stream';
+            return 'html';
         }
-        return $ret;
+        return 'stream';
     }
 
     /**

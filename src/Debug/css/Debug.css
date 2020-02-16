@@ -74,6 +74,7 @@
 .debug .t_object .property.private-ancestor:not(:hover) > * { opacity: 0.5; }
 .debug .t_object .t_modifier_static { font-style: italic; color: #00529b; }
 .debug .t_object .info { display: inline-block; background-color: #d9edf7; color: #31708f; }
+.debug td.t_object { display: table-cell; }
 .debug .m_assert, .debug .m_clear, .debug .m_count, .debug .m_error, .debug .m_groupEndValue, .debug .m_info, .debug .m_log, .debug .m_warn { position: relative; display: table; padding-left: 10px; text-indent: -10px; padding-right: 0.33em; word-break: break-word; }
 .debug .m_table td, .debug .m_trace td { word-break: break-word; }
 .debug .m_assert { background-color: rgba(255, 204, 204, 0.75); }

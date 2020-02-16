@@ -334,11 +334,11 @@ class Utilities
             return (int) $size;
         }
         $units = array('B','kB','MB','GB','TB','PB');
-        $i = \floor(\log((float) $size, 1024));
-        $pow = \pow(1024, $i);
+        $exp = \floor(\log((float) $size, 1024));
+        $pow = \pow(1024, $exp);
         $size = (int) $pow === 0
             ? '0 B'
-            : \round($size / $pow, 2) . ' ' . $units[$i];
+            : \round($size / $pow, 2) . ' ' . $units[$exp];
         return $size;
     }
 
@@ -764,18 +764,19 @@ class Utilities
     private static function buildAttribBoolVal($key, $value = true)
     {
         if ($key === 'autocomplete') {
-            $value = $value ? 'on' : 'off';
-        } elseif ($key === 'spellcheck') {
-            $value = $value ? 'true' : 'false';
-        } elseif ($key === 'translate') {
-            $value = $value ? 'yes' : 'no';
-        } elseif ($value) {
-            // even if not a recognized boolean attribute
-            $value = $key;
-        } else {
-            $value = null;
+            return $value ? 'on' : 'off';
         }
-        return $value;
+        if ($key === 'spellcheck') {
+            return $value ? 'true' : 'false';
+        }
+        if ($key === 'translate') {
+            return $value ? 'yes' : 'no';
+        }
+        if ($value) {
+            // even if not a recognized boolean attribute
+            return $key;
+        }
+        return null;
     }
 
     /**

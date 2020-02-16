@@ -1104,10 +1104,9 @@ class Internal implements SubscriberInterface
                 $prop = 'route' . \substr($classname, \strlen($prefix));
                 $this->debug->{$prop} = $route;
             }
-        } else {
-            $route = 'auto';
+            return $route;
         }
-        return $route;
+        return 'auto';
     }
 
     /**

@@ -13,7 +13,6 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
 
 /**
@@ -248,33 +247,32 @@ class Html extends Base
     /**
      * Insert a row containing code snip & arguments after the given row
      *
-     * @param string $tr  <tr>...</tr> html
-     * @param array  $row backtrace frame
-     * @param int    $i   row index
+     * @param string $html  <tr>...</tr>
+     * @param array  $frame backtrace frame
+     * @param int    $index row index
      *
      * @return string
      */
-    public function tableAddContextRow($tr, $row, $i)
+    public function tableAddContextRow($html, $frame, $index)
     {
-        if (!$row['context']) {
-            return $tr;
+        if (!$frame['context']) {
+            return $html;
         }
-        $tr = \str_replace('<tr>', '<tr' . ($i === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $tr);
-        $tr .= '<tr class="context" ' . ($i === 0 ? 'style="display:table-row;"' : '' ) . '>'
+        $html = \str_replace('<tr>', '<tr' . ($index === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $html);
+        $html .= '<tr class="context" ' . ($index === 0 ? 'style="display:table-row;"' : '' ) . '>'
             . '<td colspan="4">'
-                . '<pre class="highlight line-numbers" data-line="' . $row['line'] . '" data-start="' . \key($row['context']) . '">'
+                . '<pre class="highlight line-numbers" data-line="' . $frame['line'] . '" data-start="' . \key($frame['context']) . '">'
                     . '<code class="language-php">'
-                        . \htmlspecialchars(\implode($row['context']))
+                        . \htmlspecialchars(\implode($frame['context']))
                     . '</code>'
                 . '</pre>'
                 . '{{arguments}}'
             . '</td>' . "\n"
             . '</tr>' . "\n";
-        $args = $row['args']
-            ? '<hr />Arguments = ' . $this->dump($row['args'])
+        $args = $frame['args']
+            ? '<hr />Arguments = ' . $this->dump($frame['args'])
             : '';
-        $tr = \str_replace('{{arguments}}', $args, $tr);
-        return $tr;
+        return \str_replace('{{arguments}}', $args, $html);
     }
 
     /**
@@ -754,22 +752,21 @@ class Html extends Base
         $type = $this->debug->abstracter->getType($val)[0];
         if ($type === 'string') {
             // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
-            $val = $this->dump($val, $opts, false);
-        } elseif ($type === 'array') {
-            $count = \count($val);
-            $val = '<span class="t_keyword">array</span>'
-                . '<span class="t_punct">(</span>' . $count . '<span class="t_punct">)</span>';
-        } elseif ($type === 'object') {
-            $toStr = AbstractObject::toString($val);
-            if ($toStr) {
-                $val = $this->dump($toStr, $opts, false);
-            } else {
-                $val = $this->markupIdentifier($val['className']);
-            }
-        } else {
-            $val = $this->dump($val);
+            return $this->dump($val, $opts, false);
         }
-        return $val;
+        if ($type === 'array') {
+            $count = \count($val);
+            return '<span class="t_keyword">array</span>'
+                . '<span class="t_punct">(</span>' . $count . '<span class="t_punct">)</span>';
+        }
+        if ($type === 'object') {
+            $toStr = $val->toString();
+            $val = $toStr
+                ? $this->dump($toStr, $opts, false)
+                : $this->markupIdentifier($val['className']);
+            return $val;
+        }
+        return $this->dump($val);
     }
 
     /**

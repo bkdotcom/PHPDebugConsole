@@ -427,16 +427,19 @@ class AbstractObjectMethods extends AbstractObjectSub
         }
         $defaultValue = $param['defaultValue'];
         if (\in_array($defaultValue, array('true','false','null'))) {
-            $defaultValue = \json_decode($defaultValue);
-        } elseif (\is_numeric($defaultValue)) {
+            return \json_decode($defaultValue);
+        }
+        if (\is_numeric($defaultValue)) {
             // there are no quotes around value
-            $defaultValue = $defaultValue * 1;
-        } elseif (\preg_match('/^array\(\s*\)|\[\s*\]$/i', $defaultValue)) {
+            return $defaultValue * 1;
+        }
+        if (\preg_match('/^array\(\s*\)|\[\s*\]$/i', $defaultValue)) {
             // empty array...
             // we're not going to eval non-empty arrays...
             //    non empty array will appear as a string
-            $defaultValue = array();
-        } elseif (\preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
+            return array();
+        }
+        if (\preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
             // appears to be a constant
             if ($matches[1] && \defined($className . '::' . $matches[2])) {
                 // self
@@ -452,9 +455,8 @@ class AbstractObjectMethods extends AbstractObjectSub
                     'value' => \constant($defaultValue),
                 ));
             }
-        } else {
-            $defaultValue = \trim($defaultValue, '\'"');
+            return $defaultValue;
         }
-        return $defaultValue;
+        return \trim($defaultValue, '\'"');
     }
 }

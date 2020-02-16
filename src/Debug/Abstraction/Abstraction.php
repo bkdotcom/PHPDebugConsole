@@ -64,6 +64,24 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     }
 
     /**
+     * Return object's string representation
+     *
+     * @return string
+     */
+    public function toString()
+    {
+        $val = '';
+        if ($this->values['type'] === 'object') {
+            if ($this->values['stringified']) {
+                $val = $this->values['stringified'];
+            } elseif (isset($this->values['methods']['__toString']['returnValue'])) {
+                $val = $this->values['methods']['__toString']['returnValue'];
+            }
+        }
+        return $val;
+    }
+
+    /**
      * Implements JsonSerializable
      *
      * @return array

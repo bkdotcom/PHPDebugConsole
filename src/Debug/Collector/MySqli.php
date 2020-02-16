@@ -71,7 +71,14 @@ class MySqli extends mysqliBase
                 }
             }
             $this->connectionAttempted = true;
-            parent::__construct($params['host'], $params['username'], $params['passwd'], $params['dbname'], $params['port'], $params['socket']);
+            parent::__construct(
+                $params['host'],
+                $params['username'],
+                $params['passwd'],
+                $params['dbname'],
+                $params['port'],
+                $params['socket']
+            );
         } else {
             /*
                 Calling the constructor with no parameters is the same as calling mysqli_init().

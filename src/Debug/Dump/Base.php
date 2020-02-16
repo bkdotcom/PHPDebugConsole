@@ -15,7 +15,6 @@ namespace bdk\Debug\Dump;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Component;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
@@ -685,12 +684,11 @@ class Base extends Component implements ConfigurableInterface
                 // replace with dummy array so browser console will display native Array(length)
                 $val = \array_fill(0, $count, 0);
             }
-        } elseif ($type === 'object') {
-            $toStr = AbstractObject::toString($val);
-            $val = $toStr ?: $val['className'];
-        } else {
-            $val = $this->dump($val, $opts);
+            return $val;
         }
-        return $val;
+        if ($type === 'object') {
+            return $val->toString() ?: $val['className'];
+        }
+        return $this->dump($val, $opts);
     }
 }

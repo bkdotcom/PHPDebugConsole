@@ -403,10 +403,9 @@ class AbstractObjectProperties extends AbstractObjectSub
             $propName = $reflectionProperty->getName();
             if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
                 $value = $abs['propertyOverrideValues'][$propName];
+                $propInfo['value'] = $value;
                 if (\is_array($value) && \array_intersect_key($value, static::$basePropInfo)) {
                     $propInfo = $value;
-                } else {
-                    $propInfo['value'] = $value;
                 }
                 $propInfo['valueFrom'] = 'debug';
             } elseif ($isInstance) {

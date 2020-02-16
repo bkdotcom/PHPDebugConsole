@@ -90,7 +90,7 @@ class HtmlObject
      */
     protected function dumpToString(Abstraction $abs)
     {
-        $val = AbstractObject::toString($abs);
+        $val = $abs->toString();
         if (!$val) {
             return '';
         }
@@ -319,10 +319,10 @@ class HtmlObject
             $vis = (array) $info['visibility'];
             $isPrivateAncestor = \in_array('private', $vis) && $info['inheritedFrom'];
             $classes = \array_keys(\array_filter(array(
-                'debuginfo-value' => $info['valueFrom'] == 'debugInfo',
+                'debuginfo-value' => $info['valueFrom'] === 'debugInfo',
                 'debuginfo-excluded' => $info['debugInfoExcluded'],
                 'forceShow' => $info['forceShow'],
-                'debug-value' => $info['valueFrom'] == 'debug',
+                'debug-value' => $info['valueFrom'] === 'debug',
                 'private-ancestor' => $isPrivateAncestor,
                 'property' => true,
                 \implode(' ', $vis) => $info['visibility'] !== 'debug',

@@ -416,13 +416,11 @@ class Text extends Base
         $type = $this->debug->abstracter->getType($val)[0];
         if ($type === 'array') {
             $count = \count($val);
-            $val = 'array(' . $count . ')';
-        } elseif ($type === 'object') {
-            $toStr = AbstractObject::toString($val);
-            $val = $toStr ?: $val['className'];
-        } else {
-            $val = $this->dump($val, $opts);
+            return 'array(' . $count . ')';
         }
-        return $val;
+        if ($type === 'object') {
+            return $val->toString() ?: $val['className'];
+        }
+        return $this->dump($val, $opts);
     }
 }

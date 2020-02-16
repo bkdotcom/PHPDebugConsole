@@ -13,6 +13,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 
 /**
@@ -42,37 +43,17 @@ class MethodTable
         if (!\is_array($rows)) {
             return array();
         }
-        $lastKeys = array();
-        $newKeys = array();
-        $curKeys = array();
+        $colKeys = array();
+        $curRowKeys = array();
         foreach ($rows as $row) {
-            $curKeys = self::keys($row);
-            if (empty($lastKeys)) {
-                $lastKeys = $curKeys;
-            } elseif ($curKeys !== $lastKeys) {
-                $newKeys = array();
-                $count = \count($curKeys);
-                for ($i = 0; $i < $count; $i++) {
-                    $curKey = $curKeys[$i];
-                    if ($lastKeys && $curKey === $lastKeys[0]) {
-                        \array_push($newKeys, $curKey);
-                        \array_shift($lastKeys);
-                        continue;
-                    }
-                    $position = \array_search($curKey, $lastKeys, true);
-                    if ($position !== false) {
-                        $segment = \array_splice($lastKeys, 0, $position + 1);
-                        \array_splice($newKeys, \count($newKeys), 0, $segment);
-                    } elseif (!\in_array($curKey, $newKeys, true)) {
-                        \array_push($newKeys, $curKey);
-                    }
-                }
-                // put on remaining from lastKeys
-                \array_splice($newKeys, \count($newKeys), 0, $lastKeys);
-                $lastKeys = \array_unique($newKeys);
+            $curRowKeys = self::keys($row);
+            if (empty($colKeys)) {
+                $colKeys = $curRowKeys;
+            } elseif ($curRowKeys !== $colKeys) {
+                $colKeys = self::mergeKeys($curRowKeys, $colKeys);
             }
         }
-        return $lastKeys;
+        return $colKeys;
     }
 
     /**
@@ -96,28 +77,9 @@ class MethodTable
             'row' => false,
             'cols' => array(),
         );
-        if (Abstracter::isAbstraction($row)) {
-            if ($row['type'] === 'object') {
-                $objInfo['row'] = array(
-                    'className' => $row['className'],
-                    'phpDoc' => $row['phpDoc'],
-                );
-                $row = self::objectValues($row);
-                if (!\is_array($row)) {
-                    // ie stringified value
-                    $objInfo['row'] = false;
-                    $row = array(self::SCALAR => $row);
-                } elseif (Abstracter::isAbstraction($row)) {
-                    // still an abstraction (ie closure)
-                    $objInfo['row'] = false;
-                    $row = array(self::SCALAR => $row);
-                }
-            } else {
-                // resource & callable
-                $row = array(self::SCALAR => $row);
-            }
-        }
-        if (!\is_array($row)) {
+        if ($row instanceof Abstraction) {
+            $row = self::keyValuesAbstraction($row, $objInfo);
+        } elseif (\is_array($row) === false) {
             $row = array(self::SCALAR =>  $row);
         }
         $values = array();
@@ -133,7 +95,7 @@ class MethodTable
                 //    if stringified abstraction, we'll set cols[key] below
                 $objInfo['cols'][$key] = false;
             }
-            if (Abstracter::isAbstraction($value)) {
+            if ($value instanceof Abstraction) {
                 // just return the stringified / __toString value in a table
                 if (isset($value['stringified'])) {
                     $objInfo['cols'][$key] = $value['className'];
@@ -224,6 +186,69 @@ class MethodTable
         return \is_array($val)
             ? \array_keys($val)
             : array(self::SCALAR);
+    }
+
+    /**
+     * Get "object values" from abstraction
+     *
+     * @param Abstraction $row     [description]
+     * @param array       $objInfo [description]
+     *
+     * @return array
+     */
+    private static function keyValuesAbstraction(Abstraction $row, &$objInfo)
+    {
+        if ($row['type'] !== 'object') {
+            // resource & callable
+            return array(self::SCALAR => $row);
+        }
+        $objInfo['row'] = array(
+            'className' => $row['className'],
+            'phpDoc' => $row['phpDoc'],
+        );
+        $row = self::objectValues($row);
+        if (\is_array($row) === false) {
+            // ie stringified value
+            $objInfo['row'] = false;
+            $row = array(self::SCALAR => $row);
+        } elseif (Abstracter::isAbstraction($row)) {
+            // still an abstraction (ie closure)
+            $objInfo['row'] = false;
+            $row = array(self::SCALAR => $row);
+        }
+        return $row;
+    }
+
+    /**
+     * Merge current row's keys with merged keys
+     *
+     * @param array $curRowKeys current row's keys
+     * @param array $colKeys    all col keys
+     *
+     * @return array
+     */
+    private static function mergeKeys($curRowKeys, $colKeys)
+    {
+        $newKeys = array();
+        $count = \count($curRowKeys);
+        for ($i = 0; $i < $count; $i++) {
+            $curKey = $curRowKeys[$i];
+            if ($colKeys && $curKey === $colKeys[0]) {
+                \array_push($newKeys, $curKey);
+                \array_shift($colKeys);
+                continue;
+            }
+            $position = \array_search($curKey, $colKeys, true);
+            if ($position !== false) {
+                $segment = \array_splice($colKeys, 0, $position + 1);
+                \array_splice($newKeys, \count($newKeys), 0, $segment);
+            } elseif (!\in_array($curKey, $newKeys, true)) {
+                \array_push($newKeys, $curKey);
+            }
+        }
+        // put on remaining colKeys
+        \array_splice($newKeys, \count($newKeys), 0, $colKeys);
+        return \array_unique($newKeys);
     }
 
     /**

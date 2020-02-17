@@ -67,6 +67,7 @@ class ConfigTest extends DebugTestFramework
             'route',
             'routeNonHtml',
             'services',
+            'sessionName',
         );
 
         $this->assertSame(true, $this->debug->getCfg('collect'));

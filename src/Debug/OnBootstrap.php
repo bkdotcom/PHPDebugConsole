@@ -53,6 +53,7 @@ class OnBootstrap
         $this->logPhpInfo();
         $this->logServerVals();
         $this->logRequest();    // headers, cookies, post
+        $this->logSession();
         $this->debug->groupEnd();
         $this->debug->groupEnd();
         $this->debug->setCfg('collect', $collectWas);
@@ -71,6 +72,32 @@ class OnBootstrap
         }
         self::$input = \file_get_contents('php://input');
         return self::$input;
+    }
+
+    /**
+     * Check request for probable sessionId cookie or query-param
+     *
+     * @return string|null
+     */
+    private function getSessionName()
+    {
+        $name = $this->debug->getCfg('sessionName');
+        $names = $name
+            ? array($name)
+            : array('PHPSESSID', 'SESSIONID', 'SESSION_ID');
+        $cookies = $this->debug->request->getCookieParams();
+        $queryParams = $this->debug->request->getQueryParams();
+        foreach ($names as $name) {
+            if (isset($cookies[$name])) {
+                return $name;
+            }
+        }
+        foreach ($names as $name) {
+            if (isset($queryParams[$name])) {
+                return $name;
+            }
+        }
+        return null;
     }
 
     /**
@@ -356,6 +383,40 @@ class OnBootstrap
         }
         \ksort($vals, SORT_NATURAL);
         $this->debug->log('$_SERVER', $vals, $this->debug->meta('redact'));
+    }
+
+    /**
+     * Log $_SESSION data
+     *
+     * @return void
+     */
+    private function logSession()
+    {
+        if (!$this->debug->getCfg('logEnvInfo.session')) {
+            return;
+        }
+        $namePrev = null;
+        if (\session_status() !== PHP_SESSION_ACTIVE) {
+            $name = $this->getSessionName();
+            if ($name === null) {
+                $this->debug->log('Session:  No session id passed in request');
+                return;
+            }
+            $namePrev = \session_name($name);
+            \session_start();
+        }
+        if (\session_status() === PHP_SESSION_ACTIVE) {
+            $this->debug->log('$_SESSION', $_SESSION);
+        }
+        if ($namePrev) {
+            /*
+                PHPDebugConsole started session... close it.
+                "<jedi>we were never here</jedi>"
+            */
+            \session_abort();
+            \session_name($namePrev);
+            unset($_SESSION);
+        }
     }
 
     /**

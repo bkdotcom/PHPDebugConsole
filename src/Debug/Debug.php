@@ -117,6 +117,7 @@ class Debug
                 'phpInfo' => true,
                 'post' => true,
                 'serverVals' => true,
+                'session' => true,
             ),
             'logResponse' => 'auto',
             'logResponseMaxLen' => '1 MB',
@@ -135,6 +136,7 @@ class Debug
                                             //   if null, no output (unless output plugin added manually)
             'routeNonHtml' => 'chromeLogger',
             'services' => $this->getDefaultServices(),
+            'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
         );
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible

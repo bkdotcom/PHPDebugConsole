@@ -1787,13 +1787,12 @@ class Debug
         }
         if (!$logEntry['args']) {
             // give a default label
+            $logEntry['args'] = array( 'group' );
             $caller = $this->backtrace->getCallerInfo(0, Backtrace::INCL_ARGS);
             $args = $this->doGroupAutoArgs($caller);
             if ($args) {
                 $logEntry['args'] = $args;
                 $logEntry->setMeta('isFuncName', true);
-            } else {
-                $logEntry['args'] = array( 'group' );
             }
         }
         $this->doGroupStringify($logEntry);

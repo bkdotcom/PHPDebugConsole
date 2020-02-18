@@ -87,7 +87,11 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             return;
         }
 
-        $debugRootInstance = Debug::getInstance();
+        $debugRootInstance = Debug::getInstance(array(
+            'logEnvInfo' => array(
+                'session' => false,
+            ),
+        ));
         $debugRootInstance->eventManager->addSubscriberInterface($this);
         /*
             Debug error handler may have been registered first -> reregister

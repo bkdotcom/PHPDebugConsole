@@ -53,6 +53,7 @@ class OnBootstrap
         $this->logPhpInfo();
         $this->logServerVals();
         $this->logRequest();    // headers, cookies, post
+        $this->logSessionSettings();
         $this->logSession();
         $this->debug->groupEnd();
         $this->debug->groupEnd();
@@ -84,17 +85,23 @@ class OnBootstrap
         $name = $this->debug->getCfg('sessionName');
         $names = $name
             ? array($name)
-            : array('PHPSESSID', 'SESSIONID', 'SESSION_ID');
+            : array('PHPSESSID', 'SESSIONID', 'SESSION_ID', 'SESSID', 'SESS_ID');
         $cookies = $this->debug->request->getCookieParams();
         $queryParams = $this->debug->request->getQueryParams();
-        foreach ($names as $name) {
-            if (isset($cookies[$name])) {
-                return $name;
+        $useCookies = \filter_var(\ini_get('session.use_cookies'), FILTER_VALIDATE_BOOLEAN);
+        $useOnlyCookies = \filter_var(\ini_get('session.use_only_cookies'), FILTER_VALIDATE_BOOLEAN);
+        if ($useCookies) {
+            foreach ($names as $name) {
+                if (isset($cookies[$name])) {
+                    return $name;
+                }
             }
         }
-        foreach ($names as $name) {
-            if (isset($queryParams[$name])) {
-                return $name;
+        if ($useOnlyCookies === false) {
+            foreach ($names as $name) {
+                if (isset($queryParams[$name])) {
+                    return $name;
+                }
             }
         }
         return null;
@@ -169,10 +176,12 @@ class OnBootstrap
         $this->debug->log('PHP Version', PHP_VERSION);
         $this->debug->log('ini location', \php_ini_loaded_file(), $this->debug->meta('detectFiles', true));
         $this->debug->log('memory_limit', $this->debug->utilities->getBytes($this->debug->utilities->memoryLimit()));
-        $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
-        if (\session_module_name() === 'files') {
-            $this->debug->log('session_save_path', \session_save_path() ?: \sys_get_temp_dir());
-        }
+        $this->debug->assert(
+            \filter_var(\ini_get('expose_php'), FILTER_VALIDATE_BOOLEAN),
+            '%cexpose_php%c should be disabled',
+            'font-family:monospace;',
+            ''
+        );
         $extensionsCheck = array('curl','mbstring');
         $extensionsCheck = \array_filter($extensionsCheck, function ($extension) {
             return !\extension_loaded($extension);
@@ -416,6 +425,59 @@ class OnBootstrap
             \session_abort();
             \session_name($namePrev);
             unset($_SESSION);
+        }
+    }
+
+    /**
+     * Asserts recommended session ini settings
+     *
+     * @return void
+     */
+    private function logSessionSettings()
+    {
+        if (!$this->debug->getCfg('logEnvInfo.session')) {
+            return;
+        }
+        $settings = array(
+            array('session.cookie_httponly', true),
+            array('session.cookie_lifetime', 0),
+            array('session.name', 'PHPSESSID', '!='),
+            array('session.use_trans_sid', false),
+            array('session.use_only_cookies', true),
+            array('session.use_strict_mode', true),
+        );
+        $style = 'font-family:monospace;';
+        foreach ($settings as $info) {
+            $name = $info[0];
+            $expect = $info[1];
+            $operator = isset($info[2]) ? $info[2] : '==';
+            $expectFriendly = $expect;
+            $filter = FILTER_DEFAULT;
+            if (\is_bool($expect)) {
+                $filter = FILTER_VALIDATE_BOOLEAN;
+                $expectFriendly = $expect ? 'enabled' : 'disabled';
+            } elseif (\is_int($expect)) {
+                $filter = FILTER_VALIDATE_INT;
+                $expectFriendly = $expect;
+            }
+            $actual = \filter_var(\ini_get($name), $filter);
+            $assert = $actual === $expect;
+            $msg = 'should be ' . $expectFriendly;
+            if ($operator === '!=') {
+                $assert = $actual !== $expect;
+                $msg = 'should not be ' . $expectFriendly;
+            }
+            $this->debug->assert(
+                $assert,
+                '%c' . $name . '%c ' . $msg,
+                $style,
+                ''
+            );
+        }
+        $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
+        if (\session_module_name() === 'files') {
+            // aka session.save_handler
+            $this->debug->log('session save_path', \session_save_path() ?: \sys_get_temp_dir());
         }
     }
 

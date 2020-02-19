@@ -242,6 +242,13 @@ function registerListeners ($root) {
   $('body').on('animationend', '.debug-noti', function () {
     $(this).removeClass('animate').closest('.debug-noti-wrap').hide()
   })
+  $('.debug').on('mousedown', '.debug a', function () {
+    var beforeunload = window.onbeforeunload
+    window.onbeforeunload = null
+    window.setTimeout(function () {
+      window.onbeforeunload = beforeunload
+    }, 500)
+  })
   listenersRegistered = true
 }
 

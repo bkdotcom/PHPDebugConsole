@@ -14,6 +14,9 @@
   text-indent: 0;
   color: inherit;
   margin: 0;
+  &:not(.fa) {
+    font-family: inherit;
+  }
 }
 
 a {
@@ -34,7 +37,6 @@ button {
   cursor: pointer;
   background-color: #f0f0f0;
   border-color: #afafaf;
-  font-family: inherit;
   font-weight: inherit;
   height: auto;
   letter-spacing: initial;

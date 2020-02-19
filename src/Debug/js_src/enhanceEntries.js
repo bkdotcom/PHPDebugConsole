@@ -338,6 +338,9 @@ export function enhanceEntry ($entry) {
     return
   }
   // console.log('enhanceEntry', $entry[0])
+  if ($entry.is('.filter-hidden')) {
+    return
+  }
   if ($entry.is('.m_group')) {
     enhanceGroup($entry)
   } else if ($entry.is('.m_trace')) {

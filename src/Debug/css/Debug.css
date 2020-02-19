@@ -3,12 +3,13 @@
 .debug { font-size: 13px; /** Quite unusual, but experienced site css that modified div css...  reset */ }
 .debug { position: relative; clear: both; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: normal; text-shadow: none; color: #111; }
 .debug * { font-size: inherit; line-height: normal; text-indent: 0; color: inherit; margin: 0; }
+.debug *:not(.fa) { font-family: inherit; }
 .debug a { text-decoration: none; color: #00e; }
 .debug a:visited { color: #551a8b; }
 .debug a:focus, .debug a:hover { text-decoration: underline; }
 .debug a:active, .debug a:hover { outline: 0; color: #e00; }
 .debug a.file-link { color: inherit; }
-.debug button { color: inherit; cursor: pointer; background-color: #f0f0f0; border-color: #afafaf; font-family: inherit; font-weight: inherit; height: auto; letter-spacing: initial; line-height: initial; outline: none; padding: 1px 7px 2px; text-align: center; text-transform: none; vertical-align: baseline; white-space: initial; }
+.debug button { color: inherit; cursor: pointer; background-color: #f0f0f0; border-color: #afafaf; font-weight: inherit; height: auto; letter-spacing: initial; line-height: initial; outline: none; padding: 1px 7px 2px; text-align: center; text-transform: none; vertical-align: baseline; white-space: initial; }
 .debug button:hover { background-color: #dde6f0; }
 .debug code { padding: 2px 4px; background-color: transparent; font-family: Menlo, Monaco, Consolas, "Courier New", monospace; }
 .debug pre code { display: block; }

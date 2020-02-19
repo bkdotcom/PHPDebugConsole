@@ -604,6 +604,9 @@
       return
     }
     // console.log('enhanceEntry', $entry[0])
+    if ($entry.is('.filter-hidden')) {
+      return
+    }
     if ($entry.is('.m_group')) {
       enhanceGroup($entry);
     } else if ($entry.is('.m_trace')) {
@@ -878,6 +881,8 @@
   ];
 
   function init$3 ($delegateNode) {
+    applyFilter($delegateNode);
+
     $delegateNode.on('change', 'input[type=checkbox]', function () {
       var $this = $(this);
       var isChecked = $this.is(':checked');
@@ -945,7 +950,7 @@
         $node.debugEnhance();
       }
     });
-    $root.find('.m_group.filter-hidden > .group-header:not(.expanded) + .group-body').debugEnhance();
+    // $root.find('.m_group.filter-hidden > .group-header:not(.expanded) + .group-body').debugEnhance()
   }
 
   function updateFilterStatus ($debugRoot) {
@@ -1668,6 +1673,7 @@
       ? $toggleOrTarget.next()
       : $toggleOrTarget;
     var what = $toggle.data('toggle');
+    var eventName = 'expanded.debug.' + what;
     // trigger while still hidden!
     //    no redraws
     $target.trigger('expand.debug.' + what);
@@ -1675,7 +1681,7 @@
       // hide the toggle..  there is a different toggle in the expanded version
       $toggle.hide();
       $target.show();
-      $target.trigger('expanded.debug.' + what);
+      $target.trigger(eventName);
     } else {
       $target.slideDown('fast', function () {
         var $groupEndValue = $target.find('> .m_groupEndValue');
@@ -1687,7 +1693,7 @@
         }
         // setTimeout for reasons... ensures listener gets visible target
         setTimeout(function () {
-          $target.trigger('expanded.debug.' + what);
+          $target.trigger(eventName);
         });
       });
     }
@@ -2113,6 +2119,13 @@
     }
     $('body').on('animationend', '.debug-noti', function () {
       $(this).removeClass('animate').closest('.debug-noti-wrap').hide();
+    });
+    $('.debug').on('mousedown', '.debug a', function () {
+      var beforeunload = window.onbeforeunload;
+      window.onbeforeunload = null;
+      window.setTimeout(function () {
+        window.onbeforeunload = beforeunload;
+      }, 500);
     });
     listenersRegistered = true;
   }

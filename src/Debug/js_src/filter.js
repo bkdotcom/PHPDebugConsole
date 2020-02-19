@@ -27,6 +27,8 @@ var preFilterCallbacks = [
 ]
 
 export function init ($delegateNode) {
+  applyFilter($delegateNode)
+
   $delegateNode.on('change', 'input[type=checkbox]', function () {
     var $this = $(this)
     var isChecked = $this.is(':checked')
@@ -94,7 +96,7 @@ function applyFilter ($root) {
       $node.debugEnhance()
     }
   })
-  $root.find('.m_group.filter-hidden > .group-header:not(.expanded) + .group-body').debugEnhance()
+  // $root.find('.m_group.filter-hidden > .group-header:not(.expanded) + .group-body').debugEnhance()
 }
 
 function updateFilterStatus ($debugRoot) {

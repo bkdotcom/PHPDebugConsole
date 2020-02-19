@@ -53,21 +53,22 @@ class Highlight implements AssetProviderInterface
                 './js/prism.js',
                 'Prism.manual = true;
                 (function(){
-                    $("body").on("enhanced.debug", function(e){
-                        var $target = $(e.target);
+                    $("body").on("enhanced.debug", function (e) {
+                        // console.log("enhanced.debug", e.target)
+                        var $target = $(e.target)
                         if ($target.hasClass("m_group")) {
-                            return;
+                            return
                         }
-                        $target.find(".highlight").removeClass("highlight").each(function() {
-                            var $high = $(this),
-                                $pre,
-                                classes = $high.attr("class").split(" "),
-                                classesPre = [],
-                                lang,
-                                length,
-                                i;
+                        $target.find(".highlight").removeClass("highlight").each(function () {
+                            var $high = $(this)
+                            var $pre
+                            var classes = $high.attr("class").split(" ")
+                            var classesPre = []
+                            var lang
+                            var length
+                            var i
                             if ($high.is("pre")) {
-                                $pre = $high;
+                                $pre = $high
                             } else {
                                 for (i = 0, length = classes.length; i < length; i++) {
                                     if (classes[i].match(/^language-/)) {
@@ -78,35 +79,35 @@ class Highlight implements AssetProviderInterface
                                         classesPre.push(classes[i]);
                                     }
                                 }
-                                $high.wrapInner(\'<pre><code class="\'+lang+\'"></code></pre>\');
-                                $pre = $high.find("pre").addClass(classesPre.join(" "));
+                                $high.wrapInner(\'<pre><code class="\'+lang+\'"></code></pre>\')
+                                $pre = $high.find("pre").addClass(classesPre.join(" "))
                                 $.each($high[0].attributes, function() {
                                     if (!this.name.length) {
-                                        return; // continue;
+                                        return // continue
                                     }
                                     if (["class","colspan"].indexOf(this.name) < 0) {
-                                        $pre.attr(this.name, this.value);
+                                        $pre.attr(this.name, this.value)
                                         if (this.name.indexOf("data") < 0) {
                                             // dont remove data attr... seems to remove all data attrs & only 1st data attr will get moved
-                                            $high.removeAttr(this.name);
+                                            $high.removeAttr(this.name)
                                         }
                                     }
-                                });
+                                })
                             }
-                            setTimeout(function(){
+                            setTimeout(function () {
                                 if ($pre.is(":visible")) {
-                                    Prism.highlightElement($pre.find("> code")[0]);
+                                    Prism.highlightElement($pre.find("> code")[0])
                                 }
-                            }, 100);
-                        });
-                    });
-                    $("body").on("expanded.debug.next", ".context", function(e){
-                        var $target = $(e.target),
-                            $code = $target.find("code");
-                        if ($code.children().length === 0) {
-                            Prism.highlightElement($code[0]);
+                            }, 100)
+                        })
+                    })
+                    $("body").on("expanded.debug.next", ".context", function (e) {
+                        var $target = $(e.target)
+                        var $code = $target.find("code")
+                        if ($code.length && $code.children().length === 0) {
+                            Prism.highlightElement($code[0])
                         }
-                    });
+                    })
                 }());',
             ),
         );

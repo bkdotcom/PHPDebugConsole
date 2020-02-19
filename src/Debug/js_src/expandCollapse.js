@@ -82,6 +82,7 @@ export function expand ($toggleOrTarget) {
     ? $toggleOrTarget.next()
     : $toggleOrTarget
   var what = $toggle.data('toggle')
+  var eventName = 'expanded.debug.' + what
   // trigger while still hidden!
   //    no redraws
   $target.trigger('expand.debug.' + what)
@@ -89,7 +90,7 @@ export function expand ($toggleOrTarget) {
     // hide the toggle..  there is a different toggle in the expanded version
     $toggle.hide()
     $target.show()
-    $target.trigger('expanded.debug.' + what)
+    $target.trigger(eventName)
   } else {
     $target.slideDown('fast', function () {
       var $groupEndValue = $target.find('> .m_groupEndValue')
@@ -101,7 +102,7 @@ export function expand ($toggleOrTarget) {
       }
       // setTimeout for reasons... ensures listener gets visible target
       setTimeout(function () {
-        $target.trigger('expanded.debug.' + what)
+        $target.trigger(eventName)
       })
     })
   }

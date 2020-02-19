@@ -85,12 +85,10 @@ class AbstractObjectProperties extends AbstractObjectSub
             }
             $reflectionObject = $reflectionObject->getParentClass();
         }
+        $this->addPropertiesPhpDoc($abs); // magic properties documented via phpDoc
         if (\is_object($obj)) {
             $this->addPropertiesDom($abs);
-            $this->addPropertiesPhpDoc($abs);   // magic properties documented via phpDoc
-            $this->addPropertiesDebug($abs);    // use __debugInfo() values if useDebugInfo' && method exists
-        } else {
-            $this->addPropertiesPhpDoc($abs);
+            $this->addPropertiesDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
         }
         $properties = $abs['properties'];
         $abs['hist'][] = $obj;
@@ -295,6 +293,25 @@ class AbstractObjectProperties extends AbstractObjectSub
                 return;
             }
         }
+        $this->addPropertiesPhpDocIter($abs);
+    }
+
+    /**
+     * Iterate over PhpDoc's magic properties & add to out abstrction
+     *
+     * @param Abstraction $abs           Abstraction event object
+     * @param string|null $inheritedFrom Where the magic properties were found
+     *
+     * @return void
+     */
+    private function addPropertiesPhpDocIter(Abstraction $abs, $inheritedFrom)
+    {
+        // tag => visibility
+        $tags = array(
+            'property' => 'magic',
+            'property-read' => 'magic-read',
+            'property-write' => 'magic-write',
+        );
         $properties = $abs['properties'];
         foreach ($tags as $tag => $vis) {
             if (!isset($abs['phpDoc'][$tag])) {
@@ -315,7 +332,7 @@ class AbstractObjectProperties extends AbstractObjectSub
                             : $vis,
                     )
                 );
-                if (!$exists) {
+                if ($exists === false) {
                     $properties[ $phpDocProp['name'] ]['value'] = Abstracter::UNDEFINED;
                 }
             }

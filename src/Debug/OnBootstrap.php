@@ -382,13 +382,14 @@ class OnBootstrap
         }
         $vals = array();
         foreach ($logServerKeys as $k) {
-            if (!\array_key_exists($k, $serverParams)) {
-                $vals[$k] = Abstracter::UNDEFINED;
-            } elseif ($k === 'REQUEST_TIME') {
-                $vals[$k] = \date('Y-m-d H:i:s T', $serverParams['REQUEST_TIME']);
-            } else {
-                $vals[$k] = $serverParams[$k];
+            $val = Abstracter::UNDEFINED;
+            if (\array_key_exists($k, $serverParams)) {
+                $val = $serverParams[$k];
+                if ($k === 'REQUEST_TIME') {
+                    $val = \date('Y-m-d H:i:s T', $val);
+                }
             }
+            $vals[$k] = $val;
         }
         \ksort($vals, SORT_NATURAL);
         $this->debug->log('$_SERVER', $vals, $this->debug->meta('redact'));
@@ -439,37 +440,34 @@ class OnBootstrap
             return;
         }
         $settings = array(
-            array('session.cookie_httponly', true),
-            array('session.cookie_lifetime', 0),
-            array('session.name', 'PHPSESSID', '!='),
-            array('session.use_trans_sid', false),
-            array('session.use_only_cookies', true),
-            array('session.use_strict_mode', true),
+            array('session.cookie_httponly'),
+            array('session.cookie_lifetime', FILTER_VALIDATE_INT, 0),
+            array('session.name', FILTER_DEFAULT, 'PHPSESSID', '!=', 'should not be PHPSESSID (just as "expose_php" should be disabled)'),
+            array('session.use_only_cookies'),
+            array('session.use_strict_mode'),
+            array('session.use_trans_sid', FILTER_VALIDATE_BOOLEAN, false),
         );
         $style = 'font-family:monospace;';
-        foreach ($settings as $info) {
-            $name = $info[0];
-            $expect = $info[1];
-            $operator = isset($info[2]) ? $info[2] : '==';
-            $expectFriendly = $expect;
-            $filter = FILTER_DEFAULT;
-            if (\is_bool($expect)) {
-                $filter = FILTER_VALIDATE_BOOLEAN;
-                $expectFriendly = $expect ? 'enabled' : 'disabled';
-            } elseif (\is_int($expect)) {
-                $filter = FILTER_VALIDATE_INT;
-                $expectFriendly = $expect;
+        foreach ($settings as $setting) {
+            $setting = \array_combine(
+                array('name', 'filter', 'val', 'operator', 'msg'),
+                \array_replace(array('', FILTER_VALIDATE_BOOLEAN, true, '==', ''), $setting)
+            );
+            $valFriendly = $setting['val'];
+            if ($setting['filter'] === FILTER_VALIDATE_BOOLEAN) {
+                $valFriendly = $setting['val'] ? 'enabled' : 'disabled';
             }
-            $actual = \filter_var(\ini_get($name), $filter);
-            $assert = $actual === $expect;
-            $msg = 'should be ' . $expectFriendly;
-            if ($operator === '!=') {
-                $assert = $actual !== $expect;
-                $msg = 'should not be ' . $expectFriendly;
+            $actual = \filter_var(\ini_get($setting['name']), $setting['filter']);
+            $assert = $actual === $setting['val'];
+            $msgDefault = 'should be ' . $valFriendly;
+            if ($setting['operator'] === '!=') {
+                $assert = $actual !== $setting['val'];
+                $msgDefault = 'should not be ' . $valFriendly;
             }
+            $msg = $setting['msg'] ?: $msgDefault;
             $this->debug->assert(
                 $assert,
-                '%c' . $name . '%c ' . $msg,
+                '%c' . $setting['name'] . '%c ' . $msg,
                 $style,
                 ''
             );

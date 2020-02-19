@@ -255,7 +255,7 @@ class HtmlObject
     /**
      * Dump object's phpDoc info as html
      *
-     * @param array $phpDoc parsed phpDoc
+     * @param array $phpDoc Parsed phpDoc
      *
      * @return string html
      */
@@ -267,34 +267,45 @@ class HtmlObject
                 continue;
             }
             foreach ($values as $value) {
-                if ($k === 'author') {
-                    $html = $value['name'];
-                    if ($value['email']) {
-                        $html .= ' &lt;<a href="mailto:' . $value['email'] . '">' . $value['email'] . '</a>&gt;';
-                    }
-                    if ($value['desc']) {
-                        $html .= ' ' . \htmlspecialchars($value['desc']);
-                    }
-                    $value = $html;
-                } elseif ($k === 'link') {
-                    $value = '<a href="' . $value['uri'] . '" target="_blank">'
-                        . \htmlspecialchars($value['desc'] ?: $value['uri'])
-                        . '</a>';
-                } elseif ($k === 'see' && $value['uri']) {
-                    $value = '<a href="' . $value['uri'] . '" target="_blank">'
-                        . \htmlspecialchars($value['desc'] ?: $value['uri'])
-                        . '</a>';
-                } else {
-                    $value = \htmlspecialchars(\implode(' ', $value));
-                }
                 $str .= '<dd class="phpdoc phpdoc-' . $k . '">'
                     . '<span class="phpdoc-tag">' . $k . '</span>'
                     . '<span class="t_operator">:</span> '
-                    . $value
+                    . $this->dumpPhpDocValue($k, $value)
                     . '</dd>' . "\n";
             }
         }
         return $str;
+    }
+
+    /**
+     * Markup tag
+     *
+     * @param string $tagName PhpDoc tag name
+     * @param array  $value   parsed tag
+     *
+     * @return string html
+     */
+    private function dumpPhpDocValue($tagName, $value)
+    {
+        if ($tagName === 'author') {
+            $html = $value['name'];
+            if ($value['email']) {
+                $html .= ' &lt;<a href="mailto:' . $value['email'] . '">' . $value['email'] . '</a>&gt;';
+            }
+            if ($value['desc']) {
+                $html .= ' ' . \htmlspecialchars($value['desc']);
+            }
+            return $html;
+        } elseif ($tagName === 'link') {
+            return '<a href="' . $value['uri'] . '" target="_blank">'
+                . \htmlspecialchars($value['desc'] ?: $value['uri'])
+                . '</a>';
+        } elseif ($tagName === 'see' && $value['uri']) {
+            return '<a href="' . $value['uri'] . '" target="_blank">'
+                . \htmlspecialchars($value['desc'] ?: $value['uri'])
+                . '</a>';
+        }
+        return \htmlspecialchars(\implode(' ', $value));
     }
 
     /**

@@ -293,7 +293,7 @@ class AbstractObjectProperties extends AbstractObjectSub
                 return;
             }
         }
-        $this->addPropertiesPhpDocIter($abs);
+        $this->addPropertiesPhpDocIter($abs, $inheritedFrom);
     }
 
     /**

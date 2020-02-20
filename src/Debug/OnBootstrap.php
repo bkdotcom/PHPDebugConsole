@@ -62,6 +62,41 @@ class OnBootstrap
     }
 
     /**
+     * Assert ini setting is/is-not specified value
+     *
+     * @param array $setting setting name, "type", comparison value, operator
+     *
+     * @return void
+     */
+    private function assertSetting($setting)
+    {
+        $actual = \filter_var(\ini_get($setting['name']), $setting['filter']);
+        $assert = $actual === $setting['val'];
+        $valFriendly = $setting['val'];
+        if ($setting['filter'] === FILTER_VALIDATE_BOOLEAN) {
+            $valFriendly = $setting['val']
+                ? 'enabled'
+                : 'disabled';
+        }
+        $msgDefault = 'should be ' . $valFriendly;
+        if ($setting['operator'] === '!=') {
+            $assert = $actual !== $setting['val'];
+            $msgDefault = 'should not be ' . $valFriendly;
+        }
+        $msg = $setting['msg'] ?: $msgDefault;
+        $params = array(
+            $assert,
+            '%c' . $setting['name'] . '%c ' . $msg,
+        );
+        $cCount = \substr_count($params[1], '%c');
+        for ($i = 0; $i < $cCount; $i += 2) {
+            $params[] = 'font-family:monospace;';
+            $params[] = '';
+        }
+        \call_user_func_array(array($this->debug, 'assert'), $params);
+    }
+
+    /**
      * returns self::$input or php://input contents
      *
      * @return string;
@@ -442,35 +477,17 @@ class OnBootstrap
         $settings = array(
             array('session.cookie_httponly'),
             array('session.cookie_lifetime', FILTER_VALIDATE_INT, 0),
-            array('session.name', FILTER_DEFAULT, 'PHPSESSID', '!=', 'should not be PHPSESSID (just as "expose_php" should be disabled)'),
+            array('session.name', FILTER_DEFAULT, 'PHPSESSID', '!=', 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)'),
             array('session.use_only_cookies'),
             array('session.use_strict_mode'),
             array('session.use_trans_sid', FILTER_VALIDATE_BOOLEAN, false),
         );
-        $style = 'font-family:monospace;';
         foreach ($settings as $setting) {
             $setting = \array_combine(
                 array('name', 'filter', 'val', 'operator', 'msg'),
                 \array_replace(array('', FILTER_VALIDATE_BOOLEAN, true, '==', ''), $setting)
             );
-            $valFriendly = $setting['val'];
-            if ($setting['filter'] === FILTER_VALIDATE_BOOLEAN) {
-                $valFriendly = $setting['val'] ? 'enabled' : 'disabled';
-            }
-            $actual = \filter_var(\ini_get($setting['name']), $setting['filter']);
-            $assert = $actual === $setting['val'];
-            $msgDefault = 'should be ' . $valFriendly;
-            if ($setting['operator'] === '!=') {
-                $assert = $actual !== $setting['val'];
-                $msgDefault = 'should not be ' . $valFriendly;
-            }
-            $msg = $setting['msg'] ?: $msgDefault;
-            $this->debug->assert(
-                $assert,
-                '%c' . $setting['name'] . '%c ' . $msg,
-                $style,
-                ''
-            );
+            $this->assertSetting($setting);
         }
         $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
         if (\session_module_name() === 'files') {

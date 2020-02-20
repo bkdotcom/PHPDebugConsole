@@ -70,6 +70,13 @@ class OnBootstrap
      */
     private function assertSetting($setting)
     {
+        $setting = \array_merge(array(
+            'filter' => FILTER_VALIDATE_BOOLEAN,
+            'msg' => '',
+            'name' => '',
+            'operator' => '==',
+            'val' => true,
+        ), $setting);
         $actual = \filter_var(\ini_get($setting['name']), $setting['filter']);
         $assert = $actual === $setting['val'];
         $valFriendly = $setting['val'];
@@ -211,12 +218,10 @@ class OnBootstrap
         $this->debug->log('PHP Version', PHP_VERSION);
         $this->debug->log('ini location', \php_ini_loaded_file(), $this->debug->meta('detectFiles', true));
         $this->debug->log('memory_limit', $this->debug->utilities->getBytes($this->debug->utilities->memoryLimit()));
-        $this->debug->assert(
-            \filter_var(\ini_get('expose_php'), FILTER_VALIDATE_BOOLEAN),
-            '%cexpose_php%c should be disabled',
-            'font-family:monospace;',
-            ''
-        );
+        $this->assertSetting(array(
+            'name' => 'expose_php',
+            'val' => false,
+        ));
         $extensionsCheck = array('curl','mbstring');
         $extensionsCheck = \array_filter($extensionsCheck, function ($extension) {
             return !\extension_loaded($extension);
@@ -451,7 +456,7 @@ class OnBootstrap
             \session_start();
         }
         if (\session_status() === PHP_SESSION_ACTIVE) {
-            $this->debug->log('$_SESSION', $_SESSION);
+            $this->debug->log('$_SESSION', $_SESSION, $this->debug->meta('redact'));
         }
         if ($namePrev) {
             /*
@@ -475,18 +480,27 @@ class OnBootstrap
             return;
         }
         $settings = array(
-            array('session.cookie_httponly'),
-            array('session.cookie_lifetime', FILTER_VALIDATE_INT, 0),
-            array('session.name', FILTER_DEFAULT, 'PHPSESSID', '!=', 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)'),
-            array('session.use_only_cookies'),
-            array('session.use_strict_mode'),
-            array('session.use_trans_sid', FILTER_VALIDATE_BOOLEAN, false),
+            array('name' => 'session.cookie_httponly'),
+            array(
+                'name' => 'session.cookie_lifetime',
+                'filter' => FILTER_VALIDATE_INT,
+                'val' => 0,
+            ),
+            array(
+                'name' => 'session.name',
+                'filter' => FILTER_DEFAULT,
+                'val' => 'PHPSESSID',
+                'operator' => '!=',
+                'msg' => 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)',
+            ),
+            array('name' => 'session.use_only_cookies'),
+            array('name' => 'session.use_strict_mode'),
+            array(
+                'name' => 'session.use_trans_sid',
+                'val' => false
+            ),
         );
         foreach ($settings as $setting) {
-            $setting = \array_combine(
-                array('name', 'filter', 'val', 'operator', 'msg'),
-                \array_replace(array('', FILTER_VALIDATE_BOOLEAN, true, '==', ''), $setting)
-            );
             $this->assertSetting($setting);
         }
         $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));

@@ -14,7 +14,6 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Utility\Utilities;
 use Exception;
 
 /**
@@ -61,7 +60,6 @@ class StatementInfo
      */
     public function __construct($sql, $params = null, $types = null)
     {
-        $sql = Utilities::prettySql($sql);
         if (!self::$constants) {
             $ref = new \ReflectionClass('PDO');
             $consts = array();
@@ -165,7 +163,7 @@ class StatementInfo
                     ),
                     'addQuotes' => false,
                     'visualWhiteSpace' => false,
-                    'value' => $this->sql,
+                    'value' => $debug->utilities->prettySql($this->sql),
                 )),
                 $debug->meta(array(
                     'attribs' => array(

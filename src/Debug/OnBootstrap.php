@@ -369,7 +369,7 @@ class OnBootstrap
         // don't expect a request body for these methods
         $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
         $expectBody = !\in_array($this->debug->request->getMethod(), $noBodyMethods);
-        if ($logEnvInfo['cookies'] && $expectBody) {
+        if ($logEnvInfo['post'] && $expectBody) {
             $this->logPost();
         }
     }

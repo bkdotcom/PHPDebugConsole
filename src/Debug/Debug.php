@@ -1535,6 +1535,7 @@ class Debug
         }
         /*
             Publish debug.output on all descendant channels and then ourself
+            This isn't outputing each channel, but for performing any per-channel "before output" activities
         */
         $channels = $this->getChannels(true);
         $channels[] = $this;

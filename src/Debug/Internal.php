@@ -333,7 +333,7 @@ class Internal implements SubscriberInterface
         if (isset($cfg['routeStream']['stream'])) {
             $this->debug->addPlugin($this->debug->routeStream);
         }
-        if (!isset($cfg['debug'])) {
+        if (empty($cfg['debug'])) {
             // no debug config values have changed
             return;
         }

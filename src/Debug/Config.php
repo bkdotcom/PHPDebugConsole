@@ -54,6 +54,7 @@ class Config
             'errorHandler',
         )));
         unset($cfg['debug']['onBootstrap']);
+        unset($cfg['debug']['route']);
         if (isset($cfg['debug']['services'])) {
             $cfg['debug']['services'] = \array_intersect_key($cfg['debug']['services'], \array_flip(array(
                 // these services aren't tied to a debug instance... allow inheritance

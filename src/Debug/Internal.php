@@ -309,15 +309,12 @@ class Internal implements SubscriberInterface
     /**
      * debug.bootstrap subscriber
      *
-     * @param Event $event debug.bootstrap event instance
-     *
      * @return void
      */
-    public function onBootstrap(Event $event)
+    public function onBootstrap()
     {
-        $onBootstrap = new OnBootstrap();
-        $onBootstrap($event);
         $this->bootstraped = true;
+        $this->debug->addPlugin(new \bdk\Debug\Plugin\LogEnv());
     }
 
     /**

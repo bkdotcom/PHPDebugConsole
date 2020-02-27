@@ -313,7 +313,7 @@ class Html extends Base
      */
     private function buildTabPanes()
     {
-
+        $html = '';
         $names = \array_keys($this->debug->getChannelsTop());
         foreach ($names as $name) {
             $html .= $this->buildTabPane($name);

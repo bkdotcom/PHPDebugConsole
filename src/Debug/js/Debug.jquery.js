@@ -1164,7 +1164,7 @@
 
     // console.warn('sidebar.init')
 
-    if (config$4.get('sidebar')) {
+    if ($debugRoot.find('> .debug-tabs > .debug-tab-log').data('options').sidebar) {
       addMarkup$1($root$2);
     }
 

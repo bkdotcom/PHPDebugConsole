@@ -12,7 +12,7 @@ export function init ($debugRoot) {
 
   // console.warn('sidebar.init')
 
-  if (config.get('sidebar')) {
+  if ($debugRoot.find('> .debug-tabs > .debug-tab-log').data('options').sidebar) {
     addMarkup($root)
   }
 

@@ -13,30 +13,41 @@
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Plugin;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Utility\ErrorLevel;
 use bdk\PubSub\Event;
+use bdk\PubSub\SubscriberInterface;
 
 /**
  * Log eenvironent info
  */
-class OnBootstrap
+class LogEnv implements SubscriberInterface
 {
 
     private $debug;
     private static $input;  // populate me for unit tests in lieu of php://input
 
     /**
-     * Magic callable method
+     * {@inheritdoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            'debug.pluginInit' => 'onPluginInit',
+        );
+    }
+
+    /**
+     * debug.bootstrap subscriber
      *
-     * @param Event $event event instance
+     * @param Event $event debug.bootstrap event instance
      *
      * @return void
      */
-    public function __invoke(Event $event)
+    public function onPluginInit(Event $event)
     {
         $this->debug = $event->getSubject();
         $route = $this->debug->getCfg('route');

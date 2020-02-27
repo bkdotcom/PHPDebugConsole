@@ -212,9 +212,9 @@ class Html extends Base
             $meta['sanitizeFirst'] = $meta['sanitize'];
         }
         $logEntry->setMeta($meta);
-        $channelName = $logEntry->getChannel();
+        $channelName = $logEntry->getChannelName();
         // phpError channel is handled separately
-        if (!isset($this->channels[$channelName]) && $channelName !== 'phpError') {
+        if (!isset($this->channels[$channelName]) && $channelName !== 'general.phpError') {
             $this->channels[$channelName] = $logEntry->getSubject();
         }
         $this->detectFiles = $meta['detectFiles'];
@@ -577,7 +577,7 @@ class Html extends Base
             'errorCat' => null,  //  should only be applicable for error & warn methods
         ), $logEntry['meta']);
         $attribs = $this->logEntryAttribs;
-        if (isset($meta['file']) && $logEntry->getChannel() !== 'phpError') {
+        if (isset($meta['file']) && $logEntry->getChannelName() !== 'general.phpError') {
             // PHP errors will have file & line as one of the arguments
             //    so no need to store file & line as data args
             $attribs = \array_merge(array(

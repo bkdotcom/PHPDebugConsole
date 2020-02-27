@@ -10,6 +10,7 @@ import * as enhanceMain from './enhanceMain.js'
 import * as expandCollapse from './expandCollapse.js'
 import * as http from './http.js' // cookie & query utils
 import * as sidebar from './sidebar.js'
+import * as tabs from './tabs.js'
 import { Config } from './config.js'
 import loadDeps from './loadDeps.js'
 
@@ -152,6 +153,7 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
     if (typeof arg1 === 'object') {
       conf.set(arg1)
     }
+    tabs.init($self)
     enhanceEntries.init($self)
     expandCollapse.init($self)
     registerListeners($self)

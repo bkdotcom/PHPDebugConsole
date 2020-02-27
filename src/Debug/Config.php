@@ -463,14 +463,18 @@ class Config
         if (isset($values['key']) && !$isCli) {
             $values = \array_merge($values, $this->setDebugKeyValues($values['key']));
         }
-        if (isset($values['logEnvInfo'])) {
-            $keys = \array_keys($this->values['logEnvInfo']);
-            if (\is_bool($values['logEnvInfo'])) {
-                $values['logEnvInfo'] = \array_fill_keys($keys, $values['logEnvInfo']);
-            } elseif ($this->debug->utilities->isList($values['logEnvInfo'])) {
-                $values['logEnvInfo'] = \array_merge(
-                    \array_fill_keys($keys, false),
-                    \array_fill_keys($values['logEnvInfo'], true)
+        foreach (array('logEnvInfo','logRequestInfo') as $name) {
+            if (!isset($values[$name])) {
+                continue;
+            }
+            $allKeys = \array_keys($this->values[$name]);
+            $val = $values[$name];
+            if (\is_bool($val)) {
+                $values[$name] = \array_fill_keys($allKeys, $val);
+            } elseif ($this->debug->utilities->isList($val)) {
+                $values[$name] = \array_merge(
+                    \array_fill_keys($allKeys, false),
+                    \array_fill_keys($val, true)
                 );
             }
         }

@@ -60,7 +60,7 @@
     }
   }
 
-  .debug-body {
+  .debug-tabs {
     *[title]:not(a) {
       cursor: help;
       &:hover { background-color: rgba(0, 0, 0, 0.05); }

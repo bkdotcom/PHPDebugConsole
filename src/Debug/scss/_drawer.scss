@@ -129,11 +129,36 @@
       top: -2px;
       font-size: 0.78em;
     }
+
+    nav {
+      display: inline-block;
+      margin-left: 2em;
+      font-size: 0.85em;
+      a {
+        display: inline-block;
+        color: $default-fg;
+        padding: 0 15px 2px 15px;
+        &.active {
+          border-bottom: #4071e1 solid 2px;
+        }
+      }
+    }
   }
 
-  .debug-body {
-    padding: 5px 10px;
-    background-color: #fff;
+  /*
+  */
+  .debug-tabs {
     overflow: auto;
+    .tab-pane {
+      display: none;
+      &.active {
+        display: block;
+      }
+      .tab-body {
+        padding: 5px 10px;
+        background-color: #fff;
+        overflow: auto;
+      }
+  }
   }
 }

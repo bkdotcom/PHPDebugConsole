@@ -88,7 +88,7 @@ export function init ($debugRoot) {
 
 export function addMarkup ($node) {
   var $sidebar = $('<div class="debug-sidebar show no-transition"></div>')
-  var $expAll = $node.find('.debug-body > .expand-all')
+  var $expAll = $node.find('.debug-tabs > .debug-tab-log > .tab-body > .expand-all')
   $sidebar.html(
     '<div class="sidebar-toggle">' +
       '<div class="collapse">' +
@@ -118,7 +118,7 @@ export function addMarkup ($node) {
       '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
     '</div>'
   )
-  $node.find('.debug-body').before($sidebar)
+  $node.find('.debug-tabs > .debug-tab-log > .tab-body').before($sidebar)
 
   phpErrorToggles($node)
   moveChannelToggles($node)
@@ -149,7 +149,7 @@ export function open ($node) {
 
 function addMethodToggles ($node) {
   var $filters = $node.find('.debug-filters')
-  var $entries = $node.find('> .debug-body .m_alert, .group-body > *')
+  var $entries = $node.find('> .debug-tabs .m_alert, .group-body > *')
   var val
   var labels = {
     alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
@@ -181,20 +181,20 @@ function addMethodToggles ($node) {
 }
 
 /**
- * grab the .debug-body toggles and move them to sidebar
+ * grab the .debug-tabs toggles and move them to sidebar
  */
 function moveChannelToggles ($node) {
-  var $togglesSrc = $node.find('.debug-body .channels > ul > li')
+  var $togglesSrc = $node.find('.debug-tabs .channels > ul > li')
   var $togglesDest = $node.find('.debug-sidebar .channels ul')
   $togglesDest.append($togglesSrc)
   if ($togglesDest.children().length === 0) {
     $togglesDest.parent().hide()
   }
-  $node.find('.debug-body .channels').remove()
+  $node.find('> .debug-tabs > .debug-tab-log > .tab-body > .channels').remove()
 }
 
 /**
- * Grab the error toggles from .debug-body's error-summary move to sidebar
+ * Grab the error toggles from .debug-tabs's error-summary move to sidebar
  */
 function phpErrorToggles ($node) {
   var $togglesUl = $node.find('.debug-sidebar .php-errors ul')

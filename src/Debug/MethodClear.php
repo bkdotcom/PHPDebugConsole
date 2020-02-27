@@ -49,7 +49,7 @@ class MethodClear
     public function onLog(LogEntry $logEntry)
     {
         $this->channelName = $this->debug->parentInstance
-            ? $logEntry->getChannel() // just clear this specific channel
+            ? $logEntry->getChannelName() // just clear this specific channel
             : null;
         $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
@@ -94,8 +94,7 @@ class MethodClear
      */
     private function channelTest(LogEntry $logEntry)
     {
-        $channelName = $logEntry->getChannel();
-        return $this->isRootInstance || \preg_match($this->channelRegex, $channelName);
+        return $this->isRootInstance || \preg_match($this->channelRegex, $logEntry->getChannelName());
     }
 
     /**
@@ -180,7 +179,7 @@ class MethodClear
             }
             $clear2 = $clear;
             if ($this->channelName) {
-                $channelName = $logEntry->getChannel();
+                $channelName = $logEntry->getChannelName();
                 $clear2 = $clear && $channelName === $this->channelName;
             }
             if ($clear2) {
@@ -235,7 +234,7 @@ class MethodClear
         if ($keep || $this->channelName) {
             // we need to go through and filter based on method and/or channel
             foreach ($log as $k => $logEntry) {
-                $channelName = $logEntry->getChannel();
+                $channelName = $logEntry->getChannelName();
                 $channelMatch = !$this->channelName || $channelName === $this->channelName;
                 if (\in_array($logEntry['method'], $keep) || !$channelMatch) {
                     $entriesKeep[$k] = $logEntry;

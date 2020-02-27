@@ -30,16 +30,29 @@ export function init ($debugRoot) {
 }
 
 function addChannelToggles () {
-  var channels = $root.data('channels')
+  var $log = $root.find('> .debug-tabs > .debug-tab-log')
+  /*
+  var channels = $.extend(
+    {},
+    {
+      general: {
+        options: $log.data('channels').general.options,
+        channels: {}
+      }
+    },
+    $log.data('channels').general.channels
+  )
+  */
+  var channels = $log.data('channels')
+  var $ul = buildChannelList(channels, $log.data('nameRoot'))
   var $toggles
-  var $ul = buildChannelList(channels, $root.data('channelRoot'))
-  $toggles = $('<fieldset />', {
-    class: 'channels'
-  })
-    .append('<legend>Channels</legend>')
-    .append($ul)
   if ($ul.html().length) {
-    $root.find('.debug-body').prepend($toggles)
+    $toggles = $('<fieldset />', {
+      class: 'channels'
+    })
+      .append('<legend>Channels</legend>')
+      .append($ul)
+    $log.find('> .tab-body').prepend($toggles)
   }
 }
 
@@ -75,9 +88,11 @@ function addExpandAll () {
   var $expandAll = $('<button>', {
     class: 'expand-all'
   }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups')
+  var $logBody =  $root.find('> .debug-tabs > .debug-tab-log > .tab-body')
+
   // this is currently invoked before entries are enhance / empty class not yet added
-  if ($root.find('.m_group:not(.empty)').length > 1) {
-    $root.find('.debug-log-summary').before($expandAll)
+  if ($logBody.find('.m_group:not(.empty)').length > 1) {
+    $logBody.find('.debug-log-summary').before($expandAll)
   }
   $root.on('click', '.expand-all', function () {
     $(this).closest('.debug').find('.group-header').not('.expanded').each(function () {
@@ -119,7 +134,7 @@ function addPersistOption () {
 }
 */
 
-export function buildChannelList (channels, channelRoot, checkedChannels, prepend) {
+export function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
   var $ul = $('<ul class="list-unstyled">')
   var $li
   var $label
@@ -130,10 +145,15 @@ export function buildChannelList (channels, channelRoot, checkedChannels, prepen
   if ($.isArray(channels)) {
     channels = channelsToTree(channels)
   }
+  console.log('channels', channels);
   for (channelName in channels) {
+    // console.log('channelName', channelName);
     if (channelName === 'phpError') {
       // phpError is a special channel
       continue
+    }
+    if (prepend.length === 0 && channelName !== nameRoot) {
+      prepend = nameRoot + '.'
     }
     channel = channels[channelName]
     isChecked = checkedChannels !== undefined
@@ -143,7 +163,7 @@ export function buildChannelList (channels, channelRoot, checkedChannels, prepen
       class: 'toggle'
     }).append($('<input>', {
       checked: isChecked,
-      'data-is-root': channelName === channelRoot,
+      'data-is-root': channelName === nameRoot,
       'data-toggle': 'channel',
       type: 'checkbox',
       value: prepend + channelName
@@ -154,7 +174,7 @@ export function buildChannelList (channels, channelRoot, checkedChannels, prepen
       $li.find('input').after($('<i>', { class: channel.options.icon }))
     }
     if (Object.keys(channel.channels).length) {
-      $li.append(buildChannelList(channel.channels, channelRoot, checkedChannels, prepend + channelName + '.'))
+      $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, prepend + channelName + '.'))
     }
     $ul.append($li)
   }

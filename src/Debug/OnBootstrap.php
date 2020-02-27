@@ -313,11 +313,12 @@ class OnBootstrap
             return;
         }
         $havePostVals = false;
+        $debugRequest = $this->debug->getChannel('Request', array('nested' => false));
         if ($method === 'POST') {
             $isCorrectContentType = $this->testPostContentType($contentType);
             $post = $this->debug->request->getParsedBody();
             if (!$isCorrectContentType) {
-                $this->debug->warn(
+                $debugRequest->warn(
                     'It appears ' . $contentType . ' was posted with the wrong Content-Type' . "\n"
                         . 'Pay no attention to $_POST and instead use php://input',
                     $this->debug->meta(array(
@@ -328,7 +329,7 @@ class OnBootstrap
                 );
             } elseif ($post) {
                 $havePostVals = true;
-                $this->debug->log('$_POST', $post, $this->debug->meta('redact'));
+                $debugRequest->log('$_POST', $post, $this->debug->meta('redact'));
             }
         }
         if (!$havePostVals) {
@@ -337,7 +338,7 @@ class OnBootstrap
             if ($input) {
                 $this->logInput($contentType);
             } elseif (!$this->debug->request->getUploadedFiles()) {
-                $this->debug->warn(
+                $debugRequest->warn(
                     $method . ' request with no body',
                     $this->debug->meta(array(
                         'detectFiles' => false,
@@ -348,7 +349,7 @@ class OnBootstrap
             }
         }
         if ($this->debug->request->getUploadedFiles()) {
-            $this->debug->log('$_FILES', $this->debug->request->getUploadedFiles());
+            $debugRequest->log('$_FILES', $this->debug->request->getUploadedFiles());
         }
     }
 
@@ -359,17 +360,18 @@ class OnBootstrap
      */
     private function logRequest()
     {
+        $logInfo = $this->debug->getCfg('logRequestInfo');
         $this->logRequestHeaders();
-        $logEnvInfo = $this->debug->getCfg('logEnvInfo');
-        if ($logEnvInfo['cookies']) {
+        if ($logInfo['cookies']) {
             $cookieVals = $this->debug->request->getCookieParams();
             \ksort($cookieVals, SORT_NATURAL);
-            $this->debug->log('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
+            $debugRequest = $this->debug->getChannel('Request', array('nested' => false));
+            $debugRequest->log('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
         }
         // don't expect a request body for these methods
         $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
         $expectBody = !\in_array($this->debug->request->getMethod(), $noBodyMethods);
-        if ($logEnvInfo['post'] && $expectBody) {
+        if ($logInfo['post'] && $expectBody) {
             $this->logPost();
         }
     }
@@ -381,7 +383,7 @@ class OnBootstrap
      */
     private function logRequestHeaders()
     {
-        if (!$this->debug->getCfg('logEnvInfo.headers')) {
+        if ($this->debug->getCfg('logRequestInfo.headers') === false) {
             return;
         }
         $headers = \array_map(function ($vals) {
@@ -389,7 +391,8 @@ class OnBootstrap
         }, $this->debug->request->getHeaders());
         if ($headers) {
             \ksort($headers, SORT_NATURAL);
-            $this->debug->log('request headers', $headers, $this->debug->meta('redact'));
+            $debugRequest = $this->debug->getChannel('Request', array('nested' => false));
+            $debugRequest->log('request headers', $headers, $this->debug->meta('redact'));
         }
     }
 
@@ -400,8 +403,7 @@ class OnBootstrap
      */
     private function logServerVals()
     {
-        $logEnvInfo = $this->debug->getCfg('logEnvInfo');
-        if (!$logEnvInfo['serverVals']) {
+        if ($this->debug->getCfg('logEnvInfo.serverVals') === false) {
             return;
         }
         $logServerKeys = $this->debug->getCfg('logServerKeys');
@@ -413,7 +415,7 @@ class OnBootstrap
             $logServerKeys[] = 'CONTENT_LENGTH';
             $logServerKeys[] = 'CONTENT_TYPE';
         }
-        if (!$logEnvInfo['headers']) {
+        if ($this->debug->getCfg('logRequestInfo.headers') === false) {
             $logServerKeys[] = 'HTTP_HOST';
         }
         $logServerKeys = \array_unique($logServerKeys);

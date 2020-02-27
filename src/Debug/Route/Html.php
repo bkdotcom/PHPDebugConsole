@@ -158,12 +158,9 @@ class Html extends Base
             'class' => 'debug',
             'data-options' => array(
                 'drawer' => $this->cfg['drawer'],
-                'sidebar' => $this->cfg['sidebar'],
+                // 'sidebar' => $this->cfg['sidebar'],
                 'linkFilesTemplateDefault' => $lftDefault ?: null,
             ),
-            // channel list gets built as log processed...  we'll str_replace this...
-            'data-channels' => '{{channels}}',
-            'data-channel-root' => $this->channelNameRoot,
         )) . ">\n";
         if ($this->cfg['outputCss']) {
             $str .= '<style type="text/css">' . "\n"
@@ -176,31 +173,20 @@ class Html extends Base
                     . $this->getScript() . "\n"
                 . '</script>' . "\n";
         }
-        $str .= '<header class="debug-menu-bar">PHPDebugConsole</header>' . "\n";
-        $str .= '<div class="debug-body">' . "\n";
-        $str .= $this->processAlerts();
-        /*
-            If outputing script, initially hide the output..
-            this will help page load performance (fewer redraws)... by magnitudes
-        */
-        $style = null;
+        $str .= '<header class="debug-menu-bar">'
+            . 'PHPDebugConsole?'
+            . '<nav class="nav nav-pills" role="tablist">'
+                . $this->buildTabs()
+            . '</nav>'
+            . '</header>' . "\n";
+        $str .= '<div class="debug-tabs">' . "\n";
         if ($this->cfg['outputScript']) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n";
-            $style = 'display:none;';
+            // $style = 'display:none;';
         }
-        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
-            'class' => 'debug-log-summary group-body',
-            'style' => $style,
-        )) . ">\n" . $this->processSummary() . '</ul>' . "\n";
-        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
-            'class' => 'debug-log group-body',
-            'style' => $style,
-        )) . ">\n" . $this->processLog() . '</ul>' . "\n";
-        $str .= '</div>' . "\n";  // close .debug-body
-        $str .= '</div>' . "\n";  // close .debug
-        $str = \strtr($str, array(
-            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
-        ));
+        $str .= $this->buildTabPanes();
+        $str .= '</div>' . "\n"; // close .debug-tabs
+        $str .= '</div>' . "\n"; // close .debug
         $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
         $this->data = array();
         $event['return'] .= $str;
@@ -297,15 +283,13 @@ class Html extends Base
             return array();
         }
         \ksort($channels);
-        // move root to the top
-        if (isset($channels[$this->channelNameRoot])) {
-            // move root to the top
-            $channels = array($this->channelNameRoot => $channels[$this->channelNameRoot]) + $channels;
-        }
         $tree = array();
-        foreach ($channels as $channelName => $channel) {
+        foreach ($channels as $name => $channel) {
             $ref = &$tree;
-            $path = \explode('.', $channelName);
+            $path = \explode('.', $name);
+            if (\count($path) > 1) {
+                \array_shift($path);
+            }
             foreach ($path as $k) {
                 if (!isset($ref[$k])) {
                     $ref[$k] = array(
@@ -320,5 +304,113 @@ class Html extends Base
             }
         }
         return $tree;
+    }
+
+    /**
+     * Build tab panes/content
+     *
+     * @return html
+     */
+    private function buildTabPanes()
+    {
+
+        $names = \array_keys($this->debug->getChannelsTop());
+        foreach ($names as $name) {
+            $html .= $this->buildTabPane($name);
+        }
+        return $html;
+    }
+
+    /**
+     * Build primary log content
+     *
+     * @param string $name channel name
+     *
+     * @return string html
+     */
+    private function buildTabPane($name)
+    {
+        $this->channelRegex = '#^' . \preg_quote($name, '#') . '(\.|$)#';
+        $nameTab = $name;
+        if ($name === 'general') {
+            $nameTab = 'Log';
+        }
+        $str = '<div' . $this->debug->utilities->buildAttribString(array(
+            'class' => array(
+                'tab-pane',
+                $name === 'general'
+                    ? 'active'
+                    : null,
+                $this->nameToClassname($nameTab),
+            ),
+            // channel list gets built as log processed...  we'll str_replace this...
+            'data-channels' => '{{channels}}',
+            'data-name-root' => $name,
+            'data-options' => array(
+                'sidebar' => $this->cfg['sidebar'],
+            ),
+            'role' => 'tabpanel',
+        )) . ">\n";
+        $str .= '<div class="tab-body">' . "\n";
+
+        $str .= $this->processAlerts();
+        /*
+            If outputing script, initially hide the output..
+            this will help page load performance (fewer redraws)... by magnitudes
+        */
+        // $style = null;
+        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
+            'class' => 'debug-log-summary group-body',
+            // 'style' => $style,
+        )) . ">\n" . $this->processSummary() . '</ul>' . "\n";
+        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
+            'class' => 'debug-log group-body',
+            // 'style' => $style,
+        )) . ">\n" . $this->processLog() . '</ul>' . "\n";
+
+        $str .= '</div>' . "\n"; // close .tab-body
+        $str .= '</div>' . "\n"; // close .tab-pane
+        return \strtr($str, array(
+            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
+        ));
+    }
+
+    /**
+     * Build tab selection links
+     *
+     * @return string
+     */
+    private function buildTabs()
+    {
+        $names = \array_keys($this->debug->getChannelsTop());
+        if (\count($names) < 2) {
+            return '';
+        }
+        $html = '';
+        foreach ($names as $name) {
+            if ($name === 'general') {
+                $name = 'Log';
+            }
+            $target = '.' . $this->nameToClassname($name);
+            $html .= $this->debug->utilities->buildTag(
+                'a',
+                array(
+                    'class' => array(
+                        'nav-link',
+                        $name === 'Log' ? 'active' : null,
+                    ),
+                    'data-target' => $target,
+                    'data-toggle' => 'tab',
+                    'role' => 'tab',
+                ),
+                $name
+            ) . "\n";
+        }
+        return $html;
+    }
+
+    private function nameToClassname($name)
+    {
+        return 'debug-tab-' . \preg_replace('/\W+/', '-', \strtolower($name));
     }
 }

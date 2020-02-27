@@ -47,7 +47,7 @@ export function init ($debugRoot) {
 
   addMarkup()
 
-  $root.find('.debug-body').scrollLock()
+  $root.find('.debug-tabs').scrollLock()
   $root.find('.debug-resize-handle').on('mousedown', onMousedown)
   $root.find('.debug-pull-tab').on('click', open)
   $root.find('.debug-menu-bar .close').on('click', close)
@@ -59,12 +59,12 @@ export function init ($debugRoot) {
 
 function addMarkup () {
   var $menuBar = $('.debug-menu-bar')
-  // var $body = $('<div class='debug-body'></div>');
   $menuBar.before(
     '<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
     '<div class="debug-resize-handle"></div>'
   )
   $menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole' +
+    $menuBar.find('nav')[0].outerHTML +
     '<div class="pull-right">' +
       '<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
         '<span aria-hidden="true">&times;</span>' +
@@ -103,7 +103,7 @@ function onMousedown (e) {
     // drawer isn't open / ignore resize
     return
   }
-  origH = $root.find('.debug-body').height()
+  origH = $root.find('.debug-tabs').height()
   origPageY = e.pageY
   $('html').addClass('debug-resizing')
   $root.parents()
@@ -121,7 +121,7 @@ function onMouseup () {
 }
 
 function setHeight (height, viaUser) {
-  var $body = $root.find('.debug-body')
+  var $body = $root.find('.debug-tabs')
   var menuH = $root.find('.debug-menu-bar').outerHeight()
   var minH = 20
   // inacurate if document.doctype is null : $(window).height()

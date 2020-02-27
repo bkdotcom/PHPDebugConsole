@@ -29,6 +29,7 @@ class Base extends Component implements ConfigurableInterface
 
     public $debug;
     protected $argStringOpts;   // per-argument string options
+    protected $channelNameRoot;
     protected $dumpType;
     protected $dumpTypeMore;
 
@@ -40,7 +41,7 @@ class Base extends Component implements ConfigurableInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
+        $this->channelNameRoot = $this->debug->rootInstance->getCfg('name');
     }
 
     /**

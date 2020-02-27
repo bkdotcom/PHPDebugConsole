@@ -253,7 +253,7 @@ class Wamp implements RouteInterface
             'requestId' => $this->requestId,
         ), $logEntry['meta']);
         if ($logEntry->getSubject() !== $this->debug) {
-            $meta['channel'] = $logEntry->getChannel();
+            $meta['channel'] = $logEntry->getChannelName();
             if (!\in_array($meta['channel'], $this->channelNames)) {
                 $meta['channelIcon'] = $logEntry->getSubject()->getCfg('channelIcon');
                 $meta['channelShow'] = $logEntry->getSubject()->getCfg('channelShow');
@@ -413,7 +413,7 @@ class Wamp implements RouteInterface
                 $this->debug->redact($metaVals),
             ),
             array(
-                'channelRoot' => $this->debug->rootInstance->getCfg('channelName'),
+                'channelNameRoot' => $this->debug->rootInstance->getCfg('name'),
                 'debugVersion' => $debugClass::VERSION,
                 'drawer' => $this->debug->getCfg('outputHtml.drawer'),
                 'interface' => $this->debug->utilities->getInterface(),

@@ -92,7 +92,6 @@ class Debug
             'output'    => false,           // output the log?
             'arrayShowListKeys' => true,
             'channelIcon' => null,
-            'channelName' => 'general',
             'channelShow' => true,          // wheter initially filtered or not
             'enableProfiling' => false,
             // which error types appear as "error" in debug console... all other errors are "warn"
@@ -110,19 +109,22 @@ class Debug
             'headerMaxAll' => 250000,
             'headerMaxPer' => null,
             'logEnvInfo' => array(      // may be set by passing a list
-                'cookies' => true,
                 'errorReporting' => true,
                 'gitInfo' => true,
-                'headers' => true,
                 'phpInfo' => true,
-                'post' => true,
                 'serverVals' => true,
                 'session' => true,
+            ),
+            'logRequestInfo' => array(
+                'cookies' => true,
+                'headers' => true,
+                'post' => true,
             ),
             'logResponse' => 'auto',
             'logResponseMaxLen' => '1 MB',
             'logRuntime' => true,
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
+            'name' => 'general',            // channel or tab name
             'onBootstrap' => null,          // callable
             'onLog' => null,                // callable
             'onOutput' => null,             // callable
@@ -1354,32 +1356,34 @@ class Debug
      * Channels can be used to categorize log data... for example, may have a framework channel, database channel, library-x channel, etc
      * Channels may have subchannels
      *
-     * @param string $channelName channel name
-     * @param array  $config      channel specific configuration
+     * @param string $name   channel name
+     * @param array  $config channel specific configuration
      *
      * @return static new or existing `Debug` instance
      */
-    public function getChannel($channelName, $config = array())
+    public function getChannel($name, $config = array())
     {
-        if (\strpos($channelName, '.') !== false) {
-            $this->error('getChannel(): channelName should not contain period (.)');
+        if (\strpos($name, '.') !== false) {
+            $this->error('getChannel(): name should not contain period (.)');
             return $this;
         }
-        if (!isset($this->channels[$channelName])) {
+        $config = \array_merge(array('nested' => true), $config);
+        if (!isset($this->channels[$name])) {
             $cfg = $this->getCfg();
             $cfg = $this->config->getPropagateValues($cfg);
             // set channel values
-            $cfg['debug']['channelName'] = $this->parentInstance
-                ? $this->cfg['channelName'] . '.' . $channelName
-                : $channelName;
+            $cfg['debug']['name'] = $config['nested']
+                ? $this->cfg['name'] . '.' . $name
+                : $name;
             $cfg['debug']['parent'] = $this;
             // instantiate channel
-            $this->channels[$channelName] = new static($cfg);
+            $this->channels[$name] = new static($cfg);
         }
+        unset($config['nested']);
         if ($config) {
-            $this->channels[$channelName]->setCfg($config);
+            $this->channels[$name]->setCfg($config);
         }
-        return $this->channels[$channelName];
+        return $this->channels[$name];
     }
 
     /**
@@ -1395,18 +1399,38 @@ class Debug
      */
     public function getChannels($allDescendants = false)
     {
+        $channels = $this->channels;
         if ($allDescendants) {
             $channels = array();
             foreach ($this->channels as $channel) {
                 $channels = \array_merge(
                     $channels,
-                    array($channel->getCfg('channelName') => $channel),
+                    array($channel->getCfg('name') => $channel),
                     $channel->getChannels(true)
                 );
             }
-            return $channels;
         }
-        return $this->channels;
+        if ($this === $this->rootInstance) {
+            $channels = \array_diff_key($channels, $this->getChannelsTop());
+        }
+        return $channels;
+    }
+
+    /**
+     * Get the topmost channels (ie "tabs")
+     *
+     * @return static[]
+     */
+    public function getChannelsTop()
+    {
+        $channels = array();
+        foreach ($this->rootInstance->channels as $name => $channel) {
+            $fqn = $channel->getCfg('name');
+            if (\strpos($fqn, '.') === false) {
+                $channels[$name] = $channel;
+            }
+        }
+        return array($this->rootInstance->getCfg('name') => $this->rootInstance) + $channels;
     }
 
     /**

@@ -84,13 +84,13 @@ class LogEntry extends Event
     /**
      * Return channel name
      *
-     * shortcut for getSubject()->getCfg('channelName')
+     * shortcut for getSubject()->getCfg('name')
      *
      * @return string
      */
-    public function getChannel()
+    public function getChannelName()
     {
-        return $this->subject->getCfg('channelName');
+        return $this->subject->getCfg('name');
     }
 
     /**

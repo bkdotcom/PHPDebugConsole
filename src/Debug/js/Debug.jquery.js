@@ -756,7 +756,7 @@
 
     addMarkup();
 
-    $root.find('.debug-body').scrollLock();
+    $root.find('.debug-tabs').scrollLock();
     $root.find('.debug-resize-handle').on('mousedown', onMousedown);
     $root.find('.debug-pull-tab').on('click', open);
     $root.find('.debug-menu-bar .close').on('click', close);
@@ -768,12 +768,12 @@
 
   function addMarkup () {
     var $menuBar = $('.debug-menu-bar');
-    // var $body = $('<div class='debug-body'></div>');
     $menuBar.before(
       '<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
       '<div class="debug-resize-handle"></div>'
     );
     $menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole' +
+      $menuBar.find('nav')[0].outerHTML +
       '<div class="pull-right">' +
         '<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
           '<span aria-hidden="true">&times;</span>' +
@@ -812,7 +812,7 @@
       // drawer isn't open / ignore resize
       return
     }
-    origH = $root.find('.debug-body').height();
+    origH = $root.find('.debug-tabs').height();
     origPageY = e.pageY;
     $('html').addClass('debug-resizing');
     $root.parents()
@@ -830,7 +830,7 @@
   }
 
   function setHeight (height, viaUser) {
-    var $body = $root.find('.debug-body');
+    var $body = $root.find('.debug-tabs');
     var menuH = $root.find('.debug-menu-bar').outerHeight();
     var minH = 20;
     // inacurate if document.doctype is null : $(window).height()
@@ -930,7 +930,7 @@
       preFilterCallbacks[i]($root);
     }
     // :not(.level-error, .level-info, .level-warn)
-    $root.find('> .debug-body .m_alert, .group-body > *:not(.m_groupSummary)').each(function () {
+    $root.find('> .debug-tabs > .debug-tab-log .m_alert, > .debug-tabs > .debug-tab-log .group-body > *:not(.m_groupSummary)').each(function () {
       var $node = $(this);
       var show = true;
       var unhiding = false;
@@ -1240,7 +1240,7 @@
 
   function addMarkup$1 ($node) {
     var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
-    var $expAll = $node.find('.debug-body > .expand-all');
+    var $expAll = $node.find('.debug-tabs > .debug-tab-log > .tab-body > .expand-all');
     $sidebar.html(
       '<div class="sidebar-toggle">' +
         '<div class="collapse">' +
@@ -1270,7 +1270,7 @@
         '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
       '</div>'
     );
-    $node.find('.debug-body').before($sidebar);
+    $node.find('.debug-tabs > .debug-tab-log > .tab-body').before($sidebar);
 
     phpErrorToggles($node);
     moveChannelToggles($node);
@@ -1301,7 +1301,7 @@
 
   function addMethodToggles ($node) {
     var $filters = $node.find('.debug-filters');
-    var $entries = $node.find('> .debug-body .m_alert, .group-body > *');
+    var $entries = $node.find('> .debug-tabs .m_alert, .group-body > *');
     var val;
     var labels = {
       alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
@@ -1333,20 +1333,20 @@
   }
 
   /**
-   * grab the .debug-body toggles and move them to sidebar
+   * grab the .debug-tabs toggles and move them to sidebar
    */
   function moveChannelToggles ($node) {
-    var $togglesSrc = $node.find('.debug-body .channels > ul > li');
+    var $togglesSrc = $node.find('.debug-tabs .channels > ul > li');
     var $togglesDest = $node.find('.debug-sidebar .channels ul');
     $togglesDest.append($togglesSrc);
     if ($togglesDest.children().length === 0) {
       $togglesDest.parent().hide();
     }
-    $node.find('.debug-body .channels').remove();
+    $node.find('> .debug-tabs > .debug-tab-log > .tab-body > .channels').remove();
   }
 
   /**
-   * Grab the error toggles from .debug-body's error-summary move to sidebar
+   * Grab the error toggles from .debug-tabs's error-summary move to sidebar
    */
   function phpErrorToggles ($node) {
     var $togglesUl = $node.find('.debug-sidebar .php-errors ul');
@@ -1409,16 +1409,29 @@
   }
 
   function addChannelToggles () {
-    var channels = $root$3.data('channels');
+    var $log = $root$3.find('> .debug-tabs > .debug-tab-log');
+    /*
+    var channels = $.extend(
+      {},
+      {
+        general: {
+          options: $log.data('channels').general.options,
+          channels: {}
+        }
+      },
+      $log.data('channels').general.channels
+    )
+    */
+    var channels = $log.data('channels');
+    var $ul = buildChannelList(channels, $log.data('nameRoot'));
     var $toggles;
-    var $ul = buildChannelList(channels, $root$3.data('channelRoot'));
-    $toggles = $('<fieldset />', {
-      class: 'channels'
-    })
-      .append('<legend>Channels</legend>')
-      .append($ul);
     if ($ul.html().length) {
-      $root$3.find('.debug-body').prepend($toggles);
+      $toggles = $('<fieldset />', {
+        class: 'channels'
+      })
+        .append('<legend>Channels</legend>')
+        .append($ul);
+      $log.find('> .tab-body').prepend($toggles);
     }
   }
 
@@ -1454,9 +1467,11 @@
     var $expandAll = $('<button>', {
       class: 'expand-all'
     }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
+    var $logBody =  $root$3.find('> .debug-tabs > .debug-tab-log > .tab-body');
+
     // this is currently invoked before entries are enhance / empty class not yet added
-    if ($root$3.find('.m_group:not(.empty)').length > 1) {
-      $root$3.find('.debug-log-summary').before($expandAll);
+    if ($logBody.find('.m_group:not(.empty)').length > 1) {
+      $logBody.find('.debug-log-summary').before($expandAll);
     }
     $root$3.on('click', '.expand-all', function () {
       $(this).closest('.debug').find('.group-header').not('.expanded').each(function () {
@@ -1498,7 +1513,7 @@
   }
   */
 
-  function buildChannelList (channels, channelRoot, checkedChannels, prepend) {
+  function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
     var $ul = $('<ul class="list-unstyled">');
     var $li;
     var $label;
@@ -1509,10 +1524,15 @@
     if ($.isArray(channels)) {
       channels = channelsToTree(channels);
     }
+    console.log('channels', channels);
     for (channelName in channels) {
+      // console.log('channelName', channelName);
       if (channelName === 'phpError') {
         // phpError is a special channel
         continue
+      }
+      if (prepend.length === 0 && channelName !== nameRoot) {
+        prepend = nameRoot + '.';
       }
       channel = channels[channelName];
       isChecked = checkedChannels !== undefined
@@ -1522,7 +1542,7 @@
         class: 'toggle'
       }).append($('<input>', {
         checked: isChecked,
-        'data-is-root': channelName === channelRoot,
+        'data-is-root': channelName === nameRoot,
         'data-toggle': 'channel',
         type: 'checkbox',
         value: prepend + channelName
@@ -1533,7 +1553,7 @@
         $li.find('input').after($('<i>', { class: channel.options.icon }));
       }
       if (Object.keys(channel.channels).length) {
-        $li.append(buildChannelList(channel.channels, channelRoot, checkedChannels, prepend + channelName + '.'));
+        $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, prepend + channelName + '.'));
       }
       $ul.append($li);
     }
@@ -1765,6 +1785,30 @@
     } else {
       expand($toggle);
     }
+  }
+
+  /**
+   * handle expanding/collapsing arrays, groups, & objects
+   */
+
+  function init$8 ($delegateNode) {
+    // config = $delegateNode.data('config').get()
+    $delegateNode.on('click', '[data-toggle=tab]', function () {
+      show(this);
+      return false
+    });
+  }
+
+  function show (node) {
+    var $tab = $(node);
+    var targetSelector = $tab.data('target');
+    var $debugTabs = $tab.closest('.debug').find('.debug-tabs');
+    var $tabPane = $debugTabs.find(targetSelector);
+    console.log('show target', targetSelector);
+    $tab.siblings().removeClass('active');
+    $tab.addClass('active');
+    $tabPane.siblings().removeClass('active');
+    $tabPane.addClass('active');
   }
 
   function Config (defaults, localStorageKey) {
@@ -2030,6 +2074,7 @@
       if (typeof arg1 === 'object') {
         conf.set(arg1);
       }
+      init$8($self);
       init$1($self);
       init$7($self);
       registerListeners();

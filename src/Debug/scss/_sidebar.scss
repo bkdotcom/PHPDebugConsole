@@ -40,13 +40,13 @@
     font-weight: normal;
   }
 
-  + .debug-body {
+  + .tab-body {
     margin-left: 6px;
     padding-left: 10px;
     transition: margin-left $trans-time;
   }
 
-  &.no-transition + .debug-body {
+  &.no-transition + .tab-body {
     transition: none;
   }
 
@@ -61,7 +61,7 @@
     transform: translateX(0);
     .expand { display: none; }
     .collapse { display: block; }
-    + .debug-body {
+    + .tab-body {
       margin-left: $sidebar-w + $toggle-w;
     }
     .sidebar-content {

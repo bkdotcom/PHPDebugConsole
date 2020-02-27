@@ -40,8 +40,8 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->channelName = $this->debug->getCfg('channelName');
-        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
+        $this->channelName = $this->debug->getCfg('name');
+        $this->channelNameRoot = $this->debug->rootInstance->getCfg('name');
         $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
     }
@@ -95,8 +95,7 @@ abstract class Base extends Component implements ConfigurableInterface, RouteInt
      */
     protected function channelTest(LogEntry $logEntry)
     {
-        $channelName = $logEntry->getChannel();
-        return $this->isRootInstance || \preg_match($this->channelRegex, $channelName);
+        return \preg_match($this->channelRegex, $logEntry->getChannelName());
     }
 
     /**

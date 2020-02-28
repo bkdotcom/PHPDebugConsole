@@ -24,7 +24,6 @@ use bdk\Debug\Utility\FileStreamWrapper;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
-use Exception;
 
 /**
  * Methods that are internal to the debug class
@@ -270,7 +269,7 @@ class Internal implements SubscriberInterface
             );
         }
         /*
-            OnShutDownHigh subscribes to 'debug.log' (onDebugLogShutdown)
+            OnShutDownHigh2 subscribes to 'debug.log' (onDebugLogShutdown)
               so... if any log entry is added in php's shutdown phase, we'll have a
               "php.shutdown" log entry
         */
@@ -288,6 +287,7 @@ class Internal implements SubscriberInterface
             'errorHandler.error' => 'onError',
             'php.shutdown' => array(
                 array('onShutdownHigh', PHP_INT_MAX),
+                array('onShutdownHigh2', PHP_INT_MAX - 10),
                 array('onShutdownLow', PHP_INT_MAX * -1)
             ),
         );
@@ -315,6 +315,7 @@ class Internal implements SubscriberInterface
     {
         $this->bootstraped = true;
         $this->debug->addPlugin(new \bdk\Debug\Plugin\LogEnv());
+        $this->debug->addPlugin(new \bdk\Debug\Plugin\LogReqRes());
     }
 
     /**
@@ -572,8 +573,16 @@ class Internal implements SubscriberInterface
     public function onShutdownHigh()
     {
         $this->closeOpenGroups();
-        $this->logResponse();
         $this->inShutdown = true;
+    }
+
+    /**
+     * php.shutdown subscriber (not-so-high priority).. come after other internal...
+     *
+     * @return void
+     */
+    public function onShutdownHigh2()
+    {
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLogShutdown'));
     }
 
@@ -686,81 +695,6 @@ class Internal implements SubscriberInterface
                 // close the summary
                 $this->debug->groupEnd();
             }
-        }
-    }
-
-    /**
-     * log response headers & body/content
-     *
-     * @return void
-     */
-    private function logResponse()
-    {
-        if (!$this->cfg['logResponse']) {
-            return;
-        }
-        $this->debug->log('response headers', $this->getResponseHeaders(true));
-        $contentType = $this->getResponseHeader('Content-Type', ', ');
-        if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
-            // we're not interested in logging response
-            if (\ob_get_level()) {
-                \ob_end_flush();
-            }
-            return;
-        }
-        $this->logResponseContent();
-    }
-
-    /**
-     * log response body/content
-     *
-     * @return void
-     */
-    private function logResponseContent()
-    {
-        $maxLen = $this->debug->getCfg('logResponseMaxLen');
-        $maxLen = $this->debug->utilities->getBytes($maxLen, true);
-        // get the contents of the output buffer we started to collect response
-        $response = \ob_get_clean();
-        echo $response;
-        $contentLength = \strlen($response);
-        if ($this->debug->response) {
-            $response = '';
-            $contentLength = 0;
-            try {
-                $stream = $this->debug->response->getBody();
-                $contentLength = $stream->getSize(); // likely returns null (unknown)
-                if ($contentLength <= $maxLen) {
-                    $response = $this->debug->utilities->getStreamContents($stream);
-                    $contentLength = \strlen($response);
-                }
-            } catch (Exception $e) {
-                $this->debug->warn('Exception', array(
-                    'message' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                ));
-                return;
-            }
-        }
-        if (!$maxLen || $contentLength < $maxLen) {
-            $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
-                'value' => $response,
-                'contentType' => $contentType,
-            ));
-            $this->debug->log(
-                'response content (%c%s) %c%s',
-                'font-family: monospace;',
-                $contentType,
-                'font-style: italic; opacity: 0.8;',
-                $event['value'] instanceof Abstraction
-                    ? '(prettified)'
-                    : '',
-                $event['value'],
-                $this->debug->meta('redact')
-            );
-        } else {
-            $this->debug->log('response too large to output (' . $contentLength . ')');
         }
     }
 

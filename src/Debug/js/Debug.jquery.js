@@ -772,7 +772,7 @@
       '<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
       '<div class="debug-resize-handle"></div>'
     );
-    $menuBar.html('<i class="fa fa-bug"></i> PHPDebugConsole' +
+    $menuBar.html('<span><i class="fa fa-bug"></i> PHPDebugConsole</span>' +
       $menuBar.find('nav')[0].outerHTML +
       '<div class="pull-right">' +
         '<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +

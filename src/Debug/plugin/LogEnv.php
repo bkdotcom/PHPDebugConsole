@@ -22,7 +22,7 @@ use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
- * Log eenvironent info
+ * Log environment info
  */
 class LogEnv implements SubscriberInterface
 {
@@ -41,7 +41,7 @@ class LogEnv implements SubscriberInterface
     }
 
     /**
-     * debug.bootstrap subscriber
+     * debug.pluginInit subscriber
      *
      * @param Event $event debug.bootstrap event instance
      *
@@ -56,6 +56,7 @@ class LogEnv implements SubscriberInterface
         }
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
+
         $this->debug->group('environment', $this->debug->meta(array(
             'hideIfEmpty' => true,
             'level' => 'info',
@@ -63,11 +64,17 @@ class LogEnv implements SubscriberInterface
         $this->logGitInfo();
         $this->logPhpInfo();
         $this->logServerVals();
-        $this->logRequest();    // headers, cookies, post
+        $this->debug->groupEnd(); // end environment
+
+        $this->debug->group('session', $this->debug->meta(array(
+            'hideIfEmpty' => true,
+            'level' => 'info',
+        )));
         $this->logSessionSettings();
         $this->logSession();
-        $this->debug->groupEnd();
-        $this->debug->groupEnd();
+        $this->debug->groupEnd(); // end session
+
+        $this->debug->groupEnd(); // end groupSummary
         $this->debug->setCfg('collect', $collectWas);
         self::$input = null;
     }
@@ -112,20 +119,6 @@ class LogEnv implements SubscriberInterface
             $params[] = '';
         }
         \call_user_func_array(array($this->debug, 'assert'), $params);
-    }
-
-    /**
-     * returns self::$input or php://input contents
-     *
-     * @return string;
-     */
-    private function getInput()
-    {
-        if (self::$input) {
-            return self::$input;
-        }
-        self::$input = \file_get_contents('php://input');
-        return self::$input;
     }
 
     /**
@@ -189,31 +182,6 @@ class LogEnv implements SubscriberInterface
             );
             $this->debug->groupEnd();
         }
-    }
-
-    /**
-     * log php://input
-     *
-     * @param string $contentType Content-Type
-     *
-     * @return void
-     */
-    private function logInput($contentType = null)
-    {
-        $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
-            'value' => self::$input,
-            'contentType' => $contentType,
-        ));
-        $input = $event['value'];
-        $this->debug->log(
-            'php://input %c%s',
-            'font-style: italic; opacity: 0.8;',
-            $input instanceof Abstraction
-                ? '(prettified)'
-                : '',
-            $input,
-            $this->debug->meta('redact')
-        );
     }
 
     /**
@@ -308,102 +276,6 @@ class LogEnv implements SubscriberInterface
                 'line' => null,
             ));
             \call_user_func_array(array($this->debug, 'warn'), $args);
-        }
-    }
-
-    /**
-     * Log $_POST or php://input & $_FILES
-     *
-     * @return void
-     */
-    private function logPost()
-    {
-        $method = $this->debug->request->getMethod();
-        $contentType = $this->debug->request->getHeaderLine('Content-Type');
-        if ($method === 'GET') {
-            return;
-        }
-        $havePostVals = false;
-        $debugRequest = $this->debug->getChannel('Request', array('nested' => false));
-        if ($method === 'POST') {
-            $isCorrectContentType = $this->testPostContentType($contentType);
-            $post = $this->debug->request->getParsedBody();
-            if (!$isCorrectContentType) {
-                $debugRequest->warn(
-                    'It appears ' . $contentType . ' was posted with the wrong Content-Type' . "\n"
-                        . 'Pay no attention to $_POST and instead use php://input',
-                    $this->debug->meta(array(
-                        'detectFiles' => false,
-                        'file' => null,
-                        'line' => null,
-                    ))
-                );
-            } elseif ($post) {
-                $havePostVals = true;
-                $debugRequest->log('$_POST', $post, $this->debug->meta('redact'));
-            }
-        }
-        if (!$havePostVals) {
-            // Not POST, empty $_POST, or not application/x-www-form-urlencoded or multipart/form-data
-            $input = $this->getInput();
-            if ($input) {
-                $this->logInput($contentType);
-            } elseif (!$this->debug->request->getUploadedFiles()) {
-                $debugRequest->warn(
-                    $method . ' request with no body',
-                    $this->debug->meta(array(
-                        'detectFiles' => false,
-                        'file' => null,
-                        'line' => null,
-                    ))
-                );
-            }
-        }
-        if ($this->debug->request->getUploadedFiles()) {
-            $debugRequest->log('$_FILES', $this->debug->request->getUploadedFiles());
-        }
-    }
-
-    /**
-     * Log request headers, Cookie, Post, & Files data
-     *
-     * @return void
-     */
-    private function logRequest()
-    {
-        $logInfo = $this->debug->getCfg('logRequestInfo');
-        $this->logRequestHeaders();
-        if ($logInfo['cookies']) {
-            $cookieVals = $this->debug->request->getCookieParams();
-            \ksort($cookieVals, SORT_NATURAL);
-            $debugRequest = $this->debug->getChannel('Request', array('nested' => false));
-            $debugRequest->log('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
-        }
-        // don't expect a request body for these methods
-        $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
-        $expectBody = !\in_array($this->debug->request->getMethod(), $noBodyMethods);
-        if ($logInfo['post'] && $expectBody) {
-            $this->logPost();
-        }
-    }
-
-    /**
-     * Log Request Headers
-     *
-     * @return void
-     */
-    private function logRequestHeaders()
-    {
-        if ($this->debug->getCfg('logRequestInfo.headers') === false) {
-            return;
-        }
-        $headers = \array_map(function ($vals) {
-            return \join(', ', $vals);
-        }, $this->debug->request->getHeaders());
-        if ($headers) {
-            \ksort($headers, SORT_NATURAL);
-            $debugRequest = $this->debug->getChannel('Request', array('nested' => false));
-            $debugRequest->log('request headers', $headers, $this->debug->meta('redact'));
         }
     }
 
@@ -521,46 +393,5 @@ class LogEnv implements SubscriberInterface
             // aka session.save_handler
             $this->debug->log('session save_path', \session_save_path() ?: \sys_get_temp_dir());
         }
-    }
-
-    /**
-     * Test if $_POST is properly populated or not
-     *
-     * If JSON or XML is posted using the default application/x-www-form-urlencoded Content-Type
-     * $_POST will be improperly populated
-     *
-     * @param string $contentType Will get populated with detected content type
-     *
-     * @return bool
-     */
-    private function testPostContentType(&$contentType)
-    {
-        $contentTypeRaw = $this->debug->request->getHeaderLine('Content-Type');
-        if ($contentTypeRaw) {
-            \preg_match('#^([^;]+)#', $contentTypeRaw, $matches);
-            $contentType = $matches[1];
-        }
-        if (!$this->debug->request->getParsedBody()) {
-            // nothing in $_POST means it can't be wrong
-            return true;
-        }
-        /*
-        $_POST is populated...
-            which means Content-Type was application/x-www-form-urlencoded or multipart/form-data
-            if we detect php://input is json or XML, then must have been
-            posted with wrong Content-Type
-        */
-        $input = $this->getInput();
-        $json = \json_decode($input, true);
-        $isJson = \json_last_error() === JSON_ERROR_NONE && \is_array($json);
-        if ($isJson) {
-            $contentType = 'application/json';
-            return false;
-        }
-        if ($this->debug->utilities->isXml($input)) {
-            $contentType = 'text/xml';
-            return false;
-        }
-        return true;
     }
 }

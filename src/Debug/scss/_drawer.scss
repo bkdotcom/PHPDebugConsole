@@ -66,9 +66,9 @@
     .debug-pull-tab {
       opacity: 0;
       transform: translateY(25px);
-      .fa-bug {
-        display: none;
-      }
+      // .fa-bug {
+        // display: none;
+      // }
       .fa-spinner {
         display: inline-block;
       }
@@ -96,14 +96,12 @@
     height: 25px;
     border-top: 1px solid $border-color;
     border-bottom: 1px solid $border-color;
-    padding: 3px 6px;
+    padding: 0 6px;
     background: $lite-grey;
     font-size: 16px;
-    line-height: 1;
     margin-bottom: 0;
     &,
     a {
-      // text-decoration: none;
       color: $grey-text;
     }
     a,
@@ -130,15 +128,29 @@
       font-size: 0.78em;
     }
 
+    > span {
+      display: inline-block;
+      line-height: 23px;
+    }
+
     nav {
       display: inline-block;
-      margin-left: 2em;
-      font-size: 0.85em;
+      margin-left: 20px;
+      font-size: 0; // so that child inline-blocks don't have space between them
+      line-height: 23px;
+      vertical-align: top;
       a {
         display: inline-block;
+        padding: 0 15px;
+        font-size: 12px;
+        line-height: 23px;
+        vertical-align: top;
         color: $default-fg;
-        padding: 0 15px 2px 15px;
+        &:hover:not(.active) {
+          background: darken($lite-grey, 5%);
+        }
         &.active {
+          line-height: 22px;
           border-bottom: #4071e1 solid 2px;
         }
       }

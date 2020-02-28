@@ -167,22 +167,23 @@
 .debug.debug-drawer .debug-resize-handle { display: block; position: absolute; top: -3px; height: 4px; width: 100%; opacity: 0; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; background: #dadada; transition: all 0.25s ease-out; }
 .debug.debug-drawer.debug-drawer-open { transform: translateY(0); height: auto; }
 .debug.debug-drawer.debug-drawer-open .debug-pull-tab { opacity: 0; transform: translateY(25px); }
-.debug.debug-drawer.debug-drawer-open .debug-pull-tab .fa-bug { display: none; }
 .debug.debug-drawer.debug-drawer-open .debug-pull-tab .fa-spinner { display: inline-block; }
 .debug.debug-drawer.debug-drawer-open .debug-resize-handle { cursor: ns-resize; }
 .debug.debug-drawer.debug-drawer-open .debug-resize-handle:hover { opacity: 1; }
 html.debug-resizing { cursor: ns-resize !important; }
 html.debug-resizing .debug-drawer { transition: none; }
 html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
-.debug.debug-drawer .debug-menu-bar { height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; padding: 3px 6px; background: #f3f3f3; font-size: 16px; line-height: 1; margin-bottom: 0; }
+.debug.debug-drawer .debug-menu-bar { height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; padding: 0 6px; background: #f3f3f3; font-size: 16px; margin-bottom: 0; }
 .debug.debug-drawer .debug-menu-bar, .debug.debug-drawer .debug-menu-bar a { color: #6e6e6e; }
 .debug.debug-drawer .debug-menu-bar a:focus, .debug.debug-drawer .debug-menu-bar a:hover, .debug.debug-drawer .debug-menu-bar button:focus, .debug.debug-drawer .debug-menu-bar button:hover, .debug.debug-drawer .debug-menu-bar label:focus, .debug.debug-drawer .debug-menu-bar label:hover { color: #333; text-decoration: none; }
 .debug.debug-drawer .debug-menu-bar button.close { font-size: 21px; font-weight: 300; }
 .debug.debug-drawer .debug-menu-bar .pull-right { position: absolute; top: 0; right: 6px; }
 .debug.debug-drawer .debug-menu-bar .debug-error-counts { position: relative; top: -2px; font-size: 0.78em; }
-.debug.debug-drawer .debug-menu-bar nav { display: inline-block; margin-left: 2em; font-size: 0.85em; }
-.debug.debug-drawer .debug-menu-bar nav a { display: inline-block; color: #111; padding: 0 15px 2px 15px; }
-.debug.debug-drawer .debug-menu-bar nav a.active { border-bottom: #4071e1 solid 2px; }
+.debug.debug-drawer .debug-menu-bar > span { display: inline-block; line-height: 23px; }
+.debug.debug-drawer .debug-menu-bar nav { display: inline-block; margin-left: 20px; font-size: 0; line-height: 23px; vertical-align: top; }
+.debug.debug-drawer .debug-menu-bar nav a { display: inline-block; padding: 0 15px; font-size: 12px; line-height: 23px; vertical-align: top; color: #111; }
+.debug.debug-drawer .debug-menu-bar nav a:hover:not(.active) { background: #e6e6e6; }
+.debug.debug-drawer .debug-menu-bar nav a.active { line-height: 22px; border-bottom: #4071e1 solid 2px; }
 .debug.debug-drawer .debug-tabs { overflow: auto; }
 .debug.debug-drawer .debug-tabs .tab-pane { display: none; }
 .debug.debug-drawer .debug-tabs .tab-pane.active { display: block; }

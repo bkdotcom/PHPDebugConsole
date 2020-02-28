@@ -174,8 +174,8 @@ class Html extends Base
                 . '</script>' . "\n";
         }
         $str .= '<header class="debug-menu-bar">'
-            . 'PHPDebugConsole?'
-            . '<nav class="nav nav-pills" role="tablist">'
+            . 'PHPDebugConsole'
+            . '<nav role="tablist">'
                 . $this->buildTabs()
             . '</nav>'
             . '</header>' . "\n";

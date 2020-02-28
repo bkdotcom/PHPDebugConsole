@@ -80,7 +80,7 @@ function applyFilter ($root) {
     var $node = $(this)
     var show = true
     var unhiding = false
-    if ($node.data('channel') === 'phpError') {
+    if ($node.data('channel') === 'general.phpError') {
       // php Errors are filtered separately
       return
     }

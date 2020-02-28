@@ -431,8 +431,8 @@ class Internal implements SubscriberInterface
                 : 'warn';
             $this->debug->getChannel('phpError')->{$method}(
                 $error['typeStr'] . ':',
-                $errLoc,
                 $error['message'],
+                $errLoc,
                 $meta
             );
             $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here

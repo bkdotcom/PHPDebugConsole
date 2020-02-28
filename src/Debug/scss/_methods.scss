@@ -51,19 +51,26 @@
   color: $warn-fg;
 }
 
-// emphasize the fatal error
-.m_error.error-fatal::before {
-  display: block;
-  margin-left: 10px;
-  margin-bottom: 5px;
-  content: "Fatal error";
-  font-size: 1.2em;
-  font-weight: bold;
-}
-.debug-log .error-fatal {
-  padding: 10px;
-  border-left: solid 2px $error-fg;
-  .no-quotes {
-    display: none;
+li[data-channel="general.phpError"] {
+  > .t_string:nth-child(2) { font-weight: bold; }
+  > .t_string:nth-child(4) {
+    opacity: 0.7;
+    &::before {
+      content: "\A";
+    }
+  }
+
+  &.error-fatal {
+    padding: 10px 10px 10px 20px; // extra left padding for text-indent
+    border-left: solid 2px $error-fg;
+    > .t_string:nth-child(2) {
+      display: inline-block;
+      margin-bottom: 5px;
+      vertical-align: top;
+      font-size: 1.2em;
+    }
+    > .t_string:nth-child(3)::before {
+      content: "\A"
+    }
   }
 }

@@ -85,9 +85,12 @@
 .debug .m_error, .debug :not(.expanded) > .level-error { background-color: #ffbaba; color: #d8000c; }
 .debug .m_info, .debug :not(.expanded) > .level-info { background-color: #d9edf7; color: #31708f; }
 .debug .m_warn, .debug :not(.expanded) > .level-warn { background-color: #fefbe5; color: #8a6d3b; }
-.debug .m_error.error-fatal::before { display: block; margin-left: 10px; margin-bottom: 5px; content: "Fatal error"; font-size: 1.2em; font-weight: bold; }
-.debug .debug-log .error-fatal { padding: 10px; border-left: solid 2px #d8000c; }
-.debug .debug-log .error-fatal .no-quotes { display: none; }
+.debug li[data-channel="general.phpError"] > .t_string:nth-child(2) { font-weight: bold; }
+.debug li[data-channel="general.phpError"] > .t_string:nth-child(4) { opacity: 0.7; }
+.debug li[data-channel="general.phpError"] > .t_string:nth-child(4)::before { content: "\A"; }
+.debug li[data-channel="general.phpError"].error-fatal { padding: 10px 10px 10px 20px; border-left: solid 2px #d8000c; }
+.debug li[data-channel="general.phpError"].error-fatal > .t_string:nth-child(2) { display: inline-block; margin-bottom: 5px; vertical-align: top; font-size: 1.2em; }
+.debug li[data-channel="general.phpError"].error-fatal > .t_string:nth-child(3)::before { content: "\a"; }
 .debug table { width: auto; border-collapse: collapse; }
 .debug table caption { caption-side: top; font-weight: bold; font-style: italic; padding-bottom: 0; padding-top: 2px; text-align: left; }
 .debug table th, .debug table td { padding: 0 0.25em; vertical-align: top; }
@@ -244,8 +247,6 @@ color: #818a91
 .debug .group-header i.fa-warning { color: #cdcb06; margin-left: 0.33em; }
 .debug .group-header i.fa-times-circle { color: #d8000c; margin-left: 0.33em; }
 .debug .group-header.expanded i.fa-warning, .debug .group-header.expanded i.fa-times-circle { display: none; }
-.debug .m_error.error-fatal::before { padding-left: 1.25em; }
-.debug .m_error.error-fatal i.fa-times-circle { position: absolute; top: 0.7em; }
 .debug .filter-hidden { display: none; }
 .debug .filter-hidden.m_group { display: list-item; }
 .debug .filter-hidden.m_group > .group-header { display: none; }

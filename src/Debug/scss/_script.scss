@@ -35,14 +35,6 @@
   }
 }
 
-.m_error.error-fatal {
-  &::before { padding-left: 1.25em; }
-  i.fa-times-circle {
-    position: absolute;
-    top: 0.7em;
-  }
-}
-
 .filter-hidden {
   display: none;
   &.m_group {

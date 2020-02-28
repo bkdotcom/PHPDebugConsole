@@ -162,7 +162,7 @@ function addMethodToggles ($node) {
   for (val in labels) {
     haveEntry = val === 'other'
       ? $entries.not('.m_alert, .m_error, .m_warn, .m_info').length > 0
-      : $entries.filter('.m_' + val).not('[data-channel=phpError]').length > 0
+      : $entries.filter('.m_' + val).not('[data-channel="general.phpError"]').length > 0
     $filters.append(
       $('<li />').append(
         $('<label class="toggle active" />').toggleClass('disabled', !haveEntry).append(

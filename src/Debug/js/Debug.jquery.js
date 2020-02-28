@@ -934,7 +934,7 @@
       var $node = $(this);
       var show = true;
       var unhiding = false;
-      if ($node.data('channel') === 'phpError') {
+      if ($node.data('channel') === 'general.phpError') {
         // php Errors are filtered separately
         return
       }
@@ -1314,7 +1314,7 @@
     for (val in labels) {
       haveEntry = val === 'other'
         ? $entries.not('.m_alert, .m_error, .m_warn, .m_info').length > 0
-        : $entries.filter('.m_' + val).not('[data-channel=phpError]').length > 0;
+        : $entries.filter('.m_' + val).not('[data-channel="general.phpError"]').length > 0;
       $filters.append(
         $('<li />').append(
           $('<label class="toggle active" />').toggleClass('disabled', !haveEntry).append(

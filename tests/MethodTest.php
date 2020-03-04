@@ -15,19 +15,19 @@ class MethodTest extends DebugTestFramework
     public function testOverrideDefault()
     {
         $closure = function ($event) {
-            if ($event['method'] == 'trace') {
+            if ($event['method'] === 'trace') {
                 $route = get_class($event['route']);
-                if ($route == 'bdk\Debug\Route\ChromeLogger') {
+                if ($route === 'bdk\Debug\Route\ChromeLogger') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($route == 'bdk\Debug\Route\Firephp') {
+                } elseif ($route === 'bdk\Debug\Route\Firephp') {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($route == 'bdk\Debug\Route\Html') {
+                } elseif ($route === 'bdk\Debug\Route\Html') {
                     $event['return'] = '<li class="m_trace">this was a trace</li>';
-                } elseif ($route == 'bdk\Debug\Route\Script') {
+                } elseif ($route === 'bdk\Debug\Route\Script') {
                     $event['return'] = 'console.log("this was a trace");';
-                } elseif ($route == 'bdk\Debug\Route\Text') {
+                } elseif ($route === 'bdk\Debug\Route\Text') {
                     $event['return'] = 'this was a trace';
                 }
             }
@@ -56,7 +56,7 @@ class MethodTest extends DebugTestFramework
     public function testCustom()
     {
         $closure = function (LogEntry $logEntry) {
-            if ($logEntry['method'] == 'myCustom' && $logEntry['route'] instanceof \bdk\Debug\Route\Html) {
+            if ($logEntry['method'] === 'myCustom' && $logEntry['route'] instanceof \bdk\Debug\Route\Html) {
                 $lis = array();
                 foreach ($logEntry['args'] as $arg) {
                     $lis[] = '<li>' . htmlspecialchars($arg) . '</li>';
@@ -712,11 +712,11 @@ class MethodTest extends DebugTestFramework
     public function testCount()
     {
         $lines = array();
-        $this->debug->count('count test');          // 1 (0)
+        $this->debug->count('count test');     // 1 (0)
         for ($i = 0; $i < 3; $i++) {
             if ($i > 0) {
                 $lines[0] = __LINE__ + 1;
-                $this->debug->count();              // 1,2 (3,6)
+                $this->debug->count();         // 1,2 (3,6)
             }
             $this->debug->count('count test');      // 2,3,4 (1,4,7)
             $this->debug->count('count_inc test', Debug::COUNT_NO_OUT);  //  1,2,3, but not logged
@@ -1396,21 +1396,25 @@ class MethodTest extends DebugTestFramework
             'main' => array(),
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
-<div class="debug" data-channel-root="general" data-channels="{}" data-options="{&quot;drawer&quot;:true,&quot;sidebar&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
-    <header class="debug-menu-bar">PHPDebugConsole</header>
-    <div class="debug-body">
-        <ul class="debug-log-summary group-body">
-            <li class="m_log"><span class="no-quotes t_string">in summary</span></li>
-            <li class="m_group">
-                <div class="expanded group-header"><span class="group-label group-label-bold">inner group opened but not closed</span></div>
-                <ul class="group-body">
-                    <li class="m_log"><span class="no-quotes t_string">in inner</span></li>
+<div class="debug" data-channel-name-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
+    <header class="debug-menu-bar">PHPDebugConsole<nav role="tablist"></nav></header>
+    <div class="debug-tabs">
+        <div class="active debug-tab-log tab-pane" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
+            <div class="tab-body">
+                <ul class="debug-log-summary group-body">
+                    <li class="m_log"><span class="no-quotes t_string">in summary</span></li>
+                    <li class="m_group">
+                        <div class="expanded group-header"><span class="group-label group-label-bold">inner group opened but not closed</span></div>
+                        <ul class="group-body">
+                            <li class="m_log"><span class="no-quotes t_string">in inner</span></li>
+                        </ul>
+                    </li>
+                    <li class="m_info"><span class="no-quotes t_string">Built In %f %ss</span></li>
+                    <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
                 </ul>
-            </li>
-            <li class="m_info"><span class="no-quotes t_string">Built In %f %ss</span></li>
-            <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
-        </ul>
-        <ul class="debug-log group-body"></ul>
+                <ul class="debug-log group-body"></ul>
+            </div>
+        </div>
     </div>
 </div>
 EOD;
@@ -2019,7 +2023,7 @@ EOD;
                     $trace = \array_map(function ($row) {
                         $keys = array('file','line','function');
                         $row = \array_intersect_key($row, \array_flip($keys));
-                        uksort($row, function($key1, $key2) use ($keys) {
+                        uksort($row, function ($key1, $key2) use ($keys) {
                             return array_search($key1, $keys) > array_search($key2, $keys)
                                 ? 1
                                 : -1;
@@ -2075,7 +2079,7 @@ EOD;
                     for ($i = 1; $i < $count; $i++) {
                         $keys = array('file','line','function');
                         $row = array_intersect_key($trace[$i], array_flip($keys));
-                        uksort($row, function($key1, $key2) use ($keys) {
+                        uksort($row, function ($key1, $key2) use ($keys) {
                             return array_search($key1, $keys) > array_search($key2, $keys)
                                 ? 1
                                 : -1;
@@ -2094,7 +2098,7 @@ EOD;
                     $trace = array_map(function ($row) {
                         $keys = array('file','line','function');
                         $row = array_intersect_key($row, array_flip($keys));
-                        uksort($row, function($key1, $key2) use ($keys) {
+                        uksort($row, function ($key1, $key2) use ($keys) {
                             return array_search($key1, $keys) > array_search($key2, $keys)
                                 ? 1
                                 : -1;
@@ -2108,7 +2112,7 @@ EOD;
                     $trace = array_map(function ($row) {
                         $keys = array('file','line','function');
                         $row = array_intersect_key($row, array_flip($keys));
-                        uksort($row, function($key1, $key2) use ($keys) {
+                        uksort($row, function ($key1, $key2) use ($keys) {
                             return array_search($key1, $keys) > array_search($key2, $keys)
                                 ? 1
                                 : -1;

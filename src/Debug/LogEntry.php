@@ -76,7 +76,7 @@ class LogEntry extends Event
             'meta' => $this->values['meta'],
         );
         if ($this->subject->parentInstance) {
-            $return['meta']['channel'] = $this->getChannel();
+            $return['meta']['channel'] = $this->getChannelName();
         }
         return $return;
     }
@@ -84,13 +84,13 @@ class LogEntry extends Event
     /**
      * Return channel name
      *
-     * shortcut for getSubject()->getCfg('name')
+     * shortcut for getSubject()->getCfg('channelName')
      *
      * @return string
      */
     public function getChannelName()
     {
-        return $this->subject->getCfg('name');
+        return $this->subject->getCfg('channelName');
     }
 
     /**

@@ -31,20 +31,9 @@ export function init ($debugRoot) {
 
 function addChannelToggles () {
   var $log = $root.find('> .debug-tabs > .debug-tab-log')
-  /*
-  var channels = $.extend(
-    {},
-    {
-      general: {
-        options: $log.data('channels').general.options,
-        channels: {}
-      }
-    },
-    $log.data('channels').general.channels
-  )
-  */
-  var channels = $log.data('channels')
-  var $ul = buildChannelList(channels, $log.data('nameRoot'))
+  var channels = $root.data('channels')
+  var channelNameRoot = $root.data('channelNameRoot')
+  var $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot)
   var $toggles
   if ($ul.html().length) {
     $toggles = $('<fieldset />', {
@@ -88,7 +77,7 @@ function addExpandAll () {
   var $expandAll = $('<button>', {
     class: 'expand-all'
   }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups')
-  var $logBody =  $root.find('> .debug-tabs > .debug-tab-log > .tab-body')
+  var $logBody = $root.find('> .debug-tabs > .debug-tab-log > .tab-body')
 
   // this is currently invoked before entries are enhance / empty class not yet added
   if ($logBody.find('.m_group:not(.empty)').length > 1) {
@@ -135,9 +124,8 @@ function addPersistOption () {
 */
 
 export function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
-  var $ul = $('<ul class="list-unstyled">')
   var $li
-  var $label
+  var $ul = $('<ul class="list-unstyled">')
   var channel
   var channelName = ''
   var isChecked = true
@@ -145,9 +133,17 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
   if ($.isArray(channels)) {
     channels = channelsToTree(channels)
   }
-  console.log('channels', channels);
+  if (prepend.length === 0) {
+    $li = buildChannelLi(
+      nameRoot,
+      nameRoot,
+      true,
+      true,
+      {}
+    )
+    $ul.append($li)
+  }
   for (channelName in channels) {
-    // console.log('channelName', channelName);
     if (channelName === 'phpError') {
       // phpError is a special channel
       continue
@@ -159,26 +155,39 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
     isChecked = checkedChannels !== undefined
       ? checkedChannels.indexOf(prepend + channelName) > -1
       : channel.options.show
-    $label = $('<label>', {
-      class: 'toggle'
-    }).append($('<input>', {
-      checked: isChecked,
-      'data-is-root': channelName === nameRoot,
-      'data-toggle': 'channel',
-      type: 'checkbox',
-      value: prepend + channelName
-    })).append(channelName)
-    $label.toggleClass('active', isChecked)
-    $li = $('<li>').append($label)
-    if (channel.options.icon) {
-      $li.find('input').after($('<i>', { class: channel.options.icon }))
-    }
+    $li = buildChannelLi(
+      channelName,
+      prepend + channelName,
+      isChecked,
+      false,
+      channel.options
+    )
     if (Object.keys(channel.channels).length) {
       $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, prepend + channelName + '.'))
     }
     $ul.append($li)
   }
   return $ul
+}
+
+function buildChannelLi (channelName, value, isChecked, isRoot, options) {
+  var $label
+  var $li
+  $label = $('<label>', {
+    class: 'toggle'
+  }).append($('<input>', {
+    checked: isChecked,
+    'data-is-root': isRoot,
+    'data-toggle': 'channel',
+    type: 'checkbox',
+    value: value
+  })).append(channelName)
+  $label.toggleClass('active', isChecked)
+  $li = $('<li>').append($label)
+  if (options.icon) {
+    $li.find('input').after($('<i>', { class: options.icon }))
+  }
+  return $li
 }
 
 function channelsToTree (channels) {
@@ -201,6 +210,9 @@ function channelsToTree (channels) {
     ref = channelTree
     channel = channels[i]
     path = channel.name.split('.')
+    if (path.length > 1 && path[0] === channels[0].name) {
+      path.shift()
+    }
     for (i2 = 0; i2 < path.length; i2++) {
       if (!ref[path[i2]]) {
         ref[path[i2]] = {

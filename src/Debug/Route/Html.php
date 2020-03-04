@@ -156,9 +156,11 @@ class Html extends Base
         ));
         $str = '<div' . $this->debug->utilities->buildAttribString(array(
             'class' => 'debug',
+            // channel list gets built as log processed...  we'll str_replace this...
+            'data-channels' => '{{channels}}',
+            'data-channel-name-root' => $this->channelNameRoot,
             'data-options' => array(
                 'drawer' => $this->cfg['drawer'],
-                // 'sidebar' => $this->cfg['sidebar'],
                 'linkFilesTemplateDefault' => $lftDefault ?: null,
             ),
         )) . ">\n";
@@ -182,12 +184,14 @@ class Html extends Base
         $str .= '<div class="debug-tabs">' . "\n";
         if ($this->cfg['outputScript']) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n";
-            // $style = 'display:none;';
         }
         $str .= $this->buildTabPanes();
         $str .= '</div>' . "\n"; // close .debug-tabs
         $str .= '</div>' . "\n"; // close .debug
         $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
+        $str = \strtr($str, array(
+            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
+        ));
         $this->data = array();
         $event['return'] .= $str;
     }
@@ -234,16 +238,6 @@ class Html extends Base
     }
 
     /**
-     * {@inheritDoc}
-     */
-    protected function postSetCfg($cfg = array())
-    {
-        foreach (array('filepathCss', 'filepathScript') as $k) {
-            $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__ . '/../', $this->cfg[$k]);
-        }
-    }
-
-    /**
      * Combine css or script assets into a single string
      *
      * @param array $assets array of assets (filepaths / strings)
@@ -279,17 +273,11 @@ class Html extends Base
     protected function buildChannelTree()
     {
         $channels = $this->dump->channels;
-        if (\array_keys($channels) === array($this->channelNameRoot)) {
-            return array();
-        }
         \ksort($channels);
         $tree = array();
         foreach ($channels as $name => $channel) {
             $ref = &$tree;
             $path = \explode('.', $name);
-            if (\count($path) > 1) {
-                \array_shift($path);
-            }
             foreach ($path as $k) {
                 if (!isset($ref[$k])) {
                     $ref[$k] = array(
@@ -331,21 +319,19 @@ class Html extends Base
     private function buildTabPane($name)
     {
         $this->channelRegex = '#^' . \preg_quote($name, '#') . '(\.|$)#';
-        $nameTab = $name;
-        if ($name === 'general') {
-            $nameTab = 'Log';
+        $isActive = false;
+        if ($name === $this->debug->getCfg('channelName')) {
+            $isActive = true;
+            if ($name === $this->debug->rootInstance->getCfg('channelName')) {
+                $name = 'Log';
+            }
         }
         $str = '<div' . $this->debug->utilities->buildAttribString(array(
             'class' => array(
                 'tab-pane',
-                $name === 'general'
-                    ? 'active'
-                    : null,
-                $this->nameToClassname($nameTab),
+                $isActive ? 'active' : null,
+                $this->nameToClassname($name),
             ),
-            // channel list gets built as log processed...  we'll str_replace this...
-            'data-channels' => '{{channels}}',
-            'data-name-root' => $name,
             'data-options' => array(
                 'sidebar' => $this->cfg['sidebar'],
             ),
@@ -358,7 +344,6 @@ class Html extends Base
             If outputing script, initially hide the output..
             this will help page load performance (fewer redraws)... by magnitudes
         */
-        // $style = null;
         $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
             'class' => 'debug-log-summary group-body',
             // 'style' => $style,
@@ -370,9 +355,7 @@ class Html extends Base
 
         $str .= '</div>' . "\n"; // close .tab-body
         $str .= '</div>' . "\n"; // close .tab-pane
-        return \strtr($str, array(
-            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
-        ));
+        return $str;
     }
 
     /**
@@ -387,8 +370,11 @@ class Html extends Base
             return '';
         }
         $html = '';
+        $channelName = $this->debug->getCfg('channelName');
         foreach ($names as $name) {
-            if ($name === 'general') {
+            $isActive = false;
+            if ($name === $channelName) {
+                $isActive = true;
                 $name = 'Log';
             }
             $target = '.' . $this->nameToClassname($name);
@@ -397,7 +383,7 @@ class Html extends Base
                 array(
                     'class' => array(
                         'nav-link',
-                        $name === 'Log' ? 'active' : null,
+                        $isActive ? 'active' : null,
                     ),
                     'data-target' => $target,
                     'data-toggle' => 'tab',
@@ -409,8 +395,25 @@ class Html extends Base
         return $html;
     }
 
+    /**
+     * Translate channel name to classname
+     *
+     * @param string $name channelName
+     *
+     * @return string
+     */
     private function nameToClassname($name)
     {
         return 'debug-tab-' . \preg_replace('/\W+/', '-', \strtolower($name));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function postSetCfg($cfg = array())
+    {
+        foreach (array('filepathCss', 'filepathScript') as $k) {
+            $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__ . '/../', $this->cfg[$k]);
+        }
     }
 }

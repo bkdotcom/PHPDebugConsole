@@ -1,32 +1,37 @@
 <?php
-/**
- * Run with --process-isolation option
- */
+
+use bdk\PubSub\Event;
 
 /**
  * PHPUnit tests for Debug class
  */
-class OnBootstrapTest extends DebugTestFramework
+class LogEnvTest extends DebugTestFramework
 {
 
     public function testLogPhpInfoEr()
     {
-        $onBootstrap = new \bdk\Debug\OnBootstrap();
 
+        $logEnv = new \bdk\Debug\Plugin\LogEnv();
+
+        /*
         $refDebug = new \ReflectionProperty($onBootstrap, 'debug');
         $refDebug->setAccessible(true);
         $refDebug->setValue($onBootstrap, $this->debug);
+        */
 
-        $refMethod = new \ReflectionMethod($onBootstrap, 'logPhpInfoEr');
+        $refMethod = new \ReflectionMethod($logEnv, 'logPhpInfoEr');
         $refMethod->setAccessible(true);
 
-        $this->debug->setCfG('logEnvInfo.errorReporting', true);
+        $this->debug->addPlugin($logEnv);
+
+        $this->debug->setCfg('logEnvInfo.errorReporting', true);
 
         /*
             Test error_reporting != "all" but debug is "all"
         */
         error_reporting(E_ALL & ~E_STRICT);
-        $refMethod->invoke($onBootstrap);
+        $refMethod->invoke($logEnv);
+        // $logEnv->onPluginInit(new Event($this->debug));
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'warn',
@@ -54,7 +59,9 @@ class OnBootstrapTest extends DebugTestFramework
             Test debug != all (= "system")
         */
         $this->debug->setCfg('errorReporting', 'system');
-        $refMethod->invoke($onBootstrap);
+        // $refMethod->invoke($onBootstrap);
+        // $logEnv->onPluginInit(new Event($this->debug));
+        $refMethod->invoke($logEnv);
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'warn',
@@ -80,7 +87,9 @@ class OnBootstrapTest extends DebugTestFramework
             Test debug != all (but has same value as error_reporting)
         */
         $this->debug->setCfg('errorReporting', E_ALL & ~E_STRICT);
-        $refMethod->invoke($onBootstrap);
+        // $refMethod->invoke($onBootstrap);
+        // $logEnv->onPluginInit(new Event($this->debug));
+        $refMethod->invoke($logEnv);
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'warn',
@@ -108,7 +117,9 @@ class OnBootstrapTest extends DebugTestFramework
             Test debug != all (value different than error_reporting)
         */
         $this->debug->setCfg('errorReporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
-        $refMethod->invoke($onBootstrap);
+        // $refMethod->invoke($onBootstrap);
+        // $logEnv->onPluginInit(new Event($this->debug));
+        $refMethod->invoke($logEnv);
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'warn',

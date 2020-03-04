@@ -41,7 +41,7 @@ class Base extends Component implements ConfigurableInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->channelNameRoot = $this->debug->rootInstance->getCfg('name');
+        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
     }
 
     /**

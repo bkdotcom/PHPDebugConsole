@@ -413,7 +413,7 @@ class Wamp implements RouteInterface
                 $this->debug->redact($metaVals),
             ),
             array(
-                'channelNameRoot' => $this->debug->rootInstance->getCfg('name'),
+                'channelNameRoot' => $this->debug->rootInstance->getCfg('channelName'),
                 'debugVersion' => $debugClass::VERSION,
                 'drawer' => $this->debug->getCfg('outputHtml.drawer'),
                 'interface' => $this->debug->utilities->getInterface(),

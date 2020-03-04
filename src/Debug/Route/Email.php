@@ -165,7 +165,7 @@ class Email implements RouteInterface
             'requestId',
             'runtime',
         )));
-        $data['channelNameRoot'] = $this->debug->getCfg('name');
+        $data['channelNameRoot'] = $this->debug->getCfg('channelName');
         $data['channels'] = \array_map(function (Debug $channel) {
             return array(
                 'channelIcon' => $channel->getCfg('channelIcon'),

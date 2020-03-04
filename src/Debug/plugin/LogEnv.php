@@ -28,7 +28,6 @@ class LogEnv implements SubscriberInterface
 {
 
     private $debug;
-    private static $input;  // populate me for unit tests in lieu of php://input
 
     /**
      * {@inheritdoc}
@@ -63,6 +62,7 @@ class LogEnv implements SubscriberInterface
         )));
         $this->logGitInfo();
         $this->logPhpInfo();
+        $this->logPhpInfoEr();
         $this->logServerVals();
         $this->debug->groupEnd(); // end environment
 
@@ -76,7 +76,6 @@ class LogEnv implements SubscriberInterface
 
         $this->debug->groupEnd(); // end groupSummary
         $this->debug->setCfg('collect', $collectWas);
-        self::$input = null;
     }
 
     /**
@@ -216,7 +215,6 @@ class LogEnv implements SubscriberInterface
                 ))
             );
         }
-        $this->logPhpInfoEr();
     }
 
     /**

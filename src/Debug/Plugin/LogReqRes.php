@@ -15,6 +15,7 @@
 
 namespace bdk\Debug\Plugin;
 
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 use Exception;
@@ -27,7 +28,6 @@ class LogReqRes implements SubscriberInterface
 {
 
     private $debug;
-    private static $input;  // populate me for unit tests in lieu of php://input
 
     /**
      * {@inheritdoc}
@@ -76,42 +76,21 @@ class LogReqRes implements SubscriberInterface
     }
 
     /**
-     * returns self::$input or php://input contents
+     * Get request body contents without affecting stream pointer
      *
-     * @return string;
+     * @return string
      */
-    private function getInput()
+    private function getRequestBodyContents()
     {
-        if (self::$input) {
-            return self::$input;
+        try {
+            $stream = $this->debug->request->getBody();
+            $pos = $stream->tell();
+            $body = (string) $stream; // __toString() is like getContents(), but without throwing exceptions
+            $stream->seek($pos);
+            return $body;
+        } catch (Exception $e) {
+            return '';
         }
-        self::$input = \file_get_contents('php://input');
-        return self::$input;
-    }
-
-    /**
-     * log php://input
-     *
-     * @param string $contentType Content-Type
-     *
-     * @return void
-     */
-    private function logInput($contentType = null)
-    {
-        $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
-            'value' => self::$input,
-            'contentType' => $contentType,
-        ));
-        $input = $event['value'];
-        $this->debug->log(
-            'php://input %c%s',
-            'font-style: italic; opacity: 0.8;',
-            $input instanceof Abstraction
-                ? '(prettified)'
-                : '',
-            $input,
-            $this->debug->meta('redact')
-        );
     }
 
     /**
@@ -121,15 +100,16 @@ class LogReqRes implements SubscriberInterface
      */
     private function logPost()
     {
-        $method = $this->debug->request->getMethod();
-        $contentType = $this->debug->request->getHeaderLine('Content-Type');
+        $request = $this->debug->request;
+        $method = $request->getMethod();
+        $contentType = $request->getHeaderLine('Content-Type');
         if ($method === 'GET') {
             return;
         }
         $havePostVals = false;
         if ($method === 'POST') {
             $isCorrectContentType = $this->testPostContentType($contentType);
-            $post = $this->debug->request->getParsedBody();
+            $post = $request->getParsedBody();
             if (!$isCorrectContentType) {
                 $this->debug->warn(
                     'It appears ' . $contentType . ' was posted with the wrong Content-Type' . "\n"
@@ -147,10 +127,10 @@ class LogReqRes implements SubscriberInterface
         }
         if (!$havePostVals) {
             // Not POST, empty $_POST, or not application/x-www-form-urlencoded or multipart/form-data
-            $input = $this->getInput();
+            $input = $this->getRequestBodyContents();
             if ($input) {
-                $this->logInput($contentType);
-            } elseif (!$this->debug->request->getUploadedFiles()) {
+                $this->logRequestBody($contentType);
+            } elseif (!$request->getUploadedFiles()) {
                 $this->debug->warn(
                     $method . ' request with no body',
                     $this->debug->meta(array(
@@ -161,8 +141,8 @@ class LogReqRes implements SubscriberInterface
                 );
             }
         }
-        if ($this->debug->request->getUploadedFiles()) {
-            $this->debug->log('$_FILES', $this->debug->request->getUploadedFiles());
+        if ($request->getUploadedFiles()) {
+            $this->debug->log('$_FILES', $request->getUploadedFiles());
         }
     }
 
@@ -186,6 +166,31 @@ class LogReqRes implements SubscriberInterface
         if ($logInfo['post'] && $expectBody) {
             $this->logPost();
         }
+    }
+
+    /**
+     * log php://input
+     *
+     * @param string $contentType Content-Type
+     *
+     * @return void
+     */
+    private function logRequestBody($contentType = null)
+    {
+        $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
+            'value' => $this->getRequestBodyContents(),
+            'contentType' => $contentType,
+        ));
+        $input = $event['value'];
+        $this->debug->log(
+            'php://input %c%s',
+            'font-style: italic; opacity: 0.8;',
+            $input instanceof Abstraction
+                ? '(prettified)'
+                : '',
+            $input,
+            $this->debug->meta('redact')
+        );
     }
 
     /**
@@ -274,6 +279,7 @@ class LogReqRes implements SubscriberInterface
     {
         $contentTypeRaw = $this->debug->request->getHeaderLine('Content-Type');
         if ($contentTypeRaw) {
+            // remove encoding if pressent
             \preg_match('#^([^;]+)#', $contentTypeRaw, $matches);
             $contentType = $matches[1];
         }
@@ -287,7 +293,7 @@ class LogReqRes implements SubscriberInterface
             if we detect php://input is json or XML, then must have been
             posted with wrong Content-Type
         */
-        $input = $this->getInput();
+        $input = $this->getRequestBodyContents();
         $json = \json_decode($input, true);
         $isJson = \json_last_error() === JSON_ERROR_NONE && \is_array($json);
         if ($isJson) {

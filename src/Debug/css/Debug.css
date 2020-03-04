@@ -90,7 +90,7 @@
 .debug li[data-channel="general.phpError"] > .t_string:nth-child(4)::before { content: "\A"; }
 .debug li[data-channel="general.phpError"].error-fatal { padding: 10px 10px 10px 20px; border-left: solid 2px #d8000c; }
 .debug li[data-channel="general.phpError"].error-fatal > .t_string:nth-child(2) { display: inline-block; margin-bottom: 5px; vertical-align: top; font-size: 1.2em; }
-.debug li[data-channel="general.phpError"].error-fatal > .t_string:nth-child(3)::before { content: "\a"; }
+.debug li[data-channel="general.phpError"].error-fatal > .t_string:nth-child(3)::before { content: "\A"; }
 .debug table { width: auto; border-collapse: collapse; }
 .debug table caption { caption-side: top; font-weight: bold; font-style: italic; padding-bottom: 0; padding-top: 2px; text-align: left; }
 .debug table th, .debug table td { padding: 0 0.25em; vertical-align: top; }
@@ -159,8 +159,7 @@
 .debug .ws_t::before { display: inline-block; content: "\203A"; width: 1em; }
 .debug .ws_r::before { content: "\\r"; }
 .debug .ws_n::before { content: "\\n"; }
-.debug.debug-drawer { position: fixed; bottom: 0; left: 0; width: 100%; font-family: Arial, sans-serif; background-color: #fff; z-index: 1049; height: 100px; transform: translateY(100px); transition: all 0.5s; /*
-*/ }
+.debug.debug-drawer { position: fixed; bottom: 0; left: 0; width: 100%; font-family: Arial, sans-serif; background-color: #fff; z-index: 1049; height: 100px; transform: translateY(100px); transition: all 0.5s; }
 .debug.debug-drawer > * { box-sizing: border-box; }
 .debug.debug-drawer .debug-pull-tab { display: inline-block; opacity: 1; position: absolute; height: 25px; top: -25px; margin-left: 20px; border: 1px solid #000; border-bottom-width: 0; border-radius: 5px 5px 0 0; padding: 4px 14px; font-size: 16px; background: #f3f3f3; cursor: pointer; transition: all 0.5s; }
 .debug.debug-drawer .debug-pull-tab:hover { background: #dadada; }
@@ -176,21 +175,21 @@
 html.debug-resizing { cursor: ns-resize !important; }
 html.debug-resizing .debug-drawer { transition: none; }
 html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
-.debug.debug-drawer .debug-menu-bar { height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; padding: 0 6px; background: #f3f3f3; font-size: 16px; margin-bottom: 0; }
-.debug.debug-drawer .debug-menu-bar, .debug.debug-drawer .debug-menu-bar a { color: #6e6e6e; }
-.debug.debug-drawer .debug-menu-bar a:focus, .debug.debug-drawer .debug-menu-bar a:hover, .debug.debug-drawer .debug-menu-bar button:focus, .debug.debug-drawer .debug-menu-bar button:hover, .debug.debug-drawer .debug-menu-bar label:focus, .debug.debug-drawer .debug-menu-bar label:hover { color: #333; text-decoration: none; }
-.debug.debug-drawer .debug-menu-bar button.close { font-size: 21px; font-weight: 300; }
-.debug.debug-drawer .debug-menu-bar .pull-right { position: absolute; top: 0; right: 6px; }
-.debug.debug-drawer .debug-menu-bar .debug-error-counts { position: relative; top: -2px; font-size: 0.78em; }
-.debug.debug-drawer .debug-menu-bar > span { display: inline-block; line-height: 23px; }
-.debug.debug-drawer .debug-menu-bar nav { display: inline-block; margin-left: 20px; font-size: 0; line-height: 23px; vertical-align: top; }
-.debug.debug-drawer .debug-menu-bar nav a { display: inline-block; padding: 0 15px; font-size: 12px; line-height: 23px; vertical-align: top; color: #111; }
-.debug.debug-drawer .debug-menu-bar nav a:hover:not(.active) { background: #e6e6e6; }
-.debug.debug-drawer .debug-menu-bar nav a.active { line-height: 22px; border-bottom: #4071e1 solid 2px; }
-.debug.debug-drawer .debug-tabs { overflow: auto; }
-.debug.debug-drawer .debug-tabs .tab-pane { display: none; }
-.debug.debug-drawer .debug-tabs .tab-pane.active { display: block; }
-.debug.debug-drawer .debug-tabs .tab-pane .tab-body { padding: 5px 10px; background-color: #fff; overflow: auto; }
+.debug.debug-enhanced-ui .debug-menu-bar { height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; padding: 0 6px; background: #f3f3f3; font-size: 16px; margin-bottom: 0; }
+.debug.debug-enhanced-ui .debug-menu-bar, .debug.debug-enhanced-ui .debug-menu-bar a { color: #6e6e6e; }
+.debug.debug-enhanced-ui .debug-menu-bar nav { display: inline-block; margin-left: 20px; font-size: 0; line-height: 23px; vertical-align: top; }
+.debug.debug-enhanced-ui .debug-menu-bar nav a { display: inline-block; padding: 0 15px; font-size: 12px; line-height: 23px; vertical-align: top; color: #111; }
+.debug.debug-enhanced-ui .debug-menu-bar nav a:hover:not(.active) { background: #e6e6e6; }
+.debug.debug-enhanced-ui .debug-menu-bar nav a.active { line-height: 22px; border-bottom: #4071e1 solid 2px; }
+.debug.debug-enhanced-ui .debug-menu-bar a:focus, .debug.debug-enhanced-ui .debug-menu-bar a:hover, .debug.debug-enhanced-ui .debug-menu-bar button:focus, .debug.debug-enhanced-ui .debug-menu-bar button:hover, .debug.debug-enhanced-ui .debug-menu-bar label:focus, .debug.debug-enhanced-ui .debug-menu-bar label:hover { color: #333; text-decoration: none; }
+.debug.debug-enhanced-ui .debug-menu-bar button.close { font-size: 21px; font-weight: 300; }
+.debug.debug-enhanced-ui .debug-menu-bar .pull-right { position: absolute; top: 0; right: 6px; }
+.debug.debug-enhanced-ui .debug-menu-bar .debug-error-counts { position: relative; top: -2px; font-size: 0.78em; }
+.debug.debug-enhanced-ui .debug-menu-bar > span { display: inline-block; line-height: 23px; }
+.debug.debug-enhanced-ui .debug-tabs { overflow: auto; }
+.debug.debug-enhanced-ui .debug-tabs .tab-pane { display: none; }
+.debug.debug-enhanced-ui .debug-tabs .tab-pane.active { display: block; }
+.debug.debug-enhanced-ui .debug-tabs .tab-pane .tab-body { padding: 5px 10px; background-color: #fff; overflow: auto; }
 .debug #debug-options-toggle { position: relative; top: -1px; }
 .debug .debug-options { position: absolute; top: 100%; right: 0; max-height: 0; box-sizing: border-box; z-index: 1000; float: right; min-width: 12em; background: #f3f3f3; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25); transition: all 0.25s ease-out; overflow: hidden; font-size: 13px; }
 .debug .debug-options .debug-options-body { background-clip: padding-box; border: 1px solid #d0d0d0; padding: 0.5em 5px 0.5em 15px; }

@@ -219,7 +219,7 @@ class Config
                 $this->valuesPending[$classname] = $v;
             }
         }
-        $channels = $this->debug->getChannels();
+        $channels = $this->debug->getChannels(false, true);
         if ($channels) {
             $cfg = $this->getPropagateValues($cfg);
             foreach ($channels as $channel) {

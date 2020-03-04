@@ -118,7 +118,7 @@ class Pdo extends PdoBase
             : null;
 
         $debug->groupSummary(0);
-        $nameParts = \explode('.', $debug->getCfg('name'));
+        $nameParts = \explode('.', $debug->getCfg('channelName'));
         $name = \end($nameParts);
         $groupParams = array(
             $name . ' info',

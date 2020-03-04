@@ -1,0 +1,85 @@
+&.debug-enhanced-ui {
+
+  .debug-menu-bar {
+    height: 25px;
+    border-top: 1px solid $border-color;
+    border-bottom: 1px solid $border-color;
+    padding: 0 6px;
+    background: $lite-grey;
+    font-size: 16px;
+    margin-bottom: 0;
+
+    &,
+    a {
+      color: $grey-text;
+    }
+
+    nav {
+      display: inline-block;
+      margin-left: 20px;
+      font-size: 0; // so that child inline-blocks don't have space between them
+      line-height: 23px;
+      vertical-align: top;
+      a {
+        display: inline-block;
+        padding: 0 15px;
+        font-size: 12px;
+        line-height: 23px;
+        vertical-align: top;
+        color: $default-fg;
+        &:hover:not(.active) {
+          background: darken($lite-grey, 5%);
+        }
+        &.active {
+          line-height: 22px;
+          border-bottom: #4071e1 solid 2px;
+        }
+      }
+    }
+
+    a,
+    button,
+    label {
+      &:focus,
+      &:hover {
+        color: #333;
+        text-decoration: none;
+      }
+    }
+
+    button.close {
+      font-size: 21px;
+      font-weight: 300;
+    }
+    .pull-right {
+      position: absolute;
+      top: 0;
+      right: 6px;
+    }
+    .debug-error-counts {
+      position: relative;
+      top: -2px;
+      font-size: 0.78em;
+    }
+
+    > span {
+      display: inline-block;
+      line-height: 23px;
+    }
+  }
+
+  .debug-tabs {
+    overflow: auto;
+    .tab-pane {
+      display: none;
+      &.active {
+        display: block;
+      }
+      .tab-body {
+        padding: 5px 10px;
+        background-color: #fff;
+        overflow: auto;
+      }
+    }
+  }
+}

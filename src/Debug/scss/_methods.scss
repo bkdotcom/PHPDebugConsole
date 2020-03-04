@@ -70,7 +70,7 @@ li[data-channel="general.phpError"] {
       font-size: 1.2em;
     }
     > .t_string:nth-child(3)::before {
-      content: "\A"
+      content: "\A";
     }
   }
 }

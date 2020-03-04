@@ -10,15 +10,26 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\psr7;
 
+use bdk\Debug\psr7\Stream;
 use InvalidArgumentException;
+use Psr\Http\Message\StreamInterface;
 
 /**
+ * INTERNAL USE ONLY
+ *
+ * For the most part, this implements Psr\Http\Message\ServerRequestInterface;
+ *
  * Just looking to encapsulate the superglobals... not backbone an application or create a dependency on psr/http-message
  */
 class ServerRequestLite
 {
+
+    /**
+     * @var Stream
+     */
+    private $body;
 
     /**
      * @var array $_COOKIE
@@ -39,6 +50,11 @@ class ServerRequestLite
      * @var array Map of all registered headers, as name => array of values
      */
     private $headers = array();
+
+    /**
+     * @var array Map of lowercase header name => original name at registration
+     */
+    private $headerNames = array();
 
     /**
      * @var string
@@ -80,10 +96,24 @@ class ServerRequestLite
         $headers = static::getAllHeaders($_SERVER);
         $serverRequest = new static($headers, $_SERVER);
         return $serverRequest
+            ->withBody(Stream::factory(\fopen('php://input', 'r+')))
             ->withCookieParams($_COOKIE)
             ->withParsedBody($_POST)
             ->withQueryParams($_GET)
             ->withUploadedFiles($_FILES);
+    }
+
+    /**
+     * Gets the body of the message.
+     *
+     * @return Stream The body as a stream.
+     */
+    public function getBody()
+    {
+        if (!$this->body) {
+            $this->body = Stream::factory('');
+        }
+        return $this->body;
     }
 
     /**
@@ -104,9 +134,12 @@ class ServerRequestLite
      */
     public function getHeader($name)
     {
-        return isset($this->headers[$name])
-            ? $this->headers[$name]
-            : array();
+        $nameLower = \strtolower($name);
+        if (!isset($this->headerNames[$nameLower])) {
+            return array();
+        }
+        $name = $this->headerNames[$nameLower];
+        return $this->headers[$name];
     }
 
     /**
@@ -194,6 +227,48 @@ class ServerRequestLite
     }
 
     /**
+     * Checks if a header exists by the given case-insensitive name.
+     *
+     * @param string $name Case-insensitive header field name.
+     *
+     * @return bool Returns true if any header names match the given header
+     *     name using a case-insensitive string comparison. Returns false if
+     *     no matching header name is found in the message.
+     */
+    public function hasHeader($name)
+    {
+        $nameLower = \strtolower($name);
+        return isset($this->headerNames[$nameLower]);
+    }
+
+    /**
+     * Return an instance with the specified message body.
+     *
+     * The body MUST be a StreamInterface object.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return a new instance that has the
+     * new body stream.
+     *
+     * @param StreamInterface $body Body
+     *
+     * @return static
+     * @throws \InvalidArgumentException
+     */
+    public function withBody($body)
+    {
+        if (!($body instanceof StreamInterface) && !($body instanceof Stream)) {
+            throw new \InvalidArgumentException('body must be an instance of StreamInterface');
+        }
+        if ($body === $this->body) {
+            return $this;
+        }
+        $new = clone $this;
+        $new->body = $body;
+        return $new;
+    }
+
+    /**
      * @param array $cookies $_COOKIE
      *
      * @return static
@@ -218,8 +293,33 @@ class ServerRequestLite
     {
         $this->assertHeader($name);
         $value = $this->normalizeHeaderValue($value);
+        $nameLower = \strtolower($name);
         $new = clone $this;
+        if (isset($new->headerNames[$nameLower])) {
+            // remove previous header-name
+            $namePrev = $new->headerNames[$nameLower];
+            unset($new->headers[$namePrev]);
+        }
+        $new->headerNames[$nameLower] = $name;
         $new->headers[$name] = $value;
+        return $new;
+    }
+
+    /**
+     * Return an instance without the specified header.
+     *
+     * @param string $name Case-insensitive header field name to remove.
+     *
+     * @return static
+     */
+    public function withoutHeader($name)
+    {
+        $nameLower = \strlower($name);
+        if (!isset($this->headerNames[$nameLower])) {
+            return $this;
+        }
+        $new = clone $this;
+        unset($new->headers[$name], $new->headerNames[$nameLower]);
         return $new;
     }
 
@@ -399,9 +499,12 @@ class ServerRequestLite
             }
             self::assertHeader($name);
             $value = $this->normalizeHeaderValue($value);
-            if (isset($this->headers[$name])) {
+            $nameLower = \strtolower($name);
+            if (isset($this->headerNames[$nameLower])) {
+                $name = $this->headerNames[$nameLower];
                 $this->headers[$name] = \array_merge($this->headers[$name], $value);
             } else {
+                $this->headerNames[$nameLower] = $name;
                 $this->headers[$name] = $value;
             }
         }

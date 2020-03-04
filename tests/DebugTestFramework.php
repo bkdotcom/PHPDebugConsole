@@ -3,6 +3,7 @@
 use bdk\CssXpath\DOMTestCase;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
+use bdk\Debug\psr7\ServerRequestLite;
 use bdk\PubSub\Event;
 
 /**
@@ -90,6 +91,7 @@ class DebugTestFramework extends DOMTestCase
             'emailLog' => false,
             'emailTo' => null,
             'logEnvInfo' => false,
+            'logRequestInfo' => false,
             'logRuntime' => true,
             'onError' => function (Event $event) {
                 if (self::$allowError) {
@@ -192,7 +194,7 @@ class DebugTestFramework extends DOMTestCase
         // unset($_SERVER['REQUEST_METHOD']);
         // unset($_SERVER['REQUEST_URI']);
         $this->debug->setCfg('services', array(
-            'request' => \bdk\Debug\ServerRequestLite::fromGlobals(),
+            'request' => ServerRequestLite::fromGlobals(),
         ));
     }
 
@@ -223,13 +225,6 @@ class DebugTestFramework extends DOMTestCase
     {
         return array(
             array(
-                'log',
-                array(null),
-                array(
-                    'html' => '<li class="m_log"><span class="t_null">null</span></li>',
-                    'text' => 'null',
-                    'script' => 'console.log(null);',
-                ),
             ),
         );
     }
@@ -247,7 +242,7 @@ class DebugTestFramework extends DOMTestCase
      *
      * @return void
      */
-    public function testMethod($method, $args = array(), $tests = array())
+    public function testMethod($method = null, $args = array(), $tests = array())
     {
         $countPath = $method === 'alert'
             ? 'alerts/__count__'
@@ -271,9 +266,21 @@ class DebugTestFramework extends DOMTestCase
                 'notLogged' => true,
             );
         }
+        /*
+        $this->stderr(array(
+            'method' => $method,
+            'args' => $args,
+            'count' => count($tests),
+            'dataPath' => $dataPath,
+            'logEntry' => $logEntry,
+        ));
+        */
         foreach ($tests as $test => $outputExpect) {
+            // $this->stderr('test', $test);
             if ($test === 'entry') {
-                $logEntryTemp = $logEntry;
+                $logEntryTemp = $logEntry
+                    ? $logEntry
+                    : new LogEntry($this->debug, 'null');
                 if (\is_callable($outputExpect)) {
                     \call_user_func($outputExpect, $logEntryTemp);
                 } elseif (\is_string($outputExpect)) {
@@ -422,8 +429,18 @@ class DebugTestFramework extends DOMTestCase
         $debug->setCfg('route', $backupRoute);
     }
 
-    protected function logEntryToArray(LogEntry $logEntry)
+    /**
+     * convert log entry to array
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array|null
+     */
+    protected function logEntryToArray($logEntry)
     {
+        if (!$logEntry || !($logEntry instanceof LogEntry)) {
+            return null;
+        }
         $return = \array_values($logEntry->export());
         \ksort($return[2]);
         return $return;

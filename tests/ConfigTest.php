@@ -54,6 +54,7 @@ class ConfigTest extends DebugTestFramework
             'headerMaxAll',
             'headerMaxPer',
             'logEnvInfo',
+            'logRequestInfo',
             'logResponse',
             'logResponseMaxLen',
             'logRuntime',
@@ -85,7 +86,7 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame($configKeys, array_keys($this->debug->getCfg()));
         $this->assertSame($configKeys, array_keys($this->debug->getCfg('*')));
         $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug/*')));
-        $this->assertSame(false, $this->debug->getCfg('logEnvInfo/cookies'));       // debug/logEnvInfo/cookies
+        $this->assertSame(false, $this->debug->getCfg('logRequestInfo/cookies'));
     }
 
     /**

@@ -752,7 +752,7 @@
       return
     }
 
-    $root.addClass('debug-drawer');
+    $root.addClass('debug-drawer debug-enhanced-ui');
 
     addMarkup();
 
@@ -1159,12 +1159,14 @@
   var initialized = false;
 
   function init$5 ($debugRoot) {
+    var $debugTabLog = $debugRoot.find('> .debug-tabs > .debug-tab-log');
+
     config$4 = $debugRoot.data('config');
     $root$2 = $debugRoot;
 
     // console.warn('sidebar.init')
 
-    if ($debugRoot.find('> .debug-tabs > .debug-tab-log').data('options').sidebar) {
+    if ($debugTabLog.length && $debugTabLog.data('options').sidebar) {
       addMarkup$1($root$2);
     }
 
@@ -1410,20 +1412,9 @@
 
   function addChannelToggles () {
     var $log = $root$3.find('> .debug-tabs > .debug-tab-log');
-    /*
-    var channels = $.extend(
-      {},
-      {
-        general: {
-          options: $log.data('channels').general.options,
-          channels: {}
-        }
-      },
-      $log.data('channels').general.channels
-    )
-    */
-    var channels = $log.data('channels');
-    var $ul = buildChannelList(channels, $log.data('nameRoot'));
+    var channels = $root$3.data('channels');
+    var channelNameRoot = $root$3.data('channelNameRoot');
+    var $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot);
     var $toggles;
     if ($ul.html().length) {
       $toggles = $('<fieldset />', {
@@ -1467,7 +1458,7 @@
     var $expandAll = $('<button>', {
       class: 'expand-all'
     }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
-    var $logBody =  $root$3.find('> .debug-tabs > .debug-tab-log > .tab-body');
+    var $logBody = $root$3.find('> .debug-tabs > .debug-tab-log > .tab-body');
 
     // this is currently invoked before entries are enhance / empty class not yet added
     if ($logBody.find('.m_group:not(.empty)').length > 1) {
@@ -1514,9 +1505,8 @@
   */
 
   function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
-    var $ul = $('<ul class="list-unstyled">');
     var $li;
-    var $label;
+    var $ul = $('<ul class="list-unstyled">');
     var channel;
     var channelName = '';
     var isChecked = true;
@@ -1524,9 +1514,17 @@
     if ($.isArray(channels)) {
       channels = channelsToTree(channels);
     }
-    console.log('channels', channels);
+    if (prepend.length === 0) {
+      $li = buildChannelLi(
+        nameRoot,
+        nameRoot,
+        true,
+        true,
+        {}
+      );
+      $ul.append($li);
+    }
     for (channelName in channels) {
-      // console.log('channelName', channelName);
       if (channelName === 'phpError') {
         // phpError is a special channel
         continue
@@ -1538,26 +1536,39 @@
       isChecked = checkedChannels !== undefined
         ? checkedChannels.indexOf(prepend + channelName) > -1
         : channel.options.show;
-      $label = $('<label>', {
-        class: 'toggle'
-      }).append($('<input>', {
-        checked: isChecked,
-        'data-is-root': channelName === nameRoot,
-        'data-toggle': 'channel',
-        type: 'checkbox',
-        value: prepend + channelName
-      })).append(channelName);
-      $label.toggleClass('active', isChecked);
-      $li = $('<li>').append($label);
-      if (channel.options.icon) {
-        $li.find('input').after($('<i>', { class: channel.options.icon }));
-      }
+      $li = buildChannelLi(
+        channelName,
+        prepend + channelName,
+        isChecked,
+        false,
+        channel.options
+      );
       if (Object.keys(channel.channels).length) {
         $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, prepend + channelName + '.'));
       }
       $ul.append($li);
     }
     return $ul
+  }
+
+  function buildChannelLi (channelName, value, isChecked, isRoot, options) {
+    var $label;
+    var $li;
+    $label = $('<label>', {
+      class: 'toggle'
+    }).append($('<input>', {
+      checked: isChecked,
+      'data-is-root': isRoot,
+      'data-toggle': 'channel',
+      type: 'checkbox',
+      value: value
+    })).append(channelName);
+    $label.toggleClass('active', isChecked);
+    $li = $('<li>').append($label);
+    if (options.icon) {
+      $li.find('input').after($('<i>', { class: options.icon }));
+    }
+    return $li
   }
 
   function channelsToTree (channels) {
@@ -1580,6 +1591,9 @@
       ref = channelTree;
       channel = channels[i];
       path = channel.name.split('.');
+      if (path.length > 1 && path[0] === channels[0].name) {
+        path.shift();
+      }
       for (i2 = 0; i2 < path.length; i2++) {
         if (!ref[path[i2]]) {
           ref[path[i2]] = {
@@ -1810,6 +1824,26 @@
     $tabPane.siblings().removeClass('active');
     $tabPane.addClass('active');
   }
+
+  /*
+  function toggle (node) {
+    if ($(node).hasClass("active")) {
+      hide(node)
+    } else {
+      show(node)
+    }
+  }
+
+  function hide (node) {
+    var $tab = $(node)
+    var targetSelector = $tab.data('target')
+    var $debugTags = $tab.closest('.debug').find('.debug-tabs')
+    var $tabPane = $debugTabs.find(targetSelector)
+    console.log('hide target', targetSelector)
+    $tab.removeClass('active')
+    $tabPane.removeClass('active')
+  }
+  */
 
   function Config (defaults, localStorageKey) {
     var storedConfig = null;

@@ -12,6 +12,19 @@ export function init ($delegateNode) {
   })
 }
 
+function show (node) {
+  var $tab = $(node)
+  var targetSelector = $tab.data('target')
+  var $debugTabs = $tab.closest('.debug').find('.debug-tabs')
+  var $tabPane = $debugTabs.find(targetSelector)
+  console.log('show target', targetSelector)
+  $tab.siblings().removeClass('active')
+  $tab.addClass('active')
+  $tabPane.siblings().removeClass('active')
+  $tabPane.addClass('active')
+}
+
+/*
 function toggle (node) {
   if ($(node).hasClass("active")) {
     hide(node)
@@ -20,24 +33,13 @@ function toggle (node) {
   }
 }
 
-function show (node) {
-  var $tab = $(node)
-  var targetSelector = $tab.data('target')
-  var $debugTabs = $tab.closest('.debug').find('.debug-tabs')
-  var $tabPane = $debugTabs.find(targetSelector)
-  console.log('show target', targetSelector)
-  $tab.siblings().removeClass('active');
-  $tab.addClass('active')
-  $tabPane.siblings().removeClass('active')
-  $tabPane.addClass('active')
-}
-
 function hide (node) {
   var $tab = $(node)
   var targetSelector = $tab.data('target')
   var $debugTags = $tab.closest('.debug').find('.debug-tabs')
   var $tabPane = $debugTabs.find(targetSelector)
   console.log('hide target', targetSelector)
-  $tab.removeClass('active');
+  $tab.removeClass('active')
   $tabPane.removeClass('active')
 }
+*/

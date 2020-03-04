@@ -43,7 +43,7 @@ export function init ($debugRoot) {
     return
   }
 
-  $root.addClass('debug-drawer')
+  $root.addClass('debug-drawer debug-enhanced-ui')
 
   addMarkup()
 

@@ -77,22 +77,30 @@ class DebugTest extends DebugTestFramework
     public function testPhpError()
     {
         parent::$allowError = true;
-        $strict = array_pop(explode('-', 'hello-world'));   // Only variables should be passed by reference
+        array_pop(explode('-', 'strict-error'));   // Only variables should be passed by reference
         $lastError = $this->debug->errorHandler->get('lastError');
         $errCat = version_compare(PHP_VERSION, '7.0', '>=')
             ? 'notice'
             : 'strict';
         $errMsg = 'Only variables should be passed by reference';
         $args = version_compare(PHP_VERSION, '7.0', '>=')
-            ? array('Notice:', __FILE__ . ' (line ' . $lastError['line'] . ')', $errMsg)
-            : array('Runtime Notice (E_STRICT):', __FILE__ . ' (line ' . $lastError['line'] . ')', $errMsg);
+            ? array(
+                'Notice:',
+                $errMsg,
+                __FILE__ . ' (line ' . $lastError['line'] . ')',
+            )
+            : array(
+                'Runtime Notice (E_STRICT):',
+                $errMsg,
+                __FILE__ . ' (line ' . $lastError['line'] . ')',
+            );
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'warn',
                 $args,
                 array(
                     'backtrace' => $lastError['backtrace'],
-                    'channel' => 'phpError',
+                    'channel' => 'general.phpError',
                     'detectFiles' => true,
                     'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],
@@ -103,10 +111,10 @@ class DebugTest extends DebugTestFramework
                     'isSuppressed' => false,
                 ),
             ),
-            'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="phpError" data-detect-files="true">'
+            'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="general.phpError" data-detect-files="true">'
                 . '<span class="no-quotes t_string">' . $args[0] . ' </span>'
-                . '<span class="t_string">' . $args[1] . '</span>, '
-                . '<span class="t_string">' . $errMsg . '</span>'
+                . '<span class="t_string">' . $errMsg . '</span>, '
+                . '<span class="t_string">' . $args[2] . '</span>'
                 . '</li>',
         ));
     }
@@ -157,11 +165,15 @@ class DebugTest extends DebugTestFramework
      */
     public function testShutDownSubscribers()
     {
-        $subscribers = $this->debug->eventManager->getSubscribers('php.shutdown');
+        $subscribers = \array_map(function ($val) {
+            return array(get_class($val[0]), $val[1]);
+        }, $this->debug->eventManager->getSubscribers('php.shutdown'));
         $subscribersExpect = array(
-            array($this->debug->errorHandler, 'onShutdown'),
-            array($this->debug->internal, 'onShutdownHigh'),
-            array($this->debug->internal, 'onShutdownLow'),
+            array('bdk\ErrorHandler', 'onShutdown'),
+            array('bdk\Debug\Internal', 'onShutdownHigh'),
+            array('bdk\Debug\Plugin\LogReqRes', 'logResponse'),
+            array('bdk\Debug\Internal', 'onShutdownHigh2'),
+            array('bdk\Debug\Internal', 'onShutdownLow'),
         );
         $this->assertSame($subscribersExpect, $subscribers);
     }
@@ -190,15 +202,15 @@ class DebugTest extends DebugTestFramework
             Test cfg shortcut...
         */
         $this->assertSame(array(
-            'cfg' => array('foo'=>'bar'),
+            'cfg' => array('foo' => 'bar'),
             'debug' => Debug::META,
-        ), $this->debug->meta('cfg', array('foo'=>'bar')));
+        ), $this->debug->meta('cfg', array('foo' => 'bar')));
         $this->assertSame(array(
-            'cfg' => array('foo'=>'bar'),
+            'cfg' => array('foo' => 'bar'),
             'debug' => Debug::META,
         ), $this->debug->meta('cfg', 'foo', 'bar'));
         $this->assertSame(array(
-            'cfg' => array('foo'=>true),
+            'cfg' => array('foo' => true),
             'debug' => Debug::META,
         ), $this->debug->meta('cfg', 'foo'));
         // invalid cfg val... empty meta
@@ -211,7 +223,7 @@ class DebugTest extends DebugTestFramework
         $this->assertSame(array(
             'foo' => 'bar',
             'debug' => Debug::META,
-        ), $this->debug->meta(array('foo'=>'bar')));
+        ), $this->debug->meta(array('foo' => 'bar')));
         $this->assertSame(array(
             'foo' => 'bar',
             'debug' => Debug::META,
@@ -278,12 +290,12 @@ class DebugTest extends DebugTestFramework
     public function testErrorCallerCleared()
     {
         $this->debug->group('test');
-        $this->debug->setErrorCaller(array('file'=>'test','line'=>42));
+        $this->debug->setErrorCaller(array('file' => 'test', 'line' => 42));
         $this->debug->groupEnd();
         $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
 
         $this->debug->groupSummary();
-        $this->debug->setErrorCaller(array('file'=>'test','line'=>42));
+        $this->debug->setErrorCaller(array('file' => 'test', 'line' => 42));
         $this->debug->groupEnd();
         $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
     }

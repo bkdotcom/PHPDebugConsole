@@ -34,11 +34,6 @@
     a {
       color: $grey-text;
     }
-    // .debug-cookie {
-    //   checkbox added by javascript
-    //   float: right;
-    //   color: #666;
-    // }
     button {
       height: 18px;
       border: 0;
@@ -97,6 +92,7 @@
   @import "table";
   @import "tokens";
   @import "drawer";
+  @import "enhancedUi";
   @import "optionsDropdown";
   @import "sidebar";
   @import "script"; // misc css only applicable when javascript enhanced

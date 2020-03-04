@@ -7,12 +7,14 @@ var $root
 var initialized = false
 
 export function init ($debugRoot) {
+  var $debugTabLog = $debugRoot.find('> .debug-tabs > .debug-tab-log')
+
   config = $debugRoot.data('config')
   $root = $debugRoot
 
   // console.warn('sidebar.init')
 
-  if ($debugRoot.find('> .debug-tabs > .debug-tab-log').data('options').sidebar) {
+  if ($debugTabLog.length && $debugTabLog.data('options').sidebar) {
     addMarkup($root)
   }
 

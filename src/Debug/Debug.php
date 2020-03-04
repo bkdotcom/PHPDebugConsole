@@ -92,6 +92,7 @@ class Debug
             'output'    => false,           // output the log?
             'arrayShowListKeys' => true,
             'channelIcon' => null,
+            'channelName' => 'general',            // channel or tab name
             'channelShow' => true,          // wheter initially filtered or not
             'enableProfiling' => false,
             // which error types appear as "error" in debug console... all other errors are "warn"
@@ -124,7 +125,6 @@ class Debug
             'logResponseMaxLen' => '1 MB',
             'logRuntime' => true,
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
-            'name' => 'general',            // channel or tab name
             'onBootstrap' => null,          // callable
             'onLog' => null,                // callable
             'onOutput' => null,             // callable
@@ -1372,8 +1372,8 @@ class Debug
             $cfg = $this->getCfg();
             $cfg = $this->config->getPropagateValues($cfg);
             // set channel values
-            $cfg['debug']['name'] = $config['nested']
-                ? $this->cfg['name'] . '.' . $name
+            $cfg['debug']['channelName'] = $config['nested']
+                ? $this->cfg['channelName'] . '.' . $name
                 : $name;
             $cfg['debug']['parent'] = $this;
             // instantiate channel
@@ -1391,13 +1391,11 @@ class Debug
      *
      * If $allDescendants == true :  key = "fully qualified" channel name
      *
-     * Does not return self
-     *
      * @param bool $allDescendants (false) include all descendants?
      *
-     * @return static[]
+     * @return static[] Does not include self
      */
-    public function getChannels($allDescendants = false)
+    public function getChannels($allDescendants = false, $inclTop = false)
     {
         $channels = $this->channels;
         if ($allDescendants) {
@@ -1405,13 +1403,17 @@ class Debug
             foreach ($this->channels as $channel) {
                 $channels = \array_merge(
                     $channels,
-                    array($channel->getCfg('name') => $channel),
+                    array($channel->getCfg('channelName') => $channel),
                     $channel->getChannels(true)
                 );
             }
         }
         if ($this === $this->rootInstance) {
-            $channels = \array_diff_key($channels, $this->getChannelsTop());
+            if ($inclTop) {
+                return $channels;
+            }
+            $channelsTop = $this->getChannelsTop();
+            $channels = \array_diff_key($channels, $channelsTop);
         }
         return $channels;
     }
@@ -1423,14 +1425,19 @@ class Debug
      */
     public function getChannelsTop()
     {
-        $channels = array();
+        $channels = array(
+            $this->getCfg('channelName') => $this,
+        );
+        if ($this->parentInstance) {
+            return $channels;
+        }
         foreach ($this->rootInstance->channels as $name => $channel) {
-            $fqn = $channel->getCfg('name');
+            $fqn = $channel->getCfg('channelName');
             if (\strpos($fqn, '.') === false) {
                 $channels[$name] = $channel;
             }
         }
-        return array($this->rootInstance->getCfg('name') => $this->rootInstance) + $channels;
+        return $channels;
     }
 
     /**
@@ -2003,7 +2010,7 @@ class Debug
                 /*
                     This can return Psr\Http\Message\ServerRequestInterface
                 */
-                return Debug\ServerRequestLite::fromGlobals();
+                return Debug\psr7\ServerRequestLite::fromGlobals();
             },
             'utf8' => function () {
                 return new Debug\Utility\Utf8();

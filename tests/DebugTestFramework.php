@@ -3,7 +3,7 @@
 use bdk\CssXpath\DOMTestCase;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\psr7\ServerRequestLite;
+use bdk\Debug\psr7lite\ServerRequest;
 use bdk\PubSub\Event;
 
 /**
@@ -194,7 +194,7 @@ class DebugTestFramework extends DOMTestCase
         // unset($_SERVER['REQUEST_METHOD']);
         // unset($_SERVER['REQUEST_URI']);
         $this->debug->setCfg('services', array(
-            'request' => ServerRequestLite::fromGlobals(),
+            'request' => ServerRequest::fromGlobals(),
         ));
     }
 

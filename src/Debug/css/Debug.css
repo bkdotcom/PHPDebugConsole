@@ -189,7 +189,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug.debug-enhanced-ui .debug-tabs { overflow: auto; }
 .debug.debug-enhanced-ui .debug-tabs .tab-pane { display: none; }
 .debug.debug-enhanced-ui .debug-tabs .tab-pane.active { display: block; }
-.debug.debug-enhanced-ui .debug-tabs .tab-pane .tab-body { padding: 5px 10px; background-color: #fff; overflow: auto; }
+.debug.debug-enhanced-ui .debug-tabs .tab-pane .tab-body { padding: 10px 10px 5px; background-color: #fff; overflow: auto; }
 .debug #debug-options-toggle { position: relative; top: -1px; }
 .debug .debug-options { position: absolute; top: 100%; right: 0; max-height: 0; box-sizing: border-box; z-index: 1000; float: right; min-width: 12em; background: #f3f3f3; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25); transition: all 0.25s ease-out; overflow: hidden; font-size: 13px; }
 .debug .debug-options .debug-options-body { background-clip: padding-box; border: 1px solid #d0d0d0; padding: 0.5em 5px 0.5em 15px; }

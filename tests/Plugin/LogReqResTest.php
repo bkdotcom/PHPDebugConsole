@@ -1,8 +1,8 @@
 <?php
 
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\psr7\ServerRequestLite;
-use bdk\Debug\psr7\Stream;
+use bdk\Debug\psr7lite\ServerRequest;
+use bdk\Debug\psr7lite\Stream;
 
 /**
  * PHPUnit tests for Debug class
@@ -142,7 +142,7 @@ class LogReqResTest extends DebugTestFramework
         $files = array(array('foo' => 'bar'));
         $this->debug->setCfg('services', array(
             'request' => function () use ($files) {
-                $request = new ServerRequestLite();
+                $request = new ServerRequest();
                 return $request->withMethod('POST')
                     ->withUploadedFiles($files);
             },
@@ -165,7 +165,7 @@ class LogReqResTest extends DebugTestFramework
         */
         $this->debug->setCfg('services', array(
             'request' => function () {
-                $request = new ServerRequestLite();
+                $request = new ServerRequest();
                 return $request->withMethod('POST');
             },
         ));
@@ -191,7 +191,7 @@ class LogReqResTest extends DebugTestFramework
         $requestBody = json_encode(array('foo' => 'bar=bazy'));
         $this->debug->setCfg('services', array(
             'request' => function () use ($requestBody) {
-                $request = new ServerRequestLite();
+                $request = new ServerRequest();
                 return $request->withMethod('PUT')
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(Stream::factory($requestBody));

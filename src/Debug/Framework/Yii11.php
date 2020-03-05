@@ -68,7 +68,6 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             'debug.objAbstractEnd' => 'onDebugObjAbstractEnd',
             'debug.output' => array('onDebugOutput', 1),
             'debug.outputLogEntry' => 'onDebugOutputLogEntry',
-            'debug.pluginInit' => 'init',
             'errorHandler.error' => array(
                 array('onErrorLow', -1),
                 array('onErrorHigh', 1),
@@ -165,47 +164,12 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
      *
      * Log included files before outputting
      *
-     * @param Event $event Event instance
-     *
      * @return void
      */
-    public function onDebugOutput(Event $event)
+    public function onDebugOutput()
     {
-        $debug = $event->getSubject();
-        $files = $debug->utilities->getIncludedFiles();
-        $files = \array_filter($files, function ($file) {
-            $exclude = array(
-                '/framework/',
-                '/protected/components/system/',
-                '/vendor/',
-            );
-            $return = true;
-            foreach ($exclude as $str) {
-                if (\strpos($file, $str) !== false) {
-                    $return = false;
-                    break;
-                }
-            }
-            return $return;
-        });
-        $files = \array_values($files);
-        $debug->log('files', $files, $debug->meta('detectFiles', true));
-        if ($this->ignoredErrors) {
-            $hashes = \array_unique($this->ignoredErrors);
-            $count = \count($hashes);
-            $debug->groupSummary();
-            $debug->group(
-                $count === 1
-                    ? '1 ignored error'
-                    : $count . ' ignored errors'
-            );
-            foreach ($hashes as $hash) {
-                $error = $this->debug->errorHandler->get('error', $hash);
-                $debug->onError($error);
-            }
-            $debug->groupEnd();
-            $debug->groupEnd();
-        }
+        $this->logFiles();
+        $this->logIgnoredErrors();
     }
 
     /**
@@ -420,5 +384,59 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             $mProp->setValue($this->yiiApp, $val);
             break;
         }
+    }
+
+    /**
+     * Log included files in "Files" channel (tab)
+     *
+     * @return [void
+     */
+    private function logFiles()
+    {
+        $files = $this->debug->utilities->getIncludedFiles();
+        $files = \array_filter($files, function ($file) {
+            $exclude = array(
+                '/framework/',
+                '/protected/components/system/',
+                '/vendor/',
+            );
+            $return = true;
+            foreach ($exclude as $str) {
+                if (\strpos($file, $str) !== false) {
+                    $return = false;
+                    break;
+                }
+            }
+            return $return;
+        });
+        $files = \array_values($files);
+        $debugFiles = $this->debug->rootInstance->getChannel('Files', array('nested' => false));
+        $debugFiles->log('files', $files, $this->debug->meta('detectFiles', true));
+    }
+
+    /**
+     * Log files we ignored
+     *
+     * @return void
+     */
+    private function logIgnoredErrors()
+    {
+        if (!$this->ignoredErrors) {
+            return;
+        }
+        $hashes = \array_unique($this->ignoredErrors);
+        $count = \count($hashes);
+        $debug->groupSummary();
+        $debug->group(
+            $count === 1
+                ? '1 ignored error'
+                : $count . ' ignored errors'
+        );
+        foreach ($hashes as $hash) {
+            $error = $this->debug->errorHandler->get('error', $hash);
+            $debug->onError($error);
+        }
+        $debug->groupEnd();
+        $debug->groupEnd();
     }
 }

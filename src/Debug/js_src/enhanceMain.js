@@ -30,11 +30,15 @@ export function init ($debugRoot) {
 }
 
 function addChannelToggles () {
-  var $log = $root.find('> .debug-tabs > .debug-tab-log')
-  var channels = $root.data('channels')
   var channelNameRoot = $root.data('channelNameRoot')
-  var $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot)
+  var $log = $root.find('> .debug-tabs > .debug-root')
+  var channels = $root.data('channels') || {}
+  var $ul
   var $toggles
+  if (!channelNameRoot) {
+    return
+  }
+  $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot)
   if ($ul.html().length) {
     $toggles = $('<fieldset />', {
       class: 'channels'
@@ -77,7 +81,7 @@ function addExpandAll () {
   var $expandAll = $('<button>', {
     class: 'expand-all'
   }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups')
-  var $logBody = $root.find('> .debug-tabs > .debug-tab-log > .tab-body')
+  var $logBody = $root.find('> .debug-tabs > .debug-root > .tab-body')
 
   // this is currently invoked before entries are enhance / empty class not yet added
   if ($logBody.find('.m_group:not(.empty)').length > 1) {
@@ -132,8 +136,7 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
   prepend = prepend || ''
   if ($.isArray(channels)) {
     channels = channelsToTree(channels)
-  }
-  if (prepend.length === 0) {
+  } else if (prepend.length === 0) {
     $li = buildChannelLi(
       nameRoot,
       nameRoot,
@@ -243,3 +246,4 @@ function enhanceErrorSummary () {
   })
   $errorSummary.find('.m_trace').debugEnhance()
 }
+

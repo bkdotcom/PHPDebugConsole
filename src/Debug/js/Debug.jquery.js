@@ -861,21 +861,24 @@
   var channels = [];
   var tests = [
     function ($node) {
-      var channel = $node.data('channel');
+      var channel = $node.data('channel') || $node.closest('.debug').data('channelNameRoot');
       return channels.indexOf(channel) > -1
     }
   ];
   var preFilterCallbacks = [
     function ($root) {
       var $checkboxes = $root.find('input[data-toggle=channel]');
+      /*
       channels = $checkboxes.length
         ? []
-        : [undefined];
+        : [undefined]
+      */
+      channels = [];
       $checkboxes.filter(':checked').each(function () {
         channels.push($(this).val());
-        if ($(this).data('isRoot')) {
-          channels.push(undefined);
-        }
+        // if ($(this).data('isRoot')) {
+          // channels.push(undefined)
+        // }
       });
     }
   ];
@@ -930,7 +933,7 @@
       preFilterCallbacks[i]($root);
     }
     // :not(.level-error, .level-info, .level-warn)
-    $root.find('> .debug-tabs > .debug-tab-log .m_alert, > .debug-tabs > .debug-tab-log .group-body > *:not(.m_groupSummary)').each(function () {
+    $root.find('> .debug-tabs > .debug-root .m_alert, > .debug-tabs > .debug-root .group-body > *:not(.m_groupSummary)').each(function () {
       var $node = $(this);
       var show = true;
       var unhiding = false;
@@ -1159,7 +1162,7 @@
   var initialized = false;
 
   function init$5 ($debugRoot) {
-    var $debugTabLog = $debugRoot.find('> .debug-tabs > .debug-tab-log');
+    var $debugTabLog = $debugRoot.find('> .debug-tabs > .debug-root');
 
     config$4 = $debugRoot.data('config');
     $root$2 = $debugRoot;
@@ -1242,7 +1245,7 @@
 
   function addMarkup$1 ($node) {
     var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
-    var $expAll = $node.find('.debug-tabs > .debug-tab-log > .tab-body > .expand-all');
+    var $expAll = $node.find('.debug-tabs > .debug-root > .tab-body > .expand-all');
     $sidebar.html(
       '<div class="sidebar-toggle">' +
         '<div class="collapse">' +
@@ -1272,7 +1275,7 @@
         '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
       '</div>'
     );
-    $node.find('.debug-tabs > .debug-tab-log > .tab-body').before($sidebar);
+    $node.find('.debug-tabs > .debug-root > .tab-body').before($sidebar);
 
     phpErrorToggles($node);
     moveChannelToggles($node);
@@ -1344,7 +1347,7 @@
     if ($togglesDest.children().length === 0) {
       $togglesDest.parent().hide();
     }
-    $node.find('> .debug-tabs > .debug-tab-log > .tab-body > .channels').remove();
+    $node.find('> .debug-tabs > .debug-root > .tab-body > .channels').remove();
   }
 
   /**
@@ -1411,11 +1414,15 @@
   }
 
   function addChannelToggles () {
-    var $log = $root$3.find('> .debug-tabs > .debug-tab-log');
-    var channels = $root$3.data('channels');
     var channelNameRoot = $root$3.data('channelNameRoot');
-    var $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot);
+    var $log = $root$3.find('> .debug-tabs > .debug-root');
+    var channels = $root$3.data('channels') || {};
+    var $ul;
     var $toggles;
+    if (!channelNameRoot) {
+      return
+    }
+    $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot);
     if ($ul.html().length) {
       $toggles = $('<fieldset />', {
         class: 'channels'
@@ -1458,7 +1465,7 @@
     var $expandAll = $('<button>', {
       class: 'expand-all'
     }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
-    var $logBody = $root$3.find('> .debug-tabs > .debug-tab-log > .tab-body');
+    var $logBody = $root$3.find('> .debug-tabs > .debug-root > .tab-body');
 
     // this is currently invoked before entries are enhance / empty class not yet added
     if ($logBody.find('.m_group:not(.empty)').length > 1) {
@@ -1513,8 +1520,7 @@
     prepend = prepend || '';
     if ($.isArray(channels)) {
       channels = channelsToTree(channels);
-    }
-    if (prepend.length === 0) {
+    } else if (prepend.length === 0) {
       $li = buildChannelLi(
         nameRoot,
         nameRoot,

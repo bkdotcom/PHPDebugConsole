@@ -905,7 +905,7 @@ class Internal implements SubscriberInterface
             . '|'
             // url encoded
             . '\b' . $key . '=([^\s&]+\b)'
-            . ')#';
+            . ')#i';
     }
 
     /**

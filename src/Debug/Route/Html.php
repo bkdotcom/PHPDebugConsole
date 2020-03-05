@@ -319,17 +319,12 @@ class Html extends Base
     private function buildTabPane($name)
     {
         $this->channelRegex = '#^' . \preg_quote($name, '#') . '(\.|$)#';
-        $isActive = false;
-        if ($name === $this->debug->getCfg('channelName')) {
-            $isActive = true;
-            if ($name === $this->debug->rootInstance->getCfg('channelName')) {
-                $name = 'Log';
-            }
-        }
+        $isActive = $name === $this->debug->getCfg('channelName');
         $str = '<div' . $this->debug->utilities->buildAttribString(array(
             'class' => array(
                 'tab-pane',
                 $isActive ? 'active' : null,
+                $isActive ? 'debug-root' : null,
                 $this->nameToClassname($name),
             ),
             'data-options' => array(
@@ -373,9 +368,10 @@ class Html extends Base
         $channelName = $this->debug->getCfg('channelName');
         foreach ($names as $name) {
             $isActive = false;
+            $nameTab = $name;
             if ($name === $channelName) {
                 $isActive = true;
-                $name = 'Log';
+                $nameTab = 'Log';
             }
             $target = '.' . $this->nameToClassname($name);
             $html .= $this->debug->utilities->buildTag(

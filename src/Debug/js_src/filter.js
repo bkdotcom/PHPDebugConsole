@@ -7,21 +7,24 @@ import $ from 'jquery'
 var channels = []
 var tests = [
   function ($node) {
-    var channel = $node.data('channel')
+    var channel = $node.data('channel') || $node.closest('.debug').data('channelNameRoot')
     return channels.indexOf(channel) > -1
   }
 ]
 var preFilterCallbacks = [
   function ($root) {
     var $checkboxes = $root.find('input[data-toggle=channel]')
+    /*
     channels = $checkboxes.length
       ? []
       : [undefined]
+    */
+    channels = []
     $checkboxes.filter(':checked').each(function () {
       channels.push($(this).val())
-      if ($(this).data('isRoot')) {
-        channels.push(undefined)
-      }
+      // if ($(this).data('isRoot')) {
+        // channels.push(undefined)
+      // }
     })
   }
 ]
@@ -76,7 +79,7 @@ function applyFilter ($root) {
     preFilterCallbacks[i]($root)
   }
   // :not(.level-error, .level-info, .level-warn)
-  $root.find('> .debug-tabs > .debug-tab-log .m_alert, > .debug-tabs > .debug-tab-log .group-body > *:not(.m_groupSummary)').each(function () {
+  $root.find('> .debug-tabs > .debug-root .m_alert, > .debug-tabs > .debug-root .group-body > *:not(.m_groupSummary)').each(function () {
     var $node = $(this)
     var show = true
     var unhiding = false

@@ -7,7 +7,7 @@ var $root
 var initialized = false
 
 export function init ($debugRoot) {
-  var $debugTabLog = $debugRoot.find('> .debug-tabs > .debug-tab-log')
+  var $debugTabLog = $debugRoot.find('> .debug-tabs > .debug-root')
 
   config = $debugRoot.data('config')
   $root = $debugRoot
@@ -90,7 +90,7 @@ export function init ($debugRoot) {
 
 export function addMarkup ($node) {
   var $sidebar = $('<div class="debug-sidebar show no-transition"></div>')
-  var $expAll = $node.find('.debug-tabs > .debug-tab-log > .tab-body > .expand-all')
+  var $expAll = $node.find('.debug-tabs > .debug-root > .tab-body > .expand-all')
   $sidebar.html(
     '<div class="sidebar-toggle">' +
       '<div class="collapse">' +
@@ -120,7 +120,7 @@ export function addMarkup ($node) {
       '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
     '</div>'
   )
-  $node.find('.debug-tabs > .debug-tab-log > .tab-body').before($sidebar)
+  $node.find('.debug-tabs > .debug-root > .tab-body').before($sidebar)
 
   phpErrorToggles($node)
   moveChannelToggles($node)
@@ -192,7 +192,7 @@ function moveChannelToggles ($node) {
   if ($togglesDest.children().length === 0) {
     $togglesDest.parent().hide()
   }
-  $node.find('> .debug-tabs > .debug-tab-log > .tab-body > .channels').remove()
+  $node.find('> .debug-tabs > .debug-root > .tab-body > .channels').remove()
 }
 
 /**

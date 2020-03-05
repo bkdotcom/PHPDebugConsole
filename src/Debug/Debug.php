@@ -2010,7 +2010,7 @@ class Debug
                 /*
                     This can return Psr\Http\Message\ServerRequestInterface
                 */
-                return Debug\psr7\ServerRequestLite::fromGlobals();
+                return Debug\psr7lite\ServerRequest::fromGlobals();
             },
             'utf8' => function () {
                 return new Debug\Utility\Utf8();

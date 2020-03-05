@@ -10,9 +10,9 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\psr7;
+namespace bdk\Debug\psr7lite;
 
-use bdk\Debug\psr7\Stream;
+use bdk\Debug\psr7lite\Stream;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 
@@ -23,7 +23,7 @@ use Psr\Http\Message\StreamInterface;
  *
  * Just looking to encapsulate the superglobals... not backbone an application or create a dependency on psr/http-message
  */
-class ServerRequestLite
+class ServerRequest
 {
 
     /**

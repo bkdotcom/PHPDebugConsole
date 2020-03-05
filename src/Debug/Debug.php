@@ -43,7 +43,7 @@ use SplObjectStorage;
  * @property MethodClear   $methodClear   lazy-loaded MethodClear instance
  * @property MethodProfile $methodProfile lazy-loaded MethodProfile instance
  * @property MethodTable   $methodTable   lazy-loaded MethodTable instance
- * @property ServerRequestLite $request   lazy-loaded ServerRequest
+ * @property ServerRequest $request       lazy-loaded ServerRequest
  * @property Utf8          $utf8          lazy-loaded Utf8 instance
  * @property Utilities     $utilities     lazy-loaded Utilities instance
  */
@@ -129,7 +129,9 @@ class Debug
             'onLog' => null,                // callable
             'onOutput' => null,             // callable
             'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
-            'redactKeys' => array(),        // case-insensitive
+            'redactKeys' => array(          // case-insensitive
+                'password',
+            ),
             'redactReplace' => function ($str, $key) {
                 return '█████████';
             },

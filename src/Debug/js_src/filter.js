@@ -19,6 +19,10 @@ var preFilterCallbacks = [
       ? []
       : [undefined]
     */
+    if ($checkboxes.length === 0) {
+      channels = [$root.data('channelNameRoot')]
+      return
+    }
     channels = []
     $checkboxes.filter(':checked').each(function () {
       channels.push($(this).val())

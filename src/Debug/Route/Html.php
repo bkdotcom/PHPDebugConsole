@@ -385,7 +385,7 @@ class Html extends Base
                     'data-toggle' => 'tab',
                     'role' => 'tab',
                 ),
-                $name
+                $nameTab
             ) . "\n";
         }
         return $html;

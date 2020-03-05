@@ -133,10 +133,12 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
   var channel
   var channelName = ''
   var isChecked = true
+  // console.warn('channels', channels)
   prepend = prepend || ''
   if ($.isArray(channels)) {
     channels = channelsToTree(channels)
-  } else if (prepend.length === 0) {
+  } else if (prepend.length === 0 && Object.keys(channels).length) {
+    // start with (add) if there are other channels
     $li = buildChannelLi(
       nameRoot,
       nameRoot,

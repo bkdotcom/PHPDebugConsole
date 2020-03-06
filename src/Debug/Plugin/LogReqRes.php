@@ -260,25 +260,25 @@ class LogReqRes implements SubscriberInterface
                 return;
             }
         }
-        if (!$maxLen || $contentLength < $maxLen) {
-            $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
-                'value' => $response,
-                'contentType' => $contentType,
-            ));
-            $this->debug->log(
-                'response content (%c%s) %c%s',
-                'font-family: monospace;',
-                $contentType,
-                'font-style: italic; opacity: 0.8;',
-                $event['value'] instanceof Abstraction
-                    ? '(prettified)'
-                    : '',
-                $event['value'],
-                $this->debug->meta('redact')
-            );
-        } else {
+        if ($maxLen && $contentLength > $maxLen) {
             $this->debug->log('response too large to output (' . $contentLength . ')');
+            return;
         }
+        $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
+            'value' => $response,
+            'contentType' => $contentType,
+        ));
+        $this->debug->log(
+            'response content (%c%s) %c%s',
+            'font-family: monospace;',
+            $contentType,
+            'font-style: italic; opacity: 0.8;',
+            $event['value'] instanceof Abstraction
+                ? '(prettified)'
+                : '',
+            $event['value'],
+            $this->debug->meta('redact')
+        );
     }
 
     /**

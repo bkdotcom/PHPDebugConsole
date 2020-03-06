@@ -16,7 +16,6 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Utility\ErrorLevel;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;

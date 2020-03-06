@@ -253,12 +253,10 @@ class StatementInfo
         $sql = $this->sql;
         foreach ($this->params as $k => $v) {
             $v = $quoteLeft . $v . $quoteRight;
-            if (!\is_numeric($k)) {
-                $sql = \preg_replace('/' . $k . '\b/', $v, $sql);
-            } else {
-                $p = \strpos($sql, '?') ?: 0;
-                $sql = \substr($sql, 0, $p) . $v . \substr($sql, $p + 1);
-            }
+            $p = \strpos($sql, '?') ?: 0;
+            $sql = \is_numeric($k)
+                ? \substr($sql, 0, $p) . $v . \substr($sql, $p + 1)
+                : \preg_replace('/' . $k . '\b/', $v, $sql);
         }
         return $sql;
     }

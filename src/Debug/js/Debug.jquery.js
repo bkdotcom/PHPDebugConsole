@@ -881,7 +881,7 @@
       $checkboxes.filter(':checked').each(function () {
         channels.push($(this).val());
         // if ($(this).data('isRoot')) {
-          // channels.push(undefined)
+        //   channels.push(undefined)
         // }
       });
     }

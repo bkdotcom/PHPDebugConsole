@@ -248,4 +248,3 @@ function enhanceErrorSummary () {
   })
   $errorSummary.find('.m_trace').debugEnhance()
 }
-

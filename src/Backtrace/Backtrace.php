@@ -252,7 +252,7 @@ class Backtrace
      *
      * @param array $frame frame
      *
-     * @return boolean
+     * @return bool
      */
     private static function isSkippable($frame)
     {
@@ -268,10 +268,7 @@ class Backtrace
         if (\in_array($frame['function'], array('call_user_func', 'call_user_func_array'))) {
             return true;
         }
-        if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
-            return true;
-        }
-        return false;
+        return $class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'));
     }
 
     /**

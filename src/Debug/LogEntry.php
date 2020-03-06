@@ -123,11 +123,10 @@ class LogEntry extends Event
      */
     public function setMeta($key, $val = null)
     {
-        if (\is_array($key)) {
-            $this->values['meta'] = \array_merge($this->values['meta'], $key);
-        } else {
-            $this->values['meta'][$key] = $val;
-        }
+        $merge = \is_array($key)
+            ? $key
+            : array($key => $val);
+        $this->values['meta'] = \array_merge($this->values['meta'], $merge);
         if (isset($this->values['meta']['channel'])) {
             $this->subject = $this->subject->parentInstance
                 ? $this->subject->parentInstance->getChannel($this->values['meta']['channel'])

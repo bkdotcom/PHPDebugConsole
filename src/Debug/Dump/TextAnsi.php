@@ -366,14 +366,13 @@ class TextAnsi extends Text
             return $date
                 ? '📅 ' . $val . ' ' . $escapeCodes['muted'] . '(' . $date . ')' . $this->escapeReset
                 : $val;
-        } else {
-            $ansiQuote = $escapeCodes['quote'] . '"' . $this->escapeReset;
-            $val = $this->debug->utf8->dump($val);
-            if ($this->argStringOpts['addQuotes']) {
-                $val = $ansiQuote . $val . $ansiQuote;
-            }
-            return $val;
         }
+        $ansiQuote = $escapeCodes['quote'] . '"' . $this->escapeReset;
+        $val = $this->debug->utf8->dump($val);
+        if ($this->argStringOpts['addQuotes']) {
+            $val = $ansiQuote . $val . $ansiQuote;
+        }
+        return $val;
     }
 
     /**

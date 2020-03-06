@@ -309,14 +309,14 @@ class Yii11LogRoute extends CLogRoute
             if (\strpos($logEntry['message'], 'begin:') === 0) {
                 // add to stack
                 $this->stack[] = $logEntry;
-            } else {
-                $logEntryBegin = \array_pop($this->stack);
-                $message = $logEntryBegin['category']
-                    ? $logEntryBegin['category'] . ': ' . $logEntryBegin['message']
-                    : $logEntryBegin['message'];
-                $duration = $logEntry['time'] - $logEntryBegin['time'];
-                $debug->time($message, $duration);
+                return;
             }
+            $logEntryBegin = \array_pop($this->stack);
+            $message = $logEntryBegin['category']
+                ? $logEntryBegin['category'] . ': ' . $logEntryBegin['message']
+                : $logEntryBegin['message'];
+            $duration = $logEntry['time'] - $logEntryBegin['time'];
+            $debug->time($message, $duration);
             return;
         }
         if ($logEntry['level'] === CLogger::LEVEL_TRACE) {

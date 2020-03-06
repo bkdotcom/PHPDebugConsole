@@ -81,13 +81,14 @@ class CallInfo
         $getter = 'get' . \ucfirst($name);
         if (\method_exists($this, $getter)) {
             return $this->$getter();
-        } elseif (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {
-            return $this->$name();
-        } elseif (isset($this->$name)) {
-            return $this->{$name};
-        } else {
-            return null;
         }
+        if (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {
+            return $this->$name();
+        }
+        if (isset($this->$name)) {
+            return $this->{$name};
+        }
+        return null;
     }
 
     /**

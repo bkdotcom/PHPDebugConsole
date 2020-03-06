@@ -389,7 +389,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     /**
      * Log included files in "Files" channel (tab)
      *
-     * @return [void
+     * @return void
      */
     private function logFiles()
     {
@@ -426,6 +426,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
         }
         $hashes = \array_unique($this->ignoredErrors);
         $count = \count($hashes);
+        $debug = $this->debug;
         $debug->groupSummary();
         $debug->group(
             $count === 1

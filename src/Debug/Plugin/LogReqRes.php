@@ -143,7 +143,7 @@ class LogReqRes implements SubscriberInterface
         // don't expect a request body for these methods
         $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
         $expectBody = !\in_array($request->getMethod(), $noBodyMethods);
-        if ($expectBody == false) {
+        if ($expectBody === false) {
             return;
         }
         $contentType = $request->getHeaderLine('Content-Type');

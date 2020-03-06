@@ -178,7 +178,7 @@ class Html extends Base
         $str .= '<header class="debug-menu-bar">'
             . 'PHPDebugConsole'
             . '<nav role="tablist">'
-                . $this->buildTabs()
+                . $this->buildTabList()
             . '</nav>'
             . '</header>' . "\n";
         $str .= '<div class="debug-tabs">' . "\n";
@@ -295,70 +295,11 @@ class Html extends Base
     }
 
     /**
-     * Build tab panes/content
-     *
-     * @return html
-     */
-    private function buildTabPanes()
-    {
-        $html = '';
-        $names = \array_keys($this->debug->getChannelsTop());
-        foreach ($names as $name) {
-            $html .= $this->buildTabPane($name);
-        }
-        return $html;
-    }
-
-    /**
-     * Build primary log content
-     *
-     * @param string $name channel name
-     *
-     * @return string html
-     */
-    private function buildTabPane($name)
-    {
-        $this->channelRegex = '#^' . \preg_quote($name, '#') . '(\.|$)#';
-        $isActive = $name === $this->debug->getCfg('channelName');
-        $str = '<div' . $this->debug->utilities->buildAttribString(array(
-            'class' => array(
-                'tab-pane',
-                $isActive ? 'active' : null,
-                $isActive ? 'debug-root' : null,
-                $this->nameToClassname($name),
-            ),
-            'data-options' => array(
-                'sidebar' => $this->cfg['sidebar'],
-            ),
-            'role' => 'tabpanel',
-        )) . ">\n";
-        $str .= '<div class="tab-body">' . "\n";
-
-        $str .= $this->processAlerts();
-        /*
-            If outputing script, initially hide the output..
-            this will help page load performance (fewer redraws)... by magnitudes
-        */
-        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
-            'class' => 'debug-log-summary group-body',
-            // 'style' => $style,
-        )) . ">\n" . $this->processSummary() . '</ul>' . "\n";
-        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
-            'class' => 'debug-log group-body',
-            // 'style' => $style,
-        )) . ">\n" . $this->processLog() . '</ul>' . "\n";
-
-        $str .= '</div>' . "\n"; // close .tab-body
-        $str .= '</div>' . "\n"; // close .tab-pane
-        return $str;
-    }
-
-    /**
      * Build tab selection links
      *
      * @return string
      */
-    private function buildTabs()
+    private function buildTabList()
     {
         $names = \array_keys($this->debug->getChannelsTop());
         if (\count($names) < 2) {
@@ -389,6 +330,65 @@ class Html extends Base
             ) . "\n";
         }
         return $html;
+    }
+
+    /**
+     * Build tab panes/content
+     *
+     * @return html
+     */
+    private function buildTabPanes()
+    {
+        $html = '';
+        $names = \array_keys($this->debug->getChannelsTop());
+        foreach ($names as $name) {
+            $html .= $this->buildTabPane($name);
+        }
+        return $html;
+    }
+
+    /**
+     * Build primary log content
+     *
+     * @param string $name channel name
+     *
+     * @return string html
+     */
+    private function buildTabPane($name)
+    {
+        $this->channelRegex = '#^' . \preg_quote($name, '#') . '(\.|$)#';
+        $isActive = $name === $this->debug->getCfg('channelName');
+        $str = '<div' . $this->debug->utilities->buildAttribString(array(
+            'class' => array(
+                'tab-pane',
+                $isActive ? 'active' : null,
+                $isActive ? 'tab-primary' : null,
+                $this->nameToClassname($name),
+            ),
+            'data-options' => array(
+                'sidebar' => $this->cfg['sidebar'],
+            ),
+            'role' => 'tabpanel',
+        )) . ">\n";
+        $str .= '<div class="tab-body">' . "\n";
+
+        $str .= $this->processAlerts();
+        /*
+            If outputing script, initially hide the output..
+            this will help page load performance (fewer redraws)... by magnitudes
+        */
+        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
+            'class' => 'debug-log-summary group-body',
+            // 'style' => $style,
+        )) . ">\n" . $this->processSummary() . '</ul>' . "\n";
+        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
+            'class' => 'debug-log group-body',
+            // 'style' => $style,
+        )) . ">\n" . $this->processLog() . '</ul>' . "\n";
+
+        $str .= '</div>' . "\n"; // close .tab-body
+        $str .= '</div>' . "\n"; // close .tab-pane
+        return $str;
     }
 
     /**

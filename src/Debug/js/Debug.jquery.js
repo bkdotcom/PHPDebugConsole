@@ -937,7 +937,9 @@
       preFilterCallbacks[i]($root);
     }
     // :not(.level-error, .level-info, .level-warn)
-    $root.find('> .debug-tabs > .debug-root .m_alert, > .debug-tabs > .debug-root .group-body > *:not(.m_groupSummary)').each(function () {
+    $root.find('> .debug-tabs > .tab-primary .m_alert' +
+      ', > .debug-tabs > .tab-primary .group-body > *:not(.m_groupSummary)'
+    ).each(function () {
       var $node = $(this);
       var show = true;
       var unhiding = false;
@@ -1166,7 +1168,7 @@
   var initialized = false;
 
   function init$5 ($debugRoot) {
-    var $debugTabLog = $debugRoot.find('> .debug-tabs > .debug-root');
+    var $debugTabLog = $debugRoot.find('> .debug-tabs > .tab-primary');
 
     config$4 = $debugRoot.data('config');
     $root$2 = $debugRoot;
@@ -1249,7 +1251,7 @@
 
   function addMarkup$1 ($node) {
     var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
-    var $expAll = $node.find('.debug-tabs > .debug-root > .tab-body > .expand-all');
+    var $expAll = $node.find('.debug-tabs > .tab-primary > .tab-body > .expand-all');
     $sidebar.html(
       '<div class="sidebar-toggle">' +
         '<div class="collapse">' +
@@ -1279,7 +1281,7 @@
         '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
       '</div>'
     );
-    $node.find('.debug-tabs > .debug-root > .tab-body').before($sidebar);
+    $node.find('.debug-tabs > .tab-primary > .tab-body').before($sidebar);
 
     phpErrorToggles($node);
     moveChannelToggles($node);
@@ -1351,7 +1353,7 @@
     if ($togglesDest.children().length === 0) {
       $togglesDest.parent().hide();
     }
-    $node.find('> .debug-tabs > .debug-root > .tab-body > .channels').remove();
+    $node.find('> .debug-tabs > .tab-primary > .tab-body > .channels').remove();
   }
 
   /**
@@ -1419,7 +1421,7 @@
 
   function addChannelToggles () {
     var channelNameRoot = $root$3.data('channelNameRoot');
-    var $log = $root$3.find('> .debug-tabs > .debug-root');
+    var $log = $root$3.find('> .debug-tabs > .tab-primary');
     var channels = $root$3.data('channels') || {};
     var $ul;
     var $toggles;
@@ -1469,7 +1471,7 @@
     var $expandAll = $('<button>', {
       class: 'expand-all'
     }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
-    var $logBody = $root$3.find('> .debug-tabs > .debug-root > .tab-body');
+    var $logBody = $root$3.find('> .debug-tabs > .tab-primary > .tab-body');
 
     // this is currently invoked before entries are enhance / empty class not yet added
     if ($logBody.find('.m_group:not(.empty)').length > 1) {
@@ -1819,6 +1821,15 @@
 
   function init$8 ($delegateNode) {
     // config = $delegateNode.data('config').get()
+    var $debugTabs = $delegateNode.find('.debug-tabs');
+    $delegateNode.find('nav .nav-link').each(function () {
+      var $tab = $(this);
+      var targetSelector = $tab.data('target');
+      var $tabPane = $debugTabs.find(targetSelector);
+      if ($tabPane.text().trim().length === 0) {
+        $tab.hide();
+      }
+    });
     $delegateNode.on('click', '[data-toggle=tab]', function () {
       show(this);
       return false
@@ -1830,7 +1841,7 @@
     var targetSelector = $tab.data('target');
     var $debugTabs = $tab.closest('.debug').find('.debug-tabs');
     var $tabPane = $debugTabs.find(targetSelector);
-    console.log('show target', targetSelector);
+    // console.log('show target', targetSelector)
     $tab.siblings().removeClass('active');
     $tab.addClass('active');
     $tabPane.siblings().removeClass('active');

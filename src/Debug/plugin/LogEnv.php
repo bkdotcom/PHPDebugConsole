@@ -49,10 +49,6 @@ class LogEnv implements SubscriberInterface
     public function onPluginInit(Event $event)
     {
         $this->debug = $event->getSubject();
-        $route = $this->debug->getCfg('route');
-        if ($route === 'stream') {
-            $this->debug->setCfg('route', $route);
-        }
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
 

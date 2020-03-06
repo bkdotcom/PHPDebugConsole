@@ -54,6 +54,23 @@ class LogReqRes implements SubscriberInterface
     }
 
     /**
+     * Log request headers, Cookie, Post, & Files data
+     *
+     * @return void
+     */
+    public function logRequest()
+    {
+        $this->logRequestHeaders();
+        if ($this->debug->getCfg('logRequestInfo.cookies')) {
+            $cookieVals = $this->debug->request->getCookieParams();
+            \ksort($cookieVals, SORT_NATURAL);
+            $this->debug->table('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
+        }
+        $this->logPost();
+        $this->logFiles();
+    }
+
+    /**
      * log response headers & body/content
      *
      * @return void
@@ -94,18 +111,42 @@ class LogReqRes implements SubscriberInterface
     }
 
     /**
-     * Log $_POST or php://input & $_FILES
+     * Log $_FILES
+     *
+     * If using ServerRequestInterface, will log result of `getUploadedFiles()`
+     *
+     * @return void
+     */
+    private function logFiles()
+    {
+        if (!$this->debug->getCfg('logRequestInfo.files')) {
+            return;
+        }
+        if ($this->debug->request->getUploadedFiles()) {
+            $this->debug->log('$_FILES', $this->debug->request->getUploadedFiles());
+        }
+    }
+
+    /**
+     * Log $_POST or php://input
      *
      * @return void
      */
     private function logPost()
     {
-        $request = $this->debug->request;
-        $method = $request->getMethod();
-        $contentType = $request->getHeaderLine('Content-Type');
-        if ($method === 'GET') {
+        if (!$this->debug->getCfg('logRequestInfo.post')) {
             return;
         }
+        $request = $this->debug->request;
+        $method = $request->getMethod();
+
+        // don't expect a request body for these methods
+        $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
+        $expectBody = !\in_array($request->getMethod(), $noBodyMethods);
+        if ($expectBody == false) {
+            return;
+        }
+        $contentType = $request->getHeaderLine('Content-Type');
         $havePostVals = false;
         if ($method === 'POST') {
             $isCorrectContentType = $this->testPostContentType($contentType);
@@ -140,31 +181,6 @@ class LogReqRes implements SubscriberInterface
                     ))
                 );
             }
-        }
-        if ($request->getUploadedFiles()) {
-            $this->debug->log('$_FILES', $request->getUploadedFiles());
-        }
-    }
-
-    /**
-     * Log request headers, Cookie, Post, & Files data
-     *
-     * @return void
-     */
-    private function logRequest()
-    {
-        $logInfo = $this->debug->getCfg('logRequestInfo');
-        $this->logRequestHeaders();
-        if ($logInfo['cookies']) {
-            $cookieVals = $this->debug->request->getCookieParams();
-            \ksort($cookieVals, SORT_NATURAL);
-            $this->debug->table('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
-        }
-        // don't expect a request body for these methods
-        $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
-        $expectBody = !\in_array($this->debug->request->getMethod(), $noBodyMethods);
-        if ($logInfo['post'] && $expectBody) {
-            $this->logPost();
         }
     }
 

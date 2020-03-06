@@ -118,6 +118,7 @@ class Debug
             ),
             'logRequestInfo' => array(
                 'cookies' => true,
+                'files' => true,
                 'headers' => true,
                 'post' => true,
             ),

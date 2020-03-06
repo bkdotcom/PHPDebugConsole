@@ -16,11 +16,14 @@ class LogReqResTest extends DebugTestFramework
         $this->debug->addPlugin($logReqRes);
         $this->debug->setData('log', array());
         $this->debug->setData('logSummary', array());
+        $this->debug->setCfg('logRequestInfo', true);
 
         $reflect = new ReflectionObject($logReqRes);
 
         $logPostMeth = $reflect->getMethod('logPost');
         $logPostMeth->setAccessible(true);
+        $logRequestMeth = $reflect->getMethod('logRequest');
+        $logRequestMeth->setAccessible(true);
 
         /*
             valid form post
@@ -147,7 +150,7 @@ class LogReqResTest extends DebugTestFramework
                     ->withUploadedFiles($files);
             },
         ));
-        $logPostMeth->invoke($logReqRes);
+        $logRequestMeth->invoke($logReqRes);
         $this->assertSame(
             array(
                 'log',
@@ -156,7 +159,7 @@ class LogReqResTest extends DebugTestFramework
                     'channel' => 'Request / Response',
                 ),
             ),
-            $this->logEntryToArray($this->debug->getData('log/0'))
+            $this->logEntryToArray($this->debug->getData('log/1'))
         );
         $this->debug->setData('log', array());
 

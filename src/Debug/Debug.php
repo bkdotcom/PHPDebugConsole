@@ -43,6 +43,7 @@ use SplObjectStorage;
  * @property MethodClear   $methodClear   lazy-loaded MethodClear instance
  * @property MethodProfile $methodProfile lazy-loaded MethodProfile instance
  * @property MethodTable   $methodTable   lazy-loaded MethodTable instance
+ * @property ResponseInterface $response  lazy-loaded ResponseInterface (set via writeResponse)
  * @property ServerRequest $request       lazy-loaded ServerRequest
  * @property Utf8          $utf8          lazy-loaded Utf8 instance
  * @property Utilities     $utilities     lazy-loaded Utilities instance
@@ -70,11 +71,6 @@ class Debug
     protected $registeredPlugins;   // SplObjectHash
     protected $rootInstance;
     protected static $methodDefaultArgs = array();
-
-    /**
-     * @var ResponseInterface
-     */
-    protected $response;
 
     private static $instance;
     private $channels = array();
@@ -1703,7 +1699,7 @@ class Debug
      */
     public function writeToResponse(ResponseInterface $response)
     {
-        $this->response = $response;
+        $this->cfg['services']['response'] = $response;
         $this->cfg['outputHeaders'] = false;
         $output = $this->output();
         if ($output) {

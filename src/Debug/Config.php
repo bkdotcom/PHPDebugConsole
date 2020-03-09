@@ -61,6 +61,7 @@ class Config
                 'backtrace',
                 'methodTable',
                 'request',
+                'response',
                 'utf8',
                 'utilities',
             )));

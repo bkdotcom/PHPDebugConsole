@@ -661,9 +661,8 @@ class Base extends Component implements ConfigurableInterface
         if ($this->subInfo['options']['replace']) {
             unset($this->subInfo['args'][$index]);
             return $replacement;
-        } else {
-            $this->subInfo['args'][$index] = $arg;
         }
+        $this->subInfo['args'][$index] = $arg;
         return $replace;
     }
 

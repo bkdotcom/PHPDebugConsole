@@ -503,10 +503,10 @@ class ServerRequest
             if (isset($this->headerNames[$nameLower])) {
                 $name = $this->headerNames[$nameLower];
                 $this->headers[$name] = \array_merge($this->headers[$name], $value);
-            } else {
-                $this->headerNames[$nameLower] = $name;
-                $this->headers[$name] = $value;
+                continue;
             }
+            $this->headerNames[$nameLower] = $name;
+            $this->headers[$name] = $value;
         }
     }
 

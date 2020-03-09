@@ -744,13 +744,13 @@ class Internal implements SubscriberInterface
      */
     private function onCfgOnBootstrap($val)
     {
-        if (!$this->bootstraped) {
-            // we're initializing
-            $this->debug->eventManager->subscribe('debug.bootstrap', $val);
-        } else {
+        if ($this->bootstraped) {
             // boostrap has already occured, so go ahead and call
             \call_user_func($val, new Event($this->debug));
+            return;
         }
+        // we're bootstraping
+        $this->debug->eventManager->subscribe('debug.bootstrap', $val);
     }
 
     /**

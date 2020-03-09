@@ -588,21 +588,20 @@ class Utilities
         $regexTag2 = '#^<(?:\/\s*)?([^\s>]+)(.*?)\/?>$#s';
         $tag = \trim($tag);
         if (\preg_match($regexTag, $tag, $matches)) {
-            $return = array(
+            return array(
                 'tagname' => $matches[1],
                 'attribs' => self::parseAttribString($matches[2]),
                 'innerhtml' => $matches[3],
             );
-        } elseif (\preg_match($regexTag2, $tag, $matches)) {
-            $return = array(
+        }
+        if (\preg_match($regexTag2, $tag, $matches)) {
+            return array(
                 'tagname' => $matches[1],
                 'attribs' => self::parseAttribString($matches[2]),
                 'innerhtml' => null,
             );
-        } else {
-            $return = false;
         }
-        return $return;
+        return false;
     }
 
     /**

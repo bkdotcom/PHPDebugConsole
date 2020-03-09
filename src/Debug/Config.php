@@ -90,24 +90,7 @@ class Config
             }
             return $this->debug->utilities->arrayPathGet($this->values, $path);
         }
-        if (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
-            $pathRel = \implode('/', $path);
-            return $this->debug->{$classname}->getCfg($pathRel, $default);
-        }
-        if (isset($this->valuesPending[$classname]) && $path) {
-            // want a config value of obj that has not yet been instantiated...
-            $val = $this->debug->utilities->arrayPathGet($this->valuesPending[$classname], $path);
-            if ($val !== null) {
-                return $val;
-            }
-        }
-        $obj = $this->debug->{$classname};
-        if ($obj) {
-            // getting value of previously uninitialized obj
-            $pathRel = \implode('/', $path);
-            return $this->debug->{$classname}->getCfg($pathRel, $default);
-        }
-        return $default;
+        return $this->getValueSubClass($classname, $path, $default);
     }
 
     /**
@@ -125,12 +108,11 @@ class Config
         if ($classname === '*') {
             $values = array();
             foreach (\array_keys($this->configKeys) as $classname) {
+                $values[$classname] = array();
                 if (isset($this->debug->{$classname})) {
                     $values[$classname] = $this->debug->{$classname}->getCfg();
                 } elseif (isset($this->valuesPending[$classname])) {
                     $values[$classname] = $this->valuesPending[$classname];
-                } else {
-                    $values[$classname] = array();
                 }
             }
             \ksort($values);
@@ -208,16 +190,20 @@ class Config
             if ($classname === 'debug') {
                 $return[$classname] = \array_intersect_key($this->values, $v);
                 $this->setDebugValues($v);
-            } elseif (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
+                continue;
+            }
+            if (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
                 $return[$classname] = \array_intersect_key($this->debug->{$classname}->getCfg(), $v);
                 $this->debug->{$classname}->setCfg($v);
-            } elseif (isset($this->valuesPending[$classname])) {
+                continue;
+            }
+            if (isset($this->valuesPending[$classname])) {
                 $return[$classname] = \array_intersect_key($this->valuesPending[$classname], $v);
                 $this->valuesPending[$classname] = \array_merge($this->valuesPending[$classname], $v);
-            } else {
-                $return[$classname] = array();
-                $this->valuesPending[$classname] = $v;
+                continue;
             }
+            $return[$classname] = array();
+            $this->valuesPending[$classname] = $v;
         }
         $channels = $this->debug->getChannels(false, true);
         if ($channels) {
@@ -309,6 +295,36 @@ class Config
     }
 
     /**
+     * Get value from debug obj property
+     *
+     * @param string $classname debug property name
+     * @param array  $path      what to get from sub obj
+     * @param mixed  $default   default value
+     *
+     * @return [type] [description]
+     */
+    private function getValueSubClass($classname, $path, $default)
+    {
+        if (isset($this->debug->{$classname}) && \is_object($this->debug->{$classname})) {
+            $pathRel = \implode('/', $path);
+            return $this->debug->{$classname}->getCfg($pathRel, $default);
+        }
+        if (isset($this->valuesPending[$classname]) && $path) {
+            // want a config value of obj that has not yet been instantiated...
+            $val = $this->debug->utilities->arrayPathGet($this->valuesPending[$classname], $path);
+            if ($val !== null) {
+                return $val;
+            }
+        }
+        if ($this->debug->{$classname}) {
+            // getting value of previously uninitialized obj
+            $pathRel = \implode('/', $path);
+            return $this->debug->{$classname}->getCfg($pathRel, $default);
+        }
+        return $default;
+    }
+
+    /**
      * Convert key/path & val to array
      *
      * @param string $key key or path
@@ -362,15 +378,17 @@ class Config
                         : $v;
                     $translated = true;
                     break;
-                } elseif (\is_array($v) && isset($configKeys[$k])) {
+                }
+                if (\is_array($v) && isset($configKeys[$k])) {
                     continue;
-                } elseif (\in_array($k, $objKeys)) {
+                }
+                if (\in_array($k, $objKeys)) {
                     $return[$objName][$k] = $v;
                     $translated = true;
                     break;
                 }
             }
-            if (!$translated) {
+            if ($translated === false) {
                 $return['debug'][$k] = $v;
             }
         }

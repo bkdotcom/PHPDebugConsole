@@ -199,33 +199,15 @@ class Utilities
             return \rtrim(' ' . \trim($attribs));
         }
         $attribPairs = array();
-        foreach ($attribs as $k => $v) {
-            if (\is_int($k)) {
-                $k = $v;
-                $v = true;
-            }
-            $k = \strtolower($k);
-            if (\strpos($k, 'data-') === 0) {
-                if (!\is_string($v)) {
-                    $v = \json_encode($v);
-                }
-            } elseif (\is_bool($v)) {
-                $v = self::buildAttribBoolVal($k, $v);
-            } elseif (\is_array($v) || $k === 'class') {
-                $v = self::buildAttribArrayVal($k, $v);
-            }
-            if (
-                \array_filter(array(
-                    $v === null,
-                    $v === ''
-                        && \in_array($k, array('class', 'style'))
-                ))
-            ) {
-                // don't include
+        foreach ($attribs as $key => $val) {
+            $val = self::buildAttribVal($key, $val);
+            if ($val === null) {
                 continue;
             }
-            $v = \trim($v);
-            $attribPairs[] = $k . '="' . \htmlspecialchars($v) . '"';
+            if ($val === '' && \in_array($key, array('class', 'style'))) {
+                continue;
+            }
+            $attribPairs[] = $key . '="' . \htmlspecialchars($val) . '"';
         }
         \sort($attribPairs);
         return \rtrim(' ' . \implode(' ', $attribPairs));
@@ -311,24 +293,8 @@ class Utilities
      */
     public static function getBytes($size, $returnInt = false)
     {
-        if (\is_string($size) && \preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
-            $size = (float) \str_replace(',', '', $matches[1]);
-            switch (\strtolower($matches[2])) {
-                case 'p':
-                    $size *= 1024;
-                    // no break
-                case 't':
-                    $size *= 1024;
-                    // no break
-                case 'g':
-                    $size *= 1024;
-                    // no break
-                case 'm':
-                    $size *= 1024;
-                    // no break
-                case 'k':
-                    $size *= 1024;
-            }
+        if (\is_string($size)) {
+            $size = self::parseBytes($size);
         }
         if ($returnInt) {
             return (int) $size;
@@ -739,18 +705,17 @@ class Utilities
             }
             $value = \array_filter(\array_unique($value));
             \sort($value);
-            $value = \implode(' ', $value);
-        } elseif ($key === 'style') {
+            return \implode(' ', $value);
+        }
+        if ($key === 'style') {
             $keyValues = array();
             foreach ($value as $k => $v) {
                 $keyValues[] = $k . ':' . $v . ';';
             }
             \sort($keyValues);
-            $value = \implode('', $keyValues);
-        } else {
-            $value = null;
+            return \implode('', $keyValues);
         }
-        return $value;
+        return null;
     }
 
     /**
@@ -777,6 +742,39 @@ class Utilities
             return $key;
         }
         return null;
+    }
+
+    /**
+     * Converts attribute value to string
+     *
+     * @param string $key key
+     * @param mixed  $val value
+     *
+     * @return string|null
+     */
+    private static function buildAttribVal(&$key, $val)
+    {
+        if (\is_int($key)) {
+            $key = $val;
+            $val = true;
+        }
+        $key = \strtolower($key);
+        if (\strpos($key, 'data-') === 0) {
+            if (!\is_string($val)) {
+                $val = \json_encode($val);
+            }
+            return $val;
+        }
+        if ($val === null) {
+            return null;
+        }
+        if (\is_bool($val)) {
+            return self::buildAttribBoolVal($key, $val);
+        }
+        if (\is_array($val) || $key === 'class') {
+            return self::buildAttribArrayVal($key, $val);
+        }
+        return \trim($val);
     }
 
     /**
@@ -818,5 +816,36 @@ class Utilities
     private static function isCallable($array)
     {
         return \is_callable($array, true) && \is_object($array[0]);
+    }
+
+    /**
+     * Parse string such as 128M
+     *
+     * @param string $size size
+     *
+     * @return int
+     */
+    private static function parseBytes($size)
+    {
+        if (\preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
+            $size = (float) \str_replace(',', '', $matches[1]);
+            switch (\strtolower($matches[2])) {
+                case 'p':
+                    $size *= 1024;
+                    // no break
+                case 't':
+                    $size *= 1024;
+                    // no break
+                case 'g':
+                    $size *= 1024;
+                    // no break
+                case 'm':
+                    $size *= 1024;
+                    // no break
+                case 'k':
+                    $size *= 1024;
+            }
+        }
+        return $size;
     }
 }

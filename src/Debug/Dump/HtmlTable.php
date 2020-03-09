@@ -87,17 +87,39 @@ class HtmlTable
             }
         }
         $keys = $options['columns'] ?: $this->debug->methodTable->colKeys($rows);
-        $index = \array_search('__key', $keys);
-        $keyIndex = $index;
+        $keyIndex = \array_search('__key', $keys);
         if ($keyIndex !== false) {
-            unset($keys[$index]);
+            unset($keys[$keyIndex]);
         }
         $this->tableInfo = array(
             'colClasses' => \array_fill_keys($keys, null),
             'haveObjRow' => false,
             'totals' => \array_fill_keys($options['totalCols'], null),
         );
-        $tBody = '';
+        $body = $this->buildbody($rows, $keys, $options);
+        return $this->debug->utilities->buildTag(
+            'table',
+            $options['attribs'],
+            "\n"
+                . ($options['caption'] ? '<caption>' . $options['caption'] . '</caption>' . "\n" : '')
+                . $this->buildHeader($keys)
+                . $body
+                . $this->buildFooter($keys)
+        );
+    }
+
+    /**
+     * Builds table's body
+     *
+     * @param array $rows    array of arrays or Traverssable
+     * @param array $keys    column header values (keys of array or property names)
+     * @param array $options options
+     *
+     * @return string
+     */
+    protected function buildBody($rows, $keys, $options)
+    {
+        $tBody = '<tbody>' . "\n";
         foreach ($rows as $k => $row) {
             // row may be array or Traversable
             $tr = $this->buildRow($row, $keys, $k);
@@ -110,19 +132,11 @@ class HtmlTable
         if (!$this->tableInfo['haveObjRow']) {
             $tBody = \str_replace('<td class="classname"></td>', '', $tBody);
         }
-        return $this->debug->utilities->buildTag(
-            'table',
-            $options['attribs'],
-            "\n"
-                . ($options['caption'] ? '<caption>' . $options['caption'] . '</caption>' . "\n" : '')
-                . $this->buildHeader($keys)
-                . '<tbody>' . "\n" . $tBody . '</tbody>' . "\n"
-                . $this->buildFooter($keys)
-        );
+        return $tBody . '</tbody>' . "\n";
     }
 
     /**
-     * Returns table's tfoot
+     * Builds table's tfoot
      *
      * @param array $keys column header values (keys of array or property names)
      *
@@ -193,6 +207,7 @@ class HtmlTable
             unset($row['__key']);
         }
         $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
+        $this->updateTableInfo($values, $objInfo);
         $rowKeyParsed = $this->debug->utilities->parseTag($this->html->dump($rowKey));
         $str .= '<tr>';
         /*
@@ -224,8 +239,21 @@ class HtmlTable
             $str .= $this->html->dump($v, true, 'td');
         }
         $str .= '</tr>' . "\n";
+        return $str;
+    }
+
+    /**
+     * Update collected table info
+     *
+     * @param array $colValues values
+     * @param array $objInfo   row & col object info
+     *
+     * @return void
+     */
+    private function updateTableInfo($colValues, $objInfo)
+    {
         foreach (\array_keys($this->tableInfo['totals']) as $k) {
-            $this->tableInfo['totals'][$k] += $values[$k];
+            $this->tableInfo['totals'][$k] += $colValues[$k];
         }
         foreach ($objInfo['cols'] as $k2 => $classname) {
             if ($this->tableInfo['colClasses'][$k2] === false) {
@@ -239,6 +267,5 @@ class HtmlTable
                 $this->tableInfo['colClasses'][$k2] = false;
             }
         }
-        return $str;
     }
 }

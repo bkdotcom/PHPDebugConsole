@@ -67,7 +67,7 @@ class Error extends Event
     public function __construct(ErrorHandler $errHandler, $errType, $errMsg, $file, $line, $vars = array())
     {
         $this->subject = $errHandler;
-        $values = array(
+        $this->values = array(
             'type'      => $errType,                    // int
             'typeStr'   => self::$errTypes[$errType],   // friendly string version of 'type'
             'category'  => self::getCategory($errType),
@@ -80,18 +80,24 @@ class Error extends Event
             'exception' => $errHandler->get('uncaughtException'),  // non-null if error is uncaught-exception
             'hash'          => null,
             'isFirstOccur'  => true,
-            // isHtml = "allow" HTML
-            'isHtml'        => \filter_var(\ini_get('html_errors'), FILTER_VALIDATE_BOOLEAN)
-                && !\in_array($errType, static::$userErrors) && !$errHandler->get('uncaughtException'),
+            'isHtml'        => false,
             'isSuppressed'  => false,
         );
-        $hash = self::errorHash($values);
+        $hash = self::errorHash();
         $prevOccurance = $errHandler->get('error', $hash);
-        // if any instance of this error was not supprssed, reflect that
-        $isSuppressed = $prevOccurance && !$prevOccurance['isSuppressed']
-            ? false
-            : \error_reporting() === 0;
-        if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && !$values['exception']) {
+        $this->values = \array_merge($this->values, array(
+            'hash' => $hash,
+            'isHtml' => $this->isHtml(),
+            'isFirstOccur' => !$prevOccurance,
+            'isSuppressed' => $this->isSuppressed($prevOccurance),
+        ));
+        $this->values = \array_merge($this->values, array(
+            'continueToNormal' => $this->values['isSuppressed'] === false && !$prevOccurance,
+            'message' => $this->values['isHtml']
+                ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
+                : $this->values['message'],
+        ));
+        if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && !$this->values['exception']) {
             // will return empty unless xdebug extension installed/enabled
             Backtrace::addInternalClass(array(
                 'bdk\\ErrorHandler',
@@ -99,20 +105,28 @@ class Error extends Event
             ));
             $this->backtrace = Backtrace::get();
         }
-        if ($values['isHtml']) {
-            $values['message'] = \str_replace('<a ', '<a target="phpRef" ', $values['message']);
-        }
         $errorCaller = $errHandler->get('errorCaller');
         if ($errorCaller) {
             $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file','line')));
-            $values = \array_merge($values, $errorCallerVals);
+            $this->values = \array_merge($this->values, $errorCallerVals);
         }
-        $this->values = \array_merge($values, array(
-            'continueToNormal' => !$isSuppressed && !$prevOccurance,
-            'hash' => $hash,
-            'isFirstOccur' => !$prevOccurance,
-            'isSuppressed' => $isSuppressed,
-        ));
+    }
+
+    /**
+     * Get the plain text error message
+     *
+     * (error[message] may be html)
+     *
+     * @return string
+     */
+    public function getMessage()
+    {
+        $message = $this->values['message'];
+        if ($this->values['isHtml']) {
+            $message = \strip_tags($message);
+            $message = \htmlspecialchars_decode($message);
+        }
+        return $message;
     }
 
     /**
@@ -183,13 +197,11 @@ class Error extends Event
     /**
      * Generate hash used to uniquely identify this error
      *
-     * @param array $errorValues error array
-     *
      * @return string hash
      */
-    protected static function errorHash($errorValues)
+    protected function errorHash()
     {
-        $errMsg = $errorValues['message'];
+        $errMsg = $this->values['message'];
         // (\(.*?)\d+(.*?\))    "(tried to allocate 16384 bytes)" -> "(tried to allocate xxx bytes)"
         $errMsg = \preg_replace('/(\(.*?)\d+(.*?\))/', '\1x\2', $errMsg);
         // "blah123" -> "blahxxx"
@@ -198,7 +210,7 @@ class Error extends Event
         $errMsg = \preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errMsg);
         // remove "comments"..  this allows throttling email, while still adding unique info to user errors
         $errMsg = \preg_replace('/\s*##.+$/', '', $errMsg);
-        return \md5($errorValues['file'] . $errorValues['line'] . $errorValues['type'] . $errMsg);
+        return \md5($this->values['file'] . $this->values['line'] . $this->values['type'] . $errMsg);
     }
 
     /**
@@ -216,5 +228,32 @@ class Error extends Event
             }
         }
         return null;
+    }
+
+    /**
+     * Sets isHtml and modifies message
+     *
+     * @return bool
+     */
+    private function isHtml()
+    {
+        return \filter_var(\ini_get('html_errors'), FILTER_VALIDATE_BOOLEAN)
+            && !\in_array($this->values['type'], static::$userErrors)
+            && !$this->subject->get('uncaughtException');
+    }
+
+    /**
+     * Get initial `isSuppressed` value
+     *
+     * @param self|null $prevOccurance previous ccurance of current error
+     *
+     * @return bool
+     */
+    private function isSuppressed(self $prevOccurance = null)
+    {
+        // if any instance of this error was not supprssed, reflect that
+        return $prevOccurance && !$prevOccurance['isSuppressed']
+            ? false
+            : \error_reporting() === 0;
     }
 }

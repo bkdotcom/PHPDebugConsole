@@ -11,7 +11,7 @@
 namespace bdk\ErrorHandler;
 
 use bdk\Backtrace;
-use bdk\PubSub\Event;
+use bdk\ErrorHandler\Error;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -88,11 +88,11 @@ class ErrorEmailer implements SubscriberInterface
     /**
      * load throttle stats for passed error
      *
-     * @param Event $error error event
+     * @param Error $error Error instance
      *
      * @return void
      */
-    public function onErrorHighPri(Event $error)
+    public function onErrorHighPri(Error $error)
     {
         $this->throttleDataRead();
         $hash = $error['hash'];
@@ -116,11 +116,11 @@ class ErrorEmailer implements SubscriberInterface
     /**
      * Email error
      *
-     * @param Event $error error event
+     * @param Error $error Error instance
      *
      * @return void
      */
-    public function onErrorLowPri(Event $error)
+    public function onErrorLowPri(Error $error)
     {
         if ($error['email'] && $this->cfg['emailMin'] > 0) {
             $this->throttleDataSet($error);
@@ -176,11 +176,11 @@ class ErrorEmailer implements SubscriberInterface
     /**
      * Get formatted backtrace string for error
      *
-     * @param Event $error error event
+     * @param Error $error Error instance
      *
      * @return string
      */
-    protected function backtraceStr(Event $error)
+    protected function backtraceStr(Error $error)
     {
         $backtrace = $error->getTrace() ?: Backtrace::get();
         if (\count($backtrace) < 2) {
@@ -190,20 +190,19 @@ class ErrorEmailer implements SubscriberInterface
             $backtrace[0]['vars'] = $error['vars'];
         }
         if ($this->cfg['emailBacktraceDumper']) {
-            $str = \call_user_func($this->cfg['emailBacktraceDumper'], $backtrace);
-        } else {
-            $search = array(
-                ")\n\n",
-            );
-            $replace = array(
-                ")\n",
-            );
-            $str = \print_r($backtrace, true);
-            $str = \preg_replace('#\bArray\n\(#', 'array(', $str);
-            $str = \preg_replace('/\barray\s+\(\s+\)/s', 'array()', $str); // single-lineify empty arrays
-            $str = \str_replace($search, $replace, $str);
-            $str = \substr($str, 0, -1);
+            return \call_user_func($this->cfg['emailBacktraceDumper'], $backtrace);
         }
+        $search = array(
+            ")\n\n",
+        );
+        $replace = array(
+            ")\n",
+        );
+        $str = \print_r($backtrace, true);
+        $str = \preg_replace('#\bArray\n\(#', 'array(', $str);
+        $str = \preg_replace('/\barray\s+\(\s+\)/s', 'array()', $str); // single-lineify empty arrays
+        $str = \str_replace($search, $replace, $str);
+        $str = \substr($str, 0, -1);
         return $str;
     }
 
@@ -229,24 +228,14 @@ class ErrorEmailer implements SubscriberInterface
     /**
      * Email this error
      *
-     * @param Event $error error event
+     * @param Error $error Error instance
      *
      * @return void
      */
-    protected function emailErr(Event $error)
+    protected function emailErr(Error $error)
     {
         $dateTimeFmt = 'Y-m-d H:i:s (T)';
-        $errMsg = $error['message'];
-        if ($error['isHtml']) {
-            $errMsg = \strip_tags($errMsg);
-            $errMsg = \htmlspecialchars_decode($errMsg);
-        }
         $countSince = $error['stats']['countSince'];
-        $isCli = $this->isCli();
-        $subject = $isCli
-            ? 'Error: ' . \implode(' ', $this->serverParams['argv'])
-            : 'Website Error: ' . $this->serverParams['SERVER_NAME'];
-        $subject .= ': ' . $errMsg . ($countSince ? ' (' . $countSince . 'x)' : '');
         $emailBody = '';
         if (!empty($countSince)) {
             $dateTimePrev = \date($dateTimeFmt, $error['stats']['tsEmailed']);
@@ -254,12 +243,12 @@ class ErrorEmailer implements SubscriberInterface
         }
         $emailBody .= ''
             . 'datetime: ' . \date($dateTimeFmt) . "\n"
-            . 'errormsg: ' . $errMsg . "\n"
+            . 'errormsg: ' . $error->getMessage() . "\n"
             . 'errortype: ' . $error['type'] . ' (' . $error['typeStr'] . ')' . "\n"
             . 'file: ' . $error['file'] . "\n"
             . 'line: ' . $error['line'] . "\n"
             . '';
-        if (!$isCli) {
+        if ($this->isCli() === false) {
             $emailBody .= ''
                 . 'remote_addr: ' . $this->serverParams['REMOTE_ADDR'] . "\n"
                 . 'http_host: ' . $this->serverParams['HTTP_HOST'] . "\n"
@@ -272,11 +261,33 @@ class ErrorEmailer implements SubscriberInterface
         }
         if ($error['type'] & $this->cfg['emailTraceMask']) {
             $backtraceStr = $this->backtraceStr($error);
-            $emailBody .= "\n" . ($backtraceStr
+            $emailBody .= "\n";
+            $emailBody .= $backtraceStr
                 ? 'backtrace: ' . $backtraceStr
-                : 'no backtrace');
+                : 'no backtrace';
         }
-        $this->email($this->cfg['emailTo'], $subject, $emailBody);
+        $this->email(
+            $this->cfg['emailTo'],
+            $this->getSubject($error),
+            $emailBody
+        );
+    }
+
+    /**
+     * Build email subject
+     *
+     * @param Error $error Error instance
+     *
+     * @return string
+     */
+    private function getSubject(Error $error)
+    {
+        $countSince = $error['stats']['countSince'];
+        $subject = $this->isCli()
+            ? 'Error: ' . \implode(' ', $this->serverParams['argv'])
+            : 'Website Error: ' . $this->serverParams['SERVER_NAME'];
+        $subject .= ': ' . $error->getMessage() . ($countSince ? ' (' . $countSince . 'x)' : '');
+        return $subject;
     }
 
     /**
@@ -405,11 +416,11 @@ class ErrorEmailer implements SubscriberInterface
     /**
      * Adds/Updates this error's throttle data
      *
-     * @param Event $error error event
+     * @param Error $error Error instance
      *
      * @return void
      */
-    protected function throttleDataSet(Event $error)
+    protected function throttleDataSet(Error $error)
     {
         $tsNow = \time();
         $hash = $error['hash'];

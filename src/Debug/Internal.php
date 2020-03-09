@@ -972,9 +972,9 @@ class Internal implements SubscriberInterface
                         unset($log[$i]);            // remove end entry
                         $removed = true;
                     }
-                } else {
-                    $groupStack[$groupStackCount - 1]['hasEntries'] = true;
+                    continue;
                 }
+                $groupStack[$groupStackCount - 1]['hasEntries'] = true;
             }
         }
         if ($removed) {

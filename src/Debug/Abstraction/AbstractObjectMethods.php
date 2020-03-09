@@ -52,43 +52,56 @@ class AbstractObjectMethods extends AbstractObjectSub
     private function addMethods()
     {
         $abs = $this->abs;
-        $obj = $abs->getSubject();
         if ($this->abstracter->getCfg('cacheMethods') && isset(static::$methodCache[$abs['className']])) {
             $abs['methods'] = static::$methodCache[$abs['className']];
-        } else {
-            $methodArray = array();
-            $methods = $abs['reflector']->getMethods();
-            $interfaceMethods = array(
-                'ArrayAccess' => array('offsetExists','offsetGet','offsetSet','offsetUnset'),
-                'Countable' => array('count'),
-                'Iterator' => array('current','key','next','rewind','void'),
-                'IteratorAggregate' => array('getIterator'),
-            );
-            $interfacesHide = \array_intersect($abs['implements'], \array_keys($interfaceMethods));
-            foreach ($methods as $reflectionMethod) {
-                $info = $this->methodInfo($obj, $reflectionMethod);
-                $methodName = $reflectionMethod->getName();
-                if ($info['visibility'] === 'private' && $info['inheritedFrom']) {
-                    /*
-                        getMethods() returns parent's private methods (#reasons)..  we'll skip it
-                    */
-                    continue;
-                }
-                foreach ($interfacesHide as $interface) {
-                    if (\in_array($methodName, $interfaceMethods[$interface])) {
-                        // this method implements this interface
-                        $info['implements'] = $interface;
-                        break;
-                    }
-                }
-                $methodArray[$methodName] = $info;
-            }
-            $abs['methods'] = $methodArray;
-            $this->addMethodsPhpDoc();
-            if ($abs['className'] !== 'Closure') {
-                static::$methodCache[$abs['className']] = $abs['methods'];
-            }
+            $this->addMethodsFinish();
+            return;
         }
+        $obj = $abs->getSubject();
+        $methodArray = array();
+        $methods = $abs['reflector']->getMethods();
+        $interfaceMethods = array(
+            'ArrayAccess' => array('offsetExists','offsetGet','offsetSet','offsetUnset'),
+            'Countable' => array('count'),
+            'Iterator' => array('current','key','next','rewind','void'),
+            'IteratorAggregate' => array('getIterator'),
+        );
+        $interfacesHide = \array_intersect($abs['implements'], \array_keys($interfaceMethods));
+        foreach ($methods as $reflectionMethod) {
+            $info = $this->methodInfo($obj, $reflectionMethod);
+            $methodName = $reflectionMethod->getName();
+            if ($info['visibility'] === 'private' && $info['inheritedFrom']) {
+                /*
+                    getMethods() returns parent's private methods (#reasons)..  we'll skip it
+                */
+                continue;
+            }
+            foreach ($interfacesHide as $interface) {
+                if (\in_array($methodName, $interfaceMethods[$interface])) {
+                    // this method implements this interface
+                    $info['implements'] = $interface;
+                    break;
+                }
+            }
+            $methodArray[$methodName] = $info;
+        }
+        $abs['methods'] = $methodArray;
+        $this->addMethodsPhpDoc();
+        if ($abs['className'] !== 'Closure') {
+            static::$methodCache[$abs['className']] = $abs['methods'];
+        }
+        $this->addMethodsFinish();
+    }
+
+    /**
+     * remove phpDoc[method]
+     *
+     * @return void
+     */
+    private function addMethodsFinish()
+    {
+        $abs = $this->abs;
+        $obj = $abs->getSubject();
         unset($abs['phpDoc']['method']);
         if (isset($abs['methods']['__toString'])) {
             $val = null;
@@ -99,6 +112,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             } catch (Exception $e) {
                 // yes, __toString can throw exception..
                 // example: SplFileObject->__toString will throw exception if file doesn't exist
+                $this->devNull($e);
             }
             $abs['methods']['__toString']['returnValue'] = $val;
         }
@@ -122,6 +136,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             } catch (Exception $e) {
                 // yes, __toString can throw exception..
                 // example: SplFileObject->__toString will throw exception if file doesn't exist
+                $this->devNull($e);
             }
             $abs['methods']['__toString'] = array(
                 'returnValue' => $val,
@@ -199,6 +214,15 @@ class AbstractObjectMethods extends AbstractObjectSub
     }
 
     /**
+     * This does nothing
+     *
+     * @return void
+     */
+    private function devNull()
+    {
+    }
+
+    /**
      * Get parameter details
      *
      * returns array of
@@ -219,6 +243,12 @@ class AbstractObjectMethods extends AbstractObjectSub
     {
         $paramArray = array();
         $params = $reflectionMethod->getParameters();
+        \set_error_handler(function () {
+            // suppressing "Use of undefined constant STDERR" type notice
+            // encountered on
+            //    $reflectionParameter->getDefaultValue()
+            //    $reflectionParameter->__toString()
+        });
         foreach ($params as $i => $reflectionParameter) {
             $phpDocParam = isset($phpDoc['param'][$i])
                 ? $phpDoc['param'][$i]
@@ -233,6 +263,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                 'type' => $this->getParamTypeHint($reflectionParameter, $phpDocParam),
             );
         }
+        \restore_error_handler();
         /*
             Iterate over params only defined via phpDoc
         */
@@ -267,8 +298,7 @@ class AbstractObjectMethods extends AbstractObjectSub
     {
         $defaultValue = Abstracter::UNDEFINED;
         if ($reflectionParameter->isDefaultValueAvailable()) {
-            // suppressing following to avoid "Use of undefined constant STDERR" type notice
-            $defaultValue = @$reflectionParameter->getDefaultValue();
+            $defaultValue = $reflectionParameter->getDefaultValue();
             if (\version_compare(PHP_VERSION, '5.4.6', '>=') && $reflectionParameter->isDefaultValueConstant()) {
                 /*
                     getDefaultValueConstantName() :
@@ -329,8 +359,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             } elseif ($type) {
                 $type = (string) $type;
             }
-        } elseif (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', @$reflectionParameter->__toString(), $matches)) {
-            // suppressed error to avoid "Use of undefined constant STDERR" type notice
+        } elseif (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', $reflectionParameter->__toString(), $matches)) {
             // Parameter #0 [ <required> namespace\Type $varName ]
             $type = $matches[1];
         }

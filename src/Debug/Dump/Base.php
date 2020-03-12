@@ -637,23 +637,12 @@ class Base extends Component implements ConfigurableInterface
         $replacement = '';
         $type = \substr($replace, -1);
         if (\strpos('difs', $type) !== false) {
-            $format = $replace;
-            if ($type === 'i') {
-                $format = \substr_replace($format, 'd', -1, 1);
-            } elseif ($type === 's') {
+            if ($type === 's') {
                 $arg = $this->substitutionAsString($arg, $this->subInfo['options']);
             }
-            $replacement = \is_array($arg)
-                ? $arg
-                : \sprintf($format, $arg);
+            $replacement = $this->subReplacementDifs($arg, $replace);
         } elseif ($type === 'c' && $this->subInfo['options']['style']) {
-            if ($this->subInfo['typeCounts']['c']) {
-                // close prev
-                $replacement = '</span>';
-            }
-            $replacement .= '<span' . $this->debug->utilities->buildAttribString(array(
-                'style' => $arg,
-            )) . '>';
+            $replacement = $this->subReplacementC($arg);
         } elseif (\strpos('oO', $type) !== false) {
             $replacement = $this->dump($arg);
         }
@@ -664,6 +653,44 @@ class Base extends Component implements ConfigurableInterface
         }
         $this->subInfo['args'][$index] = $arg;
         return $replace;
+    }
+
+    /**
+     * c (css) arg replacement
+     *
+     * @param string $arg css string
+     *
+     * @return string
+     */
+    private function subReplacementC($arg)
+    {
+        $replacement = '';
+        if ($this->subInfo['typeCounts']['c']) {
+            // close prev
+            $replacement = '</span>';
+        }
+        return $replacement . '<span' . $this->debug->utilities->buildAttribString(array(
+            'style' => $arg,
+        )) . '>';
+    }
+
+    /**
+     * d,i,f,s arg replacement
+     *
+     * @param array|string $arg    replacement value
+     * @param string       $format format (what's being replaced)
+     *
+     * @return array|string
+     */
+    private function subReplacementDifs($arg, $format)
+    {
+        $type = \substr($format, -1);
+        if ($type === 'i') {
+            $format = \substr_replace($format, 'd', -1, 1);
+        }
+        return \is_array($arg)
+            ? $arg
+            : \sprintf($format, $arg);
     }
 
     /**

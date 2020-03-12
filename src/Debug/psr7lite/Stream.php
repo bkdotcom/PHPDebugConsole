@@ -116,7 +116,7 @@ class Stream
      * @param mixed $resource Entity body data
      * @param array $options  Additional options
      *
-     * @return StreamInterface
+     * @return StreamInterface|static
      * @throws \InvalidArgumentException if the $resource arg is not valid.
      */
     public static function factory($resource = '', $options = array())
@@ -137,15 +137,7 @@ class Stream
             return new static($resource, $options);
         }
         if (\is_object($resource)) {
-            if ($resource instanceof StreamInterface) {
-                return $resource;
-            }
-            if (\get_class($resource) === __CLASS__) {
-                return $resource;
-            }
-            if (\method_exists($resource, '__toString')) {
-                return self::factory((string) $resource, $options);
-            }
+            return self::factoryFromObject($resource);
         }
         throw new \InvalidArgumentException('Invalid resource type: ' . \gettype($resource));
     }
@@ -435,5 +427,26 @@ class Stream
             throw new \RuntimeException('Unable to write to stream');
         }
         return $result;
+    }
+
+    /**
+     * Create stream from object (StreamInterface, static, or object with __toString)
+     *
+     * @param object $obj     StreamInterface, static, or object with __toString()
+     * @param array  $options Additional options
+     *
+     * @return StreamInterface|static
+     */
+    private static function factoryFromObject($obj, $options)
+    {
+        if ($obj instanceof StreamInterface) {
+            return $obj;
+        }
+        if (\get_class($obj) === __CLASS__) {
+            return $obj;
+        }
+        if (\method_exists($obj, '__toString')) {
+            return self::factory((string) $obj, $options);
+        }
     }
 }

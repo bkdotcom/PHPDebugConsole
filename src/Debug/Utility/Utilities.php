@@ -101,9 +101,9 @@ class Utilities
         foreach ($source as $key => $val) {
             if ($deep && \is_array($val)) {
                 $arr[$key] = self::arrayCopy($val);
-            } else {
-                $arr[$key] = $val;
+                continue;
             }
+            $arr[$key] = $val;
         }
         return $arr;
     }
@@ -131,11 +131,13 @@ class Utilities
                 if (!\in_array($v2, $arrayDef)) {
                     $arrayDef[] = $v2;
                 }
-            } elseif (!isset($arrayDef[$k2])) {
-                $arrayDef[$k2] = $v2;
-            } else {
-                $arrayDef[$k2] = self::arrayMergeDeep($arrayDef[$k2], $v2);
+                continue;
             }
+            if (!isset($arrayDef[$k2])) {
+                $arrayDef[$k2] = $v2;
+                continue;
+            }
+            $arrayDef[$k2] = self::arrayMergeDeep($arrayDef[$k2], $v2);
         }
         return $arrayDef;
     }
@@ -163,19 +165,25 @@ class Utilities
             $arrayAccess = \is_array($array) || $array instanceof \ArrayAccess;
             if (!$arrayAccess) {
                 return null;
-            } elseif (isset($array[$key])) {
+            }
+            if (isset($array[$key])) {
                 $array = $array[$key];
-            } elseif ($key === '__count__') {
+                continue;
+            }
+            if ($key === '__count__') {
                 return \count($array);
-            } elseif ($key === '__end__') {
+            }
+            if ($key === '__end__') {
                 \end($array);
                 $path[] = \key($array);
-            } elseif ($key === '__reset__') {
+                continue;
+            }
+            if ($key === '__reset__') {
                 \reset($array);
                 $path[] = \key($array);
-            } else {
-                return null;
+                continue;
             }
+            return null;
         }
         return $array;
     }
@@ -267,15 +275,18 @@ class Utilities
             $dateInterval->sec = $sec;
             return $dateInterval->format($format);
         }
-        if ($format === 'us') {
-            $val = $duration * 1000000;
-            $unit = 'μs';
-        } elseif ($format === 'ms') {
-            $val = $duration * 1000;
-            $unit = 'ms';
-        } else {
-            $val = $duration;
-            $unit = 'sec';
+        switch ($format) {
+            case 'us':
+                $val = $duration * 1000000;
+                $unit = 'μs';
+                break;
+            case 'ms':
+                $val = $duration * 1000;
+                $unit = 'ms';
+                break;
+            default:
+                $val = $duration;
+                $unit = 'sec';
         }
         if ($precision) {
             $val = \round($val, $precision);

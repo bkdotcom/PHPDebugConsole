@@ -296,19 +296,8 @@ class Debug
      */
     public function __get($property)
     {
-        if (isset($this->cfg['services'][$property])) {
-            $val = $this->cfg['services'][$property];
-            if ($val instanceof \Closure) {
-                $val = $val($this);
-                $this->cfg['services'][$property] = $val;
-            }
-            return $val;
-        }
-        if (isset($this->cfg['factories'][$property])) {
-            $val = $this->cfg['factories'][$property];
-            if ($val instanceof \Closure) {
-                $val = $val($this);
-            }
+        $val = $this->getServiceFactory($property);
+        if ($val) {
             return $val;
         }
         /*
@@ -317,6 +306,9 @@ class Debug
         if (isset($this->{$property})) {
             return $this->{$property};
         }
+        /*
+            Check getter method (although not utilized)
+        */
         $getter = 'get' . \ucfirst($property);
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
@@ -648,20 +640,10 @@ class Debug
     {
         $logEntry = new LogEntry(
             $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(),
-            array('value' => Abstracter::UNDEFINED)
+            __FUNCTION__
         );
-        $value = $logEntry['args'][0];
-        $logEntry['args'] = array();
-        $groupStackWas = $this->rootInstance->groupStackRef;
-        $haveOpenGroup = false;
-        if ($groupStackWas && \end($groupStackWas)['collect'] === $this->cfg['collect']) {
-            \array_pop($this->rootInstance->groupStackRef);
-            $haveOpenGroup = $this->cfg['collect'];
-        }
-        if ($this->data['groupPriorityStack'] && !$groupStackWas) {
+        $haveOpenGroup = $this->haveOpenGroup();
+        if ($haveOpenGroup === 2) {
             // we're closing a summary group
             $priorityClosing = \array_pop($this->data['groupPriorityStack']);
             // not really necessary to remove this empty placeholder, but lets keep things tidy
@@ -674,7 +656,8 @@ class Debug
             $logEntry['appendLog'] = false;
             $logEntry->setMeta('closesSummary', true);
             $this->appendLog($logEntry, true);
-        } elseif ($haveOpenGroup) {
+        } elseif ($haveOpenGroup === 1) {
+            \array_pop($this->rootInstance->groupStackRef);
             if ($value !== Abstracter::UNDEFINED) {
                 $this->appendLog(new LogEntry(
                     $this,
@@ -2043,6 +2026,50 @@ class Debug
             self::$methodDefaultArgs[$methodName] = $defaultArgs;
         }
         return $defaultArgs;
+    }
+
+    /**
+     * Check if service or factory
+     *
+     * @param string $property service/factory name
+     *
+     * @return mixed
+     */
+    private function getServiceFactory($property)
+    {
+        if (isset($this->cfg['services'][$property])) {
+            $val = $this->cfg['services'][$property];
+            if ($val instanceof \Closure) {
+                $val = $val($this);
+                $this->cfg['services'][$property] = $val;
+            }
+            return $val;
+        }
+        if (isset($this->cfg['factories'][$property])) {
+            $val = $this->cfg['factories'][$property];
+            if ($val instanceof \Closure) {
+                $val = $val($this);
+            }
+            return $val;
+        }
+    }
+
+    /**
+     * Are we inside a group?
+     *
+     * @return int 2: group summary, 1: regular group, 0: not in group
+     */
+    private function haveOpenGroup()
+    {
+        $groupStackWas = $this->rootInstance->groupStackRef;
+        if ($this->data['groupPriorityStack'] && !$groupStackWas) {
+            // we're in top level of group summary
+            return 2;
+        }
+        if ($groupStackWas && \end($groupStackWas)['collect'] === $this->cfg['collect']) {
+            return 1;
+        }
+        return 0;
     }
 
     /**

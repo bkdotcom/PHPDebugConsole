@@ -82,11 +82,9 @@ class Wamp implements RouteInterface
     /**
      * debug.pluginInit subscriber
      *
-     * @param Event $event Event instance
-     *
      * @return void
      */
-    public function init(Event $event)
+    public function init()
     {
         $this->cfg['output'] = $this->debug->getCfg('output');
         if ($this->cfg['output']) {

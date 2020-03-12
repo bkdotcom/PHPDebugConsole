@@ -90,6 +90,8 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
      * @param Swift_Events_SendEvent $event Swift SendEvent Instance
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function sendPerformed(Swift_Events_SendEvent $event)
     {
@@ -263,15 +265,15 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
      */
     public function exceptionThrown(Swift_Events_TransportExceptionEvent $evt)
     {
-        $e = $evt->getException();
-        $message = $e->getMessage();
-        $code = $e->getCode();
+        $exception = $evt->getException();
+        $message = $exception->getMessage();
+        $code = $exception->getCode();
         $this->debug->warn($code . ':', $message);
         $message .= PHP_EOL;
         $message .= 'Log data:' . PHP_EOL;
         $message .= $this->dump();
         $evt->cancelBubble();
-        throw new Swift_TransportException($message, $code, $e->getPrevious());
+        throw new Swift_TransportException($message, $code, $exception->getPrevious());
     }
 
     /**

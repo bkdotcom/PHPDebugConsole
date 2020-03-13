@@ -131,15 +131,13 @@ class Firephp extends Base
     {
         $args = $logEntry['args'];
         if (\count($args) === 1) {
-            $value = $args[0];
+            return $args[0];
             // no label;
-        } else {
-            $logEntry['firephpMeta']['Label'] = \array_shift($args);
-            $value = \count($args) > 1
-                ? $args // firephp only supports label/value...  we'll pass multiple values as an array
-                : $args[0];
         }
-        return $value;
+        $logEntry['firephpMeta']['Label'] = \array_shift($args);
+        return \count($args) > 1
+            ? $args // firephp only supports label/value...  we'll pass multiple values as an array
+            : $args[0];
     }
 
     /**
@@ -195,12 +193,10 @@ class Firephp extends Base
                     $value[] = \array_merge(array($k), \array_values($row));
                 }
             }
-            $value = $this->dump->dump($value);
-        } else {
-            $logEntry['firephpMeta']['Type'] = $this->firephpMethods['log'];
-            $value = $this->getValue($logEntry);
+            return $this->dump->dump($value);
         }
-        return $value;
+        $logEntry['firephpMeta']['Type'] = $this->firephpMethods['log'];
+        return $this->getValue($logEntry);
     }
 
     /**

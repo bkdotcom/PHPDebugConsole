@@ -16,7 +16,6 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use Exception;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -74,7 +73,7 @@ class GuzzleMiddleware
      * @param RequestInterface $request Guzzle request
      * @param array            $options opts
      *
-     * @return PromiseInterface
+     * @return GuzzleHttp\Promise\PromiseInterface;
      */
     public function onRequest(RequestInterface $request, array $options)
     {
@@ -135,7 +134,7 @@ class GuzzleMiddleware
      *
      * @param mixed $reason Reject reason
      *
-     * @return PromiseInterface
+     * @return GuzzleHttp\Promise\PromiseInterface;
      */
     public function onRejected($reason)
     {

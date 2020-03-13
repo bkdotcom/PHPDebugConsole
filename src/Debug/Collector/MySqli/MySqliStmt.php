@@ -53,7 +53,7 @@ class MySqliStmt extends mysqliStmtBase
      */
     public function bind_param($types, &...$vals)
     {
-        if (!$this->mysqli->connectionAttempted) {
+        if ($this->mysqli->connectionAttempted === false) {
             return false;
         }
         $this->params = $vals;
@@ -67,13 +67,12 @@ class MySqliStmt extends mysqliStmtBase
     public function execute()
     {
         $statementInfo = new StatementInfo($this->query, $this->params, $this->types);
-        $exception = null;
-        $return = false;
-        if ($this->mysqli->connectionAttempted) {
-            $return = parent::execute();
-        } else {
-            $exception = new Exception('Not connected');
-        }
+        $return = $this->mysqli->connectionAttempted
+            ? parent::execute()
+            : false;
+        $exception = $this->mysqli->connectionAttempted
+            ? null
+            : new Exception('Not connected');
         $statementInfo->end($exception, $return ? $this->affected_rows : null);
         $this->mysqli->addStatementInfo($statementInfo);
         return $return;

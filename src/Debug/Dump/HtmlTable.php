@@ -73,10 +73,9 @@ class HtmlTable
             $options['caption'] = \strlen($options['caption'])
                 ? $options['caption'] . ' (' . $classname . ')'
                 : $classname;
-            if ($rows['traverseValues']) {
-                $rows = $rows['traverseValues'];
-            } else {
-                $rows = \array_map(
+            $rows = $rows['traverseValues']
+                ? $rows['traverseValues']
+                : \array_map(
                     function ($info) {
                         return $info['value'];
                     },
@@ -84,7 +83,6 @@ class HtmlTable
                         return !\in_array($info['visibility'], array('private', 'protected'));
                     })
                 );
-            }
         }
         $keys = $options['columns'] ?: $this->debug->methodTable->colKeys($rows);
         $keyIndex = \array_search('__key', $keys);
@@ -223,15 +221,16 @@ class HtmlTable
         );
         /*
             Output row's classname (if row is an object)
+            This column will get removed if haveObjRow = false
         */
+        $classnameTd = '<td class="classname"></td>';
         if ($objInfo['row']) {
-            $str .= $this->html->markupIdentifier($objInfo['row']['className'], 'td', array(
+            $classnameTd = $this->html->markupIdentifier($objInfo['row']['className'], 'td', array(
                 'title' => $objInfo['row']['phpDoc']['summary'] ?: null,
             ));
             $this->tableInfo['haveObjRow'] = true;
-        } else {
-            $str .= '<td class="classname"></td>';
         }
+        $str .= $classnameTd;
         /*
             Output values
         */

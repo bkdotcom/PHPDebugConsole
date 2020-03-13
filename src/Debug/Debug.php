@@ -272,9 +272,8 @@ class Debug
                     : array($args[0] => $args[1]);
                 new static($cfg);
                 return;
-            } else {
-                new static();
             }
+            new static();
         }
         /*
             Add 'statically' meta arg
@@ -480,18 +479,10 @@ class Debug
         if (\count($args) === 1 && \is_int($args[0])) {
             $label = null;
             $flags = $args[0];
-        } else {
-            $args = \array_slice($args, 0, 2);
-            $args = \array_combine(
-                array('label', 'flags'),
-                \array_replace(array(null, 0), $args)
-            );
-            \extract($args);
         }
-        if (isset($label)) {
-            $dataLabel = (string) $label;
-        } else {
-            // determine calling file & line
+        $dataLabel = (string) $label;
+        if ($label === null) {
+            // determine dataLabel from calling file & line
             $callerInfo = $this->backtrace->getCallerInfo();
             $logEntry['meta'] = \array_merge(array(
                 'file' => $callerInfo['file'],
@@ -541,22 +532,14 @@ class Debug
         if (\count($args) === 1 && \is_int($args[0])) {
             $label = 'default';
             $flags = $args[0];
-        } else {
-            $args = \array_slice($args, 0, 2);
-            $args = \array_combine(
-                array('label', 'flags'),
-                \array_replace(array('default', 0), $args)
-            );
-            \extract($args);
         }
+        $logEntry['args'] = array('Counter \'' . $label . '\' doesn\'t exist.');
         if (isset($this->data['counts'][$label])) {
             $this->data['counts'][$label] = 0;
             $logEntry['args'] = array(
                 (string) $label,
                 0,
             );
-        } else {
-            $logEntry['args'] = array('Counter \'' . $label . '\' doesn\'t exist.');
         }
         if (!($flags & self::COUNT_NO_OUT)) {
             $this->appendLog($logEntry);
@@ -864,6 +847,10 @@ class Debug
             $logEntry['meta']['name'] = \key($this->data['profileInstances']);
         }
         $name = $logEntry['meta']['name'];
+        $args = array( $name !== null
+            ? 'profileEnd: No such Profile: ' . $name
+            : 'profileEnd: Not currently profiling'
+        );
         if (isset($this->data['profileInstances'][$name])) {
             $instance = $this->data['profileInstances'][$name];
             $data = $instance->end();
@@ -879,6 +866,7 @@ class Debug
                 ));
             }
             $caption = 'Profile \'' . $name . '\' Results';
+            $args = array($caption, 'no data');
             if ($data) {
                 $args = array( $data );
                 $logEntry->setMeta(array(
@@ -887,15 +875,8 @@ class Debug
                     'totalCols' => array('ownTime'),
                     'columns' => array(),
                 ));
-            } else {
-                $args = array($caption, 'no data');
             }
             unset($this->data['profileInstances'][$name]);
-        } else {
-            $args = array( $name !== null
-                ? 'profileEnd: No such Profile: ' . $name
-                : 'profileEnd: Not currently profiling'
-            );
         }
         $logEntry['args'] = $args;
         $this->appendLog($logEntry);

@@ -114,13 +114,14 @@ class StatementInfo
         $getter = 'get' . \ucfirst($name);
         if (\method_exists($this, $getter)) {
             return $this->$getter();
-        } elseif (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {
-            return $this->$name();
-        } elseif (isset($this->$name)) {
-            return $this->{$name};
-        } else {
-            return null;
         }
+        if (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {
+            return $this->$name();
+        }
+        if (isset($this->$name)) {
+            return $this->{$name};
+        }
+        return null;
     }
 
     /**
@@ -241,15 +242,13 @@ class StatementInfo
     protected function getSqlWithParams($quotationChars = '<>')
     {
         $len = \strlen($quotationChars);
+        $quoteRight = $quotationChars;
+        $quoteLeft = $quoteRight;
         if ($len > 1) {
             $len = \floor($len / 2);
             $quoteLeft = \substr($quotationChars, 0, $len);
             $quoteRight = \substr($quotationChars, $len);
-        } else {
-            $quoteRight = $quotationChars;
-            $quoteLeft = $quoteRight;
         }
-
         $sql = $this->sql;
         foreach ($this->params as $k => $v) {
             $v = $quoteLeft . $v . $quoteRight;

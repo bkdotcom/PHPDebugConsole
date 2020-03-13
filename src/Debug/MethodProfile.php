@@ -32,6 +32,7 @@ class MethodProfile
     protected $isProfiling = false;
     protected $rootStack = array();
     protected $timeLastTick = null;
+    protected $trace = array();
 
     /**
      * Constructor
@@ -101,12 +102,12 @@ class MethodProfile
      */
     public function tickFunction()
     {
-        $trace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-        $stackCount = \count($trace) - \count($this->rootStack) - 1;
+        $this->trace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $stackCount = \count($this->trace) - \count($this->rootStack) - 1;
         $stackCountInternal = \count($this->funcStack);
-        $class = isset($trace[1]['class']) ? $trace[1]['class'] : null;
+        $class = isset($this->trace[1]['class']) ? $this->trace[1]['class'] : null;
         if ($stackCount === 0 && $this->data) {
-            $function = \ltrim($class . '::' . $trace[1]['function'], ':');
+            $function = \ltrim($class . '::' . $this->trace[1]['function'], ':');
             if ($function !== $this->rootStack[0]) {
                 // We've traveled up the stack above where we started
                 \array_shift($this->rootStack);
@@ -124,19 +125,7 @@ class MethodProfile
             $this->timeLastTick = \microtime(true);
             return;
         }
-        if ($stackCount > $stackCountInternal) {
-            $diff = $stackCount - $stackCountInternal;
-            for ($i = $diff; $i > 0; $i--) {
-                $class = isset($trace[$i]['class']) ? $trace[$i]['class'] : null;
-                if (\preg_match($this->nsIgnoreRegex, $class)) {
-                    break;
-                }
-                $function = \ltrim($class . '::' . $trace[$i]['function'], ':');
-                $this->pushStack($function);
-            }
-        } else {
-            $this->popStack();
-        }
+        $this->updateStack($stackCount, $stackCountInternal);
         $this->timeLastTick = \microtime(true);
     }
 
@@ -203,5 +192,30 @@ class MethodProfile
             );
         }
         $this->data[$funcName]['calls'] ++;
+    }
+
+    /**
+     * Add or remove functions to stack
+     *
+     * @param int $stackCount         diff between backtrace and initial backtrace
+     * @param int $stackCountInternal num functions on our stack
+     *
+     * @return void
+     */
+    protected function updateStack($stackCount, $stackCountInternal)
+    {
+        if ($stackCount <= $stackCountInternal) {
+            $this->popStack();
+            return;
+        }
+        $diff = $stackCount - $stackCountInternal;
+        for ($i = $diff; $i > 0; $i--) {
+            $class = isset($this->trace[$i]['class']) ? $this->trace[$i]['class'] : null;
+            if (\preg_match($this->nsIgnoreRegex, $class)) {
+                break;
+            }
+            $function = \ltrim($class . '::' . $this->trace[$i]['function'], ':');
+            $this->pushStack($function);
+        }
     }
 }

@@ -434,7 +434,7 @@ class ServerRequest
             }
         }
         if (!isset($headers['Authorization'])) {
-            $auth = self::getAuthorizationHeader();
+            $auth = self::getAuthorizationHeader($serverParams);
             if ($auth) {
                 $headers['Authorization'] = $auth;
             }

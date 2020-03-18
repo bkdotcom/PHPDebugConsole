@@ -74,7 +74,7 @@ class Middleware implements MiddlewareInterface
      *
      * @return ResponseInterface|null
      */
-    private function getResponse(RequestHandlerInterface $request, RequestHandlerInterface $handler)
+    private function getResponse(ServerRequestInterface $request, RequestHandlerInterface $handler)
     {
         if ($this->options['catchException'] === false) {
             /*

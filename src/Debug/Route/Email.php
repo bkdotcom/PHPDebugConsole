@@ -84,10 +84,10 @@ class Email implements RouteInterface
                         $v2 = $v2->export();
                         $data['logSummary'][$i][$i2] = \array_values($v2);
                     }
-                } else {
-                    $v = $v->export();
-                    $data[$what][$i] = \array_values($v);
+                    continue;
                 }
+                $v = $v->export();
+                $data[$what][$i] = \array_values($v);
             }
         }
         $str = \serialize($data);
@@ -283,12 +283,12 @@ class Email implements RouteInterface
                         }
                         $data['logSummary'][$i][$i2] = new LogEntry($debug, $v2[0], $v2[1], $v2[2]);
                     }
-                } else {
-                    if ($backward) {
-                        $v[1] = self::unserializeLogBackward($v[1]);
-                    }
-                    $data[$what][$i] = new LogEntry($debug, $v[0], $v[1], $v[2]);
+                    continue;
                 }
+                if ($backward) {
+                    $v[1] = self::unserializeLogBackward($v[1]);
+                }
+                $data[$what][$i] = new LogEntry($debug, $v[0], $v[1], $v[2]);
             }
         }
         return $data;

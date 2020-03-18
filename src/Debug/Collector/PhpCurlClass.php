@@ -94,6 +94,7 @@ class PhpCurlClass extends Curl
         $this->debug->log('options', $options);
         $return = parent::exec($ch);
         $verboseOutput = null;
+        $this->rawRequestHeaders = $this->getInfo(CURLINFO_HEADER_OUT);
         if (!empty($options['CURLOPT_VERBOSE'])) {
             /*
                 CURLINFO_HEADER_OUT doesn't work with verbose...
@@ -105,8 +106,6 @@ class PhpCurlClass extends Curl
             \preg_match_all('/> (.*?)\r\n\r\n/s', $verboseOutput, $matches);
             $this->rawRequestHeaders = \end($matches[1]);
             $this->requestHeaders = $this->reflection['parseReqHeaders']->invoke($this, $this->rawRequestHeaders);
-        } else {
-            $this->rawRequestHeaders = $this->getInfo(CURLINFO_HEADER_OUT);
         }
         if ($this->error) {
             $this->debug->warn($this->errorCode, $this->errorMessage);

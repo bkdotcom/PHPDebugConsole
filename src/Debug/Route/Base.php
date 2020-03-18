@@ -14,14 +14,13 @@ namespace bdk\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\Component;
-use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
 /**
  * Base output plugin
  */
-abstract class Base extends Component implements ConfigurableInterface, RouteInterface
+abstract class Base extends Component implements RouteInterface
 {
 
     public $debug;

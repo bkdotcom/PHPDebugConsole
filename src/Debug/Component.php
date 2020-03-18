@@ -15,7 +15,7 @@ namespace bdk\Debug;
 /**
  * Base "component" methods
  */
-abstract class Component
+abstract class Component implements ConfigurableInterface
 {
 
     protected $cfg = array();

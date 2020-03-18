@@ -109,22 +109,22 @@ class UseStatements
                         break;
                 }
                 self::record($token);
-            } else {
-                // check if we need to start recording
-                // $token may not be an array, but that's ok... $token[0] will just be first char of string
-                switch ($token[0]) {
-                    case T_NAMESPACE:
-                        self::$record = 'namespace';
-                        break;
-                    case T_USE:
-                        self::$record = 'class';
-                        self::$recordPart = 'class';
-                        self::$currentUse = [
-                            'class' => '',
-                            'alias' => '',
-                        ];
-                        break;
-                }
+                continue;
+            }
+            // check if we need to start recording
+            // $token may not be an array, but that's ok... $token[0] will just be first char of string
+            switch ($token[0]) {
+                case T_NAMESPACE:
+                    self::$record = 'namespace';
+                    break;
+                case T_USE:
+                    self::$record = 'class';
+                    self::$recordPart = 'class';
+                    self::$currentUse = [
+                        'class' => '',
+                        'alias' => '',
+                    ];
+                    break;
             }
         }
         return self::sort(self::$useStatements);
@@ -204,9 +204,9 @@ class UseStatements
                 'class' => self::$groupNamespace ?: '',
                 'alias' => '',
             ];
-        } else {
-            self::$record = null;
+            return;
         }
+        self::$record = null;
     }
 
     /**

@@ -16,7 +16,6 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Component;
-use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
 use bdk\Debug\MethodTable;
 use bdk\PubSub\Event;
@@ -24,7 +23,7 @@ use bdk\PubSub\Event;
 /**
  * Base output plugin
  */
-class Base extends Component implements ConfigurableInterface
+class Base extends Component
 {
 
     public $debug;

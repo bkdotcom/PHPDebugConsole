@@ -2018,21 +2018,23 @@ class Debug
      */
     private function getServiceFactory($property)
     {
+        $val = null;
         if (isset($this->cfg['services'][$property])) {
             $val = $this->cfg['services'][$property];
             if ($val instanceof \Closure) {
                 $val = $val($this);
                 $this->cfg['services'][$property] = $val;
             }
-            return $val;
-        }
-        if (isset($this->cfg['factories'][$property])) {
+        } elseif (isset($this->cfg['factories'][$property])) {
             $val = $this->cfg['factories'][$property];
             if ($val instanceof \Closure) {
                 $val = $val($this);
             }
-            return $val;
         }
+        if ($val instanceof ConfigurableInterface) {
+            $val->setCfg($this->config->getValues($property));
+        }
+        return $val;
     }
 
     /**

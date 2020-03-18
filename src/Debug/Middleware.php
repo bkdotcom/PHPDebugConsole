@@ -58,42 +58,54 @@ class Middleware implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $response = null;
-        if ($this->options['catchException']) {
-            /*
-                We've opted to catch exception here before letting outer middleware catch
-            */
-            try {
-                $response = $handler->handle($request);
-            } catch (Exception $e) {
-                $this->debug->errorHandler->handleException($e);
-                /*
-                    $response is now null
-                    errorHandler may retrigger exception
-                        if there's a prev handler AND
-                        if error event's continueToPrevHandler value = true (default)
-                    if so:
-                        we're done
-                    otherwise
-                        we need to return a ResponseInterface
-                            This can be accomplished via
-                            • onCaughtException callable
-                            • debug.middleware event subscriber (check if empty response / return)
-                */
-                if (\is_callable($this->options['onCaughtException'])) {
-                    $response = \call_user_func($this->options['onCaughtException'], $e, $request);
-                }
-            }
-        } else {
-            /*
-                Don't catch exceptions : let outer middleware or uncaught-exception-handler deal with exception
-            */
-            $response = $handler->handle($request);
-        }
+        $response = $this->getResponse($request)
         $this->debug->eventManager->publish('debug.middleware', $this->debug, array(
             'request' => $request,
             'response' => $response,
         ));
         return $this->debug->writeToResponse($response);
+    }
+
+    /**
+     * Get response
+     *
+     * @param RequestHandlerInterface $request Request
+     *
+     * @return ResponseInterface|null
+     */
+    private function getResponse(RequestHandlerInterface $request)
+    {
+        if ($this->options['catchException'] === false) {
+            /*
+                Don't catch exceptions : let outer middleware or uncaught-exception-handler deal with exception
+            */
+            return $handler->handle($request);
+        }
+        /*
+            We've opted to catch exception here before letting outer middleware catch
+        */
+        try {
+            $response = $handler->handle($request);
+        } catch (Exception $e) {
+            /*
+                $response is now null
+                errorHandler may retrigger exception
+                    if there's a prev handler AND
+                    if error event's continueToPrevHandler value = true (default)
+                if so:
+                    we're done
+                otherwise
+                    process() needs to return a ResponseInterface
+                        This can be accomplished via
+                        • onCaughtException callable
+                        • debug.middleware event subscriber (check if empty response / return)
+            */
+            $this->debug->errorHandler->handleException($e);
+            $response = null;
+            if (\is_callable($this->options['onCaughtException'])) {
+                $response = \call_user_func($this->options['onCaughtException'], $e, $request);
+            }
+        }
+        return $response;
     }
 }

@@ -58,7 +58,7 @@ class Middleware implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $response = $this->getResponse($request)
+        $response = $this->getResponse($request, $handler);
         $this->debug->eventManager->publish('debug.middleware', $this->debug, array(
             'request' => $request,
             'response' => $response,
@@ -70,10 +70,11 @@ class Middleware implements MiddlewareInterface
      * Get response
      *
      * @param RequestHandlerInterface $request Request
+     * @param RequestHandlerInterface $handler "Next" request Handler
      *
      * @return ResponseInterface|null
      */
-    private function getResponse(RequestHandlerInterface $request)
+    private function getResponse(RequestHandlerInterface $request, RequestHandlerInterface $handler)
     {
         if ($this->options['catchException'] === false) {
             /*

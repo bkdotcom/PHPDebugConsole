@@ -386,18 +386,17 @@ class Utilities
         /*
             note: $_SERVER['argv'] could be populated with query string if register_argc_argv = On
         */
-        $serverParams = $_SERVER;
         $isCliOrCron = \count(\array_filter(array(
             \defined('STDIN'),
-            isset($serverParams['argv']) && \count($serverParams['argv']) > 1,
-            !\array_key_exists('REQUEST_METHOD', $serverParams),
+            \count(self::getServerParam('argv', array())) > 1,
+            self::getServerParam('REQUEST_METHOD') === null,
         ))) > 0;
         if ($isCliOrCron) {
             // TERM is a linux/unix thing
-            $return = isset($serverParams['TERM']) || \array_key_exists('PATH', $serverParams)
+            $return = self::getServerParam('TERM') !== null || self::getServerParam('PATH') !== null
                 ? 'cli'
                 : 'cli cron';
-        } elseif (isset($serverParams['HTTP_X_REQUESTED_WITH']) && $serverParams['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+        } elseif (self::getServerParam('HTTP_X_REQUESTED_WITH') === 'XMLHttpRequest') {
             $return = 'http ajax';
         }
         return $return;
@@ -687,12 +686,11 @@ class Utilities
      */
     public static function requestId()
     {
-        $serverParams = $_SERVER;
         return \hash(
             'crc32b',
-            (isset($serverParams['REMOTE_ADDR']) ? $serverParams['REMOTE_ADDR'] : 'terminal')
-                . (isset($serverParams['REQUEST_TIME_FLOAT']) ? $serverParams['REQUEST_TIME_FLOAT'] : $serverParams['REQUEST_TIME'])
-                . (isset($serverParams['REMOTE_PORT']) ? $serverParams['REMOTE_PORT'] : '')
+            self::getServerParam('REMOTE_ADDR', 'terminal')
+                . (self::getServerParam('REQUEST_TIME_FLOAT') ?: self::getServerParam('REQUEST_TIME'))
+                . self::getServerParam('REMOTE_PORT', '')
         );
     }
 
@@ -813,6 +811,21 @@ class Utilities
             return '%im %Ss'; // M:SS
         }
         return '%hh %Im %Ss'; // H:MM:SS
+    }
+
+    /**
+     * [getServerParam description]
+     *
+     * @param string $name    $_SERVER key/name
+     * @param mixed  $default default value
+     *
+     * @return mixed
+     */
+    private static function getServerParam($name, $default = null)
+    {
+        return \array_key_exists($name, $_SERVER)
+            ? $_SERVER[$name]
+            : $default;
     }
 
     /**

@@ -4,8 +4,7 @@
     <description>PSR-12 plus commenting</description>
 
     <!--
-    ComposerScripts::postUpdate will uncomment & update this
-    <config name="installed_paths" value="vendor/slevomat/coding-standard" />
+    <rule ref="./phpcs.slevomat.xml" />
     -->
 
     <rule ref="./sniffs/">
@@ -61,77 +60,6 @@
     </rule>
 
     <rule ref="PEAR.Functions.ValidDefaultValue"/>
-
-    <!--
-        composer require slevomat/coding-standard - -dev
-    -->
-    <rule ref="SlevomatCodingStandard.Arrays" />
-    <rule ref="SlevomatCodingStandard.Classes.ClassStructure">
-        <properties>
-            <property name="groups" type="array">
-                <element value="uses" />
-                <element value="public constants" />
-                <element value="protected constants" />
-                <element value="private constants" />
-                <element value="public static properties, public properties" />
-                <element value="protected properties, protected static properties, private properties, private static properties" />
-                <element value="constructor " />
-                <element value="destructor, magic methods" />
-                <element value="public methods, public static methods, static constructors, public abstract methods, public static abstract methods" />
-                <element value="protected methods, protected static methods, private methods, private static methods, protected abstract methods, protected static abstract methods" />
-            </property>
-        </properties>
-    </rule>
-    <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
-    <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
-    <!--
-    <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
-    -->
-    <rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure" />
-    <rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue" />
-    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses" />
-    <rule ref="SlevomatCodingStandard.Namespaces.UselessAlias" />
-    <rule ref="SlevomatCodingStandard.PHP.RequireExplicitAssertion" />
-    <rule ref="SlevomatCodingStandard.PHP.UselessParentheses" />
-    <rule ref="SlevomatCodingStandard.PHP.OptimizedFunctionsWithoutUnpacking" />
-    <rule ref="SlevomatCodingStandard.PHP.UselessSemicolon" />
-    <rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable" />
-    <rule ref="SlevomatCodingStandard.Variables.UselessVariable" />
-    <rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses" />
-    <rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses" />
-    <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
-    <!--
-    Rule seems to be broken on codacy..
-    Not necessary to catch here... will be caught by unit test
-    <rule ref="SlevomatCodingStandard.Files.TypeNameMatchesFileName">
-        <properties>
-            <property name="rootNamespaces" type="array">
-                <element key="src" value="bdk"/>
-            </property>
-        </properties>
-        <exclude-pattern>src/Backtrace/Backtrace.php</exclude-pattern>
-        <exclude-pattern>src/Debug/Debug.php</exclude-pattern>
-        <exclude-pattern>src/ErrorHandler/ErrorHandler.php</exclude-pattern>
-    </rule>
-    -->
-    <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions" />
-    <rule ref="SlevomatCodingStandard.Namespaces.UseDoesNotStartWithBackslash" />
-    <!--
-    <rule ref="SlevomatCodingStandard.Commenting.ForbiddenAnnotations">
-        <property name="forbiddenAnnotations" type="array">
-            <element value="@author, @created, @version, @package, @copyright, @license, @throws" />
-        </property>
-    </rule>
-    -->
-    <rule ref="SlevomatCodingStandard.Commenting.ForbiddenComments">
-        <properties>
-            <property name="forbiddenCommentPatterns" type="array">
-                <element value="#\[\w+ description\]#" />
-            </property>
-        </properties>
-    </rule>
-    <rule ref="SlevomatCodingStandard.ControlStructures.UselessIfConditionWithReturn" />
-    <rule ref="SlevomatCodingStandard.ControlStructures.UselessTernaryOperator" />
 
     <rule ref="Squiz.Commenting">
         <exclude name="Squiz.Commenting.BlockComment.NoCapital" />

@@ -100,4 +100,19 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame('bar', $this->debug->setCfg('foo', 'baz'));
         $this->assertSame('baz', $this->debug->getCfg('foo'));
     }
+
+    /**
+     * Test config stores config values until class is instantiated
+     *
+     * @return void
+     */
+    public function testPending()
+    {
+        $debug = new \bdk\Debug();
+        $this->assertTrue($debug->getCfg('collectMethods'));
+        $debug->setCfg('collectMethods', false);
+        $this->assertFalse($debug->getCfg('collectMethods'));
+        $debug->abstracter;
+        $this->assertFalse($debug->abstracter->getCfg('collectMethods'));
+    }
 }

@@ -215,7 +215,7 @@ class Yii11LogRoute extends CLogRoute
                 return $route;
             }
         }
-        $route = new static(Debug::getInstance());
+        $route = new static();
         $route->init();
         $routes[] = $route;
         Yii::app()->log->routes = $routes;

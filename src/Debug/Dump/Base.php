@@ -53,21 +53,15 @@ class Base extends Component
      */
     public function dump($val, $opts = array())
     {
-        $optsDefault = array(
+        $this->argStringOpts = \array_merge(array(
             'addQuotes' => true,
             'sanitize' => true,     // only applies to html
             'visualWhiteSpace' => true,
-        );
-        if (\is_bool($opts)) {
-            $keys = \array_keys($optsDefault);
-            $this->argStringOpts = \array_fill_keys($keys, $opts);
-        } else {
-            $this->argStringOpts = \array_merge($optsDefault, $opts);
-        }
+        ), $opts);
         $typeMore = null;
         list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($typeMore === 'raw') {
-            $val = $this->debug->abstracter->getAbstraction($val);
+            $val = $this->debug->abstracter->getAbstraction($val, 'dump', array($type, $typeMore));
             $typeMore = null;
         }
         $method = 'dump' . \ucfirst($type);
@@ -89,7 +83,7 @@ class Base extends Component
                 $return = $event['return'];
                 $typeMore = $event['typeMore'];
             } elseif (\in_array($type, array('string','bool','float','int','null'))) {
-                $return = $this->{$method}($val['value']);
+                $return = $this->{$method}($val['value'], $val);
             } else {
                 $return = $this->{$method}($val);
             }
@@ -333,20 +327,24 @@ class Base extends Component
     /**
      * Dump string
      *
-     * @param string $val string value
+     * @param string      $val string value
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return string
      */
-    protected function dumpString($val)
+    protected function dumpString($val, Abstraction $abs = null)
     {
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
             return $date
                 ? $val . ' (' . $date . ')'
                 : $val;
-        } else {
-            return $this->debug->utf8->dump($val);
         }
+        $val = $this->debug->utf8->dump($val);
+        if ($abs) {
+            $val .= '[' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)]';
+        }
+        return $val;
     }
 
     /**

@@ -147,7 +147,7 @@ class HtmlTable
         foreach ($keys as $key) {
             $colHasTotal = isset($this->tableInfo['totals'][$key]);
             $cells[] = $colHasTotal
-                ? $this->html->dump(\round($this->tableInfo['totals'][$key], 6), true, 'td')
+                ? $this->html->dump(\round($this->tableInfo['totals'][$key], 6), array(), 'td')
                 : '<td></td>';
             $haveTotal = $haveTotal || $colHasTotal;
         }
@@ -235,7 +235,7 @@ class HtmlTable
             Output values
         */
         foreach ($values as $v) {
-            $str .= $this->html->dump($v, true, 'td');
+            $str .= $this->html->dump($v, array(), 'td');
         }
         $str .= '</tr>' . "\n";
         return $str;

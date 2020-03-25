@@ -93,8 +93,9 @@ class AbstractObjectProperties extends AbstractObjectSub
         $properties = $abs['properties'];
         $abs['hist'][] = $obj;
         foreach ($properties as $name => $info) {
-            if ($this->abstracter->needsAbstraction($info['value'])) {
-                $properties[$name]['value'] = $this->abstracter->getAbstraction($info['value'], $abs['debugMethod'], $abs['hist']);
+            $absInfo = $this->abstracter->needsAbstraction($info['value']);
+            if ($absInfo) {
+                $properties[$name]['value'] = $this->abstracter->getAbstraction($info['value'], $abs['debugMethod'], $absInfo, $abs['hist']);
             }
         }
         $abs['properties'] = $properties;

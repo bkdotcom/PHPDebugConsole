@@ -334,7 +334,7 @@ class Html extends Base
                 foreach ($array as $key => $val) {
                     $html .= "\t" . '<span class="key-value">'
                             . '<span class="t_key' . (\is_int($key) ? ' t_int' : '') . '">'
-                                . $this->dump($key, true, false) // don't wrap it
+                                . $this->dump($key, array(), null) // don't wrap it
                             . '</span>'
                             . '<span class="t_operator">=&gt;</span>'
                             . $this->dump($val)
@@ -345,7 +345,7 @@ class Html extends Base
                 // display as list
                 $html .= '<ul class="array-inner list-unstyled">' . "\n";
                 foreach ($array as $val) {
-                    $html .= $this->dump($val, true, 'li');
+                    $html .= $this->dump($val, array(), 'li');
                 }
                 $html .= '</ul>';
             }
@@ -455,11 +455,12 @@ class Html extends Base
     /**
      * Dump string
      *
-     * @param string $val string value
+     * @param string      $val string value
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return string
      */
-    protected function dumpString($val)
+    protected function dumpString($val, Abstraction $abs = null)
     {
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
@@ -471,10 +472,12 @@ class Html extends Base
             if ($this->detectFiles && !\preg_match('#(://|[\r\n\x00])#', $val) && \is_file($val)) {
                 $this->argAttribs['class'][] = 'file';
             }
-            if ($this->argStringOpts['sanitize']) {
-                $val = $this->debug->utf8->dump($val, true, true);
-            } else {
-                $val = $this->debug->utf8->dump($val, true, false);
+            $val = $this->debug->utf8->dump($val, array(
+                'sanitizeNonBinary' => $this->argStringOpts['sanitize'],
+                'useHtml' => true,
+            ));
+            if ($abs) {
+                $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)</span>';
             }
             if ($this->argStringOpts['visualWhiteSpace']) {
                 $val = $this->visualWhiteSpace($val);
@@ -593,7 +596,7 @@ class Html extends Base
             if ($argCount > 1 && \is_string($args[0])) {
                 $args[0] = $this->dump($args[0], array(
                     'sanitize' => $meta['sanitizeFirst'],
-                ), false);
+                ), null);
                 $args = $this->processSubstitutions($args, array(
                     'replace' => true,
                     'sanitize' => $meta['sanitize'],
@@ -752,7 +755,7 @@ class Html extends Base
         $type = $this->debug->abstracter->getType($val)[0];
         if ($type === 'string') {
             // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
-            return $this->dump($val, $opts, false);
+            return $this->dump($val, $opts, null);
         }
         if ($type === 'array') {
             $count = \count($val);
@@ -762,7 +765,7 @@ class Html extends Base
         if ($type === 'object') {
             $toStr = $val->toString();
             $val = $toStr
-                ? $this->dump($toStr, $opts, false)
+                ? $this->dump($toStr, $opts, null)
                 : $this->markupIdentifier($val['className']);
             return $val;
         }

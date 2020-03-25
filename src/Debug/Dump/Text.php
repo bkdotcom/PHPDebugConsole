@@ -277,11 +277,12 @@ class Text extends Base
     /**
      * Dump string
      *
-     * @param string $val string value
+     * @param string      $val string value
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return string
      */
-    protected function dumpString($val)
+    protected function dumpString($val, Abstraction $abs = null)
     {
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
@@ -289,13 +290,15 @@ class Text extends Base
             return $date
                 ? '📅 ' . $val . ' (' . $date . ')'
                 : $val;
-        } else {
-            $val = $this->debug->utf8->dump($val);
-            if ($this->argStringOpts['addQuotes']) {
-                $val = '"' . $val . '"';
-            }
-            return $val;
         }
+        $val = $this->debug->utf8->dump($val);
+        if ($this->argStringOpts['addQuotes']) {
+            $val = '"' . $val . '"';
+        }
+        if ($abs) {
+            $val .= '[' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)]';
+        }
+        return $val;
     }
 
     /**

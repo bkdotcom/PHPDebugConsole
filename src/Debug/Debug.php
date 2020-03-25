@@ -122,6 +122,7 @@ class Debug
             'logResponseMaxLen' => '1 MB',
             'logRuntime' => true,
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
+            'maxLenString' => 8192,
             'onBootstrap' => null,          // callable
             'onLog' => null,                // callable
             'onOutput' => null,             // callable
@@ -1743,8 +1744,9 @@ class Debug
             $logEntry->setMeta('cfg', null);
         }
         foreach ($logEntry['args'] as $i => $v) {
-            if ($this->abstracter->needsAbstraction($v)) {
-                $logEntry['args'][$i] = $this->abstracter->getAbstraction($v, $logEntry['method']);
+            $absInfo = $this->abstracter->needsAbstraction($v);
+            if ($absInfo) {
+                $logEntry['args'][$i] = $this->abstracter->getAbstraction($v, $logEntry['method'], $absInfo);
             }
         }
         $this->internal->publishBubbleEvent('debug.log', $logEntry);
@@ -1841,8 +1843,9 @@ class Debug
                 values have not yet been abstracted.
                 abstract now
             */
-            if ($this->abstracter->needsAbstraction($v)) {
-                $v = $this->abstracter->getAbstraction($v, $logEntry['method']);
+            $absInfo = $this->abstracter->needsAbstraction($v);
+            if ($absInfo) {
+                $v = $this->abstracter->getAbstraction($v, $logEntry['method'], $absInfo);
                 $args[$k] = $v;
             }
             if (!$this->abstracter->isAbstraction($v, 'object')) {

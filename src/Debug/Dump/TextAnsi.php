@@ -32,6 +32,7 @@ class TextAnsi extends Text
             'false' => "\e[91m",            // red
             'keyword' => "\e[38;5;45m",     // blue
             'arrayKey' => "\e[38;5;83m",    // yellow
+            'maxlen' => "\e[30;48;5;41m",   // light green background
             'muted' => "\e[38;5;250m",      // dark grey
             'numeric' => "\e[96m",          // blue
             'operator' => "\e[38;5;130m",   // green
@@ -350,11 +351,12 @@ class TextAnsi extends Text
     /**
      * Dump string
      *
-     * @param string $val string value
+     * @param string      $val string value
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return string
      */
-    protected function dumpString($val)
+    protected function dumpString($val, Abstraction $abs = null)
     {
         $escapeCodes = $this->cfg['escapeCodes'];
         if (\is_numeric($val)) {
@@ -371,6 +373,11 @@ class TextAnsi extends Text
         $val = $this->debug->utf8->dump($val);
         if ($this->argStringOpts['addQuotes']) {
             $val = $ansiQuote . $val . $ansiQuote;
+        }
+        if ($abs) {
+            $val .= $escapeCodes['maxlen']
+                . '[' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)]'
+                . $this->escapeReset;
         }
         return $val;
     }

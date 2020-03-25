@@ -18,6 +18,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Component;
 use bdk\Debug\Utility\PhpDoc;
+use bdk\Debug\Utility\Utf8;
 
 /**
  * Store array/object/resource info
@@ -69,25 +70,39 @@ class Abstracter extends Component
      * Deep cloning objects = problematic
      *   + some objects are uncloneable & throw fatal error
      *   + difficult to maintain circular references
-     * Instead of storing objects in log, store "abstraction" array containing
+     * Instead of storing objects in log, store "Abstraction" which containing
      *     type, methods, & properties
      *
-     * @param mixed  $mixed  array, object, or resource to prep
-     * @param string $method Method requesting abstraction
-     * @param array  $hist   (@internal) array/object history (used to test for recursion)
+     * @param mixed  $mixed     array, object, or resource to prep
+     * @param string $method    Method requesting abstraction
+     * @param array  $typeArray (@internal) array specifying value's type & "typeMore"
+     * @param array  $hist      (@internal) array/object history (used to test for recursion)
      *
      * @return Abstraction|array|string
      */
-    public function getAbstraction($mixed, $method = null, $hist = array())
+    public function getAbstraction($mixed, $method = null, $typeArray = array(), $hist = array())
     {
-        if (\is_array($mixed)) {
+        list($type, $typeMore) = $typeArray
+            ? $typeArray
+            : self::getType($mixed);
+        if ($type === 'array' || $type === 'callable') {
             return $this->abstractArray->getAbstraction($mixed, $method, $hist);
-        } elseif (\is_object($mixed) || \is_string($mixed) && (\class_exists($mixed) || \interface_exists($mixed))) {
+        }
+        if ($type === 'object' || $typeMore === 'classname') {
             return $this->abstractObject->getAbstraction($mixed, $method, $hist);
-        } elseif (\is_resource($mixed) || \strpos(\print_r($mixed, true), 'Resource') === 0) {
+        }
+        if ($type === 'resource') {
             return new Abstraction(array(
                 'type' => 'resource',
                 'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
+            ));
+        }
+        if ($type === 'string') {
+            $strlen = \strlen($mixed);
+            return new Abstraction(array(
+                'type' => 'string',
+                'strlen' => $strlen,
+                'value' => $this->debug->utf8->strcut($mixed, 0, $this->debug->getCfg('maxLenString')),
             ));
         }
     }
@@ -116,8 +131,7 @@ class Abstracter extends Component
             case 'array':
                 return self::getTypeArray($val);
             case 'bool':
-                $typeMore = \json_encode($val);
-                break;
+                return array('bool', \json_encode($val));
             case 'object':
                 return self::getTypeObject($val);
             case 'resource':
@@ -127,8 +141,9 @@ class Abstracter extends Component
                 return self::getTypeString($val);
             case 'unknown type':
                 return self::getTypeUnknown($val);
+            default:
+                return array($type, $typeMore);
         }
-        return array($type, $typeMore);
     }
 
     /**
@@ -155,13 +170,21 @@ class Abstracter extends Component
      *
      * @param mixed $val value to check
      *
-     * @return bool
+     * @return array|false array(type, typeMore) or false
      */
-    public static function needsAbstraction($val)
+    public function needsAbstraction($val)
     {
-        // function array dereferencing = php 5.4
-        $typeMore = self::getType($val)[1];
-        return $typeMore === 'raw';
+        if ($val instanceof Abstraction) {
+            return false;
+        }
+        list($type, $typeMore) = self::getType($val);
+        if ($typeMore === 'raw') {
+            return array($type, $typeMore);
+        }
+        if ($type === 'string' && \strlen($val) > $this->debug->getCfg('maxLenString')) {
+            return array($type, $typeMore);
+        }
+        return false;
     }
 
     /**
@@ -211,18 +234,22 @@ class Abstracter extends Component
      */
     private static function getTypeString($val)
     {
-        $type = 'string';
-        $typeMore = null;
         if (\is_numeric($val)) {
-            $typeMore = 'numeric';
-        } elseif ($val === self::UNDEFINED) {
-            $type = 'undefined';    // not a native php type!
-        } elseif ($val === self::RECURSION) {
-            $type = 'recursion';    // not a native php type!
-        } elseif ($val === self::NOT_INSPECTED) {
-            $type = 'notInspected';
+            return array('string', 'numeric');
         }
-        return array($type, $typeMore);
+        if ($val === self::UNDEFINED) {
+            return array('undefined', null);    // not a native php type!
+        }
+        if ($val === self::RECURSION) {
+            return array('recursion', null);    // not a native php type!
+        }
+        if ($val === self::NOT_INSPECTED) {
+            return array('notInspected', null);
+        }
+        if (\class_exists($val) || \interface_exists($val)) {
+            return array('string', 'classname');
+        }
+        return array('string', null);
     }
 
     /**

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Run with --process-isolation option
  */
@@ -27,6 +28,38 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
         $this->assertFalse(Utf8::isUtf8("\xf4\x90\x80\x80"));
     }
 
+    public function testStrCut()
+    {
+        // 1-byte, 2-byte, 3-type, 4-byte
+        $str = 'A©︙💩';
+
+        $this->assertSame('', Utf8::strCut($str, 0, 0));
+        $this->assertSame('A', Utf8::strCut($str, 0, 1));
+        $this->assertSame('A', Utf8::strCut($str, 0, 2));
+        $this->assertSame('A©', Utf8::strCut($str, 0, 3));
+        $this->assertSame('A©', Utf8::strCut($str, 0, 4));
+        $this->assertSame('A©', Utf8::strCut($str, 0, 5));
+        $this->assertSame('A©︙', Utf8::strCut($str, 0, 6));
+        $this->assertSame('A©︙', Utf8::strCut($str, 0, 7));
+        $this->assertSame('A©︙', Utf8::strCut($str, 0, 8));
+        $this->assertSame('A©︙', Utf8::strCut($str, 0, 9));
+        $this->assertSame($str, Utf8::strCut($str, 0, 10));
+
+        // start in middle of 2nd char
+        $this->assertSame('©', Utf8::strCut($str, 2, 2)); // 1st char
+
+        $this->assertSame('©', Utf8::strCut($str, 2, 3)); // 1st byte of 3rd char
+        $this->assertSame('©', Utf8::strCut($str, 2, 4)); // 2nd byte of 3rd char
+        $this->assertSame('©︙', Utf8::strCut($str, 2, 5)); // 3rd byte of 3rd char
+
+        $this->assertSame('©︙', Utf8::strCut($str, 2, 6)); // 1st byte of last char
+        $this->assertSame('©︙', Utf8::strCut($str, 2, 7)); // 2nd byte of last char
+        $this->assertSame('©︙', Utf8::strCut($str, 2, 8)); // 3rd byte of last char
+        $this->assertSame('©︙💩', Utf8::strCut($str, 2, 9)); // all 4 bytes of last char
+
+        $this->assertSame('©︙💩', Utf8::strCut($str, 2, 10));
+    }
+
     /**
      * Test
      *
@@ -49,7 +82,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
                 '&ldquo;fancy quotes&rdquo;'),
             'utf8'      => array(base64_decode('4oCcZmFuY3kgcXVvdGVz4oCd'),
                 '&ldquo;fancy quotes&rdquo;'),
-            'tm'        => array('<b>'.chr(153).'</b>',
+            'tm'        => array('<b>' . chr(153) . '</b>',
                 '&lt;b&gt;&trade;&lt;/b&gt;'),
             'blah'      => array('bèfore [:: whoa ::] àfter',
                 'b&egrave;fore [:: whoa ::] &agrave;fter'),
@@ -58,7 +91,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
             $expected = $pair[1];
             $string = Utf8::toUtf8($pair[0]);
             $string = htmlentities($string, null, 'UTF-8');
-            $this->assertSame($expected, $string, $k.' does not match');
+            $this->assertSame($expected, $string, $k . ' does not match');
         }
     }
 }

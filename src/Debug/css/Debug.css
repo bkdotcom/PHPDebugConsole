@@ -152,7 +152,8 @@
 .debug .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
 .debug .t_undefined::after { content: "undefined"; opacity: 0.3; }
 .debug .timestamp { color: #009; }
-.debug .binary, .debug .unicode { margin: 0 0.1em; padding: 0 0.3em; background-color: #c0c0c0; color: #003; font-weight: bold; }
+.debug .binary, .debug .maxlen, .debug .unicode { margin: 0 0.1em; padding: 0 0.3em; background-color: #c0c0c0; color: #003; font-weight: bold; }
+.debug .maxlen { background-color: #e0b450; }
 .debug .unicode { background-color: #c0c0ff; }
 .debug .c1-control { display: inline-block; vertical-align: baseline; clip-path: inset(30% 0); transform: scale(2); }
 .debug .ws_s, .debug .ws_t, .debug .ws_r, .debug .ws_n, .debug .ws_p { opacity: 0.33; }

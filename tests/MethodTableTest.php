@@ -172,6 +172,7 @@ EOD;
             $dateTimePubMethods = 4;
         }
         return array(
+            // 0
             array(
                 'table',
                 array(null),
@@ -182,6 +183,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-1: 21|[{"Type":"LOG"},null]|',
                 ),
             ),
+            // 1
             array(
                 'table',
                 array('blah'),
@@ -194,6 +196,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-2: 36|[{"Label":"blah","Type":"LOG"},null]|',
                 ),
             ),
+            // 2
             array(
                 'table',
                 array('table caption', $rowsA),
@@ -204,6 +207,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-3: 151|[{"Label":"table caption","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
                 ),
             ),
+            // 3
             array(
                 'table',
                 array(
@@ -260,6 +264,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::providerTestMethod"],[4,{"___class_name":"Closure"}]]]|',
                 ),
             ),
+            // 4
             array(
                 'table',
                 array(
@@ -273,6 +278,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-5: 149|[{"Label":"traversable","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
                 ),
             ),
+            // 5
             array(
                 'table',
                 array(
@@ -319,6 +325,7 @@ EOD;
                         .'[2,"bdk\\\DebugTest\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
                 ),
             ),
+            // 6
             array(
                 'table',
                 array(
@@ -365,6 +372,7 @@ EOD;
                         .'[2,"stdClass","10","yes","Sally",true,"F"]]]|',
                 ),
             ),
+            // 7
             array(
                 'table',
                 array(

@@ -20,6 +20,7 @@ $color-stringified: rgba(0, 200, 200, 0.6);
 $color-timestamp: #009;
 $color-bg-specialchar: #c0c0c0;
 $color-specialchar: #003;
+$color-bg-maxlen: #e0b450;
 $color-bg-unicode: #c0c0ff;
 
 //
@@ -122,13 +123,18 @@ $color-bg-unicode: #c0c0ff;
 }
 
 .timestamp { color: $color-timestamp; }
+
 .binary,
+.maxlen,
 .unicode {
   margin: 0 0.1em;
   padding: 0 0.3em;
   background-color: $color-bg-specialchar;
   color: $color-specialchar;
   font-weight: bold;
+}
+.maxlen {
+  background-color: $color-bg-maxlen;
 }
 .unicode {
   background-color: $color-bg-unicode;

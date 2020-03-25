@@ -54,11 +54,12 @@ class AbstractArray
                 'value' => array(\get_class($array[0]), $array[1]),
             ));
         }
-        $return = array();
         $hist[] = $array;
+        $return = array();
         foreach ($array as $k => $v) {
-            if ($this->abstracter->needsAbstraction($v)) {
-                $v = $this->abstracter->getAbstraction($array[$k], $method, $hist);
+            $absInfo = $this->abstracter->needsAbstraction($v);
+            if ($absInfo) {
+                $v = $this->abstracter->getAbstraction($v, $method, $absInfo, $hist);
             }
             $return[$k] = $v;
         }

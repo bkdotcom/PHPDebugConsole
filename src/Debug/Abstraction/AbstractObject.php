@@ -289,8 +289,9 @@ class AbstractObject
         $obj = $abs->getSubject();
         $abs['hist'][] = $obj;
         foreach ($obj as $k => $v) {
-            $abs['traverseValues'][$k] = $this->abstracter->needsAbstraction($v)
-                ? $this->abstracter->getAbstraction($v, $abs['debugMethod'], $abs['hist'])
+            $absInfo = $this->abstracter->needsAbstraction($v);
+            $abs['traverseValues'][$k] = $absInfo
+                ? $this->abstracter->getAbstraction($v, $abs['debugMethod'], $absInfo, $abs['hist'])
                 : $v;
         }
     }

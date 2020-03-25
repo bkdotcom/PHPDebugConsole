@@ -81,11 +81,11 @@ class Utf8
         0xFFFD => 'Replacement Character',
     );
 
-    private static $useHtml = false;
     private static $curI;
-    private static $sanitizeNonBinary = true; // htmlspecialchars non-binary
+    private static $options = array();
     private static $stats = array();
     private static $str = '';
+    private static $strNew = '';
 
     /**
      * Add additional characters to be treated as special chars
@@ -124,25 +124,89 @@ class Utf8
     }
 
     /**
+     * mb_strcut implementation
+     *
+     * @param string $str    [description]
+     * @param int    $start  [description]
+     * @param int    $length [description]
+     *
+     * @return string
+     * @see    https://www.php.net/manual/en/function.mb-strcut.php
+     */
+    public static function strcut($str, $start, $length = null)
+    {
+        if (\function_exists('mb_strcut')) {
+            return \mb_strcut($str, $start, $length);
+        }
+        self::setStr($str);
+        // find start
+        if ($start > 0) {
+            for ($i = 0; $i < 4; $i++) {
+                self::$curI = $start - $i;
+                if (self::$curI === 0 || self::isOffsetUtf8()) {
+                    break;
+                }
+            }
+            $start = self::$curI;
+        }
+        // find end
+        $end = $start + $length;
+        if ($end < \strlen($str)) {
+            for ($i = 0; $i < 4; $i++) {
+                self::$curI = $end - $i;
+                if (self::isOffsetUtf8()) {
+                    break;
+                }
+            }
+            $end = self::$curI;
+        }
+        $length = $end - $start;
+        return \substr($str, $start, $length);
+    }
+
+    /**
      * Highlight non-UTF-8, control, & "special" characters
      *
      * control & non-utf-8 chars are displayed as hex
      * "special" unicode-characters are displayed with the \uxxxx representation
      *
-     * @param string $str               string containing binary
-     * @param bool   $useHtml           (false) add html markup
-     * @param bool   $sanitizeNonBinary (false) apply htmlspecialchars to non-special chars?
+     * @param string $str     string containing binary
+     * @param string $options useHtml, sanitizeNonBinary
      *
      * @return string
      */
-    public static function dump($str, $useHtml = false, $sanitizeNonBinary = false)
+    public static function dump($str, $options = array())
     {
-        self::$useHtml = $useHtml;
-        self::$sanitizeNonBinary = $sanitizeNonBinary;
+        self::$options = \array_merge(array(
+            'useHtml' => false,
+            'sanitizeNonBinary' => false,
+        ), $options);
+        self::getStats($str);
+        if (self::$stats['percentBinary'] > 33) {
+            return self::dumpBlock($str, 'other', array('prefix' => false));
+        }
+        return self::$strNew;
+    }
+
+    /**
+     * get stats about string
+     *
+     * Returns array containing
+     *   'bytesControl'
+     *   'bytesOther'       (aka binary)
+     *   'bytesSpecial'     (aka "exotic" whitespace type chars)
+     *   'bytesUtf8'        (includes ASCII, does not incl Control or Special)
+     *   'strLen'
+     *
+     * @param string $str string to stat
+     *
+     * @return array
+     */
+    public static function getStats($str)
+    {
         self::setStr($str);
         $curBlockType = 'utf8'; // utf8, utf8special, other
-        $curBlockStart = 0; // string offset
-        $strNew = '';
+        $curBlockStart = 0;     // string offset
         while (self::$curI < self::$stats['strLen']) {
             $curI = self::$curI;
             $charType = self::getCharType($str[$curI]);
@@ -150,23 +214,19 @@ class Utf8
                 $len = $curI - $curBlockStart;
                 self::incStat($curBlockType, $len);
                 $subStr = \substr(self::$str, $curBlockStart, $len);
-                $strNew .= self::dumpBlock($subStr, $curBlockType);
+                self::$strNew .= self::dumpBlock($subStr, $curBlockType);
                 $curBlockStart = $curI;
                 $curBlockType = $charType;
             }
         }
         $len = self::$stats['strLen'] - $curBlockStart;
         self::incStat($curBlockType, $len);
-        if (self::$stats['strLen']) {
-            $percentOther = self::$stats['bytesOther'] / self::$stats['strLen'] * 100;
-            if ($percentOther > 33) {
-                $strNew = self::dumpBlock($str, 'other', array('prefix' => false));
-            } else {
-                $subStr = \substr(self::$str, $curBlockStart, $len);
-                $strNew .= self::dumpBlock($subStr, $curBlockType);
-            }
-        }
-        return $strNew;
+        $subStr = \substr(self::$str, $curBlockStart, $len);
+        self::$strNew .= self::dumpBlock($subStr, $curBlockType);
+        self::$stats['percentBinary'] = self::$stats['strLen']
+            ? (self::$stats['bytesControl'] + self::$stats['bytesOther']) / self::$stats['strLen'] * 100
+            : 0;
+        return self::$stats;
     }
 
     /**
@@ -176,7 +236,7 @@ class Utf8
      * control, or other speical characters that could otherwise go unnoticed
      *
      * @param string $str     string to check
-     * @param bool   $special does valid utf-8 string control or "exotic" whitespace type character
+     * @param bool   $special does valid utf-8 string contain control or "exotic" whitespace type character
      *
      * @return bool
      */
@@ -278,11 +338,11 @@ class Utf8
         if ($str === '') {
             return '';
         }
-        if ($blockType === 'utf8' && self::$sanitizeNonBinary) {
+        if ($blockType === 'utf8' && self::$options['sanitizeNonBinary']) {
             $str = \htmlspecialchars($str);
         } elseif ($blockType === 'utf8special') {
             $str = self::dumpBlockSpecial($str);
-        } elseif ($blockType === 'other') {
+        } elseif ($blockType === 'other' || $blockType === 'utf8control') {
             $str = self::dumpBlockOther($str, $options);
         }
         return $str;
@@ -304,7 +364,7 @@ class Utf8
             $ord = self::ordUtf8($str, $i, $char);
             $ordHex = \dechex($ord);
             $ordHex = \str_pad($ordHex, 4, '0', STR_PAD_LEFT);
-            if (self::$useHtml) {
+            if (self::$options['useHtml']) {
                 $chars = \str_split($char);
                 $utf8Hex = \array_map('bin2hex', $chars);
                 $utf8Hex = '\x' . \implode(' \x', $utf8Hex);
@@ -313,7 +373,7 @@ class Utf8
                     $title = self::$charDesc[$ord] . ': ' . $utf8Hex;
                 }
                 $url = 'https://unicode-table.com/en/' . $ordHex;
-                $strNew = '<a class="unicode" href="' . $url . '" target="unicode-table" title="' . $title . '">\u' . $ordHex . '</a>';
+                $strNew .= '<a class="unicode" href="' . $url . '" target="unicode-table" title="' . $title . '">\u' . $ordHex . '</a>';
             } else {
                 $strNew .= '\u{' . $ordHex . '}';
             }
@@ -342,7 +402,7 @@ class Utf8
             foreach ($chars as $i => $char) {
                 $ord = \ord($char);
                 $hex = \bin2hex($char); // could use dechex($ord), but would require padding
-                if (self::$useHtml && isset(self::$charDesc[$ord])) {
+                if (self::$options['useHtml'] && isset(self::$charDesc[$ord])) {
                     if ($ord < 0x20 || $ord === 0x7f) {
                         // lets use the control pictures
                         $chr = $ord === 0x7f
@@ -358,7 +418,7 @@ class Utf8
             }
             $str = \implode(' ', $chars);
         }
-        if (self::$useHtml) {
+        if (self::$options['useHtml']) {
             $str = '<span class="binary">' . $str . '</span>';
         }
         return $str;
@@ -387,41 +447,39 @@ class Utf8
      *
      * @param string $char single byte
      *
-     * @return string "utf8", "utf8special", or "other"
+     * @return string "utf8", "utf8control", "utf8special", or "other"
      */
     private static function getCharType($char)
     {
-        $controlCharAs = 'other'; // how should we treat ascii control chars?
         $isUtf8 = self::isOffsetUtf8($isSpecial, true);
-        if ($isUtf8 && $isSpecial && $controlCharAs !== 'utf8special' && \ord($char) < 0x80) {
-            if ($controlCharAs === 'other') {
-                $isUtf8 = false;
-            } elseif ($controlCharAs === 'utf8') {
-                $isSpecial = false;
-            }
-        }
-        $charType = 'other';
         if ($isUtf8) {
-            $charType = $isSpecial
-                ? 'utf8special'
-                : 'utf8';
+            if ($isSpecial) {
+                return \ord($char) < 0x80
+                    ? 'utf8control'
+                    : 'utf8special';
+            }
+            return 'utf8';
         }
-        return $charType;
+        return 'other';
     }
 
     /**
      * Increment statistic
      *
-     * @param string $stat stat to increment
+     * @param string $stat stat to increment ("utf8", "utf8control", "utf8special", or "other")
      * @param int    $inc  increment ammount
      *
      * @return void
      */
     private static function incStat($stat, $inc)
     {
-        if ($stat === 'utf8special') {
+        if ($stat === 'utf8control') {
+            $stat = 'bytesControl';
+        } elseif ($stat === 'utf8special') {
+            // aka whitespace
             $stat = 'bytesSpecial';
         } else {
+            // other or utf8
             $stat = 'bytes' . \ucfirst($stat);
         }
         self::$stats[$stat] += $inc;
@@ -443,12 +501,12 @@ class Utf8
         $byte = \ord(self::$str[self::$curI]);
         $inc = 1;
         $isUtf8 = false;
-        $isSpecial = false;
+        $special = false;
         if ($byte < 0x80) {
             // single byte 0bbbbbbb
             $inc = 1; // advance to next byte
             $isUtf8 = true;
-            $isSpecial = self::test1byteSeq($byte);
+            $special = self::test1byteSeq($byte);
         } elseif (($byte & 0xe0) === 0xc0) {
             // 2-byte sequence 110bbbbb 10bbbbbb
             $inc = 2;   // skip the next byte
@@ -470,7 +528,7 @@ class Utf8
         }
         if ($checkSpecial) {
             $subStr = \substr(self::$str, $iStart, self::$curI - $iStart);
-            $special = $isSpecial || self::hasSpecial($subStr);
+            $special = $special || self::hasSpecial($subStr);
         }
         return true;
     }
@@ -484,14 +542,21 @@ class Utf8
      */
     private static function setStr($str)
     {
-        self::$str = $str;
         self::$curI = 0;
+        self::$options = \array_merge(array(
+            'useHtml' => false,
+            'sanitizeNonBinary' => false,
+        ), self::$options);
         self::$stats = array(
+            'bytesControl' => 0,
             'bytesOther' => 0,
             'bytesSpecial' => 0,        // special UTF-8
             'bytesUtf8' => 0,           // includes ASCII
+            'percentBinary' => 0,
             'strLen' => \strlen($str),
         );
+        self::$str = $str;
+        self::$strNew = '';             // for dumping string
     }
 
     /**

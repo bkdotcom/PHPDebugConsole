@@ -374,7 +374,7 @@ class TextAnsi extends Text
         if ($this->argStringOpts['addQuotes']) {
             $val = $ansiQuote . $val . $ansiQuote;
         }
-        if ($abs) {
+        if ($abs && $abs['strlen']) {
             $val .= $escapeCodes['maxlen']
                 . '[' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)]'
                 . $this->escapeReset;

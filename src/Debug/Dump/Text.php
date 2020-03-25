@@ -295,7 +295,7 @@ class Text extends Base
         if ($this->argStringOpts['addQuotes']) {
             $val = '"' . $val . '"';
         }
-        if ($abs) {
+        if ($abs && $abs['strlen']) {
             $val .= '[' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)]';
         }
         return $val;

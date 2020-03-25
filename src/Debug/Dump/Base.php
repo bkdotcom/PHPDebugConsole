@@ -341,7 +341,7 @@ class Base extends Component
                 : $val;
         }
         $val = $this->debug->utf8->dump($val);
-        if ($abs) {
+        if ($abs && $abs['strlen']) {
             $val .= '[' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)]';
         }
         return $val;

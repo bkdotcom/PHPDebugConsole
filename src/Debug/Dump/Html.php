@@ -476,7 +476,7 @@ class Html extends Base
                 'sanitizeNonBinary' => $this->argStringOpts['sanitize'],
                 'useHtml' => true,
             ));
-            if ($abs) {
+            if ($abs && $abs['strlen']) {
                 $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)</span>';
             }
             if ($this->argStringOpts['visualWhiteSpace']) {

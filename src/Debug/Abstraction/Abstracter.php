@@ -181,8 +181,11 @@ class Abstracter extends Component
         if ($typeMore === 'raw') {
             return array($type, $typeMore);
         }
-        if ($type === 'string' && \strlen($val) > $this->debug->getCfg('maxLenString')) {
-            return array($type, $typeMore);
+        if ($type === 'string') {
+            $maxLenString = $this->debug->getCfg('maxLenString');
+            if ($maxLenString && \strlen($val) > $maxLenString) {
+                return array($type, $typeMore);
+            }
         }
         return false;
     }

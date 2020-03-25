@@ -60,7 +60,7 @@ class ComposerScripts
         \file_put_contents($phpcsPath, $xml);
 
         if ($inclSlevomat) {
-            $phpcsPath = __DIR__ . '/../../phpcs.selevomat.xml';
+            $phpcsPath = __DIR__ . '/../../phpcs.slevomat.xml';
             $xml = \file_get_contents($phpcsPath);
             /*
                 convert relative paths to absolute

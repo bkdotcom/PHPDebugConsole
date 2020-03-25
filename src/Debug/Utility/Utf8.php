@@ -141,24 +141,26 @@ class Utf8
         self::setStr($str);
         // find start
         if ($start > 0) {
+            $start++; // increment so that we start at original
             for ($i = 0; $i < 4; $i++) {
-                self::$curI = $start - $i;
-                if (self::$curI === 0 || self::isOffsetUtf8()) {
+                $start--;
+                self::$curI = $start;
+                if ($start === 0 || self::isOffsetUtf8()) {
                     break;
                 }
             }
-            $start = self::$curI;
         }
         // find end
         $end = $start + $length;
         if ($end < \strlen($str)) {
+            $end++; // increment so that we start at original
             for ($i = 0; $i < 4; $i++) {
-                self::$curI = $end - $i;
+                $end--;
+                self::$curI = $end;
                 if (self::isOffsetUtf8()) {
                     break;
                 }
             }
-            $end = self::$curI;
         }
         $length = $end - $start;
         return \substr($str, $start, $length);
@@ -520,12 +522,11 @@ class Utf8
             $inc = 4;   // skip the next 3 bytes
             $isUtf8 = self::test4byteSeq();
         }
-        if ($isUtf8) {
-            self::$curI += $inc;
-        } else {
+        if ($isUtf8 === false) {
             self::$curI++;
             return false;
         }
+        self::$curI += $inc;
         if ($checkSpecial) {
             $subStr = \substr(self::$str, $iStart, self::$curI - $iStart);
             $special = $special || self::hasSpecial($subStr);

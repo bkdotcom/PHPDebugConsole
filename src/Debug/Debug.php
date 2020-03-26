@@ -140,6 +140,20 @@ class Debug
             'services' => $this->getDefaultServices(),
             'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
         );
+        if (!isset(self::$instance)) {
+            /*
+               self::getInstance() will always return initial/first instance
+            */
+            self::$instance = $this;
+            /*
+                Only register autoloader:
+                  a. on initial instance (even though re-registering function does't re-register)
+                  b. if we're unable to to find our Config class (must not be using Composer)
+            */
+            if (!\class_exists('\\bdk\\Debug\\Config')) {
+                \spl_autoload_register(array($this, 'autoloader'));
+            }
+        }
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method
@@ -172,20 +186,6 @@ class Debug
             ),
         );
         $this->registeredPlugins = new SplObjectStorage();
-        if (!isset(self::$instance)) {
-            /*
-               self::getInstance() will always return initial/first instance
-            */
-            self::$instance = $this;
-            /*
-                Only register autoloader:
-                  a. on initial instance (even though re-registering function does't re-register)
-                  b. if we're unable to to find our Config class (must not be using Composer)
-            */
-            if (!\class_exists('\\bdk\\Debug\\Config')) {
-                \spl_autoload_register(array($this, 'autoloader'));
-            }
-        }
         /*
             Order is important
             a) set cfg (so that this->parentInstance gets set

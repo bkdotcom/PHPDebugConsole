@@ -314,6 +314,12 @@ class Internal implements SubscriberInterface
     public function onBootstrap()
     {
         $this->bootstraped = true;
+        $route = $this->debug->getCfg('route');
+        if ($route === 'stream') {
+            // normally we don't init the route until output
+            // but stream needs to begin listening now
+            $this->debug->setCfg('route', $route);
+        }
         $this->debug->addPlugin(new \bdk\Debug\Plugin\LogEnv());
         $this->debug->addPlugin(new \bdk\Debug\Plugin\LogReqRes());
     }

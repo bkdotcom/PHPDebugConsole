@@ -135,9 +135,6 @@ class Utf8
      */
     public static function strcut($str, $start, $length = null)
     {
-        if (\function_exists('mb_strcut')) {
-            return \mb_strcut($str, $start, $length);
-        }
         self::setStr($str);
         // find start
         if ($start > 0) {

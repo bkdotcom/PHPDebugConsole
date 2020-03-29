@@ -478,8 +478,7 @@ class Config
      */
     private function setDebugValues($values)
     {
-        $isCli = \strpos($this->debug->utilities->getInterface(), 'cli') !== false;
-        if (isset($values['key']) && !$isCli) {
+        if (isset($values['key']) && \strpos($this->debug->utilities->getInterface(), 'cli') === false) {
             $values = \array_merge($values, $this->setDebugKeyValues($values['key']));
         }
         foreach (array('logEnvInfo','logRequestInfo') as $name) {

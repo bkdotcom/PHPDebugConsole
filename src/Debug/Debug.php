@@ -2022,6 +2022,13 @@ class Debug
     private function getServiceFactory($property)
     {
         $val = null;
+        /*
+            Treat Request obj like a singleton..
+            Always refer to the original
+        */
+        if (\in_array($property, array('request')) && $this !== self::$instance) {
+            return self::$instance->getServiceFactory($property);
+        }
         if (isset($this->cfg['services'][$property])) {
             $val = $this->cfg['services'][$property];
             if ($val instanceof \Closure) {

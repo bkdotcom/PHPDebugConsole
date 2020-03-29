@@ -32,6 +32,8 @@ class Utilities
      */
     public static $htmlEmptyTags = array('area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr');
 
+    private static $serverParams = array();
+
     /**
      * Used by parseAttribString
      *
@@ -384,11 +386,15 @@ class Utilities
     {
         $return = 'http';
         /*
-            note: $_SERVER['argv'] could be populated with query string if register_argc_argv = On
+            notes:
+                $_SERVER['argv'] could be populated with query string if register_argc_argv = On
+                we used to also check for `defined('STDIN')`, but it's not unit test friendly
         */
+        $argv = self::getServerParam('argv', array());
         $isCliOrCron = \count(\array_filter(array(
-            \defined('STDIN'),
-            \count(self::getServerParam('argv', array())) > 1,
+            // have argv and it's not query_string
+            $argv && $argv !== array(self::getServerParam('QUERY_STRING')),
+            // serverParam REQUEST_METHOD... NOT request->getMethod() which likely defaults to GET
             self::getServerParam('REQUEST_METHOD') === null,
         ))) > 0;
         if ($isCliOrCron) {
@@ -814,7 +820,8 @@ class Utilities
     }
 
     /**
-     * [getServerParam description]
+     * Get $_SERVER param
+     * Gets serverParams from serverRequest interface
      *
      * @param string $name    $_SERVER key/name
      * @param mixed  $default default value
@@ -823,8 +830,12 @@ class Utilities
      */
     private static function getServerParam($name, $default = null)
     {
-        return \array_key_exists($name, $_SERVER)
-            ? $_SERVER[$name]
+        if (!self::$serverParams) {
+            $request = \bdk\Debug::getInstance()->request;
+            self::$serverParams = $request->getServerParams();
+        }
+        return \array_key_exists($name, self::$serverParams)
+            ? self::$serverParams[$name]
             : $default;
     }
 

@@ -50,10 +50,11 @@ class LogReqRes implements SubscriberInterface
     public function onPluginInit(Event $event)
     {
         $debug = $event->getSubject();
+        $this->debug = $debug->getChannel('Request / Response', array('nested' => false));
+
         $collectWas = $debug->setCfg('collect', true);
         $debug->groupSummary();
 
-        $this->debug = $debug->getChannel('Request / Response', array('nested' => false));
         $this->logRequest();    // headers, cookies, post
 
         $debug->groupEnd();
@@ -67,11 +68,16 @@ class LogReqRes implements SubscriberInterface
      */
     public function logRequest()
     {
+        if (\strpos($this->debug->utilities->getInterface(), 'http') !== 0) {
+            return;
+        }
         $this->logRequestHeaders();
         if ($this->debug->getCfg('logRequestInfo.cookies')) {
             $cookieVals = $this->debug->request->getCookieParams();
             \ksort($cookieVals, SORT_NATURAL);
-            $this->debug->table('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
+            if ($cookieVals) {
+                $this->debug->table('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
+            }
         }
         $this->logPost();
         $this->logFiles();
@@ -85,6 +91,9 @@ class LogReqRes implements SubscriberInterface
     public function logResponse()
     {
         if (!$this->debug->getCfg('logResponse')) {
+            return;
+        }
+        if (\strpos($this->debug->utilities->getInterface(), 'http') !== 0) {
             return;
         }
         $this->debug->log('response headers', $this->debug->getResponseHeaders(true));

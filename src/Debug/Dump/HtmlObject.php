@@ -95,10 +95,15 @@ class HtmlObject
             return '';
         }
         $valAppend = '';
-        $len = \strlen($val);
+        if ($val instanceof Abstraction) {
+            $len = $val['strlen'];
+            $val = $val['value'];
+        } else {
+            $len = \strlen($val);
+        }
         if ($len > 100) {
             $val = \substr($val, 0, 100);
-            $valAppend = '&hellip; <i>(' . ($len - 100) . ' more chars)</i>';
+            $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';
         }
         $toStringDump = $this->html->dump($val);
         $parsed = $this->debug->utilities->parseTag($toStringDump);

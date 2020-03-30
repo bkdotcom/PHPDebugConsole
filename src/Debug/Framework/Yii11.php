@@ -15,6 +15,7 @@ namespace bdk\Debug\Framework;
 use bdk\Debug;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii11LogRoute;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -217,43 +218,43 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     /**
      * debug.objAbstractStart event subscriber
      *
-     * @param Event $event Event instance
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    public function onDebugObjAbstractStart(Event $event)
+    public function onDebugObjAbstractStart(Abstraction $abs)
     {
-        if ($event->getSubject() instanceof CActiveRecord) {
-            $model = $event->getSubject();
-            $refObj = new \ReflectionObject($model);
+        $obj = $abs->getSubject();
+        if ($obj instanceof CActiveRecord) {
+            $refObj = new \ReflectionObject($obj);
             while (!$refObj->hasProperty('_models')) {
                 $refObj = $refObj->getParentClass();
             }
             $refProp = $refObj->getProperty('_models');
             $refProp->setAccessible(true);
-            $event['propertyOverrideValues'] = array(
+            $abs['propertyOverrideValues'] = array(
                 '_models' => \array_map(function ($val) {
                     return \get_class($val) . ' (not inspected)';
-                }, $refProp->getValue($model)),
+                }, $refProp->getValue($obj)),
             );
-            \ksort($event['propertyOverrideValues']['_models']);
+            \ksort($abs['propertyOverrideValues']['_models']);
         }
     }
 
     /**
      * debug.objAbstractEnd event subscriber
      *
-     * @param Event $event Event instance
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    public function onDebugObjAbstractEnd(Event $event)
+    public function onDebugObjAbstractEnd(Abstraction $abs)
     {
-        if ($event->getSubject() instanceof CActiveRecord) {
-            $event['properties']['_attributes']['forceShow'] = true;
-        } elseif ($event->getSubject() instanceof CDbCommand) {
-            $event['properties']['_paramLog']['forceShow'] = true;
-            $event['properties']['_text']['forceShow'] = true;
+        if ($abs->getSubject() instanceof CActiveRecord) {
+            $abs['properties']['_attributes']['forceShow'] = true;
+        } elseif ($abs->getSubject() instanceof CDbCommand) {
+            $abs['properties']['_paramLog']['forceShow'] = true;
+            $abs['properties']['_text']['forceShow'] = true;
         }
     }
 

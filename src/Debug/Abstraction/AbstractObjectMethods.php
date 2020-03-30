@@ -101,20 +101,9 @@ class AbstractObjectMethods extends AbstractObjectSub
     private function addMethodsFinish()
     {
         $abs = $this->abs;
-        $obj = $abs->getSubject();
         unset($abs['phpDoc']['method']);
         if (isset($abs['methods']['__toString'])) {
-            $val = null;
-            try {
-                if (\is_object($obj) && !$abs['methods']['__toString']['isDeprecated']) {
-                    $val = $obj->__toString();
-                }
-            } catch (Exception $e) {
-                // yes, __toString can throw exception..
-                // example: SplFileObject->__toString will throw exception if file doesn't exist
-                $this->devNull($e);
-            }
-            $abs['methods']['__toString']['returnValue'] = $val;
+            $abs['methods']['__toString']['returnValue'] = $this->toString();
         }
     }
 
@@ -128,18 +117,8 @@ class AbstractObjectMethods extends AbstractObjectSub
         $abs = $this->abs;
         $obj = $abs->getSubject();
         if (\method_exists($obj, '__toString')) {
-            $val = null;
-            try {
-                if (\is_object($obj)) {
-                    $val = $obj->__toString();
-                }
-            } catch (Exception $e) {
-                // yes, __toString can throw exception..
-                // example: SplFileObject->__toString will throw exception if file doesn't exist
-                $this->devNull($e);
-            }
             $abs['methods']['__toString'] = array(
-                'returnValue' => $val,
+                'returnValue' => $this->toString(),
                 'visibility' => 'public',
             );
         }
@@ -487,5 +466,35 @@ class AbstractObjectMethods extends AbstractObjectSub
             return $defaultValue;
         }
         return \trim($defaultValue, '\'"');
+    }
+
+    /**
+     * Get object's __toString value if method is not deprecated
+     *
+     * @return string|Abstraction
+     */
+    private function toString()
+    {
+        $abs = $this->abs;
+        // abs['methods']['__toString'] may not exist if via addMethodsMin
+        if (!empty($abs['methods']['__toString']['isDeprecated'])) {
+            return null;
+        }
+        $obj = $abs->getSubject();
+        if (!\is_object($obj)) {
+            return null;
+        }
+        $val = null;
+        try {
+            $val = $obj->__toString();
+            // check if needs abstraction (ie over maxLenString)
+            $absInfo = $this->abstracter->needsAbstraction($val);
+            $val = $this->abstracter->getAbstraction($val, $abs['debugMethod'], $absInfo, $abs['hist']);
+        } catch (Exception $e) {
+            // yes, __toString can throw exception..
+            // example: SplFileObject->__toString will throw exception if file doesn't exist
+            $this->devNull($e);
+        }
+        return $val;
     }
 }

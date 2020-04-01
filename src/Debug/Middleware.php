@@ -69,7 +69,7 @@ class Middleware implements MiddlewareInterface
     /**
      * Get response
      *
-     * @param RequestHandlerInterface $request Request
+     * @param ServerRequestInterface  $request Request
      * @param RequestHandlerInterface $handler "Next" request Handler
      *
      * @return ResponseInterface|null

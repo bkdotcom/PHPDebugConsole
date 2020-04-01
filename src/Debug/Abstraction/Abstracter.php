@@ -82,13 +82,13 @@ class Abstracter extends Component
      */
     public function getAbstraction($mixed, $method = null, $typeArray = array(), $hist = array())
     {
-        list($type, $typeMore) = $typeArray
-            ? $typeArray
-            : self::getType($mixed);
+        $type = $typeArray
+            ? $typeArray[0]
+            : self::getType()[0];
         if ($type === 'array' || $type === 'callable') {
             return $this->abstractArray->getAbstraction($mixed, $method, $hist);
         }
-        if ($type === 'object' || $typeMore === 'classname') {
+        if ($type === 'object') {
             return $this->abstractObject->getAbstraction($mixed, $method, $hist);
         }
         if ($type === 'resource') {
@@ -248,9 +248,6 @@ class Abstracter extends Component
         }
         if ($val === self::NOT_INSPECTED) {
             return array('notInspected', null);
-        }
-        if (\class_exists($val) || \interface_exists($val)) {
-            return array('string', 'classname');
         }
         return array('string', null);
     }

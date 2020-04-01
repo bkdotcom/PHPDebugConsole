@@ -85,6 +85,7 @@ bdk\DebugTest\Test2
 EOD;
 
         return array(
+            // 0
             array(
                 'log',
                 array(
@@ -183,6 +184,7 @@ EOD;
                     'text' => $text,
                 )
             ),
+            // 1
             array(
                 'log',
                 array(
@@ -190,10 +192,11 @@ EOD;
                 ),
                 array(
                     'html' => function ($str) {
-                        $this->assertContains('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more chars)</i></span>', $str);
+                        $this->assertContains('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more bytes)</i></span>', $str);
                     }
                 ),
             ),
+            // 2
             array(
                 'log',
                 array(

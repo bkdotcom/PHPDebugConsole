@@ -489,7 +489,9 @@ class AbstractObjectMethods extends AbstractObjectSub
             $val = $obj->__toString();
             // check if needs abstraction (ie over maxLenString)
             $absInfo = $this->abstracter->needsAbstraction($val);
-            $val = $this->abstracter->getAbstraction($val, $abs['debugMethod'], $absInfo, $abs['hist']);
+            if ($absInfo) {
+                $val = $this->abstracter->getAbstraction($val, $abs['debugMethod'], $absInfo, $abs['hist']);
+            }
         } catch (Exception $e) {
             // yes, __toString can throw exception..
             // example: SplFileObject->__toString will throw exception if file doesn't exist

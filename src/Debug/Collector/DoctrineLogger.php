@@ -113,7 +113,7 @@ class DoctrineLogger implements SQLLogger
         \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
         $debug->log('logged operations: ', \count($this->loggedStatements));
         $debug->time('total time', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));
+        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
         if ($connectionInfo) {
             $debug->log('connection info', $connectionInfo);
         }

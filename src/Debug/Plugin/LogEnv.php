@@ -190,7 +190,7 @@ class LogEnv implements SubscriberInterface
         }
         $this->debug->log('PHP Version', PHP_VERSION);
         $this->debug->log('ini location', \php_ini_loaded_file(), $this->debug->meta('detectFiles', true));
-        $this->debug->log('memory_limit', $this->debug->utilities->getBytes($this->debug->utilities->memoryLimit()));
+        $this->debug->log('memory_limit', $this->debug->utility->getBytes($this->debug->utility->memoryLimit()));
         $this->assertSetting(array(
             'name' => 'expose_php',
             'val' => false,

@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Utility;
+namespace bdk\Debug;
 
 use DOMDocument;
 use Exception;
@@ -20,7 +20,7 @@ use SqlFormatter;
 /**
  * Utility methods
  */
-class Utilities
+class Utility
 {
 
     /**

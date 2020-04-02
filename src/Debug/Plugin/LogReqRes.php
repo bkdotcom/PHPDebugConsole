@@ -68,7 +68,7 @@ class LogReqRes implements SubscriberInterface
      */
     public function logRequest()
     {
-        if (\strpos($this->debug->utilities->getInterface(), 'http') !== 0) {
+        if (\strpos($this->debug->utility->getInterface(), 'http') !== 0) {
             return;
         }
         $this->logRequestHeaders();
@@ -93,7 +93,7 @@ class LogReqRes implements SubscriberInterface
         if (!$this->debug->getCfg('logResponse')) {
             return;
         }
-        if (\strpos($this->debug->utilities->getInterface(), 'http') !== 0) {
+        if (\strpos($this->debug->utility->getInterface(), 'http') !== 0) {
             return;
         }
         $this->debug->log('response headers', $this->debug->getResponseHeaders(true));
@@ -252,7 +252,7 @@ class LogReqRes implements SubscriberInterface
     private function logResponseContent()
     {
         $maxLen = $this->debug->getCfg('logResponseMaxLen');
-        $maxLen = $this->debug->utilities->getBytes($maxLen, true);
+        $maxLen = $this->debug->utility->getBytes($maxLen, true);
         // get the contents of the output buffer we started to collect response
         $response = \ob_get_clean();
         echo $response;
@@ -264,7 +264,7 @@ class LogReqRes implements SubscriberInterface
                 $stream = $this->debug->response->getBody();
                 $contentLength = $stream->getSize(); // likely returns null (unknown)
                 if ($contentLength <= $maxLen) {
-                    $response = $this->debug->utilities->getStreamContents($stream);
+                    $response = $this->debug->utility->getStreamContents($stream);
                     $contentLength = \strlen($response);
                 }
             } catch (Exception $e) {
@@ -332,7 +332,7 @@ class LogReqRes implements SubscriberInterface
             $contentType = 'application/json';
             return false;
         }
-        if ($this->debug->utilities->isXml($input)) {
+        if ($this->debug->utility->isXml($input)) {
             $contentType = 'text/xml';
             return false;
         }

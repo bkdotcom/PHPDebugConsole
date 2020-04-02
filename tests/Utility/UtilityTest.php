@@ -1,14 +1,15 @@
 <?php
+
 /**
  * Run with --process-isolation option
  */
 
-use bdk\Debug\Utility\Utilities;
+use bdk\Debug\Utility;
 
 /**
  * PHPUnit tests for Debug class
  */
-class UtilitiesTest extends DebugTestFramework
+class UtilityTest extends DebugTestFramework
 {
 
     /**
@@ -46,7 +47,7 @@ class UtilitiesTest extends DebugTestFramework
             ),
             'boats' => array('speed','house'),
         );
-        $array3 = Utilities::arrayMergeDeep($array1, $array2);
+        $array3 = Utility::arrayMergeDeep($array1, $array2);
         $this->assertSame($arrayExpect, $array3);
     }
 
@@ -67,17 +68,17 @@ class UtilitiesTest extends DebugTestFramework
                 )
             ),
         );
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed.comfy'), true);
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.rock.comfy'), false);
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed.comfy.foo'), null);
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed.comfy.0'), null);
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed'), array('comfy' => true));
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.bed.foo'), null);
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.__count__'), 2);
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.__end__.comfy'), false);
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.__reset__.comfy'), true);
-        $this->assertSame(Utilities::arrayPathGet($array, 'surfaces.sofa.comfy'), null);
-        $this->assertSame(Utilities::arrayPathGet($array, array('surfaces','__end__','comfy')), false);
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed.comfy'), true);
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.rock.comfy'), false);
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed.comfy.foo'), null);
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed.comfy.0'), null);
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed'), array('comfy' => true));
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed.foo'), null);
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.__count__'), 2);
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.__end__.comfy'), false);
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.__reset__.comfy'), true);
+        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.sofa.comfy'), null);
+        $this->assertSame(Utility::arrayPathGet($array, array('surfaces','__end__','comfy')), false);
     }
 
     /**
@@ -155,7 +156,7 @@ class UtilitiesTest extends DebugTestFramework
             ),
         );
         foreach ($testStack as $test) {
-            $ret = Utilities::buildAttribString($test['attribs']);
+            $ret = Utility::buildAttribString($test['attribs']);
             $this->assertSame($test['expect'], $ret);
         }
     }
@@ -163,9 +164,9 @@ class UtilitiesTest extends DebugTestFramework
 
     public function testGetBytes()
     {
-        $this->assertSame('1 kB', Utilities::getBytes('1kb'));
-        $this->assertSame('1 kB', Utilities::getBytes('1024'));
-        $this->assertSame('1 kB', Utilities::getBytes(1024));
+        $this->assertSame('1 kB', Utility::getBytes('1kb'));
+        $this->assertSame('1 kB', Utility::getBytes('1024'));
+        $this->assertSame('1 kB', Utility::getBytes(1024));
     }
 
     /**
@@ -177,13 +178,13 @@ class UtilitiesTest extends DebugTestFramework
      */
     public function testGetEmittedHeader()
     {
-        $this->assertSame(array(), Utilities::getEmittedHeader());
+        $this->assertSame(array(), Utility::getEmittedHeader());
     }
 
     public function testGetIncludedFiles()
     {
         $filesA = get_included_files();
-        $filesB = Utilities::getIncludedFiles();
+        $filesB = Utility::getIncludedFiles();
         sort($filesA);
         sort($filesB);
         $this->assertArraySubset($filesA, $filesB);
@@ -191,7 +192,7 @@ class UtilitiesTest extends DebugTestFramework
 
     public function testGetInterface()
     {
-        $this->assertSame('cli', Utilities::getInterface());
+        $this->assertSame('cli', Utility::getInterface());
     }
 
     /**
@@ -202,16 +203,16 @@ class UtilitiesTest extends DebugTestFramework
     public function testIsBase64Encoded()
     {
         $base64Str = base64_encode(chunk_split(str_repeat('zippity do dah', 50)));
-        $this->assertTrue(Utilities::isBase64Encoded($base64Str));
-        $this->assertFalse(Utilities::isBase64Encoded('I\'m just a bill.'));
+        $this->assertTrue(Utility::isBase64Encoded($base64Str));
+        $this->assertFalse(Utility::isBase64Encoded('I\'m just a bill.'));
     }
 
     public function testIsList()
     {
-        $this->assertFalse(Utilities::isList("string"));
-        $this->assertTrue(Utilities::isList(array()));     // empty array = "list"
-        $this->assertFalse(Utilities::isList(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope')));
-        $this->assertTrue(Utilities::isList(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo')));
+        $this->assertFalse(Utility::isList("string"));
+        $this->assertTrue(Utility::isList(array()));     // empty array = "list"
+        $this->assertFalse(Utility::isList(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope')));
+        $this->assertTrue(Utility::isList(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo')));
     }
 
     /**
@@ -223,7 +224,7 @@ class UtilitiesTest extends DebugTestFramework
      */
     public function testMemoryLimit()
     {
-        $this->assertNotNull(Utilities::memoryLimit());
+        $this->assertNotNull(Utility::memoryLimit());
     }
 
     /**
@@ -278,7 +279,7 @@ class UtilitiesTest extends DebugTestFramework
             ),
         );
         foreach ($testStack as $test) {
-            $ret = call_user_func_array('\\bdk\\Debug\\Utility\\Utilities::parseAttribString', $test['params']);
+            $ret = call_user_func_array('\\bdk\\Debug\\Utility::parseAttribString', $test['params']);
             $this->assertSame($test['expect'], $ret);
         }
     }
@@ -321,14 +322,14 @@ class UtilitiesTest extends DebugTestFramework
             ),
         );
         foreach ($testStack as $test) {
-            $ret = Utilities::parseTag($test['tag']);
+            $ret = Utility::parseTag($test['tag']);
             $this->assertSame($test['expect'], $ret);
         }
     }
 
     public function testRequestId()
     {
-        $this->assertStringMatchesFormat('%x', Utilities::requestId());
+        $this->assertStringMatchesFormat('%x', Utility::requestId());
     }
 
     /**
@@ -344,7 +345,7 @@ class UtilitiesTest extends DebugTestFramework
             array('info', 'alone or in pairs'),
             array('warn', 'rolls over your neighbor\'s dog?'),
         );
-        $serialized = Utilities::serializeLog($log);
+        $serialized = Utility::serializeLog($log);
         return array(
             array($serialized, $log)
         );
@@ -364,7 +365,7 @@ class UtilitiesTest extends DebugTestFramework
     /*
     public function testUnserializeLog($serialized, $unserialized)
     {
-        $log = Utilities::unserializeLog($serialized, $this->debug);
+        $log = Utility::unserializeLog($serialized, $this->debug);
         $this->assertSame($unserialized, $log);
     }
     */

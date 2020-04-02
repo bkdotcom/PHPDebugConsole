@@ -666,7 +666,7 @@ class Base extends Component
             // close prev
             $replacement = '</span>';
         }
-        return $replacement . '<span' . $this->debug->utilities->buildAttribString(array(
+        return $replacement . '<span' . $this->debug->utility->buildAttribString(array(
             'style' => $arg,
         )) . '>';
     }

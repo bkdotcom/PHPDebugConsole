@@ -139,7 +139,7 @@ class Pdo extends PdoBase
         }
         $debug->log('logged operations: ', \count($this->loggedStatements));
         $debug->time('total time', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));
+        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
         $debug->log('server info', $serverInfo);
         $debug->groupEnd();
         $debug->groupEnd();

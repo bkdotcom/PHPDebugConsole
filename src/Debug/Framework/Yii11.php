@@ -194,7 +194,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
                 $isController = \preg_match('#/protected/controllers/.+.php#', $filepathRel);
                 $isView = \preg_match('#/protected/views(?:(?!/layout).)+.php#', $filepathRel);
                 $embolden = $isController || $isView;
-                return $debug->utilities->buildTag(
+                return $debug->utility->buildTag(
                     'span',
                     array(
                         'class' => 'file t_string',
@@ -394,7 +394,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
      */
     private function logFiles()
     {
-        $files = $this->debug->utilities->getIncludedFiles();
+        $files = $this->debug->utility->getIncludedFiles();
         $files = \array_filter($files, function ($file) {
             $exclude = array(
                 '/framework/',

@@ -167,7 +167,7 @@ class SimpleCache implements CacheInterface
         );
         $debug->log('logged operations: ', \count($this->loggedActions));
         $debug->log('total time: ', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));
+        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
         $debug->groupEnd();
         $debug->groupEnd();
     }

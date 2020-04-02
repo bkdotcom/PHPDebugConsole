@@ -16,6 +16,7 @@
 		"classmap": [
 			"src/Backtrace/Backtrace.php",
 			"src/Debug/Debug.php",
+			"src/Debug/Utility/Utility.php",
 			"src/ErrorHandler/ErrorHandler.php"
 		],
 		"psr-4": {

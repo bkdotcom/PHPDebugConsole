@@ -164,7 +164,7 @@ class StatementInfo
                     ),
                     'addQuotes' => false,
                     'visualWhiteSpace' => false,
-                    'value' => $debug->utilities->prettySql($this->sql),
+                    'value' => $debug->utility->prettySql($this->sql),
                 )),
                 $debug->meta(array(
                     'attribs' => array(
@@ -175,7 +175,7 @@ class StatementInfo
         }
         $this->logParams($debug);
         $debug->time('duration', $this->duration);
-        $debug->log('memory usage', $debug->utilities->getBytes($this->memoryUsage));
+        $debug->log('memory usage', $debug->utility->getBytes($this->memoryUsage));
         if ($this->exception) {
             $code = $this->exception->getCode();
             $msg = $this->exception->getMessage();

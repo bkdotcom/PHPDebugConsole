@@ -154,7 +154,7 @@ class Html extends Base
             '%f' => '%file',
             '%l' => '%line',
         ));
-        $str = '<div' . $this->debug->utilities->buildAttribString(array(
+        $str = '<div' . $this->debug->utility->buildAttribString(array(
             'class' => 'debug',
             // channel list gets built as log processed...  we'll str_replace this...
             'data-channels' => '{{channels}}',
@@ -315,7 +315,7 @@ class Html extends Base
                 $nameTab = 'Log';
             }
             $target = '.' . $this->nameToClassname($name);
-            $html .= $this->debug->utilities->buildTag(
+            $html .= $this->debug->utility->buildTag(
                 'a',
                 array(
                     'class' => array(
@@ -358,7 +358,7 @@ class Html extends Base
     {
         $this->channelRegex = '#^' . \preg_quote($name, '#') . '(\.|$)#';
         $isActive = $name === $this->debug->getCfg('channelName');
-        $str = '<div' . $this->debug->utilities->buildAttribString(array(
+        $str = '<div' . $this->debug->utility->buildAttribString(array(
             'class' => array(
                 'tab-pane',
                 $isActive ? 'active' : null,
@@ -377,11 +377,11 @@ class Html extends Base
             If outputing script, initially hide the output..
             this will help page load performance (fewer redraws)... by magnitudes
         */
-        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
+        $str .= '<ul' . $this->debug->utility->buildAttribString(array(
             'class' => 'debug-log-summary group-body',
             // 'style' => $style,
         )) . ">\n" . $this->processSummary() . '</ul>' . "\n";
-        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
+        $str .= '<ul' . $this->debug->utility->buildAttribString(array(
             'class' => 'debug-log group-body',
             // 'style' => $style,
         )) . ">\n" . $this->processLog() . '</ul>' . "\n";

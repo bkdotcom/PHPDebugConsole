@@ -54,7 +54,7 @@ class Html extends Base
                     ? 'div'
                     : 'span';
             }
-            $argAttribs = $this->debug->utilities->arrayMergeDeep(
+            $argAttribs = $this->debug->utility->arrayMergeDeep(
                 array(
                     'class' => array(
                         't_' . $this->dumpType,
@@ -67,12 +67,12 @@ class Html extends Base
                 $absAttribs['class'] = isset($absAttribs['class'])
                     ? (array) $absAttribs['class']
                     : array();
-                $argAttribs = $this->debug->utilities->arrayMergeDeep(
+                $argAttribs = $this->debug->utility->arrayMergeDeep(
                     $argAttribs,
                     $absAttribs
                 );
             }
-            $val = $this->debug->utilities->buildTag($tagName, $argAttribs, $val);
+            $val = $this->debug->utility->buildTag($tagName, $argAttribs, $val);
         }
         $this->argAttribs = array();
         return $val;
@@ -122,7 +122,7 @@ class Html extends Base
                 $classname = '<span class="namespace">' . \substr($classname, 0, $idx + 1) . '</span>'
                     . \substr($classname, $idx + 1);
             }
-            $classname = $this->debug->utilities->buildTag(
+            $classname = $this->debug->utility->buildTag(
                 $tagName,
                 \array_merge(array(
                     'class' => 'classname',
@@ -180,7 +180,7 @@ class Html extends Base
         $types = \implode('<span class="t_punct">|</span>', $types);
         $attribs = \array_filter($attribs);
         if ($attribs) {
-            $type = $this->debug->utilities->buildtag(
+            $type = $this->debug->utility->buildtag(
                 'span',
                 $attribs,
                 $types
@@ -326,7 +326,7 @@ class Html extends Base
             $html = '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">()</span>';
         } else {
-            $showKeys = $this->debug->getCfg('arrayShowListKeys') || !$this->debug->utilities->isList($array);
+            $showKeys = $this->debug->getCfg('arrayShowListKeys') || !$this->debug->utility->isList($array);
             $html = '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">(</span>' . "\n";
             if ($showKeys) {
@@ -562,7 +562,7 @@ class Html extends Base
                 . '</button>'
                 . $html;
         }
-        return $this->debug->utilities->buildTag('div', $attribs, $html);
+        return $this->debug->utility->buildTag('div', $attribs, $html);
     }
 
     /**
@@ -605,7 +605,7 @@ class Html extends Base
                 $meta['sanitizeFirst'] = false;
             }
         }
-        return $this->debug->utilities->buildTag(
+        return $this->debug->utility->buildTag(
             'li',
             $attribs,
             $this->buildArgString($args, $meta)
@@ -659,11 +659,11 @@ class Html extends Base
                 . $argStr;
         }
         $this->logEntryAttribs['class'] = \str_replace('m_' . $method, 'm_group', $this->logEntryAttribs['class']);
-        $str = '<li' . $this->debug->utilities->buildAttribString($this->logEntryAttribs) . '>' . "\n";
+        $str = '<li' . $this->debug->utility->buildAttribString($this->logEntryAttribs) . '>' . "\n";
         /*
             Header / label / toggle
         */
-        $str .= $this->debug->utilities->buildTag(
+        $str .= $this->debug->utility->buildTag(
             'div',
             array(
                 'class' => array(
@@ -679,7 +679,7 @@ class Html extends Base
         /*
             Group open
         */
-        $str .= '<ul' . $this->debug->utilities->buildAttribString(array(
+        $str .= '<ul' . $this->debug->utility->buildAttribString(array(
             'class' => array(
                 'group-body',
                 $levelClass,
@@ -714,7 +714,7 @@ class Html extends Base
         if (!$asTable && $meta['caption']) {
             \array_unshift($args, $meta['caption']);
         }
-        return $this->debug->utilities->buildTag(
+        return $this->debug->utility->buildTag(
             'li',
             $this->logEntryAttribs,
             $asTable

@@ -209,7 +209,7 @@ class GuzzleMiddleware
         $contentType = $contentType
             ? $contentType[0]
             : null;
-        $body = $this->debug->utilities->getStreamContents($msg->getBody());
+        $body = $this->debug->utility->getStreamContents($msg->getBody());
         $prettify = $msg instanceof RequestInterface
             ? $this->cfg['prettyRequestBody']
             : $this->cfg['prettyResponseBody'];

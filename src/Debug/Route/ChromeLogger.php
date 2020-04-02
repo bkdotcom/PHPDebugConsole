@@ -89,7 +89,7 @@ class ChromeLogger extends Base
                 if (\strlen($encoded) > $max) {
                     $this->jsonData['rows'] = array(
                         array(
-                            array('chromeLogger: unable to abridge log to ' . $this->debug->utilities->getBytes($max)),
+                            array('chromeLogger: unable to abridge log to ' . $this->debug->utility->getBytes($max)),
                             null,
                             'warn',
                         )
@@ -187,8 +187,8 @@ class ChromeLogger extends Base
     protected function getMaxLength()
     {
         $maxVals = \array_filter(array(
-            $this->debug->utilities->getBytes($this->debug->getCfg('headerMaxAll'), true),
-            $this->debug->utilities->getBytes($this->debug->getCfg('headerMaxPer'), true),
+            $this->debug->utility->getBytes($this->debug->getCfg('headerMaxAll'), true),
+            $this->debug->utility->getBytes($this->debug->getCfg('headerMaxPer'), true),
         ));
         return $maxVals
             ? \min($maxVals)

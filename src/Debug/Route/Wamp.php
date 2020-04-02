@@ -414,7 +414,7 @@ class Wamp implements RouteInterface
                 'channelNameRoot' => $this->debug->rootInstance->getCfg('channelName'),
                 'debugVersion' => $debugClass::VERSION,
                 'drawer' => $this->debug->getCfg('outputHtml.drawer'),
-                'interface' => $this->debug->utilities->getInterface(),
+                'interface' => $this->debug->utility->getInterface(),
                 'linkFilesTemplateDefault' => \strtr(
                     \ini_get('xdebug.file_link_format'),
                     array(

@@ -63,7 +63,7 @@ class Config
                 'request',
                 'response',
                 'utf8',
-                'utilities',
+                'utility',
             )));
         }
         return $cfg;
@@ -89,7 +89,7 @@ class Config
             if ($path === array('route') && $this->values['route'] === 'auto') {
                 return $this->getDefaultRoute();
             }
-            return $this->debug->utilities->arrayPathGet($this->values, $path);
+            return $this->debug->utility->arrayPathGet($this->values, $path);
         }
         return $this->getValueSubClass($classname, $path, $default);
     }
@@ -150,7 +150,7 @@ class Config
         $values = $this->keyValToArray($path, $val);
         $values = $this->setDupeValues($values);
         $return = $this->doSetCfg($values);
-        return $this->debug->utilities->arrayPathGet($return, $path);
+        return $this->debug->utility->arrayPathGet($return, $path);
     }
 
     /**
@@ -281,7 +281,7 @@ class Config
      */
     private function getDefaultRoute()
     {
-        $interface = $this->debug->utilities->getInterface();
+        $interface = $this->debug->utility->getInterface();
         if (\strpos($interface, 'ajax') !== false) {
             return $this->values['routeNonHtml'];
         }
@@ -312,7 +312,7 @@ class Config
         }
         if (isset($this->valuesPending[$classname]) && $path) {
             // want a config value of obj that has not yet been instantiated...
-            $val = $this->debug->utilities->arrayPathGet($this->valuesPending[$classname], $path);
+            $val = $this->debug->utility->arrayPathGet($this->valuesPending[$classname], $path);
             if ($val !== null) {
                 return $val;
             }
@@ -478,7 +478,7 @@ class Config
      */
     private function setDebugValues($values)
     {
-        if (isset($values['key']) && \strpos($this->debug->utilities->getInterface(), 'cli') === false) {
+        if (isset($values['key']) && \strpos($this->debug->utility->getInterface(), 'cli') === false) {
             $values = \array_merge($values, $this->setDebugKeyValues($values['key']));
         }
         foreach (array('logEnvInfo','logRequestInfo') as $name) {
@@ -489,7 +489,7 @@ class Config
             $val = $values[$name];
             if (\is_bool($val)) {
                 $values[$name] = \array_fill_keys($allKeys, $val);
-            } elseif ($this->debug->utilities->isList($val)) {
+            } elseif ($this->debug->utility->isList($val)) {
                 $values[$name] = \array_merge(
                     \array_fill_keys($allKeys, false),
                     \array_fill_keys($val, true)
@@ -500,7 +500,7 @@ class Config
             // don't append, replace
             $this->values['logServerKeys'] = array();
         }
-        $this->values = $this->debug->utilities->arrayMergeDeep($this->values, $values);
+        $this->values = $this->debug->utility->arrayMergeDeep($this->values, $values);
     }
 
     /**

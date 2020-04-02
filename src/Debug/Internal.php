@@ -233,7 +233,7 @@ class Internal implements SubscriberInterface
     {
         $headers = $this->debug->response
             ? $this->debug->response->getHeaders()
-            : $this->debug->utilities->getEmittedHeaders();
+            : $this->debug->utility->getEmittedHeaders();
         if (!$asString) {
             return $headers;
         }
@@ -243,7 +243,7 @@ class Internal implements SubscriberInterface
             : 'HTTP/1.0';
         $responseCode = $this->getResponseCode();
         $headersAll = array(
-            $protocol . ' ' . $responseCode . ' ' . $this->debug->utilities->httpStatusPhrase($responseCode),
+            $protocol . ' ' . $responseCode . ' ' . $this->debug->utility->httpStatusPhrase($responseCode),
         );
         foreach ($headers as $k => $vals) {
             foreach ($vals as $val) {
@@ -532,9 +532,9 @@ class Internal implements SubscriberInterface
             if ($type === 'html') {
                 $lang = 'markup';
             } elseif ($type === 'json') {
-                $string = $this->debug->utilities->prettyJson($string);
+                $string = $this->debug->utility->prettyJson($string);
             } elseif ($type === 'xml') {
-                $string = $this->debug->utilities->prettyXml($string);
+                $string = $this->debug->utility->prettyXml($string);
             }
             if (!$this->highlightAdded) {
                 $this->debug->addPlugin(new Highlight());
@@ -723,7 +723,7 @@ class Internal implements SubscriberInterface
             ), $this->debug->request->getServerParams());
             $val = \count(
                 \array_filter(array(
-                    \strpos($this->debug->utilities->getInterface(), 'http') !== false,
+                    \strpos($this->debug->utility->getInterface(), 'http') !== false,
                     $serverParams['HTTP_SOAPACTION'],
                     \stripos($serverParams['HTTP_USER_AGENT'], 'curl') !== false,
                 ))
@@ -879,15 +879,15 @@ class Internal implements SubscriberInterface
         $route = $this->debug->getCfg('route');
         $isRouteHtml = $route && \get_class($route) === 'bdk\\Debug\\Route\\Html';
         $this->debug->groupSummary(1);
-        $this->debug->info('Built In ' . $this->debug->utilities->formatDuration($vals['runtime']));
+        $this->debug->info('Built In ' . $this->debug->utility->formatDuration($vals['runtime']));
         $this->debug->info(
             'Peak Memory Usage'
                 . ($isRouteHtml
                     ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
                     : '')
                 . ': '
-                . $this->debug->utilities->getBytes($vals['memoryPeakUsage']) . ' / '
-                . $this->debug->utilities->getBytes($vals['memoryLimit']),
+                . $this->debug->utility->getBytes($vals['memoryPeakUsage']) . ' / '
+                . $this->debug->utility->getBytes($vals['memoryLimit']),
             $this->debug->meta('sanitize', false)
         );
         $this->debug->groupEnd();
@@ -999,7 +999,7 @@ class Internal implements SubscriberInterface
         if (!$vals) {
             $vals = array(
                 'memoryPeakUsage' => \memory_get_peak_usage(true),
-                'memoryLimit' => $this->debug->utilities->memoryLimit(),
+                'memoryLimit' => $this->debug->utility->memoryLimit(),
                 'runtime' => $this->debug->timeEnd('debugInit', $this->debug->meta('silent')),
             );
             $this->debug->setData('runtime', $vals);

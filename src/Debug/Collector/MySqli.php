@@ -173,7 +173,7 @@ class MySqli extends mysqliBase
 
             $debug->log('logged operations: ', \count($this->loggedStatements));
             $debug->time('total time', $this->getTimeSpent());
-            $debug->log('max memory usage', $debug->utilities->getBytes($this->getPeakMemoryUsage()));
+            $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
 
             // parse server info
             \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat(), $matches);

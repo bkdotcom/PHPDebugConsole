@@ -84,7 +84,7 @@ class Abstracter extends Component
     {
         $type = $typeArray
             ? $typeArray[0]
-            : self::getType()[0];
+            : self::getType($mixed)[0];
         if ($type === 'array' || $type === 'callable') {
             return $this->abstractArray->getAbstraction($mixed, $method, $hist);
         }

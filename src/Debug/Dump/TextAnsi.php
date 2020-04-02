@@ -69,7 +69,7 @@ class TextAnsi extends Text
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->cfg = $debug->utilities->arrayMergeDeep($this->cfg, $this->ansiCfg);
+        $this->cfg = $debug->utility->arrayMergeDeep($this->cfg, $this->ansiCfg);
     }
 
     /**

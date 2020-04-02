@@ -46,7 +46,7 @@ use SplObjectStorage;
  * @property ResponseInterface $response  lazy-loaded ResponseInterface (set via writeResponse)
  * @property ServerRequest $request       lazy-loaded ServerRequest
  * @property Utf8          $utf8          lazy-loaded Utf8 instance
- * @property Utilities     $utilities     lazy-loaded Utilities instance
+ * @property Utility       $utility       lazy-loaded Utility instance
  */
 class Debug
 {
@@ -170,7 +170,7 @@ class Debug
             'outputSent'        => false,
             'profileAutoInc'    => 1,
             'profileInstances'  => array(),
-            'requestId'         => $this->utilities->requestId(),
+            'requestId'         => $this->utility->requestId(),
             'runtime'           => array(
                 // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
             ),
@@ -1152,7 +1152,7 @@ class Debug
         $meta = $logEntry['meta'];
         if ($microT) {
             $args[0] .= ': ';
-            $elapsed = $this->utilities->formatDuration(
+            $elapsed = $this->utility->formatDuration(
                 $elapsed + \microtime(true) - $microT,
                 $meta['unit'],
                 $meta['precision']
@@ -1414,14 +1414,14 @@ class Debug
     public function getData($path = null)
     {
         if (!$path) {
-            $data = $this->utilities->arrayCopy($this->data, false);
-            $data['logSummary'] = $this->utilities->arrayCopy($data['logSummary'], false);
-            $data['groupStacks'] = $this->utilities->arrayCopy($data['groupStacks'], false);
+            $data = $this->utility->arrayCopy($this->data, false);
+            $data['logSummary'] = $this->utility->arrayCopy($data['logSummary'], false);
+            $data['groupStacks'] = $this->utility->arrayCopy($data['groupStacks'], false);
             return $data;
         }
-        $data = $this->utilities->arrayPathGet($this->data, $path);
+        $data = $this->utility->arrayPathGet($this->data, $path);
         return \is_array($data) && \in_array($path, array('logSummary','groupStacks'))
-            ? $this->utilities->arrayCopy($data, false)
+            ? $this->utility->arrayCopy($data, false)
             : $data;
     }
 
@@ -1694,15 +1694,20 @@ class Debug
     protected function autoloader($className)
     {
         $className = \ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
-        if (!\strpos($className, '\\')) {
-            // className is not namespaced
-            return;
-        }
         $psr4Map = array(
             'bdk\\Debug\\' => __DIR__,
             'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
             'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
         );
+        $classMap = array(
+            'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
+            'bdk\\Debug\\Utility' => __DIR__ . '/Utility/Utility.php',
+            'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
+        );
+        if (isset($classMap[$className])) {
+            require $classMap[$className];
+            return;
+        }
         foreach ($psr4Map as $namespace => $dir) {
             if (\strpos($className, $namespace) === 0) {
                 $rel = \substr($className, \strlen($namespace));
@@ -1710,13 +1715,6 @@ class Debug
                 require $dir . '/' . $rel . '.php';
                 return;
             }
-        }
-        $classMap = array(
-            'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
-            'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
-        );
-        if (isset($classMap[$className])) {
-            require $classMap[$className];
         }
     }
 
@@ -1880,7 +1878,7 @@ class Debug
             : 'time';
         $str = \strtr($meta['template'], array(
             '%label' => $label,
-            '%time' => $this->utilities->formatDuration($elapsed, $meta['unit'], $meta['precision']),
+            '%time' => $this->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']),
         ));
         $this->appendLog(new LogEntry(
             $this,
@@ -1981,8 +1979,8 @@ class Debug
             'utf8' => function () {
                 return new Debug\Utility\Utf8();
             },
-            'utilities' => function () {
-                return new Debug\Utility\Utilities();
+            'utility' => function () {
+                return new Debug\Utility();
             },
         );
     }

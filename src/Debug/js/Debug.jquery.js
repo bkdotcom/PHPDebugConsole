@@ -269,8 +269,7 @@
   }
 
   var config$1;
-  var expandStack = [];
-  var strings = [];
+  var toExpandQueue = [];
 
   function init$1 ($root) {
     config$1 = $root.data('config').get();
@@ -310,7 +309,6 @@
       var $node = $(e.target);
       var $entry = $node.closest('li[class*=m_]');
       e.stopPropagation();
-      expandStack.push($node);
       $node.find('> .array-inner > .key-value > :last-child').each(function () {
         enhanceValue($entry, this);
       });
@@ -327,7 +325,6 @@
       if ($node.is('.enhanced')) {
         return
       }
-      expandStack.push($node);
       $node.find('> .constant > :last-child,' +
         '> .property > :last-child,' +
         '> .method .t_string'
@@ -337,16 +334,22 @@
       enhanceInner($node);
     });
     $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
-      var i;
-      var count;
-      expandStack.pop();
-      if (expandStack.length === 0) {
-        // now that everything relevant's been expanded we can enhanceLongString
-        for (i = 0, count = strings.length; i < count; i++) {
-          enhanceLongString(strings[i]);
-        }
-        strings = [];
+      var $strings;
+      if (e.namespace === 'debug.group') {
+        // console.log('expanded group', e.target)
+        $strings = $(e.target).find('> li > .t_string');
+      } else if (e.namespace === 'debug.object') {
+        // console.log('expanded object', e.target)
+        $strings = $(e.target).find('> dd.constant > .t_string,' +
+          ' > dd.property:visible > .t_string,' +
+          ' > dd.method > .t_string');
+      } else {
+        // console.log('expanded array', e.target)
+        $strings = $(e.target).find('> .key-value > .t_string');
       }
+      $strings.not('.numeric').each(function () {
+        enhanceLongString($(this));
+      });
     });
   }
 
@@ -582,7 +585,6 @@
     // console.warn('enhanceEntries', $node[0])
     var $prev = $node.prev();
     var show = !$prev.hasClass('group-header') || $prev.hasClass('expanded');
-    expandStack.push($node);
     // temporarily hide when enhancing... minimize redraws
     $node.hide();
     $node.children().each(function () {
@@ -591,8 +593,10 @@
     if (show) {
       $node.show();
     }
+    while (toExpandQueue.length) {
+      toExpandQueue.shift().debugEnhance('expand');
+    }
     $node.addClass('enhanced');
-    $node.trigger('expanded.debug.group');
   }
 
   /**
@@ -648,7 +652,7 @@
       $group.addClass('empty');
     }
     if ($toggle.is('.expanded') || $target.find('.m_error, .m_warn').not('.filter-hidden').length) {
-      $toggle.debugEnhance('expand');
+      toExpandQueue.push($toggle);
     } else {
       $toggle.debugEnhance('collapse', true);
     }
@@ -677,7 +681,6 @@
     } else if ($node.is('table')) {
       makeSortable($node);
     } else if ($node.is('.t_string')) {
-      strings.push($node);
       createFileLinks($entry, $node);
     }
     if ($node.is('.timestamp')) {
@@ -1729,7 +1732,7 @@
       // hide the toggle..  there is a different toggle in the expanded version
       $toggle.hide();
       $target.show();
-      $target.trigger(eventName);
+      $target.find('> .array-inner').trigger(eventName);
     } else {
       $target.slideDown('fast', function () {
         var $groupEndValue = $target.find('> .m_groupEndValue');
@@ -1739,7 +1742,7 @@
           // remove value from label
           $toggle.find('.group-label').last().nextAll().remove();
         }
-        // setTimeout for reasons... ensures listener gets visible target
+        // setTimeout for reasons?...
         setTimeout(function () {
           $target.trigger(eventName);
         });

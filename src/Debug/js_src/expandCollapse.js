@@ -90,7 +90,7 @@ export function expand ($toggleOrTarget) {
     // hide the toggle..  there is a different toggle in the expanded version
     $toggle.hide()
     $target.show()
-    $target.trigger(eventName)
+    $target.find('> .array-inner').trigger(eventName)
   } else {
     $target.slideDown('fast', function () {
       var $groupEndValue = $target.find('> .m_groupEndValue')
@@ -100,7 +100,7 @@ export function expand ($toggleOrTarget) {
         // remove value from label
         $toggle.find('.group-label').last().nextAll().remove()
       }
-      // setTimeout for reasons... ensures listener gets visible target
+      // setTimeout for reasons?...
       setTimeout(function () {
         $target.trigger(eventName)
       })

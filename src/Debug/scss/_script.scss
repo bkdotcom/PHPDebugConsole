@@ -111,7 +111,7 @@ i.fa-calendar { font-size: 1.1em; }
   bottom: -1px;
   width: 100%;
   height: 55px;
-  background-image: linear-gradient(to bottom, rgba(white, 0), white);
+  background-image: linear-gradient(to bottom, rgba(white, 0), rgba(white, 0.75));
   pointer-events: none;
 }
 .level-error .show-more-fade,

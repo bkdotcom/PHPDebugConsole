@@ -3,8 +3,7 @@ import * as enhanceObject from './enhanceObject.js'
 import * as tableSort from './tableSort.js'
 
 var config
-var expandStack = []
-var strings = []
+var toExpandQueue = []
 
 export function init ($root) {
   config = $root.data('config').get()
@@ -44,7 +43,6 @@ export function init ($root) {
     var $node = $(e.target)
     var $entry = $node.closest('li[class*=m_]')
     e.stopPropagation()
-    expandStack.push($node)
     $node.find('> .array-inner > .key-value > :last-child').each(function () {
       enhanceValue($entry, this)
     })
@@ -61,7 +59,6 @@ export function init ($root) {
     if ($node.is('.enhanced')) {
       return
     }
-    expandStack.push($node)
     $node.find('> .constant > :last-child,' +
       '> .property > :last-child,' +
       '> .method .t_string'
@@ -71,16 +68,22 @@ export function init ($root) {
     enhanceObject.enhanceInner($node)
   })
   $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
-    var i
-    var count
-    expandStack.pop()
-    if (expandStack.length === 0) {
-      // now that everything relevant's been expanded we can enhanceLongString
-      for (i = 0, count = strings.length; i < count; i++) {
-        enhanceLongString(strings[i])
-      }
-      strings = []
+    var $strings
+    if (e.namespace === 'debug.group') {
+      // console.log('expanded group', e.target)
+      $strings = $(e.target).find('> li > .t_string')
+    } else if (e.namespace === 'debug.object') {
+      // console.log('expanded object', e.target)
+      $strings = $(e.target).find('> dd.constant > .t_string,' +
+        ' > dd.property:visible > .t_string,' +
+        ' > dd.method > .t_string')
+    } else {
+      // console.log('expanded array', e.target)
+      $strings = $(e.target).find('> .key-value > .t_string')
     }
+    $strings.not('.numeric').each(function () {
+      enhanceLongString($(this))
+    })
   })
 }
 
@@ -316,7 +319,6 @@ export function enhanceEntries ($node) {
   // console.warn('enhanceEntries', $node[0])
   var $prev = $node.prev()
   var show = !$prev.hasClass('group-header') || $prev.hasClass('expanded')
-  expandStack.push($node)
   // temporarily hide when enhancing... minimize redraws
   $node.hide()
   $node.children().each(function () {
@@ -325,8 +327,10 @@ export function enhanceEntries ($node) {
   if (show) {
     $node.show()
   }
+  while (toExpandQueue.length) {
+    toExpandQueue.shift().debugEnhance('expand')
+  }
   $node.addClass('enhanced')
-  $node.trigger('expanded.debug.group')
 }
 
 /**
@@ -382,7 +386,7 @@ function enhanceGroup ($group) {
     $group.addClass('empty')
   }
   if ($toggle.is('.expanded') || $target.find('.m_error, .m_warn').not('.filter-hidden').length) {
-    $toggle.debugEnhance('expand')
+    toExpandQueue.push($toggle)
   } else {
     $toggle.debugEnhance('collapse', true)
   }
@@ -411,7 +415,6 @@ function enhanceValue ($entry, node) {
   } else if ($node.is('table')) {
     tableSort.makeSortable($node)
   } else if ($node.is('.t_string')) {
-    strings.push($node)
     createFileLinks($entry, $node)
   }
   if ($node.is('.timestamp')) {

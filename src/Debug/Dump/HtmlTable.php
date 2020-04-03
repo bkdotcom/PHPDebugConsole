@@ -13,7 +13,7 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug\Dump\Html;
-use bdk\Debug\MethodTable;
+use bdk\Debug\Method\Table as MethodTable;
 
 /**
  * build a table

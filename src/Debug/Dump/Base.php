@@ -17,7 +17,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Component;
 use bdk\Debug\LogEntry;
-use bdk\Debug\MethodTable;
+use bdk\Debug\Method\Table as MethodTable;
 use bdk\PubSub\Event;
 
 /**

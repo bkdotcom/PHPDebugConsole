@@ -3,7 +3,7 @@
 use bdk\CssXpath\DOMTestCase;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\psr7lite\ServerRequest;
+use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\PubSub\Event;
 
 /**

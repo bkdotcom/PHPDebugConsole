@@ -1,6 +1,6 @@
 <?php
 
-use bdk\Debug\MethodTable;
+use bdk\Debug\Method\Table as MethodTable;
 
 /**
  * PHPUnit tests for Debug class
@@ -16,9 +16,9 @@ class MethodTableTest extends DebugTestFramework
     public function testTableColKeys()
     {
         $array = array(
-            array('col1'=>'', 'col2'=>'', 'col4'=>''),
-            array('col1'=>'', 'col2'=>'', 'col3'=>''),
-            array('col1'=>'', 'col2'=>'', 'col3'=>''),
+            array('col1' => '', 'col2' => '', 'col4' => ''),
+            array('col1' => '', 'col2' => '', 'col3' => ''),
+            array('col1' => '', 'col2' => '', 'col3' => ''),
         );
         $colKeys = MethodTable::colKeys($array);
         $this->assertSame(array('col1','col2','col3','col4'), $colKeys);
@@ -40,8 +40,8 @@ class MethodTableTest extends DebugTestFramework
     {
         $list = array(
             // note different order of keys / not all rows have all cols
-            array('name'=>'Bob', 'age'=>'12', 'sex'=>'M', 'Naughty'=>false),
-            array('Naughty'=>true, 'name'=>'Sally', 'extracol' => 'yes', 'sex'=>'F', 'age'=>'10'),
+            array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
+            array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
         );
         $this->debug->table($list);
         $this->debug->table('arg1', array());
@@ -54,9 +54,9 @@ class MethodTableTest extends DebugTestFramework
             'table',
             array($list),
             array(
-                'caption'=>null,
-                'columns'=>array(),
-                'sortable'=>true,
+                'caption' => null,
+                'columns' => array(),
+                'sortable' => true,
                 'totalCols' => array(),
             ),
         ), $this->logEntryToArray($this->debug->getData('log/0')));
@@ -64,9 +64,9 @@ class MethodTableTest extends DebugTestFramework
             'table',
             array(array()),
             array(
-                'caption'=>'arg1',
-                'columns'=>array(),
-                'sortable'=>true,
+                'caption' => 'arg1',
+                'columns' => array(),
+                'sortable' => true,
                 'totalCols' => array(),
             ),
         ), $this->logEntryToArray($this->debug->getData('log/1')));
@@ -74,9 +74,9 @@ class MethodTableTest extends DebugTestFramework
             'table',
             array($list),
             array(
-                'caption'=>'arg1',
-                'columns'=>array(),
-                'sortable'=>true,
+                'caption' => 'arg1',
+                'columns' => array(),
+                'sortable' => true,
                 'totalCols' => array(),
             ),
         ), $this->logEntryToArray($this->debug->getData('log/2')));
@@ -84,9 +84,9 @@ class MethodTableTest extends DebugTestFramework
             'table',
             array($list),
             array(
-                'caption'=>'arg2',
-                'columns'=>array('arg3 is array'),
-                'sortable'=>true,
+                'caption' => 'arg2',
+                'columns' => array('arg3 is array'),
+                'sortable' => true,
                 'totalCols' => array(),
             ),
         ), $this->logEntryToArray($this->debug->getData('log/3')));
@@ -94,9 +94,9 @@ class MethodTableTest extends DebugTestFramework
             'table',
             array(null),
             array(
-                'caption'=>'arg1',
-                'columns'=>array(),
-                'sortable'=>true,
+                'caption' => 'arg1',
+                'columns' => array(),
+                'sortable' => true,
                 'totalCols' => array(),
             ),
         ), $this->logEntryToArray($this->debug->getData('log/4')));
@@ -106,9 +106,9 @@ class MethodTableTest extends DebugTestFramework
                 array('a', 'b', 'c'),
             ),
             array(
-                'caption'=>'flat',
-                'columns'=>array(),
-                'sortable'=>true,
+                'caption' => 'flat',
+                'columns' => array(),
+                'sortable' => true,
                 'totalCols' => array(),
             ),
         ), $this->logEntryToArray($this->debug->getData('log/5')));
@@ -121,8 +121,8 @@ class MethodTableTest extends DebugTestFramework
     {
         $rowsA = array(
             // note different order of keys / not all rows have all cols
-            4 => array('name'=>'Bob', 'age'=>'12', 'sex'=>'M', 'Naughty'=>false),
-            2 => array('Naughty'=>true, 'name'=>'Sally', 'extracol' => 'yes', 'sex'=>'F', 'age'=>'10'),
+            4 => array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
+            2 => array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
         );
         $rowsB = array(
             array(
@@ -189,8 +189,8 @@ EOD;
                 array('blah'),
                 array(
                     'html' => '<li class="m_table">'
-                        .'<span class="no-quotes t_string">blah</span> = <span class="t_null">null</span>'
-                        .'</li>',
+                        . '<span class="no-quotes t_string">blah</span> = <span class="t_null">null</span>'
+                        . '</li>',
                     'text' => 'blah = null',
                     'script' => 'console.log("blah",null);',
                     'firephp' => 'X-Wf-1-1-1-2: 36|[{"Label":"blah","Type":"LOG"},null]|',
@@ -241,9 +241,9 @@ EOD;
                             <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
                             <dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$closure</span></span>, <span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
                             <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
-                            '.(version_compare(PHP_VERSION, '7.0', '>=') ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">...$parameters</span></span><span class="t_punct">)</span></dd>'."\n" : '')
-                            .(version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>'."\n" : '')
-                            .'<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
+                            ' . (version_compare(PHP_VERSION, '7.0', '>=') ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">...$parameters</span></span><span class="t_punct">)</span></dd>' . "\n" : '')
+                            . (version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>' . "\n" : '')
+                            . '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
                             </dl>
                         </td></tr>
                         </tbody>
@@ -257,7 +257,7 @@ EOD;
                         [4] => Closure
                             Properties: none!
                             Methods:
-                                public: '.$dateTimePubMethods.'
+                                public: ' . $dateTimePubMethods . '
                                 private: 1
                     )',
                     'script' => 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::providerTestMethod",{"___class_name":"Closure"}]);',
@@ -320,9 +320,9 @@ EOD;
                         )',
                     'script' => 'console.table({"4":{"___class_name":"bdk\\\DebugTest\\\TestTraversable","name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"___class_name":"bdk\\\DebugTest\\\TestTraversable","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
                     'firephp' => 'X-Wf-1-1-1-6: 250|[{"Label":"traversable -o- traversables","Type":"TABLE"},['
-                        .'["","___class_name","name","age","sex","Naughty","extracol"],'
-                        .'[4,"bdk\\\DebugTest\\\TestTraversable","Bob","12","M",false,null],'
-                        .'[2,"bdk\\\DebugTest\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
+                        . '["","___class_name","name","age","sex","Naughty","extracol"],'
+                        . '[4,"bdk\\\DebugTest\\\TestTraversable","Bob","12","M",false,null],'
+                        . '[2,"bdk\\\DebugTest\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
                 ),
             ),
             // 6
@@ -367,9 +367,9 @@ EOD;
                     )',
                     'script' => 'console.table({"4":{"___class_name":"stdClass","age":"12","name":"Bob","Naughty":false,"sex":"M"},"2":{"___class_name":"stdClass","age":"10","extracol":"yes","name":"Sally","Naughty":true,"sex":"F"}});',
                     'firephp' => 'X-Wf-1-1-1-7: 193|[{"Label":"array -o- objects","Type":"TABLE"},['
-                        .'["","___class_name","age","extracol","name","Naughty","sex"],'
-                        .'[4,"stdClass","12",null,"Bob",false,"M"],'
-                        .'[2,"stdClass","10","yes","Sally",true,"F"]]]|',
+                        . '["","___class_name","age","extracol","name","Naughty","sex"],'
+                        . '[4,"stdClass","12",null,"Bob",false,"M"],'
+                        . '[2,"stdClass","10","yes","Sally",true,"F"]]]|',
                 ),
             ),
             // 7

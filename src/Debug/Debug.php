@@ -33,20 +33,20 @@ use SplObjectStorage;
 /**
  * Web-browser/javascript like console class for PHP
  *
- * @property Abstracter    $abstracter    lazy-loaded Abstracter instance
- * @property Backtrace     $backtrace     lazy-loaded Backtrace instance
- * @property ErrorEmailer  $errorEmailer  lazy-loaded ErrorEmailer instance
- * @property ErrorHandler  $errorHandler  lazy-loaded ErrorHandler instance
- * @property EventManager  $eventManager  lazy-loaded EventManager instance
- * @property Internal      $internal      lazy-loaded Internal instance
- * @property Logger        $logger        lazy-loaded PSR-3 instance
- * @property MethodClear   $methodClear   lazy-loaded MethodClear instance
- * @property MethodProfile $methodProfile lazy-loaded MethodProfile instance
- * @property MethodTable   $methodTable   lazy-loaded MethodTable instance
- * @property ResponseInterface $response  lazy-loaded ResponseInterface (set via writeResponse)
- * @property ServerRequest $request       lazy-loaded ServerRequest
- * @property Utf8          $utf8          lazy-loaded Utf8 instance
- * @property Utility       $utility       lazy-loaded Utility instance
+ * @property Abstracter     $abstracter    lazy-loaded Abstracter instance
+ * @property Backtrace      $backtrace     lazy-loaded Backtrace instance
+ * @property ErrorEmailer   $errorEmailer  lazy-loaded ErrorEmailer instance
+ * @property ErrorHandler   $errorHandler  lazy-loaded ErrorHandler instance
+ * @property EventManager   $eventManager  lazy-loaded EventManager instance
+ * @property Internal       $internal      lazy-loaded Internal instance
+ * @property Logger         $logger        lazy-loaded PSR-3 instance
+ * @property Method\Clear   $methodClear   lazy-loaded MethodClear instance
+ * @property Method\Profile $methodProfile lazy-loaded MethodProfile instance
+ * @property Method\Table   $methodTable   lazy-loaded MethodTable instance
+ * @property ResponseInterface $response   lazy-loaded ResponseInterface (set via writeResponse)
+ * @property ServerRequest  $request       lazy-loaded ServerRequest
+ * @property Utf8           $utf8          lazy-loaded Utf8 instance
+ * @property Utility        $utility       lazy-loaded Utility instance
  */
 class Debug
 {
@@ -150,7 +150,7 @@ class Debug
                   a. on initial instance (even though re-registering function does't re-register)
                   b. if we're unable to to find our Config class (must not be using Composer)
             */
-            if (!\class_exists('\\bdk\\Debug\\Config')) {
+            if (\class_exists('bdk\\Debug\\Config') === false) {
                 \spl_autoload_register(array($this, 'autoloader'));
             }
         }
@@ -1913,7 +1913,7 @@ class Debug
     {
         return array(
             'methodProfile' => function () {
-                return new Debug\MethodProfile();
+                return new Debug\Method\Profile();
             },
         );
     }
@@ -1962,19 +1962,19 @@ class Debug
                 return new Debug\Collector\Logger($debug);
             },
             'methodClear' => function (Debug $debug) {
-                return new Debug\MethodClear($debug, $debug->data);
+                return new Debug\Method\Clear($debug, $debug->data);
             },
             'methodTable' => function () {
-                return new Debug\MethodTable();
+                return new Debug\Method\Table();
             },
             'middleware' => function (Debug $debug) {
-                return new Debug\Middleware($debug);
+                return new Debug\Psr15\Middleware($debug);
             },
             'request' => function () {
                 /*
                     This can return Psr\Http\Message\ServerRequestInterface
                 */
-                return Debug\psr7lite\ServerRequest::fromGlobals();
+                return Debug\Psr7lite\ServerRequest::fromGlobals();
             },
             'utf8' => function () {
                 return new Debug\Utility\Utf8();

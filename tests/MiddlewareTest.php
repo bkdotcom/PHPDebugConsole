@@ -1,7 +1,7 @@
 <?php
 
 use bdk\Debug;
-use bdk\Debug\Middleware;
+use bdk\Debug\Psr15\Middleware;
 use GuzzleHttp\Psr7\ServerRequest;
 use mindplay\middleman\Dispatcher;
 

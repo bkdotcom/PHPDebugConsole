@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Psr15;
 
 use bdk\Debug;
 use Exception;

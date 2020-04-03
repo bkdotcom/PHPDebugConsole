@@ -10,9 +10,9 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\psr7lite;
+namespace bdk\Debug\Psr7lite;
 
-use bdk\Debug\psr7lite\Stream;
+use bdk\Debug\Psr7lite\Stream;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 

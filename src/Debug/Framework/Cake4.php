@@ -13,7 +13,7 @@
 namespace bdk\Debug\Framework;
 
 use bdk\Debug\Collector\Pdo;
-use bdk\Debug\Middleware;
+use bdk\Debug\Psr15\Middleware;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use Cake\Core\BasePlugin;

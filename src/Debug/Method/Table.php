@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Method;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
@@ -19,7 +19,7 @@ use bdk\Debug\LogEntry;
 /**
  * Table helper methods
  */
-class MethodTable
+class Table
 {
 
     const SCALAR = "\x00scalar\x00";

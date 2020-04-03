@@ -13,7 +13,7 @@
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
  */
 
-namespace bdk\Debug\psr7lite;
+namespace bdk\Debug\Psr7lite;
 
 use Psr\Http\Message\StreamInterface;
 

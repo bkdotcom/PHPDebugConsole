@@ -1,8 +1,8 @@
 <?php
 
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\psr7lite\ServerRequest;
-use bdk\Debug\psr7lite\Stream;
+use bdk\Debug\Psr7lite\ServerRequest;
+use bdk\Debug\Psr7lite\Stream;
 
 /**
  * PHPUnit tests for Debug class

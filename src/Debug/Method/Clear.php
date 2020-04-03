@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Method;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
@@ -18,7 +18,7 @@ use bdk\Debug\LogEntry;
 /**
  * Clear method
  */
-class MethodClear
+class Clear
 {
 
     private $data;

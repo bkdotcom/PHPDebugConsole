@@ -10,13 +10,15 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Method;
 
 /**
  * Clear method
  */
-class MethodProfile
+class Profile
 {
+
+    protected $namespace = 'bdk\\Debug';
 
     /**
      * @var string Ignore methods in these namespaces
@@ -41,7 +43,8 @@ class MethodProfile
      */
     public function __construct($namespacesIgnore = array())
     {
-        $namespacesIgnore = \array_merge(array(__NAMESPACE__), $namespacesIgnore);
+        $namespacesIgnore = \array_merge(array($this->namespace), (array) $namespacesIgnore);
+        $namespacesIgnore = \array_unique($namespacesIgnore);
         $this->nsIgnoreRegex = \str_replace('\\', '\\\\', '#^(' . \implode('|', $namespacesIgnore) . ')(\\|$)#');
         $this->start();
     }
@@ -141,7 +144,7 @@ class MethodProfile
         $count = \count($backtrace);
         for ($i = $count - 1; $i > 0; $i--) {
             $frame = $backtrace[$i];
-            if (isset($frame['class']) && \strpos($frame['class'], __NAMESPACE__) === 0) {
+            if (isset($frame['class']) && \strpos($frame['class'], $this->namespace) === 0) {
                 break;
             }
         }

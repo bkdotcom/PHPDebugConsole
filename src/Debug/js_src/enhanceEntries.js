@@ -188,16 +188,16 @@ function createFileLinks ($entry, $strings, remove) {
       })
       if (isUpdate) {
         $tr.find('.file-link').replaceWith($a)
-      } else {
-        if ($tr.hasClass('context')) {
-          $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1)
-        } else {
-          $tds.last().after($('<td/>', {
-            class: 'text-center',
-            html: $a
-          }))
-        }
+        return // continue
       }
+      if ($tr.hasClass('context')) {
+        $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1)
+        return // continue;
+      }
+      $tds.last().after($('<td/>', {
+        class: 'text-center',
+        html: $a
+      }))
     })
     return
   }

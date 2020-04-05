@@ -83,8 +83,8 @@ function applyFilter ($root) {
     preFilterCallbacks[i]($root)
   }
   // :not(.level-error, .level-info, .level-warn)
-  $root.find('> .debug-tabs > .tab-primary .m_alert' +
-    ', > .debug-tabs > .tab-primary .group-body > *:not(.m_groupSummary)'
+  $root.find('> .debug-tabs > .tab-primary > .tab-body .m_alert' +
+    ', > .debug-tabs > .tab-primary > .tab-body .group-body > *:not(.m_groupSummary)'
   ).each(function () {
     var $node = $(this)
     var show = true

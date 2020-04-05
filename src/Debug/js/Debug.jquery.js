@@ -454,16 +454,16 @@
         });
         if (isUpdate) {
           $tr.find('.file-link').replaceWith($a);
-        } else {
-          if ($tr.hasClass('context')) {
-            $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1);
-          } else {
-            $tds.last().after($('<td/>', {
-              class: 'text-center',
-              html: $a
-            }));
-          }
+          return // continue
         }
+        if ($tr.hasClass('context')) {
+          $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1);
+          return // continue;
+        }
+        $tds.last().after($('<td/>', {
+          class: 'text-center',
+          html: $a
+        }));
       });
       return
     }
@@ -940,8 +940,8 @@
       preFilterCallbacks[i]($root);
     }
     // :not(.level-error, .level-info, .level-warn)
-    $root.find('> .debug-tabs > .tab-primary .m_alert' +
-      ', > .debug-tabs > .tab-primary .group-body > *:not(.m_groupSummary)'
+    $root.find('> .debug-tabs > .tab-primary > .tab-body .m_alert' +
+      ', > .debug-tabs > .tab-primary > .tab-body .group-body > *:not(.m_groupSummary)'
     ).each(function () {
       var $node = $(this);
       var show = true;
@@ -1166,6 +1166,7 @@
   }
 
   var config$4;
+  var options;
   var methods; // method filters
   var $root$2;
   var initialized = false;
@@ -1173,10 +1174,8 @@
   function init$5 ($debugRoot) {
     var $debugTabLog = $debugRoot.find('> .debug-tabs > .tab-primary');
 
-    config$4 = $debugRoot.data('config');
+    config$4 = $debugRoot.data('config') || $('body').data('config');
     $root$2 = $debugRoot;
-
-    // console.warn('sidebar.init')
 
     if ($debugTabLog.length && $debugTabLog.data('options').sidebar) {
       addMarkup$1($root$2);
@@ -1226,7 +1225,7 @@
 
     addPreFilter(function ($delegateRoot) {
       $root$2 = $delegateRoot;
-      config$4 = $root$2.data('config') || $('body').data('config');
+      options = $root$2.find('.tab-primary').data('options');
       methods = [];
       $root$2.find('input[data-toggle=method]:checked').each(function () {
         methods.push($(this).val());
@@ -1235,7 +1234,7 @@
 
     addTest(function ($node) {
       var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
-      if (!config$4.get('sidebar')) {
+      if (!options.sidebar) {
         return true
       }
       if (method === 'group' && $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)) {

@@ -2,6 +2,7 @@ import $ from 'jquery'
 import { addTest as addFilterTest, addPreFilter } from './filter.js'
 
 var config
+var options
 var methods // method filters
 var $root
 var initialized = false
@@ -9,10 +10,8 @@ var initialized = false
 export function init ($debugRoot) {
   var $debugTabLog = $debugRoot.find('> .debug-tabs > .tab-primary')
 
-  config = $debugRoot.data('config')
+  config = $debugRoot.data('config') || $('body').data('config');
   $root = $debugRoot
-
-  // console.warn('sidebar.init')
 
   if ($debugTabLog.length && $debugTabLog.data('options').sidebar) {
     addMarkup($root)
@@ -62,7 +61,7 @@ export function init ($debugRoot) {
 
   addPreFilter(function ($delegateRoot) {
     $root = $delegateRoot
-    config = $root.data('config') || $('body').data('config')
+    options = $root.find('.tab-primary').data('options')
     methods = []
     $root.find('input[data-toggle=method]:checked').each(function () {
       methods.push($(this).val())
@@ -71,7 +70,7 @@ export function init ($debugRoot) {
 
   addFilterTest(function ($node) {
     var method = $node[0].className.match(/\bm_(\S+)\b/)[1]
-    if (!config.get('sidebar')) {
+    if (!options.sidebar) {
       return true
     }
     if (method === 'group' && $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)) {

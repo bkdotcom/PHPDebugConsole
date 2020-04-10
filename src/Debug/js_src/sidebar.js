@@ -10,7 +10,7 @@ var initialized = false
 export function init ($debugRoot) {
   var $debugTabLog = $debugRoot.find('> .debug-tabs > .tab-primary')
 
-  config = $debugRoot.data('config') || $('body').data('config');
+  config = $debugRoot.data('config') || $('body').data('config')
   $root = $debugRoot
 
   if ($debugTabLog.length && $debugTabLog.data('options').sidebar) {

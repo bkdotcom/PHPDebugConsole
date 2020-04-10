@@ -34,11 +34,10 @@ class Table
     public static function colKeys($rows)
     {
         if (Abstracter::isAbstraction($rows, 'object')) {
-            if ($rows['traverseValues']) {
-                $rows = $rows['traverseValues'];
-            } else {
+            if (!$rows['traverseValues']) {
                 return array(self::SCALAR);
             }
+            $rows = $rows['traverseValues'];
         }
         if (!\is_array($rows)) {
             return array();
@@ -163,25 +162,27 @@ class Table
             if ($val['type'] === 'object') {
                 if ($val['traverseValues']) {
                     // probably Traversable
-                    $val = $val['traverseValues'];
-                } elseif ($val['stringified']) {
-                    $val = null;
-                } elseif (isset($val['methods']['__toString']['returnValue'])) {
-                    $val = null;
-                } else {
-                    $val = \array_filter($val['properties'], function ($prop) {
-                        return $prop['visibility'] === 'public';
-                    });
-                    /*
-                        Reflection doesn't return properties in any given order
-                        so, we'll sort for consistency
-                    */
-                    \ksort($val, SORT_NATURAL | SORT_FLAG_CASE);
+                    return \array_keys($val['traverseValues']);
                 }
-            } else {
-                // ie callable or resource
-                $val = null;
+                if ($val['stringified']) {
+                    return array(self::SCALAR);
+                }
+                if (isset($val['methods']['__toString']['returnValue'])) {
+                    return array(self::SCALAR);
+                }
+                $val = \array_filter($val['properties'], function ($prop) {
+                    return $prop['visibility'] === 'public';
+                });
+                $keys = \array_keys($val);
+                /*
+                    Reflection doesn't return properties in any given order
+                    so, we'll sort for consistency
+                */
+                \sort($keys, SORT_NATURAL | SORT_FLAG_CASE);
+                return $keys;
             }
+            // ie callable or resource
+            return array(self::SCALAR);
         }
         return \is_array($val)
             ? \array_keys($val)
@@ -278,9 +279,9 @@ class Table
         foreach ($values as $k => $info) {
             if ($info['visibility'] !== 'public') {
                 unset($values[$k]);
-            } else {
-                $values[$k] = $info['value'];
+                continue;
             }
+            $values[$k] = $info['value'];
         }
         return $values;
     }

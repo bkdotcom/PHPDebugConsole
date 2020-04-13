@@ -315,12 +315,12 @@ class Debug
         }
         $val = null;
         if (\strpos($property, 'route') === 0) {
-            $classname = '\\bdk\\Debug\\Route\\' . \substr($property, 5);
+            $classname = 'bdk\\Debug\\Route\\' . \substr($property, 5);
             $val = new $classname($this);
             $this->{$property} = $val;
         }
         if (\strpos($property, 'dump') === 0) {
-            $classname = '\\bdk\\Debug\\Dump\\' . \substr($property, 4);
+            $classname = 'bdk\\Debug\\Dump\\' . \substr($property, 4);
             $val = new $classname($this);
             $this->{$property} = $val;
         }
@@ -1954,6 +1954,9 @@ class Debug
             },
             'eventManager' => function () {
                 return new EventManager();
+            },
+            'html' => function () {
+                return new Debug\Utility\Html();
             },
             'internal' => function (Debug $debug) {
                 return new Debug\Internal($debug);

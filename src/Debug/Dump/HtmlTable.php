@@ -95,7 +95,7 @@ class HtmlTable
             'totals' => \array_fill_keys($options['totalCols'], null),
         );
         $body = $this->buildbody($rows, $keys, $options);
-        return $this->debug->utility->buildTag(
+        return $this->debug->html->buildTag(
             'table',
             $options['attribs'],
             "\n"
@@ -206,12 +206,12 @@ class HtmlTable
         }
         $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
         $this->updateTableInfo($values, $objInfo);
-        $rowKeyParsed = $this->debug->utility->parseTag($this->html->dump($rowKey));
+        $rowKeyParsed = $this->debug->html->parseTag($this->html->dump($rowKey));
         $str .= '<tr>';
         /*
             Output key
         */
-        $str .= $this->debug->utility->buildTag(
+        $str .= $this->debug->html->buildTag(
             'th',
             array(
                 'class' => 't_key text-right ' . $rowKeyParsed['attribs']['class'],

@@ -72,7 +72,7 @@ class Html extends Base
                     $absAttribs
                 );
             }
-            $val = $this->debug->utility->buildTag($tagName, $argAttribs, $val);
+            $val = $this->debug->html->buildTag($tagName, $argAttribs, $val);
         }
         $this->argAttribs = array();
         return $val;
@@ -122,7 +122,7 @@ class Html extends Base
                 $classname = '<span class="namespace">' . \substr($classname, 0, $idx + 1) . '</span>'
                     . \substr($classname, $idx + 1);
             }
-            $classname = $this->debug->utility->buildTag(
+            $classname = $this->debug->html->buildTag(
                 $tagName,
                 \array_merge(array(
                     'class' => 'classname',
@@ -180,11 +180,7 @@ class Html extends Base
         $types = \implode('<span class="t_punct">|</span>', $types);
         $attribs = \array_filter($attribs);
         if ($attribs) {
-            $type = $this->debug->utility->buildtag(
-                'span',
-                $attribs,
-                $types
-            );
+            $type = $this->debug->html->buildtag('span', $attribs, $types);
         }
         return $types;
     }
@@ -562,7 +558,7 @@ class Html extends Base
                 . '</button>'
                 . $html;
         }
-        return $this->debug->utility->buildTag('div', $attribs, $html);
+        return $this->debug->html->buildTag('div', $attribs, $html);
     }
 
     /**
@@ -605,7 +601,7 @@ class Html extends Base
                 $meta['sanitizeFirst'] = false;
             }
         }
-        return $this->debug->utility->buildTag(
+        return $this->debug->html->buildTag(
             'li',
             $attribs,
             $this->buildArgString($args, $meta)
@@ -659,11 +655,11 @@ class Html extends Base
                 . $argStr;
         }
         $this->logEntryAttribs['class'] = \str_replace('m_' . $method, 'm_group', $this->logEntryAttribs['class']);
-        $str = '<li' . $this->debug->utility->buildAttribString($this->logEntryAttribs) . '>' . "\n";
+        $str = '<li' . $this->debug->html->buildAttribString($this->logEntryAttribs) . '>' . "\n";
         /*
             Header / label / toggle
         */
-        $str .= $this->debug->utility->buildTag(
+        $str .= $this->debug->html->buildTag(
             'div',
             array(
                 'class' => array(
@@ -679,7 +675,7 @@ class Html extends Base
         /*
             Group open
         */
-        $str .= '<ul' . $this->debug->utility->buildAttribString(array(
+        $str .= '<ul' . $this->debug->html->buildAttribString(array(
             'class' => array(
                 'group-body',
                 $levelClass,
@@ -714,7 +710,7 @@ class Html extends Base
         if (!$asTable && $meta['caption']) {
             \array_unshift($args, $meta['caption']);
         }
-        return $this->debug->utility->buildTag(
+        return $this->debug->html->buildTag(
             'li',
             $this->logEntryAttribs,
             $asTable

@@ -66,13 +66,13 @@ class StatementInfo
             $constsAll = $ref->getConstants();
             foreach ($constsAll as $name => $val) {
                 if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
-                    $consts[$val] = '\\PDO::' . $name;
+                    $consts[$val] = 'PDO::' . $name;
                 }
             }
-            if (\class_exists('\\Doctrine\\DBAL\\Connection')) {
+            if (\class_exists('Doctrine\\DBAL\\Connection')) {
                 $consts += array(
-                    \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => '\\Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
-                    \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => '\\Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',
+                    \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
+                    \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',
                 );
             }
             self::$constants = $consts;

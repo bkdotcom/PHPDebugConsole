@@ -385,7 +385,7 @@ class SubstitutionTest extends DebugTestFramework
                             $attribs['data-file'] = $this->file;
                             $attribs['data-line'] = $this->line;
                         }
-                        $test = str_replace(' class="m_log"', $this->debug->utility->buildAttribString($attribs), $test);
+                        $test = str_replace(' class="m_log"', $this->debug->html->buildAttribString($attribs), $test);
                     } elseif ($name === 'script') {
                         $test = str_replace('console.log', 'console.' . $method, $test);
                         $fileLine = $this->file . ': line ' . $this->line;

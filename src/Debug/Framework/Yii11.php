@@ -194,7 +194,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
                 $isController = \preg_match('#/protected/controllers/.+.php#', $filepathRel);
                 $isView = \preg_match('#/protected/views(?:(?!/layout).)+.php#', $filepathRel);
                 $embolden = $isController || $isView;
-                return $debug->utility->buildTag(
+                return $debug->html->buildTag(
                     'span',
                     array(
                         'class' => 'file t_string',

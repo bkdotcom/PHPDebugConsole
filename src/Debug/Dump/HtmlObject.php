@@ -105,7 +105,7 @@ class HtmlObject
             $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';
         }
         $toStringDump = $this->html->dump($val);
-        $parsed = $this->debug->utility->parseTag($toStringDump);
+        $parsed = $this->debug->html->parseTag($toStringDump);
         $classArray = \explode(' ', $parsed['attribs']['class']);
         $classArray[] = 't_stringified';
         if ($len > 100) {
@@ -118,7 +118,7 @@ class HtmlObject
                 ? (!$abs['stringified'] ? '__toString() : ' : '') . $parsed['attribs']['title']
                 : (!$abs['stringified'] ? '__toString()' : null),
         );
-        return $this->debug->utility->buildTag(
+        return $this->debug->html->buildTag(
             'span',
             $attribs,
             $parsed['innerhtml'] . $valAppend
@@ -181,7 +181,7 @@ class HtmlObject
                 $info['visibility'] => true,
                 'static' => $info['isStatic'],
             )));
-            $str .= $this->debug->utility->buildTag(
+            $str .= $this->debug->html->buildTag(
                 'dd',
                 array(
                     'class' => \array_merge($classes, $modifiers),
@@ -193,7 +193,7 @@ class HtmlObject
                 . ' ' . $this->html->markupType($info['return']['type'], array(
                     'title' => $info['return']['desc'],
                 ))
-                . ' ' . $this->debug->utility->buildTag(
+                . ' ' . $this->debug->html->buildTag(
                     'span',
                     array(
                         'class' => 't_identifier',
@@ -232,7 +232,7 @@ class HtmlObject
             if (!empty($info['type'])) {
                 $paramStr .= $this->html->markupType($info['type']) . ' ';
             }
-            $paramStr .= $this->debug->utility->buildTag(
+            $paramStr .= $this->debug->html->buildTag(
                 'span',
                 array(
                     'class' => 't_parameter-name',
@@ -242,9 +242,9 @@ class HtmlObject
             );
             if ($info['defaultValue'] !== Abstracter::UNDEFINED) {
                 $paramStr .= ' <span class="t_operator">=</span> ';
-                $parsed = $this->debug->utility->parseTag($this->html->dump($info['defaultValue']));
+                $parsed = $this->debug->html->parseTag($this->html->dump($info['defaultValue']));
                 $parsed['attribs']['class'] .= ' t_parameter-default';
-                $paramStr .= $this->debug->utility->buildTag(
+                $paramStr .= $this->debug->html->buildTag(
                     'span',
                     $parsed['attribs'],
                     $parsed['innerhtml']

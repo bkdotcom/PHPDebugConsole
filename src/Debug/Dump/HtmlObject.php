@@ -95,11 +95,10 @@ class HtmlObject
             return '';
         }
         $valAppend = '';
+        $len = \strlen($val);
         if ($val instanceof Abstraction) {
             $len = $val['strlen'];
             $val = $val['value'];
-        } else {
-            $len = \strlen($val);
         }
         if ($len > 100) {
             $val = \substr($val, 0, 100);

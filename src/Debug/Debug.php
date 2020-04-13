@@ -1959,7 +1959,7 @@ class Debug
                 return new Debug\Internal($debug);
             },
             'logger' => function (Debug $debug) {
-                return new Debug\Collector\Logger($debug);
+                return new Debug\Psr3\Logger($debug);
             },
             'methodClear' => function (Debug $debug) {
                 return new Debug\Method\Clear($debug, $debug->data);

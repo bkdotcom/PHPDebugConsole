@@ -989,6 +989,20 @@ class MethodTest extends DebugTestFramework
             // 'firephp' => '',
         ));
 
+        $this->debug->setCfg('collect', false);
+        $this->testMethod(
+            'group',
+            array('not logged'),
+            false
+        );
+    }
+
+    public function testGroupNoArgs()
+    {
+
+        $test = new \bdk\DebugTest\Test();
+        $testBase = new \bdk\DebugTest\TestBase();
+
         /*
             Test default label
         */
@@ -1147,13 +1161,6 @@ class MethodTest extends DebugTestFramework
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
                 'firephp' => 'X-Wf-1-1-1-10: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
             )
-        );
-
-        $this->debug->setCfg('collect', false);
-        $this->testMethod(
-            'group',
-            array('not logged'),
-            false
         );
     }
 

@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Collector;
+namespace bdk\Debug\Psr3;
 
 use bdk\Debug;
 use Psr\Log\AbstractLogger;

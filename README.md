@@ -14,6 +14,7 @@ Browser/javascript like console class for PHP
   * WebSocket (WAMP)
   * "plugin"
 * [PSR-3](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md) (Logger) Implementation
+* [PSR-15](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-15-request-handlers-meta.md) (Middleware) Implementation
 * custom error handler
   * errors (even fatal) are captured / logged / displayed
   * send error notices via email (throttled as to not to send out a flood of emails)

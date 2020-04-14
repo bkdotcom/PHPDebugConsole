@@ -47,44 +47,17 @@ class MySqli extends mysqliBase
      */
     public function __construct($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, Debug $debug = null)
     {
-        $numArgs = \func_num_args();
-        if ($numArgs) {
-            $paramsDefault = array(
-                'host' => \ini_get('mysqli.default_host'),
-                'username' => \ini_get('mysqli.default_user'),
-                'passwd' => \ini_get('mysqli.default_pw'),
-                'dbname' => '',
-                'port' => \ini_get('mysqli.default_port'),
-                'socket' => \ini_get('mysqli.default_socket'),
-            );
-            $params = array(
+        $params = \func_num_args()
+            ? array(
                 'host' => $host,
                 'username' => $username,
                 'passwd' => $passwd,
                 'dbname' => $dbname,
                 'port' => $port,
                 'socket' => $socket,
-            );
-            foreach ($params as $k => $v) {
-                if ($v === null) {
-                    $params[$k] = $paramsDefault[$k];
-                }
-            }
-            $this->connectionAttempted = true;
-            parent::__construct(
-                $params['host'],
-                $params['username'],
-                $params['passwd'],
-                $params['dbname'],
-                $params['port'],
-                $params['socket']
-            );
-        } else {
-            /*
-                Calling the constructor with no parameters is the same as calling mysqli_init().
-            */
-            parent::__construct();
-        }
+            )
+            : array();
+        $this->doConstruct($params);
         if (!$debug) {
             $debug = Debug::_getChannel('MySqli', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -241,6 +214,46 @@ class MySqli extends mysqliBase
     public function stmt_init()
     {
         return new MySqliStmt($this, null);
+    }
+
+    /**
+     * Call mysqli constructor with appropriate params
+     *
+     * @param array $params host, username, etc
+     *
+     * @return void
+     */
+    private function doConstruct($params)
+    {
+        if (!$params) {
+            /*
+                Calling the constructor with no parameters is the same as calling mysqli_init().
+            */
+            parent::__construct();
+            return;
+        }
+        $paramsDefault = array(
+            'host' => \ini_get('mysqli.default_host'),
+            'username' => \ini_get('mysqli.default_user'),
+            'passwd' => \ini_get('mysqli.default_pw'),
+            'dbname' => '',
+            'port' => \ini_get('mysqli.default_port'),
+            'socket' => \ini_get('mysqli.default_socket'),
+        );
+        foreach ($params as $k => $v) {
+            if ($v === null) {
+                $params[$k] = $paramsDefault[$k];
+            }
+        }
+        $this->connectionAttempted = true;
+        parent::__construct(
+            $params['host'],
+            $params['username'],
+            $params['passwd'],
+            $params['dbname'],
+            $params['port'],
+            $params['socket']
+        );
     }
 
     /**

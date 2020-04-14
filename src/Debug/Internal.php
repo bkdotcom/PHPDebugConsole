@@ -435,7 +435,10 @@ class Internal implements SubscriberInterface
             $method = $error['type'] & $this->debug->getCfg('errorMask')
                 ? 'error'
                 : 'warn';
-            $this->debug->getChannel('phpError')->{$method}(
+            /*
+                specify rootInstance as there's nothing to prevent calling Internal::onError() dirrectly (from aanother instance)
+            */
+            $this->debug->rootInstance->getChannel('phpError')->{$method}(
                 $error['typeStr'] . ':',
                 $error['message'],
                 $errLoc,

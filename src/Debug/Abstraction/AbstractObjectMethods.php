@@ -37,11 +37,11 @@ class AbstractObjectMethods extends AbstractObjectSub
             return;
         }
         $this->abs = $abs;
-        if ($abs['flags'] & AbstractObject::COLLECT_METHODS) {
-            $this->addMethods();
-        } else {
+        if (!($abs['flags'] & AbstractObject::COLLECT_METHODS)) {
             $this->addMethodsMin();
+            return;
         }
+        $this->addMethods();
     }
 
     /**

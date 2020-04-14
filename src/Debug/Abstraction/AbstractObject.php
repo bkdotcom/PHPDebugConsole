@@ -68,11 +68,9 @@ class AbstractObject
      */
     public function getAbstraction($obj, $method = null, $hist = array())
     {
-        if (\is_string($obj) && (\class_exists($obj) || \interface_exists($obj))) {
-            $reflector = new ReflectionClass($obj);
-        } else {
-            $reflector = new ReflectionObject($obj);
-        }
+        $reflector = \is_string($obj) && (\class_exists($obj) || \interface_exists($obj))
+            ? new ReflectionClass($obj)
+            : new ReflectionObject($obj);
         $className = $reflector->getName();
         $interfaceNames = $reflector->getInterfaceNames();
         \sort($interfaceNames);

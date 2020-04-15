@@ -8,9 +8,6 @@
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2020 Brad Kent
  * @version   v3.0
- *
- * @link http://www.github.com/bkdotcom/PHPDebugConsole
- * @link https://developer.mozilla.org/en-US/docs/Web/API/console
  */
 
 namespace bdk\Debug\Plugin;

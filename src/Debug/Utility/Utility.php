@@ -50,6 +50,28 @@ class Utility
     }
 
     /**
+     * Is passed argument a simple array with all-integer keys in sequence from 0 to n?
+     * empty array returns true
+     *
+     * @param mixed $val value to check
+     *
+     * @return bool
+     */
+    public static function arrayIsList($val)
+    {
+        if (!\is_array($val)) {
+            return false;
+        }
+        $keys = \array_keys($val);
+        foreach ($keys as $i => $key) {
+            if ($key !== $i) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Recursively merge two arrays
      *
      * @param array $arrayDef default array
@@ -127,6 +149,44 @@ class Utility
             return null;
         }
         return $array;
+    }
+
+    /**
+     * Update/Set an array value via "path"
+     *
+     * @param array        $array array to edit
+     * @param array|string $path  path may contain special keys:
+     *                                 * __end__ : last value
+     *                                 * __reset__ : first value
+     * @param mixed        $val   value to set
+     *
+     * @return void
+     */
+    public static function arrayPathSet(&$array, $path, $val)
+    {
+        if (!\is_array($path)) {
+            $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
+        }
+        $path = \array_reverse($path);
+        $ref = &$array;
+        while ($path) {
+            $key = \array_pop($path);
+            if ($key === '__end__') {
+                \end($ref);
+                $path[] = \key($ref);
+                continue;
+            }
+            if ($key === '__reset__') {
+                \reset($ref);
+                $path[] = \key($ref);
+                continue;
+            }
+            if (!isset($ref[$key]) || !is_array($ref[$key])) {
+                $ref[$key] = array(); // initialize this level
+            }
+            $ref = &$ref[$key];
+        }
+        $ref = $val;
     }
 
     /**
@@ -382,28 +442,6 @@ class Utility
     public static function isBase64Encoded($str)
     {
         return (bool) \preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', \trim($str));
-    }
-
-    /**
-     * Is passed argument a simple array with all-integer in sequence from 0 to n?
-     * empty array returns true
-     *
-     * @param mixed $val value to check
-     *
-     * @return bool
-     */
-    public static function isList($val)
-    {
-        if (!\is_array($val)) {
-            return false;
-        }
-        $keys = \array_keys($val);
-        foreach ($keys as $i => $key) {
-            if ($key !== $i) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**

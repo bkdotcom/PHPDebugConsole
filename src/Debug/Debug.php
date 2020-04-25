@@ -21,10 +21,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
-use bdk\ErrorHandler;
-use bdk\ErrorHandler\ErrorEmailer;
 use bdk\PubSub\Event;
-use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
 use Psr\Http\Message\ResponseInterface; // PSR-7
 use ReflectionMethod;
@@ -33,20 +30,21 @@ use SplObjectStorage;
 /**
  * Web-browser/javascript like console class for PHP
  *
- * @property Abstracter     $abstracter    lazy-loaded Abstracter instance
- * @property Backtrace      $backtrace     lazy-loaded Backtrace instance
- * @property ErrorEmailer   $errorEmailer  lazy-loaded ErrorEmailer instance
- * @property ErrorHandler   $errorHandler  lazy-loaded ErrorHandler instance
- * @property EventManager   $eventManager  lazy-loaded EventManager instance
- * @property Internal       $internal      lazy-loaded Internal instance
- * @property Logger         $logger        lazy-loaded PSR-3 instance
- * @property Method\Clear   $methodClear   lazy-loaded MethodClear instance
- * @property Method\Profile $methodProfile lazy-loaded MethodProfile instance
- * @property Method\Table   $methodTable   lazy-loaded MethodTable instance
- * @property ResponseInterface $response   lazy-loaded ResponseInterface (set via writeResponse)
- * @property ServerRequest  $request       lazy-loaded ServerRequest
- * @property Utf8           $utf8          lazy-loaded Utf8 instance
- * @property Utility        $utility       lazy-loaded Utility instance
+ * @property Abstracter           $abstracter    lazy-loaded Abstracter instance
+ * @property \bdk\Backtrace       $backtrace     lazy-loaded Backtrace instance
+ * @property \bdk\ErrorHandler\ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer instance
+ * @property \bdk\ErrorHandler    $errorHandler  lazy-loaded ErrorHandler instance
+ * @property \bdk\PubSub\Manager  $eventManager  lazy-loaded Event Manager instance
+ * @property Debug\Utility\Html   $html          lazy=loaded Html Utility instance
+ * @property Debug\Internal       $internal      lazy-loaded Internal instance
+ * @property Debug\Psr3\Logger    $logger        lazy-loaded PSR-3 instance
+ * @property Debug\Method\Clear   $methodClear   lazy-loaded MethodClear instance
+ * @property Debug\Method\Profile $methodProfile lazy-loaded MethodProfile instance
+ * @property Debug\Method\Table   $methodTable   lazy-loaded MethodTable instance
+ * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeResponse)
+ * @property Debug\Psr7lite\ServerRequest $request lazy-loaded ServerRequest
+ * @property Debug\Utility\Utf8   $utf8          lazy-loaded Utf8 instance
+ * @property Debug\Utility        $utility       lazy-loaded Utility instance
  */
 class Debug
 {
@@ -60,10 +58,13 @@ class Debug
     const CLEAR_SILENT = 32;
     const COUNT_NO_INC = 1;
     const COUNT_NO_OUT = 2;
+    const CONFIG_DEBUG = 'configDebug';
+    const CONFIG_INIT = 'configInit';
     const META = "\x00meta\x00";
     const VERSION = '3.0';
 
     protected $cfg = array();
+    protected $container;
     protected $data = array();
     protected $groupStackRef;   // points to $this->groupStacks[x] (where x = 'main' or (int) priority)
     protected $logRef;          // points to either log or logSummary[priority]
@@ -88,7 +89,7 @@ class Debug
             'output'    => false,           // output the log?
             'arrayShowListKeys' => true,
             'channelIcon' => null,
-            'channelName' => 'general',            // channel or tab name
+            'channelName' => 'general',     // channel or tab name
             'channelShow' => true,          // wheter initially filtered or not
             'enableProfiling' => false,
             // which error types appear as "error" in debug console... all other errors are "warn"
@@ -140,20 +141,6 @@ class Debug
             'services' => $this->getDefaultServices(),
             'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
         );
-        if (!isset(self::$instance)) {
-            /*
-               self::getInstance() will always return initial/first instance
-            */
-            self::$instance = $this;
-            /*
-                Only register autoloader:
-                  a. on initial instance (even though re-registering function does't re-register)
-                  b. if we're unable to to find our Config class (must not be using Composer)
-            */
-            if (\class_exists('bdk\\Debug\\Config') === false) {
-                \spl_autoload_register(array($this, 'autoloader'));
-            }
-        }
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
             'counts'            => array(), // count method
@@ -170,7 +157,7 @@ class Debug
             'outputSent'        => false,
             'profileAutoInc'    => 1,
             'profileInstances'  => array(),
-            'requestId'         => $this->utility->requestId(),
+            'requestId'         => '',  // set in bootstrap
             'runtime'           => array(
                 // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
             ),
@@ -185,38 +172,13 @@ class Debug
                 'stack' => array(),
             ),
         );
+        $this->bootstrap($cfg);
         $this->registeredPlugins = new SplObjectStorage();
-        /*
-            Order is important
-            a) set cfg (so that this->parentInstance gets set
-            b) initialize this->internal after all properties have been initialized
-        */
-        $this->config->setValues($cfg);
-        $this->rootInstance = $this;
-        $serverParams = $this->request->getServerParams();
-        if ($this->cfg['emailTo'] === 'default') {
-            $this->cfg['emailTo'] = isset($serverParams['SERVER_ADMIN'])
-                ? $serverParams['SERVER_ADMIN']
-                : null;
-        }
-        if (isset($serverParams['REQUEST_TIME_FLOAT'])) {
-            $this->data['times']['labels']['debugInit'][1] = $serverParams['REQUEST_TIME_FLOAT'];
-        }
-        if (isset($this->cfg['parent'])) {
-            $this->parentInstance = $this->cfg['parent'];
-            while ($this->rootInstance->parentInstance) {
-                $this->rootInstance = $this->rootInstance->parentInstance;
-            }
-            $this->data = &$this->rootInstance->data;
-            unset($this->cfg['parent']);
-        } else {
-            $this->setLogDest();
-            $this->data['entryCountInitial'] = \count($this->data['log']);
-        }
         /*
             Initialize Internal
         */
         $this->internal;
+        $this->internalEvents;
         /*
             Publish bootstrap event
         */
@@ -296,7 +258,7 @@ class Debug
      */
     public function __get($property)
     {
-        $val = $this->getServiceFactory($property);
+        $val = $this->getViaContainer($property);
         if ($val) {
             return $val;
         }
@@ -313,21 +275,22 @@ class Debug
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }
-        $val = null;
+        $classname = null;
         if (\strpos($property, 'route') === 0) {
             $classname = 'bdk\\Debug\\Route\\' . \substr($property, 5);
-            $val = new $classname($this);
-            $this->{$property} = $val;
         }
         if (\strpos($property, 'dump') === 0) {
             $classname = 'bdk\\Debug\\Dump\\' . \substr($property, 4);
+        }
+        if (\class_exists($classname)) {
             $val = new $classname($this);
+            if ($val instanceof ConfigurableInterface) {
+                $val->setCfg($this->config->get($property, self::CONFIG_INIT));
+            }
             $this->{$property} = $val;
+            return $val;
         }
-        if ($val instanceof ConfigurableInterface) {
-            $val->setCfg($this->config->getValues($property));
-        }
-        return $val;
+        return null;
     }
 
     /*
@@ -1304,14 +1267,20 @@ class Debug
     /**
      * Retrieve a configuration value
      *
-     * @param string $path    what to get
-     * @param mixed  $default (optional) default value
+     * @param string $path what to get
+     * @param bool   $opt  (@internal)
      *
      * @return mixed value
      */
-    public function getCfg($path = null, $default = null)
+    public function getCfg($path = null, $opt = null)
     {
-        return $this->config->getValue($path, $default);
+        if ($path === 'route' && $this->cfg['route'] === 'auto') {
+            return $this->internal->getDefaultRoute(); // returns string
+        }
+        if ($opt === self::CONFIG_DEBUG) {
+            return $this->utility->arrayPathGet($this->cfg, $path);
+        }
+        return $this->config->get($path, $opt === self::CONFIG_INIT);
     }
 
     /**
@@ -1356,6 +1325,7 @@ class Debug
      * If $allDescendants == true :  key = "fully qualified" channel name
      *
      * @param bool $allDescendants (false) include all descendants?
+     * @param bool $inclTop        (false) whether to incl topmost channels (ie "tabs")
      *
      * @return static[] Does not include self
      */
@@ -1367,7 +1337,7 @@ class Debug
             foreach ($this->channels as $channel) {
                 $channels = \array_merge(
                     $channels,
-                    array($channel->getCfg('channelName') => $channel),
+                    array($channel->getCfg('channelName', self::CONFIG_DEBUG) => $channel),
                     $channel->getChannels(true)
                 );
             }
@@ -1390,7 +1360,7 @@ class Debug
     public function getChannelsTop()
     {
         $channels = array(
-            $this->getCfg('channelName') => $this,
+            $this->cfg['channelName'] => $this,
         );
         if ($this->parentInstance) {
             return $channels;
@@ -1509,6 +1479,43 @@ class Debug
     }
 
     /**
+     * debug.config event listener
+     *
+     * Since setCfg() passes config through Config, we need a way for Config to pass values back.
+     *
+     * @param Event $event debug.config event
+     *
+     * @return void
+     */
+    public function onConfig(Event $event)
+    {
+        $cfg = $event['debug'];
+        if (!$cfg) {
+            return;
+        }
+        foreach (array('logEnvInfo','logRequestInfo') as $name) {
+            if (!isset($cfg[$name])) {
+                continue;
+            }
+            $allKeys = \array_keys($this->cfg[$name]);
+            $val = $cfg[$name];
+            if (\is_bool($val)) {
+                $cfg[$name] = \array_fill_keys($allKeys, $val);
+            } elseif ($this->utility->arrayIsList($val)) {
+                $cfg[$name] = \array_merge(
+                    \array_fill_keys($allKeys, false),
+                    \array_fill_keys($val, true)
+                );
+            }
+        }
+        if (isset($cfg['logServerKeys'])) {
+            // don't append, replace
+            $this->cfg['logServerKeys'] = array();
+        }
+        $this->cfg = $this->utility->arrayMergeDeep($this->cfg, $cfg);
+    }
+
+    /**
      * Return debug log output
      *
      * Publishes debug.output event and returns event's 'return' value
@@ -1519,14 +1526,15 @@ class Debug
      */
     public function output($cfg = array())
     {
-        $cfgRestore = $this->config->setValues($cfg);
+        $cfgRestore = $this->config->set($cfg);
         if (!$this->cfg['output']) {
-            $this->config->setValues($cfgRestore);
+            $this->config->set($cfgRestore);
             return null;
         }
         $route = $this->getCfg('route');
         if (\is_string($route)) {
-            $this->setCfg('route', $route);
+            // Internal::onConfig will convert to route object
+            $this->config->set('route', $route);
         }
         /*
             Publish debug.output on all descendant channels and then ourself
@@ -1548,7 +1556,7 @@ class Debug
         if (!$this->parentInstance) {
             $this->data['outputSent'] = true;
         }
-        $this->config->setValues($cfgRestore);
+        $this->config->set($cfgRestore);
         return $event['return'];
     }
 
@@ -1578,16 +1586,14 @@ class Debug
      * `setCfg('level1.level2', 'value')`
      * `setCfg(array('k1'=>'v1', 'k2'=>'v2'))`
      *
-     * @param string|array $path   path
-     * @param mixed        $newVal value
+     * @param string|array $path  path
+     * @param mixed        $value value
      *
      * @return mixed previous value(s)
      */
-    public function setCfg($path, $newVal = null)
+    public function setCfg($path, $value = null)
     {
-        return \is_array($path)
-            ? $this->config->setValues($path)
-            : $this->config->setValue($path, $newVal);
+        return $this->config->set($path, $value);
     }
 
     /**
@@ -1604,15 +1610,10 @@ class Debug
      */
     public function setData($path, $value = null)
     {
-        if (\is_string($path)) {
-            $path = \preg_split('#[\./]#', $path);
-            $ref = &$this->data;
-            foreach ($path as $k) {
-                $ref = &$ref[$k];
-            }
-            $ref = $value;
-        } else {
+        if (\is_array($path)) {
             $this->data = \array_merge($this->data, $path);
+        } else {
+            $this->utility->arrayPathSet($this->data, $path, $value);
         }
         if (!$this->data['log']) {
             $this->data['groupStacks']['main'] = array();
@@ -1738,7 +1739,7 @@ class Debug
         }
         $cfgRestore = array();
         if (isset($logEntry['meta']['cfg'])) {
-            $cfgRestore = $this->config->setValues($logEntry['meta']['cfg']);
+            $cfgRestore = $this->config->set($logEntry['meta']['cfg']);
             $logEntry->setMeta('cfg', null);
         }
         foreach ($logEntry['args'] as $i => $v) {
@@ -1749,13 +1750,74 @@ class Debug
         }
         $this->internal->publishBubbleEvent('debug.log', $logEntry);
         if ($cfgRestore) {
-            $this->config->setValues($cfgRestore);
+            $this->config->set($cfgRestore);
         }
         if ($logEntry['appendLog']) {
             $this->rootInstance->logRef[] = $logEntry;
             return true;
         }
         return false;
+    }
+
+    /**
+     * Initialize autoloader, container, & config
+     *
+     * @param array $cfg passed cfg
+     *
+     * @return void
+     */
+    private function bootstrap($cfg)
+    {
+        if (!isset(self::$instance)) {
+            /*
+               self::getInstance() will always return initial/first instance
+            */
+            self::$instance = $this;
+            /*
+                Only register autoloader:
+                  a. on initial instance (even though re-registering function does't re-register)
+                  b. if we're unable to to find our Config class (must not be using Composer)
+            */
+            if (\class_exists('bdk\\Debug\\Config') === false) {
+                \spl_autoload_register(array($this, 'autoloader'));
+            }
+        }
+        $this->eventManager->subscribe('debug.config', array($this, 'onConfig'));
+        $this->config->set($cfg);
+        $this->bootstrapInstance();
+        if ($this->cfg['emailTo'] === 'default') {
+            $serverParams = $this->request->getServerParams();
+            $this->cfg['emailTo'] = isset($serverParams['SERVER_ADMIN'])
+                ? $serverParams['SERVER_ADMIN']
+                : null;
+        }
+    }
+
+    /**
+     * Set rootInstance, parentInstance, & initialize data
+     *
+     * @return void
+     */
+    private function bootstrapInstance()
+    {
+        $this->rootInstance = $this;
+        if (isset($this->cfg['parent'])) {
+            $this->parentInstance = $this->cfg['parent'];
+            while ($this->rootInstance->parentInstance) {
+                $this->rootInstance = $this->rootInstance->parentInstance;
+            }
+            $this->data = &$this->rootInstance->data;
+            unset($this->cfg['parent']);
+            return;
+        }
+        // this is the root instance
+        $this->setLogDest();
+        $this->data['entryCountInitial'] = \count($this->data['log']);
+        $this->data['requestId'] = $this->utility->requestId();
+        $serverParams = $this->request->getServerParams();
+        if (isset($serverParams['REQUEST_TIME_FLOAT'])) {
+            $this->data['timers']['labels']['debugInit'][1] = $serverParams['REQUEST_TIME_FLOAT'];
+        }
     }
 
     /**
@@ -1927,25 +1989,25 @@ class Debug
     {
         return array(
             'abstracter' => function (Debug $debug) {
-                return new Abstracter($debug, $debug->config->getValues('abstracter'));
+                return new Abstracter($debug, $debug->config->get('abstracter', self::CONFIG_INIT));
             },
             'backtrace' => function () {
-                $backtrace = new Backtrace();
+                $backtrace = new \bdk\Backtrace();
                 $backtrace->addInternalClass('bdk\\Debug');
                 return $backtrace;
             },
             'config' => function (Debug $debug) {
-                return new Debug\Config($debug, $debug->cfg);    // cfg is passed by reference
+                return new \bdk\Debug\Config($debug);    // cfg is passed by reference
             },
             'errorEmailer' => function (Debug $debug) {
-                return new ErrorEmailer($debug->config->getValues('errorEmailer'));
+                return new \bdk\ErrorHandler\ErrorEmailer($debug->config->get('errorEmailer', self::CONFIG_INIT));
             },
             'errorHandler' => function (Debug $debug) {
-                $existingInstance = ErrorHandler::getInstance();
+                $existingInstance = \bdk\ErrorHandler::getInstance();
                 if ($existingInstance) {
                     return $existingInstance;
                 }
-                $errorHandler = new ErrorHandler($debug->eventManager);
+                $errorHandler = new \bdk\ErrorHandler($debug->eventManager);
                 /*
                     log E_USER_ERROR to system_log without halting script
                 */
@@ -1953,37 +2015,40 @@ class Debug
                 return $errorHandler;
             },
             'eventManager' => function () {
-                return new EventManager();
+                return new \bdk\PubSub\Manager();
             },
             'html' => function () {
-                return new Debug\Utility\Html();
+                return new \bdk\Debug\Utility\Html();
             },
             'internal' => function (Debug $debug) {
-                return new Debug\Internal($debug);
+                return new \bdk\Debug\Internal($debug);
+            },
+            'internalEvents' => function (Debug $debug) {
+                return new \bdk\Debug\InternalEvents($debug);
             },
             'logger' => function (Debug $debug) {
-                return new Debug\Psr3\Logger($debug);
+                return new \bdk\Debug\Psr3\Logger($debug);
             },
             'methodClear' => function (Debug $debug) {
-                return new Debug\Method\Clear($debug, $debug->data);
+                return new \bdk\Debug\Method\Clear($debug);
             },
             'methodTable' => function () {
-                return new Debug\Method\Table();
+                return new \bdk\Debug\Method\Table();
             },
             'middleware' => function (Debug $debug) {
-                return new Debug\Psr15\Middleware($debug);
+                return new \bdk\Debug\Psr15\Middleware($debug);
             },
             'request' => function () {
                 /*
                     This can return Psr\Http\Message\ServerRequestInterface
                 */
-                return Debug\Psr7lite\ServerRequest::fromGlobals();
+                return \bdk\Debug\Psr7lite\ServerRequest::fromGlobals();
             },
             'utf8' => function () {
-                return new Debug\Utility\Utf8();
+                return new \bdk\Debug\Utility\Utf8();
             },
             'utility' => function () {
-                return new Debug\Utility();
+                return new \bdk\Debug\Utility();
             },
         );
     }
@@ -2014,36 +2079,40 @@ class Debug
     }
 
     /**
-     * Check if service or factory
+     * Check container for property
      *
      * @param string $property service/factory name
      *
      * @return mixed
      */
-    private function getServiceFactory($property)
+    private function getViaContainer($property)
     {
-        $val = null;
         /*
             Treat Request obj like a singleton..
             Always refer to the original
         */
         if (\in_array($property, array('request')) && $this !== self::$instance) {
-            return self::$instance->getServiceFactory($property);
+            return self::$instance->getViaContainer($property);
         }
+        }
+        $val = null;
+        $isNew = false;
         if (isset($this->cfg['services'][$property])) {
             $val = $this->cfg['services'][$property];
             if ($val instanceof \Closure) {
+                $isNew = true;
                 $val = $val($this);
                 $this->cfg['services'][$property] = $val;
             }
         } elseif (isset($this->cfg['factories'][$property])) {
             $val = $this->cfg['factories'][$property];
             if ($val instanceof \Closure) {
+                $isNew = true;
                 $val = $val($this);
             }
         }
-        if ($val instanceof ConfigurableInterface) {
-            $val->setCfg($this->config->getValues($property));
+        if ($isNew && $val instanceof ConfigurableInterface) {
+            $val->setCfg($this->config->get($property, self::CONFIG_INIT));
         }
         return $val;
     }

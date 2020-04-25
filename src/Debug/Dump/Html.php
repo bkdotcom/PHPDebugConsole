@@ -322,7 +322,7 @@ class Html extends Base
             $html = '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">()</span>';
         } else {
-            $showKeys = $this->debug->getCfg('arrayShowListKeys') || !$this->debug->utility->isList($array);
+            $showKeys = $this->debug->getCfg('arrayShowListKeys') || !$this->debug->utility->arrayIsList($array);
             $html = '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">(</span>' . "\n";
             if ($showKeys) {

@@ -17,8 +17,8 @@ class ConfigTest extends DebugTestFramework
     public function testGetCfg()
     {
         $configKeys = array(
-            'debug',
             'abstracter',
+            'debug',
             'errorEmailer',
             'errorHandler',
             'routeHtml',
@@ -79,8 +79,8 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame('visibility', $this->debug->getCfg('abstracter.objectSort'));
         $this->assertSame('visibility', $this->debug->getCfg('abstracter/objectSort'));
 
-        $this->assertSame(null, $this->debug->getCfg('debug'));
-        $this->assertSame(null, $this->debug->getCfg('abstracter'));
+        $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug')));
+        $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter')));
         $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter/*')));
         $this->assertInternalType('boolean', $this->debug->getCfg('output'));       // debug/output
 

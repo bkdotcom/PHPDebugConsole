@@ -102,7 +102,7 @@ class Abstracter extends Component
             return new Abstraction(array(
                 'type' => 'string',
                 'strlen' => $strlen,
-                'value' => $this->debug->utf8->strcut($mixed, 0, $this->debug->getCfg('maxLenString')),
+                'value' => $this->debug->utf8->strcut($mixed, 0, $this->debug->getCfg('maxLenString', Debug::CONFIG_DEBUG)),
             ));
         }
     }
@@ -182,7 +182,7 @@ class Abstracter extends Component
             return array($type, $typeMore);
         }
         if ($type === 'string') {
-            $maxLenString = $this->debug->getCfg('maxLenString');
+            $maxLenString = $this->debug->getCfg('maxLenString', Debug::CONFIG_DEBUG);
             if ($maxLenString && \strlen($val) > $maxLenString) {
                 return array($type, $typeMore);
             }

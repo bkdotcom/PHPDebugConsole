@@ -152,7 +152,7 @@ class StatementInfo
             $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
         }
         $debug->groupCollapsed($label, $debug->meta(array(
-            'icon' => $debug->getCfg('channelIcon'),
+            'icon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
             'boldLabel' => false,
         )));
         if ($logSql) {

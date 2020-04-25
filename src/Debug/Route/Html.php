@@ -282,8 +282,8 @@ class Html extends Base
                 if (!isset($ref[$k])) {
                     $ref[$k] = array(
                         'options' => array(
-                            'icon' => $channel->getCfg('channelIcon'),
-                            'show' => $channel->getCfg('channelShow'),
+                            'icon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+                            'show' => $channel->getCfg('channelShow', Debug::CONFIG_DEBUG),
                         ),
                         'channels' => array(),
                     );
@@ -306,7 +306,7 @@ class Html extends Base
             return '';
         }
         $html = '';
-        $channelName = $this->debug->getCfg('channelName');
+        $channelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         foreach ($names as $name) {
             $isActive = false;
             $nameTab = $name;
@@ -357,7 +357,7 @@ class Html extends Base
     private function buildTabPane($name)
     {
         $this->channelRegex = '#^' . \preg_quote($name, '#') . '(\.|$)#';
-        $isActive = $name === $this->debug->getCfg('channelName');
+        $isActive = $name === $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $str = '<div' . $this->debug->html->buildAttribString(array(
             'class' => array(
                 'tab-pane',

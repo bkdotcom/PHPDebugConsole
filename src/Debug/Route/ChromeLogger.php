@@ -187,8 +187,8 @@ class ChromeLogger extends Base
     protected function getMaxLength()
     {
         $maxVals = \array_filter(array(
-            $this->debug->utility->getBytes($this->debug->getCfg('headerMaxAll'), true),
-            $this->debug->utility->getBytes($this->debug->getCfg('headerMaxPer'), true),
+            $this->debug->utility->getBytes($this->debug->getCfg('headerMaxAll', Debug::CONFIG_DEBUG), true),
+            $this->debug->utility->getBytes($this->debug->getCfg('headerMaxPer', Debug::CONFIG_DEBUG), true),
         ));
         return $maxVals
             ? \min($maxVals)

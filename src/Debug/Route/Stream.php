@@ -63,7 +63,7 @@ class Stream extends Base
     {
         $isCli = \strpos($this->debug->utility->getInterface(), 'cli') !== false;
         $this->cfg['output'] = $isCli
-            ? $this->debug->getCfg('output')    // if cli, only output if explicitly true
+            ? $this->debug->getCfg('output', Debug::CONFIG_DEBUG)    // if cli, only output if explicitly true
             : true;                             //  otherwise push to stream
         $stream = $this->cfg['stream'];
         if ($stream) {

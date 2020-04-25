@@ -25,6 +25,13 @@ abstract class Base extends Component implements RouteInterface
 
     public $debug;
     protected $channelName = null;
+
+    /**
+     * channelName of instance initiating the output!
+     * Not the rootInstance channelName
+     *
+     * @var string
+     */
     protected $channelNameRoot = null;
     protected $channelRegex;
     protected $data = array();
@@ -39,8 +46,8 @@ abstract class Base extends Component implements RouteInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->channelName = $this->debug->getCfg('channelName');
-        $this->channelNameRoot = $this->debug->getCfg('channelName');
+        $this->channelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $this->channelNameRoot = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
     }

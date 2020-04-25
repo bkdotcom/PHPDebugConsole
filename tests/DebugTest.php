@@ -170,10 +170,10 @@ class DebugTest extends DebugTestFramework
         }, $this->debug->eventManager->getSubscribers('php.shutdown'));
         $subscribersExpect = array(
             array('bdk\ErrorHandler', 'onShutdown'),
-            array('bdk\Debug\Internal', 'onShutdownHigh'),
+            array('bdk\Debug\InternalEvents', 'onShutdownHigh'),
             array('bdk\Debug\Plugin\LogReqRes', 'logResponse'),
-            array('bdk\Debug\Internal', 'onShutdownHigh2'),
-            array('bdk\Debug\Internal', 'onShutdownLow'),
+            array('bdk\Debug\InternalEvents', 'onShutdownHigh2'),
+            array('bdk\Debug\InternalEvents', 'onShutdownLow'),
         );
         $this->assertSame($subscribersExpect, $subscribers);
     }

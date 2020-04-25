@@ -429,6 +429,34 @@ class DebugTestFramework extends DOMTestCase
         $debug->setCfg('route', $backupRoute);
     }
 
+    protected function deObjectifyData($data)
+    {
+        foreach (array('alerts','log') as $what) {
+            if (!isset($data[$what])) {
+                continue;
+            }
+            foreach ($data[$what] as $i => $v) {
+                $data[$what][$i] = array(
+                    $v['method'],
+                    $v['args'],
+                    $v['meta'],
+                );
+            }
+        }
+        if (isset($data['logSummary'])) {
+            foreach ($data['logSummary'] as $i => $group) {
+                foreach ($group as $i2 => $v) {
+                    $data['logSummary'][$i][$i2] = array(
+                        $v['method'],
+                        $v['args'],
+                        $v['meta'],
+                    );
+                }
+            }
+        }
+        return $data;
+    }
+
     /**
      * convert log entry to array
      *

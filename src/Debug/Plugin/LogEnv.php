@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Plugin;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Utility\ErrorLevel;
 use bdk\PubSub\Event;
@@ -119,7 +120,7 @@ class LogEnv implements SubscriberInterface
      */
     private function getSessionName()
     {
-        $name = $this->debug->getCfg('sessionName');
+        $name = $this->debug->getCfg('sessionName', Debug::CONFIG_DEBUG);
         $names = $name
             ? array($name)
             : array('PHPSESSID', 'SESSIONID', 'SESSION_ID', 'SESSID', 'SESS_ID');
@@ -151,7 +152,7 @@ class LogEnv implements SubscriberInterface
      */
     private function logGitInfo()
     {
-        if (!$this->debug->getCfg('logEnvInfo.gitInfo')) {
+        if (!$this->debug->getCfg('logEnvInfo.gitInfo', Debug::CONFIG_DEBUG)) {
             return;
         }
         $redirect = \stripos(PHP_OS, 'WIN') !== 0
@@ -182,7 +183,7 @@ class LogEnv implements SubscriberInterface
      */
     private function logPhpInfo()
     {
-        if (!$this->debug->getCfg('logEnvInfo.phpInfo')) {
+        if (!$this->debug->getCfg('logEnvInfo.phpInfo', Debug::CONFIG_DEBUG)) {
             return;
         }
         $this->debug->log('PHP Version', PHP_VERSION);
@@ -218,10 +219,10 @@ class LogEnv implements SubscriberInterface
      */
     private function logPhpInfoEr()
     {
-        if (!$this->debug->getCfg('logEnvInfo.errorReporting')) {
+        if (!$this->debug->getCfg('logEnvInfo.errorReporting', Debug::CONFIG_DEBUG)) {
             return;
         }
-        $errorReportingRaw = $this->debug->getCfg('errorReporting');
+        $errorReportingRaw = $this->debug->getCfg('errorHandler.errorReporting');
         $errorReporting = $errorReportingRaw === 'system'
             ? \error_reporting()
             : $errorReportingRaw;
@@ -276,10 +277,10 @@ class LogEnv implements SubscriberInterface
      */
     private function logServerVals()
     {
-        if ($this->debug->getCfg('logEnvInfo.serverVals') === false) {
+        if ($this->debug->getCfg('logEnvInfo.serverVals', Debug::CONFIG_DEBUG) === false) {
             return;
         }
-        $logServerKeys = $this->debug->getCfg('logServerKeys');
+        $logServerKeys = $this->debug->getCfg('logServerKeys', Debug::CONFIG_DEBUG);
         $serverParams = $this->debug->request->getServerParams();
         if ($this->debug->request->getMethod() !== 'GET') {
             $logServerKeys[] = 'REQUEST_METHOD';
@@ -288,7 +289,7 @@ class LogEnv implements SubscriberInterface
             $logServerKeys[] = 'CONTENT_LENGTH';
             $logServerKeys[] = 'CONTENT_TYPE';
         }
-        if ($this->debug->getCfg('logRequestInfo.headers') === false) {
+        if ($this->debug->getCfg('logRequestInfo.headers', Debug::CONFIG_DEBUG) === false) {
             $logServerKeys[] = 'HTTP_HOST';
         }
         $logServerKeys = \array_unique($logServerKeys);
@@ -317,7 +318,7 @@ class LogEnv implements SubscriberInterface
      */
     private function logSession()
     {
-        if (!$this->debug->getCfg('logEnvInfo.session')) {
+        if (!$this->debug->getCfg('logEnvInfo.session', Debug::CONFIG_DEBUG)) {
             return;
         }
         $namePrev = null;
@@ -351,7 +352,7 @@ class LogEnv implements SubscriberInterface
      */
     private function logSessionSettings()
     {
-        if (!$this->debug->getCfg('logEnvInfo.session')) {
+        if (!$this->debug->getCfg('logEnvInfo.session', Debug::CONFIG_DEBUG)) {
             return;
         }
         $settings = array(

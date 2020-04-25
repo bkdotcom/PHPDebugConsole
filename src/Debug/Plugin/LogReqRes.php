@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Plugin;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -69,7 +70,7 @@ class LogReqRes implements SubscriberInterface
             return;
         }
         $this->logRequestHeaders();
-        if ($this->debug->getCfg('logRequestInfo.cookies')) {
+        if ($this->debug->getCfg('logRequestInfo.cookies', Debug::CONFIG_DEBUG)) {
             $cookieVals = $this->debug->request->getCookieParams();
             \ksort($cookieVals, SORT_NATURAL);
             if ($cookieVals) {
@@ -87,7 +88,7 @@ class LogReqRes implements SubscriberInterface
      */
     public function logResponse()
     {
-        if (!$this->debug->getCfg('logResponse')) {
+        if (!$this->debug->getCfg('logResponse', Debug::CONFIG_DEBUG)) {
             return;
         }
         if (\strpos($this->debug->utility->getInterface(), 'http') !== 0) {
@@ -132,7 +133,7 @@ class LogReqRes implements SubscriberInterface
      */
     private function logFiles()
     {
-        if (!$this->debug->getCfg('logRequestInfo.files')) {
+        if (!$this->debug->getCfg('logRequestInfo.files', Debug::CONFIG_DEBUG)) {
             return;
         }
         if ($this->debug->request->getUploadedFiles()) {
@@ -147,7 +148,7 @@ class LogReqRes implements SubscriberInterface
      */
     private function logPost()
     {
-        if (!$this->debug->getCfg('logRequestInfo.post')) {
+        if (!$this->debug->getCfg('logRequestInfo.post', Debug::CONFIG_DEBUG)) {
             return;
         }
         $request = $this->debug->request;
@@ -229,7 +230,7 @@ class LogReqRes implements SubscriberInterface
      */
     private function logRequestHeaders()
     {
-        if ($this->debug->getCfg('logRequestInfo.headers') === false) {
+        if ($this->debug->getCfg('logRequestInfo.headers', Debug::CONFIG_DEBUG) === false) {
             return;
         }
         $headers = \array_map(function ($vals) {
@@ -248,7 +249,7 @@ class LogReqRes implements SubscriberInterface
      */
     private function logResponseContent()
     {
-        $maxLen = $this->debug->getCfg('logResponseMaxLen');
+        $maxLen = $this->debug->getCfg('logResponseMaxLen', Debug::CONFIG_DEBUG);
         $maxLen = $this->debug->utility->getBytes($maxLen, true);
         // get the contents of the output buffer we started to collect response
         $response = \ob_get_clean();

@@ -86,7 +86,7 @@ class Wamp implements RouteInterface
      */
     public function init()
     {
-        $this->cfg['output'] = $this->debug->getCfg('output');
+        $this->cfg['output'] = $this->debug->getCfg('output', Debug::CONFIG_DEBUG);
         if ($this->cfg['output']) {
             $this->publishMeta();
         }
@@ -151,7 +151,7 @@ class Wamp implements RouteInterface
             ),
             array(
                 'attribs' => array(
-                    'class' => $error['type'] & $this->debug->getCfg('errorMask')
+                    'class' => $error['type'] & $this->debug->getCfg('errorMask', Debug::CONFIG_DEBUG)
                         ? 'error'
                         : 'warn',
                 )
@@ -253,8 +253,8 @@ class Wamp implements RouteInterface
         if ($logEntry->getSubject() !== $this->debug) {
             $meta['channel'] = $logEntry->getChannelName();
             if (!\in_array($meta['channel'], $this->channelNames)) {
-                $meta['channelIcon'] = $logEntry->getSubject()->getCfg('channelIcon');
-                $meta['channelShow'] = $logEntry->getSubject()->getCfg('channelShow');
+                $meta['channelIcon'] = $logEntry->getSubject()->getCfg('channelIcon', Debug::CONFIG_DEBUG);
+                $meta['channelShow'] = $logEntry->getSubject()->getCfg('channelShow', Debug::CONFIG_DEBUG);
                 $this->channelNames[] = $meta['channel'];
             }
         }
@@ -411,9 +411,9 @@ class Wamp implements RouteInterface
                 $this->debug->redact($metaVals),
             ),
             array(
-                'channelNameRoot' => $this->debug->rootInstance->getCfg('channelName'),
+                'channelNameRoot' => $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG),
                 'debugVersion' => $debugClass::VERSION,
-                'drawer' => $this->debug->getCfg('outputHtml.drawer'),
+                'drawer' => $this->debug->getCfg('routeHtml.drawer'),
                 'interface' => $this->debug->utility->getInterface(),
                 'linkFilesTemplateDefault' => \strtr(
                     \ini_get('xdebug.file_link_format'),

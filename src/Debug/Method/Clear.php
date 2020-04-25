@@ -21,23 +21,11 @@ use bdk\Debug\LogEntry;
 class Clear
 {
 
-    private $data;
+    private $data = array();
     private $debug;
     private $channelName = null;
     private $channelRegex;
     private $isRootInstance = false;
-
-    /**
-     * Constructor
-     *
-     * @param Debug $debug Debug instance
-     * @param array $data  debug data
-     */
-    public function __construct(Debug $debug, &$data)
-    {
-        $this->debug = $debug;
-        $this->data = &$data;
-    }
 
     /**
      * Handle clear() call
@@ -48,6 +36,8 @@ class Clear
      */
     public function onLog(LogEntry $logEntry)
     {
+        $this->debug = $logEntry->getSubject();
+        $this->data = $this->debug->getData();
         $this->channelName = $this->debug->parentInstance
             ? $logEntry->getChannelName() // just clear this specific channel
             : null;
@@ -64,6 +54,8 @@ class Clear
             $cleared = array('everything');
         }
         $args = $this->getLogArgs($cleared);
+        $this->debug->setData($this->data);
+        $this->data = array();
         $logEntry->setValues(array(
             'method' => 'clear',
             'args' => $args,
@@ -110,16 +102,16 @@ class Clear
         if (!$clearAlerts) {
             return null;
         }
-        if ($this->channelName) {
-            foreach ($this->data['alerts'] as $i => $logEntry) {
-                if ($this->channelTest($logEntry)) {
-                    unset($this->data['alerts'][$i]);
-                }
-            }
-            $this->data['alerts'] = \array_values($this->data['alerts']);
-        } else {
+        if ($this->channelName === null) {
             $this->data['alerts'] = array();
+            return 'alerts';
         }
+        foreach ($this->data['alerts'] as $i => $logEntry) {
+            if ($this->channelTest($logEntry)) {
+                unset($this->data['alerts'][$i]);
+            }
+        }
+        $this->data['alerts'] = \array_values($this->data['alerts']);
         return 'alerts';
     }
 

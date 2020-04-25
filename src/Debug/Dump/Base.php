@@ -40,7 +40,7 @@ class Base extends Component
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName');
+        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
     }
 
     /**

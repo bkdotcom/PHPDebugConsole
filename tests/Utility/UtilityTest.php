@@ -8,6 +8,14 @@ use bdk\Debug\Utility;
 class UtilityTest extends DebugTestFramework
 {
 
+    public function testArrayIsList()
+    {
+        $this->assertFalse(Utility::arrayIsList('string'));
+        $this->assertTrue(Utility::arrayIsList(array()));     // empty array = "list"
+        $this->assertFalse(Utility::arrayIsList(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope')));
+        $this->assertTrue(Utility::arrayIsList(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo')));
+    }
+
     /**
      * Test
      *
@@ -120,14 +128,6 @@ class UtilityTest extends DebugTestFramework
         $base64Str = base64_encode(chunk_split(str_repeat('zippity do dah', 50)));
         $this->assertTrue(Utility::isBase64Encoded($base64Str));
         $this->assertFalse(Utility::isBase64Encoded('I\'m just a bill.'));
-    }
-
-    public function testIsList()
-    {
-        $this->assertFalse(Utility::isList("string"));
-        $this->assertTrue(Utility::isList(array()));     // empty array = "list"
-        $this->assertFalse(Utility::isList(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope')));
-        $this->assertTrue(Utility::isList(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo')));
     }
 
     /**

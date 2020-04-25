@@ -90,7 +90,7 @@ class LogEntry extends Event
      */
     public function getChannelName()
     {
-        return $this->subject->getCfg('channelName');
+        return $this->subject->getCfg('channelName', Debug::CONFIG_DEBUG);
     }
 
     /**

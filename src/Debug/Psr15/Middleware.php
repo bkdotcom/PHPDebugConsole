@@ -36,10 +36,10 @@ class Middleware implements MiddlewareInterface
     /**
      * Constructor
      *
+     * @param Debug $debug   (optional) Debug instance (will use singleton if not provided)
      * @param array $options middleware options
-     * @param Debug $debug   optional debug instance (will use singleton if not provided)
      */
-    public function __construct($options = array(), Debug $debug = null)
+    public function __construct(Debug $debug = null, $options = array())
     {
         $this->debug = $debug ?: Debug::getInstance();
         $this->options = \array_merge(array(

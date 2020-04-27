@@ -2102,7 +2102,6 @@ class Debug
         if (\in_array($property, array('request')) && $this !== self::$instance) {
             return self::$instance->getViaContainer($property);
         }
-        }
         $val = null;
         $isNew = false;
         if (isset($this->cfg['services'][$property])) {

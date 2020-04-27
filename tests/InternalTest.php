@@ -32,10 +32,10 @@ class InternalTest extends DebugTestFramework
 
     public function testHasLog()
     {
-        $this->assertFalse($this->debug->internal->hasLog());
+        $this->assertFalse($this->debug->hasLog());
         $this->debug->log('something');
-        $this->assertTrue($this->debug->internal->hasLog());
+        $this->assertTrue($this->debug->hasLog());
         $this->debug->clear();
-        $this->assertFalse($this->debug->internal->hasLog());
+        $this->assertFalse($this->debug->hasLog());
     }
 }

@@ -72,7 +72,7 @@ class Base extends Component
                 }
             }
             if (!\method_exists($this, $method)) {
-                $event = $this->debug->internal->publishBubbleEvent('debug.dumpCustom', new Event(
+                $event = $this->debug->publishBubbleEvent('debug.dumpCustom', new Event(
                     $val,
                     array(
                         'output' => $this,

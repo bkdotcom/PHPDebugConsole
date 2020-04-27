@@ -137,13 +137,33 @@ class Internal implements SubscriberInterface
     /**
      * Return the group & groupCollapsed ("ancestors")
      *
-     * @param array $logEntries log entries
-     * @param int   $curDepth   current group depth
+     * @param int|string $where 'auto', main' or summary priority
      *
      * @return LogEntry[] kwys are maintained
      */
-    public static function getCurrentGroups(&$logEntries, $curDepth)
+    public function getCurrentGroups($where = 'auto')
     {
+        if ($where === 'auto') {
+            $priorityStack = $this->debug->getData('groupPriorityStack');
+            $priority = \end($priorityStack);
+            $where = $priority !== false
+                ? $priority
+                : 'main';
+        }
+
+        /*
+            Determine current depth
+        */
+        $curDepth = 0;
+        $groupStacks = $this->debug->getData(array('groupStacks', $where));
+        foreach ($groupStacks as $group) {
+            $curDepth += (int) $group['collect'];
+        }
+
+        $logEntries = $where === 'main'
+            ? $this->debug->getData(array('log'))
+            : $this->debug->getData(array('logSummary', $where));
+
         /*
             curDepth will fluctuate as we go back through log
             minDepth will decrease as we work our way down/up the groups

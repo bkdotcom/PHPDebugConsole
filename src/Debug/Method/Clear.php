@@ -197,11 +197,7 @@ class Clear
         $clearErrors = (bool) ($flags & Debug::CLEAR_LOG_ERRORS);
         if ($flags & Debug::CLEAR_LOG) {
             $return = 'log (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
-            $curDepth = 0;
-            foreach ($this->data['groupStacks']['main'] as $group) {
-                $curDepth += (int) $group['collect'];
-            }
-            $entriesKeep = $this->debug->internal->getCurrentGroups($this->data['log'], $curDepth);
+            $entriesKeep = $this->debug->getCurrentGroups('main');
             $this->clearLogHelper($this->data['log'], $clearErrors, $entriesKeep);
         } elseif ($clearErrors) {
             $return = 'errors';
@@ -252,19 +248,12 @@ class Clear
             $return = 'summary (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
             $curPriority = \end($this->data['groupPriorityStack']);  // false if empty
             foreach (\array_keys($this->data['logSummary']) as $priority) {
-                $entriesKeep = array();
-                if ($priority === $curPriority) {
-                    $curDepth = 0;
-                    foreach ($this->data['groupStacks'][$priority] as $group) {
-                        $curDepth += (int) $group['collect'];
-                    }
-                    $entriesKeep = $this->debug->internal->getCurrentGroups(
-                        $this->data['logSummary'][$priority],
-                        $curDepth
-                    );
-                } else {
+                if ($priority !== $curPriority) {
                     $this->data['groupStacks'][$priority] = array();
+                    $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, array());
+                    continue;
                 }
+                $entriesKeep = $this->debug->getCurrentGroups($priority);
                 $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, $entriesKeep);
             }
         } elseif ($clearErrors) {

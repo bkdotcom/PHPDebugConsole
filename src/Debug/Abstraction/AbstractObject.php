@@ -122,7 +122,7 @@ class AbstractObject
             set stringified
             set traverseValues
         */
-        $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractStart', $abs, $this->abstracter->debug);
+        $this->abstracter->debug->publishBubbleEvent('debug.objAbstractStart', $abs, $this->abstracter->debug);
         if ($abs['isExcluded']) {
             return $this->absClean($abs);
         }
@@ -130,7 +130,7 @@ class AbstractObject
         /*
             debug.objAbstractEnd subscriber has free reign to modify abtraction array
         */
-        $this->abstracter->debug->internal->publishBubbleEvent('debug.objAbstractEnd', $abs, $this->abstracter->debug);
+        $this->abstracter->debug->publishBubbleEvent('debug.objAbstractEnd', $abs, $this->abstracter->debug);
         return $this->absClean($abs);
     }
 

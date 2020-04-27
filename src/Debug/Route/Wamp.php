@@ -368,7 +368,7 @@ class Wamp implements RouteInterface
     {
         $logEntry = new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta']);
         $logEntry['route'] = $this;
-        $this->debug->internal->publishBubbleEvent('debug.outputLogEntry', $logEntry);
+        $this->debug->publishBubbleEvent('debug.outputLogEntry', $logEntry);
         $this->processLogEntry($logEntry);
     }
 

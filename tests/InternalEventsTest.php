@@ -1,5 +1,7 @@
 <?php
 
+use bdk\Debug;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -96,7 +98,7 @@ class InternalEventsTest extends DebugTestFramework
             'config' => array(
                 'logRuntime' => $this->debug->getCfg('logRuntime'),
             ),
-            'version' => \bdk\Debug::VERSION,
+            'version' => Debug::VERSION,
         );
         $this->assertEquals(
             $this->deObjectifyData($expect)['logSummary'],

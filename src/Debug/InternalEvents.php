@@ -266,6 +266,7 @@ class InternalEvents implements SubscriberInterface
      * @param Event $event debug.output event object
      *
      * @return void
+     * @throws RuntimeException if error emitting headers
      */
     public function onOutputHeaders(Event $event)
     {
@@ -278,13 +279,7 @@ class InternalEvents implements SubscriberInterface
             ));
             return;
         }
-        if (\headers_sent($file, $line)) {
-            \trigger_error('PHPDebugConsole: headers already sent: ' . $file . ', line ' . $line, E_USER_NOTICE);
-            return;
-        }
-        foreach ($headers as $nameVal) {
-            \header($nameVal[0] . ': ' . $nameVal[1]);
-        }
+        $this->debug->utility->emitHeaders($headers);
     }
 
     /**

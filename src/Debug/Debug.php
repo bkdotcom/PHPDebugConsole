@@ -1269,21 +1269,6 @@ class Debug
     }
 
     /**
-     * Emit headers queued for output directly using `header()`
-     *
-     * @return void
-     */
-    public function emitHeaders()
-    {
-        if (\headers_sent($file, $line)) {
-            \trigger_error('PHPDebugConsole: headers already sent: ' . $file . ', line ' . $line, E_USER_NOTICE);
-        }
-        foreach ($this->getHeaders() as $nameVal) {
-            \header($nameVal[0] . ': ' . $nameVal[1]);
-        }
-    }
-
-    /**
      * Retrieve a configuration value
      *
      * @param string $path what to get

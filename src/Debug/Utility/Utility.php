@@ -181,12 +181,50 @@ class Utility
                 $path[] = \key($ref);
                 continue;
             }
-            if (!isset($ref[$key]) || !is_array($ref[$key])) {
+            if (!isset($ref[$key]) || !\is_array($ref[$key])) {
                 $ref[$key] = array(); // initialize this level
             }
             $ref = &$ref[$key];
         }
         $ref = $val;
+    }
+
+    /**
+     * Emit headers queued for output directly using `header()`
+     *
+     * @param array $headers array of headers
+     *                array(
+     *                   array(name, value)
+     *                   name => value
+     *                   name => array(value1, value2),
+     *                )
+     *
+     * @return void
+     * @throws \RuntimeException if headers already sent
+     */
+    public function emitHeaders($headers)
+    {
+        if (!$headers) {
+            return;
+        }
+        if (\headers_sent($file, $line)) {
+            throw new \RuntimeException('Headers already sent: ' . $file . ', line ' . $line);
+        }
+        foreach ($headers as $key => $nameVal) {
+            if (\is_int($key)) {
+                \header($nameVal[0] . ': ' . $nameVal[1]);
+                continue;
+            }
+            if (\is_string($nameVal)) {
+                \header($key . ': ' . $nameVal);
+                continue;
+            }
+            if (\is_array($nameVal)) {
+                foreach ($nameVal as $val) {
+                    \header($key . ': ' . $val);
+                }
+            }
+        }
     }
 
     /**

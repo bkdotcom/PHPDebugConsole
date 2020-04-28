@@ -36,7 +36,6 @@ use SplObjectStorage;
  * @property \bdk\ErrorHandler    $errorHandler  lazy-loaded ErrorHandler instance
  * @property \bdk\PubSub\Manager  $eventManager  lazy-loaded Event Manager instance
  * @property Debug\Utility\Html   $html          lazy=loaded Html Utility instance
- * @property Debug\Internal       $internal      lazy-loaded Internal instance
  * @property Debug\Psr3\Logger    $logger        lazy-loaded PSR-3 instance
  * @property Debug\Method\Clear   $methodClear   lazy-loaded MethodClear instance
  * @property Debug\Method\Profile $methodProfile lazy-loaded MethodProfile instance
@@ -64,9 +63,11 @@ class Debug
     const VERSION = '3.0';
 
     protected $cfg = array();
-    protected $container;
+    protected $config;
     protected $data = array();
     protected $groupStackRef;   // points to $this->data['groupStacks'][x] (where x = 'main' or (int) priority)
+    protected $internal;
+    protected $internalEvents;
     protected $logRef;          // points to either log or logSummary[priority]
     protected static $methodDefaultArgs = array();
     protected $readOnly = array(
@@ -179,8 +180,8 @@ class Debug
         /*
             Initialize Internal
         */
-        $this->internal;
-        $this->internalEvents;
+        $this->internal = $this->getViaContainer('internal');
+        $this->internalEvents = $this->getViaContainer('internalEvents');
         /*
             Publish bootstrap event
         */
@@ -199,8 +200,9 @@ class Debug
      */
     public function __call($methodName, $args)
     {
-        if (\method_exists($this->internal, $methodName)) {
-            return \call_user_func_array(array($this->internal, $methodName), $args);
+        $callable = array($this->internal, $methodName);
+        if (\is_callable($callable)) {
+            return \call_user_func_array($callable, $args);
         }
         return $this->appendLog(new LogEntry(
             $this,
@@ -260,14 +262,25 @@ class Debug
      */
     public function __get($property)
     {
+        if (\in_array($property, array('config', 'internal', 'internalEvents'))) {
+            $caller = $this->backtrace->getCallerInfo();
+            $this->errorHandler->handleError(
+                E_USER_NOTICE,
+                'property "' . $property . '" is not accessible',
+                $caller['file'],
+                $caller['line']
+            );
+            return;
+        }
         $val = $this->getViaContainer($property);
-        if ($val) {
+        if ($val !== false) {
+            // may be null
             return $val;
         }
         /*
             Allow read-only access to private/protected properties
         */
-        if (isset($this->readOnly[$property])) {
+        if (\array_key_exists($property, $this->readOnly)) {
             return $this->readOnly[$property];
         }
         /*
@@ -292,7 +305,13 @@ class Debug
             $this->{$property} = $val;
             return $val;
         }
-        return null;
+        $caller = $this->backtrace->getCallerInfo();
+        $this->errorHandler->handleError(
+            E_USER_NOTICE,
+            'property "' . $property . '" is not accessible',
+            $caller['file'],
+            $caller['line']
+        );
     }
 
     /*
@@ -930,9 +949,9 @@ class Debug
                 // no microtime -> the timer is currently paused -> unpause
                 $timers[$label][1] = \microtime(true);
             }
-        } else {
-            $this->data['timers']['stack'][] = \microtime(true);
+            return;
         }
+        $this->data['timers']['stack'][] = \microtime(true);
     }
 
     /**
@@ -996,7 +1015,8 @@ class Debug
         } else {
             \array_pop($this->data['timers']['stack']);
         }
-        return $this->doTime($ret, $logEntry);
+        $this->doTime($ret, $logEntry);
+        return $ret;
     }
 
     /**
@@ -1068,7 +1088,8 @@ class Debug
         if ($microT) {
             $elapsed += \microtime(true) - $microT;
         }
-        return $this->doTime($elapsed, $logEntry);
+        $this->doTime($elapsed, $logEntry);
+        return $elapsed;
     }
 
     /**
@@ -1776,6 +1797,25 @@ class Debug
      */
     private function bootstrap($cfg)
     {
+        $this->config = $this->getViaContainer('config');
+        $this->eventManager->subscribe('debug.config', array($this, 'onConfig'));
+        $this->config->set($cfg);
+        $this->bootstrapInstance();
+        if ($this->cfg['emailTo'] === 'default') {
+            $serverParams = $this->request->getServerParams();
+            $this->cfg['emailTo'] = isset($serverParams['SERVER_ADMIN'])
+                ? $serverParams['SERVER_ADMIN']
+                : null;
+        }
+    }
+
+    /**
+     * Set instance, rootInstance, parentInstance, & initialize data
+     *
+     * @return void
+     */
+    private function bootstrapInstance()
+    {
         if (!isset(self::$instance)) {
             /*
                self::getInstance() will always return initial/first instance
@@ -1790,24 +1830,6 @@ class Debug
                 \spl_autoload_register(array($this, 'autoloader'));
             }
         }
-        $this->eventManager->subscribe('debug.config', array($this, 'onConfig'));
-        $this->config->set($cfg);
-        $this->bootstrapInstance();
-        if ($this->cfg['emailTo'] === 'default') {
-            $serverParams = $this->request->getServerParams();
-            $this->cfg['emailTo'] = isset($serverParams['SERVER_ADMIN'])
-                ? $serverParams['SERVER_ADMIN']
-                : null;
-        }
-    }
-
-    /**
-     * Set rootInstance, parentInstance, & initialize data
-     *
-     * @return void
-     */
-    private function bootstrapInstance()
-    {
         $this->readOnly['rootInstance'] = $this;
         if (isset($this->cfg['parent'])) {
             $this->readOnly['parentInstance'] = $this->cfg['parent'];
@@ -1935,13 +1957,13 @@ class Debug
      * @param float    $elapsed  elapsed time in seconds
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return mixed
+     * @return void
      */
     protected function doTime($elapsed, LogEntry $logEntry)
     {
         $meta = $logEntry['meta'];
         if ($meta['silent']) {
-            return $elapsed;
+            return;
         }
         $label = isset($logEntry['args'][0])
             ? $logEntry['args'][0]
@@ -1956,7 +1978,6 @@ class Debug
             array($str),
             \array_diff_key($meta, \array_flip(array('precision','silent','template','unit')))
         ));
-        return $elapsed;
     }
 
     /**
@@ -2052,6 +2073,7 @@ class Debug
                 */
                 return \bdk\Debug\Psr7lite\ServerRequest::fromGlobals();
             },
+            'response' => null,
             'utf8' => function () {
                 return new \bdk\Debug\Utility\Utf8();
             },
@@ -2091,7 +2113,7 @@ class Debug
      *
      * @param string $property service/factory name
      *
-     * @return mixed
+     * @return mixed (false if doesn't exist)
      */
     private function getViaContainer($property)
     {
@@ -2102,9 +2124,9 @@ class Debug
         if (\in_array($property, array('request')) && $this !== self::$instance) {
             return self::$instance->getViaContainer($property);
         }
-        $val = null;
+        $val = false;
         $isNew = false;
-        if (isset($this->cfg['services'][$property])) {
+        if (\array_key_exists($property, $this->cfg['services'])) {
             $val = $this->cfg['services'][$property];
             if ($val instanceof \Closure) {
                 $isNew = true;

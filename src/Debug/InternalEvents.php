@@ -21,7 +21,7 @@ use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
- *
+ * Handle debug events
  */
 class InternalEvents implements SubscriberInterface
 {
@@ -212,12 +212,14 @@ class InternalEvents implements SubscriberInterface
             // Prevent ErrorHandler\ErrorEmailer from sending email.
             // Since we're collecting log info, we send email on shutdown
             $error['email'] = false;
-        } elseif ($this->debug->getCfg('output', Debug::CONFIG_DEBUG)) {
+            return;
+        }
+        if ($this->debug->getCfg('output', Debug::CONFIG_DEBUG)) {
             $error['email'] = false;
             $error['inConsole'] = false;
-        } else {
-            $error['inConsole'] = false;
+            return;
         }
+        $error['inConsole'] = false;
     }
 
     /**
@@ -274,12 +276,14 @@ class InternalEvents implements SubscriberInterface
                 $event->getSubject()->getData('headers'),
                 $headers
             ));
-        } elseif (\headers_sent($file, $line)) {
+            return;
+        }
+        if (\headers_sent($file, $line)) {
             \trigger_error('PHPDebugConsole: headers already sent: ' . $file . ', line ' . $line, E_USER_NOTICE);
-        } else {
-            foreach ($headers as $nameVal) {
-                \header($nameVal[0] . ': ' . $nameVal[1]);
-            }
+            return;
+        }
+        foreach ($headers as $nameVal) {
+            \header($nameVal[0] . ': ' . $nameVal[1]);
         }
     }
 

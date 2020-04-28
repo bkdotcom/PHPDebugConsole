@@ -28,10 +28,15 @@ class InternalEventsTest extends DebugTestFramework
             'emailFunc' => array($this, 'emailMock'),
         ));
 
+        $debugRef = new \ReflectionObject($this->debug);
+        $internalEventsRef = $debugRef->getProperty('internalEvents');
+        $internalEventsRef->setAccessible(true);
+        $internalEvents = $internalEventsRef->getValue($this->debug);
+
         //
         // Test that not emailed if nothing logged
         //
-        $this->debug->internalEvents->onShutdownLow();
+        $internalEvents->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
         //
@@ -40,7 +45,7 @@ class InternalEventsTest extends DebugTestFramework
         $this->debug->log('this is a test');
         $this->debug->log(new \DateTime());
         $this->expectedSubject = 'Debug Log';
-        $this->debug->internalEvents->onShutdownLow();
+        $internalEvents->onShutdownLow();
         $this->assertTrue($this->emailCalled);
         $this->emailCalled = false;
 
@@ -49,14 +54,14 @@ class InternalEventsTest extends DebugTestFramework
         //
         // Test that not emailed if no error
         //
-        $this->debug->internalEvents->onShutdownLow();
+        $internalEvents->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
         //
         // Test that not emailed for notice
         //
         $undefinedVar;  // notice
-        $this->debug->internalEvents->onShutdownLow();
+        $internalEvents->onShutdownLow();
         $this->assertFalse($this->emailCalled);
 
         //
@@ -64,7 +69,7 @@ class InternalEventsTest extends DebugTestFramework
         //
         1 / 0; // warning
         $this->expectedSubject = 'Debug Log: Error';
-        $this->debug->internalEvents->onShutdownLow();
+        $internalEvents->onShutdownLow();
         $this->assertTrue($this->emailCalled);
         $this->emailCalled = false;
 
@@ -72,7 +77,7 @@ class InternalEventsTest extends DebugTestFramework
         // Test that not emailed if disabled
         //
         $this->debug->setCfg('emailLog', false);
-        $this->debug->internalEvents->onShutdownLow();
+        $internalEvents->onShutdownLow();
         $this->assertFalse($this->emailCalled);
     }
 

@@ -401,11 +401,10 @@ class Internal implements SubscriberInterface
             );
             if ($cfgAll['enableProfiling'] && $cfgAll['collect']) {
                 static::$profilingEnabled = true;
-                $pathsExclude = array(
-                    __DIR__,
-                );
                 FileStreamWrapper::setEventManager($this->debug->eventManager);
-                FileStreamWrapper::setPathsExclude($pathsExclude);
+                FileStreamWrapper::setPathsExclude(array(
+                    __DIR__,
+                ));
                 FileStreamWrapper::register();
             }
         }

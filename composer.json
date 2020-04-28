@@ -43,7 +43,7 @@
 		"php-curl-class/php-curl-class": "^8.6",
 		"psr/log": "^1.0",
 		"slim/slim": "^2.0",
-		"squizlabs/php_codesniffer": "^3.5.4",
+		"squizlabs/php_codesniffer": "3.5.5",
 		"swiftmailer/swiftmailer": "^5.0",
 		"twig/twig": "^1.0"
 	},

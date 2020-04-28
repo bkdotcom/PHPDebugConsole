@@ -51,7 +51,16 @@ class Config
         $path = $this->normalizePath($path);
         $forInit = $forInit === true || $forInit === Debug::CONFIG_INIT;
         $debugProp = \array_shift($path);
-        $val =  $this->getPropCfg($debugProp, $path, $forInit);
+        if ($debugProp === '*') {
+            $keys = \array_keys($this->configKeys + $this->valuesPending);
+            $values = array();
+            foreach ($keys as $debugProp) {
+                $values[$debugProp] = $this->getPropCfg($debugProp, array());
+            }
+            \ksort($values);
+            return $values;
+        }
+        $val = $this->getPropCfg($debugProp, $path, $forInit);
         if ($forInit && $val === null) {
             $val = array();
         }
@@ -102,24 +111,10 @@ class Config
         foreach ($cfg as $debugProp => $v) {
             if ($debugProp === 'debug') {
                 $return[$debugProp] = \array_intersect_key($this->debug->getCfg(null, Debug::CONFIG_DEBUG), $v);
-                // debug used a debug.config subscriber to set the value
+                // debug uses a debug.config subscriber to set the value
                 continue;
             }
-            $serviceVal = $this->debug->getCfg('services/' . $debugProp, Debug::CONFIG_DEBUG);
-            $hasInitService = $serviceVal !== null && !($serviceVal instanceof \Closure);
-            $isset = isset($this->debug->{$debugProp});
-            if (($hasInitService || $isset) && \is_object($this->debug->{$debugProp})) {
-                $return[$debugProp] = \array_intersect_key($this->debug->{$debugProp}->getCfg(), $v);
-                $this->debug->{$debugProp}->setCfg($v);
-                continue;
-            }
-            if (isset($this->valuesPending[$debugProp])) {
-                $return[$debugProp] = \array_intersect_key($this->valuesPending[$debugProp], $v);
-                $this->valuesPending[$debugProp] = \array_merge($this->valuesPending[$debugProp], $v);
-                continue;
-            }
-            $return[$debugProp] = array();
-            $this->valuesPending[$debugProp] = $v;
+            $return[$debugProp] = $this->setPropCfg($debugProp, $v);
         }
         $this->debug->eventManager->publish(
             'debug.config',
@@ -188,7 +183,7 @@ class Config
     }
 
     /**
-     * Get all values
+     * Get debug property config value(s)
      *
      * @param string $debugProp debug property name
      * @param array  $path      path/key
@@ -200,15 +195,6 @@ class Config
     {
         if ($debugProp === 'debug') {
             return $this->debug->getCfg($path, Debug::CONFIG_DEBUG);
-        }
-        if ($debugProp === '*') {
-            $keys = \array_keys($this->configKeys + $this->valuesPending);
-            $values = array();
-            foreach ($keys as $debugProp) {
-                $values[$debugProp] = $this->getPropCfg($debugProp, array());
-            }
-            \ksort($values);
-            return $values;
         }
         if (isset($this->valuesPending[$debugProp])) {
             $val = $this->debug->utility->arrayPathGet($this->valuesPending[$debugProp], $path);
@@ -223,7 +209,7 @@ class Config
             return array();
         }
         if (isset($this->debug->{$debugProp}) || $this->debug->$debugProp) {
-            $path = implode('/', $path);
+            $path = \implode('/', $path);
             return $this->debug->{$debugProp}->getCfg($path);
         }
         return null;
@@ -249,9 +235,7 @@ class Config
      */
     private function normalizeArray($cfg)
     {
-        $return = array(
-            'debug' => array(),  // initialize with debug... we want debug values first
-        );
+        $return = array();
         $configKeys = $this->getConfigKeys();
         foreach ($cfg as $k => $v) {
             $translated = false;
@@ -277,9 +261,6 @@ class Config
             if ($translated === false) {
                 $return['debug'][$k] = $v;
             }
-        }
-        if (!$return['debug']) {
-            unset($return['debug']);
         }
         return $return;
     }
@@ -344,5 +325,32 @@ class Config
             }
         }
         return $values;
+    }
+
+    /**
+     * Set debug property value(s)
+     *
+     * @param string $debugProp debug property name
+     * @param array  $cfg       property config values
+     *
+     * @return array existing config
+     */
+    private function setPropCfg($debugProp, $cfg)
+    {
+        $serviceVal = $this->debug->getCfg('services/' . $debugProp, Debug::CONFIG_DEBUG);
+        $hasInitService = $serviceVal !== null && !($serviceVal instanceof \Closure);
+        $isset = isset($this->debug->{$debugProp});
+        if (($hasInitService || $isset) && \is_object($this->debug->{$debugProp})) {
+            $return = \array_intersect_key($this->debug->{$debugProp}->getCfg(), $cfg);
+            $this->debug->{$debugProp}->setCfg($cfg);
+            return $return;
+        }
+        if (isset($this->valuesPending[$debugProp])) {
+            $return = \array_intersect_key($this->valuesPending[$debugProp], $cfg);
+            $this->valuesPending[$debugProp] = \array_merge($this->valuesPending[$debugProp], $cfg);
+            return $return;
+        }
+        $this->valuesPending[$debugProp] = $cfg;
+        return array();
     }
 }

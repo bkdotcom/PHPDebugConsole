@@ -543,15 +543,10 @@ class Debug
      */
     public function error()
     {
-        $args = \func_get_args();
-        if (\count($args) === 1 && $args[0] instanceof Error) {
-            $this->internalEvents->onError($args[0]);
-            return;
-        }
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            $args,
+            \func_get_args(),
             array(
                 'detectFiles' => true,
             )
@@ -743,14 +738,21 @@ class Debug
     public function log()
     {
         $args = \func_get_args();
-        $logEntry = \count($args) === 1 && $args[0] instanceof LogEntry
-            ? $args[0]
-            : new LogEntry(
-                $this,
-                __FUNCTION__,
-                $args
-            );
-        $this->appendLog($logEntry);
+        if (\count($args) === 1) {
+            if ($args[0] instanceof LogEntry) {
+                $this->appendLog($args[0]);
+                return;
+            }
+            if ($args[0] instanceof Error) {
+                $this->internalEvents->onError($args[0]);
+                return;
+            }
+        }
+        $this->appendLog(new LogEntry(
+            $this,
+            __FUNCTION__,
+            $args
+        ));
     }
 
     /**
@@ -1207,15 +1209,10 @@ class Debug
      */
     public function warn()
     {
-        $args = \func_get_args();
-        if (\count($args) === 1 && $args[0] instanceof Error) {
-            $this->internalEvents->onError($args[0]);
-            return;
-        }
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            $args,
+            \func_get_args(),
             array(
                 'detectFiles' => true,
             )

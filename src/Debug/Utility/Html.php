@@ -33,42 +33,53 @@ class Html
      * @var array
      */
     public static $htmlBoolAttr = array(
+        /*
+            enum attribues that behave like bool :
+                'autocapitalize' :  on|off  (along with other values)
+                'autocomplete' :    on|off
+                'contenteditable' : true|false
+                'draggable' :       true|false
+                'spellcheck' :      true|false
+                'translate' :       yes|no
+        */
+
         // GLOBAL
-        'contenteditable', 'hidden', 'itemscope',
-        // 'spellcheck', // enum : true|false
-        // 'translate', // enum : yes|no
+        'hidden', 'itemscope',
 
         // FORM / INPUT
-        // 'autocomplete', // enum : on|off
-        'autofocus', 'checked', 'disabled', 'formnovalidate', 'multiple', 'novalidate', 'readonly', 'required', 'selected',
+        'autofocus', 'checked', 'disabled', 'formnovalidate',
+        'multiple', 'novalidate', 'readonly', 'required', 'selected',
 
         // AUDIO / VIDEO / TRACK
-        'autoplay', 'controls', 'default', 'loop', 'muted',
+        'autoplay', 'controls', 'default', 'loop', 'muted', 'playsinline',
 
-        // DETAILS
+        // DETAILS / DIALOG
         'open',
 
+        // OL
+        'reversed',
+
         // IFRAME
-        'frameborder',
+        'frameborder', // removed from draft
 
         // IMG
         'ismap',
 
-        // OBJECT
-        'typemustmatch',
+        // MARQUEE
+        'truespeed',
 
-        // OL
-        'reversed',
+        // OBJECT
+        'typemustmatch', // removed from draft
 
         // SCRIPT
         'async', 'defer', 'nomodule',
 
         // STYLE
-        'scoped',
+        'scoped',   // removed from draft
 
         // OBSOLETE / DEPRECATED / NEVER-A-THING
-        // "allowfullscreen",
-        // "allowpaymentrequest",
+        'allowfullscreen',     // <iframe> - legacy: redefined as allow="fullscreen"
+        'allowpaymentrequest', // <iframe> - legacy: redefined as allowe="payment"
         'compact',  // <dir> and <ol>
         'nohref',   // <area>
         'noresize', // <frame>
@@ -245,10 +256,11 @@ class Html
      */
     private static function buildAttribBoolVal($key, $value = true)
     {
-        if ($key === 'autocomplete') {
+        if (\in_array($key, array('autocapitalize', 'autocomplete'))) {
+            // autocapitalize also takes other values...
             return $value ? 'on' : 'off';
         }
-        if ($key === 'spellcheck') {
+        if (\in_array($key, array('contenteditable', 'draggable', 'spellcheck'))) {
             return $value ? 'true' : 'false';
         }
         if ($key === 'translate') {

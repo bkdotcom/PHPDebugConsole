@@ -21,6 +21,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
+use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 use Psr\Http\Message\ResponseInterface; // PSR-7
@@ -542,10 +543,15 @@ class Debug
      */
     public function error()
     {
+        $args = \func_get_args();
+        if (\count($args) === 1 && $args[0] instanceof Error) {
+            $this->internalEvents->onError($args[0]);
+            return;
+        }
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args(),
+            $args,
             array(
                 'detectFiles' => true,
             )
@@ -1201,10 +1207,15 @@ class Debug
      */
     public function warn()
     {
+        $args = \func_get_args();
+        if (\count($args) === 1 && $args[0] instanceof Error) {
+            $this->internalEvents->onError($args[0]);
+            return;
+        }
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args(),
+            $args,
             array(
                 'detectFiles' => true,
             )

@@ -436,7 +436,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
         );
         foreach ($hashes as $hash) {
             $error = $this->debug->errorHandler->get('error', $hash);
-            $debug->rootInstance->onError($error);
+            $debug->rootInstance->error($error);
         }
         $debug->groupEnd();
         $debug->groupEnd();

@@ -101,6 +101,7 @@ class DebugTest extends DebugTestFramework
                 array(
                     'backtrace' => $lastError['backtrace'],
                     'channel' => 'general.phpError',
+                    'context' => null,
                     'detectFiles' => true,
                     'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],

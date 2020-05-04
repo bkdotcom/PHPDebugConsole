@@ -54,16 +54,30 @@ class Internal implements SubscriberInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->debug->eventManager->addSubscriberInterface($this);
         if ($debug->parentInstance) {
+            $this->debug->eventManager->addSubscriberInterface($this);
             return;
         }
-        $this->onConfig(new Event(
+        /*
+            Initial setCfg has already occured... so we missed the initial debug.config event
+            manually call onConfig here
+        */
+        $cfgInit = $this->debug->getCfg(null, Debug::CONFIG_DEBUG);
+        $cfgEvent = new Event(
             $this->debug,
             array(
-                'debug' => $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
+                'debug' => $cfgInit,
             )
-        ));
+        );
+        $this->onConfig($cfgEvent);
+        if ($cfgEvent['debug'] !== $cfgInit) {
+            // publish debug.config event so event listeners will get the change
+            $this->debug->eventManager->publish(
+                'debug.config',
+                $cfgEvent
+            );
+        }
+        $this->debug->eventManager->addSubscriberInterface($this);
     }
 
     /**

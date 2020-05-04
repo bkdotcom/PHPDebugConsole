@@ -30,7 +30,10 @@ class Highlight implements AssetProviderInterface
                 './js/prism.css',
                 '.debug pre[class*="language-"] {
                     padding: 0;
-                    margin: 0;
+                    margin: 0.5em 0 0 0;
+                }
+                .debug td > pre:first-child {
+                    margin-top: 0;
                 }
                 .debug pre[data-line] {
                     padding-left: 3em;

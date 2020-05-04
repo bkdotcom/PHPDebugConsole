@@ -184,9 +184,11 @@ class InternalEvents implements SubscriberInterface
     public function onError(Error $error)
     {
         if ($this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
-            $errLoc = $error['file'] . ' (line ' . $error['line'] . ')';
             $meta = $this->debug->meta(array(
                 'backtrace' => $error['backtrace'],
+                'context' => $error['category'] === 'fatal' && $error['backtrace'] === null
+                    ? $error['context']
+                    : null,
                 'errorCat' => $error['category'],
                 'errorHash' => $error['hash'],
                 'errorType' => $error['type'],
@@ -204,7 +206,7 @@ class InternalEvents implements SubscriberInterface
             $this->debug->rootInstance->getChannel('phpError')->{$method}(
                 $error['typeStr'] . ':',
                 $error['message'],
-                $errLoc,
+                $error['file'] . ' (line ' . $error['line'] . ')',
                 $meta
             );
             $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here

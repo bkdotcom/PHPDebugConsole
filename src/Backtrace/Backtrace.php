@@ -41,48 +41,11 @@ class Backtrace
      * @param Exception|Throwable $exception (optional) Exception from which to get backtrace
      * @param bool                $inclArgs  (false) whether to include arguments
      *
-     * @return array
+     * @return array|false
      */
     public static function get($exception = null, $inclArgs = false)
     {
-        if ($exception) {
-            $backtrace = $exception->getTrace();
-            \array_unshift($backtrace, array(
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-            ));
-            $backtrace = static::normalize($backtrace);
-        } else {
-            $backtrace = \debug_backtrace($inclArgs ? null : DEBUG_BACKTRACE_IGNORE_ARGS);
-            if (!\array_key_exists('file', \end($backtrace))) {
-                /*
-                    We appear to be in shutdown
-                */
-                if (!\extension_loaded('xdebug')) {
-                    return array();
-                }
-                $backtrace = static::xdebugGetFunctionStack();
-                $backtrace = \array_reverse($backtrace);
-                $backtrace = static::normalize($backtrace);
-                $backtrace = static::removeInternalFrames($backtrace);
-                $error = \error_get_last();
-                if ($error && $error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR)) {
-                    $errorFileLine = array(
-                        'file' => $error['file'],
-                        'line' => $error['line'],
-                    );
-                    if (\array_intersect_assoc($errorFileLine, $backtrace[0]) !== $errorFileLine) {
-                        \array_unshift($backtrace, $errorFileLine);
-                    }
-                }
-                \end($backtrace);
-                $key = \key($backtrace);
-                unset($backtrace[$key]['function']);  // remove "{main}"
-            } else {
-                $backtrace = static::normalize($backtrace);
-                $backtrace = static::removeInternalFrames($backtrace);
-            }
-        }
+        $backtrace = self::getBacktrace($exception, $inclArgs);
         // keep the calling file & line, but toss the called function (what initiated trace)
         $backtrace[0]['args'] = array();
         // don't incl args passed to trace()
@@ -165,12 +128,15 @@ class Backtrace
     }
 
     /**
-     * Get lines surrounding frame line
+     * Add lines surrounding frame line to each frame
+     *
+     * Adds a `context` value to each backtrace frame
+     * context is an array of `lineNumber => line`
      *
      * @param array $backtrace backtrace frames
      * @param int   $length    number of lines to include
      *
-     * @return array
+     * @return array backtrace
      */
     public static function addContext($backtrace, $length = 19)
     {
@@ -179,10 +145,97 @@ class Backtrace
         }
         $sub = \floor($length  / 2);
         foreach ($backtrace as $i => $frame) {
-            $backtrace[$i]['context'] = \file_exists($frame['file'])
-                ? static::getFileLines($frame['file'], \max($frame['line'] - $sub, 0), $length)
-                : null;
+            $backtrace[$i]['context'] = static::getFileLines(
+                $frame['file'],
+                \max($frame['line'] - $sub, 0),
+                $length
+            );
         }
+        return $backtrace;
+    }
+
+    /**
+     * Get lines from a file
+     *
+     * Returns array of lineNumber => line
+     *
+     * @param string $file   filepath
+     * @param int    $start  line to start on (1-indexed; 1 = line; 1 = first line)
+     *                         0 also = first line
+     * @param int    $length number of lines to return
+     *
+     * @return array|false false if file doesn't exist
+     */
+    public static function getFileLines($file, $start = 1, $length = null)
+    {
+        $start  = (int) $start;
+        $length = (int) $length;
+        if (\file_exists($file) === false) {
+            return false;
+        }
+        $lines = \array_merge(array(null), \file($file));
+        if ($start === 0) {
+            $start = 1;
+        }
+        if ($start > 1 || $length) {
+            // Get a subset of lines from $start to $end (preserve keys)
+            $lines = \array_slice($lines, $start, $length, true);
+        }
+        return $lines;
+    }
+
+    /**
+     * Get backtrace from either passed exception,
+     * debug_backtrace or xdebug_get_function_stack
+     *
+     * @param Exception|Throwable $exception (optional) Exception from which to get backtrace
+     * @param bool                $inclArgs  whether to include arguments
+     *
+     * @return array|false
+     */
+    private static function getBacktrace($exception, $inclArgs)
+    {
+        if ($exception) {
+            $backtrace = $exception->getTrace();
+            \array_unshift($backtrace, array(
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ));
+            $backtrace = static::normalize($backtrace);
+            return $backtrace;
+        }
+        $backtrace = \debug_backtrace($inclArgs ? null : DEBUG_BACKTRACE_IGNORE_ARGS);
+        if (\array_key_exists('file', \end($backtrace)) === true) {
+            // We're NOT in shutdown
+            $backtrace = static::normalize($backtrace);
+            $backtrace = static::removeInternalFrames($backtrace);
+            return $backtrace;
+        }
+        /*
+            We appear to be in shutdown - use xdebug
+        */
+        $backtrace = static::xdebugGetFunctionStack();
+        if ($backtrace === false) {
+            return false;
+        }
+        $backtrace = \array_reverse($backtrace);
+        $backtrace = static::normalize($backtrace);
+        $backtrace = static::removeInternalFrames($backtrace);
+        $error = \error_get_last();
+        $isFatalError = $error && $error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR);
+        if ($isFatalError) {
+            // xdebug_get_function_stack doesn't include the frame that triggered the error!
+            $errorFileLine = array(
+                'file' => $error['file'],
+                'line' => $error['line'],
+            );
+            if (\array_intersect_assoc($errorFileLine, $backtrace[0]) !== $errorFileLine) {
+                \array_unshift($backtrace, $errorFileLine);
+            }
+        }
+        \end($backtrace);
+        $key = \key($backtrace);
+        unset($backtrace[$key]['function']);  // remove "{main}"
         return $backtrace;
     }
 
@@ -220,31 +273,6 @@ class Backtrace
             $return['line'] = 0;
         }
         return $return;
-    }
-
-    /**
-     * Get lines from a file
-     *
-     * @param string $file   filepath
-     * @param int    $start  line to start on (1-indexed; 1 = line; 1 = first line)
-     *                         0 also = first line
-     * @param int    $length number of lines to return
-     *
-     * @return array
-     */
-    private static function getFileLines($file, $start = 1, $length = null)
-    {
-        $start  = (int) $start;
-        $length = (int) $length;
-        $lines = \array_merge(array(null), \file($file));
-        if ($start === 0) {
-            $start = 1;
-        }
-        if ($start > 1 || $length) {
-            // Get a subset of lines from $start to $end
-            $lines = \array_slice($lines, $start, $length, true);
-        }
-        return $lines;
     }
 
     /**
@@ -349,7 +377,7 @@ class Backtrace
             );
         }
         /*
-            Normalize Function
+            Normalize Function / unset if empty
         */
         $frame['type'] = \strtr($frame['type'], array(
             'dynamic' => '->',
@@ -362,7 +390,8 @@ class Backtrace
             $frame['function'] = \preg_match('/\{closure\}$/', $frame['function'])
                 ? $frame['function']
                 : $frame['class'] . $frame['type'] . $frame['function'];
-        } else {
+        }
+        if (!$frame['function']) {
             unset($frame['function']);
         }
         /*
@@ -385,7 +414,7 @@ class Backtrace
     private static function removeInternalFrames($backtrace)
     {
         $count = \count($backtrace);
-        $i = 1;
+        $i = 2;
         if (static::$internalClasses['regex']) {
             for (; $i < $count; $i++) {
                 if (!\preg_match(static::$internalClasses['regex'], $backtrace[$i]['function'])) {
@@ -406,12 +435,15 @@ class Backtrace
      *
      * xdebug.collect_params ini must be set prior to running code to be backtraced for params (args) to be collected
      *
-     * @return array
+     * @return array|false
      * @see    https://bugs.xdebug.org/view.php?id=1529
      * @see    https://xdebug.org/docs/all_settings#xdebug.collect_params
      */
     private static function xdebugGetFunctionStack()
     {
+        if (\extension_loaded('xdebug') === false) {
+            return false;
+        }
         $stack = \xdebug_get_function_stack();
         $xdebugVer = \phpversion('xdebug');
         if (\version_compare($xdebugVer, '2.6.0', '<')) {

@@ -147,7 +147,9 @@ class Wamp implements RouteInterface
             $this->debug->getChannel('phpError'),
             'errorNotConsoled',
             array(
-                $error['typeStr'] . ': ' . $error['file'] . ' (line ' . $error['line'] . '): ' . $error['message']
+                $error['typeStr'] . ':',
+                $error['message'],
+                $error['file'] . ' (line ' . $error['line'] . ')',
             ),
             array(
                 'attribs' => array(

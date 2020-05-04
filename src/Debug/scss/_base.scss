@@ -81,8 +81,8 @@ dl {
     text-indent: -10px;
   }
 }
-li.no-indent,
-dl dd.no-indent {
+// dl > dd.no-indent {
+li.no-indent {
   padding-left: 0;
   text-indent: 0;
 }
@@ -145,9 +145,20 @@ ul {
   margin-top: 0;
   margin-bottom: 0;
   // error summary & channel-list
-  &.list-unstyled > li {
-    text-indent: -1em;
-    padding-left: 1em;
+  &.list-unstyled {
+    > li {
+      text-indent: -1em;
+      padding-left: 1em;
+    }
+    list-style: none outside none;
+    padding-left: 0;
+    > ul {
+      margin-left: 10px;
+    }
+  }
+  &.no-indent > li {
+    padding-left: 0;
+    text-indent: 0;
   }
 }
 fieldset {

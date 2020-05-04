@@ -91,7 +91,7 @@ class Html extends Base
      */
     public function markupIdentifier($val, $tagName = 'span', $attribs = array())
     {
-        $classname = '';
+        $classname = $val;
         $operator = '::';
         $identifier = '';
         $regex = '/^(.+)(::|->)(.+)$/';
@@ -100,20 +100,17 @@ class Html extends Base
             if (\is_array($value)) {
                 list($classname, $identifier) = $value;
             } else {
+                $identifier = $value;
                 if (\preg_match($regex, $value, $matches)) {
                     $classname = $matches[1];
                     $operator = $matches[2];
                     $identifier = $matches[3];
-                } else {
-                    $identifier = $value;
                 }
             }
         } elseif (\preg_match($regex, $val, $matches)) {
             $classname = $matches[1];
             $operator = $matches[2];
             $identifier = $matches[3];
-        } else {
-            $classname = $val;
         }
         $operator = '<span class="t_operator">' . \htmlspecialchars($operator) . '</span>';
         if ($classname) {
@@ -129,15 +126,12 @@ class Html extends Base
                 ), $attribs),
                 $classname
             );
-        } else {
-            $operator = '';
         }
         if ($identifier) {
             $identifier = '<span class="t_identifier">' . $identifier . '</span>';
-        } else {
-            $operator = '';
         }
-        return \implode($operator, array($classname, $identifier));
+        $parts = \array_filter(array($classname, $identifier), 'strlen');
+        return \implode($operator, $parts);
     }
 
     /**
@@ -223,15 +217,7 @@ class Html extends Base
             'data-icon' => $meta['icon'],
         ), $meta['attribs']);
         $this->logEntryAttribs['class'] .= ' m_' . $method;
-        if ($method === 'alert') {
-            $str = $this->methodAlert($logEntry);
-        } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $str = $this->methodGroup($logEntry);
-        } elseif (\in_array($method, array('profileEnd','table','trace'))) {
-            $str = $this->methodTabular($logEntry);
-        } else {
-            $str = $this->methodDefault($logEntry);
-        }
+        $str = parent::processLogEntry($logEntry);
         $str = \strtr($str, array(
             ' data-channel="null"' => '',
             ' data-detect-files="null"' => '',

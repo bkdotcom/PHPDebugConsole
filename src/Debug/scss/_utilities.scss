@@ -2,13 +2,6 @@
 // Utilities
 //
 .indent { padding-left: 10px !important; }
-.list-unstyled {
-  list-style: none outside none;
-  padding-left: 0;
-  ul {
-    margin-left: 10px;
-  }
-}
 .no-quotes {
   &::before { content: none; }
   &::after { content: none; }

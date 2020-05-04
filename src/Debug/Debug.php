@@ -1075,11 +1075,9 @@ class Debug
         $microT = 0;
         $elapsed = 0;
         if ($label === null) {
-            if (!$this->data['timers']['stack']) {
-                list($elapsed, $microT) = $this->data['timers']['labels']['debugInit'];
-            } else {
-                $microT = \end($this->data['timers']['stack']);
-            }
+            list($elapsed, $microT) = $this->data['timers']['stack']
+                ? array(0, \end($this->data['timers']['stack']))
+                : $this->data['timers']['labels']['debugInit'];
         } elseif (isset($this->data['timers']['labels'][$label])) {
             list($elapsed, $microT) = $this->data['timers']['labels'][$label];
         } else {
@@ -1129,11 +1127,9 @@ class Debug
         $elapsed = 0;
         if ($label === null) {
             $args[0] = 'time';
-            if (!$this->data['timers']['stack']) {
-                list($elapsed, $microT) = $this->data['timers']['labels']['debugInit'];
-            } else {
-                $microT = \end($this->data['timers']['stack']);
-            }
+            list($elapsed, $microT) = $this->data['timers']['stack']
+                ? array(0,  \end($this->data['timers']['stack']))
+                : $this->data['timers']['labels']['debugInit'];
         } elseif (isset($this->data['timers']['labels'][$label])) {
             list($elapsed, $microT) = $this->data['timers']['labels'][$label];
         } else {

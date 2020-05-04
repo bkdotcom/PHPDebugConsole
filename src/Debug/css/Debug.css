@@ -17,7 +17,7 @@
 .debug dl { margin-top: 0; margin-bottom: 0; }
 .debug dl dt { font-weight: bold; }
 .debug dl:not(.dl-horizontal) dd { margin-left: 20px; padding-left: 10px; text-indent: -10px; }
-.debug li.no-indent, .debug dl dd.no-indent { padding-left: 0; text-indent: 0; }
+.debug li.no-indent { padding-left: 0; text-indent: 0; }
 .debug h3 { margin-top: 0.66em; margin-bottom: 0.5em; font-size: 1.15em; font-weight: bold; }
 .debug h3:first-child { margin-top: 0; }
 .debug hr { color: #111; background-color: #111; border: 0; height: 1px; }
@@ -30,7 +30,10 @@
 .debug p:first-child { margin-top: 0; }
 .debug pre { padding: 0; border: 0; margin: 0; white-space: pre; -moz-tab-size: 3; -o-tag-size: 3; -tab-size: 3; }
 .debug ul { margin-top: 0; margin-bottom: 0; }
+.debug ul.list-unstyled { list-style: none outside none; padding-left: 0; }
 .debug ul.list-unstyled > li { text-indent: -1em; padding-left: 1em; }
+.debug ul.list-unstyled > ul { margin-left: 10px; }
+.debug ul.no-indent > li { padding-left: 0; text-indent: 0; }
 .debug fieldset { padding: 0.66em; margin: 0 0 10px 0; min-width: 0; border: 1px solid black; border-radius: 4px; }
 .debug fieldset > ul { font-size: 125%; }
 .debug .close { opacity: 1; float: none; }
@@ -281,8 +284,6 @@ color: #818a91
 @keyframes expandAndFade { from { opacity: 0.9; transform: scale(0.9, 0.94); }
   to { opacity: 0; transform: scale(1, 1); } }
 .debug .indent { padding-left: 10px !important; }
-.debug .list-unstyled { list-style: none outside none; padding-left: 0; }
-.debug .list-unstyled ul { margin-left: 10px; }
 .debug .no-quotes::before { content: none; }
 .debug .no-quotes::after { content: none; }
 .debug .p0 { padding: 0 !important; }

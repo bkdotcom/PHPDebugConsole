@@ -27,7 +27,7 @@ class LogReqResTest extends DebugTestFramework
         $logRequestMeth = $reflect->getMethod('logRequest');
         $logRequestMeth->setAccessible(true);
 
-        // Utility caches serverParams...  use serverParamsRef to clear it
+        // Utility caches serverParams (statically)...  use serverParamsRef to clear it
         $utilityRef = new \ReflectionClass('bdk\\Debug\\Utility');
         $serverParamsRef = $utilityRef->getProperty('serverParams');
         $serverParamsRef->setAccessible(true);

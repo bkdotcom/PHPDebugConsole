@@ -94,13 +94,13 @@ class HtmlObject
         if (!$val) {
             return '';
         }
+        $len = $val instanceof Abstraction
+            ? $val['strlen']
+            : \strlen($val);
+        $val = $val instanceof Abstraction
+            ? $val['value']
+            : $val;
         $valAppend = '';
-        if ($val instanceof Abstraction) {
-            $len = $val['strlen'];
-            $val = $val['value'];
-        } else {
-            $len = \strlen($val);
-        }
         if ($len > 100) {
             $val = \substr($val, 0, 100);
             $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';

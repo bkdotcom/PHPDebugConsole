@@ -36,6 +36,7 @@ class Html extends Base
      */
     public function __construct(Debug $debug)
     {
+        parent::__construct($debug);
         $this->errorSummary = new HtmlErrorSummary($this, $debug->errorHandler);
         $this->cfg = array(
             'css' => '',            // additional "override" css
@@ -47,7 +48,6 @@ class Html extends Base
             'outputScript' => true,
             'sidebar' => true,
         );
-        parent::__construct($debug);
         $this->dump = $debug->dumpHtml;
     }
 

@@ -1,7 +1,7 @@
 <?php
-/**
- * Run with --process-isolation option
- */
+
+use bdk\Debug;
+use bdk\Debug\Psr7lite\ServerRequest;
 
 /**
  * PHPUnit tests for Debug class
@@ -102,6 +102,31 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame('baz', $this->debug->getCfg('foo'));
     }
 
+    public function testInitKey()
+    {
+        \bdk\Debug::getInstance()->setCfg('services', array(
+            'request' => (new ServerRequest(array(), array('REQUEST_METHOD' => 'GET')))
+                ->withQueryParams(array(
+                    'debug' => 'swordfish',
+                )),
+        ));
+
+        // Utility caches serverParams (statically)...  use serverParamsRef to clear it
+        $utilityRef = new \ReflectionClass('bdk\\Debug\\Utility');
+        $serverParamsRef = $utilityRef->getProperty('serverParams');
+        $serverParamsRef->setAccessible(true);
+        $serverParamsRef->setValue(array());
+
+        $debug = new Debug(array(
+            'key' => 'swordfish',
+            'logResponse' => false,
+        ));
+        $this->assertTrue($debug->getCfg('collect'));
+        $this->assertTrue($debug->getCfg('output'));
+        $debug->setCfg('output', false);
+        $serverParamsRef->setValue(array());
+    }
+
     /**
      * Test config stores config values until class is instantiated
      *
@@ -109,7 +134,7 @@ class ConfigTest extends DebugTestFramework
      */
     public function testPending()
     {
-        $debug = new \bdk\Debug();
+        $debug = new Debug();
         $this->assertTrue($debug->getCfg('collectMethods'));
         $debug->setCfg('collectMethods', false);
         $this->assertFalse($debug->getCfg('collectMethods'));

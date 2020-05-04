@@ -269,19 +269,18 @@ class MySqli extends mysqliBase
     private function profileCall($method, $sql, array $args)
     {
         $info = new StatementInfo($sql);
-        if ($this->connectionAttempted) {
-            $return = \call_user_func_array(array('parent', $method), $args);
-            $exception = !$return
-                ? new Exception($this->error, $this->errno)
-                : null;
-            $affectedRows = $method !== 'multi_query' && $return
-                ? $this->affected_rows
-                : null;
-        } else {
-            $return = false;
-            $exception = new Exception('Not connected');
-            $affectedRows = null;
+        if ($this->connectionAttempted === false) {
+            $info->end(new Exception('Not connected'), null);
+            $this->addStatementInfo($info);
+            return false;
         }
+        $return = \call_user_func_array(array('parent', $method), $args);
+        $exception = !$return
+            ? new Exception($this->error, $this->errno)
+            : null;
+        $affectedRows = $method !== 'multi_query' && $return
+            ? $this->affected_rows
+            : null;
         $info->end($exception, $affectedRows);
         $this->addStatementInfo($info);
         return $return;

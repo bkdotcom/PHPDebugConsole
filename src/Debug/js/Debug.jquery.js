@@ -433,7 +433,7 @@
     if (detectFiles === false) {
       return
     }
-    // console.info('createFileLinks', detectFiles, $entry)
+    // console.info('createFileLinks', $entry[0], $strings)
     if ($entry.is('.m_trace')) {
       isUpdate = $entry.find('.file-link').length > 0;
       if (!isUpdate) {
@@ -623,6 +623,8 @@
           $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'));
         }
         createFileLinks($entry);
+      } else if ($entry.data('detect-files')) {
+        createFileLinks($entry, $entry.find('.t_string'));
       }
       $entry.children().each(function () {
         enhanceValue($entry, this);

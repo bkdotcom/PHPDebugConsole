@@ -1,30 +1,5 @@
 {
-  "name": "PHPDebugConsole",
-  "version": "3.0.0",
   "description": "Build CSS & Javascript for PHPDebugConsole",
-  "license": "MIT",
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/bkdotcom/PHPDebugConsole.git"
-  },
-  "scripts": {
-    "build": "npx npm-run-all --parallel --continue-on-error build:*",
-    "build:js": "npx rollup -c",
-    "build:css": "scss -t compact --sourcemap=none scss/Debug.scss css/Debug.css",
-    "cs": "npx npm-run-all --continue-on-error cs:*",
-    "cs:css": "npx stylelint ./scss",
-    "cs:js": "npx eslint js_src/*",
-    "cs:php": "../../vendor/bin/phpcs . --extensions=php",
-    "test": "jest",
-    "watch": "npx npm-run-all --parallel watch:*",
-    "watch:js": "NODE_ENV=watch npx nodemon --watch js_src/ --ext js --exec \"npm run build:js\"",
-    "watch:scss": "npx nodemon --watch scss/ --ext scss --exec \"npm run build:css\""
-  },
-  "keywords": [
-    "PHP",
-    "Debug"
-  ],
   "devDependencies": {
     "eslint": "^6.8.0",
     "eslint-plugin-import": "^2.20.2",
@@ -38,5 +13,30 @@
     "rollup-plugin-uglify": "^6.0.4",
     "stylelint": "^13.3.1",
     "stylelint-config-standard": "^20.0.0"
-  }
+  },
+  "keywords": [
+    "PHP",
+    "Debug"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "PHPDebugConsole",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bkdotcom/PHPDebugConsole.git"
+  },
+  "scripts": {
+    "build": "npx npm-run-all --parallel --continue-on-error build:*",
+    "build:css": "scss -t compact --sourcemap=none scss/Debug.scss css/Debug.css",
+    "build:js": "npx rollup -c",
+    "cs": "npx npm-run-all --continue-on-error cs:*",
+    "cs:css": "npx stylelint ./scss",
+    "cs:js": "npx eslint js_src/*",
+    "cs:php": "../../vendor/bin/phpcs . --extensions=php",
+    "test": "jest",
+    "watch": "npx npm-run-all --parallel watch:*",
+    "watch:js": "NODE_ENV=watch npx nodemon --watch js_src/ --ext js --exec \"npm run build:js\"",
+    "watch:scss": "npx nodemon --watch scss/ --ext scss --exec \"npm run build:css\""
+  },
+  "version": "3.0.0"
 }

@@ -127,14 +127,15 @@ class Base extends Component
     {
         $method = $logEntry['method'];
         if ($method === 'alert') {
-            $this->methodAlert($logEntry);
-        } elseif (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
-            $this->methodGroup($logEntry);
-        } elseif (\in_array($method, array('profileEnd','table','trace'))) {
-            $this->methodTabular($logEntry);
-        } else {
-            $this->methodDefault($logEntry);
+            return $this->methodAlert($logEntry);
         }
+        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+            return $this->methodGroup($logEntry);
+        }
+        if (\in_array($method, array('profileEnd','table','trace'))) {
+            return $this->methodTabular($logEntry);
+        }
+        return $this->methodDefault($logEntry);
     }
 
     /**
@@ -263,15 +264,14 @@ class Base extends Component
     protected function dumpObject(Abstraction $abs)
     {
         if ($abs['isRecursion']) {
-            $return = '(object) ' . $abs['className'] . ' *RECURSION*';
-        } elseif ($abs['isExcluded']) {
-            $return = '(object) ' . $abs['className'] . ' NOT INSPECTED';
-        } else {
-            $return = array(
-                '___class_name' => $abs['className'],
-            ) + $this->dumpProperties($abs);
+            return '(object) ' . $abs['className'] . ' *RECURSION*';
         }
-        return $return;
+        if ($abs['isExcluded']) {
+            return '(object) ' . $abs['className'] . ' NOT INSPECTED';
+        }
+        return array(
+            '___class_name' => $abs['className'],
+        ) + $this->dumpProperties($abs);
     }
 
     /**
@@ -513,14 +513,13 @@ class Base extends Component
         ), $opts);
         foreach ($values as $k => $val) {
             if ($val === Abstracter::UNDEFINED) {
-                if ($opts['undefinedAs'] === 'unset') {
+                $val = $opts['undefinedAs'];
+                if ($val === 'unset') {
                     unset($values[$k]);
-                } else {
-                    $values[$k] = $opts['undefinedAs'];
+                    continue;
                 }
-            } else {
-                $values[$k] = $val;
             }
+            $values[$k] = $val;
         }
         if (\count($values) === 1 && $k === MethodTable::SCALAR) {
             $values = $opts['forceArray']
@@ -547,17 +546,16 @@ class Base extends Component
         }
         if ($isObject) {
             if ($rows['traverseValues']) {
-                $rows = $rows['traverseValues'];
-            } else {
-                $rows = \array_map(
-                    function ($info) {
-                        return $info['value'];
-                    },
-                    \array_filter($rows['properties'], function ($info) {
-                        return $info['visibility'] === 'public';
-                    })
-                );
+                return $rows['traverseValues'];
             }
+            return \array_map(
+                function ($info) {
+                    return $info['value'];
+                },
+                \array_filter($rows['properties'], function ($info) {
+                    return $info['visibility'] === 'public';
+                })
+            );
         }
         return $rows;
     }

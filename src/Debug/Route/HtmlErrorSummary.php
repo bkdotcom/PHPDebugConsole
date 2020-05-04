@@ -22,8 +22,10 @@ use bdk\ErrorHandler;
 class HtmlErrorSummary
 {
 
-    protected $routeHtml;
+    protected $debug;
+    protected $html;
     protected $errorHandler;
+    protected $routeHtml;
     protected $stats = array();
 
     /**
@@ -36,6 +38,8 @@ class HtmlErrorSummary
     {
         $this->routeHtml = $routeHtml;
         $this->errorHandler = $errorHandler;
+        $this->debug = $routeHtml->debug;
+        $this->html = $this->debug->html;
     }
 
     /**
@@ -68,6 +72,7 @@ class HtmlErrorSummary
             array(
                 'attribs' => array(
                     'class' => \implode(' ', $classes),
+                    'data-detect-files' => true,
                 ),
                 'dismissible' => false,
                 'level' => 'error',
@@ -87,18 +92,26 @@ class HtmlErrorSummary
         if (!$haveFatal) {
             return '';
         }
-        $lastError = $this->errorHandler->get('lastError');
-        $isHtml = $lastError['isHtml'];
-        $backtrace = $lastError['backtrace'];
+        $error = $this->errorHandler->get('lastError');
+        $isHtml = $error['isHtml'];
         $html = '<div class="error-fatal">'
-            . '<h3>Fatal Error</h3>'
-            . '<ul class="list-unstyled">';
-        if (\count($backtrace) > 1) {
+            . '<h3>' . $error['typeStr'] . '</h3>'
+            . '<ul class="list-unstyled no-indent">';
+        $html .= $this->html->buildTag(
+            'li',
+            array(),
+            ($isHtml
+                ? $error['message']
+                : \htmlspecialchars($error['message'])
+            )
+        );
+        $this->debug->addPlugin(new \bdk\Debug\Plugin\Highlight());
+        $backtrace = $error['backtrace'];
+        if (\is_array($backtrace) && \count($backtrace) > 1) {
             // more than one trace frame
-            \bdk\Debug::getInstance()->addPlugin(new \bdk\Debug\Plugin\Highlight());
             // Don't inspect objects when dumping trace arguments...  potentially huge objects
-            $objectsExclude = \bdk\Debug::_getCfg('objectsExclude');
-            \bdk\Debug::_setCfg('objectsExclude', \array_merge($objectsExclude, array('*')));
+            $objectsExclude = $this->debug->getCfg('objectsExclude');
+            $this->debug->setCfg('objectsExclude', \array_merge($objectsExclude, array('*')));
             $table = $this->routeHtml->dump->table->build(
                 $backtrace,
                 array(
@@ -109,22 +122,28 @@ class HtmlErrorSummary
                 )
             );
             // restore previous objectsExclude
-            \bdk\Debug::_setCfg('objectsExclude', $objectsExclude);
-            $html .= '<li>' . $lastError['message'] . '</li>';
+            $this->debug->setCfg('objectsExclude', $objectsExclude);
             $html .= '<li class="m_trace" data-detect-files="true">' . $table . '</li>';
-            if (!$isHtml) {
-                $html = \str_replace($lastError['message'], \htmlspecialchars($lastError['message']), $html);
-            }
-        } else {
-            $keysKeep = array('typeStr','message','file','line');
-            $lastError = \array_intersect_key($lastError, \array_flip($keysKeep));
-            $html .= '<li>' . $this->routeHtml->dump->dump($lastError) . '</li>';
-            if ($isHtml) {
-                $html = \str_replace(\htmlspecialchars($lastError['message']), $lastError['message'], $html);
-            }
-        }
-        if (!$backtrace && !\extension_loaded('xdebug')) {
+        } elseif ($backtrace === false) {
             $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
+        } elseif ($backtrace === null) {
+            $fileLines = $error['context'];
+            $html .= $this->html->buildTag(
+                'li',
+                array(
+                    'class' => 't_string no-quotes',
+                    'data-file' => $error['file'],
+                    'data-line' => $error['line'],
+                ),
+                $error['file'] . ' (line ' . $error['line'] . ')'
+            );
+            $html .= '<li>'
+                . '<pre class="highlight line-numbers" data-line="' . $error['line'] . '" data-start="' . \key($fileLines) . '">'
+                    . '<code class="language-php">'
+                        . \htmlspecialchars(\implode($fileLines))
+                    . '</code>'
+                . '</pre>'
+                . '</li>';
         }
         $html .= '</ul>'
             . '</div>';
@@ -161,7 +180,14 @@ class HtmlErrorSummary
             if (!$a['inConsole'] || $category === 'fatal') {
                 continue;
             }
-            $html .= '<li class="error-' . $category . '" data-count="' . $a['inConsole'] . '">' . $category . ': ' . $a['inConsole'] . '</li>';
+            $html .= $this->html->buildTag(
+                'li',
+                array(
+                    'class' => 'error-' . $category,
+                    'data-count' => $a['inConsole'],
+                ),
+                $category . ': ' . $a['inConsole']
+            );
         }
         $html .= '</ul>';
         return $html;
@@ -224,7 +250,14 @@ class HtmlErrorSummary
         }
         return '<h3>' . $header . '</h3>'
             . '<ul class="list-unstyled">'
-                . '<li class="error-' . $category . '" data-count="' . $countInCat . '">' . $msg . '</li>'
+                . $this->html->buildTag(
+                    'li',
+                    array(
+                        'class' => 'error-' . $category,
+                        'data-count' => $countInCat,
+                    ),
+                    $msg
+                )
                 . '</ul>';
     }
 

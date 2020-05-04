@@ -53,32 +53,14 @@ class Text extends Base
      */
     public function processLogEntry(LogEntry $logEntry)
     {
-        $method = $logEntry['method'];
-        $strIndent = \str_repeat('    ', $this->depth);
-        $str = '';
-        if ($method === 'alert') {
-            $str = $this->methodAlert($logEntry);
-        } elseif (\in_array($method, array('group','groupCollapsed'))) {
-            $this->depth ++;
-            $str = $this->methodGroup($logEntry);
-        } elseif ($method === 'groupEnd' && $this->depth > 0) {
-            if ($logEntry->getMeta('closesSummary')) {
-                $str = '=======';
-            } else {
-                $this->depth --;
-            }
-        } elseif ($method === 'groupSummary') {
-            $str = '=======';
-        } elseif (\in_array($method, array('profileEnd','table','trace'))) {
-            $str = $this->methodTabular($logEntry);
-        } else {
-            $str = $this->methodDefault($logEntry);
-        }
+        $str = parent::processLogEntry($logEntry);
         $str = \rtrim($str);
         if ($str) {
+            $method = $logEntry['method'];
             $prefix = isset($this->cfg['prefixes'][$method])
                 ? $this->cfg['prefixes'][$method]
                 : '';
+            $strIndent = \str_repeat('    ', $this->depth);
             $str = $prefix . $str;
             $str = $strIndent . \str_replace("\n", "\n" . $strIndent, $str) . "\n";
         }
@@ -115,9 +97,8 @@ class Text extends Base
         }
         if (!$glueAfterFirst) {
             return $args[0] . \implode($glue, \array_slice($args, 1));
-        } else {
-            return \implode($glue, $args);
         }
+        return \implode($glue, $args);
     }
 
     /**
@@ -361,6 +342,20 @@ class Text extends Base
      */
     protected function methodGroup(LogEntry $logEntry)
     {
+        $method = $logEntry['method'];
+        if ($method === 'groupEnd') {
+            if ($logEntry->getMeta('closesSummary')) {
+                return '=======';
+            }
+            if ($this->depth > 0) {
+                $this->depth --;
+            }
+            return;
+        }
+        if ($method === 'groupSummary') {
+            return '=======';
+        }
+        $this->depth++;
         $args = $logEntry['args'];
         $meta = \array_merge(array(
             'argsAsParams' => true,
@@ -375,16 +370,14 @@ class Text extends Base
         foreach ($args as $k => $v) {
             $args[$k] = $this->dump($v);
         }
-        $str = '';
         $argStr = \implode(', ', $args);
         if (!$argStr) {
-            $str = $label;
-        } elseif ($meta['argsAsParams']) {
-            $str = $label . '(' . $argStr . ')';
-        } else {
-            $str = $label . ': ' . $argStr;
+            return $label;
         }
-        return $str;
+        if ($meta['argsAsParams']) {
+            return $label . '(' . $argStr . ')';
+        }
+        return $label . ': ' . $argStr;
     }
 
     /**

@@ -129,7 +129,7 @@ class Base extends Component
         if ($method === 'alert') {
             return $this->methodAlert($logEntry);
         }
-        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd'))) {
+        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd', 'groupSummary'))) {
             return $this->methodGroup($logEntry);
         }
         if (\in_array($method, array('profileEnd','table','trace'))) {

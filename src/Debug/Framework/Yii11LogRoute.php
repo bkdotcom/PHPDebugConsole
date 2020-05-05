@@ -57,9 +57,9 @@ class Yii11LogRoute extends CLogRoute
             $setter = 'set' . \ucfirst($k);
             if (\method_exists($this, $setter)) {
                 $this->{$setter}($v);
-            } else {
-                $this->{$k} = $v;
+                continue;
             }
+            $this->{$k} = $v;
         }
         $debug->backtrace->addInternalClass(array(
             'CLogger',

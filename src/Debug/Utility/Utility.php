@@ -643,13 +643,15 @@ class Utility
      * Syntax-only is_callable() check
      * Additionally checks that $array[0] is an object
      *
-     * @param array $array variable to check
+     * @param string|array $val value to check
      *
      * @return bool
      */
-    private static function isCallable($array)
+    private static function isCallable($val)
     {
-        return \is_callable($array, true) && \is_object($array[0]);
+        return \is_array($val)
+            ? \is_callable($val, true) && \is_object($val[0])
+            : \is_callable($val);
     }
 
     /**

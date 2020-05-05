@@ -114,11 +114,9 @@ class Manager
      */
     public function publish($eventName, $eventOrSubject = null, array $values = array())
     {
-        if ($eventOrSubject instanceof Event) {
-            $event = $eventOrSubject;
-        } else {
-            $event = new Event($eventOrSubject, $values);
-        }
+        $event = $eventOrSubject instanceof Event
+            ? $eventOrSubject
+            : new Event($eventOrSubject, $values);
         $subscribers = $this->getSubscribers($eventName);
         if ($subscribers) {
             $this->doPublish($eventName, $subscribers, $event);
@@ -194,15 +192,15 @@ class Manager
                 }
                 if ($v === $callable) {
                     unset($subscribers[$k], $this->sorted[$eventName]);
-                } else {
-                    $subscribers[$k] = $v;
+                    continue;
                 }
+                $subscribers[$k] = $v;
             }
             if ($subscribers) {
                 $this->subscribers[$eventName][$priority] = $subscribers;
-            } else {
-                unset($this->subscribers[$eventName][$priority]);
+                continue;
             }
+            unset($this->subscribers[$eventName][$priority]);
         }
     }
 
@@ -270,22 +268,23 @@ class Manager
             if (\is_string($mixed)) {
                 // methodName
                 $subscribers[] = array($eventName, array($interface, $mixed), 0);
-            } elseif (\count($mixed) === 2 && \is_int($mixed[1])) {
+                continue;
+            }
+            if (\count($mixed) === 2 && \is_int($mixed[1])) {
                 // array('methodName', priority)
                 $subscribers[] = array($eventName, array($interface, $mixed[0]), $mixed[1]);
-            } else {
-                foreach ($mixed as $mixed2) {
-                    // methodName
-                    // or array(methodName[, priority])
-                    if (\is_string($mixed2)) {
-                        $callable = array($interface, $mixed2);
-                        $priority = 0;
-                    } else {
-                        $callable = array($interface, $mixed2[0]);
-                        $priority = isset($mixed2[1]) ? $mixed2[1] : 0;
-                    }
-                    $subscribers[] = array($eventName, $callable, $priority);
+                continue;
+            }
+            foreach ($mixed as $mixed2) {
+                // methodName
+                // or array(methodName[, priority])
+                if (\is_string($mixed2)) {
+                    $subscribers[] = array($eventName, array($interface, $mixed2), 0);
+                    continue;
                 }
+                $callable = array($interface, $mixed2[0]);
+                $priority = isset($mixed2[1]) ? $mixed2[1] : 0;
+                $subscribers[] = array($eventName, $callable, $priority);
             }
         }
         return $subscribers;

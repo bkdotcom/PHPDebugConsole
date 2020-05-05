@@ -160,6 +160,7 @@ class HtmlErrorSummary
         if (!$this->stats['inConsole']) {
             return '';
         }
+        $header = 'There were ' . $this->stats['inConsole'] . ' errors';
         $haveFatal = isset($this->stats['counts']['fatal']);
         if ($haveFatal) {
             $countNonFatal = $this->stats['inConsole'] - $this->stats['counts']['fatal']['inConsole'];
@@ -171,8 +172,6 @@ class HtmlErrorSummary
             );
         } elseif ($this->stats['inConsoleCategories'] === 1) {
             return $this->buildInConsoleOneCat();
-        } else {
-            $header = 'There were ' . $this->stats['inConsole'] . ' errors';
         }
         $html = '<h3>' . $header . ':</h3>' . "\n";
         $html .= '<ul class="list-unstyled">';
@@ -237,6 +236,8 @@ class HtmlErrorSummary
             ),
         );
         $countInCat = $catStats['inConsole'];
+        $header = $catStrings[$category]['header'];
+        $msg = \sprintf($catStrings[$category]['msg'], $countInCat);
         if ($countInCat === 1) {
             $header = \ucfirst($category);
             $error = $this->getErrorsInCategory($category)[0];
@@ -244,9 +245,6 @@ class HtmlErrorSummary
                 . ($error['isHtml']
                     ? $error['message']
                     : \htmlspecialchars($error['message']));
-        } else {
-            $header = $catStrings[$category]['header'];
-            $msg = \sprintf($catStrings[$category]['msg'], $countInCat);
         }
         return '<h3>' . $header . '</h3>'
             . '<ul class="list-unstyled">'

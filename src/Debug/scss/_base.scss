@@ -146,12 +146,12 @@ ul {
   margin-bottom: 0;
   // error summary & channel-list
   &.list-unstyled {
+    list-style: none outside none;
+    padding-left: 0;
     > li {
       text-indent: -1em;
       padding-left: 1em;
     }
-    list-style: none outside none;
-    padding-left: 0;
     > ul {
       margin-left: 10px;
     }
@@ -161,6 +161,7 @@ ul {
     text-indent: 0;
   }
 }
+
 fieldset {
   // channels is the only component that uses fieldset
   padding: 0.66em;
@@ -172,6 +173,7 @@ fieldset {
     font-size: 125%;
   }
 }
+
 .close {
   opacity: 1;
   float: none;

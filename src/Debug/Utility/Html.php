@@ -98,6 +98,8 @@ class Html
      * data-* attributes will be json-encoded (if non-string)
      * non data attribs with null value will not be output
      *
+     * If a string is passed, it will be parsed and rebuilt
+     *
      * @param array|string $attribs key/values
      *
      * @return string
@@ -106,7 +108,7 @@ class Html
     public static function buildAttribString($attribs)
     {
         if (\is_string($attribs)) {
-            return \rtrim(' ' . \trim($attribs));
+            $attribs = static::parseAttribString($attribs);
         }
         $attribPairs = array();
         foreach ($attribs as $key => $val) {

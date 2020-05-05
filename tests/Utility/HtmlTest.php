@@ -73,13 +73,8 @@ class HtmlTest extends DebugTestFramework
                 'expect' => '',
             ),
             array(
-                'attribs' => 'I\'m a string',
-                'expect' => ' I\'m a string',
-            ),
-            array(
-                // should return a single leading space
-                'attribs' => '  leading spaces',
-                'expect' => ' leading spaces',
+                'attribs' => '  foo=bar bar="baz"',
+                'expect' => ' bar="baz" foo="bar"',
             ),
         );
         foreach ($testStack as $test) {

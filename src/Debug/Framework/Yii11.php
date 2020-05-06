@@ -13,9 +13,9 @@
 namespace bdk\Debug\Framework;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii11LogRoute;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -29,6 +29,8 @@ use Yii;
 
 /**
  * Yii v1.1 Component
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess)
  */
 class Yii11 extends CApplicationComponent implements SubscriberInterface
 {

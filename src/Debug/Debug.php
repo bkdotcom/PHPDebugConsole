@@ -102,7 +102,6 @@ class Debug
             'emailFrom' => null,    // null = use php's default (php.ini: sendmail_from)
             'emailFunc' => 'mail',  // callable
             'emailLog' => false,    // Whether to email a debug log.  (requires 'collect' to also be true)
-                                    //
                                     //   false:             email will not be sent
                                     //   true or 'always':  email sent (if log is not output)
                                     //   'onError':         email sent if error occured (unless output)
@@ -168,10 +167,8 @@ class Debug
             'timers' => array(      // timer method
                 'labels' => array(
                     // label => array(accumulatedTime, lastStartedTime|null)
-                    'debugInit' => array(
-                        0,
-                        \microtime(true),   // will get replaced with $_SERVER['REQUEST_TIME_FLOAT'] if exists
-                    ),
+                    // microtime will get replaced with $_SERVER['REQUEST_TIME_FLOAT'] if exists
+                    'debugInit' => array(0, \microtime(true)),
                 ),
                 'stack' => array(),
             ),
@@ -183,9 +180,7 @@ class Debug
         */
         $this->internal = $this->getViaContainer('internal');
         $this->internalEvents = $this->getViaContainer('internalEvents');
-        /*
-            Publish bootstrap event
-        */
+
         $this->eventManager->publish('debug.bootstrap', $this);
     }
 
@@ -791,7 +786,6 @@ class Debug
             $this->data['profileAutoInc']++;
         }
         $name = $logEntry['meta']['name'];
-        $message = '';
         if (isset($this->data['profileInstances'][$name])) {
             $instance = $this->data['profileInstances'][$name];
             $instance->end();
@@ -799,12 +793,12 @@ class Debug
             // move it to end (last started)
             unset($this->data['profileInstances'][$name]);
             $this->data['profileInstances'][$name] = $instance;
-            $message = 'Profile \'' . $name . '\' restarted';
-        } else {
-            $this->data['profileInstances'][$name] = $this->methodProfile; // factory
-            $message = 'Profile \'' . $name . '\' started';
+            $logEntry['args'] = array('Profile \'' . $name . '\' restarted');
+            $this->appendLog($logEntry);
+            return;
         }
-        $logEntry['args'] = array($message);
+        $this->data['profileInstances'][$name] = $this->methodProfile; // factory
+        $logEntry['args'] = array('Profile \'' . $name . '\' started');
         $this->appendLog($logEntry);
     }
 
@@ -1013,15 +1007,14 @@ class Debug
             'silent' => true,
             'precision' => null,
         )));
-        if (isset($label)) {
-            if (isset($this->data['timers']['labels'][$label])) {
-                $this->data['timers']['labels'][$label] = array(
-                    $ret,  // store the new "running" time
-                    null,  // "pause" the timer
-                );
-            }
-        } else {
+        if ($label === null) {
             \array_pop($this->data['timers']['stack']);
+        }
+        if (isset($this->data['timers']['labels'][$label])) {
+            $this->data['timers']['labels'][$label] = array(
+                $ret,  // store the new "running" time
+                null,  // "pause" the timer
+            );
         }
         $this->doTime($ret, $logEntry);
         return $ret;

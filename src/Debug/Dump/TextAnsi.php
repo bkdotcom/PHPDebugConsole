@@ -86,43 +86,29 @@ class TextAnsi extends Text
         $identifier = '';
         $regex = '/^(.+)(::|->)(.+)$/';
         if ($val instanceof Abstraction) {
-            $value = $val['value'];
-            if (\is_array($value)) {
-                list($classname, $identifier) = $value;
-            } else {
-                if (\preg_match($regex, $value, $matches)) {
-                    $classname = $matches[1];
-                    $operator = $matches[2];
-                    $identifier = $matches[3];
-                } else {
-                    $identifier = $value;
-                }
-            }
+            $val = $val['value'];
+        }
+        $classname = $val;
+        if (\is_array($val)) {
+            list($classname, $identifier) = $val;
         } elseif (\preg_match($regex, $val, $matches)) {
             $classname = $matches[1];
             $operator = $matches[2];
             $identifier = $matches[3];
-        } else {
-            $classname = $val;
         }
         $operator = $this->cfg['escapeCodes']['operator'] . $operator . $this->escapeReset;
         if ($classname) {
             $idx = \strrpos($classname, '\\');
-            if ($idx) {
-                $classname = $this->cfg['escapeCodes']['muted'] . \substr($classname, 0, $idx + 1) . $this->escapeReset
-                    . "\e[1m" . \substr($classname, $idx + 1) . "\e[22m";
-            } else {
-                $classname = "\e[1m" . $classname . "\e[22m";
-            }
-        } else {
-            $operator = '';
+            $classname = $idx
+                ? $this->cfg['escapeCodes']['muted'] . \substr($classname, 0, $idx + 1) . $this->escapeReset
+                    . "\e[1m" . \substr($classname, $idx + 1) . "\e[22m"
+                : "\e[1m" . $classname . "\e[22m";
         }
         if ($identifier) {
             $identifier = "\e[1m" . $identifier . "\e[22m";
-        } else {
-            $operator = '';
         }
-        return \implode($operator, array($classname, $identifier));
+        $parts = \array_filter(array($classname, $identifier), 'strlen');
+        return \implode($operator, $parts);
     }
 
     /**

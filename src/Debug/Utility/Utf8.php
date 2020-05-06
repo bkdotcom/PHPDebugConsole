@@ -363,19 +363,19 @@ class Utf8
             $ord = self::ordUtf8($str, $i, $char);
             $ordHex = \dechex($ord);
             $ordHex = \str_pad($ordHex, 4, '0', STR_PAD_LEFT);
-            if (self::$options['useHtml']) {
-                $chars = \str_split($char);
-                $utf8Hex = \array_map('bin2hex', $chars);
-                $utf8Hex = '\x' . \implode(' \x', $utf8Hex);
-                $title = $utf8Hex;
-                if (isset(self::$charDesc[$ord])) {
-                    $title = self::$charDesc[$ord] . ': ' . $utf8Hex;
-                }
-                $url = 'https://unicode-table.com/en/' . $ordHex;
-                $strNew .= '<a class="unicode" href="' . $url . '" target="unicode-table" title="' . $title . '">\u' . $ordHex . '</a>';
-            } else {
+            if (self::$options['useHtml'] === false) {
                 $strNew .= '\u{' . $ordHex . '}';
+                continue;
             }
+            $chars = \str_split($char);
+            $utf8Hex = \array_map('bin2hex', $chars);
+            $utf8Hex = '\x' . \implode(' \x', $utf8Hex);
+            $title = $utf8Hex;
+            if (isset(self::$charDesc[$ord])) {
+                $title = self::$charDesc[$ord] . ': ' . $utf8Hex;
+            }
+            $url = 'https://unicode-table.com/en/' . $ordHex;
+            $strNew .= '<a class="unicode" href="' . $url . '" target="unicode-table" title="' . $title . '">\u' . $ordHex . '</a>';
         }
         return $strNew;
     }
@@ -393,7 +393,7 @@ class Utf8
         $options = \array_merge(array(
             'prefix' => true,
         ), $options);
-        if (!$options['prefix']) {
+        if ($options['prefix'] === false) {
             $str = \bin2hex($str);
             $str = \trim(\chunk_split($str, 2, ' '));
         } else {
@@ -401,19 +401,19 @@ class Utf8
             foreach ($chars as $i => $char) {
                 $ord = \ord($char);
                 $hex = \bin2hex($char); // could use dechex($ord), but would require padding
-                if (self::$options['useHtml'] && isset(self::$charDesc[$ord])) {
-                    if ($ord < 0x20 || $ord === 0x7f) {
-                        // lets use the control pictures
-                        $chr = $ord === 0x7f
-                            ? "\xe2\x90\xa1"            // "del" char
-                            : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
-                        $chars[$i] = '<span class="c1-control" title="' . self::$charDesc[$ord] . ': \x' . $hex . '">' . $chr . '</span>';
-                    } else {
-                        $chars[$i] = '<span title="' . self::$charDesc[$ord] . '">\x' . $hex . '</span>';
-                    }
-                } else {
+                if (self::$options['useHtml'] === false || !isset(self::$charDesc[$ord])) {
                     $chars[$i] = '\x' . $hex;
+                    continue;
                 }
+                if ($ord < 0x20 || $ord === 0x7f) {
+                    // lets use the control pictures
+                    $chr = $ord === 0x7f
+                        ? "\xe2\x90\xa1"            // "del" char
+                        : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
+                    $chars[$i] = '<span class="c1-control" title="' . self::$charDesc[$ord] . ': \x' . $hex . '">' . $chr . '</span>';
+                    continue;
+                }
+                $chars[$i] = '<span title="' . self::$charDesc[$ord] . '">\x' . $hex . '</span>';
             }
             $str = \implode(' ', $chars);
         }
@@ -473,14 +473,12 @@ class Utf8
     private static function incStat($stat, $inc)
     {
         if ($stat === 'utf8control') {
-            $stat = 'bytesControl';
+            $stat = 'control';
         } elseif ($stat === 'utf8special') {
             // aka whitespace
-            $stat = 'bytesSpecial';
-        } else {
-            // other or utf8
-            $stat = 'bytes' . \ucfirst($stat);
+            $stat = 'special';
         }
+        $stat = 'bytes' . \ucfirst($stat);
         self::$stats[$stat] += $inc;
     }
 

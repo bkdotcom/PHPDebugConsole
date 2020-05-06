@@ -91,22 +91,17 @@ class Html extends Base
      */
     public function markupIdentifier($val, $tagName = 'span', $attribs = array())
     {
-        $classname = $val;
+        $classname = '';
         $operator = '::';
         $identifier = '';
         $regex = '/^(.+)(::|->)(.+)$/';
         if ($val instanceof Abstraction) {
-            $value = $val['value'];
-            if (\is_array($value)) {
-                list($classname, $identifier) = $value;
-            } else {
-                $identifier = $value;
-                if (\preg_match($regex, $value, $matches)) {
-                    $classname = $matches[1];
-                    $operator = $matches[2];
-                    $identifier = $matches[3];
-                }
-            }
+            $val = $val['value'];
+        }
+        $classname = $val;
+        $matches = array();
+        if (\is_array($val)) {
+            list($classname, $identifier) = $val;
         } elseif (\preg_match($regex, $val, $matches)) {
             $classname = $matches[1];
             $operator = $matches[2];

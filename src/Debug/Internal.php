@@ -151,7 +151,7 @@ class Internal implements SubscriberInterface
     /**
      * Return the group & groupCollapsed ("ancestors")
      *
-     * @param int|string $where 'auto', main' or summary priority
+     * @param int|string $where 'auto', 'main' or summary priority
      *
      * @return LogEntry[] kwys are maintained
      */

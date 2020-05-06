@@ -23,6 +23,8 @@ use RuntimeException;
 
 /**
  * mysqli extended with debugging
+ *
+ * @phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
  */
 class MySqli extends mysqliBase
 {
@@ -149,6 +151,7 @@ class MySqli extends mysqliBase
             $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
 
             // parse server info
+            $matches = array();
             \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat(), $matches);
             $serverInfo = \array_map(function ($val) {
                 return $val * 1;

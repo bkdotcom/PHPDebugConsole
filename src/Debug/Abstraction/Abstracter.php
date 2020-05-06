@@ -17,8 +17,8 @@ use bdk\Debug\Abstraction\AbstractArray;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Component;
+use bdk\Debug\Utility;
 use bdk\Debug\Utility\PhpDoc;
-use bdk\Debug\Utility\Utf8;
 
 /**
  * Store array/object/resource info
@@ -201,7 +201,7 @@ class Abstracter extends Component
     {
         $type = 'array';
         $typeMore = 'raw';  // needs abstracted (references removed / values abstracted if necessary)
-        if (\count($val) === 2 && AbstractArray::isCallable($val)) {
+        if (\count($val) === 2 && Utility::isCallable($val)) {
             $type = 'callable';
             $typeMore = 'raw';  // needs abstracted
         }

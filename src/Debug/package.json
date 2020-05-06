@@ -15,8 +15,8 @@
     "stylelint-config-standard": "^20.0.0"
   },
   "keywords": [
-    "PHP",
-    "Debug"
+    "Debug",
+    "PHP"
   ],
   "license": "MIT",
   "main": "index.js",
@@ -32,7 +32,7 @@
     "cs": "npx npm-run-all --continue-on-error cs:*",
     "cs:css": "npx stylelint ./scss",
     "cs:js": "npx eslint js_src/*",
-    "cs:php": "../../vendor/bin/phpcs . --extensions=php",
+    "cs:php": "../../vendor/bin/phpcs ../ --extensions=php",
     "test": "jest",
     "watch": "npx npm-run-all --parallel watch:*",
     "watch:js": "NODE_ENV=watch npx nodemon --watch js_src/ --ext js --exec \"npm run build:js\"",

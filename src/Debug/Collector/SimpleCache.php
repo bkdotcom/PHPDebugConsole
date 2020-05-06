@@ -117,9 +117,9 @@ class SimpleCache implements CacheInterface
     public function setMultiple($values, $ttl = null)
     {
         $keysDebug = array();
-        if ($keys instanceof Traversable) {
+        if ($values instanceof Traversable) {
             $keysDebug = \array_keys(\iterator_to_array($values));
-        } elseif (\is_array($keys)) {
+        } elseif (\is_array($values)) {
             $keysDebug = \array_keys($values);
         }
         return $this->profileCall('setMultiple', \func_get_args(), true, $keysDebug);

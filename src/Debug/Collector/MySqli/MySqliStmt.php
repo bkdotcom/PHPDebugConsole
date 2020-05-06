@@ -51,7 +51,7 @@ class MySqliStmt extends mysqliStmtBase
      *
      * @return bool
      */
-    public function bind_param($types, &...$vals)
+    public function bind_param($types, &...$vals) // @phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         if ($this->mysqli->connectionAttempted === false) {
             return false;

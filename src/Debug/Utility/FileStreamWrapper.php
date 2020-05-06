@@ -22,8 +22,7 @@ use bdk\PubSub\Manager;
  *
  * @see http://php.net/manual/en/class.streamwrapper.php
  *
- * phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
- * phpcs:disable Generic.NamingConventions.CamelCapsFunctionName.ScopeNotCamelCaps
+ * @phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
  */
 class FileStreamWrapper
 {

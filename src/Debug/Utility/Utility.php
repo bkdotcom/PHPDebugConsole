@@ -483,6 +483,22 @@ class Utility
     }
 
     /**
+     * Syntax-only is_callable() check
+     * Additionally checks that $array[0] is an object
+     *
+     * @param string|array $val value to check
+     *
+     * @return bool
+     */
+    public static function isCallable($val)
+    {
+        return \is_array($val)
+            // only test if "method_exists" if val[0] is an object
+            ? \is_callable($val, true) && \is_object($val[0]) && \is_callable($val)
+            : \is_callable($val);
+    }
+
+    /**
      * Test if string is valid xml
      *
      * @param string $str string to test
@@ -640,21 +656,6 @@ class Utility
     }
 
     /**
-     * Syntax-only is_callable() check
-     * Additionally checks that $array[0] is an object
-     *
-     * @param string|array $val value to check
-     *
-     * @return bool
-     */
-    private static function isCallable($val)
-    {
-        return \is_array($val)
-            ? \is_callable($val, true) && \is_object($val[0])
-            : \is_callable($val);
-    }
-
-    /**
      * Parse string such as 128M
      *
      * @param string $size size
@@ -663,6 +664,7 @@ class Utility
      */
     private static function parseBytes($size)
     {
+        $matches = array();
         if (\preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
             $size = (float) \str_replace(',', '', $matches[1]);
             switch (\strtolower($matches[2])) {

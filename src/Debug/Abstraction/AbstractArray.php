@@ -47,7 +47,7 @@ class AbstractArray
         if (\in_array($array, $hist, true)) {
             return Abstracter::RECURSION;
         }
-        if (self::isCallable($array)) {
+        if ($this->abstracter->debug->utility->isCallable($array)) {
             // this appears to be a "callable"
             return new Abstraction(array(
                 'type' => 'callable',
@@ -64,21 +64,5 @@ class AbstractArray
             $return[$k] = $v;
         }
         return $return;
-    }
-
-    /**
-     * Is array a callable?
-     *
-     * @param array $array array to check
-     *
-     * @return bool
-     */
-    public static function isCallable($array)
-    {
-        return \count($array) === 2
-            && \array_keys($array) === array(0,1)
-            && \is_object($array[0])
-            && \is_string($array[1])
-            && \method_exists($array[0], $array[1]);
     }
 }

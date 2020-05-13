@@ -225,52 +225,45 @@ class LogEnv implements SubscriberInterface
         if (!$this->debug->getCfg('logEnvInfo.errorReporting', Debug::CONFIG_DEBUG)) {
             return;
         }
-        $errorReportingRaw = $this->debug->getCfg('errorHandler.errorReporting');
-        $errorReporting = $errorReportingRaw === 'system'
-            ? \error_reporting()
-            : $errorReportingRaw;
         $msgLines = array();
-        $styles = array();
-        $styleMono = 'font-family:monospace; opacity:0.8;';
-        $styleReset = 'font-family:inherit; white-space:pre-wrap;';
+        $errorReportingRaw = $this->debug->errorHandler->getCfg('errorReporting');
+        $errorReporting = $this->debug->errorHandler->errorReporting();
         if (\error_reporting() !== (E_ALL | E_STRICT)) {
             $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . ErrorLevel::toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
-            $styles = array(
-                $styleMono, $styleReset, // wraps "error_reporting"
-                $styleMono, $styleReset, // wraps actual
-                $styleMono, $styleReset, // wraps E_ALL | E_STRICT
-            );
             if ($errorReporting === (E_ALL | E_STRICT)) {
                 $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
-                $styles[] = $styleMono;
-                $styles[] = $styleReset;
             }
         }
         if ($errorReporting !== (E_ALL | E_STRICT)) {
+            $errReportingStr = ErrorLevel::toConstantString($errorReporting);
+            $msgLine = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
+                . '`%c' . $errReportingStr . '%c`';
             if ($errorReportingRaw === 'system') {
-                $msgLines[] = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
+                $msgLine = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
             } elseif ($errorReporting === \error_reporting()) {
-                $msgLines[] = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
-                    . '`%c' . ErrorLevel::toConstantString($errorReporting) . '%c`';
-                $styles[] = $styleMono;
-                $styles[] = $styleReset;
-            } else {
-                $msgLines[] = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
-                    . '`%c' . ErrorLevel::toConstantString($errorReporting) . '%c`';
-                $styles[] = $styleMono;
-                $styles[] = $styleReset;
+                $msgLine = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
+                    . '`%c' . $errReportingStr . '%c`';
             }
+            $msgLines[] = $msgLine;
         }
-        if ($msgLines) {
-            $args = array(\implode("\n", $msgLines));
-            $args = \array_merge($args, $styles);
-            $args[] = $this->debug->meta(array(
-                'detectFiles' => false,
-                'file' => null,
-                'line' => null,
-            ));
-            \call_user_func_array(array($this->debug, 'warn'), $args);
+        if (!$msgLines) {
+            return;
         }
+        $msgLines = \implode("\n", $msgLines);
+        $args = array($msgLines);
+        $styleMono = 'font-family:monospace; opacity:0.8;';
+        $styleReset = 'font-family:inherit; white-space:pre-wrap;';
+        $cCount = \substr_count($msgLines, '%c');
+        for ($i = 0; $i < $cCount; $i += 2) {
+            $args[] = $styleMono;
+            $args[] = $styleReset;
+        }
+        $args[] = $this->debug->meta(array(
+            'detectFiles' => false,
+            'file' => null,
+            'line' => null,
+        ));
+        \call_user_func_array(array($this->debug, 'warn'), $args);
     }
 
     /**

@@ -25,6 +25,7 @@ use Reflector;
 class PhpDoc
 {
 
+    /** @var array */
     protected static $cache = array();
     protected static $reflectorStack = [];
 
@@ -38,7 +39,7 @@ class PhpDoc
     public static function getParsed($what)
     {
         $hash = self::getHash($what);
-        if ($hash !== null && isset(self::$cache[$hash])) {
+        if (isset(self::$cache[$hash])) {
             return self::$cache[$hash];
         }
         $reflector = null;

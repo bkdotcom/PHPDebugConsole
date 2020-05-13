@@ -22,6 +22,7 @@ use bdk\PubSub\SubscriberInterface;
 class ErrorEmailer implements SubscriberInterface
 {
 
+    /** @var array */
     protected $cfg = array();
     protected $throttleData = array();
     protected $errTypes = array();  // populated onError
@@ -67,7 +68,7 @@ class ErrorEmailer implements SubscriberInterface
         if (!\strlen($key)) {
             return $this->cfg;
         }
-        if ($key !== null) {
+        if (isset($this->cfg[$key])) {
             return $this->cfg[$key];
         }
         return null;

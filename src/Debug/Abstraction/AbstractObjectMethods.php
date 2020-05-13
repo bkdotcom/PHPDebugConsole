@@ -195,12 +195,11 @@ class AbstractObjectMethods extends AbstractObjectSub
     /**
      * This does nothing
      *
-     * @param mixed $ignore whatever
-     *
      * @return void
      */
-    private function devNull($ignore)
+    private function devNull()
     {
+        \func_get_args();
     }
 
     /**

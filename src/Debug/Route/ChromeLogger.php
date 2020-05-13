@@ -270,7 +270,6 @@ class ChromeLogger extends Base
     {
         $indexes = \array_reverse(\array_keys($logBack));
         $depth = 0;
-        $minDepth = 0;
         $groupOnly = false;
         /*
             work our way backwards through the log until we fill the avail header length
@@ -291,7 +290,6 @@ class ChromeLogger extends Base
                 break;
             }
             if ($strlen + (40 * $depth) > $max) {
-                $minDepth = $depth;
                 unset($this->data['log'][$i]);
                 $groupOnly = true;
             }

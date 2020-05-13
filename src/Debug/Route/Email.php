@@ -53,7 +53,7 @@ class Email implements RouteInterface
      *
      * @return void
      */
-    public function processLogEntries(Event $event = null)
+    public function processLogEntries(Event $event)
     {
         $debug = $event->getSubject();
         $subject = $this->buildSubject();
@@ -297,8 +297,8 @@ class Email implements RouteInterface
     /**
      * Unserialize while only allowing the specified classes to be unserialized
      *
-     * @param string $str            serialized string
-     * @param array  $allowedClasses allowed class names
+     * @param string   $str            serialized string
+     * @param string[] $allowedClasses allowed class names
      *
      * @return mixed
      */

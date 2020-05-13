@@ -565,6 +565,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function removeExtension($name)
     {
@@ -597,6 +599,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function setBaseTemplateClass($class)
     {
@@ -605,6 +609,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function setCache($cache)
     {
@@ -613,6 +619,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function setCharset($charset)
     {
@@ -621,6 +629,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function setCompiler(Twig_CompilerInterface $compiler)
     {
@@ -629,6 +639,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function setExtensions(array $extensions)
     {
@@ -637,6 +649,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function setLexer(Twig_LexerInterface $lexer)
     {
@@ -645,6 +659,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function setLoader(LoaderInterface $loader)
     {
@@ -653,6 +669,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function setParser(Twig_ParserInterface $parser)
     {
@@ -661,6 +679,8 @@ class Twig extends Twig_Environment
 
     /**
      * {@inheritDoc}
+     *
+     * @return TokenStream
      */
     public function tokenize($source, $name = null)
     {

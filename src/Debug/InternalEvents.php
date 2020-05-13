@@ -268,7 +268,7 @@ class InternalEvents implements SubscriberInterface
      * @param Event $event debug.output event object
      *
      * @return void
-     * @throws RuntimeException if error emitting headers
+     * @throws \RuntimeException if error emitting headers
      */
     public function onOutputHeaders(Event $event)
     {

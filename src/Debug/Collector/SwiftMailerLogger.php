@@ -267,7 +267,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     {
         $exception = $evt->getException();
         $message = $exception->getMessage();
-        $code = $exception->getCode();
+        $code = (int) $exception->getCode();
         $this->debug->warn($code . ':', $message);
         $message .= PHP_EOL;
         $message .= 'Log data:' . PHP_EOL;

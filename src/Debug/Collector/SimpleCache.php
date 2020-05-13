@@ -191,7 +191,7 @@ class SimpleCache implements CacheInterface
     /**
      * Returns the accumulated execution time of statements
      *
-     * @return int
+     * @return float
      */
     public function getTimeSpent()
     {
@@ -229,10 +229,10 @@ class SimpleCache implements CacheInterface
     /**
      * Profiles a call to a PDO method
      *
-     * @param string $method            SimpleCache method
-     * @param array  $args              method args
-     * @param bool   $isSuccessResponse does the method return boolean success?
-     * @param bool   $keyOrKeys         key(s) being queried/set
+     * @param string       $method            SimpleCache method
+     * @param array        $args              method args
+     * @param bool         $isSuccessResponse does the method return boolean success?
+     * @param string|array $keyOrKeys         key(s) being queried/set
      *
      * @return mixed The result of the call
      * @throws \Psr\SimpleCache\InvalidArgumentException
@@ -247,7 +247,7 @@ class SimpleCache implements CacheInterface
             if ($isSuccessResponse && $result === false) {
                 $exception = new \Exception();
             }
-        } catch (\Psr\SimpleCache\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             $exception = $e;
         }
 

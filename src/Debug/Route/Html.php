@@ -297,7 +297,7 @@ class Html extends Base
     /**
      * Build tab selection links
      *
-     * @return string
+     * @return string html
      */
     private function buildTabList()
     {
@@ -335,7 +335,7 @@ class Html extends Base
     /**
      * Build tab panes/content
      *
-     * @return html
+     * @return string html
      */
     private function buildTabPanes()
     {

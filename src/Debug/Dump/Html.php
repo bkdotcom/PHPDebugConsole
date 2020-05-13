@@ -32,9 +32,9 @@ class Html extends Base
     /**
      * Dump value as html
      *
-     * @param mixed        $val     value to dump
-     * @param array        $opts    options for string values
-     * @param string|false $tagName (span) tag to wrap value in (or false)
+     * @param mixed             $val     value to dump
+     * @param array             $opts    options for string values
+     * @param string|false|null $tagName (span) tag to wrap value in (or false)
      *
      * @return string
      */
@@ -282,12 +282,11 @@ class Html extends Base
                 'visualWhiteSpace' => $i !== 0,
             ));
         }
-        if (!$glueAfterFirst) {
+        if ($glueAfterFirst === false) {
             return $args[0] . \implode($glue, \array_slice($args, 1));
-        } else {
-            $glue = $meta['glue'] ?: $glue;
-            return \implode($glue, $args);
         }
+        $glue = $meta['glue'] ?: $glue;
+        return \implode($glue, $args);
     }
 
     /**
@@ -376,7 +375,7 @@ class Html extends Base
     /**
      * Dump float value
      *
-     * @param int $val float value
+     * @param float $val float value
      *
      * @return float
      */
@@ -445,20 +444,19 @@ class Html extends Base
                 $this->argAttribs['class'][] = 'timestamp';
                 $this->argAttribs['title'] = $date;
             }
-        } else {
-            if ($this->detectFiles && !\preg_match('#(://|[\r\n\x00])#', $val) && \is_file($val)) {
-                $this->argAttribs['class'][] = 'file';
-            }
-            $val = $this->debug->utf8->dump($val, array(
-                'sanitizeNonBinary' => $this->argStringOpts['sanitize'],
-                'useHtml' => true,
-            ));
-            if ($abs && $abs['strlen']) {
-                $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)</span>';
-            }
-            if ($this->argStringOpts['visualWhiteSpace']) {
-                $val = $this->visualWhiteSpace($val);
-            }
+        }
+        if ($this->detectFiles && $this->debug->utility->isFile($val)) {
+            $this->argAttribs['class'][] = 'file';
+        }
+        $val = $this->debug->utf8->dump($val, array(
+            'sanitizeNonBinary' => $this->argStringOpts['sanitize'],
+            'useHtml' => true,
+        ));
+        if ($abs && $abs['strlen']) {
+            $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)</span>';
+        }
+        if ($this->argStringOpts['visualWhiteSpace']) {
+            $val = $this->visualWhiteSpace($val);
         }
         if (!$this->argStringOpts['addQuotes']) {
             $this->argAttribs['class'][] = 'no-quotes';
@@ -479,7 +477,7 @@ class Html extends Base
     /**
      * Get & reset logged channels
      *
-     * @return Debug[]
+     * @return \bdk\Debug[]
      */
     protected function getChannels()
     {
@@ -495,8 +493,9 @@ class Html extends Base
      */
     protected function getObject()
     {
-        $this->object = new HtmlObject($this);
-        return $this->object;
+        $object = new HtmlObject($this);
+        $this->readOnly['object'] = $object;
+        return $object;
     }
 
     /**
@@ -506,8 +505,9 @@ class Html extends Base
      */
     protected function getTable()
     {
-        $this->table = new HtmlTable($this);
-        return $this->table;
+        $table = new HtmlTable($this);
+        $this->readOnly['table'] = $table;
+        return $table;
     }
 
     /**
@@ -515,7 +515,7 @@ class Html extends Base
      *
      * @param LogEntry $logEntry logEntry instance
      *
-     * @return array array($method, $args)
+     * @return string
      */
     protected function methodAlert(LogEntry $logEntry)
     {
@@ -621,20 +621,22 @@ class Html extends Base
         $levelClass = $meta['level']
             ? 'level-' . $meta['level']
             : null;
-        foreach ($args as $k => $v) {
-            $args[$k] = $this->dump($v);
+        $headerAppend = '';
+        $headerInner = $label;
+        if ($args) {
+            foreach ($args as $k => $v) {
+                $args[$k] = $this->dump($v);
+            }
+            $argStr = \implode(', ', $args);
+            $headerInner .= $meta['argsAsParams']
+                ? '(</span>' . $argStr . '<span class="' . $labelClasses . '">)'
+                : ':';
+            $headerAppend = $meta['argsAsParams']
+                ? ''
+                : ' ' . $argStr;
         }
-        $argStr = \implode(', ', $args);
-        if (!$argStr) {
-            $headerStr = '<span class="' . $labelClasses . '">' . $label . '</span>';
-        } elseif ($meta['argsAsParams']) {
-            $headerStr = '<span class="' . $labelClasses . '">' . $label . '(</span>'
-                . $argStr
-                . '<span class="' . $labelClasses . '">)</span>';
-        } else {
-            $headerStr = '<span class="' . $labelClasses . '">' . $label . ':</span> '
-                . $argStr;
-        }
+        $header = '<span class="' . $labelClasses . '">' . $headerInner . '</span>' . $headerAppend;
+
         $this->logEntryAttribs['class'] = \str_replace('m_' . $method, 'm_group', $this->logEntryAttribs['class']);
         $str = '<li' . $this->debug->html->buildAttribString($this->logEntryAttribs) . '>' . "\n";
         /*
@@ -651,7 +653,7 @@ class Html extends Base
                     $levelClass,
                 ),
             ),
-            $headerStr
+            $header
         ) . "\n";
         /*
             Group open

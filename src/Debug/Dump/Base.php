@@ -31,6 +31,7 @@ class Base extends Component
     protected $channelNameRoot;
     protected $dumpType;
     protected $dumpTypeMore;
+    private $subInfo = array();
 
     /**
      * Constructor
@@ -58,39 +59,15 @@ class Base extends Component
             'sanitize' => true,     // only applies to html
             'visualWhiteSpace' => true,
         ), $opts);
-        $typeMore = null;
         list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($typeMore === 'raw') {
             $val = $this->debug->abstracter->getAbstraction($val, 'dump', array($type, $typeMore));
             $typeMore = null;
         }
         $method = 'dump' . \ucfirst($type);
-        if ($typeMore === 'abstraction') {
-            foreach (\array_keys($this->argStringOpts) as $k) {
-                if ($val[$k] !== null) {
-                    $this->argStringOpts[$k] = $val[$k];
-                }
-            }
-            if (!\method_exists($this, $method)) {
-                $event = $this->debug->publishBubbleEvent('debug.dumpCustom', new Event(
-                    $val,
-                    array(
-                        'output' => $this,
-                        'return' => '',
-                        'typeMore' => null,
-                    )
-                ));
-                $return = $event['return'];
-                $typeMore = $event['typeMore'];
-            } elseif (\in_array($type, array('string','bool','float','int','null'))) {
-                $return = $this->{$method}($val['value'], $val);
-            } else {
-                $return = $this->{$method}($val);
-            }
-            $typeMore = null;
-        } else {
-            $return = $this->{$method}($val);
-        }
+        $return = $typeMore === 'abstraction'
+            ? $this->dumpAbstraction($val, $typeMore)
+            : $this->{$method}($val);
         $this->dumpType = $type;
         $this->dumpTypeMore = $typeMore;
         return $return;
@@ -156,11 +133,48 @@ class Base extends Component
     }
 
     /**
+     * Dump an abstraction
+     *
+     * @param Abstraction $abs      Abstraction instance
+     * @param string|null $typeMore populated with "typeMore"
+     *
+     * @return string|null
+     */
+    protected function dumpAbstraction(Abstraction $abs, &$typeMore)
+    {
+        $type = $abs['type'];
+        $method = 'dump' . \ucfirst($type);
+        foreach (\array_keys($this->argStringOpts) as $k) {
+            if ($abs[$k] !== null) {
+                $this->argStringOpts[$k] = $abs[$k];
+            }
+        }
+        $typeMore = null;
+        if (\method_exists($this, $method) === false) {
+            $event = $this->debug->publishBubbleEvent('debug.dumpCustom', new Event(
+                $abs,
+                array(
+                    'output' => $this,
+                    'return' => '',
+                    'typeMore' => $abs['typeMore'],  // likely null
+                )
+            ));
+            $typeMore = $event['typeMore'];
+            return $event['return'];
+        }
+        if (\in_array($type, array('string','bool','float','int','null'))) {
+            $typeMore = $abs['typeMore'];   // likely null
+            return $this->{$method}($abs['value'], $abs);
+        }
+        return $this->{$method}($abs);
+    }
+
+    /**
      * Dump array
      *
      * @param array $array array to dump
      *
-     * @return array
+     * @return array|string
      */
     protected function dumpArray($array)
     {
@@ -175,7 +189,7 @@ class Base extends Component
      *
      * @param bool $val boolean value
      *
-     * @return bool
+     * @return bool|string
      */
     protected function dumpBool($val)
     {
@@ -210,7 +224,7 @@ class Base extends Component
     /**
      * Dump float value
      *
-     * @param float $val float value
+     * @param float|int $val float value
      *
      * @return float|string
      */
@@ -231,7 +245,10 @@ class Base extends Component
      */
     protected function dumpInt($val)
     {
-        return $this->dumpFloat($val);
+        $val = $this->dumpFloat($val);
+        return \is_string($val)
+            ? $val
+            : (int) $val;
     }
 
     /**
@@ -247,7 +264,7 @@ class Base extends Component
     /**
      * Dump null value
      *
-     * @return null
+     * @return null|string
      */
     protected function dumpNull()
     {
@@ -271,7 +288,7 @@ class Base extends Component
         }
         return array(
             '___class_name' => $abs['className'],
-        ) + $this->dumpProperties($abs);
+        ) + (array) $this->dumpProperties($abs);
     }
 
     /**
@@ -279,7 +296,7 @@ class Base extends Component
      *
      * @param Abstraction $abs object abstraction
      *
-     * @return array
+     * @return array|string
      */
     protected function dumpProperties(Abstraction $abs)
     {
@@ -362,7 +379,7 @@ class Base extends Component
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return void
+     * @return string|void
      */
     protected function methodAlert(LogEntry $logEntry)
     {
@@ -409,7 +426,7 @@ class Base extends Component
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return void
+     * @return string|void
      */
     protected function methodDefault(LogEntry $logEntry)
     {
@@ -431,7 +448,7 @@ class Base extends Component
      *
      * @param LogEntry $logEntry logEntry instance
      *
-     * @return void
+     * @return string|void
      */
     protected function methodGroup(LogEntry $logEntry)
     {
@@ -452,7 +469,7 @@ class Base extends Component
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return void
+     * @return string|null
      */
     protected function methodTabular(LogEntry $logEntry)
     {
@@ -463,7 +480,7 @@ class Base extends Component
             if ($caption) {
                 \array_unshift($logEntry['args'], $caption);
             }
-            return;
+            return null;
         }
         $table = array();
         $classnames = array();
@@ -471,6 +488,7 @@ class Base extends Component
         $keys = $columns ?: $this->debug->methodTable->colKeys($rows);
         $undefinedAs = $logEntry->getMeta('undefinedAs', 'unset');
         $forceArray = $logEntry->getMeta('forceArray', true);
+        $objInfo = array();
         foreach ($rows as $k => $row) {
             $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
             $values = $this->methodTableCleanValues($values, array(
@@ -503,7 +521,7 @@ class Base extends Component
      * @param array $values row values
      * @param array $opts   options
      *
-     * @return row values
+     * @return array|mixed row values
      */
     private function methodTableCleanValues($values, $opts = array())
     {
@@ -511,20 +529,21 @@ class Base extends Component
             'undefinedAs' => 'unset',
             'forceArray' => true,
         ), $opts);
-        foreach ($values as $k => $val) {
+        $key = null;
+        foreach ($values as $key => $val) {
             if ($val === Abstracter::UNDEFINED) {
                 $val = $opts['undefinedAs'];
                 if ($val === 'unset') {
-                    unset($values[$k]);
+                    unset($values[$key]);
                     continue;
                 }
             }
-            $values[$k] = $val;
+            $values[$key] = $val;
         }
-        if (\count($values) === 1 && $k === MethodTable::SCALAR) {
+        if (\count($values) === 1 && $key === MethodTable::SCALAR) {
             $values = $opts['forceArray']
-                ? array('value' => $values[$k])
-                : $values[$k];
+                ? array('value' => $values[$key])
+                : $values[$key];
         }
         return $values;
     }
@@ -605,7 +624,7 @@ class Base extends Component
         }
         $hasSubs = \array_sum($this->subInfo['typeCounts']);
         if ($hasSubs && $this->subInfo['options']['replace']) {
-            if ($this->subInfo['typeCounts']['c']) {
+            if ($this->subInfo['typeCounts']['c'] > 0) {
                 $string .= '</span>';
             }
             $args = \array_values($args);
@@ -617,9 +636,9 @@ class Base extends Component
     /**
      * Process string substitution regex callback
      *
-     * @param array $matches regex matches array
+     * @param string[] $matches regex matches array
      *
-     * @return string
+     * @return string|mixed
      */
     private function processSubsCallback($matches)
     {
@@ -694,7 +713,7 @@ class Base extends Component
      * @param mixed $val  value
      * @param array $opts $options passed to dump
      *
-     * @return string
+     * @return string|array
      */
     protected function substitutionAsString($val, $opts)
     {

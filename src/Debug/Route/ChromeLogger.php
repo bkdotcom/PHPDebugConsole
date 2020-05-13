@@ -285,12 +285,6 @@ class ChromeLogger extends Base
             } elseif ($groupOnly) {
                 continue;
             }
-            if ($groupOnly) {
-                if ($minDepth <= $depth) {
-                    continue;
-                }
-                $minDepth = $depth;
-            }
             $this->data['log'][$i] = $logEntry;
             $strlen = $this->calcHeaderSize();
             if ($groupOnly && $depth === 0) {

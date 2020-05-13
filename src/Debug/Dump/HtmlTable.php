@@ -52,7 +52,7 @@ class HtmlTable
     {
         $options = \array_merge(array(
             'attribs' => array(),
-            'caption' => null,
+            'caption' => '',
             'columns' => array(),
             'onBuildRow' => null,   // callable
             'totalCols' => array(),
@@ -191,9 +191,9 @@ class HtmlTable
     /**
      * Returns table row
      *
-     * @param mixed $row    should be array or object abstraction
-     * @param array $keys   column keys
-     * @param array $rowKey row key
+     * @param mixed      $row    should be array or object abstraction
+     * @param array      $keys   column keys
+     * @param string|int $rowKey row key
      *
      * @return string
      */
@@ -204,6 +204,7 @@ class HtmlTable
             $rowKey = $row['__key'];
             unset($row['__key']);
         }
+        $objInfo = array();
         $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
         $this->updateTableInfo($values, $objInfo);
         $rowKeyParsed = $this->debug->html->parseTag($this->html->dump($rowKey));

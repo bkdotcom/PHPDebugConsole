@@ -62,6 +62,7 @@ class Utility
         if (!\is_array($val)) {
             return false;
         }
+        // iterate over keys more efficient than `$val === array_values($val)`
         $keys = \array_keys($val);
         foreach ($keys as $i => $key) {
             if ($key !== $i) {
@@ -207,6 +208,8 @@ class Utility
         if (!$headers) {
             return;
         }
+        $file = '';
+        $line = 0;
         if (\headers_sent($file, $line)) {
             throw new \RuntimeException('Headers already sent: ' . $file . ', line ' . $line);
         }
@@ -288,18 +291,21 @@ class Utility
      * @param int|string $size      bytes or similar to "1.23M"
      * @param bool       $returnInt return integer?
      *
-     * @return string|int
+     * @return string|int|false
      */
     public static function getBytes($size, $returnInt = false)
     {
         if (\is_string($size)) {
             $size = self::parseBytes($size);
         }
+        if ($size === false) {
+            return false;
+        }
         if ($returnInt) {
             return (int) $size;
         }
         $units = array('B','kB','MB','GB','TB','PB');
-        $exp = \floor(\log((float) $size, 1024));
+        $exp = (int) \floor(\log((float) $size, 1024));
         $pow = \pow(1024, $exp);
         $size = (int) $pow === 0
             ? '0 B'
@@ -465,6 +471,7 @@ class Utility
             '504' => 'Gateway Time-out',
             '505' => 'HTTP Version not supported',
         );
+        $statusCode = (int) $statusCode;
         return isset($phrases[$statusCode])
             ? $phrases[$statusCode]
             : '';
@@ -496,6 +503,24 @@ class Utility
             // only test if "method_exists" if val[0] is an object
             ? \is_callable($val, true) && \is_object($val[0]) && \is_callable($val)
             : \is_callable($val);
+    }
+
+    /**
+     * "Safely" test if value is a file
+     *
+     * @param string $val value to test
+     *
+     * @return bool
+     */
+    public static function isFile($val)
+    {
+        if (!\is_string($val)) {
+            return false;
+        }
+        if (\preg_match('#(://|[\r\n\x00])#', $val) !== 1) {
+            return false;
+        }
+        return \is_file($val);
     }
 
     /**
@@ -660,10 +685,16 @@ class Utility
      *
      * @param string $size size
      *
-     * @return int
+     * @return int|false
      */
     private static function parseBytes($size)
     {
+        if (\is_int($size)) {
+            return $size;
+        }
+        if (\preg_match('/^[\d,]+$/', $size)) {
+            return (int) \str_replace(',', '', $size);
+        }
         $matches = array();
         if (\preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
             $size = (float) \str_replace(',', '', $matches[1]);
@@ -683,7 +714,8 @@ class Utility
                 case 'k':
                     $size *= 1024;
             }
+            return (int) $size;
         }
-        return $size;
+        return false;
     }
 }

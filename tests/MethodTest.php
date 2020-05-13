@@ -1164,6 +1164,38 @@ class MethodTest extends DebugTestFramework
         );
     }
 
+    public function testGroupNotArgsAsParams()
+    {
+        $this->testMethod(
+            'group',
+            array(
+                'a',
+                10,
+                $this->debug->meta('argsAsParams', false),
+            ),
+            array(
+                'entry' => array(
+                    'group',
+                    array('a',10),
+                    array(
+                        'argsAsParams' => false,
+                    ),
+                ),
+                'chromeLogger' => array(
+                    array('a',10),
+                    null,
+                    'group',
+                ),
+                'html' => '<li class="m_group">
+                    <div class="expanded group-header"><span class="group-label group-label-bold">a:</span> <span class="t_int">10</span></div>
+                    <ul class="group-body">',
+                'text' => '▸ a: 10',
+                'script' => 'console.group("a",10);',
+                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
+            )
+        );
+    }
+
     private function methodWithGroup()
     {
         $this->debug->group();

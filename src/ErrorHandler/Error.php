@@ -142,9 +142,9 @@ class Error extends Event
      *
      * Backtrace is avail for fatal errors (incl uncaught exceptions)
      *
-     * @param bool $withContext (auto) Whether to include code snippets
+     * @param bool|'auto' $withContext (auto) Whether to include code snippets
      *
-     * @return array
+     * @return array|false|null
      */
     public function getTrace($withContext = 'auto')
     {

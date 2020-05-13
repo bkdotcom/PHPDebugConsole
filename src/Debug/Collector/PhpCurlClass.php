@@ -81,6 +81,10 @@ class PhpCurlClass extends Curl
 
     /**
      * {@inheritDoc}
+     *
+     * @param resource $ch Curl handle
+     *
+     * @return mixed Returns the value provided by parseResponse.
      */
     public function exec($ch = null)
     {
@@ -92,6 +96,7 @@ class PhpCurlClass extends Curl
             $this->debug->meta('icon', $this->icon)
         );
         $this->debug->log('options', $options);
+        $matches = array();
         $return = parent::exec($ch);
         $verboseOutput = null;
         $this->rawRequestHeaders = $this->getInfo(CURLINFO_HEADER_OUT);
@@ -149,7 +154,10 @@ class PhpCurlClass extends Curl
         if (self::$optionConstants) {
             return;
         }
-        $consts = \get_defined_constants(true)['curl'];
+        $consts = \get_defined_constants(true);
+        $consts = isset($consts['curl'])
+            ? (array) $consts['curl']
+            : array();
         \ksort($consts);
         $valToNames = array();
         foreach ($consts as $name => $val) {
@@ -180,7 +188,9 @@ class PhpCurlClass extends Curl
             $opts[$name] = $val;
         }
         if (isset($opts['CURLOPT_POSTFIELDS']) && \is_string($opts['CURLOPT_POSTFIELDS'])) {
-            \parse_str($opts['CURLOPT_POSTFIELDS'], $opts['CURLOPT_POSTFIELDS']);
+            $parsed = array();
+            \parse_str($opts['CURLOPT_POSTFIELDS'], $parsed);
+            $opts['CURLOPT_POSTFIELDS'] = $parsed;
         }
         \ksort($opts);
         return $opts;

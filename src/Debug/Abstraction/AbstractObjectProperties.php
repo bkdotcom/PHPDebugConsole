@@ -177,8 +177,10 @@ class AbstractObjectProperties extends AbstractObjectSub
         // get_object_vars() doesn't work
         $iniWas = \ini_set('xdebug.overload_var_dump', '0');
         \ob_start();
+        /** @psalm-suppress ForbiddenCode */
         \var_dump($obj);
         $dump = \ob_get_clean();
+        $matches = array();
         \ini_set('xdebug.overload_var_dump', $iniWas);
         \preg_match_all('/^\s+\["(.*?)"\]=>\n/sm', $dump, $matches);
         $props = \array_fill_keys($matches[1], null);

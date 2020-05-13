@@ -158,8 +158,8 @@ class LogEnv implements SubscriberInterface
         $redirect = \stripos(PHP_OS, 'WIN') !== 0
             ? '2>/dev/null'
             : '2> nul';
-        $outputLines = null;
-        $returnStatus = null;
+        $outputLines = array();
+        $returnStatus = 0;
         $matches = array();
         \exec('git branch ' . $redirect, $outputLines, $returnStatus);
         if ($returnStatus === 0) {

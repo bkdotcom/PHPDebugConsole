@@ -185,8 +185,9 @@ class Firephp extends Base
                 $logEntry['firephpMeta']['Label'] = $caption;
             }
             $firephpTable = true;
+            $args = $logEntry['args'];
+            $value = $args[0];
             if ($firephpTable) {
-                $args = $logEntry['args'];
                 $value = array();
                 $value[] = \array_merge(array(''), \array_keys(\current($args[0])));
                 foreach ($args[0] as $k => $row) {

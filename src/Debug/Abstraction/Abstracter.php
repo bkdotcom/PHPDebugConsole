@@ -153,6 +153,8 @@ class Abstracter extends Component
      * @param string $type  additionally check type
      *
      * @return bool
+     *
+     * @psalm-assert-if-true Abstraction $mixed
      */
     public static function isAbstraction($mixed, $type = null)
     {

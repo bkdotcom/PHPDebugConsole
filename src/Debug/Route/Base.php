@@ -32,7 +32,8 @@ abstract class Base extends Component implements RouteInterface
      *
      * @var string
      */
-    protected $channelNameRoot = null;
+    protected $channelNameRoot = '';
+
     protected $channelRegex;
     protected $data = array();
     protected $dump;
@@ -101,7 +102,7 @@ abstract class Base extends Component implements RouteInterface
      */
     protected function channelTest(LogEntry $logEntry)
     {
-        return \preg_match($this->channelRegex, $logEntry->getChannelName());
+        return \preg_match($this->channelRegex, $logEntry->getChannelName()) === 1;
     }
 
     /**

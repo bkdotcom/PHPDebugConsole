@@ -189,7 +189,7 @@ class Config
      * @param array  $path      path/key
      * @param bool   $forInit   Get values for bootstap
      *
-     * @return array
+     * @return mixed
      */
     private function getPropCfg($debugProp, $path = array(), $forInit = false)
     {

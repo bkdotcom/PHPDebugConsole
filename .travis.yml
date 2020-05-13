@@ -25,10 +25,11 @@ before_script:
     echo "TRAVIS_PHP_VERSION:" $TRAVIS_PHP_VERSION;
     php -v;
     php -r 'echo "PHP: ".PHP_VERSION."\n";';
-    if [ $(echo "$TRAVIS_PHP_VERSION >= 7.0" | bc -l) -eq 1 ]; then
-      composer require mindplay/middleman
-      composer require psr/http-server-middleware
-    fi
+    # now added via composer's post-update-cmd
+    #if [ $(echo "$TRAVIS_PHP_VERSION >= 7.0" | bc -l) -eq 1 ]; then
+    #  composer require mindplay/middleman
+    #  composer require psr/http-server-middleware
+    #fi
     if [ ${TRAVIS_PHP_VERSION:0:4} == "hhvm" ]; then
       curl -sSfL -o ~/.phpenv/versions/hhvm/bin/phpunit https://phar.phpunit.de/phpunit-5.7.phar;
     elif [ $(echo "$TRAVIS_PHP_VERSION >= 7.2" | bc -l) -eq 1 ]; then

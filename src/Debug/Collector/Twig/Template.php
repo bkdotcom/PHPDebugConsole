@@ -26,6 +26,11 @@ class Template extends Twig_Template implements Twig_TemplateInterface
     protected $template;
 
     /**
+     * @var Twig
+     */
+    protected $twig;
+
+    /**
      * @param Twig          $twig     Debug Twig_Environment wrapper
      * @param Twig_Template $template Twig_Template instance
      */
@@ -50,6 +55,8 @@ class Template extends Twig_Template implements Twig_TemplateInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function display(array $context, array $blocks = array())
     {
@@ -64,6 +71,8 @@ class Template extends Twig_Template implements Twig_TemplateInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function displayBlock($name, array $context, array $blocks = array(), $useBlocks = true)
     {
@@ -72,6 +81,8 @@ class Template extends Twig_Template implements Twig_TemplateInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
     public function displayParentBlock($name, array $context, array $blocks = array())
     {
@@ -96,6 +107,8 @@ class Template extends Twig_Template implements Twig_TemplateInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return string
      */
     public function doDisplay(array $context, array $blocks = array())
     {
@@ -136,6 +149,8 @@ class Template extends Twig_Template implements Twig_TemplateInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return bool
      */
     public function isTraitable()
     {

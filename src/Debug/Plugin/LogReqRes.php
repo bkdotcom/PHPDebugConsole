@@ -95,7 +95,7 @@ class LogReqRes implements SubscriberInterface
             return;
         }
         $this->debug->log('response headers', $this->debug->getResponseHeaders(true));
-        $contentType = $this->debug->getResponseHeader('Content-Type', ', ');
+        $contentType = \implode(', ', $this->debug->getResponseHeader('Content-Type'));
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
             // we're not interested in logging response
             if (\ob_get_level()) {
@@ -103,7 +103,7 @@ class LogReqRes implements SubscriberInterface
             }
             return;
         }
-        $this->logResponseContent();
+        $this->logResponseContent($contentType);
     }
 
     /**
@@ -245,9 +245,11 @@ class LogReqRes implements SubscriberInterface
     /**
      * log response body/content
      *
+     * @param string $contentType Content-Type
+     *
      * @return void
      */
-    private function logResponseContent()
+    private function logResponseContent($contentType)
     {
         $maxLen = $this->debug->getCfg('logResponseMaxLen', Debug::CONFIG_DEBUG);
         $maxLen = $this->debug->utility->getBytes($maxLen, true);
@@ -310,6 +312,7 @@ class LogReqRes implements SubscriberInterface
         $contentTypeRaw = $this->debug->request->getHeaderLine('Content-Type');
         if ($contentTypeRaw) {
             // remove encoding if pressent
+            $matches = array();
             \preg_match('#^([^;]+)#', $contentTypeRaw, $matches);
             $contentType = $matches[1];
         }

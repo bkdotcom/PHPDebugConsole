@@ -27,7 +27,7 @@ class ServerRequest
 {
 
     /**
-     * @var Stream
+     * @var StreamInterface|Stream
      */
     private $body;
 
@@ -106,7 +106,7 @@ class ServerRequest
     /**
      * Gets the body of the message.
      *
-     * @return Stream The body as a stream.
+     * @return StreamInterface|Stream The body as a stream.
      */
     public function getBody()
     {
@@ -250,7 +250,7 @@ class ServerRequest
      * immutability of the message, and MUST return a new instance that has the
      * new body stream.
      *
-     * @param StreamInterface $body Body
+     * @param StreamInterface|Stream $body Body
      *
      * @return static
      * @throws \InvalidArgumentException
@@ -314,7 +314,7 @@ class ServerRequest
      */
     public function withoutHeader($name)
     {
-        $nameLower = \strlower($name);
+        $nameLower = \strtolower($name);
         if (!isset($this->headerNames[$nameLower])) {
             return $this;
         }

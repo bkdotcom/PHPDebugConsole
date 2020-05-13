@@ -132,7 +132,7 @@ class Internal implements SubscriberInterface
         foreach ($stats['counts'] as $a) {
             $stats['inConsole'] += $a['inConsole'];
             $stats['notInConsole'] += $a['notInConsole'];
-            if ($a['inConsole']) {
+            if ($a['inConsole'] > 0) {
                 $stats['inConsoleCategories']++;
             }
         }
@@ -211,10 +211,10 @@ class Internal implements SubscriberInterface
     {
         $interface = $this->debug->utility->getInterface();
         if (\strpos($interface, 'ajax') !== false) {
-            return $this->values['routeNonHtml'];
+            return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
         }
         if ($interface === 'http') {
-            $contentType = $this->getResponseHeader('Content-Type', ',');
+            $contentType = \implode(', ', $this->getResponseHeader('Content-Type'));
             if ($contentType && \strpos($contentType, 'text/html') === false) {
                 return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
             }
@@ -275,20 +275,16 @@ class Internal implements SubscriberInterface
      * Header value is pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
      * otherwise, value is pulled from emitted headers via `headers_list()`
      *
-     * @param string $header    ('Content-Type') header to return
-     * @param string $delimiter Optional.  If specified, join values.  Otherwise, array is returned
+     * @param string $header ('Content-Type') header to return
      *
-     * @return array|string
+     * @return array
      */
-    public function getResponseHeader($header = 'Content-Type', $delimiter = false)
+    public function getResponseHeader($header = 'Content-Type')
     {
         $headers = $this->getResponseHeaders();
-        $header = isset($headers[$header])
+        return isset($headers[$header])
             ? $headers[$header]
             : array();
-        return \is_string($delimiter)
-            ? \implode($delimiter, $header)
-            : $header;
     }
 
     /**
@@ -297,9 +293,9 @@ class Internal implements SubscriberInterface
      * Header values are pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
      * otherwise, values are pulled from emitted headers via `headers_list()`
      *
-     * @param string $asString return as a single string/block of headers?
+     * @param bool $asString return as a single string/block of headers?
      *
-     * @return array
+     * @return array|string
      */
     public function getResponseHeaders($asString = false)
     {
@@ -405,6 +401,7 @@ class Internal implements SubscriberInterface
         );
         foreach ($valActions as $key => $callable) {
             if (isset($cfg[$key])) {
+                /** @psalm-suppress TooManyArguments */
                 $callable($cfg[$key], $event);
             }
         }
@@ -438,8 +435,9 @@ class Internal implements SubscriberInterface
      */
     public function publishBubbleEvent($eventName, Event $event, Debug $debug = null)
     {
-        if (!$debug) {
+        if ($debug === null) {
             $subject = $event->getSubject();
+            /** @var Debug */
             $debug = $subject instanceof Debug
                 ? $subject
                 : $this->debug;

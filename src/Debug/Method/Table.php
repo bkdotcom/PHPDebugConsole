@@ -207,13 +207,13 @@ class Table
             'className' => $row['className'],
             'phpDoc' => $row['phpDoc'],
         );
+        if ($row['className'] === 'Closure') {
+            $objInfo['row'] = false;
+            return array(self::SCALAR => $row);
+        }
         $row = self::objectValues($row);
         if (\is_array($row) === false) {
             // ie stringified value
-            $objInfo['row'] = false;
-            $row = array(self::SCALAR => $row);
-        } elseif (Abstracter::isAbstraction($row)) {
-            // still an abstraction (ie closure)
             $objInfo['row'] = false;
             $row = array(self::SCALAR => $row);
         }
@@ -241,7 +241,7 @@ class Table
             }
             $position = \array_search($curKey, $colKeys, true);
             if ($position !== false) {
-                $segment = \array_splice($colKeys, 0, $position + 1);
+                $segment = \array_splice($colKeys, 0, (int) $position + 1);
                 \array_splice($newKeys, \count($newKeys), 0, $segment);
             } elseif (!\in_array($curKey, $newKeys, true)) {
                 \array_push($newKeys, $curKey);
@@ -256,11 +256,11 @@ class Table
      * Get object abstraction's values
      * if, object has a stringified or __toString value, it will be returned
      *
-     * @param array $abs object abstraction
+     * @param Abstraction $abs object abstraction
      *
      * @return array|string
      */
-    private static function objectValues($abs)
+    private static function objectValues(Abstraction $abs)
     {
         if ($abs['traverseValues']) {
             // probably Traversable
@@ -271,9 +271,6 @@ class Table
         }
         if (isset($abs['methods']['__toString']['returnValue'])) {
             return $abs['methods']['__toString']['returnValue'];
-        }
-        if ($abs['className'] === 'Closure') {
-            return $abs;
         }
         $values = $abs['properties'];
         foreach ($values as $k => $info) {

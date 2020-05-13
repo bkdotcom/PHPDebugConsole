@@ -195,9 +195,11 @@ class AbstractObjectMethods extends AbstractObjectSub
     /**
      * This does nothing
      *
+     * @param mixed $ignore whatever
+     *
      * @return void
      */
-    private function devNull()
+    private function devNull($ignore)
     {
     }
 
@@ -328,6 +330,7 @@ class AbstractObjectMethods extends AbstractObjectSub
      */
     private function getParamTypeHint(ReflectionParameter $reflectionParameter, $phpDoc = array())
     {
+        $matches = array();
         $type = null;
         if ($reflectionParameter->isArray()) {
             $type = 'array';
@@ -447,6 +450,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             //    non empty array will appear as a string
             return array();
         }
+        $matches = array();
         if (\preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
             // appears to be a constant
             if ($matches[1] && \defined($className . '::' . $matches[2])) {
@@ -471,7 +475,7 @@ class AbstractObjectMethods extends AbstractObjectSub
     /**
      * Get object's __toString value if method is not deprecated
      *
-     * @return string|Abstraction
+     * @return string|Abstraction|null
      */
     private function toString()
     {
@@ -490,6 +494,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             // check if needs abstraction (ie over maxLenString)
             $absInfo = $this->abstracter->needsAbstraction($val);
             if ($absInfo) {
+                /** @var Abstraction */
                 $val = $this->abstracter->getAbstraction($val, $abs['debugMethod'], $absInfo, $abs['hist']);
             }
         } catch (Exception $e) {

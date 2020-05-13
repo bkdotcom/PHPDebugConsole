@@ -40,24 +40,13 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     }
 
     /**
-     * Unattach subject (and allow subject to deconstruct)
-     *
-     * @return self
-     */
-    public function removeSubject()
-    {
-        $this->subject = null;
-        return $this;
-    }
-
-    /**
      * Set abstraction's subject
      *
-     * @param mixed $subject Subject
+     * @param mixed $subject (null) Subject omit or set to null to remove subject
      *
      * @return self
      */
-    public function setSubject($subject)
+    public function setSubject($subject = null)
     {
         $this->subject = $subject;
         return $this;

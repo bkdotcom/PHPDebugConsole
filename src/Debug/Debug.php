@@ -41,8 +41,10 @@ use SplObjectStorage;
  * @property Debug\Method\Clear   $methodClear   lazy-loaded MethodClear instance
  * @property Debug\Method\Profile $methodProfile lazy-loaded MethodProfile instance
  * @property Debug\Method\Table   $methodTable   lazy-loaded MethodTable instance
+ * @property \bdk\Debug|null      $parentInstance parent "channel"
  * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeResponse)
  * @property Debug\Psr7lite\ServerRequest $request lazy-loaded ServerRequest
+ * @property \bdk\Debug           $rootInstance  root "channel"
  * @property Debug\Utility\Utf8   $utf8          lazy-loaded Utf8 instance
  * @property Debug\Utility        $utility       lazy-loaded Utility instance
  */
@@ -972,7 +974,7 @@ class Debug
      * @param bool   $log   (true) log it, or return only
      *                        if passed, takes precedence over silent meta val
      *
-     * @return float The duration (in sec).
+     * @return float|false The duration (in sec).
      */
     public function timeEnd($label = null, $log = true)
     {
@@ -1003,7 +1005,7 @@ class Debug
             $logEntry->setMeta('silent', !$log);
         }
         // get non-rounded running time (in seconds)
-        $ret = $this->timeGet($label, $this->meta(array(
+        $ret = $this->timeGet($label, false, $this->meta(array(
             'silent' => true,
             'precision' => null,
         )));
@@ -1066,7 +1068,7 @@ class Debug
             $logEntry->setMeta('silent', !$log);
         }
         $microT = 0;
-        $elapsed = 0;
+        $elapsed = false;
         if ($label === null) {
             list($elapsed, $microT) = $this->data['timers']['stack']
                 ? array(0, \end($this->data['timers']['stack']))
@@ -1179,7 +1181,7 @@ class Debug
         );
         // Get trace and include args if we're including context
         $backtrace = $this->backtrace->get(null, $logEntry->getMeta('inclContext'));
-        if ($logEntry->getMeta('inclContext')) {
+        if ($backtrace && $logEntry->getMeta('inclContext')) {
             $backtrace = $this->backtrace->addContext($backtrace);
             $this->addPlugin(new \bdk\Debug\Plugin\Highlight());
         }
@@ -1268,8 +1270,8 @@ class Debug
     /**
      * Retrieve a configuration value
      *
-     * @param string $path what to get
-     * @param bool   $opt  (@internal)
+     * @param string      $path what to get
+     * @param null|string $opt  (@internal)
      *
      * @return mixed value
      */
@@ -1881,6 +1883,7 @@ class Debug
         if (isset($caller['function'])) {
             // default args if first call inside function... and debugGroup is likely first call
             $function = null;
+            $callerStartLine = 1;
             if ($caller['class']) {
                 $refClass = new \ReflectionClass($caller['class']);
                 $refMethod = $refClass->getMethod($caller['function']);
@@ -1936,8 +1939,8 @@ class Debug
     /**
      * Log timeEnd() and timeGet()
      *
-     * @param float    $elapsed  elapsed time in seconds
-     * @param LogEntry $logEntry LogEntry instance
+     * @param float|false $elapsed  elapsed time in seconds
+     * @param LogEntry    $logEntry LogEntry instance
      *
      * @return void
      */
@@ -1950,10 +1953,12 @@ class Debug
         $label = isset($logEntry['args'][0])
             ? $logEntry['args'][0]
             : 'time';
-        $str = \strtr($meta['template'], array(
-            '%label' => $label,
-            '%time' => $this->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']),
-        ));
+        $str = $elapsed === false
+            ? 'Timer \'' . $label . '\' does not exist'
+            : \strtr($meta['template'], array(
+                '%label' => $label,
+                '%time' => $this->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']),
+            ));
         $this->appendLog(new LogEntry(
             $this,
             'time',
@@ -2040,8 +2045,8 @@ class Debug
             'logger' => function (Debug $debug) {
                 return new \bdk\Debug\Psr3\Logger($debug);
             },
-            'methodClear' => function (Debug $debug) {
-                return new \bdk\Debug\Method\Clear($debug);
+            'methodClear' => function () {
+                return new \bdk\Debug\Method\Clear();
             },
             'methodTable' => function () {
                 return new \bdk\Debug\Method\Table();

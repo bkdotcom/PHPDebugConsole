@@ -122,6 +122,7 @@ class Statement extends PDOStatement
         $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;
 
         $exception = null;
+        $result = false;
         try {
             $result = parent::execute($inputParameters);
             if (!$isExceptionMode && $result === false) {

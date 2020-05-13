@@ -101,19 +101,18 @@ class HtmlObject
             ? $val['value']
             : $val;
         $valAppend = '';
+        $classArray = array(
+            't_stringified',
+        );
         if ($len > 100) {
             $val = \substr($val, 0, 100);
             $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';
+            $classArray[] = 't_string_trunc';   // truncated
         }
         $toStringDump = $this->html->dump($val);
         $parsed = $this->debug->html->parseTag($toStringDump);
-        $classArray = \explode(' ', $parsed['attribs']['class']);
-        $classArray[] = 't_stringified';
-        if ($len > 100) {
-            $classArray[] = 't_string_trunc';   // truncated
-        }
         $attribs = array(
-            'class' => $classArray,
+            'class' => \array_merge($classArray, \explode(' ', $parsed['attribs']['class'])),
             'title' => isset($parsed['attribs']['title'])
                 // ie a timestamp will have a human readable date in title
                 ? (!$abs['stringified'] ? '__toString() : ' : '') . $parsed['attribs']['title']
@@ -168,8 +167,8 @@ class HtmlObject
         $label = \count($methods)
             ? 'methods'
             : 'no methods';
-        $str = '<dt class="methods">' . $label . '</dt>' . "\n";
         $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
+        $str = '<dt class="methods">' . $label . '</dt>' . "\n";
         $str .= $this->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {
             $classes = \array_keys(\array_filter(array(
@@ -301,11 +300,13 @@ class HtmlObject
                 $html .= ' ' . \htmlspecialchars($value['desc']);
             }
             return $html;
-        } elseif ($tagName === 'link') {
+        }
+        if ($tagName === 'link') {
             return '<a href="' . $value['uri'] . '" target="_blank">'
                 . \htmlspecialchars($value['desc'] ?: $value['uri'])
                 . '</a>';
-        } elseif ($tagName === 'see' && $value['uri']) {
+        }
+        if ($tagName === 'see' && $value['uri']) {
             return '<a href="' . $value['uri'] . '" target="_blank">'
                 . \htmlspecialchars($value['desc'] ?: $value['uri'])
                 . '</a>';
@@ -322,14 +323,15 @@ class HtmlObject
      */
     protected function dumpProperties(Abstraction $abs)
     {
-        $label = \count($abs['properties'])
-            ? 'properties'
-            : 'no properties';
-        if ($abs['viaDebugInfo']) {
-            $label .= ' <span class="text-muted">(via __debugInfo)</span>';
+        $label = 'no properties';
+        if (\count($abs['properties'])) {
+            $label = 'properties';
+            if ($abs['viaDebugInfo']) {
+                $label .= ' <span class="text-muted">(via __debugInfo)</span>';
+            }
         }
-        $str = '<dt class="properties">' . $label . '</dt>' . "\n";
         $magicMethods = \array_intersect(array('__get','__set'), \array_keys($abs['methods']));
+        $str = '<dt class="properties">' . $label . '</dt>' . "\n";
         $str .= $this->magicMethodInfo($magicMethods);
         foreach ($abs['properties'] as $k => $info) {
             $vis = (array) $info['visibility'];
@@ -373,7 +375,7 @@ class HtmlObject
     /**
      * Generate some info regarding the given method names
      *
-     * @param string[] $methods method names
+     * @param array $methods method names
      *
      * @return string
      */
@@ -382,10 +384,10 @@ class HtmlObject
         if (!$methods) {
             return '';
         }
-        foreach ($methods as $i => $method) {
-            $methods[$i] = '<code>' . $method . '</code>';
-        }
-        $methods = $i === 0
+        $methods = \array_map(function ($method) {
+            return '<code>' . $method . '</code>';
+        }, $methods);
+        $methods = \count($methods) === 1
             ? 'a ' . $methods[0] . ' method'
             : \implode(' and ', $methods) . ' methods';
         return '<dd class="magic info">This object has ' . $methods . '</dd>' . "\n";

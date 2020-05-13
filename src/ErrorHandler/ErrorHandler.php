@@ -84,10 +84,10 @@ class ErrorHandler
      *
      * @return mixed
      */
-    public function get($key = null, $hash = null)
+    public function get($key, $hash = null)
     {
         if ($key === 'error') {
-            return isset($this->data['errors'][$hash])
+            return $hash !== null && isset($this->data['errors'][$hash])
                 ? $this->data['errors'][$hash]
                 : null;
         }
@@ -115,7 +115,7 @@ class ErrorHandler
         if (!\strlen($key)) {
             return $this->cfg;
         }
-        if (isset($this->cfg[$key])) {
+        if ($key !== null && isset($this->cfg[$key])) {
             return $this->cfg[$key];
         }
         return null;
@@ -201,7 +201,7 @@ class ErrorHandler
      *   * catching backtrace via shutdown function only possible if xdebug installed
      *   * xdebug_get_function_stack's magic seems powerless for uncaught exceptions!
      *
-     * @param Exception|\Throwable $exception exception to handle
+     * @param \Exception|\Throwable $exception exception to handle
      *
      * @return void
      */
@@ -313,7 +313,7 @@ class ErrorHandler
             /*
                 Replace - not append - subscriber set via setCfg
             */
-            if (isset($this->cfg['onError'])) {
+            if ($this->cfg['onError'] !== null) {
                 $this->eventManager->unsubscribe('errorHandler.error', $this->cfg['onError']);
             }
             $this->eventManager->subscribe('errorHandler.error', $values['onError']);
@@ -343,10 +343,10 @@ class ErrorHandler
      *     Rather than reporting that an error occurred within the wrapper, you can use
      *     setErrorCaller() to report the error originating from the file/line that called the function
      *
-     * @param array $caller (default) null : determine automatically
-     *                        empty value (false, "", 0, array(): clear current value
-     *                        array() : manually set value
-     * @param int   $offset (optional) if determining automatically : adjust how many frames to go back
+     * @param array|null|false $caller (default) null : determine automatically
+     *                           false or empty array: clear current value
+     *                           array() : manually set value
+     * @param int              $offset (optional) if determining automatically : adjust how many frames to go back
      *
      * @return void
      */
@@ -415,7 +415,7 @@ class ErrorHandler
      * @param Error $error Error instance
      *
      * @return bool
-     * @throws Exception
+     * @throws \Exception
      */
     protected function continueToPrevHandler(Error $error)
     {
@@ -435,19 +435,18 @@ class ErrorHandler
             */
             \restore_exception_handler();
             throw $error['exception'];
-        } else {
-            if (!$this->prevErrorHandler) {
-                return !$error['continueToNormal'];
-            }
-            return \call_user_func(
-                $this->prevErrorHandler,
-                $error['type'],
-                $error['message'],
-                $error['file'],
-                $error['line'],
-                $error['vars']
-            );
         }
+        if (!$this->prevErrorHandler) {
+            return !$error['continueToNormal'];
+        }
+        return \call_user_func(
+            $this->prevErrorHandler,
+            $error['type'],
+            $error['message'],
+            $error['file'],
+            $error['line'],
+            $error['vars']
+        );
     }
 
     /**

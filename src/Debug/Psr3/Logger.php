@@ -29,6 +29,8 @@ class Logger extends AbstractLogger
      * Constructor
      *
      * @param Debug $debug Debug instance
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct(Debug $debug = null)
     {
@@ -138,11 +140,19 @@ class Logger extends AbstractLogger
      *                                    interpolated values get removed
      *
      * @return string
+     * @throws \RuntimeException if non-stringable objecct provided
      */
     protected function interpolate($message, array &$context = array())
     {
         // build a replacement array with braces around the context keys
-        \preg_match_all('/\{([a-z0-9_.]+)\}/', (string) $message, $matches);
+        if (\is_object($message)) {
+            if (\method_exists($message, '__toString') === false) {
+                throw new \RuntimeException(__METHOD__ . ': ' . \get_class($message) . 'is not stringable');
+            }
+            $message = (string) $message;
+        }
+        $matches = array();
+        \preg_match_all('/\{([a-z0-9_.]+)\}/', $message, $matches);
         $placeholders = \array_unique($matches[1]);
         $replace = array();
         foreach ($placeholders as $key) {
@@ -150,7 +160,10 @@ class Logger extends AbstractLogger
                 continue;
             }
             $val = $context[$key];
-            if (!\is_array($val) && (!\is_object($val) || \method_exists($val, '__toString'))) {
+            if (\is_array($val)) {
+                continue;
+            }
+            if (!\is_object($val) || \method_exists($val, '__toString')) {
                 $replace['{' . $key . '}'] = $val;
             }
         }

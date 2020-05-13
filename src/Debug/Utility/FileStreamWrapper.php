@@ -51,7 +51,7 @@ class FileStreamWrapper
     private static $pathsExclude = array();
 
     /**
-     * @var resource
+     * @var resource|null
      */
     private $resource;
 
@@ -247,7 +247,7 @@ class FileStreamWrapper
      * @param int $castAs STREAM_CAST_FOR_SELECT when stream_select() is calling stream_cast()
      *                      STREAM_CAST_AS_STREAM when stream_cast() is called for other uses
      *
-     * @return resource|bool
+     * @return resource|false
      *
      * @see http://php.net/manual/en/streamwrapper.stream-cast.php
      */
@@ -256,7 +256,7 @@ class FileStreamWrapper
         if (!$this->resource) {
             return false;
         }
-        if ($castAs & STREAM_CAST_AS_STREAM !== STREAM_CAST_AS_STREAM) {
+        if (($castAs & STREAM_CAST_AS_STREAM) !== STREAM_CAST_AS_STREAM) {
             return false;
         }
         return $this->resource;
@@ -271,10 +271,11 @@ class FileStreamWrapper
      */
     public function stream_close()
     {
-        if (!$this->resource) {
-            return;
+        if (\is_resource($this->resource)) {
+            // juggle var so psalm doesn't complain about assigning closed-resource
+            $resource = $this->resource;
+            \fclose($resource);
         }
-        \fclose($this->resource);
         $this->resource = null;
     }
 
@@ -404,7 +405,7 @@ class FileStreamWrapper
      *
      * @param int $bytes How many bytes of data from the current position should be returned.
      *
-     * @return string
+     * @return string|false
      *
      * @see http://php.net/manual/en/streamwrapper.stream-read.php
      */
@@ -453,7 +454,7 @@ class FileStreamWrapper
         $return = false;
         switch ($option) {
             case STREAM_OPTION_BLOCKING:
-                $return = \stream_set_blocking($this->resource, $arg1);
+                $return = \stream_set_blocking($this->resource, (bool) $arg1);
                 break;
             case STREAM_OPTION_READ_TIMEOUT:
                 $return = \stream_set_timeout($this->resource, $arg1, $arg2);
@@ -471,7 +472,7 @@ class FileStreamWrapper
     /**
      * Retrieve information about a file resource
      *
-     * @return array
+     * @return array|false
      *
      * @see http://php.net/manual/en/streamwrapper.stream-stat.php
      */
@@ -486,7 +487,7 @@ class FileStreamWrapper
     /**
      * Retrieve the current position of a stream
      *
-     * @return int
+     * @return int|false
      *
      * @see http://php.net/manual/en/streamwrapper.stream-tell.php
      */
@@ -520,7 +521,7 @@ class FileStreamWrapper
      *
      * @param string $data data to write
      *
-     * @return int
+     * @return int|false
      *
      * @see http://php.net/manual/en/streamwrapper.stream-write.php
      */
@@ -557,7 +558,7 @@ class FileStreamWrapper
      * @param string $path  The file path or URL to stat
      * @param int    $flags Holds additional flags set by the streams API.
      *
-     * @return array
+     * @return array|false
      *
      * @see http://php.net/manual/en/streamwrapper.url-stat.php
      */

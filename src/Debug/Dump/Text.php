@@ -43,6 +43,7 @@ class Text extends Base
             'equal' => ' = ',
         ),
     );
+    protected $valDepth = 0;
 
     /**
      * Return log entry as text
@@ -174,7 +175,7 @@ class Text extends Base
             $counts[ $info['visibility'] ] ++;
         }
         foreach ($counts as $vis => $count) {
-            if ($count) {
+            if ($count > 0) {
                 $str .= '    ' . $vis . ': ' . $count . "\n";
             }
         }

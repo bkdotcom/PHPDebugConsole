@@ -248,6 +248,8 @@ class Manager
      * @param mixed $val value to check
      *
      * @return bool
+     *
+     * @psalm-assert-if-true array $val
      */
     private function isClosureFactory($val)
     {

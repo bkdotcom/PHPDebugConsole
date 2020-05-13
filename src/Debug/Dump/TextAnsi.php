@@ -227,7 +227,7 @@ class TextAnsi extends Text
             $counts[ $info['visibility'] ] ++;
         }
         foreach ($counts as $vis => $count) {
-            if ($count) {
+            if ($count > 0) {
                 $str .= '    ' . $vis
                     . $this->cfg['escapeCodes']['punct'] . ':' . $this->escapeReset . ' '
                     . $this->cfg['escapeCodes']['numeric'] . $count

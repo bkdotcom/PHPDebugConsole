@@ -100,21 +100,22 @@ class Pdo extends PdoBase
     public function onDebugOutput(Event $event)
     {
         $debug = $event->getSubject();
-        $driverName = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
 
         // parse server info
         $serverInfo = $driverName !== 'sqlite'
-            ? $this->pdo->getAttribute(PDO::ATTR_SERVER_INFO)
+            ? $this->pdo->getAttribute(PdoBase::ATTR_SERVER_INFO)
             : '';
+        $matches = array();
         \preg_match_all('/([^:]+): ([a-zA-Z0-9.]+)\s*/', $serverInfo, $matches);
         $serverInfo = \array_map(function ($val) {
             return $val * 1;
         }, \array_combine($matches[1], $matches[2]));
-        $serverInfo['Version'] = $this->pdo->getAttribute(PDO::ATTR_SERVER_VERSION);
+        $serverInfo['Version'] = $this->pdo->getAttribute(PdoBase::ATTR_SERVER_VERSION);
         \ksort($serverInfo);
 
         $status = $driverName !== 'sqlite'
-            ? $this->pdo->getAttribute(PDO::ATTR_CONNECTION_STATUS)
+            ? $this->pdo->getAttribute(PdoBase::ATTR_CONNECTION_STATUS)
             : null;
 
         $debug->groupSummary(0);
@@ -251,7 +252,7 @@ class Pdo extends PdoBase
      * @param array  $driverOptions [optional] This array holds one or more key=&gt;value pairs to
      * set attribute values for the PDOStatement object that this method returns.
      *
-     * @return PDOStatement|false If the database server successfully prepares the statement,
+     * @return \PDOStatement|false If the database server successfully prepares the statement,
      * @link   http://php.net/manual/en/pdo.prepare.php
      *   PDO::prepare returns a PDOStatement object. If the database server cannot successfully prepare
      *   the statement, PDO::prepare returns FALSE or emits PDOException (depending on error handling).
@@ -266,7 +267,7 @@ class Pdo extends PdoBase
      *
      * @param string $statement The SQL statement to prepare and execute.
      *
-     * @return PDOStatement|false PDO::query returns a PDOStatement object, or `false` on failure.
+     * @return \PDOStatement|false PDO::query returns a PDOStatement object, or `false` on failure.
      * @link   http://php.net/manual/en/pdo.query.php
      */
     public function query($statement)
@@ -375,7 +376,7 @@ class Pdo extends PdoBase
      * @return mixed The result of the call
      * @throws PDOException
      */
-    protected function profileCall($method, $sql, array $args)
+    protected function profileCall($method, $sql, $args = array())
     {
         $info = new StatementInfo($sql);
         $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;

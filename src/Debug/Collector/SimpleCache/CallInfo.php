@@ -17,14 +17,14 @@ use Exception;
 /**
  * Holds information about a SimpleCache call
  *
- * @property-read integer   $duration
+ * @property-read int       $duration
  * @property-read Exception $exception
- * @property-read boolean   $isSuccess
+ * @property-read bool      $isSuccess
  * @property-read array     $keyOrKeys
- * @property-read integer   $memoryEnd
- * @property-read integer   $memoryStart
- * @property-read integer   $memoryUsage
- * @property-read method    $method
+ * @property-read int       $memoryEnd
+ * @property-read int       $memoryStart
+ * @property-read int       $memoryUsage
+ * @property-read string    $method
  * @property-read float     $timeEnd
  * @property-read float     $timeStart
  */
@@ -36,7 +36,7 @@ class CallInfo
     protected $memoryEnd;
     protected $memoryStart;
     protected $memoryUsage;
-    protected $method;
+    protected $method = '';
     protected $keyOrKeys;
     protected $timeEnd;
     protected $timeStart;

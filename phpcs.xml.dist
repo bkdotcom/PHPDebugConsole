@@ -30,7 +30,15 @@
         <exclude name="Generic.Classes.OpeningBraceSameLine.BraceOnNewLine" />
         <exclude name="Generic.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition" />
         <exclude name="Generic.CodeAnalysis.EmptyStatement.DetectedCATCH" />
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass" />
+        <!--
         <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface" />
+        -->
+
+        <!-- Allow single-line doc comments. See https://github.com/squizlabs/PHP_CodeSniffer/issues/258. -->
+        <exclude name="Generic.Commenting.DocComment.ContentAfterOpen" />
+        <exclude name="Generic.Commenting.DocComment.ContentBeforeClose" />
+
         <exclude name="Generic.Commenting.DocComment.LongNotCapital" />
         <exclude name="Generic.Commenting.DocComment.MissingShort" />
         <exclude name="Generic.Commenting.DocComment.ShortNotCapital" />
@@ -62,12 +70,23 @@
     <rule ref="PEAR.Functions.ValidDefaultValue"/>
 
     <rule ref="Squiz.Commenting">
+        <!-- BlockComment -->
         <exclude name="Squiz.Commenting.BlockComment.NoCapital" />
         <exclude name="Squiz.Commenting.BlockComment.NoEmptyLineAfter" />
         <exclude name="Squiz.Commenting.BlockComment.NoEmptyLineBefore" />
+        <exclude name="Squiz.Commenting.BlockComment.WrongStart" />
+
+        <!-- ClassComment -->
         <exclude name="Squiz.Commenting.ClassComment.ShortFullStop" />
         <exclude name="Squiz.Commenting.ClassComment.TagNotAllowed" />
+
+        <!-- ClosingDeclarationComment -->
         <exclude name="Squiz.Commenting.ClosingDeclarationComment.Missing" />
+
+        <!-- DocCommentAlignment -->
+        <!-- EmptyCatchComment -->
+
+        <!-- FileComment -->
         <exclude name="Squiz.Commenting.FileComment.AuthorTagOrder" />
         <exclude name="Squiz.Commenting.FileComment.IncorrectAuthor" />
         <exclude name="Squiz.Commenting.FileComment.IncorrectCopyright" />
@@ -78,22 +97,34 @@
         <exclude name="Squiz.Commenting.FileComment.SpacingAfterOpen" /> <!-- conflicts with PSR12 -->
         <exclude name="Squiz.Commenting.FileComment.SubpackageTagOrder" />
 
+        <!-- FunctionComment -->
         <!--
             FunctionComment refuses to acknowledge @inheritdoc
         -->
         <exclude name="Squiz.Commenting.FunctionComment" />
 
+        <!-- FunctionCommentThrowTag -->
         <exclude name="Squiz.Commenting.FunctionCommentThrowTag.Missing" />
+
+        <!-- InlineComment -->
+        <exclude name="Squiz.Commenting.InlineComment.DocBlock" />
         <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar" />
         <exclude name="Squiz.Commenting.InlineComment.NotCapital" />
         <exclude name="Squiz.Commenting.InlineComment.SpacingAfter" />
         <exclude name="Squiz.Commenting.InlineComment.SpacingBefore" />
         <exclude name="Squiz.Commenting.InlineComment.WrongStyle" />
+
+
+        <!-- LongConditionClosingComment -->
         <!--
             refuses to acknowledge @inheritdoc
         -->
         <exclude name="Squiz.Commenting.LongConditionClosingComment.Missing" />
+
+        <!-- PostStatementComment -->
         <exclude name="Squiz.Commenting.PostStatementComment.Found" />
+
+        <!-- VariableComment -->
         <exclude name="Squiz.Commenting.VariableComment.Missing" />
         <exclude name="Squiz.Commenting.VariableComment.WrongStyle" />
     </rule>

@@ -65,12 +65,11 @@ class AbstractObject
      * @param array         $hist   (@internal) array & object history
      *
      * @return Abstraction
+     * @throws RuntimeException
      */
     public function getAbstraction($obj, $method = null, $hist = array())
     {
-        $reflector = \is_string($obj) && (\class_exists($obj) || \interface_exists($obj))
-            ? new ReflectionClass($obj)
-            : new ReflectionObject($obj);
+        $reflector = $this->getReflector($obj);
         $className = $reflector->getName();
         $interfaceNames = $reflector->getInterfaceNames();
         \sort($interfaceNames);
@@ -221,7 +220,7 @@ class AbstractObject
             $this->sort($values['methods']);
         }
         return $abs
-            ->removeSubject()
+            ->setSubject(null)
             ->setValues($values);
     }
 
@@ -313,6 +312,25 @@ class AbstractObject
         return \array_reduce($config, function ($carry, $val) {
             return $carry | $val;
         }, 0);
+    }
+
+    /**
+     * Get ReflectionObject or ReflectionClass instance
+     *
+     * @param object|string $obj Object (or classname)
+     *
+     * @return ReflectionObject|ReflectionClass
+     * @throws RuntimeException
+     */
+    private function getReflector($obj)
+    {
+        if (\is_object($obj)) {
+            return new ReflectionObject($obj);
+        }
+        if (\is_string($obj) && (\class_exists($obj) || \interface_exists($obj))) {
+            return new ReflectionClass($obj);
+        }
+        throw new RuntimeException(__METHOD__ . ' expects and object, className, or interfaceName');
     }
 
     /**

@@ -43,11 +43,11 @@ class Stream
     /**
      * This constructor accepts an associative array of options.
      *
+     * - metadata: (array) Any additional metadata to return when the metadata
+     *   of the stream is accessed.
      * - size: (int) If a read stream would otherwise have an indeterminate
      *   size, but the size is known due to foreknowledge, then you can
      *   provide that size, in bytes.
-     * - metadata: (array) Any additional metadata to return when the metadata
-     *   of the stream is accessed.
      *
      * @param resource $stream  Stream resource to wrap.
      * @param array    $options Associative array of options.
@@ -123,7 +123,7 @@ class Stream
         }
         if (\is_scalar($resource)) {
             $stream = \fopen('php://temp', 'r+');
-            \fwrite($stream, $resource);
+            \fwrite($stream, (string) $resource);
             \fseek($stream, 0);
             if (\class_exists('Psr\\Http\\Message\\StreamInterface')) {
                 return new StreamInterface($stream, $options);
@@ -134,7 +134,10 @@ class Stream
             return new static($resource, $options);
         }
         if (\is_object($resource)) {
-            return self::factoryFromObject($resource);
+            $stream = self::factoryFromObject($resource, $options);
+            if ($stream !== false) {
+                return $stream;
+            }
         }
         throw new \InvalidArgumentException('Invalid resource type: ' . \gettype($resource));
     }
@@ -432,7 +435,7 @@ class Stream
      * @param object $obj     StreamInterface, static, or object with __toString()
      * @param array  $options Additional options
      *
-     * @return StreamInterface|static
+     * @return StreamInterface|static|false
      */
     private static function factoryFromObject($obj, $options)
     {
@@ -440,10 +443,12 @@ class Stream
             return $obj;
         }
         if (\get_class($obj) === __CLASS__) {
+            /** @var static */
             return $obj;
         }
         if (\method_exists($obj, '__toString')) {
             return self::factory((string) $obj, $options);
         }
+        return false;
     }
 }

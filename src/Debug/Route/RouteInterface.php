@@ -42,7 +42,7 @@ interface RouteInterface extends SubscriberInterface
      *
      * @param LogEntry $logEntry log entry instance
      *
-     * @return mixed
+     * @return mixed|void
      */
     public function processLogEntry(LogEntry $logEntry);
 }

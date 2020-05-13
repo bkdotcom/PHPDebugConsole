@@ -211,7 +211,7 @@ class StatementInfo
     /**
      * Returns the exception's code
      *
-     * @return string
+     * @return int|string
      */
     protected function getErrorCode()
     {
@@ -245,7 +245,7 @@ class StatementInfo
         $quoteRight = $quotationChars;
         $quoteLeft = $quoteRight;
         if ($len > 1) {
-            $len = \floor($len / 2);
+            $len = (int) \floor($len / 2);
             $quoteLeft = \substr($quotationChars, 0, $len);
             $quoteRight = \substr($quotationChars, $len);
         }

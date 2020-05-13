@@ -38,14 +38,17 @@ class Backtrace
      * Utilizes `xdebug_get_function_stack()` (if available) to get backtrace in shutdown phase
      * When called internally, internal frames are removed
      *
-     * @param Exception|Throwable $exception (optional) Exception from which to get backtrace
-     * @param bool                $inclArgs  (false) whether to include arguments
+     * @param \Exception|\Throwable $exception (optional) Exception from which to get backtrace
+     * @param bool                  $inclArgs  (false) whether to include arguments
      *
      * @return array|false
      */
     public static function get($exception = null, $inclArgs = false)
     {
         $backtrace = self::getBacktrace($exception, $inclArgs);
+        if (empty($backtrace)) {
+            return $backtrace;
+        }
         // keep the calling file & line, but toss the called function (what initiated trace)
         $backtrace[0]['args'] = array();
         // don't incl args passed to trace()
@@ -143,7 +146,7 @@ class Backtrace
         if ($length <= 0) {
             $length = 19;
         }
-        $sub = \floor($length  / 2);
+        $sub = (int) \floor($length  / 2);
         foreach ($backtrace as $i => $frame) {
             $backtrace[$i]['context'] = static::getFileLines(
                 $frame['file'],
@@ -188,8 +191,8 @@ class Backtrace
      * Get backtrace from either passed exception,
      * debug_backtrace or xdebug_get_function_stack
      *
-     * @param Exception|Throwable $exception (optional) Exception from which to get backtrace
-     * @param bool                $inclArgs  whether to include arguments
+     * @param \Exception|\Throwable $exception (optional) Exception from which to get backtrace
+     * @param bool                  $inclArgs  whether to include arguments
      *
      * @return array|false
      */
@@ -222,8 +225,7 @@ class Backtrace
         $backtrace = static::normalize($backtrace);
         $backtrace = static::removeInternalFrames($backtrace);
         $error = \error_get_last();
-        $isFatalError = $error && $error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR);
-        if ($isFatalError) {
+        if ($error !== null && $error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR)) {
             // xdebug_get_function_stack doesn't include the frame that triggered the error!
             $errorFileLine = array(
                 'file' => $error['file'],
@@ -362,6 +364,7 @@ class Backtrace
             Normalize File
         */
         $regex = '/^(.+)\((\d+)\) : eval\(\)\'d code$/';
+        $matches = array();
         if (\preg_match($regex, $frame['file'], $matches)) {
             // reported line = line within eval
             // line inside paren is the line `eval` is on

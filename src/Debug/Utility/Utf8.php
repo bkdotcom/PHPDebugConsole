@@ -170,7 +170,7 @@ class Utf8
      * "special" unicode-characters are displayed with the \uxxxx representation
      *
      * @param string $str     string containing binary
-     * @param string $options useHtml, sanitizeNonBinary
+     * @param array  $options useHtml, sanitizeNonBinary
      *
      * @return string
      */
@@ -450,6 +450,7 @@ class Utf8
      */
     private static function getCharType($char)
     {
+        $isSpecial = false;
         $isUtf8 = self::isOffsetUtf8($isSpecial, true);
         if ($isUtf8) {
             if ($isSpecial) {

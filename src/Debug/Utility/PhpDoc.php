@@ -38,15 +38,13 @@ class PhpDoc
     public static function getParsed($what)
     {
         $hash = self::getHash($what);
-        if (isset(self::$cache[$hash])) {
+        if ($hash !== null && isset(self::$cache[$hash])) {
             return self::$cache[$hash];
         }
-        $reflector = self::getReflector($what);
+        $reflector = null;
+        $comment = self::getCommentContent($what, $reflector);
         if ($reflector) {
             self::$reflectorStack[] = $reflector;
-            $comment = self::getCommentContent($reflector);
-        } else {
-            $comment = self::getCommentContent($what);
         }
         if (\is_array($comment)) {
             if ($reflector) {
@@ -54,36 +52,7 @@ class PhpDoc
             }
             return $comment;
         }
-        $return = array(
-            'summary' => null,
-            'desc' => null,
-        );
-        if (\preg_match('/^@/m', $comment, $matches, PREG_OFFSET_CAPTURE)) {
-            // we have tags
-            $pos = $matches[0][1];
-            $strTags = \substr($comment, $pos);
-            $return = \array_merge($return, self::parseTags($strTags));
-            // remove tags from comment
-            $comment = $pos > 0
-                ? \substr($comment, 0, $pos - 1)
-                : '';
-        }
-        /*
-            Do some string replacement
-        */
-        $comment = \preg_replace('/^\\\@/m', '@', $comment);
-        $comment = \str_replace('{@*}', '*/', $comment);
-        /*
-            split into summary & description
-            summary ends with empty whiteline or "." followed by \n
-        */
-        $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $comment, 2, PREG_SPLIT_DELIM_CAPTURE);
-        $split = \array_replace(array('','',''), $split);
-        // assume that summary and desc won't be "0"..  remove empty value and merge
-        $return = \array_merge($return, \array_filter(array(
-            'summary' => \trim($split[0] . $split[1]),    // split[1] is the ".\n"
-            'desc' => \trim($split[2]),
-        )));
+        $return = self::parseComment($comment);
         if ($hash) {
             // cache it
             self::$cache[$hash] = $return;
@@ -196,6 +165,7 @@ class PhpDoc
                 break;
             }
         }
+        $matches = array();
         \preg_match($parser['regex'], $tagStr, $matches);
         foreach ($parser['parts'] as $part) {
             $parsed[$part] = isset($matches[$part]) && $matches[$part] !== ''
@@ -203,7 +173,7 @@ class PhpDoc
                 : null;
         }
         if (isset($parser['callable'])) {
-            $parsed = \call_user_func($parser['callable'], $parsed, $tag);
+            $parsed = \call_user_func($parser['callable'], $parsed);
         }
         $parsed['desc'] = self::trimDesc($parsed['desc']);
         return $parsed;
@@ -255,20 +225,19 @@ class PhpDoc
     /**
      * Get comment contents
      *
-     * @param Reflector|string $what doc-block string, object, or reflector object
+     * @param Reflector|object|string $what      doc-block string or reflector object
+     * @param null|Reflector          $reflector set to reflector instance
      *
      * @return string|array may return array if comment contains cached inheritdoc
      */
-    private static function getCommentContent($what)
+    private static function getCommentContent($what, &$reflector)
     {
-        $reflector = null;
-        if ($what instanceof Reflector) {
-            $reflector = $what;
-            $docComment = $reflector->getDocComment();
-        } else {
-            // assume code string
-            $docComment = $what;
-        }
+        $reflector = self::getReflector($what);
+        $docComment = $reflector
+            ? \is_callable(array($reflector, 'getDocComment'))
+                ? $reflector->getDocComment()
+                : ''
+            : $what;
         // remove opening "/**" and closing "*/"
         $docComment = \preg_replace('#^/\*\*(.+)\*/$#s', '$1', $docComment);
         // remove leading "*"s
@@ -277,16 +246,15 @@ class PhpDoc
         if ($reflector) {
             if (\strtolower($docComment) === '{@inheritdoc}') {
                 return self::findInheritedDoc($reflector);
-            } else {
-                $docComment = \preg_replace_callback(
-                    '/{@inheritdoc}/i',
-                    function () use ($reflector) {
-                        $phpDoc =  self::findInheritedDoc($reflector);
-                        return $phpDoc['desc'];
-                    },
-                    $docComment
-                );
             }
+            $docComment = \preg_replace_callback(
+                '/{@inheritdoc}/i',
+                function () use ($reflector) {
+                    $phpDoc =  self::findInheritedDoc($reflector);
+                    return $phpDoc['desc'];
+                },
+                $docComment
+            );
         }
         return $docComment;
     }
@@ -340,6 +308,50 @@ class PhpDoc
     }
 
     /**
+     * Parse comment content
+     *
+     * Comment has already been stripped of comment *s
+     *
+     * @param string $comment comment content
+     *
+     * @return array
+     */
+    private static function parseComment($comment)
+    {
+        $return = array(
+            'summary' => null,
+            'desc' => null,
+        );
+        $matches = array();
+        if (\preg_match('/^@/m', $comment, $matches, PREG_OFFSET_CAPTURE)) {
+            // we have tags
+            $pos = $matches[0][1];
+            $strTags = \substr($comment, $pos);
+            $return = \array_merge($return, self::parseTags($strTags));
+            // remove tags from comment
+            $comment = $pos > 0
+                ? \substr($comment, 0, $pos - 1)
+                : '';
+        }
+        /*
+            Do some string replacement
+        */
+        $comment = \preg_replace('/^\\\@/m', '@', $comment);
+        $comment = \str_replace('{@*}', '*/', $comment);
+        /*
+            split into summary & description
+            summary ends with empty whiteline or "." followed by \n
+        */
+        $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $comment, 2, PREG_SPLIT_DELIM_CAPTURE);
+        $split = \array_replace(array('','',''), $split);
+        // assume that summary and desc won't be "0"..  remove empty value and merge
+        return \array_merge($return, \array_filter(array(
+            'summary' => \trim($split[0] . $split[1]),    // split[1] is the ".\n"
+            'desc' => \trim($split[2]),
+        )));
+    }
+
+    /**
      * Parse @method parameters
      *
      * @param string $paramStr parameter string
@@ -351,6 +363,7 @@ class PhpDoc
         $params = $paramStr
             ? self::splitParams($paramStr)
             : array();
+        $matches = array();
         foreach ($params as $i => $str) {
             \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(\S+))?$/', $str, $matches);
             $info = array(
@@ -386,9 +399,9 @@ class PhpDoc
             $value = self::parseTag($match['tag'], $value);
             if (\in_array($match['tag'], $singleTags)) {
                 $return[ $match['tag'] ] = $value;
-            } else {
-                $return[ $match['tag'] ][] = $value;
+                continue;
             }
+            $return[ $match['tag'] ][] = $value;
         }
         return $return;
     }

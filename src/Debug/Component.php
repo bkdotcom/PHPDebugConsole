@@ -19,6 +19,7 @@ abstract class Component implements ConfigurableInterface
 {
 
     protected $cfg = array();
+    protected $readOnly = array();
 
     /**
      * Magic getter
@@ -29,6 +30,9 @@ abstract class Component implements ConfigurableInterface
      */
     public function __get($prop)
     {
+        if (\array_key_exists($prop, $this->readOnly)) {
+            return $this->readOnly[$prop];
+        }
         $getter = 'get' . \ucfirst($prop);
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();

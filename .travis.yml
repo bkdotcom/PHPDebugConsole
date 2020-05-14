@@ -9,15 +9,8 @@ php:
   - 7.2
   - 7.3
   - 7.4
-  - hhvm-3.24
-  - hhvm
-  - hhvm-nightly
 matrix:
   fast_finish: true
-  allow_failures:
-    - php: hhvm-3.24
-    - php: hhvm
-    - php: hhvm-nightly
 install:
   - composer install
 before_script:
@@ -25,14 +18,7 @@ before_script:
     echo "TRAVIS_PHP_VERSION:" $TRAVIS_PHP_VERSION;
     php -v;
     php -r 'echo "PHP: ".PHP_VERSION."\n";';
-    # now added via composer's post-update-cmd
-    #if [ $(echo "$TRAVIS_PHP_VERSION >= 7.0" | bc -l) -eq 1 ]; then
-    #  composer require mindplay/middleman
-    #  composer require psr/http-server-middleware
-    #fi
-    if [ ${TRAVIS_PHP_VERSION:0:4} == "hhvm" ]; then
-      curl -sSfL -o ~/.phpenv/versions/hhvm/bin/phpunit https://phar.phpunit.de/phpunit-5.7.phar;
-    elif [ $(echo "$TRAVIS_PHP_VERSION >= 7.2" | bc -l) -eq 1 ]; then
+    if [ $(echo "$TRAVIS_PHP_VERSION >= 7.2" | bc -l) -eq 1 ]; then
       echo using PHPUnit 7.5.2
       curl -sSfL -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-7.5.2.phar;
     fi

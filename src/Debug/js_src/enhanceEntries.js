@@ -81,7 +81,7 @@ export function init ($root) {
       // console.log('expanded array', e.target)
       $strings = $(e.target).is('array-values')
         ? $(e.target).find('> li.t_string')
-        : $(e.target).find('> li > .t_string');
+        : $(e.target).find('> li > .t_string')
     }
     $strings.not('.numeric').each(function () {
       enhanceLongString($(this))

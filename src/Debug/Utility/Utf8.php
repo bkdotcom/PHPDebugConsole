@@ -327,7 +327,7 @@ class Utf8
      * Format a block of text
      *
      * @param string $str       string to output
-     * @param string $blockType "utf8", "utf8special", or "other"
+     * @param string $blockType "utf8", "utf8control", "utf8special", or "other"
      * @param array  $options   options
      *
      * @return string hidden/special chars converted to visible human-readable
@@ -343,6 +343,9 @@ class Utf8
             $str = self::dumpBlockSpecial($str);
         } elseif ($blockType === 'other' || $blockType === 'utf8control') {
             $str = self::dumpBlockOther($str, $options);
+            if (self::$options['useHtml']) {
+                $str = '<span class="binary">' . $str . '</span>';
+            }
         }
         return $str;
     }
@@ -360,6 +363,7 @@ class Utf8
         $i = 0;
         $length = \strlen($str);
         while ($i < $length) {
+            $char = '';
             $ord = self::ordUtf8($str, $i, $char);
             $ordHex = \dechex($ord);
             $ordHex = \str_pad($ordHex, 4, '0', STR_PAD_LEFT);
@@ -395,32 +399,27 @@ class Utf8
         ), $options);
         if ($options['prefix'] === false) {
             $str = \bin2hex($str);
-            $str = \trim(\chunk_split($str, 2, ' '));
-        } else {
-            $chars = \str_split($str);
-            foreach ($chars as $i => $char) {
-                $ord = \ord($char);
-                $hex = \bin2hex($char); // could use dechex($ord), but would require padding
-                if (self::$options['useHtml'] === false || !isset(self::$charDesc[$ord])) {
-                    $chars[$i] = '\x' . $hex;
-                    continue;
-                }
-                if ($ord < 0x20 || $ord === 0x7f) {
-                    // lets use the control pictures
-                    $chr = $ord === 0x7f
-                        ? "\xe2\x90\xa1"            // "del" char
-                        : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
-                    $chars[$i] = '<span class="c1-control" title="' . self::$charDesc[$ord] . ': \x' . $hex . '">' . $chr . '</span>';
-                    continue;
-                }
-                $chars[$i] = '<span title="' . self::$charDesc[$ord] . '">\x' . $hex . '</span>';
+            return \trim(\chunk_split($str, 2, ' '));
+        }
+        $chars = \str_split($str);
+        foreach ($chars as $i => $char) {
+            $ord = \ord($char);
+            $hex = \bin2hex($char); // could use dechex($ord), but would require padding
+            if (self::$options['useHtml'] === false || !isset(self::$charDesc[$ord])) {
+                $chars[$i] = '\x' . $hex;
+                continue;
             }
-            $str = \implode(' ', $chars);
+            if ($ord < 0x20 || $ord === 0x7f) {
+                // lets use the control pictures
+                $chr = $ord === 0x7f
+                    ? "\xe2\x90\xa1"            // "del" char
+                    : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
+                $chars[$i] = '<span class="c1-control" title="' . self::$charDesc[$ord] . ': \x' . $hex . '">' . $chr . '</span>';
+                continue;
+            }
+            $chars[$i] = '<span title="' . self::$charDesc[$ord] . '">\x' . $hex . '</span>';
         }
-        if (self::$options['useHtml']) {
-            $str = '<span class="binary">' . $str . '</span>';
-        }
-        return $str;
+        return \implode(' ', $chars);
     }
 
     /**

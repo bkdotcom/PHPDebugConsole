@@ -67,8 +67,7 @@
 .debug .namespace { opacity: 0.5; }
 .debug .array-inner, .debug .object-inner { display: block; margin-left: 1em; }
 .debug .classname { font-weight: bold; color: #8d0c4c; }
-.debug span.key-value { display: block; padding-left: 10px; text-indent: -10px; }
-.debug span.key-value > .t_operator { margin: 0 0.25em; }
+.debug .array-inner > li > .t_operator { margin: 0 0.25em; }
 .debug .t_object { display: inline; }
 .debug .t_object .method .parameter [title], .debug .t_object .t_identifier[title], .debug .t_object .t_stringified, .debug .t_object .t_type[title] { text-decoration: underline; }
 .debug .t_object .method.deprecated { opacity: 0.66; }

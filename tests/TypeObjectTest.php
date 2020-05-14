@@ -134,13 +134,13 @@ EOD;
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
-                            '<span class="array-inner">',
-                            "\t" . '<span class="key-value"><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">123</span></span>',
-                            "\t" . '<span class="key-value"><span class="t_key">numeric</span><span class="t_operator">=&gt;</span><span class="numeric t_string">123</span></span>',
-                            "\t" . '<span class="key-value"><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></span>',
-                            "\t" . '<span class="key-value"><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool true">true</span></span>',
-                            "\t" . '<span class="key-value"><span class="t_key">obj</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></span>',
-                            '</span><span class="t_punct">)</span></span></dd>',
+                            '<ul class="array-inner list-unstyled">',
+                            "\t" . '<li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">123</span></li>',
+                            "\t" . '<li><span class="t_key">numeric</span><span class="t_operator">=&gt;</span><span class="numeric t_string">123</span></li>',
+                            "\t" . '<li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></li>',
+                            "\t" . '<li><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool true">true</span></li>',
+                            "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></li>',
+                            '</ul><span class="t_punct">)</span></span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
                             '<dd class="property protected magic-read"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
                             '<dd class="property protected"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
@@ -495,7 +495,7 @@ EOD;
         $select = '.m_log
             > .t_object > .object-inner
             > .property
-            > .t_array .array-inner > .key-value'
+            > .t_array .array-inner > li'
             // > .t_array
             . '> .t_recursion';
         $this->assertSelectCount($select, 1, $output);

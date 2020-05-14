@@ -13,11 +13,11 @@ class TypeArrayTest extends DebugTestFramework
 		// indented with tab
         $arrayDumpHtml = <<<'EOD'
 <li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
-<span class="array-inner">
-	<span class="key-value"><span class="t_key t_int">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></span>
-	<span class="key-value"><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></span>
-	<span class="key-value"><span class="t_key t_int">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></span>
-</span><span class="t_punct">)</span></span></li>
+<ul class="array-inner list-unstyled">
+	<li><span class="t_key t_int">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
+	<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
+	<li><span class="t_key t_int">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
+</ul><span class="t_punct">)</span></span></li>
 EOD;
 		// indented with 4 spaces
 		$arrayDumpText = <<<'EOD'
@@ -39,7 +39,7 @@ EOD;
             array(
                 'log',
                 array(
-                    array('a','foo'=>'bar','c')
+                    array('a','foo' => 'bar','c')
                 ),
                 array(
                     'html' => $arrayDumpHtml,
@@ -61,12 +61,12 @@ EOD;
      */
     public function testDereferenceArray()
     {
-        $test_val = 'success';
-        $test_a = array(
-            'ref' => &$test_val,
+        $testVal = 'success';
+        $testA = array(
+            'ref' => &$testVal,
         );
-        $this->debug->log('test_a', $test_a);
-        $test_val = 'fail';
+        $this->debug->log('testA', $testA);
+        $testVal = 'fail';
         $output = $this->debug->output();
         $this->assertContains('success', $output);
     }
@@ -88,14 +88,14 @@ EOD;
             'Did not find expected recursion'
         );
         $output = $this->debug->output();
-        $test_a = array( 'foo' => 'bar' );
-        $test_a['val'] = &$test_a;
-        $this->debug->log('test_a', $test_a);
+        $testA = array( 'foo' => 'bar' );
+        $testA['val'] = &$testA;
+        $this->debug->log('testA', $testA);
         $output = $this->debug->output();
         $this->assertContains('t_recursion', $output);
         $this->testMethod(
             'log',
-            array($test_a),
+            array($testA),
             array(
                 'chromeLogger' => array(
                     array(
@@ -109,8 +109,8 @@ EOD;
                 ),
                 'firephp' => 'X-Wf-1-1-1-37: 56|[{"Type":"LOG"},{"foo":"bar","val":"array *RECURSION*"}]|',
                 'html' => function ($strHtml) {
-                    $this->assertSelectEquals('.key-value > .t_keyword', 'array', true, $strHtml);
-                    $this->assertSelectEquals('.key-value > .t_recursion', '*RECURSION*', true, $strHtml);
+                    $this->assertSelectEquals('.array-inner > li > .t_keyword', 'array', true, $strHtml);
+                    $this->assertSelectEquals('.array-inner > li > .t_recursion', '*RECURSION*', true, $strHtml);
                 },
                 'text' => array('contains' => '    [val] => array *RECURSION*'),
                 'script' => 'console.log({"foo":"bar","val":"array *RECURSION*"});',
@@ -127,14 +127,14 @@ EOD;
     public function testRecursiveArray2()
     {
         /*
-            $test_a is a circular reference
-            $test_b references $test_a
+            $testA is a circular reference
+            $testB references $testA
         */
-        $test_a = array();
-        $test_a[] = &$test_a;
-        $this->debug->log('test_a', $test_a);
-        $test_b = array('foo', &$test_a, 'bar');
-        $this->debug->log('test_b', $test_b);
+        $testA = array();
+        $testA[] = &$testA;
+        $this->debug->log('test_a', $testA);
+        $testB = array('foo', &$testA, 'bar');
+        $this->debug->log('testB', $testB);
         $output = $this->debug->output();
         $this->assertSelectCount('.t_recursion', 2, $output, 'Does not contain two recursion types');
     }

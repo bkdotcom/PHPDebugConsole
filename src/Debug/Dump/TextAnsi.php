@@ -89,6 +89,7 @@ class TextAnsi extends Text
             $val = $val['value'];
         }
         $classname = $val;
+        $matches = array();
         if (\is_array($val)) {
             list($classname, $identifier) = $val;
         } elseif (\preg_match($regex, $val, $matches)) {
@@ -259,18 +260,18 @@ class TextAnsi extends Text
      */
     protected function dumpObject(Abstraction $abs)
     {
-        $isNested = $this->valDepth > 0;
-        $this->valDepth++;
         $escapeCodes = $this->cfg['escapeCodes'];
         if ($abs['isRecursion']) {
-            $str = $escapeCodes['excluded'] . '*RECURSION*' . $this->escapeReset;
-        } elseif ($abs['isExcluded']) {
-            $str = $escapeCodes['excluded'] . 'NOT INSPECTED' . $this->escapeReset;
-        } else {
-            $str = $this->markupIdentifier($abs['className']) . "\n";
-            $str .= $this->dumpProperties($abs);
-            $str .= $this->dumpMethods($abs);
+            return $escapeCodes['excluded'] . '*RECURSION*' . $this->escapeReset;
         }
+        if ($abs['isExcluded']) {
+            return $escapeCodes['excluded'] . 'NOT INSPECTED' . $this->escapeReset;
+        }
+        $isNested = $this->valDepth > 0;
+        $this->valDepth++;
+        $str = $this->markupIdentifier($abs['className']) . "\n"
+            . $this->dumpProperties($abs)
+            . $this->dumpMethods($abs);
         $str = \trim($str);
         if ($isNested) {
             $str = \str_replace("\n", "\n    ", $str);

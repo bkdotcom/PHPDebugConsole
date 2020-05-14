@@ -383,19 +383,17 @@ class FileStreamWrapper
      */
     public function stream_open($path, $mode, $options, &$openedPath)
     {
+        if (\preg_match('/[rx]/', $mode) && \file_exists($path) === false) {
+            return false;
+        }
         static::unregister();
-        if (\strpos($mode, 'r') !== false && !\file_exists($path)) {
-            return false;
-        }
-        if (\strpos($mode, 'x') !== false && \file_exists($path)) {
-            return false;
-        }
-        if (static::shouldTransform($path, $options)) {
+        $shouldTransform = static::shouldTransform($path, $options);
+        if ($shouldTransform) {
             static::$filesTransformed[] = $path;
-            $this->resource = static::getResourceTransformed($path, $options, $openedPath);
-        } else {
-            $this->resource = static::getResource($path, $mode, $options, $openedPath);
         }
+        $this->resource = $shouldTransform
+            ? static::getResourceTransformed($path, $options, $openedPath)
+            : $this->resource = static::getResource($path, $mode, $options, $openedPath);
         static::register();
         return $this->resource !== false;
     }
@@ -566,8 +564,10 @@ class FileStreamWrapper
     {
         static::unregister();
         if (!\file_exists($path)) {
-            $result = false;
-        } elseif ($flags & STREAM_URL_STAT_QUIET) {
+            static::register();
+            return false;
+        }
+        if ($flags & STREAM_URL_STAT_QUIET) {
             /*
                 Temporary error handler to discard errors in silent mode
             */
@@ -581,11 +581,12 @@ class FileStreamWrapper
                 $result = false;
             }
             \restore_error_handler();
-        } else {
-            $result = $flags & STREAM_URL_STAT_LINK
-                ? \lstat($path)
-                : \stat($path);
+            static::register();
+            return $result;
         }
+        $result = $flags & STREAM_URL_STAT_LINK
+            ? \lstat($path)
+            : \stat($path);
         static::register();
         return $result;
     }

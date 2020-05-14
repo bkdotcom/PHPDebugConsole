@@ -34,6 +34,7 @@ class Html extends Base
      *
      * @param mixed             $val     value to dump
      * @param array             $opts    options for string values
+     *                                     addQuotes, sanitize, visualWhitespace
      * @param string|false|null $tagName (span) tag to wrap value in (or false)
      *
      * @return string
@@ -299,34 +300,26 @@ class Html extends Base
     protected function dumpArray($array)
     {
         if (empty($array)) {
-            $html = '<span class="t_keyword">array</span>'
+            return '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">()</span>';
-        } else {
-            $showKeys = $this->debug->getCfg('arrayShowListKeys') || !$this->debug->utility->arrayIsList($array);
-            $html = '<span class="t_keyword">array</span>'
-                . '<span class="t_punct">(</span>' . "\n";
-            if ($showKeys) {
-                $html .= '<span class="array-inner">' . "\n";
-                foreach ($array as $key => $val) {
-                    $html .= "\t" . '<span class="key-value">'
-                            . '<span class="t_key' . (\is_int($key) ? ' t_int' : '') . '">'
-                                . $this->dump($key, array(), null) // don't wrap it
-                            . '</span>'
-                            . '<span class="t_operator">=&gt;</span>'
-                            . $this->dump($val)
-                        . '</span>' . "\n";
-                }
-                $html .= '</span>';
-            } else {
-                // display as list
-                $html .= '<ul class="array-inner list-unstyled">' . "\n";
-                foreach ($array as $val) {
-                    $html .= $this->dump($val, array(), 'li');
-                }
-                $html .= '</ul>';
-            }
-            $html .= '<span class="t_punct">)</span>';
         }
+        $showKeys = $this->debug->getCfg('arrayShowListKeys') || !$this->debug->utility->arrayIsList($array);
+        $html = '<span class="t_keyword">array</span>'
+            . '<span class="t_punct">(</span>' . "\n"
+            . '<ul class="array-inner list-unstyled' . ($showKeys ? '' : 'array-values') . '">' . "\n";
+        foreach ($array as $key => $val) {
+            $html .= $showKeys
+                ? "\t" . '<li>'
+                    . '<span class="t_key' . (\is_int($key) ? ' t_int' : '') . '">'
+                        . $this->dump($key, array(), null) // don't wrap it
+                    . '</span>'
+                    . '<span class="t_operator">=&gt;</span>'
+                    . $this->dump($val)
+                . '</li>' . "\n"
+                : "\t" . $this->dump($val, array(), 'li');
+        }
+        $html .= '</ul>'
+            . '<span class="t_punct">)</span>';
         return $html;
     }
 

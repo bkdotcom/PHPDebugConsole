@@ -204,17 +204,17 @@ class Text extends Base
      */
     protected function dumpObject(Abstraction $abs)
     {
+        if ($abs['isRecursion']) {
+            return $abs['className'] . ' *RECURSION*';
+        }
+        if ($abs['isExcluded']) {
+            return $abs['className'] . ' NOT INSPECTED';
+        }
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
-        if ($abs['isRecursion']) {
-            $str = $abs['className'] . ' *RECURSION*';
-        } elseif ($abs['isExcluded']) {
-            $str = $abs['className'] . ' NOT INSPECTED';
-        } else {
-            $str = $abs['className'] . "\n";
-            $str .= $this->dumpProperties($abs);
-            $str .= $this->dumpMethods($abs);
-        }
+        $str = $abs['className'] . "\n"
+            . $this->dumpProperties($abs)
+            . $this->dumpMethods($abs);
         $str = \trim($str);
         if ($isNested) {
             $str = \str_replace("\n", "\n    ", $str);

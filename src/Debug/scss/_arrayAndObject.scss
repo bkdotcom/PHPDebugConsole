@@ -19,18 +19,28 @@ $color-static: #00529b;
   color: $color-classname;
 }
 
-span.key-value {
-  display: block;
-  padding-left: 10px;
-  text-indent: -10px;
-  // :nth-child(-n+2) {
-  //   first two elements (_key & t_operator)
-  //   white-space: nowrap;
+.array-inner {
+  //
+  // Old
+  //
+  // span.key-value {
+  //   display: block;
+  //   padding-left: 10px;
+  //   text-indent: -10px;
+  //   > .t_operator {
+  //     margin: 0 0.25em;
+  //   }
   // }
-  > .t_operator {
-    margin: 0 0.25em;
+  //
+  // New
+  //
+  > li {
+    > .t_operator {
+      margin: 0 0.25em;
+    }
   }
 }
+
 .t_object {
   display: inline;
 

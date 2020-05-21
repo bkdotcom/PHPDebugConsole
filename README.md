@@ -32,7 +32,7 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
 ```json
 {
     "require": {
-        "bdk/debug": "^2.0",
+        "bdk/debug": "~3.0",
     }
 }
 ```

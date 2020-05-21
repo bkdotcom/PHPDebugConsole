@@ -49,9 +49,9 @@ class Backtrace
         if (empty($backtrace)) {
             return $backtrace;
         }
-        // keep the calling file & line, but toss the called function (what initiated trace)
-        $backtrace[0]['args'] = array();
         // don't incl args passed to trace()
+        $backtrace[0]['args'] = array();
+        // keep the calling file & line, but toss the called function (what initiated trace)
         unset($backtrace[0]['function']);
         return $backtrace;
     }

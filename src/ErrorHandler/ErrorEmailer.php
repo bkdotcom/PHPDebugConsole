@@ -327,7 +327,7 @@ class ErrorEmailer implements SubscriberInterface
 
     /**
      * Remove errors in throttleData that haven't occured recently
-     * If error(s) have occured since they were last emailed, a summary email will be sent
+     * If error(s) have occured since they were last emailed, a summary email may be sent
      *
      * @return void
      */

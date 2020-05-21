@@ -29,8 +29,9 @@
 		"classmap": ["tests"]
 	},
 	"replace": {
-		"bdk/errorhandler": "self.version",
-		"bdk/pubsub": "self.version"
+		"bdk/backtrace": "1.0",
+		"bdk/errorhandler": "3.0",
+		"bdk/pubsub": "2.3.1"
 	},
 	"require": {
 		"php": ">=5.4.0"

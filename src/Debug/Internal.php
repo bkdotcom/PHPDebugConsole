@@ -692,6 +692,8 @@ class Internal implements SubscriberInterface
      * @param Event                 $event Event instance
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
     private function onCfgRoute($route, Event $event)
     {
@@ -712,14 +714,6 @@ class Internal implements SubscriberInterface
         }
         if ($route instanceof RouteInterface) {
             $this->debug->addPlugin($route);
-            /*
-            $classname = \get_class($route);
-            $prefix = __NAMESPACE__ . '\\Route\\';
-            if (\strpos($classname, $prefix) === 0) {
-                $prop = 'route' . \substr($classname, \strlen($prefix));
-                $event['debug'][$prop] = $route;
-            }
-            */
             $event['debug']['route'] = $route;
         }
     }

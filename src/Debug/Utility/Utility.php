@@ -520,6 +520,8 @@ class Utility
         if (\preg_match('#(://|[\r\n\x00])#', $val) !== 1) {
             return false;
         }
+        // ocassionaly get `is_file() expects parameter 1 to be a valid path, string given`
+        // don't know why
         return \is_file($val);
     }
 

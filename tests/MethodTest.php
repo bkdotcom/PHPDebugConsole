@@ -2158,7 +2158,7 @@ EOD;
                         });
                         return $row;
                     }, $this->debug->getData('log/0/args/0'));
-                    $expect = 'trace = ' . $this->debug->dumpText->dump($trace);
+                    $expect = 'trace = ' . $this->debug->getDump('text')->dump($trace);
                     $this->assertNotEmpty($trace);
                     $this->assertSame($expect, trim($logEntry));
                 },

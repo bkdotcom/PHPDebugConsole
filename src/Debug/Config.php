@@ -34,7 +34,7 @@ class Config
     {
         $this->debug = $debug;
         $this->valuesPending['errorEmailer']['emailBacktraceDumper'] = function ($backtrace) use ($debug) {
-            return $debug->dumpText->dump($backtrace);
+            return $debug->getDump('text')->dump($backtrace);
         };
     }
 
@@ -208,7 +208,7 @@ class Config
         if ($forInit) {
             return array();
         }
-        if (isset($this->debug->{$debugProp}) || $this->debug->$debugProp) {
+        if (isset($this->debug->{$debugProp}) || $this->debug->{$debugProp}) {
             $path = \implode('/', $path);
             return $this->debug->{$debugProp}->getCfg($path);
         }
@@ -339,7 +339,12 @@ class Config
     {
         $serviceVal = $this->debug->getCfg('services/' . $debugProp, Debug::CONFIG_DEBUG);
         $hasInitService = $serviceVal !== null && !($serviceVal instanceof \Closure);
-        $isset = isset($this->debug->{$debugProp});
+        $isset = isset($this->debug->{$debugProp});  // isset does not call __get
+        if (\substr($debugProp, 0, 4) === 'dump') {
+            $isset = $this->debug->getDump(\substr($debugProp, 4), true);
+        } elseif (\substr($debugProp, 0, 5) === 'route') {
+            $isset = $this->debug->getRoute(\substr($debugProp, 5), true);
+        }
         if (($hasInitService || $isset) && \is_object($this->debug->{$debugProp})) {
             $return = \array_intersect_key($this->debug->{$debugProp}->getCfg(), $cfg);
             $this->debug->{$debugProp}->setCfg($cfg);

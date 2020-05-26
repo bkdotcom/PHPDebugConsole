@@ -360,7 +360,7 @@ class Html extends Base
     protected function dumpConst(Abstraction $abs)
     {
         $this->argAttribs['title'] = $abs['value']
-            ? 'value: ' . $this->debug->dumpText->dump($abs['value'])
+            ? 'value: ' . $this->debug->getDump('text')->dump($abs['value'])
             : null;
         return $this->markupIdentifier($abs['name']);
     }

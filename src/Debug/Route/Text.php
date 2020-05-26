@@ -28,7 +28,7 @@ class Text extends Base
     {
         parent::__construct($debug);
         if (!$this->dump) {
-            $this->dump = $debug->dumpText;
+            $this->dump = $debug->getDump('text');
         }
     }
 }

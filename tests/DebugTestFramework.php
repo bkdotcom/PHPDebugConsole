@@ -178,7 +178,7 @@ class DebugTestFramework extends DOMTestCase
             $refProperties['channels'] = $channelProp;
         }
         if (!isset($refProperties['textDepth'])) {
-            $depthRef = new \ReflectionProperty($this->debug->dumpText, 'depth');
+            $depthRef = new \ReflectionProperty($this->debug->getDump('text'), 'depth');
             $depthRef->setAccessible(true);
             $refProperties['textDepth'] = $depthRef;
         }
@@ -188,7 +188,7 @@ class DebugTestFramework extends DOMTestCase
             $refProperties['registeredPlugins'] = $registeredPluginsRef;
         }
         $refProperties['channels']->setValue($this->debug, array());
-        $refProperties['textDepth']->setValue($this->debug->dumpText, 0);
+        $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
         $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
         $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
         // unset($_SERVER['REQUEST_METHOD']);
@@ -311,11 +311,10 @@ class DebugTestFramework extends DOMTestCase
             }
             if ($test === 'streamAnsi') {
                 // $routeObj = new \bdk\Debug\Route\Stream($this->debug);
-                $routeObj = $this->debug->routeStream;
+                $routeObj = $this->debug->getRoute('stream');
                 $routeObj->setCfg('stream', 'php://temp');
             } else {
-                $prop = 'route' . \ucfirst($test);
-                $routeObj = $this->debug->{$prop};
+                $routeObj = $this->debug->getRoute($test);
             }
             if (\in_array($test, array('chromeLogger','firephp'))) {
                 // remove data - sans the logEntry we're interested in

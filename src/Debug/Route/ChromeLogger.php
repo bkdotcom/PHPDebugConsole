@@ -63,7 +63,7 @@ class ChromeLogger extends Base
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->dump = $debug->dumpBase;
+        $this->dump = $debug->getDump('base');
     }
 
     /**

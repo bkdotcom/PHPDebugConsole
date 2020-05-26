@@ -12,8 +12,10 @@
 
 namespace bdk\Debug;
 
+use bdk\Backtrace;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\Utility\FileStreamWrapper;
 use bdk\PubSub\Event;
@@ -39,6 +41,7 @@ class Internal implements SubscriberInterface
      * @var array
      */
     private $cfg = array(
+        'collect' => false,
         'redactKeys' => array(),
         'redactReplace' => null,
     );
@@ -78,6 +81,61 @@ class Internal implements SubscriberInterface
             );
         }
         $this->debug->eventManager->addSubscriberInterface($this);
+    }
+
+    /**
+     * Append logEntry
+     * Adds default arguments and "stringifies"
+     *
+     * @param LogEntry $logEntry [description]
+     *
+     * @return void
+     */
+    public function doGroup(LogEntry $logEntry)
+    {
+        if (!$logEntry['args']) {
+            // give a default label
+            $logEntry['args'] = array( 'group' );
+            $caller = $this->debug->backtrace->getCallerInfo(0, Backtrace::INCL_ARGS);
+            $args = $this->doGroupAutoArgs($caller);
+            if ($args) {
+                $logEntry['args'] = $args;
+                $logEntry->setMeta('isFuncName', true);
+            }
+        }
+        $this->doGroupStringify($logEntry);
+        $this->debug->log($logEntry);
+    }
+
+    /**
+     * Log timeEnd() and timeGet()
+     *
+     * @param float|false $elapsed  elapsed time in seconds
+     * @param LogEntry    $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    public function doTime($elapsed, LogEntry $logEntry)
+    {
+        $meta = $logEntry['meta'];
+        if ($meta['silent']) {
+            return;
+        }
+        $label = isset($logEntry['args'][0])
+            ? $logEntry['args'][0]
+            : 'time';
+        $str = $elapsed === false
+            ? 'Timer \'' . $label . '\' does not exist'
+            : \strtr($meta['template'], array(
+                '%label' => $label,
+                '%time' => $this->debug->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']),
+            ));
+        $this->debug->log(new LogEntry(
+            $this->debug,
+            'time',
+            array($str),
+            \array_diff_key($meta, \array_flip(array('precision','silent','template','unit')))
+        ));
     }
 
     /**
@@ -381,7 +439,7 @@ class Internal implements SubscriberInterface
     {
         $cfg = $event->getValues();
         if (isset($cfg['routeStream']['stream'])) {
-            $this->debug->addPlugin($this->debug->routeStream);
+            $this->debug->addPlugin($this->debug->getRoute('stream'));
         }
         if (empty($cfg['debug'])) {
             // no debug config values have changed
@@ -395,9 +453,7 @@ class Internal implements SubscriberInterface
             'redactReplace' => function ($val) {
                 $this->cfg['redactReplace'] = $val;
             },
-            'route' => function ($val, Event $event) {
-                $event['debug']['route'] = $this->setRoute($val);
-            },
+            'route' => array($this, 'onCfgRoute'),
         );
         foreach ($valActions as $key => $callable) {
             if (isset($cfg[$key])) {
@@ -489,6 +545,74 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Automatic group/groupCollapsed arguments
+     *
+     * @param array $caller CallerInfo
+     *
+     * @return array
+     */
+    private function doGroupAutoArgs($caller = array())
+    {
+        $args = array();
+        if (isset($caller['function']) === false) {
+            return $args;
+        }
+        // default args if first call inside function... and debugGroup is likely first call
+        $function = null;
+        $callerStartLine = 1;
+        if ($caller['class']) {
+            $refClass = new \ReflectionClass($caller['class']);
+            $refMethod = $refClass->getMethod($caller['function']);
+            $callerStartLine = $refMethod->getStartLine();
+            $function = $caller['class'] . $caller['type'] . $caller['function'];
+        } elseif (!\in_array($caller['function'], array('include', 'include_once', 'require', 'require_once'))) {
+            $refFunction = new \ReflectionFunction($caller['function']);
+            $callerStartLine = $refFunction->getStartLine();
+            $function = $caller['function'];
+        }
+        if ($function && $caller['line'] <= $callerStartLine + 2) {
+            $args[] = $function;
+            $args = \array_merge($args, $caller['args']);
+        }
+        return $args;
+    }
+
+    /**
+     * Use string representation for group args if available
+     *
+     * @param LogEntry $logEntry Log entry
+     *
+     * @return void
+     */
+    private function doGroupStringify(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        $abstracter = $this->debug->abstracter;
+        foreach ($args as $k => $v) {
+            /*
+                doGroupStringify is called before appendLog.
+                values have not yet been abstracted.
+                abstract now
+            */
+            $absInfo = $abstracter->needsAbstraction($v);
+            if ($absInfo) {
+                $v = $abstracter->getAbstraction($v, $logEntry['method'], $absInfo);
+                $args[$k] = $v;
+            }
+            if ($abstracter->isAbstraction($v, 'object') === false) {
+                continue;
+            }
+            if ($v['stringified']) {
+                $v = $v['stringified'];
+            } elseif (isset($v['methods']['__toString']['returnValue'])) {
+                $v = $v['methods']['__toString']['returnValue'];
+            }
+            $args[$k] = $v;
+        }
+        $logEntry['args'] = $args;
+    }
+
+    /**
      * Test $_REQUEST['debug'] against passed configured key
      * Update collect & output values based on key value
      *
@@ -561,6 +685,46 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Set route value
+     * instantiate object if necessary & addPlugin if not already subscribed
+     *
+     * @param RouteInterface|string $route RouteInterface instance, or (short) classname
+     * @param Event                 $event Event instance
+     *
+     * @return void
+     */
+    private function onCfgRoute($route, Event $event)
+    {
+        if ($this->isBootstraped) {
+            /*
+                Only need to worry about previous route if we're bootstrapped
+                There can only be one 'route' at a time:
+                If multiple output routes are desired, use debug->addPlugin()
+                unsubscribe current OutputInterface
+            */
+            $routePrev = $this->debug->getCfg('route');
+            if (\is_object($routePrev)) {
+                $this->debug->removePlugin($routePrev);
+            }
+        }
+        if (\is_string($route) && $route !== 'auto') {
+            $route = $this->debug->getRoute($route);
+        }
+        if ($route instanceof RouteInterface) {
+            $this->debug->addPlugin($route);
+            /*
+            $classname = \get_class($route);
+            $prefix = __NAMESPACE__ . '\\Route\\';
+            if (\strpos($classname, $prefix) === 0) {
+                $prop = 'route' . \substr($classname, \strlen($prefix));
+                $event['debug'][$prop] = $route;
+            }
+            */
+            $event['debug']['route'] = $route;
+        }
+    }
+
+    /**
      * Build Regex that will search for key=val in string
      *
      * @param string $key key to redact
@@ -608,44 +772,5 @@ class Internal implements SubscriberInterface
             }, $val);
         }
         return $val;
-    }
-
-    /**
-     * Set route value
-     * instantiate object if necessary & addPlugin if not already subscribed
-     *
-     * @param RouteInterface|string $route RouteInterface instance, or (short) classname
-     *
-     * @return RouteInterface|string
-     */
-    private function setRoute($route)
-    {
-        if ($this->isBootstraped) {
-            /*
-                Only need to wory about previous route if we're bootstrapped
-                There can only be one 'route' at a time:
-                If multiple output routes are desired, use debug->addPlugin()
-                unsubscribe current OutputInterface
-            */
-            $routePrev = $this->debug->getCfg('route');
-            if (\is_object($routePrev)) {
-                $this->debug->removePlugin($routePrev);
-            }
-        }
-        if (\is_string($route) && $route !== 'auto') {
-            $prop = 'route' . \ucfirst($route);
-            $route = $this->debug->{$prop};
-        }
-        if ($route instanceof RouteInterface) {
-            $this->debug->addPlugin($route);
-            $classname = \get_class($route);
-            $prefix = __NAMESPACE__ . '\\Route\\';
-            if (\strpos($classname, $prefix) === 0) {
-                $prop = 'route' . \substr($classname, \strlen($prefix));
-                $this->debug->{$prop} = $route;
-            }
-            return $route;
-        }
-        return 'auto';
     }
 }

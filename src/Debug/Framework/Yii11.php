@@ -189,7 +189,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             // let's embolden the primary files
             $root = \realpath(YII_PATH . '/..');
             $regex = '#(<span class="file t_string">)(.*?)(</span>)#';
-            $html = $debug->dumpHtml->processLogEntry($logEntry);
+            $html = $debug->getDump('html')->processLogEntry($logEntry);
             $html = \preg_replace_callback($regex, function ($matches) use ($debug, $root) {
                 $filepath = $matches[2];
                 $filepathRel = \str_replace($root, '.', $filepath);

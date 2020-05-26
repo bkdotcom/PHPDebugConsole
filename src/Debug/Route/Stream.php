@@ -38,7 +38,7 @@ class Stream extends Base
     {
         parent::__construct($debug);
         if (!$this->dump) {
-            $this->dump = $debug->dumpText;
+            $this->dump = $debug->getDump('text');
         }
     }
 
@@ -149,8 +149,8 @@ class Stream extends Base
             return;
         }
         $this->dump = $this->ansiCheck()
-            ? $this->debug->dumpTextAnsi
-            : $this->debug->dumpText;
+            ? $this->debug->getDump('textAnsi')
+            : $this->debug->getDump('text');
     }
 
     /**

@@ -48,7 +48,7 @@ class Html extends Base
             'outputScript' => true,
             'sidebar' => true,
         );
-        $this->dump = $debug->dumpHtml;
+        $this->dump = $debug->getDump('html');
     }
 
     /**

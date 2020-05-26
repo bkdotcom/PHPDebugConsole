@@ -15,12 +15,12 @@
 
 namespace bdk;
 
-use bdk\Backtrace;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Route\RouteInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -276,7 +276,7 @@ class Debug
             return $val;
         }
         /*
-            Allow read-only access to private/protected properties
+            "Read-only" properties
         */
         if (\array_key_exists($property, $this->readOnly)) {
             return $this->readOnly[$property];
@@ -288,28 +288,7 @@ class Debug
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }
-        $classname = null;
-        if (\strpos($property, 'route') === 0) {
-            $classname = 'bdk\\Debug\\Route\\' . \substr($property, 5);
-        }
-        if (\strpos($property, 'dump') === 0) {
-            $classname = 'bdk\\Debug\\Dump\\' . \substr($property, 4);
-        }
-        if (\class_exists($classname)) {
-            $val = new $classname($this);
-            if ($val instanceof ConfigurableInterface) {
-                $val->setCfg($this->config->get($property, self::CONFIG_INIT));
-            }
-            $this->{$property} = $val;
-            return $val;
-        }
-        $caller = $this->backtrace->getCallerInfo();
-        $this->errorHandler->handleError(
-            E_USER_NOTICE,
-            'property "' . $property . '" is not accessible',
-            $caller['file'],
-            $caller['line']
-        );
+        return null;
     }
 
     /*
@@ -941,7 +920,7 @@ class Debug
         if ($floats) {
             $duration = \reset($floats);
             $logEntry['args'] = array($label);
-            $this->doTime($duration, $logEntry);
+            $this->internal->doTime($duration, $logEntry);
             return;
         }
         if (isset($label)) {
@@ -1018,7 +997,7 @@ class Debug
                 null,  // "pause" the timer
             );
         }
-        $this->doTime($ret, $logEntry);
+        $this->internal->doTime($ret, $logEntry);
         return $ret;
     }
 
@@ -1089,7 +1068,7 @@ class Debug
         if ($microT) {
             $elapsed += \microtime(true) - $microT;
         }
-        $this->doTime($elapsed, $logEntry);
+        $this->internal->doTime($elapsed, $logEntry);
         return $elapsed;
     }
 
@@ -1241,7 +1220,7 @@ class Debug
         $isPlugin = false;
         if ($plugin instanceof AssetProviderInterface) {
             $isPlugin = true;
-            $this->readOnly['rootInstance']->routeHtml->addAssetProvider($plugin);
+            $this->readOnly['rootInstance']->getRoute('html')->addAssetProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
             $isPlugin = true;
@@ -1399,6 +1378,22 @@ class Debug
     }
 
     /**
+     * Get dumper
+     *
+     * @param string $name      classname
+     * @param bool   $checkOnly (false) only check if initialized
+     *
+     * @return \bdk\Debug\Dump\Base|bool
+     *
+     * @psalm-return ($checkOnly is true ? bool : \bdk\Debug\Dump\Base)
+     */
+    public function getDump($name, $checkOnly = false)
+    {
+        /** @var \bdk\Debug\Dump\Base|bool */
+        return $this->getDumpRoute('dump', $name, $checkOnly);
+    }
+
+    /**
      * Get and clear headers that need to be output
      *
      * @return array headerName=>value array
@@ -1426,6 +1421,22 @@ class Debug
             self::$instance->setCfg($cfg);
         }
         return self::$instance;
+    }
+
+    /**
+     * Get route
+     *
+     * @param string $name      classname
+     * @param bool   $checkOnly (false) only check if initialized
+     *
+     * @return RouteInterface|bool
+     *
+     * @psalm-return ($checkOnly is true ? bool : RouteInterface)
+     */
+    public function getRoute($name, $checkOnly = false)
+    {
+        /** @var RouteInterface|bool */
+        return $this->getDumpRoute('route', $name, $checkOnly);
     }
 
     /**
@@ -1496,24 +1507,21 @@ class Debug
         if (!$cfg) {
             return;
         }
-        foreach (array('logEnvInfo','logRequestInfo') as $name) {
-            if (!isset($cfg[$name])) {
-                continue;
+        $valActions = array(
+            'route' => array($this, 'onCfgRoute'),
+            'logEnvInfo' => array($this, 'onCfgList'),
+            'logRequestInfo' => array($this, 'onCfgList'),
+            'logServerKeys' => function ($val) {
+                // don't append, replace
+                $this->cfg['logServerKeys'] = array();
+                return $val;
+            },
+        );
+        foreach ($valActions as $key => $callable) {
+            if (isset($cfg[$key])) {
+                /** @psalm-suppress TooManyArguments */
+                $cfg[$key] = $callable($cfg[$key], $key);
             }
-            $allKeys = \array_keys($this->cfg[$name]);
-            $val = $cfg[$name];
-            if (\is_bool($val)) {
-                $cfg[$name] = \array_fill_keys($allKeys, $val);
-            } elseif ($this->utility->arrayIsList($val)) {
-                $cfg[$name] = \array_merge(
-                    \array_fill_keys($allKeys, false),
-                    \array_fill_keys($val, true)
-                );
-            }
-        }
-        if (isset($cfg['logServerKeys'])) {
-            // don't append, replace
-            $this->cfg['logServerKeys'] = array();
         }
         $this->cfg = $this->utility->arrayMergeDeep($this->cfg, $cfg);
         /*
@@ -1584,7 +1592,7 @@ class Debug
     {
         $this->registeredPlugins->detach($plugin);
         if ($plugin instanceof AssetProviderInterface) {
-            $this->readOnly['rootInstance']->routeHtml->removeAssetProvider($plugin);
+            $this->readOnly['rootInstance']->getRoute('html')->removeAssetProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
             $this->eventManager->RemoveSubscriberInterface($plugin);
@@ -1853,118 +1861,10 @@ class Debug
             'channel' => $this,
             'collect' => $this->cfg['collect'],
         );
-        if (!$this->cfg['collect']) {
+        if ($this->cfg['collect'] === false) {
             return;
         }
-        if (!$logEntry['args']) {
-            // give a default label
-            $logEntry['args'] = array( 'group' );
-            $caller = $this->backtrace->getCallerInfo(0, Backtrace::INCL_ARGS);
-            $args = $this->doGroupAutoArgs($caller);
-            if ($args) {
-                $logEntry['args'] = $args;
-                $logEntry->setMeta('isFuncName', true);
-            }
-        }
-        $this->doGroupStringify($logEntry);
-        $this->appendLog($logEntry);
-    }
-
-    /**
-     * Automatic group/groupCollapsed arguments
-     *
-     * @param array $caller CallerInfo
-     *
-     * @return array
-     */
-    private function doGroupAutoArgs($caller = array())
-    {
-        $args = array();
-        if (isset($caller['function'])) {
-            // default args if first call inside function... and debugGroup is likely first call
-            $function = null;
-            $callerStartLine = 1;
-            if ($caller['class']) {
-                $refClass = new \ReflectionClass($caller['class']);
-                $refMethod = $refClass->getMethod($caller['function']);
-                $callerStartLine = $refMethod->getStartLine();
-                $function = $caller['class'] . $caller['type'] . $caller['function'];
-            } elseif (!\in_array($caller['function'], array('include', 'include_once', 'require', 'require_once'))) {
-                $refFunction = new \ReflectionFunction($caller['function']);
-                $callerStartLine = $refFunction->getStartLine();
-                $function = $caller['function'];
-            }
-            if ($function && $caller['line'] <= $callerStartLine + 2) {
-                $args[] = $function;
-                $args = \array_merge($args, $caller['args']);
-            }
-        }
-        return $args;
-    }
-
-    /**
-     * Use string representation for group args if available
-     *
-     * @param LogEntry $logEntry Log entry
-     *
-     * @return void
-     */
-    private function doGroupStringify(LogEntry $logEntry)
-    {
-        $args = $logEntry['args'];
-        foreach ($args as $k => $v) {
-            /*
-                doGroupStringify is called before appendLog.
-                values have not yet been abstracted.
-                abstract now
-            */
-            $absInfo = $this->abstracter->needsAbstraction($v);
-            if ($absInfo) {
-                $v = $this->abstracter->getAbstraction($v, $logEntry['method'], $absInfo);
-                $args[$k] = $v;
-            }
-            if (!$this->abstracter->isAbstraction($v, 'object')) {
-                continue;
-            }
-            if ($v['stringified']) {
-                $v = $v['stringified'];
-            } elseif (isset($v['methods']['__toString']['returnValue'])) {
-                $v = $v['methods']['__toString']['returnValue'];
-            }
-            $args[$k] = $v;
-        }
-        $logEntry['args'] = $args;
-    }
-
-    /**
-     * Log timeEnd() and timeGet()
-     *
-     * @param float|false $elapsed  elapsed time in seconds
-     * @param LogEntry    $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    protected function doTime($elapsed, LogEntry $logEntry)
-    {
-        $meta = $logEntry['meta'];
-        if ($meta['silent']) {
-            return;
-        }
-        $label = isset($logEntry['args'][0])
-            ? $logEntry['args'][0]
-            : 'time';
-        $str = $elapsed === false
-            ? 'Timer \'' . $label . '\' does not exist'
-            : \strtr($meta['template'], array(
-                '%label' => $label,
-                '%time' => $this->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']),
-            ));
-        $this->appendLog(new LogEntry(
-            $this,
-            'time',
-            array($str),
-            \array_diff_key($meta, \array_flip(array('precision','silent','template','unit')))
-        ));
+        $this->internal->doGroup($logEntry);
     }
 
     /**
@@ -2071,6 +1971,45 @@ class Debug
     }
 
     /**
+     * Get Dump or Route instance
+     *
+     * @param 'dump'|'route' $cat       "Category" (dump or route)
+     * @param string         $name      html, text, etc)
+     * @param bool           $checkOnly Only check if initialized?
+     *
+     * @return \bdk\Debug\Dump\Base|RouteInterface|bool
+     *
+     * @psalm-return ($checkOnly is true ? bool : \bdk\Debug\Dump\Base|RouteInterface)
+     */
+    private function getDumpRoute($cat, $name, $checkOnly)
+    {
+        $property = $cat . \ucfirst($name);
+        $isset = isset($this->readOnly[$property]);
+        if ($checkOnly) {
+            return $isset;
+        }
+        if ($isset) {
+            return $this->readOnly[$property];
+        }
+        $classname = 'bdk\\Debug\\' . \ucfirst($cat) . '\\' . \ucfirst($name);
+        if (\class_exists($classname)) {
+            $val = new $classname($this);
+            if ($val instanceof ConfigurableInterface) {
+                $val->setCfg($this->config->get($property, self::CONFIG_INIT));
+            }
+            $this->readOnly[$property] = $val;
+            return $val;
+        }
+        $caller = $this->backtrace->getCallerInfo();
+        $this->errorHandler->handleError(
+            E_USER_NOTICE,
+            '"' . $property . '" is not accessible',
+            $caller['file'],
+            $caller['line']
+        );
+    }
+
+    /**
      * Get Method's default argument list
      *
      * @param string $methodName Name of the method
@@ -2149,6 +2088,52 @@ class Debug
             return 1;
         }
         return 0;
+    }
+
+    /**
+     * Convert logEnvInfo & logRequestInfo values to key=>value arrays
+     *
+     * @param mixed  $val  value
+     * @param string $name 'logEnvInfo'|'logRequestInfo'
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgList($val, $name)
+    {
+        $allKeys = \array_keys($this->cfg[$name]);
+        if (\is_bool($val)) {
+            $val = \array_fill_keys($allKeys, $val);
+        } elseif ($this->utility->arrayIsList($val)) {
+            $val = \array_merge(
+                \array_fill_keys($allKeys, false),
+                \array_fill_keys($val, true)
+            );
+        }
+        return $val;
+    }
+
+    /**
+     * If "core" route, store in readonly property
+     *
+     * @param mixed $val route value
+     *
+     * @return mixed
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgRoute($val)
+    {
+        if ($val instanceof RouteInterface) {
+            $classname = \get_class($val);
+            $prefix = __NAMESPACE__ . '\\Debug\\Route\\';
+            if (\strpos($classname, $prefix) === 0) {
+                $prop = 'route' . \substr($classname, \strlen($prefix));
+                $this->readOnly[$prop] = $val;
+            }
+        }
+        return $val;
     }
 
     /**

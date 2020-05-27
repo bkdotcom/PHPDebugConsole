@@ -135,10 +135,18 @@ class ConfigTest extends DebugTestFramework
     public function testPending()
     {
         $debug = new Debug();
+
         $this->assertTrue($debug->getCfg('collectMethods'));
         $debug->setCfg('collectMethods', false);
         $this->assertFalse($debug->getCfg('collectMethods'));
         $debug->abstracter;
         $this->assertFalse($debug->abstracter->getCfg('collectMethods'));
+
+        // routeHtml should not yet be loaded
+        $this->assertFalse($debug->getRoute('html', true));
+        // getting filepathScript should load routeHtml
+        $filepathScript = $debug->getCfg('filepathScript');
+        $this->assertInternalType('string', $filepathScript);
+        $this->assertTrue($debug->getRoute('html', true));
     }
 }

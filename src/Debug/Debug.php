@@ -1284,7 +1284,7 @@ class Debug
         }
         $config = \array_merge(array('nested' => true), $config);
         if (!isset($this->channels[$name])) {
-            $cfg = $this->getCfg();
+            $cfg = $this->getCfg(null, self::CONFIG_INIT);
             $cfg = $this->internal->getPropagateValues($cfg);
             // set channel values
             $cfg['debug']['channelName'] = $config['nested']

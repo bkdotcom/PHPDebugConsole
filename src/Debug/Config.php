@@ -55,7 +55,7 @@ class Config
             $keys = \array_keys($this->configKeys + $this->valuesPending);
             $values = array();
             foreach ($keys as $debugProp) {
-                $values[$debugProp] = $this->getPropCfg($debugProp, array());
+                $values[$debugProp] = $this->getPropCfg($debugProp, array(), $forInit);
             }
             \ksort($values);
             return $values;
@@ -208,9 +208,17 @@ class Config
         if ($forInit) {
             return array();
         }
-        if (isset($this->debug->{$debugProp}) || $this->debug->{$debugProp}) {
+        $matches = array();
+        $obj = $this->debug->{$debugProp};
+        if (\preg_match('/^(dump|route)(.+)$/', $debugProp, $matches)) {
+            $cat = $matches[1];
+            $what = $matches[2];
+            $func = 'get' . \ucfirst($cat);
+            $obj = $this->debug->{$func}($what);
+        }
+        if ($obj) {
             $path = \implode('/', $path);
-            return $this->debug->{$debugProp}->getCfg($path);
+            return $obj->getCfg($path);
         }
         return null;
     }
@@ -337,16 +345,17 @@ class Config
      */
     private function setPropCfg($debugProp, $cfg)
     {
+        $obj = null;
+        $matches = array();
         $serviceVal = $this->debug->getCfg('services/' . $debugProp, Debug::CONFIG_DEBUG);
-        $hasInitService = $serviceVal !== null && !($serviceVal instanceof \Closure);
-        $isset = isset($this->debug->{$debugProp});  // isset does not call __get
-        if (\substr($debugProp, 0, 4) === 'dump') {
-            $isset = $this->debug->getDump(\substr($debugProp, 4), true);
-        } elseif (\substr($debugProp, 0, 5) === 'route') {
-            $isset = $this->debug->getRoute(\substr($debugProp, 5), true);
+        $isLoadedService = $serviceVal !== null && !($serviceVal instanceof \Closure);
+        if ($isLoadedService) {
+            $obj = $this->debug->{$debugProp};
+        } elseif (\preg_match('/^(dump|route)(.+)$/', $debugProp, $matches)) {
+            $obj = $this->debug->{$debugProp};
         }
-        if (($hasInitService || $isset) && \is_object($this->debug->{$debugProp})) {
-            $return = \array_intersect_key($this->debug->{$debugProp}->getCfg(), $cfg);
+        if ($obj && \is_object($obj)) {
+            $return = \array_intersect_key($obj->getCfg(), $cfg);
             $this->debug->{$debugProp}->setCfg($cfg);
             return $return;
         }

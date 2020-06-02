@@ -336,19 +336,16 @@ class Wamp implements RouteInterface
     private function crateValues($mixed)
     {
         if (\is_array($mixed)) {
-            $prevK = null;
-            $storeKeyOrder = false;
             foreach ($mixed as $k => $v) {
-                if (!$storeKeyOrder) {
-                    if (\is_int($k) && ($k < $prevK || \is_string($prevK))) {
-                        $storeKeyOrder = true;
-                    }
-                    $prevK = $k;
-                }
                 $mixed[$k] = $this->crateValues($v);
             }
-            if ($storeKeyOrder) {
-                $mixed['__debug_key_order__'] = \array_keys($mixed);
+            if ($this->debug->utility->arrayIsList($mixed) === false) {
+                $keys = \array_keys($mixed);
+                $keysSorted = \array_keys($mixed);
+                \ksort($keysSorted);
+                if ($keys !== $keysSorted) {
+                    $mixed['__debug_key_order__'] = $keys;
+                }
             }
             return $mixed;
         }

@@ -296,31 +296,44 @@ class TextAnsi extends Text
                 . "\n";
         }
         foreach ($abs['properties'] as $name => $info) {
-            $vis = (array) $info['visibility'];
-            foreach ($vis as $i => $v) {
-                if (\in_array($v, array('magic','magic-read','magic-write'))) {
-                    $vis[$i] = '✨ ' . $v;    // "sparkles" there is no magic-wand unicode char
-                } elseif ($v === 'private' && $info['inheritedFrom']) {
-                    $vis[$i] = '🔒 ' . $v;
-                }
-            }
-            $vis = \implode(' ', $vis);
-            if ($info['debugInfoExcluded']) {
-                $vis .= ' excluded';
-            }
-            $vis = $this->cfg['escapeCodes']['muted'] . '(' . $vis . ')' . $this->escapeReset;
-            $name = $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset;
-            $str .= '    ' . $vis . ' ' . $name . ($info['debugInfoExcluded']
-                    ? "\n"
+            $str .= '    ' . $this->dumpPropVis($info)
+                . ' ' . $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset
+                . ($info['debugInfoExcluded']
+                    ? ''
                     : ' '
                         . $this->cfg['escapeCodes']['operator'] . '=' . $this->escapeReset . ' '
-                        . $this->dump($info['value']) . "\n"
-            );
+                        . $this->dump($info['value'])
+                ) . "\n";
         }
         $header = $str
             ? "\e[4mProperties:\e[24m"
             : 'Properties: none!';
         return '  ' . $header . "\n" . $str;
+    }
+
+    /**
+     * Dump property visibility
+     *
+     * @param array $info property info array
+     *
+     * @return string visibility
+     */
+    private function dumpPropVis($info)
+    {
+        $vis = (array) $info['visibility'];
+        foreach ($vis as $i => $v) {
+            if (\in_array($v, array('magic','magic-read','magic-write'))) {
+                $vis[$i] = '✨ ' . $v;    // "sparkles" there is no magic-wand unicode char
+            } elseif ($v === 'private' && $info['inheritedFrom']) {
+                $vis[$i] = '🔒 ' . $v;
+            }
+        }
+        if ($info['debugInfoExcluded']) {
+            $vis[] = 'excluded';
+        }
+        $vis = \implode(' ', $vis);
+        $vis = $this->cfg['escapeCodes']['muted'] . '(' . $vis . ')' . $this->escapeReset;
+        return $vis;
     }
 
     /**

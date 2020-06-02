@@ -31,6 +31,7 @@ class UtilityTest extends DebugTestFramework
                 'sedan' => array('family','luxury'),
                 'suv' => array('boxy','good'),
             ),
+            1 => array('foo'),
         );
         $array2 = array(
             'boats' => array('speed','house'),
@@ -40,6 +41,7 @@ class UtilityTest extends DebugTestFramework
                 'hatchback' => 'array2 val',
                 'suv' => 'array2 val',
             ),
+            1 => array('bar'),
         );
         $arrayExpect = array(
             'planes' => 'array2 val',
@@ -49,6 +51,7 @@ class UtilityTest extends DebugTestFramework
                 'sedan' => array('family','luxury'),
                 'suv' => 'array2 val',
             ),
+            1 => array('foo','bar'),
             'boats' => array('speed','house'),
         );
         $array3 = Utility::arrayMergeDeep($array1, $array2);
@@ -128,6 +131,14 @@ class UtilityTest extends DebugTestFramework
         $base64Str = base64_encode(chunk_split(str_repeat('zippity do dah', 50)));
         $this->assertTrue(Utility::isBase64Encoded($base64Str));
         $this->assertFalse(Utility::isBase64Encoded('I\'m just a bill.'));
+    }
+
+    public function testIsFile()
+    {
+        $this->assertTrue(Utility::isFile(__FILE__));
+        // is_file() expects parameter 1 to be a valid path, string given
+        $this->assertFalse(Utility::isFile("\0foo.txt"));
+        $this->assertFalse(Utility::isFile(__DIR__ . '/' . "\0foo.txt"));
     }
 
     /**

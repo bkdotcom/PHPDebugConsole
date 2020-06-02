@@ -84,6 +84,21 @@ bdk\DebugTest\Test2
     magic: 1
 EOD;
 
+        $wamp = \bdk\Debug::getInstance()->getRoute('wamp');
+        $wampRef = new \ReflectionObject($wamp);
+        $crateRef = $wampRef->getMethod('crateValues');
+        $crateRef->setAccessible(true);
+        $abs1 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTest\Test(), 'log');
+        $cratedAbs1 = $crateRef->invoke($wamp, $abs1);
+        $cratedAbs1 = json_decode(json_encode($cratedAbs1), true);
+        $cratedAbs1['scopeClass'] = 'bdk\\Debug';
+
+        $abs2 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTest\Test2(), 'log');
+        $cratedAbs2 = $crateRef->invoke($wamp, $abs2);
+        $cratedAbs2 = json_decode(json_encode($cratedAbs2), true);
+        $cratedAbs2['scopeClass'] = 'bdk\\Debug';
+
+
         return array(
             // 0
             array(
@@ -182,6 +197,12 @@ EOD;
                     'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug NOT INSPECTED","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
                     'streamAnsi' => $ansi,
                     'text' => $text,
+                    'wamp' => array(
+                        'log',
+                        array(
+                            $cratedAbs1,
+                        ),
+                    ),
                 )
             ),
             // 1
@@ -228,8 +249,14 @@ EOD;
                             '</dl>',
                         )), $str);
                     },
-                    'text' => $text2,
                     'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test2","(protected ✨ magic-read) magicReadProp":"not null","(✨ magic) magicProp":undefined});',
+                    'text' => $text2,
+                    'wamp' => array(
+                        'log',
+                        array(
+                            $cratedAbs2,
+                        ),
+                    )
                 ),
             ),
         );

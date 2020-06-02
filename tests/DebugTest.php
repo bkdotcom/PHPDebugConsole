@@ -175,6 +175,7 @@ class DebugTest extends DebugTestFramework
             array('bdk\Debug\Plugin\LogReqRes', 'logResponse'),
             array('bdk\Debug\InternalEvents', 'onShutdownHigh2'),
             array('bdk\Debug\InternalEvents', 'onShutdownLow'),
+            array('bdk\Debug\Route\Wamp', 'onShutdown'),
         );
         $this->assertSame($subscribersExpect, $subscribers);
     }

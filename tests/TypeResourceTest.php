@@ -9,8 +9,17 @@ class TypeResourceTest extends DebugTestFramework
     public function providerTestMethod()
     {
         $fh = fopen(__FILE__, 'r');
-        // val, html, text script
-        $value = print_r($fh, true).': stream';
+        $value = print_r($fh, true) . ': stream';
+        $entry = array(
+            'log',
+            array(
+                new \bdk\Debug\Abstraction\Abstraction(array(
+                    'type' => 'resource',
+                    'value' => $value,
+                )),
+            ),
+            array(),
+        );
         return array(
             array(
                 'log',
@@ -19,20 +28,12 @@ class TypeResourceTest extends DebugTestFramework
                     'custom' => function () use ($fh) {
                         fclose($fh);
                     },
-                    'entry' => array(
-                        'log',
-                        array(
-                            new \bdk\Debug\Abstraction\Abstraction(array(
-                                'type' => 'resource',
-                                'value' => $value,
-                            )),
-                        ),
-                        array(),
-                    ),
-                    'chromeLogger' => '[["Resource id #'.(int) $fh.': stream"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_resource">Resource id #'.(int) $fh.': stream</span></li>',
-                    'text' => 'Resource id #'.(int) $fh.': stream',
-                    'script' => 'console.log("Resource id #'.(int) $fh.': stream");',
+                    'entry' => $entry,
+                    'chromeLogger' => '[["Resource id #' . (int) $fh . ': stream"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_resource">Resource id #' . (int) $fh . ': stream</span></li>',
+                    'script' => 'console.log("Resource id #' . (int) $fh . ': stream");',
+                    'text' => 'Resource id #' . (int) $fh . ': stream',
+                    'wamp' => json_decode(json_encode($entry), true),
                 )
             ),
         );

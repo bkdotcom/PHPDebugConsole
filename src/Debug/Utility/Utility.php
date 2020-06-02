@@ -91,7 +91,7 @@ class Utility
             return $array2;
         }
         foreach ($array2 as $k2 => $v2) {
-            if (\is_int($k2)) {
+            if (\is_int($k2) && !\is_array($v2)) {
                 if (!\in_array($v2, $arrayDef)) {
                     $arrayDef[] = $v2;
                 }
@@ -517,11 +517,12 @@ class Utility
         if (!\is_string($val)) {
             return false;
         }
-        if (\preg_match('#(://|[\r\n\x00])#', $val) !== 1) {
+        /*
+            pre-text / prevent "is_file() expects parameter 1 to be a valid path, string given"
+        */
+        if (\preg_match('#(://|[\r\n\x00])#', $val) === 1) {
             return false;
         }
-        // ocassionaly get `is_file() expects parameter 1 to be a valid path, string given`
-        // don't know why
         return \is_file($val);
     }
 

@@ -12,23 +12,28 @@ class MethodTest extends DebugTestFramework
     /**
      * Test overriding a core method
      */
-    public function testOverrideDefault()
+    public function testOverrideOutput()
     {
         $closure = function ($event) {
             if ($event['method'] === 'trace') {
-                $route = get_class($event['route']);
-                if ($route === 'bdk\Debug\Route\ChromeLogger') {
+                $route = $event['route'];
+                if ($route instanceof bdk\Debug\Route\ChromeLogger) {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($route === 'bdk\Debug\Route\Firephp') {
+                } elseif ($route instanceof bdk\Debug\Route\Firephp) {
                     $event['method'] = 'log';
                     $event['args'] = array('this was a trace');
-                } elseif ($route === 'bdk\Debug\Route\Html') {
+                } elseif ($route instanceof bdk\Debug\Route\Html) {
                     $event['return'] = '<li class="m_trace">this was a trace</li>';
-                } elseif ($route === 'bdk\Debug\Route\Script') {
+                } elseif ($route instanceof bdk\Debug\Route\Script) {
                     $event['return'] = 'console.log("this was a trace");';
-                } elseif ($route === 'bdk\Debug\Route\Text') {
+                } elseif ($route instanceof bdk\Debug\Route\Text) {
                     $event['return'] = 'this was a trace';
+                } elseif ($route instanceof bdk\Debug\Route\Wamp) {
+                    $event['method'] = 'log';
+                    $event['args'] = array('something completely different');
+                    $meta = array_diff_key($event['meta'], array_flip(array('columns','caption','inclContext')));
+                    $event['meta'] = $meta;
                 }
             }
         };
@@ -37,6 +42,17 @@ class MethodTest extends DebugTestFramework
             'trace',
             array(),
             array(
+                'entry' => function ($logEntry) {
+                    // we're doing the custom stuff via debug.outputLogEntry, so logEntry should still be trace
+                    $this->assertSame('trace', $logEntry['method']);
+                    $this->assertInternalType('array', $logEntry['args'][0]);
+                    $this->assertSame(array(
+                        'caption' => 'trace',
+                        'columns' => array('file','line','function'),
+                        'detectFiles' => true,
+                        'inclContext' => false,
+                    ), $logEntry['meta']);
+                },
                 'chromeLogger' => array(
                     array('this was a trace'),
                     null,
@@ -46,6 +62,14 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_trace">this was a trace</li>',
                 'script' => 'console.log("this was a trace");',
                 'text' => 'this was a trace',
+                'wamp' => array(
+                    'log',
+                    array('something completely different'),
+                    array(
+                        'detectFiles' => true,
+                        'foundFiles' => array(),
+                    ),
+                ),
             )
         );
     }
@@ -65,17 +89,18 @@ class MethodTest extends DebugTestFramework
             }
         };
         $this->debug->eventManager->subscribe('debug.outputLogEntry', $closure);
+        $entry = array(
+            'myCustom',
+            array('How\'s it goin?'),
+            array(
+                'isCustomMethod' => true,
+            ),
+        );
         $this->testMethod(
             'myCustom',
             array('How\'s it goin?'),
             array(
-                'entry' => array(
-                    'myCustom',
-                    array('How\'s it goin?'),
-                    array(
-                        'isCustomMethod' => true,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('How\'s it goin?'),
                     null,
@@ -85,6 +110,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_myCustom"><ul><li>How\'s it goin?</li></ul></li>',
                 'script' => 'console.log("How\'s it goin?");',
                 'text' => 'How\'s it goin?',
+                'wamp' => $entry,
             )
         );
 
@@ -92,18 +118,19 @@ class MethodTest extends DebugTestFramework
             Now test it statically
         */
         Debug::_myCustom('called statically');
+        $entry = array(
+            'myCustom',
+            array('called statically'),
+            array(
+                'isCustomMethod' => true,
+                'statically' => true,
+            ),
+        );
         $this->testMethod(
             null,
             array('called statically'),
             array(
-                'entry' => array(
-                    'myCustom',
-                    array('called statically'),
-                    array(
-                        'isCustomMethod' => true,
-                        'statically' => true,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('called statically'),
                     null,
@@ -113,32 +140,35 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_myCustom"><ul><li>called statically</li></ul></li>',
                 'script' => 'console.log("called statically");',
                 'text' => 'called statically',
+                'wamp' => $entry,
             )
         );
     }
 
     public function testCustomDefault()
     {
+        $entry = array(
+            'myCustom',
+            array('How\'s it goin?'),
+            array(
+                'isCustomMethod' => true,
+            ),
+        );
         $this->testMethod(
             'myCustom',
             array('How\'s it goin?'),
             array(
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('How\'s it goin?'),
                     null,
                     '',
                 ),
-                'entry' => array(
-                    'myCustom',
-                    array('How\'s it goin?'),
-                    array(
-                        'isCustomMethod' => true,
-                    ),
-                ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
                 'html' => '<li class="m_myCustom"><span class="no-quotes t_string">How\'s it goin?</span></li>',
                 'script' => 'console.log("How\'s it goin?");',
                 'text' => 'How\'s it goin?',
+                'wamp' => $entry,
             )
         );
     }
@@ -152,18 +182,19 @@ class MethodTest extends DebugTestFramework
     {
         $message = 'Ballistic missle threat inbound to Hawaii.  <b>Seek immediate shelter</b>.  This is not a drill.';
         $messageEscaped = htmlspecialchars($message);
+        $entry = array(
+            'alert',
+            array($message),
+            array(
+                'dismissible' => false,
+                'level' => 'error',
+            ),
+        );
         $this->testMethod(
             'alert',
             array($message),
             array(
-                'entry' => array(
-                    'alert',
-                    array($message),
-                    array(
-                        'dismissible' => false,
-                        'level' => 'error',
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array(
                         '%c' . $message,
@@ -172,10 +203,11 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'html' => '<div class="alert-error m_alert" role="alert">' . $messageEscaped . '</div>',
-                'text' => '》[Alert ⦻ error] ' . $message . '《',
-                'script' => str_replace('%c', '%%c', 'console.log(' . json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"ERROR"},' . json_encode($message, JSON_UNESCAPED_SLASHES) . ']|',
+                'html' => '<div class="alert-error m_alert" role="alert">' . $messageEscaped . '</div>',
+                'script' => str_replace('%c', '%%c', 'console.log(' . json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
+                'text' => '》[Alert ⦻ error] ' . $message . '《',
+                'wamp' => $entry,
             )
         );
 
@@ -194,42 +226,45 @@ class MethodTest extends DebugTestFramework
      */
     public function testAssert()
     {
+        $entry = array(
+            'assert',
+            array('this is false'),
+            array(),
+        );
         $this->testMethod(
             'assert',
             array(false, 'this is false'),
             array(
-                'entry' => array(
-                    'assert',
-                    array('this is false'),
-                    array(),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array(false, 'this is false'),
                     null,
                     'assert',
                 ),
-                'html' => '<li class="m_assert"><span class="no-quotes t_string">this is false</span></li>',
-                'text' => '≠ this is false',
-                'script' => 'console.assert(false,"this is false");',
                 'firephp' => 'X-Wf-1-1-1-2: 32|[{"Type":"LOG"},"this is false"]|',
+                'html' => '<li class="m_assert"><span class="no-quotes t_string">this is false</span></li>',
+                'script' => 'console.assert(false,"this is false");',
+                'text' => '≠ this is false',
+                'wamp' => $entry,
             )
         );
 
         // no msg arguments
+        $entry = array(
+            'assert',
+            array(
+                'Assertion failed:',
+                $this->file . ' (line ' . $this->line . ')',
+            ),
+            array(
+                'detectFiles' => true,
+            ),
+        );
         $this->testMethod(
             'assert',
             array(false),
             array(
-                'entry' => array(
-                    'assert',
-                    array(
-                        'Assertion failed:',
-                        $this->file . ' (line ' . $this->line . ')',
-                    ),
-                    array(
-                        'detectFiles' => true,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array(
                         false,
@@ -239,10 +274,13 @@ class MethodTest extends DebugTestFramework
                     null,
                     'assert',
                 ),
-                'html' => '<li class="m_assert" data-detect-files="true"><span class="no-quotes t_string">Assertion failed: </span><span class="t_string">' . $this->file . ' (line ' . $this->line . ')</span></li>',
-                'text' => '≠ Assertion failed: "' . $this->file . ' (line ' . $this->line . ')"',
-                'script' => 'console.assert(false,"Assertion failed:",' . json_encode($this->file . ' (line ' . $this->line . ')', JSON_UNESCAPED_SLASHES) . ');',
                 'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Assertion failed:","Type":"LOG"},' . json_encode($this->file . ' (line ' . $this->line . ')', JSON_UNESCAPED_SLASHES) . ']|',
+                'html' => '<li class="m_assert" data-detect-files="true"><span class="no-quotes t_string">Assertion failed: </span><span class="t_string">' . $this->file . ' (line ' . $this->line . ')</span></li>',
+                'script' => 'console.assert(false,"Assertion failed:",' . json_encode($this->file . ' (line ' . $this->line . ')', JSON_UNESCAPED_SLASHES) . ');',
+                'text' => '≠ Assertion failed: "' . $this->file . ' (line ' . $this->line . ')"',
+                'wamp' => $this->debug->utility->arrayMergeDeep($entry, array(
+                    2 => array('foundFiles' => array()),
+                )),
             )
         );
 
@@ -267,6 +305,23 @@ class MethodTest extends DebugTestFramework
      */
     public function testClearDefault()
     {
+        $entry = array(
+            'clear',
+            array('Cleared log (sans errors)'),
+            array(
+                'bitmask' => Debug::CLEAR_LOG,
+                'file' => $this->file,
+                'flags' => array(
+                    'alerts' => false,
+                    'log' => true,
+                    'logErrors' => false,
+                    'summary' => false,
+                    'summaryErrors' => false,
+                    'silent' => false,
+                ),
+                'line' => $this->line,
+            ),
+        );
         $this->clearPrep();
         $this->testMethod(
             'clear',
@@ -278,32 +333,17 @@ class MethodTest extends DebugTestFramework
                     $this->assertCount(3, $this->debug->getData('logSummary/1'));
                     $this->assertCount(4, $this->debug->getData('log'));    // clear-summary gets added
                 },
-                'entry' => array(
-                    'clear',
-                    array('Cleared log (sans errors)'),
-                    array(
-                        'bitmask' => Debug::CLEAR_LOG,
-                        'file' => $this->file,
-                        'flags' => array(
-                            'alerts' => false,
-                            'log' => true,
-                            'logErrors' => false,
-                            'summary' => false,
-                            'summaryErrors' => false,
-                            'silent' => false,
-                        ),
-                        'line' => $this->line,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('Cleared log (sans errors)'),
                     $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared log (sans errors)</span></li>',
-                'text' => '⌦ Cleared log (sans errors)',
-                'script' => 'console.log("Cleared log (sans errors)");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared log (sans errors)"]|',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared log (sans errors)</span></li>',
+                'script' => 'console.log("Cleared log (sans errors)");',
+                'text' => '⌦ Cleared log (sans errors)',
+                'wamp' => $entry,
             )
         );
     }
@@ -339,43 +379,45 @@ class MethodTest extends DebugTestFramework
      */
     public function testClearAlerts()
     {
+        $entry = array(
+            'clear',
+            array('Cleared alerts'),
+            array(
+                'bitmask' => Debug::CLEAR_ALERTS,
+                'file' => $this->file,
+                'flags' => array(
+                    'alerts' => true,
+                    'log' => false,
+                    'logErrors' => false,
+                    'summary' => false,
+                    'summaryErrors' => false,
+                    'silent' => false,
+                ),
+                'line' => $this->line,
+            ),
+        );
         $this->clearPrep();
         $this->testMethod(
             'clear',
             array(Debug::CLEAR_ALERTS),
             array(
+                'entry' => $entry,
                 'custom' => function () {
                     $this->assertCount(0, $this->debug->getData('alerts'));
                     $this->assertCount(3, $this->debug->getData('logSummary/0'));
                     $this->assertCount(3, $this->debug->getData('logSummary/1'));
                     $this->assertCount(6, $this->debug->getData('log'));
                 },
-                'entry' => array(
-                    'clear',
-                    array('Cleared alerts'),
-                    array(
-                        'bitmask' => Debug::CLEAR_ALERTS,
-                        'file' => $this->file,
-                        'flags' => array(
-                            'alerts' => true,
-                            'log' => false,
-                            'logErrors' => false,
-                            'summary' => false,
-                            'summaryErrors' => false,
-                            'silent' => false,
-                        ),
-                        'line' => $this->line,
-                    ),
-                ),
                 'chromeLogger' => array(
                     array('Cleared alerts'),
                     $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared alerts</span></li>',
-                'text' => '⌦ Cleared alerts',
-                'script' => 'console.log("Cleared alerts");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared alerts"]|',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared alerts</span></li>',
+                'script' => 'console.log("Cleared alerts");',
+                'text' => '⌦ Cleared alerts',
+                'wamp' => $entry,
             )
         );
     }
@@ -387,11 +429,29 @@ class MethodTest extends DebugTestFramework
      */
     public function testClearSummary()
     {
+        $entry = array(
+            'clear',
+            array('Cleared summary (sans errors)'),
+            array(
+                'bitmask' => Debug::CLEAR_SUMMARY,
+                'file' => $this->file,
+                'flags' => array(
+                    'alerts' => false,
+                    'log' => false,
+                    'logErrors' => false,
+                    'summary' => true,
+                    'summaryErrors' => false,
+                    'silent' => false,
+                ),
+                'line' => $this->line,
+            ),
+        );
         $this->clearPrep();
         $this->testMethod(
             'clear',
             array(Debug::CLEAR_SUMMARY),
             array(
+                'entry' => $entry,
                 'custom' => function () {
                     $this->assertCount(1, $this->debug->getData('alerts'));
                     $this->assertCount(1, $this->debug->getData('logSummary/0'));   // error remains
@@ -408,32 +468,16 @@ class MethodTest extends DebugTestFramework
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
-                'entry' => array(
-                    'clear',
-                    array('Cleared summary (sans errors)'),
-                    array(
-                        'bitmask' => Debug::CLEAR_SUMMARY,
-                        'file' => $this->file,
-                        'flags' => array(
-                            'alerts' => false,
-                            'log' => false,
-                            'logErrors' => false,
-                            'summary' => true,
-                            'summaryErrors' => false,
-                            'silent' => false,
-                        ),
-                        'line' => $this->line,
-                    ),
-                ),
                 'chromeLogger' => array(
                     array('Cleared summary (sans errors)'),
                     $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared summary (sans errors)</span></li>',
-                'text' => '⌦ Cleared summary (sans errors)',
-                'script' => 'console.log("Cleared summary (sans errors)");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared summary (sans errors)"]|',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared summary (sans errors)</span></li>',
+                'script' => 'console.log("Cleared summary (sans errors)");',
+                'text' => '⌦ Cleared summary (sans errors)',
+                'wamp' => $entry,
             )
         );
     }
@@ -445,11 +489,29 @@ class MethodTest extends DebugTestFramework
      */
     public function testClearErrors()
     {
+        $entry = array(
+            'clear',
+            array('Cleared errors'),
+            array(
+                'bitmask' => Debug::CLEAR_LOG_ERRORS,
+                'file' => $this->file,
+                'flags' => array(
+                    'alerts' => false,
+                    'log' => false,
+                    'logErrors' => true,
+                    'summary' => false,
+                    'summaryErrors' => false,
+                    'silent' => false,
+                ),
+                'line' => $this->line,
+            ),
+        );
         $this->clearPrep();
         $this->testMethod(
             'clear',
             array(Debug::CLEAR_LOG_ERRORS),
             array(
+                'entry' => $entry,
                 'custom' => function () {
                     $this->assertCount(1, $this->debug->getData('alerts'));
                     $this->assertCount(3, $this->debug->getData('logSummary/0'));
@@ -470,32 +532,16 @@ class MethodTest extends DebugTestFramework
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
-                'entry' => array(
-                    'clear',
-                    array('Cleared errors'),
-                    array(
-                        'bitmask' => Debug::CLEAR_LOG_ERRORS,
-                        'file' => $this->file,
-                        'flags' => array(
-                            'alerts' => false,
-                            'log' => false,
-                            'logErrors' => true,
-                            'summary' => false,
-                            'summaryErrors' => false,
-                            'silent' => false,
-                        ),
-                        'line' => $this->line,
-                    ),
-                ),
                 'chromeLogger' => array(
                     array('Cleared errors'),
                     $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared errors</span></li>',
-                'text' => '⌦ Cleared errors',
-                'script' => 'console.log("Cleared errors");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared errors"]|',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared errors</span></li>',
+                'script' => 'console.log("Cleared errors");',
+                'text' => '⌦ Cleared errors',
+                'wamp' => $entry,
             )
         );
     }
@@ -507,11 +553,29 @@ class MethodTest extends DebugTestFramework
      */
     public function testClearAll()
     {
+        $entry = array(
+            'clear',
+            array('Cleared everything'),
+            array(
+                'bitmask' => Debug::CLEAR_ALL,
+                'file' => $this->file,
+                'flags' => array(
+                    'alerts' => true,
+                    'log' => true,
+                    'logErrors' => true,
+                    'summary' => true,
+                    'summaryErrors' => true,
+                    'silent' => false,
+                ),
+                'line' => $this->line,
+            ),
+        );
         $this->clearPrep();
         $this->testMethod(
             'clear',
             array(Debug::CLEAR_ALL),
             array(
+                'entry' => $entry,
                 'custom' => function () {
                     $this->assertCount(0, $this->debug->getData('alerts'));
                     $this->assertCount(0, $this->debug->getData('logSummary/0'));
@@ -530,32 +594,16 @@ class MethodTest extends DebugTestFramework
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
-                'entry' => array(
-                    'clear',
-                    array('Cleared everything'),
-                    array(
-                        'bitmask' => Debug::CLEAR_ALL,
-                        'file' => $this->file,
-                        'flags' => array(
-                            'alerts' => true,
-                            'log' => true,
-                            'logErrors' => true,
-                            'summary' => true,
-                            'summaryErrors' => true,
-                            'silent' => false,
-                        ),
-                        'line' => $this->line,
-                    ),
-                ),
                 'chromeLogger' => array(
                     array('Cleared everything'),
                     $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared everything</span></li>',
-                'text' => '⌦ Cleared everything',
-                'script' => 'console.log("Cleared everything");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared everything"]|',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared everything</span></li>',
+                'script' => 'console.log("Cleared everything");',
+                'text' => '⌦ Cleared everything',
+                'wamp' => $entry,
             )
         );
     }
@@ -567,11 +615,29 @@ class MethodTest extends DebugTestFramework
      */
     public function testClearSummaryInclErrors()
     {
+        $entry = array(
+            'clear',
+            array('Cleared summary (incl errors)'),
+            array(
+                'bitmask' => Debug::CLEAR_SUMMARY | Debug::CLEAR_SUMMARY_ERRORS,
+                'file' => $this->file,
+                'flags' => array(
+                    'alerts' => false,
+                    'log' => false,
+                    'logErrors' => false,
+                    'summary' => true,
+                    'summaryErrors' => true,
+                    'silent' => false,
+                ),
+                'line' => $this->line,
+            ),
+        );
         $this->clearPrep();
         $this->testMethod(
             'clear',
             array(Debug::CLEAR_SUMMARY | Debug::CLEAR_SUMMARY_ERRORS),
             array(
+                'entry' => $entry,
                 'custom' => function () {
                     $this->assertCount(1, $this->debug->getData('alerts'));
                     $this->assertCount(0, $this->debug->getData('logSummary/0'));
@@ -590,32 +656,16 @@ class MethodTest extends DebugTestFramework
                         ),
                     ), $this->debug->getData('groupStacks'));
                 },
-                'entry' => array(
-                    'clear',
-                    array('Cleared summary (incl errors)'),
-                    array(
-                        'bitmask' => Debug::CLEAR_SUMMARY | Debug::CLEAR_SUMMARY_ERRORS,
-                        'file' => $this->file,
-                        'flags' => array(
-                            'alerts' => false,
-                            'log' => false,
-                            'logErrors' => false,
-                            'summary' => true,
-                            'summaryErrors' => true,
-                            'silent' => false,
-                        ),
-                        'line' => $this->line,
-                    ),
-                ),
                 'chromeLogger' => array(
                     array('Cleared summary (incl errors)'),
                     $this->file . ': ' . $this->line,
                     '',
                 ),
-                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared summary (incl errors)</span></li>',
-                'text' => '⌦ Cleared summary (incl errors)',
-                'script' => 'console.log("Cleared summary (incl errors)");',
                 'firephp' => 'X-Wf-1-1-1-14: %d|[{"File":' . json_encode($this->file, JSON_UNESCAPED_SLASHES) . ',"Line":' . $this->line . ',"Type":"LOG"},"Cleared summary (incl errors)"]|',
+                'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared summary (incl errors)</span></li>',
+                'script' => 'console.log("Cleared summary (incl errors)");',
+                'text' => '⌦ Cleared summary (incl errors)',
+                'wamp' => $entry,
             )
         );
     }
@@ -639,7 +689,26 @@ class MethodTest extends DebugTestFramework
                 'custom' => function ($logEntry) {
                     $this->assertSame('Cleared log (sans errors)', $logEntry['args'][0]);
                     $this->assertCount(4, $this->debug->getData('log'));    // clear-summary gets added
-                }
+                },
+                'wamp' => array(
+                    'clear',
+                    array(
+                        'Cleared log (sans errors)'
+                    ),
+                    array(
+                        'bitmask' => Debug::CLEAR_LOG,
+                        'file' => $this->file,
+                        'flags' => array(
+                            'alerts' => false,
+                            'log' => true,
+                            'logErrors' => false,
+                            'summary' => false,
+                            'summaryErrors' => false,
+                            'silent' => false,
+                        ),
+                        'line' => $this->line,
+                    ),
+                ),
             )
         );
         $this->debug->setCfg('collect', true);
@@ -758,10 +827,17 @@ class MethodTest extends DebugTestFramework
                     null,
                     '',
                 ),
-                'html' => '<li class="m_count"><span class="no-quotes t_string">count_inc test</span> = <span class="t_int">3</span></li>',
-                'text' => '✚ count_inc test = 3',
-                'script' => 'console.log("count_inc test",3);',
                 'firephp' => 'X-Wf-1-1-1-3: 43|[{"Label":"count_inc test","Type":"LOG"},3]|',
+                'html' => '<li class="m_count"><span class="no-quotes t_string">count_inc test</span> = <span class="t_int">3</span></li>',
+                'script' => 'console.log("count_inc test",3);',
+                'text' => '✚ count_inc test = 3',
+                'wamp' => array(
+                    'count',
+                    array(
+                        'count_inc test',
+                        3,
+                    ),
+                ),
             )
         );
 
@@ -777,10 +853,23 @@ class MethodTest extends DebugTestFramework
                     __FILE__ . ': ' . $lines[1],
                     '',
                 ),
-                'html' => '<li class="m_count" data-file="' . __FILE__ . '" data-line="' . $lines[1] . '"><span class="no-quotes t_string">count</span> = <span class="t_int">1</span></li>',
-                'text' => '✚ count = 1',
-                'script' => 'console.log("count",1);',
                 'firephp' => 'X-Wf-1-1-1-4: %d|[{"File":"' . __FILE__ . '","Label":"count","Line":' . $lines[1] . ',"Type":"LOG"},1]|',
+                'html' => '<li class="m_count" data-file="' . __FILE__ . '" data-line="' . $lines[1] . '"><span class="no-quotes t_string">count</span> = <span class="t_int">1</span></li>',
+                'script' => 'console.log("count",1);',
+                'text' => '✚ count = 1',
+                'wamp' => array(
+                    'messageIndex' => 2,
+                    'count',
+                    array(
+                        'count',
+                        1,
+                    ),
+                    array(
+                        'file' => __FILE__,
+                        'line' => $lines[1],
+                        'statically' => true,
+                    )
+                ),
             )
         );
 
@@ -805,10 +894,11 @@ class MethodTest extends DebugTestFramework
             array('count test'),
             array(
                 'notLogged' => true,
-                'return' => 5,
-                'custom' => function () {
-                    $this->assertSame(5, $this->debug->getData('counts/count test'));
-                },
+                // 'return' => 5,
+                // 'custom' => function () {
+                    // $this->assertSame(5, $this->debug->getData('counts/count test'));
+                // },
+                'wamp' => false,
             )
         );
     }
@@ -840,6 +930,11 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_countReset"><span class="no-quotes t_string">foo</span> = <span class="t_int">0</span></li>',
                 'script' => 'console.log("foo",0);',
                 'text' => '✚ foo = 0',
+                'wamp' => array(
+                    'countReset',
+                    array('foo', 0),
+                    array(),
+                ),
             )
         );
         $this->testMethod(
@@ -860,6 +955,11 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_countReset"><span class="no-quotes t_string">Counter \'noExisty\' doesn\'t exist.</span></li>',
                 'script' => 'console.log("Counter \'noExisty\' doesn\'t exist.");',
                 'text' => '✚ Counter \'noExisty\' doesn\'t exist.',
+                'wamp' => array(
+                    'countReset',
+                    array('Counter \'noExisty\' doesn\'t exist.'),
+                    array(),
+                ),
             )
         );
         $this->testMethod(
@@ -867,6 +967,7 @@ class MethodTest extends DebugTestFramework
             array('noExisty', Debug::COUNT_NO_OUT),
             array(
                 'notLogged' => true,
+                'wamp' => false,
             )
         );
     }
@@ -902,17 +1003,17 @@ class MethodTest extends DebugTestFramework
                     __DIR__ . '/DebugTestFramework.php: %d',
                     'error',
                 )),
+                'firephp' => 'X-Wf-1-1-1-3: %d|[{"File":"%s","Label":"a string","Line":%d,"Type":"ERROR"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
                 'html' => '<li class="m_error" data-detect-files="true" data-file="' . __DIR__ . '/DebugTestFramework.php" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
                     </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
                 'text' => '⦻ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%i: stream',
-                'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
-                'firephp' => 'X-Wf-1-1-1-3: %d|[{"File":"%s","Label":"a string","Line":%d,"Type":"ERROR"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
             )
         );
         fclose($resource);
@@ -928,7 +1029,10 @@ class MethodTest extends DebugTestFramework
         $this->testMethod(
             'error',
             array('error message'),
-            false
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
         );
     }
 
@@ -964,12 +1068,17 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
+                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
                     <ul class="group-body">',
-                'text' => '▸ a("b", "c")',
                 'script' => 'console.group("a","b","c");',
-                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
+                'text' => '▸ a("b", "c")',
+                'wamp' => array(
+                    'group',
+                    array('a','b','c'),
+                    array(),
+                ),
             )
         );
 
@@ -980,26 +1089,28 @@ class MethodTest extends DebugTestFramework
         $this->debug->log('after group');
         $this->outputTest(array(
             // @todo chromeLogger & firephp
+            // 'firephp' => '',
             'html' => '<li class="m_log"><span class="no-quotes t_string">before group</span></li>
                 <li class="m_log"><span class="no-quotes t_string">after group</span></li>',
-            'text' => 'before group
-                after group',
             'script' => 'console.log("before group");
                 console.log("after group");',
-            // 'firephp' => '',
+            'text' => 'before group
+                after group',
         ));
 
         $this->debug->setCfg('collect', false);
         $this->testMethod(
             'group',
             array('not logged'),
-            false
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
         );
     }
 
     public function testGroupNoArgs()
     {
-
         $test = new \bdk\DebugTest\Test();
         $testBase = new \bdk\DebugTest\TestBase();
 
@@ -1007,21 +1118,22 @@ class MethodTest extends DebugTestFramework
             Test default label
         */
         $this->methodWithGroup('foo', 10);
+        $entry = array(
+            'group',
+            array(
+                __CLASS__ . '->methodWithGroup',
+                'foo',
+                10
+            ),
+            array(
+                'isFuncName' => true,
+            ),
+        );
         $this->testMethod(
             array(),    // test last called method
             array(),
             array(
-                'entry' => array(
-                    'group',
-                    array(
-                        __CLASS__ . '->methodWithGroup',
-                        'foo',
-                        10
-                    ),
-                    array(
-                        'isFuncName' => true,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array(
                         __CLASS__ . '->methodWithGroup',
@@ -1031,141 +1143,161 @@ class MethodTest extends DebugTestFramework
                     null,
                     'group',
                 ),
+                'firephp' => 'X-Wf-1-1-1-6: %d|[{"Collapsed":"false","Label":"' . __CLASS__ . '->methodWithGroup","Type":"GROUP_START"},null]|',
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname">' . __CLASS__ . '</span><span class="t_operator">-&gt;</span><span class="t_identifier">methodWithGroup</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="group-label group-label-bold">)</span></div>
                     <ul class="group-body">',
-                'text' => '▸ ' . __CLASS__ . '->methodWithGroup("foo", 10)',
                 'script' => 'console.group("' . __CLASS__ . '->methodWithGroup","foo",10);',
-                'firephp' => 'X-Wf-1-1-1-6: %d|[{"Collapsed":"false","Label":"' . __CLASS__ . '->methodWithGroup","Type":"GROUP_START"},null]|',
+                'text' => '▸ ' . __CLASS__ . '->methodWithGroup("foo", 10)',
+                'wamp' => $entry,
             )
         );
 
         $this->debug->setData('log', array());
+        $this->debug->getRoute('wamp')->wamp->messages = array();
         $testBase->testBasePublic();
+        $entry = array(
+            'group',
+            array(
+                'bdk\DebugTest\TestBase->testBasePublic'
+            ),
+            array(
+                'isFuncName' => true,
+                'statically' => true,
+            ),
+        );
         $this->testMethod(
             array('dataPath' => 'log/0'),
             array(),
             array(
-                'entry' => array(
-                    'group',
-                    array(
-                        'bdk\DebugTest\TestBase->testBasePublic'
-                    ),
-                    array(
-                        'isFuncName' => true,
-                        'statically' => true,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('bdk\DebugTest\TestBase->testBasePublic'),
                     null,
                     'group',
                 ),
+                'firephp' => 'X-Wf-1-1-1-7: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase->testBasePublic","Type":"GROUP_START"},null]|',
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
                     <ul class="group-body">',
-                'text' => '▸ bdk\DebugTest\TestBase->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase->testBasePublic");',
-                'firephp' => 'X-Wf-1-1-1-7: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase->testBasePublic","Type":"GROUP_START"},null]|',
+                'text' => '▸ bdk\DebugTest\TestBase->testBasePublic',
+                'wamp' => $entry + array('messageIndex' => 0),
             )
         );
 
         $this->debug->setData('log', array());
+        $this->debug->getRoute('wamp')->wamp->messages = array();
         $test->testBasePublic();
+        $entry = array(
+            'group',
+            array(
+                'bdk\DebugTest\Test->testBasePublic'
+            ),
+            array(
+                'isFuncName' => true,
+                'statically' => true,
+            ),
+        );
         $this->testMethod(
             array('dataPath' => 'log/0'),
             array(),
             array(
-                'entry' => array(
-                    'group',
-                    array(
-                        'bdk\DebugTest\Test->testBasePublic'
-                    ),
-                    array(
-                        'isFuncName' => true,
-                        'statically' => true,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('bdk\DebugTest\Test->testBasePublic'),
                     null,
                     'group',
                 ),
+                'firephp' => 'X-Wf-1-1-1-8: 96|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\Test->testBasePublic","Type":"GROUP_START"},null]|',
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
                     <ul class="group-body">',
-                'text' => '▸ bdk\DebugTest\Test->testBasePublic',
                 'script' => 'console.group("bdk\\\DebugTest\\\Test->testBasePublic");',
-                'firephp' => 'X-Wf-1-1-1-8: 96|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\Test->testBasePublic","Type":"GROUP_START"},null]|',
+                'text' => '▸ bdk\DebugTest\Test->testBasePublic',
+                'wamp' => $entry + array('messageIndex' => 0),
             )
         );
 
         // yes, we call Test... but static method is defined in TestBase
         // .... PHP
         $this->debug->setData('log', array());
+        $this->debug->getRoute('wamp')->wamp->messages = array();
         \bdk\DebugTest\Test::testBaseStatic();
+        $entry = array(
+            'group',
+            array(
+                'bdk\DebugTest\TestBase::testBaseStatic'
+            ),
+            array(
+                'isFuncName' => true,
+                'statically' => true,
+            ),
+        );
         $this->testMethod(
             array('dataPath' => 'log/0'),
             array(),
             array(
-                'entry' => array(
-                    'group',
-                    array(
-                        'bdk\DebugTest\TestBase::testBaseStatic'
-                    ),
-                    array(
-                        'isFuncName' => true,
-                        'statically' => true,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('bdk\DebugTest\TestBase::testBaseStatic'),
                     null,
                     'group',
                 ),
+                'firephp' => 'X-Wf-1-1-1-9: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
                     <ul class="group-body">',
-                'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
-                'firephp' => 'X-Wf-1-1-1-9: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
+                'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
+                'wamp' => $entry + array('messageIndex' => 0),
             )
         );
 
         // even if called with an arrow
         $this->debug->setData('log', array());
+        $this->debug->getRoute('wamp')->wamp->messages = array();
         $test->testBaseStatic();
+        $entry = array(
+            'group',
+            array(
+                'bdk\DebugTest\TestBase::testBaseStatic'
+            ),
+            array(
+                'isFuncName' => true,
+                'statically' => true,
+            ),
+        );
         $this->testMethod(
             array('dataPath' => 'log/0'),
             array(),
             array(
-                'entry' => array(
-                    'group',
-                    array(
-                        'bdk\DebugTest\TestBase::testBaseStatic'
-                    ),
-                    array(
-                        'isFuncName' => true,
-                        'statically' => true,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('bdk\DebugTest\TestBase::testBaseStatic'),
                     null,
                     'group',
                 ),
+                'firephp' => 'X-Wf-1-1-1-10: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
                     <ul class="group-body">',
-                'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
                 'script' => 'console.group("bdk\\\DebugTest\\\TestBase::testBaseStatic");',
-                'firephp' => 'X-Wf-1-1-1-10: 100|[{"Collapsed":"false","Label":"bdk\\\DebugTest\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
+                'text' => '▸ bdk\DebugTest\TestBase::testBaseStatic',
+                'wamp' => $entry + array('messageIndex' => 0),
             )
         );
     }
 
     public function testGroupNotArgsAsParams()
     {
+        $entry = array(
+            'group',
+            array('a',10),
+            array(
+                'argsAsParams' => false,
+            ),
+        );
         $this->testMethod(
             'group',
             array(
@@ -1174,24 +1306,19 @@ class MethodTest extends DebugTestFramework
                 $this->debug->meta('argsAsParams', false),
             ),
             array(
-                'entry' => array(
-                    'group',
-                    array('a',10),
-                    array(
-                        'argsAsParams' => false,
-                    ),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('a',10),
                     null,
                     'group',
                 ),
+                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
                 'html' => '<li class="m_group">
                     <div class="expanded group-header"><span class="group-label group-label-bold">a:</span> <span class="t_int">10</span></div>
                     <ul class="group-body">',
-                'text' => '▸ a: 10',
                 'script' => 'console.group("a",10);',
-                'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
+                'text' => '▸ a: 10',
+                'wamp' => $entry,
             )
         );
     }
@@ -1208,15 +1335,16 @@ class MethodTest extends DebugTestFramework
      */
     public function testGroupCollapsed()
     {
+        $entry = array(
+            'groupCollapsed',
+            array('a','b','c'),
+            array(),
+        );
         $this->testMethod(
             'groupCollapsed',
             array('a', 'b', 'c'),
             array(
-                'entry' => array(
-                    'groupCollapsed',
-                    array('a','b','c'),
-                    array(),
-                ),
+                'entry' => $entry,
                 'custom' => function () {
                     $this->assertSame(array(
                         'main' => array(
@@ -1235,6 +1363,7 @@ class MethodTest extends DebugTestFramework
                     <ul class="group-body">',
                 'script' => 'console.groupCollapsed("a","b","c");',
                 'text' => '▸ a("b", "c")',
+                'wamp' => $entry,
             )
         );
 
@@ -1248,10 +1377,10 @@ class MethodTest extends DebugTestFramework
                 <ul class="group-body">
                     <li class="m_log"><span class="no-quotes t_string">after nested group</span></li>
                 </ul>',
-            'text' => '▸ a("b", "c")
-                after nested group',
             'script' => 'console.groupCollapsed("a","b","c");
                 console.log("after nested group");',
+            'text' => '▸ a("b", "c")
+                after nested group',
             // 'firephp' => '',
         ));
 
@@ -1259,7 +1388,10 @@ class MethodTest extends DebugTestFramework
         $this->testMethod(
             'groupCollapsed',
             array('not logged'),
-            false
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
         );
     }
 
@@ -1308,15 +1440,16 @@ class MethodTest extends DebugTestFramework
         $this->debug->groupEnd(); // close the open group
         $this->assertCount(2, $this->debug->getData('log'));
 
+        $entry = array(
+            'groupEnd',
+            array(),
+            array(),
+        );
         $this->testMethod(
             'groupEnd',
             array(),
             array(
-                'entry' => array(
-                    'groupEnd',
-                    array(),
-                    array(),
-                ),
+                'entry' => $entry,
                 'custom' => function () {
                     // $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
                 },
@@ -1329,6 +1462,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '</ul>' . "\n" . '</li>',
                 'script' => 'console.groupEnd();',
                 'text' => '',
+                'wamp' => false,
             )
         );
     }
@@ -1354,7 +1488,18 @@ class MethodTest extends DebugTestFramework
                 'html' => '</ul>' . "\n" . '</li>',
                 'script' => 'console.groupEnd();',
                 'text' => '',
+                'wamp' => array(
+                    'groupEnd',
+                    array(),
+                    array(),
+                ),
             )
+        );
+
+        $entry = array(
+            'groupEndValue',
+            array('return', 'foo'),
+            array(),
         );
         $this->testMethod(
             array(
@@ -1362,11 +1507,7 @@ class MethodTest extends DebugTestFramework
             ),
             array(),
             array(
-                'entry' => array(
-                    'groupEndValue',
-                    array('return', 'foo'),
-                    array(),
-                ),
+                'entry' => $entry,
                 'chromeLogger' => array(
                     array('return', 'foo'),
                     null,
@@ -1376,6 +1517,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_groupEndValue"><span class="no-quotes t_string">return</span> = <span class="t_string">foo</span></li>',
                 'script' => 'console.log("return","foo");',
                 'text' => 'return = "foo"',
+                'wamp' => $entry + array('messageIndex' => 0),
             )
         );
     }
@@ -1559,17 +1701,18 @@ EOD;
                     null,
                     'info',
                 )),
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"INFO"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
                 'html' => '<li class="m_info"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
                     </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'script' => 'console.info("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
                 'text' => 'ℹ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
-                'script' => 'console.info("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"INFO"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                // 'wamp' @todo
             )
         );
         fclose($resource);
@@ -1578,7 +1721,10 @@ EOD;
         $this->testMethod(
             'info',
             array('info message'),
-            false
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
         );
     }
 
@@ -1617,20 +1763,20 @@ EOD;
                     null,
                     '',
                 )),
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"LOG"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
                     </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
-                'text' => 'a string, array(), stdClass
-                    Properties: none!
-                    Methods: none!, Resource id #%d: stream',
                 'script' => 'console.log("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"LOG"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
                 'streamAnsi' => "a string\e[38;5;245m, \e[0m\e[38;5;45marray\e[38;5;245m(\e[0m\e[38;5;245m)\e[0m\e[38;5;245m, \e[0m\e[1mstdClass\e[22m
                     Properties: none!
                     Methods: none!\e[38;5;245m, \e[0mResource id #%d: stream",
+                'text' => 'a string, array(), stdClass
+                    Properties: none!
+                    Methods: none!, Resource id #%d: stream',
             )
         );
         fclose($resource);
@@ -1639,7 +1785,10 @@ EOD;
         $this->testMethod(
             'log',
             array('log message'),
-            false
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
         );
     }
 
@@ -1660,6 +1809,7 @@ EOD;
         $this->assertInternalType('float', $this->debug->getData('timers/labels/some label/1'));
 
         $this->assertEmpty($this->debug->getData('log'));
+        $this->assertEmpty($this->debug->getRoute('wamp')->wamp->messages);
     }
 
     /**
@@ -1697,6 +1847,7 @@ EOD;
                 'html' => '<li class="m_time"><span class="no-quotes t_string">time: %f μs</span></li>',
                 'script' => 'console.log("time: %f μs");',
                 'text' => '⏱ time: %f μs',
+                // 'wamp' => @todo
             )
         );
         $this->testMethod(
@@ -1708,6 +1859,7 @@ EOD;
             array(
                 'return' => '%f',
                 'notLogged' => true,    // not logged because 2nd param = true
+                'wamp' => false,
             )
         );
         $this->testMethod(
@@ -1734,6 +1886,7 @@ EOD;
                 'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f %ss</span></li>',
                 'script' => 'console.log("my label: %f %ss");',
                 'text' => '⏱ my label: %f %ss',
+                // 'wamp' => @todo
             )
         );
         $this->testMethod(
@@ -1756,7 +1909,7 @@ EOD;
                 */
                 'entry' => json_encode(array(
                     'time',
-                    array("blahmy labelblah%f %ssblah"),
+                    array('blahmy labelblah%f %ssblah'),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
@@ -1770,6 +1923,7 @@ EOD;
                 'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f %ssblah</span></li>',
                 'script' => 'console.log("blahmy labelblah%f %ssblah");',
                 'text' => '⏱ blahmy labelblah%f %ssblah',
+                // 'wamp' => @todo
             )
         );
 
@@ -1781,7 +1935,10 @@ EOD;
         $this->testMethod(
             'timeEnd',
             array('my label'),
-            false
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
         );
     }
 
@@ -1831,6 +1988,7 @@ EOD;
                 'html' => '<li class="m_time"><span class="no-quotes t_string">time: %f μs</span></li>',
                 'script' => 'console.log("time: %f μs");',
                 'text' => '⏱ time: %f μs',
+                // 'wamp' => @todo
             )
         );
 
@@ -1856,6 +2014,7 @@ EOD;
                 'html' => '<li class="m_time"><span class="no-quotes t_string">my label: %f %ss</span></li>',
                 'script' => 'console.log("my label: %f %ss");',
                 'text' => '⏱ my label: %f %ss',
+                // 'wamp' => @todo
             )
         );
 
@@ -1868,6 +2027,7 @@ EOD;
             array(
                 'notLogged' => true,  // not logged because 2nd param = true
                 'return' => '%f',
+                'wamp' => false,
             )
         );
 
@@ -1886,7 +2046,7 @@ EOD;
             array(
                 'entry' => json_encode(array(
                     'time',
-                    array("blahmy labelblah%f %ssblah"),
+                    array('blahmy labelblah%f %ssblah'),
                     array(),
                 )),
                 'chromeLogger' => json_encode(array(
@@ -1900,6 +2060,7 @@ EOD;
                 'html' => '<li class="m_time"><span class="no-quotes t_string">blahmy labelblah%f %ssblah</span></li>',
                 'script' => 'console.log("blahmy labelblah%f %ssblah");',
                 'text' => '⏱ blahmy labelblah%f %ssblah',
+                // 'wamp' => @todo
             )
         );
 
@@ -1907,7 +2068,10 @@ EOD;
         $this->testMethod(
             'timeGet',
             array('my label'),
-            false
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
         );
     }
 
@@ -1953,6 +2117,7 @@ EOD;
                 'html' => '<li class="m_timeLog"><span class="no-quotes t_string">time: </span><span class="t_string">%f μs</span></li>',
                 'script' => 'console.log("time: ","%f μs");',
                 'text' => '⏱ time: "%f μs"',
+                // 'wamp' => @todo
             )
         );
 
@@ -1994,6 +2159,7 @@ EOD;
                 'text' => '⏱ my label: "%f %ss", array(
                     [foo] => "bar"
                     )',
+                // 'wamp' => @todo
             )
         );
 
@@ -2026,6 +2192,7 @@ EOD;
                 'html' => '<li class="m_timeLog"><span class="no-quotes t_string">Timer \'bogus\' does not exist</span></li>',
                 'script' => 'console.log("Timer \'bogus\' does not exist");',
                 'text' => '⏱ Timer \'bogus\' does not exist',
+                // 'wamp' => @todo
             )
         );
     }
@@ -2162,6 +2329,7 @@ EOD;
                     $this->assertNotEmpty($trace);
                     $this->assertSame($expect, trim($logEntry));
                 },
+                // 'wamp' => @todo
             )
         );
 
@@ -2169,7 +2337,10 @@ EOD;
         $this->testMethod(
             'log',
             array('log message'),
-            false
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
         );
     }
 
@@ -2211,17 +2382,18 @@ EOD;
                     __DIR__ . '/DebugTestFramework.php: %d',
                     'warn',
                 )),
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . __DIR__ . '/' . 'DebugTestFramework.php","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
                 'html' => '<li class="m_warn" data-detect-files="true" data-file="' . __DIR__ . '/DebugTestFramework.php" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
                     </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","' . __DIR__ . '/DebugTestFramework.php: line %d");',
                 'text' => '⚠ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',
-                'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","' . __DIR__ . '/DebugTestFramework.php: line %d");',
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . __DIR__ . '/' . 'DebugTestFramework.php","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                // 'wamp' => @todo
             )
         );
         fclose($resource);
@@ -2230,7 +2402,10 @@ EOD;
         $this->testMethod(
             'warn',
             array('warn message'),
-            false
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
         );
     }
 }

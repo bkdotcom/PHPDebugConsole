@@ -30,4 +30,14 @@ ini_set('xdebug.var_display_max_data', '-1');
     'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
     'enableProfiling' => true,
     'route' => 'html',
+    'services' => array(
+        'routeWamp' => function ($debug) {
+            return new \bdk\Debug\Route\Wamp($debug, new \bdk\DebugTest\MockWampPublisher());
+        },
+    ),
+    'onBootstrap' => function ($event) {
+        $debug = $event->getSubject();
+        $wamp = $debug->getRoute('wamp');
+        $debug->addPlugin($wamp);
+    }
 ));

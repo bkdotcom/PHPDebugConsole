@@ -45,6 +45,7 @@ EOD;
                     'html' => $arrayDumpHtml,
                     'text' => $arrayDumpText,
                     'script' => 'console.log({"0":"a","foo":"bar","1":"c"});',
+                    // 'wamp' => @todo
                 ),
             ),
         );
@@ -112,9 +113,25 @@ EOD;
                     $this->assertSelectEquals('.array-inner > li > .t_keyword', 'array', true, $strHtml);
                     $this->assertSelectEquals('.array-inner > li > .t_recursion', '*RECURSION*', true, $strHtml);
                 },
-                'text' => array('contains' => '    [val] => array *RECURSION*'),
                 'script' => 'console.log({"foo":"bar","val":"array *RECURSION*"});',
                 'streamAnsi' => array('contains' => "    \e[38;5;245m[\e[38;5;83mval\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;45marray \e[38;5;196m*RECURSION*\e[0m"),
+                'text' => array('contains' => '    [val] => array *RECURSION*'),
+                'wamp' => array(
+                    'log',
+                    array(
+                        array(
+                            'foo' => 'bar',
+                            'val' => \bdk\Debug\Abstraction\Abstracter::RECURSION,
+                            /*
+                            '__debug_key_order__' => array(
+                                'foo',
+                                'val',
+                            )
+                            */
+                        ),
+                    ),
+                    array(),
+                ),
             )
         );
     }

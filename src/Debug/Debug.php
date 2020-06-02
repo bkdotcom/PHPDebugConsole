@@ -1239,6 +1239,9 @@ class Debug
                 );
             }
         }
+        if ($plugin instanceof RouteInterface) {
+            $this->onCfgRoute($plugin);
+        }
         if (!$isPlugin) {
             throw new \InvalidArgumentException('addPlugin expects \\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface');
         }
@@ -1991,8 +1994,13 @@ class Debug
         if ($isset) {
             return $this->readOnly[$property];
         }
+        $val = $this->getViaContainer($property);
+        if ($val !== false) {
+            return $val;
+        }
         $classname = 'bdk\\Debug\\' . \ucfirst($cat) . '\\' . \ucfirst($name);
         if (\class_exists($classname)) {
+            /** @var \bdk\Debug\Dump\Base|RouteInterface */
             $val = new $classname($this);
             if ($val instanceof ConfigurableInterface) {
                 $val->setCfg($this->config->get($property, self::CONFIG_INIT));

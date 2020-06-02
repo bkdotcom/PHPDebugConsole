@@ -4,6 +4,7 @@ use bdk\CssXpath\DOMTestCase;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Psr7lite\ServerRequest;
+use bdk\Debug\Route\RouteInterface;
 use bdk\PubSub\Event;
 
 /**
@@ -13,6 +14,7 @@ class DebugTestFramework extends DOMTestCase
 {
 
     public static $allowError = false;
+    // public static $haveWampPlugin = false;
 
     protected function &getSharedVar($key)
     {
@@ -129,6 +131,15 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
+        /*
+        if (self::$haveWampPlugin === false) {
+            $wamp = $this->debug->getRoute('wamp', true) === false
+                ? new \bdk\Debug\Route\Wamp($this->debug, new \bdk\DebugTest\MockWampPublisher())
+                : $this->debug->getRoute('wamp');
+            $this->debug->addPlugin($wamp);
+            self::$haveWampPlugin = true;
+        }
+        */
         if (!isset($this->file)) {
             /*
             this dummy test won't do any assertions, but will set
@@ -250,17 +261,28 @@ class DebugTestFramework extends DOMTestCase
         $dataPath = $method === 'alert'
             ? 'alerts/__end__'
             : 'log/__end__';
-        $logCountBefore = $this->debug->getData($countPath);
+        $values = array(
+            'logCountAfter' => 0,
+            'logCountBefore' => $this->debug->getData($countPath),
+            'return' => null,
+        );
         if (\is_array($method)) {
             if (isset($method['dataPath'])) {
                 $dataPath = $method['dataPath'];
             }
         } elseif ($method) {
-            $return = \call_user_func_array(array($this->debug, $method), $args);
+            $this->debug->getRoute('wamp')->wamp->messages = array();
+            $values['return'] = \call_user_func_array(array($this->debug, $method), $args);
             $this->file = __FILE__;
             $this->line = __LINE__ - 2;
         }
+        $values['logCountAfter'] = $this->debug->getData($countPath);
         $logEntry = $this->debug->getData($dataPath);
+        if ($logEntry) {
+            $meta = $logEntry['meta'];
+            ksort($meta);
+            $logEntry['meta'] = $meta;
+        }
         if (!$tests) {
             $tests = array(
                 'notLogged' => true,
@@ -275,83 +297,133 @@ class DebugTestFramework extends DOMTestCase
             'logEntry' => $logEntry,
         ));
         */
-        foreach ($tests as $test => $outputExpect) {
+        foreach ($tests as $test => $expect) {
             // $this->stderr('test', $test);
-            if ($test === 'entry') {
+            $continue = $this->tstMethodPreTest($test, $expect, $logEntry, $values);
+            if ($continue === false) {
+                // continue testing = false
+                continue;
+            }
+            $routeObj = $this->tstMethodRouteObj($test);
+            $output = $this->tstMethodOutput($test, $routeObj, $logEntry, $expect);
+            $this->tstMethodTest($test, $expect, $output);
+        }
+    }
+
+    private function tstMethodPreTest($test, $expect, $logEntry, $vals = array())
+    {
+        switch ($test) {
+            case 'entry':
                 $logEntryTemp = $logEntry
                     ? $logEntry
                     : new LogEntry($this->debug, 'null');
-                if (\is_callable($outputExpect)) {
-                    \call_user_func($outputExpect, $logEntryTemp);
-                } elseif (\is_string($outputExpect)) {
+                if (\is_callable($expect)) {
+                    \call_user_func($expect, $logEntryTemp);
+                } elseif (\is_string($expect)) {
                     $logEntryTemp = $this->logEntryToArray($logEntryTemp);
-                    $this->assertStringMatchesFormat($outputExpect, \json_encode($logEntryTemp), 'log entry does not match format');
+                    $this->assertStringMatchesFormat($expect, \json_encode($logEntryTemp), 'log entry does not match format');
                 } else {
                     $logEntryTemp = $this->logEntryToArray($logEntryTemp);
-                    if (isset($outputExpect[2]['file']) && $outputExpect[2]['file'] === '*') {
-                        unset($outputExpect[2]['file']);
+                    if (isset($expect[2]['file']) && $expect[2]['file'] === '*') {
+                        unset($expect[2]['file']);
                         unset($logEntryTemp[2]['file']);
                     }
-                    $this->assertEquals($outputExpect, $logEntryTemp);
+                    $this->assertEquals($expect, $logEntryTemp);
                 }
-                continue;
-            } elseif ($test === 'custom') {
-                \call_user_func($outputExpect, $logEntry);
-                continue;
-            } elseif ($test === 'notLogged') {
-                $this->assertSame($logCountBefore, $this->debug->getData($countPath), 'failed asserting nothing logged');
-                continue;
-            } elseif ($test === 'return') {
-                if (\is_string($outputExpect)) {
-                    $this->assertStringMatchesFormat($outputExpect, (string) $return, 'return value does not match format');
-                } else {
-                    $this->assertSame($outputExpect, $return, 'return value not same');
+                return false;
+            case 'custom':
+                \call_user_func($expect, $logEntry);
+                return false;
+            case 'notLogged':
+                $this->assertSame($vals['logCountBefore'], $vals['logCountAfter'], 'failed asserting nothing logged');
+                return false;
+            case 'return':
+                if (\is_string($expect)) {
+                    $this->assertStringMatchesFormat($expect, (string) $vals['return'], 'return value does not match format');
+                    return false;
                 }
-                continue;
-            }
-            if ($test === 'streamAnsi') {
-                // $routeObj = new \bdk\Debug\Route\Stream($this->debug);
+                $this->assertSame($expect, $vals['return'], 'return value not same');
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * Get/Initialize route
+     *
+     * @param string $test route
+     *
+     * @return RouteInterface
+     */
+    private function tstMethodRouteObj($test)
+    {
+        switch ($test) {
+            case 'streamAnsi':
                 $routeObj = $this->debug->getRoute('stream');
                 $routeObj->setCfg('stream', 'php://temp');
-            } else {
-                $routeObj = $this->debug->getRoute($test);
-            }
-            if (\in_array($test, array('chromeLogger','firephp'))) {
-                // remove data - sans the logEntry we're interested in
-                $dataBackup = array(
-                    'alerts' => $this->debug->getData('alerts'),
-                    'log' => $this->debug->getData('log'),
-                    // 'logSummary' => $this->debug->getData('logSummary'),
-                );
-                $this->debug->setData('alerts', array());
-                $this->debug->setData('log', array($logEntry));
-                /*
-                    We'll call processLogEntries directly
-                */
-                $event = new \bdk\PubSub\Event(
-                    $this->debug,
-                    array(
-                        'headers' => array(),
-                        'return' => '',
-                    )
-                );
+                return $routeObj;
+            case 'wamp':
+                return null;  // we'll rely on wamp's debug.log subscription
+            default:
+                return $this->debug->getRoute($test);
+        }
+    }
+
+    /**
+     * Get output from route
+     *
+     * @param string              $test     chromeLogger|firephp|wampother
+     * @param RouteInterface|null $routeObj Route instance
+     * @param LogEntry            $logEntry LogEntry
+     * @param mixed               $expect   expected output
+     *
+     * @return array|string
+     */
+    private function tstMethodOutput($test, $routeObj, LogEntry $logEntry, $expect)
+    {
+        $asString = \is_string($expect);
+        if (\in_array($test, array('chromeLogger','firephp','wamp'))) {
+            // remove data - sans the logEntry we're interested in
+            $dataBackup = array(
+                'alerts' => $this->debug->getData('alerts'),
+                'log' => $this->debug->getData('log'),
+                // 'logSummary' => $this->debug->getData('logSummary'),
+            );
+            $this->debug->setData('alerts', array());
+            $this->debug->setData('log', array($logEntry));
+            /*
+                We'll call processLogEntries directly
+            */
+            $event = new \bdk\PubSub\Event(
+                $this->debug,
+                array(
+                    'headers' => array(),
+                    'return' => '',
+                )
+            );
+            if ($routeObj) {
                 $routeObj->processLogEntries($event, 'debug.output', $this->debug->eventManager);
-                $this->debug->setData($dataBackup);
-                $headers = $event['headers'];
-                if ($test === 'chromeLogger') {
+            }
+            $this->debug->setData($dataBackup);
+            $headers = $event['headers'];
+            switch ($test) {
+                case 'chromeLogger':
                     /*
                         Decode the chromelogger header and get rows data
                     */
                     $rows = \json_decode(\base64_decode($headers[0][1]), true)['rows'];
                     // entry is nested inside a group
                     $output = $rows[\count($rows) - 2];
-                    if (\is_string($outputExpect)) {
+                    if ($asString) {
                         $output = \json_encode($output);
                     }
-                } else {
-                    if (\is_string($outputExpect)) {
+                    break;
+                case 'firephp':
+                    /*
+                    if ($asString) {
                         $outputExpect = \preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
                     }
+                    */
                     /*
                         Filter just the log entry headers
                     */
@@ -363,41 +435,106 @@ class DebugTestFramework extends DOMTestCase
                     }
                     // entry is nested inside a group
                     $output = $headersNew[\count($headersNew) - 2];
-                }
-            } else {
-                $refMethods = &$this->getSharedVar('reflectionMethods');
-                if (!isset($refMethods[$test])) {
-                    $refMethod = new \ReflectionMethod($routeObj, 'processLogEntryViaEvent');
-                    $refMethod->setAccessible(true);
-                    $refMethods[$test] = $refMethod;
-                }
-                $output = $refMethods[$test]->invoke($routeObj, $logEntry);
-            }
-            if (\is_callable($outputExpect)) {
-                $outputExpect($output);
-            } elseif (\is_array($outputExpect)) {
-                if (isset($outputExpect['contains'])) {
-                    $message = "\e[1m" . $test . " doesn't contain\e[0m";
-                    if ($test === 'streamAnsi') {
-                        $message .= "\nactual: " . \str_replace("\e", '\e', $output);
+                    break;
+                case 'wamp':
+                    // $output = end($routeObj->wamp->messages);
+                    $routeObj = $this->debug->getRoute('wamp');
+                    // var_dump('get output:', $routeObj->wamp);
+                    $messageIndex = \is_array($expect) && isset($expect['messageIndex'])
+                        ? $expect['messageIndex']
+                        : count($routeObj->wamp->messages) - 1;
+                    $output = isset($routeObj->wamp->messages[$messageIndex])
+                        ? $routeObj->wamp->messages[$messageIndex]
+                        : false;
+                    if ($output) {
+                        ksort($output['args'][2]);
+                        $output = json_encode($output);
+                        if (!$asString) {
+                            $output = json_decode($output, true);
+                        }
                     }
-                    $this->assertContains($outputExpect['contains'], $output, $message);
-                } else {
-                    $this->assertSame($outputExpect, $output, "\e[1m" . $test . " not same\e[0m");
+                    break;
+            }
+            return $output;
+        }
+        $refMethods = &$this->getSharedVar('reflectionMethods');
+        if (!isset($refMethods[$test])) {
+            $refMethod = new \ReflectionMethod($routeObj, 'processLogEntryViaEvent');
+            $refMethod->setAccessible(true);
+            $refMethods[$test] = $refMethod;
+        }
+        return $refMethods[$test]->invoke($routeObj, $logEntry);
+    }
+
+    /**
+     * TEst output from route
+     *
+     * @param string       $test         chromeLogger|firephp|wamp
+     * @param string|array $outputExpect [description]
+     * @param string|array $output       [description]
+     *
+     * @return void
+     */
+    private function tstMethodTest($test, $outputExpect, $output)
+    {
+        if (\is_callable($outputExpect)) {
+            $outputExpect($output);
+            return;
+        }
+        if (\is_array($outputExpect)) {
+            if ($test === 'wamp') {
+                if ($outputExpect) {
+                    unset($outputExpect['messageIndex']);
+                    if ($this->debug->utility->arrayIsList($outputExpect)) {
+                        // method, args, meta
+                        $outputExpect = array('args' => $outputExpect);
+                    }
                 }
-            } else {
-                $output = \preg_replace('#^\s+#m', '', $output);
-                $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);
-                // @see https://github.com/sebastianbergmann/phpunit/issues/3040
-                $output = \str_replace("\r", '[\\r]', $output);
-                $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
-                $message = "\e[1m" . $test . " not same\e[0m";
+                $outputExpect = \array_replace_recursive(array(
+                    'topic' => $this->debug->getRoute('wamp')->topic,
+                    'args' => array(
+                        null,       // method
+                        array(),    // args
+                        array(),    // meta
+                    ),
+                    'options' => array(),
+                ), $outputExpect);
+                $outputExpect['args'][2] = array_merge(array(
+                    'format' => 'raw',
+                    'requestId' => $this->debug->getData('requestId'),
+                ), $outputExpect['args'][2]);
+                ksort($outputExpect['args'][2]);
+            }
+            if (isset($outputExpect['contains'])) {
+                $message = "\e[1m" . $test . " doesn't contain\e[0m";
                 if ($test === 'streamAnsi') {
                     $message .= "\nactual: " . \str_replace("\e", '\e', $output);
                 }
-                $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
+                $this->assertContains($outputExpect['contains'], $output, $message);
+            } else {
+                $message = "\e[1m" . $test . " not same\e[0m";
+                $this->assertSame($outputExpect, $output, $message);
+            }
+            return;
+        } elseif ($outputExpect === false) {
+            if ($test === 'wamp') {
+                $this->assertFalse($output);
+                return;
             }
         }
+        if ($test === 'firephp') {
+            $outputExpect = \preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
+        }
+        $output = \preg_replace('#^\s+#m', '', $output);
+        $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);
+        // @see https://github.com/sebastianbergmann/phpunit/issues/3040
+        $output = \str_replace("\r", '[\\r]', $output);
+        $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
+        $message = "\e[1m" . $test . " not same\e[0m";
+        if ($test === 'streamAnsi') {
+            $message .= "\nactual: " . \str_replace("\e", '\e', $output);
+        }
+        $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
     }
 
     /**

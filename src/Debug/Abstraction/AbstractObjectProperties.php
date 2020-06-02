@@ -141,6 +141,9 @@ class AbstractObjectProperties extends AbstractObjectSub
             }
             $properties[$name]['debugInfoExcluded'] = true;
         }
+        /*
+            What remains in debugInfo are __debugInfo only values
+        */
         foreach ($debugInfo as $name => $value) {
             $properties[$name] = \array_merge(
                 static::$basePropInfo,
@@ -388,7 +391,7 @@ class AbstractObjectProperties extends AbstractObjectSub
      * Get property info
      *
      * @param Abstraction        $abs                Abstraction event object
-     * @param ReflectionProperty $reflectionProperty reflectionProperty instance
+     * @param ReflectionProperty $reflectionProperty ReflectionProperty instance
      *
      * @return array
      */
@@ -413,12 +416,8 @@ class AbstractObjectProperties extends AbstractObjectSub
                 : null,
             'isStatic' => $reflectionProperty->isStatic(),
             'type' => $this->resolvePhpDocType($phpDoc['type']),
+            'visibility' => $this->getPropVis($reflectionProperty),
         ));
-        if ($reflectionProperty->isPrivate()) {
-            $propInfo['visibility'] = 'private';
-        } elseif ($reflectionProperty->isProtected()) {
-            $propInfo['visibility'] = 'protected';
-        }
         if ($abs['collectPropertyValues']) {
             $propName = $reflectionProperty->getName();
             if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
@@ -433,6 +432,24 @@ class AbstractObjectProperties extends AbstractObjectSub
             }
         }
         return $propInfo;
+    }
+
+    /**
+     * Get property visibility
+     *
+     * @param ReflectionProperty $reflectionProperty ReflectionProperty instance
+     *
+     * @return 'public'|'private'|'protected'
+     */
+    private function getPropVis(ReflectionProperty $reflectionProperty)
+    {
+        if ($reflectionProperty->isPrivate()) {
+            return 'private';
+        }
+        if ($reflectionProperty->isProtected()) {
+            return 'protected';
+        }
+        return 'public';
     }
 
     /**

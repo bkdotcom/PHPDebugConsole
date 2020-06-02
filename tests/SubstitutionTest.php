@@ -37,6 +37,7 @@ class SubstitutionTest extends DebugTestFramework
                     . '</span></li>',
                 'script' => 'console.log({{args}});',
                 'text' => 'array(1) array(0) null true false',
+                // 'wamp' => // @todo
             )
         );
     }
@@ -77,6 +78,7 @@ class SubstitutionTest extends DebugTestFramework
                     . '</span></li>',
                 'script' => 'console.log("%%s %%s %%s","callable: ' . __CLASS__ . '::' . __FUNCTION__ . '","Closure","' . $datetime->format(\DateTime::ISO8601) . '");',
                 'text' => 'callable: ' . __CLASS__ . '::' . __FUNCTION__ . ' Closure ' . $datetime->format(\DateTime::ISO8601),
+                // 'wamp' => @todo
             )
         );
     }
@@ -125,6 +127,7 @@ class SubstitutionTest extends DebugTestFramework
                     . '</span></li>',
                 'script' => 'console.log("%%s %%s %%s %%s %%s",123.45,42,"' . $time . ' (' . $timeStr . ')","<i>boring</i>","' . $binaryStr . '");',
                 'text' => '123.45 42 📅 ' . $time . ' (' . $timeStr . ') <i>boring</i> ' . $binaryStr,
+                // 'wamp' => @todo
             )
         );
     }
@@ -160,6 +163,7 @@ class SubstitutionTest extends DebugTestFramework
                 'html' => '<li class="m_log"><span class="no-quotes t_string"><span style="font-weight:bold;">Location:</span><span> <a href="http://localhost/?foo=bar&jim=slim">http://localhost/?foo=bar&jim=slim</a></span></span> = <span class="t_string">extra</span></li>',
                 'script' => 'console.log({{args}});',
                 'text' => 'Location: <a href="http://localhost/?foo=bar&jim=slim">http://localhost/?foo=bar&jim=slim</a> = "extra"',
+                // 'wamp' => @todo
             )
         );
     }
@@ -202,6 +206,7 @@ class SubstitutionTest extends DebugTestFramework
                     . trim(json_encode(array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), JSON_UNESCAPED_SLASHES), '[]')
                 . ');',
                 'text' => '\\u{feff}sub 1 <b>boldy</b> <b>sub bold</b> = "extra"',
+                // 'wamp' => @todo,
             )
         );
     }
@@ -246,6 +251,7 @@ class SubstitutionTest extends DebugTestFramework
                     . trim(json_encode(array_slice(array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1), JSON_UNESCAPED_SLASHES), '[]')
                 . ');',
                 'text' => '\\u{feff}sub 1 <b>boldy</b> <b>sub bold</b> = "extra"',
+                // 'wamp' => @todo,
             )
         );
     }
@@ -290,6 +296,7 @@ class SubstitutionTest extends DebugTestFramework
                     . trim(json_encode(array_slice(array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1), JSON_UNESCAPED_SLASHES), '[]')
                 . ');',
                 'text' => '\\u{feff}sub 1 <b>boldy</b> <b>sub bold</b> = "extra"',
+                // 'wamp' => @todo,
             )
         );
     }

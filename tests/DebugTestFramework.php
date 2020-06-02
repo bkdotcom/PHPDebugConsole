@@ -299,13 +299,16 @@ class DebugTestFramework extends DOMTestCase
         */
         foreach ($tests as $test => $expect) {
             // $this->stderr('test', $test);
-            $continue = $this->tstMethodPreTest($test, $expect, $logEntry, $values);
+            $logEntryTemp = $logEntry
+                ? new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta'])
+                : new LogEntry($this->debug, 'null');
+            $continue = $this->tstMethodPreTest($test, $expect, $logEntryTemp, $values);
             if ($continue === false) {
                 // continue testing = false
                 continue;
             }
             $routeObj = $this->tstMethodRouteObj($test);
-            $output = $this->tstMethodOutput($test, $routeObj, $logEntry, $expect);
+            $output = $this->tstMethodOutput($test, $routeObj, $logEntryTemp, $expect);
             $this->tstMethodTest($test, $expect, $output);
         }
     }
@@ -314,21 +317,18 @@ class DebugTestFramework extends DOMTestCase
     {
         switch ($test) {
             case 'entry':
-                $logEntryTemp = $logEntry
-                    ? $logEntry
-                    : new LogEntry($this->debug, 'null');
                 if (\is_callable($expect)) {
-                    \call_user_func($expect, $logEntryTemp);
+                    \call_user_func($expect, $logEntry);
                 } elseif (\is_string($expect)) {
-                    $logEntryTemp = $this->logEntryToArray($logEntryTemp);
-                    $this->assertStringMatchesFormat($expect, \json_encode($logEntryTemp), 'log entry does not match format');
+                    $logEntryArray = $this->logEntryToArray($logEntry);
+                    $this->assertStringMatchesFormat($expect, \json_encode($logEntryArray), 'log entry does not match format');
                 } else {
-                    $logEntryTemp = $this->logEntryToArray($logEntryTemp);
+                    $logEntryArray = $this->logEntryToArray($logEntry);
                     if (isset($expect[2]['file']) && $expect[2]['file'] === '*') {
                         unset($expect[2]['file']);
-                        unset($logEntryTemp[2]['file']);
+                        unset($logEntryArray[2]['file']);
                     }
-                    $this->assertEquals($expect, $logEntryTemp);
+                    $this->assertEquals($expect, $logEntryArray);
                 }
                 return false;
             case 'custom':

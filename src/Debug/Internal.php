@@ -573,6 +573,8 @@ class Internal implements SubscriberInterface
         if ($function && $caller['line'] <= $callerStartLine + 2) {
             $args[] = $function;
             $args = \array_merge($args, $caller['args']);
+            // php < 7.0 debug_backtrace args are references!
+            $args = $this->debug->utility->arrayCopy($args, false);
         }
         return $args;
     }

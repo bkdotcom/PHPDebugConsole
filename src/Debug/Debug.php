@@ -123,7 +123,7 @@ class Debug
             'outputSent'        => false,
             'profileAutoInc'    => 1,
             'profileInstances'  => array(),
-            'requestId'         => $this->utilities->requestId(),
+            'requestId'         => '', // set below
             'runtime'           => array(
                 // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
             ),
@@ -177,6 +177,7 @@ class Debug
         } else {
             $this->setLogDest();
             $this->data['entryCountInitial'] = \count($this->data['log']);
+            $this->data['requestId'] = $this->utilities->requestId();
         }
         /*
             Initialize Internal

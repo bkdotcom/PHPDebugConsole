@@ -383,9 +383,11 @@ class Utilities
     public static function getInterface()
     {
         $return = 'http';
+        $argv = isset($_SERVER['argv']) ? $_SERVER['argv'] : array();
+        $queryString = isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
         $isCliOrCron = \count(\array_filter(array(
-            \defined('STDIN'),
-            isset($_SERVER['argv']),
+            // have argv and it's not query_string
+            $argv && $argv !== array($queryString),
             !\array_key_exists('REQUEST_METHOD', $_SERVER),
         ))) > 0;
         if ($isCliOrCron) {

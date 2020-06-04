@@ -49,7 +49,9 @@ class LogEntry extends Event
         );
         $metaExtracted = $this->metaExtract($this->values['args']);
         if ($defaultArgs) {
-            $args = \array_slice($this->values['args'], 0, \count($defaultArgs));
+            $count = \count($defaultArgs);
+            $args = \array_slice($this->values['args'], 0, $count);
+            $argsMore = \array_slice($this->values['args'], $count);
             $args = \array_combine(
                 \array_keys($defaultArgs),
                 \array_replace(\array_values($defaultArgs), $args)
@@ -58,7 +60,7 @@ class LogEntry extends Event
                 $this->values['meta'][$k] = $args[$k];
                 unset($args[$k]);
             }
-            $this->values['args'] = \array_values($args);
+            $this->values['args'] = \array_values($args + $argsMore);
         }
         $this->setMeta($metaExtracted);
     }

@@ -104,7 +104,7 @@ class AbstractObjectProperties extends AbstractObjectSub
     /**
      * Add/Update properties with info from __debugInfo method
      *
-     * @param Abstraction $abs Abstraction event object
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
@@ -118,7 +118,36 @@ class AbstractObjectProperties extends AbstractObjectSub
             return;
         }
         $obj = $abs->getSubject();
-        $debugInfo = \call_user_func(array($obj, '__debugInfo'));
+        // temporarily store __debugInfo values in abstraction
+        $abs['debugInfo'] = \call_user_func(array($obj, '__debugInfo'));
+        $properties = $this->addPropertiesDebugWalk($abs);
+        /*
+            What remains in debugInfo are __debugInfo only values
+        */
+        foreach ($abs['debugInfo'] as $name => $value) {
+            $properties[$name] = \array_merge(
+                static::$basePropInfo,
+                array(
+                    'value' => $value,
+                    'valueFrom' => 'debugInfo',
+                    'visibility' => 'debug',    // indicates this "property" is exclusive to debugInfo
+                )
+            );
+        }
+        $abs['properties'] = $properties;
+        unset($abs['debugInfo']);
+    }
+
+    /**
+     * Iterate over properties to set value & valueFrom
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return array
+     */
+    private function addPropertiesDebugWalk(Abstraction $abs)
+    {
+        $debugInfo = $abs['debugInfo'];
         $properties = $abs['properties'];
         foreach ($properties as $name => $info) {
             if (\array_key_exists($name, $abs['propertyOverrideValues'])) {
@@ -141,20 +170,8 @@ class AbstractObjectProperties extends AbstractObjectSub
             }
             $properties[$name]['debugInfoExcluded'] = true;
         }
-        /*
-            What remains in debugInfo are __debugInfo only values
-        */
-        foreach ($debugInfo as $name => $value) {
-            $properties[$name] = \array_merge(
-                static::$basePropInfo,
-                array(
-                    'value' => $value,
-                    'valueFrom' => 'debugInfo',
-                    'visibility' => 'debug',    // indicates this property is exclusive to debugInfo
-                )
-            );
-        }
-        $abs['properties'] = $properties;
+        $abs['debugInfo'] = $debugInfo;
+        return $properties;
     }
 
     /**

@@ -90,20 +90,7 @@ class Utility
             // not array or appears to be a callable
             return $array2;
         }
-        foreach ($array2 as $k2 => $v2) {
-            if (\is_int($k2) && !\is_array($v2)) {
-                if (!\in_array($v2, $arrayDef)) {
-                    $arrayDef[] = $v2;
-                }
-                continue;
-            }
-            if (!isset($arrayDef[$k2])) {
-                $arrayDef[$k2] = $v2;
-                continue;
-            }
-            $arrayDef[$k2] = self::arrayMergeDeep($arrayDef[$k2], $v2);
-        }
-        return $arrayDef;
+        return static::arrayMergeDeepWalk($arrayDef, $array2);
     }
 
     /**
@@ -633,6 +620,33 @@ class Utility
                 . (self::getServerParam('REQUEST_TIME_FLOAT') ?: self::getServerParam('REQUEST_TIME'))
                 . self::getServerParam('REMOTE_PORT', '')
         );
+    }
+
+    /**
+     * Merge 2nd array into first
+     *
+     * @param array $arrayDef default array
+     * @param array $array2   array 2
+     *
+     * @return array
+     */
+    private static function arrayMergeDeepWalk($arrayDef, $array2)
+    {
+        foreach ($array2 as $k2 => $v2) {
+            // append int-key'd values... unless value is an array
+            if (\is_int($k2) && !\is_array($v2)) {
+                if (!\in_array($v2, $arrayDef)) {
+                    $arrayDef[] = $v2;
+                }
+                continue;
+            }
+            if (!isset($arrayDef[$k2])) {
+                $arrayDef[$k2] = $v2;
+                continue;
+            }
+            $arrayDef[$k2] = static::arrayMergeDeep($arrayDef[$k2], $v2);
+        }
+        return $arrayDef;
     }
 
     /**

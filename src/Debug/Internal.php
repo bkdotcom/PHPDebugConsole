@@ -209,18 +209,14 @@ class Internal implements SubscriberInterface
     /**
      * Return the group & groupCollapsed ("ancestors")
      *
-     * @param int|string $where 'auto', 'main' or summary priority
+     * @param 'auto'|'main'|int $where 'auto', 'main' or summary priority
      *
      * @return LogEntry[] kwys are maintained
      */
     public function getCurrentGroups($where = 'auto')
     {
         if ($where === 'auto') {
-            $priorityStack = $this->debug->getData('groupPriorityStack');
-            $priority = \end($priorityStack);
-            $where = $priority !== false
-                ? $priority
-                : 'main';
+            $where = $this->getCurrentPriority();
         }
 
         /*
@@ -232,16 +228,15 @@ class Internal implements SubscriberInterface
             $curDepth += (int) $group['collect'];
         }
 
-        $logEntries = $where === 'main'
-            ? $this->debug->getData(array('log'))
-            : $this->debug->getData(array('logSummary', $where));
-
+        $entries = array();
         /*
             curDepth will fluctuate as we go back through log
             minDepth will decrease as we work our way down/up the groups
         */
+        $logEntries = $where === 'main'
+            ? $this->debug->getData(array('log'))
+            : $this->debug->getData(array('logSummary', $where));
         $minDepth = $curDepth;
-        $entries = array();
         for ($i = \count($logEntries) - 1; $i >= 0; $i--) {
             if ($curDepth < 1) {
                 break;
@@ -258,6 +253,20 @@ class Internal implements SubscriberInterface
             }
         }
         return $entries;
+    }
+
+    /**
+     * GEt current group priority
+     *
+     * @return 'main'|int
+     */
+    public function getCurrentPriority()
+    {
+        $priorityStack = $this->debug->getData('groupPriorityStack');
+        $priority = \end($priorityStack);
+        return $priority !== false
+            ? $priority
+            : 'main';
     }
 
     /**

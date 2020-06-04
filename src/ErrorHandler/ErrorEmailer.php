@@ -209,6 +209,27 @@ class ErrorEmailer implements SubscriberInterface
     }
 
     /**
+     * Build summary of errors that haven't occured in a while
+     *
+     * @param array $errors errors to include in summary
+     *
+     * @return string
+     */
+    protected function buildSummaryBody($errors)
+    {
+        $emailBody = '';
+        foreach ($errors as $err) {
+            $dateLastEmailed = \date($this->cfg['dateTimeFmt'], $err['tsEmailed']) ?: '??';
+            $emailBody .= ''
+                . 'File: ' . $err['file'] . "\n"
+                . 'Line: ' . $err['line'] . "\n"
+                . 'Error: ' . $this->errTypes[ $err['errType'] ] . ': ' . $err['errMsg'] . "\n"
+                . 'Has occured ' . $err['countSince'] . ' times since ' . $dateLastEmailed . "\n\n";
+        }
+        return $emailBody;
+    }
+
+    /**
      * Send an email
      *
      * @param string $toAddr  To
@@ -333,15 +354,14 @@ class ErrorEmailer implements SubscriberInterface
      */
     protected function throttleDataGarbageCollection()
     {
+        $sendEmailSummary = false;
+        $summaryErrors = array();
         $tsNow     = \time();
         $tsCutoff  = $tsNow - $this->cfg['emailMin'] * 60;
         if ($this->throttleData['tsGarbageCollection'] > $tsCutoff) {
             // we've recently performed garbage collection
             return;
         }
-        // garbage collection time
-        $emailBody = '';
-        $sendEmailSummary = false;
         $this->throttleData['tsGarbageCollection'] = $tsNow;
         foreach ($this->throttleData['errors'] as $k => $err) {
             if ($err['tsEmailed'] > $tsCutoff) {
@@ -357,17 +377,16 @@ class ErrorEmailer implements SubscriberInterface
             }
             unset($this->throttleData['errors'][$k]);
             if ($err['countSince'] > 0) {
-                $dateLastEmailed = \date($this->cfg['dateTimeFmt'], $err['tsEmailed']) ?: '??';
-                $emailBody .= ''
-                    . 'File: ' . $err['file'] . "\n"
-                    . 'Line: ' . $err['line'] . "\n"
-                    . 'Error: ' . $this->errTypes[ $err['errType'] ] . ': ' . $err['errMsg'] . "\n"
-                    . 'Has occured ' . $err['countSince'] . ' times since ' . $dateLastEmailed . "\n\n";
                 $sendEmailSummary = $this->cfg['emailThrottledSummary'];
+                $summaryErrors[] = $err;
             }
         }
         if ($sendEmailSummary) {
-            $this->email($this->cfg['emailTo'], 'Website Errors: ' . $this->serverParams['SERVER_NAME'], $emailBody);
+            $this->email(
+                $this->cfg['emailTo'],
+                'Website Errors: ' . $this->serverParams['SERVER_NAME'],
+                $this->buildSummaryBody($summaryErrors)
+            );
         }
     }
 
@@ -423,8 +442,8 @@ class ErrorEmailer implements SubscriberInterface
      */
     protected function throttleDataSet(Error $error)
     {
-        $tsNow = \time();
         $hash = $error['hash'];
+        $tsNow = \time();
         $tsCutoff = $tsNow - $this->cfg['emailMin'] * 60;
         if ($error['stats']['tsEmailed'] > $tsCutoff) {
             // This error was recently emailed

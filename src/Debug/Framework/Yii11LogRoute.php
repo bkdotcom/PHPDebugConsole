@@ -117,7 +117,7 @@ class Yii11LogRoute extends CLogRoute
      *
      * @param array $logEntry raw/indexed Yii log entry
      *
-     * @return LogEntry
+     * @return array key=>value
      */
     protected function buildLogEntry(array $logEntry)
     {
@@ -130,30 +130,33 @@ class Yii11LogRoute extends CLogRoute
             'meta' => array(),
             'trace' => array(),
         ));
-        if ($logEntry['level'] === CLogger::LEVEL_TRACE || YII_DEBUG && YII_TRACE_LEVEL > 0) {
-            // if YII_DEBUG is on, we may have trace info
-            $regex = '#^in (.+) \((\d+)\)$#m';
-            \preg_match_all($regex, $logEntry['message'], $matches, PREG_SET_ORDER);
-            // remove the trace info from the message
-            $logEntry['message'] = \rtrim(\preg_replace($regex, '', $logEntry['message']));
-            foreach ($matches as $line) {
-                $logEntry['trace'][] = array(
-                    'file' => $line[1],
-                    'line' => $line[2] * 1,
-                );
-            }
-            if ($logEntry['trace']) {
-                $logEntry['meta']['file'] = $logEntry['trace'][0]['file'];
-                $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
-                if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
-                    $logEntry['meta']['backtrace'] = $logEntry['trace'];
-                    unset($logEntry['trace']);
-                }
-            } else {
-                $logEntry['level'] = CLogger::LEVEL_INFO;
-            }
+        $logEntry = $this->buildLogEntryChannel($logEntry);
+        $haveTrace = $logEntry['level'] === CLogger::LEVEL_TRACE || YII_DEBUG && YII_TRACE_LEVEL > 0;
+        if ($haveTrace === false) {
+            return $logEntry;
         }
-        return $this->buildLogEntryChannel($logEntry);
+        // if YII_DEBUG is on, we may have trace info
+        $regex = '#^in (.+) \((\d+)\)$#m';
+        \preg_match_all($regex, $logEntry['message'], $matches, PREG_SET_ORDER);
+        // remove the trace info from the message
+        $logEntry['message'] = \rtrim(\preg_replace($regex, '', $logEntry['message']));
+        foreach ($matches as $line) {
+            $logEntry['trace'][] = array(
+                'file' => $line[1],
+                'line' => $line[2] * 1,
+            );
+        }
+        if (!$logEntry['trace']) {
+            $logEntry['level'] = CLogger::LEVEL_INFO;
+            return $logEntry;
+        }
+        $logEntry['meta']['file'] = $logEntry['trace'][0]['file'];
+        $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
+        if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
+            $logEntry['meta']['backtrace'] = $logEntry['trace'];
+            unset($logEntry['trace']);
+        }
+        return $logEntry;
     }
 
     /**
@@ -170,22 +173,30 @@ class Yii11LogRoute extends CLogRoute
                 $category = \str_replace('system.caching.', '', $logEntry['category']);
                 $icon = 'fa fa-cube';
                 $logEntry['category'] = $category;
-                $logEntry['channel'] = $this->debug->getChannel($category, array('channelIcon' => $icon));
+                $logEntry['channel'] = $this->debug->getChannel($category, array(
+                    'channelIcon' => $icon,
+                ));
                 $logEntry['message'] = \preg_replace('# (to|from) cache$#', '', $logEntry['message']);
                 $logEntry['meta']['icon'] = $icon;
-            } elseif ($logEntry['category'] === 'system.CModule') {
+                return $logEntry;
+            }
+            if ($logEntry['category'] === 'system.CModule') {
                 $icon = 'fa fa-puzzle-piece';
                 $logEntry['channel'] = $this->debug->getChannel('CModule', array(
                     'channelIcon' => $icon,
                     'channelShow' => false,
                 ));
                 $logEntry['meta']['icon'] = $icon;
-            } else {
-                $icon = 'fa fa-cogs';
-                $logEntry['channel'] = $this->debug->getChannel('system misc', array('channelIcon' => $icon));
-                $logEntry['meta']['icon'] = $icon;
+                return $logEntry;
             }
-        } elseif ($logEntry['category'] === 'application') {
+            $icon = 'fa fa-cogs';
+            $logEntry['channel'] = $this->debug->getChannel('system misc', array(
+                'channelIcon' => $icon,
+            ));
+            $logEntry['meta']['icon'] = $icon;
+            return $logEntry;
+        }
+        if ($logEntry['category'] === 'application') {
             $logEntry['category'] = null;
             $logEntry['channel'] = $this->debug->getChannel('app');
         }

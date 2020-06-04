@@ -1040,21 +1040,14 @@ class Debug
         $label = $args[0];
         $log = $args[1];
         if ($numArgs === 1 && \is_bool($label)) {
-            // log passed as single arg
+            // $log passed as single arg
             $logEntry->setMeta('silent', !$label);
             $label = null;
         } elseif ($numArgs === 2) {
             $logEntry->setMeta('silent', !$log);
         }
-        $microT = 0;
-        $elapsed = false;
-        if ($label === null) {
-            list($elapsed, $microT) = $this->data['timers']['stack']
-                ? array(0, \end($this->data['timers']['stack']))
-                : $this->data['timers']['labels']['debugInit'];
-        } elseif (isset($this->data['timers']['labels'][$label])) {
-            list($elapsed, $microT) = $this->data['timers']['labels'][$label];
-        } else {
+        $elapsed = $this->timeGetElapsed($label);
+        if ($elapsed === false) {
             if ($logEntry->getMeta('silent') === false) {
                 $this->appendLog(new LogEntry(
                     $this,
@@ -1065,6 +1058,7 @@ class Debug
             }
             return false;
         }
+        list($elapsed, $microT) = $elapsed;
         if ($microT) {
             $elapsed += \microtime(true) - $microT;
         }
@@ -1091,34 +1085,32 @@ class Debug
             array(
                 'precision' => 4,
                 'unit' => 'auto',
+            ),
+            array(
+                'label' => null,
             )
         );
         $args = $logEntry['args'];
-        $label = isset($args[0])
-            ? $args[0]
-            : null;
-        $microT = 0;
-        $elapsed = 0;
-        if ($label === null) {
-            $args[0] = 'time';
-            list($elapsed, $microT) = $this->data['timers']['stack']
-                ? array(0,  \end($this->data['timers']['stack']))
-                : $this->data['timers']['labels']['debugInit'];
-        } elseif (isset($this->data['timers']['labels'][$label])) {
-            list($elapsed, $microT) = $this->data['timers']['labels'][$label];
-        } else {
-            $args = array('Timer \'' . $label . '\' does not exist');
-        }
+        $label = $args[0];
+        $elapsed = $this->timeGetElapsed($label);
         $meta = $logEntry['meta'];
-        if ($microT) {
-            $args[0] .= ': ';
-            $elapsed = $this->utility->formatDuration(
-                $elapsed + \microtime(true) - $microT,
-                $meta['unit'],
-                $meta['precision']
-            );
-            \array_splice($args, 1, 0, $elapsed);
+        if ($elapsed === false) {
+            $this->appendLog(new LogEntry(
+                $this,
+                __FUNCTION__,
+                array('Timer \'' . $label . '\' does not exist'),
+                \array_diff_key($meta, \array_flip(array('precision','unit')))
+            ));
+            return;
         }
+        list($elapsed, $microT) = $elapsed;
+        $elapsed = $this->utility->formatDuration(
+            $elapsed + \microtime(true) - $microT,
+            $meta['unit'],
+            $meta['precision']
+        );
+        $args[0] = $label . ': ';
+        \array_splice($args, 1, 0, $elapsed);
         $logEntry['args'] = $args;
         $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision','unit')));
         $this->appendLog($logEntry);
@@ -1627,18 +1619,19 @@ class Debug
      *    setCfg('level1.level2', 'value')
      *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
-     * @param string|array $path  path
+     * @param string|array $path  path or array of values to merge
      * @param mixed        $value value
      *
      * @return void
      */
     public function setData($path, $value = null)
     {
-        if (\is_array($path)) {
-            $this->data = \array_merge($this->data, $path);
-        } else {
-            $this->utility->arrayPathSet($this->data, $path, $value);
-        }
+        $this->data = \is_array($path)
+            ? \array_merge($this->data, $path)
+            : call_user_func(function ($path, $value) {
+                $this->utility->arrayPathSet($this->data, $path, $value);
+                return $this->data;
+            }, $path, $value);
         if (!$this->data['log']) {
             $this->data['groupStacks']['main'] = array();
         }
@@ -2175,5 +2168,26 @@ class Debug
                 $this->readOnly['rootInstance']->logRef = &$this->readOnly['rootInstance']->data['logSummary'][$priority];
                 $this->readOnly['rootInstance']->groupStackRef = &$this->readOnly['rootInstance']->data['groupStacks'][$priority];
         }
+    }
+
+    /**
+     * Get elapsed-time & microtime for given label
+     *
+     * @param string|null $label unique label
+     *
+     * @return array|false array(elapsed, microt) or false
+     */
+    private function timeGetElapsed(&$label)
+    {
+        if ($label === null) {
+            $label = 'time';
+            return $this->data['timers']['stack']
+                ? array(0, \end($this->data['timers']['stack']))
+                : $this->data['timers']['labels']['debugInit'];
+        }
+        if (isset($this->data['timers']['labels'][$label])) {
+            return $this->data['timers']['labels'][$label];
+        }
+        return false;
     }
 }

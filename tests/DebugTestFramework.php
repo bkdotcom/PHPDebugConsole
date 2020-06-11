@@ -115,17 +115,6 @@ class DebugTestFramework extends DOMTestCase
             'log'           => array(),
             'logSummary'    => array(),
             'outputSent'    => false,
-            'timers' => array(      // timer method
-                'labels' => array(
-                    'debugInit' => array(
-                        0,
-                        isset($_SERVER['REQUEST_TIME_FLOAT']) // php 5.4
-                            ? $_SERVER['REQUEST_TIME_FLOAT']
-                            : \microtime(true)
-                    ),
-                ),
-                'stack' => array(),
-            ),
         );
         $this->debug->setData($resetValues);
         $this->debug->errorHandler->setData('errors', array());

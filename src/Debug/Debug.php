@@ -166,14 +166,6 @@ class Debug
             'runtime'           => array(
                 // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
             ),
-            'timers' => array(      // timer method
-                'labels' => array(
-                    // label => array(accumulatedTime, lastStartedTime|null)
-                    // microtime will get replaced with $_SERVER['REQUEST_TIME_FLOAT'] if exists
-                    'debugInit' => array(0, \microtime(true)),
-                ),
-                'stack' => array(),
-            ),
         );
         $this->bootstrap($cfg);
         $this->registeredPlugins = new SplObjectStorage();
@@ -923,18 +915,7 @@ class Debug
             $this->internal->doTime($duration, $logEntry);
             return;
         }
-        if (isset($label)) {
-            $timers = &$this->data['timers']['labels'];
-            if (!isset($timers[$label])) {
-                // new label
-                $timers[$label] = array(0, \microtime(true));
-            } elseif (!isset($timers[$label][1])) {
-                // no microtime -> the timer is currently paused -> unpause
-                $timers[$label][1] = \microtime(true);
-            }
-            return;
-        }
-        $this->data['timers']['stack'][] = \microtime(true);
+        $this->stopWatch->start($label);
     }
 
     /**
@@ -983,22 +964,9 @@ class Debug
         } elseif ($numArgs === 2) {
             $logEntry->setMeta('silent', !$log);
         }
-        // get non-rounded running time (in seconds)
-        $ret = $this->timeGet($label, false, $this->meta(array(
-            'silent' => true,
-            'precision' => null,
-        )));
-        if ($label === null) {
-            \array_pop($this->data['timers']['stack']);
-        }
-        if (isset($this->data['timers']['labels'][$label])) {
-            $this->data['timers']['labels'][$label] = array(
-                $ret,  // store the new "running" time
-                null,  // "pause" the timer
-            );
-        }
-        $this->internal->doTime($ret, $logEntry);
-        return $ret;
+        $elapsed = $this->stopWatch->stop($label);
+        $this->internal->doTime($elapsed, $logEntry);
+        return $elapsed;
     }
 
     /**
@@ -1046,7 +1014,7 @@ class Debug
         } elseif ($numArgs === 2) {
             $logEntry->setMeta('silent', !$log);
         }
-        $elapsed = $this->timeGetElapsed($label);
+        $elapsed = $this->stopWatch->get($label);
         if ($elapsed === false) {
             if ($logEntry->getMeta('silent') === false) {
                 $this->appendLog(new LogEntry(
@@ -1057,10 +1025,6 @@ class Debug
                 ));
             }
             return false;
-        }
-        list($elapsed, $microT) = $elapsed;
-        if ($microT) {
-            $elapsed += \microtime(true) - $microT;
         }
         $this->internal->doTime($elapsed, $logEntry);
         return $elapsed;
@@ -1092,7 +1056,7 @@ class Debug
         );
         $args = $logEntry['args'];
         $label = $args[0];
-        $elapsed = $this->timeGetElapsed($label);
+        $elapsed = $this->stopWatch->get($label);
         $meta = $logEntry['meta'];
         if ($elapsed === false) {
             $this->appendLog(new LogEntry(
@@ -1103,9 +1067,8 @@ class Debug
             ));
             return;
         }
-        list($elapsed, $microT) = $elapsed;
         $elapsed = $this->utility->formatDuration(
-            $elapsed + \microtime(true) - $microT,
+            $elapsed,
             $meta['unit'],
             $meta['precision']
         );
@@ -1832,10 +1795,6 @@ class Debug
         $this->setLogDest();
         $this->data['entryCountInitial'] = \count($this->data['log']);
         $this->data['requestId'] = $this->utility->requestId();
-        $serverParams = $this->request->getServerParams();
-        if (isset($serverParams['REQUEST_TIME_FLOAT'])) {
-            $this->data['timers']['labels']['debugInit'][1] = $serverParams['REQUEST_TIME_FLOAT'];
-        }
     }
 
     /**
@@ -1957,6 +1916,14 @@ class Debug
                 return \bdk\Debug\Psr7lite\ServerRequest::fromGlobals();
             },
             'response' => null,
+            'stopWatch' => function () {
+                $serverParams = $this->request->getServerParams();
+                return new \bdk\Debug\StopWatch(array(
+                    'requestTime' => isset($serverParams['REQUEST_TIME_FLOAT'])
+                        ? $serverParams['REQUEST_TIME_FLOAT']
+                        : \microtime(true),
+                ));
+            },
             'utf8' => function () {
                 return new \bdk\Debug\Utility\Utf8();
             },
@@ -2168,26 +2135,5 @@ class Debug
                 $this->readOnly['rootInstance']->logRef = &$this->readOnly['rootInstance']->data['logSummary'][$priority];
                 $this->readOnly['rootInstance']->groupStackRef = &$this->readOnly['rootInstance']->data['groupStacks'][$priority];
         }
-    }
-
-    /**
-     * Get elapsed-time & microtime for given label
-     *
-     * @param string|null $label unique label
-     *
-     * @return array|false array(elapsed, microt) or false
-     */
-    private function timeGetElapsed(&$label)
-    {
-        if ($label === null) {
-            $label = 'time';
-            return $this->data['timers']['stack']
-                ? array(0, \end($this->data['timers']['stack']))
-                : $this->data['timers']['labels']['debugInit'];
-        }
-        if (isset($this->data['timers']['labels'][$label])) {
-            return $this->data['timers']['labels'][$label];
-        }
-        return false;
     }
 }

@@ -1748,6 +1748,20 @@ class Debug
      */
     private function bootstrap($cfg)
     {
+        if (!isset(self::$instance)) {
+            /*
+               self::getInstance() will always return initial/first instance
+            */
+            self::$instance = $this;
+            /*
+                Only register autoloader:
+                  a. on initial instance (even though re-registering function does't re-register)
+                  b. if we're unable to to find our Config class (must not be using Composer)
+            */
+            if (\class_exists('bdk\\Debug\\Config') === false) {
+                \spl_autoload_register(array($this, 'autoloader'));
+            }
+        }
         $this->config = $this->getViaContainer('config');
         $this->eventManager->subscribe('debug.config', array($this, 'onConfig'));
         $this->config->set($cfg);
@@ -1767,20 +1781,6 @@ class Debug
      */
     private function bootstrapInstance()
     {
-        if (!isset(self::$instance)) {
-            /*
-               self::getInstance() will always return initial/first instance
-            */
-            self::$instance = $this;
-            /*
-                Only register autoloader:
-                  a. on initial instance (even though re-registering function does't re-register)
-                  b. if we're unable to to find our Config class (must not be using Composer)
-            */
-            if (\class_exists('bdk\\Debug\\Config') === false) {
-                \spl_autoload_register(array($this, 'autoloader'));
-            }
-        }
         $this->readOnly['rootInstance'] = $this;
         if (isset($this->cfg['parent'])) {
             $this->readOnly['parentInstance'] = $this->cfg['parent'];

@@ -74,6 +74,14 @@ class DebugTest extends DebugTestFramework
         }
     }
 
+    public function testNoDebug()
+    {
+        $output = array();
+        $returnVal = 0;
+        exec('php ' . __DIR__ . '/noComposer.php', $output, $returnVal);
+        $this->assertSame(0, $returnVal, 'Failed to init Debug without composer');
+    }
+
     public function testPhpError()
     {
         parent::$allowError = true;

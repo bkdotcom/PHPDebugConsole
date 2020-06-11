@@ -28,10 +28,7 @@ class InternalEventsTest extends DebugTestFramework
             'emailFunc' => array($this, 'emailMock'),
         ));
 
-        $debugRef = new \ReflectionObject($this->debug);
-        $internalEventsRef = $debugRef->getProperty('internalEvents');
-        $internalEventsRef->setAccessible(true);
-        $internalEvents = $internalEventsRef->getValue($this->debug);
+        $internalEvents = $this->getPrivateProp($this->debug, 'internalEvents');
 
         //
         // Test that not emailed if nothing logged

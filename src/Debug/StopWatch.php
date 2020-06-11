@@ -13,7 +13,7 @@
 namespace bdk\Debug;
 
 /**
- *
+ * Maintain timers
  */
 class StopWatch
 {
@@ -71,6 +71,19 @@ class StopWatch
     }
 
     /**
+     * Reset timers
+     *
+     * @return void
+     */
+    public function reset()
+    {
+        $this->timers = array(
+            'labels' => \array_intersect_key($this->timers['labels'], \array_flip(array('requestTime'))),
+            'stack' => array(),
+        );
+    }
+
+    /**
      * Start a timer
      *
      * @param string $label label
@@ -87,7 +100,7 @@ class StopWatch
         if (isset($this->timers['labels'][$label]) === false) {
             // new label timer
             $this->timers['labels'][$label] = array(0, \microtime(true));
-        } elseif ($this->timers['labels'][$label][1] === false) {
+        } elseif ($this->timers['labels'][$label][1] === null) {
             // paused timer -> unpause (no microtime)
             $this->timers['labels'][$label][1] = \microtime(true);
         }
@@ -104,15 +117,16 @@ class StopWatch
      */
     public function stop($label = null)
     {
+        $labelOrig = $label;
         $elapsed = $this->get($label);
         if ($elapsed === false) {
             return $elapsed;
         }
-        if ($label === null) {
+        if ($labelOrig === null) {
             \array_pop($this->timers['stack']);
             return $elapsed;
         }
-        $this->timers['labels'][$label] = array($elapsed, false);
+        $this->timers['labels'][$label] = array($elapsed, null);
         return $elapsed;
     }
 }

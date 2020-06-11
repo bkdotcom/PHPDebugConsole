@@ -117,6 +117,7 @@ class DebugTestFramework extends DOMTestCase
             'outputSent'    => false,
         );
         $this->debug->setData($resetValues);
+        $this->debug->stopWatch->reset();
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
@@ -552,6 +553,14 @@ class DebugTestFramework extends DOMTestCase
             }
         }
         $debug->setCfg('route', $backupRoute);
+    }
+
+    protected function getPrivateProp($obj, $prop)
+    {
+        $objRef = new \ReflectionObject($obj);
+        $propRef = $objRef->getProperty($prop);
+        $propRef->setAccessible(true);
+        return $propRef->getValue($obj);
     }
 
     protected function deObjectifyData($data)

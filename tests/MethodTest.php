@@ -1805,8 +1805,10 @@ EOD;
     {
         $this->debug->time();
         $this->debug->time('some label');
-        // $this->assertInternalType('float', $this->debug->getData('timers/stack/0'));
-        // $this->assertInternalType('float', $this->debug->getData('timers/labels/some label/1'));
+
+        $timers = $this->getPrivateProp($this->debug->stopWatch, 'timers');
+        $this->assertInternalType('float', $timers['stack'][0]);
+        $this->assertInternalType('float', $timers['labels']['some label'][1]);
 
         $this->assertEmpty($this->debug->getData('log'));
         $this->assertEmpty($this->debug->getRoute('wamp')->wamp->messages);
@@ -1826,11 +1828,10 @@ EOD;
             'timeEnd',
             array(),
             array(
-                /*
                 'custom' => function () {
-                    $this->assertCount(0, $this->debug->getData('timers/stack'));
+                    $timers = $this->getPrivateProp($this->debug->stopWatch, 'timers');
+                    $this->assertCount(0, $timers['stack']);
                 },
-                */
                 'entry' => json_encode(array(
                     'time',
                     array(
@@ -1929,11 +1930,9 @@ EOD;
             )
         );
 
-        /*
-        $timers = $this->debug->getData('timers');
+        $timers = $this->getPrivateProp($this->debug->stopWatch, 'timers');
         $this->assertInternalType('float', $timers['labels']['my label'][0]);
         $this->assertNull($timers['labels']['my label'][1]);
-        */
 
         $this->debug->setCfg('collect', false);
         $this->testMethod(
@@ -1961,12 +1960,11 @@ EOD;
             'timeGet',
             array(),
             array(
-                /*
                 'custom' => function () {
                     // test stack is still 1
-                    $this->assertCount(1, $this->debug->getData('timers/stack'));
+                    $timers = $this->getPrivateProp($this->debug->stopWatch, 'timers');
+                    $this->assertCount(1, $timers['stack']);
                 },
-                */
                 /*
                 'entry' => function ($logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
@@ -2037,12 +2035,10 @@ EOD;
             )
         );
 
-        /*
-        $timers = $this->debug->getData('timers');
+        $timers = $this->getPrivateProp($this->debug->stopWatch, 'timers');
         $this->assertSame(0, $timers['labels']['my label'][0]);
         // test not paused
         $this->assertNotNull($timers['labels']['my label'][1]);
-        */
 
         $this->testMethod(
             'timeGet',

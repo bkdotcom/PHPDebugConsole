@@ -109,7 +109,7 @@ class StopWatch
             return $elapsed;
         }
         if ($label === null) {
-            \array_pop($this->data['timers']['stack']);
+            \array_pop($this->timers['stack']);
             return $elapsed;
         }
         $this->timers['labels'][$label] = array($elapsed, false);

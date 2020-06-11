@@ -45,6 +45,7 @@ use SplObjectStorage;
  * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeResponse)
  * @property Debug\Psr7lite\ServerRequest $request lazy-loaded ServerRequest
  * @property \bdk\Debug           $rootInstance  root "channel"
+ * @property Debug\StopWatch      $stopWatch     lazy-loaded StopWatch Instance
  * @property Debug\Utility\Utf8   $utf8          lazy-loaded Utf8 instance
  * @property Debug\Utility        $utility       lazy-loaded Utility instance
  */
@@ -938,32 +939,10 @@ class Debug
      */
     public function timeEnd($label = null, $log = true)
     {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(
-                'precision' => 4,
-                'silent' => false,
-                'template' => '%label: %time',
-                'unit' => 'auto',
-            ),
-            array(
-                'label' => null,
-                'log' => true,
-            )
-        );
-        $numArgs = $logEntry['numArgs'];
-        $args = $logEntry['args'];
-        $label = $args[0];
-        $log = $args[1];
-        if ($numArgs === 1 && \is_bool($label)) {
-            // log passed as single arg
-            $logEntry->setMeta('silent', !$label);
-            $label = null;
-        } elseif ($numArgs === 2) {
-            $logEntry->setMeta('silent', !$log);
-        }
+        // "use" our function params so things (ie phpmd) don't complain
+        array($log);
+        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
+        $label = $logEntry['args'][0];
         $elapsed = $this->stopWatch->stop($label);
         $this->internal->doTime($elapsed, $logEntry);
         return $elapsed;
@@ -988,32 +967,10 @@ class Debug
      */
     public function timeGet($label = null, $log = true)
     {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(
-                'precision' => 4,
-                'silent' => false,
-                'template' => '%label: %time',
-                'unit' => 'auto',
-            ),
-            array(
-                'label' => null,
-                'log' => true,
-            )
-        );
-        $numArgs = $logEntry['numArgs'];
-        $args = $logEntry['args'];
-        $label = $args[0];
-        $log = $args[1];
-        if ($numArgs === 1 && \is_bool($label)) {
-            // $log passed as single arg
-            $logEntry->setMeta('silent', !$label);
-            $label = null;
-        } elseif ($numArgs === 2) {
-            $logEntry->setMeta('silent', !$log);
-        }
+        // "use" our function params so things (ie phpmd) don't complain
+        array($log);
+        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
+        $label = $logEntry['args'][0];
         $elapsed = $this->stopWatch->get($label);
         if ($elapsed === false) {
             if ($logEntry->getMeta('silent') === false) {
@@ -2135,5 +2092,45 @@ class Debug
                 $this->readOnly['rootInstance']->logRef = &$this->readOnly['rootInstance']->data['logSummary'][$priority];
                 $this->readOnly['rootInstance']->groupStackRef = &$this->readOnly['rootInstance']->data['groupStacks'][$priority];
         }
+    }
+
+    /**
+     * Create timeEnd & timeGet LogEntry
+     *
+     * @param string $method 'timeEnd' or 'timeGet'
+     * @param array  $args   arguments passed to method
+     *
+     * @return LogEntry
+     */
+    private function timeLogEntry($method, $args)
+    {
+        $logEntry = new LogEntry(
+            $this,
+            $method,
+            $args,
+            array(
+                'precision' => 4,
+                'silent' => false,
+                'template' => '%label: %time',
+                'unit' => 'auto',
+            ),
+            array(
+                'label' => null,
+                'log' => true,
+            )
+        );
+        $numArgs = $logEntry['numArgs'];
+        $args = $logEntry['args'];
+        $label = $args[0];
+        $log = $args[1];
+        if ($numArgs === 1 && \is_bool($label)) {
+            // $log passed as single arg
+            $logEntry->setMeta('silent', !$label);
+            $args[0] = null;
+            $logEntry['args'] = $args;
+        } elseif ($numArgs === 2) {
+            $logEntry->setMeta('silent', !$log);
+        }
+        return $logEntry;
     }
 }

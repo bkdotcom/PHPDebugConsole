@@ -228,7 +228,7 @@ class LogEnv implements SubscriberInterface
         $msgLines = array();
         $errorReportingRaw = $this->debug->errorHandler->getCfg('errorReporting');
         $errorReporting = $this->debug->errorHandler->errorReporting();
-        if (\error_reporting() !== (E_ALL | E_STRICT)) {
+        if (\in_array(\error_reporting(), array(-1, E_ALL | E_STRICT)) === false) {
             $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . ErrorLevel::toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
             if ($errorReporting === (E_ALL | E_STRICT)) {
                 $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';

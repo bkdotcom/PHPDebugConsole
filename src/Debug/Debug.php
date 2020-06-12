@@ -138,6 +138,8 @@ class Debug
                 'password',
             ),
             'redactReplace' => function ($str, $key) {
+                // "use" our function params so things (ie phpmd) don't complain
+                array($str, $key);
                 return '█████████';
             },
             'route' => 'auto',              // 'auto', chromeLogger', 'firephp', 'html', 'script', 'steam', 'text', or RouteInterface,

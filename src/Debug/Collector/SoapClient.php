@@ -35,6 +35,8 @@ class SoapClient extends \SoapClient
      * @param Debug  $debug   (optional) Specify PHPDebugConsole instance
      *                            if not passed, will create Soap channnel on singleton instance
      *                            if root channel is specified, will create a Soap channel
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct($wsdl, $options = array(), Debug $debug = null)
     {

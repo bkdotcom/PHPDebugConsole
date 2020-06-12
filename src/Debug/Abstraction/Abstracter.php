@@ -34,6 +34,7 @@ class Abstracter extends Component
     public $debug;
     protected $abstractArray;
     protected $abstractObject;
+    public static $utility;
 
     /**
      * Constructor
@@ -61,6 +62,7 @@ class Abstracter extends Component
         $this->setCfg($cfg);
         $this->abstractArray = new AbstractArray($this);
         $this->abstractObject = new AbstractObject($this, new PhpDoc());
+        self::$utility = $debug->utility;
     }
 
     /**
@@ -203,7 +205,7 @@ class Abstracter extends Component
     {
         $type = 'array';
         $typeMore = 'raw';  // needs abstracted (references removed / values abstracted if necessary)
-        if (\count($val) === 2 && Utility::isCallable($val)) {
+        if (\count($val) === 2 && self::$utility->isCallable($val)) {
             $type = 'callable';
             $typeMore = 'raw';  // needs abstracted
         }

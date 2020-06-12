@@ -33,6 +33,8 @@ class Slim2
      *                             if not passed, will create Slim channnel on singleton instance
      *                             if root channel is specified, will create a Slim channel
      * @param object $prevWriter (optional) previous slim logWriter if desired to continue writing to existing writer
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct(Debug $debug = null, $prevWriter = null)
     {

@@ -1,0 +1,1032 @@
+<?php
+
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2020 Brad Kent
+ * @version   v3.0
+ */
+
+namespace bdk\Debug\Collector;
+
+use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
+use Curl\Curl;
+// use ReflectionClass;
+// use ReflectionMethod;
+use ReflectionObject;
+
+/**
+ * Decorate php-curl-class with logging
+ *
+ * @see https://github.com/php-curl-class/php-curl-class
+ */
+class PhpCurlClassDecorator extends Curl
+{
+    public $rawRequestHeaders = '';
+
+    private $curlClass;
+    private $debug;
+    private $icon = 'fa fa-exchange';
+    private $debugOptions = array(
+        'inclResponseBody' => false,
+        'prettyResponseBody' => true,
+        'inclInfo' => false,
+        'verbose' => false,
+    );
+    private $reflection = array();
+
+    /**
+     * @var array constant value to array of names
+     */
+    protected static $optionConstants = array();
+
+    /**
+     * Constructor
+     *
+     * @param Curl  $curl    Php Curl Class instance
+     * @param array $options options
+     * @param Debug $debug   (optional) Specify PHPDebugConsole instance
+     *                        if not passed, will create Curl channnel on singleton instance
+     *                        if root channel is specified, will create a Curl channel
+     */
+    public function __construct(Curl $curl, $options = array(), Debug $debug = null)
+    {
+        $this->curlClass = $curl;
+        $this->debugOptions = \array_merge($this->debugOptions, $options);
+        if (!$debug) {
+            $debug = Debug::_getChannel('Curl', array('channelIcon' => $this->icon));
+        } elseif ($debug === $debug->rootInstance) {
+            $debug = $debug->getChannel('Curl', array('channelIcon' => $this->icon));
+        }
+        $this->debug = $debug;
+        $this->buildConstLookup();
+        // parent::__construct();
+        if ($options['verbose']) {
+            $this->curlClass->verbose(true, \fopen('php://temp', 'rw'));
+        }
+        $classRef = new ReflectionObject($this->curlClass);
+        $optionsRef = $classRef->getProperty('options');
+        $optionsRef->setAccessible(true);
+        $parseReqHeadersRef = $classRef->getMethod('parseRequestHeaders');
+        $parseReqHeadersRef->setAccessible(true);
+        $this->reflection['options'] = $optionsRef;
+        $this->reflection['parseReqHeaders'] = $parseReqHeadersRef;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function delete($url, $queryParameters = array(), $data = array())
+    {
+        $this->preExec();
+        $return = $this->curlClass->delete($url, $queryParameters, $data);
+        $this->postExec();
+        return $return;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function get($url, $data = array())
+    {
+        $this->preExec();
+        $return = $this->curlClass->get($url, $data);
+        $this->postExec();
+        return $return;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function head($url, $data = array())
+    {
+        $this->preExec();
+        $return = $this->curlClass->head($url, $data);
+        $this->postExec();
+        return $return;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function options($url, $data = array())
+    {
+        $this->preExec();
+        $return = $this->curlClass->options($url, $data);
+        $this->postExec();
+        return $return;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function patch($url, $data = array())
+    {
+        $this->preExec();
+        $return = $this->curlClass->patch($url, $data);
+        $this->postExec();
+        return $return;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function post($url, $data = '', $follow_303_with_post = false)
+    {
+        $this->preExec();
+        $return = $this->curlClass->post($url, $data, $follow_303_with_post);
+        $this->postExec();
+        return $return;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function put($url, $data = array())
+    {
+        $this->preExec();
+        $return = $this->curlClass->put($url, $data);
+        $this->postExec();
+        return $return;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function search($url, $data = array())
+    {
+        $this->preExec();
+        $return = $this->curlClass->search($url, $data);
+        $this->postExec();
+        return $return;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function exec($ch = null)
+    {
+        $this->preExec();
+        $return = $this->curlClass->exec($ch);
+        $this->postExec();
+        return $return;
+    }
+
+    /*
+        Fall through methods
+    */
+
+    /**
+     * Before Send
+     *
+     * @param callable $callback callable
+     *
+     * @return void
+     */
+    public function beforeSend($callback)
+    {
+        $this->curlClass->beforeSend($callback);
+    }
+
+    /**
+     * Build Post Data
+     *
+     * @param array $data data
+     *
+     * @return array|string
+     * @throws \ErrorException
+     */
+    public function buildPostData($data)
+    {
+        return $this->curlClass->buildPostData($data);
+    }
+
+    /**
+     * Call
+     *
+     * @return void
+     */
+    public function call()
+    {
+        \call_user_func_array(array($this->curlClass, 'call'), \func_get_args());
+    }
+
+    /**
+     * Close
+     *
+     * @return void
+     */
+    public function close()
+    {
+        $this->curlClass->close();
+    }
+
+    /**
+     * Complete
+     *
+     * @param callable $callback callable
+     *
+     * @return void
+     */
+    public function complete($callback)
+    {
+        $this->curlClass->complete($callback);
+    }
+
+    /**
+     * Progress
+     *
+     * @param callable $callback callable
+     *
+     * @return void
+     */
+    public function progress($callback)
+    {
+        $this->curlClass->progress($callback);
+    }
+
+    /**
+     * Download
+     *
+     * @param string          $url           URL
+     * @param callable|string $mixedFilename callable or filepath
+     *
+     * @return bool
+     */
+    public function download($url, $mixedFilename)
+    {
+        return $this->curlClass->download($url, $mixedFilename);
+    }
+
+    /**
+     * Error
+     *
+     * @param callable $callback callable
+     *
+     * @return void
+     */
+    public function error($callback)
+    {
+        $this->curlClass->error($callback);
+    }
+
+    public function execDone()
+    {
+        $this->curlClass->execDone();
+    }
+
+    /**
+     * Get Info
+     *
+     * @param int $opt option to get
+     *
+     * @return mixed
+     */
+    public function getInfo($opt = null)
+    {
+        return $this->curlClass->getInfo($opt);
+    }
+
+    /**
+     * Get Opt
+     *
+     * @param int $option option
+     *
+     * @return mixed
+     */
+    public function getOpt($option)
+    {
+        return $this->curlClass->getOpt($option);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setBasicAuthentication($username, $password = '')
+    {
+        $this->curlClass->setBasicAuthentication($username, $password);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setDigestAuthentication($username, $password = '')
+    {
+        $this->curlClass->setDigestAuthentication($username, $password);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setCookie($key, $value)
+    {
+        $this->curlClass->setCookie($key, $value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setCookies($cookies)
+    {
+        $this->curlClass->setCookies($cookies);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCookie($key)
+    {
+        $this->curlClass->getCookie($key);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getResponseCookie($key)
+    {
+        $this->curlClass->getResponseCookie($key);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setMaxFilesize($bytes)
+    {
+        $this->curlClass->setMaxFilesize($bytes);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setPort($port)
+    {
+        $this->curlClass->setPort($port);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setConnectTimeout($seconds)
+    {
+        $this->curlClass->setConnectTimeout($seconds);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setCookieString($string)
+    {
+        return $this->curlClass->setCookieString($string);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setCookieFile($cookie_file)
+    {
+        return $this->curlClass->setCookieFile($cookie_file);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setCookieJar($cookie_jar)
+    {
+        return $this->curlClass->setCookieJar($cookie_jar);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setDefaultJsonDecoder()
+    {
+        $this->curlClass->setDefaultJsonDecoder();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setDefaultXmlDecoder()
+    {
+        $this->curlClass->setDefaultXmlDecoder();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setDefaultDecoder($mixed = 'json')
+    {
+        $this->curlClass->setDefaultDecoder($mixed);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setDefaultTimeout()
+    {
+        $this->curlClass->setDefaultTimeout();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setDefaultUserAgent()
+    {
+        $this->curlClass->setDefaultUserAgent();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setHeader($key, $value)
+    {
+        $this->curlClass->setHeader($key, $value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setHeaders($headers)
+    {
+        $this->curlClass->setHeaders($headers);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setJsonDecoder($mixed)
+    {
+        $this->curlClass->setJsonDecoder($mixed);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setXmlDecoder($mixed)
+    {
+        $this->curlClass->setXmlDecoder($mixed);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setOpt($option, $value)
+    {
+        return $this->curlClass->setOpt($option, $value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setOpts($options)
+    {
+        return $this->curlClass->setOpts($options);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setProxy($proxy, $port = null, $username = null, $password = null)
+    {
+        return $this->curlClass->setProxy($proxy, $port, $username, $password);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setProxyAuth($auth)
+    {
+        return $this->curlClass->setProxyAuth($auth);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setProxyType($type)
+    {
+        return $this->curlClass->setProxyType($type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setProxyTunnel($tunnel = true)
+    {
+        return $this->curlClass->setProxyTunnel($tunnel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function unsetProxy()
+    {
+        return $this->curlClass->unsetProxy();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setReferer($referer)
+    {
+        $this->curlClass->setReferer($referer);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setReferrer($referrer)
+    {
+        $this->curlClass->setReferrer($referrer);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setRetry($mixed)
+    {
+        $this->curlClass->setRetry($mixed);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setTimeout($seconds)
+    {
+        $this->curlClass->setTimeout($seconds);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setUrl($url, $mixed_data = '')
+    {
+        $this->curlClass->setUrl($url, $mixed_data);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setUserAgent($user_agent)
+    {
+        $this->curlClass->setUserAgent($user_agent);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function attemptRetry()
+    {
+        return $this->curlClass->attemptRetry();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function success($callback)
+    {
+        $this->curlClass->success($callback);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function unsetHeader($key)
+    {
+        $this->curlClass->unsetHeader($key);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function removeHeader($key)
+    {
+        $this->curlClass->removeHeader($key);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function verbose($on = true, $output = STDERR)
+    {
+        $this->curlClass->verbose($on, $output);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function reset()
+    {
+        $this->curlClass->reset();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCurl()
+    {
+        return $this->curlClass->getCurl();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getId()
+    {
+        return $this->curlClass->getId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isError()
+    {
+        return $this->curlClass->isError();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getErrorCode()
+    {
+        return $this->curlClass->getErrorCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getErrorMessage()
+    {
+        return $this->curlClass->getErrorMessage();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isCurlError()
+    {
+        return $this->curlClass->isCurlError();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCurlErrorCode()
+    {
+        return $this->curlClass->getCurlErrorCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCurlErrorMessage()
+    {
+        return $this->curlClass->getCurlErrorMessage();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isHttpError()
+    {
+        return $this->curlClass->isHttpError();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getHttpStatusCode()
+    {
+        return $this->curlClass->getHttpStatusCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getHttpErrorMessage()
+    {
+        return $this->curlClass->getHttpErrorMessage();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getUrl()
+    {
+        return $this->curlClass->getUrl();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRequestHeaders()
+    {
+        return $this->curlClass->getRequestHeaders();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getResponseHeaders()
+    {
+        return $this->curlClass->getResponseHeaders();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRawResponseHeaders()
+    {
+        return $this->curlClass->getRawResponseHeaders();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getResponseCookies()
+    {
+        return $this->curlClass->getResponseCookies();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getResponse()
+    {
+        return $this->curlClass->getResponse();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRawResponse()
+    {
+        return $this->curlClass->getRawResponse();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getBeforeSendCallback()
+    {
+        return $this->curlClass->getBeforeSendCallback();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getDownloadCompleteCallback()
+    {
+        return $this->curlClass->getDownloadCompleteCallback();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getDownloadFileName()
+    {
+        return $this->curlClass->getDownloadFileName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSuccessCallback()
+    {
+        return $this->curlClass->getSuccessCallback();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getErrorCallback()
+    {
+        return $this->curlClass->getErrorCallback();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCompleteCallback()
+    {
+        return $this->curlClass->getCompleteCallback();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFileHandle()
+    {
+        return $this->curlClass->getFileHandle();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAttempts()
+    {
+        return $this->curlClass->getAttempts();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRetries()
+    {
+        return $this->curlClass->getRetries();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isChildOfMultiCurl()
+    {
+        return $this->curlClass->isChildOfMultiCurl();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRemainingRetries()
+    {
+        return $this->curlClass->getRemainingRetries();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRetryDecider()
+    {
+        return $this->curlClass->getRetryDecider();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getJsonDecoder()
+    {
+        return $this->curlClass->getJsonDecoder();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getXmlDecoder()
+    {
+        return $this->curlClass->getXmlDecoder();
+    }
+
+    /*
+        Private methods
+    */
+
+    /**
+     * Set self::optionConstants  CURLOPT_* value => names array
+     *
+     * @return void
+     */
+    private function buildConstLookup()
+    {
+        if (self::$optionConstants) {
+            return;
+        }
+        $consts = \get_defined_constants(true)['curl'];
+        \ksort($consts);
+        $valToNames = array();
+        foreach ($consts as $name => $val) {
+            if (\strpos($name, 'CURLOPT') !== 0 && $name !== 'CURLINFO_HEADER_OUT') {
+                continue;
+            }
+            if (!isset($valToNames[$val])) {
+                $valToNames[$val] = array();
+            }
+            $valToNames[$val][] = $name;
+        }
+        \ksort($valToNames);
+        self::$optionConstants = $valToNames;
+    }
+
+    /**
+     *  Build an array of human-readable options used
+     *
+     * @return array
+     */
+    private function buildOptionsDebug()
+    {
+        $options = $this->reflection['options']->getValue($this->curlClass);
+        $opts = array();
+        foreach ($options as $constVal => $val) {
+            $name = \implode(' / ', self::$optionConstants[$constVal]);
+            $opts[$name] = $val;
+        }
+        if (isset($opts['CURLOPT_POSTFIELDS']) && \is_string($opts['CURLOPT_POSTFIELDS'])) {
+            \parse_str($opts['CURLOPT_POSTFIELDS'], $opts['CURLOPT_POSTFIELDS']);
+        }
+        \ksort($opts);
+        return $opts;
+    }
+
+    private function preExec()
+    {
+        $this->optionsDebug = $this->buildOptionsDebug();
+        $this->debug->groupCollapsed(
+            'Curl',
+            $this->getHttpMethod($this->optionsDebug),
+            $this->optionsDebug['CURLOPT_URL'],
+            $this->debug->meta('icon', $this->icon)
+        );
+        $this->debug->log('options', $this->optionsDebug);
+    }
+
+    private function postExec()
+    {
+        $verboseOutput = null;
+        if (!empty($this->optionsDebug['CURLOPT_VERBOSE'])) {
+            /*
+                CURLINFO_HEADER_OUT doesn't work with verbose...
+                but we can get the request headers from the verbose output
+            */
+            $pointer = $this->optionsDebug['CURLOPT_STDERR'];
+            \rewind($pointer);
+            $verboseOutput = \stream_get_contents($pointer);
+            \preg_match_all('/> (.*?)\r\n\r\n/s', $verboseOutput, $matches);
+            $this->rawRequestHeaders = \end($matches[1]);
+            $this->curlClass->requestHeaders = $this->reflection['parseReqHeaders']->invoke($this->curlClass, $this->rawRequestHeaders);
+        } else {
+            $this->rawRequestHeaders = $this->getInfo(CURLINFO_HEADER_OUT);
+        }
+        if ($this->error) {
+            $this->debug->warn($this->errorCode, $this->errorMessage);
+        }
+        if ($this->effectiveUrl !== $this->optionsDebug['CURLOPT_URL']) {
+            \preg_match_all('/^(Location:|URI: )(.*?)\r\n/im', $this->curlClass->rawResponseHeaders, $matches);
+            $this->debug->log('Redirect(s)', $matches[2]);
+        }
+        $this->debug->log('request headers', $this->rawRequestHeaders, $this->debug->meta('redact'));
+        // Curl provides no means to get the request body
+        $this->debug->log('response headers', $this->curlClass->rawResponseHeaders, $this->debug->meta('redact'));
+        if ($this->debugOptions['inclResponseBody']) {
+            $body = $this->getResponseBody();
+            $this->debug->log(
+                'response body %c%s',
+                'font-style: italic; opacity: 0.8;',
+                $body instanceof Abstraction
+                    ? '(prettified)'
+                    : '',
+                $body,
+                $this->debug->meta('redact')
+            );
+        }
+        if ($this->debugOptions['inclInfo']) {
+            $this->debug->log('info', $this->getInfo());
+        }
+        if ($verboseOutput) {
+            $this->debug->log('verbose', $verboseOutput);
+        }
+        $this->debug->groupEnd();
+    }
+
+    /**
+     * Get the http method used (GET, POST, etc)
+     *
+     * @param array $options our human readable curl options
+     *
+     * @return string
+     */
+    private function getHttpMethod($options)
+    {
+        $method = 'GET';
+        if (isset($options['CURLOPT_CUSTOMREQUEST'])) {
+            $method = $options['CURLOPT_CUSTOMREQUEST'];
+        } elseif (!empty($options['CURLOPT_POST'])) {
+            $method = 'POST';
+        }
+        return $method;
+    }
+
+    /**
+     * Get the response body
+     *
+     * Will return formatted Abstraction if html/json/xml
+     *
+     * @return Abstraction|string|null
+     */
+    private function getResponseBody()
+    {
+        $body = $this->rawResponse;
+        if (\strlen($body) === 0) {
+            return null;
+        }
+        if ($this->debugOptions['prettyResponseBody']) {
+            $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this, array(
+                'value' => $body,
+                'contentType' => $this->curlClass->responseHeaders['content-type'],
+            ));
+            return $event['value'];
+        }
+        return $body;
+    }
+}

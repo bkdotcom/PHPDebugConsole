@@ -45,6 +45,8 @@ class Yii11LogRoute extends CLogRoute
      *
      * @param Debug $debug Debug instance
      * @param array $opts  Route options
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct(Debug $debug = null, $opts = array())
     {

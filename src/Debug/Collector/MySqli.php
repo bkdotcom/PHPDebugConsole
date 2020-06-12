@@ -46,6 +46,8 @@ class MySqli extends mysqliBase
      * @param Debug  $debug    (optional) Specify PHPDebugConsole instance
      *                           if not passed, will create MySqli channnel on singleton instance
      *                           if root channel is specified, will create a MySqli channel
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, Debug $debug = null)
     {

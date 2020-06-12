@@ -84,10 +84,14 @@ class ErrorHandler
      */
     public function errorReporting()
     {
-        return $this->cfg['errorReporting'] === 'system'
+        $errorReporting = $this->cfg['errorReporting'] === 'system'
             ? \error_reporting() // note:  will return 0 if error suppression is active in call stack (via @ operator)
                                 //  our shutdown function unsupresses fatal errors
             : $this->cfg['errorReporting'];
+        if ($errorReporting === -1) {
+            $errorReporting = E_ALL | E_STRICT;
+        }
+        return $errorReporting;
     }
 
     /**

@@ -50,6 +50,8 @@ class PhpCurlClass extends Curl
      * @param Debug $debug   (optional) Specify PHPDebugConsole instance
      *                        if not passed, will create Curl channnel on singleton instance
      *                        if root channel is specified, will create a Curl channel
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct($options = array(), Debug $debug = null)
     {

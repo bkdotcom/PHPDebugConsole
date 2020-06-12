@@ -46,6 +46,8 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
      * @param Debug $debug (optional) Specify PHPDebugConsole instance
      *                         if not passed, will create Slim channnel on singleton instance
      *                         if root channel is specified, will create a SwiftMailer channel
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct(Debug $debug = null)
     {
@@ -95,6 +97,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
      */
     public function sendPerformed(Swift_Events_SendEvent $event)
     {
+        array($event);
         $this->debug->groupEnd();
         $this->clear();
         $this->useIcon = true;
@@ -113,6 +116,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     {
         $this->messages[] = $entry;
         $debugArgs = array($entry);
+        $matches = array();
         if (\preg_match('#^(([-+><])\2) (.+)$#s', $entry, $matches)) {
             $debugArgs = array($matches[1] . ':', $matches[3]);
         }

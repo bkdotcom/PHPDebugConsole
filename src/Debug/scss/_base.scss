@@ -102,9 +102,12 @@ hr {
   height: 1px;
 }
 img { border: 0; }
-input[type=checkbox] {
-  margin: 0 0.33em 0 0;
-  cursor: pointer;
+input {
+  border-width: 1px;
+  &[type=checkbox] {
+    margin: 0 0.33em 0 0;
+    cursor: pointer;
+  }
 }
 
 label {

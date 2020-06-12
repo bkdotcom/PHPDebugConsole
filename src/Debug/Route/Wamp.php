@@ -208,6 +208,8 @@ class Wamp implements RouteInterface
      */
     public function processLogEntries(Event $event = null)
     {
+        // "use" our function params so things (ie phpmd) don't complain
+        array($event);
         $data = $this->debug->getData();
         foreach ($data['alerts'] as $logEntry) {
             $this->processLogEntryViaEvent($logEntry);

@@ -44,6 +44,8 @@ class GuzzleMiddleware
      * @param Debug $debug (optional) Specify PHPDebugConsole instance
      *                       if not passed, will create Guzzle channnel on singleton instance
      *                       if root channel is specified, will create a Guzzle channel
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct($cfg = array(), Debug $debug = null)
     {

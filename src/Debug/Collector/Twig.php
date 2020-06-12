@@ -62,6 +62,8 @@ class Twig extends Twig_Environment
      * @param Debug            $debug (optional) Specify PHPDebugConsole instance
      *                                  if not passed, will create PDO channnel on singleton instance
      *                                  if root channel is specified, will create a PDO channel
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct(Twig_Environment $twig, Debug $debug = null)
     {

@@ -22,6 +22,7 @@
 .debug h3:first-child { margin-top: 0; }
 .debug hr { color: #111; background-color: #111; border: 0; height: 1px; }
 .debug img { border: 0; }
+.debug input { border-width: 1px; }
 .debug input[type=checkbox] { margin: 0 0.33em 0 0; cursor: pointer; }
 .debug label { display: block; margin: 0; cursor: pointer; font-weight: bold; max-width: none; }
 .debug label.disabled { cursor: default; pointer-events: none; }

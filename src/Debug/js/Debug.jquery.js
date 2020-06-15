@@ -2055,8 +2055,6 @@
     throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.')
   }
 
-  // var $selfScript = $(document.CurrentScript || document.scripts[document.scripts.length -1])
-
   /*
     Load 'optional' dependencies
   */
@@ -2067,13 +2065,15 @@
       check: function () {
         var span = document.createElement('span');
         var haveFa = false;
+        var fontFamily = null;
         function css (element, property) {
           return window.getComputedStyle(element, null).getPropertyValue(property)
         }
         span.className = 'fa';
         span.style.display = 'none';
         document.body.appendChild(span);
-        haveFa = css(span, 'font-family') === 'FontAwesome';
+        fontFamily = css(span, 'font-family');
+        haveFa = fontFamily === 'FontAwesome' || fontFamily.indexOf('Font Awesome') > -1;
         document.body.removeChild(span);
         return haveFa
       }

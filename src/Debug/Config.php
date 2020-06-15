@@ -55,7 +55,7 @@ class Config
             $keys = \array_keys($this->configKeys + $this->valuesPending);
             $values = array();
             foreach ($keys as $debugProp) {
-                $values[$debugProp] = $this->getPropCfg($debugProp, array(), $forInit);
+                $values[$debugProp] = $this->getPropCfg($debugProp, array(), $forInit, false);
             }
             \ksort($values);
             return $values;
@@ -185,20 +185,21 @@ class Config
     /**
      * Get debug property config value(s)
      *
-     * @param string $debugProp debug property name
-     * @param array  $path      path/key
-     * @param bool   $forInit   Get values for bootstap
+     * @param string $debugProp  debug property name
+     * @param array  $path       path/key
+     * @param bool   $forInit    Get values for bootstap
+     * @param bool   $delPending Delete pending values (if forInit)
      *
      * @return mixed
      */
-    private function getPropCfg($debugProp, $path = array(), $forInit = false)
+    private function getPropCfg($debugProp, $path = array(), $forInit = false, $delPending = true)
     {
         if ($debugProp === 'debug') {
             return $this->debug->getCfg($path, Debug::CONFIG_DEBUG);
         }
         if (isset($this->valuesPending[$debugProp])) {
             $val = $this->debug->utility->arrayPathGet($this->valuesPending[$debugProp], $path);
-            if ($forInit) {
+            if ($forInit && $delPending) {
                 unset($this->valuesPending[$debugProp]);
             }
             if ($val !== null) {

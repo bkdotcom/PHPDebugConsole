@@ -8,7 +8,7 @@ describe('my first test', () => {
   beforeAll(() => {
     html = fs.readFileSync(path.resolve(__dirname, './test.html')).toString()
     document.body.innerHTML = html
-  });
+  })
 
   test('test passes', () => {
     expect(true).toBeTruthy()

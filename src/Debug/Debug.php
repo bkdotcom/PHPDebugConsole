@@ -1922,7 +1922,8 @@ class Debug
             /** @var \bdk\Debug\Dump\Base|RouteInterface */
             $val = new $classname($this);
             if ($val instanceof ConfigurableInterface) {
-                $val->setCfg($this->config->get($property, self::CONFIG_INIT));
+                $cfg = $this->config->get($property, self::CONFIG_INIT);
+                $val->setCfg($cfg);
             }
             $this->readOnly[$property] = $val;
             return $val;

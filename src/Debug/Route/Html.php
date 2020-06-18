@@ -177,14 +177,14 @@ class Html extends Base
         }
         $str .= '<header class="debug-menu-bar">'
             . 'PHPDebugConsole'
-            . '<nav role="tablist">'
+            . '<nav role="tablist"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>'
                 . $this->buildTabList()
             . '</nav>'
             . '</header>' . "\n";
-        $str .= '<div class="debug-tabs">' . "\n";
         if ($this->cfg['outputScript']) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n";
         }
+        $str .= '<div class="debug-tabs"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>' . "\n";
         $str .= $this->buildTabPanes();
         $str .= '</div>' . "\n"; // close .debug-tabs
         $str .= '</div>' . "\n"; // close .debug
@@ -379,11 +379,9 @@ class Html extends Base
         */
         $str .= '<ul' . $this->debug->html->buildAttribString(array(
             'class' => 'debug-log-summary group-body',
-            // 'style' => $style,
         )) . ">\n" . $this->processSummary() . '</ul>' . "\n";
         $str .= '<ul' . $this->debug->html->buildAttribString(array(
             'class' => 'debug-log group-body',
-            // 'style' => $style,
         )) . ">\n" . $this->processLog() . '</ul>' . "\n";
 
         $str .= '</div>' . "\n"; // close .tab-body

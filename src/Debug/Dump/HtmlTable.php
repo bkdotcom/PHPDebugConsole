@@ -54,7 +54,7 @@ class HtmlTable
             'attribs' => array(),
             'caption' => '',
             'columns' => array(),
-            'onBuildRow' => null,   // callable
+            'onBuildRow' => null,   // callable (or array of callables)
             'totalCols' => array(),
         ), $options);
         if (\is_string($options['attribs'])) {
@@ -118,11 +118,16 @@ class HtmlTable
     protected function buildBody($rows, $keys, $options)
     {
         $tBody = '<tbody>' . "\n";
+        $options['onBuildRow'] = \is_callable($options['onBuildRow'])
+            ? array( $options['onBuildRow'] )
+            : (array) $options['onBuildRow'];
         foreach ($rows as $k => $row) {
             // row may be array or Traversable
             $tr = $this->buildRow($row, $keys, $k);
-            if (\is_callable($options['onBuildRow'])) {
-                $tr = $options['onBuildRow']($tr, $row, $k);
+            foreach ($options['onBuildRow'] as $callable) {
+                if (\is_callable($callable)) {
+                    $tr = $callable($tr, $row, $k);
+                }
             }
             $tBody .= $tr;
         }

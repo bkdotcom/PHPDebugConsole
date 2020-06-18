@@ -81,12 +81,14 @@
 .debug td.t_object { display: table-cell; }
 .debug .m_assert, .debug .m_clear, .debug .m_count, .debug .m_error, .debug .m_groupEndValue, .debug .m_info, .debug .m_log, .debug .m_warn { position: relative; display: table; padding-left: 10px; text-indent: -10px; padding-right: 0.33em; word-break: break-word; }
 .debug .m_table td, .debug .m_trace td { word-break: break-word; }
+.debug .m_table td.t_string, .debug .m_trace td.t_string { padding-left: 1em; text-indent: -0.75em; }
 .debug .m_assert { background-color: rgba(255, 204, 204, 0.75); }
 .debug .m_group .group-header { display: table; white-space: nowrap; }
 .debug .m_group .group-label-bold { font-weight: bold; }
 .debug .m_group > ul { list-style: none; margin-left: 1em; border-left: 1px solid rgba(0, 0, 0, 0.25); padding-left: 0.25rem; }
 .debug .m_error, .debug :not(.expanded) > .level-error { background-color: #ffbaba; color: #d8000c; }
 .debug .m_info, .debug :not(.expanded) > .level-info { background-color: #d9edf7; color: #31708f; }
+.debug .m_trace .classname { color: #146314; }
 .debug .m_warn, .debug :not(.expanded) > .level-warn { background-color: #fefbe5; color: #8a6d3b; }
 .debug li[data-channel="general.phpError"] > .t_string:nth-child(2) { font-weight: bold; }
 .debug li[data-channel="general.phpError"] > .t_string:nth-child(4) { opacity: 0.7; }
@@ -125,7 +127,7 @@
 .debug table.trace-context tr.context { display: none; }
 .debug table.trace-context tr.context td { color: #111; max-width: 1px; background-color: #f5f2f0; padding: 0.75em; }
 .debug table.trace-context tr.context td hr { margin: 1em 0; }
-.debug .t_identifier { font-weight: bold; }
+.debug .t_identifier { font-weight: bold; white-space: nowrap; }
 .debug .t_type { color: #693; }
 .debug .t_bool.true { color: #993; text-shadow: 1px 1px 2px rgba(153, 153, 51, 0.5); }
 .debug .t_bool.false { color: #c33; text-shadow: 1px 1px 2px rgba(204, 51, 51, 0.5); }
@@ -142,7 +144,7 @@
 .debug .t_key.t_int { white-space: nowrap; }
 .debug .t_keyword { color: #07a; }
 .debug .t_null { opacity: 0.3; }
-.debug .t_operator { color: #a67f59; }
+.debug .t_operator { color: #a67f59; white-space: nowrap !important; }
 .debug .t_punct { color: #999; }
 .debug .excluded, .debug .t_notInspected, .debug .t_recursion { font-weight: bold; color: #f00; }
 .debug .t_resource { font-style: italic; }

@@ -176,7 +176,7 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
       // console.log('debugEnhance', this, $self.is('.enhanced'))
       if ($self.is('.debug')) {
         // console.warn('debugEnhance() : .debug')
-        $self.find('.debug-log-summary, .debug-log').show()
+        $self.find('.tablist, .debug-tabs').show()
         $self.find('.m_alert, .debug-log-summary, .debug-log').debugEnhance()
       } else if (!$self.is('.enhanced')) {
         if ($self.is('.group-body')) {

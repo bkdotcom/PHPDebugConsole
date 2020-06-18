@@ -201,13 +201,13 @@ class ErrorHandler
             return $this->continueToPrevHandler($error);
         }
         $this->storeLastError($error);
+        $this->data['errors'][ $error['hash'] ] = $error;
         if (!$error['isSuppressed']) {
             // only clear error caller via non-suppressed error
             $this->data['errorCaller'] = array();
             // only publish event for non-suppressed error
             $this->eventManager->publish('errorHandler.error', $error);
         }
-        $this->data['errors'][ $error['hash'] ] = $error;
         return $this->continueToPrevHandler($error);
     }
 

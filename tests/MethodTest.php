@@ -2278,6 +2278,7 @@ EOD;
                         . '<thead>' . "\n"
                         . '<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>' . "\n"
                         . '</thead>', $logEntry);
+                    $matches = array();
                     preg_match_all('#<tr>'
                         . '<th.*?>(.*?)</th>'
                         . '<td.*?>(.*?)</td>'
@@ -2297,7 +2298,7 @@ EOD;
                         $valuesExpect = array_merge(array((string) $i), array_values($trace[$i]));
                         $valuesExpect[1] = is_null($valuesExpect[1]) ? 'null' : $valuesExpect[1];
                         $valuesExpect[2] = is_null($valuesExpect[2]) ? 'null' : (string) $valuesExpect[2];
-                        $valuesExpect[3] = htmlspecialchars($valuesExpect[3]);
+                        $valuesExpect[3] = $this->debug->getDump('html')->markupIdentifier($valuesExpect[3], 'span', array(), true);
                         $valuesActual = $matches[$i];
                         array_shift($valuesActual);
                         $this->assertSame($valuesExpect, $valuesActual);

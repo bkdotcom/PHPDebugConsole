@@ -86,11 +86,12 @@ class Html extends Base
      *
      * @param mixed  $val     classname or classname(::|->)name (method/property/const)
      * @param string $tagName ("span") html tag to use
-     * @param array  $attribs (optional) additional html attributes
+     * @param array  $attribs (optional) additional html attributes for classname span
+     * @param bool   $wbr     (false)
      *
      * @return string
      */
-    public function markupIdentifier($val, $tagName = 'span', $attribs = array())
+    public function markupIdentifier($val, $tagName = 'span', $attribs = array(), $wbr = false)
     {
         $classname = '';
         $operator = '::';
@@ -107,27 +108,35 @@ class Html extends Base
             $classname = $matches[1];
             $operator = $matches[2];
             $identifier = $matches[3];
+        } elseif (\preg_match('/^(.+)(\\\\\{closure\})$/', $val, $matches)) {
+            $classname = $matches[1];
+            $operator = '';
+            $identifier = $matches[2];
         }
         $operator = '<span class="t_operator">' . \htmlspecialchars($operator) . '</span>';
         if ($classname) {
             $idx = \strrpos($classname, '\\');
             if ($idx) {
-                $classname = '<span class="namespace">' . \substr($classname, 0, $idx + 1) . '</span>'
+                $classname = '<span class="namespace">' . \str_replace('\\', '\\<wbr />', \substr($classname, 0, $idx + 1)) . '</span>'
                     . \substr($classname, $idx + 1);
             }
             $classname = $this->debug->html->buildTag(
                 $tagName,
                 \array_merge(array(
                     'class' => 'classname',
-                ), $attribs),
+                ), (array) $attribs),
                 $classname
-            );
+            ) . '<wbr />';
         }
         if ($identifier) {
             $identifier = '<span class="t_identifier">' . $identifier . '</span>';
         }
         $parts = \array_filter(array($classname, $identifier), 'strlen');
-        return \implode($operator, $parts);
+        $html = \implode($operator, $parts);
+        if ($wbr === false) {
+            $html = \str_replace('<wbr />', '', $html);
+        }
+        return $html;
     }
 
     /**
@@ -251,6 +260,31 @@ class Html extends Base
             ? '<hr />Arguments = ' . $this->dump($frame['args'])
             : '';
         return \str_replace('{{arguments}}', $args, $html);
+    }
+
+    /**
+     * Format trace table's function column
+     *
+     * @param string $html <tr>...</tr>
+     * @param array  $row  row values
+     *
+     * @return string
+     */
+    public function tableMarkupFunction($html, $row)
+    {
+        if (isset($row['function'])) {
+            $regex = '/^(.+)(::|->)(.+)$/';
+            $replace = \preg_match($regex, $row['function']) || \strpos($row['function'], '{closure}')
+                ? $this->markupIdentifier($row['function'], 'span', array(), true)
+                : '<span class="t_identifier">' . \htmlspecialchars($row['function']) . '</span>';
+            $replace = '<td class="col-function no-quotes t_string">' . $replace . '</td>';
+            $html = \str_replace(
+                '<td class="t_string">' . \htmlspecialchars($row['function']) . '</td>',
+                $replace,
+                $html
+            );
+        }
+        return $html;
     }
 
     /**
@@ -677,11 +711,15 @@ class Html extends Base
             'totalCols' => array(),
             'inclContext' => false,
         ), $logEntry['meta']);
-        $asTable = false;
-        if (\is_array($args[0])) {
-            $asTable = (bool) $args[0];
-        } elseif ($this->debug->abstracter->isAbstraction($args[0], 'object')) {
-            $asTable = true;
+        $asTable = \is_array($args[0])
+            ? (bool) $args[0]
+            : $this->debug->abstracter->isAbstraction($args[0], 'object');
+        $onBuildRow = array();
+        if ($logEntry['method'] === 'trace') {
+            $onBuildRow[] = array($this, 'tableMarkupFunction');
+        }
+        if ($meta['inclContext']) {
+            $onBuildRow[] = array($this, 'tableAddContextRow');
         }
         if (!$asTable && $meta['caption']) {
             \array_unshift($args, $meta['caption']);
@@ -703,9 +741,7 @@ class Html extends Base
                             ),
                             'caption' => $meta['caption'],
                             'columns' => $meta['columns'],
-                            'onBuildRow' => $meta['inclContext']
-                                ? array($this, 'tableAddContextRow')
-                                : null,
+                            'onBuildRow' => $onBuildRow,
                             'totalCols' => $meta['totalCols'],
                         )
                     ) . "\n"

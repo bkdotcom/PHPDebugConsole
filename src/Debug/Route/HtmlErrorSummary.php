@@ -118,7 +118,10 @@ class HtmlErrorSummary
                     'attribs' => 'trace trace-context table-bordered',
                     'caption' => 'trace',
                     'columns' => array('file','line','function'),
-                    'onBuildRow' => array($this->routeHtml->dump, 'tableAddContextRow'),
+                    'onBuildRow' => array(
+                        array($this->routeHtml->dump, 'tableMarkupFunction'),
+                        array($this->routeHtml->dump, 'tableAddContextRow'),
+                    ),
                 )
             );
             // restore previous objectsExclude

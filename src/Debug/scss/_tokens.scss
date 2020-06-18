@@ -28,6 +28,7 @@ $color-bg-unicode: #c0c0ff;
 //
 .t_identifier {
   font-weight: bold;
+  white-space: nowrap;
 }
 .t_type { color: $color-type; }
 
@@ -88,7 +89,10 @@ $color-bg-unicode: #c0c0ff;
 }
 .t_keyword { color: $color-keyword; }
 .t_null { opacity: 0.3; }
-.t_operator { color: $color-operator; }
+.t_operator {
+  color: $color-operator;
+  white-space: nowrap !important; //  override .debug .t_string > *
+}
 .t_punct { color: $color-punct; }
 .excluded,
 .t_notInspected,

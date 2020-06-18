@@ -17,6 +17,10 @@
 .m_table td,
 .m_trace td {
   word-break: break-word;
+  &.t_string {
+    padding-left: 1em;
+    text-indent: -0.75em;
+  }
 }
 .m_assert { background-color: rgba(255, 204, 204, 0.75); }
 .m_group {
@@ -43,6 +47,12 @@
 :not(.expanded) > .level-info {
   background-color: $info-bg;
   color: $info-fg;
+}
+
+.m_trace {
+  .classname {
+    color: #146314;
+  }
 }
 
 .m_warn,

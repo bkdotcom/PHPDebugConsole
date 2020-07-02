@@ -3,3 +3,14 @@ services:
     # alias", "parent", "class", "shared", "synthetic", "lazy", "public", "abstract", "deprecated", "factory", "file", "arguments", "properties", "configurator", "calls", "tags", "decorates", "decoration_inner_name", "decoration_priority", "decoration_on_invalid", "autowire", "autoconfigure, bind
     tags: ['kernel.event_subscriber']
     class: bdk\Debug\Framework\Symfony\DebugBundle\EventListener\BdkDebugBundleListener
+    arguments: ['@bdk\Debug']
+  bdk\Debug:
+    factory: ['bdk\Debug', 'getInstance']
+  # bdk\Debug\Psr3\Logger:
+    # arguments: ['@bdk\Debug']
+    # factory: ['bdk\Debug', 'getChannel']
+  monologHandler:
+   #class: Monolog\Handler\PsrHandler
+   #arguments: ['@bdk\Debug\Psr3\Logger']
+   class: bdk\Debug\Collector\MonologHandler
+   arguments: ['@bdk\Debug']

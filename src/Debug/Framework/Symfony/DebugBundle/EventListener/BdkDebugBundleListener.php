@@ -2,6 +2,7 @@
 
 namespace bdk\Debug\Framework\Symfony\DebugBundle\EventListener;
 
+use bdk\Debug;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,11 +15,21 @@ use Symfony\Component\HttpKernel\KernelEvents;
 class BdkDebugBundleListener implements EventSubscriberInterface
 {
      protected $mode;
+     private $debug;
 
-    public function __construct()
+    /**
+     * Constructor
+     *
+     * @param Debug $debug Debug instance
+     */
+    public function __construct(Debug $debug)
     {
+        $this->debug = $debug;
     }
 
+    /**
+     * {@ineritdoc}
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -26,6 +37,13 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * [onKernelResponse description]
+     *
+     * @param ResponseEvent $event ResponseEvent
+     *
+     * @return void
+     */
     public function onKernelResponse(ResponseEvent $event)
     {
         $response = $event->getResponse();
@@ -48,13 +66,18 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             return;
         }
 
-        $this->injectToolbar($response, $request);
+        $this->injectDebug($response, $request);
     }
 
     /**
      * Injects the web debug toolbar into the given Response.
+     *
+     * @param Response $response
+     * @param REequest $request
+     *
+     * @return void
      */
-    protected function injectToolbar(Response $response, Request $request)
+    protected function injectDebug(Response $response, Request $request)
     {
         $content = $response->getContent();
         $pos = \strripos($content, '</body>');
@@ -62,8 +85,9 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         if ($pos === false) {
             return;
         }
+        $this->debug->alert('injected into response via ' . __CLASS__, 'success');
         $content = \substr($content, 0, $pos)
-            . \bdk\Debug::_output()
+            . $this->debug->output()
             . \substr($content, $pos);
         $response->setContent($content);
     }

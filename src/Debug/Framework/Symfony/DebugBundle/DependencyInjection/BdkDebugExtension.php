@@ -27,8 +27,7 @@ class BdkDebugExtension extends Extension
         ));
 
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
-        $loader->load('services.yml');
-        // $debug->warn(__METHOD__, $container);
+        $loader->load('config.yml');
         // $container->getDefinition('monolog.logger')
             // ->addMethodCall('pushHandler', [new \Monolog\Handler\PsrHandler($debug->logger)]);
     }

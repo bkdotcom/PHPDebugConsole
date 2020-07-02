@@ -13,6 +13,7 @@
 namespace bdk\Debug\Psr3;
 
 use bdk\Debug;
+use bdk\Debug\LogEntry;
 use Psr\Log\AbstractLogger;
 use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
@@ -56,7 +57,7 @@ class Logger extends AbstractLogger
      */
     public function log($level, $message, array $context = array())
     {
-        if (!$this->isValidLevel($level)) {
+        if ($this->isValidLevel($level) === false) {
             throw new InvalidArgumentException();
         }
         $levelMap = array(
@@ -69,67 +70,28 @@ class Logger extends AbstractLogger
             LogLevel::INFO => 'info',
             LogLevel::DEBUG => 'log',
         );
-        $method = $levelMap[$level];
-        $str = $this->interpolate($message, $context);
-        $meta = $this->getMeta($level, $context);
-        if (\in_array($method, array('info','log'))) {
-            foreach ($context as $key => $value) {
-                if ($key === 'table' && \is_array($value)) {
-                    /*
-                        context['table'] is table data
-                        context may contain other meta values
-                    */
-                    $method = 'table';
-                    $metaMerge = \array_intersect_key($context, \array_flip(array(
-                        'columns',
-                        'sortable',
-                        'totalCols',
-                    )));
-                    $meta = \array_merge($meta, $metaMerge);
-                    unset($meta['glue']);
-                    $context = $value;
-                    break;
-                }
-            }
-        }
-        $args = array($str);
-        if ($context) {
-            $args[] = $context;
-        }
-        $args[] = $meta;
-        \call_user_func_array(array($this->debug, $method), $args);
-    }
-
-    /**
-     * Extract potential meta values from $context
-     *
-     * @param string $level   log level
-     * @param array  $context context array
-     *                          meta values get removed
-     *
-     * @return array meta
-     */
-    protected function getMeta($level, &$context)
-    {
-        $haveException = isset($context['exception'])
-            && ($context['exception'] instanceof \Exception
-                || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable);
-        $metaVals = \array_intersect_key($context, \array_flip(array('file','line')));
-        $metaVals['psr3level'] = $level;
-        // remove meta from context
-        $context = \array_diff_key($context, $metaVals);
-        if ($haveException) {
-            $exception = $context['exception'];
-            $metaVals = \array_merge(array(
-                'backtrace' => $this->debug->backtrace->get($exception),
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-            ), $metaVals);
-        }
-        if ($context) {
-            $metaVals['glue'] = ', ';   // override automatic " = " when only two args
-        }
-        return $this->debug->meta($metaVals);
+        /*
+            Lets create a LogEntry obj to pass arround
+        */
+        $logEntry = new LogEntry(
+            $this->debug,
+            $levelMap[$level],
+            array(
+                $message,
+                $context,
+            ),
+            array(
+                'psr3level' => $level,
+            )
+        );
+        $this->setMeta($logEntry);
+        $this->setArgs($logEntry);
+        $args = $logEntry['args'];
+        $args[] = $this->debug->meta($logEntry['meta']);
+        \call_user_func_array(
+            array($logEntry->getSubject(), $logEntry['method']),
+            $args
+        );
     }
 
     /**
@@ -199,6 +161,76 @@ class Logger extends AbstractLogger
             LogLevel::NOTICE,
             LogLevel::INFO,
             LogLevel::DEBUG,
+        );
+    }
+
+    /**
+     * Interpolates message and context.
+     * Switches to table if context['table'] is set
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    private function setArgs(LogEntry $logEntry)
+    {
+        list($message, $context) = $logEntry['args'];
+        $args = array(
+            $this->interpolate($message, $context)
+        );
+        if (\in_array($logEntry['method'], array('info','log'))) {
+            if (isset($context['table']) && \is_array($context['table'])) {
+                /*
+                    context['table'] is table data
+                    context may contain other meta values
+                */
+                $args = array($context['table']);
+                $logEntry['method'] = 'table';
+                $logEntry->setMeta('caption', $message);
+                $meta = \array_intersect_key($context, \array_flip(array(
+                    'columns',
+                    'sortable',
+                    'totalCols',
+                )));
+                $logEntry->setMeta($meta);
+                $context = null;
+            }
+        }
+        if ($context) {
+            $args[] = $context;
+            $logEntry->setMeta('glue', ', ');
+        }
+        $logEntry['args'] = $args;
+    }
+
+    /**
+     * Extract potential meta values from context array
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    private function setMeta(LogEntry $logEntry)
+    {
+        list($message, $context) = $logEntry['args'];
+        $haveException = isset($context['exception'])
+            && ($context['exception'] instanceof \Exception
+                || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable);
+        $meta = \array_intersect_key($context, \array_flip(array('channel','file','line')));
+        // remove meta from context
+        $context = \array_diff_key($context, $meta);
+        if ($haveException) {
+            $exception = $context['exception'];
+            $meta = \array_merge(array(
+                'backtrace' => $this->debug->backtrace->get($exception),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ), $meta);
+        }
+        $logEntry->setMeta($meta);
+        $logEntry['args'] = array(
+            $message,
+            $context,
         );
     }
 }

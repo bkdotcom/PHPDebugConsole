@@ -2043,7 +2043,7 @@ class Debug
     }
 
     /**
-     * If "core" route, store in readonly property
+     * If "core" route, store in readOnly property
      *
      * @param mixed $val route value
      *

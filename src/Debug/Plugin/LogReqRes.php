@@ -51,11 +51,7 @@ class LogReqRes implements SubscriberInterface
         $this->debug = $debug->getChannel('Request / Response', array('nested' => false));
 
         $collectWas = $debug->setCfg('collect', true);
-        $debug->groupSummary();
-
         $this->logRequest();    // headers, cookies, post
-
-        $debug->groupEnd();
         $debug->setCfg('collect', $collectWas);
     }
 

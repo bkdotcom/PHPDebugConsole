@@ -2160,7 +2160,7 @@
         // console.log('debugEnhance', this, $self.is('.enhanced'))
         if ($self.is('.debug')) {
           // console.warn('debugEnhance() : .debug')
-          $self.find('.tablist, .debug-tabs').show();
+          $self.find('.debug-menu-bar > nav, .debug-tabs').show();
           $self.find('.m_alert, .debug-log-summary, .debug-log').debugEnhance();
         } else if (!$self.is('.enhanced')) {
           if ($self.is('.group-body')) {

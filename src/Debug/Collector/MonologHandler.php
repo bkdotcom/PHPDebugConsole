@@ -16,8 +16,6 @@ use bdk\Debug;
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
-// use Monolog\Handler\AbstractHandler;
-// use Monolog\Handler\FormattableHandlerInterface;
 use Psr\Log\LoggerInterface;
 
 /**

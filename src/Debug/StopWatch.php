@@ -34,7 +34,7 @@ class StopWatch
      */
     public function __construct($vals = array())
     {
-        $this->timers['requestTime'] = array(
+        $this->timers['labels']['requestTime'] = array(
             0,
             isset($vals['requestTime'])
                 ? $vals['requestTime']

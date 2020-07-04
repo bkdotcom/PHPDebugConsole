@@ -41,6 +41,7 @@ class ConfigTest extends DebugTestFramework
             'key',
             'output',
             'arrayShowListKeys',
+            'channels',
             'channelIcon',
             'channelName',
             'channelShow',

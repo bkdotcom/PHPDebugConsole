@@ -21,6 +21,10 @@ use Exception;
 /**
  * Log Request/Response
  * Display in dedicated tab
+ *
+ * Response will only avail if one of the following
+ *   Debug::response obj avail (set via Debug::writeToResponse or setting 'response' service)
+ *   output triggered via shutdown
  */
 class LogReqRes implements SubscriberInterface
 {
@@ -34,7 +38,7 @@ class LogReqRes implements SubscriberInterface
     {
         return array(
             'debug.pluginInit' => 'onPluginInit',
-            'php.shutdown' => array('logResponse', PHP_INT_MAX),
+            'debug.output' => array('logResponse', PHP_INT_MAX),
         );
     }
 
@@ -97,6 +101,11 @@ class LogReqRes implements SubscriberInterface
             if (\ob_get_level()) {
                 \ob_end_flush();
             }
+            $this->debug->log(
+                $contentType
+                    ? 'Not logging response body for Content-Type "' . $contentType . '"'
+                    : 'Content-Type unknown:  Not logging response body.'
+            );
             return;
         }
         $this->logResponseContent($contentType);

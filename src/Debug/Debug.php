@@ -42,7 +42,7 @@ use SplObjectStorage;
  * @property Debug\Method\Profile $methodProfile lazy-loaded MethodProfile instance
  * @property Debug\Method\Table   $methodTable   lazy-loaded MethodTable instance
  * @property \bdk\Debug|null      $parentInstance parent "channel"
- * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeResponse)
+ * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
  * @property Debug\Psr7lite\ServerRequest $request lazy-loaded ServerRequest
  * @property \bdk\Debug           $rootInstance  root "channel"
  * @property Debug\StopWatch      $stopWatch     lazy-loaded StopWatch Instance
@@ -95,6 +95,15 @@ class Debug
             'key'       => null,
             'output'    => false,           // output the log?
             'arrayShowListKeys' => true,
+            'channels' => array(
+                /*
+                channelName => array(
+                    'channelIcon'
+                    'channelShow'
+                    'nested'
+                )
+                */
+            ),
             'channelIcon' => null,
             'channelName' => 'general',     // channel or tab name
             'channelShow' => true,          // wheter initially filtered or not
@@ -1199,15 +1208,22 @@ class Debug
             $this->error('getChannel(): name should not contain period (.)');
             return $this;
         }
-        $config = \array_merge(array('nested' => true), $config);
         if (!isset($this->channels[$name])) {
+            $config = \array_merge(
+                array('nested' => true),
+                isset($this->cfg['channels'][$name])
+                    ? $this->cfg['channels'][$name]
+                    : array(),
+                $config
+            );
             $cfg = $this->getCfg(null, self::CONFIG_INIT);
             $cfg = $this->internal->getPropagateValues($cfg);
             // set channel values
-            $cfg['debug']['channelName'] = $config['nested']
+            $cfg['debug']['channelName'] = $config['nested'] || $this->readOnly['parentInstance']
                 ? $this->cfg['channelName'] . '.' . $name
                 : $name;
             $cfg['debug']['parent'] = $this;
+            unset($config['nested']);
             // instantiate channel
             $this->channels[$name] = new static($cfg);
         }

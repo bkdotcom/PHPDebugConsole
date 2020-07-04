@@ -180,7 +180,7 @@ class DebugTest extends DebugTestFramework
         $subscribersExpect = array(
             array('bdk\ErrorHandler', 'onShutdown'),
             array('bdk\Debug\InternalEvents', 'onShutdownHigh'),
-            array('bdk\Debug\Plugin\LogReqRes', 'logResponse'),
+            // array('bdk\Debug\Plugin\LogReqRes', 'logResponse'),
             array('bdk\Debug\InternalEvents', 'onShutdownHigh2'),
             array('bdk\Debug\InternalEvents', 'onShutdownLow'),
             array('bdk\Debug\Route\Wamp', 'onShutdown'),

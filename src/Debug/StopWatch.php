@@ -21,8 +21,6 @@ class StopWatch
     protected $timers = array(
         'labels' => array(
             // label => array(accumulatedTime, lastStartedTime|null)
-            // microtime will get replaced with $_SERVER['REQUEST_TIME_FLOAT'] if exists
-            // 'requestTime' => array(0, \microtime(true)),
         ),
         'stack' => array(),
     );
@@ -38,7 +36,7 @@ class StopWatch
             0,
             isset($vals['requestTime'])
                 ? $vals['requestTime']
-                : \microtime(true)
+                : $_SERVER['REQUEST_TIME_FLOAT']
         );
     }
 

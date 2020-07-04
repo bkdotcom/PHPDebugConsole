@@ -1894,9 +1894,7 @@ class Debug
             'stopWatch' => function () {
                 $serverParams = $this->request->getServerParams();
                 return new \bdk\Debug\StopWatch(array(
-                    'requestTime' => isset($serverParams['REQUEST_TIME_FLOAT'])
-                        ? $serverParams['REQUEST_TIME_FLOAT']
-                        : \microtime(true),
+                    'requestTime' => $serverParams['REQUEST_TIME_FLOAT'],
                 ));
             },
             'utf8' => function () {

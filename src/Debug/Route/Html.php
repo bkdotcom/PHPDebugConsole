@@ -345,9 +345,9 @@ class Html extends Base
             We want Request / Response to come first in case we're not outputting tab UI
         */
         $order = ('Request / Response');
-        \usort($names, function ($a, $b) use ($order) {
-            $aPos = \array_search($a, $order);
-            $bPos = \array_search($b, $order);
+        \usort($names, function ($valA, $valB) use ($order) {
+            $aPos = \array_search($valA, $order);
+            $bPos = \array_search($valB, $order);
             if ($aPos === false && $bPos === false) {   // both items are dont cares
                 return 0;                               //   a == b
             }
@@ -357,7 +357,7 @@ class Html extends Base
             if ($bPos === false) {                      // $b is a dont care
                 return -1;                              //   $a < $b
             }
-            return \strnatcasecmp($b, $a);
+            return \strnatcasecmp($valA, $valB);
         });
         foreach ($names as $name) {
             $html .= $this->buildTabPane($name);

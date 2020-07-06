@@ -341,6 +341,24 @@ class Html extends Base
     {
         $html = '';
         $names = \array_keys($this->debug->getChannelsTop());
+        /*
+            We want Request / Response to come first in case we're not outputting tab UI
+        */
+        $order = ('Request / Response');
+        \usort($names, function ($a, $b) use ($order) {
+            $aPos = \array_search($a, $order);
+            $bPos = \array_search($b, $order);
+            if ($aPos === false && $bPos === false) {   // both items are dont cares
+                return 0;                               //   a == b
+            }
+            if ($aPos === false) {                      // $a is a dont care
+                return 1;                               //   $a > $b
+            }
+            if ($bPos === false) {                      // $b is a dont care
+                return -1;                              //   $a < $b
+            }
+            return \strnatcasecmp($b, $a);
+        });
         foreach ($names as $name) {
             $html .= $this->buildTabPane($name);
         }

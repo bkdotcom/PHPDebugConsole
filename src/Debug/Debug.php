@@ -184,9 +184,9 @@ class Debug
         /*
             Initialize Internal
         */
-        $this->internal = $this->getViaContainer('internal');
         $this->internalEvents = $this->getViaContainer('internalEvents');
-
+        $this->internal = $this->getViaContainer('internal');
+        $this->internal->init();
         $this->eventManager->publish('debug.bootstrap', $this);
     }
 

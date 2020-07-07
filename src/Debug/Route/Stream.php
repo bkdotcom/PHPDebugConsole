@@ -166,22 +166,24 @@ class Stream extends Base
             $this->fileHandle = $stream;
             return;
         }
-        $uriExists = \file_exists($stream);
-        $isWritable = !\is_file($stream) || \is_writable($stream);
+        $file = $stream;
+        $dir = \dirname($file);
+        $fileExists = \file_exists($file);
+        $isWritable = \is_writable($file) || !\file_exists($file) && \is_writeable($dir);
         if (!$isWritable) {
-            \trigger_error($stream . ' is not writable', E_USER_NOTICE);
+            \trigger_error($file . ' is not writable', E_USER_NOTICE);
             return;
         }
-        $this->fileHandle = \fopen($stream, 'a');
+        $this->fileHandle = \fopen($file, 'a');
         if (!$this->fileHandle) {
             return;
         }
         $meta = \stream_get_meta_data($this->fileHandle);
         if ($meta['wrapper_type'] === 'plainfile') {
             \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s') . ' *****' . "\n");
-            if (!$uriExists) {
+            if (!$fileExists) {
                 // we just created file
-                \chmod($stream, 0660);
+                \chmod($file, 0660);
             }
         }
     }
@@ -191,8 +193,8 @@ class Stream extends Base
      */
     protected function postSetCfg($cfg = array())
     {
-        if (\array_key_exists('stream', $cfg)) {
-            // changing stream?
+        if (\array_key_exists('stream', $cfg) && $this->fileHandle) {
+            // changing stream?  (but not initializing..  use init() to initialize)
             $this->openStream($cfg['stream']);
         }
     }

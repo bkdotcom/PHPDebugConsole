@@ -617,7 +617,7 @@ class Utility
         return \hash(
             'crc32b',
             self::getServerParam('REMOTE_ADDR', 'terminal')
-                . (self::getServerParam('REQUEST_TIME_FLOAT') ?: self::getServerParam('REQUEST_TIME'))
+                . self::getServerParam('REQUEST_TIME_FLOAT')
                 . self::getServerParam('REMOTE_PORT', '')
         );
     }

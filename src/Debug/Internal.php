@@ -413,7 +413,7 @@ class Internal implements SubscriberInterface
             Initial setCfg has already occured... so we missed the initial debug.config event
             manually call onConfig here
         */
-        $cfgInit = $this->debug->getCfg();
+        $cfgInit = $this->debug->getCfg(null, Debug::CONFIG_INIT);
         $cfgEvent = new Event(
             $this->debug,
             $cfgInit

@@ -65,10 +65,6 @@ class Stream extends Base
         $this->cfg['output'] = $isCli
             ? $this->debug->getCfg('output', Debug::CONFIG_DEBUG)    // if cli, only output if explicitly true
             : true;                             //  otherwise push to stream
-        $stream = $this->cfg['stream'];
-        if ($stream) {
-            $this->openStream($stream);
-        }
     }
 
     /**
@@ -169,7 +165,7 @@ class Stream extends Base
         $file = $stream;
         $dir = \dirname($file);
         $fileExists = \file_exists($file);
-        $isWritable = \is_writable($file) || !\file_exists($file) && \is_writeable($dir);
+        $isWritable = strpos($file, 'php://') === 0 || \is_writable($file) || !\file_exists($file) && \is_writeable($dir);
         if (!$isWritable) {
             \trigger_error($file . ' is not writable', E_USER_NOTICE);
             return;
@@ -193,8 +189,8 @@ class Stream extends Base
      */
     protected function postSetCfg($cfg = array())
     {
-        if (\array_key_exists('stream', $cfg) && $this->fileHandle) {
-            // changing stream?  (but not initializing..  use init() to initialize)
+        if (\array_key_exists('stream', $cfg)) {
+            // changing stream?
             $this->openStream($cfg['stream']);
         }
     }

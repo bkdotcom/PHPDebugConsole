@@ -180,7 +180,6 @@ class Debug
             ),
         );
         $this->bootstrap($cfg);
-        $this->registeredPlugins = new SplObjectStorage();
         /*
             Initialize Internal
         */
@@ -1737,6 +1736,8 @@ class Debug
                 \spl_autoload_register(array($this, 'autoloader'));
             }
         }
+        $this->registeredPlugins = new SplObjectStorage();
+        $this->getViaContainer('errorHandler');
         $this->config = $this->getViaContainer('config');
         $this->eventManager->subscribe('debug.config', array($this, 'onConfig'));
         $this->config->set($cfg);

@@ -344,7 +344,7 @@ class Html extends Base
         /*
             We want Request / Response to come first in case we're not outputting tab UI
         */
-        $order = ('Request / Response');
+        $order = array('Request / Response');
         \usort($names, function ($valA, $valB) use ($order) {
             $aPos = \array_search($valA, $order);
             $bPos = \array_search($valB, $order);

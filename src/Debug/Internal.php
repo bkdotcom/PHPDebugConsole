@@ -57,30 +57,8 @@ class Internal implements SubscriberInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        if ($debug->parentInstance) {
-            $this->debug->eventManager->addSubscriberInterface($this);
-            return;
-        }
-        /*
-            Initial setCfg has already occured... so we missed the initial debug.config event
-            manually call onConfig here
-        */
-        $cfgInit = $this->debug->getCfg(null, Debug::CONFIG_DEBUG);
-        $cfgEvent = new Event(
-            $this->debug,
-            array(
-                'debug' => $cfgInit,
-            )
-        );
-        $this->onConfig($cfgEvent);
-        if ($cfgEvent['debug'] !== $cfgInit) {
-            // publish debug.config event so event listeners will get the change
-            $this->debug->eventManager->publish(
-                'debug.config',
-                $cfgEvent
-            );
-        }
         $this->debug->eventManager->addSubscriberInterface($this);
+        // see also self::init()
     }
 
     /**
@@ -302,6 +280,7 @@ class Internal implements SubscriberInterface
         $cfg = \array_diff_key($cfg, \array_flip(array(
             'errorEmailer',
             'errorHandler',
+            'routeStream',
         )));
         unset($cfg['debug']['onBootstrap']);
         unset($cfg['debug']['route']);
@@ -417,6 +396,36 @@ class Internal implements SubscriberInterface
         $entryCountCurrent = $this->debug->getData('log/__count__');
         $lastEntryMethod = $this->debug->getData('log/__end__/method');
         return $entryCountCurrent > $entryCountInitial && $lastEntryMethod !== 'clear';
+    }
+
+    /**
+     * Initialize
+     * This is not called from __construct as we may call debug->internal which hasn't been set yet
+     *
+     * @return void
+     */
+    public function init()
+    {
+        if ($this->debug->parentInstance) {
+            return;
+        }
+        /*
+            Initial setCfg has already occured... so we missed the initial debug.config event
+            manually call onConfig here
+        */
+        $cfgInit = $this->debug->getCfg(null, Debug::CONFIG_INIT);
+        $cfgEvent = new Event(
+            $this->debug,
+            $cfgInit
+        );
+        $this->onConfig($cfgEvent);
+        if ($cfgEvent['debug'] !== $cfgInit['debug']) {
+            // publish debug.config event so event listeners will get the change
+            $this->debug->eventManager->publish(
+                'debug.config',
+                $cfgEvent
+            );
+        }
     }
 
     /**

@@ -65,10 +65,6 @@ class Stream extends Base
         $this->cfg['output'] = $isCli
             ? $this->debug->getCfg('output', Debug::CONFIG_DEBUG)    // if cli, only output if explicitly true
             : true;                             //  otherwise push to stream
-        $stream = $this->cfg['stream'];
-        if ($stream) {
-            $this->openStream($stream);
-        }
     }
 
     /**
@@ -166,22 +162,24 @@ class Stream extends Base
             $this->fileHandle = $stream;
             return;
         }
-        $uriExists = \file_exists($stream);
-        $isWritable = !\is_file($stream) || \is_writable($stream);
+        $file = $stream;
+        $dir = \dirname($file);
+        $fileExists = \file_exists($file);
+        $isWritable = strpos($file, 'php://') === 0 || \is_writable($file) || !\file_exists($file) && \is_writeable($dir);
         if (!$isWritable) {
-            \trigger_error($stream . ' is not writable', E_USER_NOTICE);
+            \trigger_error($file . ' is not writable', E_USER_NOTICE);
             return;
         }
-        $this->fileHandle = \fopen($stream, 'a');
+        $this->fileHandle = \fopen($file, 'a');
         if (!$this->fileHandle) {
             return;
         }
         $meta = \stream_get_meta_data($this->fileHandle);
         if ($meta['wrapper_type'] === 'plainfile') {
             \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s') . ' *****' . "\n");
-            if (!$uriExists) {
+            if (!$fileExists) {
                 // we just created file
-                \chmod($stream, 0660);
+                \chmod($file, 0660);
             }
         }
     }

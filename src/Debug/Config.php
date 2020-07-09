@@ -163,7 +163,13 @@ class Config
                 // 'emailTo',
                 'emailTraceMask',
             ),
-            'errorHandler' => \array_keys($this->debug->errorHandler->getCfg()),
+            'errorHandler' => array(
+                'continueToPrevHandler',
+                'errorFactory',
+                'errorReporting',
+                'onError',
+                'onEUserError',
+            ),
             'routeHtml' => array(
                 'css',
                 'drawer',

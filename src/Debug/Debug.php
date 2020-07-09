@@ -180,13 +180,12 @@ class Debug
             ),
         );
         $this->bootstrap($cfg);
-        $this->registeredPlugins = new SplObjectStorage();
         /*
             Initialize Internal
         */
-        $this->internal = $this->getViaContainer('internal');
         $this->internalEvents = $this->getViaContainer('internalEvents');
-
+        $this->internal = $this->getViaContainer('internal');
+        $this->internal->init();
         $this->eventManager->publish('debug.bootstrap', $this);
     }
 
@@ -1737,6 +1736,8 @@ class Debug
                 \spl_autoload_register(array($this, 'autoloader'));
             }
         }
+        $this->registeredPlugins = new SplObjectStorage();
+        $this->getViaContainer('errorHandler');
         $this->config = $this->getViaContainer('config');
         $this->eventManager->subscribe('debug.config', array($this, 'onConfig'));
         $this->config->set($cfg);

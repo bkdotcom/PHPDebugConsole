@@ -6,11 +6,8 @@ services:
     arguments: ['@bdk\Debug']
   bdk\Debug:
     factory: ['bdk\Debug', 'getInstance']
-  # bdk\Debug\Psr3\Logger:
-    # arguments: ['@bdk\Debug']
-    # factory: ['bdk\Debug', 'getChannel']
   monologHandler:
-   #class: Monolog\Handler\PsrHandler
-   #arguments: ['@bdk\Debug\Psr3\Logger']
    class: bdk\Debug\Collector\MonologHandler
    arguments: ['@bdk\Debug']
+   tags: ['monolog.logger']
+            # - { name: monolog.logger, channel: country }

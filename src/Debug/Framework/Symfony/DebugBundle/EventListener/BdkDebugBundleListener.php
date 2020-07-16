@@ -3,9 +3,11 @@
 namespace bdk\Debug\Framework\Symfony\DebugBundle\EventListener;
 
 use bdk\Debug;
+use bdk\PubSub\Event;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -33,12 +35,48 @@ class BdkDebugBundleListener implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
+            KernelEvents::REQUEST => ['onKernelRequest', PHP_INT_MAX],
             KernelEvents::RESPONSE => ['onKernelResponse', -128],
         ];
     }
 
     /**
-     * [onKernelResponse description]
+     * onKernelRequest
+     *
+     * @param ResponseEvent $event ResponseEvent
+     *
+     * @return void
+     */
+    public function onKernelRequest(RequestEvent $event)
+    {
+        if (!$event->isMasterRequest()) {
+            return;
+        }
+        $this->debug->setCfg(array(
+            'collect' => true,
+            'output' => true,
+            'stream' => __DIR__ . '/../log.txt',
+            'channels' => array(
+                'doctrine' => array(
+                    'channelIcon' => 'fa fa-database',
+                ),
+                'event' => array(
+                    'channelIcon' => 'fa fa-bell-o',
+                    'channelShow' => false,
+                ),
+                'request' => array(
+                    'channelIcon' => 'fa fa-arrow-left',
+                ),
+                'security' => array(
+                    'channelIcon' => 'fa fa-shield',
+                ),
+            ),
+        ));
+        $this->debug->eventManager->subscribe('debug.output', array($this, 'logFiles'), 1);
+    }
+
+    /**
+     * onKernelResponse
      *
      * @param ResponseEvent $event ResponseEvent
      *
@@ -72,8 +110,8 @@ class BdkDebugBundleListener implements EventSubscriberInterface
     /**
      * Injects the web debug toolbar into the given Response.
      *
-     * @param Response $response
-     * @param REequest $request
+     * @param Response $response Response instance
+     * @param Request  $request  Request instance
      *
      * @return void
      */
@@ -90,5 +128,32 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             . $this->debug->output()
             . \substr($content, $pos);
         $response->setContent($content);
+    }
+
+    /**
+     * Log included files in new tab
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function logFiles(Event $event)
+    {
+        $files = $this->debug->utility->getIncludedFiles();
+        $files = \array_filter($files, function ($file) {
+            $exclude = array(
+                '/var/cache/',
+                '/vendor/',
+            );
+            foreach ($exclude as $str) {
+                if (\strpos($file, $str) !== false) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        $files = \array_values($files);
+        $debugFiles = $this->debug->rootInstance->getChannel('Files', array('nested' => false));
+        $debugFiles->log('files', $files, $this->debug->meta('detectFiles', true));
     }
 }

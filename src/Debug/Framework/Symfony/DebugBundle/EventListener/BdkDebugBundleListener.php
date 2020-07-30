@@ -3,7 +3,11 @@
 namespace bdk\Debug\Framework\Symfony\DebugBundle\EventListener;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
+use Doctrine\Bundle\DoctrineBundle\Registry as DoctrineRegistry;
+use Psr\Log\LogLevel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,11 +26,19 @@ class BdkDebugBundleListener implements EventSubscriberInterface
     /**
      * Constructor
      *
-     * @param Debug $debug Debug instance
+     * @param Debug            $debug            Debug instance
+     * @param DoctrineRegistry $doctrineRegistry Doctrine Regsitry
      */
-    public function __construct(Debug $debug)
+    public function __construct(Debug $debug, DoctrineRegistry $doctrineRegistry)
     {
         $this->debug = $debug;
+        $this->debug->errorHandler->register();
+
+        $connections = $doctrineRegistry->getConnections();
+        foreach ($connections as $conn) {
+            $logger = new \bdk\Debug\Collector\DoctrineLogger($conn);
+            $conn->getConfiguration()->setSQLLogger($logger);
+        }
     }
 
     /**
@@ -43,7 +55,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
     /**
      * onKernelRequest
      *
-     * @param ResponseEvent $event ResponseEvent
+     * @param RequestEvent $event RequestEvent
      *
      * @return void
      */
@@ -53,9 +65,6 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             return;
         }
         $this->debug->setCfg(array(
-            'collect' => true,
-            'output' => true,
-            'stream' => __DIR__ . '/../log.txt',
             'channels' => array(
                 'doctrine' => array(
                     'channelIcon' => 'fa fa-database',
@@ -71,8 +80,38 @@ class BdkDebugBundleListener implements EventSubscriberInterface
                     'channelIcon' => 'fa fa-shield',
                 ),
             ),
+            'css' => '.debug .empty {border:none; padding:inherit;}',
         ));
+        $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLog'));
+        $this->debug->eventManager->subscribe('debug.objAbstractStart', array($this, 'onObjAbstractStart'));
         $this->debug->eventManager->subscribe('debug.output', array($this, 'logFiles'), 1);
+    }
+
+    /**
+     * php.debug event listener
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    public function onDebugLog(LogEntry $logEntry)
+    {
+        if ($logEntry->getMeta('psr3level') === LogLevel::CRITICAL) {
+            /*
+                test if came via debug's errorHandler
+                if so, already logged
+            */
+            $lastError = $logEntry->getSubject()->errorHandler->getLastError();
+            if ($lastError) {
+                $str = $this->debug->utility->strInterpolate(
+                    '"{typeStr}: {message}" at {file} line {line}',
+                    $lastError
+                );
+                if (\strpos($logEntry['args'][0], $str) !== false) {
+                    $logEntry['appendLog'] = false;
+                }
+            }
+        }
     }
 
     /**
@@ -108,26 +147,17 @@ class BdkDebugBundleListener implements EventSubscriberInterface
     }
 
     /**
-     * Injects the web debug toolbar into the given Response.
+     * debug.objAbstractStart listener
      *
-     * @param Response $response Response instance
-     * @param Request  $request  Request instance
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    protected function injectDebug(Response $response, Request $request)
+    public function onObjAbstractStart(Abstraction $abs)
     {
-        $content = $response->getContent();
-        $pos = \strripos($content, '</body>');
-
-        if ($pos === false) {
-            return;
+        if ($abs['debugMethod'] === 'error' && $abs['className'] === 'ErrorException') {
+            $abs['isExcluded'] = true;
         }
-        $this->debug->alert('injected into response via ' . __CLASS__, 'success');
-        $content = \substr($content, 0, $pos)
-            . $this->debug->output()
-            . \substr($content, $pos);
-        $response->setContent($content);
     }
 
     /**
@@ -155,5 +185,27 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         $files = \array_values($files);
         $debugFiles = $this->debug->rootInstance->getChannel('Files', array('nested' => false));
         $debugFiles->log('files', $files, $this->debug->meta('detectFiles', true));
+    }
+
+    /**
+     * Injects the web debug toolbar into the given Response.
+     *
+     * @param Response $response Response instance
+     * @param Request  $request  Request instance
+     *
+     * @return void
+     */
+    protected function injectDebug(Response $response, Request $request)
+    {
+        $content = $response->getContent();
+        $pos = \strripos($content, '</body>');
+        if ($pos === false) {
+            return;
+        }
+        $this->debug->alert('injected into response via ' . __CLASS__, 'success');
+        $content = \substr($content, 0, $pos)
+            . $this->debug->output()
+            . \substr($content, $pos);
+        $response->setContent($content);
     }
 }

@@ -32,7 +32,6 @@ class BdkDebugBundle extends Bundle
      */
     public function setContainer(ContainerInterface $container = null)
     {
-        // \bdk\Debug::_info(__METHOD__, $container);
         parent::setContainer($container);
     }
 }

@@ -138,7 +138,7 @@ class HtmlErrorSummary
                     'data-file' => $error['file'],
                     'data-line' => $error['line'],
                 ),
-                $error['file'] . ' (line ' . $error['line'] . ')'
+                \sprintf('%s (line %s)', $error['file'], $error['line'])
             );
             $html .= '<li>'
                 . '<pre class="highlight line-numbers" data-line="' . $error['line'] . '" data-start="' . \key($fileLines) . '">'
@@ -244,10 +244,14 @@ class HtmlErrorSummary
         if ($countInCat === 1) {
             $header = \ucfirst($category);
             $error = $this->getErrorsInCategory($category)[0];
-            $msg = $error['file'] . '(line ' . $error['line'] . '): '
-                . ($error['isHtml']
+            $msg = \sprintf(
+                '%s (line %s): %s',
+                $error['file'],
+                $error['line'],
+                $error['isHtml']
                     ? $error['message']
-                    : \htmlspecialchars($error['message']));
+                    : \htmlspecialchars($error['message'])
+            );
         }
         return '<h3>' . $header . '</h3>'
             . '<ul class="list-unstyled">'
@@ -285,11 +289,15 @@ class HtmlErrorSummary
             ) {
                 continue;
             }
-            $lis[] = '<li>' . $err['typeStr'] . ': ' . $err['file'] . ' (line ' . $err['line'] . '): '
-                . ($err['isHtml']
+            $lis[] = \sprintf(
+                '<li>%s: %s (line %s): %s</li>',
+                $err['typeStr'],
+                $err['file'],
+                $err['line'],
+                $err['isHtml']
                     ? $err['message']
-                    : \htmlspecialchars($err['message']))
-                . '</li>';
+                    : \htmlspecialchars($err['message'])
+            );
         }
         if (!$lis) {
             return '';

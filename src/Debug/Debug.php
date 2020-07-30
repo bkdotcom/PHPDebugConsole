@@ -371,7 +371,7 @@ class Debug
                 $callerInfo = $this->backtrace->getCallerInfo();
                 $args = array(
                     'Assertion failed:',
-                    $callerInfo['file'] . ' (line ' . $callerInfo['line'] . ')',
+                    \sprintf('%s (line %s)', $callerInfo['file'], $callerInfo['line']),
                 );
                 $logEntry->setMeta('detectFiles', true);
             }
@@ -748,10 +748,15 @@ class Debug
         }
         if (!$this->cfg['enableProfiling']) {
             $callerInfo = $this->backtrace->getCallerInfo();
+            $msg = \sprintf(
+                'Profile: Unable to start - enableProfiling opt not set.  %s on line %s.',
+                $callerInfo['file'],
+                $callerInfo['line']
+            );
             $this->appendLog(new LogEntry(
                 $this,
                 __FUNCTION__,
-                array('Profile: Unable to start - enableProfiling opt not set.  ' . $callerInfo['file'] . ' on line ' . $callerInfo['line'] . '.')
+                array($msg)
             ));
             return;
         }

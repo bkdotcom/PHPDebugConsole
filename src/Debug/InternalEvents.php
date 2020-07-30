@@ -206,7 +206,7 @@ class InternalEvents implements SubscriberInterface
             $this->debug->rootInstance->getChannel('phpError')->{$method}(
                 $error['typeStr'] . ':',
                 $error['message'],
-                $error['file'] . ' (line ' . $error['line'] . ')',
+                \sprintf('%s (line %s)', $error['file'], $error['line']),
                 $meta
             );
             $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here

@@ -117,7 +117,7 @@ class Script extends Base
             \array_unshift($args, false);
         } elseif (\in_array($method, array('error','warn'))) {
             if (isset($meta['file'])) {
-                $args[] = $meta['file'] . ': line ' . $meta['line'];
+                $args[] = \sprintf('%s: line %s', $meta['file'], $meta['line']);
             }
         } elseif (!\in_array($method, $this->consoleMethods)) {
             $method = 'log';

@@ -252,7 +252,7 @@ class ErrorHandler
     public function onShutdown(Event $event)
     {
         $this->inShutdown = true;
-        if (!$this->registered) {
+        if ($this->registered === false) {
             return;
         }
         $error = $event['error'] ?: \error_get_last();
@@ -298,12 +298,17 @@ class ErrorHandler
      */
     public function register()
     {
-        if ($this->registered) {
-            return;
+        $errHandlerCur = $this->getErrorHandler();
+        if ($errHandlerCur !== array($this, 'handleError')) {
+            $this->prevErrorHandler = \set_error_handler(array($this, 'handleError'));
         }
+
+        $exHandlerCur = $this->getExceptionHandler();
+        if ($exHandlerCur !== array($this, 'handleException')) {
+            $this->prevExceptionHandler = \set_exception_handler(array($this, 'handleException'));
+        }
+
         $this->prevDisplayErrors = \ini_set('display_errors', '0');
-        $this->prevErrorHandler = \set_error_handler(array($this, 'handleError'));
-        $this->prevExceptionHandler = \set_exception_handler(array($this, 'handleException'));
         $this->registered = true;   // used by this->onShutdown()
     }
 
@@ -407,28 +412,21 @@ class ErrorHandler
      */
     public function unregister()
     {
-        if (!$this->registered) {
-            return;
-        }
-        /*
-            set and restore error handler to determine the current error handler
-        */
-        $errHandlerCur = \set_error_handler(array($this, 'handleError'));
-        \restore_error_handler();
+        $errHandlerCur = $this->getErrorHandler();
         if ($errHandlerCur === array($this, 'handleError')) {
             // we are the current error handler
             \restore_error_handler();
         }
-        /*
-            set and restore exception handler to determine the current error handler
-        */
-        $exHandlerCur = \set_exception_handler(array($this, 'handleException'));
-        \restore_exception_handler();
+
+        $exHandlerCur = $this->getExceptionHandler();
         if ($exHandlerCur === array($this, 'handleException')) {
             // we are the current exception handler
             \restore_exception_handler();
         }
-        \ini_set('display_errors', $this->prevDisplayErrors);
+
+        if ($this->prevDisplayErrors !== false) {
+            \ini_set('display_errors', $this->prevDisplayErrors);
+        }
         $this->prevErrorHandler = null;
         $this->prevExceptionHandler = null;
         $this->registered = false;  // used by $this->onShutdown()
@@ -535,6 +533,36 @@ class ErrorHandler
                 don't change continueToNormal value
                 */
         }
+    }
+
+    /**
+     * Get current registered error handler
+     *
+     * @return callable|null
+     */
+    private static function getErrorHandler()
+    {
+        /*
+            set and restore error handler to determine the current error handler
+        */
+        $errHandlerCur = \set_error_handler('var_dump');
+        \restore_error_handler();
+        return $errHandlerCur;
+    }
+
+    /**
+     * Get current registered exception handler
+     *
+     * @return callable|null
+     */
+    private static function getExceptionHandler()
+    {
+        /*
+            set and restore exception handler to determine the current error handler
+        */
+        $exHandlerCur = \set_exception_handler('var_dump');
+        \restore_exception_handler();
+        return $exHandlerCur;
     }
 
     /**

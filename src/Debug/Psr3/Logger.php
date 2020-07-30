@@ -95,45 +95,6 @@ class Logger extends AbstractLogger
     }
 
     /**
-     * Interpolates context values into the message placeholders.
-     *
-     * @param string|object $message message (string, or obj with __toString)
-     * @param array         $context optional array of key/values
-     *                                    interpolated values get removed
-     *
-     * @return string
-     * @throws \RuntimeException if non-stringable objecct provided
-     */
-    protected function interpolate($message, array &$context = array())
-    {
-        // build a replacement array with braces around the context keys
-        if (\is_object($message)) {
-            if (\method_exists($message, '__toString') === false) {
-                throw new \RuntimeException(__METHOD__ . ': ' . \get_class($message) . 'is not stringable');
-            }
-            $message = (string) $message;
-        }
-        $matches = array();
-        \preg_match_all('/\{([a-z0-9_.]+)\}/', $message, $matches);
-        $placeholders = \array_unique($matches[1]);
-        $replace = array();
-        foreach ($placeholders as $key) {
-            if (!isset($context[$key])) {
-                continue;
-            }
-            $val = $context[$key];
-            if (\is_array($val)) {
-                continue;
-            }
-            if (!\is_object($val) || \method_exists($val, '__toString')) {
-                $replace['{' . $key . '}'] = $val;
-            }
-        }
-        $context = \array_diff_key($context, \array_flip($placeholders));
-        return \strtr((string) $message, $replace);
-    }
-
-    /**
      * Check if level is valid
      *
      * @param string $level debug level
@@ -176,7 +137,7 @@ class Logger extends AbstractLogger
     {
         list($message, $context) = $logEntry['args'];
         $args = array(
-            $this->interpolate($message, $context)
+            $this->debug->utility->strInterpolate($message, $context, true),
         );
         if (\in_array($logEntry['method'], array('info','log'))) {
             if (isset($context['table']) && \is_array($context['table'])) {

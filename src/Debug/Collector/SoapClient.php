@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Plugin\Highlight;
 
@@ -91,7 +92,7 @@ class SoapClient extends \SoapClient
         $debug->log(
             'request body',
             new Abstraction(array(
-                'type' => 'string',
+                'type' => Abstracter::TYPE_STRING,
                 'attribs' => array(
                     'class' => 'highlight language-xml',
                 ),
@@ -110,7 +111,7 @@ class SoapClient extends \SoapClient
         $debug->log(
             'response body',
             new Abstraction(array(
-                'type' => 'string',
+                'type' => Abstracter::TYPE_STRING,
                 'attribs' => array(
                     'class' => 'highlight language-xml',
                 ),

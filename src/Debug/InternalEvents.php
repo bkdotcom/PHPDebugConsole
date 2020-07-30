@@ -13,6 +13,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Highlight;
@@ -309,7 +310,7 @@ class InternalEvents implements SubscriberInterface
                 $this->highlightAdded = true;
             }
             $event['value'] = new Abstraction(array(
-                'type' => 'string',
+                'type' => Abstracter::TYPE_STRING,
                 'attribs' => array(
                     'class' => 'highlight language-' . $lang,
                 ),

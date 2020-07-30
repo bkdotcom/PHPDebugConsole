@@ -832,7 +832,7 @@ class Debug
             */
             foreach ($data as $k => &$row) {
                 $row['__key'] = new Abstraction(array(
-                    'type' => 'callable',
+                    'type' => Abstracter::TYPE_CALLABLE,
                     'value' => $k,
                     'hideType' => true, // don't output 'callable'
                 ));

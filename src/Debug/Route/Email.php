@@ -249,7 +249,7 @@ class Email implements RouteInterface
             }
             if (isset($v['debug']) && $v['debug'] === Abstracter::ABSTRACTION) {
                 unset($v['debug']);
-                if ($v['type'] === 'object') {
+                if ($v['type'] === Abstracter::TYPE_OBJECT) {
                     $v['properties'] = self::unserializeLogBackward($v['properties']);
                 }
                 $args[$k] = new Abstraction($v);

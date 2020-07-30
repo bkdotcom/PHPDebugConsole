@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use Exception;
 
@@ -143,6 +144,7 @@ class StatementInfo
                 SELECT\s*(?P<select>.*?)\s+FROM\s+\S+|
                 UPDATE\s+\S+
             )(?P<more>.*)/imsx';
+        $matches = array();
         if (\preg_match($regex, $label, $matches)) {
             $logSql = !empty($matches['more']);
             $label = $matches[1] . ($logSql ? '…' : '');
@@ -158,7 +160,7 @@ class StatementInfo
         if ($logSql) {
             $debug->log(
                 new Abstraction(array(
-                    'type' => 'string',
+                    'type' => Abstracter::TYPE_STRING,
                     'attribs' => array(
                         'class' => 'highlight language-sql',
                     ),

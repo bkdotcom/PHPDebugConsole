@@ -16,6 +16,7 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
@@ -354,7 +355,7 @@ class Wamp implements RouteInterface
         if (\is_string($mixed)) {
             return $this->crateString($mixed);
         }
-        if ($this->debug->abstracter->isAbstraction($mixed, 'object')) {
+        if ($this->debug->abstracter->isAbstraction($mixed, Abstracter::TYPE_OBJECT)) {
             return $this->crateObject($mixed);
         }
         return $mixed;

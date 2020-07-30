@@ -17,7 +17,6 @@ use bdk\Debug\Abstraction\AbstractArray;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Component;
-use bdk\Debug\Utility;
 use bdk\Debug\Utility\PhpDoc;
 
 /**
@@ -31,10 +30,24 @@ class Abstracter extends Component
     const RECURSION = "\x00recursion\x00";  // ie, array recursion
     const UNDEFINED = "\x00undefined\x00";
 
+    const TYPE_ARRAY = 'array';
+    const TYPE_BOOL = 'bool';
+    const TYPE_CALLABLE = 'callable'; // callable array
+    const TYPE_INT = 'int';
+    const TYPE_FLOAT = 'float';
+    const TYPE_NULL = 'null';
+    const TYPE_OBJECT = 'object';
+    const TYPE_RESOURCE = 'resource';
+    const TYPE_STRING = 'string';
+    const TYPE_UNDEFINED = 'undefined'; // non-native type
+    // notInspected
+    // recursion
+    // unknown
+
     public $debug;
+    public static $utility;
     protected $abstractArray;
     protected $abstractObject;
-    public static $utility;
 
     /**
      * Constructor
@@ -87,23 +100,22 @@ class Abstracter extends Component
         $type = $typeArray
             ? $typeArray[0]
             : self::getType($mixed)[0];
-        if ($type === 'array' || $type === 'callable') {
+        if ($type === self::TYPE_ARRAY || $type === self::TYPE_CALLABLE) {
             return $this->abstractArray->getAbstraction($mixed, $method, $hist);
         }
-        if ($type === 'object') {
+        if ($type === self::TYPE_OBJECT) {
             return $this->abstractObject->getAbstraction($mixed, $method, $hist);
         }
-        if ($type === 'resource') {
+        if ($type === self::TYPE_RESOURCE) {
             return new Abstraction(array(
-                'type' => 'resource',
+                'type' => $type,
                 'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
             ));
         }
-        if ($type === 'string') {
-            $strlen = \strlen($mixed);
+        if ($type === self::TYPE_STRING) {
             return new Abstraction(array(
-                'type' => 'string',
-                'strlen' => $strlen,
+                'type' => $type,
+                'strlen' => \strlen($mixed),
                 'value' => $this->debug->utf8->strcut($mixed, 0, $this->debug->getCfg('maxLenString', Debug::CONFIG_DEBUG)),
             ));
         }
@@ -121,25 +133,25 @@ class Abstracter extends Component
         $type = \gettype($val);
         $typeMore = null;
         $map = array(
-            'boolean' => 'bool',
-            'double' => 'float',
-            'integer' => 'int',
-            'NULL' => 'null',
+            'boolean' => self::TYPE_BOOL,
+            'double' => self::TYPE_FLOAT,
+            'integer' => self::TYPE_INT,
+            'NULL' => self::TYPE_NULL,
+            'resource (closed)' => self::TYPE_RESOURCE,
         );
         if (isset($map[$type])) {
             $type = $map[$type];
         }
         switch ($type) {
-            case 'array':
+            case self::TYPE_ARRAY:
                 return self::getTypeArray($val);
-            case 'bool':
-                return array('bool', \json_encode($val));
-            case 'object':
+            case self::TYPE_BOOL:
+                return array(self::TYPE_BOOL, \json_encode($val));
+            case self::TYPE_OBJECT:
                 return self::getTypeObject($val);
-            case 'resource':
-            case 'resource (closed)':
-                return array('resource', 'raw');
-            case 'string':
+            case self::TYPE_RESOURCE:
+                return array(self::TYPE_RESOURCE, 'raw');
+            case self::TYPE_STRING:
                 return self::getTypeString($val);
             case 'unknown type':
                 return self::getTypeUnknown($val);
@@ -185,7 +197,7 @@ class Abstracter extends Component
         if ($typeMore === 'raw') {
             return array($type, $typeMore);
         }
-        if ($type === 'string') {
+        if ($type === self::TYPE_STRING) {
             $maxLenString = $this->debug->getCfg('maxLenString', Debug::CONFIG_DEBUG);
             if ($maxLenString && \strlen($val) > $maxLenString) {
                 return array($type, $typeMore);
@@ -203,11 +215,10 @@ class Abstracter extends Component
      */
     private static function getTypeArray($val)
     {
-        $type = 'array';
+        $type = self::TYPE_ARRAY;
         $typeMore = 'raw';  // needs abstracted (references removed / values abstracted if necessary)
         if (\count($val) === 2 && self::$utility->isCallable($val)) {
-            $type = 'callable';
-            $typeMore = 'raw';  // needs abstracted
+            $type = self::TYPE_CALLABLE;
         }
         return array($type, $typeMore);
     }
@@ -221,7 +232,7 @@ class Abstracter extends Component
      */
     private static function getTypeObject($object)
     {
-        $type = 'object';
+        $type = self::TYPE_OBJECT;
         $typeMore = 'raw';  // needs abstracted
         if ($object instanceof Abstraction) {
             $type = $object['type'];
@@ -242,10 +253,10 @@ class Abstracter extends Component
     private static function getTypeString($val)
     {
         if (\is_numeric($val)) {
-            return array('string', 'numeric');
+            return array(self::TYPE_STRING, 'numeric');
         }
         if ($val === self::UNDEFINED) {
-            return array('undefined', null);    // not a native php type!
+            return array(self::TYPE_UNDEFINED, null);    // not a native php type!
         }
         if ($val === self::RECURSION) {
             return array('recursion', null);    // not a native php type!
@@ -253,7 +264,7 @@ class Abstracter extends Component
         if ($val === self::NOT_INSPECTED) {
             return array('notInspected', null);
         }
-        return array('string', null);
+        return array(self::TYPE_STRING, null);
     }
 
     /**
@@ -273,7 +284,7 @@ class Abstracter extends Component
             gettype  returns 'unknown type' or 'resource (closed)'
         */
         if (\strpos(\print_r($val, true), 'Resource') === 0) {
-            $type = 'resource';
+            $type = self::TYPE_RESOURCE;
             $typeMore = 'raw';  // needs abstracted
         }
         return array($type, $typeMore);

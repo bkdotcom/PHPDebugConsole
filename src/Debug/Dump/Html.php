@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Dump;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 
@@ -51,7 +52,7 @@ class Html extends Base
         $val = parent::dump($val, $opts);
         if ($tagName && !\in_array($this->dumpType, array('recursion'))) {
             if ($tagName === '__default__') {
-                $tagName = $this->dumpType === 'object'
+                $tagName = $this->dumpType === Abstracter::TYPE_OBJECT
                     ? 'div'
                     : 'span';
             }
@@ -151,11 +152,11 @@ class Html extends Base
     {
         $phpPrimatives = array(
             // scalar
-            'bool', 'int', 'float', 'string',
+            Abstracter::TYPE_BOOL, Abstracter::TYPE_FLOAT, Abstracter::TYPE_INT, Abstracter::TYPE_STRING,
             // compound
-            'array', 'object', 'callable', 'iterable',
+            Abstracter::TYPE_ARRAY, Abstracter::TYPE_CALLABLE, Abstracter::TYPE_OBJECT, 'iterable',
             // "special"
-            'resource', 'null',
+            Abstracter::TYPE_NULL, Abstracter::TYPE_RESOURCE,
         );
         $typesOther = array(
             '$this','false','mixed','static','self','true','void',
@@ -299,6 +300,9 @@ class Html extends Base
     {
         $glue = ', ';
         $glueAfterFirst = true;
+        if (\count($args) === 0) {
+            return '';
+        }
         if (\is_string($args[0])) {
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
@@ -713,7 +717,7 @@ class Html extends Base
         ), $logEntry['meta']);
         $asTable = \is_array($args[0])
             ? (bool) $args[0]
-            : $this->debug->abstracter->isAbstraction($args[0], 'object');
+            : $this->debug->abstracter->isAbstraction($args[0], Abstracter::TYPE_OBJECT);
         $onBuildRow = array();
         if ($logEntry['method'] === 'trace') {
             $onBuildRow[] = array($this, 'tableMarkupFunction');
@@ -761,16 +765,16 @@ class Html extends Base
     {
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
-        if ($type === 'string') {
+        if ($type === Abstracter::TYPE_STRING) {
             // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
             return $this->dump($val, $opts, null);
         }
-        if ($type === 'array') {
+        if ($type === Abstracter::TYPE_ARRAY) {
             $count = \count($val);
             return '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">(</span>' . $count . '<span class="t_punct">)</span>';
         }
-        if ($type === 'object') {
+        if ($type === Abstracter::TYPE_OBJECT) {
             $toStr = $val->toString();
             $val = $toStr
                 ? $this->dump($toStr, $opts, null)

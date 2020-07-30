@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Dump;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
@@ -411,11 +412,11 @@ class Text extends Base
     {
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
-        if ($type === 'array') {
+        if ($type === Abstracter::TYPE_ARRAY) {
             $count = \count($val);
             return 'array(' . $count . ')';
         }
-        if ($type === 'object') {
+        if ($type === Abstracter::TYPE_OBJECT) {
             return $val->toString() ?: $val['className'];
         }
         return $this->dump($val, $opts);

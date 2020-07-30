@@ -162,7 +162,14 @@ class Base extends Component
             $typeMore = $event['typeMore'];
             return $event['return'];
         }
-        if (\in_array($type, array('string','bool','float','int','null'))) {
+        $scalarTypes = array(
+            Abstracter::TYPE_BOOL,
+            Abstracter::TYPE_FLOAT,
+            Abstracter::TYPE_INT,
+            Abstracter::TYPE_NULL,
+            Abstracter::TYPE_STRING,
+        );
+        if (\in_array($type, $scalarTypes)) {
             $typeMore = $abs['typeMore'];   // likely null
             return $this->{$method}($abs['value'], $abs);
         }
@@ -558,7 +565,7 @@ class Base extends Component
     private function methodTableRows(LogEntry $logEntry)
     {
         $rows = $logEntry['args'][0];
-        $isObject = $this->debug->abstracter->isAbstraction($rows, 'object');
+        $isObject = $this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT);
         $asTable = \is_array($rows) && $rows || $isObject;
         if (!$asTable) {
             return false;
@@ -719,7 +726,7 @@ class Base extends Component
     {
         // function array dereferencing = php 5.4
         $type = $this->debug->abstracter->getType($val)[0];
-        if ($type === 'array') {
+        if ($type === Abstracter::TYPE_ARRAY) {
             $count = \count($val);
             if ($count) {
                 // replace with dummy array so browser console will display native Array(length)
@@ -727,7 +734,7 @@ class Base extends Component
             }
             return $val;
         }
-        if ($type === 'object') {
+        if ($type === Abstracter::TYPE_OBJECT) {
             return $val->toString() ?: $val['className'];
         }
         return $this->dump($val, $opts);

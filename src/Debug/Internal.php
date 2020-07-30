@@ -14,6 +14,7 @@ namespace bdk\Debug;
 
 use bdk\Backtrace;
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
@@ -540,7 +541,7 @@ class Internal implements SubscriberInterface
             return $this->redactString($val, $key);
         }
         if ($val instanceof Abstraction) {
-            if ($val['type'] === 'object') {
+            if ($val['type'] === Abstracter::TYPE_OBJECT) {
                 $props = $val['properties'];
                 foreach ($props as $name => $prop) {
                     $props[$name]['value'] = $this->redact($prop['value'], $name);
@@ -619,7 +620,7 @@ class Internal implements SubscriberInterface
                 $v = $abstracter->getAbstraction($v, $logEntry['method'], $absInfo);
                 $args[$k] = $v;
             }
-            if ($abstracter->isAbstraction($v, 'object') === false) {
+            if ($abstracter->isAbstraction($v, Abstracter::TYPE_OBJECT) === false) {
                 continue;
             }
             if ($v['stringified']) {

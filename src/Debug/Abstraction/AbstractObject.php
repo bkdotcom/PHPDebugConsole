@@ -96,7 +96,7 @@ class AbstractObject
             'properties' => array(),
             'scopeClass' => $this->getScopeClass($hist),
             'stringified' => null,
-            'type' => 'object',
+            'type' => Abstracter::TYPE_OBJECT,
             'traverseValues' => array(),    // populated if method is table && traversable
             'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && $reflector->hasMethod('__debugInfo'),
             // these are temporary values available during abstraction

@@ -236,7 +236,9 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="classname">MethodTableTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestMethod</span></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_object" data-accessible="public"><span class="classname">Closure</span>
                             <dl class="object-inner">
-                            <dt class="properties">no properties</dt>
+                            <dt class="properties">properties</dt>
+                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
+                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
                             <dt class="methods">methods</dt>
                             <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
                             <dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$closure</span></span>, <span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
@@ -255,13 +257,15 @@ EOD;
                         [2] => Resource id #%d: stream
                         [3] => callable: MethodTableTest::providerTestMethod
                         [4] => Closure
-                            Properties: none!
+                            Properties:
+                                (debug) file = "' . __FILE__ . '"
+                                (debug) line = %i
                             Methods:
                                 public: ' . $dateTimePubMethods . '
                                 private: 1
                     )',
-                    'script' => 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::providerTestMethod",{"___class_name":"Closure"}]);',
-                    'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::providerTestMethod"],[4,{"___class_name":"Closure"}]]]|',
+                    'script' => 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::providerTestMethod",{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]);',
+                    'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::providerTestMethod"],[4,{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]]]|',
                 ),
             ),
             // 4

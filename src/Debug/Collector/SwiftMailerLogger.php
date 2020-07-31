@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\PubSub\Manager as EventManager;
 use SplObjectStorage;
 use Swift_Events_CommandEvent;
 use Swift_Events_CommandListener;
@@ -56,7 +57,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('SwiftMailer', array('channelIcon' => $this->icon));
         }
-        $debug->rootInstance->eventManager->subscribe('php.shutdown', array($this, 'onShutdown'), PHP_INT_MAX * -1 + 1);
+        $debug->rootInstance->eventManager->subscribe(EventManager::EVENT_PHP_SHUTDOWN, array($this, 'onShutdown'), PHP_INT_MAX * -1 + 1);
         $this->debug = $debug;
         $this->iconMeta = $this->debug->meta('icon', $this->icon);
         $this->transports = new SplObjectStorage();
@@ -211,7 +212,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     }
 
     /**
-     * php.shutdown listener
+     * EventManager::EVENT_PHP_SHUTDOWN listener
      *
      * "preemptively" stop transports rather than wait for transport's __destruct
      *

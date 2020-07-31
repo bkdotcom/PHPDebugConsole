@@ -29,7 +29,7 @@ interface RouteInterface extends SubscriberInterface
 
     /**
      * Process log collectively (alerts, summary, log...)
-     * likely implemented as a subscriber for the debug.output event
+     * likely implemented as a subscriber for the Debug::EVENT_OUTPUT event
      *
      * @param Event $event Event instance
      *

@@ -69,7 +69,7 @@ class ChromeLogger extends Base
     /**
      * Output the log as chromelogger headers
      *
-     * @param Event $event debug.output event object
+     * @param Event $event Debug::EVENT_OUTPUT Event object
      *
      * @return void
      */

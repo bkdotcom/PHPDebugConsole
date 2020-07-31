@@ -51,8 +51,8 @@ class AbstractObject
             // we only need to subscribe to these events from root channel
             return;
         }
-        $abstracter->debug->eventManager->subscribe('debug.objAbstractStart', array($this, 'onStart'));
-        $abstracter->debug->eventManager->subscribe('debug.objAbstractEnd', array($this, 'onEnd'));
+        $abstracter->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, array($this, 'onStart'));
+        $abstracter->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_END, array($this, 'onEnd'));
         $abstracter->debug->eventManager->addSubscriberInterface(new AbstractObjectMethods($abstracter, $phpDoc));
         $abstracter->debug->eventManager->addSubscriberInterface(new AbstractObjectProperties($abstracter, $phpDoc));
     }
@@ -113,7 +113,7 @@ class AbstractObject
         $abs->setSubject($obj);
         $abs['isTraverseOnly'] = $this->isTraverseOnly($abs);
         /*
-            debug.objAbstractStart subscriber may
+            Debug::EVENT_OBJ_ABSTRACT_START subscriber may
             set isExcluded
             set collectPropertyValues (boolean)
             set flags (int / bitmask)
@@ -121,20 +121,20 @@ class AbstractObject
             set stringified
             set traverseValues
         */
-        $this->abstracter->debug->publishBubbleEvent('debug.objAbstractStart', $abs, $this->abstracter->debug);
+        $this->abstracter->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_START, $abs, $this->abstracter->debug);
         if ($abs['isExcluded']) {
             return $this->absClean($abs);
         }
         $this->addMisc($abs);
         /*
-            debug.objAbstractEnd subscriber has free reign to modify abtraction array
+            Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction array
         */
-        $this->abstracter->debug->publishBubbleEvent('debug.objAbstractEnd', $abs, $this->abstracter->debug);
+        $this->abstracter->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_END, $abs, $this->abstracter->debug);
         return $this->absClean($abs);
     }
 
     /**
-     * debug.objAbstractStart event subscriber
+     * Debug::EVENT_OBJ_ABSTRACT_START event subscriber
      *
      * @param Abstraction $abs Abstraction instance
      *
@@ -169,7 +169,7 @@ class AbstractObject
     }
 
     /**
-     * debug.objAbstractEnd event subscriber
+     * Debug::EVENT_OBJ_ABSTRACT_END event subscriber
      *
      * @param Abstraction $abs Abstraction instance
      *

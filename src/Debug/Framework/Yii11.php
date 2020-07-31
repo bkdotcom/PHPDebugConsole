@@ -17,8 +17,10 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii11LogRoute;
 use bdk\Debug\LogEntry;
+use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
+use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
 use CActiveRecord;
 use CApplicationComponent;
@@ -66,12 +68,12 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            'debug.log' => 'onDebugLog',
-            'debug.objAbstractStart' => 'onDebugObjAbstractStart',
-            'debug.objAbstractEnd' => 'onDebugObjAbstractEnd',
-            'debug.output' => array('onDebugOutput', 1),
-            'debug.outputLogEntry' => 'onDebugOutputLogEntry',
-            'errorHandler.error' => array(
+            Debug::EVENT_LOG => 'onDebugLog',
+            Debug::EVENT_OBJ_ABSTRACT_START => 'onDebugObjAbstractStart',
+            Debug::EVENT_OBJ_ABSTRACT_END => 'onDebugObjAbstractEnd',
+            Debug::EVENT_OUTPUT => array('onDebugOutput', 1),
+            Debug::EVENT_OUTPUT_LOG_ENTRY => 'onDebugOutputLogEntry',
+            ErrorHandler::EVENT_ERROR => array(
                 array('onErrorLow', -1),
                 array('onErrorHigh', 1),
             ),
@@ -163,7 +165,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
-     * debug.output subscriber
+     * Debug::EVENT_OUTPUT subscriber
      *
      * Log included files before outputting
      *
@@ -176,7 +178,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
-     * debug.outputLogEntry event subscriber
+     * Debug::EVENT_OUTPUT_LOG_ENTRY event subscriber
      *
      * @param LogEntry $logEntry LogEntry instance
      *
@@ -218,7 +220,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
-     * debug.objAbstractStart event subscriber
+     * Debug::EVENT_OBJ_ABSTRACT_START event subscriber
      *
      * @param Abstraction $abs Abstraction instance
      *
@@ -244,7 +246,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
-     * debug.objAbstractEnd event subscriber
+     * Debug::EVENT_OBJ_ABSTRACT_END event subscriber
      *
      * @param Abstraction $abs Abstraction instance
      *
@@ -296,7 +298,7 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
-     * errorHandler.error event subscriber
+     * ErrorHandler::EVENT_ERROR event subscriber
      *
      * @param Error $error Error instance
      *
@@ -316,13 +318,13 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             //    exit within shutdown procedure (that's us) = immediate exit
             //    so... unsubscribe the callables that have already been called and
             //    re-publish the shutdown event before calling yii's error handler
-            foreach ($this->debug->rootInstance->eventManager->getSubscribers('php.shutdown') as $callable) {
-                $this->debug->rootInstance->eventManager->unsubscribe('php.shutdown', $callable);
+            foreach ($this->debug->rootInstance->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN) as $callable) {
+                $this->debug->rootInstance->eventManager->unsubscribe(EventManager::EVENT_PHP_SHUTDOWN, $callable);
                 if (\is_array($callable) && $callable[0] === $this->debug->rootInstance->errorHandler) {
                     break;
                 }
             }
-            $this->debug->rootInstance->eventManager->publish('php.shutdown');
+            $this->debug->rootInstance->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
             $this->yiiApp->handleError($error['type'], $error['message'], $error['file'], $error['line']);
         }
     }

@@ -54,7 +54,7 @@ class Script extends Base
      * output the log as javascript
      *    which outputs the log to the console
      *
-     * @param Event $event debug.output event object
+     * @param Event $event Debug::EVENT_OUTPUT event object
      *
      * @return string|void
      */

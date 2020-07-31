@@ -74,7 +74,7 @@ class Config
      *    set('level1.level2', 'value')
      *    set(array('k1'=>'v1', 'k2'=>'v2'))
      *
-     * Triggers a debug.config event that contains all changed values
+     * Triggers a `Debug::EVENT_CONFIG` event that contains all changed values
      *
      * @param array|string $path  path or array of values
      * @param mixed        $value if setting via path, this is the value
@@ -111,13 +111,13 @@ class Config
         foreach ($cfg as $debugProp => $v) {
             if ($debugProp === 'debug') {
                 $return[$debugProp] = \array_intersect_key($this->debug->getCfg(null, Debug::CONFIG_DEBUG), $v);
-                // debug uses a debug.config subscriber to set the value
+                // debug uses a Debug::EVENT_CONFIG subscriber to set the value
                 continue;
             }
             $return[$debugProp] = $this->setPropCfg($debugProp, $v);
         }
         $this->debug->eventManager->publish(
-            'debug.config',
+            Debug::EVENT_CONFIG,
             $this->debug,
             $cfg
         );

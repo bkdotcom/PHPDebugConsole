@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Framework;
 
+use bdk\Debug;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Psr15\Middleware;
 use bdk\ErrorHandler\Error;
@@ -165,7 +166,7 @@ class Cake4 extends BasePlugin
         $this->debug->backtrace->addInternalClass('Cake\\Log\\Log');
         \Cake\Log\Log::setConfig('PHPDebugConsole', function () {
             $logChannel = $this->debug->getChannel('log');
-            $logChannel->eventManager->subscribe('debug.log', function ($event) {
+            $logChannel->eventManager->subscribe(Debug::EVENT_LOG, function ($event) {
                 /*
                     Toss scope / entire context if empty
                 */

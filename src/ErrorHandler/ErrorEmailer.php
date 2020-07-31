@@ -11,6 +11,7 @@
 namespace bdk\ErrorHandler;
 
 use bdk\Backtrace;
+use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\SubscriberInterface;
 
@@ -80,7 +81,7 @@ class ErrorEmailer implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            'errorHandler.error' => array(
+            ErrorHandler::EVENT_ERROR => array(
                 array('onErrorHighPri', PHP_INT_MAX),
                 array('onErrorLowPri', PHP_INT_MAX * -1),
             ),

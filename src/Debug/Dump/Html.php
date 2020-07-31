@@ -50,7 +50,7 @@ class Html extends Base
             ? $val['attribs']
             : array();
         $val = parent::dump($val, $opts);
-        if ($tagName && !\in_array($this->dumpType, array('recursion'))) {
+        if ($tagName && $this->dumpType !== Abstracter::TYPE_RECURSION) {
             if ($tagName === '__default__') {
                 $tagName = $this->dumpType === Abstracter::TYPE_OBJECT
                     ? 'div'

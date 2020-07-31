@@ -48,14 +48,14 @@ class Stream extends Base
     public function getSubscriptions()
     {
         return array(
-            'debug.config' => 'onConfig',
-            'debug.log' => 'onLog',
-            'debug.pluginInit' => 'init',
+            Debug::EVENT_CONFIG => 'onConfig',
+            Debug::EVENT_LOG => 'onLog',
+            Debug::EVENT_PLUGIN_INIT => 'init',
         );
     }
 
     /**
-     * debug.pluginInit subscriber
+     * Debug::EVENT_PLUGIN_INIT subscriber
      *
      * @return void
      */
@@ -68,9 +68,9 @@ class Stream extends Base
     }
 
     /**
-     * debug.config subscriber
+     * Debug::EVENT_CONFIG subscriber
      *
-     * @param Event $event event instance
+     * @param Event $event Event instance
      *
      * @return void
      */
@@ -85,7 +85,7 @@ class Stream extends Base
     }
 
     /**
-     * debug.log event subscriber
+     * Debug::EVENT_LOG event subscriber
      *
      * @param LogEntry $logEntry log entry instance
      *
@@ -165,7 +165,7 @@ class Stream extends Base
         $file = $stream;
         $dir = \dirname($file);
         $fileExists = \file_exists($file);
-        $isWritable = strpos($file, 'php://') === 0 || \is_writable($file) || !\file_exists($file) && \is_writeable($dir);
+        $isWritable = \strpos($file, 'php://') === 0 || \is_writable($file) || !\file_exists($file) && \is_writeable($dir);
         if (!$isWritable) {
             \trigger_error($file . ' is not writable', E_USER_NOTICE);
             return;

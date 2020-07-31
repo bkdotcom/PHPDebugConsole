@@ -22,6 +22,8 @@ use bdk\PubSub\Manager as EventManager;
 class ErrorHandler
 {
 
+    const EVENT_ERROR = 'errorHandler.error';
+
     public $eventManager;
     /** @var array */
     protected $cfg = array();
@@ -74,7 +76,7 @@ class ErrorHandler
         }
         $this->setCfg($cfg);
         $this->register();
-        $this->eventManager->subscribe('php.shutdown', array($this, 'onShutdown'), PHP_INT_MAX);
+        $this->eventManager->subscribe(EventManager::EVENT_PHP_SHUTDOWN, array($this, 'onShutdown'), PHP_INT_MAX);
     }
 
     /**
@@ -206,7 +208,7 @@ class ErrorHandler
             // only clear error caller via non-suppressed error
             $this->data['errorCaller'] = array();
             // only publish event for non-suppressed error
-            $this->eventManager->publish('errorHandler.error', $error);
+            $this->eventManager->publish(self::EVENT_ERROR, $error);
         }
         return $this->continueToPrevHandler($error);
     }
@@ -239,13 +241,13 @@ class ErrorHandler
     }
 
     /**
-     * php.shutdown event subscriber
+     * EventManager::EVENT_PHP_SHUTDOWN event subscriber
      *
      * Used to handle fatal errors
      *
-     * Test fatal error handling by publishing 'php.shutdown' event with error value
+     * Test fatal error handling by publishing EventManager::EVENT_PHP_SHUTDOWN event with error value
      *
-     * @param Event $event php.shutdown event
+     * @param Event $event EventManager::EVENT_PHP_SHUTDOWN event
      *
      * @return void
      */
@@ -344,9 +346,9 @@ class ErrorHandler
                 Replace - not append - subscriber set via setCfg
             */
             if ($this->cfg['onError'] !== null) {
-                $this->eventManager->unsubscribe('errorHandler.error', $this->cfg['onError']);
+                $this->eventManager->unsubscribe(self::EVENT_ERROR, $this->cfg['onError']);
             }
-            $this->eventManager->subscribe('errorHandler.error', $values['onError']);
+            $this->eventManager->subscribe(self::EVENT_ERROR, $values['onError']);
         }
         $this->cfg = \array_merge($this->cfg, $values);
         return $ret;

@@ -1,6 +1,7 @@
 <?php
 
 use bdk\Debug;
+use bdk\PubSub\Manager as EventManager;
 
 /**
  * PHPUnit tests for Debug class
@@ -176,7 +177,7 @@ class DebugTest extends DebugTestFramework
     {
         $subscribers = \array_map(function ($val) {
             return array(get_class($val[0]), $val[1]);
-        }, $this->debug->eventManager->getSubscribers('php.shutdown'));
+        }, $this->debug->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN));
         $subscribersExpect = array(
             array('bdk\ErrorHandler', 'onShutdown'),
             array('bdk\Debug\InternalEvents', 'onShutdownHigh'),

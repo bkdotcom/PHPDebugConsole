@@ -37,13 +37,13 @@ class MethodTest extends DebugTestFramework
                 }
             }
         };
-        $this->debug->eventManager->subscribe('debug.outputLogEntry', $closure);
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, $closure);
         $this->testMethod(
             'trace',
             array(),
             array(
                 'entry' => function ($logEntry) {
-                    // we're doing the custom stuff via debug.outputLogEntry, so logEntry should still be trace
+                    // we're doing the custom stuff via Debug::EVENT_OUTPUT_LOG_ENTRY, so logEntry should still be trace
                     $this->assertSame('trace', $logEntry['method']);
                     $this->assertInternalType('array', $logEntry['args'][0]);
                     $this->assertSame(array(
@@ -88,7 +88,7 @@ class MethodTest extends DebugTestFramework
                 $logEntry['return'] = '<li class="m_myCustom"><ul>' . implode('', $lis) . '</ul></li>';
             }
         };
-        $this->debug->eventManager->subscribe('debug.outputLogEntry', $closure);
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, $closure);
         $entry = array(
             'myCustom',
             array('How\'s it goin?'),
@@ -1525,7 +1525,7 @@ class MethodTest extends DebugTestFramework
     public function testGroupsLeftOpen()
     {
         /*
-        Internal debug.output subscribers
+        Internal Debug::EVENT_OUTPUT subscribers
              1: Internal::onOutput:  closes open groups / remoes hideIfEmpty groups
                 onOutputCleanup
                     closeOpenGroups
@@ -1544,7 +1544,7 @@ class MethodTest extends DebugTestFramework
                 $this->debug->log('in inner');
         $onOutputVals = array();
 
-        $this->debug->eventManager->subscribe('debug.output', function (\bdk\PubSub\Event $event) use (&$onOutputVals) {
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, function (\bdk\PubSub\Event $event) use (&$onOutputVals) {
             /*
                 Nothing has been closed yet
             */
@@ -1552,7 +1552,7 @@ class MethodTest extends DebugTestFramework
             $onOutputVals['groupPriorityStackA'] = $debug->getData('groupPriorityStack');
             $onOutputVals['groupStacksA'] = $debug->getData('groupStacks');
         }, 2);
-        $this->debug->eventManager->subscribe('debug.output', function (\bdk\PubSub\Event $event) use (&$onOutputVals) {
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, function (\bdk\PubSub\Event $event) use (&$onOutputVals) {
             /*
                 At this point, log has been output.. all groups have been closed
             */

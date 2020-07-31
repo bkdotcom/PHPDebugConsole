@@ -32,7 +32,7 @@ class Abstracter extends Component
 
     const TYPE_ARRAY = 'array';
     const TYPE_BOOL = 'bool';
-    const TYPE_CALLABLE = 'callable'; // callable array
+    const TYPE_CALLABLE = 'callable'; // non-native type : callable array
     const TYPE_INT = 'int';
     const TYPE_FLOAT = 'float';
     const TYPE_NULL = 'null';
@@ -40,9 +40,9 @@ class Abstracter extends Component
     const TYPE_RESOURCE = 'resource';
     const TYPE_STRING = 'string';
     const TYPE_UNDEFINED = 'undefined'; // non-native type
-    // notInspected
-    // recursion
-    // unknown
+    const TYPE_NOT_INSPECTED = 'notInspected'; // non-native type
+    const TYPE_RECURSION = 'recursion'; // non-native type
+    const TYPE_UNKNOWN = 'unknown'; // non-native type
 
     public $debug;
     public static $utility;
@@ -243,8 +243,6 @@ class Abstracter extends Component
 
     /**
      * Get string's type.
-     * String could actually be "undefined" or "recursion"
-     * Further, check if numeric
      *
      * @param string $val string value
      *
@@ -252,19 +250,21 @@ class Abstracter extends Component
      */
     private static function getTypeString($val)
     {
-        if (\is_numeric($val)) {
-            return array(self::TYPE_STRING, 'numeric');
-        }
         if ($val === self::UNDEFINED) {
-            return array(self::TYPE_UNDEFINED, null);    // not a native php type!
+            return array(self::TYPE_UNDEFINED, null);       // not a native php type!
         }
         if ($val === self::RECURSION) {
-            return array('recursion', null);    // not a native php type!
+            return array(self::TYPE_RECURSION, null);       // not a native php type!
         }
         if ($val === self::NOT_INSPECTED) {
-            return array('notInspected', null);
+            return array(self::TYPE_NOT_INSPECTED, null);   // not a native php type!
         }
-        return array(self::TYPE_STRING, null);
+        return array(
+            self::TYPE_STRING,
+            \is_numeric($val)
+                ? 'numeric'
+                : null
+        );
     }
 
     /**
@@ -276,7 +276,7 @@ class Abstracter extends Component
      */
     private static function getTypeUnknown($val)
     {
-        $type = 'unknown';
+        $type = self::TYPE_UNKNOWN;
         $typeMore = null;
         /*
             closed resource?

@@ -42,7 +42,7 @@ class Email implements RouteInterface
     public function getSubscriptions()
     {
         return array(
-            'debug.output' => 'processLogEntries',
+            Debug::EVENT_OUTPUT => 'processLogEntries',
         );
     }
 

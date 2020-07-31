@@ -68,7 +68,7 @@ class MySqli extends mysqliBase
             $debug = $debug->getChannel('MySqli', array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
-        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'), 1);
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
         $this->debug->addPlugin(new Highlight());
     }
 
@@ -123,9 +123,9 @@ class MySqli extends mysqliBase
     }
 
     /**
-     * debug.output subscriber
+     * Debug::EVENT_OUTPUT subscriber
      *
-     * @param Event $event event instance
+     * @param Event $event Event instance
      *
      * @return void
      */

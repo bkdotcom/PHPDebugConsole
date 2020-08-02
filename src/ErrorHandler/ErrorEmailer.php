@@ -5,7 +5,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2020 Brad Kent
- * @version   v3.0
+ * @version   v3.0.1
  */
 
 namespace bdk\ErrorHandler;

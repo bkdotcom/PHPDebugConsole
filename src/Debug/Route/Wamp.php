@@ -16,11 +16,14 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
+use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
+use bdk\PubSub\Manager as EventManager;
 use bdk\WampPublisher;
 
 /**
@@ -71,16 +74,16 @@ class Wamp implements RouteInterface
             return array();
         }
         return array(
-            'debug.config' => 'onConfig',
-            'debug.log' => array('onLog', PHP_INT_MAX * -1),
-            'debug.pluginInit' => 'init',
-            'errorHandler.error' => 'onError',    // assumes errorhandler is using same dispatcher.. as should be
-            'php.shutdown' => array('onShutdown', PHP_INT_MAX * -1),
+            Debug::EVENT_CONFIG => 'onConfig',
+            Debug::EVENT_LOG => array('onLog', PHP_INT_MAX * -1),
+            Debug::EVENT_PLUGIN_INIT => 'init',
+            ErrorHandler::EVENT_ERROR => 'onError',    // assumes errorhandler is using same dispatcher.. as should be
+            EventManager::EVENT_PHP_SHUTDOWN => array('onShutdown', PHP_INT_MAX * -1),
         );
     }
 
     /**
-     * debug.pluginInit subscriber
+     * Debug::EVENT_PLUGIN_INIT subscriber
      *
      * @return void
      */
@@ -103,9 +106,9 @@ class Wamp implements RouteInterface
     }
 
     /**
-     * debug.config subscriber
+     * Debug::EVENT_CONFIG subscriber
      *
-     * @param Event $event event instance
+     * @param Event $event Event instance
      *
      * @return void
      */
@@ -121,11 +124,11 @@ class Wamp implements RouteInterface
     }
 
     /**
-     * errorHandler.error event subscriber
+     * ErrorHandler::EVENT_ERROR event subscriber
      *
      * Used to capture errors that aren't sent to log (ie debug capture is false)
      *
-     * @param Error $error error event instance
+     * @param Error $error Error event instance
      *
      * @return void
      */
@@ -149,7 +152,7 @@ class Wamp implements RouteInterface
             array(
                 $error['typeStr'] . ':',
                 $error['message'],
-                $error['file'] . ' (line ' . $error['line'] . ')',
+                \sprintf('%s (line %s)', $error['file'], $error['line']),
             ),
             array(
                 'attribs' => array(
@@ -162,7 +165,7 @@ class Wamp implements RouteInterface
     }
 
     /**
-     * debug.log event subscriber
+     * Debug::EVENT_LOG event subscriber
      *
      * @param LogEntry $logEntry logEntry instance
      *
@@ -177,7 +180,7 @@ class Wamp implements RouteInterface
     }
 
     /**
-     * php.shutdown event subscriber
+     * EventManager::EVENT_PHP_SHUTDOWN event subscriber
      *
      * @return void
      */
@@ -354,7 +357,7 @@ class Wamp implements RouteInterface
         if (\is_string($mixed)) {
             return $this->crateString($mixed);
         }
-        if ($this->debug->abstracter->isAbstraction($mixed, 'object')) {
+        if ($this->debug->abstracter->isAbstraction($mixed, Abstracter::TYPE_OBJECT)) {
             return $this->crateObject($mixed);
         }
         return $mixed;
@@ -371,7 +374,7 @@ class Wamp implements RouteInterface
     {
         $logEntry = new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta']);
         $logEntry['route'] = $this;
-        $this->debug->publishBubbleEvent('debug.outputLogEntry', $logEntry);
+        $this->debug->publishBubbleEvent(Debug::EVENT_OUTPUT_LOG_ENTRY, $logEntry);
         $this->processLogEntry($logEntry);
     }
 

@@ -42,7 +42,7 @@ class Email implements RouteInterface
     public function getSubscriptions()
     {
         return array(
-            'debug.output' => 'processLogEntries',
+            Debug::EVENT_OUTPUT => 'processLogEntries',
         );
     }
 
@@ -226,7 +226,7 @@ class Email implements RouteInterface
             $typeStr = $error['type'] === E_STRICT
                 ? 'Strict'
                 : $error['typeStr'];
-            $errorStr .= '  Line ' . $error['line'] . ': (' . $typeStr . ') ' . $error['message'] . "\n";
+            $errorStr .= \sprintf(' Line %s: (%s) %s', $error['line'], $typeStr, $error['message']) . "\n";
         }
         return $errorStr;
     }
@@ -249,7 +249,7 @@ class Email implements RouteInterface
             }
             if (isset($v['debug']) && $v['debug'] === Abstracter::ABSTRACTION) {
                 unset($v['debug']);
-                if ($v['type'] === 'object') {
+                if ($v['type'] === Abstracter::TYPE_OBJECT) {
                     $v['properties'] = self::unserializeLogBackward($v['properties']);
                 }
                 $args[$k] = new Abstraction($v);

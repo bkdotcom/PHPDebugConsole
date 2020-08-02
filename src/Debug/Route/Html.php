@@ -138,7 +138,7 @@ class Html extends Base
     /**
      * Return the log as HTML
      *
-     * @param Event $event debug.output event object
+     * @param Event $event Debug::EVENT_OUTPUT event object
      *
      * @return string|void
      */

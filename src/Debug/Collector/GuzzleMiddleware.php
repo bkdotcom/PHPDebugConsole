@@ -219,7 +219,7 @@ class GuzzleMiddleware
             return null;
         }
         if ($prettify) {
-            $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $msg, array(
+            $event = $this->debug->rootInstance->eventManager->publish(Debug::EVENT_PRETTIFY, $msg, array(
                 'value' => $body,
                 'contentType' => $contentType,
             ));

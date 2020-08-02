@@ -623,6 +623,72 @@ class Utility
     }
 
     /**
+     * Interpolates context values into the message placeholders.
+     *
+     * @param string|object $message message (string, or obj with __toString)
+     * @param array|object  $context optional array of key/values or object
+     *                                    if array: interpolated values get removed
+     * @param bool          $unset   (false) whether to unset values from context (if array)
+     *
+     * @return string
+     * @throws \RuntimeException if non-stringable object provided for $message
+     * @throws \InvalidArgumentException if $context not array or object
+     */
+    public function strInterpolate($message, &$context = array(), $unset = false)
+    {
+        // build a replacement array with braces around the context keys
+        if (!\is_array($context) && !\is_object($context)) {
+            throw new \InvalidArgumentException(
+                'Expected array or object for $context. ' . \gettype($context) . ' provided'
+            );
+        }
+        if (\is_object($message)) {
+            if (\method_exists($message, '__toString') === false) {
+                throw new \RuntimeException(__METHOD__ . ': ' . \get_class($message) . 'is not stringable');
+            }
+            $message = (string) $message;
+        }
+        $matches = array();
+        \preg_match_all('/\{([a-zA-Z0-9.]+)\}/', $message, $matches);
+        $placeholders = \array_unique($matches[1]);
+        $replaceVals = self::strInterpolateValues($placeholders, $context);
+        if ($unset && \is_array($context)) {
+            $context = \array_diff_key($context, \array_flip($placeholders));
+        }
+        return \strtr((string) $message, $replaceVals);
+    }
+
+    /**
+     * Get substitution values for strInterpolate
+     *
+     * @param array        $placeholders keys
+     * @param array|object $context      values
+     *
+     * @return string[] key->value array
+     */
+    private static function strInterpolateValues($placeholders, $context)
+    {
+        $replace = array();
+        $isArrayAccess = \is_array($context) || $context instanceof \ArrayAccess;
+        foreach ($placeholders as $key) {
+            $val = $isArrayAccess
+                ? (isset($context[$key]) ? $context[$key] : null)
+                : (isset($context->{$key}) ? $context->{$key} : null);
+            if (
+                \array_filter(array(
+                    $val === null,
+                    \is_array($val),
+                    \is_object($val) && \method_exists($val, '__toString') === false,
+                ))
+            ) {
+                continue;
+            }
+            $replace['{' . $key . '}'] = (string) $val;
+        }
+        return $replace;
+    }
+
+    /**
      * Merge 2nd array into first
      *
      * @param array $arrayDef default array

@@ -12,10 +12,11 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug;
 use bdk\PubSub\Manager;
 
 /**
- * Generic stream-wrapper which publishes debug.streamWrap when file is required/included
+ * Generic stream-wrapper which publishes Debug::EVENT_STREAM_WRAP when file is required/included
  *
  * Event subscriber is able to modify file on-the-fly to monkey-path
  *  or, in the case of PHPDebugConsole, inject `declare(ticks=1);`
@@ -656,7 +657,7 @@ class FileStreamWrapper
             $openedPath = \stream_resolve_include_path($file);
         }
         if (static::$eventManager) {
-            $event = static::$eventManager->publish('debug.streamWrap', $resource, array(
+            $event = static::$eventManager->publish(Debug::EVENT_STREAM_WRAP, $resource, array(
                 'content' => $content,
                 'filepath' => $file,
             ));

@@ -50,7 +50,7 @@ class Pdo extends PdoBase
         $this->pdo = $pdo;
         $this->debug = $debug;
         $this->pdo->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, array('bdk\Debug\Collector\Pdo\Statement', array($this)));
-        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'), 1);
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
         $this->debug->addPlugin(new Highlight());
     }
 
@@ -93,9 +93,9 @@ class Pdo extends PdoBase
     }
 
     /**
-     * debug.output subscriber
+     * Debug::EVENT_OUTPUT subscriber
      *
-     * @param Event $event event instance
+     * @param Event $event Event instance
      *
      * @return void
      */

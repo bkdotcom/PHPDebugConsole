@@ -74,7 +74,7 @@ class Twig extends Twig_Environment
         }
         $this->twig = $twig;
         $this->debug = $debug;
-        $this->debug->eventManager->subscribe('debug.output', array($this, 'onDebugOutput'), 1);
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
     }
 
     /**
@@ -106,9 +106,9 @@ class Twig extends Twig_Environment
     }
 
     /**
-     * debug.output subscriber
+     * Debug::EVENT_OUTPUT subscriber
      *
-     * @param Event $event event instance
+     * @param Event $event Event instance
      *
      * @return void
      */

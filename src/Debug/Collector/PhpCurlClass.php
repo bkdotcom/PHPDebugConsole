@@ -230,7 +230,7 @@ class PhpCurlClass extends Curl
             return null;
         }
         if ($this->debugOptions['prettyResponseBody']) {
-            $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this, array(
+            $event = $this->debug->rootInstance->eventManager->publish(Debug::EVENT_PRETTIFY, $this, array(
                 'value' => $body,
                 'contentType' => $this->responseHeaders['content-type'],
             ));

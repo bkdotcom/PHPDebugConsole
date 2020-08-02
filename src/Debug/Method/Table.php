@@ -33,7 +33,7 @@ class Table
      */
     public static function colKeys($rows)
     {
-        if (Abstracter::isAbstraction($rows, 'object')) {
+        if (Abstracter::isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
             if (!$rows['traverseValues']) {
                 return array(self::SCALAR);
             }
@@ -159,7 +159,7 @@ class Table
     {
         if (Abstracter::isAbstraction($val)) {
             // abstraction
-            if ($val['type'] === 'object') {
+            if ($val['type'] === Abstracter::TYPE_OBJECT) {
                 if ($val['traverseValues']) {
                     // probably Traversable
                     return \array_keys($val['traverseValues']);
@@ -199,7 +199,7 @@ class Table
      */
     private static function keyValuesAbstraction(Abstraction $row, &$objInfo)
     {
-        if ($row['type'] !== 'object') {
+        if ($row['type'] !== Abstracter::TYPE_OBJECT) {
             // resource & callable
             return array(self::SCALAR => $row);
         }

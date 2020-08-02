@@ -14,6 +14,7 @@ namespace bdk\Debug;
 
 use bdk\Backtrace;
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
@@ -375,13 +376,13 @@ class Internal implements SubscriberInterface
         if ($this->debug->parentInstance) {
             // we are a child channel
             return array(
-                'debug.config' => array('onConfig', PHP_INT_MAX),
+                Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
             );
         }
         // root instance
         return array(
-            'debug.config' => array('onConfig', PHP_INT_MAX),
-            'debug.bootstrap' => array('onBootstrap', PHP_INT_MAX * -1),
+            Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
+            Debug::EVENT_BOOTSTRAP => array('onBootstrap', PHP_INT_MAX * -1),
         );
     }
 
@@ -410,7 +411,7 @@ class Internal implements SubscriberInterface
             return;
         }
         /*
-            Initial setCfg has already occured... so we missed the initial debug.config event
+            Initial setCfg has already occured... so we missed the initial Debug::EVENT_CONFIG event
             manually call onConfig here
         */
         $cfgInit = $this->debug->getCfg(null, Debug::CONFIG_INIT);
@@ -420,16 +421,16 @@ class Internal implements SubscriberInterface
         );
         $this->onConfig($cfgEvent);
         if ($cfgEvent['debug'] !== $cfgInit['debug']) {
-            // publish debug.config event so event listeners will get the change
+            // publish Debug::EVENT_CONFIG event so event listeners will get the change
             $this->debug->eventManager->publish(
-                'debug.config',
+                Debug::EVENT_CONFIG,
                 $cfgEvent
             );
         }
     }
 
     /**
-     * debug.bootstrap subscriber
+     * Debug::EVENT_BOOTSTRAP subscriber
      *
      * @return void
      */
@@ -447,9 +448,9 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * debug.config subscriber
+     * Debug::EVENT_CONFIG subscriber
      *
-     * @param Event $event event instance
+     * @param Event $event Event instance
      *
      * @return void
      */
@@ -499,11 +500,11 @@ class Internal implements SubscriberInterface
      * Publish/Trigger/Dispatch event
      * Event will get published on ancestor channels if propagation not stopped
      *
-     * @param string $eventName event name
-     * @param Event  $event     event instance
-     * @param Debug  $debug     specify Debug instance to start on
-     *                            if not specified will check if getSubject returns Debug instance
-     *                            fallback this->debug
+     * @param string $eventName Event name
+     * @param Event  $event     Event instance
+     * @param Debug  $debug     Specify Debug instance to start on.
+     *                            If not specified will check if getSubject returns Debug instance
+     *                            Fallback: this->debug
      *
      * @return Event
      */
@@ -540,7 +541,7 @@ class Internal implements SubscriberInterface
             return $this->redactString($val, $key);
         }
         if ($val instanceof Abstraction) {
-            if ($val['type'] === 'object') {
+            if ($val['type'] === Abstracter::TYPE_OBJECT) {
                 $props = $val['properties'];
                 foreach ($props as $name => $prop) {
                     $props[$name]['value'] = $this->redact($prop['value'], $name);
@@ -619,7 +620,7 @@ class Internal implements SubscriberInterface
                 $v = $abstracter->getAbstraction($v, $logEntry['method'], $absInfo);
                 $args[$k] = $v;
             }
-            if ($abstracter->isAbstraction($v, 'object') === false) {
+            if ($abstracter->isAbstraction($v, Abstracter::TYPE_OBJECT) === false) {
                 continue;
             }
             if ($v['stringified']) {
@@ -637,7 +638,7 @@ class Internal implements SubscriberInterface
      * Update collect & output values based on key value
      *
      * @param string $key   configured debug key
-     * @param Event  $event debug.config event instance
+     * @param Event  $event Debug::EVENT_CONFIG event instance
      *
      * @return void
      *
@@ -683,7 +684,7 @@ class Internal implements SubscriberInterface
             return;
         }
         // we're bootstraping
-        $this->debug->eventManager->subscribe('debug.bootstrap', $val);
+        $this->debug->eventManager->subscribe(Debug::EVENT_BOOTSTRAP, $val);
     }
 
     /**

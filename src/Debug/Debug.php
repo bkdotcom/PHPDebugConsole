@@ -63,6 +63,20 @@ class Debug
     const CONFIG_INIT = 'configInit';
     const COUNT_NO_INC = 1;
     const COUNT_NO_OUT = 2;
+
+    const EVENT_BOOTSTRAP = 'debug.bootstrap';
+    const EVENT_CONFIG = 'debug.config';
+    const EVENT_DUMP_CUSTOM = 'debug.dumpCustom';
+    const EVENT_LOG = 'debug.log';
+    const EVENT_MIDDLEWARE = 'debug.middleware';
+    const EVENT_OBJ_ABSTRACT_END = 'debug.objAbstractEnd';
+    const EVENT_OBJ_ABSTRACT_START = 'debug.objAbstractStart';
+    const EVENT_OUTPUT = 'debug.output';
+    const EVENT_OUTPUT_LOG_ENTRY = 'debug.outputLogEntry';
+    const EVENT_PLUGIN_INIT = 'debug.pluginInit';
+    const EVENT_PRETTIFY = 'debug.prettify';
+    const EVENT_STREAM_WRAP = 'debug.streamWrap';
+
     const META = "\x00meta\x00";
     const VERSION = '3.0';
 
@@ -186,7 +200,7 @@ class Debug
         $this->internalEvents = $this->getViaContainer('internalEvents');
         $this->internal = $this->getViaContainer('internal');
         $this->internal->init();
-        $this->eventManager->publish('debug.bootstrap', $this);
+        $this->eventManager->publish(self::EVENT_BOOTSTRAP, $this);
     }
 
     /**
@@ -371,7 +385,7 @@ class Debug
                 $callerInfo = $this->backtrace->getCallerInfo();
                 $args = array(
                     'Assertion failed:',
-                    $callerInfo['file'] . ' (line ' . $callerInfo['line'] . ')',
+                    \sprintf('%s (line %s)', $callerInfo['file'], $callerInfo['line']),
                 );
                 $logEntry->setMeta('detectFiles', true);
             }
@@ -598,7 +612,7 @@ class Debug
             unset($this->data['groupStacks'][$priorityClosing]);
             $this->setLogDest('auto');
             /*
-                Publish the debug.log event (regardless of cfg.collect)
+                Publish the Debug::EVENT_LOG event (regardless of cfg.collect)
                 don't actually log
             */
             $logEntry['appendLog'] = false;
@@ -650,11 +664,11 @@ class Debug
         $this->data['groupPriorityStack'][] = $logEntry['meta']['priority'];
         $this->setLogDest('summary');
         /*
-            Publish the debug.log event (regardless of cfg.collect)
+            Publish the Debug::EVENT_LOG event (regardless of cfg.collect)
             don't actually log
         */
         $logEntry['appendLog'] = false;
-        // groupSumary's debug.log event should happen on the root instance
+        // groupSumary's Debug::EVENT_LOG event should happen on the root instance
         $this->readOnly['rootInstance']->appendLog($logEntry, true);
     }
 
@@ -680,7 +694,7 @@ class Debug
             $groupLogEntry['method'] = 'group';
         }
         /*
-            Publish the debug.log event (regardless of cfg.collect)
+            Publish the Debug::EVENT_LOG event (regardless of cfg.collect)
             don't actually log
         */
         $logEntry['appendLog'] = false;
@@ -748,10 +762,15 @@ class Debug
         }
         if (!$this->cfg['enableProfiling']) {
             $callerInfo = $this->backtrace->getCallerInfo();
+            $msg = \sprintf(
+                'Profile: Unable to start - enableProfiling opt not set.  %s on line %s.',
+                $callerInfo['file'],
+                $callerInfo['line']
+            );
             $this->appendLog(new LogEntry(
                 $this,
                 __FUNCTION__,
-                array('Profile: Unable to start - enableProfiling opt not set.  ' . $callerInfo['file'] . ' on line ' . $callerInfo['line'] . '.')
+                array($msg)
             ));
             return;
         }
@@ -827,7 +846,7 @@ class Debug
             */
             foreach ($data as $k => &$row) {
                 $row['__key'] = new Abstraction(array(
-                    'type' => 'callable',
+                    'type' => Abstracter::TYPE_CALLABLE,
                     'value' => $k,
                     'hideType' => true, // don't output 'callable'
                 ));
@@ -1148,15 +1167,15 @@ class Debug
             $isPlugin = true;
             $this->eventManager->addSubscriberInterface($plugin);
             $subscriptions = $plugin->getSubscriptions();
-            if (isset($subscriptions['debug.pluginInit'])) {
+            if (isset($subscriptions[self::EVENT_PLUGIN_INIT])) {
                 /*
-                    plugin we just added subscribes to debug.pluginInit
+                    plugin we just added subscribes to Debug::EVENT_PLUGIN_INIT
                     call subscriber directly
                 */
                 \call_user_func(
-                    array($plugin, $subscriptions['debug.pluginInit']),
+                    array($plugin, $subscriptions[self::EVENT_PLUGIN_INIT]),
                     new Event($this),
-                    'debug.pluginInit',
+                    self::EVENT_PLUGIN_INIT,
                     $this->eventManager
                 );
             }
@@ -1425,11 +1444,11 @@ class Debug
     }
 
     /**
-     * debug.config event listener
+     * Debug::EVENT_CONFIG event listener
      *
      * Since setCfg() passes config through Config, we need a way for Config to pass values back.
      *
-     * @param Event $event debug.config event
+     * @param Event $event Debug::EVENT_CONFIG Event instance
      *
      * @return void
      */
@@ -1471,7 +1490,7 @@ class Debug
     /**
      * Return debug log output
      *
-     * Publishes debug.output event and returns event's 'return' value
+     * Publishes Debug::EVENT_OUTPUT event and returns event's 'return' value
      *
      * @param array $cfg Override any config values
      *
@@ -1490,14 +1509,14 @@ class Debug
             $this->config->set('route', $route);
         }
         /*
-            Publish debug.output on all descendant channels and then ourself
+            Publish Debug::EVENT_OUTPUT on all descendant channels and then ourself
             This isn't outputing each channel, but for performing any per-channel "before output" activities
         */
         $channels = $this->getChannels(true);
         $channels[] = $this;
         foreach ($channels as $channel) {
             $event = $channel->eventManager->publish(
-                'debug.output',
+                self::EVENT_OUTPUT,
                 $channel,
                 array(
                     'headers' => array(),
@@ -1565,7 +1584,7 @@ class Debug
     {
         $this->data = \is_array($path)
             ? \array_merge($this->data, $path)
-            : call_user_func(function ($path, $value) {
+            : \call_user_func(function ($path, $value) {
                 $this->utility->arrayPathSet($this->data, $path, $value);
                 return $this->data;
             }, $path, $value);
@@ -1678,7 +1697,7 @@ class Debug
      * if collect is false -> does nothing
      * otherwise:
      *   + abstracts values
-     *   + publishes debug.log event
+     *   + publishes Debug::EVENT_LOG event
      *   + appends log (if event propagation not stopped)
      *
      * @param LogEntry $logEntry     log entry instance
@@ -1702,7 +1721,7 @@ class Debug
                 $logEntry['args'][$i] = $this->abstracter->getAbstraction($v, $logEntry['method'], $absInfo);
             }
         }
-        $this->internal->publishBubbleEvent('debug.log', $logEntry);
+        $this->internal->publishBubbleEvent(self::EVENT_LOG, $logEntry);
         if ($cfgRestore) {
             $this->config->set($cfgRestore);
         }
@@ -1739,7 +1758,7 @@ class Debug
         $this->registeredPlugins = new SplObjectStorage();
         $this->getViaContainer('errorHandler');
         $this->config = $this->getViaContainer('config');
-        $this->eventManager->subscribe('debug.config', array($this, 'onConfig'));
+        $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'));
         $this->config->set($cfg);
         $this->bootstrapInstance();
         if ($this->cfg['emailTo'] === 'default') {

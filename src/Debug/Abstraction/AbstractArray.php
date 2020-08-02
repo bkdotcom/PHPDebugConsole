@@ -50,7 +50,7 @@ class AbstractArray
         if ($this->abstracter->debug->utility->isCallable($array)) {
             // this appears to be a "callable"
             return new Abstraction(array(
-                'type' => 'callable',
+                'type' => Abstracter::TYPE_CALLABLE,
                 'value' => array(\get_class($array[0]), $array[1]),
             ));
         }

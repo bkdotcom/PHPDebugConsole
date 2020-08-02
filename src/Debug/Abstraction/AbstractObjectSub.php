@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Abstraction;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Utility\PhpDoc;
@@ -46,12 +47,12 @@ abstract class AbstractObjectSub implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            'debug.objAbstractEnd' => array('onAbstractEnd', PHP_INT_MAX),
+            Debug::EVENT_OBJ_ABSTRACT_END => array('onAbstractEnd', PHP_INT_MAX),
         );
     }
 
     /**
-     * debug.objAbstracctStart listener
+     * Debug::EVENT_OBJ_ABSTRACT_END listener
      *
      * @param Abstraction $abs Abstraction instance
      *

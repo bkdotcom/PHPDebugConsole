@@ -59,7 +59,7 @@ abstract class Base extends Component implements RouteInterface
     public function getSubscriptions()
     {
         return array(
-            'debug.output' => 'processLogEntries',
+            Debug::EVENT_OUTPUT => 'processLogEntries',
         );
     }
 
@@ -150,7 +150,7 @@ abstract class Base extends Component implements RouteInterface
     }
 
     /**
-     * Publish debug.outputLogEntry.
+     * Publish Debug::EVENT_OUTPUT_LOG_ENTRY.
      * Return event['return'] if not empty
      * Otherwise, propagation not stopped, return result of processLogEntry()
      *
@@ -162,7 +162,7 @@ abstract class Base extends Component implements RouteInterface
     {
         $logEntry = new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta']);
         $logEntry['route'] = $this;
-        $this->debug->publishBubbleEvent('debug.outputLogEntry', $logEntry);
+        $this->debug->publishBubbleEvent(Debug::EVENT_OUTPUT_LOG_ENTRY, $logEntry);
         if ($logEntry['return'] !== null) {
             return $logEntry['return'];
         }

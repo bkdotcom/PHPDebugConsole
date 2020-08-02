@@ -13,11 +13,14 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Highlight;
+use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
+use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -52,16 +55,16 @@ class InternalEvents implements SubscriberInterface
         if ($debug->parentInstance) {
             return;
         }
-        $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
+        $this->debug->errorHandler->eventManager->subscribe(ErrorHandler::EVENT_ERROR, array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
         }, 'onErrorHighPri'), PHP_INT_MAX);
-        $this->debug->errorHandler->eventManager->subscribe('errorHandler.error', array(function () {
+        $this->debug->errorHandler->eventManager->subscribe(ErrorHandler::EVENT_ERROR, array(function () {
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
         }, 'onErrorLowPri'), PHP_INT_MAX * -1);
         /*
-            Initial setCfg has already occured... so we missed the initial debug.config event
+            Initial setCfg has already occured... so we missed the initial Debug::EVENT_CONFIG event
             manually call onConfig here
         */
         $this->onConfig(new Event(
@@ -80,30 +83,30 @@ class InternalEvents implements SubscriberInterface
         if ($this->debug->parentInstance) {
             // we are a child channel
             return array(
-                'debug.output' => array(
+                Debug::EVENT_OUTPUT => array(
                     array('onOutput', 1),
                     array('onOutputHeaders', -1),
                 ),
-                'debug.config' => 'onConfig',
+                Debug::EVENT_CONFIG => 'onConfig',
             );
         }
         /*
-            OnShutDownHigh2 subscribes to 'debug.log' (onDebugLogShutdown)
+            OnShutDownHigh2 subscribes to Debug::EVENT_LOG (onDebugLogShutdown)
               so... if any log entry is added in php's shutdown phase, we'll have a
               "php.shutdown" log entry
         */
         return array(
-            'debug.config' => 'onConfig',
-            'debug.dumpCustom' => 'onDumpCustom',
-            'debug.log' => array('onLog', PHP_INT_MAX),
-            'debug.output' => array(
+            Debug::EVENT_CONFIG => 'onConfig',
+            Debug::EVENT_DUMP_CUSTOM => 'onDumpCustom',
+            Debug::EVENT_LOG => array('onLog', PHP_INT_MAX),
+            Debug::EVENT_OUTPUT => array(
                 array('onOutput', 1),
                 array('onOutputHeaders', -1),
             ),
-            'debug.prettify' => array('onPrettify', -1),
-            'debug.streamWrap' => 'onStreamWrap',
-            'errorHandler.error' => 'onError',
-            'php.shutdown' => array(
+            Debug::EVENT_PRETTIFY => array('onPrettify', -1),
+            Debug::EVENT_STREAM_WRAP => 'onStreamWrap',
+            ErrorHandler::EVENT_ERROR => 'onError',
+            EventManager::EVENT_PHP_SHUTDOWN => array(
                 array('onShutdownHigh', PHP_INT_MAX),
                 array('onShutdownHigh2', PHP_INT_MAX - 10),
                 array('onShutdownLow', PHP_INT_MAX * -1)
@@ -112,9 +115,9 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * debug.config subscriber
+     * Debug::EVENT_CONFIG subscriber
      *
-     * @param Event $event event instance
+     * @param Event $event Event instance
      *
      * @return void
      */
@@ -140,13 +143,13 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * Listen for a log entry occuring after php.shutdown...
+     * Listen for a log entry occuring after EventManager::EVENT_PHP_SHUTDOWN...
      *
      * @return void
      */
     public function onDebugLogShutdown()
     {
-        $this->debug->eventManager->unsubscribe('debug.log', array($this, __FUNCTION__));
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, array($this, __FUNCTION__));
         $this->debug->info('php.shutdown', $this->debug->meta(array(
             'attribs' => array(
                 'class' => 'php-shutdown',
@@ -156,9 +159,9 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * debug.dumpCustom subscriber
+     * Debug::EVENT_DUMP_CUSTOM subscriber
      *
-     * @param Event $event event instance
+     * @param Event $event Event instance
      *
      * @return void
      */
@@ -174,7 +177,7 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * errorHandler.error event subscriber
+     * ErrorHandler::EVENT_ERROR event subscriber
      * adds error to console as error or warn
      *
      * @param Error $error error/event object
@@ -206,7 +209,7 @@ class InternalEvents implements SubscriberInterface
             $this->debug->rootInstance->getChannel('phpError')->{$method}(
                 $error['typeStr'] . ':',
                 $error['message'],
-                $error['file'] . ' (line ' . $error['line'] . ')',
+                \sprintf('%s (line %s)', $error['file'], $error['line']),
                 $meta
             );
             $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
@@ -225,7 +228,7 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * debug.log subscriber
+     * Debug::EVENT_LOG subscriber
      *
      * @param LogEntry $logEntry log entry instance
      *
@@ -240,9 +243,9 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * debug.output subscriber
+     * Debug::EVENT_OUTPUT subscriber
      *
-     * @param Event $event debug.output event object
+     * @param Event $event Debug::EVENT_OUTPUT event object
      *
      * @return void
      */
@@ -261,11 +264,11 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * debug.output subscriber
+     * Debug::EVENT_OUTPUT subscriber
      *
      * Merge event headers into data['headers'] or output them
      *
-     * @param Event $event debug.output event object
+     * @param Event $event Debug::EVENT_OUTPUT event object
      *
      * @return void
      * @throws \RuntimeException if error emitting headers
@@ -287,12 +290,13 @@ class InternalEvents implements SubscriberInterface
     /**
      * Prettify a string if known content-type
      *
-     * @param Event $event debug.prettyify event object
+     * @param Event $event Debug::EVENT_PRETTIFY event object
      *
      * @return void
      */
     public function onPrettify(Event $event)
     {
+        $matches = array();
         if (\preg_match('#\b(html|json|xml)\b#', $event['contentType'], $matches)) {
             $string = $event['value'];
             $type = $matches[1];
@@ -309,7 +313,7 @@ class InternalEvents implements SubscriberInterface
                 $this->highlightAdded = true;
             }
             $event['value'] = new Abstraction(array(
-                'type' => 'string',
+                'type' => Abstracter::TYPE_STRING,
                 'attribs' => array(
                     'class' => 'highlight language-' . $lang,
                 ),
@@ -324,7 +328,7 @@ class InternalEvents implements SubscriberInterface
     /**
      * If profiling, inject `declare(ticks=1)`
      *
-     * @param Event $event debug.streamWrap event object
+     * @param Event $event Debug::EVENT_STREAM_WRAP event object
      *
      * @return void
      */
@@ -340,7 +344,7 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * php.shutdown subscriber (high priority)
+     * EventManager::EVENT_PHP_SHUTDOWN subscriber (high priority)
      *
      * @return void
      */
@@ -351,17 +355,17 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * php.shutdown subscriber (not-so-high priority).. come after other internal...
+     * EventManager::EVENT_PHP_SHUTDOWN subscriber (not-so-high priority).. come after other internal...
      *
      * @return void
      */
     public function onShutdownHigh2()
     {
-        $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLogShutdown'));
+        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, array($this, 'onDebugLogShutdown'));
     }
 
     /**
-     * php.shutdown subscriber (low priority)
+     * EventManager::EVENT_PHP_SHUTDOWN subscriber (low priority)
      * Email Log if emailLog is 'always' or 'onError'
      * output log if not already output
      *
@@ -369,7 +373,7 @@ class InternalEvents implements SubscriberInterface
      */
     public function onShutdownLow()
     {
-        $this->debug->eventManager->unsubscribe('debug.log', array($this, 'onDebugLogShutdown'));
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, array($this, 'onDebugLogShutdown'));
         if ($this->testEmailLog()) {
             $this->runtimeVals();
             $this->debug->getRoute('email')->processLogEntries(new Event($this->debug));
@@ -457,9 +461,9 @@ class InternalEvents implements SubscriberInterface
         */
         $prev = $this->debug->getCfg('onLog', Debug::CONFIG_DEBUG);
         if ($prev) {
-            $this->debug->eventManager->unsubscribe('debug.log', $prev);
+            $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, $prev);
         }
-        $this->debug->eventManager->subscribe('debug.log', $val);
+        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, $val);
     }
 
     /**
@@ -478,9 +482,9 @@ class InternalEvents implements SubscriberInterface
         */
         $prev = $this->debug->getCfg('onOutput', Debug::CONFIG_DEBUG);
         if ($prev) {
-            $this->debug->eventManager->unsubscribe('debug.output', $prev);
+            $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT, $prev);
         }
-        $this->debug->eventManager->subscribe('debug.output', $val);
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, $val);
     }
 
     /**
@@ -499,9 +503,9 @@ class InternalEvents implements SubscriberInterface
         */
         $prev = $this->debug->getCfg('onMiddleware', Debug::CONFIG_DEBUG);
         if ($prev) {
-            $this->debug->eventManager->unsubscribe('debug.middleware', $prev);
+            $this->debug->eventManager->unsubscribe(Debug::EVENT_MIDDLEWARE, $prev);
         }
-        $this->debug->eventManager->subscribe('debug.middleware', $val);
+        $this->debug->eventManager->subscribe(Debug::EVENT_MIDDLEWARE, $val);
     }
 
     /**
@@ -529,7 +533,7 @@ class InternalEvents implements SubscriberInterface
     /**
      * Log our runtime info in a summary group
      *
-     * As we're only subscribed to root debug instance's debug.output event, this info
+     * As we're only subscribed to root debug instance's Debug::EVENT_OUTPUT event, this info
      *   will not be output for any sub-channels output directly
      *
      * @return void

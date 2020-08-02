@@ -24,13 +24,14 @@ class AbstractObjectProperties extends AbstractObjectSub
 
     private static $basePropInfo = array(
         'debugInfoExcluded' => false,   // true if not included in __debugInfo
-        'desc' => null,
+        'desc' => null,                 // from phpDoc
         'inheritedFrom' => null,        // populated only if inherited
         'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
-        'overrides' => null,            // populated only if we're overriding
+        'overrides' => null,            // previous ancestor where property is defined
+                                        //   populated only if we're overriding
         'forceShow' => false,           // initially show the property/value (even if protected or private)
-                                        //    if value is an array, expand it
+                                        //   if value is an array, expand it
         'type' => null,
         'value' => null,
         'valueFrom' => 'value',         // 'value' | 'debugInfo' | 'debug'
@@ -48,6 +49,21 @@ class AbstractObjectProperties extends AbstractObjectSub
         }
         $this->abs = $abs;
         $this->addProperties($abs);
+        if ($abs['className'] === 'Closure') {
+            $ref = new \ReflectionFunction($abs->getSubject());
+            $abs['properties']['file'] = \array_merge(static::$basePropInfo, array(
+                'type' => Abstracter::TYPE_STRING,
+                'value' => $ref->getFileName(),
+                'valueFrom' => 'debug',
+                'visibility' => 'debug',
+            ));
+            $abs['properties']['line'] = \array_merge(static::$basePropInfo, array(
+                'type' => Abstracter::TYPE_INT,
+                'value' => $ref->getStartLine(),
+                'valueFrom' => 'debug',
+                'visibility' => 'debug',
+            ));
+        }
     }
 
     /**

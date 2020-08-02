@@ -32,14 +32,14 @@ class LogEnv implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            'debug.pluginInit' => 'onPluginInit',
+            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
         );
     }
 
     /**
-     * debug.pluginInit subscriber
+     * Debug::EVENT_PLUGIN_INIT subscriber
      *
-     * @param Event $event debug.bootstrap event instance
+     * @param Event $event Debug::EVENT_PLUGIN_INIT Event instance
      *
      * @return void
      */

@@ -160,9 +160,15 @@ function buildFileLink (file, line) {
  * Create text editor links for error, warn, & trace
  */
 function createFileLinks ($entry, $strings, remove) {
-  var detectFiles = $entry.data('detectFiles') === true
+  var $closureObjs = $entry.find('.t_object > .classname').filter(function () {
+    return this.innerText.match(/^Closure\b/)
+  })
+  var detectFiles = $entry.data('detectFiles') === true || $closureObjs.length > 0
   var dataFoundFiles = $entry.data('foundFiles') || []
   var isUpdate = false
+  if ($closureObjs.length) {
+    console.warn('closureObjs', $strings.length)
+  }
   if (!config.linkFiles && !remove) {
     return
   }
@@ -220,6 +226,27 @@ function createFileLinks ($entry, $strings, remove) {
     }
     return
   }
+  /*
+  $closureObjs.each(function () {
+    var vals = {};
+    $(this).parent().find('> .object-inner > .property.debug-value').each(function () {
+      var prop = $(this).find('> .t_identifier')[0].innerText
+      var $valNode = $(this).find('> *:last-child')
+      var val = $.trim($valNode[0].innerText)
+      vals[prop] = {
+        val: val,
+        node: $valNode
+      }
+    })
+    var $a = $('<a>', {
+      class: 'file-link',
+      href: buildFileLink(vals.file.val, vals.line.val),
+      html: vals.file.val + ' <i class="fa fa-external-link"></i>',
+      title: 'Open in editor'
+    })
+    vals.file.node.html($a)
+  })
+  */
   if (!$strings) {
     $strings = []
   }
@@ -227,7 +254,7 @@ function createFileLinks ($entry, $strings, remove) {
     // console.log('string', $(this).text())
     var $replace
     var $string = $(this)
-    var attr = $string[0].attributes
+    var attrs = $string[0].attributes
     var text = $.trim($string.text())
     var matches = []
     if ($string.closest('.m_trace').length) {
@@ -239,6 +266,15 @@ function createFileLinks ($entry, $strings, remove) {
       matches = [null, $string.data('file'), $string.data('line') || 1]
     } else if (dataFoundFiles.indexOf(text) === 0 || $string.is('.file')) {
       matches = [null, text, 1]
+    } else if ($string.parent('.property.debug-value').parent().parent().find('> .classname').text().match(/^Closure\b/)) {
+      matches = {}
+      $string.parent().parent().find('> .property.debug-value').each(function () {
+        var prop = $(this).find('> .t_identifier')[0].innerText
+        var $valNode = $(this).find('> *:last-child')
+        var val = $.trim($valNode[0].innerText)
+        matches[prop] = val
+      })
+      matches = [null, text, matches.line]
     } else {
       matches = text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
     }
@@ -259,10 +295,10 @@ function createFileLinks ($entry, $strings, remove) {
         )
       } else {
         /*
-          attr is not a plain object, but an array of attribute nodes
+          attrs is not a plain object, but an array of attribute nodes
           which contain both the name and value
         */
-        $.each(attr, function () {
+        $.each(attrs, function () {
           var name = this.name
           if (['html', 'href', 'title'].indexOf(name) > -1) {
             return // continue

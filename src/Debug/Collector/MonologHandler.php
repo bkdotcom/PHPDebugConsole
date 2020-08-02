@@ -13,7 +13,6 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
-use Monolog\Formatter\FormatterInterface;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;

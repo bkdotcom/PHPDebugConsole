@@ -19,6 +19,8 @@ namespace bdk\PubSub;
 class Manager
 {
 
+    const EVENT_PHP_SHUTDOWN = 'php.shutdown';
+
     private $subscribers = array();
     private $sorted = array();
 
@@ -31,7 +33,7 @@ class Manager
             As a convenience, make shutdown subscribeable
         */
         \register_shutdown_function(function () {
-            $this->publish('php.shutdown');
+            $this->publish(self::EVENT_PHP_SHUTDOWN);
         });
     }
 

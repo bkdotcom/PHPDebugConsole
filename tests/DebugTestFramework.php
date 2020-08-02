@@ -1,5 +1,6 @@
 <?php
 
+use bdk\Debug;
 use bdk\CssXpath\DOMTestCase;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
@@ -156,7 +157,7 @@ class DebugTestFramework extends DOMTestCase
     {
         $this->debug->setCfg('output', false);
         // fwrite(STDERR, "tearDown\n");
-        $subscribers = $this->debug->eventManager->getSubscribers('debug.output');
+        $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_OUTPUT);
         foreach ($subscribers as $subscriber) {
             $unsub = false;
             if ($subscriber instanceof \Closure) {
@@ -165,12 +166,12 @@ class DebugTestFramework extends DOMTestCase
                 $unsub = true;
             }
             if ($unsub) {
-                $this->debug->eventManager->unsubscribe('debug.output', $subscriber);
+                $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT, $subscriber);
             }
         }
-        $subscribers = $this->debug->eventManager->getSubscribers('debug.outputLogEntry');
+        $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_OUTPUT_LOG_ENTRY);
         foreach ($subscribers as $subscriber) {
-            $this->debug->eventManager->unsubscribe('debug.outputLogEntry', $subscriber);
+            $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, $subscriber);
         }
         $refProperties = &$this->getSharedVar('reflectionProperties');
         if (!isset($refProperties['channels'])) {
@@ -353,7 +354,7 @@ class DebugTestFramework extends DOMTestCase
                 $routeObj->setCfg('stream', 'php://temp');
                 return $routeObj;
             case 'wamp':
-                return null;  // we'll rely on wamp's debug.log subscription
+                return null;  // we'll rely on wamp's Debug::EVENT_LOG subscription
             default:
                 return $this->debug->getRoute($test);
         }
@@ -392,7 +393,7 @@ class DebugTestFramework extends DOMTestCase
                 )
             );
             if ($routeObj) {
-                $routeObj->processLogEntries($event, 'debug.output', $this->debug->eventManager);
+                $routeObj->processLogEntries($event, Debug::EVENT_OUTPUT, $this->debug->eventManager);
             }
             $this->debug->setData($dataBackup);
             $headers = $event['headers'];

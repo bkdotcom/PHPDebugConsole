@@ -52,7 +52,7 @@ class Firephp extends Base
     /**
      * Output the log via FirePHP headers
      *
-     * @param Event $event debug.output event object
+     * @param Event $event Debug::EVENT_OUTPUT Event object
      *
      * @return void
      */

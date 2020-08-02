@@ -59,7 +59,7 @@ class Middleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = $this->getResponse($request, $handler);
-        $this->debug->eventManager->publish('debug.middleware', $this->debug, array(
+        $this->debug->eventManager->publish(Debug::EVENT_MIDDLEWARE, $this->debug, array(
             'request' => $request,
             'response' => $response,
         ));
@@ -99,7 +99,7 @@ class Middleware implements MiddlewareInterface
                     process() needs to return a ResponseInterface
                         This can be accomplished via
                         • onCaughtException callable
-                        • debug.middleware event subscriber (check if empty response / return)
+                        • Debug::EVENT_MIDDLEWARE event subscriber (check if empty response / return)
             */
             $this->debug->errorHandler->handleException($e);
             $response = null;

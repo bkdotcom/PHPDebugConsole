@@ -60,7 +60,7 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     public function toString()
     {
         $val = '';
-        if ($this->values['type'] === 'object') {
+        if ($this->values['type'] === Abstracter::TYPE_OBJECT) {
             if ($this->values['stringified']) {
                 $val = $this->values['stringified'];
             } elseif (isset($this->values['methods']['__toString']['returnValue'])) {

@@ -37,15 +37,15 @@ class LogReqRes implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            'debug.pluginInit' => 'onPluginInit',
-            'debug.output' => array('logResponse', PHP_INT_MAX),
+            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
+            Debug::EVENT_OUTPUT => array('logResponse', PHP_INT_MAX),
         );
     }
 
     /**
-     * debug.pluginInit subscriber
+     * Debug::EVENT_PLUGIN_INIT subscriber
      *
-     * @param Event $event debug.bootstrap event instance
+     * @param Event $event Debug::EVENT_PLUGIN_INIT Event instance
      *
      * @return void
      */
@@ -212,7 +212,7 @@ class LogReqRes implements SubscriberInterface
      */
     private function logRequestBody($contentType = null)
     {
-        $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
+        $event = $this->debug->rootInstance->eventManager->publish(Debug::EVENT_PRETTIFY, $this->debug, array(
             'value' => $this->getRequestBodyContents(),
             'contentType' => $contentType,
         ));
@@ -285,7 +285,7 @@ class LogReqRes implements SubscriberInterface
             $this->debug->log('response too large to output (' . $contentLength . ')');
             return;
         }
-        $event = $this->debug->rootInstance->eventManager->publish('debug.prettify', $this->debug, array(
+        $event = $this->debug->rootInstance->eventManager->publish(Debug::EVENT_PRETTIFY, $this->debug, array(
             'value' => $response,
             'contentType' => $contentType,
         ));

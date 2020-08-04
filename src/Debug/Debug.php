@@ -45,7 +45,7 @@ use SplObjectStorage;
  * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
  * @property Debug\Psr7lite\ServerRequest $request lazy-loaded ServerRequest
  * @property \bdk\Debug           $rootInstance  root "channel"
- * @property Debug\StopWatch      $stopWatch     lazy-loaded StopWatch Instance
+ * @property Debug\Utility\StopWatch $stopWatch  lazy-loaded StopWatch Instance
  * @property Debug\Utility\Utf8   $utf8          lazy-loaded Utf8 instance
  * @property Debug\Utility        $utility       lazy-loaded Utility instance
  */
@@ -1913,7 +1913,7 @@ class Debug
             'response' => null,
             'stopWatch' => function () {
                 $serverParams = $this->request->getServerParams();
-                return new \bdk\Debug\StopWatch(array(
+                return new \bdk\Debug\Utility\StopWatch(array(
                     'requestTime' => $serverParams['REQUEST_TIME_FLOAT'],
                 ));
             },

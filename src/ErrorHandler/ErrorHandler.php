@@ -5,7 +5,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2020 Brad Kent
- * @version   v3.0
+ * @version   v3.0.1
  */
 
 namespace bdk;
@@ -542,12 +542,12 @@ class ErrorHandler
      *
      * @return callable|null
      */
-    private static function getErrorHandler()
+    private function getErrorHandler()
     {
         /*
             set and restore error handler to determine the current error handler
         */
-        $errHandlerCur = \set_error_handler('var_dump');
+        $errHandlerCur = \set_error_handler(array($this, 'handleError'));
         \restore_error_handler();
         return $errHandlerCur;
     }
@@ -557,12 +557,12 @@ class ErrorHandler
      *
      * @return callable|null
      */
-    private static function getExceptionHandler()
+    private function getExceptionHandler()
     {
         /*
             set and restore exception handler to determine the current error handler
         */
-        $exHandlerCur = \set_exception_handler('var_dump');
+        $exHandlerCur = \set_exception_handler(array($this, 'handleException'));
         \restore_exception_handler();
         return $exHandlerCur;
     }

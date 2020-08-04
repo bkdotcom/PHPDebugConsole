@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2020 Brad Kent
- * @version   v2.3
+ * @version   v2.3.2
  * @link      http://www.github.com/bkdotcom/PubSub
  */
 

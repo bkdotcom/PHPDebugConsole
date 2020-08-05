@@ -273,7 +273,7 @@ class Html extends Base
     protected function buildChannelTree()
     {
         $channels = $this->dump->channels;
-        \ksort($channels);
+        \ksort($channels, SORT_NATURAL | SORT_FLAG_CASE);
         $tree = array();
         foreach ($channels as $name => $channel) {
             $ref = &$tree;

@@ -30,6 +30,8 @@ class TwigExtension extends ProfilerExtension
      *
      * @param Debug   $debug   (optional) Debug instance
      * @param Profile $profile (optional) Profile instance
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct(Debug $debug = null, Profile $profile = null)
     {
@@ -46,6 +48,19 @@ class TwigExtension extends ProfilerExtension
     }
 
     /**
+     * Used by ProfilerNodeVisitor / Profiler\Node\EnterProfileNode
+     *
+     * @param Profile $profile Profile instance
+     *
+     * @return void
+     */
+    public function enter(Profile $profile)
+    {
+        parent::enter($profile);
+        $this->debug->group('Twig: ' . $profile->getType(), $profile->getName(), $this->debug->meta('ungroup'));
+    }
+
+    /**
      * Used by ProfilerNodeVisitor / Profiler\Node\LeaveProfileNode
      *
      * @param Profile $profile Profile instance
@@ -55,8 +70,11 @@ class TwigExtension extends ProfilerExtension
     public function leave(Profile $profile)
     {
         parent::leave($profile);
-        $this->debug->time('Rendered Template: ' . $profile->getName(), $profile->getDuration(), $this->debug->meta(array(
-            'icon' => $this->icon,
-        )));
+        $haveChildren = \count($profile->getProfiles()) > 0;
+        $msg = $haveChildren
+            ? 'Twig: end ' . $profile->getType() . ': ' . $profile->getName()
+            : 'Twig: ' . $profile->getType() . ': ' . $profile->getName();
+        $this->debug->time($msg, $profile->getDuration());
+        $this->debug->groupEnd();
     }
 }

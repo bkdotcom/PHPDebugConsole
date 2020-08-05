@@ -1044,8 +1044,8 @@ class MethodTest extends DebugTestFramework
     public function testGroup()
     {
 
-        $test = new \bdk\DebugTest\Test();
-        $testBase = new \bdk\DebugTest\TestBase();
+        // $test = new \bdk\DebugTest\Test();
+        // $testBase = new \bdk\DebugTest\TestBase();
 
         $this->testMethod(
             'group',
@@ -1082,7 +1082,19 @@ class MethodTest extends DebugTestFramework
             )
         );
 
-        $this->debug->setData('log', array());
+        $this->debug->setCfg('collect', false);
+        $this->testMethod(
+            'group',
+            array('not logged'),
+            array(
+                'notLogged' => true,
+                'wamp' => false,
+            )
+        );
+    }
+
+    public function testGroupHideIfEmpty()
+    {
         $this->debug->log('before group');
         $this->debug->group($this->debug->meta('hideIfEmpty'));
         $this->debug->groupEnd();
@@ -1098,15 +1110,81 @@ class MethodTest extends DebugTestFramework
                 after group',
         ));
 
-        $this->debug->setCfg('collect', false);
-        $this->testMethod(
-            'group',
-            array('not logged'),
-            array(
-                'notLogged' => true,
-                'wamp' => false,
-            )
-        );
+        /*
+            hideIfEmpty group containing log entry
+        */
+        $this->debug->setData('log', array());
+        $this->debug->log('before group');
+        $this->debug->group($this->debug->meta('hideIfEmpty'));
+        $this->debug->log('something');
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
+        $this->outputTest(array(
+            'script' => 'console.log("before group");
+                console.group("group");
+                console.log("something");
+                console.groupEnd();
+                console.log("after group");',
+        ));
+
+        /*
+            hideIfEmtpy group containing empty group
+        */
+        $this->debug->setData('log', array());
+        $this->debug->log('before group');
+        $this->debug->group($this->debug->meta('hideIfEmpty'));
+        $this->debug->group('inner group empty');
+        $this->debug->groupEnd();
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
+        $this->outputTest(array(
+            'script' => 'console.log("before group");
+                console.group("group");
+                console.group("inner group empty");
+                console.groupEnd();
+                console.groupEnd();
+                console.log("after group");',
+        ));
+
+        /*
+            hideIfEmtpy group containing hideIfEmty group
+        */
+        $this->debug->setData('log', array());
+        $this->debug->log('before group');
+        $this->debug->group($this->debug->meta('hideIfEmpty'));
+        $this->debug->group('inner group empty', $this->debug->meta('hideIfEmpty'));
+        $this->debug->groupEnd();
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
+        $this->outputTest(array(
+            'script' => 'console.log("before group");
+                console.log("after group");',
+        ));
+    }
+
+    public function testGroupUngroup()
+    {
+        $this->debug->log('before group');
+        $this->debug->group('shazam', $this->debug->meta('ungroup'));
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
+        $this->outputTest(array(
+            'script' => 'console.log("before group");
+                console.log("shazam");
+                console.log("after group");',
+        ));
+
+        $this->debug->setData('log', array());
+        $this->debug->log('before group');
+        $this->debug->group('shazam', $this->debug->meta('ungroup'));
+        $this->debug->log('shazam2');
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
+        $this->outputTest(array(
+            'script' => 'console.log("before group");
+                console.log("shazam2");
+                console.log("after group");',
+        ));
     }
 
     public function testGroupNoArgs()

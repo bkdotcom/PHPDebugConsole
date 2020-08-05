@@ -564,6 +564,15 @@ class Debug
      *
      * Supports styling & substitutions
      *
+     * applicable meta args:
+     *      argsAsParams: true
+     *      boldLabel: true
+     *      hideIfEmpty: false
+     *      isFuncName: (bool)
+     *      level: (string)
+     *      ungroup: false  // when closed: if no children, convert to plain log entry
+     *                      // when closed: if only one child, remove the containing group
+     *
      * @param mixed $arg,... label / values
      *
      * @return void

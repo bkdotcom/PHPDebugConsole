@@ -33,6 +33,7 @@ class InternalEvents implements SubscriberInterface
 
     private $highlightAdded = false;
     private $inShutdown = false;
+    protected $log = array();
 
     /**
      * duplicate/store frequently used cfg vals
@@ -521,13 +522,90 @@ class InternalEvents implements SubscriberInterface
         $this->closeOpenGroups();
         $data = $this->debug->getData();
         $data['headers'] = array();
-        $this->removeHideIfEmptyGroups($data['log']);
-        $this->uncollapseErrors($data['log']);
-        foreach ($data['logSummary'] as &$log) {
-            $this->removeHideIfEmptyGroups($log);
-            $this->uncollapseErrors($log);
+        $this->log = &$data['log'];
+        $this->onOutputGroups();
+        $this->uncollapseErrors();
+        $summaryKeys = \array_keys($data['logSummary']);
+        foreach ($summaryKeys as $key) {
+            $this->log = &$data['logSummary'][$key];
+            $this->onOutputGroups();
+            $this->uncollapseErrors();
         }
         $this->debug->setData($data);
+    }
+
+    /**
+     * Remove empty groups having 'hideIfEmpty' meta value
+     * Convert empty groups having "ungroup" meta value to log entries
+     *
+     * @return void
+     */
+    private function onOutputGroups()
+    {
+        $groupStack = array();
+        $groupStackCount = 0;
+        $reindex = false;
+        for ($i = 0, $count = \count($this->log); $i < $count; $i++) {
+            $logEntry = $this->log[$i];
+            $method = $logEntry['method'];
+            if ($method !== 'groupEnd' && $groupStackCount > 0) {
+                $groupStack[$groupStackCount - 1]['decendantCount']++;
+            }
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $groupStack[] = array(
+                    'i' => $i,
+                    'iEnd' => null,
+                    'meta' => $logEntry['meta'],
+                    'decendantCount' => 0,
+                );
+                $groupStackCount++;
+            } elseif ($method === 'groupEnd') {
+                // $groupStackCount = \count($groupStack);
+                $group = \array_pop($groupStack);
+                $group['iEnd'] = $i;
+                $groupStackCount--;
+                $reindex = $this->onOutputGroup($group) || $reindex;
+                if ($groupStackCount > 0) {
+                    // update parent's count
+                    $groupStack[$groupStackCount - 1]['decendantCount'] += $group['decendantCount'];
+                }
+            }
+        }
+        if ($reindex) {
+            $this->log = \array_values($this->log);
+        }
+    }
+
+    /**
+     * Handle group hideIfEmpty & ungroup meta options
+     *
+     * @param array $group Group info collected in onOutputGroups
+     *
+     * @return bool Whether log needs re-indexed
+     */
+    private function onOutputGroup(&$group = array())
+    {
+        if (!empty($group['meta']['hideIfEmpty'])) {
+            if ($group['decendantCount'] === 0) {
+                unset($this->log[$group['i']]);     // remove open entry
+                unset($this->log[$group['iEnd']]);  // remove end entry
+                $group['decendantCount']--;         // decrement parent's decendantCount
+                return true;
+            }
+        }
+        if (!empty($group['meta']['ungroup'])) {
+            if ($group['decendantCount'] === 0) {
+                $this->log[$group['i']]['method'] = 'log';
+                unset($this->log[$group['iEnd']]);  // remove end entry
+                return true;
+            } elseif ($group['decendantCount'] === 1) {
+                unset($this->log[$group['i']]);     // remove open entry
+                unset($this->log[$group['iEnd']]);  // remove end entry
+                $group['decendantCount']--;         // decrement parent's decendantCount
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -559,51 +637,6 @@ class InternalEvents implements SubscriberInterface
             $this->debug->meta('sanitize', false)
         );
         $this->debug->groupEnd();
-    }
-
-    /**
-     * Remove empty groups with 'hideIfEmpty' meta value
-     *
-     * @param array $log log or summary
-     *
-     * @return void
-     */
-    private function removeHideIfEmptyGroups(&$log)
-    {
-        $groupStack = array();
-        $groupStackCount = 0;
-        $removed = false;
-        for ($i = 0, $count = \count($log); $i < $count; $i++) {
-            $logEntry = $log[$i];
-            $method = $logEntry['method'];
-            /*
-                pushing/popping to/from groupStack led to unexplicable warning:
-                "Cannot add element to the array as the next element is already occupied"
-            */
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[$groupStackCount] = array(
-                    'i' => $i,
-                    'meta' => $logEntry['meta'],
-                    'hasEntries' => false,
-                );
-                $groupStackCount++;
-            } elseif ($groupStackCount) {
-                if ($method === 'groupEnd') {
-                    $groupStackCount--;
-                    $group = $groupStack[$groupStackCount];
-                    if (!$group['hasEntries'] && !empty($group['meta']['hideIfEmpty'])) {
-                        unset($log[$group['i']]);   // remove open entry
-                        unset($log[$i]);            // remove end entry
-                        $removed = true;
-                    }
-                    continue;
-                }
-                $groupStack[$groupStackCount - 1]['hasEntries'] = true;
-            }
-        }
-        if ($removed) {
-            $log = \array_values($log);
-        }
     }
 
     /**
@@ -661,22 +694,20 @@ class InternalEvents implements SubscriberInterface
     /**
      * Uncollapse groups containing errors.
      *
-     * @param array $log log or summary
-     *
      * @return void
      */
-    private function uncollapseErrors(&$log)
+    private function uncollapseErrors()
     {
         $groupStack = array();
-        for ($i = 0, $count = \count($log); $i < $count; $i++) {
-            $method = $log[$i]['method'];
+        for ($i = 0, $count = \count($this->log); $i < $count; $i++) {
+            $method = $this->log[$i]['method'];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $groupStack[] = $i;
             } elseif ($method === 'groupEnd') {
                 \array_pop($groupStack);
             } elseif (\in_array($method, array('error', 'warn'))) {
                 foreach ($groupStack as $i2) {
-                    $log[$i2]['method'] = 'group';
+                    $this->log[$i2]['method'] = 'group';
                 }
             }
         }

@@ -4,6 +4,7 @@ namespace bdk\Debug\Framework\Symfony\DebugBundle\EventListener;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Collector\DoctrineLogger;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use Doctrine\Bundle\DoctrineBundle\Registry as DoctrineRegistry;
@@ -36,7 +37,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
 
         $connections = $doctrineRegistry->getConnections();
         foreach ($connections as $conn) {
-            $logger = new \bdk\Debug\Collector\DoctrineLogger($conn);
+            $logger = new DoctrineLogger($conn);
             $conn->getConfiguration()->setSQLLogger($logger);
         }
     }
@@ -66,9 +67,6 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         }
         $this->debug->setCfg(array(
             'channels' => array(
-                'doctrine' => array(
-                    'channelIcon' => 'fa fa-database',
-                ),
                 'event' => array(
                     'channelIcon' => 'fa fa-bell-o',
                     'channelShow' => false,

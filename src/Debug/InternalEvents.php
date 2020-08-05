@@ -560,7 +560,6 @@ class InternalEvents implements SubscriberInterface
                 );
                 $groupStackCount++;
             } elseif ($method === 'groupEnd') {
-                // $groupStackCount = \count($groupStack);
                 $group = \array_pop($groupStack);
                 $group['iEnd'] = $i;
                 $groupStackCount--;

@@ -548,26 +548,28 @@ class InternalEvents implements SubscriberInterface
         for ($i = 0, $count = \count($this->log); $i < $count; $i++) {
             $logEntry = $this->log[$i];
             $method = $logEntry['method'];
-            if ($method !== 'groupEnd' && $groupStackCount > 0) {
-                $groupStack[$groupStackCount - 1]['decendantCount']++;
-            }
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $groupStack[] = array(
+                    'childCount' => 0,  // includes any child groups
+                    'groupCount' => 0,
                     'i' => $i,
                     'iEnd' => null,
                     'meta' => $logEntry['meta'],
-                    'decendantCount' => 0,
+                    'parent' => null,
                 );
+                if ($groupStackCount > 0) {
+                    $groupStack[$groupStackCount - 1]['childCount']++;
+                    $groupStack[$groupStackCount - 1]['groupCount']++;
+                    $groupStack[$groupStackCount]['parent'] = &$groupStack[$groupStackCount - 1];
+                }
                 $groupStackCount++;
             } elseif ($method === 'groupEnd') {
                 $group = \array_pop($groupStack);
                 $group['iEnd'] = $i;
                 $groupStackCount--;
                 $reindex = $this->onOutputGroup($group) || $reindex;
-                if ($groupStackCount > 0) {
-                    // update parent's count
-                    $groupStack[$groupStackCount - 1]['decendantCount'] += $group['decendantCount'];
-                }
+            } elseif ($groupStackCount > 0) {
+                $groupStack[$groupStackCount - 1]['childCount']++;
             }
         }
         if ($reindex) {
@@ -585,22 +587,28 @@ class InternalEvents implements SubscriberInterface
     private function onOutputGroup(&$group = array())
     {
         if (!empty($group['meta']['hideIfEmpty'])) {
-            if ($group['decendantCount'] === 0) {
+            if ($group['childCount'] === 0) {
                 unset($this->log[$group['i']]);     // remove open entry
                 unset($this->log[$group['iEnd']]);  // remove end entry
-                $group['decendantCount']--;         // decrement parent's decendantCount
+                if ($group['parent']) {
+                    $group['parent']['childCount']--;
+                    $group['parent']['groupCount']--;
+                }
                 return true;
             }
         }
         if (!empty($group['meta']['ungroup'])) {
-            if ($group['decendantCount'] === 0) {
+            if ($group['childCount'] === 0) {
                 $this->log[$group['i']]['method'] = 'log';
                 unset($this->log[$group['iEnd']]);  // remove end entry
                 return true;
-            } elseif ($group['decendantCount'] === 1) {
+            } elseif ($group['childCount'] === 1 && $group['groupCount'] === 0) {
                 unset($this->log[$group['i']]);     // remove open entry
                 unset($this->log[$group['iEnd']]);  // remove end entry
-                $group['decendantCount']--;         // decrement parent's decendantCount
+                if ($group['parent']) {
+                    $group['parent']['childCount']--;
+                    $group['parent']['groupCount']--;
+                }
                 return true;
             }
         }

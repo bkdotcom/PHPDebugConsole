@@ -1164,6 +1164,8 @@ class MethodTest extends DebugTestFramework
 
     public function testGroupUngroup()
     {
+
+        // basic no children
         $this->debug->log('before group');
         $this->debug->group('shazam', $this->debug->meta('ungroup'));
         $this->debug->groupEnd();
@@ -1174,6 +1176,7 @@ class MethodTest extends DebugTestFramework
                 console.log("after group");',
         ));
 
+        // single child
         $this->debug->setData('log', array());
         $this->debug->log('before group');
         $this->debug->group('shazam', $this->debug->meta('ungroup'));
@@ -1185,6 +1188,55 @@ class MethodTest extends DebugTestFramework
                 console.log("shazam2");
                 console.log("after group");',
         ));
+
+
+        // single child (nested group)
+        $this->debug->setData('log', array());
+        $this->debug->log('before group');
+        $this->debug->group('ungroup', $this->debug->meta('ungroup'));
+        $this->debug->group('nested');
+        $this->debug->groupEnd();
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
+        $this->outputTest(array(
+            'script' => 'console.log("before group");
+                console.group("ungroup");
+                console.group("nested");
+                console.groupEnd();
+                console.groupEnd();
+                console.log("after group");',
+        ));
+
+        // single child (nested hideIfEmpty group)
+        $this->debug->setData('log', array());
+        $this->debug->log('before group');
+        $this->debug->group('ungroup', $this->debug->meta('ungroup'));
+        $this->debug->group('nested', $this->debug->meta('hideIfEmpty'));
+        $this->debug->groupEnd();
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
+        $this->outputTest(array(
+            'script' => 'console.log("before group");
+                console.log("ungroup");
+                console.log("after group");',
+        ));
+
+
+        // Two children (log-entry + hideIfEmpty group)
+        $this->debug->setData('log', array());
+        $this->debug->log('before group');
+        $this->debug->group('ungroup', $this->debug->meta('ungroup'));
+        $this->debug->log('child entry');
+        $this->debug->group('nested', $this->debug->meta('hideIfEmpty'));
+        $this->debug->groupEnd();
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
+        $this->outputTest(array(
+            'script' => 'console.log("before group");
+                console.log("child entry");
+                console.log("after group");',
+        ));
+
     }
 
     public function testGroupNoArgs()

@@ -161,11 +161,9 @@ class BdkDebugBundleListener implements EventSubscriberInterface
     /**
      * Log included files in new tab
      *
-     * @param Event $event Event instance
-     *
      * @return void
      */
-    public function logFiles(Event $event)
+    public function logFiles()
     {
         $files = $this->debug->utility->getIncludedFiles();
         $files = \array_filter($files, function ($file) {

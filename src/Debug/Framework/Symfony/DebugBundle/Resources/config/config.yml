@@ -1,32 +1,35 @@
 services:
   # KEYS
   #
-  # "alias"
-  # "parent"
-  # "class"
-  # "shared"
-  # "synthetic"
-  # "lazy"
-  # "public"
   # "abstract"
+  # "alias"
+  # "arguments"
+  # "autoconfigure"
+  # "autowire"
+  # "bind"
+  # "calls"
+  # "class"
+  # "configurator"
+  # "decorates"
+  # "decoration_inner_name"
+  # "decoration_on_invalid"
+  # "decoration_priority"
   # "deprecated"
   # "factory"
   # "file"
-  # "arguments"
+  # "lazy"
+  # "parent"
   # "properties"
-  # "configurator"
-  # "calls"
+  # "public"
+  # "shared"
+  # "synthetic"
   # "tags"
-  # "decorates"
-  # "decoration_inner_name"
-  # "decoration_priority"
-  # "decoration_on_invalid"
-  # "autowire"
-  # "autoconfigure"
-  # "bind"
-  bdk_debug:
-    class: bdk\Debug
+  bdk\Debug:
     factory: ['bdk\Debug', 'getInstance']
+    public: false
+  bdk_debug:
+    alias: bdk\Debug
+    public: true
   bdk_debug_listener:
     class: bdk\Debug\Framework\Symfony\DebugBundle\EventListener\BdkDebugBundleListener
     arguments: ['@bdk_debug', '@doctrine']

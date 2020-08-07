@@ -21,7 +21,7 @@ class Highlight implements AssetProviderInterface
 {
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getAssets()
     {

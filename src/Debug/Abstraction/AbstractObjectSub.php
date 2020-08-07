@@ -42,7 +42,7 @@ abstract class AbstractObjectSub implements SubscriberInterface
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getSubscriptions()
     {

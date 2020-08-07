@@ -77,7 +77,7 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getSubscriptions()
     {

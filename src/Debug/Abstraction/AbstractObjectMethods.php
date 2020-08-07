@@ -29,7 +29,7 @@ class AbstractObjectMethods extends AbstractObjectSub
     private static $methodCache = array();
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function onAbstractEnd(Abstraction $abs)
     {

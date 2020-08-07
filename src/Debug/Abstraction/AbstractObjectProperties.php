@@ -40,7 +40,7 @@ class AbstractObjectProperties extends AbstractObjectSub
     );
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function onAbstractEnd(Abstraction $abs)
     {

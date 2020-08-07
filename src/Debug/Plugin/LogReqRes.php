@@ -32,7 +32,7 @@ class LogReqRes implements SubscriberInterface
     private $debug;
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getSubscriptions()
     {

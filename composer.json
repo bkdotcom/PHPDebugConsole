@@ -54,8 +54,14 @@
 	"scripts": {
 		"post-update-cmd": [
 			"bdk\\Debug\\ComposerScripts::postUpdate"
+		],
+		"update-phpcs": [
+			"bdk\\Debug\\ComposerScripts::updatePhpCsXml"
 		]
 	},
+    "scripts-descriptions": {
+        "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml"
+    },
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",
 		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",

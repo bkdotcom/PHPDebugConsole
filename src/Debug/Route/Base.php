@@ -54,7 +54,7 @@ abstract class Base extends Component implements RouteInterface
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getSubscriptions()
     {

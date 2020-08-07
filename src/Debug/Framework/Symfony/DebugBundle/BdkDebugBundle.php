@@ -1,37 +1,23 @@
 <?php
 
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2020 Brad Kent
+ * @version   v3.0
+ */
+
 namespace bdk\Debug\Framework\Symfony\DebugBundle;
 
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
- *
+ * PHPDebugConsole bundle
  */
 class BdkDebugBundle extends Bundle
 {
 
-    /**
-     * {@inheritdoc}
-     */
-    public function boot()
-    {
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function build(ContainerBuilder $container)
-    {
-        return parent::build($container);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setContainer(ContainerInterface $container = null)
-    {
-        parent::setContainer($container);
-    }
 }

@@ -43,7 +43,7 @@ class Stream extends Base
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getSubscriptions()
     {

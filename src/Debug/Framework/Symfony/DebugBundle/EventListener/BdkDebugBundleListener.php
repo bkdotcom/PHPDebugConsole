@@ -1,12 +1,21 @@
 <?php
 
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2020 Brad Kent
+ * @version   v3.0
+ */
+
 namespace bdk\Debug\Framework\Symfony\DebugBundle\EventListener;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Collector\DoctrineLogger;
 use bdk\Debug\LogEntry;
-use bdk\PubSub\Event;
 use Doctrine\Bundle\DoctrineBundle\Registry as DoctrineRegistry;
 use Psr\Log\LogLevel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -43,7 +52,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
     }
 
     /**
-     * {@ineritdoc}
+     * {@inheritDoc}
      */
     public static function getSubscribedEvents(): array
     {
@@ -190,6 +199,8 @@ class BdkDebugBundleListener implements EventSubscriberInterface
      * @param Request  $request  Request instance
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function injectDebug(Response $response, Request $request)
     {

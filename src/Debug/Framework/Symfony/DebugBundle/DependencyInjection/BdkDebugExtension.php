@@ -16,12 +16,13 @@ use bdk\Debug;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 /**
  * {@inheritDoc}
  */
-class BdkDebugExtension extends Extension
+class BdkDebugExtension extends Extension implements PrependExtensionInterface
 {
 
     /**
@@ -38,5 +39,33 @@ class BdkDebugExtension extends Extension
             Config will get passed to constructor (or factory) defined in config
         */
         $definition->setArgument(0, $configs[0]);
+    }
+
+    /**
+     * "Prepend" / modify other extension config
+     *
+     * @param ContainerBuilder $container ContainerBuilder instance
+     *
+     * @return void
+     */
+    public function prepend(ContainerBuilder $container)
+    {
+        $kernelDebug = $container->getParameter('kernel.debug');
+        if ($kernelDebug) {
+            $container->prependExtensionConfig('framework', array(
+                'php_errors' => array(
+                    'throw' => false,
+                ),
+            ));
+        }
+
+        $container->prependExtensionConfig('monolog', array(
+            'handlers' => array(
+                'phpDebugConsole' => array(
+                    'type' => 'service',
+                    'id' => 'monologHandler',
+                ),
+            ),
+        ));
     }
 }

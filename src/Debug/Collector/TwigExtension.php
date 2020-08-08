@@ -57,7 +57,11 @@ class TwigExtension extends ProfilerExtension
     public function enter(Profile $profile)
     {
         parent::enter($profile);
-        $this->debug->group('Twig: ' . $profile->getType(), $profile->getName(), $this->debug->meta('ungroup'));
+        $this->debug->groupCollapsed(
+            'Twig: ' . $profile->getType(),
+            $profile->getName(),
+            $this->debug->meta('ungroup')
+        );
     }
 
     /**

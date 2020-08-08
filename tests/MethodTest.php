@@ -1237,6 +1237,22 @@ class MethodTest extends DebugTestFramework
                 console.log("after group");',
         ));
 
+        /*
+            nested ungroups
+        */
+        $this->debug->setData('log', array());
+        $this->debug->log('before group');
+        $this->debug->group('ungroup me!', $this->debug->meta('ungroup'));
+        $this->debug->group('inner group', $this->debug->meta('ungroup'));
+        $this->debug->log('inner most log entry');
+        $this->debug->groupEnd();
+        $this->debug->groupEnd();
+        $this->debug->log('after group');
+        $this->outputTest(array(
+            'script' => 'console.log("before group");
+                console.log("inner most log entry");
+                console.log("after group");',
+        ));
     }
 
     public function testGroupNoArgs()

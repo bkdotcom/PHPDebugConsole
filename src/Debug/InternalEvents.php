@@ -542,8 +542,15 @@ class InternalEvents implements SubscriberInterface
      */
     private function onOutputGroups()
     {
-        $groupStack = array();
-        $groupStackCount = 0;
+        $groupStack = array(
+            array(
+                // dummy / root group
+                //  eliminates need to test if entry has parent group
+                'childCount' => 0,
+                'groupCount' => 0,
+            )
+        );
+        $groupStackCount = 1;
         $reindex = false;
         for ($i = 0, $count = \count($this->log); $i < $count; $i++) {
             $logEntry = $this->log[$i];
@@ -557,20 +564,20 @@ class InternalEvents implements SubscriberInterface
                     'meta' => $logEntry['meta'],
                     'parent' => null,
                 );
-                if ($groupStackCount > 0) {
-                    $groupStack[$groupStackCount - 1]['childCount']++;
-                    $groupStack[$groupStackCount - 1]['groupCount']++;
-                    $groupStack[$groupStackCount]['parent'] = &$groupStack[$groupStackCount - 1];
-                }
+                $groupStack[$groupStackCount - 1]['childCount']++;
+                $groupStack[$groupStackCount - 1]['groupCount']++;
+                $groupStack[$groupStackCount]['parent'] = &$groupStack[$groupStackCount - 1];
                 $groupStackCount++;
-            } elseif ($method === 'groupEnd') {
+                continue;
+            }
+            if ($method === 'groupEnd') {
                 $group = \array_pop($groupStack);
                 $group['iEnd'] = $i;
                 $groupStackCount--;
                 $reindex = $this->onOutputGroup($group) || $reindex;
-            } elseif ($groupStackCount > 0) {
-                $groupStack[$groupStackCount - 1]['childCount']++;
+                continue;
             }
+            $groupStack[$groupStackCount - 1]['childCount']++;
         }
         if ($reindex) {
             $this->log = \array_values($this->log);
@@ -590,10 +597,8 @@ class InternalEvents implements SubscriberInterface
             if ($group['childCount'] === 0) {
                 unset($this->log[$group['i']]);     // remove open entry
                 unset($this->log[$group['iEnd']]);  // remove end entry
-                if ($group['parent']) {
-                    $group['parent']['childCount']--;
-                    $group['parent']['groupCount']--;
-                }
+                $group['parent']['childCount']--;
+                $group['parent']['groupCount']--;
                 return true;
             }
         }
@@ -601,14 +606,12 @@ class InternalEvents implements SubscriberInterface
             if ($group['childCount'] === 0) {
                 $this->log[$group['i']]['method'] = 'log';
                 unset($this->log[$group['iEnd']]);  // remove end entry
+                $group['parent']['groupCount']--;
                 return true;
             } elseif ($group['childCount'] === 1 && $group['groupCount'] === 0) {
                 unset($this->log[$group['i']]);     // remove open entry
                 unset($this->log[$group['iEnd']]);  // remove end entry
-                if ($group['parent']) {
-                    $group['parent']['childCount']--;
-                    $group['parent']['groupCount']--;
-                }
+                $group['parent']['groupCount']--;
                 return true;
             }
         }

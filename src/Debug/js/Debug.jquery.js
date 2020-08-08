@@ -1483,8 +1483,8 @@
 
   function addErrorIcons () {
     var counts = {
-      error: $root$3.find('.m_error[data-channel=phpError]').length,
-      warn: $root$3.find('.m_warn[data-channel=phpError]').length
+      error: $root$3.find('.m_error[data-channel="general.phpError"]').length,
+      warn: $root$3.find('.m_warn[data-channel="general.phpError"]').length
     };
     var $icon;
     var $icons = $('<span>', { class: 'debug-error-counts' });

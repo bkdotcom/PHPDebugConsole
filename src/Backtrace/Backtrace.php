@@ -28,8 +28,8 @@ class Backtrace
      * @var array
      */
     private static $internalClasses = array(
-        'classes' => array(),
-        'regex' => '/^\b$/',  // start with a regex that will never match
+        'classes' => array(__CLASS__),
+        'regex' => '/^bdk\\\Backtrace\b$/',
     );
 
     /**
@@ -114,7 +114,7 @@ class Backtrace
     }
 
     /**
-     * add a new namespace, classname or filepath to be used to determine when to
+     * add a new namespace or classname to be used to determine when to
      * stop iterrating over the backtrace when determining calling info
      *
      * @param array|string $class classname(s)
@@ -456,6 +456,10 @@ class Backtrace
                 $function = isset($frame['function'])
                     ? $frame['function']
                     : null;
+                if (!isset($frame['type']) && isset($frame['class'])) {
+                    // XDebug pre 2.1.1 doesn't set the call type key http://bugs.xdebug.org/view.php?id=695
+                    $stack[$i]['type'] = 'static';
+                }
                 if ($function === '__get') {
                     // wrong file!
                     $prev = $stack[$i - 1];

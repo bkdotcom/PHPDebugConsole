@@ -74,6 +74,7 @@ class Error extends Event
      */
     public function __construct(ErrorHandler $errHandler, $errType, $errMsg, $file, $line, $vars = array())
     {
+        unset($vars['GLOBALS']);
         $this->subject = $errHandler;
         $this->values = array(
             'type'      => $errType,                    // int
@@ -83,13 +84,14 @@ class Error extends Event
             'file'      => $file,
             'line'      => $line,
             'vars'      => $vars,
-            'continueToNormal' => false,    // aka, let PHP do its thing (log error)
+            'continueToNormal' => null, // aka, let PHP do its thing (log error / exit if E_USER_ERROR)
             'continueToPrevHandler' => $errHandler->getCfg('continueToPrevHandler'),
             'exception' => $errHandler->get('uncaughtException'),  // non-null if error is uncaught-exception
             'hash'          => null,
             'isFirstOccur'  => true,
             'isHtml'        => false,
             'isSuppressed'  => false,
+            'throw'         => ($errType & $errHandler->getCfg('errorThrow')) === $errType,
         );
         $hash = self::errorHash();
         $prevOccurance = $errHandler->get('error', $hash);
@@ -97,15 +99,15 @@ class Error extends Event
             'hash' => $hash,
             'isHtml' => $this->isHtml(),
             'isFirstOccur' => !$prevOccurance,
-            'isSuppressed' => $this->isSuppressed($prevOccurance),
+            'isSuppressed' => $this->isSuppressed($errType, $prevOccurance),
         ));
         $this->values = \array_merge($this->values, array(
-            'continueToNormal' => $this->values['isSuppressed'] === false && !$prevOccurance,
+            'continueToNormal' => $this->setContinueToNormal($errType, $this->values['isSuppressed'] === false && !$prevOccurance),
             'message' => $this->values['isHtml']
                 ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
                 : $this->values['message'],
         ));
-        if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && !$this->values['exception']) {
+        if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && $this->values['exception'] === null) {
             // will return empty unless xdebug extension installed/enabled
             Backtrace::addInternalClass(array(
                 'bdk\\ErrorHandler',
@@ -118,6 +120,31 @@ class Error extends Event
             $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file','line')));
             $this->values = \array_merge($this->values, $errorCallerVals);
         }
+    }
+
+    /**
+     * Return as ErrorException
+     *
+     * If error is an uncaught exception, the original Exception will be returned
+     *
+     * @return Exception|ErrorException
+     */
+    public function asException()
+    {
+        if ($this->values['exception']) {
+            return $this->values['exception'];
+        }
+        $exception = new \ErrorException(
+            $this->values['message'],
+            0,
+            $this->values['type'],
+            $this->values['file'],
+            $this->values['line']
+        );
+        $traceReflector = new \ReflectionProperty('Exception', 'trace');
+        $traceReflector->setAccessible(true);
+        $traceReflector->setValue($exception, $this->getTrace());
+        return $exception;
     }
 
     /**
@@ -267,15 +294,47 @@ class Error extends Event
     /**
      * Get initial `isSuppressed` value
      *
+     * @param int       $errType       The level of the error
      * @param self|null $prevOccurance previous ccurance of current error
      *
      * @return bool
      */
-    private function isSuppressed(self $prevOccurance = null)
+    private function isSuppressed($errType, self $prevOccurance = null)
     {
-        // if any instance of this error was not supprssed, reflect that
-        return $prevOccurance && !$prevOccurance['isSuppressed']
-            ? false
-            : \error_reporting() === 0;
+        if ($prevOccurance && !$prevOccurance['isSuppressed']) {
+            // if any instance of this error was not supprssed, reflect that
+            return false;
+        }
+        if (($this->subject->getCfg('suppressNever') & $errType) === $errType) {
+            // never suppress tyis type
+            return false;
+        }
+        return \error_reporting() === 0;
+    }
+
+    /**
+     * Set continueToNormal flag
+     *
+     * @param int  $errType          the level of the error
+     * @param bool $continueToNormal if not suppressed and no prev occurance
+     *
+     * @return bool
+     */
+    private function setContinueToNormal($errType, $continueToNormal)
+    {
+        if ($continueToNormal === false || \in_array($errType, array(E_USER_ERROR, E_RECOVERABLE_ERROR)) === false) {
+            return $continueToNormal;
+        }
+        switch ($this->subject->getCfg('onEUserError')) {
+            case 'continue':
+                return false;
+            case 'log':
+                return false;
+            case 'normal':
+                // force continueToNormal
+                // for a userError, php will log error and script will halt
+                return true;
+        }
+        return $continueToNormal;
     }
 }

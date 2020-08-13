@@ -33,6 +33,7 @@ bdk\DebugTest\Test
     (private excluded) propNoDebug
     (private) propPrivate = "redefined in Test (private) (alternate value via __debugInfo)"
     (🔒 private) testBasePrivate = "defined in TestBase (private)"
+    (private) toStrThrow = 0
     (✨ magic excluded) magicProp
     (debug) debugValue = "This property is debug only"
   Methods:
@@ -63,6 +64,7 @@ EOD;
         \e[38;5;250m(private excluded)\e[0m \e[38;5;83mpropNoDebug\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
         \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83mtoStrThrow\e[0m \e[38;5;130m=\e[0m \e[96m0\e[0m
         \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
         \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
     \e[4mMethods:\e[24m
@@ -162,6 +164,7 @@ EOD;
                             '<dd class="debuginfo-excluded property private"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value property private"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
                             '<dd class="private-ancestor property private"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</i>)</span> <span class="t_identifier">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                            '<dd class="property private"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
                             '<dd class="debuginfo-excluded property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
                             '<dt class="methods">methods</dt>'
@@ -171,7 +174,7 @@ EOD;
                         $this->assertContains(implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="magic info">This object has a <code>__call</code> method</dd>',
-                            '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">)</span></dd>',
+                            '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span>, <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don\'t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">array</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
@@ -194,7 +197,7 @@ EOD;
                             '</dl>',
                         )), $str);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug NOT INSPECTED","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
+                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug NOT INSPECTED","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toStrThrow":0,"(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
                     'streamAnsi' => $ansi,
                     'text' => $text,
                     'wamp' => array(

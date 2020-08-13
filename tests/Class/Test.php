@@ -21,10 +21,10 @@ class TestBase
     const INHERITED = 'defined in TestBase';
     const MY_CONSTANT = 'defined in TestBase';
 
+    public $propPublic = 'defined in TestBase (public)';
     private $testBasePrivate = 'defined in TestBase (private)';
     private $propPrivate = 'defined in TestBase (private)';
     protected $propProtected = 'defined only in TestBase (protected)';
-    public $propPublic = 'defined in TestBase (public)';
     protected $magicReadProp = 'not null';
 
     /**
@@ -57,14 +57,14 @@ class TestBase
     public function testBasePublic()
     {
         \bdk\Debug::_group();
-        \bdk\Debug::_log('this group\'s label should be', get_class($this).'->'.__FUNCTION__);
+        \bdk\Debug::_log('this group\'s label should be', get_class($this) . '->' . __FUNCTION__);
         \bdk\Debug::_groupEnd();
     }
 
     public static function testBaseStatic()
     {
         \bdk\Debug::_group();
-        \bdk\Debug::_log('this group\'s label will be '.__CLASS__.'::'.__FUNCTION__.' regardless if called from inherited class :(');
+        \bdk\Debug::_log('this group\'s label will be ' . __CLASS__ . '::' . __FUNCTION__ . ' regardless if called from inherited class :(');
         \bdk\Debug::_groupEnd();
     }
 }
@@ -80,7 +80,20 @@ class Test extends TestBase
 
     const MY_CONSTANT = 'redefined in Test';
 
+    public $someArray = array(
+        'int' => 123,
+        'numeric' => '123',
+        'string' => 'cheese',
+        'bool' => true,
+        'obj' => null,
+    );
+
     public static $propStatic = 'I\'m Static';
+
+    /**
+     * Public Property.
+     */
+    public $propPublic = 'redefined in Test (public)';
 
     /**
      * Private Property.
@@ -91,27 +104,20 @@ class Test extends TestBase
 
     // protected $propProtected = 'redefined in Test (protected)';
 
-    /**
-     * Public Property.
-     */
-    public $propPublic = 'redefined in Test (public)';
-
     private $propNoDebug = 'not included in __debugInfo';
 
-    public $someArray = array(
-        'int' => 123,
-        'numeric' => '123',
-        'string' => 'cheese',
-        'bool' => true,
-        'obj' => null,
-    );
+    private $toStrThrow;
 
     /**
      * Constructor
+     *
+     * @param string $toString   value __toString will return;
+     * @param int    $toStrThrow 0: don't, 1: throw, 2: throw & catch
      */
-    public function __construct($toString = 'abracadabra')
+    public function __construct($toString = 'abracadabra', $toStrThrow = 0)
     {
         $this->debug = \bdk\Debug::getInstance();
+        $this->toStrThrow = $toStrThrow;
         $this->toString = $toString;
         $this->instance = $this;
     }
@@ -123,8 +129,8 @@ class Test extends TestBase
      */
     public function __debugInfo()
     {
-        $className = get_class($this);
-        $return = array_merge(get_class_vars($className), get_object_vars($this));
+        $className = \get_class($this);
+        $return = \array_merge(\get_class_vars($className), \get_object_vars($this));
         $return['propPrivate'] .= ' (alternate value via __debugInfo)';
         $return['debugValue'] = 'This property is debug only';
         unset($return['propNoDebug']);
@@ -138,6 +144,16 @@ class Test extends TestBase
      */
     public function __toString()
     {
+        if ($this->toStrThrow === 1) {
+            throw new \Exception('thown exception');
+        }
+        if ($this->toStrThrow === 2) {
+            try {
+                throw new \Exception('[exception trigger_error]');
+            } catch (\Exception $e) {
+                return \trigger_error($e, E_USER_ERROR);
+            }
+        }
         return $this->toString;
     }
 

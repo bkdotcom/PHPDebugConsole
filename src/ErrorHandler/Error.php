@@ -77,8 +77,8 @@ class Error extends Event
         unset($vars['GLOBALS']);
         $this->subject = $errHandler;
         $this->values = array(
-            'type'      => $errType,                    // int
-            'typeStr'   => self::$errTypes[$errType],   // friendly string version of 'type'
+            'type'      => $errType,                    // int: aka severity / level
+            'typeStr'   => self::$errTypes[$errType],   // string: friendly version of 'type'
             'category'  => self::getCategory($errType),
             'message'   => $errMsg,
             'file'      => $file,
@@ -87,11 +87,11 @@ class Error extends Event
             'continueToNormal' => null, // aka, let PHP do its thing (log error / exit if E_USER_ERROR)
             'continueToPrevHandler' => $errHandler->getCfg('continueToPrevHandler'),
             'exception' => $errHandler->get('uncaughtException'),  // non-null if error is uncaught-exception
-            'hash'          => null,
-            'isFirstOccur'  => true,
-            'isHtml'        => false,
-            'isSuppressed'  => false,
-            'throw'         => ($errType & $errHandler->getCfg('errorThrow')) === $errType,
+            'hash'          => null,    // populated below
+            'isFirstOccur'  => true,    // populated below
+            'isHtml'        => false,   // populated below
+            'isSuppressed'  => false,   // populated below
+            'throw'         => false,   // populated below (fatal errors never thrown)
         );
         $hash = self::errorHash();
         $prevOccurance = $errHandler->get('error', $hash);
@@ -100,6 +100,7 @@ class Error extends Event
             'isHtml' => $this->isHtml(),
             'isFirstOccur' => !$prevOccurance,
             'isSuppressed' => $this->isSuppressed($errType, $prevOccurance),
+            'throw' => $this->isFatal() === false && ($errType & $errHandler->getCfg('errorThrow')) === $errType,
         ));
         $this->values = \array_merge($this->values, array(
             'continueToNormal' => $this->setContinueToNormal($errType, $this->values['isSuppressed'] === false && !$prevOccurance),
@@ -288,7 +289,7 @@ class Error extends Event
     {
         return \filter_var(\ini_get('html_errors'), FILTER_VALIDATE_BOOLEAN)
             && !\in_array($this->values['type'], static::$userErrors)
-            && !$this->subject->get('uncaughtException');
+            && !$this->values['exception'];
     }
 
     /**

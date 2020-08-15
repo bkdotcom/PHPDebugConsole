@@ -595,6 +595,7 @@ class ErrorHandler
 
     /**
      * Throw ErrorException if $error['throw'] === true
+     * Fatal or Suppressed errors will never be thrown
      *
      * @param Error $error error exception
      *
@@ -605,6 +606,9 @@ class ErrorHandler
     private function throwError(Error $error)
     {
         if ($error['isSuppressed']) {
+            return;
+        }
+        if ($error->isFatal()) {
             return;
         }
         if ($error['throw']) {
@@ -634,9 +638,9 @@ class ErrorHandler
             return;
         }
         if ($this->toStringException) {
-            $e = $this->toStringException;
+            $exception = $this->toStringException;
             $this->toStringException = null;
-            throw $e;
+            throw $exception;
         }
         if ($error['type'] !== E_USER_ERROR) {
             return;

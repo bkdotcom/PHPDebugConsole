@@ -29,7 +29,7 @@
 		"classmap": ["tests"]
 	},
 	"replace": {
-		"bdk/backtrace": "1.0",
+		"bdk/backtrace": "1.0.1",
 		"bdk/errorhandler": "3.0.1",
 		"bdk/pubsub": "2.3.2"
 	},

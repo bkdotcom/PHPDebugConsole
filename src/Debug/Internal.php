@@ -42,7 +42,7 @@ class Internal implements SubscriberInterface
      * @var array
      */
     private $cfg = array(
-        'collect' => false,
+        // 'collect' => false,
         'redactKeys' => array(),
         'redactReplace' => null,
     );
@@ -421,7 +421,11 @@ class Internal implements SubscriberInterface
         );
         $this->onConfig($cfgEvent);
         if ($cfgEvent['debug'] !== $cfgInit['debug']) {
-            // publish Debug::EVENT_CONFIG event so event listeners will get the change
+            /*
+                config changed via onConfig
+                publish Debug::EVENT_CONFIG event so event listeners will get the change
+            */
+            $cfgEvent['isInternalUpdate'] = true;
             $this->debug->eventManager->publish(
                 Debug::EVENT_CONFIG,
                 $cfgEvent
@@ -462,6 +466,9 @@ class Internal implements SubscriberInterface
         }
         if (empty($cfg['debug'])) {
             // no debug config values have changed
+            return;
+        }
+        if ($event['isInternalUpdate']) {
             return;
         }
         $cfg = $cfg['debug'];

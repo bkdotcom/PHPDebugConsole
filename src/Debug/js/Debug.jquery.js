@@ -1273,7 +1273,8 @@
     });
 
     addTest(function ($node) {
-      var method = $node[0].className.match(/\bm_(\S+)\b/)[1];
+      var matches = $node[0].className.match(/\bm_(\S+)\b/);
+      var method = matches ? matches[1] : null;
       if (!options.sidebar) {
         return true
       }

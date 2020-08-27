@@ -162,21 +162,24 @@ class LogEnv implements SubscriberInterface
         $returnStatus = 0;
         $matches = array();
         \exec('git branch ' . $redirect, $outputLines, $returnStatus);
-        if ($returnStatus === 0) {
-            $lines = \implode("\n", $outputLines);
-            \preg_match('#^\* (.+)$#m', $lines, $matches);
-            $branch = $matches[1];
-            $this->debug->groupSummary(1);
-            $this->debug->log(
-                // '<i class="fa fa-github fa-lg" aria-hidden="true"></i> %cgit branch: %c%s',
-                '%cgit branch: %c%s',
-                'font-weight:bold;',
-                'font-size:1.5em; background-color:#DDD; padding:0 .3em;',
-                $branch,
-                $this->debug->meta('icon', 'fa fa-github fa-lg')
-            );
-            $this->debug->groupEnd();
+        if ($returnStatus !== 0) {
+            return;
         }
+        $allLines = \implode("\n", $outputLines);
+        \preg_match('#^\* (.+)$#m', $allLines, $matches);
+        if (!$matches) {
+            return;
+        }
+        $branch = $matches[1];
+        $this->debug->groupSummary(1);
+        $this->debug->log(
+            '%cgit branch: %c%s',
+            'font-weight:bold;',
+            'font-size:1.5em; background-color:#DDD; padding:0 .3em;',
+            $branch,
+            $this->debug->meta('icon', 'fa fa-github fa-lg')
+        );
+        $this->debug->groupEnd();
     }
 
     /**

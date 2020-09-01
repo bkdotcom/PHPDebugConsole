@@ -3,7 +3,7 @@
 .debug { font-size: 13px; /** Quite unusual, but experienced site css that modified div css...  reset */ }
 .debug { position: relative; clear: both; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: normal; text-align: left; text-shadow: none; color: #111; }
 .debug * { font-size: inherit; line-height: normal; text-indent: 0; color: inherit; margin: 0; }
-.debug *:not(.fa) { font-family: inherit; }
+.debug *:not(.fa, .fas, .far, .fal, .fab) { font-family: inherit; }
 .debug a { text-decoration: none; color: #00e; }
 .debug a:visited { color: #551a8b; }
 .debug a:focus, .debug a:hover { text-decoration: underline; }

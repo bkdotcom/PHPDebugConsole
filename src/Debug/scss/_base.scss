@@ -15,7 +15,7 @@
   text-indent: 0;
   color: inherit;
   margin: 0;
-  &:not(.fa) {
+  &:not(.fa, .fas, .far, .fal, .fab) {
     font-family: inherit;
   }
 }

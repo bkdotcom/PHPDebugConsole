@@ -64,7 +64,17 @@ var config = new Config({
   persistDrawer: false,
   linkFiles: false,
   linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
-  useLocalStorage: true
+  useLocalStorage: true,
+  cssFontAwesome5: '' +
+    '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
+    '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
+    '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
+    '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
+    '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
+    '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
+    '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
+    '.debug .fa-warning:before { content:"\\f071"; }' +
+    '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }'
 }, 'phpDebugConsole')
 
 if (typeof $ === 'undefined') {
@@ -79,19 +89,16 @@ loadDeps([
     src: config.get('fontAwesomeCss'),
     type: 'stylesheet',
     check: function () {
-      var span = document.createElement('span')
-      var haveFa = false
-      var fontFamily = null
-      function css (element, property) {
-        return window.getComputedStyle(element, null).getPropertyValue(property)
-      }
-      span.className = 'fa'
-      span.style.display = 'none'
-      document.body.appendChild(span)
-      fontFamily = css(span, 'font-family')
-      haveFa = fontFamily === 'FontAwesome' || fontFamily.indexOf('Font Awesome') > -1
-      document.body.removeChild(span)
+      var fontFamily = getFontFamily('fa')
+      var haveFa = fontFamily === 'FontAwesome' || fontFamily.indexOf('Font Awesome') > -1
       return haveFa
+    },
+    onLoaded: function () {
+      var fontFamily = getFontFamily('fa')
+      var matches = fontFamily.match(/Font\s?Awesome.+(\d+)/)
+      if (matches && matches[1] >= 5) {
+        addStyle(config.get('cssFontAwesome5'))
+      }
     }
   },
   /*
@@ -199,6 +206,36 @@ $(function () {
     // $(this).find('.m_alert, .debug-log-summary, .debug-log').debugEnhance()
   })
 })
+
+/**
+ * Add <style> tag to head of document
+ */
+function addStyle (css) {
+  var head = document.head || document.getElementsByTagName('head')[0]
+  var style = document.createElement('style')
+  style.type = 'text/css';
+  head.appendChild(style);
+  if (style.styleSheet){
+    // This is required for IE8 and below.
+    style.styleSheet.cssText = css;
+    return
+  }
+  style.appendChild(document.createTextNode(css));
+}
+
+/**
+ * For given css class, what is its font-family
+ */
+function getFontFamily (cssClass) {
+    var span = document.createElement('span')
+    var fontFamily = null
+    span.className = 'fa'
+    span.style.display = 'none'
+    document.body.appendChild(span)
+    fontFamily = window.getComputedStyle(span, null).getPropertyValue('font-family')
+    document.body.removeChild(span)
+    return fontFamily
+}
 
 function getDebugKey () {
   var key = null

@@ -290,7 +290,7 @@ class StatementInfo
             $params[$name]['type'] = $type; // integer value
             if (isset(self::$constants[$type])) {
                 $params[$name]['type'] = new Abstraction(array(
-                    'type' => 'const',
+                    'type' => Abstracter::TYPE_CONST,
                     'name' => self::$constants[$type],
                     'value' => $type,
                 ));

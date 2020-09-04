@@ -39,6 +39,7 @@ class Abstracter extends Component
     const TYPE_OBJECT = 'object';
     const TYPE_RESOURCE = 'resource';
     const TYPE_STRING = 'string';
+    const TYPE_CONST = 'const'; // non-native type (Abstraction: we store name and value)
     const TYPE_UNDEFINED = 'undefined'; // non-native type
     const TYPE_NOT_INSPECTED = 'notInspected'; // non-native type
     const TYPE_RECURSION = 'recursion'; // non-native type

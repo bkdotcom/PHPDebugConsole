@@ -529,10 +529,13 @@
       }
       if ($string.data('file')) {
         // filepath specified in data attr
-        matches = [null, $string.data('file'), $string.data('line') || 1];
-      } else if (dataFoundFiles.indexOf(text) === 0 || $string.is('.file')) {
+        matches = typeof $string.data('file') === 'boolean'
+          ? [null, text, 1]
+          : [null, $string.data('file'), $string.data('line') || 1];
+      } else if (dataFoundFiles.indexOf(text) === 0) {
         matches = [null, text, 1];
       } else if ($string.parent('.property.debug-value').parent().parent().find('> .classname').text().match(/^Closure\b/)) {
+        // Closure object has two .property.debug-value for file & line
         matches = {};
         $string.parent().parent().find('> .property.debug-value').each(function () {
           var prop = $(this).find('> .t_identifier')[0].innerText;
@@ -2088,11 +2091,18 @@
     useLocalStorage: true,
     cssFontAwesome5: '' +
       '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
+      '.debug .fa-calendar:before { content:"\\f073"; }' +
       '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
+      '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
       '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
+      '.debug .fa-external-link:before { content:"\\f35d"; }' +
+      '.debug .fa-exchange:before { content:"\\f362"; }' +
+      '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
       '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
       '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
+      '.debug .fa-pie-chart:before { content:"\\f200"; }' +
       '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
+      '.debug .fa-shield:before { content:"\\f3ed"; }' +
       '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
       '.debug .fa-warning:before { content:"\\f071"; }' +
       '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }'
@@ -2236,7 +2246,7 @@
     var style = document.createElement('style');
     style.type = 'text/css';
     head.appendChild(style);
-    if (style.styleSheet){
+    if (style.styleSheet) {
       // This is required for IE8 and below.
       style.styleSheet.cssText = css;
       return
@@ -2248,14 +2258,14 @@
    * For given css class, what is its font-family
    */
   function getFontFamily (cssClass) {
-      var span = document.createElement('span');
-      var fontFamily = null;
-      span.className = 'fa';
-      span.style.display = 'none';
-      document.body.appendChild(span);
-      fontFamily = window.getComputedStyle(span, null).getPropertyValue('font-family');
-      document.body.removeChild(span);
-      return fontFamily
+    var span = document.createElement('span');
+    var fontFamily = null;
+    span.className = 'fa';
+    span.style.display = 'none';
+    document.body.appendChild(span);
+    fontFamily = window.getComputedStyle(span, null).getPropertyValue('font-family');
+    document.body.removeChild(span);
+    return fontFamily
   }
 
   function getDebugKey () {

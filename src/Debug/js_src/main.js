@@ -67,11 +67,18 @@ var config = new Config({
   useLocalStorage: true,
   cssFontAwesome5: '' +
     '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
+    '.debug .fa-calendar:before { content:"\\f073"; }' +
     '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
+    '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
     '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
+    '.debug .fa-external-link:before { content:"\\f35d"; }' +
+    '.debug .fa-exchange:before { content:"\\f362"; }' +
+    '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
     '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
     '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
+    '.debug .fa-pie-chart:before { content:"\\f200"; }' +
     '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
+    '.debug .fa-shield:before { content:"\\f3ed"; }' +
     '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
     '.debug .fa-warning:before { content:"\\f071"; }' +
     '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }'
@@ -213,28 +220,28 @@ $(function () {
 function addStyle (css) {
   var head = document.head || document.getElementsByTagName('head')[0]
   var style = document.createElement('style')
-  style.type = 'text/css';
-  head.appendChild(style);
-  if (style.styleSheet){
+  style.type = 'text/css'
+  head.appendChild(style)
+  if (style.styleSheet) {
     // This is required for IE8 and below.
-    style.styleSheet.cssText = css;
+    style.styleSheet.cssText = css
     return
   }
-  style.appendChild(document.createTextNode(css));
+  style.appendChild(document.createTextNode(css))
 }
 
 /**
  * For given css class, what is its font-family
  */
 function getFontFamily (cssClass) {
-    var span = document.createElement('span')
-    var fontFamily = null
-    span.className = 'fa'
-    span.style.display = 'none'
-    document.body.appendChild(span)
-    fontFamily = window.getComputedStyle(span, null).getPropertyValue('font-family')
-    document.body.removeChild(span)
-    return fontFamily
+  var span = document.createElement('span')
+  var fontFamily = null
+  span.className = 'fa'
+  span.style.display = 'none'
+  document.body.appendChild(span)
+  fontFamily = window.getComputedStyle(span, null).getPropertyValue('font-family')
+  document.body.removeChild(span)
+  return fontFamily
 }
 
 function getDebugKey () {

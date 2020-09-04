@@ -477,7 +477,7 @@ class Html extends Base
             }
         }
         if ($this->detectFiles && $this->debug->utility->isFile($val)) {
-            $this->argAttribs['class'][] = 'file';
+            $this->argAttribs['data-file'] = true;
         }
         $val = $this->debug->utf8->dump($val, array(
             'sanitizeNonBinary' => $this->argStringOpts['sanitize'],

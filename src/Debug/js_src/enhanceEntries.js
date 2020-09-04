@@ -263,10 +263,13 @@ function createFileLinks ($entry, $strings, remove) {
     }
     if ($string.data('file')) {
       // filepath specified in data attr
-      matches = [null, $string.data('file'), $string.data('line') || 1]
-    } else if (dataFoundFiles.indexOf(text) === 0 || $string.is('.file')) {
+      matches = typeof $string.data('file') === 'boolean'
+        ? [null, text, 1]
+        : [null, $string.data('file'), $string.data('line') || 1]
+    } else if (dataFoundFiles.indexOf(text) === 0) {
       matches = [null, text, 1]
     } else if ($string.parent('.property.debug-value').parent().parent().find('> .classname').text().match(/^Closure\b/)) {
+      // Closure object has two .property.debug-value for file & line
       matches = {}
       $string.parent().parent().find('> .property.debug-value').each(function () {
         var prop = $(this).find('> .t_identifier')[0].innerText

@@ -254,9 +254,9 @@ class StatementInfo
         $sql = $this->sql;
         foreach ($this->params as $k => $v) {
             $v = $quoteLeft . $v . $quoteRight;
-            $p = \strpos($sql, '?') ?: 0;
+            $pos = \strpos($sql, '?') ?: 0;
             $sql = \is_numeric($k)
-                ? \substr($sql, 0, $p) . $v . \substr($sql, $p + 1)
+                ? \substr($sql, 0, $pos) . $v . \substr($sql, $pos + 1)
                 : \preg_replace('/' . $k . '\b/', $v, $sql);
         }
         return $sql;

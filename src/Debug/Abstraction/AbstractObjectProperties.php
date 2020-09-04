@@ -40,6 +40,18 @@ class AbstractObjectProperties extends AbstractObjectSub
     );
 
     /**
+     * Return property info array
+     *
+     * @param array $values values to apply
+     *
+     * @return array
+     */
+    public static function buildPropInfo($values = array())
+    {
+        return \array_merge(static::$basePropInfo, $values);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function onAbstractEnd(Abstraction $abs)
@@ -51,13 +63,13 @@ class AbstractObjectProperties extends AbstractObjectSub
         $this->addProperties($abs);
         if ($abs['className'] === 'Closure') {
             $ref = new \ReflectionFunction($abs->getSubject());
-            $abs['properties']['file'] = \array_merge(static::$basePropInfo, array(
+            $abs['properties']['file'] = static::buildPropInfo(array(
                 'type' => Abstracter::TYPE_STRING,
                 'value' => $ref->getFileName(),
                 'valueFrom' => 'debug',
                 'visibility' => 'debug',
             ));
-            $abs['properties']['line'] = \array_merge(static::$basePropInfo, array(
+            $abs['properties']['line'] = static::buildPropInfo(array(
                 'type' => Abstracter::TYPE_INT,
                 'value' => $ref->getStartLine(),
                 'valueFrom' => 'debug',
@@ -141,14 +153,11 @@ class AbstractObjectProperties extends AbstractObjectSub
             What remains in debugInfo are __debugInfo only values
         */
         foreach ($abs['debugInfo'] as $name => $value) {
-            $properties[$name] = \array_merge(
-                static::$basePropInfo,
-                array(
-                    'value' => $value,
-                    'valueFrom' => 'debugInfo',
-                    'visibility' => 'debug',    // indicates this "property" is exclusive to debugInfo
-                )
-            );
+            $properties[$name] = static::buildPropInfo(array(
+                'value' => $value,
+                'valueFrom' => 'debugInfo',
+                'visibility' => 'debug',    // indicates this "property" is exclusive to debugInfo
+            ));
         }
         $abs['properties'] = $properties;
         unset($abs['debugInfo']);
@@ -275,13 +284,12 @@ class AbstractObjectProperties extends AbstractObjectSub
                 // function array dereferencing = php 5.4
                 $type = $this->abstracter->getType($val)[0];
             }
-            $propInfo = \array_merge(static::$basePropInfo, array(
+            $abs['properties'][$propName] = static::buildPropInfo(array(
                 'type' => $type,
                 'value' => \is_object($val)
                     ? Abstracter::NOT_INSPECTED
                     : $val,
             ));
-            $abs['properties'][$propName] = $propInfo;
         }
     }
 
@@ -442,7 +450,7 @@ class AbstractObjectProperties extends AbstractObjectSub
             getDeclaringClass returns "LAST-declared/overriden"
         */
         $declaringClassName = $reflectionProperty->getDeclaringClass()->getName();
-        $propInfo = \array_merge(static::$basePropInfo, array(
+        $propInfo = static::buildPropInfo(array(
             'desc' => $phpDoc['desc'],
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName

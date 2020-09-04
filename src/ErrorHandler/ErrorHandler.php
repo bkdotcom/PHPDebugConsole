@@ -392,12 +392,12 @@ class ErrorHandler
             $backtrace = \version_compare(PHP_VERSION, '5.4.0', '>=')
                 ? \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3)
                 : \debug_backtrace(false);   // don't provide object
-            $i = isset($backtrace[$offset + 1])
+            $index = isset($backtrace[$offset + 1])
                 ? $offset + 1
                 : \count($backtrace) - 1;
-            $caller = isset($backtrace[$i]['file'])
-                ? $backtrace[$i]
-                : $backtrace[$i + 1]; // likely called via call_user_func.. need to go one more to get calling file & line
+            $caller = isset($backtrace[$index]['file'])
+                ? $backtrace[$index]
+                : $backtrace[$index + 1]; // likely called via call_user_func.. need to go one more to get calling file & line
             $caller = array(
                 'file' => $caller['file'],
                 'line' => $caller['line'],
@@ -449,13 +449,13 @@ class ErrorHandler
     private function anonymousCheck(Error $error)
     {
         $message = $error['message'];
-        if (\strpos($message, "class@anonymous\0") === false) {
+        if (\strpos($message, "@anonymous\0") === false) {
             return;
         }
-        $regex = '/class@anonymous\x00.*?\.php(?:0x?|:)[0-9a-fA-F]++/';
-        $error['message'] = \preg_replace_callback($regex, function ($matches) {
+        $regex = '/[a-zA-Z_\x7f-\xff][\\\\a-zA-Z0-9_\x7f-\xff]*+@anonymous\x00(.*?\.php)(?:0x?|:([0-9]++)\$)[0-9a-fA-F]++/';
+        $error['message'] = \preg_replace_callback($regex, static function ($matches) {
             return \class_exists($matches[0], false)
-                ? \get_parent_class($matches[0]) . '@anonymous'
+                ? (\get_parent_class($matches[0]) ?: \key(\class_implements($matches[0])) ?: 'class') . '@anonymous'
                 : $matches[0];
         }, $message);
     }

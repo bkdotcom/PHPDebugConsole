@@ -123,13 +123,13 @@ class HtmlTable
             : (array) $options['onBuildRow'];
         foreach ($rows as $k => $row) {
             // row may be array or Traversable
-            $tr = $this->buildRow($row, $keys, $k);
+            $html = $this->buildRow($row, $keys, $k);
             foreach ($options['onBuildRow'] as $callable) {
                 if (\is_callable($callable)) {
-                    $tr = $callable($tr, $row, $k);
+                    $html = $callable($html, $row, $k);
                 }
             }
-            $tBody .= $tr;
+            $tBody .= $html;
         }
         $tBody = \str_replace(' title=""', '', $tBody);
         if (!$this->tableInfo['haveObjRow']) {

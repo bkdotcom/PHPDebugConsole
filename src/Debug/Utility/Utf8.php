@@ -360,11 +360,11 @@ class Utf8
     private static function dumpBlockSpecial($str)
     {
         $strNew = '';
-        $i = 0;
+        $pos = 0;   // self::ordUtf8 will update
         $length = \strlen($str);
-        while ($i < $length) {
+        while ($pos < $length) {
             $char = '';
-            $ord = self::ordUtf8($str, $i, $char);
+            $ord = self::ordUtf8($str, $pos, $char);
             $ordHex = \dechex($ord);
             $ordHex = \str_pad($ordHex, 4, '0', STR_PAD_LEFT);
             if (self::$options['useHtml'] === false) {

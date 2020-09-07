@@ -1,7 +1,8 @@
 <?php
 
+namespace bdk\DebugTests;
+
 use bdk\Debug;
-use bdk\Debug\LogEntry;
 
 /**
  * PHPUnit tests for Debug Methods
@@ -67,16 +68,16 @@ class SubstitutionTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},['
-                    . '"callable: ' . __CLASS__ . '::' . __FUNCTION__ . '",'
+                    . \json_encode('callable: ' . __CLASS__ . '::' . __FUNCTION__) . ','
                     . '"Closure",'
                     . '"' . $datetime->format(\DateTime::ISO8601) . '"'
                     . ']]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">'
-                    . '<span class="t_callable"><span class="t_type">callable</span> <span class="classname">' . __CLASS__ . '</span><span class="t_operator">::</span><span class="t_identifier">' . __FUNCTION__ . '</span></span>'
+                    . '<span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">' . __NAMESPACE__ . '\</span>SubstitutionTest</span><span class="t_operator">::</span><span class="t_identifier">' . __FUNCTION__ . '</span></span>'
                     . ' <span class="classname">Closure</span>'
                     . ' ' . $datetime->format(\DateTime::ISO8601)
                     . '</span></li>',
-                'script' => 'console.log("%%s %%s %%s","callable: ' . __CLASS__ . '::' . __FUNCTION__ . '","Closure","' . $datetime->format(\DateTime::ISO8601) . '");',
+                'script' => 'console.log("%%s %%s %%s",' . \json_encode('callable: ' . __CLASS__ . '::' . __FUNCTION__) . ',"Closure","' . $datetime->format(\DateTime::ISO8601) . '");',
                 'text' => 'callable: ' . __CLASS__ . '::' . __FUNCTION__ . ' Closure ' . $datetime->format(\DateTime::ISO8601),
                 // 'wamp' => @todo
             )
@@ -85,10 +86,10 @@ class SubstitutionTest extends DebugTestFramework
 
     public function testTypesOther()
     {
-        $binary = base64_decode('j/v9wNrF5i1abMXFW/4vVw==');
+        $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==');
         $binaryStr = \trim(\chunk_split(\bin2hex($binary), 2, ' '));
-        $time = time();
-        $timeStr = date('Y-m-d H:i:s', $time);
+        $time = \time();
+        $timeStr = \date('Y-m-d H:i:s', $time);
         $this->doTestSubstitution(
             'log',
             array(
@@ -203,7 +204,7 @@ class SubstitutionTest extends DebugTestFramework
                     . '</span> = <span class="t_string">extra</span>'
                     . '</li>',
                 'script' => 'console.log('
-                    . trim(json_encode(array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), JSON_UNESCAPED_SLASHES), '[]')
+                    . \trim(\json_encode(\array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), JSON_UNESCAPED_SLASHES), '[]')
                 . ');',
                 'text' => '\\u{feff}sub 1 <b>boldy</b> <b>sub bold</b> = "extra"',
                 // 'wamp' => @todo,
@@ -235,7 +236,7 @@ class SubstitutionTest extends DebugTestFramework
                     ),
                 ),
                 'chromeLogger' => array(
-                    array_slice(array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1),
+                    \array_slice(\array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1),
                     null,
                     '',
                 ),
@@ -248,7 +249,7 @@ class SubstitutionTest extends DebugTestFramework
                     . '</span> = <span class="t_string">extra</span>'
                     . '</li>',
                 'script' => 'console.log('
-                    . trim(json_encode(array_slice(array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1), JSON_UNESCAPED_SLASHES), '[]')
+                    . \trim(\json_encode(\array_slice(\array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1), JSON_UNESCAPED_SLASHES), '[]')
                 . ');',
                 'text' => '\\u{feff}sub 1 <b>boldy</b> <b>sub bold</b> = "extra"',
                 // 'wamp' => @todo,
@@ -280,7 +281,7 @@ class SubstitutionTest extends DebugTestFramework
                     ),
                 ),
                 'chromeLogger' => array(
-                    array_slice(array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1),
+                    \array_slice(\array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1),
                     null,
                     '',
                 ),
@@ -293,7 +294,7 @@ class SubstitutionTest extends DebugTestFramework
                     . '</span> = <span class="t_string">extra</span>'
                     . '</li>',
                 'script' => 'console.log('
-                    . trim(json_encode(array_slice(array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1), JSON_UNESCAPED_SLASHES), '[]')
+                    . \trim(\json_encode(\array_slice(\array_replace($args, array('\\u{feff}%c%s%c <b>boldy</b> %s')), 0, -1), JSON_UNESCAPED_SLASHES), '[]')
                 . ');',
                 'text' => '\\u{feff}sub 1 <b>boldy</b> <b>sub bold</b> = "extra"',
                 // 'wamp' => @todo,
@@ -319,29 +320,29 @@ class SubstitutionTest extends DebugTestFramework
         foreach (array('error','info','log','warn') as $method) {
             // $this->stderr('method', $method);
             if ($method === 'assert') {
-                array_unshift($args, false);
-                array_unshift($argsSansMeta, false);
+                \array_unshift($args, false);
+                \array_unshift($argsSansMeta, false);
             }
             foreach ($tests as $name => $test) {
-                if (is_array($test)) {
+                if (\is_array($test)) {
                     $foundArgs = false;
                     foreach ($test as $i => $val) {
                         if ($val === '{{args}}') {
                             $foundArgs = true;
                             $test[$i] = $argsSansMeta;
                             if ($name === 'entry' && $method === 'assert') {
-                                array_shift($test[$i]);
+                                \array_shift($test[$i]);
                             }
                         }
                     }
                     if ($name === 'chromeLogger') {
                         if (!$foundArgs && $method === 'assert') {
-                            array_unshift($test[0], false);
+                            \array_unshift($test[0], false);
                         }
-                        $test[0] = array_map(function ($val) {
+                        $test[0] = \array_map(function ($val) {
                             return $this->debug->getDump('base')->dump($val);
                         }, $test[0]);
-                        $test[1] = in_array($method, array('error','warn'))
+                        $test[1] = \in_array($method, array('error','warn'))
                             ? $this->file . ': ' . $this->line
                             : null;
                         $test[2] = $method === 'log'
@@ -349,7 +350,7 @@ class SubstitutionTest extends DebugTestFramework
                             : $method;
                     } elseif ($name === 'entry') {
                         $test[0] = $method;
-                        if (in_array($method, array('error','warn'))) {
+                        if (\in_array($method, array('error','warn'))) {
                             $test[2]['detectFiles'] = true;
                             $test[2]['file'] = $this->file;
                             $test[2]['line'] = $this->line;
@@ -363,7 +364,7 @@ class SubstitutionTest extends DebugTestFramework
                             : 0;
                         $label = $argsSansMeta[$i];
                         $label = $this->debug->getDump('base')->dump($label);
-                        $label = strtr($label, $replace);
+                        $label = \strtr($label, $replace);
                         // $label = strtr($label, array('\\u', 'foo'));
                         // $test = str_replace('{{label}}', $label, $test);
                         $firephpMethods = array(
@@ -377,35 +378,35 @@ class SubstitutionTest extends DebugTestFramework
                             'Label' => $label,
                             'Type' => $firephpMethods[$method],
                         );
-                        if (in_array($method, array('error','warn'))) {
+                        if (\in_array($method, array('error','warn'))) {
                             $firemeta['File'] = $this->file;
                             $firemeta['Line'] = $this->line;
                         }
-                        ksort($firemeta);
-                        $test = str_replace('{{meta}}', json_encode($firemeta, JSON_UNESCAPED_SLASHES), $test);
+                        \ksort($firemeta);
+                        $test = \str_replace('{{meta}}', \json_encode($firemeta, JSON_UNESCAPED_SLASHES), $test);
                     } elseif ($name === 'html') {
                         $attribs = array(
                             'class' => 'm_' . $method,
                         );
-                        if (in_array($method, array('error','warn'))) {
+                        if (\in_array($method, array('error','warn'))) {
                             $attribs['data-detect-files'] = true;
                             $attribs['data-file'] = $this->file;
                             $attribs['data-line'] = $this->line;
                         }
-                        $test = str_replace(' class="m_log"', $this->debug->html->buildAttribString($attribs), $test);
+                        $test = \str_replace(' class="m_log"', $this->debug->html->buildAttribString($attribs), $test);
                     } elseif ($name === 'script') {
-                        $test = str_replace('console.log', 'console.' . $method, $test);
+                        $test = \str_replace('console.log', 'console.' . $method, $test);
                         $fileLine = $this->file . ': line ' . $this->line;
-                        if (in_array($method, array('error','warn'))) {
+                        if (\in_array($method, array('error','warn'))) {
                             $argsSansMeta[] = $fileLine;
-                            if (strpos($test, '{{args}}') === false) {
-                                $test = str_replace(');', ',"' . $fileLine . '");', $test);
+                            if (\strpos($test, '{{args}}') === false) {
+                                $test = \str_replace(');', ',"' . $fileLine . '");', $test);
                             }
                         } else {
-                            $test = str_replace(',"' . $fileLine . '"', '', $test);
+                            $test = \str_replace(',"' . $fileLine . '"', '', $test);
                         }
-                        if ($method === 'assert' && strpos($test, '{{args}}') === false) {
-                            $test = str_replace('console.assert(', 'console.assert(false,', $test);
+                        if ($method === 'assert' && \strpos($test, '{{args}}') === false) {
+                            $test = \str_replace('console.assert(', 'console.assert(false,', $test);
                         }
                     } elseif ($name === 'text') {
                         $prefixes = array(
@@ -417,15 +418,15 @@ class SubstitutionTest extends DebugTestFramework
                         );
                         $test = $prefixes[$method] . $test;
                     }
-                    if (strpos($test, '{{args}}') !== false) {
+                    if (\strpos($test, '{{args}}') !== false) {
                         $i = $method === 'assert'
                             ? 2
                             : 1;
                         $argStr = $name === 'firephp'
-                            ? json_encode(array_slice($argsSansMeta, $i), JSON_UNESCAPED_SLASHES)
-                            : trim(json_encode($argsSansMeta, JSON_UNESCAPED_SLASHES), '[]');
-                        $argStr = strtr($argStr, $replace);
-                        $test = str_replace('{{args}}', $argStr, $test);
+                            ? \json_encode(\array_slice($argsSansMeta, $i), JSON_UNESCAPED_SLASHES)
+                            : \trim(\json_encode($argsSansMeta, JSON_UNESCAPED_SLASHES), '[]');
+                        $argStr = \strtr($argStr, $replace);
+                        $test = \str_replace('{{args}}', $argStr, $test);
                     }
                     $tests[$name] = $test;
                 }
@@ -433,8 +434,8 @@ class SubstitutionTest extends DebugTestFramework
             }
             $this->testMethod($method, $args, $tests);
             if ($method === 'assert') {
-                array_shift($args);
-                array_shift($argsSansMeta);
+                \array_shift($args);
+                \array_shift($argsSansMeta);
             }
             $tests = $testsBack;
             $argsSansMeta = $argsSansMetaBack;

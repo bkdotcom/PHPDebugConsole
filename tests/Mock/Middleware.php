@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests\Mock;
+
 use bdk\Debug;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Stream;
@@ -8,7 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-class MockMiddleware implements MiddlewareInterface
+class Middleware implements MiddlewareInterface
 {
     /**
      * @var ChromeLogger
@@ -37,9 +39,9 @@ class MockMiddleware implements MiddlewareInterface
     {
         $this->debug->log('running mock middleware');
         $msg = 'Hello';
-        $stream = fopen('php://temp', 'r+');
-        fwrite($stream, $msg);
-        fseek($stream, 0);
+        $stream = \fopen('php://temp', 'r+');
+        \fwrite($stream, $msg);
+        \fseek($stream, 0);
         $stream = new Stream($stream, []);
         return (new Response())->withBody($stream);
     }

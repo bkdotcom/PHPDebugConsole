@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests;
+
 use bdk\Debug\Abstraction\Abstracter;
 
 /**
@@ -10,9 +12,9 @@ class TypeBasicTest extends DebugTestFramework
 
     public function providerTestMethod()
     {
-        $ts = time();
-        $datetime = date('Y-m-d H:i:s', $ts);
-        $test = new \bdk\DebugTest\Test();
+        $ts = \time();
+        $datetime = \date('Y-m-d H:i:s', $ts);
+        $test = new \bdk\DebugTests\Fixture\Test();
         // val, html, text, script
         return array(
             // boolean
@@ -142,18 +144,18 @@ class TypeBasicTest extends DebugTestFramework
                 'log',
                 array(array($test,'testBaseStatic')),
                 array(
-                    'chromeLogger' => '[["callable: bdk\\\DebugTest\\\Test::testBaseStatic"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\DebugTest\</span>Test</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></li>',
-                    'script' => 'console.log("callable: bdk\\\DebugTest\\\Test::testBaseStatic");',
-                    'streamAnsi' => "callable: \e[38;5;250mbdk\DebugTest\\\e[0m\e[1mTest\e[22m\e[38;5;130m::\e[0m\e[1mtestBaseStatic\e[22m",
-                    'text' => 'callable: bdk\DebugTest\Test::testBaseStatic',
+                    'chromeLogger' => '[["callable: bdk\\\DebugTests\\\Fixture\\\Test::testBaseStatic"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>Test</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></li>',
+                    'script' => 'console.log("callable: bdk\\\DebugTests\\\Fixture\\\Test::testBaseStatic");',
+                    'streamAnsi' => "callable: \e[38;5;250mbdk\DebugTests\Fixture\\\e[0m\e[1mTest\e[22m\e[38;5;130m::\e[0m\e[1mtestBaseStatic\e[22m",
+                    'text' => 'callable: bdk\DebugTests\Fixture\Test::testBaseStatic',
                     'wamp' => array(
                         'log',
                         array(
                             array(
                                 'type' => 'callable',
                                 'value' => array(
-                                    'bdk\DebugTest\Test',
+                                    'bdk\DebugTests\Fixture\Test',
                                     'testBaseStatic',
                                 ),
                                 'debug' => Abstracter::ABSTRACTION,

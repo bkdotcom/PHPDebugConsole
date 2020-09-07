@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests;
+
 use bdk\Debug\Abstraction\Abstracter;
 
 /**
@@ -13,11 +15,11 @@ class TypeObjectTest extends DebugTestFramework
         // val, html, text, script
 
         $text = <<<'EOD'
-bdk\DebugTest\Test
+bdk\DebugTests\Fixture\Test
   Properties:
     ✨ This object has a __get() method
     (public) debug = bdk\Debug NOT INSPECTED
-    (public) instance = bdk\DebugTest\Test *RECURSION*
+    (public) instance = bdk\DebugTests\Fixture\Test *RECURSION*
     (public) propPublic = "redefined in Test (public)"
     (public) propStatic = "I'm Static"
     (public) someArray = array(
@@ -44,7 +46,7 @@ bdk\DebugTest\Test
 EOD;
 
         $ansi = <<<'EOD'
-\e[38;5;250mbdk\DebugTest\\e[0m\e[1mTest\e[22m
+\e[38;5;250mbdk\DebugTests\Fixture\\e[0m\e[1mTest\e[22m
     \e[4mProperties:\e[24m
         \e[38;5;250m✨ This object has a __get() method\e[0m
         \e[38;5;250m(public)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;9mNOT INSPECTED\e[0m
@@ -73,10 +75,10 @@ EOD;
         private\e[38;5;245m:\e[0m \e[96m1\e[0m
         magic\e[38;5;245m:\e[0m \e[96m2\e[0m
 EOD;
-        $ansi = str_replace('\e', "\e", $ansi);
+        $ansi = \str_replace('\e', "\e", $ansi);
 
         $text2 = <<<'EOD'
-bdk\DebugTest\Test2
+bdk\DebugTests\Fixture\Test2
   Properties:
     ✨ This object has a __get() method
     (protected ✨ magic-read) magicReadProp = "not null"
@@ -90,14 +92,14 @@ EOD;
         $wampRef = new \ReflectionObject($wamp);
         $crateRef = $wampRef->getMethod('crateValues');
         $crateRef->setAccessible(true);
-        $abs1 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTest\Test(), 'log');
+        $abs1 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTests\Fixture\Test(), 'log');
         $cratedAbs1 = $crateRef->invoke($wamp, $abs1);
-        $cratedAbs1 = json_decode(json_encode($cratedAbs1), true);
+        $cratedAbs1 = \json_decode(\json_encode($cratedAbs1), true);
         $cratedAbs1['scopeClass'] = 'bdk\\Debug';
 
-        $abs2 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTest\Test2(), 'log');
+        $abs2 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTests\Fixture\Test2(), 'log');
         $cratedAbs2 = $crateRef->invoke($wamp, $abs2);
-        $cratedAbs2 = json_decode(json_encode($cratedAbs2), true);
+        $cratedAbs2 = \json_decode(\json_encode($cratedAbs2), true);
         $cratedAbs2['scopeClass'] = 'bdk\\Debug';
 
 
@@ -106,25 +108,25 @@ EOD;
             array(
                 'log',
                 array(
-                    new \bdk\DebugTest\Test(),
+                    new \bdk\DebugTests\Fixture\Test(),
                 ),
                 array(
                     'html' => function ($str) {
                         $this->assertStringStartsWith(
                             '<li class="m_log"><div class="t_object" data-accessible="public">'
                             . '<span class="t_string t_stringified" title="__toString()">abracadabra</span>' . "\n"
-                            . '<span class="classname" title="PhpDoc Summary"><span class="namespace">bdk\DebugTest\</span>Test</span>',
+                            . '<span class="classname" title="PhpDoc Summary"><span class="namespace">bdk\DebugTests\Fixture\</span>Test</span>',
                             $str
                         );
                         $this->assertSelectCount('dl.object-inner', 1, $str);
 
                         // extends
                         $this->assertContains('<dt>extends</dt>' . "\n" .
-                            '<dd class="extends"><span class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</span></dd>', $str);
+                            '<dd class="extends"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</span></dd>', $str);
 
                         // implements
-                        if (defined('HHVM_VERSION')) {
-                            $this->assertContains(implode("\n", array(
+                        if (\defined('HHVM_VERSION')) {
+                            $this->assertContains(\implode("\n", array(
                                 '<dt>implements</dt>',
                                 '<dd class="interface">Stringish</dd>',
                                 '<dd class="interface">XHPChild</dd>',
@@ -142,12 +144,12 @@ EOD;
                         );
 
                         // properties
-                        $this->assertContains(implode("\n", array(
+                        $this->assertContains(\implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
                             '<dd class="magic info">This object has a <code>__get</code> method</dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
                             '<span class="excluded">NOT INSPECTED</span></div></dd>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\DebugTest\</span>Test</span> <span class="t_recursion">*RECURSION*</span></div></dd>',
+                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>Test</span> <span class="t_recursion">*RECURSION*</span></div></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
@@ -163,7 +165,7 @@ EOD;
                             '<dd class="property protected"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
                             '<dd class="debuginfo-excluded property private"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value property private"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
-                            '<dd class="private-ancestor property private"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\DebugTest\</span>TestBase</i>)</span> <span class="t_identifier">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                            '<dd class="private-ancestor property private"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</i>)</span> <span class="t_identifier">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
                             '<dd class="property private"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
                             '<dd class="debuginfo-excluded property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
@@ -171,7 +173,7 @@ EOD;
                         )), $str);
 
                         // methods
-                        $this->assertContains(implode("\n", array(
+                        $this->assertContains(\implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="magic info">This object has a <code>__call</code> method</dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span>, <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don\'t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
@@ -191,13 +193,13 @@ EOD;
                         )), $str);
 
                         // phpdoc
-                        $this->assertContains(implode("\n", array(
+                        $this->assertContains(\implode("\n", array(
                             '<dt>phpDoc</dt>',
                             '<dd class="phpdoc phpdoc-link"><span class="phpdoc-tag">link</span><span class="t_operator">:</span> <a href="http://www.bradkent.com/php/debug" target="_blank">PHPDebugConsole Homepage</a></dd>',
                             '</dl>',
                         )), $str);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test","(public) debug":"(object) bdk\\\Debug NOT INSPECTED","(public) instance":"(object) bdk\\\DebugTest\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toStrThrow":0,"(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
+                    'script' => 'console.log({"___class_name":"bdk\\\DebugTests\\\Fixture\\\Test","(public) debug":"(object) bdk\\\Debug NOT INSPECTED","(public) instance":"(object) bdk\\\DebugTests\\\Fixture\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toStrThrow":0,"(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
                     'streamAnsi' => $ansi,
                     'text' => $text,
                     'wamp' => array(
@@ -212,7 +214,7 @@ EOD;
             array(
                 'log',
                 array(
-                    new \bdk\DebugTest\Test('This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it not knowing what it was.  And they\'ll never stop singing it forever just because.  This is the song that never ends...'),
+                    new \bdk\DebugTests\Fixture\Test('This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it not knowing what it was.  And they\'ll never stop singing it forever just because.  This is the song that never ends...'),
                 ),
                 array(
                     'html' => function ($str) {
@@ -224,12 +226,12 @@ EOD;
             array(
                 'log',
                 array(
-                    new \bdk\DebugTest\Test2(),
+                    new \bdk\DebugTests\Fixture\Test2(),
                 ),
                 array(
                     'html' => function ($str) {
                         // properties
-                        $this->assertContains(implode("\n", array(
+                        $this->assertContains(\implode("\n", array(
                             '<dt class="properties">properties</dt>',
                             '<dd class="magic info">This object has a <code>__get</code> method</dd>',
                             '<dd class="property protected magic-read"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
@@ -237,22 +239,22 @@ EOD;
                         )), $str);
 
                         // methods
-                        $constName = defined('HHVM_VERSION')
-                            ? '<span class="classname">\\bdk\\DebugTest\\Test2Base</span><span class="t_operator">::</span><span class="t_identifier">WORD</span>'
+                        $constName = \defined('HHVM_VERSION')
+                            ? '<span class="classname">\\bdk\\DebugTests\\Test2Base</span><span class="t_operator">::</span><span class="t_identifier">WORD</span>'
                             : '<span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">WORD</span>';
-                        $this->assertContains(implode("\n", array(
+                        $this->assertContains(\implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="magic info">This object has a <code>__call</code> method</dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
-                            version_compare(PHP_VERSION, '5.4.6', '>=')
+                            \version_compare(PHP_VERSION, '5.4.6', '>=')
                                 ? '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;">' . $constName . '</span></span><span class="t_punct">)</span></dd>'
                                 : '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">bird</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited magic method"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="test constant as param">methConstTest</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$mode</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">WORD</span></span></span><span class="t_punct">)</span></dd>',
                             '</dl>',
                         )), $str);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\DebugTest\\\Test2","(protected ✨ magic-read) magicReadProp":"not null","(✨ magic) magicProp":undefined});',
+                    'script' => 'console.log({"___class_name":"bdk\\\DebugTests\\\Fixture\\\Test2","(protected ✨ magic-read) magicReadProp":"not null","(✨ magic) magicProp":undefined});',
                     'text' => $text2,
                     'wamp' => array(
                         'log',
@@ -272,18 +274,18 @@ EOD;
      */
     public function testDereferenceObject()
     {
-        $test_val = 'success A';
-        $test_o = new \bdk\DebugTest\Test();
-        $test_o->propPublic = &$test_val;
-        $this->debug->log('test_o', $test_o);
-        $test_val = 'success B';
-        $this->debug->log('test_o', $test_o);
-        $test_val = 'fail';
+        $testVal = 'success A';
+        $testO = new \bdk\DebugTests\Fixture\Test();
+        $testO->propPublic = &$testVal;
+        $this->debug->log('test_o', $testO);
+        $testVal = 'success B';
+        $this->debug->log('test_o', $testO);
+        $testVal = 'fail';
         $output = $this->debug->output();
         $this->assertContains('success A', $output);
         $this->assertContains('success B', $output);
         $this->assertNotContains('fail', $output);
-        $this->assertSame('fail', $test_o->propPublic);   // prop should be 'fail' at this point
+        $this->assertSame('fail', $testO->propPublic);   // prop should be 'fail' at this point
     }
 
     /**
@@ -295,17 +297,17 @@ EOD;
     {
         // mostly tested via logTest, infoTest, warnTest, errorTest....
         // test object inheritance
-        $test = new \bdk\DebugTest\Test();
+        $test = new \bdk\DebugTests\Fixture\Test();
         $abs = $this->debug->abstracter->getAbstraction($test);
 
         $this->assertSame('object', $abs['type']);
-        $this->assertSame('bdk\DebugTest\Test', $abs['className']);
+        $this->assertSame('bdk\DebugTests\Fixture\Test', $abs['className']);
         $this->assertSame(
-            array('bdk\DebugTest\TestBase'),
+            array('bdk\DebugTests\Fixture\TestBase'),
             $abs['extends']
         );
         $this->assertSame(
-            defined('HHVM_VERSION')
+            \defined('HHVM_VERSION')
                 ? array('Stringish','XHPChild') // hhvm-3.25 has XHPChild
                 : array(),
             $abs['implements']
@@ -336,8 +338,8 @@ EOD;
                 'visibility' => 'public',
                 'value' => 'redefined in Test (public)',
                 'valueFrom' => 'value',
-                'overrides' => 'bdk\DebugTest\TestBase',
-                'originallyDeclared' => 'bdk\DebugTest\TestBase',
+                'overrides' => 'bdk\DebugTests\Fixture\TestBase',
+                'originallyDeclared' => 'bdk\DebugTests\Fixture\TestBase',
             ),
             $abs['properties']['propPublic']
         );
@@ -353,9 +355,9 @@ EOD;
             array(
                 'visibility' => 'protected',
                 'value' => 'defined only in TestBase (protected)',
-                'inheritedFrom' => 'bdk\DebugTest\TestBase',
+                'inheritedFrom' => 'bdk\DebugTests\Fixture\TestBase',
                 'overrides' => null,
-                'originallyDeclared' => 'bdk\DebugTest\TestBase',
+                'originallyDeclared' => 'bdk\DebugTests\Fixture\TestBase',
                 'valueFrom' => 'value',
             ),
             $abs['properties']['propProtected']
@@ -365,8 +367,8 @@ EOD;
                 'visibility' => 'private',
                 'value' => 'redefined in Test (private) (alternate value via __debugInfo)',
                 'inheritedFrom' => null,
-                'overrides' => 'bdk\DebugTest\TestBase',
-                'originallyDeclared' => 'bdk\DebugTest\TestBase',
+                'overrides' => 'bdk\DebugTests\Fixture\TestBase',
+                'originallyDeclared' => 'bdk\DebugTests\Fixture\TestBase',
                 'valueFrom' => 'debugInfo',
             ),
             $abs['properties']['propPrivate']
@@ -375,7 +377,7 @@ EOD;
             array(
                 'visibility' => 'private',
                 'value' => 'defined in TestBase (private)',
-                'inheritedFrom' => 'bdk\DebugTest\TestBase',
+                'inheritedFrom' => 'bdk\DebugTests\Fixture\TestBase',
                 'overrides' => null,
                 'originallyDeclared' => null,
                 'valueFrom' => 'value',
@@ -395,25 +397,85 @@ EOD;
         $this->assertTrue($abs['methods']['methodPublic']['isDeprecated']);
     }
 
+    public function testAnonymousClass()
+    {
+        if (PHP_VERSION_ID < 70000) {
+            $this->markTestSkipped('anonymous classes are a php 7.0 thing');
+        }
+        // self::$allowError = true;
+        $filepath = __DIR__ . '/Fixture/Anonymous.php';
+        $anonymous = require $filepath;
+        $this->testMethod(
+            'log',
+            array(
+                'anonymous',
+                $anonymous
+            ),
+            array(
+                // 'entry' => $entry,
+                'chromeLogger' => array(
+                    array(
+                        'anonymous',
+                        array(
+                            '___class_name' => 'stdClass@anonymous',
+                            '(debug) file' => $filepath,
+                            '(debug) line' => 3,
+                        ),
+                    ),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"anonymous","Type":"LOG"},{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":3}]|',
+                'html' => '<li class="m_log"><span class="no-quotes t_string">anonymous</span> = <div class="t_object" data-accessible="public"><span class="classname">stdClass@anonymous</span>
+                    <dl class="object-inner">
+                    <dt>extends</dt>
+                        <dd class="extends"><span class="classname">stdClass</span></dd>
+                    <dt class="properties">properties</dt>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . $filepath . '</span></dd>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">3</span></dd>
+                    <dt class="methods">no methods</dt>
+                    </dl>
+                    </div></li>',
+                'script' => 'console.log("anonymous",{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":3});',
+                'text' => 'anonymous = stdClass@anonymous
+                    Properties:
+                    (debug) file = "/Users/bkent/Dropbox/htdocs/common/vendor/bdk/PHPDebugConsole/tests/Fixture/Anonymous.php"
+                    (debug) line = 3
+                    Methods: none!',
+                // 'wamp' => $entry,
+            )
+        );
+        /*
+        $this->debug->errorHandler->handleError(
+            E_WARNING,
+            'foo ' . \get_class($anonymous) . ' bar',
+            'foo.php',
+            12
+        );
+        $this->assertSame('foo stdClass@anonymous bar', $this->onErrorEvent['message']);
+        */
+    }
+
+
     public function testVariadic()
     {
-        if (version_compare(PHP_VERSION, '5.6', '<')) {
+        if (\version_compare(PHP_VERSION, '5.6', '<')) {
             return;
         }
-        $testVar = new \bdk\DebugTest\TestVariadic();
+        $testVar = new \bdk\DebugTests\Fixture\TestVariadic();
         $abs = $this->debug->abstracter->getAbstraction($testVar);
         $this->assertSame('...$moreParams', $abs['methods']['methodVariadic']['params'][1]['name']);
     }
 
     public function testVariadicByReference()
     {
-        if (version_compare(PHP_VERSION, '5.6', '<')) {
+        if (\version_compare(PHP_VERSION, '5.6', '<')) {
             return;
         }
-        if (defined('HHVM_VERSION')) {
+        if (\defined('HHVM_VERSION')) {
             return;
         }
-        $testVarByRef = new \bdk\DebugTest\TestVariadicByReference();
+        $testVarByRef = new \bdk\DebugTests\Fixture\TestVariadicByReference();
         $abs = $this->debug->abstracter->getAbstraction($testVarByRef);
         $this->assertSame('&...$moreParams', $abs['methods']['methodVariadicByReference']['params'][1]['name']);
     }
@@ -491,7 +553,7 @@ EOD;
      */
     public function testDebugInfo()
     {
-        $test = new \bdk\DebugTest\Test();
+        $test = new \bdk\DebugTests\Fixture\Test();
         $this->debug->log('test', $test);
         $abstraction = $this->debug->getData('log/0/args/1');
         $props = $abstraction['properties'];
@@ -511,7 +573,7 @@ EOD;
      */
     public function testRecursiveObjectProp1()
     {
-        $test = new \bdk\DebugTest\Test();
+        $test = new \bdk\DebugTests\Fixture\Test();
         $test->prop = array();
         $test->prop[] = &$test->prop;
         $this->debug->log('test', $test);
@@ -538,7 +600,7 @@ EOD;
      */
     public function testRecursiveObjectProp2()
     {
-        $test = new \bdk\DebugTest\Test();
+        $test = new \bdk\DebugTests\Fixture\Test();
         $test->propPublic = &$test;
         $this->debug->log('test', $test);
         $abstraction = $this->debug->getData('log/0/args/1');
@@ -557,7 +619,7 @@ EOD;
      */
     public function testRecursiveObjectProp3()
     {
-        $test = new \bdk\DebugTest\Test();
+        $test = new \bdk\DebugTests\Fixture\Test();
         $test->prop = array( &$test );
         $this->debug->log('test', $test);
         $abstraction = $this->debug->getData('log/0/args/1');
@@ -576,13 +638,13 @@ EOD;
      */
     public function testCrossRefObjects()
     {
-        $test_oa = new \bdk\DebugTest\Test();
-        $test_ob = new \bdk\DebugTest\Test();
-        $test_oa->prop = 'this is object a';
-        $test_ob->prop = 'this is object b';
-        $test_oa->ob = $test_ob;
-        $test_ob->oa = $test_oa;
-        $this->debug->log('test_oa', $test_oa);
+        $testOa = new \bdk\DebugTests\Fixture\Test();
+        $testOb = new \bdk\DebugTests\Fixture\Test();
+        $testOa->prop = 'this is object a';
+        $testOb->prop = 'this is object b';
+        $testOa->ob = $testOb;
+        $testOb->oa = $testOa;
+        $this->debug->log('test_oa', $testOa);
         $abstraction = $this->debug->getData('log/0/args/1');
         $this->assertEquals(
             true,

@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests;
+
 use bdk\Debug;
 use bdk\Debug\Psr7lite\ServerRequest;
 
@@ -80,14 +82,14 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame('visibility', $this->debug->getCfg('abstracter.objectSort'));
         $this->assertSame('visibility', $this->debug->getCfg('abstracter/objectSort'));
 
-        $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug')));
-        $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter')));
-        $this->assertSame($abstracterKeys, array_keys($this->debug->getCfg('abstracter/*')));
+        $this->assertSame($debugKeys, \array_keys($this->debug->getCfg('debug')));
+        $this->assertSame($abstracterKeys, \array_keys($this->debug->getCfg('abstracter')));
+        $this->assertSame($abstracterKeys, \array_keys($this->debug->getCfg('abstracter/*')));
         $this->assertInternalType('boolean', $this->debug->getCfg('output'));       // debug/output
 
-        $this->assertSame($configKeys, array_keys($this->debug->getCfg()));
-        $this->assertSame($configKeys, array_keys($this->debug->getCfg('*')));
-        $this->assertSame($debugKeys, array_keys($this->debug->getCfg('debug/*')));
+        $this->assertSame($configKeys, \array_keys($this->debug->getCfg()));
+        $this->assertSame($configKeys, \array_keys($this->debug->getCfg('*')));
+        $this->assertSame($debugKeys, \array_keys($this->debug->getCfg('debug/*')));
         $this->assertSame(false, $this->debug->getCfg('logRequestInfo/cookies'));
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests;
+
 /**
  * PHPUnit tests for Debug class
  */

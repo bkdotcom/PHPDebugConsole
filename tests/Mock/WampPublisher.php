@@ -1,10 +1,10 @@
 <?php
 
-namespace bdk\DebugTest;
+namespace bdk\DebugTests\Mock;
 
-use bdk\WampPublisher;
+use bdk\WampPublisher as BaseWampPublisher;
 
-class MockWampPublisher extends WampPublisher
+class WampPublisher extends BaseWampPublisher
 {
 
     public $connected = true;

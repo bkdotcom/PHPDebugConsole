@@ -1,6 +1,9 @@
 <?php
 
+namespace bdk\DebugTests\Utility;
+
 use bdk\Debug\Utility;
+use bdk\DebugTests\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class

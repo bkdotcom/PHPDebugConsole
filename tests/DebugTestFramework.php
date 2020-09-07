@@ -1,11 +1,12 @@
 <?php
 
-use bdk\Debug;
+namespace bdk\DebugTests;
+
 use bdk\CssXpath\DOMTestCase;
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Psr7lite\ServerRequest;
-use bdk\Debug\Route\RouteInterface;
 use bdk\PubSub\Event;
 
 /**
@@ -125,7 +126,7 @@ class DebugTestFramework extends DOMTestCase
         /*
         if (self::$haveWampPlugin === false) {
             $wamp = $this->debug->getRoute('wamp', true) === false
-                ? new \bdk\Debug\Route\Wamp($this->debug, new \bdk\DebugTest\MockWampPublisher())
+                ? new \bdk\Debug\Route\Wamp($this->debug, new \bdk\DebugTests\MockWampPublisher())
                 : $this->debug->getRoute('wamp');
             $this->debug->addPlugin($wamp);
             self::$haveWampPlugin = true;
@@ -271,7 +272,7 @@ class DebugTestFramework extends DOMTestCase
         $logEntry = $this->debug->getData($dataPath);
         if ($logEntry) {
             $meta = $logEntry['meta'];
-            ksort($meta);
+            \ksort($meta);
             $logEntry['meta'] = $meta;
         }
         if (!$tests) {
@@ -344,7 +345,7 @@ class DebugTestFramework extends DOMTestCase
      *
      * @param string $test route
      *
-     * @return RouteInterface
+     * @return \bdk\Debug\Route\RouteInterface
      */
     private function tstMethodRouteObj($test)
     {
@@ -363,10 +364,10 @@ class DebugTestFramework extends DOMTestCase
     /**
      * Get output from route
      *
-     * @param string              $test     chromeLogger|firephp|wampother
-     * @param RouteInterface|null $routeObj Route instance
-     * @param LogEntry            $logEntry LogEntry
-     * @param mixed               $expect   expected output
+     * @param string                               $test     chromeLogger|firephp|wampother
+     * @param \bdk\Debug\Route\RouteInterface|null $routeObj Route instance
+     * @param LogEntry                             $logEntry LogEntry
+     * @param mixed                                $expect   expected output
      *
      * @return array|string
      */
@@ -433,15 +434,15 @@ class DebugTestFramework extends DOMTestCase
                     // var_dump('get output:', $routeObj->wamp);
                     $messageIndex = \is_array($expect) && isset($expect['messageIndex'])
                         ? $expect['messageIndex']
-                        : count($routeObj->wamp->messages) - 1;
+                        : \count($routeObj->wamp->messages) - 1;
                     $output = isset($routeObj->wamp->messages[$messageIndex])
                         ? $routeObj->wamp->messages[$messageIndex]
                         : false;
                     if ($output) {
-                        ksort($output['args'][2]);
-                        $output = json_encode($output);
+                        \ksort($output['args'][2]);
+                        $output = \json_encode($output);
                         if (!$asString) {
-                            $output = json_decode($output, true);
+                            $output = \json_decode($output, true);
                         }
                     }
                     break;
@@ -490,11 +491,11 @@ class DebugTestFramework extends DOMTestCase
                     ),
                     'options' => array(),
                 ), $outputExpect);
-                $outputExpect['args'][2] = array_merge(array(
+                $outputExpect['args'][2] = \array_merge(array(
                     'format' => 'raw',
                     'requestId' => $this->debug->getData('requestId'),
                 ), $outputExpect['args'][2]);
-                ksort($outputExpect['args'][2]);
+                \ksort($outputExpect['args'][2]);
             }
             if (isset($outputExpect['contains'])) {
                 $message = "\e[1m" . $test . " doesn't contain\e[0m";

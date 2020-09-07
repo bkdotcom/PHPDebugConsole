@@ -142,9 +142,10 @@ class Profile
     protected function backtraceRemoveInternal($backtrace)
     {
         $count = \count($backtrace);
+        $nsRegex = '#^' . \preg_quote($this->namespace) . '\b#';
         for ($i = $count - 1; $i > 0; $i--) {
             $frame = $backtrace[$i];
-            if (isset($frame['class']) && \strpos($frame['class'], $this->namespace) === 0) {
+            if (isset($frame['class']) && \preg_match($nsRegex, $frame['class'])) {
                 break;
             }
         }

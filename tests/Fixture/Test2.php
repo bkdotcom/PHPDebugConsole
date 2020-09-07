@@ -1,8 +1,8 @@
 <?php
 
-namespace bdk\DebugTest;
+namespace bdk\DebugTests\Fixture;
 
-define('WORD', 'swordfish');
+\define('WORD', 'swordfish');
 
 /**
  * TestBase

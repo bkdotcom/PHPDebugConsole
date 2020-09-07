@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests;
+
 use bdk\Debug;
 use bdk\PubSub\Manager as EventManager;
 
@@ -24,13 +26,13 @@ class DebugTest extends DebugTestFramework
             'eventManager' => array(),
         );
 
-        $debugRef = new reflectionClass($this->debug);
-        $debugProps = $debugRef->getProperties(ReflectionProperty::IS_STATIC);
+        $debugRef = new \ReflectionClass($this->debug);
+        $debugProps = $debugRef->getProperties(\ReflectionProperty::IS_STATIC);
         foreach ($debugProps as $prop) {
             $prop->setAccessible(true);
             $name = $prop->getName();
             $this->debugBackup['debug'][$name] = $prop->getValue();
-            $newVal = is_array($this->debugBackup['debug'][$name])
+            $newVal = \is_array($this->debugBackup['debug'][$name])
                 ? array()
                 : null;
             $prop->setValue($newVal);
@@ -39,7 +41,7 @@ class DebugTest extends DebugTestFramework
         /*
             Backup eventManager data
         */
-        $eventManagerRef = new reflectionClass($this->debug->eventManager);
+        $eventManagerRef = new \ReflectionClass($this->debug->eventManager);
         $eventManagerProps = $eventManagerRef->getProperties();
         foreach ($eventManagerProps as $prop) {
             $prop->setAccessible(true);
@@ -55,8 +57,8 @@ class DebugTest extends DebugTestFramework
      */
     protected function restoreDebug()
     {
-        $debugRef = new reflectionClass($this->debug);
-        $debugProps = $debugRef->getProperties(ReflectionProperty::IS_STATIC);
+        $debugRef = new \ReflectionClass($this->debug);
+        $debugProps = $debugRef->getProperties(\ReflectionProperty::IS_STATIC);
         foreach ($debugProps as $prop) {
             $prop->setAccessible(true);
             $name = $prop->getName();
@@ -66,7 +68,7 @@ class DebugTest extends DebugTestFramework
         /*
             Restore eventManager data
         */
-        $eventManagerRef = new reflectionClass($this->debug->eventManager);
+        $eventManagerRef = new \ReflectionClass($this->debug->eventManager);
         $eventManagerProps = $eventManagerRef->getProperties();
         foreach ($eventManagerProps as $prop) {
             $prop->setAccessible(true);
@@ -79,20 +81,20 @@ class DebugTest extends DebugTestFramework
     {
         $output = array();
         $returnVal = 0;
-        exec('php ' . __DIR__ . '/noComposer.php', $output, $returnVal);
+        \exec('php ' . __DIR__ . '/noComposer.php', $output, $returnVal);
         $this->assertSame(0, $returnVal, 'Failed to init Debug without composer');
     }
 
     public function testPhpError()
     {
         parent::$allowError = true;
-        array_pop(explode('-', 'strict-error'));   // Only variables should be passed by reference
+        \array_pop(\explode('-', 'strict-error'));   // Only variables should be passed by reference
         $lastError = $this->debug->errorHandler->get('lastError');
-        $errCat = version_compare(PHP_VERSION, '7.0', '>=')
+        $errCat = \version_compare(PHP_VERSION, '7.0', '>=')
             ? 'notice'
             : 'strict';
         $errMsg = 'Only variables should be passed by reference';
-        $args = version_compare(PHP_VERSION, '7.0', '>=')
+        $args = \version_compare(PHP_VERSION, '7.0', '>=')
             ? array(
                 'Notice:',
                 $errMsg,
@@ -114,7 +116,7 @@ class DebugTest extends DebugTestFramework
                     'detectFiles' => true,
                     'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],
-                    'errorType' => version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
+                    'errorType' => \version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
                     'file' => __FILE__,
                     'line' => $lastError['line'],
                     'sanitize' => true,
@@ -176,7 +178,7 @@ class DebugTest extends DebugTestFramework
     public function testShutDownSubscribers()
     {
         $subscribers = \array_map(function ($val) {
-            return array(get_class($val[0]), $val[1]);
+            return array(\get_class($val[0]), $val[1]);
         }, $this->debug->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN));
         $subscribersExpect = array(
             array('bdk\ErrorHandler', 'onShutdown'),
@@ -289,7 +291,7 @@ class DebugTest extends DebugTestFramework
         ), $errorCaller);
 
         // this will use maximum debug_backtrace depth
-        call_user_func(array($this, 'setErrorCallerHelper'), true);
+        \call_user_func(array($this, 'setErrorCallerHelper'), true);
         $errorCaller = $this->debug->errorHandler->get('errorCaller');
         $this->assertSame(array(
             'file' => __FILE__,

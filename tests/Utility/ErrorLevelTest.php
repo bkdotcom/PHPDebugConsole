@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests\Utility;
+
 use bdk\Debug\Utility\ErrorLevel;
 
 /**

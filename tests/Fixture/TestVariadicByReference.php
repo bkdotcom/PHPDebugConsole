@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\DebugTest;
+namespace bdk\DebugTests\Fixture;
 
 /**
  * Test
@@ -21,6 +21,5 @@ class TestVariadicByReference extends TestVariadic
      */
     public function methodVariadicByReference(&$param1, &...$moreParams)
     {
-
     }
 }

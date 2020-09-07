@@ -1,7 +1,8 @@
 <?php
 
-use bdk\Debug;
-use bdk\Debug\Psr15\Middleware;
+namespace bdk\DebugTests;
+
+use bdk\DebugTests\Mock\Middleware as MockMiddleware;
 use GuzzleHttp\Psr7\ServerRequest;
 use mindplay\middleman\Dispatcher;
 
@@ -13,7 +14,7 @@ class MiddlewareTest extends DebugTestFramework
 
     public function testMiddleware()
     {
-        if (version_compare(PHP_VERSION, '7.0', '<')) {
+        if (\version_compare(PHP_VERSION, '7.0', '<')) {
             return;
         }
         $this->debug->addPlugin($this->debug->getRoute('chromeLogger'));
@@ -22,7 +23,7 @@ class MiddlewareTest extends DebugTestFramework
         $dispatcher = new Dispatcher([
             // $debugMiddleware,
             $this->debug->middleware,
-            $mockMiddleware
+            $mockMiddleware,
         ]);
         $response = $dispatcher->dispatch(new ServerRequest('GET', '/'));
         $chromeLoggerHeader = $response->getHeaderLine(\bdk\Debug\Route\ChromeLogger::HEADER_NAME);

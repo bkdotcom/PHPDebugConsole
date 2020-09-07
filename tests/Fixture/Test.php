@@ -1,8 +1,8 @@
 <?php
 
-namespace bdk\DebugTest;
+namespace bdk\DebugTests\Fixture;
 
-define('SOMECONSTANT', 'Constant value');
+\define('SOMECONSTANT', 'Constant value');
 
 /**
  * TestBase gets extended to test that inherited properties / methods get debugged

@@ -26,7 +26,9 @@
 		}
 	},
 	"autoload-dev": {
-		"classmap": ["tests"]
+		"psr-4": {
+			"bdk\\DebugTests\\": "tests/"
+		}
 	},
 	"replace": {
 		"bdk/backtrace": "1.0.1",

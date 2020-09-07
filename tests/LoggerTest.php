@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -69,7 +71,7 @@ class LoggerTest extends DebugTestFramework
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
 
         $this->debug->logger->critical('Make an exception', array(
-            'exception' => new Exception(),
+            'exception' => new \Exception(),
             'file' => 'file',
             'foo' => 'bar',
         ));

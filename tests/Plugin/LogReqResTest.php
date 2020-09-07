@@ -1,8 +1,11 @@
 <?php
 
+namespace bdk\DebugTests\Plugin;
+
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\Debug\Psr7lite\Stream;
+use bdk\DebugTests\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
@@ -20,7 +23,7 @@ class LogReqResTest extends DebugTestFramework
 
         $debugSingle = \bdk\Debug::getInstance();
 
-        $reflect = new ReflectionObject($logReqRes);
+        $reflect = new \ReflectionObject($logReqRes);
 
         $logPostMeth = $reflect->getMethod('logPost');
         $logPostMeth->setAccessible(true);
@@ -59,7 +62,7 @@ class LogReqResTest extends DebugTestFramework
         /*
             json properly posted
         */
-        $requestBody = json_encode(array('foo' => 'bar=baz'));
+        $requestBody = \json_encode(array('foo' => 'bar=baz'));
         $debugSingle->setCfg('services', array(
             'request' => $debugSingle->request
                 ->withMethod('POST')
@@ -82,7 +85,7 @@ class LogReqResTest extends DebugTestFramework
                         ),
                         'addQuotes' => false,
                         'visualWhiteSpace' => false,
-                        'value' => json_encode(json_decode($requestBody), JSON_PRETTY_PRINT),
+                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                     ))
                 ),
                 array(
@@ -97,8 +100,8 @@ class LogReqResTest extends DebugTestFramework
         /*
             json improperly posted
         */
-        $requestBody = json_encode(array('foo' => 'bar=baz'));
-        parse_str($requestBody, $parsedBody);
+        $requestBody = \json_encode(array('foo' => 'bar=baz'));
+        \parse_str($requestBody, $parsedBody);
         $debugSingle->setCfg('services', array(
             'request' => $debugSingle->request
                 ->withMethod('POST')
@@ -134,7 +137,7 @@ class LogReqResTest extends DebugTestFramework
                         ),
                         'addQuotes' => false,
                         'visualWhiteSpace' => false,
-                        'value' => json_encode(json_decode($requestBody), JSON_PRETTY_PRINT),
+                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                     ))
                 ),
                 array(
@@ -200,7 +203,7 @@ class LogReqResTest extends DebugTestFramework
         /*
             Put method
         */
-        $requestBody = json_encode(array('foo' => 'bar=bazy'));
+        $requestBody = \json_encode(array('foo' => 'bar=bazy'));
         $debugSingle->setCfg('services', array(
             'request' => function () use ($requestBody) {
                 $request = new ServerRequest(array(), array('REQUEST_METHOD' => 'PUT'));
@@ -224,7 +227,7 @@ class LogReqResTest extends DebugTestFramework
                         ),
                         'addQuotes' => false,
                         'visualWhiteSpace' => false,
-                        'value' => json_encode(json_decode($requestBody), JSON_PRETTY_PRINT),
+                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                     ))
                 ),
                 array(

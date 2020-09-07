@@ -32,12 +32,13 @@ ini_set('xdebug.var_display_max_data', '-1');
     'route' => 'html',
     'services' => array(
         'routeWamp' => function ($debug) {
-            return new \bdk\Debug\Route\Wamp($debug, new \bdk\DebugTest\MockWampPublisher());
+            return new \bdk\Debug\Route\Wamp($debug, new \bdk\DebugTests\Mock\WampPublisher());
         },
     ),
     'onBootstrap' => function ($event) {
         $debug = $event->getSubject();
         $wamp = $debug->getRoute('wamp');
         $debug->addPlugin($wamp);
+        // $debug->errorHandler->unregister();
     }
 ));

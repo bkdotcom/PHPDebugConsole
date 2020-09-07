@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests;
+
 use bdk\Debug\Method\Table as MethodTable;
 
 /**
@@ -126,12 +128,12 @@ class MethodTableTest extends DebugTestFramework
         );
         $rowsB = array(
             array(
-                'date' => new DateTime('1955-11-05'),
+                'date' => new \DateTime('1955-11-05'),
                 'date2' => 'not a datetime',
             ),
             array(
-                'date' => new DateTime('1985-10-26'),
-                'date2' => new DateTime('2015-10-21'),
+                'date' => new \DateTime('1985-10-26'),
+                'date2' => new \DateTime('2015-10-21'),
             )
         );
         $rowsAHtml = <<<'EOD'
@@ -166,9 +168,9 @@ table caption = array(
 )
 EOD;
         $dateTimePubMethods = 3;
-        if (version_compare(PHP_VERSION, '7.1', '>=')) {
+        if (\version_compare(PHP_VERSION, '7.1', '>=')) {
             $dateTimePubMethods = 5;
-        } elseif (version_compare(PHP_VERSION, '7.0', '>=')) {
+        } elseif (\version_compare(PHP_VERSION, '7.0', '>=')) {
             $dateTimePubMethods = 4;
         }
         return array(
@@ -214,8 +216,8 @@ EOD;
                     'flat',
                     array(
                         'a',
-                        new DateTime('2233-03-22'),
-                        fopen(__FILE__, 'r'),
+                        new \DateTime('2233-03-22'),
+                        \fopen(__FILE__, 'r'),
                         array($this, __FUNCTION__),
                         function ($foo) {
                             echo $foo;
@@ -233,7 +235,7 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">a</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="classname">MethodTableTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestMethod</span></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\DebugTests\</span>MethodTableTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestMethod</span></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_object" data-accessible="public"><span class="classname">Closure</span>
                             <dl class="object-inner">
                             <dt class="properties">properties</dt>
@@ -243,8 +245,8 @@ EOD;
                             <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
                             <dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$closure</span></span>, <span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
                             <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
-                            ' . (version_compare(PHP_VERSION, '7.0', '>=') ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">...$parameters</span></span><span class="t_punct">)</span></dd>' . "\n" : '')
-                            . (version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>' . "\n" : '')
+                            ' . (\version_compare(PHP_VERSION, '7.0', '>=') ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span>, <span class="parameter"><span class="t_parameter-name">...$parameters</span></span><span class="t_punct">)</span></dd>' . "\n" : '')
+                            . (\version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>' . "\n" : '')
                             . '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
                             </dl>
                         </td></tr>
@@ -255,7 +257,7 @@ EOD;
                         [0] => "a"
                         [1] => "2233-03-22T00:00:00%i"
                         [2] => Resource id #%d: stream
-                        [3] => callable: MethodTableTest::providerTestMethod
+                        [3] => callable: bdk\DebugTests\MethodTableTest::providerTestMethod
                         [4] => Closure
                             Properties:
                                 (debug) file = "' . __FILE__ . '"
@@ -264,8 +266,8 @@ EOD;
                                 public: ' . $dateTimePubMethods . '
                                 private: 1
                     )',
-                    'script' => 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream","callable: MethodTableTest::providerTestMethod",{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]);',
-                    'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,"callable: MethodTableTest::providerTestMethod"],[4,{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]]]|',
+                    'script' => 'console.table(["a","2233-03-22T00:00:00%i","Resource id #%d: stream",' . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . ',{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]);',
+                    'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,' . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . '],[4,{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]]]|',
                 ),
             ),
             // 4
@@ -273,11 +275,11 @@ EOD;
                 'table',
                 array(
                     'traversable',
-                    new \bdk\DebugTest\TestTraversable($rowsA),
+                    new \bdk\DebugTests\Fixture\TestTraversable($rowsA),
                 ),
                 array(
-                    'html' => str_replace('table caption', 'traversable (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)', $rowsAHtml),
-                    'text' => str_replace('table caption', 'traversable', $rowsAText),
+                    'html' => \str_replace('table caption', 'traversable (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</span>)', $rowsAHtml),
+                    'text' => \str_replace('table caption', 'traversable', $rowsAText),
                     'script' => 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
                     'firephp' => 'X-Wf-1-1-1-5: 149|[{"Label":"traversable","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
                 ),
@@ -287,34 +289,34 @@ EOD;
                 'table',
                 array(
                     'traversable -o- traversables',
-                    new \bdk\DebugTest\TestTraversable(array(
-                        4 => new \bdk\DebugTest\TestTraversable($rowsA[4]),
-                        2 => new \bdk\DebugTest\TestTraversable($rowsA[2]),
+                    new \bdk\DebugTests\Fixture\TestTraversable(array(
+                        4 => new \bdk\DebugTests\Fixture\TestTraversable($rowsA[4]),
+                        2 => new \bdk\DebugTests\Fixture\TestTraversable($rowsA[2]),
                     )),
                 ),
                 array(
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
-                        <caption>traversable -o- traversables (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</span>)</caption>
+                        <caption>traversable -o- traversables (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</span>)</caption>
                         <thead>
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTest\</span>TestTraversable</td><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</td><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</td><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
                         </tbody>
                         </table>
                         </li>',
                     'text' => 'traversable -o- traversables = array(
                             [4] => array(
-                                [___class_name] => "bdk\DebugTest\TestTraversable"
+                                [___class_name] => "bdk\DebugTests\Fixture\TestTraversable"
                                 [name] => "Bob"
                                 [age] => "12"
                                 [sex] => "M"
                                 [Naughty] => false
                             )
                             [2] => array(
-                                [___class_name] => "bdk\DebugTest\TestTraversable"
+                                [___class_name] => "bdk\DebugTests\Fixture\TestTraversable"
                                 [name] => "Sally"
                                 [age] => "10"
                                 [sex] => "F"
@@ -322,11 +324,11 @@ EOD;
                                 [extracol] => "yes"
                             )
                         )',
-                    'script' => 'console.table({"4":{"___class_name":"bdk\\\DebugTest\\\TestTraversable","name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"___class_name":"bdk\\\DebugTest\\\TestTraversable","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
-                    'firephp' => 'X-Wf-1-1-1-6: 250|[{"Label":"traversable -o- traversables","Type":"TABLE"},['
+                    'script' => 'console.table({"4":{"___class_name":"bdk\\\DebugTests\\\Fixture\\\TestTraversable","name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"___class_name":"bdk\\\DebugTests\\\Fixture\\\TestTraversable","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
+                    'firephp' => 'X-Wf-1-1-1-6: 270|[{"Label":"traversable -o- traversables","Type":"TABLE"},['
                         . '["","___class_name","name","age","sex","Naughty","extracol"],'
-                        . '[4,"bdk\\\DebugTest\\\TestTraversable","Bob","12","M",false,null],'
-                        . '[2,"bdk\\\DebugTest\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
+                        . '[4,"bdk\\\DebugTests\\\Fixture\\\TestTraversable","Bob","12","M",false,null],'
+                        . '[2,"bdk\\\DebugTests\\\Fixture\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
                 ),
             ),
             // 6

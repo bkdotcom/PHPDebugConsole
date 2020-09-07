@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\DebugTest;
+namespace bdk\DebugTests\Fixture;
 
 /**
  * I implement Traversable!

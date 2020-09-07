@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests;
+
 use bdk\Debug;
 use bdk\PubSub\Event;
 
@@ -298,7 +300,7 @@ EOD;
             // $this->debugFoo->groupEnd(); // foo group
         // $this->debug->groupEnd(); // main group
 
-        $data = array_intersect_key($this->debug->getData(), array_flip(array(
+        $data = \array_intersect_key($this->debug->getData(), \array_flip(array(
             'alerts',
             'groupPriorityStack',
             'groupStacks',
@@ -310,21 +312,21 @@ EOD;
                 foreach ($data['logSummary'] as $i => $group) {
                     foreach ($group as $i2 => $v2) {
                         $export = $v2->export();
-                        ksort($export['meta']);
-                        $data['logSummary'][$i][$i2] = array_values($export);
+                        \ksort($export['meta']);
+                        $data['logSummary'][$i][$i2] = \array_values($export);
                     }
                 }
             } else {
                 foreach ($data[$what] as $i => $v) {
                     $export = $v->export();
-                    ksort($export['meta']);
-                    $data[$what][$i] = array_values($export);
+                    \ksort($export['meta']);
+                    $data[$what][$i] = \array_values($export);
                 }
             }
-            $temp = json_encode($data[$what]);
-            $temp = preg_replace('/"(file)":"[^",]+"/', '"$1":""', $temp);
-            $temp = preg_replace('/"(line)":\d+/', '"$1":""', $temp);
-            $data[$what] = json_decode($temp, true);
+            $temp = \json_encode($data[$what]);
+            $temp = \preg_replace('/"(file)":"[^",]+"/', '"$1":""', $temp);
+            $temp = \preg_replace('/"(line)":\d+/', '"$1":""', $temp);
+            $data[$what] = \json_decode($temp, true);
         }
         foreach ($data['groupStacks'] as $k => $stack) {
             foreach ($stack as $k2 => $info) {

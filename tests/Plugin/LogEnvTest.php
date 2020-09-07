@@ -1,6 +1,8 @@
 <?php
 
-use bdk\PubSub\Event;
+namespace bdk\DebugTests\Plugin;
+
+use bdk\DebugTests\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
@@ -29,7 +31,7 @@ class LogEnvTest extends DebugTestFramework
         /*
             Test error_reporting != "all" but debug is "all"
         */
-        error_reporting(E_ALL & ~E_STRICT);
+        \error_reporting(E_ALL & ~E_STRICT);
         $refMethod->invoke($logEnv);
         // $logEnv->onPluginInit(new Event($this->debug));
         $this->testMethod(null, array(), array(
@@ -146,7 +148,7 @@ class LogEnvTest extends DebugTestFramework
         /*
             Reset
         */
-        error_reporting(E_ALL | E_STRICT);
+        \error_reporting(E_ALL | E_STRICT);
         $this->debug->setCfg('errorReporting', E_ALL | E_STRICT);
         $this->debug->setCfG('logEnvInfo.errorReporting', false);
     }

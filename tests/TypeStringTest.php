@@ -1,5 +1,7 @@
 <?php
 
+namespace bdk\DebugTests;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -8,7 +10,7 @@ class TypeStringTest extends DebugTestFramework
 
     public function providerTestMethod()
     {
-        $ts = time();
+        $ts = \time();
         $longString = <<<'EOD'
 They see me mowin' my front lawn
 I know they're all thinkin' I'm so
@@ -141,7 +143,7 @@ EOD;
                 'log',
                 array('numeric string', '10'),
                 array(
-                    'chromeLogger' => json_encode(array(
+                    'chromeLogger' => \json_encode(array(
                         array('numeric string', '10'),
                         null,
                         '',
@@ -156,7 +158,7 @@ EOD;
                 'log',
                 array('numeric string', '10.10'),
                 array(
-                    'chromeLogger' => json_encode(array(
+                    'chromeLogger' => \json_encode(array(
                         array('numeric string', '10.10'),
                         null,
                         '',
@@ -171,17 +173,17 @@ EOD;
                 'log',
                 array('timestamp', (string) $ts),
                 array(
-                    'chromeLogger' => json_encode(array(
+                    'chromeLogger' => \json_encode(array(
                         array(
                             'timestamp',
-                            $ts . ' (' . date('Y-m-d H:i:s') . ')',
+                            $ts . ' (' . \date('Y-m-d H:i:s') . ')',
                         ),
                         null,
                         '',
                     )),
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="numeric t_string timestamp" title="' . date('Y-m-d H:i:s', $ts) . '">' . $ts . '</span></li>',
-                    'script' => 'console.log("timestamp","' . $ts . ' (' . date('Y-m-d H:i:s') . ')");',
-                    'text' => 'timestamp = 📅 "' . $ts . '" (' . date('Y-m-d H:i:s') . ')',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="numeric t_string timestamp" title="' . \date('Y-m-d H:i:s', $ts) . '">' . $ts . '</span></li>',
+                    'script' => 'console.log("timestamp","' . $ts . ' (' . \date('Y-m-d H:i:s') . ')");',
+                    'text' => 'timestamp = 📅 "' . $ts . '" (' . \date('Y-m-d H:i:s') . ')',
                 ),
             ),
             // 5
@@ -189,7 +191,7 @@ EOD;
                 'log',
                 array('long string', $longString, \bdk\Debug::_meta('cfg', 'maxLenString', 430)), // cut in middle of multi-byte char
                 array(
-                    'chromeLogger' => json_encode(array(
+                    'chromeLogger' => \json_encode(array(
                         array(
                             'long string',
                             $longStringExpect . '[1778 more bytes (not logged)]',
@@ -200,10 +202,10 @@ EOD;
                     'html' => '<li class="m_log">'
                         . '<span class="no-quotes t_string">long string</span> = '
                         . '<span class="t_string">'
-                            . str_replace("\n", '<span class="ws_n"></span>' . "\n", $longStringExpect)
+                            . \str_replace("\n", '<span class="ws_n"></span>' . "\n", $longStringExpect)
                             . '<span class="maxlen">&hellip; 1778 more bytes (not logged)</span>'
                         . '</span></li>',
-                    'script' => 'console.log("long string",' . json_encode($longStringExpect . '[1778 more bytes (not logged)]') . ');',
+                    'script' => 'console.log("long string",' . \json_encode($longStringExpect . '[1778 more bytes (not logged)]') . ');',
                     'streamAnsi' => "long string \e[38;5;245m=\e[0m \e[38;5;250m\"\e[0m"
                         . $longStringExpect
                         . "\e[38;5;250m\"\e[0m"

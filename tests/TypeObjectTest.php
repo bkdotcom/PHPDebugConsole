@@ -439,7 +439,7 @@ EOD;
                 'script' => 'console.log("anonymous",{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":3});',
                 'text' => 'anonymous = stdClass@anonymous
                     Properties:
-                    (debug) file = "/Users/bkent/Dropbox/htdocs/common/vendor/bdk/PHPDebugConsole/tests/Fixture/Anonymous.php"
+                    (debug) file = "%s/PHPDebugConsole/tests/Fixture/Anonymous.php"
                     (debug) line = 3
                     Methods: none!',
                 // 'wamp' => $entry,

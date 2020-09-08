@@ -86,6 +86,7 @@ class AbstractObject
             'extends' => array(),
             'flags' => $this->getFlags(),
             'implements' => $interfaceNames,
+            'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
             'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
             'isRecursion' => \in_array($obj, $hist, true),
             'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
@@ -166,7 +167,7 @@ class AbstractObject
             $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
         } elseif ($obj instanceof self) {
             $abs['propertyOverrideValues']['methodCache'] = Abstracter::NOT_INSPECTED;
-        } elseif ($abs['reflector']->isAnonymous()) {
+        } elseif ($abs['isAnonymous']) {
             $this->handleAnonymous($abs);
         }
     }
@@ -213,6 +214,7 @@ class AbstractObject
             'collectPropertyValues',
             'fullyQualifyPhpDocType',
             'hist',
+            'isAnonymous',
             'isTraverseOnly',
             'propertyOverrideValues',
             'reflector',

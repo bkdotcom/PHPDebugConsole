@@ -166,6 +166,8 @@ class AbstractObject
             $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
         } elseif ($obj instanceof self) {
             $abs['propertyOverrideValues']['methodCache'] = Abstracter::NOT_INSPECTED;
+        } elseif ($abs['reflector']->isAnonymous()) {
+            $this->handleAnonymous($abs);
         }
     }
 
@@ -195,9 +197,6 @@ class AbstractObject
                 }
                 $abs['properties'][$name]['value'] = $reflectionObject->getProperty($name)->getValue($obj);
             }
-        }
-        if (\strpos($abs['className'], "anonymous\0") !== false) {
-            $this->cleanAnonymous($abs);
         }
     }
 
@@ -298,47 +297,6 @@ class AbstractObject
     }
 
     /**
-     * Make anonymous class more user friendly
-     *
-     *  * adjust classname
-     *  * add file & line debug properties
-     *
-     * Where is this anonymous class notation documented?
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function cleanAnonymous(Abstraction $abs)
-    {
-        $regex = '/[a-zA-Z_\x7f-\xff][\\\\a-zA-Z0-9_\x7f-\xff]*+@anonymous\x00(.*?\.php)(?:0x?|:([0-9]++)\$)[0-9a-fA-F]++/';
-        $matches = array();
-        \preg_match($regex, $abs['className'], $matches);
-        if (!$matches) {
-            return;
-        }
-        $abs['className'] = \class_exists($matches[0], false)
-            ? (\get_parent_class($matches[0]) ?: \key(\class_implements($matches[0])) ?: 'class') . '@anonymous'
-            : $matches[0];
-        $properties = $abs['properties'];
-        $properties['debug.file'] = $this->abstractObjectProperties->buildPropInfo(array(
-            'type' => Abstracter::TYPE_STRING,
-            'value' => $matches[1],
-            'valueFrom' => 'debug',
-            'visibility' => 'debug',
-        ));
-        if (isset($matches[2])) {
-            $properties['debug.line'] = $this->abstractObjectProperties->buildPropInfo(array(
-                'type' => Abstracter::TYPE_INT,
-                'value' => (int) $matches[2],
-                'valueFrom' => 'debug',
-                'visibility' => 'debug',
-            ));
-        }
-        $abs['properties'] = $properties;
-    }
-
-    /**
      * Get configuration flags
      *
      * @return int bitmask
@@ -408,6 +366,40 @@ class AbstractObject
                 : null;
         }
         return $className;
+    }
+
+    /**
+     * Make anonymous class more user friendly
+     *
+     *  * adjust classname
+     *  * add file & line debug properties
+     *
+     * Where is this anonymous class notation documented?
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     */
+    private function handleAnonymous(Abstraction $abs)
+    {
+        $reflector = $abs['reflector'];
+        $parentClassRef = $reflector->getParentClass();
+        $extends = $parentClassRef ? $parentClassRef->getName() : null;
+        $abs['className'] = ($extends ?: \current($reflector->getInterfaceNames()) ?: 'class') . '@anonymous';
+        $properties = $abs['properties'];
+        $properties['debug.file'] = $this->abstractObjectProperties->buildPropInfo(array(
+            'type' => Abstracter::TYPE_STRING,
+            'value' => $abs['definition']['fileName'],
+            'valueFrom' => 'debug',
+            'visibility' => 'debug',
+        ));
+        $properties['debug.line'] = $this->abstractObjectProperties->buildPropInfo(array(
+            'type' => Abstracter::TYPE_INT,
+            'value' => (int) $abs['definition']['startLine'],
+            'valueFrom' => 'debug',
+            'visibility' => 'debug',
+        ));
+        $abs['properties'] = $properties;
     }
 
     /**

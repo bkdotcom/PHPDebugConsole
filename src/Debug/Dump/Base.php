@@ -320,7 +320,7 @@ class Base extends Component
             if ($info['debugInfoExcluded']) {
                 $vis[] = 'excluded';
             }
-            $name = '(' . \implode(' ', $vis) . ') ' . $name;
+            $name = '(' . \implode(' ', $vis) . ') ' . \str_replace('debug.', '', $name);
             $return[$name] = $this->dump($info['value']);
         }
         return $return;

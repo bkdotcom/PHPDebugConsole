@@ -63,13 +63,13 @@ class AbstractObjectProperties extends AbstractObjectSub
         $this->addProperties($abs);
         if ($abs['className'] === 'Closure') {
             $ref = new \ReflectionFunction($abs->getSubject());
-            $abs['properties']['file'] = static::buildPropInfo(array(
+            $abs['properties']['debug.file'] = static::buildPropInfo(array(
                 'type' => Abstracter::TYPE_STRING,
                 'value' => $ref->getFileName(),
                 'valueFrom' => 'debug',
                 'visibility' => 'debug',
             ));
-            $abs['properties']['line'] = static::buildPropInfo(array(
+            $abs['properties']['debug.line'] = static::buildPropInfo(array(
                 'type' => Abstracter::TYPE_INT,
                 'value' => $ref->getStartLine(),
                 'valueFrom' => 'debug',

@@ -238,6 +238,7 @@ class Text extends Base
             $str .= '    ✨ This object has a __get() method' . "\n";
         }
         foreach ($abs['properties'] as $name => $info) {
+            $name = \str_replace('debug.', '', $name);
             $vis = (array) $info['visibility'];
             foreach ($vis as $i => $v) {
                 if (\in_array($v, array('magic','magic-read','magic-write'))) {

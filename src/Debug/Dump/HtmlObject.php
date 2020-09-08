@@ -333,7 +333,8 @@ class HtmlObject
         $magicMethods = \array_intersect(array('__get','__set'), \array_keys($abs['methods']));
         $str = '<dt class="properties">' . $label . '</dt>' . "\n";
         $str .= $this->magicMethodInfo($magicMethods);
-        foreach ($abs['properties'] as $k => $info) {
+        foreach ($abs['properties'] as $name => $info) {
+            $name = \str_replace('debug.', '', $name);
             $vis = (array) $info['visibility'];
             $isPrivateAncestor = \in_array('private', $vis) && $info['inheritedFrom'];
             $classes = \array_keys(\array_filter(array(
@@ -362,7 +363,7 @@ class HtmlObject
                     : '')
                 . ' <span class="t_identifier"'
                     . ' title="' . \htmlspecialchars($info['desc']) . '"'
-                    . '>' . $k . '</span>'
+                    . '>' . $name . '</span>'
                 . ($info['value'] !== Abstracter::UNDEFINED
                     ? ' <span class="t_operator">=</span> '
                         . $this->html->dump($info['value'])

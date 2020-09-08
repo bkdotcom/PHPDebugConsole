@@ -321,14 +321,14 @@ class AbstractObject
             ? (\get_parent_class($matches[0]) ?: \key(\class_implements($matches[0])) ?: 'class') . '@anonymous'
             : $matches[0];
         $properties = $abs['properties'];
-        $properties['file'] = $this->abstractObjectProperties->buildPropInfo(array(
+        $properties['debug.file'] = $this->abstractObjectProperties->buildPropInfo(array(
             'type' => Abstracter::TYPE_STRING,
             'value' => $matches[1],
             'valueFrom' => 'debug',
             'visibility' => 'debug',
         ));
         if ($matches[2]) {
-            $properties['line'] = $this->abstractObjectProperties->buildPropInfo(array(
+            $properties['debug.line'] = $this->abstractObjectProperties->buildPropInfo(array(
                 'type' => Abstracter::TYPE_INT,
                 'value' => (int) $matches[2],
                 'valueFrom' => 'debug',

@@ -327,7 +327,7 @@ class AbstractObject
             'valueFrom' => 'debug',
             'visibility' => 'debug',
         ));
-        if ($matches[2]) {
+        if (isset($matches[2])) {
             $properties['debug.line'] = $this->abstractObjectProperties->buildPropInfo(array(
                 'type' => Abstracter::TYPE_INT,
                 'value' => (int) $matches[2],

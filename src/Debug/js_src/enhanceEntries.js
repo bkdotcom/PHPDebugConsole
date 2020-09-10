@@ -160,15 +160,12 @@ function buildFileLink (file, line) {
  * Create text editor links for error, warn, & trace
  */
 function createFileLinks ($entry, $strings, remove) {
-  var $closureObjs = $entry.find('.t_object > .classname').filter(function () {
-    return this.innerText.match(/^Closure\b/)
+  var $objects = $entry.find('.t_object > .object-inner > .property.debug-value > .t_identifier').filter(function () {
+    return this.innerText.match(/^file$/)
   })
-  var detectFiles = $entry.data('detectFiles') === true || $closureObjs.length > 0
+  var detectFiles = $entry.data('detectFiles') === true || $objects.length > 0
   var dataFoundFiles = $entry.data('foundFiles') || []
   var isUpdate = false
-  if ($closureObjs.length) {
-    console.warn('closureObjs', $strings.length)
-  }
   if (!config.linkFiles && !remove) {
     return
   }
@@ -226,27 +223,6 @@ function createFileLinks ($entry, $strings, remove) {
     }
     return
   }
-  /*
-  $closureObjs.each(function () {
-    var vals = {};
-    $(this).parent().find('> .object-inner > .property.debug-value').each(function () {
-      var prop = $(this).find('> .t_identifier')[0].innerText
-      var $valNode = $(this).find('> *:last-child')
-      var val = $.trim($valNode[0].innerText)
-      vals[prop] = {
-        val: val,
-        node: $valNode
-      }
-    })
-    var $a = $('<a>', {
-      class: 'file-link',
-      href: buildFileLink(vals.file.val, vals.line.val),
-      html: vals.file.val + ' <i class="fa fa-external-link"></i>',
-      title: 'Open in editor'
-    })
-    vals.file.node.html($a)
-  })
-  */
   if (!$strings) {
     $strings = []
   }
@@ -268,9 +244,11 @@ function createFileLinks ($entry, $strings, remove) {
         : [null, $string.data('file'), $string.data('line') || 1]
     } else if (dataFoundFiles.indexOf(text) === 0) {
       matches = [null, text, 1]
-    } else if ($string.parent('.property.debug-value').parent().parent().find('> .classname').text().match(/^Closure\b/)) {
-      // Closure object has two .property.debug-value for file & line
-      matches = {}
+    } else if ($string.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
+      // object with file .debug-value
+      matches = {
+        line: 1
+      }
       $string.parent().parent().find('> .property.debug-value').each(function () {
         var prop = $(this).find('> .t_identifier')[0].innerText
         var $valNode = $(this).find('> *:last-child')

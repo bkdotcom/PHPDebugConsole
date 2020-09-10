@@ -162,14 +162,15 @@ class Base extends Component
             $typeMore = $event['typeMore'];
             return $event['return'];
         }
-        $scalarTypes = array(
+        $simpleTypes = array(
+            Abstracter::TYPE_ARRAY,
             Abstracter::TYPE_BOOL,
             Abstracter::TYPE_FLOAT,
             Abstracter::TYPE_INT,
             Abstracter::TYPE_NULL,
             Abstracter::TYPE_STRING,
         );
-        if (\in_array($type, $scalarTypes)) {
+        if (\in_array($type, $simpleTypes)) {
             $typeMore = $abs['typeMore'];   // likely null
             return $this->{$method}($abs['value'], $abs);
         }

@@ -26,6 +26,9 @@ use bdk\PubSub\Event;
 class Base extends Component
 {
 
+    public $crateRaw = true;    // whether dump() should call crate "raw" value
+                                //   when processing log this is set to false
+                                //   so not unecessarily re-crating arrays
     public $debug;
     protected $argStringOpts;   // per-argument string options
     protected $channelNameRoot;
@@ -61,7 +64,9 @@ class Base extends Component
         ), $opts);
         list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($typeMore === 'raw') {
-            $val = $this->debug->abstracter->getAbstraction($val, 'dump', array($type, $typeMore));
+            if ($this->crateRaw) {
+                $val = $this->debug->abstracter->crate($val, 'dump');
+            }
             $typeMore = null;
         }
         $method = 'dump' . \ucfirst($type);

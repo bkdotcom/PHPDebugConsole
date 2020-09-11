@@ -409,7 +409,7 @@ EOD;
             'log',
             array(
                 'anonymous',
-                $anonymous
+                $anonymous,
             ),
             array(
                 // 'entry' => $entry,
@@ -425,7 +425,7 @@ EOD;
                     null,
                     '',
                 ),
-                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"anonymous","Type":"LOG"},{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":3}]|',
+                'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":"anonymous","Type":"LOG"},{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":3}]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">anonymous</span> = <div class="t_object" data-accessible="public"><span class="classname">stdClass@anonymous</span>
                     <dl class="object-inner">
                     <dt>extends</dt>
@@ -433,7 +433,8 @@ EOD;
                     <dt class="properties">properties</dt>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . $filepath . '</span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">3</span></dd>
-                    <dt class="methods">no methods</dt>
+                    <dt class="methods">methods</dt>
+                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="t_identifier" title="Anonymous method">myMethod</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
                     </dl>
                     </div></li>',
                 'script' => 'console.log("anonymous",{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":3});',
@@ -441,21 +442,33 @@ EOD;
                     Properties:
                     (debug) file = "%s/PHPDebugConsole/tests/Fixture/Anonymous.php"
                     (debug) line = 3
-                    Methods: none!',
+                    Methods:
+                    public: 1',
                 // 'wamp' => $entry,
             )
         );
-        /*
-        $this->debug->errorHandler->handleError(
-            E_WARNING,
-            'foo ' . \get_class($anonymous) . ' bar',
-            'foo.php',
-            12
+        $callable = array($anonymous, 'myMethod');
+        $this->testMethod(
+            'log',
+            array(
+                $callable,
+            ),
+            array(
+                'chromeLogger' => array(
+                    array(
+                        'callable: stdClass@anonymous::myMethod'
+                    ),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-%d: 57|[{"Type":"LOG"},"callable: stdClass@anonymous::myMethod"]|',
+                'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname">stdClass@anonymous</span><span class="t_operator">::</span><span class="t_identifier">myMethod</span></span></li>',
+                'script' => 'console.log("callable: stdClass@anonymous::myMethod");',
+                'text' => 'callable: stdClass@anonymous::myMethod',
+                // 'wamp' =>
+            )
         );
-        $this->assertSame('foo stdClass@anonymous bar', $this->onErrorEvent['message']);
-        */
     }
-
 
     public function testVariadic()
     {

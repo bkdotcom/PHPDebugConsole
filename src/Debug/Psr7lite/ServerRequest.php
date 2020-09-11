@@ -22,6 +22,8 @@ use Psr\Http\Message\StreamInterface;
  * For the most part, this implements Psr\Http\Message\ServerRequestInterface;
  *
  * Just looking to encapsulate the superglobals... not backbone an application or create a dependency on psr/http-message
+ *
+ * @psalm-consistent-constructor
  */
 class ServerRequest
 {

@@ -35,6 +35,7 @@ class AbstractObject
     const OUTPUT_METHOD_DESC = 16;
 
 	protected $abstracter;
+    protected $objectProperties;
 	protected $phpDoc;
 
     /**
@@ -51,11 +52,11 @@ class AbstractObject
             // we only need to subscribe to these events from root channel
             return;
         }
-        $this->abstractObjectProperties = new AbstractObjectProperties($abstracter, $phpDoc);
+        $this->objectProperties = new AbstractObjectProperties($abstracter, $phpDoc);
         $abstracter->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, array($this, 'onStart'));
         $abstracter->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_END, array($this, 'onEnd'));
         $abstracter->debug->eventManager->addSubscriberInterface(new AbstractObjectMethods($abstracter, $phpDoc));
-        $abstracter->debug->eventManager->addSubscriberInterface($this->abstractObjectProperties);
+        $abstracter->debug->eventManager->addSubscriberInterface($this->objectProperties);
     }
 
     /**
@@ -256,7 +257,7 @@ class AbstractObject
      * Populate constants, extends, phpDoc, & traverseValues
      *
      * methods added separately via AbstractObjectMethods::onAbstractEnd
-     * properties added separately via AbstractObjectProperties::onAbstractEnd
+     * properties added separately via objectProperties::onAbstractEnd
      *
      * @param Abstraction $abs Abstraction instance
      *
@@ -291,10 +292,7 @@ class AbstractObject
         $obj = $abs->getSubject();
         $abs['hist'][] = $obj;
         foreach ($obj as $k => $v) {
-            $absInfo = $this->abstracter->needsAbstraction($v);
-            $abs['traverseValues'][$k] = $absInfo
-                ? $this->abstracter->getAbstraction($v, $abs['debugMethod'], $absInfo, $abs['hist'])
-                : $v;
+            $abs['traverseValues'][$k] = $this->abstracter->crate($v, $abs['debugMethod'], $abs['hist']);
         }
     }
 
@@ -384,18 +382,15 @@ class AbstractObject
      */
     private function handleAnonymous(Abstraction $abs)
     {
-        $reflector = $abs['reflector'];
-        $parentClassRef = $reflector->getParentClass();
-        $extends = $parentClassRef ? $parentClassRef->getName() : null;
-        $abs['className'] = ($extends ?: \current($reflector->getInterfaceNames()) ?: 'class') . '@anonymous';
+        $abs['className'] = $this->abstracter->debug->utility->friendlyClassName($abs['reflector']);
         $properties = $abs['properties'];
-        $properties['debug.file'] = $this->abstractObjectProperties->buildPropInfo(array(
+        $properties['debug.file'] = $this->objectProperties->buildPropInfo(array(
             'type' => Abstracter::TYPE_STRING,
             'value' => $abs['definition']['fileName'],
             'valueFrom' => 'debug',
             'visibility' => 'debug',
         ));
-        $properties['debug.line'] = $this->abstractObjectProperties->buildPropInfo(array(
+        $properties['debug.line'] = $this->objectProperties->buildPropInfo(array(
             'type' => Abstracter::TYPE_INT,
             'value' => (int) $abs['definition']['startLine'],
             'valueFrom' => 'debug',

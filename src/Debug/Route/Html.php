@@ -144,6 +144,7 @@ class Html extends Base
      */
     public function processLogEntries(Event $event)
     {
+        $this->dump->crateRaw = false;
         $this->data = $this->debug->getData();
         // this could go in an extended processAlerts method
         $errorSummary = $this->errorSummary->build($this->debug->errorStats());
@@ -194,6 +195,7 @@ class Html extends Base
         ));
         $this->data = array();
         $event['return'] .= $str;
+        $this->dump->crateRaw = true;
     }
 
     /**

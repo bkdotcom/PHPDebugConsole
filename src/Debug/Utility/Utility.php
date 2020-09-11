@@ -15,6 +15,8 @@ namespace bdk\Debug;
 use DOMDocument;
 use Exception;
 use Psr\Http\Message\StreamInterface;
+use ReflectionClass;
+use ReflectionObject;
 use SqlFormatter;
 
 /**
@@ -273,6 +275,30 @@ class Utility
     }
 
     /**
+     * Get friendly classname for given classname or object
+     * This is primarily useful for anonymous classes
+     *
+     * @param object|class-string $mixed Reflector instance, object, or classname
+     *
+     * @return string
+     */
+    public static function friendlyClassName($mixed)
+    {
+        $reflector = $mixed instanceof ReflectionClass
+            ? $mixed
+            : (\is_object($mixed)
+                ? new ReflectionObject($mixed)
+                : new ReflectionClass($mixed)
+            );
+        if (PHP_VERSION_ID < 70000 || $reflector->isAnonymous() === false) {
+            return $reflector->getName();
+        }
+        $parentClassRef = $reflector->getParentClass();
+        $extends = $parentClassRef ? $parentClassRef->getName() : null;
+        return ($extends ?: \current($reflector->getInterfaceNames()) ?: 'class') . '@anonymous';
+    }
+
+    /**
      * Convert size int into "1.23 kB" or vice versa
      *
      * @param int|string $size      bytes or similar to "1.23M"
@@ -479,6 +505,8 @@ class Utility
     /**
      * Syntax-only is_callable() check
      * Additionally checks that $array[0] is an object
+     *
+     * Does not check for static class method - ie array('class', 'method')
      *
      * @param string|array $val value to check
      *

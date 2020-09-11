@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2020 Brad Kent
- * @version   v2.1.0
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Abstraction;
@@ -80,6 +80,26 @@ class Abstracter extends Component
     }
 
     /**
+     * "crate" value for logging
+     *
+     * @param mixed  $mixed  value to crate
+     * @param string $method Method doing the crating
+     * @param array  $hist   (@internal) array/object history (used to test for recursion)
+     *
+     * @return mixed
+     */
+    public function crate($mixed, $method = null, $hist = array())
+    {
+        $typeInfo = self::needsAbstraction($mixed);
+        if ($typeInfo) {
+            $mixed = $typeInfo === array(self::TYPE_ARRAY, 'raw')
+                ? $this->abstractArray->crate($mixed, $method, $hist)
+                : $this->getAbstraction($mixed, $method, $typeInfo, $hist);
+        }
+        return $mixed;
+    }
+
+    /**
      * Want to store a "snapshot" of arrays, objects, & resources
      * Remove any reference to an "external" variable
      *
@@ -89,36 +109,41 @@ class Abstracter extends Component
      * Instead of storing objects in log, store "Abstraction" which containing
      *     type, methods, & properties
      *
-     * @param mixed  $mixed     array, object, or resource to prep
-     * @param string $method    Method requesting abstraction
-     * @param array  $typeArray (@internal) array specifying value's type & "typeMore"
-     * @param array  $hist      (@internal) array/object history (used to test for recursion)
+     * @param mixed  $mixed    array, object, or resource to prep
+     * @param string $method   Method requesting abstraction
+     * @param array  $typeInfo (@internal) array specifying value's type & "typeMore"
+     * @param array  $hist     (@internal) array/object history (used to test for recursion)
      *
-     * @return Abstraction|array|string
+     * @return Abstraction
      */
-    public function getAbstraction($mixed, $method = null, $typeArray = array(), $hist = array())
+    public function getAbstraction($mixed, $method = null, $typeInfo = array(), $hist = array())
     {
-        $type = $typeArray
-            ? $typeArray[0]
+        $type = $typeInfo
+            ? $typeInfo[0]
             : self::getType($mixed)[0];
-        if ($type === self::TYPE_ARRAY || $type === self::TYPE_CALLABLE) {
-            return $this->abstractArray->getAbstraction($mixed, $method, $hist);
-        }
-        if ($type === self::TYPE_OBJECT) {
-            return $this->abstractObject->getAbstraction($mixed, $method, $hist);
-        }
-        if ($type === self::TYPE_RESOURCE) {
-            return new Abstraction(array(
-                'type' => $type,
-                'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
-            ));
-        }
-        if ($type === self::TYPE_STRING) {
-            return new Abstraction(array(
-                'type' => $type,
-                'strlen' => \strlen($mixed),
-                'value' => $this->debug->utf8->strcut($mixed, 0, $this->debug->getCfg('maxLenString', Debug::CONFIG_DEBUG)),
-            ));
+        switch ($type) {
+            case self::TYPE_ARRAY:
+                return $this->abstractArray->getAbstraction($mixed, $method, $hist);
+            case self::TYPE_CALLABLE:
+                return $this->abstractArray->getCallableAbstraction($mixed);
+            case self::TYPE_OBJECT:
+                return $this->abstractObject->getAbstraction($mixed, $method, $hist);
+            case self::TYPE_RESOURCE:
+                return new Abstraction(array(
+                    'type' => $type,
+                    'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
+                ));
+            case self::TYPE_STRING:
+                return new Abstraction(array(
+                    'type' => $type,
+                    'strlen' => \strlen($mixed),
+                    'value' => $this->debug->utf8->strcut($mixed, 0, $this->debug->getCfg('maxLenString', Debug::CONFIG_DEBUG)),
+                ));
+            default:
+                return new Abstraction(array(
+                    'type' => $type,
+                    'value' => $mixed,
+                ));
         }
     }
 
@@ -127,12 +152,17 @@ class Abstracter extends Component
      *
      * @param mixed $val value
      *
-     * @return array [$type, $typeMore]
+     * @return array [$type, $typeMore] typeMore may be
+     *    null
+     *    'raw' indicates value needs crating
+     *    'abstraction'
+     *    'true'  (type bool)
+     *    'false' (type bool)
+     *    'numeric' (type string)
      */
     public static function getType($val)
     {
         $type = \gettype($val);
-        $typeMore = null;
         $map = array(
             'boolean' => self::TYPE_BOOL,
             'double' => self::TYPE_FLOAT,
@@ -157,7 +187,7 @@ class Abstracter extends Component
             case 'unknown type':
                 return self::getTypeUnknown($val);
             default:
-                return array($type, $typeMore);
+                return array($type, null);
         }
     }
 

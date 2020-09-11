@@ -60,6 +60,7 @@ class Script extends Base
      */
     public function processlogEntries(Event $event)
     {
+        $this->dump->crateRaw = false;
         $this->data = $this->debug->getData();
         $errorStats = $this->debug->errorStats();
         $serverParams = $this->debug->request->getServerParams();
@@ -94,6 +95,7 @@ class Script extends Base
         $str .= '</script>' . "\n";
         $this->data = array();
         $event['return'] .= $str;
+        $this->dump->crateRaw = true;
     }
 
     /**

@@ -75,6 +75,7 @@ class ChromeLogger extends Base
      */
     public function processLogEntries(Event $event)
     {
+        $this->dump->crateRaw = false;
         $this->data = $this->debug->getData();
         $this->buildJsonData();
         if ($this->jsonData['rows']) {
@@ -101,6 +102,7 @@ class ChromeLogger extends Base
         }
         $this->data = array();
         $this->jsonData['rows'] = array();
+        $this->dump->crateRaw = true;
     }
 
     /**

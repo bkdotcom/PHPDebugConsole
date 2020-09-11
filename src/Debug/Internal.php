@@ -42,7 +42,6 @@ class Internal implements SubscriberInterface
      * @var array
      */
     private $cfg = array(
-        // 'collect' => false,
         'redactKeys' => array(),
         'redactReplace' => null,
     );
@@ -622,14 +621,11 @@ class Internal implements SubscriberInterface
                 values have not yet been abstracted.
                 abstract now
             */
-            $absInfo = $abstracter->needsAbstraction($v);
-            if ($absInfo) {
-                $v = $abstracter->getAbstraction($v, $logEntry['method'], $absInfo);
-                $args[$k] = $v;
-            }
-            if ($abstracter->isAbstraction($v, Abstracter::TYPE_OBJECT) === false) {
+            $typeInfo = $abstracter->getType($v);
+            if ($typeInfo[0] !== Abstracter::TYPE_OBJECT) {
                 continue;
             }
+            $v = $abstracter->crate($v, $logEntry['method']);
             if ($v['stringified']) {
                 $v = $v['stringified'];
             } elseif (isset($v['methods']['__toString']['returnValue'])) {

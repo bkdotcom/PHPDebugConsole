@@ -292,7 +292,7 @@ class LogEnv implements SubscriberInterface
             $logServerKeys[] = 'HTTP_HOST';
         }
         $logServerKeys = \array_unique($logServerKeys);
-        if (!$logServerKeys) {
+        if (empty($logServerKeys)) {
             return;
         }
         $vals = array();

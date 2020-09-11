@@ -39,7 +39,7 @@ class ComposerScripts
                 \exec('composer require guzzlehttp/guzzle ^6.5 --dev --no-scripts');
             }
             if (\version_compare(PHP_VERSION, '7.1', '>=') && !$isCi) {
-                \exec('composer require slevomat/coding-standard --dev --no-scripts');
+                \exec('composer require slevomat/coding-standard ^6.3.0 --dev --no-scripts');
                 $haveSlevomat = true;
             }
         }

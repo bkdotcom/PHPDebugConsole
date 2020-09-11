@@ -45,6 +45,8 @@ class StopWatch
      *
      * @param string $label timer label
      *
+     * @param-out string $label
+     *
      * @return float|false
      */
     public function get(&$label = null)

@@ -128,7 +128,7 @@ class Error extends Event
      *
      * If error is an uncaught exception, the original Exception will be returned
      *
-     * @return Exception|ErrorException
+     * @return \Exception|\ErrorException
      */
     public function asException()
     {

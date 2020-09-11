@@ -18,6 +18,8 @@ use Psr\Http\Message\StreamInterface;
  * Psr\Http\Message\StreamInterface implementation
  *
  * for internal use... doesn't actually implement StreamInterface to avoid dependency
+ *
+ * @psalm-consistent-constructor
  */
 class Stream
 {

@@ -58,6 +58,7 @@ class Firephp extends Base
      */
     public function processLogEntries(Event $event)
     {
+        $this->dump->crateRaw = false;
         $this->outputEvent = $event;
         $this->data = $this->debug->getData();
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
@@ -81,6 +82,7 @@ class Firephp extends Base
         ));
         $event['headers'][] = array('X-Wf-1-Index', $this->messageIndex);
         $this->data = array();
+        $this->dump->crateRaw = true;
     }
 
     /**

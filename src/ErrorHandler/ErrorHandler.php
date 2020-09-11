@@ -44,7 +44,7 @@ class ErrorHandler
     /**
      * Temp store error exception caught/triggered inside __toString
      *
-     * @var Exception
+     * @var \Exception|\Throwable|null
      */
     private $toStringException = null;
 
@@ -601,7 +601,7 @@ class ErrorHandler
      *
      * @return void
      *
-     * @throws ErrorException
+     * @throws \ErrorException
      */
     private function throwError(Error $error)
     {
@@ -630,7 +630,7 @@ class ErrorHandler
      * @param Error $error [description]
      *
      * @return void
-     * @throws re-throws caught exception
+     * @throws \Exception re-throws caught exception
      */
     private function toStringCheck(Error $error)
     {
@@ -652,7 +652,8 @@ class ErrorHandler
         */
         foreach ($error['vars'] as $val) {
             if ($val instanceof \Exception && ($val->getMessage() === $errMsg || (string) $val === $errMsg)) {
-                return $this->toStringCheckTrigger($error, $val);
+                $this->toStringCheckTrigger($error, $val);
+                break;
             }
         }
     }
@@ -660,14 +661,17 @@ class ErrorHandler
     /**
      * Look through backtrace to see if error via __toString -> trigger_error
      *
-     * @param Error               $error     Error instance
-     * @param Throwable|Exception $exception Exception
+     * @param Error                 $error     Error instance
+     * @param \Throwable|\Exception $exception Exception
      *
      * @return void
      */
     private function toStringCheckTrigger(Error $error, $exception)
     {
         $backtrace = $error->getTrace();
+        if ($backtrace === false) {
+            return;
+        }
         $count = \count($backtrace);
         for ($i = 1; $i < $count; $i++) {
             if (

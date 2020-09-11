@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2020 Brad Kent
- * @version   v2.1.0
+ * @version   v3.0
  */
 
 namespace bdk\Debug\Abstraction;
@@ -34,35 +34,60 @@ class AbstractArray
     }
 
     /**
-     * returns information about an array
+     * "Crate" array for logging
      *
-     * @param array  $array  Array to inspect
+     * @param array  $array  Array to crate
      * @param string $method Method requesting abstraction
      * @param array  $hist   (@internal) array/object history
      *
-     * @return array|Abstraction|string
+     * @return array|string
      */
-    public function getAbstraction(&$array, $method = null, $hist = array())
+    public function crate($array, $method = null, $hist = array())
     {
         if (\in_array($array, $hist, true)) {
             return Abstracter::RECURSION;
         }
-        if ($this->abstracter->debug->utility->isCallable($array)) {
-            // this appears to be a "callable"
-            return new Abstraction(array(
-                'type' => Abstracter::TYPE_CALLABLE,
-                'value' => array(\get_class($array[0]), $array[1]),
-            ));
-        }
         $hist[] = $array;
         $return = array();
         foreach ($array as $k => $v) {
-            $absInfo = $this->abstracter->needsAbstraction($v);
-            if ($absInfo) {
-                $v = $this->abstracter->getAbstraction($v, $method, $absInfo, $hist);
-            }
-            $return[$k] = $v;
+            $return[$k] = $this->abstracter->crate($v, $method, $hist);
         }
         return $return;
+    }
+
+    /**
+     * Returns array crated and wrapped in Abstraction
+     *
+     * @param array  $array  Array to crate as abstraction
+     * @param string $method Method requesting abstraction
+     * @param array  $hist   (@internal) array/object history
+     *
+     * @return Abstraction
+     */
+    public function getAbstraction(&$array, $method = null, $hist = array())
+    {
+        return new Abstraction(array(
+            'type' => Abstracter::TYPE_ARRAY,
+            'value' => $this->crate($array, $method, $hist),
+        ));
+    }
+
+    /**
+     * Returns an callable array(obj, 'method') abstraction
+     *
+     * @param array $array array callable
+     *
+     * @return Abstraction
+     */
+    public function getCallableAbstraction($array)
+    {
+        $className = \get_class($array[0]);
+        if (PHP_VERSION_ID >= 70000 && \strpos($className, "@anonymous\0") !== false) {
+            $className = $this->abstracter->debug->utility->friendlyClassName($array[0]);
+        }
+        return new Abstraction(array(
+            'type' => Abstracter::TYPE_CALLABLE,
+            'value' => array($className, $array[1]),
+        ));
     }
 }

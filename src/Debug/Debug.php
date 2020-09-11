@@ -48,6 +48,8 @@ use SplObjectStorage;
  * @property Debug\Utility\StopWatch $stopWatch  lazy-loaded StopWatch Instance
  * @property Debug\Utility\Utf8   $utf8          lazy-loaded Utf8 instance
  * @property Debug\Utility        $utility       lazy-loaded Utility instance
+ *
+ * @psalm-consistent-constructor
  */
 class Debug
 {
@@ -1725,10 +1727,7 @@ class Debug
             $logEntry->setMeta('cfg', null);
         }
         foreach ($logEntry['args'] as $i => $v) {
-            $absInfo = $this->abstracter->needsAbstraction($v);
-            if ($absInfo) {
-                $logEntry['args'][$i] = $this->abstracter->getAbstraction($v, $logEntry['method'], $absInfo);
-            }
+            $logEntry['args'][$i] = $this->abstracter->crate($v, $logEntry['method']);
         }
         $this->internal->publishBubbleEvent(self::EVENT_LOG, $logEntry);
         if ($cfgRestore) {

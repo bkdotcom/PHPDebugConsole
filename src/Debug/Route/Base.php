@@ -72,6 +72,7 @@ abstract class Base extends Component implements RouteInterface
      */
     public function processLogEntries(Event $event)
     {
+        $this->dump->crateRaw = false;
         $this->data = $this->debug->getData();
         $str = '';
         $str .= $this->processAlerts();
@@ -79,6 +80,7 @@ abstract class Base extends Component implements RouteInterface
         $str .= $this->processLog();
         $this->data = array();
         $event['return'] .= $str;
+        $this->dump->crateRaw = true;
     }
 
     /**

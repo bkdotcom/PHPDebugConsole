@@ -110,7 +110,6 @@ class Debug
             'collect'   => false,
             'key'       => null,
             'output'    => false,           // output the log?
-            'arrayShowListKeys' => true,
             'channels' => array(
                 /*
                 channelName => array(

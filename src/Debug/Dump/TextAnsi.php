@@ -371,7 +371,7 @@ class TextAnsi extends Text
         }
         $ansiQuote = $escapeCodes['quote'] . '"' . $this->escapeReset;
         $val = $this->debug->utf8->dump($val);
-        if ($this->argStringOpts['addQuotes']) {
+        if ($this->argOpts['addQuotes']) {
             $val = $ansiQuote . $val . $ansiQuote;
         }
         if ($abs && $abs['strlen']) {

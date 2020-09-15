@@ -38,6 +38,9 @@ function addChannelToggles () {
   if (!channelNameRoot) {
     return
   }
+  if (!channels[channelNameRoot]) {
+    return
+  }
   $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot)
   if ($ul.html().length) {
     $toggles = $('<fieldset />', {

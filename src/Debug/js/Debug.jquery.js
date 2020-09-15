@@ -309,7 +309,7 @@
       var $node = $(e.target);
       var $entry = $node.closest('li[class*=m_]');
       e.stopPropagation();
-      $node.find('> .array-inner > li > :last-child, > .array-inner.array-values > li').each(function () {
+      $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
         enhanceValue($entry, this);
       });
     });
@@ -345,9 +345,7 @@
           ' > dd.method > .t_string');
       } else {
         // console.log('expanded array', e.target)
-        $strings = $(e.target).is('array-values')
-          ? $(e.target).find('> li.t_string')
-          : $(e.target).find('> li > .t_string');
+        $strings = $(e.target).find('> li > .t_string, > li.t_string');
       }
       $strings.not('.numeric').each(function () {
         enhanceLongString($(this));
@@ -1450,6 +1448,9 @@
     var $ul;
     var $toggles;
     if (!channelNameRoot) {
+      return
+    }
+    if (!channels[channelNameRoot]) {
       return
     }
     $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot);

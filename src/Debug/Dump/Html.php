@@ -25,10 +25,11 @@ use bdk\Debug\LogEntry;
 class Html extends Base
 {
 
-    protected $argAttribs = array();
     protected $channels = array();
     protected $detectFiles = false;
     protected $logEntryAttribs = array();
+    protected $valAttribs = array();
+    protected $valAttribsStack = array();
 
     /**
      * Dump value as html
@@ -42,7 +43,7 @@ class Html extends Base
      */
     public function dump($val, $opts = array(), $tagName = '__default__')
     {
-        $this->argAttribs = array(
+        $this->valAttribs = array(
             'class' => array(),
             'title' => null,
         );
@@ -50,33 +51,36 @@ class Html extends Base
             ? $val['attribs']
             : array();
         $val = parent::dump($val, $opts);
-        if ($tagName && $this->dumpType !== Abstracter::TYPE_RECURSION) {
-            if ($tagName === '__default__') {
-                $tagName = $this->dumpType === Abstracter::TYPE_OBJECT
-                    ? 'div'
-                    : 'span';
+        if ($tagName === '__default__') {
+            $tagName = 'span';
+            if ($this->dumpType === Abstracter::TYPE_OBJECT) {
+                $tagName = 'div';
+            } elseif ($this->dumpType === Abstracter::TYPE_RECURSION) {
+                $tagName = null;
             }
-            $argAttribs = $this->debug->utility->arrayMergeDeep(
+        }
+        if ($tagName) {
+            $valAttribs = $this->debug->utility->arrayMergeDeep(
                 array(
                     'class' => array(
                         't_' . $this->dumpType,
                         $this->dumpTypeMore,
                     ),
                 ),
-                $this->argAttribs
+                $this->valAttribs
             );
             if ($absAttribs) {
                 $absAttribs['class'] = isset($absAttribs['class'])
                     ? (array) $absAttribs['class']
                     : array();
-                $argAttribs = $this->debug->utility->arrayMergeDeep(
-                    $argAttribs,
+                $valAttribs = $this->debug->utility->arrayMergeDeep(
+                    $valAttribs,
                     $absAttribs
                 );
             }
-            $val = $this->debug->html->buildTag($tagName, $argAttribs, $val);
+            $val = $this->debug->html->buildTag($tagName, $valAttribs, $val);
         }
-        $this->argAttribs = array();
+        $this->valAttribs = array();
         return $val;
     }
 
@@ -341,10 +345,18 @@ class Html extends Base
             return '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">()</span>';
         }
-        $showKeys = $this->debug->getCfg('arrayShowListKeys') || !$this->debug->utility->arrayIsList($array);
+        $opts = \array_merge(array(
+            'showListKeys' => true,
+            'expand' => null,
+        ), $this->argOpts);
+        if ($opts['expand'] !== null) {
+            $this->valAttribs['data-expand'] = $opts['expand'];
+        }
+        $showKeys = $opts['showListKeys'] || !$this->debug->utility->arrayIsList($array);
+        $this->valAttribsStack[] = $this->valAttribs;
         $html = '<span class="t_keyword">array</span>'
             . '<span class="t_punct">(</span>' . "\n"
-            . '<ul class="array-inner list-unstyled' . ($showKeys ? '' : 'array-values') . '">' . "\n";
+            . '<ul class="array-inner list-unstyled">' . "\n";
         foreach ($array as $key => $val) {
             $html .= $showKeys
                 ? "\t" . '<li>'
@@ -358,6 +370,7 @@ class Html extends Base
         }
         $html .= '</ul>'
             . '<span class="t_punct">)</span>';
+        $this->valAttribs = \array_pop($this->valAttribsStack);
         return $html;
     }
 
@@ -397,7 +410,7 @@ class Html extends Base
      */
     protected function dumpConst(Abstraction $abs)
     {
-        $this->argAttribs['title'] = $abs['value']
+        $this->valAttribs['title'] = $abs['value']
             ? 'value: ' . $this->debug->getDump('text')->dump($abs['value'])
             : null;
         return $this->markupIdentifier($abs['name']);
@@ -414,8 +427,8 @@ class Html extends Base
     {
         $date = $this->checkTimestamp($val);
         if ($date) {
-            $this->argAttribs['class'][] = 'timestamp';
-            $this->argAttribs['title'] = $date;
+            $this->valAttribs['class'][] = 'timestamp';
+            $this->valAttribs['title'] = $date;
         }
         return $val;
     }
@@ -439,14 +452,16 @@ class Html extends Base
      */
     protected function dumpObject(Abstraction $abs)
     {
-        $dump = $this->object->dump($abs);
         /*
             Were we debugged from inside or outside of the object?
         */
-        $this->argAttribs['data-accessible'] = $abs['scopeClass'] === $abs['className']
+        $this->valAttribs['data-accessible'] = $abs['scopeClass'] === $abs['className']
             ? 'private'
             : 'public';
-        return $dump;
+        $this->valAttribsStack[] = $this->valAttribs;
+        $html = $this->object->dump($abs);
+        $this->valAttribs = \array_pop($this->valAttribsStack);
+        return $html;
     }
 
     /**
@@ -472,25 +487,25 @@ class Html extends Base
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
             if ($date) {
-                $this->argAttribs['class'][] = 'timestamp';
-                $this->argAttribs['title'] = $date;
+                $this->valAttribs['class'][] = 'timestamp';
+                $this->valAttribs['title'] = $date;
             }
         }
         if ($this->detectFiles && $this->debug->utility->isFile($val)) {
-            $this->argAttribs['data-file'] = true;
+            $this->valAttribs['data-file'] = true;
         }
         $val = $this->debug->utf8->dump($val, array(
-            'sanitizeNonBinary' => $this->argStringOpts['sanitize'],
+            'sanitizeNonBinary' => $this->argOpts['sanitize'],
             'useHtml' => true,
         ));
         if ($abs && $abs['strlen']) {
             $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)</span>';
         }
-        if ($this->argStringOpts['visualWhiteSpace']) {
+        if ($this->argOpts['visualWhiteSpace']) {
             $val = $this->visualWhiteSpace($val);
         }
-        if (!$this->argStringOpts['addQuotes']) {
-            $this->argAttribs['class'][] = 'no-quotes';
+        if (!$this->argOpts['addQuotes']) {
+            $this->valAttribs['class'][] = 'no-quotes';
         }
         return $val;
     }
@@ -600,8 +615,7 @@ class Html extends Base
             if ($meta['errorCat']) {
                 $attribs['class'] .= ' error-' . $meta['errorCat'];
             }
-            $argCount = \count($args);
-            if ($argCount > 1 && \is_string($args[0])) {
+            if ($this->containsSubstitutions($logEntry)) {
                 $args[0] = $this->dump($args[0], array(
                     'sanitize' => $meta['sanitizeFirst'],
                 ), null);

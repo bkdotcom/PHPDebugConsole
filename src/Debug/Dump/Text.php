@@ -276,7 +276,7 @@ class Text extends Base
                 : $val;
         }
         $val = $this->debug->utf8->dump($val);
-        if ($this->argStringOpts['addQuotes']) {
+        if ($this->argOpts['addQuotes']) {
             $val = '"' . $val . '"';
         }
         if ($abs && $abs['strlen']) {
@@ -327,7 +327,7 @@ class Text extends Base
     protected function methodDefault(LogEntry $logEntry)
     {
         $args = $logEntry['args'];
-        if (\count($args) > 1 && \is_string($args[0])) {
+        if ($this->containsSubstitutions($logEntry)) {
             $args = $this->processSubstitutions($args, array(
                 'replace' => true,
                 'style' => false,

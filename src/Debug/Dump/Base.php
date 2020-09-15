@@ -30,11 +30,22 @@ class Base extends Component
                                 //   when processing log this is set to false
                                 //   so not unecessarily re-crating arrays
     public $debug;
-    protected $argStringOpts;   // per-argument string options
+    protected $argOpts; // per-argument options
     protected $channelNameRoot;
     protected $dumpType;
     protected $dumpTypeMore;
     private $subInfo = array();
+    private $subRegex = '/%'
+        . '(?:'
+        . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
+        . '[+-]?'                // sign specifier
+        . '(?:[ 0]|\'.{1})?'     // padding specifier
+        . '-?'                   // alignment specifier
+        . '\d*'                  // width specifier
+        . '(?:\.\d+)?'           // precision specifier
+        . '[difs]'
+        . ')'
+        . '/';
 
     /**
      * Constructor
@@ -57,7 +68,7 @@ class Base extends Component
      */
     public function dump($val, $opts = array())
     {
-        $this->argStringOpts = \array_merge(array(
+        $this->argOpts = \array_merge(array(
             'addQuotes' => true,
             'sanitize' => true,     // only applies to html
             'visualWhiteSpace' => true,
@@ -138,6 +149,22 @@ class Base extends Component
     }
 
     /**
+     * Do the logEntry arguments appear to have string substitutions
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return bool
+     */
+    protected function containsSubstitutions(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        if (\count($args) < 2 || \is_string($args[0]) === false) {
+            return false;
+        }
+        return \preg_match($this->subRegex, $args[0]) === 1;
+    }
+
+    /**
      * Dump an abstraction
      *
      * @param Abstraction $abs      Abstraction instance
@@ -149,10 +176,13 @@ class Base extends Component
     {
         $type = $abs['type'];
         $method = 'dump' . \ucfirst($type);
-        foreach (\array_keys($this->argStringOpts) as $k) {
+        foreach (\array_keys($this->argOpts) as $k) {
             if ($abs[$k] !== null) {
-                $this->argStringOpts[$k] = $abs[$k];
+                $this->argOpts[$k] = $abs[$k];
             }
+        }
+        if ($abs['options']) {
+            $this->argOpts = \array_merge($this->argOpts, $abs['options']);
         }
         $typeMore = null;
         if (\method_exists($this, $method) === false) {
@@ -446,7 +476,7 @@ class Base extends Component
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
-            if (\count($args) > 1 && \is_string($args[0])) {
+            if ($this->containsSubstitutions($logEntry)) {
                 $args = $this->processSubstitutions($args);
             }
         }
@@ -619,18 +649,7 @@ class Base extends Component
             ), $options),
             'typeCounts' => \array_fill_keys(\str_split('coOdifs'), 0),
         );
-        $subRegex = '/%'
-            . '(?:'
-            . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
-            . '[+-]?'                // sign specifier
-            . '(?:[ 0]|\'.{1})?'     // padding specifier
-            . '-?'                   // alignment specifier
-            . '\d*'                  // width specifier
-            . '(?:\.\d+)?'           // precision specifier
-            . '[difs]'
-            . ')'
-            . '/';
-        $string = \preg_replace_callback($subRegex, array($this, 'processSubsCallback'), $args[0]);
+        $string = \preg_replace_callback($this->subRegex, array($this, 'processSubsCallback'), $args[0]);
         $args = $this->subInfo['args'];
         if (!$this->subInfo['options']['style']) {
             $this->subInfo['typeCounts']['c'] = 0;

@@ -153,7 +153,6 @@ class Debug
             'logResponseMaxLen' => '1 MB',
             'logRuntime' => true,
             'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
-            'maxLenString' => 8192,
             'onBootstrap' => null,          // callable
             'onLog' => null,                // callable
             'onOutput' => null,             // callable
@@ -172,6 +171,7 @@ class Debug
             'routeNonHtml' => 'chromeLogger',
             'services' => $this->getDefaultServices(),
             'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
+            'stringMaxLen' => 8192,
         );
         $this->data = array(
             'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
@@ -855,8 +855,7 @@ class Debug
                 set special '__key' value
             */
             foreach ($data as $k => &$row) {
-                $row['__key'] = new Abstraction(array(
-                    'type' => Abstracter::TYPE_CALLABLE,
+                $row['__key'] = new Abstraction(Abstracter::TYPE_CALLABLE, array(
                     'value' => $k,
                     'hideType' => true, // don't output 'callable'
                 ));

@@ -91,14 +91,13 @@ class SoapClient extends \SoapClient
         $debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
         $debug->log(
             'request body',
-            new Abstraction(array(
-                'type' => Abstracter::TYPE_STRING,
+            new Abstraction(Abstracter::TYPE_STRING, array(
+                'value' => $xmlRequest,
                 'attribs' => array(
                     'class' => 'highlight language-xml',
                 ),
                 'addQuotes' => false,
                 'visualWhiteSpace' => false,
-                'value' => $xmlRequest,
             )),
             $debug->meta(array(
                 'attribs' => array(
@@ -110,14 +109,13 @@ class SoapClient extends \SoapClient
         $debug->log('response headers', $this->__getLastResponseHeaders(), $this->debug->meta('redact'));
         $debug->log(
             'response body',
-            new Abstraction(array(
-                'type' => Abstracter::TYPE_STRING,
+            new Abstraction(Abstracter::TYPE_STRING, array(
+                'value' => $xmlResponse,
                 'attribs' => array(
                     'class' => 'highlight language-xml',
                 ),
                 'addQuotes' => false,
                 'visualWhiteSpace' => false,
-                'value' => $xmlResponse,
             )),
             $debug->meta(array(
                 'attribs' => array(

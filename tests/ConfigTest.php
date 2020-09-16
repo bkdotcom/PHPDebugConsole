@@ -62,7 +62,6 @@ class ConfigTest extends DebugTestFramework
             'logResponseMaxLen',
             'logRuntime',
             'logServerKeys',
-            'maxLenString',
             'onBootstrap',
             'onLog',
             'onOutput',
@@ -73,6 +72,7 @@ class ConfigTest extends DebugTestFramework
             'routeNonHtml',
             'services',
             'sessionName',
+            'stringMaxLen',
         );
 
         $this->assertSame(true, $this->debug->getCfg('collect'));

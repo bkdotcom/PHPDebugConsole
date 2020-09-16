@@ -107,6 +107,8 @@ class Email implements RouteInterface
      * @param Debug  $debug (optional) Debug instance
      *
      * @return array|false
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public static function unserializeLog($str, Debug $debug = null)
     {
@@ -116,6 +118,7 @@ class Email implements RouteInterface
         $strStart = 'START DEBUG';
         $strEnd = 'END DEBUG';
         $regex = '/' . $strStart . '[\r\n]+(.+)[\r\n]+' . $strEnd . '/s';
+        $matches = array();
         if (\preg_match($regex, $str, $matches)) {
             $str = $matches[1];
         }
@@ -248,11 +251,12 @@ class Email implements RouteInterface
                 continue;
             }
             if (isset($v['debug']) && $v['debug'] === Abstracter::ABSTRACTION) {
-                unset($v['debug']);
-                if ($v['type'] === Abstracter::TYPE_OBJECT) {
+                $type = $v['type'];
+                unset($v['debug'], $v['type']);
+                if ($type === Abstracter::TYPE_OBJECT) {
                     $v['properties'] = self::unserializeLogBackward($v['properties']);
                 }
-                $args[$k] = new Abstraction($v);
+                $args[$k] = new Abstraction($type, $v);
                 continue;
             }
             $args[$k] = self::unserializeLogBackward($v);

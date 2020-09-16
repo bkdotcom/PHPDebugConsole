@@ -37,7 +37,7 @@ class MonologHandler extends PsrHandler
     public function __construct($debug = null, $level = Logger::DEBUG, bool $bubble = true)
     {
         if (!$debug) {
-            $debug = Debug::_getInstance();
+            $debug = Debug::getInstance();
         }
         if ($debug instanceof Debug) {
             $this->logger = $debug->logger;

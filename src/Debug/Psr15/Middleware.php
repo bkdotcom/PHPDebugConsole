@@ -38,6 +38,8 @@ class Middleware implements MiddlewareInterface
      *
      * @param Debug $debug   (optional) Debug instance (will use singleton if not provided)
      * @param array $options middleware options
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function __construct(Debug $debug = null, $options = array())
     {

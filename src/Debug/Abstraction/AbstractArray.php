@@ -66,8 +66,7 @@ class AbstractArray
      */
     public function getAbstraction(&$array, $method = null, $hist = array())
     {
-        return new Abstraction(array(
-            'type' => Abstracter::TYPE_ARRAY,
+        return new Abstraction(Abstracter::TYPE_ARRAY, array(
             'value' => $this->crate($array, $method, $hist),
         ));
     }
@@ -85,8 +84,7 @@ class AbstractArray
         if (PHP_VERSION_ID >= 70000 && \strpos($className, "@anonymous\0") !== false) {
             $className = $this->abstracter->debug->utility->friendlyClassName($array[0]);
         }
-        return new Abstraction(array(
-            'type' => Abstracter::TYPE_CALLABLE,
+        return new Abstraction(Abstracter::TYPE_CALLABLE, array(
             'value' => array($className, $array[1]),
         ));
     }

@@ -285,8 +285,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                         php may return something like self::CONSTANT_NAME
                         hhvm will return WhateverTheClassNameIs::CONSTANT_NAME
                 */
-                $defaultValue = new Abstraction(array(
-                    'type' => Abstracter::TYPE_CONST,
+                $defaultValue = new Abstraction(Abstracter::TYPE_CONST, array(
                     'name' => $reflectionParameter->getDefaultValueConstantName(),
                     'value' => $defaultValue,
                 ));
@@ -454,14 +453,12 @@ class AbstractObjectMethods extends AbstractObjectSub
             // appears to be a constant
             if ($matches[1] && \defined($className . '::' . $matches[2])) {
                 // self
-                $defaultValue = new Abstraction(array(
-                    'type' => Abstracter::TYPE_CONST,
+                $defaultValue = new Abstraction(Abstracter::TYPE_CONST, array(
                     'name' => $matches[0],
                     'value' => \constant($className . '::' . $matches[2]),
                 ));
             } elseif (\defined($defaultValue)) {
-                $defaultValue = new Abstraction(array(
-                    'type' => Abstracter::TYPE_CONST,
+                $defaultValue = new Abstraction(Abstracter::TYPE_CONST, array(
                     'name' => $defaultValue,
                     'value' => \constant($defaultValue),
                 ));

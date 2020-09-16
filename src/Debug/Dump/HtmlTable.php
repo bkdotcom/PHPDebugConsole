@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Dump;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Dump\Html;
 use bdk\Debug\Method\Table as MethodTable;
 
@@ -62,7 +63,7 @@ class HtmlTable
                 'class' => $options['attribs'],
             );
         }
-        if ($this->debug->abstracter->isAbstraction($rows, 'object')) {
+        if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
             $classname = $this->html->markupIdentifier(
                 $rows['className'],
                 'span',

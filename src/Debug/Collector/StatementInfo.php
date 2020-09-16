@@ -159,14 +159,13 @@ class StatementInfo
         )));
         if ($logSql) {
             $debug->log(
-                new Abstraction(array(
-                    'type' => Abstracter::TYPE_STRING,
+                new Abstraction(Abstracter::TYPE_STRING, array(
+                    'value' => $debug->utility->prettySql($this->sql),
                     'attribs' => array(
                         'class' => 'highlight language-sql',
                     ),
                     'addQuotes' => false,
                     'visualWhiteSpace' => false,
-                    'value' => $debug->utility->prettySql($this->sql),
                 )),
                 $debug->meta(array(
                     'attribs' => array(
@@ -289,8 +288,7 @@ class StatementInfo
             $type = $this->types[$name];
             $params[$name]['type'] = $type; // integer value
             if (isset(self::$constants[$type])) {
-                $params[$name]['type'] = new Abstraction(array(
-                    'type' => Abstracter::TYPE_CONST,
+                $params[$name]['type'] = new Abstraction(Abstracter::TYPE_CONST, array(
                     'name' => self::$constants[$type],
                     'value' => $type,
                 ));

@@ -153,11 +153,11 @@ class TypeBasicTest extends DebugTestFramework
                         'log',
                         array(
                             array(
-                                'type' => 'callable',
                                 'value' => array(
                                     'bdk\DebugTests\Fixture\Test',
                                     'testBaseStatic',
                                 ),
+                                'type' => Abstracter::TYPE_CALLABLE,
                                 'debug' => Abstracter::ABSTRACTION,
                             ),
                         ),

@@ -306,6 +306,8 @@ function enhanceArray ($node) {
         '<span class="t_punct">)</span>' +
       '</span>')
   var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length
+  var expand = $node.data('expand')
+  var expandDefault = true
   if (isEnhanced) {
     return
   }
@@ -322,8 +324,20 @@ function enhanceArray ($node) {
     .parent().next().remove() // remove original '('
   $node.before($expander)
   if (numParents === 0) {
-    // outermost array -> leave open
-    $node.debugEnhance('expand')
+    // outermost array
+    expandDefault = true // expand
+  } else {
+    // nested array
+    expandDefault = false // collapse
+    if (expand === undefined) {
+      expand = $node.closest('.t_array[data-expand]').data('expand')
+    }
+  }
+  if (expand === undefined) {
+    expand = expandDefault
+  }
+  if (expand) {
+    $node.debugEnhance('expand');
   } else {
     $node.find('.t_array-collapse').first().debugEnhance('collapse')
   }

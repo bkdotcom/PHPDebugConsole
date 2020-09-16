@@ -313,8 +313,7 @@ class InternalEvents implements SubscriberInterface
                 $this->debug->addPlugin(new Highlight());
                 $this->highlightAdded = true;
             }
-            $event['value'] = new Abstraction(array(
-                'type' => Abstracter::TYPE_STRING,
+            $event['value'] = new Abstraction(Abstracter::TYPE_STRING, array(
                 'attribs' => array(
                     'class' => 'highlight language-' . $lang,
                 ),

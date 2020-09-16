@@ -2,6 +2,7 @@
 
 namespace bdk\DebugTests\Plugin;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\Debug\Psr7lite\Stream;
@@ -78,14 +79,13 @@ class LogReqResTest extends DebugTestFramework
                     'php://input %c%s',
                     'font-style: italic; opacity: 0.8;',
                     '(prettified)',
-                    new Abstraction(array(
-                        'type' => 'string',
+                    new Abstraction(Abstracter::TYPE_STRING, array(
+                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'attribs' => array(
                             'class' => 'highlight language-json',
                         ),
                         'addQuotes' => false,
                         'visualWhiteSpace' => false,
-                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                     ))
                 ),
                 array(
@@ -130,14 +130,13 @@ class LogReqResTest extends DebugTestFramework
                     'php://input %c%s',
                     'font-style: italic; opacity: 0.8;',
                     '(prettified)',
-                    new Abstraction(array(
-                        'type' => 'string',
+                    new Abstraction(Abstracter::TYPE_STRING, array(
+                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'attribs' => array(
                             'class' => 'highlight language-json',
                         ),
                         'addQuotes' => false,
                         'visualWhiteSpace' => false,
-                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                     ))
                 ),
                 array(
@@ -220,14 +219,13 @@ class LogReqResTest extends DebugTestFramework
                     'php://input %c%s',
                     'font-style: italic; opacity: 0.8;',
                     '(prettified)',
-                    new Abstraction(array(
-                        'type' => 'string',
+                    new Abstraction(Abstracter::TYPE_STRING, array(
+                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'attribs' => array(
                             'class' => 'highlight language-json',
                         ),
                         'addQuotes' => false,
                         'visualWhiteSpace' => false,
-                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                     ))
                 ),
                 array(

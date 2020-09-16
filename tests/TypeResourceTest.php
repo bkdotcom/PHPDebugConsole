@@ -2,6 +2,9 @@
 
 namespace bdk\DebugTests;
 
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -15,8 +18,7 @@ class TypeResourceTest extends DebugTestFramework
         $entry = array(
             'log',
             array(
-                new \bdk\Debug\Abstraction\Abstraction(array(
-                    'type' => 'resource',
+                new Abstraction(Abstracter::TYPE_RESOURCE, array(
                     'value' => $value,
                 )),
             ),

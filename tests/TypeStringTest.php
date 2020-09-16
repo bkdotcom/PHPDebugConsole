@@ -189,7 +189,7 @@ EOD;
             // 5
             array(
                 'log',
-                array('long string', $longString, \bdk\Debug::_meta('cfg', 'maxLenString', 430)), // cut in middle of multi-byte char
+                array('long string', $longString, \bdk\Debug::_meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
                 array(
                     'chromeLogger' => \json_encode(array(
                         array(

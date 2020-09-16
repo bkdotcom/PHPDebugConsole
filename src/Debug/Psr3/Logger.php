@@ -36,7 +36,7 @@ class Logger extends AbstractLogger
     public function __construct(Debug $debug = null)
     {
         if (!$debug) {
-            $debug = Debug::_getInstance();
+            $debug = Debug::getInstance();
         }
         $this->debug = $debug;
         $debug->backtrace->addInternalClass(array(

@@ -30,10 +30,10 @@ class Base extends Component
                                 //   when processing log this is set to false
                                 //   so not unecessarily re-crating arrays
     public $debug;
-    protected $argOpts; // per-argument options
     protected $channelNameRoot;
     protected $dumpType;
     protected $dumpTypeMore;
+    protected $valOpts; // per-value options
     private $subInfo = array();
     private $subRegex = '/%'
         . '(?:'
@@ -68,7 +68,7 @@ class Base extends Component
      */
     public function dump($val, $opts = array())
     {
-        $this->argOpts = \array_merge(array(
+        $this->valOpts = \array_merge(array(
             'addQuotes' => true,
             'sanitize' => true,     // only applies to html
             'visualWhiteSpace' => true,
@@ -176,13 +176,13 @@ class Base extends Component
     {
         $type = $abs['type'];
         $method = 'dump' . \ucfirst($type);
-        foreach (\array_keys($this->argOpts) as $k) {
+        foreach (\array_keys($this->valOpts) as $k) {
             if ($abs[$k] !== null) {
-                $this->argOpts[$k] = $abs[$k];
+                $this->valOpts[$k] = $abs[$k];
             }
         }
         if ($abs['options']) {
-            $this->argOpts = \array_merge($this->argOpts, $abs['options']);
+            $this->valOpts = \array_merge($this->valOpts, $abs['options']);
         }
         $typeMore = null;
         if (\method_exists($this, $method) === false) {

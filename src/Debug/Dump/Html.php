@@ -348,7 +348,7 @@ class Html extends Base
         $opts = \array_merge(array(
             'showListKeys' => true,
             'expand' => null,
-        ), $this->argOpts);
+        ), $this->valOpts);
         if ($opts['expand'] !== null) {
             $this->valAttribs['data-expand'] = $opts['expand'];
         }
@@ -495,16 +495,16 @@ class Html extends Base
             $this->valAttribs['data-file'] = true;
         }
         $val = $this->debug->utf8->dump($val, array(
-            'sanitizeNonBinary' => $this->argOpts['sanitize'],
+            'sanitizeNonBinary' => $this->valOpts['sanitize'],
             'useHtml' => true,
         ));
         if ($abs && $abs['strlen']) {
             $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)</span>';
         }
-        if ($this->argOpts['visualWhiteSpace']) {
+        if ($this->valOpts['visualWhiteSpace']) {
             $val = $this->visualWhiteSpace($val);
         }
-        if (!$this->argOpts['addQuotes']) {
+        if (!$this->valOpts['addQuotes']) {
             $this->valAttribs['class'][] = 'no-quotes';
         }
         return $val;

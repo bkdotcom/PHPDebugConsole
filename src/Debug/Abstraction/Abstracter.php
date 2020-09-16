@@ -100,9 +100,31 @@ class Abstracter extends Component
     }
 
     /**
-     * Want to store a "snapshot" of arrays, objects, & resources
-     * Remove any reference to an "external" variable
+     * Wrap value in Abstraction
      *
+     * @param mixed $mixed   value to abstract
+     * @param array $options options
+     *
+     * @return Abstraction
+     */
+    public function crateWithOpts($mixed, $options = array())
+    {
+        $abs = $this->getAbstraction($mixed);
+        if ($options) {
+            if (isset($options['attribs'])) {
+                $abs['attribs'] = $options['attribs'];
+                unset($options['attribs']);
+            }
+            $abs['options'] = $options;
+        }
+        return $abs;
+    }
+
+    /**
+     * Store a "snapshot" of arrays, objects, & resources (or any other value)
+     * along with other meta info/options for the value
+     *
+     * Remove any reference to an "external" variable
      * Deep cloning objects = problematic
      *   + some objects are uncloneable & throw fatal error
      *   + difficult to maintain circular references
@@ -115,6 +137,8 @@ class Abstracter extends Component
      * @param array  $hist     (@internal) array/object history (used to test for recursion)
      *
      * @return Abstraction
+     *
+     * @internal
      */
     public function getAbstraction($mixed, $method = null, $typeInfo = array(), $hist = array())
     {
@@ -129,19 +153,17 @@ class Abstracter extends Component
             case self::TYPE_OBJECT:
                 return $this->abstractObject->getAbstraction($mixed, $method, $hist);
             case self::TYPE_RESOURCE:
-                return new Abstraction(array(
-                    'type' => $type,
+                return new Abstraction($type, array(
                     'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
                 ));
             case self::TYPE_STRING:
-                return new Abstraction(array(
-                    'type' => $type,
+                $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
+                return new Abstraction($type, array(
                     'strlen' => \strlen($mixed),
-                    'value' => $this->debug->utf8->strcut($mixed, 0, $this->debug->getCfg('maxLenString', Debug::CONFIG_DEBUG)),
+                    'value' => $this->debug->utf8->strcut($mixed, 0, $maxLen),
                 ));
             default:
-                return new Abstraction(array(
-                    'type' => $type,
+                return new Abstraction($type, array(
                     'value' => $mixed,
                 ));
         }
@@ -229,8 +251,8 @@ class Abstracter extends Component
             return array($type, $typeMore);
         }
         if ($type === self::TYPE_STRING) {
-            $maxLenString = $this->debug->getCfg('maxLenString', Debug::CONFIG_DEBUG);
-            if ($maxLenString && \strlen($val) > $maxLenString) {
+            $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
+            if ($maxLen && \strlen($val) > $maxLen) {
                 return array($type, $typeMore);
             }
         }

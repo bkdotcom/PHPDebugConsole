@@ -276,7 +276,7 @@ class Text extends Base
                 : $val;
         }
         $val = $this->debug->utf8->dump($val);
-        if ($this->argOpts['addQuotes']) {
+        if ($this->valOpts['addQuotes']) {
             $val = '"' . $val . '"';
         }
         if ($abs && $abs['strlen']) {

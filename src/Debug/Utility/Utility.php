@@ -12,6 +12,7 @@
 
 namespace bdk\Debug;
 
+use bdk\Debug;
 use DOMDocument;
 use Exception;
 use Psr\Http\Message\StreamInterface;
@@ -783,7 +784,7 @@ class Utility
     private static function getServerParam($name, $default = null)
     {
         if (!self::$serverParams) {
-            $request = \bdk\Debug::getInstance()->request;
+            $request = Debug::getInstance()->request;
             self::$serverParams = $request->getServerParams();
         }
         return \array_key_exists($name, self::$serverParams)

@@ -32,11 +32,13 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     /**
      * Constructor
      *
-     * @param array $values abtraction values
+     * @param string $type   value type (one of the Abstracter TYPE_XXX constants)
+     * @param array  $values abtraction values
      */
-    public function __construct($values = array())
+    public function __construct($type, $values = array())
     {
         $this->values = $values;
+        $this->values['type'] = $type;
     }
 
     /**

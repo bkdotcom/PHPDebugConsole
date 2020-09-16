@@ -75,7 +75,7 @@ class AbstractObject
         $className = $reflector->getName();
         $interfaceNames = $reflector->getInterfaceNames();
         \sort($interfaceNames);
-        $abs = new Abstraction(array(
+        $abs = new Abstraction(Abstracter::TYPE_OBJECT, array(
             'className' => $className,
             'constants' => array(),
             'debugMethod' => $method,
@@ -99,7 +99,6 @@ class AbstractObject
             'properties' => array(),
             'scopeClass' => $this->getScopeClass($hist),
             'stringified' => null,
-            'type' => Abstracter::TYPE_OBJECT,
             'traverseValues' => array(),    // populated if method is table && traversable
             'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && $reflector->hasMethod('__debugInfo'),
             // these are temporary values available during abstraction

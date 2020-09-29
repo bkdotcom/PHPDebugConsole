@@ -84,7 +84,27 @@ class Debug
 
     protected $cfg = array();
     protected $config;
-    protected $data = array();
+    protected $data = array(
+        'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
+        'counts'            => array(), // count method
+        'entryCountInitial' => 0,       // store number of log entries created during init
+        'groupStacks' => array(
+            'main' => array(),  // array('channel' => Debug, 'collect' => bool)[]
+        ),
+        'groupPriorityStack' => array(), // array of priorities
+                                        //   used to return to the previous summary when groupEnd()ing out of a summary
+                                        //   this allows calling groupSummary() while in a groupSummary
+        'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
+        'log'               => array(),
+        'logSummary'        => array(), // summary log entries subgrouped by priority
+        'outputSent'        => false,
+        'profileAutoInc'    => 1,
+        'profileInstances'  => array(),
+        'requestId'         => '',  // set in bootstrap
+        'runtime'           => array(
+            // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
+        ),
+    );
     protected $groupStackRef;   // points to $this->data['groupStacks'][x] (where x = 'main' or (int) priority)
     protected $internal;
     protected $internalEvents;
@@ -173,27 +193,6 @@ class Debug
             'services' => $this->getDefaultServices(),
             'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
             'stringMaxLen' => 8192,
-        );
-        $this->data = array(
-            'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
-            'counts'            => array(), // count method
-            'entryCountInitial' => 0,       // store number of log entries created during init
-            'groupStacks' => array(
-                'main' => array(),  // array('channel' => Debug, 'collect' => bool)[]
-            ),
-            'groupPriorityStack' => array(), // array of priorities
-                                            //   used to return to the previous summary when groupEnd()ing out of a summary
-                                            //   this allows calling groupSummary() while in a groupSummary
-            'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
-            'log'               => array(),
-            'logSummary'        => array(), // summary log entries subgrouped by priority
-            'outputSent'        => false,
-            'profileAutoInc'    => 1,
-            'profileInstances'  => array(),
-            'requestId'         => '',  // set in bootstrap
-            'runtime'           => array(
-                // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
-            ),
         );
         $this->bootstrap($cfg);
         /*

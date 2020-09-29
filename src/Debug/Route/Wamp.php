@@ -300,7 +300,6 @@ class Wamp implements RouteInterface
                 if differ pass the key order
             */
             $keys = \array_keys($array);
-            // $keysSorted= \array_keys($array);
             $keysSorted = $keys;
             \sort($keysSorted, SORT_STRING);
             if ($keys !== $keysSorted) {

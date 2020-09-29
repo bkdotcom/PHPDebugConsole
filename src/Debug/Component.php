@@ -12,6 +12,8 @@
 
 namespace bdk\Debug;
 
+use bdk\Debug\ConfigurableInterface;
+
 /**
  * Base "component" methods
  */

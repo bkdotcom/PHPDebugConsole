@@ -13,6 +13,8 @@
 
 namespace bdk\PubSub;
 
+use bdk\PubSub\SubscriberInterface;
+
 /**
  * Event publish/subscribe event manager
  */

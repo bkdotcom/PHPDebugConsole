@@ -188,7 +188,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug.debug-enhanced-ui .debug-menu-bar { height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; padding: 0 6px; background: #f3f3f3; font-size: 16px; margin-bottom: 0; }
 .debug.debug-enhanced-ui .debug-menu-bar, .debug.debug-enhanced-ui .debug-menu-bar a { color: #6e6e6e; }
 .debug.debug-enhanced-ui .debug-menu-bar nav { display: inline-block; margin-left: 20px; font-size: 0; line-height: 23px; vertical-align: top; }
-.debug.debug-enhanced-ui .debug-menu-bar nav .fa { margin-right: .5em; }
+.debug.debug-enhanced-ui .debug-menu-bar nav .fa { margin-right: 0.5em; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a { display: inline-block; padding: 0 15px; font-size: 12px; line-height: 23px; vertical-align: top; color: #111; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a:hover:not(.active) { background: #e6e6e6; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a.active { line-height: 22px; border-bottom: #4071e1 solid 2px; }

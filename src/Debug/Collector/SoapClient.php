@@ -70,24 +70,7 @@ class SoapClient extends \SoapClient
             $action = $dom->childNodes[0]->childNodes[0]->childNodes[0]->localName;
         }
 
-        $dom->loadXML($return);
-        $xmlResponse = $dom->saveXML();
-
         $debug->groupCollapsed('soap', $action, $debug->meta('icon', $this->icon));
-
-        /*
-            determine if soapFault
-            a bit tricky from within __doRequest
-        */
-        $fault = $dom->getElementsByTagNameNS('http://schemas.xmlsoap.org/soap/envelope/', 'Fault');
-        if ($fault->length) {
-            $vals = array();
-            foreach ($fault[0]->childNodes as $node) {
-                $vals[$node->localName] = $node->nodeValue;
-            }
-            $debug->warn('soapFault', $vals);
-        }
-
         $debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
         $debug->log(
             'request body',
@@ -107,6 +90,25 @@ class SoapClient extends \SoapClient
             ))
         );
         $debug->log('response headers', $this->__getLastResponseHeaders(), $this->debug->meta('redact'));
+
+        $xmlResponse = '';
+        if ($return) {
+            $dom->loadXML($return);
+            $xmlResponse = $dom->saveXML();
+            /*
+                determine if soapFault
+                a bit tricky from within __doRequest
+            */
+            $fault = $dom->getElementsByTagNameNS('http://schemas.xmlsoap.org/soap/envelope/', 'Fault');
+            if ($fault->length) {
+                $vals = array();
+                foreach ($fault[0]->childNodes as $node) {
+                    $vals[$node->localName] = $node->nodeValue;
+                }
+                $debug->warn('soapFault', $vals);
+            }
+        }
+
         $debug->log(
             'response body',
             new Abstraction(Abstracter::TYPE_STRING, array(

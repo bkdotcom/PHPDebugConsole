@@ -119,7 +119,7 @@ class Debug
                 )
                 */
             ),
-            'channelIcon' => null,
+            'channelIcon' => '<i class="fa fa-list-ul"></i>',
             'channelName' => 'general',     // channel or tab name
             'channelShow' => true,          // wheter initially filtered or not
             'enableProfiling' => false,
@@ -138,6 +138,7 @@ class Debug
             'headerMaxPer' => null,
             'logEnvInfo' => array(      // may be set by passing a list
                 'errorReporting' => true,
+                'files' => true,
                 'gitInfo' => true,
                 'phpInfo' => true,
                 'serverVals' => true,
@@ -1246,6 +1247,7 @@ class Debug
             $cfg = $this->getCfg(null, self::CONFIG_INIT);
             $cfg = $this->internal->getPropagateValues($cfg);
             // set channel values
+            $cfg['debug']['channelIcon'] = null;
             $cfg['debug']['channelName'] = $config['nested'] || $this->readOnly['parentInstance']
                 ? $this->cfg['channelName'] . '.' . $name
                 : $name;
@@ -1897,6 +1899,18 @@ class Debug
             },
             'internalEvents' => function (Debug $debug) {
                 return new \bdk\Debug\InternalEvents($debug);
+            },
+            'logEnv' => function () {
+                return new \bdk\Debug\Plugin\LogEnv();
+            },
+            'logFiles' => function (Debug $debug) {
+                return new \bdk\Debug\Plugin\LogFiles(
+                    $debug->config->get('logFiles', self::CONFIG_INIT),
+                    $debug->getInstance()
+                );
+            },
+            'logReqRes' => function () {
+                return new \bdk\Debug\Plugin\LogReqRes();
             },
             'logger' => function (Debug $debug) {
                 return new \bdk\Debug\Psr3\Logger($debug);

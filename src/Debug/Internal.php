@@ -282,8 +282,11 @@ class Internal implements SubscriberInterface
             'errorHandler',
             'routeStream',
         )));
-        unset($cfg['debug']['onBootstrap']);
-        unset($cfg['debug']['route']);
+        $cfg['debug'] = \array_diff_key($cfg['debug'], \array_flip(array(
+            'channelIcon',
+            'onBootstrap',
+            'route',
+        )));
         if (isset($cfg['debug']['services'])) {
             $cfg['debug']['services'] = \array_intersect_key($cfg['debug']['services'], \array_flip(array(
                 // these services aren't tied to a debug instance... allow inheritance
@@ -446,8 +449,8 @@ class Internal implements SubscriberInterface
             // but stream needs to begin listening now
             $this->debug->setCfg('route', $route);
         }
-        $this->debug->addPlugin(new \bdk\Debug\Plugin\LogEnv());
-        $this->debug->addPlugin(new \bdk\Debug\Plugin\LogReqRes());
+        $this->debug->addPlugin($this->debug->logEnv);
+        $this->debug->addPlugin($this->debug->logReqRes);
     }
 
     /**

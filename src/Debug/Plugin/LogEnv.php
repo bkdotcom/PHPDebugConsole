@@ -33,7 +33,21 @@ class LogEnv implements SubscriberInterface
     {
         return array(
             Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
+            Debug::EVENT_OUTPUT => array('logFiles', PHP_INT_MAX),
         );
+    }
+
+    /**
+     * Log files required during request
+     *
+     * @return void
+     */
+    public function logFiles()
+    {
+        if (!$this->debug->getCfg('logEnvInfo.files', Debug::CONFIG_DEBUG)) {
+            return;
+        }
+        $this->debug->logFiles->output();
     }
 
     /**

@@ -346,11 +346,15 @@ class Html extends Base
                 . '<span class="t_punct">()</span>';
         }
         $opts = \array_merge(array(
-            'showListKeys' => true,
+            'asFileTree' => false,
             'expand' => null,
+            'showListKeys' => true,
         ), $this->valOpts);
         if ($opts['expand'] !== null) {
             $this->valAttribs['data-expand'] = $opts['expand'];
+        }
+        if ($opts['asFileTree']) {
+            $this->valAttribs['class'][] = 'array-file-tree';
         }
         $showKeys = $opts['showListKeys'] || !$this->debug->utility->arrayIsList($array);
         $this->valAttribsStack[] = $this->valAttribs;
@@ -789,11 +793,10 @@ class Html extends Base
                 . '<span class="t_punct">(</span>' . $count . '<span class="t_punct">)</span>';
         }
         if ($type === Abstracter::TYPE_OBJECT) {
-            $toStr = $val->toString();
-            $val = $toStr
-                ? $this->dump($toStr, $opts, null)
-                : $this->markupIdentifier($val['className']);
-            return $val;
+            $toStr = (string) $val; // objects __toString or its classname
+            return $toStr === $val['className']
+                ? $this->markupIdentifier($toStr)
+                : $this->dump($toStr, $opts, null);
         }
         return $this->dump($val);
     }

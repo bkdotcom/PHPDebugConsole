@@ -418,7 +418,7 @@ class Text extends Base
             return 'array(' . $count . ')';
         }
         if ($type === Abstracter::TYPE_OBJECT) {
-            return $val->toString() ?: $val['className'];
+            return (string) $val;   // __toString or className
         }
         return $this->dump($val, $opts);
     }

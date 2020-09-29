@@ -90,8 +90,8 @@ class HtmlObject
      */
     protected function dumpToString(Abstraction $abs)
     {
-        $val = $abs->toString();
-        if (!$val) {
+        $val = (string) $abs;
+        if ($val === $abs['className']) {
             return '';
         }
         $len = $val instanceof Abstraction

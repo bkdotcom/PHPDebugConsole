@@ -116,9 +116,7 @@
     }
     $node.prepend('<span class="vis-toggles">' + visToggles + '</span>');
     addIcons($node);
-    $node.find('> .property.forceShow').show().find('> .t_array-expand').each(function () {
-      $(this).debugEnhance('expand');
-    });
+    $node.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand');
     $node.addClass('enhanced');
   }
 
@@ -306,7 +304,7 @@
       }
     });
     $root.on('expand.debug.array', function (e) {
-      var $node = $(e.target);
+      var $node = $(e.target); // .t_array
       var $entry = $node.closest('li[class*=m_]');
       e.stopPropagation();
       $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
@@ -335,17 +333,18 @@
     });
     $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
       var $strings;
+      var $target = $(e.target);
       if (e.namespace === 'debug.group') {
         // console.log('expanded group', e.target)
-        $strings = $(e.target).find('> li > .t_string');
+        $strings = $target.find('> li > .t_string');
       } else if (e.namespace === 'debug.object') {
         // console.log('expanded object', e.target)
-        $strings = $(e.target).find('> dd.constant > .t_string,' +
+        $strings = $target.find('> dd.constant > .t_string,' +
           ' > dd.property:visible > .t_string,' +
           ' > dd.method > .t_string');
       } else {
         // console.log('expanded array', e.target)
-        $strings = $(e.target).find('> li > .t_string, > li.t_string');
+        $strings = $target.find('> .array-inner > li > .t_string, > .array-inner > li.t_string');
       }
       $strings.not('.numeric').each(function () {
         enhanceLongString($(this));
@@ -565,30 +564,47 @@
    */
   function enhanceArray ($node) {
     // console.log('enhanceArray', $node[0])
-    var isEnhanced = $node.prev().is('.t_array-expand');
-    var $expander = $('<span class="t_array-expand" data-toggle="array">' +
-          '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-          '<i class="fa ' + config$1.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
-          '<span class="t_punct">)</span>' +
-        '</span>');
+    var $arrayInner = $node.find('> .array-inner');
+    var isEnhanced = $node.find(' > .t_array-expand').length > 0;
+    var $expander;
     var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length;
     var expand = $node.data('expand');
     var expandDefault = true;
     if (isEnhanced) {
       return
     }
-    if ($.trim($node.find('.array-inner').html()).length < 1) {
+    if ($.trim($arrayInner.html()).length < 1) {
       // empty array -> don't add expand/collapse
-      $node.find('br').hide();
-      $node.find('.array-inner').hide();
+      $node.addClass('expanded').find('br').hide();
       return
     }
-    // add collapse link
-    $node.find('.t_keyword').first()
-      .wrap('<span class="t_array-collapse expanded" data-toggle="array">')
-      .after('<span class="t_punct">(</span> <i class="fa ' + config$1.iconsExpand.collapse + '"></i>')
-      .parent().next().remove(); // remove original '('
-    $node.before($expander);
+    if ($node.closest('.array-file-tree').length) {
+      $node.find('> .t_keyword, > .t_punct').remove();
+      $arrayInner.find('> li > .t_operator, > li > .t_key.t_int').remove();
+      $node.prevAll('.t_key').each(function () {
+        var $dir = $(this).attr('data-toggle', 'array');
+        $node.prepend($dir);
+        $node.prepend(
+          '<span class="t_array-collapse" data-toggle="array">▾ </span>' + // ▼
+          '<span class="t_array-expand" data-toggle="array">▸ </span>' // ▶
+        );
+      });
+    } else {
+      $expander = $('<span class="t_array-expand" data-toggle="array">' +
+          '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
+          '<i class="fa ' + config$1.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+          '<span class="t_punct">)</span>' +
+        '</span>');
+      // add expand/collapse
+      $node.find('.t_keyword').first()
+        .wrap('<span class="t_array-collapse" data-toggle="array">')
+        .after('<span class="t_punct">(</span> <i class="fa ' + config$1.iconsExpand.collapse + '"></i>')
+        .parent().next().remove(); // remove original '('
+      $node.prepend($expander);
+    }
+    $.each(config$1.iconsArray, function (selector, v) {
+      $node.find(selector).prepend(v);
+    });
     if (numParents === 0) {
       // outermost array
       expandDefault = true; // expand
@@ -1517,9 +1533,7 @@
       $logBody.find('.debug-log-summary').before($expandAll);
     }
     $root$3.on('click', '.expand-all', function () {
-      $(this).closest('.debug').find('.group-header').not('.expanded').each(function () {
-        $(this).debugEnhance('expand');
-      });
+      $(this).closest('.debug').find('.group-header').not('.expanded').debugEnhance('expand');
       return false
     });
   }
@@ -1724,10 +1738,8 @@
     var what = 'array';
     var icon = config$6.iconsExpand.expand;
     if ($toggle.is('[data-toggle=array]')) {
-      // show and use the 'expand it' toggle as reference toggle
-      $toggle = $toggle.closest('.t_array').prev().show();
-      $target = $toggle.next();
-      $target.hide();
+      $target = $toggle.closest('.t_array');
+      $target.removeClass('expanded');
     } else {
       if ($toggle.is('[data-toggle=group]')) {
         $groupEndValue = $target.find('> .m_groupEndValue > :last-child');
@@ -1752,23 +1764,33 @@
   }
 
   function expand ($toggleOrTarget) {
+    // console.warn('expand', $toggleOrTarget)
     var isToggle = $toggleOrTarget.is('[data-toggle]');
-    var $toggle = isToggle
-      ? $toggleOrTarget
-      : $toggleOrTarget.prev();
-    var $target = isToggle
-      ? $toggleOrTarget.next()
-      : $toggleOrTarget;
-    var what = $toggle.data('toggle');
-    var eventName = 'expanded.debug.' + what;
+    var $toggle;
+    var $target;
+    var what;
+    var eventNameExpanded;
+    if ($toggleOrTarget.hasClass('t_array')) {
+      what = 'array';
+      $target = $toggleOrTarget;
+      // don't need toggle
+    } else if (isToggle) {
+      what = $toggleOrTarget.data('toggle');
+      $toggle = $toggleOrTarget;
+      $target = what === 'array'
+        ? $toggle.closest('.t_array')
+        : $toggle.next();
+    } else {
+      $target = $toggleOrTarget;
+      $toggle = $toggleOrTarget.prev();
+      what = $toggle.data('toggle');
+    }
+    eventNameExpanded = 'expanded.debug.' + what;
     // trigger while still hidden!
     //    no redraws
     $target.trigger('expand.debug.' + what);
     if (what === 'array') {
-      // hide the toggle..  there is a different toggle in the expanded version
-      $toggle.hide();
-      $target.show();
-      $target.find('> .array-inner').trigger(eventName);
+      $target.addClass('expanded').trigger(eventNameExpanded);
     } else {
       $target.slideDown('fast', function () {
         var $groupEndValue = $target.find('> .m_groupEndValue');
@@ -1780,7 +1802,7 @@
         }
         // setTimeout for reasons?...
         setTimeout(function () {
-          $target.trigger(eventName);
+          $target.trigger(eventNameExpanded);
         });
       });
     }
@@ -1844,10 +1866,14 @@
 
   function toggle (toggle) {
     var $toggle = $(toggle);
+    var isExpanded = $toggle.hasClass('expanded');
     if ($toggle.is('.group-header') && $toggle.parent().is('.empty')) {
       return
     }
-    if ($toggle.is('.expanded')) {
+    if ($toggle.parent().hasClass('t_array')) {
+      isExpanded = $toggle.parent().hasClass('expanded');
+    }
+    if (isExpanded) {
       collapse($toggle);
     } else {
       expand($toggle);
@@ -2044,6 +2070,9 @@
     iconsMisc: {
       '.timestamp': '<i class="fa fa-calendar"></i>'
     },
+    iconsArray: {
+      '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
+    },
     iconsObject: {
       '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
       '> .method.magic': '<i class="fa fa-fw fa-magic" title="magic method"></i>',
@@ -2091,6 +2120,7 @@
       '.debug .fa-external-link:before { content:"\\f35d"; }' +
       '.debug .fa-exchange:before { content:"\\f362"; }' +
       '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
+      '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
       '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
       '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
       '.debug .fa-pie-chart:before { content:"\\f200"; }' +

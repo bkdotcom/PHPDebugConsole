@@ -303,13 +303,13 @@ class Html extends Base
      */
     private function buildTabList()
     {
-        $names = \array_keys($this->debug->getChannelsTop());
-        if (\count($names) < 2) {
+        $channels = $this->debug->getChannelsTop();
+        if (\count($channels) < 2) {
             return '';
         }
         $html = '';
         $channelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        foreach ($names as $name) {
+        foreach ($channels as $name => $instance) {
             $isActive = false;
             $nameTab = $name;
             if ($name === $channelName) {
@@ -317,6 +317,7 @@ class Html extends Base
                 $nameTab = 'Log';
             }
             $target = '.' . $this->nameToClassname($name);
+            $channelIcon = $instance->getCfg('channelIcon', Debug::CONFIG_DEBUG);
             $html .= $this->debug->html->buildTag(
                 'a',
                 array(
@@ -328,7 +329,7 @@ class Html extends Base
                     'data-toggle' => 'tab',
                     'role' => 'tab',
                 ),
-                $nameTab
+                $channelIcon . $nameTab
             ) . "\n";
         }
         return $html;
@@ -346,7 +347,7 @@ class Html extends Base
         /*
             We want Request / Response to come first in case we're not outputting tab UI
         */
-        $order = array('Request / Response');
+        $order = array('Request / Response', 'Files');
         \usort($names, function ($valA, $valB) use ($order) {
             $aPos = \array_search($valA, $order);
             $bPos = \array_search($valB, $order);

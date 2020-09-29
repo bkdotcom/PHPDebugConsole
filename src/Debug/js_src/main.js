@@ -27,6 +27,9 @@ var config = new Config({
   iconsMisc: {
     '.timestamp': '<i class="fa fa-calendar"></i>'
   },
+  iconsArray: {
+    '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
+  },
   iconsObject: {
     '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
     '> .method.magic': '<i class="fa fa-fw fa-magic" title="magic method"></i>',
@@ -74,6 +77,7 @@ var config = new Config({
     '.debug .fa-external-link:before { content:"\\f35d"; }' +
     '.debug .fa-exchange:before { content:"\\f362"; }' +
     '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
+    '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
     '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
     '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
     '.debug .fa-pie-chart:before { content:"\\f200"; }' +

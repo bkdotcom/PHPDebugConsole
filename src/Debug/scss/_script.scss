@@ -65,6 +65,26 @@ i.fa-calendar { font-size: 1.1em; }
 [data-toggle],
 [data-toggle][title] { cursor: pointer; }
 
+.t_array {
+  > .t_array-collapse,
+  > .array-inner,
+  > .t_punct {
+    display: none;
+  }
+  &.expanded {
+    > .t_array-expand {
+      display: none;
+    }
+    > .t_array-collapse,
+    > .t_punct {
+      display: inline;
+    }
+    > .array-inner {
+      display: block;
+    }
+  }
+}
+
 .t_object {
   i.fa-eye {
     color: #00529b;

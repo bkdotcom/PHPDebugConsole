@@ -40,7 +40,7 @@ export function init ($root) {
     }
   })
   $root.on('expand.debug.array', function (e) {
-    var $node = $(e.target)
+    var $node = $(e.target) // .t_array
     var $entry = $node.closest('li[class*=m_]')
     e.stopPropagation()
     $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
@@ -69,17 +69,18 @@ export function init ($root) {
   })
   $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
     var $strings
+    var $target = $(e.target)
     if (e.namespace === 'debug.group') {
       // console.log('expanded group', e.target)
-      $strings = $(e.target).find('> li > .t_string')
+      $strings = $target.find('> li > .t_string')
     } else if (e.namespace === 'debug.object') {
       // console.log('expanded object', e.target)
-      $strings = $(e.target).find('> dd.constant > .t_string,' +
+      $strings = $target.find('> dd.constant > .t_string,' +
         ' > dd.property:visible > .t_string,' +
         ' > dd.method > .t_string')
     } else {
       // console.log('expanded array', e.target)
-      $strings = $(e.target).find('> li > .t_string, > li.t_string')
+      $strings = $target.find('> .array-inner > li > .t_string, > .array-inner > li.t_string')
     }
     $strings.not('.numeric').each(function () {
       enhanceLongString($(this))
@@ -299,30 +300,47 @@ function createFileLinks ($entry, $strings, remove) {
  */
 function enhanceArray ($node) {
   // console.log('enhanceArray', $node[0])
-  var isEnhanced = $node.prev().is('.t_array-expand')
-  var $expander = $('<span class="t_array-expand" data-toggle="array">' +
-        '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-        '<i class="fa ' + config.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
-        '<span class="t_punct">)</span>' +
-      '</span>')
+  var $arrayInner = $node.find('> .array-inner')
+  var isEnhanced = $node.find(' > .t_array-expand').length > 0
+  var $expander
   var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length
   var expand = $node.data('expand')
   var expandDefault = true
   if (isEnhanced) {
     return
   }
-  if ($.trim($node.find('.array-inner').html()).length < 1) {
+  if ($.trim($arrayInner.html()).length < 1) {
     // empty array -> don't add expand/collapse
-    $node.find('br').hide()
-    $node.find('.array-inner').hide()
+    $node.addClass('expanded').find('br').hide()
     return
   }
-  // add collapse link
-  $node.find('.t_keyword').first()
-    .wrap('<span class="t_array-collapse expanded" data-toggle="array">')
-    .after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>')
-    .parent().next().remove() // remove original '('
-  $node.before($expander)
+  if ($node.closest('.array-file-tree').length) {
+    $node.find('> .t_keyword, > .t_punct').remove()
+    $arrayInner.find('> li > .t_operator, > li > .t_key.t_int').remove()
+    $node.prevAll('.t_key').each(function () {
+      var $dir = $(this).attr('data-toggle', 'array')
+      $node.prepend($dir)
+      $node.prepend(
+        '<span class="t_array-collapse" data-toggle="array">▾ </span>' + // ▼
+        '<span class="t_array-expand" data-toggle="array">▸ </span>' // ▶
+      )
+    })
+  } else {
+    $expander = $('<span class="t_array-expand" data-toggle="array">' +
+        '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
+        '<i class="fa ' + config.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+        '<span class="t_punct">)</span>' +
+      '</span>')
+    // add expand/collapse
+    $node.find('.t_keyword').first()
+      .wrap('<span class="t_array-collapse" data-toggle="array">')
+      .after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>')
+      .parent().next().remove() // remove original '('
+    $node.prepend($expander)
+  }
+  $.each(config.iconsArray, function (selector, v) {
+    $node.find(selector).prepend(v)
+  })
   if (numParents === 0) {
     // outermost array
     expandDefault = true // expand
@@ -337,7 +355,7 @@ function enhanceArray ($node) {
     expand = expandDefault
   }
   if (expand) {
-    $node.debugEnhance('expand');
+    $node.debugEnhance('expand')
   } else {
     $node.find('.t_array-collapse').first().debugEnhance('collapse')
   }

@@ -69,6 +69,10 @@
 .debug .array-inner, .debug .object-inner { display: block; margin-left: 1em; }
 .debug .classname { font-weight: bold; color: #8d0c4c; }
 .debug .array-inner > li > .t_operator { margin: 0 0.25em; }
+.debug .t_array.array-file-tree .array-inner { margin-left: 0.25em; }
+.debug .t_array.array-file-tree .exclude-count { background: #d9edf7; color: #31708f; }
+.debug .t_array.array-file-tree .t_string::before, .debug .t_array.array-file-tree .t_string::after, .debug .t_array.array-file-tree .t_key::before, .debug .t_array.array-file-tree .t_key::after { display: none; }
+.debug li[class*=m_] > .t_array.array-file-tree > .array-inner { margin-left: -10px; }
 .debug .t_object { display: inline; }
 .debug .t_object .method .parameter [title], .debug .t_object .t_identifier[title], .debug .t_object .t_stringified, .debug .t_object .t_type[title] { text-decoration: underline; }
 .debug .t_object .method.deprecated { opacity: 0.66; }
@@ -184,6 +188,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug.debug-enhanced-ui .debug-menu-bar { height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; padding: 0 6px; background: #f3f3f3; font-size: 16px; margin-bottom: 0; }
 .debug.debug-enhanced-ui .debug-menu-bar, .debug.debug-enhanced-ui .debug-menu-bar a { color: #6e6e6e; }
 .debug.debug-enhanced-ui .debug-menu-bar nav { display: inline-block; margin-left: 20px; font-size: 0; line-height: 23px; vertical-align: top; }
+.debug.debug-enhanced-ui .debug-menu-bar nav .fa { margin-right: .5em; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a { display: inline-block; padding: 0 15px; font-size: 12px; line-height: 23px; vertical-align: top; color: #111; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a:hover:not(.active) { background: #e6e6e6; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a.active { line-height: 22px; border-bottom: #4071e1 solid 2px; }
@@ -262,6 +267,10 @@ color: #818a91
 .debug i.fa-plus-circle { opacity: 0.42; }
 .debug i.fa-calendar { font-size: 1.1em; }
 .debug [data-toggle], .debug [data-toggle][title] { cursor: pointer; }
+.debug .t_array > .t_array-collapse, .debug .t_array > .array-inner, .debug .t_array > .t_punct { display: none; }
+.debug .t_array.expanded > .t_array-expand { display: none; }
+.debug .t_array.expanded > .t_array-collapse, .debug .t_array.expanded > .t_punct { display: inline; }
+.debug .t_array.expanded > .array-inner { display: block; }
 .debug .t_object i.fa-eye { color: #00529b; font-size: 1.1em; border-bottom: 0; }
 .debug .t_object i.fa-magic { color: orange; }
 .debug .t_object .method i.fa-clone { color: #999; }

@@ -42,6 +42,27 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     }
 
     /**
+     * Return stringified value
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        $val = isset($this->values['value'])
+            ? $this->values['value']
+            : '';
+        if ($this->values['type'] === Abstracter::TYPE_OBJECT) {
+            $val = $this->values['className'];
+            if ($this->values['stringified']) {
+                $val = $this->values['stringified'];
+            } elseif (isset($this->values['methods']['__toString']['returnValue'])) {
+                $val = $this->values['methods']['__toString']['returnValue'];
+            }
+        }
+        return (string) $val;
+    }
+
+    /**
      * Set abstraction's subject
      *
      * @param mixed $subject (null) Subject omit or set to null to remove subject
@@ -52,24 +73,6 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     {
         $this->subject = $subject;
         return $this;
-    }
-
-    /**
-     * Return object's string representation
-     *
-     * @return string
-     */
-    public function toString()
-    {
-        $val = '';
-        if ($this->values['type'] === Abstracter::TYPE_OBJECT) {
-            if ($this->values['stringified']) {
-                $val = $this->values['stringified'];
-            } elseif (isset($this->values['methods']['__toString']['returnValue'])) {
-                $val = $this->values['methods']['__toString']['returnValue'];
-            }
-        }
-        return $val;
     }
 
     /**

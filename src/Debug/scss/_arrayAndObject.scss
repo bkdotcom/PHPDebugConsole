@@ -20,25 +20,31 @@ $color-static: #00529b;
 }
 
 .array-inner {
-  //
-  // Old
-  //
-  // span.key-value {
-  //   display: block;
-  //   padding-left: 10px;
-  //   text-indent: -10px;
-  //   > .t_operator {
-  //     margin: 0 0.25em;
-  //   }
-  // }
-  //
-  // New
-  //
   > li {
     > .t_operator {
       margin: 0 0.25em;
     }
   }
+}
+.t_array.array-file-tree {
+  .array-inner {
+    margin-left: 0.25em;
+  }
+  .exclude-count {
+    background: $info-bg;
+    color: $info-fg;
+  }
+  .t_string,
+  .t_key {
+    // directory "key" & files
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+}
+li[class*=m_] > .t_array.array-file-tree > .array-inner {
+  margin-left: -10px;
 }
 
 .t_object {

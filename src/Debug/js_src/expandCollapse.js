@@ -46,10 +46,8 @@ export function collapse ($toggle, immediate) {
   var what = 'array'
   var icon = config.iconsExpand.expand
   if ($toggle.is('[data-toggle=array]')) {
-    // show and use the 'expand it' toggle as reference toggle
-    $toggle = $toggle.closest('.t_array').prev().show()
-    $target = $toggle.next()
-    $target.hide()
+    $target = $toggle.closest('.t_array')
+    $target.removeClass('expanded')
   } else {
     if ($toggle.is('[data-toggle=group]')) {
       $groupEndValue = $target.find('> .m_groupEndValue > :last-child')
@@ -74,23 +72,33 @@ export function collapse ($toggle, immediate) {
 }
 
 export function expand ($toggleOrTarget) {
+  // console.warn('expand', $toggleOrTarget)
   var isToggle = $toggleOrTarget.is('[data-toggle]')
-  var $toggle = isToggle
-    ? $toggleOrTarget
-    : $toggleOrTarget.prev()
-  var $target = isToggle
-    ? $toggleOrTarget.next()
-    : $toggleOrTarget
-  var what = $toggle.data('toggle')
-  var eventName = 'expanded.debug.' + what
+  var $toggle
+  var $target
+  var what
+  var eventNameExpanded
+  if ($toggleOrTarget.hasClass('t_array')) {
+    what = 'array'
+    $target = $toggleOrTarget
+    // don't need toggle
+  } else if (isToggle) {
+    what = $toggleOrTarget.data('toggle')
+    $toggle = $toggleOrTarget
+    $target = what === 'array'
+      ? $toggle.closest('.t_array')
+      : $toggle.next()
+  } else {
+    $target = $toggleOrTarget
+    $toggle = $toggleOrTarget.prev()
+    what = $toggle.data('toggle')
+  }
+  eventNameExpanded = 'expanded.debug.' + what
   // trigger while still hidden!
   //    no redraws
   $target.trigger('expand.debug.' + what)
   if (what === 'array') {
-    // hide the toggle..  there is a different toggle in the expanded version
-    $toggle.hide()
-    $target.show()
-    $target.find('> .array-inner').trigger(eventName)
+    $target.addClass('expanded').trigger(eventNameExpanded)
   } else {
     $target.slideDown('fast', function () {
       var $groupEndValue = $target.find('> .m_groupEndValue')
@@ -102,7 +110,7 @@ export function expand ($toggleOrTarget) {
       }
       // setTimeout for reasons?...
       setTimeout(function () {
-        $target.trigger(eventName)
+        $target.trigger(eventNameExpanded)
       })
     })
   }
@@ -166,10 +174,14 @@ function iconUpdate ($toggle, classNameNew) {
 
 export function toggle (toggle) {
   var $toggle = $(toggle)
+  var isExpanded = $toggle.hasClass('expanded')
   if ($toggle.is('.group-header') && $toggle.parent().is('.empty')) {
     return
   }
-  if ($toggle.is('.expanded')) {
+  if ($toggle.parent().hasClass('t_array')) {
+    isExpanded = $toggle.parent().hasClass('expanded')
+  }
+  if (isExpanded) {
     collapse($toggle)
   } else {
     expand($toggle)

@@ -88,10 +88,15 @@ class BdkDebugBundleListener implements EventSubscriberInterface
                 ),
             ),
             'css' => '.debug .empty {border:none; padding:inherit;}',
+            'logFiles' => array(
+                'filesExclude' => array(
+                    '/var/cache/',
+                    '/vendor/',
+                ),
+            ),
         ));
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLog'));
         $this->debug->eventManager->subscribe('debug.objAbstractStart', array($this, 'onObjAbstractStart'));
-        $this->debug->eventManager->subscribe('debug.output', array($this, 'logFiles'), 1);
     }
 
     /**
@@ -165,31 +170,6 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         if ($abs['debugMethod'] === 'error' && $abs['className'] === 'ErrorException') {
             $abs['isExcluded'] = true;
         }
-    }
-
-    /**
-     * Log included files in new tab
-     *
-     * @return void
-     */
-    public function logFiles()
-    {
-        $files = $this->debug->utility->getIncludedFiles();
-        $files = \array_filter($files, function ($file) {
-            $exclude = array(
-                '/var/cache/',
-                '/vendor/',
-            );
-            foreach ($exclude as $str) {
-                if (\strpos($file, $str) !== false) {
-                    return false;
-                }
-            }
-            return true;
-        });
-        $files = \array_values($files);
-        $debugFiles = $this->debug->rootInstance->getChannel('Files', array('nested' => false));
-        $debugFiles->log('files', $files, $this->debug->meta('detectFiles', true));
     }
 
     /**

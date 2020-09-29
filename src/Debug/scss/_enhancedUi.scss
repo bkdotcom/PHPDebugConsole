@@ -20,6 +20,9 @@
       font-size: 0; // so that child inline-blocks don't have space between them
       line-height: 23px;
       vertical-align: top;
+      .fa {
+        margin-right: .5em;
+      }
       a {
         display: inline-block;
         padding: 0 15px;

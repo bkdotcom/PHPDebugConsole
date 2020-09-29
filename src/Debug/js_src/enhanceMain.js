@@ -91,9 +91,7 @@ function addExpandAll () {
     $logBody.find('.debug-log-summary').before($expandAll)
   }
   $root.on('click', '.expand-all', function () {
-    $(this).closest('.debug').find('.group-header').not('.expanded').each(function () {
-      $(this).debugEnhance('expand')
-    })
+    $(this).closest('.debug').find('.group-header').not('.expanded').debugEnhance('expand')
     return false
   })
 }

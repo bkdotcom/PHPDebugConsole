@@ -95,6 +95,13 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             'logEnvInfo' => array(
                 'session' => false,
             ),
+            'logFiles' => array(
+                'filesExclude' => array(
+                    '/framework/',
+                    '/protected/components/system/',
+                    '/vendor/',
+                ),
+            ),
         ));
         $debugRootInstance->eventManager->addSubscriberInterface($this);
         /*
@@ -173,7 +180,6 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
      */
     public function onDebugOutput()
     {
-        $this->logFiles();
         $this->logIgnoredErrors();
     }
 
@@ -389,34 +395,6 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
             $mProp->setValue($this->yiiApp, $val);
             break;
         }
-    }
-
-    /**
-     * Log included files in "Files" channel (tab)
-     *
-     * @return void
-     */
-    private function logFiles()
-    {
-        $files = $this->debug->utility->getIncludedFiles();
-        $files = \array_filter($files, function ($file) {
-            $exclude = array(
-                '/framework/',
-                '/protected/components/system/',
-                '/vendor/',
-            );
-            $return = true;
-            foreach ($exclude as $str) {
-                if (\strpos($file, $str) !== false) {
-                    $return = false;
-                    break;
-                }
-            }
-            return $return;
-        });
-        $files = \array_values($files);
-        $debugFiles = $this->debug->rootInstance->getChannel('Files', array('nested' => false));
-        $debugFiles->log('files', $files, $this->debug->meta('detectFiles', true));
     }
 
     /**

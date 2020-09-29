@@ -52,7 +52,10 @@ class LogReqRes implements SubscriberInterface
     public function onPluginInit(Event $event)
     {
         $debug = $event->getSubject();
-        $this->debug = $debug->getChannel('Request / Response', array('nested' => false));
+        $this->debug = $debug->getChannel('Request / Response', array(
+            'channelIcon' => '<i class="fa fa-exchange"></i>',
+            'nested' => false,
+        ));
 
         $collectWas = $debug->setCfg('collect', true);
         $this->logRequest();    // headers, cookies, post

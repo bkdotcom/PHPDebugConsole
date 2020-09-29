@@ -283,6 +283,34 @@ class Wamp implements RouteInterface
     }
 
     /**
+     * Crate array (may be encapsulated by Abstraction)
+     *
+     * @param array $array array
+     *
+     * @return array
+     */
+    private function crateArray($array)
+    {
+        foreach ($array as $k => $v) {
+            $array[$k] = $this->crateValues($v);
+        }
+        if ($this->debug->utility->arrayIsList($array) === false) {
+            /*
+                Compare sorted vs unsorted
+                if differ pass the key order
+            */
+            $keys = \array_keys($array);
+            // $keysSorted= \array_keys($array);
+            $keysSorted = $keys;
+            \sort($keysSorted, SORT_STRING);
+            if ($keys !== $keysSorted) {
+                $array['__debug_key_order__'] = $keys;
+            }
+        }
+        return $array;
+    }
+
+    /**
      * Crate object abstraction
      * (make sure string values are base64 encoded when necessary)
      *
@@ -341,24 +369,23 @@ class Wamp implements RouteInterface
     private function crateValues($mixed)
     {
         if (\is_array($mixed)) {
-            foreach ($mixed as $k => $v) {
-                $mixed[$k] = $this->crateValues($v);
-            }
-            if ($this->debug->utility->arrayIsList($mixed) === false) {
-                $keys = \array_keys($mixed);
-                $keysSorted = \array_keys($mixed);
-                \ksort($keysSorted);
-                if ($keys !== $keysSorted) {
-                    $mixed['__debug_key_order__'] = $keys;
-                }
-            }
-            return $mixed;
+            return $this->crateArray($mixed);
         }
         if (\is_string($mixed)) {
             return $this->crateString($mixed);
         }
-        if ($this->debug->abstracter->isAbstraction($mixed, Abstracter::TYPE_OBJECT)) {
-            return $this->crateObject($mixed);
+        if ($mixed instanceof Abstraction) {
+            $clone = clone $mixed;
+            switch ($mixed['type']) {
+                case Abstracter::TYPE_ARRAY:
+                    $clone['value'] = $this->crateArray($clone['value']);
+                    return $clone;
+                case Abstracter::TYPE_OBJECT:
+                    return $this->crateObject($clone);
+                case Abstracter::TYPE_STRING:
+                    $clone['value'] = $this->crateString($clone['value']);
+                    return $clone;
+            }
         }
         return $mixed;
     }

@@ -183,7 +183,7 @@ class ChannelTest extends DebugTestFramework
         </div>
 EOD;
         $html = <<<EOD
-        <div class="debug" data-channel-name-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
+        <div class="debug" data-channel-name-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:&quot;&lt;i class=\&quot;fa fa-list-ul\&quot;&gt;&lt;\/i&gt;&quot;,&quot;show&quot;:true},&quot;channels&quot;:{&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null}">
             <header class="debug-menu-bar">PHPDebugConsole<nav role="tablist"></nav></header>
             <div class="debug-tabs">
                 <div class="active debug-tab-general tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">

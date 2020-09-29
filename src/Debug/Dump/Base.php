@@ -760,7 +760,7 @@ class Base extends Component
             return $val;
         }
         if ($type === Abstracter::TYPE_OBJECT) {
-            return $val->toString() ?: $val['className'];
+            return (string) $val;   // __toString or className
         }
         return $this->dump($val, $opts);
     }

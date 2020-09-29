@@ -102,20 +102,16 @@ class Abstracter extends Component
     /**
      * Wrap value in Abstraction
      *
-     * @param mixed $mixed   value to abstract
-     * @param array $options options
+     * @param mixed $mixed  value to abstract
+     * @param array $values additional values to set
      *
      * @return Abstraction
      */
-    public function crateWithOpts($mixed, $options = array())
+    public function crateWithVals($mixed, $values = array())
     {
         $abs = $this->getAbstraction($mixed);
-        if ($options) {
-            if (isset($options['attribs'])) {
-                $abs['attribs'] = $options['attribs'];
-                unset($options['attribs']);
-            }
-            $abs['options'] = $options;
+        foreach ($values as $k => $v) {
+            $abs[$k] = $v;
         }
         return $abs;
     }

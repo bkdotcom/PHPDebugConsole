@@ -162,8 +162,8 @@ class Internal implements SubscriberInterface
                     'notInConsole' => 0,
                 );
             }
-            $k = $error['inConsole'] ? 'inConsole' : 'notInConsole';
-            $stats['counts'][$category][$k]++;
+            $key = $error['inConsole'] ? 'inConsole' : 'notInConsole';
+            $stats['counts'][$category][$key]++;
         }
         foreach ($stats['counts'] as $a) {
             $stats['inConsole'] += $a['inConsole'];

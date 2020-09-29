@@ -92,6 +92,8 @@ class ServerRequest
      * Instantiate self from superglobals
      *
      * @return static
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
      */
     public static function fromGlobals()
     {

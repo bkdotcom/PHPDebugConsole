@@ -42,7 +42,8 @@ class Cake4 extends BasePlugin
 
     private $debug;
     private $ignoreLogError = false;
-    private $errorHandlerMiddleware;
+    /** @var @var ErrorHandlerMiddleware */
+    private $errorHandlerMiddleW;
     private $app;
 
     /**
@@ -121,7 +122,7 @@ class Cake4 extends BasePlugin
         $middleware->insertAfter(ErrorHandlerMiddleware::class, new Middleware(array(
             'catchException' => true,   // we'll catch it, pass to PHPDebugConsole's errorHandler and passit on to Cake's handler
             'onCaughtException' => function (Exception $e, ServerRequestInterface $request) {
-                return $this->errorHandlerMiddleware->handleException($e, $request);
+                return $this->errorHandlerMiddleW->handleException($e, $request);
             }
         )));
         $mwRef = new \ReflectionObject($middleware);
@@ -130,7 +131,7 @@ class Cake4 extends BasePlugin
         $queue = $queueRef->getValue($middleware);
         foreach ($queue as $obj) {
             if ($obj instanceof ErrorHandlerMiddleware) {
-                $this->errorHandlerMiddleware = $obj;
+                $this->errorHandlerMiddleW = $obj;
             }
         }
         return $middleware;

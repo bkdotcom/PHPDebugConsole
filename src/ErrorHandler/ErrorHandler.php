@@ -10,6 +10,7 @@
 
 namespace bdk;
 
+use bdk\Backtrace;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
@@ -24,6 +25,9 @@ class ErrorHandler
 
     const EVENT_ERROR = 'errorHandler.error';
 
+    /** @var Backtrace */
+    public $backtrace;
+    /** @var EventManager */
     public $eventManager;
     /** @var array */
     protected $cfg = array();
@@ -204,6 +208,9 @@ class ErrorHandler
      */
     public function handleError($errType, $errMsg, $file, $line, $vars = array())
     {
+        if (!$this->backtrace) {
+            $this->backtrace = new Backtrace();
+        }
         $error = $this->cfg['errorFactory']($this, $errType, $errMsg, $file, $line, $vars);
         $this->anonymousCheck($error);
         $this->toStringCheck($error);

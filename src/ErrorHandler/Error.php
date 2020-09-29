@@ -10,7 +10,6 @@
 
 namespace bdk\ErrorHandler;
 
-use bdk\Backtrace;
 use bdk\ErrorHandler;
 use bdk\PubSub\Event;
 
@@ -110,11 +109,11 @@ class Error extends Event
         ));
         if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && $this->values['exception'] === null) {
             // will return empty unless xdebug extension installed/enabled
-            Backtrace::addInternalClass(array(
+            $this->subject->backtrace->addInternalClass(array(
                 'bdk\\ErrorHandler',
                 'bdk\\PubSub',
             ));
-            $this->backtrace = Backtrace::get();
+            $this->backtrace = $this->subject->backtrace->get();
         }
         $errorCaller = $errHandler->get('errorCaller');
         if ($errorCaller) {
@@ -177,7 +176,7 @@ class Error extends Event
     public function getTrace($withContext = 'auto')
     {
         $trace = $this->values['exception']
-            ? Backtrace::get($this->values['exception']) // adds Exception's file/line as frame and "normalizes"
+            ? $this->subject->backtrace->get($this->values['exception']) // adds Exception's file/line as frame and "normalizes"
             : $this->backtrace;
         if (!$trace) {
             // false, null, or empty array()
@@ -187,7 +186,7 @@ class Error extends Event
             $withContext = $this->isFatal();
         }
         return $withContext
-            ? Backtrace::addContext($trace)
+            ? $this->subject->backtrace->addContext($trace)
             : $trace;
     }
 
@@ -234,7 +233,7 @@ class Error extends Event
             $trace = $this->getTrace();
             return $trace;
         } elseif ($key === 'context') {
-            $context = Backtrace::getFileLines(
+            $context = $this->subject->backtrace->getFileLines(
                 $this->values['file'],
                 \max($this->values['line'] - 6, 0),
                 13

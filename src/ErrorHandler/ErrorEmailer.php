@@ -10,7 +10,6 @@
 
 namespace bdk\ErrorHandler;
 
-use bdk\Backtrace;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\SubscriberInterface;
@@ -185,7 +184,7 @@ class ErrorEmailer implements SubscriberInterface
      */
     protected function backtraceStr(Error $error)
     {
-        $backtrace = $error->getTrace() ?: Backtrace::get();
+        $backtrace = $error->getTrace() ?: $error->getSubjec()->backtrace->get();
         if (empty($backtrace) || \count($backtrace) < 2) {
             return '';
         }

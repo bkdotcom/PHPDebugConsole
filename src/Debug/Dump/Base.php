@@ -35,17 +35,7 @@ class Base extends Component
     protected $dumpTypeMore;
     protected $valOpts; // per-value options
     private $subInfo = array();
-    private $subRegex = '/%'
-        . '(?:'
-        . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
-        . '[+-]?'                // sign specifier
-        . '(?:[ 0]|\'.{1})?'     // padding specifier
-        . '-?'                   // alignment specifier
-        . '\d*'                  // width specifier
-        . '(?:\.\d+)?'           // precision specifier
-        . '[difs]'
-        . ')'
-        . '/';
+    private $subRegex;
 
     /**
      * Constructor
@@ -56,6 +46,17 @@ class Base extends Component
     {
         $this->debug = $debug;
         $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $this->subRegex = '/%'
+        . '(?:'
+        . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
+        . '[+-]?'                // sign specifier
+        . '(?:[ 0]|\'.{1})?'     // padding specifier
+        . '-?'                   // alignment specifier
+        . '\d*'                  // width specifier
+        . '(?:\.\d+)?'           // precision specifier
+        . '[difs]'
+        . ')'
+        . '/';
     }
 
     /**

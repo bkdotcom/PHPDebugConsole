@@ -352,7 +352,7 @@ class Html extends Base
             $aPos = \array_search($valA, $order);
             $bPos = \array_search($valB, $order);
             if ($aPos === false && $bPos === false) {   // both items are dont cares
-                return 0;                               //   a == b
+                return 0;
             }
             if ($aPos === false) {                      // $a is a dont care
                 return 1;                               //   $a > $b
@@ -360,7 +360,6 @@ class Html extends Base
             if ($bPos === false) {                      // $b is a dont care
                 return -1;                              //   $a < $b
             }
-            return \strnatcasecmp($valA, $valB);
         });
         foreach ($names as $name) {
             $html .= $this->buildTabPane($name);

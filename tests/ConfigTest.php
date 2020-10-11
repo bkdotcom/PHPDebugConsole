@@ -107,18 +107,19 @@ class ConfigTest extends DebugTestFramework
 
     public function testInitKey()
     {
-        \bdk\Debug::getInstance()->setCfg('services', array(
-            'request' => (new ServerRequest(array(), array('REQUEST_METHOD' => 'GET')))
+        Debug::getInstance()->setCfg('services', array(
+            'request' => (new ServerRequest(
+                'GET',
+                null,
+                array(
+                    'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
+                )
+            ))
                 ->withQueryParams(array(
                     'debug' => 'swordfish',
                 )),
         ));
-
-        // Utility caches serverParams (statically)...  use serverParamsRef to clear it
-        $utilityRef = new \ReflectionClass('bdk\\Debug\\Utility');
-        $serverParamsRef = $utilityRef->getProperty('serverParams');
-        $serverParamsRef->setAccessible(true);
-        $serverParamsRef->setValue(array());
+        $this->clearServerParamCache();
 
         $debug = new Debug(array(
             'key' => 'swordfish',
@@ -127,7 +128,6 @@ class ConfigTest extends DebugTestFramework
         $this->assertTrue($debug->getCfg('collect'));
         $this->assertTrue($debug->getCfg('output'));
         $debug->setCfg('output', false);
-        $serverParamsRef->setValue(array());
     }
 
     /**

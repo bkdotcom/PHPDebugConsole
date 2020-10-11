@@ -13,6 +13,7 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -144,9 +145,20 @@ class LogReqRes implements SubscriberInterface
         if (!$this->debug->getCfg('logRequestInfo.files', Debug::CONFIG_DEBUG)) {
             return;
         }
-        if ($this->debug->request->getUploadedFiles()) {
-            $this->debug->log('$_FILES', $this->debug->request->getUploadedFiles());
+        $files = $this->debug->request->getUploadedFiles();
+        if (!$files) {
+            return;
         }
+        $files = $this->debug->utility->arrayMapRecursive(function ($uploadedFile) {
+            return array(
+                'error' => $uploadedFile->getError(),
+                'name' => $uploadedFile->getClientFilename(),
+                'size' => $uploadedFile->getSize(),
+                'tmp_name' => $uploadedFile->getStream()->getMetadata('uri'),
+                'type' => $uploadedFile->getClientMediaType(),
+            );
+        }, $files);
+        $this->debug->log('$_FILES', $files);
     }
 
     /**
@@ -242,7 +254,17 @@ class LogReqRes implements SubscriberInterface
             return;
         }
         $headers = \array_map(function ($vals) {
-            return \join(', ', $vals);
+            $val = \join(', ', $vals);
+            if (\is_numeric($val)) {
+                $val = new Abstraction(Abstracter::TYPE_STRING, array(
+                    'attribs' => array(
+                        'class' => 'text-left',
+                    ),
+                    'typeMore' => 'numeric',
+                    'value' => $val,
+                ));
+            }
+            return $val;
         }, $this->debug->request->getHeaders());
         if ($headers) {
             \ksort($headers, SORT_NATURAL);

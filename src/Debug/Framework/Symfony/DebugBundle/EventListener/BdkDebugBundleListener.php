@@ -189,7 +189,6 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         if ($pos === false) {
             return;
         }
-        $this->debug->alert('injected into response via ' . __CLASS__, 'success');
         $content = \substr($content, 0, $pos)
             . $this->debug->output()
             . \substr($content, $pos);

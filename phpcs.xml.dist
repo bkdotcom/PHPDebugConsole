@@ -105,6 +105,7 @@
         <!-- FunctionComment -->
         <!--
             FunctionComment refuses to acknowledge @inheritdoc
+            And insists on boolean / integer vs bool / int
         -->
         <exclude name="Squiz.Commenting.FunctionComment" />
 
@@ -130,6 +131,7 @@
         <exclude name="Squiz.Commenting.PostStatementComment.Found" />
 
         <!-- VariableComment -->
+        <exclude name="Squiz.Commenting.VariableComment.IncorrectVarType" />
         <exclude name="Squiz.Commenting.VariableComment.Missing" />
         <exclude name="Squiz.Commenting.VariableComment.WrongStyle" />
     </rule>
@@ -157,6 +159,7 @@
 
     <rule ref="Squiz.Functions">
         <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine" /> <!-- handled by Generic.Functions -->
+        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.NewlineBeforeOpenBrace" />
     </rule>
 
     <rule ref="Squiz.Operators">

@@ -192,7 +192,7 @@ class Base extends Component
                 array(
                     'output' => $this,
                     'return' => '',
-                    'typeMore' => $abs['typeMore'],  // likely null
+                    'typeMore' => $abs['typeMore'],
                 )
             ));
             $typeMore = $event['typeMore'];
@@ -207,7 +207,7 @@ class Base extends Component
             Abstracter::TYPE_STRING,
         );
         if (\in_array($type, $simpleTypes)) {
-            $typeMore = $abs['typeMore'];   // likely null
+            $typeMore = $abs['typeMore'];
             return $this->{$method}($abs['value'], $abs);
         }
         return $this->{$method}($abs);

@@ -57,9 +57,7 @@ class Logger extends AbstractLogger
      */
     public function log($level, $message, array $context = array())
     {
-        if ($this->isValidLevel($level) === false) {
-            throw new InvalidArgumentException();
-        }
+        $this->assertValidLevel($level);
         $levelMap = array(
             LogLevel::EMERGENCY => 'error',
             LogLevel::ALERT => 'alert',
@@ -99,11 +97,18 @@ class Logger extends AbstractLogger
      *
      * @param string $level debug level
      *
-     * @return bool
+     * @return void
+     *
+     * @throws InvalidArgumentException
      */
-    protected function isValidLevel($level)
+    protected function assertValidLevel($level)
     {
-        return \in_array($level, $this->validLevels());
+        if (!\in_array($level, $this->validLevels())) {
+            throw new InvalidArgumentException(\sprintf(
+                '%s is not a valid level',
+                $level
+            ));
+        }
     }
 
     /**

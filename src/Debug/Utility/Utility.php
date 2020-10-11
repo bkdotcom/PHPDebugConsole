@@ -76,6 +76,27 @@ class Utility
     }
 
     /**
+     * Applies the callback to all leafs of the given array
+     *
+     * @param callable $callback Callable to be applied
+     * @param array    $input    Input array
+     *
+     * @return array
+     */
+    public static function arrayMapRecursive($callback, $input)
+    {
+        $return = array();
+        foreach ($input as $key => $val) {
+            if (\is_array($val)) {
+                $return[$key] = self::arrayMapRecursive($callback, $val);
+                continue;
+            }
+            $return[$key] = $callback($val);
+        }
+        return $return;
+    }
+
+    /**
      * Recursively merge two arrays
      *
      * @param array $arrayDef default array

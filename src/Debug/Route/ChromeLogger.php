@@ -137,11 +137,12 @@ class ChromeLogger extends Base
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $serverParams = $this->debug->request->getServerParams();
         if ($this->jsonData) {
+            $request = $this->debug->request;
+            $serverParams = $request->getServerParams();
             \array_unshift($this->jsonData['rows'], array(
                 array('PHP', isset($serverParams['REQUEST_METHOD'])
-                    ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact($serverParams['REQUEST_URI'])
+                    ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
                     : '$: ' . \implode(' ', $serverParams['argv'])
                 ),
                 null,

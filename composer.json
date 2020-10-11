@@ -27,6 +27,7 @@
 	},
 	"autoload-dev": {
 		"psr-4": {
+			"bdk\\Sniffs\\": "sniffs/",
 			"bdk\\DebugTests\\": "tests/"
 		}
 	},

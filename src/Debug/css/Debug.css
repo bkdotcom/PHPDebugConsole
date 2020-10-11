@@ -71,6 +71,7 @@
 .debug .array-inner > li > .t_operator { margin: 0 0.25em; }
 .debug .t_array.array-file-tree .array-inner { margin-left: 0.25em; }
 .debug .t_array.array-file-tree .exclude-count { background: #d9edf7; color: #31708f; }
+.debug .t_array.array-file-tree .t_key { color: #000040; font-weight: bold; }
 .debug .t_array.array-file-tree .t_string::before, .debug .t_array.array-file-tree .t_string::after, .debug .t_array.array-file-tree .t_key::before, .debug .t_array.array-file-tree .t_key::after { display: none; }
 .debug li[class*=m_] > .t_array.array-file-tree > .array-inner { margin-left: -10px; }
 .debug .t_object { display: inline; }
@@ -300,7 +301,8 @@ color: #818a91
 .debug .p0 { padding: 0 !important; }
 .debug .text-center { text-align: center; }
 .debug .text-muted { color: #777; }
-.debug .text-right { text-align: right; }
+.debug .text-left { text-align: left !important; }
+.debug .text-right { text-align: right !important; }
 .debug .text-error { color: #d8000c; }
 .debug .text-info { color: #31708f; }
 .debug .text-warn { color: #8a6d3b; }

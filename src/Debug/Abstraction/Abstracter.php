@@ -138,10 +138,8 @@ class Abstracter extends Component
      */
     public function getAbstraction($mixed, $method = null, $typeInfo = array(), $hist = array())
     {
-        $type = $typeInfo
-            ? $typeInfo[0]
-            : self::getType($mixed)[0];
-        switch ($type) {
+        $typeInfo = $typeInfo ?: self::getType($mixed);
+        switch ($typeInfo[0]) {
             case self::TYPE_ARRAY:
                 return $this->abstractArray->getAbstraction($mixed, $method, $hist);
             case self::TYPE_CALLABLE:
@@ -149,17 +147,19 @@ class Abstracter extends Component
             case self::TYPE_OBJECT:
                 return $this->abstractObject->getAbstraction($mixed, $method, $hist);
             case self::TYPE_RESOURCE:
-                return new Abstraction($type, array(
+                return new Abstraction($typeInfo[0], array(
                     'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
                 ));
             case self::TYPE_STRING:
                 $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
-                return new Abstraction($type, array(
+                return new Abstraction($typeInfo[0], array(
                     'strlen' => \strlen($mixed),
+                    'typeMore' => $typeInfo[1],
                     'value' => $this->debug->utf8->strcut($mixed, 0, $maxLen),
                 ));
             default:
-                return new Abstraction($type, array(
+                return new Abstraction($typeInfo[0], array(
+                    'typeMore' => $typeInfo[1],
                     'value' => $mixed,
                 ));
         }

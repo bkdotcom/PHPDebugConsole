@@ -34,6 +34,10 @@ $color-static: #00529b;
     background: $info-bg;
     color: $info-fg;
   }
+  .t_key {
+    color: #000040  ;
+    font-weight: bold;
+  }
   .t_string,
   .t_key {
     // directory "key" & files

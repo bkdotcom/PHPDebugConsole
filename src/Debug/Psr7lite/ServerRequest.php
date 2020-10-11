@@ -12,35 +12,30 @@
 
 namespace bdk\Debug\Psr7lite;
 
+use bdk\Debug\Psr7lite\Request;
 use bdk\Debug\Psr7lite\Stream;
+use bdk\Debug\Psr7lite\UploadedFile;
+use bdk\Debug\Psr7lite\Uri;
 use InvalidArgumentException;
-use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
 
 /**
  * INTERNAL USE ONLY
  *
- * For the most part, this implements Psr\Http\Message\ServerRequestInterface;
- *
- * Just looking to encapsulate the superglobals... not backbone an application or create a dependency on psr/http-message
- *
  * @psalm-consistent-constructor
  */
-class ServerRequest
+class ServerRequest extends Request
 {
 
-    /**
-     * @var StreamInterface|Stream
-     */
-    private $body;
+    /** @var array */
+    private $attributes = array();
 
     /**
      * @var array $_COOKIE
      */
     private $cookie = array();
 
-    /**
-     * @var array $_FILES
-     */
+    /** @var array */
     private $files = array();
 
     /**
@@ -49,24 +44,9 @@ class ServerRequest
     private $get = array();
 
     /**
-     * @var array Map of all registered headers, as name => array of values
+     * @var null|array|object $_POST
      */
-    private $headers = array();
-
-    /**
-     * @var array Map of lowercase header name => original name at registration
-     */
-    private $headerNames = array();
-
-    /**
-     * @var string
-     */
-    private $method = 'GET';
-
-    /**
-     * @var array $_POST
-     */
-    private $post = array();
+    private $post = null;
 
     /**
      * @var array $_SERVER
@@ -76,16 +56,20 @@ class ServerRequest
     /**
      * Constructor
      *
-     * @param array $headers headers
-     * @param array $server  $_SERVER superglobal
+     * @param string              $method       The HTTP method associated with the request.
+     * @param UriInterface|string $uri          The URI associated with the request.
+     * @param array               $serverParams An array of Server API (SAPI) parameters with
+     *     which to seed the generated request instance. (and headers)
      */
-    public function __construct($headers = array(), $server = array())
+    public function __construct($method = 'GET', $uri = '', $serverParams = array())
     {
+        parent::__construct($method, $uri);
+        $headers = self::getAllHeaders($serverParams);
+        $this->server = $serverParams;
+        $this->protocolVersion = isset($serverParams['SERVER_PROTOCOL'])
+            ? \str_replace('HTTP/', '', $serverParams['SERVER_PROTOCOL'])
+            : '1.1';
         $this->setHeaders($headers);
-        $this->server = $server;
-        $this->method = isset($server['REQUEST_METHOD'])
-            ? $server['REQUEST_METHOD']
-            : 'GET';
     }
 
     /**
@@ -97,117 +81,24 @@ class ServerRequest
      */
     public static function fromGlobals()
     {
-        $headers = static::getAllHeaders($_SERVER);
-        $serverRequest = new static($headers, $_SERVER);
+        $method = isset($_SERVER['REQUEST_METHOD'])
+            ? $_SERVER['REQUEST_METHOD']
+            : 'GET';
+        $uri = self::uriFromGlobals();
+        $files = self::filesFromGlobals($_FILES);
+        $serverRequest = new static($method, $uri, $_SERVER);
+        $contentType = $serverRequest->getHeaderLine('Content-Type');
+        $parsedBody = self::postFromInput($method, $contentType);
+        $query = $uri->getQuery();
+        $queryParams = $query !== ''
+            ? self::parseStr($query)
+            : $_GET;
         return $serverRequest
-            ->withBody(Stream::factory(\fopen('php://input', 'r+')))
+            ->withBody(new Stream(\fopen('php://input', 'r+')))
             ->withCookieParams($_COOKIE)
-            ->withParsedBody($_POST)
-            ->withQueryParams($_GET)
-            ->withUploadedFiles($_FILES);
-    }
-
-    /**
-     * Gets the body of the message.
-     *
-     * @return StreamInterface|Stream The body as a stream.
-     */
-    public function getBody()
-    {
-        if (!$this->body) {
-            $this->body = Stream::factory('');
-        }
-        return $this->body;
-    }
-
-    /**
-     * Get Cookie values
-     *
-     * @return array
-     */
-    public function getCookieParams()
-    {
-        return $this->cookie;
-    }
-
-    /**
-     * @param string $name header name
-     *
-     * @return string[] An array of string values as provided for the given
-     *    header. If the header does not appear in the message, an empty array is returned.
-     */
-    public function getHeader($name)
-    {
-        $nameLower = \strtolower($name);
-        if (!isset($this->headerNames[$nameLower])) {
-            return array();
-        }
-        $name = $this->headerNames[$nameLower];
-        return $this->headers[$name];
-    }
-
-    /**
-     * Retrieves a comma-separated string of the values for a single header.
-     *
-     * This method returns all of the header values of the given
-     * case-insensitive header name as a string concatenated together using
-     * a comma.
-     *
-     * NOTE: Not all header values may be appropriately represented using
-     * comma concatenation. For such headers, use getHeader() instead
-     * and supply your own delimiter when concatenating.
-     *
-     * If the header does not appear in the message, this method will return
-     * an empty string.
-     *
-     * @param string $name Case-insensitive header field name.
-     *
-     * @return string A string of values as provided for the given header
-     *    concatenated together using a comma. If the header does not appear in
-     *    the message, this method will return an empty string.
-     */
-    public function getHeaderLine($name)
-    {
-        return \implode(', ', $this->getHeader($name));
-    }
-
-    /**
-     * @return string[][] Returns an associative array of the message's headers. Each
-     *     key is a header name, and each value is an array of strings for that header.
-     */
-    public function getHeaders()
-    {
-        return $this->headers;
-    }
-
-    /**
-     * Retrieves the HTTP method of the request.
-     *
-     * @return string Returns the request method.
-     */
-    public function getMethod()
-    {
-        return $this->method;
-    }
-
-    /**
-     * Get $_POST data
-     *
-     * @return array
-     */
-    public function getParsedBody()
-    {
-        return $this->post;
-    }
-
-    /**
-     * Get $_GET data
-     *
-     * @return array
-     */
-    public function getQueryParams()
-    {
-        return $this->get;
+            ->withParsedBody($parsedBody)
+            ->withQueryParams($queryParams)
+            ->withUploadedFiles($files);
     }
 
     /**
@@ -221,55 +112,13 @@ class ServerRequest
     }
 
     /**
-     * Get $_FILES data
+     * Get Cookie values
      *
      * @return array
      */
-    public function getUploadedFiles()
+    public function getCookieParams()
     {
-        return $this->files;
-    }
-
-    /**
-     * Checks if a header exists by the given case-insensitive name.
-     *
-     * @param string $name Case-insensitive header field name.
-     *
-     * @return bool Returns true if any header names match the given header
-     *     name using a case-insensitive string comparison. Returns false if
-     *     no matching header name is found in the message.
-     */
-    public function hasHeader($name)
-    {
-        $nameLower = \strtolower($name);
-        return isset($this->headerNames[$nameLower]);
-    }
-
-    /**
-     * Return an instance with the specified message body.
-     *
-     * The body MUST be a StreamInterface object.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return a new instance that has the
-     * new body stream.
-     *
-     * @param StreamInterface|Stream $body Body
-     *
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    public function withBody($body)
-    {
-        if (!($body instanceof StreamInterface) && !($body instanceof Stream)) {
-            throw new \InvalidArgumentException('body must be an instance of StreamInterface');
-        }
-        if ($body === $this->body) {
-            return $this;
-        }
-        $new = clone $this;
-        $new->body = $body;
-        return $new;
+        return $this->cookie;
     }
 
     /**
@@ -285,80 +134,13 @@ class ServerRequest
     }
 
     /**
-     * Return an instance with the provided value replacing the specified header.
+     * Get $_GET data
      *
-     * @param string          $name  Case-insensitive header field name.
-     * @param string|string[] $value Header value(s).
-     *
-     * @return static
-     * @throws InvalidArgumentException for invalid header names or values.
+     * @return array
      */
-    public function withHeader($name, $value)
+    public function getQueryParams()
     {
-        $this->assertHeader($name);
-        $value = $this->normalizeHeaderValue($value);
-        $nameLower = \strtolower($name);
-        $new = clone $this;
-        if (isset($new->headerNames[$nameLower])) {
-            // remove previous header-name
-            $namePrev = $new->headerNames[$nameLower];
-            unset($new->headers[$namePrev]);
-        }
-        $new->headerNames[$nameLower] = $name;
-        $new->headers[$name] = $value;
-        return $new;
-    }
-
-    /**
-     * Return an instance without the specified header.
-     *
-     * @param string $name Case-insensitive header field name to remove.
-     *
-     * @return static
-     */
-    public function withoutHeader($name)
-    {
-        $nameLower = \strtolower($name);
-        if (!isset($this->headerNames[$nameLower])) {
-            return $this;
-        }
-        $new = clone $this;
-        unset($new->headers[$name], $new->headerNames[$nameLower]);
-        return $new;
-    }
-
-    /**
-     * Return an instance with the provided HTTP method.
-     *
-     * While HTTP method names are typically all uppercase characters, HTTP
-     * method names are case-sensitive and thus implementations SHOULD NOT
-     * modify the given string.
-     *
-     * @param string $method Case-sensitive method.
-     *
-     * @return static
-     * @throws InvalidArgumentException for invalid HTTP methods.
-     */
-    public function withMethod($method)
-    {
-        if (!\is_string($method) || $method === '') {
-            throw new InvalidArgumentException('Method must be a non-empty string.');
-        }
-        $new = clone $this;
-        $new->method = $method;
-        return $new;
-    }
-
-    /**
-     * @param array $post $_POST
-     *
-     * @return static
-     */
-    public function withParsedBody($post)
-    {
-        $new = clone $this;
-        $new->post = $post;
-        return $new;
+        return $this->get;
     }
 
     /**
@@ -374,170 +156,403 @@ class ServerRequest
     }
 
     /**
-     * @param array $files $_FILES
+     * Retrieve normalized file upload data.
+     *
+     * This method returns upload metadata in a normalized tree, with each leaf
+     * an instance of Psr\Http\Message\UploadedFileInterface.
+     *
+     * @return array An array tree of UploadedFileInterface instances (or an empty array)
+     */
+    public function getUploadedFiles()
+    {
+        return $this->files;
+    }
+
+    /**
+     * Create a new instance with the specified uploaded files.
+     *
+     * @param array $uploadedFiles An array tree of UploadedFileInterface instances.
      *
      * @return static
+     * @throws InvalidArgumentException if an invalid structure is provided.
      */
-    public function withUploadedFiles($files)
+    public function withUploadedFiles($uploadedFiles)
     {
+        $this->assertUploadedFiles($uploadedFiles);
         $new = clone $this;
-        $new->files = $files;
+        $new->files = $uploadedFiles;
         return $new;
     }
 
     /**
-     * Test valid header name
+     * Get $_POST data
      *
-     * @param string $header header name
+     * @return null|array|object
+     */
+    public function getParsedBody()
+    {
+        return $this->post;
+    }
+
+    /**
+     * @param null|array|object $post The deserialized body data ($_POST).
+     *                                  This will typically be in an array or object
+     *
+     * @return static
+     */
+    public function withParsedBody($post)
+    {
+        $this->assertParsedBody($post);
+        $new = clone $this;
+        $new->post = $post;
+        return $new;
+    }
+
+    /**
+     * Retrieve attributes derived from the request.
+     *
+     * The request "attributes" may be used to allow injection of any
+     * parameters derived from the request: e.g., the results of path
+     * match operations; the results of decrypting cookies; the results of
+     * deserializing non-form-encoded message bodies; etc. Attributes
+     * will be application and request specific, and CAN be mutable.
+     *
+     * @return mixed[] Attributes derived from the request.
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * Retrieve a single derived request attribute.
+     *
+     * @param string $name    The attribute name.
+     * @param mixed  $default Default value to return if the attribute does not exist.
+     *
+     * @return mixed
+     */
+    public function getAttribute($name, $default = null)
+    {
+        if (\array_key_exists($name, $this->attributes) === false) {
+            return $default;
+        }
+        return $this->attributes[$name];
+    }
+
+    /**
+     * Return an instance that removes the specified derived request attribute.
+     *
+     * @param string $name  attribute name
+     * @param mixed  $value value
+     *
+     * @return static
+     */
+    public function withAttribute($name, $value)
+    {
+        $new = clone $this;
+        $new->attributes[$name] = $value;
+        return $new;
+    }
+
+    /**
+     * Return an instance that removes the specified derived request attribute.
+     *
+     * @param string $name attribute name
+     *
+     * @return static
+     */
+    public function withoutAttribute($name)
+    {
+        if (\array_key_exists($name, $this->attributes) === false) {
+            return $this;
+        }
+        $new = clone $this;
+        unset($new->attributes[$name]);
+        return $new;
+    }
+
+    /**
+     * Throw an exception if an unsupported argument type is provided.
+     *
+     * @param string|array|null $data The deserialized body data. This will
+     *     typically be in an array or object.
      *
      * @return void
+     *
      * @throws InvalidArgumentException
      */
-    private static function assertHeader($header)
+    protected function assertParsedBody($data)
     {
-        if (!\is_string($header)) {
+        if (
+            $data === null ||
+            \is_array($data) ||
+            \is_object($data)
+        ) {
+            return;
+        }
+        throw new InvalidArgumentException(\sprintf(
+            'Only accepts array, object and null, but %s provided.',
+            \gettype($data)
+        ));
+    }
+
+    /**
+     * Recursively validate the structure in an uploaded files array.
+     *
+     * @param array $uploadedFiles uploaded files tree
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException if any leaf is not an UploadedFileInterface instance.
+     */
+    private function assertUploadedFiles($uploadedFiles)
+    {
+        if (!\is_array($uploadedFiles)) {
             throw new InvalidArgumentException(\sprintf(
-                'Header name must be a string but %s provided.',
-                \is_object($header) ? \get_class($header) : \gettype($header)
+                'Uploaded files - expected array, but %s provided',
+                \is_object($uploadedFiles) ? \get_class($uploadedFiles) : \gettype($uploadedFiles)
             ));
         }
-        if ($header === '') {
-            throw new InvalidArgumentException('Header name can not be empty.');
-        }
-    }
-
-    /**
-     * Get all HTTP header key/values as an associative array for the current request.
-     *
-     * Uses getallheaders (aka apache_request_headers) if avail / falls back to $_SERVER vals
-     *
-     * @param array $serverParams $_SERVER
-     *
-     * @return string[string] The HTTP header key/value pairs.
-     */
-    private static function getAllHeaders($serverParams)
-    {
-        if (\function_exists('getallheaders')) {
-            return \getallheaders();
-        }
-        $headers = array();
-        $keysSansHttp = array(
-            'CONTENT_TYPE'   => 'Content-Type',
-            'CONTENT_LENGTH' => 'Content-Length',
-            'CONTENT_MD5'    => 'Content-Md5',
-        );
-        foreach ($serverParams as $key => $value) {
-            if (\substr($key, 0, 5) === 'HTTP_') {
-                $key = \substr($key, 5);
-                if (!isset($keysSansHttp[$key]) || !isset($serverParams[$key])) {
-                    $key = \str_replace(' ', '-', \ucwords(\strtolower(\str_replace('_', ' ', $key))));
-                    $headers[$key] = $value;
-                }
-            } elseif (isset($keysSansHttp[$key])) {
-                $headers[$keysSansHttp[$key]] = $value;
-            }
-        }
-        if (!isset($headers['Authorization'])) {
-            $auth = self::getAuthorizationHeader($serverParams);
-            if ($auth) {
-                $headers['Authorization'] = $auth;
-            }
-        }
-        return $headers;
-    }
-
-    /**
-     * Build Authorization header from $_SERVER values
-     *
-     * @param array $serverParams $_SERVER vals
-     *
-     * @return null|string
-     */
-    private static function getAuthorizationHeader($serverParams)
-    {
-        $auth = null;
-        if (isset($serverParams['REDIRECT_HTTP_AUTHORIZATION'])) {
-            $auth = $serverParams['REDIRECT_HTTP_AUTHORIZATION'];
-        } elseif (isset($serverParams['PHP_AUTH_USER'])) {
-            $basicPass = isset($serverParams['PHP_AUTH_PW']) ? $serverParams['PHP_AUTH_PW'] : '';
-            $auth = 'Basic ' . \base64_encode($serverParams['PHP_AUTH_USER'] . ':' . $basicPass);
-        } elseif (isset($serverParams['PHP_AUTH_DIGEST'])) {
-            $auth = $serverParams['PHP_AUTH_DIGEST'];
-        }
-        return $auth;
-    }
-
-    /**
-     * Trim header value(s)
-     *
-     * @param string|array $value header value
-     *
-     * @return array
-     * @throws InvalidArgumentException
-     */
-    private static function normalizeHeaderValue($value)
-    {
-        if (!\is_array($value)) {
-            return self::trimHeaderValues([$value]);
-        }
-        if (\count($value) === 0) {
-            throw new InvalidArgumentException('Header value can not be an empty array.');
-        }
-        return self::trimHeaderValues($value);
-    }
-
-    /**
-     * Set header values
-     *
-     * @param array $headers header name/value pairs
-     *
-     * @return void
-     */
-    private function setHeaders($headers = array())
-    {
-        foreach ($headers as $name => $value) {
-            if (\is_int($name)) {
-                // Numeric array keys are converted to int by PHP but having a header name '123' is not forbidden by the spec
-                // and also allowed in withHeader(). So we need to cast it to string again for the following assertion to pass.
-                $name = (string) $name;
-            }
-            self::assertHeader($name);
-            $value = $this->normalizeHeaderValue($value);
-            $nameLower = \strtolower($name);
-            if (isset($this->headerNames[$nameLower])) {
-                $name = $this->headerNames[$nameLower];
-                $this->headers[$name] = \array_merge($this->headers[$name], $value);
+        foreach ($uploadedFiles as $file) {
+            if (\is_array($file)) {
+                $this->assertUploadedFiles($file);
                 continue;
             }
-            $this->headerNames[$nameLower] = $name;
-            $this->headers[$name] = $value;
+            if ($file instanceof UploadedFileInterface) {
+                continue;
+            }
+            if ($file instanceof UploadedFile) {
+                continue;
+            }
+            throw new InvalidArgumentException(
+                'Invalid leaf in uploaded files structure'
+            );
         }
     }
 
     /**
-     * Trims whitespace from the header values.
+     * Create UploadedFile(s) from $_FILES entry
      *
-     * Spaces and tabs ought to be excluded by parsers when extracting the field value from a header field.
+     * @param array $fileInfo $_FILES entry
      *
-     * header-field = field-name ":" OWS field-value OWS
-     * OWS          = *( SP / HTAB )
-     *
-     * @param string[] $values Header values
-     *
-     * @return string[] Trimmed header values
-     *
-     * @see https://tools.ietf.org/html/rfc7230#section-3.2.4
+     * @return UploadedFile|UploadedFile[]
      */
-    private static function trimHeaderValues(array $values)
+    private static function createUploadedFile($fileInfo)
     {
-        return \array_map(function ($value) {
-            if (!\is_scalar($value) && $value !== null) {
-                throw new InvalidArgumentException(\sprintf(
-                    'Header value must be scalar or null but %s provided.',
-                    \is_object($value) ? \get_class($value) : \gettype($value)
-                ));
+        if (\is_array($fileInfo['tmp_name'])) {
+            $files = array();
+            foreach (\array_keys($fileInfo['tmp_name']) as $key) {
+                $fileInfoNew = [
+                    'tmp_name' => $fileInfo['tmp_name'][$key],
+                    'size'     => $fileInfo['size'][$key],
+                    'error'    => $fileInfo['error'][$key],
+                    'name'     => $fileInfo['name'][$key],
+                    'type'     => $fileInfo['type'][$key],
+                ];
+                $files[$key] = self::createUploadedFile($fileInfoNew);
             }
-            return \trim((string) $value, " \t");
-        }, $values);
+            return $files;
+        }
+        return new UploadedFile(
+            $fileInfo['tmp_name'],
+            (int) $fileInfo['size'],
+            (int) $fileInfo['error'],
+            $fileInfo['name'],
+            $fileInfo['type']
+        );
+    }
+
+    /**
+     * Create UploadedFiles tree from $_FILES
+     *
+     * @param array $phpFiles $_FILES type array
+     *
+     * @return array
+     *
+     * @throws InvalidArgumentException
+     */
+    private static function filesFromGlobals($phpFiles)
+    {
+        $files = array();
+        foreach ($phpFiles as $key => $value) {
+            if ($value instanceof UploadedFileInterface) {
+                $files[$key] = $value;
+                continue;
+            }
+            if ($value instanceof UploadedFile) {
+                $files[$key] = $value;
+                continue;
+            }
+            if (\is_array($value)) {
+                $files[$key] = isset($value['tmp_name'])
+                    ? self::createUploadedFile($value)
+                    : self::filesFromGlobals($value);
+                continue;
+            }
+            throw new InvalidArgumentException('Invalid value in files specification');
+        }
+        return $files;
+    }
+
+    /**
+     * Get host and port from $_SERVER vals
+     *
+     * @return array host & port
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     */
+    private static function getHostPortFromGlobals()
+    {
+        $host = '';
+        $port = null;
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $url = 'http://' . $_SERVER['HTTP_HOST'];
+            $parts = \parse_url($url);
+            if ($parts === false) {
+                return [null, null];
+            }
+            $host = isset($parts['host']) ? $parts['host'] : '';
+            $port = isset($parts['port']) ? $parts['port'] : null;
+        } elseif (isset($_SERVER['SERVER_NAME'])) {
+            $host = $_SERVER['SERVER_NAME'];
+        } elseif (isset($_SERVER['SERVER_ADDR'])) {
+            $host = $_SERVER['SERVER_ADDR'];
+        }
+        if ($port === null && isset($_SERVER['SERVER_PORT'])) {
+            $port = $_SERVER['SERVER_PORT'];
+        }
+        return array($host, $port);
+    }
+
+    /**
+     * like PHP's parse_str()
+     *   key difference: by default this does not convert root key dots and spaces to '_'
+     *
+     * @param string $str  input string
+     * @param array  $opts parse options
+     *
+     * @return array
+     *
+     * @see https://github.com/api-platform/core/blob/master/src/Util/RequestParser.php#L50
+     */
+    private static function parseStr($str, $opts = array())
+    {
+        $params = array();
+        $opts = \array_merge(array(
+            'convDot' => false,
+            'convSpace' => false,
+        ), $opts);
+        $useParseStr = (!$opts['convDot'] || \strpos($str, '.') === false)
+            && (!$opts['convSpace'] || \strpos($str, ' ') === false);
+        if ($useParseStr) {
+            // there are no spaces or dots in serialized data
+            //   and/or we're not interested in converting them
+            // just use parse_str
+            \parse_str($str, $params);
+            return $params;
+        }
+
+        // Use a regex to replace keys with a bin2hex'd version
+        // this will prevent parse_str from modifying the keys
+        // '[' is urlencoded ('%5B') in the input, but we must urldecode it in order
+        // to find it when replacing names with the regexp below.
+        $str = \str_replace('%5B', '[', $str);
+        $str = \preg_replace_callback(
+            '/(^|(?<=&))[^=[&]+/',
+            function ($matches) {
+                return \bin2hex(\urldecode($matches[0]));
+            },
+            $str
+        );
+        \parse_str($str, $params);
+
+        $replace = array();
+        if ($opts['convDot']) {
+            $replace['.'] = '_';
+        }
+        if ($opts['convSpace']) {
+            $replace[' '] = '_';
+        }
+        $keys = \array_map(function ($key) use ($replace) {
+            return \strtr(\hex2bin($key), $replace);
+        }, \array_keys($params));
+        return \array_combine($keys, $params);
+    }
+
+    /**
+     * Confirm the content type and post values whether fit the requirement.
+     *
+     * @param string $method      HTTP method
+     * @param string $contentType Content-Type header value
+     * @param string $rawBody     @internal for unit-testing
+     *
+     * @return null|array
+     */
+    protected static function postFromInput($method, $contentType, $rawBody = null)
+    {
+        $contentType = \preg_replace('/\s*[;,]\s*.*$/', '', $contentType);
+        $contentType = \strtolower($contentType);
+        if ($method === 'GET') {
+            return null;
+        }
+        if ($rawBody === null) {
+            $rawBody = \file_get_contents('php://input');
+        }
+        if ($rawBody === '') {
+            return null;
+        }
+        $formContentTypes = array(
+            'application/x-www-form-urlencoded',
+            'multipart/form-data',
+        );
+        if (\in_array($contentType, $formContentTypes)) {
+            return self::parseStr($rawBody);
+        }
+        if ($contentType === 'application/json') {
+            $jsonParsedBody = \json_decode($rawBody, true);
+            return \json_last_error() === JSON_ERROR_NONE
+                ? $jsonParsedBody
+                : null;
+        }
+        return self::parseStr($rawBody);
+    }
+
+    /**
+     * Get a Uri populated with values from $_SERVER.
+     *
+     * @return UriInterface
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     */
+    private static function uriFromGlobals()
+    {
+        $uri = new Uri('');
+        $scheme = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
+            ? 'https'
+            : 'http';
+        $uri = $uri->withScheme($scheme);
+
+        list($host, $port) = self::getHostPortFromGlobals();
+        if ($host) {
+            $uri = $uri->withHost($host);
+        }
+        if ($port) {
+            $uri = $uri->withPort($port);
+        }
+        $query = null;
+        if (isset($_SERVER['REQUEST_URI'])) {
+            $requestUriParts = \explode('?', $_SERVER['REQUEST_URI'], 2);
+            $uri = $uri->withPath($requestUriParts[0]);
+            if (isset($requestUriParts[1])) {
+                $query = $requestUriParts[1];
+                $uri = $uri->withQuery($query);
+            }
+        }
+        if ($query === null && isset($_SERVER['QUERY_STRING'])) {
+            $query = $_SERVER['QUERY_STRING'];
+            $uri = $uri->withQuery($query);
+        }
+        return $uri;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace bdk\DebugTests\Utility;
 
+use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\Debug\Utility;
 use bdk\DebugTests\DebugTestFramework;
 
@@ -121,7 +122,36 @@ class UtilityTest extends DebugTestFramework
 
     public function testGetInterface()
     {
+        $this->debug->setCfg('services', array(
+            'request' => new ServerRequest('GET', null, array(
+                'REQUEST_METHOD' => 'GET',
+            )),
+        ));
+        $this->clearServerParamCache();
+        $this->assertSame('http', Utility::getInterface());
+
+        $this->debug->setCfg('services', array(
+            'request' => new ServerRequest('GET', null, array(
+                'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
+                'REQUEST_METHOD' => 'GET',
+            )),
+        ));
+        $this->clearServerParamCache();
+        $this->assertSame('http ajax', Utility::getInterface());
+
+        $this->debug->setCfg('services', array(
+            'request' => new ServerRequest('GET', null, array(
+                'PATH' => '.',
+            )),
+        ));
+        $this->clearServerParamCache();
         $this->assertSame('cli', Utility::getInterface());
+
+        $this->debug->setCfg('services', array(
+            'request' => new ServerRequest('GET'),
+        ));
+        $this->clearServerParamCache();
+        $this->assertSame('cli cron', Utility::getInterface());
     }
 
     /**

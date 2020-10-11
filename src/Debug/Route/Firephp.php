@@ -64,9 +64,10 @@ class Firephp extends Base
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER);
         $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
-        $serverParams = $this->debug->request->getServerParams();
+        $request = $this->debug->request;
+        $serverParams = $request->getServerParams();
         $heading = isset($serverParams['REQUEST_METHOD'])
-            ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact($serverParams['REQUEST_URI'])
+            ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
             : '$: ' . \implode(' ', $serverParams['argv']);
         $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,

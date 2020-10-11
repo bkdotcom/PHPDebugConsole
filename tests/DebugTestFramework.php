@@ -16,6 +16,7 @@ class DebugTestFramework extends DOMTestCase
 {
 
     public static $allowError = false;
+    public static $obLevels = 0;
     // public static $haveWampPlugin = false;
 
     protected function &getSharedVar($key)
@@ -89,6 +90,7 @@ class DebugTestFramework extends DOMTestCase
             $this->stderr(' ----------------- setUp -----------------');
         }
         */
+        self::$obLevels = \ob_get_level();
         self::$allowError = false;
         $this->debug = \bdk\Debug::getInstance(array(
             'collect' => true,
@@ -109,6 +111,16 @@ class DebugTestFramework extends DOMTestCase
             'outputHeaders' => false,
             'outputScript' => false,
             'route' => 'html',
+            'services' => array(
+                'request' => new ServerRequest(
+                    'GET',
+                    null,
+                    array(
+                        'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
+                        'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
+                    )
+                ),
+            ),
         ));
         $resetValues = array(
             'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
@@ -123,6 +135,7 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
+        $this->clearServerParamCache();
         /*
         if (self::$haveWampPlugin === false) {
             $wamp = $this->debug->getRoute('wamp', true) === false
@@ -194,11 +207,23 @@ class DebugTestFramework extends DOMTestCase
         $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
         $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
         $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
-        // unset($_SERVER['REQUEST_METHOD']);
-        // unset($_SERVER['REQUEST_URI']);
+        // $serverParams = $this->debug->request->getServerParams();
+        // $_SERVER['REQUEST_METHOD'] = 'GET';
+        /*
         $this->debug->setCfg('services', array(
-            'request' => ServerRequest::fromGlobals(),
+            'request' => new ServerRequest(
+                'GET',
+                null,
+                array(
+                    'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
+                )
+            )
         ));
+        $this->clearServerParamCache();
+        */
+        while (\ob_get_level() > self::$obLevels) {
+            \ob_end_clean();
+        }
     }
 
     /**
@@ -211,7 +236,7 @@ class DebugTestFramework extends DOMTestCase
         $args = \array_map(function ($val) {
             return $val === null
                 ? 'null'
-                : \print_r($val, true);
+                : \json_encode($val, JSON_PRETTY_PRINT);
         }, \func_get_args());
         $glue = \func_num_args() > 2
             ? ', '
@@ -608,5 +633,14 @@ class DebugTestFramework extends DOMTestCase
         $return = \array_values($logEntry->export());
         \ksort($return[2]);
         return $return;
+    }
+
+    protected function clearServerParamCache()
+    {
+        // Utility caches serverParams (statically)...  use serverParamsRef to clear it
+        $utilityRef = new \ReflectionClass('bdk\\Debug\\Utility');
+        $serverParams = $utilityRef->getProperty('serverParams');
+        $serverParams->setAccessible(true);
+        $serverParams->setValue(array());
     }
 }

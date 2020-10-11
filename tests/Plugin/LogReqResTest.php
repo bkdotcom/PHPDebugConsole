@@ -2,10 +2,13 @@
 
 namespace bdk\DebugTests\Plugin;
 
+use bdk\Debug;
+use bdk\Debug\Plugin\LogReqRes;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\Debug\Psr7lite\Stream;
+use bdk\Debug\Psr7lite\UploadedFile;
 use bdk\DebugTests\DebugTestFramework;
 
 /**
@@ -16,13 +19,13 @@ class LogReqResTest extends DebugTestFramework
 
     public function testLogPost()
     {
-        $logReqRes = new \bdk\Debug\Plugin\LogReqRes();
+        $logReqRes = new LogReqRes();
         $this->debug->addPlugin($logReqRes);
         $this->debug->setData('log', array());
         $this->debug->setData('logSummary', array());
         $this->debug->setCfg('logRequestInfo', true);
 
-        $debugSingle = \bdk\Debug::getInstance();
+        $debugSingle = Debug::getInstance();
 
         $reflect = new \ReflectionObject($logReqRes);
 
@@ -44,7 +47,7 @@ class LogReqResTest extends DebugTestFramework
             'request' => $debugSingle->request
                 ->withMethod('POST')
                 ->withParsedBody($post)
-                ->withBody(Stream::factory(\http_build_query($post))),
+                ->withBody(new Stream(\http_build_query($post))),
         ));
         $logPostMeth->invoke($logReqRes);
         $this->assertSame(
@@ -68,7 +71,7 @@ class LogReqResTest extends DebugTestFramework
             'request' => $debugSingle->request
                 ->withMethod('POST')
                 ->withHeader('Content-Type', 'application/json')
-                ->withBody(Stream::factory($requestBody))
+                ->withBody(new Stream($requestBody))
                 ->withParsedBody(array()),
         ));
         $logPostMeth->invoke($logReqRes);
@@ -106,7 +109,7 @@ class LogReqResTest extends DebugTestFramework
             'request' => $debugSingle->request
                 ->withMethod('POST')
                 ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
-                ->withBody(Stream::factory($requestBody))
+                ->withBody(new Stream($requestBody))
                 ->withParsedBody($parsedBody),
         ));
         $logPostMeth->invoke($logReqRes);
@@ -149,23 +152,41 @@ class LogReqResTest extends DebugTestFramework
         $this->debug->setData('log', array());
 
         /*
-            Post with just $_FILES
+            Post with just uploadedFiles
         */
         $this->debug->setData('log', array());
         $serverParamsRef->setValue(array());
-        $files = array(array('foo' => 'bar'));
+        $files = array(
+            'foo' => new UploadedFile(
+                TEST_DIR . '/assets/logo.png',
+                10000,
+                UPLOAD_ERR_OK,
+                'logo.png',
+                'image/png'
+            ),
+        );
         $debugSingle->setCfg('services', array(
             'request' => function () use ($files) {
-                $request = new ServerRequest(array(), array('REQUEST_METHOD' => 'POST'));
-                return $request->withMethod('POST')
-                    ->withUploadedFiles($files);
+                $request = new ServerRequest('POST', null, array(
+                    'REQUEST_METHOD' => 'POST',
+                ));
+                return $request->withUploadedFiles($files);
             },
         ));
+        $this->clearServerParamCache();
         $logRequestMeth->invoke($logReqRes);
         $this->assertSame(
             array(
                 'log',
-                array('$_FILES', $files),
+                array('$_FILES', array(
+                    'foo' => array(
+                        'error' => UPLOAD_ERR_OK,
+                        'name' => 'logo.png',
+                        'size' => 8138,
+                        'tmp_name' => TEST_DIR . '/assets/logo.png',
+                        'type' => 'image/png',
+                    ),
+                )),
                 array(
                     'channel' => 'Request / Response',
                 ),
@@ -179,8 +200,7 @@ class LogReqResTest extends DebugTestFramework
         */
         $debugSingle->setCfg('services', array(
             'request' => function () {
-                $request = new ServerRequest(array(), array('REQUEST_METHOD' => 'POST'));
-                return $request->withMethod('POST');
+                return new ServerRequest('POST');
             },
         ));
         $logPostMeth->invoke($logReqRes);
@@ -205,10 +225,10 @@ class LogReqResTest extends DebugTestFramework
         $requestBody = \json_encode(array('foo' => 'bar=bazy'));
         $debugSingle->setCfg('services', array(
             'request' => function () use ($requestBody) {
-                $request = new ServerRequest(array(), array('REQUEST_METHOD' => 'PUT'));
-                return $request->withMethod('PUT')
+                $request = new ServerRequest('PUT');
+                return $request
                     ->withHeader('Content-Type', 'application/json')
-                    ->withBody(Stream::factory($requestBody));
+                    ->withBody(new Stream($requestBody));
             },
         ));
         $logPostMeth->invoke($logReqRes);

@@ -28,33 +28,32 @@
             </property>
         </properties>
     </rule>
-    <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
     <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
-    <rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure" />
-    <rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue" />
-    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses" />
-    <rule ref="SlevomatCodingStandard.Namespaces.UselessAlias" />
-    <rule ref="SlevomatCodingStandard.PHP.RequireExplicitAssertion" />
-    <rule ref="SlevomatCodingStandard.PHP.UselessParentheses" />
-    <rule ref="SlevomatCodingStandard.PHP.OptimizedFunctionsWithoutUnpacking" />
-    <rule ref="SlevomatCodingStandard.PHP.UselessSemicolon" />
-    <rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable" />
-    <rule ref="SlevomatCodingStandard.Variables.UselessVariable" />
-    <rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses" />
-    <rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses" />
-    <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
-    <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions" />
-    <rule ref="SlevomatCodingStandard.Namespaces.UseDoesNotStartWithBackslash" />
+    <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
     <rule ref="SlevomatCodingStandard.Commenting.ForbiddenComments">
         <properties>
             <property name="forbiddenCommentPatterns" type="array">
-                <element value="#\[\w+ description\]#" />
+                <element value="#\[\w*description\]#" />
             </property>
         </properties>
     </rule>
+    <rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses" />
+    <rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses" />
     <rule ref="SlevomatCodingStandard.ControlStructures.UselessIfConditionWithReturn" />
     <rule ref="SlevomatCodingStandard.ControlStructures.UselessTernaryOperator" />
-    -->
+    <rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure" />
+    <rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue" />
+    <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
+    <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions" />
+    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses" />
+    <rule ref="SlevomatCodingStandard.Namespaces.UseDoesNotStartWithBackslash" />
+    <rule ref="SlevomatCodingStandard.Namespaces.UselessAlias" />
+    <rule ref="SlevomatCodingStandard.PHP.OptimizedFunctionsWithoutUnpacking" />
+    <rule ref="SlevomatCodingStandard.PHP.RequireExplicitAssertion" />
+    <rule ref="SlevomatCodingStandard.PHP.UselessParentheses" />
+    <rule ref="SlevomatCodingStandard.PHP.UselessSemicolon" />
+    <rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable" />
+    <rule ref="SlevomatCodingStandard.Variables.UselessVariable" />
     <!--
     <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
 

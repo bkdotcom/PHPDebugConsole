@@ -242,7 +242,7 @@ class Response extends Message
             ));
         }
         if ($phrase === null || $phrase === '') {
-            $phrase = isset(self::PHRASES[$code])
+            $phrase = \array_key_exists($code, self::PHRASES)
                 ? self::PHRASES[$code]
                 : '';
         }

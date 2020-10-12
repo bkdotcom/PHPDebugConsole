@@ -241,7 +241,7 @@ class UploadedFile
         if ($this->error === UPLOAD_ERR_OK) {
             return '';
         }
-        return isset(self::ERRORS[$this->error])
+        return \array_key_exists($this->error, self::ERRORS)
             ? self::ERRORS[$this->error]
             : 'Unknown upload error.';
     }
@@ -287,7 +287,7 @@ class UploadedFile
      */
     private function assertError($error)
     {
-        if (\is_int($error) === false || !isset(self::ERRORS[$error])) {
+        if (\is_int($error) === false || !\array_key_exists($error, self::ERRORS)) {
             throw new InvalidArgumentException('Upload file error status must be an integer value and one of the "UPLOAD_ERR_*" constants.');
         }
     }

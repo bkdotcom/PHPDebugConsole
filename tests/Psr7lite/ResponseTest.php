@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class ResponseTest extends TestCase
 {
-    use bdk\DebugTests\PhpUnitPolyfillTrait;
+    use \bdk\DebugTests\PhpUnitPolyfillTrait;
 
     public function testConstruct()
     {

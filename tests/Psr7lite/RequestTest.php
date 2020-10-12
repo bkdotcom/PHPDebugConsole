@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class RequestTest extends TestCase
 {
-    use bdk\DebugTests\PhpUnitPolyfillTrait;
+    use \bdk\DebugTests\PhpUnitPolyfillTrait;
 
     public function testConstruct()
     {

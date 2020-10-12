@@ -107,6 +107,9 @@ class UploadedFile
      *
      * @throws RuntimeException in cases when no stream is available or can be
      *     created.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function getStream()
     {
@@ -118,7 +121,7 @@ class UploadedFile
 
         if (!$this->stream && $this->file) {
             $errMsg = '';
-            \set_error_handler(function ($type, $msg) use ($errMsg) {
+            \set_error_handler(function ($type, $msg) use (&$errMsg) {
                 $errMsg = $msg;
             });
             $resource = \fopen($this->file, 'r');
@@ -331,11 +334,14 @@ class UploadedFile
      * @return bool
      *
      * @throws RuntimeException
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     private function moveFile($targetPath)
     {
         $errMsg = '';
-        \set_error_handler(function ($type, $msg) use ($errMsg) {
+        \set_error_handler(function ($type, $msg) use (&$errMsg) {
             $errMsg = $msg;
         });
         $this->isMoved = $this->sapi === 'cli'

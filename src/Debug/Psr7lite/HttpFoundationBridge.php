@@ -16,8 +16,11 @@ use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\Debug\Psr7lite\Stream;
 use bdk\Debug\Psr7lite\UploadedFile;
 use bdk\Debug\Psr7lite\Uri;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile as HttpFoundationUploadedFile;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Factories for creating Psr7lite ServerRequest & Response from HttpFoundation objects

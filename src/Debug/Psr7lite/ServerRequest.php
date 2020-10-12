@@ -64,7 +64,7 @@ class ServerRequest extends Request
     public function __construct($method = 'GET', $uri = '', $serverParams = array())
     {
         parent::__construct($method, $uri);
-        $headers = self::getAllHeaders($serverParams);
+        $headers = $this->getAllHeaders($serverParams);
         $this->server = $serverParams;
         $this->protocolVersion = isset($serverParams['SERVER_PROTOCOL'])
             ? \str_replace('HTTP/', '', $serverParams['SERVER_PROTOCOL'])
@@ -311,7 +311,7 @@ class ServerRequest extends Request
         if (!\is_array($uploadedFiles)) {
             throw new InvalidArgumentException(\sprintf(
                 'Uploaded files - expected array, but %s provided',
-                \is_object($uploadedFiles) ? \get_class($uploadedFiles) : \gettype($uploadedFiles)
+                self::debugType($uploadedFiles)
             ));
         }
         foreach ($uploadedFiles as $file) {

@@ -40,9 +40,6 @@ class Message
     private $headerNames = array();
 
     /** @var string */
-    private $method = 'GET';
-
-    /** @var string */
     private $protocolVersion = '1.1';
 
     /**
@@ -273,12 +270,12 @@ class Message
      * @return void
      * @throws InvalidArgumentException
      */
-    protected static function assertHeaderName($name)
+    private function assertHeaderName($name)
     {
         if (!\is_string($name)) {
             throw new InvalidArgumentException(\sprintf(
                 'Header name must be a string but "%s" provided.',
-                \is_object($name) ? \get_class($name) : \gettype($name)
+                self::debugType($name)
             ));
         }
         if ($name === '') {
@@ -306,7 +303,7 @@ class Message
      * @return void
      * @throws InvalidArgumentException
      */
-    protected static function assertHeaderValue($value = null)
+    private function assertHeaderValue($value = null)
     {
         if (\is_scalar($value) && !\is_bool($value)) {
             $value = array((string) $value);
@@ -314,7 +311,7 @@ class Message
         if (!\is_array($value)) {
             throw new InvalidArgumentException(\sprintf(
                 'The header field value only accepts string and array, but "%s" provided.',
-                \is_object($value) ? \get_class($value) : \gettype($value)
+                self::debugType($value)
             ));
         }
         if (empty($value)) {
@@ -323,36 +320,62 @@ class Message
             );
         }
         foreach ($value as $item) {
-            if ($item === '') {
-                continue;
-            }
-            if (!\is_scalar($item) || \is_bool($item)) {
-                throw new InvalidArgumentException(\sprintf(
-                    'The header values only accept string and number, but "%s" provided.',
-                    \is_object($item) ? \get_class($item) : \gettype($item)
-                ));
-            }
+            $this->assertHeaderValueLine($item);
+        }
+    }
 
-            /*
+    /**
+     * Validate header value
+     *
+     * @param mixed $value Header value to test
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertHeaderValueLine($value)
+    {
+        if ($value === '') {
+            return;
+        }
+        if (!\is_scalar($value) || \is_bool($value)) {
+            throw new InvalidArgumentException(\sprintf(
+                'The header values only accept string and number, but "%s" provided.',
+                self::debugType($value)
+            ));
+        }
+
+        /*
             https://www.rfc-editor.org/rfc/rfc7230.txt (page.25)
+
             field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
             field-vchar   = VCHAR / obs-text
-            obs-text      = %x80-FF
+            obs-text      = %x80-FF (character range outside ASCII.)
+                             NOT ALLOWED
             SP            = space
             HTAB          = horizontal tab
             VCHAR         = any visible [USASCII] character. (x21-x7e)
-            %x80-FF       = character range outside ASCII.
-            obs-text SHOULD N0T BE USED.
-            OR EVEN I CAN PASS CHINESE CHARACTERS, THAT'S WEIRD.
-            */
-
-            if (!\preg_match('/^[ \t\x21-\x7e]+$/', $item)) {
-                throw new InvalidArgumentException(\sprintf(
-                    '"%s" is not valid header value, it must contains visible ASCII characters only.',
-                    $item
-                ));
-            }
+        */
+        if (!\preg_match('/^[ \t\x21-\x7e]+$/', $value)) {
+            throw new InvalidArgumentException(\sprintf(
+                '"%s" is not valid header value, it must contains visible ASCII characters only.',
+                $value
+            ));
         }
+    }
+
+    /**
+     * Get the value's type
+     *
+     * @param mixed $val Value to inspect
+     *
+     * @return string
+     */
+    protected static function debugType($val)
+    {
+        return \is_object($val)
+            ? \get_class($val)
+            : \gettype($val);
     }
 
     /**
@@ -364,7 +387,7 @@ class Message
      *
      * @throws InvalidArgumentException
      */
-    protected function assertProtocolVersion(string $version): void
+    private function assertProtocolVersion(string $version)
     {
         if (!\in_array($version, $this->validProtocolVers)) {
             throw new InvalidArgumentException(\sprintf(
@@ -383,7 +406,7 @@ class Message
      *
      * @return string[string] The HTTP header key/value pairs.
      */
-    protected static function getAllHeaders($serverParams)
+    protected function getAllHeaders($serverParams)
     {
         if (\function_exists('getallheaders')) {
             return \getallheaders();
@@ -406,7 +429,7 @@ class Message
             }
         }
         if (!isset($headers['Authorization'])) {
-            $auth = self::getAuthorizationHeader($serverParams);
+            $auth = $this->getAuthorizationHeader($serverParams);
             if ($auth) {
                 $headers['Authorization'] = $auth;
             }
@@ -421,7 +444,7 @@ class Message
      *
      * @return null|string
      */
-    private static function getAuthorizationHeader($serverParams)
+    private function getAuthorizationHeader($serverParams)
     {
         $auth = null;
         if (isset($serverParams['REDIRECT_HTTP_AUTHORIZATION'])) {
@@ -443,10 +466,10 @@ class Message
      * @return array
      * @throws InvalidArgumentException
      */
-    private static function normalizeHeaderValue($value)
+    private function normalizeHeaderValue($value)
     {
-        self::assertHeaderValue($value);
-        return \array_values(self::trimHeaderValues($value));
+        $this->assertHeaderValue($value);
+        return \array_values($this->trimHeaderValues($value));
     }
 
     /**
@@ -464,7 +487,7 @@ class Message
                 // and also allowed in withHeader(). So we need to cast it to string again for the following assertion to pass.
                 $name = (string) $name;
             }
-            self::assertHeaderName($name);
+            $this->assertHeaderName($name);
             $values = $this->normalizeHeaderValue($value);
             $nameLower = \strtolower($name);
             if (isset($this->headerNames[$nameLower])) {
@@ -491,13 +514,13 @@ class Message
      *
      * @see https://tools.ietf.org/html/rfc7230#section-3.2.4
      */
-    private static function trimHeaderValues($values = array())
+    private function trimHeaderValues($values = array())
     {
         return \array_map(function ($value) {
             if (!\is_scalar($value) && $value !== null) {
                 throw new InvalidArgumentException(\sprintf(
                     'Header value must be scalar or null but %s provided.',
-                    \is_object($value) ? \get_class($value) : \gettype($value)
+                    self::debugType($value)
                 ));
             }
             return \trim((string) $value, " \t");

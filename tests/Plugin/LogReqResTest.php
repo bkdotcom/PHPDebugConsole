@@ -182,7 +182,7 @@ class LogReqResTest extends DebugTestFramework
                     'foo' => array(
                         'error' => UPLOAD_ERR_OK,
                         'name' => 'logo.png',
-                        'size' => 8138,
+                        'size' => \filesize(TEST_DIR . '/assets/logo.png'),
                         'tmp_name' => TEST_DIR . '/assets/logo.png',
                         'type' => 'image/png',
                     ),

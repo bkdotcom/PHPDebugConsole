@@ -72,7 +72,7 @@ class UploadedFileTest extends TestCase
             'image/png'
         );
 
-        $this->assertSame(8138, $uploadedFile->getSize());
+        $this->assertSame(\filesize(TEST_DIR . '/assets/logo.png'), $uploadedFile->getSize());
         $this->assertSame(0, $uploadedFile->getError());
         $this->assertSame('logo.png', $uploadedFile->getClientFilename());
         $this->assertSame('image/png', $uploadedFile->getClientMediaType());

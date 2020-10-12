@@ -430,7 +430,7 @@ class Uri
      *
      * @return static A new instance with the specified fragment.
      */
-    public function withFragment($fragment): self
+    public function withFragment($fragment)
     {
         $this->assertString($fragment, 'fragment');
         $fragment = $this->filterQueryAndFragment($fragment);
@@ -477,7 +477,7 @@ class Uri
      *
      * @throws InvalidArgumentException
      */
-    protected function assertString($value, $what = ''): void
+    protected function assertString($value, $what = '')
     {
         if (!\is_string($value)) {
             throw new InvalidArgumentException(\sprintf(

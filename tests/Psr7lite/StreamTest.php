@@ -59,7 +59,7 @@ class StreamTest extends TestCase
     {
         $resource = \fopen(TEST_DIR . '/assets/logo.png', 'r+');
         $stream = new Stream($resource);
-        $this->assertSame(8138, $stream->getSize());
+        $this->assertSame(\filesize(TEST_DIR . '/assets/logo.png'), $stream->getSize());
         $stream->close();
     }
 

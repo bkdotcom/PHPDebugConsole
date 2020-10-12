@@ -666,7 +666,10 @@ class Uri
         if (PHP_VERSION_ID < 50500 && \strpos($url, '//') === 0) {
             // php 5.4 chokes without the scheme
             $parts = \parse_url('http:' . $url);
-            $parts['scheme'] = '';
+            if ($parts) {
+                $parts['scheme'] = '';
+            }
+            return $parts;
         }
         return \parse_url($url);
     }

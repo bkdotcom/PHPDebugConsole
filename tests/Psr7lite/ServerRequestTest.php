@@ -6,7 +6,6 @@ use bdk\Debug\Psr7lite\Message;
 use bdk\Debug\Psr7lite\Request;
 use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\Debug\Psr7lite\UploadedFile;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 

@@ -4,10 +4,8 @@ namespace bdk\DebugTests\Psr7lite;
 
 use bdk\Debug\Psr7lite\Stream;
 use bdk\Debug\Psr7lite\UploadedFile;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
-use RuntimeException;
 
 class UploadedFileTest extends TestCase
 {
@@ -20,7 +18,7 @@ class UploadedFileTest extends TestCase
             100000,             // size
             UPLOAD_ERR_OK,      // error
             'example1.jpg',     // name
-            'image/jpeg',       // type
+            'image/jpeg'        // type
         );
 
         $this->assertTrue($uploadedFile instanceof UploadedFile);
@@ -90,7 +88,7 @@ class UploadedFileTest extends TestCase
             100000,
             UPLOAD_ERR_OK,
             'logo.png',
-            'image/png',
+            'image/png'
         );
 
         $this->assertSame('', $uploadedFile->getErrorMessage());
@@ -170,7 +168,7 @@ class UploadedFileTest extends TestCase
             100000,             // size
             UPLOAD_ERR_OK,      // error
             'example1.jpg',     // name
-            'image/jpeg',       // type
+            'image/jpeg'        // type
         );
 
         // Exception => No stream is available or can be created.

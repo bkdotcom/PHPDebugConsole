@@ -193,7 +193,7 @@ class Response extends Message
         }
         if (!\is_string($phrase)) {
             throw new InvalidArgumentException(
-                'Reason-phrase must be a string',
+                'Reason-phrase must be a string'
             );
         }
 

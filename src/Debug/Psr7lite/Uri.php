@@ -456,16 +456,31 @@ class Uri
     {
         $this->assertString($host, 'host');
         if ($host === '') {
-            // Note: An empty host value is equivalent to removing the host.
-            // So that if the host is empty, ignore the following check.
+            // An empty host value is equivalent to removing the host.
+            // No validation required
             return;
         }
-        if (!\filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+        if (PHP_VERSION_ID >= 70000) {
+            if (\filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+                return;
+            }
             throw new InvalidArgumentException(\sprintf(
                 '"%s" is not a valid host',
                 $host
             ));
         }
+        // https://www.regextester.com/103452
+        $regex = '/(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/';
+        if (\preg_match($regex, $host)) {
+            return;
+        }
+        if (\filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_RES_RANGE)) {
+            return;
+        }
+        throw new InvalidArgumentException(\sprintf(
+            '"%s" is not a valid host',
+            $host
+        ));
     }
 
     /**

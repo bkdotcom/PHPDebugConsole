@@ -387,7 +387,7 @@ class Message
      *
      * @throws InvalidArgumentException
      */
-    private function assertProtocolVersion(string $version)
+    private function assertProtocolVersion($version)
     {
         if (!\in_array($version, $this->validProtocolVers)) {
             throw new InvalidArgumentException(\sprintf(

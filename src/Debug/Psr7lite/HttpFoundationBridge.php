@@ -153,7 +153,7 @@ class HttpFoundationBridge
      *
      * @return array
      */
-    private function getFiles(array $uploadedFiles)
+    private function getFiles($uploadedFiles)
     {
         $files = [];
         foreach ($uploadedFiles as $key => $value) {

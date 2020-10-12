@@ -272,7 +272,7 @@ class UploadedFileTest extends TestCase
      *
      * @return string The file's path.
      */
-    private static function getTestFilepath(string $filename, string $dir = '')
+    private static function getTestFilepath($filename, $dir = '')
     {
         $dir = $dir === ''
             ? TEST_DIR . '/../tmp'

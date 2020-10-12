@@ -28,7 +28,7 @@ class Response extends Message
      *
      * @var array
      */
-    const PHRASES = array(
+    private $phrases = array(
         // 1xx: Informational
         // Request received, continuing process.
         100 => 'Continue',
@@ -242,8 +242,8 @@ class Response extends Message
             ));
         }
         if ($phrase === null || $phrase === '') {
-            $phrase = \array_key_exists($code, self::PHRASES)
-                ? self::PHRASES[$code]
+            $phrase = \array_key_exists($code, $this->phrases)
+                ? $this->phrases[$code]
                 : '';
         }
         $this->assertReasonPhrase($phrase);

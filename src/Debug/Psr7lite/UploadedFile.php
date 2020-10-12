@@ -28,7 +28,16 @@ use RuntimeException;
 class UploadedFile
 {
 
-    const ERRORS = array(
+    /** @var string */
+    private $clientFilename;
+
+    /** @var string */
+    private $clientMediaType;
+
+    /** @var int */
+    private $error;
+
+    private $errors = array(
         UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
         UPLOAD_ERR_EXTENSION  => 'File upload stopped by extension.',
         UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
@@ -38,15 +47,6 @@ class UploadedFile
         UPLOAD_ERR_OK         => 'There is no error, the file uploaded with success.',
         UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded.',
     );
-
-    /** @var string */
-    private $clientFilename;
-
-    /** @var string */
-    private $clientMediaType;
-
-    /** @var int */
-    private $error;
 
     /** @var string|null */
     private $file;
@@ -241,8 +241,8 @@ class UploadedFile
         if ($this->error === UPLOAD_ERR_OK) {
             return '';
         }
-        return \array_key_exists($this->error, self::ERRORS)
-            ? self::ERRORS[$this->error]
+        return \array_key_exists($this->error, $this->errors)
+            ? $this->errors[$this->error]
             : 'Unknown upload error.';
     }
 
@@ -287,7 +287,7 @@ class UploadedFile
      */
     private function assertError($error)
     {
-        if (\is_int($error) === false || !\array_key_exists($error, self::ERRORS)) {
+        if (\is_int($error) === false || !\array_key_exists($error, $this->errors)) {
             throw new InvalidArgumentException('Upload file error status must be an integer value and one of the "UPLOAD_ERR_*" constants.');
         }
     }

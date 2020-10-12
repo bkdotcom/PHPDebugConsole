@@ -20,16 +20,17 @@ use InvalidArgumentException;
 class Uri
 {
 
-    private const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
-    private const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
-    private const SCHEMES = array(
+    const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
+    const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
+
+    /** @var string Uri scheme. */
+    private $scheme = '';
+
+    private static $schemes = array(
         'ftp' => 21,
         'http' => 80,
         'https' => 443,
     );
-
-    /** @var string Uri scheme. */
-    private $scheme = '';
 
     /** @var string Uri user info. */
     private $userInfo = '';
@@ -556,7 +557,7 @@ class Uri
      */
     private static function isNonStandardPort($scheme, $port)
     {
-        return !isset(self::SCHEMES[$scheme]) || $port !== self::SCHEMES[$scheme];
+        return !isset(self::$schemes[$scheme]) || $port !== self::$schemes[$scheme];
     }
 
     /**

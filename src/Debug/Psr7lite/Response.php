@@ -28,7 +28,7 @@ class Response extends Message
      *
      * @var array
      */
-    private const PHRASES = array(
+    const PHRASES = array(
         // 1xx: Informational
         // Request received, continuing process.
         100 => 'Continue',

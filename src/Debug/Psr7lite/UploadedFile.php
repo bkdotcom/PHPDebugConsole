@@ -28,7 +28,7 @@ use RuntimeException;
 class UploadedFile
 {
 
-    private const ERRORS = array(
+    const ERRORS = array(
         UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
         UPLOAD_ERR_EXTENSION  => 'File upload stopped by extension.',
         UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',

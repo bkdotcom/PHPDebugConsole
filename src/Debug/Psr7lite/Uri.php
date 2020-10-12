@@ -66,7 +66,7 @@ class Uri
         if ($uri === '') {
             return;
         }
-        $parts = \parse_url($uri);
+        $parts = $this->parseUrl($uri);
         if ($parts === false) {
             throw new InvalidArgumentException('Unable to parse URI: ' . $uri);
         }
@@ -652,6 +652,23 @@ class Uri
             'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
             'abcdefghijklmnopqrstuvwxyz'
         );
+    }
+
+    /**
+     * Parse URL with fix for php 5.4
+     *
+     * @param string $url The URL to parse.
+     *
+     * @return array|false
+     */
+    private function parseUrl($url)
+    {
+        if (PHP_VERSION_ID < 50500 && \strpos($url, '//') === 0) {
+            // php 5.4 chokes without the scheme
+            $parts = \parse_url('http:' . $url);
+            $parts['scheme'] = '';
+        }
+        return \parse_url($url);
     }
 
     /**

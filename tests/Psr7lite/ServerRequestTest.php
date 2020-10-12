@@ -11,6 +11,8 @@ use ReflectionObject;
 
 class ServerRequestTest extends TestCase
 {
+    use bdk\DebugTests\PhpUnitPolyfillTrait;
+
     public function testConstruct()
     {
         $serverRequest = new ServerRequest();

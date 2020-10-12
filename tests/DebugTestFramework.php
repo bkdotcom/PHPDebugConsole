@@ -19,9 +19,6 @@ class DebugTestFramework extends DOMTestCase
     public static $obLevels = 0;
     // public static $haveWampPlugin = false;
 
-    private $forwardCompatExpectedExceptionMessage = '';
-    private $forwardCompatExpectedExceptionCode = null;
-
     protected function &getSharedVar($key)
     {
         static $values = array(
@@ -74,41 +71,6 @@ class DebugTestFramework extends DOMTestCase
             $return = $var['type'] === 'resource' && isset($var['value']);
         }
         return $return;
-    }
-
-    /**
-     * Polyfill
-     *
-     * @param string $exception
-     *
-     * @return void
-     *
-     * @see https://github.com/symfony/symfony/pull/32869/files
-     */
-    public function expectException($exception)
-    {
-        if (\method_exists('\\PHPUnit\\Framework\\TestCase', 'expectException')) {
-            parent::expectException($exception);
-            return;
-        }
-        parent::setExpectedException(
-            $exception,
-            $this->forwardCompatExpectedExceptionMessage,
-            $this->forwardCompatExpectedExceptionCode
-        );
-    }
-
-    /**
-     * @param string $exceptionName
-     * @param string $exceptionMessage
-     *
-     * @return void
-     */
-    public function setExpectedException($exceptionName, $exceptionMessage = '', $exceptionCode = null)
-    {
-        $this->forwardCompatExpectedExceptionMessage = $exceptionMessage;
-        $this->forwardCompatExpectedExceptionCode = $exceptionCode;
-        parent::setExpectedException($exceptionName, $exceptionMessage, $exceptionCode);
     }
 
     /**

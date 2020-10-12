@@ -9,6 +9,8 @@ use ReflectionObject;
 
 class UploadedFileTest extends TestCase
 {
+    use bdk\DebugTests\PhpUnitPolyfillTrait;
+
     public function testConstruct()
     {
         // Test 1

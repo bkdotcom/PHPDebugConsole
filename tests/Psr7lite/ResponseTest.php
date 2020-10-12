@@ -4,11 +4,11 @@ namespace bdk\DebugTests\Psr7lite;
 
 use bdk\Debug\Psr7lite\Message;
 use bdk\Debug\Psr7lite\Response;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class ResponseTest extends TestCase
 {
+    use bdk\DebugTests\PhpUnitPolyfillTrait;
 
     public function testConstruct()
     {

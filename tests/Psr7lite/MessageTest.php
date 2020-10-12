@@ -4,13 +4,14 @@ namespace bdk\DebugTests\Psr7lite;
 
 use bdk\Debug\Psr7lite\Message;
 use bdk\Debug\Psr7lite\Stream;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 use stdClass;
 
 class MessageTest extends TestCase
 {
+    use bdk\DebugTests\PhpUnitPolyfillTrait;
+
     public function testConstruct()
     {
         $message = new Message();

@@ -3,12 +3,12 @@
 namespace bdk\DebugTests\Psr7lite;
 
 use bdk\Debug\Psr7lite\Uri;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
 class UriTest extends TestCase
 {
+    use bdk\DebugTests\PhpUnitPolyfillTrait;
 
     public function testConstruct()
     {

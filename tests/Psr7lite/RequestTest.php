@@ -5,11 +5,12 @@ namespace bdk\DebugTests\Psr7lite;
 use bdk\Debug\Psr7lite\Message;
 use bdk\Debug\Psr7lite\Request;
 use bdk\Debug\Psr7lite\Uri;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class RequestTest extends TestCase
 {
+    use bdk\DebugTests\PhpUnitPolyfillTrait;
+
     public function testConstruct()
     {
         $request = new Request('GET', '', '', [], '1.1');

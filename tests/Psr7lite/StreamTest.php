@@ -3,13 +3,13 @@
 namespace bdk\DebugTests\Psr7lite;
 
 use bdk\Debug\Psr7lite\Stream;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
-use RuntimeException;
 
 class StreamTest extends TestCase
 {
+    use bdk\DebugTests\PhpUnitPolyfillTrait;
+
     public function testConstruct()
     {
         $resource = \fopen(TEST_DIR . '/assets/logo.png', 'r+');

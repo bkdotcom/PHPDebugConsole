@@ -474,7 +474,7 @@ class Uri
         if (\preg_match($regex, $host)) {
             return;
         }
-        if (\filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_RES_RANGE)) {
+        if (\filter_var($host, FILTER_VALIDATE_IP)) {
             return;
         }
         throw new InvalidArgumentException(\sprintf(

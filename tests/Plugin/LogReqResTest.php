@@ -3,9 +3,9 @@
 namespace bdk\DebugTests\Plugin;
 
 use bdk\Debug;
-use bdk\Debug\Plugin\LogReqRes;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Plugin\LogReqRes;
 use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\Debug\Psr7lite\Stream;
 use bdk\Debug\Psr7lite\UploadedFile;
@@ -25,26 +25,28 @@ class LogReqResTest extends DebugTestFramework
         $this->debug->setData('logSummary', array());
         $this->debug->setCfg('logRequestInfo', true);
 
-        $debugSingle = Debug::getInstance();
-
         $reflect = new \ReflectionObject($logReqRes);
-
         $logPostMeth = $reflect->getMethod('logPost');
         $logPostMeth->setAccessible(true);
         $logRequestMeth = $reflect->getMethod('logRequest');
         $logRequestMeth->setAccessible(true);
 
-        // Utility caches serverParams (statically)...  use serverParamsRef to clear it
-        $utilityRef = new \ReflectionClass('bdk\\Debug\\Utility');
-        $serverParamsRef = $utilityRef->getProperty('serverParams');
-        $serverParamsRef->setAccessible(true);
+        // Internal caches serverParams (statically)...  use serverParamsRef to clear it
+        $debugRef = new \ReflectionObject($this->debug);
+        $internalProp = $debugRef->getProperty('internal');
+        $internalProp->setAccessible(true);
+        $internal = $internalProp->getValue($this->debug);
+
+        $internalRef = new \ReflectionObject($internal);
+        $serverParams = $internalRef->getProperty('serverParams');
+        $serverParams->setAccessible(true);
 
         /*
             valid form post
         */
         $post = array('foo' => 'bar');
-        $debugSingle->setCfg('services', array(
-            'request' => $debugSingle->request
+        $this->debug->setCfg('services', array(
+            'request' => $this->debug->request
                 ->withMethod('POST')
                 ->withParsedBody($post)
                 ->withBody(new Stream(\http_build_query($post))),
@@ -67,8 +69,8 @@ class LogReqResTest extends DebugTestFramework
             json properly posted
         */
         $requestBody = \json_encode(array('foo' => 'bar=baz'));
-        $debugSingle->setCfg('services', array(
-            'request' => $debugSingle->request
+        $this->debug->setCfg('services', array(
+            'request' => $this->debug->request
                 ->withMethod('POST')
                 ->withHeader('Content-Type', 'application/json')
                 ->withBody(new Stream($requestBody))
@@ -105,8 +107,8 @@ class LogReqResTest extends DebugTestFramework
         */
         $requestBody = \json_encode(array('foo' => 'bar=baz'));
         \parse_str($requestBody, $parsedBody);
-        $debugSingle->setCfg('services', array(
-            'request' => $debugSingle->request
+        $this->debug->setCfg('services', array(
+            'request' => $this->debug->request
                 ->withMethod('POST')
                 ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
                 ->withBody(new Stream($requestBody))
@@ -155,7 +157,7 @@ class LogReqResTest extends DebugTestFramework
             Post with just uploadedFiles
         */
         $this->debug->setData('log', array());
-        $serverParamsRef->setValue(array());
+        $serverParams->setValue($internal, array());
         $files = array(
             'foo' => new UploadedFile(
                 TEST_DIR . '/assets/logo.png',
@@ -165,7 +167,7 @@ class LogReqResTest extends DebugTestFramework
                 'image/png'
             ),
         );
-        $debugSingle->setCfg('services', array(
+        $this->debug->setCfg('services', array(
             'request' => function () use ($files) {
                 $request = new ServerRequest('POST', null, array(
                     'REQUEST_METHOD' => 'POST',
@@ -198,7 +200,7 @@ class LogReqResTest extends DebugTestFramework
         /*
             Post with no body
         */
-        $debugSingle->setCfg('services', array(
+        $this->debug->setCfg('services', array(
             'request' => function () {
                 return new ServerRequest('POST');
             },
@@ -223,7 +225,7 @@ class LogReqResTest extends DebugTestFramework
             Put method
         */
         $requestBody = \json_encode(array('foo' => 'bar=bazy'));
-        $debugSingle->setCfg('services', array(
+        $this->debug->setCfg('services', array(
             'request' => function () use ($requestBody) {
                 $request = new ServerRequest('PUT');
                 return $request
@@ -261,8 +263,8 @@ class LogReqResTest extends DebugTestFramework
         /*
             Reset request
         */
-        $serverParamsRef->setValue(array());
-        $debugSingle->setCfg('services', array(
+        $serverParams->setValue($internal, array());
+        $this->debug->setCfg('services', array(
             'request' => function () {
                 return ServerRequest::fromGlobals();
             },

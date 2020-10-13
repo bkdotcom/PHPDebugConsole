@@ -2,7 +2,6 @@
 
 namespace bdk\DebugTests\Utility;
 
-use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\Debug\Utility;
 use bdk\DebugTests\DebugTestFramework;
 
@@ -113,45 +112,11 @@ class UtilityTest extends DebugTestFramework
 
     public function testGetIncludedFiles()
     {
-        $filesA = get_included_files();
+        $filesA = \get_included_files();
         $filesB = Utility::getIncludedFiles();
-        sort($filesA);
-        sort($filesB);
+        \sort($filesA);
+        \sort($filesB);
         $this->assertArraySubset($filesA, $filesB);
-    }
-
-    public function testGetInterface()
-    {
-        $this->debug->setCfg('services', array(
-            'request' => new ServerRequest('GET', null, array(
-                'REQUEST_METHOD' => 'GET',
-            )),
-        ));
-        $this->clearServerParamCache();
-        $this->assertSame('http', Utility::getInterface());
-
-        $this->debug->setCfg('services', array(
-            'request' => new ServerRequest('GET', null, array(
-                'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
-                'REQUEST_METHOD' => 'GET',
-            )),
-        ));
-        $this->clearServerParamCache();
-        $this->assertSame('http ajax', Utility::getInterface());
-
-        $this->debug->setCfg('services', array(
-            'request' => new ServerRequest('GET', null, array(
-                'PATH' => '.',
-            )),
-        ));
-        $this->clearServerParamCache();
-        $this->assertSame('cli', Utility::getInterface());
-
-        $this->debug->setCfg('services', array(
-            'request' => new ServerRequest('GET'),
-        ));
-        $this->clearServerParamCache();
-        $this->assertSame('cli cron', Utility::getInterface());
     }
 
     /**
@@ -161,7 +126,7 @@ class UtilityTest extends DebugTestFramework
      */
     public function testIsBase64Encoded()
     {
-        $base64Str = base64_encode(chunk_split(str_repeat('zippity do dah', 50)));
+        $base64Str = \base64_encode(\chunk_split(\str_repeat('zippity do dah', 50)));
         $this->assertTrue(Utility::isBase64Encoded($base64Str));
         $this->assertFalse(Utility::isBase64Encoded('I\'m just a bill.'));
     }
@@ -184,11 +149,6 @@ class UtilityTest extends DebugTestFramework
     public function testMemoryLimit()
     {
         $this->assertNotNull(Utility::memoryLimit());
-    }
-
-    public function testRequestId()
-    {
-        $this->assertStringMatchesFormat('%x', Utility::requestId());
     }
 
     /**

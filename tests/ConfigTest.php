@@ -107,23 +107,21 @@ class ConfigTest extends DebugTestFramework
 
     public function testInitKey()
     {
-        Debug::getInstance()->setCfg('services', array(
-            'request' => (new ServerRequest(
-                'GET',
-                null,
-                array(
-                    'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
-                )
-            ))
-                ->withQueryParams(array(
-                    'debug' => 'swordfish',
-                )),
-        ));
-        $this->clearServerParamCache();
-
         $debug = new Debug(array(
             'key' => 'swordfish',
             'logResponse' => false,
+            'services' => array(
+                'request' => (new ServerRequest(
+                    'GET',
+                    null,
+                    array(
+                        'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
+                    )
+                ))
+                    ->withQueryParams(array(
+                        'debug' => 'swordfish',
+                    )),
+            ),
         ));
         $this->assertTrue($debug->getCfg('collect'));
         $this->assertTrue($debug->getCfg('output'));

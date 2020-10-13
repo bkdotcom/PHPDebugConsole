@@ -429,7 +429,7 @@ class InternalEvents implements SubscriberInterface
             ), $this->debug->request->getServerParams());
             $val = \count(
                 \array_filter(array(
-                    \strpos($this->debug->utility->getInterface(), 'http') !== false,
+                    \strpos($this->debug->getInterface(), 'http') !== false,
                     $serverParams['HTTP_SOAPACTION'],
                     \stripos($serverParams['HTTP_USER_AGENT'], 'curl') !== false,
                 ))

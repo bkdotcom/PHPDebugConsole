@@ -48,6 +48,7 @@ class Message
      * @var array
      */
     protected $validProtocolVers = array(
+        '1.0',
         '1.1',
         '2.0',
         '3.0',

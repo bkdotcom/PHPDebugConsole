@@ -195,13 +195,6 @@ class Debug
             'stringMaxLen' => 8192,
         );
         $this->bootstrap($cfg);
-        /*
-            Initialize Internal
-        */
-        $this->internalEvents = $this->getViaContainer('internalEvents');
-        $this->internal = $this->getViaContainer('internal');
-        $this->internal->init();
-        $this->eventManager->publish(self::EVENT_BOOTSTRAP, $this);
     }
 
     /**
@@ -1762,18 +1755,23 @@ class Debug
                 \spl_autoload_register(array($this, 'autoloader'));
             }
         }
-        $this->registeredPlugins = new SplObjectStorage();
         $this->getViaContainer('errorHandler');
+        $this->registeredPlugins = new SplObjectStorage();
         $this->config = $this->getViaContainer('config');
         $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'));
         $this->config->set($cfg);
         $this->bootstrapInstance();
+        /*
+            Initialize Internal
+        */
+        $this->internal = $this->getViaContainer('internal');
+        $this->internal->init();
+        $this->data['requestId'] = $this->internal->requestId();
         if ($this->cfg['emailTo'] === 'default') {
-            $serverParams = $this->request->getServerParams();
-            $this->cfg['emailTo'] = isset($serverParams['SERVER_ADMIN'])
-                ? $serverParams['SERVER_ADMIN']
-                : null;
+            $this->cfg['emailTo'] = $this->internal->getServerParam('SERVER_ADMIN');
         }
+        $this->internalEvents = $this->getViaContainer('internalEvents');
+        $this->eventManager->publish(self::EVENT_BOOTSTRAP, $this);
     }
 
     /**
@@ -1796,7 +1794,6 @@ class Debug
         // this is the root instance
         $this->setLogDest();
         $this->data['entryCountInitial'] = \count($this->data['log']);
-        $this->data['requestId'] = $this->utility->requestId();
     }
 
     /**
@@ -1931,9 +1928,8 @@ class Debug
             },
             'response' => null,
             'stopWatch' => function () {
-                $serverParams = $this->request->getServerParams();
                 return new \bdk\Debug\Utility\StopWatch(array(
-                    'requestTime' => $serverParams['REQUEST_TIME_FLOAT'],
+                    'requestTime' => $this->internal->getServerParam('REQUEST_TIME_FLOAT'),
                 ));
             },
             'utf8' => function () {
@@ -2024,13 +2020,6 @@ class Debug
      */
     private function getViaContainer($property)
     {
-        /*
-            Treat Request obj like a singleton..
-            Always refer to the original
-        */
-        if (\in_array($property, array('request')) && $this !== self::$instance) {
-            return self::$instance->getViaContainer($property);
-        }
         $val = false;
         $isNew = false;
         if (\array_key_exists($property, $this->cfg['services'])) {

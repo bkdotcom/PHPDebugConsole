@@ -48,6 +48,7 @@ class Internal implements SubscriberInterface
 
     private $isBootstraped = false;
     private static $profilingEnabled = false;
+    private $serverParams = array();
 
     /**
      * Constructor
@@ -254,7 +255,7 @@ class Internal implements SubscriberInterface
      */
     public function getDefaultRoute()
     {
-        $interface = $this->debug->utility->getInterface();
+        $interface = $this->getInterface();
         if (\strpos($interface, 'ajax') !== false) {
             return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
         }
@@ -266,6 +267,37 @@ class Internal implements SubscriberInterface
             return 'html';
         }
         return 'stream';
+    }
+
+    /**
+     * Returns cli, cron, ajax, or http
+     *
+     * @return string cli | "cli cron" | http | "http ajax"
+     */
+    public function getInterface()
+    {
+        $return = 'http';
+        /*
+            notes:
+                $_SERVER['argv'] could be populated with query string if register_argc_argv = On
+                we used to also check for `defined('STDIN')`, but it's not unit test friendly
+        */
+        $argv = $this->getServerParam('argv', array());
+        $isCliOrCron = \count(\array_filter(array(
+            // have argv and it's not query_string
+            $argv && $argv !== array($this->getServerParam('QUERY_STRING')),
+            // serverParam REQUEST_METHOD... NOT request->getMethod() which likely defaults to GET
+            $this->getServerParam('REQUEST_METHOD') === null,
+        ))) > 0;
+        if ($isCliOrCron) {
+            // TERM is a linux/unix thing
+            $return = $this->getServerParam('TERM') !== null || $this->getServerParam('PATH') !== null
+                ? 'cli'
+                : 'cli cron';
+        } elseif ($this->getServerParam('HTTP_X_REQUESTED_WITH') === 'XMLHttpRequest') {
+            $return = 'http ajax';
+        }
+        return $return;
     }
 
     /**
@@ -289,12 +321,12 @@ class Internal implements SubscriberInterface
         )));
         if (isset($cfg['debug']['services'])) {
             $cfg['debug']['services'] = \array_intersect_key($cfg['debug']['services'], \array_flip(array(
-                // these services aren't tied to a debug instance... allow inheritance
+                // these services aren't tied to a debug channel instance... allow inheritance
                 'backtrace',
                 'html',
                 'methodClear',
                 'methodTable',
-                // 'request', // not tied to instance, but "singleton" returned
+                'request',
                 'response',
                 'utf8',
                 'utility',
@@ -354,10 +386,7 @@ class Internal implements SubscriberInterface
         if (!$asString) {
             return $headers;
         }
-        $serverParams = $this->debug->request->getServerParams();
-        $protocol = isset($serverParams['SERVER_PROTOCOL'])
-            ? $serverParams['SERVER_PROTOCOL']
-            : 'HTTP/1.0';
+        $protocol = $this->getServerParam('SERVER_PROTOCOL') ?: 'HTTP/1.0';
         $responseCode = $this->getResponseCode();
         $headersAll = array(
             $protocol . ' ' . $responseCode . ' ' . $this->debug->utility->httpStatusPhrase($responseCode),
@@ -368,6 +397,26 @@ class Internal implements SubscriberInterface
             }
         }
         return \join("\n", $headersAll);
+    }
+
+    /**
+     * Get $_SERVER param
+     * Gets serverParams from serverRequest interface
+     *
+     * @param string $name    $_SERVER key/name
+     * @param mixed  $default default value
+     *
+     * @return mixed
+     */
+    public function getServerParam($name, $default = null)
+    {
+        if (!$this->serverParams) {
+            $request = $this->debug->rootInstance->request;
+            $this->serverParams = $request->getServerParams();
+        }
+        return \array_key_exists($name, $this->serverParams)
+            ? $this->serverParams[$name]
+            : $default;
     }
 
     /**
@@ -573,6 +622,21 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Generate a unique request id
+     *
+     * @return string
+     */
+    public function requestId()
+    {
+        return \hash(
+            'crc32b',
+            $this->getServerParam('REMOTE_ADDR', 'terminal')
+                . $this->getServerParam('REQUEST_TIME_FLOAT')
+                . $this->getServerParam('REMOTE_PORT', '')
+        );
+    }
+
+    /**
      * Automatic group/groupCollapsed arguments
      *
      * @param array $caller CallerInfo
@@ -652,7 +716,7 @@ class Internal implements SubscriberInterface
      */
     private function onCfgKey($key, Event $event)
     {
-        if (\strpos($this->debug->utility->getInterface(), 'cli') !== false) {
+        if (\strpos($this->getInterface(), 'cli') !== false) {
             return;
         }
         $cookieParams = $this->debug->request->getCookieParams();

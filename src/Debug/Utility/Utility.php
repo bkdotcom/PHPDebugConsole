@@ -12,7 +12,6 @@
 
 namespace bdk\Debug;
 
-use bdk\Debug;
 use DOMDocument;
 use Exception;
 use Psr\Http\Message\StreamInterface;
@@ -25,8 +24,6 @@ use SqlFormatter;
  */
 class Utility
 {
-
-    private static $serverParams = array();
 
     protected static $domDocument;
 
@@ -405,37 +402,6 @@ class Utility
     }
 
     /**
-     * Returns cli, cron, ajax, or http
-     *
-     * @return string cli | "cli cron" | http | "http ajax"
-     */
-    public static function getInterface()
-    {
-        $return = 'http';
-        /*
-            notes:
-                $_SERVER['argv'] could be populated with query string if register_argc_argv = On
-                we used to also check for `defined('STDIN')`, but it's not unit test friendly
-        */
-        $argv = self::getServerParam('argv', array());
-        $isCliOrCron = \count(\array_filter(array(
-            // have argv and it's not query_string
-            $argv && $argv !== array(self::getServerParam('QUERY_STRING')),
-            // serverParam REQUEST_METHOD... NOT request->getMethod() which likely defaults to GET
-            self::getServerParam('REQUEST_METHOD') === null,
-        ))) > 0;
-        if ($isCliOrCron) {
-            // TERM is a linux/unix thing
-            $return = self::getServerParam('TERM') !== null || self::getServerParam('PATH') !== null
-                ? 'cli'
-                : 'cli cron';
-        } elseif (self::getServerParam('HTTP_X_REQUESTED_WITH') === 'XMLHttpRequest') {
-            $return = 'http ajax';
-        }
-        return $return;
-    }
-
-    /**
      * Get stream contents without affecting pointer
      *
      * @param StreamInterface $stream StreamInteface
@@ -658,21 +624,6 @@ class Utility
     }
 
     /**
-     * Generate a unique request id
-     *
-     * @return string
-     */
-    public static function requestId()
-    {
-        return \hash(
-            'crc32b',
-            self::getServerParam('REMOTE_ADDR', 'terminal')
-                . self::getServerParam('REQUEST_TIME_FLOAT')
-                . self::getServerParam('REMOTE_PORT', '')
-        );
-    }
-
-    /**
      * Interpolates context values into the message placeholders.
      *
      * @param string|object $message message (string, or obj with __toString)
@@ -791,26 +742,6 @@ class Utility
             return '%im %Ss'; // M:SS
         }
         return '%hh %Im %Ss'; // H:MM:SS
-    }
-
-    /**
-     * Get $_SERVER param
-     * Gets serverParams from serverRequest interface
-     *
-     * @param string $name    $_SERVER key/name
-     * @param mixed  $default default value
-     *
-     * @return mixed
-     */
-    private static function getServerParam($name, $default = null)
-    {
-        if (!self::$serverParams) {
-            $request = Debug::getInstance()->request;
-            self::$serverParams = $request->getServerParams();
-        }
-        return \array_key_exists($name, self::$serverParams)
-            ? self::$serverParams[$name]
-            : $default;
     }
 
     /**

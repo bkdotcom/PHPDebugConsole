@@ -70,7 +70,7 @@ class LogReqRes implements SubscriberInterface
      */
     public function logRequest()
     {
-        if (\strpos($this->debug->utility->getInterface(), 'http') !== 0) {
+        if (\strpos($this->debug->getInterface(), 'http') !== 0) {
             return;
         }
         $this->logRequestHeaders();
@@ -95,7 +95,7 @@ class LogReqRes implements SubscriberInterface
         if (!$this->debug->getCfg('logResponse', Debug::CONFIG_DEBUG)) {
             return;
         }
-        if (\strpos($this->debug->utility->getInterface(), 'http') !== 0) {
+        if (\strpos($this->debug->getInterface(), 'http') !== 0) {
             return;
         }
         $this->debug->log('response headers', $this->debug->getResponseHeaders(true));

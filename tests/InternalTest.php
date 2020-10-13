@@ -2,6 +2,8 @@
 
 namespace bdk\DebugTests;
 
+use bdk\Debug\Psr7lite\ServerRequest;
+
 /**
  * PHPUnit tests for Debug class
  */
@@ -32,6 +34,40 @@ class InternalTest extends DebugTestFramework
         ), $this->debug->errorStats());
     }
 
+    public function testGetInterface()
+    {
+        $this->debug->setCfg('services', array(
+            'request' => new ServerRequest('GET', null, array(
+                'REQUEST_METHOD' => 'GET',
+            )),
+        ));
+        $this->clearServerParamCache();
+        $this->assertSame('http', $this->debug->getInterface());
+
+        $this->debug->setCfg('services', array(
+            'request' => new ServerRequest('GET', null, array(
+                'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
+                'REQUEST_METHOD' => 'GET',
+            )),
+        ));
+        $this->clearServerParamCache();
+        $this->assertSame('http ajax', $this->debug->getInterface());
+
+        $this->debug->setCfg('services', array(
+            'request' => new ServerRequest('GET', null, array(
+                'PATH' => '.',
+            )),
+        ));
+        $this->clearServerParamCache();
+        $this->assertSame('cli', $this->debug->getInterface());
+
+        $this->debug->setCfg('services', array(
+            'request' => new ServerRequest('GET'),
+        ));
+        $this->clearServerParamCache();
+        $this->assertSame('cli cron', $this->debug->getInterface());
+    }
+
     public function testHasLog()
     {
         $this->assertFalse($this->debug->hasLog());
@@ -39,5 +75,10 @@ class InternalTest extends DebugTestFramework
         $this->assertTrue($this->debug->hasLog());
         $this->debug->clear();
         $this->assertFalse($this->debug->hasLog());
+    }
+
+    public function testRequestId()
+    {
+        $this->assertStringMatchesFormat('%x', $this->debug->requestId());
     }
 }

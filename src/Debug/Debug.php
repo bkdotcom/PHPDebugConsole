@@ -20,6 +20,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Psr7lite\HttpFoundationBridge;
 use bdk\Debug\Route\RouteInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -27,6 +28,7 @@ use bdk\PubSub\SubscriberInterface;
 use Psr\Http\Message\ResponseInterface; // PSR-7
 use ReflectionMethod;
 use SplObjectStorage;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 /**
  * Web-browser/javascript like console class for PHP
@@ -536,6 +538,7 @@ class Debug
             \func_get_args(),
             array(
                 'detectFiles' => true,
+                'uncollapse' => true,
             )
         );
         // file & line meta may already be set (ie coming via errorHandler)
@@ -1128,6 +1131,7 @@ class Debug
             \func_get_args(),
             array(
                 'detectFiles' => true,
+                'uncollapse' => true,
             )
         );
         // file & line meta may already be set (ie coming via errorHandler)
@@ -1635,26 +1639,53 @@ class Debug
      * You should call this at the end of the request/response cycle in your PSR-7 project,
      * e.g. immediately before emitting the Response.
      *
-     * @param ResponseInterface $response PSR-7 Response
+     * @param ResponseInterface|HttpFoundationResponse $response PSR-7 or HttpFoundation response
      *
-     * @return ResponseInterface
+     * @return ResponseInterface|HttpFoundationResponse
+     *
+     * @throws InvalidArgumentException
      */
-    public function writeToResponse(ResponseInterface $response)
+    public function writeToResponse($response)
     {
-        $this->cfg['services']['response'] = $response;
-        $this->cfg['outputHeaders'] = false;
-        $output = $this->output();
-        if ($output) {
-            $stream = $response->getBody();
-            $stream->seek(0, SEEK_END);
-            $stream->write($output);
-            $stream->rewind();
+        if ($response instanceof ResponseInterface) {
+            $this->cfg['services']['response'] = $response;
+            $this->cfg['outputHeaders'] = false;
+            $debugOutput = $this->output();
+            if ($debugOutput) {
+                $stream = $response->getBody();
+                $stream->seek(0, SEEK_END);
+                $stream->write($debugOutput);
+                $stream->rewind();
+            }
+            $headers = $this->getHeaders();
+            foreach ($headers as $nameVal) {
+                $response = $response->withHeader($nameVal[0], $nameVal[1]);
+            }
+            return $response;
         }
-        $headers = $this->getHeaders();
-        foreach ($headers as $nameVal) {
-            $response = $response->withHeader($nameVal[0], $nameVal[1]);
+        if ($response instanceof HttpFoundationResponse) {
+            $this->cfg['services']['response'] = HttpFoundationBridge::createResponse($response);
+            $this->cfg['outputHeaders'] = false;
+            $content = $response->getContent();
+            $pos = \strripos($content, '</body>');
+            if ($pos !== false) {
+                $content = \substr($content, 0, $pos)
+                    . $this->output()
+                    . \substr($content, $pos);
+                $response->setContent($content);
+                // reset the content length
+                $response->headers->remove('Content-Length');
+            }
+            $headers = $this->getHeaders();
+            foreach ($headers as $nameVal) {
+                $response = $response->headers->set($nameVal[0], $nameVal[1]);
+            }
+            return $response;
         }
-        return $response;
+        throw new InvalidArgumentException(\sprintf(
+            'writeToResponse expects ResponseInterface or HttpFoundationResponse, but %s provided',
+            \is_object($response) ? \get_class($response) : \gettype($response)
+        ));
     }
 
     /*
@@ -1902,7 +1933,7 @@ class Debug
             'logFiles' => function (Debug $debug) {
                 return new \bdk\Debug\Plugin\LogFiles(
                     $debug->config->get('logFiles', self::CONFIG_INIT),
-                    $debug->getInstance()
+                    $debug
                 );
             },
             'logReqRes' => function () {

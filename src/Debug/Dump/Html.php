@@ -605,6 +605,7 @@ class Html extends Base
         $args = $logEntry['args'];
         $meta = \array_merge(array(
             'errorCat' => null,  //  should only be applicable for error & warn methods
+            'uncollapse' => null,
         ), $logEntry['meta']);
         $attribs = $this->logEntryAttribs;
         if (isset($meta['file']) && $logEntry->getChannelName() !== 'general.phpError') {
@@ -618,6 +619,9 @@ class Html extends Base
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if ($meta['errorCat']) {
                 $attribs['class'] .= ' error-' . $meta['errorCat'];
+            }
+            if ($meta['uncollapse'] === false) {
+                $attribs['data-uncollapse'] = false;
             }
             if ($this->containsSubstitutions($logEntry)) {
                 $args[0] = $this->dump($args[0], array(

@@ -121,6 +121,7 @@ class DebugTest extends DebugTestFramework
                     'line' => $lastError['line'],
                     'sanitize' => true,
                     'isSuppressed' => false,
+                    'uncollapse' => true,
                 ),
             ),
             'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="general.phpError" data-detect-files="true">'

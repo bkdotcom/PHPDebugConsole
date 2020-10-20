@@ -53,6 +53,7 @@ class LogEnvTest extends DebugTestFramework
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,
+                    'uncollapse' => true,
                 ),
             ),
         ));
@@ -81,6 +82,7 @@ class LogEnvTest extends DebugTestFramework
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,
+                    'uncollapse' => true,
                 ),
             ),
         ));
@@ -111,6 +113,7 @@ class LogEnvTest extends DebugTestFramework
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,
+                    'uncollapse' => true,
                 ),
             ),
         ));
@@ -141,6 +144,7 @@ class LogEnvTest extends DebugTestFramework
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,
+                    'uncollapse' => true,
                 ),
             ),
         ));

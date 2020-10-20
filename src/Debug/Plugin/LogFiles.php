@@ -25,6 +25,7 @@ class LogFiles extends Component
 
     private $excludedCounts = array();
     private $debug;
+    private $files;
 
     /**
      * Constructor
@@ -64,7 +65,10 @@ class LogFiles extends Component
      */
     public function output()
     {
-        $files = $this->debug->utility->getIncludedFiles();
+        $files = $this->files !== null
+            ? $this->files
+            : $this->debug->utility->getIncludedFiles();
+
         $countIncluded = \count($files);
         $files = $this->filter($files);
         $countLogged = \count($files);
@@ -72,7 +76,7 @@ class LogFiles extends Component
         $this->debug->info($countIncluded . ' files required');
         if (empty($files)) {
             $this->debug->info('All files excluded from logging');
-            $this->debug->log('See %clogFiles.filesExclude%c config', 'font-family: monospace', '');
+            $this->debug->log('See %clogFiles.filesExclude%c config', 'font-family: monospace;', '');
             return;
         }
         if ($countLogged !== $countIncluded) {
@@ -147,6 +151,18 @@ class LogFiles extends Component
             unset($cur);
         }
         return $tree;
+    }
+
+    /**
+     * Set files to display
+     *
+     * @param array $files
+     *
+     * @return void
+     */
+    public function setFiles($files)
+    {
+        $this->files = $files;
     }
 
     /**

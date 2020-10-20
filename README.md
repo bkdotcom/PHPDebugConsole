@@ -63,8 +63,8 @@ $psr3logger->emergency('fallen and can\'t get up');
 monolog:
 
 ```php
-$monolog = new Monolog\Logger('myApplication');
-$monolog->pushHandler(new Monolog\Handler\PsrHandler($debug->logger));
+$monolog = new \Monolog\Logger('myApplication');
+$monolog->pushHandler(new \bdk\Debug\Collector\MonologHandler($debug));
 $monolog->critical('all your base are belong to them');
 ```
 

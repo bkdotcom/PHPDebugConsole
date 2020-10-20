@@ -35,7 +35,7 @@ class HttpFoundationBridge
      *
      * @return ServerRequest
      */
-    public function createRequest(HttpFoundationRequest $request)
+    public static function createRequest(HttpFoundationRequest $request)
     {
         $query = $request->server->get('QUERY_STRING', '');
         $uri = $request->getSchemeAndHttpHost()
@@ -53,7 +53,7 @@ class HttpFoundationBridge
         $psr7request = new ServerRequest($request->getMethod(), $uri, $request->server->all());
         $psr7request = $psr7request
             ->withBody($stream)
-            ->withUploadedFiles($this->getFiles($request->files->all()))
+            ->withUploadedFiles(self::getFiles($request->files->all()))
             ->withCookieParams($request->cookies->all())
             ->withQueryParams($request->query->all())
             ->withParsedBody($request->request->all());
@@ -72,14 +72,14 @@ class HttpFoundationBridge
      *
      * @return Response
      */
-    public function createResponse(HttpFoundationResponse $response)
+    public static function createResponse(HttpFoundationResponse $response)
     {
         $statusCode = $response->getStatusCode();
         $reasonPhrase = isset($response->statusTexts[$statusCode])
             ? $response->statusTexts[$statusCode]
             : null;
         $protocolVersion = $response->getProtocolVersion();
-        $stream = $this->createResponseStream($response);
+        $stream = self::createResponseStream($response);
 
         $psr7response = new Response($statusCode, $reasonPhrase);
         $psr7response = $psr7response
@@ -87,13 +87,6 @@ class HttpFoundationBridge
             ->withBody($stream);
 
         $headers = $response->headers->all();
-        $cookies = $response->headers->getCookies();
-        if (!empty($cookies)) {
-            $headers['Set-Cookie'] = [];
-            foreach ($cookies as $cookie) {
-                $headers['Set-Cookie'][] = $cookie->__toString();
-            }
-        }
         foreach ($headers as $name => $value) {
             $psr7response = $psr7response->withHeader($name, $value);
         }
@@ -108,7 +101,7 @@ class HttpFoundationBridge
      *
      * @return Stream
      */
-    private function createResponseStream(HttpFoundationResponse $response)
+    private static function createResponseStream(HttpFoundationResponse $response)
     {
         if ($response instanceof BinaryFileResponse && !$response->headers->has('Content-Range')) {
             $pathName = $response->getFile()->getPathname();
@@ -135,7 +128,7 @@ class HttpFoundationBridge
      *
      * @return UploadedFile
      */
-    private function createUploadedFile(HttpFoundationUploadedFile $uploadedFile)
+    private static function createUploadedFile(HttpFoundationUploadedFile $uploadedFile)
     {
         return new UploadedFile(
             $uploadedFile->getRealPath(),
@@ -153,7 +146,7 @@ class HttpFoundationBridge
      *
      * @return array
      */
-    private function getFiles($uploadedFiles)
+    private static function getFiles($uploadedFiles)
     {
         $files = [];
         foreach ($uploadedFiles as $key => $value) {
@@ -166,10 +159,10 @@ class HttpFoundationBridge
                 continue;
             }
             if ($value instanceof HttpFoundationUploadedFile) {
-                $files[$key] = $this->createUploadedFile($value);
+                $files[$key] = self::createUploadedFile($value);
                 continue;
             }
-            $files[$key] = $this->getFiles($value);
+            $files[$key] = self::getFiles($value);
         }
         return $files;
     }

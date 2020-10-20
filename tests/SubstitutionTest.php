@@ -354,6 +354,7 @@ class SubstitutionTest extends DebugTestFramework
                             $test[2]['detectFiles'] = true;
                             $test[2]['file'] = $this->file;
                             $test[2]['line'] = $this->line;
+                            $test[2]['uncollapse'] = true;
                         }
                     }
                     $tests[$name] = $test;

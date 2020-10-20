@@ -18,7 +18,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use Exception;
 
 /**
- * Holds information about a statement
+ * Holds information about a SQL statement
  *
  * @property-read integer   $duration
  * @property-read integer   $errorCode
@@ -80,7 +80,7 @@ class StatementInfo
         }
         $this->memoryStart = \memory_get_usage(false);
         $this->params = $params;
-        $this->sql = $sql;
+        $this->sql = \trim($sql);
         $this->timeStart = \microtime(true);
         $this->types = $types;
     }
@@ -114,10 +114,10 @@ class StatementInfo
     {
         $getter = 'get' . \ucfirst($name);
         if (\method_exists($this, $getter)) {
-            return $this->$getter();
+            return $this->{$getter}();
         }
         if (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {
-            return $this->$name();
+            return $this->{$name}();
         }
         if (isset($this->$name)) {
             return $this->{$name};
@@ -134,30 +134,13 @@ class StatementInfo
      */
     public function appendLog(Debug $debug)
     {
-        $logSql = true;
-        $label = $this->sql;
-        $regex = '/^(
-                (?:DROP|SHOW).+$|
-                CREATE(?:\sTEMPORARY)?\s+TABLE(?:\sIF\sNOT\sEXISTS)?\s+\S+|
-                DELETE.*?FROM\s+\S+|
-                INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
-                SELECT\s*(?P<select>.*?)\s+FROM\s+\S+|
-                UPDATE\s+\S+
-            )(?P<more>.*)/imsx';
-        $matches = array();
-        if (\preg_match($regex, $label, $matches)) {
-            $logSql = !empty($matches['more']);
-            $label = $matches[1] . ($logSql ? '…' : '');
-            if (\strlen($matches['select']) > 100) {
-                $label = \str_replace($matches['select'], '(…)', $label);
-            }
-            $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
-        }
+        // $logSql = true;
+        $label = $this->getGroupLabel();
         $debug->groupCollapsed($label, $debug->meta(array(
             'icon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
             'boldLabel' => false,
         )));
-        if ($logSql) {
+        if (\preg_replace('/[\r\n\s]+/', ' ', $this->sql) !== $label) {
             $debug->log(
                 new Abstraction(Abstracter::TYPE_STRING, array(
                     'value' => $debug->utility->prettySql($this->sql),
@@ -175,8 +158,13 @@ class StatementInfo
             );
         }
         $this->logParams($debug);
-        $debug->time('duration', $this->duration);
-        $debug->log('memory usage', $debug->utility->getBytes($this->memoryUsage));
+        if ($this->duration !== null) {
+            $debug->time('duration', $this->duration);
+        }
+        if ($this->memoryUsage !== null) {
+            $debug->log('memory usage', $debug->utility->getBytes($this->memoryUsage));
+        }
+        $this->performQueryAnalysis($this->sql, $debug);
         if ($this->exception) {
             $code = $this->exception->getCode();
             $msg = $this->exception->getMessage();
@@ -207,6 +195,30 @@ class StatementInfo
         $this->duration = $this->timeEnd - $this->timeStart;
         $this->memoryUsage = \max($this->memoryEnd - $this->memoryStart, 0);
         $this->isSuccess = $exception === null;
+    }
+
+    /**
+     * Set query's duration
+     *
+     * @param float $duration duration (in sec)
+     *
+     * @return void
+     */
+    public function setDuration($duration)
+    {
+        $this->duration = $duration;
+    }
+
+    /**
+     * Set query's memory usage
+     *
+     * @param int $memory memory (in bytes)
+     *
+     * @return void
+     */
+    public function setMemoryUsaage($memory)
+    {
+        $this->memoryUsage = $memory;
     }
 
     /**
@@ -250,15 +262,65 @@ class StatementInfo
             $quoteLeft = \substr($quotationChars, 0, $len);
             $quoteRight = \substr($quotationChars, $len);
         }
+
         $sql = $this->sql;
+
+        $cleanBackRefCharMap = array(
+            '%' => '%%',
+            '$' => '$%',
+            '\\' => '\\%'
+        );
+
         foreach ($this->params as $k => $v) {
-            $v = $quoteLeft . $v . $quoteRight;
-            $pos = \strpos($sql, '?') ?: 0;
-            $sql = \is_numeric($k)
-                ? \substr($sql, 0, $pos) . $v . \substr($sql, $pos + 1)
-                : \preg_replace('/' . $k . '\b/', $v, $sql);
+            $backRefSafeV = \strtr($v, $cleanBackRefCharMap);
+            $v = $quoteLeft . $backRefSafeV . $quoteRight;
+            $marker = \is_numeric($k)
+                ? '?'
+                : (\preg_match('/^:/', $k)
+                    ? $k
+                    : ':' . $k);
+
+            $matchRule = '/(' . $marker . '(?!\w))'
+                . '(?='
+                . '(?:[^' . $quotationChars . ']|'
+                . '[' . $quotationChars . '][^' . $quotationChars . ']*[' . $quotationChars . ']'
+                . ')*$)/';
+            do {
+                $sql = \preg_replace($matchRule, $v, $sql, 1);
+            } while (\mb_substr_count($sql, $k));
         }
-        return $sql;
+
+        return \strtr($sql, \array_flip($cleanBackRefCharMap));
+    }
+
+
+
+    /**
+     * Get group's label
+     *
+     * @return string
+     */
+    private function getGroupLabel()
+    {
+        $label = $this->sql;
+        $regex = '/^(
+                (?:DROP|SHOW).+$|
+                CREATE(?:\sTEMPORARY)?\s+TABLE(?:\sIF\sNOT\sEXISTS)?\s+\S+|
+                DELETE.*?FROM\s+\S+|
+                INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
+                SELECT\s+(?P<select>.*?)\s+FROM\s+\S+|
+                UPDATE\s+\S+
+            )(?P<more>.*)/imsx';
+        $matches = array();
+        if (\preg_match($regex, $label, $matches)) {
+            $haveMore = !empty($matches['more']);
+            $label = $matches[1] . ($haveMore ? '…' : '');
+            if (\strlen($matches['select']) > 100) {
+                $label = \str_replace($matches['select'], '(…)', $label);
+            }
+            $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
+        }
+        return $label;
     }
 
     /**
@@ -268,7 +330,7 @@ class StatementInfo
      *
      * @return void
      */
-    private function logParams(Debug $debug)
+    protected function logParams(Debug $debug)
     {
         if (!$this->params) {
             return;
@@ -295,5 +357,73 @@ class StatementInfo
             }
         }
         $debug->table('parameters', $params);
+    }
+
+    /**
+     * Find common query performance issues
+     *
+     * @param string $query SQL query
+     * @param Debug  $debug Debug instance
+     *
+     * @return void
+     *
+     * @link https://github.com/rap2hpoutre/mysql-xplain-xplain/blob/master/app/Explainer.php
+     */
+    protected function performQueryAnalysis($query, $debug)
+    {
+        if (\preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $query)) {
+            $debug->warn(
+                'Use %cSELECT *%c only if you need all columns from table',
+                'font-family:monospace',
+                '',
+                $debug->meta('uncollapse', false)
+            );
+        }
+        if (\stripos('ORDER BY RAND()', $query) !== false) {
+            $debug->warn(
+                '%cORDER BY RAND()%c is slow, avoid if you can.',
+                'font-family:monospace',
+                '',
+                $debug->meta('uncollapse', false)
+            );
+        }
+        if (\strpos($query, '!=') !== false) {
+            $debug->warn(
+                'The %c!=%c operator is not standard. Use the %c<>%c operator instead.',
+                'font-family:monospace',
+                '',
+                'font-family:monospace',
+                '',
+                $debug->meta('uncollapse', false)
+            );
+        }
+        if (\preg_match('/^SELECT\s/i', $query) && \stripos($query, 'WHERE') === false) {
+            $debug->warn(
+                'The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended',
+                'font-family:monospace',
+                '',
+                'font-family:monospace',
+                '',
+                $debug->meta('uncollapse', false)
+            );
+        }
+        if (\preg_match('/LIKE\s+[\'"](%.*?)[\'"]/i', $query, $matches)) {
+            $debug->warn(
+                'An argument has a leading wildcard character: %c' . $matches[1] . '%c and cannot use an index if one exists.',
+                'font-family:monospace',
+                '',
+                $debug->meta('uncollapse', false)
+            );
+        }
+        if (\preg_match('/LIMIT\s/i', $query) && \stripos($query, 'ORDER BY') === false) {
+            $debug->warn(
+                '%cLIMIT%c without %cORDER BY%c causes non-deterministic results',
+                'font-family:monospace',
+                '',
+                'font-family:monospace',
+                '',
+                $debug->meta('uncollapse', false)
+            );
+        }
     }
 }

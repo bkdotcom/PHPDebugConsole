@@ -86,6 +86,38 @@ class MySqli extends mysqliBase
     }
 
     /**
+     * Turns on or off auto-committing database modification (begin transaction)
+     *
+     * @param bool $mode Whether to turn on auto-commit or not.
+     *
+     * @return bool
+     */
+    public function autocommit($mode)
+    {
+        if ($mode === false) {
+            $this->debug->group('transaction', $this->debug->meta(array(
+                'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+            )));
+        }
+        return parent::autocommit($mode);
+    }
+
+    /**
+     * Commits the current transaction
+     *
+     * @param int    $flags A bitmask of MYSQLI_TRANS_COR_* constants
+     * @param string $name  If provided then COMMIT/name/ is executed.
+     *
+     * @return bool
+     */
+    public function commit($flags = 0, $name = null)
+    {
+        $return = parent::commit($flags, $name);
+        $this->debug->groupEnd($return);
+        return $return;
+    }
+
+    /**
      * Returns the accumulated execution time of statements
      *
      * @return float
@@ -211,6 +243,24 @@ class MySqli extends mysqliBase
     public function real_query($query)
     {
         return $this->profileCall('real_query', $query, \func_get_args());
+    }
+
+    /**
+     *  Rolls back current transaction
+     *
+     * @param int    $flags A bitmask of MYSQLI_TRANS_COR_* constants.
+     * @param string $name  If provided then ROLLBACK/name/ is executed.
+     *
+     * @return bool
+     */
+    public function rollBack($flags = 0, $name = null)
+    {
+        $return = parent::rollback($flags, $name);
+        $this->debug->log('rollback', $this->debug->meta(array(
+            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+        )));
+        $this->debug->groupEnd($return);
+        return $return;
     }
 
     /**

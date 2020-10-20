@@ -124,6 +124,7 @@ class LogReqResTest extends DebugTestFramework
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,
+                    'uncollapse' => true,
                 ),
             ),
             $this->logEntryToArray($this->debug->getData('log/0'))
@@ -215,6 +216,7 @@ class LogReqResTest extends DebugTestFramework
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,
+                    'uncollapse' => true,
                 ),
             ),
             $this->logEntryToArray($this->debug->getData('log/0'))

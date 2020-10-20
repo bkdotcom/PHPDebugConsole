@@ -155,7 +155,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             return;
         }
 
-        $this->injectDebug($response, $request);
+        $this->debug->writeToResponse($response);
     }
 
     /**
@@ -170,28 +170,5 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         if ($abs['debugMethod'] === 'error' && $abs['className'] === 'ErrorException') {
             $abs['isExcluded'] = true;
         }
-    }
-
-    /**
-     * Injects the web debug toolbar into the given Response.
-     *
-     * @param Response $response Response instance
-     * @param Request  $request  Request instance
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    protected function injectDebug(Response $response, Request $request)
-    {
-        $content = $response->getContent();
-        $pos = \strripos($content, '</body>');
-        if ($pos === false) {
-            return;
-        }
-        $content = \substr($content, 0, $pos)
-            . $this->debug->output()
-            . \substr($content, $pos);
-        $response->setContent($content);
     }
 }

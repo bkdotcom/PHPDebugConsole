@@ -79,22 +79,36 @@ export function addPreFilter (func) {
 
 function applyFilter ($root) {
   var i
+  var i2
+  var len
+  var sort = []
   for (i in preFilterCallbacks) {
     preFilterCallbacks[i]($root)
   }
-  // :not(.level-error, .level-info, .level-warn)
+  /*
+    find all log entries and process them greatest depth to least depth
+  */
   $root.find('> .debug-tabs > .tab-primary > .tab-body .m_alert' +
     ', > .debug-tabs > .tab-primary > .tab-body .group-body > *:not(.m_groupSummary)'
   ).each(function () {
-    var $node = $(this)
+    sort.push({
+      depth: $(this).parentsUntil('.tab_body').length,
+      node: $(this)
+    });
+  });
+  sort.sort(function (a, b) {
+    return a.depth < b.depth ? 1 : -1
+  })
+  for (i = 0, len = sort.length; i < len; i++) {
+    var $node = sort[i].node
     var show = true
     var unhiding = false
     if ($node.data('channel') === 'general.phpError') {
       // php Errors are filtered separately
-      return
+      continue
     }
-    for (i in tests) {
-      show = tests[i]($node)
+    for (i2 in tests) {
+      show = tests[i2]($node)
       if (!show) {
         break
       }
@@ -104,8 +118,7 @@ function applyFilter ($root) {
     if (unhiding && $node.is(':visible')) {
       $node.debugEnhance()
     }
-  })
-  // $root.find('.m_group.filter-hidden > .group-header:not(.expanded) + .group-body').debugEnhance()
+  }
 }
 
 function updateFilterStatus ($debugRoot) {

@@ -47,6 +47,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 4,
             'psr3level' => 'emergency',
+            'uncollapse' => true,
         );
         $this->assertSame(array(
             'error',
@@ -63,6 +64,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 4,
             'psr3level' => 'critical',
+            'uncollapse' => true,
         );
         $this->assertSame(array(
             'error',
@@ -79,6 +81,7 @@ class LoggerTest extends DebugTestFramework
             'detectFiles' => true,
             'file' => 'file',
             'line' => __LINE__ - 7, // line of Exception
+            'uncollapse' => true,
         );
         $metaActual = $this->debug->getData('log/__end__/meta');
         $this->assertSame('error', $this->debug->getData('log/__end__')['method']);
@@ -105,6 +108,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 4,
             'psr3level' => 'error',
+            'uncollapse' => true,
         );
         $this->assertSame(array(
             'error',
@@ -121,6 +125,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 4,
             'psr3level' => 'warning',
+            'uncollapse' => true,
         );
         $this->assertSame(array(
             'warn',
@@ -137,6 +142,7 @@ class LoggerTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__ - 4,
             'psr3level' => 'notice',
+            'uncollapse' => true,
         );
         $this->assertSame(array(
             'warn',

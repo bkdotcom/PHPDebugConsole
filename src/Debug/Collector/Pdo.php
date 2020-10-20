@@ -156,6 +156,9 @@ class Pdo extends PdoBase
      */
     public function beginTransaction()
     {
+        $this->debug->group('transaction', $this->debug->meta(array(
+            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+        )));
         return $this->pdo->beginTransaction();
     }
 
@@ -167,7 +170,9 @@ class Pdo extends PdoBase
      */
     public function commit()
     {
-        return $this->pdo->commit();
+        $return = $this->pdo->commit();
+        $this->debug->groupEnd($return);
+        return $return;
     }
 
     /**
@@ -301,7 +306,12 @@ class Pdo extends PdoBase
      */
     public function rollBack()
     {
-        return $this->pdo->rollBack();
+        $return = $this->pdo->rollBack();
+        $this->debug->log('rollback', $this->debug->meta(array(
+            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+        )));
+        $this->debug->groupEnd($return);
+        return $return;
     }
 
     /**

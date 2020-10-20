@@ -94,8 +94,8 @@ function applyFilter ($root) {
     sort.push({
       depth: $(this).parentsUntil('.tab_body').length,
       node: $(this)
-    });
-  });
+    })
+  })
   sort.sort(function (a, b) {
     return a.depth < b.depth ? 1 : -1
   })

@@ -25,6 +25,7 @@ use bdk\Debug\Route\RouteInterface;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface; // PSR-7
 use ReflectionMethod;
 use SplObjectStorage;
@@ -1157,7 +1158,7 @@ class Debug
      * @param AssetProviderInterface|SubscriberInterface $plugin object implementing SubscriberInterface and/or AssetProviderInterface
      *
      * @return $this
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function addPlugin($plugin)
     {
@@ -1190,7 +1191,7 @@ class Debug
             $this->onCfgRoute($plugin);
         }
         if (!$isPlugin) {
-            throw new \InvalidArgumentException('addPlugin expects \\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface');
+            throw new InvalidArgumentException('addPlugin expects \\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface');
         }
         $this->registeredPlugins->attach($plugin);
         return $this;

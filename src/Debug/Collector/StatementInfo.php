@@ -134,7 +134,6 @@ class StatementInfo
      */
     public function appendLog(Debug $debug)
     {
-        // $logSql = true;
         $label = $this->getGroupLabel();
         $debug->groupCollapsed($label, $debug->meta(array(
             'icon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
@@ -369,7 +368,7 @@ class StatementInfo
      *
      * @link https://github.com/rap2hpoutre/mysql-xplain-xplain/blob/master/app/Explainer.php
      */
-    protected function performQueryAnalysis($query, $debug)
+    protected function performQueryAnalysis($query, Debug $debug)
     {
         if (\preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $query)) {
             $debug->warn(

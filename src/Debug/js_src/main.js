@@ -161,9 +161,13 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
   } else if (method === 'buildChannelList') {
     return enhanceMain.buildChannelList(arg1, arg2, arguments[3])
   } else if (method === 'collapse') {
-    expandCollapse.collapse($self, arg1)
+    this.each(function () {
+      expandCollapse.collapse($(this), arg1)
+    })
   } else if (method === 'expand') {
-    expandCollapse.expand($self)
+    this.each(function () {
+      expandCollapse.expand($(this))
+    })
   } else if (method === 'init') {
     var conf = new Config(config.get(), 'phpDebugConsole')
     $self.data('config', conf)
@@ -197,6 +201,8 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
         $self.find('.debug-menu-bar > nav, .debug-tabs').show()
         $self.find('.m_alert, .debug-log-summary, .debug-log').debugEnhance()
       } else if (!$self.is('.enhanced')) {
+        console.group('debugEnhance')
+        console.warn('log', this)
         if ($self.is('.group-body')) {
           // console.warn('debugEnhance() : .group-body', $self)
           enhanceEntries.enhanceEntries($self)
@@ -205,6 +211,7 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
           // console.warn('debugEnhance() : entry')
           enhanceEntries.enhanceEntry($self) // true
         }
+        console.groupEnd()
       }
     })
   }

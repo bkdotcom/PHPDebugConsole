@@ -715,6 +715,9 @@ class InternalEvents implements SubscriberInterface
             } elseif ($method === 'groupEnd') {
                 \array_pop($groupStack);
             } elseif (\in_array($method, array('error', 'warn'))) {
+                if ($this->log[$i]->getMeta('uncollapse') === false) {
+                    continue;
+                }
                 foreach ($groupStack as $i2) {
                     $this->log[$i2]['method'] = 'group';
                 }

@@ -862,10 +862,10 @@ class Debug
             if ($data) {
                 $args = array( $data );
                 $logEntry->setMeta(array(
-                    'sortable' => true,
                     'caption' => $caption,
-                    'totalCols' => array('ownTime'),
                     'columns' => array(),
+                    'sortable' => true,
+                    'totalCols' => array('ownTime'),
                 ));
             }
             unset($this->data['profileInstances'][$name]);

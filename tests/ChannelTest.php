@@ -154,14 +154,14 @@ class ChannelTest extends DebugTestFramework
                     <div class="tab-body">
                         <div class="alert-error m_alert" data-channel="general.foo" role="alert">foo: alert</div>
                         <ul class="debug-log-summary group-body">
-                            <li class="m_group" data-channel="general.foo">
-                                <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
+                            <li class="expanded m_group" data-channel="general.foo">
+                                <div class="group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
                                 <ul class="group-body">
                                     <li class="m_log" data-channel="general.foo"><span class="no-quotes t_string">foo: sum 1 / group 1 / group 2 / log</span></li>
                                 </ul>
                             </li>
-                            <li class="m_group" data-channel="general.foo">
-                                <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 0 / group 1</span></div>
+                            <li class="expanded m_group" data-channel="general.foo">
+                                <div class="group-header"><span class="group-label group-label-bold">foo: sum 0 / group 1</span></div>
                                 <ul class="group-body">
                                     <li class="m_log" data-channel="general.foo"><span class="no-quotes t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
                                     <li class="m_error" data-channel="general.foo" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">foo: error</span></li>
@@ -169,8 +169,8 @@ class ChannelTest extends DebugTestFramework
                             </li>
                         </ul>
                         <ul class="debug-log group-body">
-                            <li class="m_group" data-channel="general.foo">
-                                <div class="expanded group-header"><span class="group-label group-label-bold">foo: group / group</span></div>
+                            <li class="expanded m_group" data-channel="general.foo">
+                                <div class="group-header"><span class="group-label group-label-bold">foo: group / group</span></div>
                                 <ul class="group-body">
                                     <li class="m_log" data-channel="general.foo"><span class="no-quotes t_string">foo: group / group / log</span></li>
                                     <li class="m_log" data-channel="general.foo"><span class="no-quotes t_string">foo: group / group / after summaries</span></li>
@@ -191,11 +191,11 @@ EOD;
                         <div class="alert-error m_alert" role="alert">main: alert</div>
                         <div class="alert-error m_alert" data-channel="general.foo" role="alert">foo: alert</div>
                         <ul class="debug-log-summary group-body">
-                            <li class="m_group" data-channel="general.foo">
-                                <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
+                            <li class="expanded m_group" data-channel="general.foo">
+                                <div class="group-header"><span class="group-label group-label-bold">foo: sum 1 / group 1</span></div>
                                 <ul class="group-body">
-                                    <li class="m_group">
-                                        <div class="expanded group-header"><span class="group-label group-label-bold">main: sum 1 / group 1 / group 2</span></div>
+                                    <li class="expanded m_group">
+                                        <div class="group-header"><span class="group-label group-label-bold">main: sum 1 / group 1 / group 2</span></div>
                                         <ul class="group-body">
                                             <li class="m_log"><span class="no-quotes t_string">main: sum 1 / group 1 / group 2 / log</span></li>
                                             <li class="m_log" data-channel="general.foo"><span class="no-quotes t_string">foo: sum 1 / group 1 / group 2 / log</span></li>
@@ -205,11 +205,11 @@ EOD;
                             </li>
                             <li class="m_info"><span class="no-quotes t_string">Built In %f %ss</span></li>
                             <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
-                            <li class="m_group" data-channel="general.foo">
-                                <div class="expanded group-header"><span class="group-label group-label-bold">foo: sum 0 / group 1</span></div>
+                            <li class="expanded m_group" data-channel="general.foo">
+                                <div class="group-header"><span class="group-label group-label-bold">foo: sum 0 / group 1</span></div>
                                 <ul class="group-body">
-                                    <li class="m_group">
-                                        <div class="expanded group-header"><span class="group-label group-label-bold">main: sum 0 / group 1 / group 2</span></div>
+                                    <li class="expanded m_group">
+                                        <div class="group-header"><span class="group-label group-label-bold">main: sum 0 / group 1 / group 2</span></div>
                                         <ul class="group-body">
                                             <li class="m_log"><span class="no-quotes t_string">main: sum 0 / group 1 / group 2 / log</span></li>
                                             <li class="m_log" data-channel="general.foo"><span class="no-quotes t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
@@ -222,12 +222,12 @@ EOD;
                         </ul>
                         <ul class="debug-log group-body">
                             <li class="m_log"><span class="no-quotes t_string">main: log</span></li>
-                            <li class="m_group">
-                                <div class="expanded group-header"><span class="group-label group-label-bold">main: group</span></div>
+                            <li class="expanded m_group">
+                                <div class="group-header"><span class="group-label group-label-bold">main: group</span></div>
                                 <ul class="group-body">
                                     <li class="m_log"><span class="no-quotes t_string">main: group / log</span></li>
-                                    <li class="m_group" data-channel="general.foo">
-                                        <div class="expanded group-header"><span class="group-label group-label-bold">foo: group / group</span></div>
+                                    <li class="expanded m_group" data-channel="general.foo">
+                                        <div class="group-header"><span class="group-label group-label-bold">foo: group / group</span></div>
                                         <ul class="group-body">
                                             <li class="m_log"><span class="no-quotes t_string">main: group / group / log</span></li>
                                             <li class="m_log" data-channel="general.foo"><span class="no-quotes t_string">foo: group / group / log</span></li>

@@ -312,39 +312,45 @@
       });
     });
     $root.on('expand.debug.group', function (e) {
-      var $node = $(e.target);
+      var $node = $(e.target); // .m_group
       e.stopPropagation();
-      enhanceEntries($node);
+      enhanceEntries($node.find('> .group-body'));
     });
     $root.on('expand.debug.object', function (e) {
-      var $node = $(e.target);
+      var $node = $(e.target); // .t_object
       var $entry = $node.closest('li[class*=m_]');
       e.stopPropagation();
       if ($node.is('.enhanced')) {
         return
       }
-      $node.find('> .constant > :last-child,' +
-        '> .property > :last-child,' +
-        '> .method .t_string'
-      ).each(function () {
-        enhanceValue($entry, this);
-      });
+      $node.find('> .object-inner')
+        .find('> .constant > :last-child,' +
+          '> .property > :last-child,' +
+          '> .method .t_string'
+        ).each(function () {
+          enhanceValue($entry, this);
+        });
       enhanceInner($node);
     });
     $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
       var $strings;
       var $target = $(e.target);
-      if (e.namespace === 'debug.group') {
-        // console.log('expanded group', e.target)
-        $strings = $target.find('> li > .t_string');
-      } else if (e.namespace === 'debug.object') {
-        // console.log('expanded object', e.target)
-        $strings = $target.find('> dd.constant > .t_string,' +
-          ' > dd.property:visible > .t_string,' +
-          ' > dd.method > .t_string');
+      if ($target.hasClass('t_array')) {
+        // e.namespace = array.debug ??
+        $strings = $target.find('> .array-inner')
+          .find('> li > .t_string,' +
+            ' > li.t_string');
+      } else if ($target.hasClass('m_group')) {
+        // e.namespace = debug.group
+        $strings = $target.find('> .group-body > li > .t_string');
+      } else if ($target.hasClass('t_object')) {
+        // e.namespace = debug.object
+        $strings = $target.find('> .object-inner')
+          .find('> dd.constant > .t_string,' +
+            ' > dd.property:visible > .t_string,' +
+            ' > dd.method > .t_string');
       } else {
-        // console.log('expanded array', e.target)
-        $strings = $target.find('> .array-inner > li > .t_string, > .array-inner > li.t_string');
+        $strings = $();
       }
       $strings.not('.numeric').each(function () {
         enhanceLongString($(this));
@@ -626,12 +632,12 @@
   }
 
   /**
-   * Enhance log entries
+   * Enhance log entries inside .group-body
    */
   function enhanceEntries ($node) {
     // console.warn('enhanceEntries', $node[0])
-    var $prev = $node.prev();
-    var show = !$prev.hasClass('group-header') || $prev.hasClass('expanded');
+    var $parent = $node.parent();
+    var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded');
     // temporarily hide when enhancing... minimize redraws
     $node.hide();
     $node.children().each(function () {
@@ -696,11 +702,11 @@
         $toggle.prepend($icon); // move icon
       }
     });
-    $toggle.removeClass('collapsed level-error level-info level-warn'); // collapsed class is never used
+    $toggle.removeClass('level-error level-info level-warn');
     if ($.trim($target.html()).length < 1) {
       $group.addClass('empty');
     }
-    if ($toggle.is('.expanded') || $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length) {
+    if ($group.is('.expanded') || $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length) {
       toExpandQueue.push($toggle);
     } else {
       $toggle.debugEnhance('collapse', true);
@@ -964,7 +970,7 @@
       var selector = '.group-body .error-' + errorClass;
       $root.find(selector).toggleClass('filter-hidden', !isChecked);
       // trigger collapse to potentially update group icon
-      $root.find('.m_error, .m_warn').parents('.m_group').find('.group-body')
+      $root.find('.m_error, .m_warn').parents('.m_group')
         .trigger('collapsed.debug.group');
       updateFilterStatus($root);
     });
@@ -994,14 +1000,14 @@
     /*
       find all log entries and process them greatest depth to least depth
     */
-    $root.find('> .debug-tabs > .tab-primary > .tab-body .m_alert' +
-      ', > .debug-tabs > .tab-primary > .tab-body .group-body > *:not(.m_groupSummary)'
-    ).each(function () {
-      sort.push({
-        depth: $(this).parentsUntil('.tab_body').length,
-        node: $(this)
+    $root.find('> .debug-tabs > .tab-primary > .tab-body')
+      .find('.m_alert, .group-body > *:not(.m_groupSummary)')
+      .each(function () {
+        sort.push({
+          depth: $(this).parentsUntil('.tab_body').length,
+          node: $(this)
+        });
       });
-    });
     sort.sort(function (a, b) {
       return a.depth < b.depth ? 1 : -1
     });
@@ -1546,7 +1552,7 @@
       $logBody.find('.debug-log-summary').before($expandAll);
     }
     $root$3.on('click', '.expand-all', function () {
-      $(this).closest('.debug').find('.group-header').not('.expanded').debugEnhance('expand');
+      $(this).closest('.debug').find('.m_group:not(.expanded)').debugEnhance('expand');
       return false
     });
   }
@@ -1733,7 +1739,7 @@
       return false
     });
     $delegateNode.on('collapsed.debug.group', function (e) {
-      groupErrorIconUpdate($(e.target).prev());
+      groupErrorIconUpdate($(e.target));
     });
   }
 
@@ -1745,78 +1751,88 @@
    *
    * @return void
    */
-  function collapse ($toggle, immediate) {
-    var $target = $toggle.next();
-    var $groupEndValue;
-    var what = 'array';
+  function collapse ($node, immediate) {
     var icon = config$6.iconsExpand.expand;
-    if ($toggle.is('[data-toggle=array]')) {
-      $target = $toggle.closest('.t_array');
-      $target.removeClass('expanded');
-    } else {
-      if ($toggle.is('[data-toggle=group]')) {
-        $groupEndValue = $target.find('> .m_groupEndValue > :last-child');
-        if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
-          $toggle.find('.group-label').last().after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML);
-        }
-        what = 'group';
-      } else {
-        what = 'object';
+    var isToggle = $node.is('[data-toggle]');
+    var what = isToggle
+      ? $node.data('toggle')
+      : $node.find('> *[data-toggle]').data('toggle');
+    var $toggle = isToggle
+      ? $node
+      : $node.find('> *[data-toggle]');
+    var $wrap = isToggle
+      ? $node.parent()
+      : $node;
+    var $groupEndValue;
+    var eventNameDone = 'collapsed.debug.' + what;
+    if (what === 'array') {
+      $wrap.removeClass('expanded');
+    } else if (['group','object'].indexOf(what) > -1) {
+      $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child');
+      if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
+        $toggle.find('.group-label').last()
+          .after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML);
       }
-      $toggle.removeClass('expanded');
       if (immediate) {
-        $target.hide();
+        $wrap.removeClass('expanded');
         iconUpdate($toggle, icon);
+        $wrap.trigger(eventNameDone);
       } else {
-        $target.slideUp('fast', function () {
+        $toggle.next().slideUp('fast', function () {
+          $wrap.removeClass('expanded');
           iconUpdate($toggle, icon);
+          $wrap.trigger(eventNameDone);
+        });
+      }
+    } else if (what === 'next') {
+      if (immediate) {
+        $toggle.removeClass('expanded').next().hide();
+        iconUpdate($toggle, icon);
+        $toggle.trigger(eventNameDone);
+      } else {
+        $toggle.next().slideUp('fast', function () {
+          $toggle.removeClass('expanded');
+          iconUpdate($toggle, icon);
+          $toggle.next().trigger(eventNameDone);
         });
       }
     }
-    $target.trigger('collapsed.debug.' + what);
   }
 
-  function expand ($toggleOrTarget) {
-    // console.warn('expand', $toggleOrTarget)
-    var isToggle = $toggleOrTarget.is('[data-toggle]');
-    var $toggle;
-    var $target;
-    var what;
-    var eventNameExpanded;
-    if ($toggleOrTarget.hasClass('t_array')) {
-      what = 'array';
-      $target = $toggleOrTarget;
-      // don't need toggle
-    } else if (isToggle) {
-      what = $toggleOrTarget.data('toggle');
-      $toggle = $toggleOrTarget;
-      $target = what === 'array'
-        ? $toggle.closest('.t_array')
-        : $toggle.next();
-    } else {
-      $target = $toggleOrTarget;
-      $toggle = $toggleOrTarget.prev();
-      what = $toggle.data('toggle');
-    }
-    eventNameExpanded = 'expanded.debug.' + what;
+  function expand ($node) {
+    var icon = config$6.iconsExpand.collapse;
+    var isToggle = $node.is('[data-toggle]');
+    var what = isToggle
+      ? $node.data('toggle')
+      : $node.find('> *[data-toggle]').data('toggle');
+    var $toggle = isToggle
+      ? $node
+      : $node.find('> *[data-toggle]');
+    var $wrap = isToggle
+      ? $node.parent()
+      : $node;
+    var eventNameDone = 'expanded.debug.' + what;
     // trigger while still hidden!
     //    no redraws
-    $target.trigger('expand.debug.' + what);
+    $wrap.trigger('expand.debug.' + what);
     if (what === 'array') {
-      $target.addClass('expanded').trigger(eventNameExpanded);
-    } else {
-      $target.slideDown('fast', function () {
-        var $groupEndValue = $target.find('> .m_groupEndValue');
-        $toggle.addClass('expanded');
-        iconUpdate($toggle, config$6.iconsExpand.collapse);
+      $wrap.addClass('expanded').trigger(eventNameDone);
+    } else if (['group','object'].indexOf(what) > -1) {
+      $toggle.next().slideDown('fast', function () {
+        var $groupEndValue = $(this).find('> .m_groupEndValue');
         if ($groupEndValue.length) {
           // remove value from label
           $toggle.find('.group-label').last().nextAll().remove();
         }
-        // setTimeout for reasons?...
-        setTimeout(function () {
-          $target.trigger(eventNameExpanded);
-        });
+        $wrap.addClass('expanded');
+        iconUpdate($toggle, icon);
+        $wrap.trigger(eventNameDone);
+      });
+    } else if (what === 'next') {
+      $toggle.next().slideDown('fast', function () {
+        $toggle.addClass('expanded');
+        iconUpdate($toggle, icon);
+        $toggle.next().trigger(eventNameDone);
       });
     }
   }
@@ -1840,12 +1856,11 @@
     return icon
   }
 
-  function groupErrorIconUpdate ($toggle) {
+  function groupErrorIconUpdate ($group) {
     var selector = '.fa-times-circle, .fa-warning';
-    var $group = $toggle.parent();
-    var $target = $toggle.next();
+    var $toggle = $group.find('> .group-header');
     var icon = groupErrorIconGet($group);
-    var isExpanded = $toggle.is('.expanded');
+    var isExpanded = $group.is('.expanded');
     $group.removeClass('empty'); // 'empty' class just affects cursor
     if (icon) {
       if ($toggle.find(selector).length) {
@@ -1859,7 +1874,7 @@
       );
     } else {
       $toggle.find(selector).remove();
-      if ($target.children().not('.m_warn, .m_error').length < 1) {
+      if ($group.find('> .group-body > *').not('.m_warn, .m_error').length < 1) {
         // group only contains errors & they're now hidden
         $group.addClass('empty');
         iconUpdate($toggle, config$6.iconsExpand.empty);
@@ -1877,19 +1892,25 @@
     });
   }
 
-  function toggle (toggle) {
-    var $toggle = $(toggle);
-    var isExpanded = $toggle.hasClass('expanded');
-    if ($toggle.is('.group-header') && $toggle.parent().is('.empty')) {
+  function toggle (node) {
+    var $node = $(node);
+    var isToggle = $node.is('[data-toggle]');
+    var what = isToggle
+      ? $node.data('toggle')
+      : $node.find('> *[data-toggle]').data('toggle');
+    var $wrap = isToggle
+      ? $node.parent()
+      : $node;
+    var isExpanded = what === 'next'
+      ? $node.hasClass('expanded')
+      : $wrap.hasClass('expanded');
+    if (what === 'group' && $wrap.hasClass('.empty')) {
       return
     }
-    if ($toggle.parent().hasClass('t_array')) {
-      isExpanded = $toggle.parent().hasClass('expanded');
-    }
     if (isExpanded) {
-      collapse($toggle);
+      collapse($node);
     } else {
-      expand($toggle);
+      expand($node);
     }
   }
 
@@ -2217,9 +2238,13 @@
     } else if (method === 'buildChannelList') {
       return buildChannelList(arg1, arg2, arguments[3])
     } else if (method === 'collapse') {
-      collapse($self, arg1);
+      this.each(function () {
+        collapse($(this), arg1);
+      });
     } else if (method === 'expand') {
-      expand($self);
+      this.each(function () {
+        expand($(this));
+      });
     } else if (method === 'init') {
       var conf = new Config(config$7.get(), 'phpDebugConsole');
       $self.data('config', conf);
@@ -2253,6 +2278,8 @@
           $self.find('.debug-menu-bar > nav, .debug-tabs').show();
           $self.find('.m_alert, .debug-log-summary, .debug-log').debugEnhance();
         } else if (!$self.is('.enhanced')) {
+          console.group('debugEnhance');
+          console.warn('log', this);
           if ($self.is('.group-body')) {
             // console.warn('debugEnhance() : .group-body', $self)
             enhanceEntries($self);
@@ -2261,6 +2288,7 @@
             // console.warn('debugEnhance() : entry')
             enhanceEntry($self); // true
           }
+          console.groupEnd();
         }
       });
     }

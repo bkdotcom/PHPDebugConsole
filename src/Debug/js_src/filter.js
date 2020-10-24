@@ -58,7 +58,7 @@ export function init ($delegateNode) {
     var selector = '.group-body .error-' + errorClass
     $root.find(selector).toggleClass('filter-hidden', !isChecked)
     // trigger collapse to potentially update group icon
-    $root.find('.m_error, .m_warn').parents('.m_group').find('.group-body')
+    $root.find('.m_error, .m_warn').parents('.m_group')
       .trigger('collapsed.debug.group')
     updateFilterStatus($root)
   })
@@ -88,14 +88,14 @@ function applyFilter ($root) {
   /*
     find all log entries and process them greatest depth to least depth
   */
-  $root.find('> .debug-tabs > .tab-primary > .tab-body .m_alert' +
-    ', > .debug-tabs > .tab-primary > .tab-body .group-body > *:not(.m_groupSummary)'
-  ).each(function () {
-    sort.push({
-      depth: $(this).parentsUntil('.tab_body').length,
-      node: $(this)
+  $root.find('> .debug-tabs > .tab-primary > .tab-body')
+    .find('.m_alert, .group-body > *:not(.m_groupSummary)')
+    .each(function () {
+      sort.push({
+        depth: $(this).parentsUntil('.tab_body').length,
+        node: $(this)
+      })
     })
-  })
   sort.sort(function (a, b) {
     return a.depth < b.depth ? 1 : -1
   })

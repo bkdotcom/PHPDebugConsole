@@ -325,10 +325,10 @@ class Html extends Base
                 'visualWhiteSpace' => $i !== 0,
             ));
         }
+        $glue = $meta['glue'] ?: $glue;
         if ($glueAfterFirst === false) {
             return $args[0] . \implode($glue, \array_slice($args, 1));
         }
-        $glue = $meta['glue'] ?: $glue;
         return \implode($glue, $args);
     }
 
@@ -688,9 +688,15 @@ class Html extends Base
                 ? ''
                 : ' ' . $argStr;
         }
-        $header = '<span class="' . $labelClasses . '">' . $headerInner . '</span>' . $headerAppend;
 
-        $this->logEntryAttribs['class'] = \str_replace('m_' . $method, 'm_group', $this->logEntryAttribs['class']);
+        $classes = (array) $this->logEntryAttribs['class'];
+        if ($method === 'group') {
+            // groupCollapsed doesn't get expanded
+            $classes[] = 'expanded';
+        }
+        $classes = \implode(' ', $classes);
+        $classes = \str_replace('m_' . $method, 'm_group', $classes);
+        $this->logEntryAttribs['class'] = $classes;
         $str = '<li' . $this->debug->html->buildAttribString($this->logEntryAttribs) . '>' . "\n";
         /*
             Header / label / toggle
@@ -700,13 +706,13 @@ class Html extends Base
             array(
                 'class' => array(
                     'group-header',
-                    $method === 'groupCollapsed'
-                        ? 'collapsed'
-                        : 'expanded',
                     $levelClass,
                 ),
             ),
-            $header
+            '<span class="' . $labelClasses . '">'
+                . $headerInner
+                . '</span>'
+                . $headerAppend
         ) . "\n";
         /*
             Group open

@@ -28,7 +28,7 @@ export function init ($delegateNode) {
     return false
   })
   $delegateNode.on('collapsed.debug.group', function (e) {
-    groupErrorIconUpdate($(e.target).prev())
+    groupErrorIconUpdate($(e.target))
   })
 }
 
@@ -40,78 +40,88 @@ export function init ($delegateNode) {
  *
  * @return void
  */
-export function collapse ($toggle, immediate) {
-  var $target = $toggle.next()
-  var $groupEndValue
-  var what = 'array'
+export function collapse ($node, immediate) {
   var icon = config.iconsExpand.expand
-  if ($toggle.is('[data-toggle=array]')) {
-    $target = $toggle.closest('.t_array')
-    $target.removeClass('expanded')
-  } else {
-    if ($toggle.is('[data-toggle=group]')) {
-      $groupEndValue = $target.find('> .m_groupEndValue > :last-child')
-      if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
-        $toggle.find('.group-label').last().after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML)
-      }
-      what = 'group'
-    } else {
-      what = 'object'
+  var isToggle = $node.is('[data-toggle]')
+  var what = isToggle
+    ? $node.data('toggle')
+    : $node.find('> *[data-toggle]').data('toggle')
+  var $toggle = isToggle
+    ? $node
+    : $node.find('> *[data-toggle]')
+  var $wrap = isToggle
+    ? $node.parent()
+    : $node
+  var $groupEndValue
+  var eventNameDone = 'collapsed.debug.' + what
+  if (what === 'array') {
+    $wrap.removeClass('expanded')
+  } else if (['group','object'].indexOf(what) > -1) {
+    $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child')
+    if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
+      $toggle.find('.group-label').last()
+        .after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML)
     }
-    $toggle.removeClass('expanded')
     if (immediate) {
-      $target.hide()
+      $wrap.removeClass('expanded')
       iconUpdate($toggle, icon)
+      $wrap.trigger(eventNameDone)
     } else {
-      $target.slideUp('fast', function () {
+      $toggle.next().slideUp('fast', function () {
+        $wrap.removeClass('expanded')
         iconUpdate($toggle, icon)
+        $wrap.trigger(eventNameDone)
+      })
+    }
+  } else if (what === 'next') {
+    if (immediate) {
+      $toggle.removeClass('expanded').next().hide()
+      iconUpdate($toggle, icon)
+      $toggle.trigger(eventNameDone)
+    } else {
+      $toggle.next().slideUp('fast', function () {
+        $toggle.removeClass('expanded')
+        iconUpdate($toggle, icon)
+        $toggle.next().trigger(eventNameDone)
       })
     }
   }
-  $target.trigger('collapsed.debug.' + what)
 }
 
-export function expand ($toggleOrTarget) {
-  // console.warn('expand', $toggleOrTarget)
-  var isToggle = $toggleOrTarget.is('[data-toggle]')
-  var $toggle
-  var $target
-  var what
-  var eventNameExpanded
-  if ($toggleOrTarget.hasClass('t_array')) {
-    what = 'array'
-    $target = $toggleOrTarget
-    // don't need toggle
-  } else if (isToggle) {
-    what = $toggleOrTarget.data('toggle')
-    $toggle = $toggleOrTarget
-    $target = what === 'array'
-      ? $toggle.closest('.t_array')
-      : $toggle.next()
-  } else {
-    $target = $toggleOrTarget
-    $toggle = $toggleOrTarget.prev()
-    what = $toggle.data('toggle')
-  }
-  eventNameExpanded = 'expanded.debug.' + what
+export function expand ($node) {
+  var icon = config.iconsExpand.collapse
+  var isToggle = $node.is('[data-toggle]')
+  var what = isToggle
+    ? $node.data('toggle')
+    : $node.find('> *[data-toggle]').data('toggle')
+  var $toggle = isToggle
+    ? $node
+    : $node.find('> *[data-toggle]')
+  var $wrap = isToggle
+    ? $node.parent()
+    : $node
+  var eventNameDone = 'expanded.debug.' + what
   // trigger while still hidden!
   //    no redraws
-  $target.trigger('expand.debug.' + what)
+  $wrap.trigger('expand.debug.' + what)
   if (what === 'array') {
-    $target.addClass('expanded').trigger(eventNameExpanded)
-  } else {
-    $target.slideDown('fast', function () {
-      var $groupEndValue = $target.find('> .m_groupEndValue')
-      $toggle.addClass('expanded')
-      iconUpdate($toggle, config.iconsExpand.collapse)
+    $wrap.addClass('expanded').trigger(eventNameDone)
+  } else if (['group','object'].indexOf(what) > -1) {
+    $toggle.next().slideDown('fast', function () {
+      var $groupEndValue = $(this).find('> .m_groupEndValue')
       if ($groupEndValue.length) {
         // remove value from label
         $toggle.find('.group-label').last().nextAll().remove()
       }
-      // setTimeout for reasons?...
-      setTimeout(function () {
-        $target.trigger(eventNameExpanded)
-      })
+      $wrap.addClass('expanded')
+      iconUpdate($toggle, icon)
+      $wrap.trigger(eventNameDone)
+    })
+  } else if (what === 'next') {
+    $toggle.next().slideDown('fast', function () {
+      $toggle.addClass('expanded')
+      iconUpdate($toggle, icon)
+      $toggle.next().trigger(eventNameDone)
     })
   }
 }
@@ -135,12 +145,11 @@ function groupErrorIconGet ($group) {
   return icon
 }
 
-function groupErrorIconUpdate ($toggle) {
+function groupErrorIconUpdate ($group) {
   var selector = '.fa-times-circle, .fa-warning'
-  var $group = $toggle.parent()
-  var $target = $toggle.next()
+  var $toggle = $group.find('> .group-header')
   var icon = groupErrorIconGet($group)
-  var isExpanded = $toggle.is('.expanded')
+  var isExpanded = $group.is('.expanded')
   $group.removeClass('empty') // 'empty' class just affects cursor
   if (icon) {
     if ($toggle.find(selector).length) {
@@ -154,7 +163,7 @@ function groupErrorIconUpdate ($toggle) {
     )
   } else {
     $toggle.find(selector).remove()
-    if ($target.children().not('.m_warn, .m_error').length < 1) {
+    if ($group.find('> .group-body > *').not('.m_warn, .m_error').length < 1) {
       // group only contains errors & they're now hidden
       $group.addClass('empty')
       iconUpdate($toggle, config.iconsExpand.empty)
@@ -172,18 +181,24 @@ function iconUpdate ($toggle, classNameNew) {
   })
 }
 
-export function toggle (toggle) {
-  var $toggle = $(toggle)
-  var isExpanded = $toggle.hasClass('expanded')
-  if ($toggle.is('.group-header') && $toggle.parent().is('.empty')) {
+export function toggle (node) {
+  var $node = $(node)
+  var isToggle = $node.is('[data-toggle]')
+  var what = isToggle
+    ? $node.data('toggle')
+    : $node.find('> *[data-toggle]').data('toggle')
+  var $wrap = isToggle
+    ? $node.parent()
+    : $node
+  var isExpanded = what === 'next'
+    ? $node.hasClass('expanded')
+    : $wrap.hasClass('expanded')
+  if (what === 'group' && $wrap.hasClass('.empty')) {
     return
   }
-  if ($toggle.parent().hasClass('t_array')) {
-    isExpanded = $toggle.parent().hasClass('expanded')
-  }
   if (isExpanded) {
-    collapse($toggle)
+    collapse($node)
   } else {
-    expand($toggle)
+    expand($node)
   }
 }

@@ -89,13 +89,15 @@
 .debug .m_table td.t_string, .debug .m_trace td.t_string { padding-left: 1em; text-indent: -0.75em; }
 .debug .m_assert { background-color: rgba(255, 204, 204, 0.75); }
 .debug .m_group .group-header { display: table; white-space: nowrap; }
+.debug .m_group .group-body { display: none; }
 .debug .m_group .group-label-bold { font-weight: bold; }
 .debug .m_group > ul { list-style: none; margin-left: 1em; border-left: 1px solid rgba(0, 0, 0, 0.25); padding-left: 0.25rem; }
-.debug .m_error, .debug :not(.expanded) > .level-error { background-color: #ffbaba; color: #d8000c; }
-.debug .m_info, .debug :not(.expanded) > .level-info { background-color: #d9edf7; color: #31708f; }
+.debug .m_group.expanded > .group-body { display: block; }
+.debug .m_error, .debug .group-body.level-error, .debug .m_group:not(.expanded) > .group-header > .level-error { background-color: #ffbaba; color: #d8000c; }
+.debug .m_info, .debug .group-body.level-info, .debug .m_group:not(.expanded) > .group-header > .level-info { background-color: #d9edf7; color: #31708f; }
 .debug .m_trace .classname { color: #146314; }
-.debug .m_warn, .debug :not(.expanded) > .level-warn { background-color: #fefbe5; color: #8a6d3b; }
-.debug li[data-channel="general.phpError"] > .t_string:nth-child(2) { font-weight: bold; }
+.debug .m_warn, .debug .group-body.level-warn, .debug .m_group:not(.expanded) > .group-header > .level-warn { background-color: #fefbe5; color: #8a6d3b; }
+.debug li[data-channel="general.phpError"] > i + .t_string:nth-child(2) { font-weight: bold; }
 .debug li[data-channel="general.phpError"] > .t_string:nth-child(4) { opacity: 0.7; }
 .debug li[data-channel="general.phpError"] > .t_string:nth-child(4)::before { content: "\A"; }
 .debug li[data-channel="general.phpError"].error-fatal { padding: 10px 10px 10px 20px; border-left: solid 2px #d8000c; }
@@ -257,7 +259,6 @@ color: #818a91
 .debug .debug-tabs .file-link i { margin-right: 0; vertical-align: baseline; }
 .debug .group-header i.fa-warning { color: #cdcb06; margin-left: 0.33em; }
 .debug .group-header i.fa-times-circle { color: #d8000c; margin-left: 0.33em; }
-.debug .group-header.expanded i.fa-warning, .debug .group-header.expanded i.fa-times-circle { display: none; }
 .debug .filter-hidden { display: none; }
 .debug .filter-hidden.m_group { display: list-item; }
 .debug .filter-hidden.m_group > .group-header { display: none; }

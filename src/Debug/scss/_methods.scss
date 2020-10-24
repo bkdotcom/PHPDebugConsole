@@ -28,6 +28,9 @@
     display: table;
     white-space: nowrap;
   }
+  .group-body {
+    display: none;
+  }
   .group-label-bold { font-weight: bold; }
   > ul {
     list-style: none;
@@ -35,16 +38,23 @@
     border-left: 1px solid rgba(0, 0, 0, 0.25);
     padding-left: 0.25rem;
   }
+  &.expanded {
+    > .group-body {
+      display: block;
+    }
+  }
 }
 
 .m_error,
-:not(.expanded) > .level-error {
+.group-body.level-error,
+.m_group:not(.expanded) > .group-header > .level-error {
   background-color: $error-bg;
   color: $error-fg;
 }
 
 .m_info,
-:not(.expanded) > .level-info {
+.group-body.level-info,
+.m_group:not(.expanded) > .group-header > .level-info {
   background-color: $info-bg;
   color: $info-fg;
 }
@@ -56,13 +66,14 @@
 }
 
 .m_warn,
-:not(.expanded) > .level-warn {
+.group-body.level-warn,
+.m_group:not(.expanded) > .group-header > .level-warn {
   background-color: $warn-bg;
   color: $warn-fg;
 }
 
 li[data-channel="general.phpError"] {
-  > .t_string:nth-child(2) { font-weight: bold; }
+  > i + .t_string:nth-child(2) { font-weight: bold; }
   > .t_string:nth-child(4) {
     opacity: 0.7;
     &::before {

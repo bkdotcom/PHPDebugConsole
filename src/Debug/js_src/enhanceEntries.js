@@ -48,39 +48,45 @@ export function init ($root) {
     })
   })
   $root.on('expand.debug.group', function (e) {
-    var $node = $(e.target)
+    var $node = $(e.target) // .m_group
     e.stopPropagation()
-    enhanceEntries($node)
+    enhanceEntries($node.find('> .group-body'))
   })
   $root.on('expand.debug.object', function (e) {
-    var $node = $(e.target)
+    var $node = $(e.target) // .t_object
     var $entry = $node.closest('li[class*=m_]')
     e.stopPropagation()
     if ($node.is('.enhanced')) {
       return
     }
-    $node.find('> .constant > :last-child,' +
-      '> .property > :last-child,' +
-      '> .method .t_string'
-    ).each(function () {
-      enhanceValue($entry, this)
-    })
+    $node.find('> .object-inner')
+      .find('> .constant > :last-child,' +
+        '> .property > :last-child,' +
+        '> .method .t_string'
+      ).each(function () {
+        enhanceValue($entry, this)
+      })
     enhanceObject.enhanceInner($node)
   })
   $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
     var $strings
     var $target = $(e.target)
-    if (e.namespace === 'debug.group') {
-      // console.log('expanded group', e.target)
-      $strings = $target.find('> li > .t_string')
-    } else if (e.namespace === 'debug.object') {
-      // console.log('expanded object', e.target)
-      $strings = $target.find('> dd.constant > .t_string,' +
-        ' > dd.property:visible > .t_string,' +
-        ' > dd.method > .t_string')
+    if ($target.hasClass('t_array')) {
+      // e.namespace = array.debug ??
+      $strings = $target.find('> .array-inner')
+        .find('> li > .t_string,' +
+          ' > li.t_string')
+    } else if ($target.hasClass('m_group')) {
+      // e.namespace = debug.group
+      $strings = $target.find('> .group-body > li > .t_string')
+    } else if ($target.hasClass('t_object')) {
+      // e.namespace = debug.object
+      $strings = $target.find('> .object-inner')
+        .find('> dd.constant > .t_string,' +
+          ' > dd.property:visible > .t_string,' +
+          ' > dd.method > .t_string')
     } else {
-      // console.log('expanded array', e.target)
-      $strings = $target.find('> .array-inner > li > .t_string, > .array-inner > li.t_string')
+      $strings = $()
     }
     $strings.not('.numeric').each(function () {
       enhanceLongString($(this))
@@ -362,12 +368,12 @@ function enhanceArray ($node) {
 }
 
 /**
- * Enhance log entries
+ * Enhance log entries inside .group-body
  */
 export function enhanceEntries ($node) {
   // console.warn('enhanceEntries', $node[0])
-  var $prev = $node.prev()
-  var show = !$prev.hasClass('group-header') || $prev.hasClass('expanded')
+  var $parent = $node.parent()
+  var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded')
   // temporarily hide when enhancing... minimize redraws
   $node.hide()
   $node.children().each(function () {
@@ -432,11 +438,11 @@ function enhanceGroup ($group) {
       $toggle.prepend($icon) // move icon
     }
   })
-  $toggle.removeClass('collapsed level-error level-info level-warn') // collapsed class is never used
+  $toggle.removeClass('level-error level-info level-warn')
   if ($.trim($target.html()).length < 1) {
     $group.addClass('empty')
   }
-  if ($toggle.is('.expanded') || $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length) {
+  if ($group.is('.expanded') || $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length) {
     toExpandQueue.push($toggle)
   } else {
     $toggle.debugEnhance('collapse', true)

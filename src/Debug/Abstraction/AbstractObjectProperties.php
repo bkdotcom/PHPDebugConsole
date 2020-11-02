@@ -40,6 +40,32 @@ class AbstractObjectProperties extends AbstractObjectSub
     );
 
     /**
+     * Add property info/values to abstraction
+     *
+     * @param Abstraction $abs Object abstraction
+     *
+     * @return void
+     */
+    public function add(Abstraction $abs)
+    {
+        if ($abs['isTraverseOnly']) {
+            return;
+        }
+        $this->abs = $abs;
+        $this->addPropertiesBase($abs);
+        $this->addPropertiesPhpDoc($abs); // magic properties documented via phpDoc
+        $obj = $abs->getSubject();
+        if (\is_object($obj)) {
+            $this->addPropertiesDom($abs);
+            $this->addPropertiesDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
+            if ($abs['className'] === 'Closure') {
+                $this->addPropertiesClosure($abs);
+            }
+        }
+        $this->crate($abs);
+    }
+
+    /**
      * Return property info array
      *
      * @param array $values values to apply
@@ -52,43 +78,14 @@ class AbstractObjectProperties extends AbstractObjectSub
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public function onAbstractEnd(Abstraction $abs)
-    {
-        if ($abs['isTraverseOnly']) {
-            return;
-        }
-        $this->abs = $abs;
-        $this->addProperties($abs);
-        if ($abs['className'] === 'Closure') {
-            $ref = new \ReflectionFunction($abs->getSubject());
-            $abs['properties']['debug.file'] = static::buildPropInfo(array(
-                'type' => Abstracter::TYPE_STRING,
-                'value' => $ref->getFileName(),
-                'valueFrom' => 'debug',
-                'visibility' => 'debug',
-            ));
-            $abs['properties']['debug.line'] = static::buildPropInfo(array(
-                'type' => Abstracter::TYPE_INT,
-                'value' => $ref->getStartLine(),
-                'valueFrom' => 'debug',
-                'visibility' => 'debug',
-            ));
-        }
-    }
-
-    /**
-     * Adds properties to abstraction
+     * Adds properties (via reflection) to abstraction
      *
      * @param Abstraction $abs Abstraction event object
      *
      * @return void
      */
-    private function addProperties(Abstraction $abs)
+    private function addPropertiesBase(Abstraction $abs)
     {
-        $abs = $this->abs;
-        $obj = $abs->getSubject();
         $reflectionObject = $abs['reflector'];
         /*
             We trace our ancestory to learn where properties are inherited from
@@ -113,17 +110,31 @@ class AbstractObjectProperties extends AbstractObjectSub
             }
             $reflectionObject = $reflectionObject->getParentClass();
         }
-        $this->addPropertiesPhpDoc($abs); // magic properties documented via phpDoc
-        if (\is_object($obj)) {
-            $this->addPropertiesDom($abs);
-            $this->addPropertiesDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
-        }
-        $properties = $abs['properties'];
-        $abs['hist'][] = $obj;
-        foreach ($properties as $name => $info) {
-            $properties[$name]['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
-        }
-        $abs['properties'] = $properties;
+    }
+
+    /**
+     * Add file & line debug properties for Closure
+     *
+     * @param Abstraction $abs Abstraction event object
+     *
+     * @return void
+     */
+    private function addPropertiesClosure(Abstraction $abs)
+    {
+        $obj = $abs->getSubject();
+        $ref = new \ReflectionFunction($obj);
+        $abs['properties']['debug.file'] = static::buildPropInfo(array(
+            'type' => Abstracter::TYPE_STRING,
+            'value' => $ref->getFileName(),
+            'valueFrom' => 'debug',
+            'visibility' => 'debug',
+        ));
+        $abs['properties']['debug.line'] = static::buildPropInfo(array(
+            'type' => Abstracter::TYPE_INT,
+            'value' => $ref->getStartLine(),
+            'valueFrom' => 'debug',
+            'visibility' => 'debug',
+        ));
     }
 
     /**
@@ -381,6 +392,23 @@ class AbstractObjectProperties extends AbstractObjectSub
                 }
             }
             unset($abs['phpDoc'][$tag]);
+        }
+        $abs['properties'] = $properties;
+    }
+
+    /**
+     * "Crate" property values
+     *
+     * @param Abstraction $abs Abstraction event object
+     *
+     * @return void
+     */
+    private function crate(Abstraction $abs)
+    {
+        $abs['hist'][] = $abs->getSubject();
+        $properties = $this->abs['properties'];
+        foreach ($properties as $name => $info) {
+            $properties[$name]['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
         }
         $abs['properties'] = $properties;
     }

@@ -1,5 +1,5 @@
 /**
- * handle expanding/collapsing arrays, groups, & objects
+ * handle tabs
  */
 
 import $ from 'jquery'
@@ -19,6 +19,9 @@ export function init ($delegateNode) {
     show(this)
     return false
   })
+  $delegateNode.on('shown.debug.tab', function (e) {
+    $(this).find('.m_alert, .group-body:visible:not(.enhanced)').debugEnhance()
+  })
 }
 
 function show (node) {
@@ -31,6 +34,7 @@ function show (node) {
   $tab.addClass('active')
   $tabPane.siblings().removeClass('active')
   $tabPane.addClass('active')
+  $tabPane.trigger('shown.debug.tab')
 }
 
 /*

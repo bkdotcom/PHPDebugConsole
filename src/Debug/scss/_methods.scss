@@ -79,6 +79,9 @@ li[data-channel="general.phpError"] {
     &::before {
       content: "\A";
     }
+    &::after {
+      content: none;
+    }
   }
 
   &.error-fatal {

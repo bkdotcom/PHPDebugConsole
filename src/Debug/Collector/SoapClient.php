@@ -67,9 +67,12 @@ class SoapClient extends \SoapClient
         $dom->loadXML($this->__getLastRequest());
         $xmlRequest = $dom->saveXML();
         if (!$action) {
-            $action = $dom->childNodes[0]->childNodes[0]->childNodes[0]->localName;
+            $envelope = $dom->childNodes[0];
+            $body = $envelope->childNodes[0]->localName !== 'Header'
+                ? $envelope->childNodes[0]
+                : $envelope->childNodes[1];
+            $action = $body->childNodes[0]->localName;
         }
-
         $debug->groupCollapsed('soap', $action, $debug->meta('icon', $this->icon));
         $debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
         $debug->log(

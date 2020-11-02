@@ -156,6 +156,7 @@ class Debug
                                     //   true or 'always':  email sent (if log is not output)
                                     //   'onError':         email sent if error occured (unless output)
             'emailTo' => 'default', // will default to $_SERVER['SERVER_ADMIN'] if non-empty, null otherwise
+            'exitCheck' => true,
             'factories' => $this->getDefaultFactories(),
             'headerMaxAll' => 250000,
             'headerMaxPer' => null,

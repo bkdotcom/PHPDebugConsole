@@ -101,22 +101,31 @@ function applyFilter ($root) {
   })
   for (i = 0, len = sort.length; i < len; i++) {
     var $node = sort[i].node
-    var show = true
+    var $parentGroup
+    var isFilterVis = true
     var unhiding = false
     if ($node.data('channel') === 'general.phpError') {
       // php Errors are filtered separately
       continue
     }
     for (i2 in tests) {
-      show = tests[i2]($node)
-      if (!show) {
+      isFilterVis = tests[i2]($node)
+      if (!isFilterVis) {
         break
       }
     }
-    unhiding = show && $node.is('.filter-hidden')
-    $node.toggleClass('filter-hidden', !show)
-    if (unhiding && $node.is(':visible')) {
-      $node.debugEnhance()
+    unhiding = isFilterVis && $node.is('.filter-hidden')
+    $node.toggleClass('filter-hidden', !isFilterVis)
+    if (unhiding) {
+      $parentGroup = $node.parent().closest('.m_group')
+      if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
+        $node.debugEnhance()
+      }
+    } else if (!isFilterVis) {
+      if ($node.hasClass('m_group')) {
+        // filtering group... means children (if not filtered) are visible
+        $node.find('> .group-body:not(.enhanced)').debugEnhance()
+      }
     }
   }
 }

@@ -144,6 +144,7 @@ class Config
                 'collectMethods',
                 'fullyQualifyPhpDocType',
                 'objectsExclude',
+                'objectsWhitelist',
                 'objectSort',
                 'outputConstants',
                 'outputMethodDesc',

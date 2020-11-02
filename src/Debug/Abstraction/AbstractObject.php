@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
+use bdk\Debug\Component;
 use bdk\Debug\Utility\PhpDoc;
 use ReflectionClass;
 use ReflectionObject;
@@ -25,7 +26,7 @@ use RuntimeException;
 /**
  * Abstracter:  Methods used to abstract objects
  */
-class AbstractObject
+class AbstractObject extends Component
 {
 
     const COLLECT_CONSTANTS = 1;
@@ -35,7 +36,8 @@ class AbstractObject
     const OUTPUT_METHOD_DESC = 16;
 
 	protected $abstracter;
-    protected $objectProperties;
+    protected $methods;
+    protected $properties;
 	protected $phpDoc;
 
     /**
@@ -48,15 +50,15 @@ class AbstractObject
     {
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
+        $this->cfg = $abstracter->getCfg();
+        $this->methods = new AbstractObjectMethods($abstracter, $phpDoc);
+        $this->properties = new AbstractObjectProperties($abstracter, $phpDoc);
         if ($abstracter->debug->parentInstance) {
             // we only need to subscribe to these events from root channel
             return;
         }
-        $this->objectProperties = new AbstractObjectProperties($abstracter, $phpDoc);
         $abstracter->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, array($this, 'onStart'));
         $abstracter->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_END, array($this, 'onEnd'));
-        $abstracter->debug->eventManager->addSubscriberInterface(new AbstractObjectMethods($abstracter, $phpDoc));
-        $abstracter->debug->eventManager->addSubscriberInterface($this->objectProperties);
     }
 
     /**
@@ -100,10 +102,10 @@ class AbstractObject
             'scopeClass' => $this->getScopeClass($hist),
             'stringified' => null,
             'traverseValues' => array(),    // populated if method is table && traversable
-            'viaDebugInfo' => $this->abstracter->getCfg('useDebugInfo') && $reflector->hasMethod('__debugInfo'),
+            'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
             // these are temporary values available during abstraction
             'collectPropertyValues' => true,
-            'fullyQualifyPhpDocType' => $this->abstracter->getCfg('fullyQualifyPhpDocType'),
+            'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
             'hist' => $hist,
             'isTraverseOnly' => false,
             'propertyOverrideValues' => array(),
@@ -128,6 +130,8 @@ class AbstractObject
             return $this->absClean($abs);
         }
         $this->addMisc($abs);
+        $this->methods->add($abs);
+        $this->properties->add($abs);
         /*
             Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction array
         */
@@ -246,7 +250,7 @@ class AbstractObject
         while ($reflector = $reflector->getParentClass()) {
             $constants = \array_merge($reflector->getConstants(), $constants);
         }
-        if ($this->abstracter->getCfg('objectSort') === 'name') {
+        if ($this->cfg['objectSort'] === 'name') {
             \ksort($constants);
         }
         $abs['constants'] = $constants;
@@ -255,8 +259,7 @@ class AbstractObject
     /**
      * Populate constants, extends, phpDoc, & traverseValues
      *
-     * methods added separately via AbstractObjectMethods::onAbstractEnd
-     * properties added separately via objectProperties::onAbstractEnd
+     * methods & properties added separately
      *
      * @param Abstraction $abs Abstraction instance
      *
@@ -309,9 +312,8 @@ class AbstractObject
             'outputMethodDesc' => self::OUTPUT_METHOD_DESC,
             'outputMethods' => self::OUTPUT_METHODS,
         );
-        $config = $this->abstracter->getCfg();
-        $config = \array_intersect_key($flags, \array_filter($config));
-        return \array_reduce($config, function ($carry, $val) {
+        $flagVals = \array_intersect_key($flags, \array_filter($this->cfg));
+        return \array_reduce($flagVals, function ($carry, $val) {
             return $carry | $val;
         }, 0);
     }
@@ -383,13 +385,13 @@ class AbstractObject
     {
         $abs['className'] = $this->abstracter->debug->utility->friendlyClassName($abs['reflector']);
         $properties = $abs['properties'];
-        $properties['debug.file'] = $this->objectProperties->buildPropInfo(array(
+        $properties['debug.file'] = $this->properties->buildPropInfo(array(
             'type' => Abstracter::TYPE_STRING,
             'value' => $abs['definition']['fileName'],
             'valueFrom' => 'debug',
             'visibility' => 'debug',
         ));
-        $properties['debug.line'] = $this->objectProperties->buildPropInfo(array(
+        $properties['debug.line'] = $this->properties->buildPropInfo(array(
             'type' => Abstracter::TYPE_INT,
             'value' => (int) $abs['definition']['startLine'],
             'valueFrom' => 'debug',
@@ -410,12 +412,26 @@ class AbstractObject
         $classname = \is_object($obj)
             ? \get_class($obj)
             : $obj;
-        if (\array_intersect(array('*', $classname), $this->abstracter->getCfg('objectsExclude'))) {
+        $whitelist = $this->cfg['objectsWhitelist'];
+        if ($whitelist !== null) {
+            // wildcard in whitelist?  we'll allow it
+            if (\array_intersect(array('*', $classname), $whitelist)) {
+                return false;
+            }
+            foreach ($whitelist as $class) {
+                if (\is_subclass_of($obj, $class)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        $blacklist = $this->cfg['objectsExclude'];
+        if (\array_intersect(array('*', $classname), $blacklist)) {
             return true;
         }
         // now test "instanceof"
-        foreach ($this->abstracter->getCfg('objectsExclude') as $exclude) {
-            if (\is_subclass_of($obj, $exclude)) {
+        foreach ($blacklist as $class) {
+            if (\is_subclass_of($obj, $class)) {
                 return true;
             }
         }
@@ -453,7 +469,7 @@ class AbstractObject
         if (!$array) {
             return;
         }
-        $sort = $this->abstracter->getCfg('objectSort');
+        $sort = $this->cfg['objectSort'];
         if ($sort === 'name') {
             // rather than a simple key sort, use array_multisort so that __construct is always first
             $sortData = array();

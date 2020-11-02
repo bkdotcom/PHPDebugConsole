@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Highlight;
+use \bdk\Debug\Utility\FindExit;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -350,8 +351,40 @@ class InternalEvents implements SubscriberInterface
      */
     public function onShutdownHigh()
     {
+        $this->exitCheck();
         $this->closeOpenGroups();
         $this->inShutdown = true;
+    }
+
+    /**
+     * Check if php was shutdown via exit() or die()
+     * This check is only possible if xdebug is instaned & enabled
+     *
+     * @return void
+     */
+    private function exitCheck()
+    {
+        if ($this->debug->getCfg('exitCheck', Debug::CONFIG_DEBUG) === false) {
+            return;
+        }
+        if ($this->debug->getData('outputSent')) {
+            return;
+        }
+        $findExit = new FindExit(array(
+            __CLASS__,
+            \get_class($this->debug->eventManager),
+        ));
+        $info = $findExit->find();
+        if ($info) {
+            $this->debug->warn(
+                'Potentialy shutdown via ' . $info['found'] . ': ',
+                \sprintf('%s (line %s)', $info['file'], $info['line']),
+                $this->debug->meta(array(
+                    'file' => $info['file'],
+                    'line' => $info['line'],
+                ))
+            );
+        }
     }
 
     /**

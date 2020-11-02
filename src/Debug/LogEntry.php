@@ -125,15 +125,21 @@ class LogEntry extends Event
      */
     public function setMeta($key, $val = null)
     {
-        $merge = \is_array($key)
+        $meta = \is_array($key)
             ? $key
             : array($key => $val);
-        $this->values['meta'] = \array_merge($this->values['meta'], $merge);
-        if (isset($this->values['meta']['channel'])) {
-            $this->subject = $this->subject->parentInstance
-                ? $this->subject->parentInstance->getChannel($this->values['meta']['channel'])
-                : $this->subject->getChannel($this->values['meta']['channel']);
+        $meta = \array_merge($this->values['meta'], $meta);
+        $this->values['meta'] = $meta;
+        if (\array_key_exists('channel', $meta)) {
+            $channel = $meta['channel'];
             unset($this->values['meta']['channel']);
+            if ($channel === null) {
+                $this->subject = $this->subject->rootInstance;
+                return;
+            }
+            $this->subject = $this->subject->parentInstance
+                ? $this->subject->parentInstance->getChannel($channel)
+                : $this->subject->getChannel($channel);
         }
     }
 

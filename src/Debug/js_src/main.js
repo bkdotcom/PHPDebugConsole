@@ -200,18 +200,18 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
         // console.warn('debugEnhance() : .debug')
         $self.find('.debug-menu-bar > nav, .debug-tabs').show()
         $self.find('.m_alert, .debug-log-summary, .debug-log').debugEnhance()
-      } else if (!$self.is('.enhanced')) {
-        console.group('debugEnhance')
-        console.warn('log', this)
+        return
+      }
+      if (!$self.is('.enhanced, .filter-hidden')) {
+        // console.group('debugEnhance')
+        // console.warn('self', this)
         if ($self.is('.group-body')) {
-          // console.warn('debugEnhance() : .group-body', $self)
           enhanceEntries.enhanceEntries($self)
         } else {
           // log entry assumed
-          // console.warn('debugEnhance() : entry')
-          enhanceEntries.enhanceEntry($self) // true
+          enhanceEntries.enhanceEntry($self)
         }
-        console.groupEnd()
+        // console.groupEnd()
       }
     })
   }
@@ -221,7 +221,6 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
 $(function () {
   $('.debug').each(function () {
     $(this).debugEnhance('init')
-    // $(this).find('.m_alert, .debug-log-summary, .debug-log').debugEnhance()
   })
 })
 

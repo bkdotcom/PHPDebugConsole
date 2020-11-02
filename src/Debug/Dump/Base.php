@@ -76,7 +76,7 @@ class Base extends Component
         ), $opts);
         list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($typeMore === 'raw') {
-            if ($this->crateRaw) {
+            if ($type === Abstracter::TYPE_OBJECT || $this->crateRaw) {
                 $val = $this->debug->abstracter->crate($val, 'dump');
             }
             $typeMore = null;

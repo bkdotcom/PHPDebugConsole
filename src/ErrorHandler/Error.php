@@ -19,13 +19,20 @@ use bdk\PubSub\Event;
 class Error extends Event
 {
 
+    const CAT_DEPRECATED = 'deprecated';
+    const CAT_ERROR = 'error';
+    const CAT_NOTICE = 'notice';
+    const CAT_STRICT = 'strict';
+    const CAT_WARNING = 'warning';
+    const CAT_FATAL = 'fatal';
+
     protected static $errCategories = array(
-        'deprecated'    => array( E_DEPRECATED, E_USER_DEPRECATED ),
-        'error'         => array( E_USER_ERROR, E_RECOVERABLE_ERROR ),
-        'notice'        => array( E_NOTICE, E_USER_NOTICE ),
-        'strict'        => array( E_STRICT ),
-        'warning'       => array( E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING ),
-        'fatal'         => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
+        self::CAT_DEPRECATED => array( E_DEPRECATED, E_USER_DEPRECATED ),
+        self::CAT_ERROR      => array( E_USER_ERROR, E_RECOVERABLE_ERROR ),
+        self::CAT_NOTICE     => array( E_NOTICE, E_USER_NOTICE ),
+        self::CAT_STRICT     => array( E_STRICT ),
+        self::CAT_WARNING    => array( E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING ),
+        self::CAT_FATAL      => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
     );
     protected static $errTypes = array(
         E_ERROR             => 'Fatal Error',       // handled via shutdown function
@@ -197,7 +204,7 @@ class Error extends Event
      */
     public function isFatal()
     {
-        return \in_array($this->values['type'], self::$errCategories['fatal']);
+        return $this->values['category'] === self::CAT_FATAL;
     }
 
     /**

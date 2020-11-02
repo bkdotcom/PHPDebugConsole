@@ -631,7 +631,7 @@ class Internal implements SubscriberInterface
         return \hash(
             'crc32b',
             $this->getServerParam('REMOTE_ADDR', 'terminal')
-                . $this->getServerParam('REQUEST_TIME_FLOAT')
+                . ($this->getServerParam('REQUEST_TIME_FLOAT') ?: \md5(\uniqid(\rand(), true)))
                 . $this->getServerParam('REMOTE_PORT', '')
         );
     }

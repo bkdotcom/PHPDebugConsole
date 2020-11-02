@@ -50,7 +50,7 @@ export function init ($root) {
   $root.on('expand.debug.group', function (e) {
     var $node = $(e.target) // .m_group
     e.stopPropagation()
-    enhanceEntries($node.find('> .group-body'))
+    $node.find('> .group-body').debugEnhance()
   })
   $root.on('expand.debug.object', function (e) {
     var $node = $(e.target) // .t_object
@@ -67,6 +67,9 @@ export function init ($root) {
         enhanceValue($entry, this)
       })
     enhanceObject.enhanceInner($node)
+  })
+  $root.on('expanded.debug.next', '.context', function (e) {
+    enhanceArray($(e.target).find('> td > .t_array'))
   })
   $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
     var $strings
@@ -116,7 +119,9 @@ function addIcons ($root) {
     }
   }
   if ($root.data('icon')) {
-    $icon = $('<i>').addClass($root.data('icon'))
+    $icon = $root.data('icon').match('<')
+      ? $($root.data('icon'))
+      : $('<i>').addClass($root.data('icon'))
   } else {
     for (selector in config.iconsMethods) {
       if ($root.is(selector)) {
@@ -338,7 +343,7 @@ function enhanceArray ($node) {
         '<span class="t_punct">)</span>' +
       '</span>')
     // add expand/collapse
-    $node.find('.t_keyword').first()
+    $node.find('> .t_keyword').first()
       .wrap('<span class="t_array-collapse" data-toggle="array">')
       .after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>')
       .parent().next().remove() // remove original '('
@@ -363,7 +368,7 @@ function enhanceArray ($node) {
   if (expand) {
     $node.debugEnhance('expand')
   } else {
-    $node.find('.t_array-collapse').first().debugEnhance('collapse')
+    $node.debugEnhance('collapse')
   }
 }
 
@@ -375,6 +380,9 @@ export function enhanceEntries ($node) {
   var $parent = $node.parent()
   var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded')
   // temporarily hide when enhancing... minimize redraws
+  if ($node.hasClass('enhanced')) {
+    return;
+  }
   $node.hide()
   $node.children().each(function () {
     enhanceEntry($(this))
@@ -393,13 +401,10 @@ export function enhanceEntries ($node) {
  * we don't enhance strings by default (add showmore).. needs to be visible to calc height
  */
 export function enhanceEntry ($entry) {
-  if ($entry.is('.enhanced')) {
+  if ($entry.is('.enhanced, .filter-hidden')) {
     return
   }
   // console.log('enhanceEntry', $entry[0])
-  if ($entry.is('.filter-hidden')) {
-    return
-  }
   if ($entry.is('.m_group')) {
     enhanceGroup($entry)
   } else if ($entry.is('.m_trace')) {
@@ -415,16 +420,23 @@ export function enhanceEntry ($entry) {
     } else if ($entry.data('detect-files')) {
       createFileLinks($entry, $entry.find('.t_string'))
     }
+    addIcons($entry)
+    if ($entry.hasClass('m_table')) {
+      $entry.find('> table > tbody > tr > td').each(function () {
+        enhanceValue($entry, this)
+      })
+      return
+    }
     $entry.children().each(function () {
       enhanceValue($entry, this)
     })
-    addIcons($entry)
   }
   $entry.addClass('enhanced')
   $entry.trigger('enhanced.debug')
 }
 
 function enhanceGroup ($group) {
+  // console.log('enhanceGroup', $group)
   var $toggle = $group.find('> .group-header')
   var $target = $toggle.next()
   addIcons($group)
@@ -442,11 +454,17 @@ function enhanceGroup ($group) {
   if ($.trim($target.html()).length < 1) {
     $group.addClass('empty')
   }
-  if ($group.is('.expanded') || $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length) {
-    toExpandQueue.push($toggle)
-  } else {
-    $toggle.debugEnhance('collapse', true)
+  if ($group.hasClass('filter-hidden')) {
+    return
   }
+  if (
+    $group.hasClass('expanded') ||
+    $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length
+  ) {
+    toExpandQueue.push($toggle)
+    return
+  }
+  $toggle.debugEnhance('collapse', true)
 }
 
 function enhanceLongString ($node) {

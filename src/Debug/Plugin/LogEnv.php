@@ -63,7 +63,7 @@ class LogEnv implements SubscriberInterface
         $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->groupSummary();
 
-        $this->debug->group('environment', $this->debug->meta(array(
+        $this->debug->group('PHP environment', $this->debug->meta(array(
             'hideIfEmpty' => true,
             'level' => 'info',
         )));

@@ -50,7 +50,7 @@ abstract class Component implements ConfigurableInterface
      */
     public function getCfg($key = null)
     {
-        if ($key === null || \strlen($key) === 0) {
+        if ($key === null || $key === '') {
             return $this->cfg;
         }
         return isset($this->cfg[$key])
@@ -93,10 +93,10 @@ abstract class Component implements ConfigurableInterface
      * @param array $cfg new config values
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function postSetCfg($cfg = array())
     {
-        // avoid phpcs unused param found
-        array($cfg);
     }
 }

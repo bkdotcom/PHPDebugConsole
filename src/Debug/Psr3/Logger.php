@@ -69,6 +69,12 @@ class Logger extends AbstractLogger
             LogLevel::DEBUG => 'log',
         );
         /*
+            Check if logging exception
+        */
+        if ($this->handleException($level, $context)) {
+            return;
+        }
+        /*
             Lets create a LogEntry obj to pass arround
         */
         $logEntry = new LogEntry(
@@ -109,6 +115,36 @@ class Logger extends AbstractLogger
                 $level
             ));
         }
+    }
+
+    /**
+     * Handle as exception if Error or Exception attached to contexxt
+     *
+     * @param string $level   Psr3 log level
+     * @param array  $context log entry context
+     *
+     * @return bool whether handled as exception
+     */
+    protected function handleException($level, $context)
+    {
+        if (!isset($context['exception'])) {
+            return false;
+        }
+        $fatalLevels = array(
+            LogLevel::EMERGENCY => 'error',
+            LogLevel::ALERT => 'alert',
+            LogLevel::CRITICAL => 'error',
+            LogLevel::ERROR => 'error',
+        );
+        if (!\in_array($level, $fatalLevels)) {
+            return false;
+        }
+        $exception = $context['exception'];
+        if (!($exception instanceof \Error) && !($exception instanceof \Exception)) {
+            return false;
+        }
+        $this->debug->errorHandler->handleException($exception);
+        return true;
     }
 
     /**

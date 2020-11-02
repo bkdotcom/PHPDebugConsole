@@ -17,12 +17,11 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\Debug\Utility\UseStatements;
-use bdk\PubSub\SubscriberInterface;
 
 /**
  * Base class for AbstractObjectMethod & AbstractObjectProperty
  */
-abstract class AbstractObjectSub implements SubscriberInterface
+abstract class AbstractObjectSub
 {
 
     protected $abs;
@@ -40,25 +39,6 @@ abstract class AbstractObjectSub implements SubscriberInterface
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            Debug::EVENT_OBJ_ABSTRACT_END => array('onAbstractEnd', PHP_INT_MAX),
-        );
-    }
-
-    /**
-     * Debug::EVENT_OBJ_ABSTRACT_END listener
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    abstract public function onAbstractEnd(Abstraction $abs);
 
     /**
      * Fully quallify type-hint

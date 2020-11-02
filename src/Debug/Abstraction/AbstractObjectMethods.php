@@ -29,9 +29,13 @@ class AbstractObjectMethods extends AbstractObjectSub
     private static $methodCache = array();
 
     /**
-     * {@inheritDoc}
+     * Add method info to abstraction
+     *
+     * @param Abstraction $abs Object abstraction
+     *
+     * @return void
      */
-    public function onAbstractEnd(Abstraction $abs)
+    public function add(Abstraction $abs)
     {
         if ($abs['isTraverseOnly']) {
             return;
@@ -41,7 +45,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             $this->addMethodsMin();
             return;
         }
-        $this->addMethods();
+        $this->addMethodsFull();
     }
 
     /**
@@ -49,7 +53,7 @@ class AbstractObjectMethods extends AbstractObjectSub
      *
      * @return void
      */
-    private function addMethods()
+    private function addMethodsFull()
     {
         $abs = $this->abs;
         if ($this->abstracter->getCfg('cacheMethods') && isset(static::$methodCache[$abs['className']])) {

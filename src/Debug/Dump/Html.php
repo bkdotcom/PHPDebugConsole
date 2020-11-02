@@ -261,9 +261,12 @@ class Html extends Base
                 . '{{arguments}}'
             . '</td>' . "\n"
             . '</tr>' . "\n";
+        $crateRawWas = $this->crateRaw;
+        $this->crateRaw = true;
         $args = $frame['args']
             ? '<hr />Arguments = ' . $this->dump($frame['args'])
             : '';
+        $this->crateRaw = $crateRawWas;
         return \str_replace('{{arguments}}', $args, $html);
     }
 

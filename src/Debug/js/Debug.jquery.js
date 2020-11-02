@@ -314,7 +314,7 @@
     $root.on('expand.debug.group', function (e) {
       var $node = $(e.target); // .m_group
       e.stopPropagation();
-      enhanceEntries($node.find('> .group-body'));
+      $node.find('> .group-body').debugEnhance();
     });
     $root.on('expand.debug.object', function (e) {
       var $node = $(e.target); // .t_object
@@ -331,6 +331,9 @@
           enhanceValue($entry, this);
         });
       enhanceInner($node);
+    });
+    $root.on('expanded.debug.next', '.context', function (e) {
+      enhanceArray($(e.target).find('> td > .t_array'));
     });
     $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
       var $strings;
@@ -380,7 +383,9 @@
       }
     }
     if ($root.data('icon')) {
-      $icon = $('<i>').addClass($root.data('icon'));
+      $icon = $root.data('icon').match('<')
+        ? $($root.data('icon'))
+        : $('<i>').addClass($root.data('icon'));
     } else {
       for (selector in config$1.iconsMethods) {
         if ($root.is(selector)) {
@@ -602,7 +607,7 @@
           '<span class="t_punct">)</span>' +
         '</span>');
       // add expand/collapse
-      $node.find('.t_keyword').first()
+      $node.find('> .t_keyword').first()
         .wrap('<span class="t_array-collapse" data-toggle="array">')
         .after('<span class="t_punct">(</span> <i class="fa ' + config$1.iconsExpand.collapse + '"></i>')
         .parent().next().remove(); // remove original '('
@@ -627,7 +632,7 @@
     if (expand) {
       $node.debugEnhance('expand');
     } else {
-      $node.find('.t_array-collapse').first().debugEnhance('collapse');
+      $node.debugEnhance('collapse');
     }
   }
 
@@ -639,6 +644,9 @@
     var $parent = $node.parent();
     var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded');
     // temporarily hide when enhancing... minimize redraws
+    if ($node.hasClass('enhanced')) {
+      return;
+    }
     $node.hide();
     $node.children().each(function () {
       enhanceEntry($(this));
@@ -657,13 +665,10 @@
    * we don't enhance strings by default (add showmore).. needs to be visible to calc height
    */
   function enhanceEntry ($entry) {
-    if ($entry.is('.enhanced')) {
+    if ($entry.is('.enhanced, .filter-hidden')) {
       return
     }
     // console.log('enhanceEntry', $entry[0])
-    if ($entry.is('.filter-hidden')) {
-      return
-    }
     if ($entry.is('.m_group')) {
       enhanceGroup($entry);
     } else if ($entry.is('.m_trace')) {
@@ -679,16 +684,23 @@
       } else if ($entry.data('detect-files')) {
         createFileLinks($entry, $entry.find('.t_string'));
       }
+      addIcons$1($entry);
+      if ($entry.hasClass('m_table')) {
+        $entry.find('> table > tbody > tr > td').each(function () {
+          enhanceValue($entry, this);
+        });
+        return
+      }
       $entry.children().each(function () {
         enhanceValue($entry, this);
       });
-      addIcons$1($entry);
     }
     $entry.addClass('enhanced');
     $entry.trigger('enhanced.debug');
   }
 
   function enhanceGroup ($group) {
+    // console.log('enhanceGroup', $group)
     var $toggle = $group.find('> .group-header');
     var $target = $toggle.next();
     addIcons$1($group);
@@ -706,11 +718,17 @@
     if ($.trim($target.html()).length < 1) {
       $group.addClass('empty');
     }
-    if ($group.is('.expanded') || $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length) {
-      toExpandQueue.push($toggle);
-    } else {
-      $toggle.debugEnhance('collapse', true);
+    if ($group.hasClass('filter-hidden')) {
+      return
     }
+    if (
+      $group.hasClass('expanded') ||
+      $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length
+    ) {
+      toExpandQueue.push($toggle);
+      return
+    }
+    $toggle.debugEnhance('collapse', true);
   }
 
   function enhanceLongString ($node) {
@@ -1013,22 +1031,31 @@
     });
     for (i = 0, len = sort.length; i < len; i++) {
       var $node = sort[i].node;
-      var show = true;
+      var $parentGroup;
+      var isFilterVis = true;
       var unhiding = false;
       if ($node.data('channel') === 'general.phpError') {
         // php Errors are filtered separately
         continue
       }
       for (i2 in tests) {
-        show = tests[i2]($node);
-        if (!show) {
+        isFilterVis = tests[i2]($node);
+        if (!isFilterVis) {
           break
         }
       }
-      unhiding = show && $node.is('.filter-hidden');
-      $node.toggleClass('filter-hidden', !show);
-      if (unhiding && $node.is(':visible')) {
-        $node.debugEnhance();
+      unhiding = isFilterVis && $node.is('.filter-hidden');
+      $node.toggleClass('filter-hidden', !isFilterVis);
+      if (unhiding) {
+        $parentGroup = $node.parent().closest('.m_group');
+        if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
+          $node.debugEnhance();
+        }
+      } else if (!isFilterVis) {
+        if ($node.hasClass('m_group')) {
+          // filtering group... means children (if not filtered) are visible
+          $node.find('> .group-body:not(.enhanced)').debugEnhance();
+        }
       }
     }
   }
@@ -1767,7 +1794,7 @@
     var eventNameDone = 'collapsed.debug.' + what;
     if (what === 'array') {
       $wrap.removeClass('expanded');
-    } else if (['group','object'].indexOf(what) > -1) {
+    } else if (['group', 'object'].indexOf(what) > -1) {
       $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child');
       if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
         $toggle.find('.group-label').last()
@@ -1804,37 +1831,39 @@
     var isToggle = $node.is('[data-toggle]');
     var what = isToggle
       ? $node.data('toggle')
-      : $node.find('> *[data-toggle]').data('toggle');
+      : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop());
     var $toggle = isToggle
       ? $node
       : $node.find('> *[data-toggle]');
     var $wrap = isToggle
       ? $node.parent()
       : $node;
+    var $classTarget = what === 'next' // node that get's "expanded" class
+      ? $toggle
+      : $wrap;
+    var $evtTarget = what === 'next' // node we trigger events on
+      ? $toggle.next()
+      : $wrap;
     var eventNameDone = 'expanded.debug.' + what;
     // trigger while still hidden!
     //    no redraws
-    $wrap.trigger('expand.debug.' + what);
+    $evtTarget.trigger('expand.debug.' + what);
     if (what === 'array') {
-      $wrap.addClass('expanded').trigger(eventNameDone);
-    } else if (['group','object'].indexOf(what) > -1) {
-      $toggle.next().slideDown('fast', function () {
-        var $groupEndValue = $(this).find('> .m_groupEndValue');
-        if ($groupEndValue.length) {
-          // remove value from label
-          $toggle.find('.group-label').last().nextAll().remove();
-        }
-        $wrap.addClass('expanded');
-        iconUpdate($toggle, icon);
-        $wrap.trigger(eventNameDone);
-      });
-    } else if (what === 'next') {
-      $toggle.next().slideDown('fast', function () {
-        $toggle.addClass('expanded');
-        iconUpdate($toggle, icon);
-        $toggle.next().trigger(eventNameDone);
-      });
+      $classTarget.addClass('expanded');
+      $evtTarget.trigger(eventNameDone);
+      return
     }
+    // group, object, & next
+    $toggle.next().slideDown('fast', function () {
+      var $groupEndValue = $(this).find('> .m_groupEndValue');
+      if ($groupEndValue.length) {
+        // remove value from label
+        $toggle.find('.group-label').last().nextAll().remove();
+      }
+      $classTarget.addClass('expanded');
+      iconUpdate($toggle, icon);
+      $evtTarget.trigger(eventNameDone);
+    });
   }
 
   function groupErrorIconGet ($group) {
@@ -1915,7 +1944,7 @@
   }
 
   /**
-   * handle expanding/collapsing arrays, groups, & objects
+   * handle tabs
    */
 
   function init$8 ($delegateNode) {
@@ -1933,6 +1962,9 @@
       show(this);
       return false
     });
+    $delegateNode.on('shown.debug.tab', function (e) {
+      $(this).find('.m_alert, .group-body:visible:not(.enhanced)').debugEnhance();
+    });
   }
 
   function show (node) {
@@ -1945,6 +1977,7 @@
     $tab.addClass('active');
     $tabPane.siblings().removeClass('active');
     $tabPane.addClass('active');
+    $tabPane.trigger('shown.debug.tab');
   }
 
   /*
@@ -2277,18 +2310,18 @@
           // console.warn('debugEnhance() : .debug')
           $self.find('.debug-menu-bar > nav, .debug-tabs').show();
           $self.find('.m_alert, .debug-log-summary, .debug-log').debugEnhance();
-        } else if (!$self.is('.enhanced')) {
-          console.group('debugEnhance');
-          console.warn('log', this);
+          return
+        }
+        if (!$self.is('.enhanced, .filter-hidden')) {
+          // console.group('debugEnhance')
+          // console.warn('self', this)
           if ($self.is('.group-body')) {
-            // console.warn('debugEnhance() : .group-body', $self)
             enhanceEntries($self);
           } else {
             // log entry assumed
-            // console.warn('debugEnhance() : entry')
-            enhanceEntry($self); // true
+            enhanceEntry($self);
           }
-          console.groupEnd();
+          // console.groupEnd()
         }
       });
     }
@@ -2298,7 +2331,6 @@
   $(function () {
     $('.debug').each(function () {
       $(this).debugEnhance('init');
-      // $(this).find('.m_alert, .debug-log-summary, .debug-log').debugEnhance()
     });
   });
 

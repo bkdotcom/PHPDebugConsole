@@ -33,7 +33,7 @@
     <rule ref="SlevomatCodingStandard.Commenting.ForbiddenComments">
         <properties>
             <property name="forbiddenCommentPatterns" type="array">
-                <element value="#\[\w*description\]#" />
+                <element value="#\[\w*\s+description\]#" />
             </property>
         </properties>
     </rule>

@@ -66,6 +66,7 @@ class Abstracter extends Component
             'objectsExclude' => array(
                 __NAMESPACE__,
             ),
+            'objectsWhitelist' => null,     // will be used if array
             'objectSort' => 'visibility',   // none, visibility, or name
             'outputConstants' => true,
             'outputMethodDesc' => true,     // (or just summary)
@@ -73,9 +74,9 @@ class Abstracter extends Component
             'useDebugInfo' => true,
             'fullyQualifyPhpDocType' => false,
         );
-        $this->setCfg($cfg);
         $this->abstractArray = new AbstractArray($this);
         $this->abstractObject = new AbstractObject($this, new PhpDoc());
+        $this->setCfg($cfg);
         self::$utility = $debug->utility;
     }
 
@@ -345,8 +346,10 @@ class Abstracter extends Component
     protected function postSetCfg($cfg = array())
     {
         $debugClass = \get_class($this->debug);
-        if (!\in_array($debugClass, $this->cfg['objectsExclude'])) {
+        if (!\array_intersect(array('*', $debugClass), $this->cfg['objectsExclude'])) {
             $this->cfg['objectsExclude'][] = $debugClass;
+            $cfg['objectsExclude'] = $this->cfg['objectsExclude'];
         }
+        $this->abstractObject->setCfg($cfg);
     }
 }

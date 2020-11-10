@@ -48,6 +48,7 @@ export function init ($delegateNode) {
     $nested.prop('checked', isChecked)
     applyFilter($root)
     updateFilterStatus($root)
+    $root.find('.m_group:not(.filter-hidden)').trigger('collapsed.debug.group')
   })
 
   $delegateNode.on('change', 'input[data-toggle=error]', function () {
@@ -124,7 +125,7 @@ function applyFilter ($root) {
     } else if (!isFilterVis) {
       if ($node.hasClass('m_group')) {
         // filtering group... means children (if not filtered) are visible
-        $node.find('> .group-body:not(.enhanced)').debugEnhance()
+        $node.find('> .group-body').debugEnhance()
       }
     }
   }

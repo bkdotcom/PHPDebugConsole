@@ -262,6 +262,7 @@ class Wamp implements RouteInterface
             if (!\in_array($meta['channel'], $this->channelNames)) {
                 $meta['channelIcon'] = $logEntry->getSubject()->getCfg('channelIcon', Debug::CONFIG_DEBUG);
                 $meta['channelShow'] = $logEntry->getSubject()->getCfg('channelShow', Debug::CONFIG_DEBUG);
+                $meta['channelSort'] = $logEntry->getSubject()->getCfg('channelSort', Debug::CONFIG_DEBUG);
                 $this->channelNames[] = $meta['channel'];
             }
         }

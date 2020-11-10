@@ -57,6 +57,7 @@ class MethodTableTest extends DebugTestFramework
             array($list),
             array(
                 'caption' => null,
+                'columnNames' => array(),
                 'columns' => array(),
                 'sortable' => true,
                 'totalCols' => array(),
@@ -67,6 +68,7 @@ class MethodTableTest extends DebugTestFramework
             array(array()),
             array(
                 'caption' => 'arg1',
+                'columnNames' => array(),
                 'columns' => array(),
                 'sortable' => true,
                 'totalCols' => array(),
@@ -77,6 +79,7 @@ class MethodTableTest extends DebugTestFramework
             array($list),
             array(
                 'caption' => 'arg1',
+                'columnNames' => array(),
                 'columns' => array(),
                 'sortable' => true,
                 'totalCols' => array(),
@@ -87,6 +90,7 @@ class MethodTableTest extends DebugTestFramework
             array($list),
             array(
                 'caption' => 'arg2',
+                'columnNames' => array(),
                 'columns' => array('arg3 is array'),
                 'sortable' => true,
                 'totalCols' => array(),
@@ -97,6 +101,7 @@ class MethodTableTest extends DebugTestFramework
             array(null),
             array(
                 'caption' => 'arg1',
+                'columnNames' => array(),
                 'columns' => array(),
                 'sortable' => true,
                 'totalCols' => array(),
@@ -109,6 +114,7 @@ class MethodTableTest extends DebugTestFramework
             ),
             array(
                 'caption' => 'flat',
+                'columnNames' => array(),
                 'columns' => array(),
                 'sortable' => true,
                 'totalCols' => array(),

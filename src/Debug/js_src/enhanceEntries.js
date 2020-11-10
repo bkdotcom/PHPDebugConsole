@@ -100,55 +100,59 @@ export function init ($root) {
 /**
  * add font-awsome icons
  */
-function addIcons ($root) {
+function addIcons ($node) {
   var $caption
   var $icon
-  var $node
+  var $node2
   var selector
   for (selector in config.iconsMisc) {
-    $node = $root.find(selector)
-    if ($node.length) {
+    $node2 = $node.find(selector)
+    if ($node2.length) {
       $icon = $(config.iconsMisc[selector])
-      if ($node.find('> i:first-child').hasClass($icon.attr('class'))) {
+      if ($node2.find('> i:first-child').hasClass($icon.attr('class'))) {
         // already have icon
         $icon = null
         continue
       }
-      $node.prepend($icon)
+      $node2.prepend($icon)
       $icon = null
     }
   }
-  if ($root.data('icon')) {
-    $icon = $root.data('icon').match('<')
-      ? $($root.data('icon'))
-      : $('<i>').addClass($root.data('icon'))
-  } else {
+  if ($node.data('icon')) {
+    $icon = $node.data('icon').match('<')
+      ? $($node.data('icon'))
+      : $('<i>').addClass($node.data('icon'))
+  } else if (!$node.hasClass('m_group')) {
+    $node2 = $node.hasClass('group-header')
+      ? $node.parent()
+      : $node
     for (selector in config.iconsMethods) {
-      if ($root.is(selector)) {
+      if ($node2.is(selector)) {
         $icon = $(config.iconsMethods[selector])
         break
       }
     }
   }
-  if ($icon) {
-    if ($root.is('.m_group')) {
-      // custom icon..   add to .group-label
-      $root = $root.find('> .group-header .group-label').eq(0)
-    } else if ($root.find('> table').length) {
-      // table... we'll prepend icon to caption
-      $caption = $root.find('> table > caption')
-      if (!$caption.length) {
-        $caption = $('<caption>')
-        $root.find('> table').prepend($caption)
-      }
-      $root = $caption
-    }
-    if ($root.find('> i:first-child').hasClass($icon.attr('class'))) {
-      // already have icon
-      return
-    }
-    $root.prepend($icon)
+  if (!$icon) {
+    return
   }
+  if ($node.hasClass('m_group')) {
+    // custom icon..   add to .group-label
+    $node = $node.find('> .group-header .group-label').eq(0)
+  } else if ($node.find('> table').length) {
+    // table... we'll prepend icon to caption
+    $caption = $node.find('> table > caption')
+    if (!$caption.length) {
+      $caption = $('<caption>')
+      $node.find('> table').prepend($caption)
+    }
+    $node = $caption
+  }
+  if ($node.find('> i:first-child').hasClass($icon.attr('class'))) {
+    // already have icon
+    return
+  }
+  $node.prepend($icon)
 }
 
 function buildFileLink (file, line) {
@@ -379,10 +383,12 @@ export function enhanceEntries ($node) {
   // console.warn('enhanceEntries', $node[0])
   var $parent = $node.parent()
   var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded')
-  // temporarily hide when enhancing... minimize redraws
+  /*
   if ($node.hasClass('enhanced')) {
     return;
   }
+  */
+  // temporarily hide when enhancing... minimize redraws
   $node.hide()
   $node.children().each(function () {
     enhanceEntry($(this))
@@ -390,10 +396,11 @@ export function enhanceEntries ($node) {
   if (show) {
     $node.show()
   }
-  while (toExpandQueue.length) {
-    toExpandQueue.shift().debugEnhance('expand')
+  processExpandQueue()
+  if ($node.parent().hasClass('m_group') === false) {
+    // only add .enhanced to root .group-body
+    $node.addClass('enhanced')
   }
-  $node.addClass('enhanced')
 }
 
 /**
@@ -425,7 +432,6 @@ export function enhanceEntry ($entry) {
       $entry.find('> table > tbody > tr > td').each(function () {
         enhanceValue($entry, this)
       })
-      return
     }
     $entry.children().each(function () {
       enhanceValue($entry, this)
@@ -436,11 +442,11 @@ export function enhanceEntry ($entry) {
 }
 
 function enhanceGroup ($group) {
-  // console.log('enhanceGroup', $group)
+  // console.log('enhanceGroup', $group[0])
   var $toggle = $group.find('> .group-header')
   var $target = $toggle.next()
-  addIcons($group)
-  addIcons($toggle)
+  addIcons($group) // custom data-icon
+  addIcons($toggle) // expand/collapse
   $toggle.attr('data-toggle', 'group')
   $.each(['level-error', 'level-info', 'level-warn'], function (i, val) {
     var $icon
@@ -508,6 +514,12 @@ function enhanceValue ($entry, node) {
     }
     $node.removeClass('t_float t_int t_string numeric no-quotes')
     $node.html($i).append($span)
+  }
+}
+
+function processExpandQueue () {
+  while (toExpandQueue.length) {
+    toExpandQueue.shift().debugEnhance('expand')
   }
 }
 

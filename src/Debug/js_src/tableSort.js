@@ -21,7 +21,7 @@ export function makeSortable (table) {
     if (!$th.find('.sort-arrows').length) {
       // this th needs the arrow markup
       $cells.find('.sort-arrows').remove()
-      $th.append('<span class="fa fa-stack sort-arrows pull-right">' +
+      $th.append('<span class="fa fa-stack sort-arrows float-right">' +
           '<i class="fa fa-caret-up" aria-hidden="true"></i>' +
           '<i class="fa fa-caret-down" aria-hidden="true"></i>' +
         '</span>')

@@ -198,7 +198,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a.active { line-height: 22px; border-bottom: #4071e1 solid 2px; }
 .debug.debug-enhanced-ui .debug-menu-bar a:focus, .debug.debug-enhanced-ui .debug-menu-bar a:hover, .debug.debug-enhanced-ui .debug-menu-bar button:focus, .debug.debug-enhanced-ui .debug-menu-bar button:hover, .debug.debug-enhanced-ui .debug-menu-bar label:focus, .debug.debug-enhanced-ui .debug-menu-bar label:hover { color: #333; text-decoration: none; }
 .debug.debug-enhanced-ui .debug-menu-bar button.close { font-size: 21px; font-weight: 300; }
-.debug.debug-enhanced-ui .debug-menu-bar .pull-right { position: absolute; top: 0; right: 6px; }
+.debug.debug-enhanced-ui .debug-menu-bar .float-right { position: absolute; top: 0; right: 6px; }
 .debug.debug-enhanced-ui .debug-menu-bar .debug-error-counts { position: relative; top: -2px; font-size: 0.78em; }
 .debug.debug-enhanced-ui .debug-menu-bar > span { display: inline-block; line-height: 23px; }
 .debug.debug-enhanced-ui .debug-tabs { overflow: auto; }
@@ -305,6 +305,8 @@ color: #818a91
 .debug .fa-stack { line-height: 2em; }
 .debug .fa-stack-1x { line-height: inherit; }
 .debug .fa-stack-2x { font-size: 2em; }
+.debug .float-left { float: left !important; }
+.debug .float-right { float: right !important; }
 .debug .text-center { text-align: center; }
 .debug .text-muted { color: #777; }
 .debug .text-left { text-align: left !important; }

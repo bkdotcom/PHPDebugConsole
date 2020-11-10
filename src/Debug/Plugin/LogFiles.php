@@ -47,7 +47,8 @@ class LogFiles extends Component
         ), $config);
         $this->setCfg($config);
         $channelOpts = array(
-            'channelIcon' => '<i class="fa fa-files-o"></i>',
+            'channelIcon' => 'fa fa-files-o',
+            'channelSort' => -10,
             'nested' => false,
         );
         if (!$debug) {

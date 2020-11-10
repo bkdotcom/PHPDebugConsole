@@ -142,9 +142,12 @@ class Debug
                 )
                 */
             ),
-            'channelIcon' => '<i class="fa fa-list-ul"></i>',
+            'channelIcon' => 'fa fa-list-ul',
             'channelName' => 'general',     // channel or tab name
             'channelShow' => true,          // wheter initially filtered or not
+            'channelSort' => 0, // if non-nested channel (tab), sort order
+                            // higher = first
+                            // tabs with same sort will be sorted alphabetically
             'enableProfiling' => false,
             // which error types appear as "error" in debug console... all other errors are "warn"
             'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
@@ -1237,10 +1240,10 @@ class Debug
         if (!isset($this->channels[$name])) {
             $config = \array_merge(
                 array('nested' => true),
+                $config,
                 isset($this->cfg['channels'][$name])
                     ? $this->cfg['channels'][$name]
-                    : array(),
-                $config
+                    : array()
             );
             $cfg = $this->getCfg(null, self::CONFIG_INIT);
             $cfg = $this->internal->getPropagateValues($cfg);

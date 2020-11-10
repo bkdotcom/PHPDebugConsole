@@ -44,6 +44,7 @@ class HtmlTable
      * @param array $options options
      *                           'attribs' : key/val array (or string - interpreted as class value)
      *                           'caption' : optional caption
+     *                           'columnNames' : key => alt col-header label
      *                           'columns' : array of columns to display (defaults to all)
      *                           'totalCols' : array of column keys that will get totaled
      *
@@ -51,10 +52,13 @@ class HtmlTable
      */
     public function build($rows, $options = array())
     {
-        $options = \array_merge(array(
+        $options = $this->debug->utility->arrayMergeDeep(array(
             'attribs' => array(),
             'caption' => '',
             'columns' => array(),
+            'columnNames' => array(
+                MethodTable::SCALAR => 'value',
+            ),
             'onBuildRow' => null,   // callable (or array of callables)
             'totalCols' => array(),
         ), $options);
@@ -101,7 +105,7 @@ class HtmlTable
             $options['attribs'],
             "\n"
                 . ($options['caption'] ? '<caption>' . $options['caption'] . '</caption>' . "\n" : '')
-                . $this->buildHeader($keys)
+                . $this->buildHeader($keys, $options)
                 . $body
                 . $this->buildFooter($keys)
         );
@@ -152,8 +156,14 @@ class HtmlTable
         $cells = array();
         foreach ($keys as $key) {
             $colHasTotal = isset($this->tableInfo['totals'][$key]);
+            $totalVal = $colHasTotal
+                ? $this->tableInfo['totals'][$key]
+                : null;
+            if (\is_float($totalVal)) {
+                $totalVal = \round($totalVal, 6);
+            }
             $cells[] = $colHasTotal
-                ? $this->html->dump(\round($this->tableInfo['totals'][$key], 6), array(), 'td')
+                ? $this->html->dump($totalVal, array(), 'td')
                 : '<td></td>';
             $haveTotal = $haveTotal || $colHasTotal;
         }
@@ -171,25 +181,27 @@ class HtmlTable
     /**
      * Returns table's thead
      *
-     * @param array $keys column header values (keys of array or property names)
+     * @param array $keys    column header values (keys of array or property names)
+     * @param array $options options
      *
      * @return string
      */
-    protected function buildHeader($keys)
+    protected function buildHeader($keys, $options)
     {
-        $headers = array();
+        $labels = array();
         foreach ($keys as $key) {
-            $headers[$key] = $key === MethodTable::SCALAR
-                ? 'value'
-                : \htmlspecialchars($key);
+            $label = isset($options['columnNames'][$key])
+                ? $options['columnNames'][$key]
+                : $key;
             if ($this->tableInfo['colClasses'][$key]) {
-                $headers[$key] .= ' ' . $this->html->markupIdentifier($this->tableInfo['colClasses'][$key]);
+                $label .= ' ' . $this->html->markupIdentifier($this->tableInfo['colClasses'][$key]);
             }
+            $labels[] = $label;
         }
         return '<thead>' . "\n"
             . '<tr><th>&nbsp;</th>'
                 . ($this->tableInfo['haveObjRow'] ? '<th>&nbsp;</th>' : '')
-                . '<th>' . \implode('</th><th scope="col">', $headers) . '</th>'
+                . '<th>' . \implode('</th><th scope="col">', $labels) . '</th>'
             . '</tr>' . "\n"
             . '</thead>' . "\n";
     }

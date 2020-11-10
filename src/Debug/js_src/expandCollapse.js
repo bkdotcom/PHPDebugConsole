@@ -28,7 +28,10 @@ export function init ($delegateNode) {
     return false
   })
   $delegateNode.on('collapsed.debug.group', function (e) {
-    groupErrorIconUpdate($(e.target))
+    groupIconUpdate($(e.target))
+  })
+  $delegateNode.on('expanded.debug.group', function (e) {
+    $(e.target).find('> .group-header > i:last-child').remove()
   })
 }
 
@@ -147,35 +150,32 @@ function groupErrorIconGet ($group) {
   return icon
 }
 
-function groupErrorIconUpdate ($group) {
-  var selector = '.fa-times-circle, .fa-warning'
+/**
+ * Update expand/collapse icon and nested error/warn icon
+ */
+function groupIconUpdate ($group) {
+  var selector = '> i:last-child'
   var $toggle = $group.find('> .group-header')
+  var haveVis = $group.find('> .group-body > *').not('.filter-hidden').length > 0
   var icon = groupErrorIconGet($group)
-  var isExpanded = $group.is('.expanded')
-  $group.removeClass('empty') // 'empty' class just affects cursor
-  if (icon) {
-    if ($toggle.find(selector).length) {
-      $toggle.find(selector).replaceWith(icon)
-    } else {
-      $toggle.append(icon)
-    }
-    iconUpdate($toggle, isExpanded
-      ? config.iconsExpand.collapse
-      : config.iconsExpand.expand
-    )
-  } else {
+  var isExpanded = $group.hasClass('expanded')
+  // console.log('groupIconUpdate', $toggle.text(), icon)
+  $group.toggleClass('empty', !haveVis) // 'empty' class just affects cursor
+  iconUpdate($toggle, config.iconsExpand[ isExpanded ? 'collapse' : 'expand' ])
+  if (!icon || isExpanded) {
     $toggle.find(selector).remove()
-    if ($group.find('> .group-body > *').not('.m_warn, .m_error').length < 1) {
-      // group only contains errors & they're now hidden
-      $group.addClass('empty')
-      iconUpdate($toggle, config.iconsExpand.empty)
-    }
+    return
   }
+  if ($toggle.find(selector).length) {
+    $toggle.find(selector).replaceWith(icon)
+    return
+  }
+  $toggle.append(icon)
 }
 
 function iconUpdate ($toggle, classNameNew) {
   var $icon = $toggle.children('i').eq(0)
-  if ($toggle.is('.group-header') && $toggle.parent().is('.empty')) {
+  if ($toggle.hasClass('group-header') && $toggle.parent().hasClass('empty')) {
     classNameNew = config.iconsExpand.empty
   }
   $.each(config.iconsExpand, function (i, className) {

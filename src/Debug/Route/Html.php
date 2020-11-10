@@ -304,20 +304,33 @@ class Html extends Base
     private function buildTabList()
     {
         $channels = $this->debug->getChannelsTop();
+        $channelNameRoot = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        \uasort($channels, function ($channelA, $channelB) use ($channelNameRoot) {
+            $sortA = $channelA->getCfg('channelSort', Debug::CONFIG_DEBUG);
+            $sortB = $channelB->getCfg('channelSort', Debug::CONFIG_DEBUG);
+            $nameA = $channelA->getCfg('channelName', Debug::CONFIG_DEBUG);
+            $nameB = $channelB->getCfg('channelName', Debug::CONFIG_DEBUG);
+            if ($nameA === $channelNameRoot) {
+                return -1;
+            }
+            return $sortB - $sortA ?: \strcasecmp($nameA, $nameB);
+        });
         if (\count($channels) < 2) {
             return '';
         }
         $html = '';
-        $channelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         foreach ($channels as $name => $instance) {
             $isActive = false;
             $nameTab = $name;
-            if ($name === $channelName) {
+            if ($name === $channelNameRoot) {
                 $isActive = true;
                 $nameTab = 'Log';
             }
             $target = '.' . $this->nameToClassname($name);
             $channelIcon = $instance->getCfg('channelIcon', Debug::CONFIG_DEBUG);
+            if ($channelIcon && \strpos($channelIcon, '<') === false) {
+                $channelIcon = '<i class="' . $channelIcon . '"></i>';
+            }
             $html .= $this->debug->html->buildTag(
                 'a',
                 array(

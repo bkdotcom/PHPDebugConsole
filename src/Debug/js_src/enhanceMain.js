@@ -15,7 +15,7 @@ var $root
 export function init ($debugRoot) {
   $root = $debugRoot
   config = $root.data('config').get()
-  $root.find('.debug-menu-bar').append($('<div />', { class: 'pull-right' }))
+  $root.find('.debug-menu-bar').append($('<div />', { class: 'float-right' }))
   addChannelToggles()
   addExpandAll()
   addNoti($('body'))
@@ -77,7 +77,7 @@ function addErrorIcons () {
     }))
   }
   $root.find('.debug-pull-tab').append($icons[0].outerHTML)
-  $root.find('.debug-menu-bar .pull-right').prepend($icons)
+  $root.find('.debug-menu-bar .float-right').prepend($icons)
 }
 
 function addExpandAll () {

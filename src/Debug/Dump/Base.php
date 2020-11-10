@@ -528,17 +528,19 @@ class Base extends Component
         }
         $table = array();
         $classnames = array();
-        $columns = $logEntry->getMeta('columns');
-        $keys = $columns ?: $this->debug->methodTable->colKeys($rows);
-        $undefinedAs = $logEntry->getMeta('undefinedAs', 'unset');
-        $forceArray = $logEntry->getMeta('forceArray', true);
         $objInfo = array();
+        $options = array(
+            'columns' => $logEntry->getMeta('columns'),
+            'columnNames' => \array_merge(array(
+                MethodTable::SCALAR => 'value',
+            ), $logEntry->getMeta('columnNames', array())),
+            'forceArray' => $logEntry->getMeta('forceArray', true),
+            'undefinedAs' => $logEntry->getMeta('undefinedAs', 'unset'),
+        );
+        $keys = $options['columns'] ?: $this->debug->methodTable->colKeys($rows);
         foreach ($rows as $k => $row) {
             $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
-            $values = $this->methodTableCleanValues($values, array(
-                'undefinedAs' => $undefinedAs,
-                'forceArray' => $forceArray,
-            ));
+            $values = $this->methodTableCleanValues($values, $options);
             if (\is_array($values)) {
                 unset($values['__key']);
             }
@@ -569,27 +571,24 @@ class Base extends Component
      */
     private function methodTableCleanValues($values, $opts = array())
     {
-        $opts = \array_merge(array(
-            'undefinedAs' => 'unset',
-            'forceArray' => true,
-        ), $opts);
+        $return = array();
         $key = null;
         foreach ($values as $key => $val) {
             if ($val === Abstracter::UNDEFINED) {
                 $val = $opts['undefinedAs'];
                 if ($val === 'unset') {
-                    unset($values[$key]);
                     continue;
                 }
             }
-            $values[$key] = $val;
+            $key = isset($opts['columnNames'][$key])
+                ? $opts['columnNames'][$key]
+                : $key;
+            $return[$key] = $val;
         }
-        if (\count($values) === 1 && $key === MethodTable::SCALAR) {
-            $values = $opts['forceArray']
-                ? array('value' => $values[$key])
-                : $values[$key];
+        if (\count($values) === 1 && \key($values) === MethodTable::SCALAR && !$opts['forceArray']) {
+            $return = \current($values);
         }
-        return $values;
+        return $return;
     }
 
     /**

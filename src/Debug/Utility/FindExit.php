@@ -163,7 +163,7 @@ class FindExit
         $backtrace = \xdebug_get_function_stack();
         $backtrace = \array_reverse($backtrace);
         foreach ($backtrace as $frame) {
-            if (\strpos($frame['function'], 'call_user_func:') === 0) {
+            if (isset($frame['function']) && \strpos($frame['function'], 'call_user_func:') === 0) {
                 continue;
             }
             if (!isset($frame['class'])) {

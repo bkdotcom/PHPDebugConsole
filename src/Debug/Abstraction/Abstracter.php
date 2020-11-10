@@ -152,9 +152,12 @@ class Abstracter extends Component
                     'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
                 ));
             case self::TYPE_STRING:
+                $strlen = \strlen($mixed);
                 $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
                 return new Abstraction($typeInfo[0], array(
-                    'strlen' => \strlen($mixed),
+                    'strlen' => $strlen > $maxLen
+                        ? $strlen
+                        : null,
                     'typeMore' => $typeInfo[1],
                     'value' => $this->debug->utf8->strcut($mixed, 0, $maxLen),
                 ));

@@ -20,7 +20,7 @@ export function init ($delegateNode) {
     return false
   })
   $delegateNode.on('shown.debug.tab', function (e) {
-    $(this).find('.m_alert, .group-body:visible:not(.enhanced)').debugEnhance()
+    $(this).find('.m_alert, .group-body:visible').debugEnhance()
   })
 }
 

@@ -742,6 +742,7 @@ class Html extends Base
         $meta = \array_merge(array(
             'caption' => null,
             'columns' => array(),
+            'columnNames' => array(),
             'sortable' => false,
             'totalCols' => array(),
             'inclContext' => false,
@@ -776,6 +777,7 @@ class Html extends Base
                             ),
                             'caption' => $meta['caption'],
                             'columns' => $meta['columns'],
+                            'columnNames' => $meta['columnNames'],
                             'onBuildRow' => $onBuildRow,
                             'totalCols' => $meta['totalCols'],
                         )

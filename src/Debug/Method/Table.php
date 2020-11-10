@@ -79,7 +79,7 @@ class Table
         if ($row instanceof Abstraction) {
             $row = self::keyValuesAbstraction($row, $objInfo);
         } elseif (\is_array($row) === false) {
-            $row = array(self::SCALAR =>  $row);
+            $row = array(self::SCALAR => $row);
         }
         $values = array();
         foreach ($keys as $key) {
@@ -122,6 +122,7 @@ class Table
         $meta = \array_merge(array(
             'caption' => null,
             'columns' => array(),
+            'columnNames' => array(),
             'sortable' => true,
             'totalCols' => array(),
         ), $logEntry['meta']);

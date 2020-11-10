@@ -58,15 +58,15 @@
     });
   }
 
-  function enhanceInner ($node) {
-    var $wrapper = $node.parent();
+  function enhanceInner ($nodeObj) {
+    var $inner = $nodeObj.find('> .object-inner');
     var flags = {
-      hasProtected: $node.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
-      hasPrivate: $node.children('.private').not('.magic, .magic-read, .magic-write').length > 0,
-      hasExcluded: $node.children('.debuginfo-excluded').hide().length > 0,
-      hasInherited: $node.children('.inherited').length > 0
+      hasProtected: $inner.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
+      hasPrivate: $inner.children('.private').not('.magic, .magic-read, .magic-write').length > 0,
+      hasExcluded: $inner.children('.debuginfo-excluded').hide().length > 0,
+      hasInherited: $inner.children('.inherited').length > 0
     };
-    var accessible = $wrapper.data('accessible');
+    var accessible = $nodeObj.data('accessible');
     var toggleClass = accessible === 'public'
       ? 'toggle-off'
       : 'toggle-on';
@@ -75,19 +75,19 @@
       : 'hide';
     var visToggles = '';
     var hiddenInterfaces = [];
-    if ($node.is('.enhanced')) {
+    if ($nodeObj.is('.enhanced')) {
       return
     }
-    if ($node.find('.method[data-implements]').hide().length) {
+    if ($inner.find('> .method[data-implements]').hide().length) {
       // linkify visibility
-      $node.find('.method[data-implements]').each(function () {
+      $inner.find('> .method[data-implements]').each(function () {
         var iface = $(this).data('implements');
         if (hiddenInterfaces.indexOf(iface) < 0) {
           hiddenInterfaces.push(iface);
         }
       });
       $.each(hiddenInterfaces, function (i, iface) {
-        $node.find('.interface').each(function () {
+        $inner.find('> .interface').each(function () {
           var html = '<span class="toggle-off" data-toggle="interface" data-interface="' + iface + '" title="toggle methods">' +
               '<i class="fa fa-eye-slash"></i>' + iface + '</span>';
           if ($(this).text() === iface) {
@@ -96,11 +96,11 @@
         });
       });
     }
-    $wrapper.find('.private, .protected')
+    $inner.find('> .private, > .protected')
       .filter('.magic, .magic-read, .magic-write')
       .removeClass('private protected');
     if (accessible === 'public') {
-      $wrapper.find('.private, .protected').hide();
+      $inner.find('.private, .protected').hide();
     }
     if (flags.hasProtected) {
       visToggles += ' <span class="' + toggleClass + '" data-toggle="vis" data-vis="protected">' + toggleVerb + ' protected</span>';
@@ -114,10 +114,10 @@
     if (flags.hasInherited) {
       visToggles += ' <span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited methods</span>';
     }
-    $node.prepend('<span class="vis-toggles">' + visToggles + '</span>');
-    addIcons($node);
-    $node.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand');
-    $node.addClass('enhanced');
+    $inner.prepend('<span class="vis-toggles">' + visToggles + '</span>');
+    addIcons($inner);
+    $inner.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand');
+    $nodeObj.addClass('enhanced');
   }
 
   function toggleInterface (toggle) {
@@ -198,7 +198,7 @@
       if (!$th.find('.sort-arrows').length) {
         // this th needs the arrow markup
         $cells.find('.sort-arrows').remove();
-        $th.append('<span class="fa fa-stack sort-arrows pull-right">' +
+        $th.append('<span class="fa fa-stack sort-arrows float-right">' +
             '<i class="fa fa-caret-up" aria-hidden="true"></i>' +
             '<i class="fa fa-caret-down" aria-hidden="true"></i>' +
           '</span>');
@@ -364,55 +364,59 @@
   /**
    * add font-awsome icons
    */
-  function addIcons$1 ($root) {
+  function addIcons$1 ($node) {
     var $caption;
     var $icon;
-    var $node;
+    var $node2;
     var selector;
     for (selector in config$1.iconsMisc) {
-      $node = $root.find(selector);
-      if ($node.length) {
+      $node2 = $node.find(selector);
+      if ($node2.length) {
         $icon = $(config$1.iconsMisc[selector]);
-        if ($node.find('> i:first-child').hasClass($icon.attr('class'))) {
+        if ($node2.find('> i:first-child').hasClass($icon.attr('class'))) {
           // already have icon
           $icon = null;
           continue
         }
-        $node.prepend($icon);
+        $node2.prepend($icon);
         $icon = null;
       }
     }
-    if ($root.data('icon')) {
-      $icon = $root.data('icon').match('<')
-        ? $($root.data('icon'))
-        : $('<i>').addClass($root.data('icon'));
-    } else {
+    if ($node.data('icon')) {
+      $icon = $node.data('icon').match('<')
+        ? $($node.data('icon'))
+        : $('<i>').addClass($node.data('icon'));
+    } else if (!$node.hasClass('m_group')) {
+      $node2 = $node.hasClass('group-header')
+        ? $node.parent()
+        : $node;
       for (selector in config$1.iconsMethods) {
-        if ($root.is(selector)) {
+        if ($node2.is(selector)) {
           $icon = $(config$1.iconsMethods[selector]);
           break
         }
       }
     }
-    if ($icon) {
-      if ($root.is('.m_group')) {
-        // custom icon..   add to .group-label
-        $root = $root.find('> .group-header .group-label').eq(0);
-      } else if ($root.find('> table').length) {
-        // table... we'll prepend icon to caption
-        $caption = $root.find('> table > caption');
-        if (!$caption.length) {
-          $caption = $('<caption>');
-          $root.find('> table').prepend($caption);
-        }
-        $root = $caption;
-      }
-      if ($root.find('> i:first-child').hasClass($icon.attr('class'))) {
-        // already have icon
-        return
-      }
-      $root.prepend($icon);
+    if (!$icon) {
+      return
     }
+    if ($node.hasClass('m_group')) {
+      // custom icon..   add to .group-label
+      $node = $node.find('> .group-header .group-label').eq(0);
+    } else if ($node.find('> table').length) {
+      // table... we'll prepend icon to caption
+      $caption = $node.find('> table > caption');
+      if (!$caption.length) {
+        $caption = $('<caption>');
+        $node.find('> table').prepend($caption);
+      }
+      $node = $caption;
+    }
+    if ($node.find('> i:first-child').hasClass($icon.attr('class'))) {
+      // already have icon
+      return
+    }
+    $node.prepend($icon);
   }
 
   function buildFileLink (file, line) {
@@ -643,10 +647,12 @@
     // console.warn('enhanceEntries', $node[0])
     var $parent = $node.parent();
     var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded');
-    // temporarily hide when enhancing... minimize redraws
+    /*
     if ($node.hasClass('enhanced')) {
       return;
     }
+    */
+    // temporarily hide when enhancing... minimize redraws
     $node.hide();
     $node.children().each(function () {
       enhanceEntry($(this));
@@ -654,10 +660,11 @@
     if (show) {
       $node.show();
     }
-    while (toExpandQueue.length) {
-      toExpandQueue.shift().debugEnhance('expand');
+    processExpandQueue();
+    if ($node.parent().hasClass('m_group') === false) {
+      // only add .enhanced to root .group-body
+      $node.addClass('enhanced');
     }
-    $node.addClass('enhanced');
   }
 
   /**
@@ -689,7 +696,6 @@
         $entry.find('> table > tbody > tr > td').each(function () {
           enhanceValue($entry, this);
         });
-        return
       }
       $entry.children().each(function () {
         enhanceValue($entry, this);
@@ -700,11 +706,11 @@
   }
 
   function enhanceGroup ($group) {
-    // console.log('enhanceGroup', $group)
+    // console.log('enhanceGroup', $group[0])
     var $toggle = $group.find('> .group-header');
     var $target = $toggle.next();
-    addIcons$1($group);
-    addIcons$1($toggle);
+    addIcons$1($group); // custom data-icon
+    addIcons$1($toggle); // expand/collapse
     $toggle.attr('data-toggle', 'group');
     $.each(['level-error', 'level-info', 'level-warn'], function (i, val) {
       var $icon;
@@ -772,6 +778,12 @@
       }
       $node.removeClass('t_float t_int t_string numeric no-quotes');
       $node.html($i).append($span);
+    }
+  }
+
+  function processExpandQueue () {
+    while (toExpandQueue.length) {
+      toExpandQueue.shift().debugEnhance('expand');
     }
   }
 
@@ -850,7 +862,7 @@
     );
     $menuBar.html('<span><i class="fa fa-bug"></i> PHPDebugConsole</span>' +
       $menuBar.find('nav')[0].outerHTML +
-      '<div class="pull-right">' +
+      '<div class="float-right">' +
         '<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
           '<span aria-hidden="true">&times;</span>' +
         '</button>' +
@@ -978,6 +990,7 @@
       $nested.prop('checked', isChecked);
       applyFilter($root);
       updateFilterStatus($root);
+      $root.find('.m_group:not(.filter-hidden)').trigger('collapsed.debug.group');
     });
 
     $delegateNode.on('change', 'input[data-toggle=error]', function () {
@@ -1054,7 +1067,7 @@
       } else if (!isFilterVis) {
         if ($node.hasClass('m_group')) {
           // filtering group... means children (if not filtered) are visible
-          $node.find('> .group-body:not(.enhanced)').debugEnhance();
+          $node.find('> .group-body').debugEnhance();
         }
       }
     }
@@ -1212,7 +1225,7 @@
 
   function addDropdown () {
     var $menuBar = $root$1.find('.debug-menu-bar');
-    $menuBar.find('.pull-right').prepend('<button id="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
+    $menuBar.find('.float-right').prepend('<button id="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
         '<i class="fa fa-ellipsis-v fa-fw"></i>' +
       '</button>'
     );
@@ -1503,7 +1516,7 @@
   function init$6 ($debugRoot) {
     $root$3 = $debugRoot;
     config$5 = $root$3.data('config').get();
-    $root$3.find('.debug-menu-bar').append($('<div />', { class: 'pull-right' }));
+    $root$3.find('.debug-menu-bar').append($('<div />', { class: 'float-right' }));
     addChannelToggles();
     addExpandAll();
     addNoti($('body'));
@@ -1565,7 +1578,7 @@
       }));
     }
     $root$3.find('.debug-pull-tab').append($icons[0].outerHTML);
-    $root$3.find('.debug-menu-bar .pull-right').prepend($icons);
+    $root$3.find('.debug-menu-bar .float-right').prepend($icons);
   }
 
   function addExpandAll () {
@@ -1766,7 +1779,10 @@
       return false
     });
     $delegateNode.on('collapsed.debug.group', function (e) {
-      groupErrorIconUpdate($(e.target));
+      groupIconUpdate($(e.target));
+    });
+    $delegateNode.on('expanded.debug.group', function (e) {
+      $(e.target).find('> .group-header > i:last-child').remove();
     });
   }
 
@@ -1885,35 +1901,32 @@
     return icon
   }
 
-  function groupErrorIconUpdate ($group) {
-    var selector = '.fa-times-circle, .fa-warning';
+  /**
+   * Update expand/collapse icon and nested error/warn icon
+   */
+  function groupIconUpdate ($group) {
+    var selector = '> i:last-child';
     var $toggle = $group.find('> .group-header');
+    var haveVis = $group.find('> .group-body > *').not('.filter-hidden').length > 0;
     var icon = groupErrorIconGet($group);
-    var isExpanded = $group.is('.expanded');
-    $group.removeClass('empty'); // 'empty' class just affects cursor
-    if (icon) {
-      if ($toggle.find(selector).length) {
-        $toggle.find(selector).replaceWith(icon);
-      } else {
-        $toggle.append(icon);
-      }
-      iconUpdate($toggle, isExpanded
-        ? config$6.iconsExpand.collapse
-        : config$6.iconsExpand.expand
-      );
-    } else {
+    var isExpanded = $group.hasClass('expanded');
+    // console.log('groupIconUpdate', $toggle.text(), icon)
+    $group.toggleClass('empty', !haveVis); // 'empty' class just affects cursor
+    iconUpdate($toggle, config$6.iconsExpand[ isExpanded ? 'collapse' : 'expand' ]);
+    if (!icon || isExpanded) {
       $toggle.find(selector).remove();
-      if ($group.find('> .group-body > *').not('.m_warn, .m_error').length < 1) {
-        // group only contains errors & they're now hidden
-        $group.addClass('empty');
-        iconUpdate($toggle, config$6.iconsExpand.empty);
-      }
+      return
     }
+    if ($toggle.find(selector).length) {
+      $toggle.find(selector).replaceWith(icon);
+      return
+    }
+    $toggle.append(icon);
   }
 
   function iconUpdate ($toggle, classNameNew) {
     var $icon = $toggle.children('i').eq(0);
-    if ($toggle.is('.group-header') && $toggle.parent().is('.empty')) {
+    if ($toggle.hasClass('group-header') && $toggle.parent().hasClass('empty')) {
       classNameNew = config$6.iconsExpand.empty;
     }
     $.each(config$6.iconsExpand, function (i, className) {
@@ -1963,7 +1976,7 @@
       return false
     });
     $delegateNode.on('shown.debug.tab', function (e) {
-      $(this).find('.m_alert, .group-body:visible:not(.enhanced)').debugEnhance();
+      $(this).find('.m_alert, .group-body:visible').debugEnhance();
     });
   }
 
@@ -2158,12 +2171,13 @@
     },
     // debug methods (not object methods)
     iconsMethods: {
-      '.group-header': '<i class="fa fa-lg fa-minus-square-o"></i>',
       '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
       '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
       '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
       '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
       '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
+      '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
+      '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
       '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
       '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
       '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
@@ -2296,7 +2310,7 @@
     } else if (method === 'setConfig') {
       if (typeof arg1 === 'object') {
         config$7.set(arg1);
-        // update logs that have already been enhanced
+        // update log entries that have already been enhanced
         $(this)
           .find('.debug-log.enhanced')
           .closest('.debug')
@@ -2305,20 +2319,21 @@
     } else {
       this.each(function () {
         var $self = $(this);
-        // console.log('debugEnhance', this, $self.is('.enhanced'))
         if ($self.is('.debug')) {
           // console.warn('debugEnhance() : .debug')
           $self.find('.debug-menu-bar > nav, .debug-tabs').show();
-          $self.find('.m_alert, .debug-log-summary, .debug-log').debugEnhance();
+          $self.find('.tab-pane.active')
+            .find('.m_alert, .debug-log-summary, .debug-log')
+            .debugEnhance();
           return
         }
-        if (!$self.is('.enhanced, .filter-hidden')) {
+        if (!$self.is('.filter-hidden')) {
           // console.group('debugEnhance')
-          // console.warn('self', this)
           if ($self.is('.group-body')) {
+            // console.warn('group-body', $self.prev('.group-header').text(), this)
             enhanceEntries($self);
           } else {
-            // log entry assumed
+            // console.warn(this)
             enhanceEntry($self);
           }
           // console.groupEnd()

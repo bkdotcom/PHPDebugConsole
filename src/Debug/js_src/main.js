@@ -48,12 +48,13 @@ var config = new Config({
   },
   // debug methods (not object methods)
   iconsMethods: {
-    '.group-header': '<i class="fa fa-lg fa-minus-square-o"></i>',
     '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
     '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
     '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
     '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
     '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
+    '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
+    '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
     '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
     '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
     '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
@@ -186,7 +187,7 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
   } else if (method === 'setConfig') {
     if (typeof arg1 === 'object') {
       config.set(arg1)
-      // update logs that have already been enhanced
+      // update log entries that have already been enhanced
       $(this)
         .find('.debug-log.enhanced')
         .closest('.debug')
@@ -195,20 +196,21 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
   } else {
     this.each(function () {
       var $self = $(this)
-      // console.log('debugEnhance', this, $self.is('.enhanced'))
       if ($self.is('.debug')) {
         // console.warn('debugEnhance() : .debug')
         $self.find('.debug-menu-bar > nav, .debug-tabs').show()
-        $self.find('.m_alert, .debug-log-summary, .debug-log').debugEnhance()
+        $self.find('.tab-pane.active')
+          .find('.m_alert, .debug-log-summary, .debug-log')
+          .debugEnhance()
         return
       }
-      if (!$self.is('.enhanced, .filter-hidden')) {
+      if (!$self.is('.filter-hidden')) {
         // console.group('debugEnhance')
-        // console.warn('self', this)
         if ($self.is('.group-body')) {
+          // console.warn('group-body', $self.prev('.group-header').text(), this)
           enhanceEntries.enhanceEntries($self)
         } else {
-          // log entry assumed
+          // console.warn(this)
           enhanceEntries.enhanceEntry($self)
         }
         // console.groupEnd()

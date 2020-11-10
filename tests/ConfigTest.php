@@ -48,6 +48,7 @@ class ConfigTest extends DebugTestFramework
             'channelIcon',
             'channelName',
             'channelShow',
+            'channelSort',
             'enableProfiling',
             'errorMask',
             'emailFrom',

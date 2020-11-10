@@ -11,6 +11,10 @@
 .fa-stack { line-height: 2em; }
 .fa-stack-1x { line-height: inherit; }
 .fa-stack-2x { font-size: 2em; }
+
+.float-left { float: left !important; }
+.float-right { float: right !important; }
+
 .text-center { text-align: center; }
 .text-muted { color: $text-muted; }
 // .text-nowrap { white-space: nowrap; }

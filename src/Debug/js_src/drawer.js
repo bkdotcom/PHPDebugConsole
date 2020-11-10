@@ -65,7 +65,7 @@ function addMarkup () {
   )
   $menuBar.html('<span><i class="fa fa-bug"></i> PHPDebugConsole</span>' +
     $menuBar.find('nav')[0].outerHTML +
-    '<div class="pull-right">' +
+    '<div class="float-right">' +
       '<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
         '<span aria-hidden="true">&times;</span>' +
       '</button>' +

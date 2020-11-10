@@ -125,9 +125,14 @@ class LogEntry extends Event
      */
     public function setMeta($key, $val = null)
     {
-        $meta = \is_array($key)
-            ? $key
-            : array($key => $val);
+        $meta = $key;
+        if (!\is_array($key)) {
+            if ($val === null) {
+                unset($this->values['meta'][$key]);
+                return;
+            }
+            $meta = array($key => $val);
+        }
         $meta = \array_merge($this->values['meta'], $meta);
         $this->values['meta'] = $meta;
         if (\array_key_exists('channel', $meta)) {

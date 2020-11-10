@@ -55,15 +55,15 @@ export function enhance ($node) {
   })
 }
 
-export function enhanceInner ($node) {
-  var $wrapper = $node.parent()
+export function enhanceInner ($nodeObj) {
+  var $inner = $nodeObj.find('> .object-inner')
   var flags = {
-    hasProtected: $node.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
-    hasPrivate: $node.children('.private').not('.magic, .magic-read, .magic-write').length > 0,
-    hasExcluded: $node.children('.debuginfo-excluded').hide().length > 0,
-    hasInherited: $node.children('.inherited').length > 0
+    hasProtected: $inner.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
+    hasPrivate: $inner.children('.private').not('.magic, .magic-read, .magic-write').length > 0,
+    hasExcluded: $inner.children('.debuginfo-excluded').hide().length > 0,
+    hasInherited: $inner.children('.inherited').length > 0
   }
-  var accessible = $wrapper.data('accessible')
+  var accessible = $nodeObj.data('accessible')
   var toggleClass = accessible === 'public'
     ? 'toggle-off'
     : 'toggle-on'
@@ -72,19 +72,19 @@ export function enhanceInner ($node) {
     : 'hide'
   var visToggles = ''
   var hiddenInterfaces = []
-  if ($node.is('.enhanced')) {
+  if ($nodeObj.is('.enhanced')) {
     return
   }
-  if ($node.find('.method[data-implements]').hide().length) {
+  if ($inner.find('> .method[data-implements]').hide().length) {
     // linkify visibility
-    $node.find('.method[data-implements]').each(function () {
+    $inner.find('> .method[data-implements]').each(function () {
       var iface = $(this).data('implements')
       if (hiddenInterfaces.indexOf(iface) < 0) {
         hiddenInterfaces.push(iface)
       }
     })
     $.each(hiddenInterfaces, function (i, iface) {
-      $node.find('.interface').each(function () {
+      $inner.find('> .interface').each(function () {
         var html = '<span class="toggle-off" data-toggle="interface" data-interface="' + iface + '" title="toggle methods">' +
             '<i class="fa fa-eye-slash"></i>' + iface + '</span>'
         if ($(this).text() === iface) {
@@ -93,11 +93,11 @@ export function enhanceInner ($node) {
       })
     })
   }
-  $wrapper.find('.private, .protected')
+  $inner.find('> .private, > .protected')
     .filter('.magic, .magic-read, .magic-write')
     .removeClass('private protected')
   if (accessible === 'public') {
-    $wrapper.find('.private, .protected').hide()
+    $inner.find('.private, .protected').hide()
   }
   if (flags.hasProtected) {
     visToggles += ' <span class="' + toggleClass + '" data-toggle="vis" data-vis="protected">' + toggleVerb + ' protected</span>'
@@ -111,10 +111,10 @@ export function enhanceInner ($node) {
   if (flags.hasInherited) {
     visToggles += ' <span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited methods</span>'
   }
-  $node.prepend('<span class="vis-toggles">' + visToggles + '</span>')
-  addIcons($node)
-  $node.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand')
-  $node.addClass('enhanced')
+  $inner.prepend('<span class="vis-toggles">' + visToggles + '</span>')
+  addIcons($inner)
+  $inner.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand')
+  $nodeObj.addClass('enhanced')
 }
 
 function toggleInterface (toggle) {

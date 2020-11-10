@@ -191,6 +191,7 @@ class LoggerTest extends DebugTestFramework
             ),
             array(
                 'caption' => 'table caption',
+                'columnNames' => array(),
                 'columns' => array('name', 'age'),
                 'psr3level' => 'info',
                 'sortable' => true,
@@ -218,6 +219,7 @@ class LoggerTest extends DebugTestFramework
             ),
             array(
                 'caption' => 'table caption',
+                'columnNames' => array(),
                 'columns' => array('name', 'age'),
                 'psr3level' => 'debug',
                 'sortable' => true,

@@ -54,7 +54,8 @@ class LogReqRes implements SubscriberInterface
     {
         $debug = $event->getSubject();
         $this->debug = $debug->getChannel('Request / Response', array(
-            'channelIcon' => '<i class="fa fa-exchange"></i>',
+            'channelIcon' => 'fa fa-exchange',
+            'channelSort' => 10,
             'nested' => false,
         ));
 

@@ -458,9 +458,6 @@ class Internal implements SubscriberInterface
      */
     public function init()
     {
-        if ($this->debug->parentInstance) {
-            return;
-        }
         /*
             Initial setCfg has already occured... so we missed the initial Debug::EVENT_CONFIG event
             manually call onConfig here
@@ -471,6 +468,9 @@ class Internal implements SubscriberInterface
             $cfgInit
         );
         $this->onConfig($cfgEvent);
+        if ($this->debug->parentInstance) {
+            return;
+        }
         if ($cfgEvent['debug'] !== $cfgInit['debug']) {
             /*
                 config changed via onConfig
@@ -820,7 +820,7 @@ class Internal implements SubscriberInterface
     {
         return '#(?:'
             // xml
-            . '<' . $key . '\b.*?>\s*([^<]*?)\s*</' . $key . '>'
+            . '<(?:\w+:)?' . $key . '\b.*?>\s*([^<]*?)\s*</(?:\w+:)?' . $key . '>'
             . '|'
             // json
             . \json_encode($key) . '\s*:\s*"([^"]*?)"'

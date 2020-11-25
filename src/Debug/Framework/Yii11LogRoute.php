@@ -155,7 +155,7 @@ class Yii11LogRoute extends CLogRoute
         $logEntry['meta']['file'] = $logEntry['trace'][0]['file'];
         $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
         if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
-            $logEntry['meta']['backtrace'] = $logEntry['trace'];
+            $logEntry['meta']['trace'] = $logEntry['trace'];
             unset($logEntry['trace']);
         }
         return $logEntry;
@@ -338,14 +338,8 @@ class Yii11LogRoute extends CLogRoute
                 : $logEntry['message'];
             $logEntry['meta']['caption'] = $caption;
             $logEntry['meta']['columns'] = array('file','line');
-            $debug->log(new LogEntry(
-                $debug,
-                'trace',
-                array(
-                    $logEntry['trace'],
-                ),
-                $logEntry['meta']
-            ));
+            $logEntry['meta']['trace'] = $logEntry['trace'];
+            $debug->trace(false, $debug->meta($logEntry['meta']));
             return;
         }
         $method = $this->levelToMethod($logEntry['level']);

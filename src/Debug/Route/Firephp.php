@@ -175,7 +175,7 @@ class Firephp extends Base
      */
     private function methodTabular(LogEntry $logEntry)
     {
-        $logEntry->setMeta('undefinedAs', null);
+        $logEntry->setMeta('undefinedAs', 'null');
         if ($logEntry['method'] === 'trace') {
             $logEntry['firephpMeta']['Label'] = 'trace';
         }

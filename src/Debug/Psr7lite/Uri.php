@@ -469,6 +469,9 @@ class Uri
                 $host
             ));
         }
+        if ($host === 'localhost') {
+            return;
+        }
         // https://www.regextester.com/103452
         $regex = '/(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/';
         if (\preg_match($regex, $host)) {

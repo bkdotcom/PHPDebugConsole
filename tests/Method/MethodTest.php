@@ -1,9 +1,10 @@
 <?php
 
-namespace bdk\DebugTests;
+namespace bdk\DebugTests\Method;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
+use bdk\DebugTests\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug Methods
@@ -34,7 +35,7 @@ class MethodTest extends DebugTestFramework
                 } elseif ($route instanceof \bdk\Debug\Route\Wamp) {
                     $event['method'] = 'log';
                     $event['args'] = array('something completely different');
-                    $meta = \array_diff_key($event['meta'], \array_flip(array('columns','caption','inclContext')));
+                    $meta = \array_diff_key($event['meta'], \array_flip(array('caption','inclContext','requestId','sortable','tableInfo')));
                     $event['meta'] = $meta;
                 }
             }
@@ -44,15 +45,25 @@ class MethodTest extends DebugTestFramework
             'trace',
             array(),
             array(
-                'entry' => function ($logEntry) {
+                'entry' => function (LogEntry $logEntry) {
                     // we're doing the custom stuff via Debug::EVENT_OUTPUT_LOG_ENTRY, so logEntry should still be trace
                     $this->assertSame('trace', $logEntry['method']);
                     $this->assertInternalType('array', $logEntry['args'][0]);
                     $this->assertSame(array(
                         'caption' => 'trace',
-                        'columns' => array('file','line','function'),
                         'detectFiles' => true,
-                        'inclContext' => false,
+                        'sortable' => true,
+                        'tableInfo' => array(
+                            'class' => null,
+                            'columns' => array(
+                                array('key' => 'file'),
+                                array('key' => 'line'),
+                                array('key' => 'function'),
+                            ),
+                            'haveObjRow' => false,
+                            'rows' => array(),
+                            'summary' => null,
+                        ),
                     ), $logEntry['meta']);
                 },
                 'chromeLogger' => array(
@@ -69,6 +80,7 @@ class MethodTest extends DebugTestFramework
                     array('something completely different'),
                     array(
                         'detectFiles' => true,
+                        'format' => 'raw',
                         'foundFiles' => array(),
                     ),
                 ),
@@ -688,7 +700,7 @@ class MethodTest extends DebugTestFramework
             'clear',
             array(),
             array(
-                'custom' => function ($logEntry) {
+                'custom' => function (LogEntry $logEntry) {
                     $this->assertSame('Cleared log (sans errors)', $logEntry['args'][0]);
                     $this->assertCount(4, $this->debug->getData('log'));    // clear-summary gets added
                 },
@@ -727,7 +739,7 @@ class MethodTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_LOG | Debug::CLEAR_SUMMARY),
             array(
-                'custom' => function ($logEntry) {
+                'custom' => function (LogEntry $logEntry) {
                     $this->assertSame('Cleared log (sans errors) and summary (sans errors)', $logEntry['args'][0]);
                 }
             )
@@ -745,7 +757,7 @@ class MethodTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_ALERTS | Debug::CLEAR_LOG | Debug::CLEAR_SUMMARY),
             array(
-                'custom' => function ($logEntry) {
+                'custom' => function (LogEntry $logEntry) {
                     $this->assertSame('Cleared alerts, log (sans errors), and summary (sans errors)', $logEntry['args'][0]);
                 }
             )
@@ -986,12 +998,12 @@ class MethodTest extends DebugTestFramework
             'error',
             array('a string', array(), new \stdClass(), $resource),
             array(
-                'entry' => function ($entry) {
-                    $this->assertSame('error', $entry['method']);
-                    $this->assertSame('a string', $entry['args'][0]);
-                    $this->assertSame(array(), $entry['args'][1]);
-                    $this->assertTrue($this->checkAbstractionType($entry['args'][2], 'object'));
-                    $this->assertTrue($this->checkAbstractionType($entry['args'][3], 'resource'));
+                'entry' => function (LogEntry $logEntry) {
+                    $this->assertSame('error', $logEntry['method']);
+                    $this->assertSame('a string', $logEntry['args'][0]);
+                    $this->assertSame(array(), $logEntry['args'][1]);
+                    $this->assertTrue($this->checkAbstractionType($logEntry['args'][2], 'object'));
+                    $this->assertTrue($this->checkAbstractionType($logEntry['args'][3], 'resource'));
                 },
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -1002,11 +1014,11 @@ class MethodTest extends DebugTestFramework
                         ),
                         'Resource id #%d: stream',
                     ),
-                    __DIR__ . '/DebugTestFramework.php: %d',
+                    \realpath(__DIR__ . '/../DebugTestFramework.php') . ': %d',
                     'error',
                 )),
                 'firephp' => 'X-Wf-1-1-1-3: %d|[{"File":"%s","Label":"a string","Line":%d,"Type":"ERROR"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_error" data-detect-files="true" data-file="' . __DIR__ . '/DebugTestFramework.php" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                'html' => '<li class="m_error" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
@@ -1827,7 +1839,7 @@ EOD;
             'info',
             array('a string', array(), new \stdClass(), $resource),
             array(
-                'entry' => function ($logEntry) {
+                'entry' => function (LogEntry $logEntry) {
                     $this->assertSame('info', $logEntry['method']);
                     $this->assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
@@ -1889,7 +1901,7 @@ EOD;
             'log',
             array('a string', array(), new \stdClass(), $resource),
             array(
-                'entry' => function ($logEntry) {
+                'entry' => function (LogEntry $logEntry) {
                     $this->assertSame('log', $logEntry['method']);
                     $this->assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
@@ -2049,7 +2061,7 @@ EOD;
             ),
             array(
                 /*
-                'entry' => function ($logEntry) {
+                'entry' => function (LogEntry $logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
@@ -2115,7 +2127,7 @@ EOD;
                     $this->assertCount(1, $timers['stack']);
                 },
                 /*
-                'entry' => function ($logEntry) {
+                'entry' => function (LogEntry $logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'time',
@@ -2242,7 +2254,7 @@ EOD;
             array(),
             array(
                 /*
-                'entry' => function ($logEntry) {
+                'entry' => function (LogEntry $logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
@@ -2278,7 +2290,7 @@ EOD;
             array('my label', array('foo' => 'bar')),
             array(
                 /*
-                'entry' => function ($logEntry) {
+                'entry' => function (LogEntry $logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
@@ -2320,7 +2332,7 @@ EOD;
             array('bogus'),
             array(
                 /*
-                'entry' => function ($logEntry) {
+                'entry' => function (LogEntry $logEntry) {
                     $logEntry = $this->logEntryToArray($logEntry);
                     $expectFormat = json_encode(array(
                         'timeLog',
@@ -2354,154 +2366,6 @@ EOD;
      *
      * @return void
      */
-    public function testTrace()
-    {
-        $this->debug->trace();
-        $values = array(
-            'file0' => __FILE__,
-            'line0' => __LINE__ - 3,
-            'function1' => __CLASS__ . '->' . __FUNCTION__,
-        );
-
-        $this->testMethod(
-            array(
-                'dataPath' => 'log/0'
-            ),
-            array(),
-            array(
-                'custom' => function ($logEntry) use ($values) {
-                    $trace = $logEntry['args'][0];
-                    $this->assertSame($values['file0'], $trace[0]['file']);
-                    $this->assertSame($values['line0'], $trace[0]['line']);
-                    $this->assertInternalType('integer', $trace[0]['line']);
-                    $this->assertNotTrue(isset($trace[0]['function']));
-                    $this->assertSame($values['function1'], $trace[1]['function']);
-                },
-                'chromeLogger' => function ($logEntry) {
-                    $trace = \array_map(function ($row) {
-                        $keys = array('file','line','function');
-                        $row = \array_intersect_key($row, \array_flip($keys));
-                        \uksort($row, function ($key1, $key2) use ($keys) {
-                            return \array_search($key1, $keys) > \array_search($key2, $keys)
-                                ? 1
-                                : -1;
-                        });
-                        return $row;
-                    }, $this->debug->getData('log/0/args/0'));
-                    $chromeTable = $logEntry[0][0];
-                    $this->assertSame($trace, $chromeTable);
-                    $this->assertSame(null, $logEntry[1]);
-                    $this->assertSame('table', $logEntry[2]);
-                },
-                'firephp' => function ($logEntry) {
-                    $trace = $this->debug->getData('log/0/args/0');
-                    \preg_match('#\|(.+)\|#', $logEntry, $matches);
-                    $logEntry = \json_decode($matches[1], true);
-                    list($logEntryMeta, $logEntryTable) = $logEntry;
-                    $this->assertSame(array(
-                        'Label' => 'trace',
-                        'Type' => 'TABLE',
-                    ), $logEntryMeta);
-                    $this->assertSame(array(
-                        '',
-                        'file',
-                        'line',
-                        'function',
-                    ), $logEntryTable[0]);
-                    $count = \count($logEntryTable);
-                    for ($i = 1; $i < $count; $i++) {
-                        $tracei = $i - 1;
-                        $valuesExpect = array(
-                            $tracei,
-                            $trace[$tracei]['file'],
-                            $trace[$tracei]['line'],
-                            isset($trace[$tracei]['function']) ? $trace[$tracei]['function'] : null,
-                        );
-                        $this->assertSame($valuesExpect, $logEntryTable[$i]);
-                    }
-                },
-                'html' => function ($logEntry) {
-                    // $this->assertSame('', $logEntry);
-                    $trace = $this->debug->getData('log/0/args/0');
-                    $this->assertContains('<caption>trace</caption>' . "\n"
-                        . '<thead>' . "\n"
-                        . '<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>' . "\n"
-                        . '</thead>', $logEntry);
-                    $matches = array();
-                    \preg_match_all('#<tr>'
-                        . '<th.*?>(.*?)</th>'
-                        . '<td.*?>(.*?)</td>'
-                        . '<td.*?>(.*?)</td>'
-                        . '<td.*?>(.*?)</td>'
-                        . '</tr>#is', $logEntry, $matches, PREG_SET_ORDER);
-                    $count = \count($matches);
-                    for ($i = 1; $i < $count; $i++) {
-                        $keys = array('file','line','function');
-                        $row = \array_intersect_key($trace[$i], \array_flip($keys));
-                        \uksort($row, function ($key1, $key2) use ($keys) {
-                            return \array_search($key1, $keys) > \array_search($key2, $keys)
-                                ? 1
-                                : -1;
-                        });
-                        $trace[$i] = $row;
-                        $valuesExpect = \array_merge(array((string) $i), \array_values($trace[$i]));
-                        $valuesExpect[1] = \is_null($valuesExpect[1]) ? 'null' : $valuesExpect[1];
-                        $valuesExpect[2] = \is_null($valuesExpect[2]) ? 'null' : (string) $valuesExpect[2];
-                        $valuesExpect[3] = $this->debug->getDump('html')->markupIdentifier($valuesExpect[3], 'span', array(), true);
-                        $valuesActual = $matches[$i];
-                        \array_shift($valuesActual);
-                        $this->assertSame($valuesExpect, $valuesActual);
-                    }
-                },
-                'script' => function ($logEntry) {
-                    $trace = \array_map(function ($row) {
-                        $keys = array('file','line','function');
-                        $row = \array_intersect_key($row, \array_flip($keys));
-                        \uksort($row, function ($key1, $key2) use ($keys) {
-                            return \array_search($key1, $keys) > \array_search($key2, $keys)
-                                ? 1
-                                : -1;
-                        });
-                        return $row;
-                    }, $this->debug->getData('log/0/args/0'));
-                    \preg_match('#console.table\((.+)\);#', $logEntry, $matches);
-                    $this->assertSame(\json_encode($trace, JSON_UNESCAPED_SLASHES), $matches[1]);
-                },
-                'text' => function ($logEntry) use ($values) {
-                    $trace = \array_map(function ($row) {
-                        $keys = array('file','line','function');
-                        $row = \array_intersect_key($row, \array_flip($keys));
-                        \uksort($row, function ($key1, $key2) use ($keys) {
-                            return \array_search($key1, $keys) > \array_search($key2, $keys)
-                                ? 1
-                                : -1;
-                        });
-                        return $row;
-                    }, $this->debug->getData('log/0/args/0'));
-                    $expect = 'trace = ' . $this->debug->getDump('text')->dump($trace);
-                    $this->assertNotEmpty($trace);
-                    $this->assertSame($expect, \trim($logEntry));
-                },
-                // 'wamp' => @todo
-            )
-        );
-
-        $this->debug->setCfg('collect', false);
-        $this->testMethod(
-            'log',
-            array('log message'),
-            array(
-                'notLogged' => true,
-                'wamp' => false,
-            )
-        );
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
     public function testWarn()
     {
         $resource = \fopen(__FILE__, 'r');
@@ -2509,7 +2373,7 @@ EOD;
             'warn',
             array('a string', array(), new \stdClass(), $resource),
             array(
-                'entry' => function ($logEntry) {
+                'entry' => function (LogEntry $logEntry) {
                     $this->assertSame('warn', $logEntry['method']);
                     $this->assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
@@ -2532,17 +2396,17 @@ EOD;
                         ),
                         'Resource id #%d: stream',
                     ),
-                    __DIR__ . '/DebugTestFramework.php: %d',
+                    \realpath(__DIR__ . '/../DebugTestFramework.php') . ': %d',
                     'warn',
                 )),
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . __DIR__ . '/' . 'DebugTestFramework.php","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_warn" data-detect-files="true" data-file="' . __DIR__ . '/DebugTestFramework.php" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . \realpath(__DIR__ . '/../DebugTestFramework.php') . '","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'html' => '<li class="m_warn" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
                     </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
-                'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","' . __DIR__ . '/DebugTestFramework.php: line %d");',
+                'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","' . \realpath(__DIR__ . '/../DebugTestFramework.php') . ': line %d");',
                 'text' => '⚠ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',

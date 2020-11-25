@@ -322,11 +322,11 @@ class Debug
      * @param bool   $dismissible (false) Whether to display a close icon/button
      *
      * @return void
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function alert($message, $level = 'error', $dismissible = false)
     {
-        // "use" our function params so things (ie phpmd) don't complain
-        array($message, $dismissible);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -368,11 +368,11 @@ class Debug
      *                           if none provided, will use calling file & line num
      *
      * @return void
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function assert($assertion, $msg = null)
     {
-        // "use" our function params so things (ie phpmd) don't complain
-        array($msg);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -410,11 +410,11 @@ class Debug
      *                     `self::CLEAR_SILENT` : Don't add log entry
      *
      * @return void
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function clear($flags = self::CLEAR_LOG)
     {
-        // "use" our function params so things (ie phpmd) don't complain
-        array($flags);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -657,11 +657,11 @@ class Debug
      * @param int $priority (0) The higher the priority, the earlier it will appear.
      *
      * @return void
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function groupSummary($priority = 0)
     {
-        // "use" our function params so things (ie phpmd) don't complain
-        array($priority);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -855,11 +855,18 @@ class Debug
                 So that our row keys can receive 'callable' formatting,
                 set special '__key' value
             */
-            foreach ($data as $k => &$row) {
-                $row['__key'] = new Abstraction(Abstracter::TYPE_CALLABLE, array(
-                    'value' => $k,
-                    'hideType' => true, // don't output 'callable'
-                ));
+            $tableInfo = $logEntry->getMeta('tableInfo', array());
+            $tableInfo = \array_replace_recursive(array(
+                'rows' => \array_fill_keys(\array_keys($data), array()),
+            ), $tableInfo);
+            foreach (\array_keys($data) as $k) {
+                $tableInfo['rows'][$k]['key'] = new Abstraction(
+                    Abstracter::TYPE_CALLABLE,
+                    array(
+                        'value' => $k,
+                        'hideType' => true, // don't output 'callable'
+                    )
+                );
             }
             $caption = 'Profile \'' . $name . '\' Results';
             $args = array($caption, 'no data');
@@ -867,14 +874,14 @@ class Debug
                 $args = array( $data );
                 $logEntry->setMeta(array(
                     'caption' => $caption,
-                    'columns' => array(),
-                    'sortable' => true,
                     'totalCols' => array('ownTime'),
+                    'tableInfo' => $tableInfo,
                 ));
             }
             unset($this->data['profileInstances'][$name]);
         }
         $logEntry['args'] = $args;
+        $this->methodTable->onLog($logEntry);
         $this->appendLog($logEntry);
     }
 
@@ -975,11 +982,11 @@ class Debug
      *                        if passed, takes precedence over silent meta val
      *
      * @return float|false The duration (in sec).
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function timeEnd($label = null, $log = true)
     {
-        // "use" our function params so things (ie phpmd) don't complain
-        array($log);
         $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
         $label = $logEntry['args'][0];
         $elapsed = $this->stopWatch->stop($label);
@@ -1003,11 +1010,11 @@ class Debug
      *                        if passed, takes precedence over silent meta val
      *
      * @return float|false The duration (in sec).  `false` if specified label does not exist
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function timeGet($label = null, $log = true)
     {
-        // "use" our function params so things (ie phpmd) don't complain
-        array($log);
         $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
         $label = $logEntry['args'][0];
         $elapsed = $this->stopWatch->get($label);
@@ -1084,14 +1091,14 @@ class Debug
      * @param string $caption     (optional) Specify caption for the trace table
      *
      * @return void
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function trace($inclContext = false, $caption = 'trace')
     {
         if (!$this->cfg['collect']) {
             return;
         }
-        // "use" our function params so things (ie phpmd) don't complain
-        array($inclContext, $caption);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -1103,6 +1110,7 @@ class Debug
             array(
                 'inclContext' => false,
                 'caption' => 'trace',
+                'sortable' => false,
             ),
             array(
                 'caption',
@@ -1110,12 +1118,17 @@ class Debug
             )
         );
         // Get trace and include args if we're including context
-        $backtrace = $this->backtrace->get(null, $logEntry->getMeta('inclContext'));
-        if ($backtrace && $logEntry->getMeta('inclContext')) {
+        $inclContext = $logEntry->getMeta('inclContext');
+        $backtrace = isset($logEntry['meta']['trace'])
+            ? $logEntry['meta']['trace']
+            : $this->backtrace->get($inclContext ? \bdk\Backtrace::INCL_ARGS : 0);
+        $logEntry->setMeta('trace', null);
+        if ($backtrace && $inclContext) {
             $backtrace = $this->backtrace->addContext($backtrace);
             $this->addPlugin(new \bdk\Debug\Plugin\Highlight());
         }
         $logEntry['args'] = array($backtrace);
+        $this->methodTable->onLog($logEntry);
         $this->appendLog($logEntry);
     }
 

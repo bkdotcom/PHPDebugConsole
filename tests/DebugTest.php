@@ -110,7 +110,6 @@ class DebugTest extends DebugTestFramework
                 'warn',
                 $args,
                 array(
-                    'backtrace' => $lastError['backtrace'],
                     'channel' => 'general.phpError',
                     'context' => null,
                     'detectFiles' => true,
@@ -122,6 +121,7 @@ class DebugTest extends DebugTestFramework
                     'sanitize' => true,
                     'isSuppressed' => false,
                     'uncollapse' => true,
+                    'trace' => $lastError['backtrace'],
                 ),
             ),
             'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="general.phpError" data-detect-files="true">'

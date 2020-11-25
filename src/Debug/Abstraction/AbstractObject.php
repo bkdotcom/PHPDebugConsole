@@ -36,6 +36,7 @@ class AbstractObject extends Component
     const OUTPUT_METHOD_DESC = 16;
 
 	protected $abstracter;
+    protected $debug;
     protected $methods;
     protected $properties;
 	protected $phpDoc;
@@ -50,6 +51,7 @@ class AbstractObject extends Component
     {
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
+        $this->debug = $abstracter->debug;
         $this->cfg = $abstracter->getCfg();
         $this->methods = new AbstractObjectMethods($abstracter, $phpDoc);
         $this->properties = new AbstractObjectProperties($abstracter, $phpDoc);
@@ -125,7 +127,7 @@ class AbstractObject extends Component
             set stringified
             set traverseValues
         */
-        $this->abstracter->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_START, $abs, $this->abstracter->debug);
+        $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_START, $abs, $this->debug);
         if ($abs['isExcluded']) {
             return $this->absClean($abs);
         }
@@ -135,7 +137,7 @@ class AbstractObject extends Component
         /*
             Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction array
         */
-        $this->abstracter->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_END, $abs, $this->abstracter->debug);
+        $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_END, $abs, $this->debug);
         return $this->absClean($abs);
     }
 
@@ -354,9 +356,7 @@ class AbstractObject extends Component
             }
         }
         if ($i < 0) {
-            $backtrace = \version_compare(PHP_VERSION, '5.4.0', '>=')
-                ? \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
-                : \debug_backtrace(false);   // don't provide object
+            $backtrace = $this->debug->backtrace->get();
             foreach ($backtrace as $i => $frame) {
                 if (!isset($frame['class']) || \strpos($frame['class'], __NAMESPACE__) !== 0) {
                     break;
@@ -383,7 +383,7 @@ class AbstractObject extends Component
      */
     private function handleAnonymous(Abstraction $abs)
     {
-        $abs['className'] = $this->abstracter->debug->utility->friendlyClassName($abs['reflector']);
+        $abs['className'] = $this->debug->utility->friendlyClassName($abs['reflector']);
         $properties = $abs['properties'];
         $properties['debug.file'] = $this->properties->buildPropInfo(array(
             'type' => Abstracter::TYPE_STRING,

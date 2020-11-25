@@ -326,11 +326,11 @@ class DebugTestFramework extends DOMTestCase
             }
             $routeObj = $this->tstMethodRouteObj($test);
             $output = $this->tstMethodOutput($test, $routeObj, $logEntryTemp, $expect);
-            $this->tstMethodTest($test, $expect, $output);
+            $this->tstMethodTest($test, $logEntryTemp, $expect, $output);
         }
     }
 
-    private function tstMethodPreTest($test, $expect, $logEntry, $vals = array())
+    private function tstMethodPreTest($test, $expect, LogEntry $logEntry, $vals = array())
     {
         switch ($test) {
             case 'entry':
@@ -484,18 +484,19 @@ class DebugTestFramework extends DOMTestCase
     }
 
     /**
-     * TEst output from route
+     * Test output from route
      *
      * @param string       $test         chromeLogger|firephp|wamp
+     * @param LogEntry     $logEntry     LogEntry instance
      * @param string|array $outputExpect [description]
      * @param string|array $output       [description]
      *
      * @return void
      */
-    private function tstMethodTest($test, $outputExpect, $output)
+    private function tstMethodTest($test, LogEntry $logEntry, $outputExpect, $output)
     {
         if (\is_callable($outputExpect)) {
-            $outputExpect($output);
+            $outputExpect($output, $logEntry);
             return;
         }
         if (\is_array($outputExpect)) {

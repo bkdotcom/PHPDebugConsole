@@ -12,9 +12,7 @@
 
 namespace bdk\Debug\Abstraction;
 
-use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\Debug\Utility\UseStatements;
 

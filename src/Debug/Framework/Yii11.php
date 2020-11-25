@@ -192,37 +192,28 @@ class Yii11 extends CApplicationComponent implements SubscriberInterface
      */
     public function onDebugOutputLogEntry(LogEntry $logEntry)
     {
-        $debug = $logEntry->getSubject();
-        if ($logEntry['method'] === 'log' && $logEntry['args'][0] === 'files') {
-            // let's embolden the primary files
-            $root = \realpath(YII_PATH . '/..');
-            $regex = '#(<span class="file t_string">)(.*?)(</span>)#';
-            $html = $debug->getDump('html')->processLogEntry($logEntry);
-            $html = \preg_replace_callback($regex, function ($matches) use ($debug, $root) {
-                $filepath = $matches[2];
-                $filepathRel = \str_replace($root, '.', $filepath);
-                $isController = \preg_match('#/protected/controllers/.+.php#', $filepathRel);
-                $isView = \preg_match('#/protected/views(?:(?!/layout).)+.php#', $filepathRel);
-                $embolden = $isController || $isView;
-                return $debug->html->buildTag(
-                    'span',
-                    array(
-                        'class' => 'file t_string',
-                        'data-file' => $filepath,
-                        'style' => $embolden
-                            ? 'font-weight:bold;'
-                            : null,
-                    ),
-                    $filepathRel
-                );
-            }, $html);
-            $route = \get_class($logEntry['route']);
-            if (\in_array($route, array('bdk\Debug\Route\Wamp', 'bdk\Debug\Route\Html'))) {
-                $logEntry->setMeta('format', 'html');
-                $logEntry['return'] = $html;
-            }
-            $logEntry->stopPropagation();
+        if ($logEntry['method'] !== 'log') {
+            return;
         }
+        if ($logEntry->getChannelName() !== 'Files') {
+            return;
+        }
+        if (!$logEntry->getMeta('detectFiles')) {
+            return;
+        }
+        // let's embolden the primary files
+        \array_walk_recursive($logEntry['args'][0]['value'], function ($abs) {
+            if (!isset($abs['attribs']['data-file'])) {
+                return;
+            }
+            $file = $abs['attribs']['data-file'];
+            $isController = \preg_match('#/protected/controllers/.+.php#', $file);
+            $isView = \preg_match('#/protected/views(?:(?!/layout).)+.php#', $file);
+            $embolden = $isController || $isView;
+            if ($embolden) {
+                $abs['attribs']['style'] = 'font-weight:bold; color:#88bb11;';
+            }
+        });
     }
 
     /**

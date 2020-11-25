@@ -207,7 +207,17 @@ class LogEnv implements SubscriberInterface
             return;
         }
         $this->debug->log('PHP Version', PHP_VERSION);
-        $this->debug->log('ini location', \php_ini_loaded_file(), $this->debug->meta('detectFiles', true));
+
+        $iniFiles = \array_merge(
+            array(\php_ini_loaded_file()),
+            \preg_split('#\s*[,\r\n]+\s*#', \trim(\php_ini_scanned_files()))
+        );
+        $this->debug->log(
+            \count($iniFiles) === 1 ? 'ini location' : 'ini files',
+            \count($iniFiles) === 1 ? $iniFiles[1] : $iniFiles,
+            $this->debug->meta('detectFiles', true)
+        );
+
         $this->debug->log('memory_limit', $this->debug->utility->getBytes($this->debug->utility->memoryLimit()));
         $this->assertSetting(array(
             'name' => 'expose_php',
@@ -228,6 +238,8 @@ class LogEnv implements SubscriberInterface
                 ))
             );
         }
+        $haveXdebug = \extension_loaded('xdebug');
+        $this->debug->log('Xdebug is ' . ($haveXdebug ? '' : 'not ') . 'installed');
     }
 
     /**

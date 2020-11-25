@@ -24,6 +24,32 @@ class Table
 
     const SCALAR = "\x00scalar\x00";
 
+    private $debug;
+    private $logEntry;
+    private $meta = array();
+
+    /**
+     * Handle table() call
+     *
+     * @param LogEntry $logEntry log entry instance
+     *
+     * @return void
+     */
+    public function onLog(LogEntry $logEntry)
+    {
+        $this->logEntry = $logEntry;
+        $this->debug = $logEntry->getSubject();
+        $this->initLogEntry();
+        $this->processRows();
+        if (!$this->haveTableData()) {
+            $logEntry['method'] = 'log';
+            if ($this->meta['caption']) {
+                \array_unshift($logEntry['args'], $this->meta['caption']);
+            }
+        }
+        $this->setMeta();
+    }
+
     /**
      * Go through all the "rows" of array to determine what the keys are and their order
      *
@@ -31,7 +57,7 @@ class Table
      *
      * @return array
      */
-    public static function colKeys($rows)
+    private static function colKeys($rows)
     {
         if (Abstracter::isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
             if (!$rows['traverseValues']) {
@@ -56,97 +82,131 @@ class Table
     }
 
     /**
-     * Get values for passed keys
+     * Do we have table data?
      *
-     * Used by table method
-     *
-     * @param array $row     should be array or abstraction
-     * @param array $keys    column keys
-     * @param array $objInfo Will be populated with object info
-     *                           if row is an object, $objInfo['row'] will be populated with
-     *                               'className' & 'phpDoc'
-     *                           if a value is an object being displayed as a string,
-     *                               $objInfo['cols'][key] will be populated
-     *
-     * @return array
+     * @return bool
      */
-    public static function keyValues($row, $keys, &$objInfo)
+    private function haveTableData()
     {
-        $objInfo = array(
-            'row' => false,
-            'cols' => array(),
-        );
-        if ($row instanceof Abstraction) {
-            $row = self::keyValuesAbstraction($row, $objInfo);
-        } elseif (\is_array($row) === false) {
-            $row = array(self::SCALAR => $row);
-        }
-        $values = array();
-        foreach ($keys as $key) {
-            if (!\array_key_exists($key, $row)) {
-                $values[$key] = Abstracter::UNDEFINED;
-                continue;
-            }
-            $value = $row[$key];
-            if ($value !== null) {
-                // by setting to false :
-                //    indicate that the column is not populated by objs of the same type
-                //    if stringified abstraction, we'll set cols[key] below
-                $objInfo['cols'][$key] = false;
-            }
-            if ($value instanceof Abstraction) {
-                // just return the stringified / __toString value in a table
-                if (isset($value['stringified'])) {
-                    $objInfo['cols'][$key] = $value['className'];
-                    $value = $value['stringified'];
-                } elseif (isset($value['__toString']['returnValue'])) {
-                    $objInfo['cols'][$key] = $value['className'];
-                    $value = $value['__toString']['returnValue'];
-                }
-            }
-            $values[$key] = $value;
-        }
-        return $values;
+        return isset($this->logEntry['args'][0])
+            && \is_array($this->logEntry['args'][0])
+            && $this->logEntry['args'][0] !== array();
     }
 
     /**
-     * Handle table() call
-     *
-     * @param LogEntry $logEntry log entry instance
+     * Find the data, caption, & columns in logEntry arguments
      *
      * @return void
      */
-    public function onLog(LogEntry $logEntry)
+    private function initLogEntry()
     {
-        $args = $logEntry['args'];
-        $meta = \array_merge(array(
-            'caption' => null,
-            'columns' => array(),
-            'columnNames' => array(),
-            'sortable' => true,
-            'totalCols' => array(),
-        ), $logEntry['meta']);
+        $args = $this->logEntry['args'];
+        $this->initMeta();
         $argCount = \count($args);
         $data = null;
+        $other = Abstracter::UNDEFINED;
         for ($i = 0; $i < $argCount; $i++) {
             if (\is_array($args[$i])) {
                 if ($data === null) {
                     $data = $args[$i];
-                } elseif (!$meta['columns']) {
-                    $meta['columns'] = $args[$i];
+                } elseif (!$this->meta['columns']) {
+                    $this->meta['columns'] = $args[$i];
                 }
-            } elseif (\is_object($args[$i])) {
+                continue;
+            }
+            if (\is_object($args[$i])) {
                 // Traversable or other
                 if ($data === null) {
                     $data = $args[$i];
                 }
-            } elseif (\is_string($args[$i]) && !$meta['caption']) {
-                $meta['caption'] = $args[$i];
+                continue;
             }
-            unset($args[$i]);
+            if (\is_string($args[$i]) && $this->meta['caption'] === null) {
+                $this->meta['caption'] = $args[$i];
+                continue;
+            }
+            if ($other === Abstracter::UNDEFINED) {
+                $other = $args[$i];
+            }
         }
-        $logEntry['args'] = array($data);
-        $logEntry['meta'] = $meta;
+        if ($data === null) {
+            $data = $other;
+        }
+        $this->logEntry['args'] = $data !== Abstracter::UNDEFINED
+            ? array($data)
+            : array();
+    }
+
+    /**
+     * Merge / initialize meta values
+     *
+     * @return void
+     */
+    private function initMeta()
+    {
+        /*
+            columns, columnNames, & totalCols will be moved to
+            tableInfo['columns'] structure
+        */
+        $this->meta = $this->debug->utility->arrayMergeDeep(array(
+            'caption' => null,
+            'columns' => array(),
+            'columnNames' => array(
+                self::SCALAR => 'value',
+            ),
+            'inclContext' => false, // for trace tables
+            'sortable' => true,
+            'tableInfo' => array(
+                'class' => null,
+                'columns' => array(
+                    /*
+                    key => array(
+                        class
+                        total
+                    )
+                    */
+                ),
+                'haveObjRow' => false,
+                'rows' => array(
+                    /*
+                    key => array(
+                        'args'     (for traces)
+                        'class'
+                        'context'  (for traces)
+                        'isScalar'
+                        'key'      (alternate key to display)
+                        'summary'
+                    )
+                    */
+                ),
+                'summary' => null, // if table is an obj... phpDoc summary
+            ),
+            'totalCols' => array(),
+        ), $this->logEntry['meta']);
+    }
+
+    /**
+     * Initialize this->meta['tableInfo']['columns']
+     *
+     * @return void
+     */
+    private function initTableInfoColumns()
+    {
+        $columns = array();
+        $columnNames = $this->meta['columnNames'];
+        $keys = $this->meta['columns'] ?: $this->colKeys($this->logEntry['args'][0]);
+        foreach ($keys as $key) {
+            $colInfo = array(
+                'key' => isset($columnNames[$key])
+                    ? $columnNames[$key]
+                    : $key
+            );
+            if (\in_array($key, $this->meta['totalCols'])) {
+                $colInfo['total'] = null;
+            }
+            $columns[$key] = $colInfo;
+        }
+        $this->meta['tableInfo']['columns'] = $columns;
     }
 
     /**
@@ -191,31 +251,83 @@ class Table
     }
 
     /**
-     * Get "object values" from abstraction
+     * Get values for passed keys
      *
-     * @param Abstraction $row     [description]
-     * @param array       $objInfo [description]
+     * Used by table method
+     *
+     * @param array $row     should be array or abstraction
+     * @param array $keys    column keys
+     * @param array $rowInfo Will be populated with object info
+     *                           if row is an object, $rowInfo['row'] will be populated with
+     *                               'class' & 'summary'
+     *                           if a value is an object being displayed as a string,
+     *                               $rowInfo['classes'][key] will be populated with className
      *
      * @return array
      */
-    private static function keyValuesAbstraction(Abstraction $row, &$objInfo)
+    private static function keyValues($row, $keys, &$rowInfo)
     {
-        if ($row['type'] !== Abstracter::TYPE_OBJECT) {
-            // resource & callable
-            return array(self::SCALAR => $row);
-        }
-        $objInfo['row'] = array(
-            'className' => $row['className'],
-            'phpDoc' => $row['phpDoc'],
+        $rowInfo = array(
+            'class' => null,
+            'classes' => array(), // key => classname (or false if not stringified class)
+            'isScalar' => false,
+            'summary' => null,
         );
-        if ($row['className'] === 'Closure') {
-            $objInfo['row'] = false;
-            return array(self::SCALAR => $row);
+        if ($row instanceof Abstraction) {
+            $row = self::keyValuesAbstraction($row, $rowInfo);
+        } elseif (\is_array($row) === false) {
+            $row = array(self::SCALAR => $row);
         }
-        $row = self::objectValues($row);
+        $values = array();
+        foreach ($keys as $key) {
+            $rowInfo['classes'][$key] = false;
+            $value = \array_key_exists($key, $row)
+                ? $row[$key]
+                : Abstracter::UNDEFINED;
+            if ($value instanceof Abstraction) {
+                // just return the stringified / __toString value in a table
+                if (isset($value['stringified'])) {
+                    $rowInfo['classes'][$key] = $value['className'];
+                    $value = $value['stringified'];
+                } elseif (isset($value['__toString']['returnValue'])) {
+                    $rowInfo['classes'][$key] = $value['className'];
+                    $value = $value['__toString']['returnValue'];
+                }
+            }
+            $values[$key] = $value;
+        }
+        if (\array_keys($values) === array(self::SCALAR)) {
+            $rowInfo['isScalar'] = true;
+        }
+        return $values;
+    }
+
+    /**
+     * Get "object values" from abstraction
+     *
+     * @param Abstraction $abs     Abstraction instance
+     * @param array       $rowInfo row info
+     *
+     * @return array
+     */
+    private static function keyValuesAbstraction(Abstraction $abs, &$rowInfo)
+    {
+        if ($abs['type'] !== Abstracter::TYPE_OBJECT) {
+            // resource & callable
+            $rowInfo['isScalar'] = true;
+            return array(self::SCALAR => $abs);
+        }
+        if ($abs['className'] === 'Closure') {
+            $rowInfo['isScalar'] = true;
+            return array(self::SCALAR => $abs);
+        }
+        $rowInfo['class'] = $abs['className'];
+        $rowInfo['summary'] = $abs['phpDoc']['summary'];
+        $row = self::objectValues($abs);
         if (\is_array($row) === false) {
             // ie stringified value
-            $objInfo['row'] = false;
+            $rowInfo['class'] = null;
+            $rowInfo['isScalar'] = true;
             $row = array(self::SCALAR => $row);
         }
         return $row;
@@ -273,14 +385,137 @@ class Table
         if (isset($abs['methods']['__toString']['returnValue'])) {
             return $abs['methods']['__toString']['returnValue'];
         }
-        $values = $abs['properties'];
-        foreach ($values as $k => $info) {
-            if ($info['visibility'] !== 'public') {
-                unset($values[$k]);
-                continue;
-            }
-            $values[$k] = $info['value'];
+        return \array_map(
+            function ($info) {
+                return $info['value'];
+            },
+            \array_filter($abs['properties'], function ($prop) {
+                return $prop['visibility'] === 'public';
+            })
+        );
+    }
+
+    /**
+     * non-array
+     * empty array
+     * array
+     * object / traversable
+     * ovject / traversable or objects / traversables
+     *
+     * @return void
+     */
+    private function processRows()
+    {
+        if (!isset($this->logEntry['args'][0])) {
+            return;
         }
-        return $values;
+        $rows = $this->debug->abstracter->crate($this->logEntry['args'][0], 'table');
+        if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
+            $this->meta['tableInfo']['class'] = $rows['className'];
+            $this->meta['tableInfo']['summary'] = $rows['phpDoc']['summary'];
+            $rows = $rows['traverseValues']
+                ? $rows['traverseValues']
+                : \array_map(
+                    function ($info) {
+                        return $info['value'];
+                    },
+                    \array_filter($rows['properties'], function ($prop) {
+                        return $prop['visibility'] === 'public';
+                    })
+                );
+        }
+        if (!\is_array($rows)) {
+            return;
+        }
+        $this->logEntry['args'] = array($rows);
+        $this->initTableInfoColumns();
+        $columns = $this->meta['tableInfo']['columns'];
+        $keys = \array_keys($columns);
+        $inclContext = $this->meta['inclContext'];
+        foreach ($rows as $rowKey => $row) {
+            // row may be "scalar", array, Traversable, or object
+            $rowInfo = array();
+            $valsTemp = $this->keyValues($row, $keys, $rowInfo);
+            if ($inclContext) {
+                $rowInfo['args'] = $row['args'];
+                $rowInfo['context'] = $row['context'];
+            }
+            $this->updateTableInfo($rowKey, $valsTemp, $rowInfo);
+            $values = array();
+            foreach ($valsTemp as $k => $v) {
+                $kNew = $columns[$k]['key'];
+                $values[$kNew] = $v;
+            }
+            $rows[$rowKey] = $values;
+        }
+        $this->logEntry['args'] = array($rows);
+    }
+
+    /**
+     * Set tableInfo meta info
+     *
+     * @return void
+     */
+    private function setMeta()
+    {
+        $columns = array();
+        foreach ($this->meta['tableInfo']['columns'] as $key => $colInfo) {
+            $columns[] = \array_filter($colInfo);
+        }
+        $this->meta['tableInfo']['columns'] = $columns;
+        unset(
+            $this->meta['columns'],
+            $this->meta['columnNames'],
+            $this->meta['totalCols']
+        );
+        if (!$this->meta['inclContext']) {
+            unset($this->meta['inclContext']);
+        }
+        if (!$this->haveTableData()) {
+            unset(
+                $this->meta['caption'],
+                $this->meta['inclContext'],
+                $this->meta['sortable'],
+                $this->meta['tableInfo']
+            );
+        }
+        $this->logEntry['meta'] = $this->meta;
+    }
+
+    /**
+     * Update collected table info
+     *
+     * @param int|string $rowKey    row's key/index
+     * @param array      $rowValues row's values
+     * @param array      $rowInfo   Row info
+     *
+     * @return void
+     */
+    private function updateTableInfo($rowKey, $rowValues, $rowInfo)
+    {
+        foreach ($this->meta['totalCols'] as $key) {
+            $this->meta['tableInfo']['columns'][$key]['total'] += $rowValues[$key];
+        }
+        $this->meta['tableInfo']['haveObjRow'] = $this->meta['tableInfo']['haveObjRow'] || $rowInfo['class'];
+        $classes = $rowInfo['classes'];
+        unset($rowInfo['classes']);
+        $rowInfo = \array_filter($rowInfo, function ($val) {
+            return $val !== null && $val !== false;
+        });
+        if ($rowInfo) {
+            $rowInfoExisting = isset($this->meta['tableInfo']['rows'][$rowKey])
+                ? $this->meta['tableInfo']['rows'][$rowKey]
+                : array();
+            $this->meta['tableInfo']['rows'][$rowKey] = \array_merge($rowInfo, $rowInfoExisting);
+        }
+        foreach ($classes as $key => $class) {
+            if (!isset($this->meta['tableInfo']['columns'][$key]['class'])) {
+                $this->meta['tableInfo']['columns'][$key]['class'] = $class;
+            }
+            if ($this->meta['tableInfo']['columns'][$key]['class'] !== $class) {
+                // column values not of the same type
+                $this->meta['tableInfo']['columns'][$key]['class'] = false;
+            }
+        }
     }
 }

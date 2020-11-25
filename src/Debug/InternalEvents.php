@@ -17,7 +17,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Highlight;
-use \bdk\Debug\Utility\FindExit;
+use bdk\Debug\Utility\FindExit;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -190,7 +190,6 @@ class InternalEvents implements SubscriberInterface
     {
         if ($this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
             $meta = $this->debug->meta(array(
-                'backtrace' => $error['backtrace'],
                 'context' => $error['category'] === 'fatal' && $error['backtrace'] === null
                     ? $error['context']
                     : null,
@@ -201,6 +200,7 @@ class InternalEvents implements SubscriberInterface
                 'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
                 'line' => $error['line'],
                 'sanitize' => $error['isHtml'] === false,
+                'trace' => $error['backtrace'],
             ));
             $method = $error['type'] & $this->debug->getCfg('errorMask', Debug::CONFIG_DEBUG)
                 ? 'error'
@@ -357,37 +357,6 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * Check if php was shutdown via exit() or die()
-     * This check is only possible if xdebug is instaned & enabled
-     *
-     * @return void
-     */
-    private function exitCheck()
-    {
-        if ($this->debug->getCfg('exitCheck', Debug::CONFIG_DEBUG) === false) {
-            return;
-        }
-        if ($this->debug->getData('outputSent')) {
-            return;
-        }
-        $findExit = new FindExit(array(
-            __CLASS__,
-            \get_class($this->debug->eventManager),
-        ));
-        $info = $findExit->find();
-        if ($info) {
-            $this->debug->warn(
-                'Potentialy shutdown via ' . $info['found'] . ': ',
-                \sprintf('%s (line %s)', $info['file'], $info['line']),
-                $this->debug->meta(array(
-                    'file' => $info['file'],
-                    'line' => $info['line'],
-                ))
-            );
-        }
-    }
-
-    /**
      * EventManager::EVENT_PHP_SHUTDOWN subscriber (not-so-high priority).. come after other internal...
      *
      * @return void
@@ -440,6 +409,41 @@ class InternalEvents implements SubscriberInterface
                 // close the summary
                 $this->debug->groupEnd();
             }
+        }
+    }
+
+    /**
+     * Check if php was shutdown via exit() or die()
+     * This check is only possible if xdebug is instaned & enabled
+     *
+     * @return void
+     */
+    private function exitCheck()
+    {
+        if ($this->debug->getCfg('exitCheck', Debug::CONFIG_DEBUG) === false) {
+            return;
+        }
+        if ($this->debug->getData('outputSent')) {
+            return;
+        }
+        $lastError = $this->debug->errorHandler->getLastError();
+        if ($lastError && ($lastError['type'] === E_PARSE || $lastError['exception'] instanceof \ParseError)) {
+            return;
+        }
+        $findExit = new FindExit(array(
+            __CLASS__,
+            \get_class($this->debug->eventManager),
+        ));
+        $info = $findExit->find();
+        if ($info) {
+            $this->debug->warn(
+                'Potentialy shutdown via ' . $info['found'] . ': ',
+                \sprintf('%s (line %s)', $info['file'], $info['line']),
+                $this->debug->meta(array(
+                    'file' => $info['file'],
+                    'line' => $info['line'],
+                ))
+            );
         }
     }
 

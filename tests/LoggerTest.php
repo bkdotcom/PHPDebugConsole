@@ -96,7 +96,7 @@ class LoggerTest extends DebugTestFramework
         $this->assertSame('Exception', $exceptionAbs['className']);
         $this->assertSame('object', $exceptionAbs['type']);
         $this->assertArraySubset($metaSubset, $metaActual);
-        $backtrace = $this->debug->getData('log/__end__/meta/backtrace');
+        $backtrace = $this->debug->getData('log/__end__/meta/trace');
         $this->assertInternalType('array', $backtrace);
     }
 
@@ -175,10 +175,17 @@ class LoggerTest extends DebugTestFramework
                 'psr3level' => 'info',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
+    }
 
+    public function testInfoWithTable()
+    {
         $tableData = array(
             array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
             array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
+        );
+        $tableDataLogged = array(
+            array('name' => 'Bob', 'age' => '12'),
+            array('name' => 'Sally', 'age' => '10'),
         );
         $this->debug->logger->info('table caption', array(
             'table' => $tableData,
@@ -187,26 +194,53 @@ class LoggerTest extends DebugTestFramework
         $this->assertSame(array(
             'table',
             array(
-                $tableData
+                $tableDataLogged
             ),
             array(
                 'caption' => 'table caption',
-                'columnNames' => array(),
-                'columns' => array('name', 'age'),
                 'psr3level' => 'info',
                 'sortable' => true,
-                'totalCols' => array(),
+                'tableInfo' => array(
+                    'class' => null,
+                    'columns' => array(
+                        array(
+                            'key' => 'name',
+                        ),
+                        array(
+                            'key' => 'age',
+                        ),
+                    ),
+                    'haveObjRow' => false,
+                    'rows' => array(),
+                    'summary' => null,
+                ),
             ),
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
     }
 
     public function testDebug()
     {
+        $this->debug->logger->debug('Hello World');
+        $this->assertSame(array(
+            'log',
+            array('Hello World'),
+            array(
+                'psr3level' => 'debug',
+            ),
+        ), $this->logEntryToArray($this->debug->getData('log/__end__')));
+    }
+
+    public function testDebugWithTable()
+    {
         // see also testPlaceholders
 
         $tableData = array(
             array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
             array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
+        );
+        $tableDataLogged = array(
+            array('name' => 'Bob', 'age' => '12',),
+            array('name' => 'Sally', 'age' => '10', ),
         );
         $this->debug->logger->debug('table caption', array(
             'table' => $tableData,
@@ -215,15 +249,26 @@ class LoggerTest extends DebugTestFramework
         $this->assertSame(array(
             'table',
             array(
-                $tableData
+                $tableDataLogged
             ),
             array(
                 'caption' => 'table caption',
-                'columnNames' => array(),
-                'columns' => array('name', 'age'),
                 'psr3level' => 'debug',
                 'sortable' => true,
-                'totalCols' => array(),
+                'tableInfo' => array(
+                    'class' => null,
+                    'columns' => array(
+                        array(
+                            'key' => 'name',
+                        ),
+                        array(
+                            'key' => 'age',
+                        ),
+                    ),
+                    'haveObjRow' => false,
+                    'rows' => array(),
+                    'summary' => null,
+                ),
             ),
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
     }

@@ -108,8 +108,11 @@ class Script extends Base
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        if ($method === 'table') {
-            $logEntry->setMeta('forceArray', false);
+        if (\in_array($method, array('table', 'trace'))) {
+            $logEntry->setMeta(array(
+                'forceArray' => false,
+                'undefinedAs' => Abstracter::UNDEFINED,
+            ));
         }
         $this->dump->processLogEntry($logEntry);
         $method = $logEntry['method'];

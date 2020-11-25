@@ -38,14 +38,15 @@ class Backtrace
      * Utilizes `xdebug_get_function_stack()` (if available) to get backtrace in shutdown phase
      * When called internally, internal frames are removed
      *
+     * @param int                   $options   bitmask of options
+     * @param int                   $limit     limit the number of stack frames returned.
      * @param \Exception|\Throwable $exception (optional) Exception from which to get backtrace
-     * @param bool                  $inclArgs  (false) whether to include arguments
      *
      * @return array|false
      */
-    public static function get($exception = null, $inclArgs = false)
+    public static function get($options = 0, $limit = 0, $exception = null)
     {
-        $backtrace = self::getBacktrace($exception, $inclArgs);
+        $backtrace = self::getBacktrace($options, $limit, $exception);
         if (empty($backtrace)) {
             return $backtrace;
         }
@@ -71,24 +72,21 @@ class Backtrace
      *    the class value will always be the class in which the method was defined,
      *    type will always be "::", even if called with an ->
      *
-     * @param int $offset Adjust how far to go back
-     * @param int $flags  optional INCL_ARGS
+     * @param int $offset  Adjust how far to go back
+     * @param int $options bitmask options
      *
      * @return array
      */
-    public static function getCallerInfo($offset = 0, $flags = 0)
+    public static function getCallerInfo($offset = 0, $options = 0)
     {
         /*
             we need to collect object... we'll remove object at end if undesired
         */
-        $options = DEBUG_BACKTRACE_IGNORE_ARGS | DEBUG_BACKTRACE_PROVIDE_OBJECT;
-        if ($flags & self::INCL_ARGS) {
-            $options &= ~DEBUG_BACKTRACE_IGNORE_ARGS;
-        }
+        $phpOptions = static::translateOptions($options | self::INCL_OBJECT);
         /*
             Must get at least 13 frames to account for potential framework loggers
         */
-        $backtrace = \debug_backtrace($options, 13);
+        $backtrace = \debug_backtrace($phpOptions, 13);
         $count = \count($backtrace);
         for ($i = 1; $i < $count; $i++) {
             if (self::isSkippable($backtrace[$i])) {
@@ -107,7 +105,7 @@ class Backtrace
             }
         }
         $return = static::getCallerInfoBuild(\array_slice($backtrace, $i));
-        if (!($flags & self::INCL_OBJECT)) {
+        if (!($options & self::INCL_OBJECT)) {
             unset($return['object']);
         }
         return $return;
@@ -191,13 +189,17 @@ class Backtrace
      * Get backtrace from either passed exception,
      * debug_backtrace or xdebug_get_function_stack
      *
+     * @param int                   $options   options bitmask
+     * @param int                   $limit     limit the number of stack frames returned.
      * @param \Exception|\Throwable $exception (optional) Exception from which to get backtrace
-     * @param bool                  $inclArgs  whether to include arguments
      *
      * @return array|false
      */
-    private static function getBacktrace($exception, $inclArgs)
+    private static function getBacktrace($options = 0, $limit = 0, $exception = null)
     {
+        if ($exception instanceof \ParseError) {
+            return array();
+        }
         if ($exception) {
             $backtrace = $exception->getTrace();
             \array_unshift($backtrace, array(
@@ -207,7 +209,11 @@ class Backtrace
             $backtrace = static::normalize($backtrace);
             return $backtrace;
         }
-        $backtrace = \debug_backtrace($inclArgs ? null : DEBUG_BACKTRACE_IGNORE_ARGS);
+        $options = static::translateOptions($options);
+        $limit = $limit
+            ? $limit + 2
+            : 0;
+        $backtrace = \debug_backtrace($options, $limit);
         if (\array_key_exists('file', \end($backtrace)) === true) {
             // We're NOT in shutdown
             $backtrace = static::normalize($backtrace);
@@ -430,6 +436,25 @@ class Backtrace
         }
         $i = \max(0, $i);
         return \array_slice($backtrace, $i);
+    }
+
+    /**
+     * Convert our additive options to PHP's options
+     *
+     * @param int $options bitmask options
+     *
+     * @return int
+     */
+    private static function translateOptions($options)
+    {
+        $phpOptions = DEBUG_BACKTRACE_IGNORE_ARGS;
+        if ($options & self::INCL_ARGS) {
+            $phpOptions &= ~DEBUG_BACKTRACE_IGNORE_ARGS;
+        }
+        if ($options & self::INCL_OBJECT) {
+            $phpOptions |= DEBUG_BACKTRACE_PROVIDE_OBJECT;
+        }
+        return $phpOptions;
     }
 
     /**

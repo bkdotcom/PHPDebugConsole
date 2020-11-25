@@ -1912,7 +1912,7 @@
     var isExpanded = $group.hasClass('expanded');
     // console.log('groupIconUpdate', $toggle.text(), icon)
     $group.toggleClass('empty', !haveVis); // 'empty' class just affects cursor
-    iconUpdate($toggle, config$6.iconsExpand[ isExpanded ? 'collapse' : 'expand' ]);
+    iconUpdate($toggle, config$6.iconsExpand[isExpanded ? 'collapse' : 'expand']);
     if (!icon || isExpanded) {
       $toggle.find(selector).remove();
       return

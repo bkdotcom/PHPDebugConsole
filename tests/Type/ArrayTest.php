@@ -1,13 +1,14 @@
 <?php
 
-namespace bdk\DebugTests;
+namespace bdk\DebugTests\Type;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\DebugTests\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
  */
-class TypeArrayTest extends DebugTestFramework
+class ArrayTest extends DebugTestFramework
 {
 
     public function providerTestMethod()

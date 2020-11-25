@@ -224,9 +224,9 @@ class Logger extends AbstractLogger
         if ($haveException) {
             $exception = $context['exception'];
             $meta = \array_merge(array(
-                'backtrace' => $this->debug->backtrace->get($exception),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
+                'trace' => $this->debug->backtrace->get(null, 0, $exception),
             ), $meta);
         }
         $logEntry->setMeta($meta);

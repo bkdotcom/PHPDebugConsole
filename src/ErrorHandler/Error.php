@@ -15,6 +15,9 @@ use bdk\PubSub\Event;
 
 /**
  * Error object
+ *
+ * @property array $context lines surrounding error
+ * @property array $trace   backtrace
  */
 class Error extends Event
 {
@@ -175,6 +178,7 @@ class Error extends Event
      * Get backtrace
      *
      * Backtrace is avail for fatal errors (incl uncaught exceptions)
+     *   (does not include parse errors)
      *
      * @param bool|'auto' $withContext (auto) Whether to include code snippets
      *
@@ -182,8 +186,11 @@ class Error extends Event
      */
     public function getTrace($withContext = 'auto')
     {
+        if ($this->values['exception'] instanceof \ParseError) {
+            return null;
+        }
         $trace = $this->values['exception']
-            ? $this->subject->backtrace->get($this->values['exception']) // adds Exception's file/line as frame and "normalizes"
+            ? $this->subject->backtrace->get(null, 0, $this->values['exception']) // adds Exception's file/line as frame and "normalizes"
             : $this->backtrace;
         if (!$trace) {
             // false, null, or empty array()

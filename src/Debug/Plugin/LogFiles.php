@@ -99,12 +99,7 @@ class LogFiles extends Component
             }
             return;
         }
-
-        $files = $this->filesToTree($files);
-        $files = $this->addExcludedToTree($files);
-        if ($this->cfg['condense']) {
-            $files = $this->condenseTree($files);
-        }
+        $files = $this->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);
         $this->debug->log(
             $this->debug->abstracter->crateWithVals(
                 $files,
@@ -124,11 +119,13 @@ class LogFiles extends Component
     /**
      * Convert list of filepaths to a tree structure
      *
-     * @param string[] $files list of files
+     * @param string[] $files          list of files
+     * @param array    $excludedCounts path => count array
+     * @param bool     $condense       whether to "condense" filepaths
      *
      * @return array
      */
-    public function filesToTree($files)
+    public function filesToTree($files, $excludedCounts = array(), $condense = false)
     {
         $tree = array();
         foreach ($files as $filepath) {
@@ -151,13 +148,17 @@ class LogFiles extends Component
             ));
             unset($cur);
         }
+        $tree = $this->addExcludedToTree($tree, $excludedCounts);
+        if ($condense) {
+            $tree = $this->condenseTree($tree);
+        }
         return $tree;
     }
 
     /**
      * Set files to display
      *
-     * @param array $files
+     * @param array $files list of files
      *
      * @return void
      */
@@ -169,13 +170,14 @@ class LogFiles extends Component
     /**
      * Insert 'xx omitted' info into file tree
      *
-     * @param array $tree file tree
+     * @param array $tree           file tree
+     * @param array $excludedCounts path => count array
      *
      * @return array modifed tree
      */
-    private function addExcludedToTree($tree)
+    private function addExcludedToTree($tree, $excludedCounts)
     {
-        foreach ($this->excludedCounts as $path => $count) {
+        foreach ($excludedCounts as $path => $count) {
             $cur = &$tree;
             $dirs = $path === 'closure://function'
                 ? array('', $path)

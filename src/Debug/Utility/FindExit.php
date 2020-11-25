@@ -10,7 +10,7 @@ class FindExit
 
     private $classesSkip = array();
     private $depth = 0;
-    private $funcCount = 0;
+    private $funcStack = array(); // nested functions
     private $function = '';
     private $inFunc = false;
 
@@ -45,33 +45,21 @@ class FindExit
         list($file, $lineStart, $phpSrcCode) = $this->getFrameSource($frame);
         $phpSrcCode = \preg_replace('/^\s*((public|private|protected|final)\s+)+/', '', $phpSrcCode);
         $tokens = $this->getTokens($phpSrcCode);
-        /*
-        $this->debug->table('tokens', \array_map(function ($token) {
-            return \is_array($token)
-                ? array(
-                    'name' => \token_name($token[0]),
-                    'value' => $token[1],
-                    'line' => $token[2],
-                )
-                : array(
-                    'value' => $token,
-                );
-        }, $tokens));
-        */
         $this->depth = 0; // keep track of bracket depth
-        $this->funcCount = 0;
+        $this->funcStack = array();
         $this->function = $frame['function'];
-        $this->inFunc = false;
+        $this->inFunc = empty($frame['function']);
         $token = $this->searchTokens($tokens);
         if ($token) {
             return array(
-                'class' => isset($frame['class']) ? $frame['class'] : null,
+                'class' => $frame['class'],
                 'file' => $file,
                 'function' => $frame['function'],
                 'found' => $token[1],
                 'line' => $token[2] + $lineStart - 1,
             );
         }
+        return null;
     }
 
     /**
@@ -100,6 +88,9 @@ class FindExit
             if (!$this->inFunc) {
                 continue;
             }
+            if ($this->funcStack) {
+                continue;
+            }
             if ($token[0] === T_EXIT) {
                 return $token;
             }
@@ -120,7 +111,10 @@ class FindExit
             $this->depth++;
         } elseif ($token === '}') {
             $this->depth--;
-            if ($this->depth === 0 && $this->inFunc) {
+            if (\end($this->funcStack) === $this->depth) {
+                \array_pop($this->funcStack);
+            }
+            if ($this->function && $this->depth === 0 && $this->inFunc) {
                 return false;
             }
         }
@@ -128,7 +122,7 @@ class FindExit
     }
 
     /**
-     * Chect if we're entering target function
+     * Check if we're entering target function
      *
      * @param array|string $tokenNext next token
      *
@@ -136,10 +130,10 @@ class FindExit
      */
     private function handleTfunction($tokenNext)
     {
-        if ($this->funcCount === 0) {
-            $this->depth = 0;
+        if ($this->inFunc) {
+            $this->funcStack[] = $this->depth;
+            return;
         }
-        $this->funcCount++;
         if (
             \is_array($tokenNext)
             && $tokenNext[0] === T_STRING
@@ -162,18 +156,34 @@ class FindExit
     {
         $backtrace = \xdebug_get_function_stack();
         $backtrace = \array_reverse($backtrace);
+        $found = false;
         foreach ($backtrace as $frame) {
-            if (isset($frame['function']) && \strpos($frame['function'], 'call_user_func:') === 0) {
+            $frame = \array_merge(array(
+                'class' => null,
+                'file' => null,
+                'function' => null,
+            ), $frame);
+            if (\strpos($frame['function'], 'call_user_func:') === 0) {
                 continue;
             }
-            if (!isset($frame['class'])) {
-                return $frame;
-            }
             if (\in_array($frame['class'], $this->classesSkip) === false) {
-                return $frame;
+                $found = true;
+            }
+            if ($found) {
+                if (\in_array($frame['function'], array(null, '{main}'), true)) {
+                    break;
+                }
+                $reflection = isset($frame['class'])
+                    ? (new \ReflectionClass($frame['class']))->getMethod($frame['function'])
+                    : new \ReflectionFunction($frame['function']);
+                if ($reflection->isInternal() === false) {
+                    break;
+                }
             }
         }
-        return false;
+        return $found
+            ? $frame
+            : false;
     }
 
     /**
@@ -185,6 +195,13 @@ class FindExit
      */
     private function getFrameSource($frame)
     {
+        if (isset($frame['include_filename'])) {
+            return array(
+                $frame['include_filename'],
+                0,
+                \file_get_contents($frame['include_filename']),
+            );
+        }
         if ($frame['function'] === '{main}') {
             return array(
                 $frame['file'],

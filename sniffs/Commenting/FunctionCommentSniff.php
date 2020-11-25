@@ -183,6 +183,10 @@ class FunctionCommentSniff extends SquizFunctionCommentSniff
 
             foreach ($typeNames as $typeName) {
                 // Strip nullable operator.
+                if ($typeName === '') {
+                    $error = $var . ' @param\'s suggested types has "|" with missing type';
+                    $phpcsFile->addError($error, $tag, 'MissingType');
+                }
                 if ($typeName[0] === '?') {
                     $typeName = \substr($typeName, 1);
                 }

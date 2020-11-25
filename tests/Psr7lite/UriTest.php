@@ -119,6 +119,11 @@ class UriTest extends TestCase
         $this->assertSame(null, $newUri->getPort());
         $this->assertSame('chineseChars=%E5%85%AD%E5%9B%9B', $newUri->getQuery());
         $this->assertSame('19890604', $newUri->getFragment());
+
+        // Test 3 - assert that 'localhost' is a valid host
+
+        $newUri = $uri->withHost('localhost');
+        $this->assertSame('localhost', $newUri->getHost());
     }
 
     public function testFilterPort()

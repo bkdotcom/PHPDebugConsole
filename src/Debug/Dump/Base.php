@@ -17,7 +17,6 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Component;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Method\Table as MethodTable;
 use bdk\PubSub\Event;
 
 /**
@@ -511,115 +510,74 @@ class Base extends Component
      *
      * This builds table rows usable by ChromeLogger, Text, and Script
      *
+     * undefinedAs values
+     *   ChromeLogger: 'unset'
+     *   Text:  'unset'
+     *   Script: Abstracter::UNDEFINED
+     *
      * @param LogEntry $logEntry LogEntry instance
      *
      * @return string|null
      */
     protected function methodTabular(LogEntry $logEntry)
     {
-        $rows = $this->methodTableRows($logEntry);
-        if (!$rows) {
-            $logEntry['method'] = 'log';
-            $caption = $logEntry->getMeta('caption');
-            if ($caption) {
-                \array_unshift($logEntry['args'], $caption);
-            }
-            return null;
-        }
-        $table = array();
-        $classnames = array();
-        $objInfo = array();
-        $options = array(
-            'columns' => $logEntry->getMeta('columns'),
-            'columnNames' => \array_merge(array(
-                MethodTable::SCALAR => 'value',
-            ), $logEntry->getMeta('columnNames', array())),
-            'forceArray' => $logEntry->getMeta('forceArray', true),
-            'undefinedAs' => $logEntry->getMeta('undefinedAs', 'unset'),
-        );
-        $keys = $options['columns'] ?: $this->debug->methodTable->colKeys($rows);
-        foreach ($rows as $k => $row) {
-            $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
-            $values = $this->methodTableCleanValues($values, $options);
-            if (\is_array($values)) {
-                unset($values['__key']);
-            }
-            $table[$k] = $values;
-            $classnames[$k] = $objInfo['row']
-                ? $objInfo['row']['className']
-                : '';
-        }
-        if (\array_filter($classnames)) {
-            foreach ($classnames as $k => $classname) {
-                $table[$k] = \array_merge(
-                    array('___class_name' => $classname),
-                    $table[$k]
-                );
-            }
-        }
         $logEntry['method'] = 'table';
-        $logEntry['args'] = array($table);
+        $forceArray = $logEntry->getMeta('forceArray', true);
+        $undefinedAs = $logEntry->getMeta('undefinedAs', 'unset');
+        $tableInfo = $logEntry->getMeta('tableInfo');
+        if ($undefinedAs !== Abstracter::UNDEFINED || $forceArray === false || $tableInfo['haveObjRow']) {
+            $rows = $logEntry['args'][0];
+            if ($undefinedAs === 'null') {
+                $undefinedAs = null;
+            }
+            foreach ($rows as $rowKey => $row) {
+                $rowInfo = isset($tableInfo['rows'][$rowKey])
+                    ? $tableInfo['rows'][$rowKey]
+                    : array();
+                $rows[$rowKey] = $this->methodTabularRow($row, $forceArray, $undefinedAs, $rowInfo);
+            }
+            $logEntry['args'] = array($rows);
+        }
+        return null;
     }
 
     /**
-     * Ready row value(s)
+     * Process table row
      *
-     * @param array $values row values
-     * @param array $opts   options
+     * @param array $row         row
+     * @param bool  $forceArray  whether "scalar" rows should be wrapped in array
+     * @param mixed $undefinedAs how "undefined" should be represented
+     * @param array $rowInfo     row information (class, isScalar, etc)
      *
-     * @return array|mixed row values
+     * @return array
      */
-    private function methodTableCleanValues($values, $opts = array())
+    private function methodTabularRow($row, $forceArray, $undefinedAs, $rowInfo)
     {
-        $return = array();
-        $key = null;
-        foreach ($values as $key => $val) {
+        $rowInfo = \array_merge(
+            array(
+                'class' => null,
+                'isScalar' => false,
+            ),
+            $rowInfo
+        );
+        if ($rowInfo['isScalar'] === true && $forceArray === false) {
+            return \current($row);
+        }
+        foreach ($row as $k => $val) {
             if ($val === Abstracter::UNDEFINED) {
-                $val = $opts['undefinedAs'];
-                if ($val === 'unset') {
-                    continue;
+                $row[$k] = $undefinedAs;
+                if ($undefinedAs === 'unset') {
+                    unset($row[$k]);
                 }
             }
-            $key = isset($opts['columnNames'][$key])
-                ? $opts['columnNames'][$key]
-                : $key;
-            $return[$key] = $val;
         }
-        if (\count($values) === 1 && \key($values) === MethodTable::SCALAR && !$opts['forceArray']) {
-            $return = \current($values);
-        }
-        return $return;
-    }
-
-    /**
-     * Get table rows
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return array|false
-     */
-    private function methodTableRows(LogEntry $logEntry)
-    {
-        $rows = $logEntry['args'][0];
-        $isObject = $this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT);
-        $asTable = \is_array($rows) && $rows || $isObject;
-        if (!$asTable) {
-            return false;
-        }
-        if ($isObject) {
-            if ($rows['traverseValues']) {
-                return $rows['traverseValues'];
-            }
-            return \array_map(
-                function ($info) {
-                    return $info['value'];
-                },
-                \array_filter($rows['properties'], function ($info) {
-                    return $info['visibility'] === 'public';
-                })
+        if ($rowInfo['class']) {
+            $row = \array_merge(
+                array('___class_name' => $rowInfo['class']),
+                $row
             );
         }
-        return $rows;
+        return $row;
     }
 
     /**
@@ -671,6 +629,8 @@ class Base extends Component
      * @param string[] $matches regex matches array
      *
      * @return string|mixed
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
     private function processSubsCallback($matches)
     {

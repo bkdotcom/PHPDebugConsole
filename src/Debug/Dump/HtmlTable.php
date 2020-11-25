@@ -12,9 +12,7 @@
 
 namespace bdk\Debug\Dump;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Dump\Html;
-use bdk\Debug\Method\Table as MethodTable;
 
 /**
  * build a table
@@ -44,70 +42,43 @@ class HtmlTable
      * @param array $options options
      *                           'attribs' : key/val array (or string - interpreted as class value)
      *                           'caption' : optional caption
-     *                           'columnNames' : key => alt col-header label
-     *                           'columns' : array of columns to display (defaults to all)
-     *                           'totalCols' : array of column keys that will get totaled
+     *                           'tableInfo':
+     *                               'columns' : list of columns info
      *
      * @return string
      */
     public function build($rows, $options = array())
     {
-        $options = $this->debug->utility->arrayMergeDeep(array(
+        $options = \array_merge(array(
             'attribs' => array(),
             'caption' => '',
-            'columns' => array(),
-            'columnNames' => array(
-                MethodTable::SCALAR => 'value',
-            ),
             'onBuildRow' => null,   // callable (or array of callables)
-            'totalCols' => array(),
+            'tableInfo' => array(),
         ), $options);
-        if (\is_string($options['attribs'])) {
-            $options['attribs'] = array(
-                'class' => $options['attribs'],
-            );
-        }
-        if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
-            $classname = $this->html->markupIdentifier(
-                $rows['className'],
+        $this->tableInfo = $options['tableInfo'];
+        $caption = \htmlspecialchars($options['caption']);
+        if ($this->tableInfo['class']) {
+            $class = $this->html->markupIdentifier(
+                $this->tableInfo['class'],
                 'span',
                 array(
-                    'title' => $rows['phpDoc']['summary'] ?: null,
+                    'title' => $this->tableInfo['summary'] ?: null,
                 )
             );
-            $options['caption'] = \strlen($options['caption'])
-                ? $options['caption'] . ' (' . $classname . ')'
-                : $classname;
-            $rows = $rows['traverseValues']
-                ? $rows['traverseValues']
-                : \array_map(
-                    function ($info) {
-                        return $info['value'];
-                    },
-                    \array_filter($rows['properties'], function ($info) {
-                        return !\in_array($info['visibility'], array('private', 'protected'));
-                    })
-                );
+            $caption = $caption
+                ? $caption . ' (' . $class . ')'
+                : $class;
         }
-        $keys = $options['columns'] ?: $this->debug->methodTable->colKeys($rows);
-        $keyIndex = \array_search('__key', $keys);
-        if ($keyIndex !== false) {
-            unset($keys[$keyIndex]);
-        }
-        $this->tableInfo = array(
-            'colClasses' => \array_fill_keys($keys, null),
-            'haveObjRow' => false,
-            'totals' => \array_fill_keys($options['totalCols'], null),
-        );
-        $body = $this->buildbody($rows, $keys, $options);
         return $this->debug->html->buildTag(
             'table',
             $options['attribs'],
             "\n"
-                . ($options['caption'] ? '<caption>' . $options['caption'] . '</caption>' . "\n" : '')
-                . $this->buildHeader($keys, $options)
-                . $body
-                . $this->buildFooter($keys)
+                . ($caption
+                    ? '<caption>' . $caption . '</caption>' . "\n"
+                    : '')
+                . $this->buildHeader($this->tableInfo['columns'])
+                . $this->buildbody($rows, $options)
+                . $this->buildFooter($this->tableInfo['columns'])
         );
     }
 
@@ -115,49 +86,54 @@ class HtmlTable
      * Builds table's body
      *
      * @param array $rows    array of arrays or Traverssable
-     * @param array $keys    column header values (keys of array or property names)
      * @param array $options options
      *
      * @return string
      */
-    protected function buildBody($rows, $keys, $options)
+    protected function buildBody($rows, $options)
     {
-        $tBody = '<tbody>' . "\n";
+        $tBody = '';
         $options['onBuildRow'] = \is_callable($options['onBuildRow'])
             ? array( $options['onBuildRow'] )
             : (array) $options['onBuildRow'];
         foreach ($rows as $k => $row) {
-            // row may be array or Traversable
-            $html = $this->buildRow($row, $keys, $k);
+            $rowInfo = \array_merge(
+                array(
+                    'class' => null,
+                    'key' => null,
+                    'summary' => null,
+                ),
+                isset($this->tableInfo['rows'][$k])
+                    ? $this->tableInfo['rows'][$k]
+                    : array()
+            );
+            $html = $this->buildRow($row, $rowInfo, $k);
             foreach ($options['onBuildRow'] as $callable) {
                 if (\is_callable($callable)) {
-                    $html = $callable($html, $row, $k);
+                    $html = $callable($html, $row, $rowInfo, $k);
                 }
             }
             $tBody .= $html;
         }
         $tBody = \str_replace(' title=""', '', $tBody);
-        if (!$this->tableInfo['haveObjRow']) {
-            $tBody = \str_replace('<td class="classname"></td>', '', $tBody);
-        }
-        return $tBody . '</tbody>' . "\n";
+        return '<tbody>' . "\n" . $tBody . '</tbody>' . "\n";
     }
 
     /**
      * Builds table's tfoot
      *
-     * @param array $keys column header values (keys of array or property names)
+     * @param array $columns column info
      *
      * @return string
      */
-    protected function buildFooter($keys)
+    protected function buildFooter($columns)
     {
         $haveTotal = false;
         $cells = array();
-        foreach ($keys as $key) {
-            $colHasTotal = isset($this->tableInfo['totals'][$key]);
+        foreach ($columns as $info) {
+            $colHasTotal = isset($info['total']);
             $totalVal = $colHasTotal
-                ? $this->tableInfo['totals'][$key]
+                ? $info['total']
                 : null;
             if (\is_float($totalVal)) {
                 $totalVal = \round($totalVal, 6);
@@ -181,20 +157,17 @@ class HtmlTable
     /**
      * Returns table's thead
      *
-     * @param array $keys    column header values (keys of array or property names)
-     * @param array $options options
+     * @param array $columns column info
      *
      * @return string
      */
-    protected function buildHeader($keys, $options)
+    protected function buildHeader($columns)
     {
         $labels = array();
-        foreach ($keys as $key) {
-            $label = isset($options['columnNames'][$key])
-                ? $options['columnNames'][$key]
-                : $key;
-            if ($this->tableInfo['colClasses'][$key]) {
-                $label .= ' ' . $this->html->markupIdentifier($this->tableInfo['colClasses'][$key]);
+        foreach ($columns as $colInfo) {
+            $label = $colInfo['key'];
+            if (isset($colInfo['class'])) {
+                $label .= ' ' . $this->html->markupIdentifier($colInfo['class']);
             }
             $labels[] = $label;
         }
@@ -209,22 +182,16 @@ class HtmlTable
     /**
      * Returns table row
      *
-     * @param mixed      $row    should be array or object abstraction
-     * @param array      $keys   column keys
-     * @param string|int $rowKey row key
+     * @param mixed      $row     should be array or object abstraction
+     * @param array      $rowInfo row info / meta
+     * @param string|int $rowKey  row key
      *
      * @return string
      */
-    protected function buildRow($row, $keys, $rowKey)
+    protected function buildRow($row, $rowInfo, $rowKey)
     {
         $str = '';
-        if (\is_array($row) && isset($row['__key'])) {
-            $rowKey = $row['__key'];
-            unset($row['__key']);
-        }
-        $objInfo = array();
-        $values = $this->debug->methodTable->keyValues($row, $keys, $objInfo);
-        $this->updateTableInfo($values, $objInfo);
+        $rowKey = $rowInfo['key'] ?: $rowKey;
         $rowKeyParsed = $this->debug->html->parseTag($this->html->dump($rowKey));
         $str .= '<tr>';
         /*
@@ -239,51 +206,22 @@ class HtmlTable
             $rowKeyParsed['innerhtml']
         );
         /*
-            Output row's classname (if row is an object)
-            This column will get removed if haveObjRow = false
+            Output row's classname
         */
-        $classnameTd = '<td class="classname"></td>';
-        if ($objInfo['row']) {
-            $classnameTd = $this->html->markupIdentifier($objInfo['row']['className'], 'td', array(
-                'title' => $objInfo['row']['phpDoc']['summary'] ?: null,
-            ));
-            $this->tableInfo['haveObjRow'] = true;
+        if ($this->tableInfo['haveObjRow']) {
+            $str .= $rowInfo['class']
+                ? $this->html->markupIdentifier($rowInfo['class'], 'td', array(
+                    'title' => $rowInfo['summary'] ?: null,
+                ))
+                : '<td class="t_undefined"></td>';
         }
-        $str .= $classnameTd;
         /*
             Output values
         */
-        foreach ($values as $v) {
+        foreach ($row as $v) {
             $str .= $this->html->dump($v, array(), 'td');
         }
         $str .= '</tr>' . "\n";
         return $str;
-    }
-
-    /**
-     * Update collected table info
-     *
-     * @param array $colValues values
-     * @param array $objInfo   row & col object info
-     *
-     * @return void
-     */
-    private function updateTableInfo($colValues, $objInfo)
-    {
-        foreach (\array_keys($this->tableInfo['totals']) as $k) {
-            $this->tableInfo['totals'][$k] += $colValues[$k];
-        }
-        foreach ($objInfo['cols'] as $k2 => $classname) {
-            if ($this->tableInfo['colClasses'][$k2] === false) {
-                // column values not of the same type
-                continue;
-            }
-            if ($this->tableInfo['colClasses'][$k2] === null) {
-                $this->tableInfo['colClasses'][$k2] = $classname;
-            }
-            if ($this->tableInfo['colClasses'][$k2] !== $classname) {
-                $this->tableInfo['colClasses'][$k2] = false;
-            }
-        }
     }
 }

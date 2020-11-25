@@ -38,7 +38,7 @@ class InternalTest extends DebugTestFramework
     {
         $this->debug->setCfg('services', array(
             'request' => new ServerRequest('GET', null, array(
-                'REQUEST_METHOD' => 'GET',
+                // 'REQUEST_METHOD' => 'GET',
             )),
         ));
         $this->clearServerParamCache();
@@ -47,7 +47,7 @@ class InternalTest extends DebugTestFramework
         $this->debug->setCfg('services', array(
             'request' => new ServerRequest('GET', null, array(
                 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
-                'REQUEST_METHOD' => 'GET',
+                // 'REQUEST_METHOD' => 'GET',
             )),
         ));
         $this->clearServerParamCache();
@@ -56,13 +56,16 @@ class InternalTest extends DebugTestFramework
         $this->debug->setCfg('services', array(
             'request' => new ServerRequest('GET', null, array(
                 'PATH' => '.',
+                'argv' => array('phpunit'),
             )),
         ));
         $this->clearServerParamCache();
         $this->assertSame('cli', $this->debug->getInterface());
 
         $this->debug->setCfg('services', array(
-            'request' => new ServerRequest('GET'),
+            'request' => new ServerRequest('GET', null, array(
+                'argv' => array('phpunit'),
+            )),
         ));
         $this->clearServerParamCache();
         $this->assertSame('cli cron', $this->debug->getInterface());

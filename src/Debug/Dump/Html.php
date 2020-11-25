@@ -239,23 +239,24 @@ class Html extends Base
     /**
      * Insert a row containing code snip & arguments after the given row
      *
-     * @param string $html  <tr>...</tr>
-     * @param array  $frame backtrace frame
-     * @param int    $index row index
+     * @param string $html    <tr>...</tr>
+     * @param array  $row     Row values
+     * @param array  $rowInfo Row info / meta
+     * @param int    $index   Row index
      *
      * @return string
      */
-    public function tableAddContextRow($html, $frame, $index)
+    public function tableAddContextRow($html, $row, $rowInfo, $index)
     {
-        if (!$frame['context']) {
+        if (!$rowInfo['context']) {
             return $html;
         }
         $html = \str_replace('<tr>', '<tr' . ($index === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $html);
         $html .= '<tr class="context" ' . ($index === 0 ? 'style="display:table-row;"' : '' ) . '>'
             . '<td colspan="4">'
-                . '<pre class="highlight line-numbers" data-line="' . $frame['line'] . '" data-start="' . \key($frame['context']) . '">'
+                . '<pre class="highlight line-numbers" data-line="' . $row['line'] . '" data-start="' . \key($rowInfo['context']) . '">'
                     . '<code class="language-php">'
-                        . \htmlspecialchars(\implode($frame['context']))
+                        . \htmlspecialchars(\implode($rowInfo['context']))
                     . '</code>'
                 . '</pre>'
                 . '{{arguments}}'
@@ -263,8 +264,8 @@ class Html extends Base
             . '</tr>' . "\n";
         $crateRawWas = $this->crateRaw;
         $this->crateRaw = true;
-        $args = $frame['args']
-            ? '<hr />Arguments = ' . $this->dump($frame['args'])
+        $args = $rowInfo['args']
+            ? '<hr />Arguments = ' . $this->dump($rowInfo['args'])
             : '';
         $this->crateRaw = $crateRawWas;
         return \str_replace('{{arguments}}', $args, $html);
@@ -738,51 +739,28 @@ class Html extends Base
      */
     protected function methodTabular(LogEntry $logEntry)
     {
-        $args = $logEntry['args'];
-        $meta = \array_merge(array(
+        $meta = $this->debug->utility->arrayMergeDeep(array(
+            'attribs' => array(
+                'class' => array(
+                    'table-bordered',
+                    $logEntry->getMeta('sortable') ? 'sortable' : null,
+                    $logEntry->getMeta('inclContext') ? 'trace-context' : null,
+                ),
+            ),
             'caption' => null,
-            'columns' => array(),
-            'columnNames' => array(),
-            'sortable' => false,
-            'totalCols' => array(),
-            'inclContext' => false,
+            'onBuildRow' => array(),
+            'tableInfo' => array(),
         ), $logEntry['meta']);
-        $asTable = \is_array($args[0])
-            ? (bool) $args[0]
-            : $this->debug->abstracter->isAbstraction($args[0], Abstracter::TYPE_OBJECT);
-        $onBuildRow = array();
         if ($logEntry['method'] === 'trace') {
-            $onBuildRow[] = array($this, 'tableMarkupFunction');
+            $meta['onBuildRow'][] = array($this, 'tableMarkupFunction');
         }
-        if ($meta['inclContext']) {
-            $onBuildRow[] = array($this, 'tableAddContextRow');
-        }
-        if (!$asTable && $meta['caption']) {
-            \array_unshift($args, $meta['caption']);
+        if ($logEntry->getMeta('inclContext')) {
+            $meta['onBuildRow'][] = array($this, 'tableAddContextRow');
         }
         return $this->debug->html->buildTag(
             'li',
             $this->logEntryAttribs,
-            $asTable
-                ? "\n"
-                    . $this->table->build(
-                        $args[0],
-                        array(
-                            'attribs' => array(
-                                'class' => array(
-                                    'table-bordered',
-                                    $meta['sortable'] ? 'sortable' : null,
-                                    $meta['inclContext'] ? 'trace-context' : null,
-                                ),
-                            ),
-                            'caption' => $meta['caption'],
-                            'columns' => $meta['columns'],
-                            'columnNames' => $meta['columnNames'],
-                            'onBuildRow' => $onBuildRow,
-                            'totalCols' => $meta['totalCols'],
-                        )
-                    ) . "\n"
-                : $this->buildArgString($args, $meta)
+            "\n" . $this->table->build($logEntry['args'][0], $meta) . "\n"
         );
     }
 

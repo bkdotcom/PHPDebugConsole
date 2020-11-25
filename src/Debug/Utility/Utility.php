@@ -392,6 +392,8 @@ class Utility
     {
         $includedFiles = \get_included_files();
         \usort($includedFiles, function ($valA, $valB) {
+            $valA = \str_replace('_', '0', $valA);
+            $valB = \str_replace('_', '0', $valB);
             $dirA = \dirname($valA);
             $dirB = \dirname($valB);
             return $dirA === $dirB

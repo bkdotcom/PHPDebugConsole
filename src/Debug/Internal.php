@@ -280,15 +280,14 @@ class Internal implements SubscriberInterface
         /*
             notes:
                 $_SERVER['argv'] could be populated with query string if register_argc_argv = On
-                we used to also check for `defined('STDIN')`, but it's not unit test friendly
+                don't use request->getMethod()... Psr7 implementation likely defaults to GET
+                we used to check for `defined('STDIN')`,
+                    but it's not unit test friendly
+                we used to check for getServerParam['REQUEST_METHOD'] === null
+                    not particularly psr7 friendly
         */
-        $argv = $this->getServerParam('argv', array());
-        $isCliOrCron = \count(\array_filter(array(
-            // have argv and it's not query_string
-            $argv && $argv !== array($this->getServerParam('QUERY_STRING')),
-            // serverParam REQUEST_METHOD... NOT request->getMethod() which likely defaults to GET
-            $this->getServerParam('REQUEST_METHOD') === null,
-        ))) > 0;
+        $argv = $this->getServerParam('argv');
+        $isCliOrCron = $argv && $argv !== array($this->getServerParam('QUERY_STRING'));
         if ($isCliOrCron) {
             // TERM is a linux/unix thing
             $return = $this->getServerParam('TERM') !== null || $this->getServerParam('PATH') !== null

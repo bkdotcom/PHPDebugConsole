@@ -1,13 +1,15 @@
 <?php
 
-namespace bdk\DebugTests;
+namespace bdk\DebugTests\Method;
 
-use bdk\Debug\Method\Table as MethodTable;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\DebugTests\DebugTestFramework;
+use ReflectionMethod;
 
 /**
  * PHPUnit tests for Debug class
  */
-class MethodTableTest extends DebugTestFramework
+class TableTest extends DebugTestFramework
 {
 
     /**
@@ -17,109 +19,22 @@ class MethodTableTest extends DebugTestFramework
      */
     public function testTableColKeys()
     {
+        $colKeysMeth = new ReflectionMethod('bdk\\Debug\\Method\\Table', 'colKeys');
+        $colKeysMeth->setAccessible(true);
         $array = array(
             array('col1' => '', 'col2' => '', 'col4' => ''),
             array('col1' => '', 'col2' => '', 'col3' => ''),
             array('col1' => '', 'col2' => '', 'col3' => ''),
         );
-        $colKeys = MethodTable::colKeys($array);
+        $colKeys = $colKeysMeth->invoke(null, $array);
         $this->assertSame(array('col1','col2','col3','col4'), $colKeys);
         $array = array(
             array('a','b','c'),
             array('d','e','f','g'),
             array('h','i'),
         );
-        $colKeys = MethodTable::colKeys($array);
+        $colKeys = $colKeysMeth->invoke(null, $array);
         $this->assertSame(array(0,1,2,3), $colKeys);
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testTableLog()
-    {
-        $list = array(
-            // note different order of keys / not all rows have all cols
-            array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
-            array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
-        );
-        $this->debug->table($list);
-        $this->debug->table('arg1', array());
-        $this->debug->table('arg1', 'arg2 is not logged', $list, 'arg4 is not logged');
-        $this->debug->table($list, 'arg2', array('arg3 is array'), 'arg4 is not logged');
-        $this->debug->table('arg1', 'arg2');
-        $this->debug->table('flat', array('a','b','c'));
-        // test stored args
-        $this->assertSame(array(
-            'table',
-            array($list),
-            array(
-                'caption' => null,
-                'columnNames' => array(),
-                'columns' => array(),
-                'sortable' => true,
-                'totalCols' => array(),
-            ),
-        ), $this->logEntryToArray($this->debug->getData('log/0')));
-        $this->assertSame(array(
-            'table',
-            array(array()),
-            array(
-                'caption' => 'arg1',
-                'columnNames' => array(),
-                'columns' => array(),
-                'sortable' => true,
-                'totalCols' => array(),
-            ),
-        ), $this->logEntryToArray($this->debug->getData('log/1')));
-        $this->assertSame(array(
-            'table',
-            array($list),
-            array(
-                'caption' => 'arg1',
-                'columnNames' => array(),
-                'columns' => array(),
-                'sortable' => true,
-                'totalCols' => array(),
-            ),
-        ), $this->logEntryToArray($this->debug->getData('log/2')));
-        $this->assertSame(array(
-            'table',
-            array($list),
-            array(
-                'caption' => 'arg2',
-                'columnNames' => array(),
-                'columns' => array('arg3 is array'),
-                'sortable' => true,
-                'totalCols' => array(),
-            ),
-        ), $this->logEntryToArray($this->debug->getData('log/3')));
-        $this->assertSame(array(
-            'table',
-            array(null),
-            array(
-                'caption' => 'arg1',
-                'columnNames' => array(),
-                'columns' => array(),
-                'sortable' => true,
-                'totalCols' => array(),
-            ),
-        ), $this->logEntryToArray($this->debug->getData('log/4')));
-        $this->assertSame(array(
-            'table',
-            array(
-                array('a', 'b', 'c'),
-            ),
-            array(
-                'caption' => 'flat',
-                'columnNames' => array(),
-                'columns' => array(),
-                'sortable' => true,
-                'totalCols' => array(),
-            ),
-        ), $this->logEntryToArray($this->debug->getData('log/5')));
     }
 
     /**
@@ -132,6 +47,24 @@ class MethodTableTest extends DebugTestFramework
             4 => array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
             2 => array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
         );
+        $rowsAProcessed = array(
+            4 => array(
+                'name' => 'Bob',
+                'age' => '12',
+                'sex' => 'M',
+                'Naughty' => false,
+                'extracol' => Abstracter::UNDEFINED,
+            ),
+            2 => array(
+                'name' => 'Sally',
+                'age' => '10',
+                'sex' => 'F',
+                'Naughty' => true,
+                'extracol' => 'yes',
+            ),
+        );
+
+        // not all date2 values of same type
         $rowsB = array(
             array(
                 'date' => new \DateTime('1955-11-05'),
@@ -173,64 +106,268 @@ table caption = array(
     )
 )
 EOD;
+        $rowsAScript = 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false,"extracol":undefined},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});';
+        $rowsAFirephp = 'X-Wf-1-1-1-3: %d|[{"Label":"table caption","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|';
+
         $dateTimePubMethods = 3;
         if (\version_compare(PHP_VERSION, '7.1', '>=')) {
             $dateTimePubMethods = 5;
         } elseif (\version_compare(PHP_VERSION, '7.0', '>=')) {
             $dateTimePubMethods = 4;
         }
+
+        $vals = array(
+            'datetime' => new \DateTime('2233-03-22'),
+            'resource' => \fopen(__FILE__, 'r'),
+            'callable' => array($this, __FUNCTION__),
+            'closure' => function ($foo) {
+                echo $foo;
+            },
+        );
+        $abstracter = \bdk\Debug::getInstance()->abstracter;
+        foreach ($vals as $k => $raw) {
+            $vals[$k] = array(
+                'raw' => $raw,
+                'crated' => $abstracter->crate($raw, 'table'),
+            );
+        }
+
         return array(
-            // 0
+            // 0 null
             array(
                 'table',
                 array(null),
                 array(
-                    'html' => '<li class="m_table"><span class="t_null">null</span></li>',
+                    'entry' => array(
+                        'log',
+                        array(null),
+                        array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="t_null">null</span></li>',
                     'text' => 'null',
                     'script' => 'console.log(null);',
                     'firephp' => 'X-Wf-1-1-1-1: 21|[{"Type":"LOG"},null]|',
                 ),
             ),
-            // 1
+            // 1 empty array
             array(
                 'table',
-                array('blah'),
+                array('arg1', array()),
                 array(
-                    'html' => '<li class="m_table">'
-                        . '<span class="no-quotes t_string">blah</span> = <span class="t_null">null</span>'
+                    'entry' => array(
+                        'log',
+                        array('arg1', array()),
+                        array(),
+                    ),
+                    'html' => '<li class="m_log">'
+                        . '<span class="no-quotes t_string">arg1</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>'
                         . '</li>',
-                    'text' => 'blah = null',
-                    'script' => 'console.log("blah",null);',
-                    'firephp' => 'X-Wf-1-1-1-2: 36|[{"Label":"blah","Type":"LOG"},null]|',
+                    'text' => 'arg1 = array()',
+                    'script' => 'console.log("arg1",[]);',
+                    'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"arg1","Type":"LOG"},[]]|',
                 ),
             ),
-            // 2
+            // 2 not table material
+            array(
+                'table',
+                array('arg1'),
+                array(
+                    'entry' => array(
+                        'log',
+                        array('arg1'),
+                        array(),
+                    ),
+                    'html' => '<li class="m_log">'
+                        . '<span class="no-quotes t_string">arg1</span>'
+                        . '</li>',
+                    'text' => 'arg1',
+                    'script' => 'console.log("arg1");',
+                    'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"LOG"},"arg1"]|',
+                ),
+            ),
+            // 3 not table material with label
+            array(
+                'table',
+                array('arg1', 'arg2'),
+                array(
+                    'entry' => array(
+                        'log',
+                        array('arg1', 'arg2'),
+                        array(),
+                    ),
+                    'html' => '<li class="m_log">'
+                        . '<span class="no-quotes t_string">arg1</span> = <span class="t_string">arg2</span>'
+                        . '</li>',
+                    'text' => 'arg1 = "arg2"',
+                    'script' => 'console.log("arg1","arg2");',
+                    'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"arg1","Type":"LOG"},"arg2"]|',
+                ),
+            ),
+            // 4 superfluous args
+            array(
+                'table',
+                array('arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged'),
+                array(
+                    'entry' => array(
+                        'table',
+                        array($rowsAProcessed),
+                        array(
+                            'caption' => 'arg1',
+                            'sortable' => true,
+                            'tableInfo' => array(
+                                'class' => null,
+                                'columns' => array(
+                                    array('key' => 'name'),
+                                    array('key' => 'age'),
+                                    array('key' => 'sex'),
+                                    array('key' => 'Naughty'),
+                                    array('key' => 'extracol'),
+                                ),
+                                'haveObjRow' => false,
+                                'rows' => array(),
+                                'summary' => null,
+                            ),
+                        ),
+                    ),
+                    'html' => \str_replace('table caption', 'arg1', $rowsAHtml),
+                    'text' => \str_replace('table caption', 'arg1', $rowsAText),
+                    'script' => $rowsAScript,
+                    'firephp' => \str_replace('table caption', 'arg1', $rowsAFirephp),
+                ),
+            ),
+            // 5 rowsA
             array(
                 'table',
                 array('table caption', $rowsA),
                 array(
+                    'entry' => array(
+                        'table',
+                        array($rowsAProcessed),
+                        array(
+                            'caption' => 'table caption',
+                            'sortable' => true,
+                            'tableInfo' => array(
+                                'class' => null,
+                                'columns' => array(
+                                    array('key' => 'name'),
+                                    array('key' => 'age'),
+                                    array('key' => 'sex'),
+                                    array('key' => 'Naughty'),
+                                    array('key' => 'extracol'),
+                                ),
+                                'haveObjRow' => false,
+                                'rows' => array(),
+                                'summary' => null,
+                            )
+                        ),
+                    ),
                     'html' => $rowsAHtml,
                     'text' => $rowsAText,
-                    'script' => 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
-                    'firephp' => 'X-Wf-1-1-1-3: 151|[{"Label":"table caption","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
+                    'script' => $rowsAScript,
+                    'firephp' => $rowsAFirephp,
                 ),
             ),
-            // 3
+            // 6 rowsA - specify columns
+            array(
+                'table',
+                array($rowsA, 'table caption', array('name','extracol')),
+                array(
+                    'entry' => array(
+                        'table',
+                        array(
+                            array(
+                                4 => array('name' => 'Bob', 'extracol' => Abstracter::UNDEFINED),
+                                2 => array('name' => 'Sally', 'extracol' => 'yes'),
+                            ),
+                        ),
+                        array(
+                            'caption' => 'table caption',
+                            'sortable' => true,
+                            'tableInfo' => array(
+                                'class' => null,
+                                'columns' => array(
+                                    array('key' => 'name'),
+                                    array('key' => 'extracol'),
+                                ),
+                                'haveObjRow' => false,
+                                'rows' => array(),
+                                'summary' => null,
+                            )
+                        ),
+                    ),
+                    'html' => '<li class="m_table">
+                        <table class="sortable table-bordered">
+                        <caption>table caption</caption>
+                        <thead>
+                        <tr><th>&nbsp;</th><th>name</th><th scope="col">extracol</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="t_undefined"></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">Sally</td><td class="t_string">yes</td></tr>
+                        </tbody>
+                        </table>
+                        </li>',
+                    'text' => 'table caption = array(
+                            [4] => array(
+                                [name] => "Bob"
+                            )
+                            [2] => array(
+                                [name] => "Sally"
+                                [extracol] => "yes"
+                            )
+                        )',
+                    'script' => 'console.table({"4":{"name":"Bob","extracol":undefined},"2":{"name":"Sally","extracol":"yes"}});',
+                    'firephp' => 'X-Wf-1-1-1-20: %d|[{"Label":"table caption","Type":"TABLE"},[["","name","extracol"],[4,"Bob",null],[2,"Sally","yes"]]]|',
+                ),
+            ),
+            // 7 flat
             array(
                 'table',
                 array(
                     'flat',
                     array(
                         'a',
-                        new \DateTime('2233-03-22'),
-                        \fopen(__FILE__, 'r'),
-                        array($this, __FUNCTION__),
-                        function ($foo) {
-                            echo $foo;
-                        },
+                        $vals['datetime']['raw'],
+                        $vals['resource']['raw'],
+                        $vals['callable']['raw'],
+                        $vals['closure']['raw'],
                     ),
                 ),
                 array(
+                    'entry' => array(
+                        'table',
+                        array(
+                            array(
+                                array('value' => 'a'),
+                                array('value' => $vals['datetime']['crated']['stringified']),
+                                array('value' => $vals['resource']['crated']),
+                                array('value' => $vals['callable']['crated']),
+                                array('value' => $vals['closure']['crated']),
+                            ),
+                        ),
+                        array(
+                            'caption' => 'flat',
+                            'sortable' => true,
+                            'tableInfo' => array(
+                                'class' => null,
+                                'columns' => array(
+                                    array('key' => 'value'),
+                                ),
+                                'haveObjRow' => false,
+                                'rows' => array(
+                                    array('isScalar' => true),
+                                    array(
+                                        // 'class' => 'DateTime',
+                                        'isScalar' => true
+                                    ),
+                                    array('isScalar' => true),
+                                    array('isScalar' => true),
+                                    array('isScalar' => true),
+                                ),
+                                'summary' => null,
+                            ),
+                        ),
+                    ),
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
                         <caption>flat</caption>
@@ -241,7 +378,7 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">a</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\DebugTests\</span>MethodTableTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestMethod</span></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\DebugTests\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestMethod</span></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_object" data-accessible="public"><span class="classname">Closure</span>
                             <dl class="object-inner">
                             <dt class="properties">properties</dt>
@@ -263,7 +400,7 @@ EOD;
                         [0] => "a"
                         [1] => "2233-03-22T00:00:00%i"
                         [2] => Resource id #%d: stream
-                        [3] => callable: bdk\DebugTests\MethodTableTest::providerTestMethod
+                        [3] => callable: bdk\DebugTests\Method\TableTest::providerTestMethod
                         [4] => Closure
                             Properties:
                                 (debug) file = "' . __FILE__ . '"
@@ -276,7 +413,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,' . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . '],[4,{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]]]|',
                 ),
             ),
-            // 4
+            // 8 traversavle
             array(
                 'table',
                 array(
@@ -286,11 +423,11 @@ EOD;
                 array(
                     'html' => \str_replace('table caption', 'traversable (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</span>)', $rowsAHtml),
                     'text' => \str_replace('table caption', 'traversable', $rowsAText),
-                    'script' => 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
+                    'script' => $rowsAScript,
                     'firephp' => 'X-Wf-1-1-1-5: 149|[{"Label":"traversable","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
                 ),
             ),
-            // 5
+            // 9 traversable -o- traversables
             array(
                 'table',
                 array(
@@ -330,14 +467,14 @@ EOD;
                                 [extracol] => "yes"
                             )
                         )',
-                    'script' => 'console.table({"4":{"___class_name":"bdk\\\DebugTests\\\Fixture\\\TestTraversable","name":"Bob","age":"12","sex":"M","Naughty":false},"2":{"___class_name":"bdk\\\DebugTests\\\Fixture\\\TestTraversable","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
+                    'script' => 'console.table({"4":{"___class_name":"bdk\\\DebugTests\\\Fixture\\\TestTraversable","name":"Bob","age":"12","sex":"M","Naughty":false,"extracol":undefined},"2":{"___class_name":"bdk\\\DebugTests\\\Fixture\\\TestTraversable","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
                     'firephp' => 'X-Wf-1-1-1-6: 270|[{"Label":"traversable -o- traversables","Type":"TABLE"},['
                         . '["","___class_name","name","age","sex","Naughty","extracol"],'
                         . '[4,"bdk\\\DebugTests\\\Fixture\\\TestTraversable","Bob","12","M",false,null],'
                         . '[2,"bdk\\\DebugTests\\\Fixture\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
                 ),
             ),
-            // 6
+            // 10 array -o- objects
             array(
                 'table',
                 array(
@@ -377,14 +514,14 @@ EOD;
                             [sex] => "F"
                         )
                     )',
-                    'script' => 'console.table({"4":{"___class_name":"stdClass","age":"12","name":"Bob","Naughty":false,"sex":"M"},"2":{"___class_name":"stdClass","age":"10","extracol":"yes","name":"Sally","Naughty":true,"sex":"F"}});',
+                    'script' => 'console.table({"4":{"___class_name":"stdClass","age":"12","extracol":undefined,"name":"Bob","Naughty":false,"sex":"M"},"2":{"___class_name":"stdClass","age":"10","extracol":"yes","name":"Sally","Naughty":true,"sex":"F"}});',
                     'firephp' => 'X-Wf-1-1-1-7: 193|[{"Label":"array -o- objects","Type":"TABLE"},['
                         . '["","___class_name","age","extracol","name","Naughty","sex"],'
                         . '[4,"stdClass","12",null,"Bob",false,"M"],'
                         . '[2,"stdClass","10","yes","Sally",true,"F"]]]|',
                 ),
             ),
-            // 7
+            // 11 rowsB (not all col values of same type)
             array(
                 'table',
                 array(

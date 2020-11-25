@@ -274,8 +274,23 @@ class Wamp implements RouteInterface
         if ($meta['format'] === 'raw') {
             $args = $this->crateValues($args);
         }
-        if (!empty($meta['backtrace'])) {
-            $meta['backtrace'] = $this->crateValues($meta['backtrace']);
+        if (!empty($meta['trace'])) {
+            $logEntryTmp = new LogEntry(
+                $this->debug,
+                'trace',
+                array($meta['trace']),
+                array(
+                    'columns' => array('file','line','function'),
+                    'inclContext' => $logEntry->getMeta('inclContext', false),
+                )
+            );
+            $this->debug->methodTable->onLog($logEntryTmp);
+            unset($args[2]);
+            $meta = \array_merge($meta, array(
+                'caption' => 'trace',
+                'tableInfo' => $logEntryTmp['meta']['tableInfo'],
+                'trace' => $logEntryTmp['args'][0],
+            ));
         }
         if ($this->detectFiles) {
             $meta['foundFiles'] = $this->foundFiles;
@@ -292,8 +307,15 @@ class Wamp implements RouteInterface
      */
     private function crateArray($array)
     {
+        $return = array();
+        $keys = array();
         foreach ($array as $k => $v) {
-            $array[$k] = $this->crateValues($v);
+            if (\is_string($k) && \substr($k, 0, 1) === "\x00") {
+                // key starts with null...
+                // php based wamp router will choke (attempt to json_decode to obj)
+                $k = '_b64_:' . \base64_encode($k);
+            }
+            $return[$k] = $this->crateValues($v);
         }
         if ($this->debug->utility->arrayIsList($array) === false) {
             /*
@@ -304,10 +326,10 @@ class Wamp implements RouteInterface
             $keysSorted = $keys;
             \sort($keysSorted, SORT_STRING);
             if ($keys !== $keysSorted) {
-                $array['__debug_key_order__'] = $keys;
+                $return['__debug_key_order__'] = $keys;
             }
         }
-        return $array;
+        return $return;
     }
 
     /**
@@ -417,24 +439,29 @@ class Wamp implements RouteInterface
         }
         $this->metaPublished = true;
         $debugClass = \get_class($this->debug);
-        $metaVals = array();
-        $keys = array(
-            'HTTP_HOST',
-            'HTTPS',
-            'REMOTE_ADDR',
-            'REQUEST_METHOD',
-            'REQUEST_TIME',
-            'REQUEST_URI',
-            'SERVER_ADDR',
-            'SERVER_NAME',
+        $metaVals = array(
+            'HTTP_HOST' => null,
+            'HTTPS' => null,
+            'REMOTE_ADDR' => null,
+            'REQUEST_METHOD' => $this->debug->request->getMethod(),
+            'REQUEST_TIME' => null,
+            'REQUEST_URI' => $this->debug->request->getRequestTarget(),
+            'SERVER_ADDR' => null,
+            'SERVER_NAME' => null,
         );
-        $serverParams = $this->debug->request->getServerParams();
-        foreach ($keys as $k) {
-            $metaVals[$k] = isset($serverParams[$k])
-                ? $serverParams[$k]
-                : null;
+        $serverParams = \array_merge(
+            array(
+                'argv' => array(),
+            ),
+            $this->debug->request->getServerParams(),
+            $metaVals
+        );
+        foreach (\array_keys($metaVals) as $k) {
+            $metaVals[$k] = $serverParams[$k];
         }
-        if (!isset($metaVals['REQUEST_URI']) && !empty($serverParams['argv'])) {
+        $isCli = \strpos($this->debug->getInterface(), 'cli') === 0;
+        if ($isCli) {
+            $metaVals['REQUEST_METHOD'] = null;
             $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $serverParams['argv']);
         }
         $this->processLogEntry(new LogEntry(

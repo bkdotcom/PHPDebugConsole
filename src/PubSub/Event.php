@@ -25,7 +25,7 @@ use IteratorAggregate;
 class Event implements ArrayAccess, IteratorAggregate
 {
     /**
-     * @var boolean Whether event subscribers should be called
+     * @var bool Whether event subscribers should be called
      */
     private $propagationStopped = false;
 

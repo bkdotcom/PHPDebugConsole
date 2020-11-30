@@ -56,9 +56,9 @@ class ServerRequest extends Request
     /**
      * Constructor
      *
-     * @param string              $method       The HTTP method associated with the request.
-     * @param UriInterface|string $uri          The URI associated with the request.
-     * @param array               $serverParams An array of Server API (SAPI) parameters with
+     * @param string                                    $method       The HTTP method associated with the request.
+     * @param \Psr\Http\Message\UriInterface|Uri|string $uri          The URI associated with the request.
+     * @param array                                     $serverParams An array of Server API (SAPI) parameters with
      *     which to seed the generated request instance. (and headers)
      */
     public function __construct($method = 'GET', $uri = '', $serverParams = array())
@@ -275,7 +275,7 @@ class ServerRequest extends Request
     /**
      * Throw an exception if an unsupported argument type is provided.
      *
-     * @param string|array|null $data The deserialized body data. This will
+     * @param array|object|null $data The deserialized body data. This will
      *     typically be in an array or object.
      *
      * @return void
@@ -336,7 +336,7 @@ class ServerRequest extends Request
      *
      * @param array $fileInfo $_FILES entry
      *
-     * @return UploadedFile|UploadedFile[]
+     * @return UploadedFile|array
      */
     private static function createUploadedFile($fileInfo)
     {
@@ -521,7 +521,7 @@ class ServerRequest extends Request
     /**
      * Get a Uri populated with values from $_SERVER.
      *
-     * @return UriInterface
+     * @return Uri
      *
      * @SuppressWarnings(PHPMD.Superglobals)
      */

@@ -7,9 +7,12 @@ use bdk\Debug\Psr7lite\Request;
 use bdk\Debug\Psr7lite\Uri;
 use PHPUnit\Framework\TestCase;
 
+/**
+ *
+ */
 class RequestTest extends TestCase
 {
-    use \bdk\DebugTests\PhpUnitPolyfillTrait;
+    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
 
     public function testConstruct()
     {

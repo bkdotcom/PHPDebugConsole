@@ -6,9 +6,12 @@ use bdk\Debug\Psr7lite\Uri;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
+/**
+ *
+ */
 class UriTest extends TestCase
 {
-    use \bdk\DebugTests\PhpUnitPolyfillTrait;
+    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
 
     public function testConstruct()
     {

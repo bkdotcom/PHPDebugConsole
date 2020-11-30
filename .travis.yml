@@ -9,18 +9,30 @@ php:
   - 7.2
   - 7.3
   - 7.4
+  - 8.0
 matrix:
   fast_finish: true
+  allow_failures:
+    - php: 8.0
 install:
   - |
     composer self-update
     composer install
 before_script:
+  # php 5.4 -> phpunit 4.8.35
+  # php 5.6 -> phpunit 5.7.23
+  # php 7.0 -> phpunit 6.4.3
+  # php 7.1 -> phpunit 6.4.3
+  # php 7.2 -> phpunit 7.5.2
+  # php 8.0 -> phpunit 9.x
   - |
     echo "TRAVIS_PHP_VERSION:" $TRAVIS_PHP_VERSION;
     php -v;
     php -r 'echo "PHP: ".PHP_VERSION."\n";';
-    if [ $(echo "$TRAVIS_PHP_VERSION >= 7.2" | bc -l) -eq 1 ]; then
+    if [ $(echo "$TRAVIS_PHP_VERSION >= 8.0" | bc -l) -eq 1 ]; then
+      echo using PHPUnit 9.x
+      curl -sSfL -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-9.phar
+    elif [ $(echo "$TRAVIS_PHP_VERSION >= 7.2" | bc -l) -eq 1 ]; then
       echo using PHPUnit 7.5.2
       curl -sSfL -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-7.5.2.phar;
     fi

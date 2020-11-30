@@ -40,7 +40,7 @@ class Message
     private $headerNames = array();
 
     /** @var string */
-    private $protocolVersion = '1.1';
+    protected $protocolVersion = '1.1';
 
     /**
      * Valid HTTP version numbers.
@@ -299,7 +299,7 @@ class Message
     /**
      * Test valid header value
      *
-     * @param string $value header value
+     * @param array|string $value header value
      *
      * @return void
      * @throws InvalidArgumentException
@@ -357,7 +357,7 @@ class Message
             HTAB          = horizontal tab
             VCHAR         = any visible [USASCII] character. (x21-x7e)
         */
-        if (!\preg_match('/^[ \t\x21-\x7e]+$/', $value)) {
+        if (!\preg_match('/^[ \t\x21-\x7e]+$/', (string) $value)) {
             throw new InvalidArgumentException(\sprintf(
                 '"%s" is not valid header value, it must contains visible ASCII characters only.',
                 $value

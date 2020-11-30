@@ -16,7 +16,7 @@ class ChannelTest extends DebugTestFramework
      *
      * @return void
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->debugFoo = $this->debug->getChannel('foo');

@@ -15,6 +15,8 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\Debug\Utility\UseStatements;
+use ReflectionNamedType;
+use ReflectionType;
 
 /**
  * Base class for AbstractObjectMethod & AbstractObjectProperty
@@ -36,6 +38,23 @@ abstract class AbstractObjectSub
     {
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
+    }
+
+    /**
+     * Get string representation of ReflectionNamedType or ReflectionType
+     *
+     * @param ReflectionType|null $type ReflectionType
+     *
+     * @return string|null
+     */
+    protected function getTypeString(ReflectionType $type = null)
+    {
+        if ($type === null) {
+            return null;
+        }
+        return $type instanceof ReflectionNamedType
+            ? $type->getName()
+            : (string) $type;
     }
 
     /**

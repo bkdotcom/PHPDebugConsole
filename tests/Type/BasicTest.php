@@ -181,6 +181,6 @@ class BasicTest extends DebugTestFramework
         $this->debug->log('ref', $ref);
         $src = 'fail';
         $output = $this->debug->output();
-        $this->assertContains('success', $output);
+        $this->assertStringContainsString('success', $output);
     }
 }

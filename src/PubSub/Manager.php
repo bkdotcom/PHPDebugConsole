@@ -161,9 +161,9 @@ class Manager
      *    `array(Closure)` - closure returns object that is callable (ie has `__invoke` method)
      *   The closure will be called the first time the event occurs
      *
-     * @param string   $eventName event name
-     * @param callable $callable  callable or closure factory
-     * @param int      $priority  The higher this value, the earlier we handle event
+     * @param string         $eventName event name
+     * @param callable|array $callable  callable or closure factory
+     * @param int            $priority  The higher this value, the earlier we handle event
      *
      * @return void
      */

@@ -1,10 +1,10 @@
 <?php
 
-namespace bdk\DebugTests;
+namespace bdk\DebugTests\PolyFill;
 
 if (!\method_exists('\\PHPUnit\\Framework\\TestCase', 'expectException')) {
 
-    trait PhpUnitPolyfillTrait
+    trait ExpectExceptionTrait
     {
 
         private $forwardCompatExpectedExceptionMessage = '';
@@ -46,7 +46,7 @@ if (!\method_exists('\\PHPUnit\\Framework\\TestCase', 'expectException')) {
         }
     }
 } else {
-    trait PhpUnitPolyfillTrait
+    trait ExpectExceptionTrait
     {
     }
 }

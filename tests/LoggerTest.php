@@ -97,7 +97,7 @@ class LoggerTest extends DebugTestFramework
         $this->assertSame('object', $exceptionAbs['type']);
         $this->assertArraySubset($metaSubset, $metaActual);
         $backtrace = $this->debug->getData('log/__end__/meta/trace');
-        $this->assertInternalType('array', $backtrace);
+        $this->assertIsArray($backtrace);
     }
 
     public function testError()

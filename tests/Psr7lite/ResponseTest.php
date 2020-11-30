@@ -6,9 +6,12 @@ use bdk\Debug\Psr7lite\Message;
 use bdk\Debug\Psr7lite\Response;
 use PHPUnit\Framework\TestCase;
 
+/**
+ *
+ */
 class ResponseTest extends TestCase
 {
-    use \bdk\DebugTests\PhpUnitPolyfillTrait;
+    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
 
     public function testConstruct()
     {

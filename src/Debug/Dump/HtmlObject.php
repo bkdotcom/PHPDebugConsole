@@ -70,6 +70,7 @@ class HtmlObject
                     . \implode(\array_map(function ($classname) {
                         return '<dd class="interface">' . $this->html->markupIdentifier($classname) . '</dd>' . "\n";
                     }, $abs['implements']))
+                . $this->dumpAttributes($abs)
                 . $this->dumpConstants($abs)
                 . $this->dumpProperties($abs)
                 . $this->dumpMethods($abs)
@@ -126,7 +127,44 @@ class HtmlObject
     }
 
     /**
-     * dump object constants as html
+     * Dump object constants as html
+     *
+     * @param Abstraction $abs object "abstraction"
+     *
+     * @return string html
+     */
+    protected function dumpAttributes(Abstraction $abs)
+    {
+        $attributes = $abs['attributes'];
+        if (!$attributes || !($abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_OBJ)) {
+            return '';
+        }
+        $str = '<dt class="attributes">attributes</dt>' . "\n";
+        foreach ($attributes as $info) {
+            $str .= '<dd class="attribute">';
+            $str .= $this->html->markupIdentifier($info['name']);
+            if ($info['arguments']) {
+                $str .= '<span class="t_punct">(</span>';
+                $args = array();
+                foreach ($info['arguments'] as $k => $v) {
+                    $arg = '';
+                    if (\is_string($k)) {
+                        $arg .= '<span class="t_parameter-name">' . \htmlspecialchars($k) . '</span>'
+                            . '<span class="t_punct">:</span>';
+                    }
+                    $arg .= $this->html->dump($v);
+                    $args[] = $arg;
+                }
+                $str .= \implode('<span class="t_punct">,</span> ', $args);
+                $str .= '<span class="t_punct">)</span>';
+            }
+            $str .= '</dd>' . "\n";
+        }
+        return $str;
+    }
+
+    /**
+     * Dump object constants as html
      *
      * @param Abstraction $abs object "abstraction"
      *
@@ -139,11 +177,17 @@ class HtmlObject
             return '';
         }
         $str = '<dt class="constants">constants</dt>' . "\n";
-        foreach ($constants as $k => $value) {
-            $str .= '<dd class="constant">'
-                . '<span class="t_identifier">' . $k . '</span>'
+        foreach ($constants as $k => $info) {
+            $modifiers = array(
+                $info['visibility'],
+            );
+            $str .= '<dd class="constant ' . $info['visibility'] . '">'
+                . \implode(' ', \array_map(function ($modifier) {
+                    return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
+                }, $modifiers))
+                . ' <span class="t_identifier">' . $k . '</span>'
                 . ' <span class="t_operator">=</span> '
-                . $this->html->dump($value)
+                . $this->html->dump($info['value'])
                 . '</dd>' . "\n";
         }
         return $str;

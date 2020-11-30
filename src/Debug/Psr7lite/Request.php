@@ -31,7 +31,7 @@ class Request extends Message
     /** @var string|null */
     private $requestTarget;
 
-    /** @var UriInterface|null */
+    /** @var UriInterface|Uri */
     private $uri;
 
     /**
@@ -178,7 +178,7 @@ class Request extends Message
      *
      * This method MUST return a UriInterface instance.
      *
-     * @return UriInterface Returns a UriInterface instance
+     * @return UriInterface|Uri Returns a UriInterface instance
      *     representing the URI of the request.
      *
      * @see http://tools.ietf.org/html/rfc3986#section-4.3
@@ -213,8 +213,8 @@ class Request extends Message
      * immutability of the message, and MUST return an instance that has the
      * new UriInterface instance.
      *
-     * @param UriInterface $uri          New request URI to use.
-     * @param bool         $preserveHost Preserve the original state of the Host header.
+     * @param UriInterface|Uri $uri          New request URI to use.
+     * @param bool             $preserveHost Preserve the original state of the Host header.
      *
      * @see http://tools.ietf.org/html/rfc3986#section-4.3
      *

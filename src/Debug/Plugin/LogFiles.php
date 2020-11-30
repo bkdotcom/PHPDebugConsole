@@ -286,7 +286,7 @@ class LogFiles extends Component
                 $strlen = $strpos + \strlen($str);
                 $path = \substr($dir, 0, $strlen);
                 if (\substr($path, -1) !== DIRECTORY_SEPARATOR) {
-                    $strpos = \strpos($dir, DIRECTORY_SEPARATOR, $strlen);
+                    $strpos = \strpos($dir, DIRECTORY_SEPARATOR, $strlen) ?: 0;
                     $path = \substr($dir, 0, $strpos);
                 }
                 $path = \rtrim($path, DIRECTORY_SEPARATOR);
@@ -324,7 +324,7 @@ class LogFiles extends Component
             if ($bIsDir) {
                 return 1;
             }
-            return $keyA > $keyB;
+            return \strnatcasecmp($keyA, $keyB);
         });
     }
 }

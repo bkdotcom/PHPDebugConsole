@@ -19,7 +19,8 @@ class InternalTest extends DebugTestFramework
     {
         parent::$allowError = true;
 
-        1 / 0;    // warning
+        // 1 / 0;    // warning
+        $this->debug->errorHandler->handleError(E_WARNING, 'you have been warned', __FILE__, __LINE__);
 
         $this->assertSame(array(
             'inConsole' => 1,

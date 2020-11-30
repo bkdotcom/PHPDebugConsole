@@ -7,6 +7,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Psr7lite\ServerRequest;
+use bdk\DebugTests\PolyFill\AssertionTrait;
 use bdk\PubSub\Event;
 
 /**
@@ -14,6 +15,7 @@ use bdk\PubSub\Event;
  */
 class DebugTestFramework extends DOMTestCase
 {
+    use AssertionTrait;
 
     public static $allowError = false;
     public static $obLevels = 0;
@@ -78,7 +80,7 @@ class DebugTestFramework extends DOMTestCase
      *
      * @return void
      */
-    public function setUp()
+    public function setUp(): void
     {
         /*
         $count = &$this->getSharedVar('count');
@@ -167,7 +169,7 @@ class DebugTestFramework extends DOMTestCase
      *
      * @return void
      */
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->debug->setCfg('output', false);
         // fwrite(STDERR, "tearDown\n");
@@ -527,6 +529,10 @@ class DebugTestFramework extends DOMTestCase
                 $message = "\e[1m" . $test . " doesn't contain\e[0m";
                 if ($test === 'streamAnsi') {
                     $message .= "\nactual: " . \str_replace("\e", '\e', $output);
+                }
+                if (\is_string($output)) {
+                    $this->assertStringContainsString($outputExpect['contains'], $output, $message);
+                    return;
                 }
                 $this->assertContains($outputExpect['contains'], $output, $message);
             } else {

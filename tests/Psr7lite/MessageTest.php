@@ -8,9 +8,13 @@ use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 use stdClass;
 
+/**
+ *
+ */
 class MessageTest extends TestCase
 {
-    use \bdk\DebugTests\PhpUnitPolyfillTrait;
+    use \bdk\DebugTests\PolyFill\AssertionTrait;
+    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
 
     public function testConstruct()
     {
@@ -89,9 +93,9 @@ class MessageTest extends TestCase
         ]);
 
         $headerLine = $message->getHeaderLine('content-type');
-        $this->assertRegExp('|text/html|', $headerLine);
-        $this->assertRegExp('|text/plain|', $headerLine);
-        $this->assertRegExp('|application/json|', $headerLine);
+        $this->assertStringContainsString('text/html', $headerLine);
+        $this->assertStringContainsString('text/plain', $headerLine);
+        $this->assertStringContainsString('application/json', $headerLine);
 
         $message = $message->withAddedHeader('foo', '');
         $headerLine = $message->getHeaderLine('foo');

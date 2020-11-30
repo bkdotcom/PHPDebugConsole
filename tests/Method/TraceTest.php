@@ -36,7 +36,7 @@ class TraceTest extends DebugTestFramework
                     $trace = $logEntry['args'][0];
                     $this->assertSame($values['file0'], $trace[0]['file']);
                     $this->assertSame($values['line0'], $trace[0]['line']);
-                    $this->assertInternalType('integer', $trace[0]['line']);
+                    $this->assertIsInt($trace[0]['line']);
                     $this->assertSame(Abstracter::UNDEFINED, $trace[0]['function']);
                     $this->assertSame($values['function1'], $trace[1]['function']);
                 },
@@ -84,7 +84,7 @@ class TraceTest extends DebugTestFramework
                 },
                 'html' => function ($output, LogEntry $logEntry) {
                     $trace = $logEntry['args'][0];
-                    $this->assertContains('<caption>trace</caption>' . "\n"
+                    $this->assertStringContainsString('<caption>trace</caption>' . "\n"
                         . '<thead>' . "\n"
                         . '<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>' . "\n"
                         . '</thead>', $output);

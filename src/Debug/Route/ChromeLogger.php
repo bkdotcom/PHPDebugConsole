@@ -193,9 +193,8 @@ class ChromeLogger extends Base
             $this->debug->utility->getBytes($this->debug->getCfg('headerMaxAll', Debug::CONFIG_DEBUG), true),
             $this->debug->utility->getBytes($this->debug->getCfg('headerMaxPer', Debug::CONFIG_DEBUG), true),
         ));
-        return $maxVals
-            ? \min($maxVals)
-            : 0;
+        $maxVals[] = 0;
+        return \min($maxVals);
     }
 
     /**

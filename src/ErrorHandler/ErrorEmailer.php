@@ -184,7 +184,7 @@ class ErrorEmailer implements SubscriberInterface
      */
     protected function backtraceStr(Error $error)
     {
-        $backtrace = $error->getTrace() ?: $error->getSubjec()->backtrace->get();
+        $backtrace = $error->getTrace() ?: $error->getSubject()->backtrace->get();
         if (empty($backtrace) || \count($backtrace) < 2) {
             return '';
         }

@@ -172,7 +172,7 @@ class Html
             $isDataAttrib = \strpos($k, 'data-') === 0;
             if ($isDataAttrib && $dataDecode) {
                 $val = $attribs[$k];
-                $attribs[$k] = \json_decode($attribs[$k], true);
+                $attribs[$k] = \json_decode((string) $attribs[$k], true);
                 if ($attribs[$k] === null && $val !== 'null') {
                     $attribs[$k] = \json_decode('"' . $val . '"', true);
                 }

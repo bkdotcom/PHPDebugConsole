@@ -1432,6 +1432,7 @@ class Debug
     {
         $args = \func_get_args();
         $count = \count($args);
+        /** @var mixed[] make psalm happy */
         $args = \array_replace(array(null, null, null), $args);
         if (\is_array($args[0])) {
             $args[0]['debug'] = self::META;

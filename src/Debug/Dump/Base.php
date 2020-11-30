@@ -642,14 +642,14 @@ class Base extends Component
         $arg = $this->subInfo['args'][$index];
         $replacement = '';
         $type = \substr($replace, -1);
-        if (\strpos('difs', $type) !== false) {
+        if (\preg_match('/[difs]/', $type)) {
             if ($type === 's') {
                 $arg = $this->substitutionAsString($arg, $this->subInfo['options']);
             }
             $replacement = $this->subReplacementDifs($arg, $replace);
         } elseif ($type === 'c' && $this->subInfo['options']['style']) {
             $replacement = $this->subReplacementC($arg);
-        } elseif (\strpos('oO', $type) !== false) {
+        } elseif (\preg_match('/[oO]/', $type)) {
             $replacement = $this->dump($arg);
         }
         $this->subInfo['typeCounts'][$type] ++;

@@ -72,7 +72,7 @@ EOD;
         $this->debug->log('testA', $testA);
         $testVal = 'fail';
         $output = $this->debug->output();
-        $this->assertContains('success', $output);
+        $this->assertStringContainsString('success', $output);
     }
 
     /**
@@ -96,7 +96,7 @@ EOD;
         $testA['val'] = &$testA;
         $this->debug->log('testA', $testA);
         $output = $this->debug->output();
-        $this->assertContains('t_recursion', $output);
+        $this->assertStringContainsString('t_recursion', $output);
         $this->testMethod(
             'log',
             array($testA),

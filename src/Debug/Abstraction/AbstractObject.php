@@ -19,6 +19,7 @@ use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Component;
 use bdk\Debug\Utility\PhpDoc;
+use Error;
 use ReflectionClass;
 use ReflectionObject;
 use RuntimeException;
@@ -34,6 +35,8 @@ class AbstractObject extends Component
     const OUTPUT_CONSTANTS = 4;
     const OUTPUT_METHODS = 8;
     const OUTPUT_METHOD_DESC = 16;
+    const COLLECT_ATTRIBUTES_OBJ = 32;
+    const OUTPUT_ATTRIBUTES_OBJ = 64;
 
 	protected $abstracter;
     protected $debug;
@@ -80,6 +83,7 @@ class AbstractObject extends Component
         $interfaceNames = $reflector->getInterfaceNames();
         \sort($interfaceNames);
         $abs = new Abstraction(Abstracter::TYPE_OBJECT, array(
+            'attributes' => array(),
             'className' => $className,
             'constants' => array(),
             'debugMethod' => $method,
@@ -154,19 +158,7 @@ class AbstractObject extends Component
         if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
             $abs['stringified'] = $obj->format(\DateTime::ISO8601);
         } elseif ($obj instanceof \mysqli) {
-            \set_error_handler(function ($errno, $errstr) {
-                throw new RuntimeException($errstr, $errno);
-            }, E_ALL);
-            try {
-                $obj->stat();
-            } catch (RuntimeException $e) {
-                /*
-                    stat() threw an error, so we'll not collect property values to
-                    avoid "Property access is not allowed yet"
-                */
-                $abs['collectPropertyValues'] = false;
-            }
-            \restore_error_handler();
+            $this->onStartMysqli($abs);
         } elseif ($obj instanceof Debug) {
             $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
         } elseif ($obj instanceof PhpDoc) {
@@ -227,6 +219,7 @@ class AbstractObject extends Component
         );
         $values = \array_diff_key($abs->getValues(), \array_flip($keysTemp));
         if (!$abs['isRecursion'] && !$abs['isExcluded']) {
+            $this->sort($values['constants']);
             $this->sort($values['properties']);
             $this->sort($values['methods']);
         }
@@ -236,7 +229,30 @@ class AbstractObject extends Component
     }
 
     /**
-     * Get object's constants
+     * Add object's attributes to abstraction
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     */
+    private function addAttributes(Abstraction $abs)
+    {
+        if (PHP_VERSION_ID < 80000) {
+            return;
+        }
+        if (!($abs['flags'] & self::COLLECT_ATTRIBUTES_OBJ)) {
+            return;
+        }
+        $abs['attributes'] = \array_map(function ($attribute) {
+            return array(
+                'name' => $attribute->getName(),
+                'arguments' => $attribute->getArguments(),
+            );
+        }, $abs['reflector']->getAttributes());
+    }
+
+    /**
+     * Add object's constants to abstraction
      *
      * @param Abstraction $abs Abstraction instance
      *
@@ -247,15 +263,69 @@ class AbstractObject extends Component
         if (!($abs['flags'] & self::COLLECT_CONSTANTS)) {
             return;
         }
-        $reflector = $abs['reflector'];
-        $constants = $reflector->getConstants();
-        while ($reflector = $reflector->getParentClass()) {
-            $constants = \array_merge($reflector->getConstants(), $constants);
+        $abs['constants'] = PHP_VERSION_ID >= 70100
+            ? $this->getConstantsReflection($abs['reflector'])
+            : $this->getConstants($abs['reflector']);
+    }
+
+    /**
+     * Get constant arrays via `getReflectionConstants` (php 7.1)
+     * This gets us visibility and access to phpDoc
+     *
+     * @param ReflectionClass $reflector ReflectionClass or ReflectionObject
+     *
+     * @return array name => array
+     */
+    private function getConstantsReflection(ReflectionClass $reflector)
+    {
+        $constants = array();
+        while ($reflector) {
+            foreach ($reflector->getReflectionConstants() as $const) {
+                $name = $const->getName();
+                if (isset($constants[$name])) {
+                    continue;
+                }
+                $vis = 'public';
+                if ($const->isPrivate()) {
+                    $vis = 'private';
+                } elseif ($const->isProtected()) {
+                    $vis = 'protected';
+                }
+                $constants[$name] = array(
+                    'desc' => null,
+                    'value' => $const->getValue(),
+                    'visibility' => $vis,
+                );
+            }
+            $reflector = $reflector->getParentClass();
         }
-        if ($this->cfg['objectSort'] === 'name') {
-            \ksort($constants);
+        return $constants;
+    }
+
+    /**
+     * Get constant arrays
+     *
+     * @param ReflectionClass $reflector ReflectionClass or ReflectionObject
+     *
+     * @return array name => array
+     */
+    private function getConstants(ReflectionClass $reflector)
+    {
+        $constants = array();
+        while ($reflector) {
+            foreach ($reflector->getConstants() as $name => $value) {
+                if (isset($constants[$name])) {
+                    continue;
+                }
+                $constants[$name] = array(
+                    'desc' => null,
+                    'value' => $value,
+                    'visibility' => 'public',
+                );
+            }
+            $reflector = $reflector->getParentClass();
         }
-        $abs['constants'] = $constants;
+        return $constants;
     }
 
     /**
@@ -275,6 +345,7 @@ class AbstractObject extends Component
             $this->addTraverseValues($abs);
             return;
         }
+        $this->addAttributes($abs);
         $this->addConstants($abs);
         while ($reflector = $reflector->getParentClass()) {
             $abs['extends'][] = $reflector->getName();
@@ -308,8 +379,10 @@ class AbstractObject extends Component
     private function getFlags()
     {
         $flags = array(
+            'collectAttributesObj' => self::COLLECT_ATTRIBUTES_OBJ,
             'collectConstants' => self::COLLECT_CONSTANTS,
             'collectMethods' => self::COLLECT_METHODS,
+            'outputAttributesObj' => self::OUTPUT_ATTRIBUTES_OBJ,
             'outputConstants' => self::OUTPUT_CONSTANTS,
             'outputMethodDesc' => self::OUTPUT_METHOD_DESC,
             'outputMethods' => self::OUTPUT_METHODS,
@@ -458,7 +531,34 @@ class AbstractObject extends Component
     }
 
     /**
-     * Sorts property/method array by visibility or name
+     * Test if we can collect mysqli property values
+     *
+     * @param Abstraction $abs [description]
+     *
+     * @return void
+     */
+    private function onStartMysqli(Abstraction $abs)
+    {
+        /*
+            test if stat() throws an error (ie "Property access is not allowed yet")
+            if so, don't collect property values
+        */
+        \set_error_handler(function ($errno, $errstr) {
+            throw new RuntimeException($errstr, $errno);
+        }, E_ALL);
+        try {
+            $mysqli = $abs->getSubject();
+            $mysqli->stat();
+        } catch (Error $e) {
+            $abs['collectPropertyValues'] = false;
+        } catch (RuntimeException $e) {
+            $abs['collectPropertyValues'] = false;
+        }
+        \restore_error_handler();
+    }
+
+    /**
+     * Sorts constant/property/method array by visibility or name
      *
      * @param array $array array to sort
      *

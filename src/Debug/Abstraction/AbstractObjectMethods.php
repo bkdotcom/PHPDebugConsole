@@ -283,7 +283,7 @@ class AbstractObjectMethods extends AbstractObjectSub
         $defaultValue = Abstracter::UNDEFINED;
         if ($reflectionParameter->isDefaultValueAvailable()) {
             $defaultValue = $reflectionParameter->getDefaultValue();
-            if (\version_compare(PHP_VERSION, '5.4.6', '>=') && $reflectionParameter->isDefaultValueConstant()) {
+            if (PHP_VERSION_ID >= 50406 && $reflectionParameter->isDefaultValueConstant()) {
                 /*
                     getDefaultValueConstantName() :
                         php may return something like self::CONSTANT_NAME
@@ -333,24 +333,22 @@ class AbstractObjectMethods extends AbstractObjectSub
     private function getParamTypeHint(ReflectionParameter $reflectionParameter, $phpDoc = array())
     {
         $matches = array();
-        $type = null;
+        if (isset($phpDoc['type'])) {
+            return $this->resolvePhpDocType($phpDoc['type']);
+        }
+        if (PHP_VERSION_ID >= 70000) {
+            return $this->getTypeString($reflectionParameter->getType());
+        }
         if ($reflectionParameter->isArray()) {
-            $type = 'array';
-        } elseif (\version_compare(PHP_VERSION, '7.0', '>=')) {
-            $type = $reflectionParameter->getType();
-            if ($type instanceof ReflectionNamedType) {
-                $type = $type->getName();
-            } elseif ($type) {
-                $type = (string) $type;
-            }
-        } elseif (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', $reflectionParameter->__toString(), $matches)) {
+            // isArray is deprecated in php 8.0
+            // isArray is only concerned with type-hint and does not look at default value
+            return 'array';
+        }
+        if (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', $reflectionParameter->__toString(), $matches)) {
             // Parameter #0 [ <required> namespace\Type $varName ]
-            $type = $matches[1];
+            return $matches[1];
         }
-        if (!$type && isset($phpDoc['type'])) {
-            $type = $this->resolvePhpDocType($phpDoc['type']);
-        }
-        return $type;
+        return null;
     }
 
     /**
@@ -370,14 +368,8 @@ class AbstractObjectMethods extends AbstractObjectSub
         if (!empty($phpDoc['return'])) {
             $return = \array_merge($return, $phpDoc['return']);
             $return['type'] = $this->resolvePhpDocType($return['type']);
-        }
-        if (\version_compare(PHP_VERSION, '7.0', '>=')) {
-            $type = $reflectionMethod->getReturnType();
-            if ($type instanceof ReflectionNamedType) {
-                $type = $type->getName();
-            } elseif ($type) {
-                $type = (string) $type;
-            }
+        } elseif (PHP_VERSION_ID >= 70000) {
+            $return['type'] = $this->getTypeString($reflectionMethod->getReturnType());
         }
         return $return;
     }

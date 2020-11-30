@@ -48,7 +48,7 @@ class MethodTest extends DebugTestFramework
                 'entry' => function (LogEntry $logEntry) {
                     // we're doing the custom stuff via Debug::EVENT_OUTPUT_LOG_ENTRY, so logEntry should still be trace
                     $this->assertSame('trace', $logEntry['method']);
-                    $this->assertInternalType('array', $logEntry['args'][0]);
+                    $this->assertIsArray($logEntry['args'][0]);
                     $this->assertSame(array(
                         'caption' => 'trace',
                         'detectFiles' => true,
@@ -1968,8 +1968,8 @@ EOD;
         $this->debug->time('some label');
 
         $timers = $this->getPrivateProp($this->debug->stopWatch, 'timers');
-        $this->assertInternalType('float', $timers['stack'][0]);
-        $this->assertInternalType('float', $timers['labels']['some label'][1]);
+        $this->assertIsFloat($timers['stack'][0]);
+        $this->assertIsFloat($timers['labels']['some label'][1]);
 
         $this->assertEmpty($this->debug->getData('log'));
         $this->assertEmpty($this->debug->getRoute('wamp')->wamp->messages);
@@ -2092,7 +2092,7 @@ EOD;
         );
 
         $timers = $this->getPrivateProp($this->debug->stopWatch, 'timers');
-        $this->assertInternalType('float', $timers['labels']['my label'][0]);
+        $this->assertIsFloat($timers['labels']['my label'][0]);
         $this->assertNull($timers['labels']['my label'][1]);
 
         $this->debug->setCfg('collect', false);

@@ -66,7 +66,8 @@ class InternalEventsTest extends DebugTestFramework
         //
         // Test that emailed if there's an error
         //
-        1 / 0; // warning
+        // 1 / 0; // warning
+        $this->debug->errorHandler->handleError(E_WARNING, 'you have been warned', __FILE__, __LINE__);
         $this->expectedSubject = 'Debug Log: Error';
         $internalEvents->onShutdownLow();
         $this->assertTrue($this->emailCalled);

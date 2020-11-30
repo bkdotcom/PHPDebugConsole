@@ -79,7 +79,7 @@
 .debug .t_object .method.deprecated { opacity: 0.66; }
 .debug .t_object .method.deprecated i { opacity: 0.66; color: #d8000c; border-bottom: 0; }
 .debug .t_object .method > .t_punct { opacity: 1; font-weight: bold; color: inherit; }
-.debug .t_object .method .t_parameter-name { color: #263; }
+.debug .t_object .t_parameter-name { color: #263; }
 .debug .t_object .property.private-ancestor:not(:hover) > * { opacity: 0.5; }
 .debug .t_object .t_modifier_static { font-style: italic; color: #00529b; }
 .debug .t_object .info { display: inline-block; background-color: #d9edf7; color: #31708f; }

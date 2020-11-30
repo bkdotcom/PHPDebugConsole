@@ -269,9 +269,9 @@ class Utility
             }
             $format = \preg_replace('/%[Ss]/', (string) $sec, $format);
             $dateInterval = new \DateInterval('PT0S');
-            $dateInterval->h = $hours;
-            $dateInterval->i = $min;
-            $dateInterval->sec = $sec;
+            $dateInterval->h = (int) $hours;
+            $dateInterval->i = (int) $min;
+            $dateInterval->s = (int) $sec;
             return $dateInterval->format($format);
         }
         switch ($format) {

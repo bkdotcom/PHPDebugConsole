@@ -627,10 +627,11 @@ class Internal implements SubscriberInterface
      */
     public function requestId()
     {
+        $unique = \md5(\uniqid((string) \rand(), true));
         return \hash(
             'crc32b',
             $this->getServerParam('REMOTE_ADDR', 'terminal')
-                . ($this->getServerParam('REQUEST_TIME_FLOAT') ?: \md5(\uniqid(\rand(), true)))
+                . ($this->getServerParam('REQUEST_TIME_FLOAT') ?: $unique)
                 . $this->getServerParam('REMOTE_PORT', '')
         );
     }

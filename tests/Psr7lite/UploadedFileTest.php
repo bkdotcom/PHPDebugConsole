@@ -7,9 +7,12 @@ use bdk\Debug\Psr7lite\UploadedFile;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
+/**
+ *
+ */
 class UploadedFileTest extends TestCase
 {
-    use \bdk\DebugTests\PhpUnitPolyfillTrait;
+    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
 
     public function testConstruct()
     {

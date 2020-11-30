@@ -464,12 +464,12 @@ class AbstractObjectProperties extends AbstractObjectSub
     private function getPropInfo(Abstraction $abs, ReflectionProperty $reflectionProperty)
     {
         $obj = $abs->getSubject();
-        $reflectionProperty->setAccessible(true); // only accessible via reflection
         $isInstance = \is_object($obj);
         $className = $isInstance
             ? \get_class($obj) // prop->class is equiv to getDeclaringClass
             : $obj;
-        // get type and comment from phpdoc
+        $reflectionProperty->setAccessible(true); // only accessible via reflection
+        // get type and desc from phpdoc
         $phpDoc = $this->getPhpDoc($reflectionProperty);
         /*
             getDeclaringClass returns "LAST-declared/overriden"
@@ -481,21 +481,63 @@ class AbstractObjectProperties extends AbstractObjectSub
                 ? $declaringClassName
                 : null,
             'isStatic' => $reflectionProperty->isStatic(),
-            'type' => $this->resolvePhpDocType($phpDoc['type']),
+            'type' => $this->getPropType($phpDoc['type'], $reflectionProperty),
             'visibility' => $this->getPropVis($reflectionProperty),
         ));
         if ($abs['collectPropertyValues']) {
-            $propName = $reflectionProperty->getName();
-            if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
-                $value = $abs['propertyOverrideValues'][$propName];
-                $propInfo['value'] = $value;
-                if (\is_array($value) && \array_intersect_key($value, static::$basePropInfo)) {
-                    $propInfo = $value;
-                }
-                $propInfo['valueFrom'] = 'debug';
-            } elseif ($isInstance) {
-                $propInfo['value'] = $reflectionProperty->getValue($obj);
+            $propInfo = $this->getPropValue($propInfo, $abs, $reflectionProperty);
+        }
+        return $propInfo;
+    }
+
+    /**
+     * Get Property's type
+     * Priority given to phpDoc type, followed by declared type (PHP 7.4)
+     *
+     * @param string             $phpDocType         type specified in phpDoc block
+     * @param ReflectionProperty $reflectionProperty ReflectionProperty instance
+     *
+     * @return string|null
+     */
+    private function getPropType($phpDocType, ReflectionProperty $reflectionProperty)
+    {
+        $type = $this->resolvePhpDocType($phpDocType);
+        if ($type !== null) {
+            return $type;
+        }
+        return PHP_VERSION_ID >= 70400
+            ? $this->getTypeString($reflectionProperty->getType())
+            : null;
+    }
+
+    /**
+     * Set 'value' and 'valueFrom' values
+     *
+     * @param array              $propInfo           propInfo array
+     * @param Abstraction        $abs                Abstraction event object
+     * @param ReflectionProperty $reflectionProperty ReflectionProperty
+     *
+     * @return array updated propInfo
+     */
+    private function getPropValue($propInfo, Abstraction $abs, ReflectionProperty $reflectionProperty)
+    {
+        $propName = $reflectionProperty->getName();
+        if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
+            $value = $abs['propertyOverrideValues'][$propName];
+            $propInfo['value'] = $value;
+            if (\is_array($value) && \array_intersect_key($value, static::$basePropInfo)) {
+                $propInfo = $value;
             }
+            $propInfo['valueFrom'] = 'debug';
+            return $propInfo;
+        }
+        $obj = $abs->getSubject();
+        $isInstance = \is_object($obj);
+        if ($isInstance) {
+            $isInitialized = PHP_VERSION_ID < 70400 || $reflectionProperty->isInitialized($obj);
+            $propInfo['value'] = $isInitialized
+                ? $reflectionProperty->getValue($obj)
+                : null;
         }
         return $propInfo;
     }

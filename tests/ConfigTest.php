@@ -28,11 +28,13 @@ class ConfigTest extends DebugTestFramework
         );
         $abstracterKeys = array(
             'cacheMethods',
+            'collectAttributesObj',
             'collectConstants',
             'collectMethods',
             'objectsExclude',
             'objectsWhitelist',
             'objectSort',
+            'outputAttributesObj',
             'outputConstants',
             'outputMethodDesc',
             'outputMethods',
@@ -88,7 +90,7 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame($debugKeys, \array_keys($this->debug->getCfg('debug')));
         $this->assertSame($abstracterKeys, \array_keys($this->debug->getCfg('abstracter')));
         $this->assertSame($abstracterKeys, \array_keys($this->debug->getCfg('abstracter/*')));
-        $this->assertInternalType('boolean', $this->debug->getCfg('output'));       // debug/output
+        $this->assertIsBool($this->debug->getCfg('output'));       // debug/output
 
         $this->assertSame($configKeys, \array_keys($this->debug->getCfg()));
         $this->assertSame($configKeys, \array_keys($this->debug->getCfg('*')));
@@ -150,7 +152,7 @@ class ConfigTest extends DebugTestFramework
         $this->assertFalse($debug->getRoute('html', true));
         // getting filepathScript should load routeHtml
         $filepathScript = $debug->getCfg('filepathScript');
-        $this->assertInternalType('string', $filepathScript);
+        $this->assertIsString($filepathScript);
         $this->assertTrue($debug->getRoute('html', true));
     }
 }

@@ -74,9 +74,10 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       font-weight: bold;
       color: inherit;
     }
-    .t_parameter-name {
-      color: $color-param;
-    }
+  }
+  .t_parameter-name {
+    // method parameter or attribute argument
+    color: $color-param;
   }
   .property {
     &.private-ancestor:not(:hover) {

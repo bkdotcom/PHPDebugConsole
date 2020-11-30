@@ -157,6 +157,7 @@ class FindExit
         $backtrace = \xdebug_get_function_stack();
         $backtrace = \array_reverse($backtrace);
         $found = false;
+        $frame = false;
         foreach ($backtrace as $frame) {
             $frame = \array_merge(array(
                 'class' => null,
@@ -191,7 +192,7 @@ class FindExit
      *
      * @param array $frame backtrace frame
      *
-     * @return string
+     * @return array
      */
     private function getFrameSource($frame)
     {
@@ -211,8 +212,8 @@ class FindExit
         }
         if (\preg_match('/^.*\{closure:(.+):(\d+)-(\d+)\}$/', $frame['function'], $matches)) {
             $file = $matches[1];
-            $lineStart = $matches[2];
-            $lineEnd = $matches[3];
+            $lineStart = (int) $matches[2];
+            $lineEnd = (int) $matches[3];
             $php = \array_slice(
                 \file($file),
                 $lineStart - 1,
@@ -228,7 +229,11 @@ class FindExit
             ? (new \ReflectionClass($frame['class']))->getMethod($frame['function'])
             : new \ReflectionFunction($frame['function']);
         if ($reflection->isInternal()) {
-            return '';
+            return array(
+                null,
+                0,
+                '',
+            );
         }
         $php = \array_slice(
             \file($reflection->getFileName()),

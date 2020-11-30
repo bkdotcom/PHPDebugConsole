@@ -188,6 +188,7 @@ class MySqli extends mysqliBase
             $matches = array();
             \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat(), $matches);
             $serverInfo = \array_map(function ($val) {
+                /** @psalm-suppress InvalidOperand */
                 return $val * 1;
             }, \array_combine($matches[1], $matches[2]));
             $serverInfo['Version'] = $this->server_info;

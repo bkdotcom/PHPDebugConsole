@@ -244,6 +244,7 @@ class SimpleCache implements CacheInterface
         $info = new CallInfo($method, $keyOrKeys);
 
         $exception = null;
+        $result = null;
         try {
             $result = \call_user_func_array(array($this->cache, $method), $args);
             if ($isSuccessResponse && $result === false) {

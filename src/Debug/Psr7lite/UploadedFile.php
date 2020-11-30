@@ -28,10 +28,10 @@ use RuntimeException;
 class UploadedFile
 {
 
-    /** @var string */
+    /** @var string|null */
     private $clientFilename;
 
-    /** @var string */
+    /** @var string|null */
     private $clientMediaType;
 
     /** @var int */
@@ -54,10 +54,10 @@ class UploadedFile
     /** @var bool */
     private $isMoved = false;
 
-    /** @var int */
+    /** @var int|null */
     private $size;
 
-    /** @var StreamInterface|null */
+    /** @var StreamInterface|Stream|null */
     private $stream;
 
     /** @var string */
@@ -103,7 +103,7 @@ class UploadedFile
      * If the moveTo() method has been called previously, this method will raise
      * an exception.
      *
-     * @return Stream Stream representation of the uploaded file.
+     * @return Stream|StreamInterface Stream representation of the uploaded file.
      *
      * @throws RuntimeException in cases when no stream is available or can be
      *     created.
@@ -189,7 +189,7 @@ class UploadedFile
         }
         // Copy the contents of a stream into another stream until end-of-file.
         $dest = new Stream(\fopen($targetPath, 'w'));
-        $bufferSize = \pow(1024, 2); // 1 MB
+        $bufferSize = (int) \pow(1024, 2); // 1 MB
         while (!$stream->eof()) {
             if (!$dest->write($stream->read($bufferSize))) {
                 break;
@@ -381,7 +381,7 @@ class UploadedFile
         }
         if (\is_resource($streamOrFile)) {
             $this->stream = new Stream($streamOrFile);
-            $stats = \fstat($this->resource);
+            $stats = \fstat($streamOrFile);
             if (isset($stats['size'])) {
                 $this->size = $stats['size'];
             }

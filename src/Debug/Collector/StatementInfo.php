@@ -378,7 +378,7 @@ class StatementInfo
                 $debug->meta('uncollapse', false)
             );
         }
-        if (\stripos('ORDER BY RAND()', $query) !== false) {
+        if (\stripos($query, 'ORDER BY RAND()') !== false) {
             $debug->warn(
                 '%cORDER BY RAND()%c is slow, avoid if you can.',
                 'font-family:monospace',

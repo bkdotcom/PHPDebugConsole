@@ -21,6 +21,9 @@ define('TEST_DIR', __DIR__);
 ini_set('xdebug.var_display_max_depth', 10);
 ini_set('xdebug.var_display_max_data', '-1');
 
+$modifyTests = new \bdk\DebugTests\ModifyTests();
+$modifyTests->modify(__DIR__);
+
 /*
     We also initialize via DebugTestFramework::setUp()
     however, testProviders are called before setup (I belive)

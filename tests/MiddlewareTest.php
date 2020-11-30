@@ -34,6 +34,6 @@ class MiddlewareTest extends DebugTestFramework
             null,
             '',
         ), $chromeLoggerData['rows']);
-        $this->assertContains('<li class="m_log"><span class="no-quotes t_string">running mock middleware</span></li>', $body);
+        $this->assertStringContainsString('<li class="m_log"><span class="no-quotes t_string">running mock middleware</span></li>', $body);
     }
 }

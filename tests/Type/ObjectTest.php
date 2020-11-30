@@ -103,7 +103,6 @@ EOD;
         $cratedAbs2 = \json_decode(\json_encode($cratedAbs2), true);
         $cratedAbs2['scopeClass'] = null;
 
-
         return array(
             // 0
             array(
@@ -112,6 +111,33 @@ EOD;
                     new \bdk\DebugTests\Fixture\Test(),
                 ),
                 array(
+                    'entry' => function ($logEntry) {
+                        $objAbs = $logEntry['args'][0];
+                        $values = $objAbs->getValues();
+                        $keysExpect = array(
+                            'attributes',
+                            'className',
+                            'constants',
+                            'debugMethod',
+                            'definition',
+                            'extends',
+                            'flags',
+                            'implements',
+                            'isExcluded',
+                            'isRecursion',
+                            'methods',
+                            'phpDoc',
+                            'properties',
+                            'scopeClass',
+                            'stringified',
+                            'traverseValues',
+                            'type',
+                            'viaDebugInfo',
+                        );
+                        $keysActual = \array_keys($values);
+                        \sort($keysActual);
+                        $this->assertSame($keysExpect, $keysActual);
+                    },
                     'html' => function ($str) {
                         $this->assertStringStartsWith(
                             '<li class="m_log"><div class="t_object" data-accessible="public">'
@@ -122,30 +148,35 @@ EOD;
                         $this->assertSelectCount('dl.object-inner', 1, $str);
 
                         // extends
-                        $this->assertContains('<dt>extends</dt>' . "\n" .
+                        $this->assertStringContainsString('<dt>extends</dt>' . "\n" .
                             '<dd class="extends"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</span></dd>', $str);
 
                         // implements
                         if (\defined('HHVM_VERSION')) {
-                            $this->assertContains(\implode("\n", array(
+                            $this->assertStringContainsString(\implode("\n", array(
                                 '<dt>implements</dt>',
-                                '<dd class="interface">Stringish</dd>',
-                                '<dd class="interface">XHPChild</dd>',
+                                '<dd class="interface"><span class="classname">Stringish</span></dd>',
+                                '<dd class="interface"><span class="classname">XHPChild</span></dd>',
+                            )), $str);
+                        } elseif (PHP_VERSION_ID >= 80000) {
+                            $this->assertStringContainsString(\implode("\n", array(
+                                '<dt>implements</dt>',
+                                '<dd class="interface"><span class="classname">Stringable</span></dd>',
                             )), $str);
                         } else {
-                            $this->assertNotContains('<dt>implements</dt>', $str);
+                            $this->assertStringNotContainsString('<dt>implements</dt>', $str);
                         }
 
                         // constants
-                        $this->assertContains(
+                        $this->assertStringContainsString(
                             '<dt class="constants">constants</dt>' . "\n"
-                            . '<dd class="constant"><span class="t_identifier">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
-                            . '<dd class="constant"><span class="t_identifier">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>',
+                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
+                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>',
                             $str
                         );
 
                         // properties
-                        $this->assertContains(\implode("\n", array(
+                        $this->assertStringContainsString(\implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
                             '<dd class="magic info">This object has a <code>__get</code> method</dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
@@ -174,7 +205,7 @@ EOD;
                         )), $str);
 
                         // methods
-                        $this->assertContains(\implode("\n", array(
+                        $this->assertStringContainsString(\implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="magic info">This object has a <code>__call</code> method</dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span>, <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don\'t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
@@ -187,14 +218,14 @@ EOD;
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_identifier">testBasePublic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">testBaseStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="method protected"><span class="t_modifier_protected">protected</span> <span class="t_type">void</span> <span class="t_identifier" title="This method is protected">methodProtected</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param">$param1</span></span><span class="t_punct">)</span></dd>',
-                            '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_type">void</span> <span class="t_identifier" title="This method is private">methodPrivate</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">SomeClass</span></span> <span class="t_parameter-name" title="first param (passed by ref)">&amp;$param1</span></span>, <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="second param (passed by ref)">&amp;$param2</span></span><span class="t_punct">)</span></dd>',
+                            '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_type">void</span> <span class="t_identifier" title="This method is private">methodPrivate</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param (passed by ref)">&amp;$param1</span></span>, <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="second param (passed by ref)">&amp;$param2</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited magic method"><span class="t_modifier_magic">magic</span> <span class="t_type">void</span> <span class="t_identifier" title="I\'m a magic method">presto</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span>, <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name">$int</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">1</span></span>, <span class="parameter"><span class="t_parameter-name">$bool</span> <span class="t_operator">=</span> <span class="t_bool t_parameter-default true">true</span></span>, <span class="parameter"><span class="t_parameter-name">$null</span> <span class="t_operator">=</span> <span class="t_null t_parameter-default">null</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited magic method static"><span class="t_modifier_magic">magic</span> <span class="t_modifier_static">static</span> <span class="t_type">void</span> <span class="t_identifier" title="I\'m a static magic method">prestoStatic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name">$noDefault</span></span>, <span class="parameter"><span class="t_parameter-name">$arr</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span>, <span class="parameter"><span class="t_parameter-name">$opts</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">array(\'a\'=&gt;\'ay\',\'b\'=&gt;\'bee\')</span></span><span class="t_punct">)</span></dd>',
                             '<dt>phpDoc</dt>',
                         )), $str);
 
                         // phpdoc
-                        $this->assertContains(\implode("\n", array(
+                        $this->assertStringContainsString(\implode("\n", array(
                             '<dt>phpDoc</dt>',
                             '<dd class="phpdoc phpdoc-link"><span class="phpdoc-tag">link</span><span class="t_operator">:</span> <a href="http://www.bradkent.com/php/debug" target="_blank">PHPDebugConsole Homepage</a></dd>',
                             '</dl>',
@@ -219,7 +250,7 @@ EOD;
                 ),
                 array(
                     'html' => function ($str) {
-                        $this->assertContains('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more bytes)</i></span>', $str);
+                        $this->assertStringContainsString('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more bytes)</i></span>', $str);
                     }
                 ),
             ),
@@ -232,7 +263,7 @@ EOD;
                 array(
                     'html' => function ($str) {
                         // properties
-                        $this->assertContains(\implode("\n", array(
+                        $this->assertStringContainsString(\implode("\n", array(
                             '<dt class="properties">properties</dt>',
                             '<dd class="magic info">This object has a <code>__get</code> method</dd>',
                             '<dd class="property protected magic-read"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
@@ -243,7 +274,7 @@ EOD;
                         $constName = \defined('HHVM_VERSION')
                             ? '<span class="classname">\\bdk\\DebugTests\\Test2Base</span><span class="t_operator">::</span><span class="t_identifier">WORD</span>'
                             : '<span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">WORD</span>';
-                        $this->assertContains(\implode("\n", array(
+                        $this->assertStringContainsString(\implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="magic info">This object has a <code>__call</code> method</dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
@@ -283,9 +314,9 @@ EOD;
         $this->debug->log('test_o', $testO);
         $testVal = 'fail';
         $output = $this->debug->output();
-        $this->assertContains('success A', $output);
-        $this->assertContains('success B', $output);
-        $this->assertNotContains('fail', $output);
+        $this->assertStringContainsString('success A', $output);
+        $this->assertStringContainsString('success B', $output);
+        $this->assertStringNotContainsString('fail', $output);
         $this->assertSame('fail', $testO->propPublic);   // prop should be 'fail' at this point
     }
 
@@ -307,16 +338,25 @@ EOD;
             array('bdk\DebugTests\Fixture\TestBase'),
             $abs['extends']
         );
-        $this->assertSame(
-            \defined('HHVM_VERSION')
-                ? array('Stringish','XHPChild') // hhvm-3.25 has XHPChild
-                : array(),
-            $abs['implements']
-        );
+        $expect = array();
+        if (\defined('HHVM_VERSION')) {
+            $expect = array('Stringish','XHPChild'); // hhvm-3.25 has XHPChild
+        } elseif (PHP_VERSION_ID >= 80000) {
+            $expect = array('Stringable');
+        }
+        $this->assertSame($expect, $abs['implements']);
         $this->assertSame(
             array(
-                'INHERITED' => 'defined in TestBase',
-                'MY_CONSTANT' => 'redefined in Test',
+                'INHERITED' => array(
+                    'desc' => null,
+                    'value' => 'defined in TestBase',
+                    'visibility' => 'public',
+                ),
+                'MY_CONSTANT' => array(
+                    'desc' => null,
+                    'value' => 'redefined in Test',
+                    'visibility' => 'public',
+                ),
             ),
             $abs['constants']
         );
@@ -404,7 +444,7 @@ EOD;
             $this->markTestSkipped('anonymous classes are a php 7.0 thing');
         }
         // self::$allowError = true;
-        $filepath = __DIR__ . '/Fixture/Anonymous.php';
+        $filepath = \realpath(__DIR__ . '/../Fixture/Anonymous.php');
         $anonymous = require $filepath;
         $this->testMethod(
             'log',

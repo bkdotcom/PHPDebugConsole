@@ -65,6 +65,7 @@ class Middleware implements MiddlewareInterface
             'request' => $request,
             'response' => $response,
         ));
+        /** @var ResponseInterface */
         return $this->debug->writeToResponse($response);
     }
 

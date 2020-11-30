@@ -3,24 +3,27 @@
 namespace bdk\DebugTests\Utility;
 
 use bdk\Debug\Utility\FileStreamWrapper;
+use bdk\DebugTests\PolyFill\AssertionTrait;
+use PHPUnit\Framework\TestCase;
 
 /**
  * PHPUnit tests for Debug class
  */
-class FileStreamWrapperTest extends \PHPUnit\Framework\TestCase
+class FileStreamWrapperTest extends TestCase
 {
+    use AssertionTrait;
 
     protected $stream;
 
     protected static $tmpdir = 'mkdirtest';
     protected static $tmpdir2 = 'mkdirtest2';
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         FileStreamWrapper::register();
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         self::rmdir(self::$tmpdir);
         self::rmdir(self::$tmpdir2);
@@ -29,7 +32,7 @@ class FileStreamWrapperTest extends \PHPUnit\Framework\TestCase
     public function testDirClosedir()
     {
         $resource = \opendir(__DIR__);
-        $this->assertInternalType(\PHPUnit\Framework\Constraint\IsType::TYPE_RESOURCE, $resource);
+        $this->assertIsResource($resource);
         \closedir($resource);
         $this->assertFalse(is_resource($resource));
     }
@@ -37,31 +40,31 @@ class FileStreamWrapperTest extends \PHPUnit\Framework\TestCase
     public function testDirOpendir()
     {
         $resource = \opendir(__DIR__);
-        $this->assertInternalType(\PHPUnit\Framework\Constraint\IsType::TYPE_RESOURCE, $resource);
+        $this->assertIsResource($resource);
     }
 
     public function testDirReaddir()
     {
-        if ($dh = \opendir(__DIR__)) {
-            $entry = \readdir($dh);
-            $this->assertNotFalse($entry);
-            \closedir($dh);
-        } else {
+        $dh = \opendir(__DIR__);
+        if (!$dh) {
             throw new \PHPUnit\Framework\Exception('opendir failed', 500);
         }
+        $entry = \readdir($dh);
+        $this->assertNotFalse($entry);
+        \closedir($dh);
     }
 
     public function testDirRewinddir()
     {
-        if ($dh = \opendir(__DIR__)) {
-            $entry = \readdir($dh);
-            \rewinddir($dh);
-            $entry2 = \readdir($dh);
-            $this->assertSame($entry, $entry2);
-            \closedir($dh);
-        } else {
+        $dh = \opendir(__DIR__);
+        if (!$dh) {
             throw new \PHPUnit\Framework\Exception('opendir failed', 500);
         }
+        $entry = \readdir($dh);
+        \rewinddir($dh);
+        $entry2 = \readdir($dh);
+        $this->assertSame($entry, $entry2);
+        \closedir($dh);
     }
 
     public function testMkdir()

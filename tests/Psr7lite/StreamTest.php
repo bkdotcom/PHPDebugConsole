@@ -3,12 +3,18 @@
 namespace bdk\DebugTests\Psr7lite;
 
 use bdk\Debug\Psr7lite\Stream;
+use bdk\DebugTests\PolyFill\AssertionTrait;
+use bdk\DebugTests\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
+/**
+ *
+ */
 class StreamTest extends TestCase
 {
-    use \bdk\DebugTests\PhpUnitPolyfillTrait;
+    use AssertionTrait;
+    use ExpectExceptionTrait;
 
     public function testConstruct()
     {
@@ -21,9 +27,9 @@ class StreamTest extends TestCase
         $this->assertTrue($stream->isReadable());
         $this->assertTrue($stream->isSeekable());
 
-        $this->assertInternalType('integer', $stream->getSize());
-        $this->assertInternalType('bool', $stream->eof());
-        $this->assertInternalType('integer', $stream->tell());
+        $this->assertIsInt($stream->getSize());
+        $this->assertIsBool($stream->eof());
+        $this->assertIsInt($stream->tell());
 
         // close.
         $this->assertEquals($resource, $stream->detach());

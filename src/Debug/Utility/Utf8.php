@@ -234,25 +234,25 @@ class Utf8
      * In addition, if valid UTF-8, will also report whether string contains
      * control, or other speical characters that could otherwise go unnoticed
      *
-     * @param string $str     string to check
-     * @param bool   $special does valid utf-8 string contain control or "exotic" whitespace type character
+     * @param string $str       string to check
+     * @param bool   $isSpecial does valid utf-8 string contain control or "exotic" whitespace type character
      *
      * @return bool
      */
-    public static function isUtf8($str, &$special = false)
+    public static function isUtf8($str, &$isSpecial = false)
     {
         self::setStr($str);
-        $special = false;
+        $isSpecial = false;
         while (self::$curI < self::$stats['strLen']) {
             $isUtf8 = self::isOffsetUtf8($isSpecial); // special is only checking control chars
             if (!$isUtf8) {
                 return false;
             }
             if ($isSpecial) {
-                $special = true;
+                $isSpecial = true;
             }
         }
-        $special = $special || self::hasSpecial($str);
+        $isSpecial = $isSpecial || self::hasSpecial($str);
         return true;
     }
 
@@ -304,19 +304,19 @@ class Utf8
         if (\extension_loaded('mbstring') && \function_exists('iconv')) {
             $encoding = \mb_detect_encoding($str, \mb_detect_order(), true);
             if (!$encoding) {
-                $str_conv = false;
+                $strConv = false;
                 if (\function_exists('iconv')) {
-                    $str_conv = \iconv('cp1252', 'UTF-8', $str);
+                    $strConv = \iconv('cp1252', 'UTF-8', $str);
                 }
-                if ($str_conv === false) {
-                    $str_conv = \htmlentities($str, ENT_COMPAT);
-                    $str_conv = \html_entity_decode($str_conv, ENT_COMPAT, 'UTF-8');
+                if ($strConv === false) {
+                    $strConv = \htmlentities($str, ENT_COMPAT);
+                    $strConv = \html_entity_decode($strConv, ENT_COMPAT, 'UTF-8');
                 }
-                $str = $str_conv;
+                $str = $strConv;
             } elseif (!\in_array($encoding, array('ASCII','UTF-8'))) {
-                $str_new = \iconv($encoding, 'UTF-8', $str);
-                if ($str_new !== false) {
-                    $str = $str_new;
+                $strNew = \iconv($encoding, 'UTF-8', $str);
+                if ($strNew !== false) {
+                    $str = $strNew;
                 }
             }
         }

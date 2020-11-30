@@ -317,6 +317,7 @@ class LogEnv implements SubscriberInterface
         if ($this->debug->getCfg('logRequestInfo.headers', Debug::CONFIG_DEBUG) === false) {
             $logServerKeys[] = 'HTTP_HOST';
         }
+        /** @var string[] make psalm happy */
         $logServerKeys = \array_unique($logServerKeys);
         if (empty($logServerKeys)) {
             return;

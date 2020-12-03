@@ -171,14 +171,16 @@ class FindExit
                 $found = true;
             }
             if ($found) {
-                if (\in_array($frame['function'], array(null, '{main}'), true)) {
-                    break;
-                }
-                $reflection = isset($frame['class'])
-                    ? (new \ReflectionClass($frame['class']))->getMethod($frame['function'])
-                    : new \ReflectionFunction($frame['function']);
-                if ($reflection->isInternal() === false) {
-                    break;
+                try {
+                    $reflection = isset($frame['class'])
+                        ? (new \ReflectionClass($frame['class']))->getMethod($frame['function'])
+                        : new \ReflectionFunction($frame['function']);
+                    if ($reflection->isInternal() === false) {
+                        break;
+                    }
+                } catch (\ReflectionException $e) {
+                    // {closure...} or {main}, etc
+                    continue;
                 }
             }
         }

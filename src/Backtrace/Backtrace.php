@@ -42,13 +42,13 @@ class Backtrace
      * @param int                   $limit     limit the number of stack frames returned.
      * @param \Exception|\Throwable $exception (optional) Exception from which to get backtrace
      *
-     * @return array|false
+     * @return array
      */
     public static function get($options = 0, $limit = 0, $exception = null)
     {
         $backtrace = self::getBacktrace($options, $limit, $exception);
         if (empty($backtrace)) {
-            return $backtrace;
+            return array();
         }
         // don't incl args passed to trace()
         $backtrace[0]['args'] = array();

@@ -459,7 +459,7 @@ class Table
     private function setMeta()
     {
         $columns = array();
-        foreach ($this->meta['tableInfo']['columns'] as $key => $colInfo) {
+        foreach ($this->meta['tableInfo']['columns'] as $colInfo) {
             $columns[] = \array_filter($colInfo);
         }
         $this->meta['tableInfo']['columns'] = $columns;

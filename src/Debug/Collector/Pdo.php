@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Collector\Pdo\MethodSignatureCompatTrait;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Plugin\Highlight;
 use bdk\PubSub\Event;
@@ -24,6 +25,7 @@ use PDOException;
  */
 class Pdo extends PdoBase
 {
+    use MethodSignatureCompatTrait;
 
     private $debug;
     protected $pdo;
@@ -137,9 +139,17 @@ class Pdo extends PdoBase
             'level' => 'info',
         ));
         \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
-        $statement = $this->pdo->query('select database()');
-        if ($statement) {
-            $debug->log('database', $statement->fetchColumn());
+        try {
+            // Returns the default (current) database name as a string in the utf8 character set
+            $statement = $this->pdo->query('select database()');
+            if ($statement) {
+                $database = $statement->fetchColumn();
+                if ($database) {
+                    $debug->log('database', $database);
+                }
+            }
+        } catch (PDOException $e) {
+            // no such method
         }
         $debug->log('logged operations: ', \count($this->loggedStatements));
         $debug->time('total time', $this->getTimeSpent());
@@ -270,18 +280,9 @@ class Pdo extends PdoBase
         return $this->pdo->prepare($statement, $driverOptions);
     }
 
-    /**
-     * Executes an SQL statement, returning a result set as a PDOStatement object
-     *
-     * @param string $statement The SQL statement to prepare and execute.
-     *
-     * @return \PDOStatement|false PDO::query returns a PDOStatement object, or `false` on failure.
-     * @link   http://php.net/manual/en/pdo.query.php
-     */
-    public function query($statement)
-    {
-        return $this->profileCall('query', $statement, \func_get_args());
-    }
+    /*
+        query() in in MethodSignatureCompatTrait
+    */
 
     /**
      * Quotes a string for use in a query.

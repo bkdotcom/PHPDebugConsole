@@ -180,6 +180,14 @@ class MySqli extends mysqliBase
             ));
             \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
 
+            $result = parent::query('select database() as `database`');
+            if ($result) {
+                $row = $result->fetch_assoc();
+                if ($row) {
+                    $debug->log('database', $row['database']);
+                }
+            }
+
             $debug->log('logged operations: ', \count($this->loggedStatements));
             $debug->time('total time', $this->getTimeSpent());
             $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));

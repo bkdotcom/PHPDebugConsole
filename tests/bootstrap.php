@@ -26,7 +26,7 @@ $modifyTests->modify(__DIR__);
 
 /*
     We also initialize via DebugTestFramework::setUp()
-    however, testProviders are called before setup (I belive)
+    however, testProviders are called before setup (I believe)
     provider may also initialiez debug if instance does not exist...
     ... we want to make sure we initialize with route=>'html'
 */

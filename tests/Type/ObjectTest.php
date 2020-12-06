@@ -93,14 +93,15 @@ EOD;
         $wampRef = new \ReflectionObject($wamp);
         $crateRef = $wampRef->getMethod('crateValues');
         $crateRef->setAccessible(true);
+
         $abs1 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTests\Fixture\Test(), 'log');
         $cratedAbs1 = $crateRef->invoke($wamp, $abs1);
-        $cratedAbs1 = \json_decode(\json_encode($cratedAbs1), true);
+        $cratedAbs1 = $this->crate($cratedAbs1);
         $cratedAbs1['scopeClass'] = null;
 
         $abs2 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTests\Fixture\Test2(), 'log');
         $cratedAbs2 = $crateRef->invoke($wamp, $abs2);
-        $cratedAbs2 = \json_decode(\json_encode($cratedAbs2), true);
+        $cratedAbs2 = $this->crate($cratedAbs2);
         $cratedAbs2['scopeClass'] = null;
 
         return array(

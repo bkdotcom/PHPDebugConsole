@@ -12,9 +12,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->log('debug', 'good enough');
         $this->assertSame(array(
-            'log',
-            array('good enough'),
-            array(
+            'method' => 'log',
+            'args' => array('good enough'),
+            'meta' => array(
                 'psr3level' => 'debug',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
@@ -27,12 +27,12 @@ class LoggerTest extends DebugTestFramework
             'foo' => 'bar',
         ));
         $this->assertSame(array(
-            'log',
-            array(
+            'method' => 'log',
+            'args' => array(
                 'Awesome debugging',
                 array('foo' => 'bar'),
             ),
-            array(
+            'meta' => array(
                 'glue' => ', ',
                 'psr3level' => 'debug',
             ),
@@ -50,9 +50,9 @@ class LoggerTest extends DebugTestFramework
             'uncollapse' => true,
         );
         $this->assertSame(array(
-            'error',
-            array('Emergency broadcast system'),
-            $metaExpect,
+            'method' => 'error',
+            'args' => array('Emergency broadcast system'),
+            'meta' => $metaExpect,
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
     }
 
@@ -67,9 +67,9 @@ class LoggerTest extends DebugTestFramework
             'uncollapse' => true,
         );
         $this->assertSame(array(
-            'error',
-            array('Critical test'),
-            $metaExpect,
+            'method' => 'error',
+            'args' => array('Critical test'),
+            'meta' => $metaExpect,
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
 
         $this->debug->logger->critical('Make an exception', array(
@@ -111,9 +111,9 @@ class LoggerTest extends DebugTestFramework
             'uncollapse' => true,
         );
         $this->assertSame(array(
-            'error',
-            array('Error test'),
-            $meta,
+            'method' => 'error',
+            'args' => array('Error test'),
+            'meta' => $meta,
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
     }
 
@@ -128,9 +128,9 @@ class LoggerTest extends DebugTestFramework
             'uncollapse' => true,
         );
         $this->assertSame(array(
-            'warn',
-            array('You\'ve been warned'),
-            $meta,
+            'method' => 'warn',
+            'args' => array('You\'ve been warned'),
+            'meta' => $meta,
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
     }
 
@@ -145,9 +145,9 @@ class LoggerTest extends DebugTestFramework
             'uncollapse' => true,
         );
         $this->assertSame(array(
-            'warn',
-            array('Final Notice'),
-            $meta,
+            'method' => 'warn',
+            'args' => array('Final Notice'),
+            'meta' => $meta,
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
     }
 
@@ -155,9 +155,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->alert('Alert');
         $this->assertSame(array(
-            'alert',
-            array('Alert'),
-            array(
+            'method' => 'alert',
+            'args' => array('Alert'),
+            'meta' => array(
                 'dismissible' => false,
                 'level' => 'error',
                 'psr3level' => 'alert',
@@ -169,9 +169,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->info('For your information');
         $this->assertSame(array(
-            'info',
-            array('For your information'),
-            array(
+            'method' => 'info',
+            'args' => array('For your information'),
+            'meta' => array(
                 'psr3level' => 'info',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
@@ -192,11 +192,11 @@ class LoggerTest extends DebugTestFramework
             'columns' => array('name', 'age'),
         ));
         $this->assertSame(array(
-            'table',
-            array(
+            'method' => 'table',
+            'args' => array(
                 $tableDataLogged
             ),
-            array(
+            'meta' => array(
                 'caption' => 'table caption',
                 'psr3level' => 'info',
                 'sortable' => true,
@@ -222,9 +222,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->debug('Hello World');
         $this->assertSame(array(
-            'log',
-            array('Hello World'),
-            array(
+            'method' => 'log',
+            'args' => array('Hello World'),
+            'meta' => array(
                 'psr3level' => 'debug',
             ),
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
@@ -247,11 +247,11 @@ class LoggerTest extends DebugTestFramework
             'columns' => array('name', 'age'),
         ));
         $this->assertSame(array(
-            'table',
-            array(
+            'method' => 'table',
+            'args' => array(
                 $tableDataLogged
             ),
-            array(
+            'meta' => array(
                 'caption' => 'table caption',
                 'psr3level' => 'debug',
                 'sortable' => true,

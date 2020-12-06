@@ -242,7 +242,7 @@ class Utility
      * Format duration
      *
      * @param float    $duration  duration in seconds
-     * @param string   $format    DateInterval format string, or 'us', 'ms', 's'
+     * @param string   $format    DateInterval format string, or 'auto', us', 'ms', 's', or 'sec'
      * @param int|null $precision decimal precision
      *
      * @return string

@@ -36,8 +36,8 @@ class LogEnvTest extends DebugTestFramework
         // $logEnv->onPluginInit(new Event($this->debug));
         $this->testMethod(null, array(), array(
             'entry' => array(
-                'warn',
-                array(
+                'method' => 'warn',
+                'args' => array(
                     'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
                         . 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)',
                     'font-family:monospace; opacity:0.8;',
@@ -49,7 +49,7 @@ class LogEnvTest extends DebugTestFramework
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
-                array(
+                'meta' => array(
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,
@@ -67,8 +67,8 @@ class LogEnvTest extends DebugTestFramework
         $refMethod->invoke($logEnv);
         $this->testMethod(null, array(), array(
             'entry' => array(
-                'warn',
-                array(
+                'method' => 'warn',
+                'args' => array(
                     'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
                         . 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)',
                     'font-family:monospace; opacity:0.8;',
@@ -78,7 +78,7 @@ class LogEnvTest extends DebugTestFramework
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
-                array(
+                'meta' => array(
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,
@@ -96,8 +96,8 @@ class LogEnvTest extends DebugTestFramework
         $refMethod->invoke($logEnv);
         $this->testMethod(null, array(), array(
             'entry' => array(
-                'warn',
-                array(
+                'method' => 'warn',
+                'args' => array(
                     'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
                         . 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of `%cE_ALL & ~E_STRICT%c`',
                     'font-family:monospace; opacity:0.8;',
@@ -109,7 +109,7 @@ class LogEnvTest extends DebugTestFramework
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
-                array(
+                'meta' => array(
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,
@@ -127,8 +127,8 @@ class LogEnvTest extends DebugTestFramework
         $refMethod->invoke($logEnv);
         $this->testMethod(null, array(), array(
             'entry' => array(
-                'warn',
-                array(
+                'method' => 'warn',
+                'args' => array(
                     'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
                         . 'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%cE_ALL & ~E_STRICT & ~E_DEPRECATED%c`',
                     'font-family:monospace; opacity:0.8;',
@@ -140,7 +140,7 @@ class LogEnvTest extends DebugTestFramework
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
-                array(
+                'meta' => array(
                     'detectFiles' => false,
                     'file' => null,
                     'line' => null,

@@ -4,6 +4,7 @@ namespace bdk\DebugTests;
 
 use bdk\CssXpath\DOMTestCase;
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Psr7lite\ServerRequest;
@@ -94,7 +95,7 @@ class DebugTestFramework extends DOMTestCase
         */
         self::$obLevels = \ob_get_level();
         self::$allowError = false;
-        $this->debug = \bdk\Debug::getInstance(array(
+        $this->debug = Debug::getInstance(array(
             'collect' => true,
             'emailLog' => false,
             'emailTo' => null,
@@ -236,14 +237,46 @@ class DebugTestFramework extends DOMTestCase
     public function stderr()
     {
         $args = \array_map(function ($val) {
-            return $val === null
+            $new = $val === null
                 ? 'null'
                 : \json_encode($val, JSON_PRETTY_PRINT);
+            if (\json_last_error() !== JSON_ERROR_NONE) {
+                $new = \var_export($val, true);
+            }
+            return $new;
         }, \func_get_args());
         $glue = \func_num_args() > 2
             ? ', '
             : ' = ';
         \fwrite(STDERR, \implode($glue, $args) . "\n");
+    }
+
+    /**
+     * Test output
+     *
+     * @param array $tests array of 'route' => 'string
+     *                         ie array('html'=>'expected html')
+     * @param Debug $debug Debug instance
+     *
+     * @return void
+     */
+    public function outputTest($tests = array(), $debug = null)
+    {
+        if (!$debug) {
+            $debug = $this->debug;
+        }
+        $backupRoute = $debug->getCfg('route');
+        $regexLtrim = '#^\s+#m';
+        foreach ($tests as $test => $expectContains) {
+            $debug->setCfg('route', $test);
+            $output = $debug->output();
+            $output = \preg_replace($regexLtrim, '', $output);
+            $expectContains = \preg_replace($regexLtrim, '', $expectContains);
+            if ($expectContains) {
+                $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
+            }
+        }
+        $debug->setCfg('route', $backupRoute);
     }
 
     /**
@@ -343,9 +376,9 @@ class DebugTestFramework extends DOMTestCase
                     $this->assertStringMatchesFormat($expect, \json_encode($logEntryArray), 'log entry does not match format');
                 } else {
                     $logEntryArray = $this->logEntryToArray($logEntry);
-                    if (isset($expect[2]['file']) && $expect[2]['file'] === '*') {
-                        unset($expect[2]['file']);
-                        unset($logEntryArray[2]['file']);
+                    if (isset($expect['meta']['file']) && $expect['meta']['file'] === '*') {
+                        unset($expect['meta']['file']);
+                        unset($logEntryArray['meta']['file']);
                     }
                     $this->assertEquals($expect, $logEntryArray);
                 }
@@ -466,7 +499,8 @@ class DebugTestFramework extends DOMTestCase
                         ? $routeObj->wamp->messages[$messageIndex]
                         : false;
                     if ($output) {
-                        \ksort($output['args'][2]);
+                        $output['args'][1] = $this->crate($output['args'][1]); // sort abstraction values
+                        \ksort($output['args'][2]); // sort meta
                         $output = \json_encode($output);
                         if (!$asString) {
                             $output = \json_decode($output, true);
@@ -505,10 +539,9 @@ class DebugTestFramework extends DOMTestCase
             if ($test === 'wamp') {
                 if ($outputExpect) {
                     unset($outputExpect['messageIndex']);
-                    if ($this->debug->utility->arrayIsList($outputExpect)) {
-                        // method, args, meta
-                        $outputExpect = array('args' => $outputExpect);
-                    }
+                    $outputExpect = $this->debug->utility->arrayIsList($outputExpect)
+                        ? array('args' => $outputExpect)
+                        : array('args' => \array_values($outputExpect));
                 }
                 $outputExpect = \array_replace_recursive(array(
                     'topic' => $this->debug->getRoute('wamp')->topic,
@@ -561,87 +594,6 @@ class DebugTestFramework extends DOMTestCase
         $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
     }
 
-    /**
-     * Test output
-     *
-     * @param array $tests array of 'route' => 'string
-     *                         ie array('html'=>'expected html')
-     * @param Debug $debug Debug instance
-     *
-     * @return void
-     */
-    public function outputTest($tests = array(), $debug = null)
-    {
-        if (!$debug) {
-            $debug = $this->debug;
-        }
-        $backupRoute = $debug->getCfg('route');
-        $regexLtrim = '#^\s+#m';
-        foreach ($tests as $test => $expectContains) {
-            $debug->setCfg('route', $test);
-            $output = $debug->output();
-            $output = \preg_replace($regexLtrim, '', $output);
-            $expectContains = \preg_replace($regexLtrim, '', $expectContains);
-            if ($expectContains) {
-                $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
-            }
-        }
-        $debug->setCfg('route', $backupRoute);
-    }
-
-    protected function getPrivateProp($obj, $prop)
-    {
-        $objRef = new \ReflectionObject($obj);
-        $propRef = $objRef->getProperty($prop);
-        $propRef->setAccessible(true);
-        return $propRef->getValue($obj);
-    }
-
-    protected function deObjectifyData($data)
-    {
-        foreach (array('alerts','log') as $what) {
-            if (!isset($data[$what])) {
-                continue;
-            }
-            foreach ($data[$what] as $i => $v) {
-                $data[$what][$i] = array(
-                    $v['method'],
-                    $v['args'],
-                    $v['meta'],
-                );
-            }
-        }
-        if (isset($data['logSummary'])) {
-            foreach ($data['logSummary'] as $i => $group) {
-                foreach ($group as $i2 => $v) {
-                    $data['logSummary'][$i][$i2] = array(
-                        $v['method'],
-                        $v['args'],
-                        $v['meta'],
-                    );
-                }
-            }
-        }
-        return $data;
-    }
-
-    /**
-     * convert log entry to array
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return array|null
-     */
-    protected function logEntryToArray($logEntry)
-    {
-        if (!$logEntry || !($logEntry instanceof LogEntry)) {
-            return null;
-        }
-        $return = \array_values($logEntry->export());
-        \ksort($return[2]);
-        return $return;
-    }
-
     protected function clearServerParamCache()
     {
         // Utility caches serverParams (statically)...  use serverParamsRef to clear it
@@ -653,5 +605,90 @@ class DebugTestFramework extends DOMTestCase
         $serverParams = $internalRef->getProperty('serverParams');
         $serverParams->setAccessible(true);
         $serverParams->setValue($internal, array());
+    }
+
+    protected function deObjectifyData($data)
+    {
+        foreach (array('alerts','log') as $what) {
+            if (!isset($data[$what])) {
+                continue;
+            }
+            foreach ($data[$what] as $i => $v) {
+                $data[$what][$i] = $this->logEntryToArray($v);
+            }
+        }
+        if (isset($data['logSummary'])) {
+            foreach ($data['logSummary'] as $i => $group) {
+                foreach ($group as $i2 => $v) {
+                    $data['logSummary'][$i][$i2] = $this->logEntryToArray($v);
+                }
+            }
+        }
+        return $data;
+    }
+
+    protected function getPrivateProp($obj, $prop)
+    {
+        $objRef = new \ReflectionObject($obj);
+        $propRef = $objRef->getProperty($prop);
+        $propRef->setAccessible(true);
+        return $propRef->getValue($obj);
+    }
+
+    /**
+     * convert log entry to array
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     * @param bool     $withKeys Whether to return key => value or just list
+     *
+     * @return array|null
+     */
+    protected function logEntryToArray($logEntry, $withKeys = true)
+    {
+        if (!$logEntry || !($logEntry instanceof LogEntry)) {
+            return null;
+        }
+        $return = $logEntry->export();
+        // convert any abstractions to array via json_encode
+        // $return['args'] = \json_decode(\json_encode($return['args']), true);
+        $return['args'] = $this->crate($return['args']);
+        \ksort($return['meta']);
+        if (!$withKeys) {
+            return \array_values($return);
+        }
+        return $return;
+    }
+
+    /**
+     * Arrayify abstractions
+     * sort abtract values and meta values for consistency
+     *
+     * @param mixed $val args or value
+     *
+     * @return mixed
+     */
+    protected function crate($val)
+    {
+        if (\is_array($val)) {
+            if (\in_array(Abstracter::ABSTRACTION, $val, true)) {
+                // already arrayified abstraction... probably via wamp
+                // go ahead and sort
+                \ksort($val);
+                if ($val['type'] === 'object') {
+                    $val['methods'] = $this->crate($val['methods']);
+                }
+                return $val;
+            }
+            foreach ($val as $k => $v) {
+                $val[$k] = $this->crate($v);
+            }
+            return $val;
+        }
+        if ($val instanceof Abstraction) {
+            $val = $val->jsonSerialize();
+            \ksort($val);
+            return $val;
+        }
+        return $val;
     }
 }

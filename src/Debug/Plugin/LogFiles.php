@@ -132,6 +132,9 @@ class LogFiles extends Component
             $cur = &$tree;
             $dirs = \explode('/', \trim($filepath, '/'));
             $file = \array_pop($dirs);
+            if ($dirs) {
+                $dirs[0] = '/' . $dirs[0];
+            }
             foreach ($dirs as $dir) {
                 if (!isset($cur[$dir])) {
                     // we're adding a dir..

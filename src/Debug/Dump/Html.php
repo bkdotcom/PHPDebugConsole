@@ -374,7 +374,7 @@ class Html extends Base
                     . '<span class="t_operator">=&gt;</span>'
                     . $this->dump($val)
                 . '</li>' . "\n"
-                : "\t" . $this->dump($val, array(), 'li');
+                : "\t" . $this->dump($val, array(), 'li') . "\n";
         }
         $html .= '</ul>'
             . '<span class="t_punct">)</span>';

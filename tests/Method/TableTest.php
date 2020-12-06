@@ -128,7 +128,7 @@ EOD;
         foreach ($vals as $k => $raw) {
             $vals[$k] = array(
                 'raw' => $raw,
-                'crated' => $abstracter->crate($raw, 'table'),
+                'crated' => $abstracter->crate($raw, 'table')->jsonSerialize(),
             );
         }
 
@@ -139,9 +139,9 @@ EOD;
                 array(null),
                 array(
                     'entry' => array(
-                        'log',
-                        array(null),
-                        array(),
+                        'method' => 'log',
+                        'args' => array(null),
+                        'meta' => array(),
                     ),
                     'html' => '<li class="m_log"><span class="t_null">null</span></li>',
                     'text' => 'null',
@@ -155,9 +155,9 @@ EOD;
                 array('arg1', array()),
                 array(
                     'entry' => array(
-                        'log',
-                        array('arg1', array()),
-                        array(),
+                        'method' => 'log',
+                        'args' => array('arg1', array()),
+                        'meta' => array(),
                     ),
                     'html' => '<li class="m_log">'
                         . '<span class="no-quotes t_string">arg1</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>'
@@ -173,9 +173,9 @@ EOD;
                 array('arg1'),
                 array(
                     'entry' => array(
-                        'log',
-                        array('arg1'),
-                        array(),
+                        'method' => 'log',
+                        'args' => array('arg1'),
+                        'meta' => array(),
                     ),
                     'html' => '<li class="m_log">'
                         . '<span class="no-quotes t_string">arg1</span>'
@@ -191,9 +191,9 @@ EOD;
                 array('arg1', 'arg2'),
                 array(
                     'entry' => array(
-                        'log',
-                        array('arg1', 'arg2'),
-                        array(),
+                        'method' => 'log',
+                        'args' => array('arg1', 'arg2'),
+                        'meta' => array(),
                     ),
                     'html' => '<li class="m_log">'
                         . '<span class="no-quotes t_string">arg1</span> = <span class="t_string">arg2</span>'
@@ -209,9 +209,9 @@ EOD;
                 array('arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged'),
                 array(
                     'entry' => array(
-                        'table',
-                        array($rowsAProcessed),
-                        array(
+                        'method' => 'table',
+                        'args' => array($rowsAProcessed),
+                        'meta' => array(
                             'caption' => 'arg1',
                             'sortable' => true,
                             'tableInfo' => array(
@@ -241,9 +241,9 @@ EOD;
                 array('table caption', $rowsA),
                 array(
                     'entry' => array(
-                        'table',
-                        array($rowsAProcessed),
-                        array(
+                        'method' => 'table',
+                        'args' => array($rowsAProcessed),
+                        'meta' => array(
                             'caption' => 'table caption',
                             'sortable' => true,
                             'tableInfo' => array(
@@ -273,14 +273,14 @@ EOD;
                 array($rowsA, 'table caption', array('name','extracol')),
                 array(
                     'entry' => array(
-                        'table',
-                        array(
+                        'method' => 'table',
+                        'args' => array(
                             array(
                                 4 => array('name' => 'Bob', 'extracol' => Abstracter::UNDEFINED),
                                 2 => array('name' => 'Sally', 'extracol' => 'yes'),
                             ),
                         ),
-                        array(
+                        'meta' => array(
                             'caption' => 'table caption',
                             'sortable' => true,
                             'tableInfo' => array(
@@ -335,8 +335,8 @@ EOD;
                 ),
                 array(
                     'entry' => array(
-                        'table',
-                        array(
+                        'method' => 'table',
+                        'args' => array(
                             array(
                                 array('value' => 'a'),
                                 array('value' => $vals['datetime']['crated']['stringified']),
@@ -345,7 +345,7 @@ EOD;
                                 array('value' => $vals['closure']['crated']),
                             ),
                         ),
-                        array(
+                        'meta' => array(
                             'caption' => 'flat',
                             'sortable' => true,
                             'tableInfo' => array(

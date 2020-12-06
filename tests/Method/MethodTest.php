@@ -104,9 +104,9 @@ class MethodTest extends DebugTestFramework
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, $closure);
         $entry = array(
-            'myCustom',
-            array('How\'s it goin?'),
-            array(
+            'method' => 'myCustom',
+            'args' => array('How\'s it goin?'),
+            'meta' => array(
                 'isCustomMethod' => true,
             ),
         );
@@ -133,9 +133,9 @@ class MethodTest extends DebugTestFramework
         */
         Debug::_myCustom('called statically');
         $entry = array(
-            'myCustom',
-            array('called statically'),
-            array(
+            'method' => 'myCustom',
+            'args' => array('called statically'),
+            'meta' => array(
                 'isCustomMethod' => true,
                 'statically' => true,
             ),
@@ -162,9 +162,9 @@ class MethodTest extends DebugTestFramework
     public function testCustomDefault()
     {
         $entry = array(
-            'myCustom',
-            array('How\'s it goin?'),
-            array(
+            'method' => 'myCustom',
+            'args' => array('How\'s it goin?'),
+            'meta' => array(
                 'isCustomMethod' => true,
             ),
         );
@@ -197,9 +197,9 @@ class MethodTest extends DebugTestFramework
         $message = 'Ballistic missle threat inbound to Hawaii.  <b>Seek immediate shelter</b>.  This is not a drill.';
         $messageEscaped = \htmlspecialchars($message);
         $entry = array(
-            'alert',
-            array($message),
-            array(
+            'method' => 'alert',
+            'args' => array($message),
+            'meta' => array(
                 'dismissible' => false,
                 'level' => 'error',
             ),
@@ -241,9 +241,9 @@ class MethodTest extends DebugTestFramework
     public function testAssert()
     {
         $entry = array(
-            'assert',
-            array('this is false'),
-            array(),
+            'method' => 'assert',
+            'args' => array('this is false'),
+            'meta' => array(),
         );
         $this->testMethod(
             'assert',
@@ -265,12 +265,12 @@ class MethodTest extends DebugTestFramework
 
         // no msg arguments
         $entry = array(
-            'assert',
-            array(
+            'method' => 'assert',
+            'args' => array(
                 'Assertion failed:',
                 $this->file . ' (line ' . $this->line . ')',
             ),
-            array(
+            'meta' => array(
                 'detectFiles' => true,
             ),
         );
@@ -293,7 +293,7 @@ class MethodTest extends DebugTestFramework
                 'script' => 'console.assert(false,"Assertion failed:",' . \json_encode($this->file . ' (line ' . $this->line . ')', JSON_UNESCAPED_SLASHES) . ');',
                 'text' => '≠ Assertion failed: "' . $this->file . ' (line ' . $this->line . ')"',
                 'wamp' => $this->debug->utility->arrayMergeDeep($entry, array(
-                    2 => array('foundFiles' => array()),
+                    'meta' => array('foundFiles' => array()),
                 )),
             )
         );
@@ -320,9 +320,9 @@ class MethodTest extends DebugTestFramework
     public function testClearDefault()
     {
         $entry = array(
-            'clear',
-            array('Cleared log (sans errors)'),
-            array(
+            'method' => 'clear',
+            'args' => array('Cleared log (sans errors)'),
+            'meta' => array(
                 'bitmask' => Debug::CLEAR_LOG,
                 'file' => $this->file,
                 'flags' => array(
@@ -394,9 +394,9 @@ class MethodTest extends DebugTestFramework
     public function testClearAlerts()
     {
         $entry = array(
-            'clear',
-            array('Cleared alerts'),
-            array(
+            'method' => 'clear',
+            'args' => array('Cleared alerts'),
+            'meta' => array(
                 'bitmask' => Debug::CLEAR_ALERTS,
                 'file' => $this->file,
                 'flags' => array(
@@ -444,9 +444,9 @@ class MethodTest extends DebugTestFramework
     public function testClearSummary()
     {
         $entry = array(
-            'clear',
-            array('Cleared summary (sans errors)'),
-            array(
+            'method' => 'clear',
+            'args' => array('Cleared summary (sans errors)'),
+            'meta' => array(
                 'bitmask' => Debug::CLEAR_SUMMARY,
                 'file' => $this->file,
                 'flags' => array(
@@ -504,9 +504,9 @@ class MethodTest extends DebugTestFramework
     public function testClearErrors()
     {
         $entry = array(
-            'clear',
-            array('Cleared errors'),
-            array(
+            'method' => 'clear',
+            'args' => array('Cleared errors'),
+            'meta' => array(
                 'bitmask' => Debug::CLEAR_LOG_ERRORS,
                 'file' => $this->file,
                 'flags' => array(
@@ -568,9 +568,9 @@ class MethodTest extends DebugTestFramework
     public function testClearAll()
     {
         $entry = array(
-            'clear',
-            array('Cleared everything'),
-            array(
+            'method' => 'clear',
+            'args' => array('Cleared everything'),
+            'meta' => array(
                 'bitmask' => Debug::CLEAR_ALL,
                 'file' => $this->file,
                 'flags' => array(
@@ -630,9 +630,9 @@ class MethodTest extends DebugTestFramework
     public function testClearSummaryInclErrors()
     {
         $entry = array(
-            'clear',
-            array('Cleared summary (incl errors)'),
-            array(
+            'method' => 'clear',
+            'args' => array('Cleared summary (incl errors)'),
+            'meta' => array(
                 'bitmask' => Debug::CLEAR_SUMMARY | Debug::CLEAR_SUMMARY_ERRORS,
                 'file' => $this->file,
                 'flags' => array(
@@ -828,7 +828,7 @@ class MethodTest extends DebugTestFramework
             array('log', array('count_inc test', 3), array()),
             array('count', array('count_inc test',3), array()),
         ), \array_map(function ($logEntry) {
-            return $this->logEntryToArray($logEntry);
+            return $this->logEntryToArray($logEntry, false);
         }, $this->debug->getData('log')));
 
         // test label provided output
@@ -931,9 +931,9 @@ class MethodTest extends DebugTestFramework
             array('foo'),
             array(
                 'entry' => array(
-                    'countReset',
-                    array('foo', 0),
-                    array(),
+                    'method' => 'countReset',
+                    'args' => array('foo', 0),
+                    'meta' => array(),
                 ),
                 'chromeLogger' => array(
                     array('foo', 0),
@@ -956,9 +956,9 @@ class MethodTest extends DebugTestFramework
             array('noExisty'),
             array(
                 'entry' => array(
-                    'countReset',
-                    array('Counter \'noExisty\' doesn\'t exist.'),
-                    array(),
+                    'method' => 'countReset',
+                    'args' => array('Counter \'noExisty\' doesn\'t exist.'),
+                    'meta' => array(),
                 ),
                 'chromeLogger' => array(
                     array('Counter \'noExisty\' doesn\'t exist.'),
@@ -1066,9 +1066,9 @@ class MethodTest extends DebugTestFramework
             array('a','b','c'),
             array(
                 'entry' => array(
-                    'group',
-                    array('a','b','c'),
-                    array(),
+                    'method' => 'group',
+                    'args' => array('a','b','c'),
+                    'meta' => array(),
                 ),
                 'custom' => function () {
                     $this->assertSame(array(
@@ -1279,13 +1279,13 @@ class MethodTest extends DebugTestFramework
         */
         $this->methodWithGroup('foo', 10);
         $entry = array(
-            'group',
-            array(
+            'method' => 'group',
+            'args' => array(
                 __CLASS__ . '->methodWithGroup',
                 'foo',
                 10
             ),
-            array(
+            'meta' => array(
                 'isFuncName' => true,
             ),
         );
@@ -1318,11 +1318,11 @@ class MethodTest extends DebugTestFramework
         $this->debug->getRoute('wamp')->wamp->messages = array();
         $testBase->testBasePublic();
         $entry = array(
-            'group',
-            array(
+            'method' => 'group',
+            'args' => array(
                 'bdk\DebugTests\Fixture\TestBase->testBasePublic'
             ),
-            array(
+            'meta' => array(
                 'isFuncName' => true,
                 'statically' => true,
             ),
@@ -1351,11 +1351,11 @@ class MethodTest extends DebugTestFramework
         $this->debug->getRoute('wamp')->wamp->messages = array();
         $test->testBasePublic();
         $entry = array(
-            'group',
-            array(
+            'method' => 'group',
+            'args' => array(
                 'bdk\DebugTests\Fixture\Test->testBasePublic'
             ),
-            array(
+            'meta' => array(
                 'isFuncName' => true,
                 'statically' => true,
             ),
@@ -1386,11 +1386,11 @@ class MethodTest extends DebugTestFramework
         $this->debug->getRoute('wamp')->wamp->messages = array();
         \bdk\DebugTests\Fixture\Test::testBaseStatic();
         $entry = array(
-            'group',
-            array(
+            'method' => 'group',
+            'args' => array(
                 'bdk\DebugTests\Fixture\TestBase::testBaseStatic'
             ),
-            array(
+            'meta' => array(
                 'isFuncName' => true,
                 'statically' => true,
             ),
@@ -1420,11 +1420,11 @@ class MethodTest extends DebugTestFramework
         $this->debug->getRoute('wamp')->wamp->messages = array();
         $test->testBaseStatic();
         $entry = array(
-            'group',
-            array(
+            'method' => 'group',
+            'args' => array(
                 'bdk\DebugTests\Fixture\TestBase::testBaseStatic'
             ),
-            array(
+            'meta' => array(
                 'isFuncName' => true,
                 'statically' => true,
             ),
@@ -1453,9 +1453,9 @@ class MethodTest extends DebugTestFramework
     public function testGroupNotArgsAsParams()
     {
         $entry = array(
-            'group',
-            array('a',10),
-            array(
+            'method' => 'group',
+            'args' => array('a',10),
+            'meta' => array(
                 'argsAsParams' => false,
             ),
         );
@@ -1497,9 +1497,9 @@ class MethodTest extends DebugTestFramework
     public function testGroupCollapsed()
     {
         $entry = array(
-            'groupCollapsed',
-            array('a','b','c'),
-            array(),
+            'method' => 'groupCollapsed',
+            'args' => array('a','b','c'),
+            'meta' => array(),
         );
         $this->testMethod(
             'groupCollapsed',
@@ -1577,7 +1577,7 @@ class MethodTest extends DebugTestFramework
             array('group', array('a','b','c'), array()),
             array('groupEnd', array(), array()),
         ), \array_map(function ($logEntry) {
-            return $this->logEntryToArray($logEntry);
+            return $this->logEntryToArray($logEntry, false);
         }, $log));
 
         // reset log
@@ -1602,9 +1602,9 @@ class MethodTest extends DebugTestFramework
         $this->assertCount(2, $this->debug->getData('log'));
 
         $entry = array(
-            'groupEnd',
-            array(),
-            array(),
+            'method' => 'groupEnd',
+            'args' => array(),
+            'meta' => array(),
         );
         $this->testMethod(
             'groupEnd',
@@ -1658,9 +1658,9 @@ class MethodTest extends DebugTestFramework
         );
 
         $entry = array(
-            'groupEndValue',
-            array('return', 'foo'),
-            array(),
+            'method' => 'groupEndValue',
+            'args' => array('return', 'foo'),
+            'meta' => array(),
         );
         $this->testMethod(
             array(
@@ -1796,14 +1796,14 @@ EOD;
             array('log',array('I\'m still in the summary!'), array()),
             array('log',array('I\'m staying in the summary!'), array()),
         ), \array_map(function ($logEntry) {
-            return $this->logEntryToArray($logEntry);
+            return $this->logEntryToArray($logEntry, false);
         }, $logSummary));
         $log = $this->debug->getData('log');
         $this->assertSame(array(
             array('log',array('I\'m not in the summary'), array()),
             array('log',array('the end'), array()),
         ), \array_map(function ($logEntry) {
-            return $this->logEntryToArray($logEntry);
+            return $this->logEntryToArray($logEntry, false);
         }, $log));
     }
 
@@ -1994,11 +1994,11 @@ EOD;
                     $this->assertCount(0, $timers['stack']);
                 },
                 'entry' => \json_encode(array(
-                    'time',
-                    array(
+                    'method' => 'time',
+                    'args' => array(
                         'time: %f μs',
                     ),
-                    array(),
+                    'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -2033,11 +2033,11 @@ EOD;
             ),
             array(
                 'entry' => \json_encode(array(
-                    'time',
-                    array(
+                    'method' => 'time',
+                    'args' => array(
                         'my label: %f %ss',
                     ),
-                    array(),
+                    'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -2072,9 +2072,9 @@ EOD;
                 },
                 */
                 'entry' => \json_encode(array(
-                    'time',
-                    array('blahmy labelblah%f %ssblah'),
-                    array(),
+                    'method' => 'time',
+                    'args' => array('blahmy labelblah%f %ssblah'),
+                    'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -2138,9 +2138,9 @@ EOD;
                 },
                 */
                 'entry' => \json_encode(array(
-                    'time',
-                    array('time: %f μs'),
-                    array(),
+                    'method' => 'time',
+                    'args' => array('time: %f μs'),
+                    'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -2162,11 +2162,11 @@ EOD;
             array('my label'),
             array(
                 'entry' => \json_encode(array(
-                    'time',
-                    array(
+                    'method' => 'time',
+                    'args' => array(
                         'my label: %f %ss',
                     ),
-                    array(),
+                    'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -2209,9 +2209,9 @@ EOD;
             ),
             array(
                 'entry' => \json_encode(array(
-                    'time',
-                    array('blahmy labelblah%f %ssblah'),
-                    array(),
+                    'method' => 'time',
+                    'args' => array('blahmy labelblah%f %ssblah'),
+                    'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -2265,9 +2265,9 @@ EOD;
                 },
                 */
                 'entry' => \json_encode(array(
-                    'timeLog',
-                    array('time: ', '%f μs'),
-                    array(),
+                    'method' => 'timeLog',
+                    'args' => array('time: ', '%f μs'),
+                    'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -2301,9 +2301,9 @@ EOD;
                 },
                 */
                 'entry' => \json_encode(array(
-                    'timeLog',
-                    array('my label: ', '%f %ss', array('foo' => 'bar')),
-                    array(),
+                    'method' => 'timeLog',
+                    'args' => array('my label: ', '%f %ss', array('foo' => 'bar')),
+                    'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -2343,9 +2343,9 @@ EOD;
                 },
                 */
                 'entry' => \json_encode(array(
-                    'timeLog',
-                    array('Timer \'bogus\' does not exist'),
-                    array(),
+                    'method' => 'timeLog',
+                    'args' => array('Timer \'bogus\' does not exist'),
+                    'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array('Timer \'bogus\' does not exist'),

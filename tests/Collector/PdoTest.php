@@ -2,6 +2,7 @@
 
 namespace bdk\DebugTests\Collector;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\DebugTests\DebugTestFramework;
 
@@ -40,17 +41,12 @@ EOD;
         $line = __LINE__ + 2;
         $statement->bindParam(':datetime', $datetime, \PDO::PARAM_STR);
         $statement->execute();
+
         $logEntries = $this->debug->getData('log');
-        // $count = $count($logEntries);
         $logEntries = \array_slice($logEntries, -8);
         $logEntries = \array_map(function (LogEntry $logEntry) {
-            $logEntry = $logEntry->export();
-            $logEntry['args'] = \json_decode(\json_encode($logEntry['args']), true);
-            \ksort($logEntry['meta']);
-            // var_dump($logEntry);
-            return $logEntry;
+            return $this->logEntryToArray($logEntry);
         }, $logEntries);
-        // var_dump($logEntries);
 
         $logEntriesExpect = array(
             array(
@@ -68,14 +64,14 @@ EOD;
                 'method' => 'log',
                 'args' => array(
                     array(
-                        'value' => "SELECT \n  * \nFROM \n  `bob` \nWHERE \n  e < :datetime",
+                        'addQuotes' => false,
                         'attribs' => array(
                             'class' => 'highlight language-sql',
                         ),
-                        'addQuotes' => false,
+                        'debug' => Abstracter::ABSTRACTION,
+                        'type' => Abstracter::TYPE_STRING,
+                        'value' => "SELECT \n  * \nFROM \n  `bob` \nWHERE \n  e < :datetime",
                         'visualWhiteSpace' => false,
-                        'type' => 'string',
-                        'debug' => \bdk\Debug\Abstraction\Abstracter::ABSTRACTION,
                     ),
                 ),
                 'meta' => array(
@@ -92,10 +88,10 @@ EOD;
                         ':datetime' => array(
                             'value' => $datetime,
                             'type' => array(
+                                'debug' => Abstracter::ABSTRACTION,
                                 'name' => 'PDO::PARAM_STR',
+                                'type' => Abstracter::TYPE_CONST,
                                 'value' => 2,
-                                'type' => 'const',
-                                'debug' => \bdk\Debug\Abstraction\Abstracter::ABSTRACTION,
                             ),
                         ),
                     ),

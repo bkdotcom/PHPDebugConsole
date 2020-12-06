@@ -2,9 +2,7 @@
 
 namespace bdk\DebugTests\Plugin;
 
-use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Plugin\LogReqRes;
 use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\Debug\Psr7lite\Stream;
@@ -54,9 +52,9 @@ class LogReqResTest extends DebugTestFramework
         $logPostMeth->invoke($logReqRes);
         $this->assertSame(
             array(
-                'log',
-                array('$_POST', $post),
-                array(
+                'method' => 'log',
+                'args' => array('$_POST', $post),
+                'meta' => array(
                     'channel' => 'Request / Response',
                     'redact' => true,
                 ),
@@ -79,21 +77,23 @@ class LogReqResTest extends DebugTestFramework
         $logPostMeth->invoke($logReqRes);
         $this->assertEquals(
             array(
-                'log',
-                array(
+                'method' => 'log',
+                'args' => array(
                     'php://input %c%s',
                     'font-style: italic; opacity: 0.8;',
                     '(prettified)',
-                    new Abstraction(Abstracter::TYPE_STRING, array(
-                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
+                    array(
+                        'addQuotes' => false,
                         'attribs' => array(
                             'class' => 'highlight language-json',
                         ),
-                        'addQuotes' => false,
+                        'debug' => Abstracter::ABSTRACTION,
+                        'type' => Abstracter::TYPE_STRING,
+                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'visualWhiteSpace' => false,
-                    ))
+                    ),
                 ),
-                array(
+                'meta' => array(
                     'channel' => 'Request / Response',
                     'redact' => true,
                 )
@@ -116,10 +116,11 @@ class LogReqResTest extends DebugTestFramework
         ));
         $logPostMeth->invoke($logReqRes);
         $this->assertSame(
-            array('warn',
-                array('It appears application/json was posted with the wrong Content-Type' . "\n"
-                . 'Pay no attention to $_POST and instead use php://input'),
-                array(
+            array(
+                'method' => 'warn',
+                'args' => array('It appears application/json was posted with the wrong Content-Type' . "\n"
+                    . 'Pay no attention to $_POST and instead use php://input'),
+                'meta' => array(
                     'channel' => 'Request / Response',
                     'detectFiles' => false,
                     'file' => null,
@@ -131,21 +132,23 @@ class LogReqResTest extends DebugTestFramework
         );
         $this->assertEquals(
             array(
-                'log',
-                array(
+                'method' => 'log',
+                'args' => array(
                     'php://input %c%s',
                     'font-style: italic; opacity: 0.8;',
                     '(prettified)',
-                    new Abstraction(Abstracter::TYPE_STRING, array(
-                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
+                    array(
+                        'addQuotes' => false,
                         'attribs' => array(
                             'class' => 'highlight language-json',
                         ),
-                        'addQuotes' => false,
+                        'debug' => Abstracter::ABSTRACTION,
+                        'type' => Abstracter::TYPE_STRING,
+                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'visualWhiteSpace' => false,
-                    ))
+                    ),
                 ),
-                array(
+                'meta' => array(
                     'channel' => 'Request / Response',
                     'redact' => true,
                 ),
@@ -180,8 +183,8 @@ class LogReqResTest extends DebugTestFramework
         $logRequestMeth->invoke($logReqRes);
         $this->assertSame(
             array(
-                'log',
-                array('$_FILES', array(
+                'method' => 'log',
+                'args' => array('$_FILES', array(
                     'foo' => array(
                         'error' => UPLOAD_ERR_OK,
                         'name' => 'logo.png',
@@ -190,7 +193,7 @@ class LogReqResTest extends DebugTestFramework
                         'type' => 'image/png',
                     ),
                 )),
-                array(
+                'meta' => array(
                     'channel' => 'Request / Response',
                 ),
             ),
@@ -209,9 +212,9 @@ class LogReqResTest extends DebugTestFramework
         $logPostMeth->invoke($logReqRes);
         $this->assertSame(
             array(
-                'warn',
-                array('POST request with no body'),
-                array(
+                'method' => 'warn',
+                'args' => array('POST request with no body'),
+                'meta' => array(
                     'channel' => 'Request / Response',
                     'detectFiles' => false,
                     'file' => null,
@@ -238,21 +241,23 @@ class LogReqResTest extends DebugTestFramework
         $logPostMeth->invoke($logReqRes);
         $this->assertEquals(
             array(
-                'log',
-                array(
+                'method' => 'log',
+                'args' => array(
                     'php://input %c%s',
                     'font-style: italic; opacity: 0.8;',
                     '(prettified)',
-                    new Abstraction(Abstracter::TYPE_STRING, array(
-                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
+                    array(
+                        'addQuotes' => false,
                         'attribs' => array(
                             'class' => 'highlight language-json',
                         ),
-                        'addQuotes' => false,
+                        'debug' => Abstracter::ABSTRACTION,
+                        'type' => Abstracter::TYPE_STRING,
+                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'visualWhiteSpace' => false,
-                    ))
+                    ),
                 ),
-                array(
+                'meta' => array(
                     'channel' => 'Request / Response',
                     'redact' => true,
                 ),

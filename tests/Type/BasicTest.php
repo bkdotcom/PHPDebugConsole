@@ -154,12 +154,12 @@ class BasicTest extends DebugTestFramework
                         'log',
                         array(
                             array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Abstracter::TYPE_CALLABLE,
                                 'value' => array(
                                     'bdk\DebugTests\Fixture\Test',
                                     'testBaseStatic',
                                 ),
-                                'type' => Abstracter::TYPE_CALLABLE,
-                                'debug' => Abstracter::ABSTRACTION,
                             ),
                         ),
                     ),

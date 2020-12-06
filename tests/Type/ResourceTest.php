@@ -17,13 +17,15 @@ class ResourceTest extends DebugTestFramework
         $fh = \fopen(__FILE__, 'r');
         $value = \print_r($fh, true) . ': stream';
         $entry = array(
-            'log',
-            array(
-                new Abstraction(Abstracter::TYPE_RESOURCE, array(
+            'method' => 'log',
+            'args' => array(
+                array(
+                    'debug' => Abstracter::ABSTRACTION,
+                    'type' => Abstracter::TYPE_RESOURCE,
                     'value' => $value,
-                )),
+                ),
             ),
-            array(),
+            'meta' => array(),
         );
         return array(
             array(

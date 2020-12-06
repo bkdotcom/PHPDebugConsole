@@ -107,9 +107,9 @@ class DebugTest extends DebugTestFramework
             );
         $this->testMethod(null, array(), array(
             'entry' => array(
-                'warn',
-                $args,
-                array(
+                'method' => 'warn',
+                'args' => $args,
+                'meta' => array(
                     'channel' => 'general.phpError',
                     'context' => null,
                     'detectFiles' => true,

@@ -283,7 +283,7 @@ function createFileLinks ($entry, $strings, remove) {
           href: buildFileLink(matches[1], matches[2]),
           title: 'Open in editor'
         })
-      if ($string.is('td')) {
+      if ($string.is('td, li')) {
         $string.html(remove
           ? text
           : $replace
@@ -369,7 +369,7 @@ function enhanceArray ($node) {
   if (expand === undefined) {
     expand = expandDefault
   }
-  if (expand) {
+  if (expand || $node.hasClass('array-file-tree')) {
     $node.debugEnhance('expand')
   } else {
     $node.debugEnhance('collapse')

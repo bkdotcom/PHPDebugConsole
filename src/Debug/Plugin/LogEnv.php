@@ -207,17 +207,7 @@ class LogEnv implements SubscriberInterface
             return;
         }
         $this->debug->log('PHP Version', PHP_VERSION);
-
-        $iniFiles = \array_merge(
-            array(\php_ini_loaded_file()),
-            \preg_split('#\s*[,\r\n]+\s*#', \trim(\php_ini_scanned_files()))
-        );
-        $this->debug->log(
-            \count($iniFiles) === 1 ? 'ini location' : 'ini files',
-            \count($iniFiles) === 1 ? $iniFiles[1] : $iniFiles,
-            $this->debug->meta('detectFiles', true)
-        );
-
+        $this->logPhpIni();
         $this->debug->log('memory_limit', $this->debug->utility->getBytes($this->debug->utility->memoryLimit()));
         $this->assertSetting(array(
             'name' => 'expose_php',
@@ -293,6 +283,36 @@ class LogEnv implements SubscriberInterface
             'line' => null,
         ));
         \call_user_func_array(array($this->debug, 'warn'), $args);
+    }
+
+    /**
+     * Log ini file location + the ini files returned by `php_ini_scanned_files()`
+     *
+     * @return void
+     */
+    private function logPhpIni()
+    {
+        $iniFiles = \array_merge(
+            array(\php_ini_loaded_file()),
+            \preg_split('#\s*[,\r\n]+\s*#', \trim(\php_ini_scanned_files()))
+        );
+        if (\count($iniFiles) === 1) {
+            $this->debug->log('ini location', $iniFiles[0], $this->debug->meta('detectFiles'));
+            return;
+        }
+        $this->debug->log(
+            'ini files',
+            $this->debug->abstracter->crateWithVals(
+                $iniFiles,
+                array(
+                    'options' => array(
+                        'showListKeys' => false,
+                        // 'expand' => true,
+                    ),
+                )
+            ),
+            $this->debug->meta('detectFiles')
+        );
     }
 
     /**

@@ -33,14 +33,16 @@ class ModifyTests
     /**
      * PHPUnit 8.0 requires specifying return types for some methods.
      * This is a PHP 7.0 feature that we must remove to run tests for php 5.x
+     * void return type was added in php 7.1
      *
      * @return void
      */
     public function removeReturnType()
     {
-        if (PHP_VERSION_ID >= 70000) {
+        if (PHP_VERSION_ID >= 70100) {
             return;
         }
+        // remove void return type from php < 7.1
         $this->findFiles($this->dir, function ($filepath) {
             if (\preg_match('/\.php$/', $filepath) === 0) {
                 return false;

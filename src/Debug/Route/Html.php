@@ -305,7 +305,7 @@ class Html extends Base
     {
         $channels = $this->debug->getChannelsTop();
         $channelNameRoot = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        \uasort($channels, function ($channelA, $channelB) use ($channelNameRoot) {
+        \uasort($channels, function (Debug $channelA, Debug $channelB) use ($channelNameRoot) {
             $sortA = $channelA->getCfg('channelSort', Debug::CONFIG_DEBUG);
             $sortB = $channelB->getCfg('channelSort', Debug::CONFIG_DEBUG);
             $nameA = $channelA->getCfg('channelName', Debug::CONFIG_DEBUG);

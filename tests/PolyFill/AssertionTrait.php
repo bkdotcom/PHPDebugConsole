@@ -115,14 +115,14 @@ trait AssertionTrait
         }
     }
 
-    public static function assertStringContainsString(string $needle, string $haystack, string $message = ''): void
+    public static function assertStringContainsString($needle, $haystack, $message = ''): void
     {
         if (\strpos($haystack, $needle) === false) {
             throw new AssertionFailedError($message ?: 'Does not contain string');
         }
     }
 
-    public static function assertStringNotContainsString(string $needle, string $haystack, string $message = ''): void
+    public static function assertStringNotContainsString($needle, $haystack, $message = ''): void
     {
         if (\strpos($haystack, $needle) !== false) {
             throw new AssertionFailedError($message ?: 'String contains string');

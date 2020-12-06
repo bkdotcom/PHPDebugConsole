@@ -20,6 +20,7 @@ use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Component;
 use bdk\Debug\Utility\PhpDoc;
 use Error;
+use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionObject;
 use RuntimeException;
@@ -243,7 +244,7 @@ class AbstractObject extends Component
         if (!($abs['flags'] & self::COLLECT_ATTRIBUTES_OBJ)) {
             return;
         }
-        $abs['attributes'] = \array_map(function ($attribute) {
+        $abs['attributes'] = \array_map(function (ReflectionAttribute $attribute) {
             return array(
                 'name' => $attribute->getName(),
                 'arguments' => $attribute->getArguments(),

@@ -32,10 +32,10 @@ class FindExit
      */
     public function find()
     {
-        if (\extension_loaded('xdebug') === false) {
+        if (\extension_loaded('tokenizer') === false) {
             return false;
         }
-        if (\extension_loaded('tokenizer') === false) {
+        if (self::isXdebugFuncStackAvail() === false) {
             return false;
         }
         $frame = $this->getLastFrame();
@@ -60,6 +60,26 @@ class FindExit
             );
         }
         return null;
+    }
+
+    /**
+     * Check if `xdebug_get_function_stack()` is available for use
+     *
+     * @return bool
+     */
+    private static function isXdebugFuncStackAvail()
+    {
+        if (\extension_loaded('xdebug') === false) {
+            return false;
+        }
+        $xdebugVer = \phpversion('xdebug');
+        if (\version_compare($xdebugVer, '3.0.0', '>=')) {
+            $mode = \ini_get('xdebug.mode') ?: 'off';
+            if (\strpos($mode, 'develop') === false) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

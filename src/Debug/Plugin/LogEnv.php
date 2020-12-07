@@ -228,8 +228,7 @@ class LogEnv implements SubscriberInterface
                 ))
             );
         }
-        $haveXdebug = \extension_loaded('xdebug');
-        $this->debug->log('Xdebug is ' . ($haveXdebug ? '' : 'not ') . 'installed');
+        $this->logXdebug();
     }
 
     /**
@@ -430,5 +429,26 @@ class LogEnv implements SubscriberInterface
             // aka session.save_handler
             $this->debug->log('session save_path', \session_save_path() ?: \sys_get_temp_dir());
         }
+    }
+
+    /**
+     * Log whether xdebug is installed & version
+     *
+     * @return void
+     */
+    private function logXdebug()
+    {
+        $haveXdebug = \extension_loaded('xdebug');
+        if (!$haveXdebug) {
+            $this->debug->log('Xdebug is not installed');
+            return;
+        }
+        $xdebugVer = \phpversion('xdebug');
+        if (\version_compare($xdebugVer, '3.0.0', '>=')) {
+            $mode = \ini_get('xdebug.mode') ?: 'off';
+            $this->debug->log('Xdebug v' . $xdebugVer . ' is installed (mode: ' . $mode . ')');
+            return;
+        }
+        $this->debug->log('Xdebug v' . $xdebugVer . ' is installed');
     }
 }

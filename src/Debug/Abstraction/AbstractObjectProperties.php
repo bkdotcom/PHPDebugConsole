@@ -226,16 +226,14 @@ class AbstractObjectProperties extends AbstractObjectSub
         if (!$this->isDomObj($obj)) {
             return;
         }
-        // use var_dump to get the property names
-        // get_object_vars() doesn't work
-        $iniWas = \ini_set('xdebug.overload_var_dump', '0');
-        \ob_start();
-        /** @psalm-suppress ForbiddenCode */
-        \var_dump($obj);
-        $dump = \ob_get_clean();
+        /*
+            use print_r to get the property names
+            get_object_vars() doesn't work
+            var_dump may be overridden by xdebug...  and if xdebug v3 unable to disable at runtime
+        */
+        $dump = \print_r($obj, true);
         $matches = array();
-        \ini_set('xdebug.overload_var_dump', $iniWas);
-        \preg_match_all('/^\s+\["(.*?)"\]=>\n/sm', $dump, $matches);
+        \preg_match_all('/^\s+\[(.+?)\] => /m', $dump, $matches);
         $props = \array_fill_keys($matches[1], null);
 
         if ($obj instanceof \DOMNode) {

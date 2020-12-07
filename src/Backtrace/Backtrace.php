@@ -308,6 +308,26 @@ class Backtrace
     }
 
     /**
+     * Check if `xdebug_get_function_stack()` is available for use
+     *
+     * @return bool
+     */
+    private static function isXdebugFuncStackAvail()
+    {
+        if (\extension_loaded('xdebug') === false) {
+            return false;
+        }
+        $xdebugVer = \phpversion('xdebug');
+        if (\version_compare($xdebugVer, '3.0.0', '>=')) {
+            $mode = \ini_get('xdebug.mode') ?: 'off';
+            if (\strpos($mode, 'develop') === false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * "Normalize" backtrace from debug_backtrace() or xdebug_get_function_stack();
      *
      * @param array $backtrace trace/stack from debug_backtrace() or xdebug_Get_function_stack()
@@ -469,7 +489,7 @@ class Backtrace
      */
     private static function xdebugGetFunctionStack()
     {
-        if (\extension_loaded('xdebug') === false) {
+        if (self::isXdebugFuncStackAvail() === false) {
             return false;
         }
         $stack = \xdebug_get_function_stack();

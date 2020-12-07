@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
 	bootstrap="tests/bootstrap.php"
-	verbose="true"
+	testdox="true"
 >
   <testsuites>
     <testsuite name="Debug">

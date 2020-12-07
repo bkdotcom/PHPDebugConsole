@@ -23,6 +23,7 @@ use Error;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionObject;
+use Reflector;
 use RuntimeException;
 
 /**
@@ -38,6 +39,8 @@ class AbstractObject extends Component
     const OUTPUT_METHOD_DESC = 16;
     const COLLECT_ATTRIBUTES_OBJ = 32;
     const OUTPUT_ATTRIBUTES_OBJ = 64;
+    const COLLECT_ATTRIBUTES_CONST = 128;
+    const OUTPUT_ATTRIBUTES_CONST = 256;
 
 	protected $abstracter;
     protected $debug;
@@ -230,29 +233,6 @@ class AbstractObject extends Component
     }
 
     /**
-     * Add object's attributes to abstraction
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function addAttributes(Abstraction $abs)
-    {
-        if (PHP_VERSION_ID < 80000) {
-            return;
-        }
-        if (!($abs['flags'] & self::COLLECT_ATTRIBUTES_OBJ)) {
-            return;
-        }
-        $abs['attributes'] = \array_map(function (ReflectionAttribute $attribute) {
-            return array(
-                'name' => $attribute->getName(),
-                'arguments' => $attribute->getArguments(),
-            );
-        }, $abs['reflector']->getAttributes());
-    }
-
-    /**
      * Add object's constants to abstraction
      *
      * @param Abstraction $abs Abstraction instance
@@ -264,8 +244,9 @@ class AbstractObject extends Component
         if (!($abs['flags'] & self::COLLECT_CONSTANTS)) {
             return;
         }
+        $inclAttributes = $abs['flags'] & self::COLLECT_ATTRIBUTES_CONST === self::COLLECT_ATTRIBUTES_CONST;
         $abs['constants'] = PHP_VERSION_ID >= 70100
-            ? $this->getConstantsReflection($abs['reflector'])
+            ? $this->getConstantsReflection($abs['reflector'], $inclAttributes)
             : $this->getConstants($abs['reflector']);
     }
 
@@ -273,11 +254,12 @@ class AbstractObject extends Component
      * Get constant arrays via `getReflectionConstants` (php 7.1)
      * This gets us visibility and access to phpDoc
      *
-     * @param ReflectionClass $reflector ReflectionClass or ReflectionObject
+     * @param ReflectionClass $reflector      ReflectionClass or ReflectionObject
+     * @param bool            $inclAttributes Whether to include attributes
      *
      * @return array name => array
      */
-    private function getConstantsReflection(ReflectionClass $reflector)
+    private function getConstantsReflection(ReflectionClass $reflector, $inclAttributes = true)
     {
         $constants = array();
         while ($reflector) {
@@ -293,6 +275,9 @@ class AbstractObject extends Component
                     $vis = 'protected';
                 }
                 $constants[$name] = array(
+                    'attributes' => $inclAttributes
+                        ? $this->getAttributes($const)
+                        : array(),
                     'desc' => null,
                     'value' => $const->getValue(),
                     'visibility' => $vis,
@@ -301,6 +286,26 @@ class AbstractObject extends Component
             $reflector = $reflector->getParentClass();
         }
         return $constants;
+    }
+
+    /**
+     * Get Object or constant attributes
+     *
+     * @param Reflector $reflector Reflection instance
+     *
+     * @return array
+     */
+    private function getAttributes(Reflector $reflector)
+    {
+        if (PHP_VERSION_ID < 80000) {
+            return array();
+        }
+        return \array_map(function (ReflectionAttribute $attribute) {
+            return array(
+                'name' => $attribute->getName(),
+                'arguments' => $attribute->getArguments(),
+            );
+        }, $reflector->getAttributes());
     }
 
     /**
@@ -319,6 +324,7 @@ class AbstractObject extends Component
                     continue;
                 }
                 $constants[$name] = array(
+                    'attributes' => array(),
                     'desc' => null,
                     'value' => $value,
                     'visibility' => 'public',
@@ -346,7 +352,9 @@ class AbstractObject extends Component
             $this->addTraverseValues($abs);
             return;
         }
-        $this->addAttributes($abs);
+        if ($abs['flags'] & self::COLLECT_ATTRIBUTES_OBJ) {
+            $abs['attributes'] = $this->getAttributes($reflector);
+        }
         $this->addConstants($abs);
         while ($reflector = $reflector->getParentClass()) {
             $abs['extends'][] = $reflector->getName();
@@ -380,9 +388,11 @@ class AbstractObject extends Component
     private function getFlags()
     {
         $flags = array(
+            'collectAttributesConst' => self::COLLECT_ATTRIBUTES_CONST,
             'collectAttributesObj' => self::COLLECT_ATTRIBUTES_OBJ,
             'collectConstants' => self::COLLECT_CONSTANTS,
             'collectMethods' => self::COLLECT_METHODS,
+            'outputAttributesConst' => self::OUTPUT_ATTRIBUTES_CONST,
             'outputAttributesObj' => self::OUTPUT_ATTRIBUTES_OBJ,
             'outputConstants' => self::OUTPUT_CONSTANTS,
             'outputMethodDesc' => self::OUTPUT_METHOD_DESC,

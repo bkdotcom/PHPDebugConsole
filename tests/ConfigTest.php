@@ -28,12 +28,14 @@ class ConfigTest extends DebugTestFramework
         );
         $abstracterKeys = array(
             'cacheMethods',
+            'collectAttributesConst',
             'collectAttributesObj',
             'collectConstants',
             'collectMethods',
             'objectsExclude',
             'objectsWhitelist',
             'objectSort',
+            'outputAttributesConst',
             'outputAttributesObj',
             'outputConstants',
             'outputMethodDesc',

@@ -61,6 +61,7 @@ class Abstracter extends Component
         $this->debug = $debug;  // we need debug instance so we can bubble events up channels
         $this->cfg = array(
             'cacheMethods' => true,
+            'collectAttributesConst' => true,
             'collectAttributesObj' => true,
             'collectConstants' => true,
             'collectMethods' => true,
@@ -69,6 +70,7 @@ class Abstracter extends Component
             ),
             'objectsWhitelist' => null,     // will be used if array
             'objectSort' => 'visibility',   // none, visibility, or name
+            'outputAttributesConst' => true,
             'outputAttributesObj' => true,
             'outputConstants' => true,
             'outputMethodDesc' => true,     // (or just summary)

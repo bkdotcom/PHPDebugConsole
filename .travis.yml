@@ -10,6 +10,12 @@ php:
   - 7.3
   - 7.4
   - 8.0
+jobs:
+  include:
+    - php: 7.4
+      dist: xenial
+    - php: 8.0
+      dist: xenial
 matrix:
   fast_finish: true
   allow_failures:
@@ -34,7 +40,7 @@ before_script:
       echo using PHPUnit 9.x
       curl -sSfL -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-9.phar
     elif [ $(echo "$TRAVIS_PHP_VERSION >= 7.3" | bc -l) -eq 1 ]; then
-      echo using PHPUnit 9
+      echo using PHPUnit 9.x
       curl -sSfL -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-9.phar;
     elif [ $(echo "$TRAVIS_PHP_VERSION >= 7.2" | bc -l) -eq 1 ]; then
       echo using PHPUnit 7.5.20

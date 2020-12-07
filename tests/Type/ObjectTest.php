@@ -349,11 +349,13 @@ EOD;
         $this->assertSame(
             array(
                 'INHERITED' => array(
+                    'attributes' => array(),
                     'desc' => null,
                     'value' => 'defined in TestBase',
                     'visibility' => 'public',
                 ),
                 'MY_CONSTANT' => array(
+                    'attributes' => array(),
                     'desc' => null,
                     'value' => 'redefined in Test',
                     'visibility' => 'public',

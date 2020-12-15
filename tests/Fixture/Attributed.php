@@ -7,25 +7,30 @@ namespace bdk\DebugTests\Fixture;
  *
  * @link http://www.bradkent.com/php/debug PHPDebugConsole Homepage
  */
-#[ExampleAttribute("foo", PHP_VERSION_ID, name:"bar")]
+#[ExampleClassAttribute("foo", PHP_VERSION_ID, name:"bar")]
 class Attributed
 {
 
-    #[ExampleAttribute]
+    #[ExampleConstAttribute]
     private const FOO = 'foo';
 
-    #[ExampleAttribute]
+    /**
+     * Test isInitialized
+     */
+    #[ExamplePropAttribute]
     protected int $id;
 
-    #[ExampleAttribute]
-    public function myMethod(
-        #[ExampleAttribute] int $arg1
+    /**
+     * Test attributes and promoted param
+     *
+     * Promoted param attributes will also be avail on the property
+     *
+     * @param int $arg1 Attributed & promoted param
+     */
+    #[ExampleMethodAttribute]
+    public function __construct(
+        #[ExampleParamAttribute] public int $arg1
     )
     {
-    }
-
-    public function __toString(): string
-    {
-        return 'turd';
     }
 }

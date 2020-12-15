@@ -54,7 +54,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
 .t_object {
   display: inline;
 
-  .method .parameter [title],
+  .method .parameter .t_parameter-name[title],
   .t_identifier[title],
   .t_stringified,
   .t_type[title] {

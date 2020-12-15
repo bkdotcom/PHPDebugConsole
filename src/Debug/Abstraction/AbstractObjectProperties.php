@@ -14,6 +14,7 @@ namespace bdk\Debug\Abstraction;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionProperty;
 
 /**
@@ -23,6 +24,7 @@ class AbstractObjectProperties extends AbstractObjectSub
 {
 
     private static $basePropInfo = array(
+        'attributes' => array(),
         'debugInfoExcluded' => false,   // true if not included in __debugInfo
         'desc' => null,                 // from phpDoc
         'inheritedFrom' => null,        // populated only if inherited
@@ -474,6 +476,9 @@ class AbstractObjectProperties extends AbstractObjectSub
         */
         $declaringClassName = $reflectionProperty->getDeclaringClass()->getName();
         $propInfo = static::buildPropInfo(array(
+            'attributes' => $abs['flags'] & AbstractObject::COLLECT_ATTRIBUTES_PROP
+                ? $this->getAttributes($reflectionProperty)
+                : array(),
             'desc' => $phpDoc['desc'],
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName
@@ -535,7 +540,7 @@ class AbstractObjectProperties extends AbstractObjectSub
             $isInitialized = PHP_VERSION_ID < 70400 || $reflectionProperty->isInitialized($obj);
             $propInfo['value'] = $isInitialized
                 ? $reflectionProperty->getValue($obj)
-                : null;
+                : Abstracter::UNDEFINED;  // value won't be displayed
         }
         return $propInfo;
     }

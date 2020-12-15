@@ -239,7 +239,13 @@ class DebugTestFramework extends DOMTestCase
         $args = \array_map(function ($val) {
             $new = $val === null
                 ? 'null'
-                : \json_encode($val, JSON_PRETTY_PRINT);
+                /*
+                : (isset($this->debug)
+                    ? $this->debug->getDump('text')->dump($val)
+                    : \str_replace('\n', "\n", \json_encode($val, JSON_PRETTY_PRINT))
+                );
+                */
+                : \bdk\Debug::getInstance()->getDump('text')->dump($val);
             if (\json_last_error() !== JSON_ERROR_NONE) {
                 $new = \var_export($val, true);
             }

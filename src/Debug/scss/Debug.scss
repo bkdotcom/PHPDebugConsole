@@ -57,6 +57,7 @@
   }
 
   .debug-tabs {
+    .hasTooltip,
     *[title]:not(a) {
       cursor: help;
       &:hover { background-color: rgba(0, 0, 0, 0.05); }
@@ -97,5 +98,6 @@
   @import "optionsDropdown";
   @import "sidebar";
   @import "script"; // misc css only applicable when javascript enhanced
+  @import "tippy";
   @import "utilities";
 }

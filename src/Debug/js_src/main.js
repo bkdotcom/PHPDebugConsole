@@ -11,6 +11,7 @@ import * as expandCollapse from './expandCollapse.js'
 import * as http from './http.js' // cookie & query utils
 import * as sidebar from './sidebar.js'
 import * as tabs from './tabs.js'
+import * as tooltip from './Tooltip.js'
 import { Config } from './config.js'
 import loadDeps from './loadDeps.js'
 
@@ -35,6 +36,9 @@ var config = new Config({
     '> .method.magic': '<i class="fa fa-fw fa-magic" title="magic method"></i>',
     '> .method.deprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
     '> .method.inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+    '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
+    '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
+    '> *[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
     '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
     '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
     '> .property.private-ancestor': '<i class="fa fa-lock" title="private ancestor"></i>',
@@ -177,6 +181,7 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
       conf.set(arg1)
     }
     tabs.init($self)
+    tooltip.init($self)
     enhanceEntries.init($self)
     expandCollapse.init($self)
     registerListeners($self)

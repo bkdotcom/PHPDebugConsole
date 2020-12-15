@@ -3,6 +3,7 @@
 namespace bdk\DebugTests\Type;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\LogEntry;
 use bdk\DebugTests\DebugTestFramework;
 
 /**
@@ -177,9 +178,9 @@ EOD;
                         );
 
                         // properties
-                        $this->assertStringContainsString(\implode("\n", array(
+                        $expect = \implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
-                            '<dd class="magic info">This object has a <code>__get</code> method</dd>',
+                            '<dd class="info magic">This object has a <code>__get</code> method</dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
                             '<span class="excluded">NOT INSPECTED</span></div></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>Test</span> <span class="t_recursion">*RECURSION*</span></div></dd>',
@@ -194,28 +195,30 @@ EOD;
                             "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
-                            '<dd class="property protected magic-read"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
+                            '<dd class="magic-read property protected"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
                             '<dd class="property protected"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
-                            '<dd class="debuginfo-excluded property private"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
-                            '<dd class="debuginfo-value property private"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
-                            '<dd class="private-ancestor property private"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</i>)</span> <span class="t_identifier">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
-                            '<dd class="property private"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
-                            '<dd class="debuginfo-excluded property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
+                            '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
+                            '<dd class="debuginfo-value private property"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
+                            '<dd class="private private-ancestor property"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</i>)</span> <span class="t_identifier">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
+                            '<dd class="debuginfo-excluded magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
                             '<dt class="methods">methods</dt>'
-                        )), $str);
+                        ));
+
+                        $this->assertStringContainsString($expect, $str);
 
                         // methods
                         $this->assertStringContainsString(\implode("\n", array(
                             '<dt class="methods">methods</dt>',
-                            '<dd class="magic info">This object has a <code>__call</code> method</dd>',
+                            '<dd class="info magic">This object has a <code>__call</code> method</dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span>, <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don\'t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">array</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="t_identifier" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><br /><span class="t_string">abracadabra</span></dd>',
                             '<dd class="deprecated method public"><span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">SomeClass</span></span> <span class="t_parameter-name" title="first param',
-                                'two-line description!">$param1</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="third param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span></dd>',
+                                'two-line description!">$param1</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="second param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_identifier">testBasePublic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public static"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">testBaseStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="method protected"><span class="t_modifier_protected">protected</span> <span class="t_type">void</span> <span class="t_identifier" title="This method is protected">methodProtected</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param">$param1</span></span><span class="t_punct">)</span></dd>',
@@ -264,12 +267,13 @@ EOD;
                 array(
                     'html' => function ($str) {
                         // properties
-                        $this->assertStringContainsString(\implode("\n", array(
+                        $expect = \implode("\n", array(
                             '<dt class="properties">properties</dt>',
-                            '<dd class="magic info">This object has a <code>__get</code> method</dd>',
-                            '<dd class="property protected magic-read"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
-                            '<dd class="property magic"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
-                        )), $str);
+                            '<dd class="info magic">This object has a <code>__get</code> method</dd>',
+                            '<dd class="magic-read property protected"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
+                            '<dd class="magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
+                        ));
+                        $this->assertStringContainsString($expect, $str);
 
                         // methods
                         $constName = \defined('HHVM_VERSION')
@@ -277,7 +281,7 @@ EOD;
                             : '<span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">WORD</span>';
                         $this->assertStringContainsString(\implode("\n", array(
                             '<dt class="methods">methods</dt>',
-                            '<dd class="magic info">This object has a <code>__call</code> method</dd>',
+                            '<dd class="info magic">This object has a <code>__call</code> method</dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
                             \version_compare(PHP_VERSION, '5.4.6', '>=')
@@ -379,11 +383,12 @@ EOD;
         $this->assertTrue($abs['properties']['instance']['value']['isRecursion']);
         $this->assertArraySubset(
             array(
-                'visibility' => 'public',
+                'attributes' => array(),
+                'originallyDeclared' => 'bdk\DebugTests\Fixture\TestBase',
+                'overrides' => 'bdk\DebugTests\Fixture\TestBase',
                 'value' => 'redefined in Test (public)',
                 'valueFrom' => 'value',
-                'overrides' => 'bdk\DebugTests\Fixture\TestBase',
-                'originallyDeclared' => 'bdk\DebugTests\Fixture\TestBase',
+                'visibility' => 'public',
             ),
             $abs['properties']['propPublic']
         );
@@ -408,6 +413,7 @@ EOD;
         );
         $this->assertArraySubset(
             array(
+                'attributes' => array(),
                 'visibility' => 'private',
                 'value' => 'redefined in Test (private) (alternate value via __debugInfo)',
                 'inheritedFrom' => null,
@@ -419,6 +425,7 @@ EOD;
         );
         $this->assertArraySubset(
             array(
+                'attributes' => array(),
                 'visibility' => 'private',
                 'value' => 'defined in TestBase (private)',
                 'inheritedFrom' => 'bdk\DebugTests\Fixture\TestBase',
@@ -430,6 +437,7 @@ EOD;
         );
         $this->assertArraySubset(
             array(
+                'attributes' => array(),
                 'value' => 'This property is debug only',
                 'valueFrom' => 'debugInfo',
             ),
@@ -439,6 +447,52 @@ EOD;
         //    Methods
         $this->assertArrayNotHasKey('testBasePrivate', $abs['methods']);
         $this->assertTrue($abs['methods']['methodPublic']['isDeprecated']);
+        $this->assertSame(
+            array(
+                'attributes' => array(),
+                'implements' => null,
+                'inheritedFrom' => null,
+                'isAbstract' => false,
+                'isDeprecated' => true,
+                'isFinal' => false,
+                'isStatic' => false,
+                'params' => array(
+                    array(
+                        'attributes' => array(),
+                        'defaultValue' => Abstracter::UNDEFINED,
+                        'desc' => 'first param' . "\n" . 'two-line description!',
+                        'isOptional' => false,
+                        'isPromoted' => false,
+                        'name' => '$param1',
+                        'type' => 'SomeClass',
+                    ),
+                    array(
+                        'attributes' => array(),
+                        'defaultValue' => array(),
+                        'desc' => 'second param',
+                        'isOptional' => true,
+                        'isPromoted' => false,
+                        'name' => '$param2',
+                        'type' => 'array',
+                    ),
+                ),
+                'phpDoc' => array(
+                    'summary' => 'This method is public',
+                    'desc' => null,
+                    'deprecated' => array(
+                        array(
+                            'desc' => null,
+                        ),
+                    ),
+                ),
+                'return' => array(
+                    'type' => 'void',
+                    'desc' => null,
+                ),
+                'visibility' => 'public',
+            ),
+            $abs['methods']['methodPublic']
+        );
     }
 
     public function testAnonymousClass()
@@ -510,6 +564,114 @@ EOD;
                 'script' => 'console.log("callable: stdClass@anonymous::myMethod");',
                 'text' => 'callable: stdClass@anonymous::myMethod',
                 // 'wamp' =>
+            )
+        );
+    }
+
+    public function testPromotedParam()
+    {
+        if (PHP_VERSION_ID < 80000) {
+            $this->markTestSkipped('attributes classes are a php 8.0 thing');
+        }
+        $test = new \bdk\DebugTests\Fixture\Attributed(42);
+        $this->testMethod(
+            'log',
+            array(
+                $test,
+            ),
+            array(
+                'entry' => function (LogEntry $logEntry) {
+                    $abs = $logEntry['args'][0];
+                    $this->assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
+                    $this->assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
+                },
+                'html' => function ($html) {
+                    // $this->stdErr($html);
+                    // @todo
+                },
+            )
+        );
+    }
+
+    public function testAttributes()
+    {
+        if (PHP_VERSION_ID < 80000) {
+            $this->markTestSkipped('attributes classes are a php 8.0 thing');
+        }
+        $test = new \bdk\DebugTests\Fixture\Attributed(42);
+        $this->testMethod(
+            'log',
+            array(
+                $test,
+            ),
+            array(
+                'entry' => function (LogEntry $logEntry) {
+                    $abs = $logEntry['args'][0];
+                    $attribNamespace = 'bdk\\DebugTests\\Fixture\\';
+                    $this->assertSame(
+                        array(
+                            array(
+                                'name' =>  $attribNamespace . 'ExampleClassAttribute',
+                                'arguments' => array(
+                                    'foo',
+                                    PHP_VERSION_ID,
+                                    'name' => 'bar',
+                                ),
+                            ),
+                        ),
+                        $abs['attributes']
+                    );
+                    $this->assertSame(
+                        array(
+                            array(
+                                'name' =>  $attribNamespace . 'ExampleConstAttribute',
+                                'arguments' => array(),
+                            ),
+                        ),
+                        $abs['constants']['FOO']['attributes']
+                    );
+                    $this->assertSame(
+                        array(
+                            array(
+                                'name' =>  $attribNamespace . 'ExampleMethodAttribute',
+                                'arguments' => array(),
+                            ),
+                        ),
+                        $abs['methods']['__construct']['attributes']
+                    );
+                    $this->assertSame(
+                        array(
+                            array(
+                                'name' =>  $attribNamespace . 'ExampleParamAttribute',
+                                'arguments' =>  array(),
+                            ),
+                        ),
+                        $abs['methods']['__construct']['params'][0]['attributes']
+                    );
+                    $this->assertSame(
+                        // this property (and it's attributes came via parameter promotion)
+                        array(
+                            array(
+                                'name' =>  $attribNamespace . 'ExampleParamAttribute',
+                                'arguments' =>  array(),
+                            ),
+                        ),
+                        $abs['properties']['arg1']['attributes']
+                    );
+                    $this->assertSame(
+                        array(
+                            array(
+                                'name' =>  $attribNamespace . 'ExamplePropAttribute',
+                                'arguments' =>  array(),
+                            ),
+                        ),
+                        $abs['properties']['id']['attributes']
+                    );
+                },
+                'html' => function ($html) {
+                    // $this->stdErr($html);
+                    // @todo
+                },
             )
         );
     }

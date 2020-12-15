@@ -3,6 +3,9 @@
  */
 
 import { uglify } from 'rollup-plugin-uglify'
+import { nodeResolve } from '@rollup/plugin-node-resolve' // so can resolve tippy.js
+// import css from 'rollup-plugin-import-css'
+import replace from '@rollup/plugin-replace'
 
 var tasks = [
   {
@@ -15,7 +18,20 @@ var tasks = [
         clipboardjs: 'window.ClipboardJS',
         jquery: 'window.jQuery'
       }
-    }
+    },
+    plugins: [
+      /*
+      css({
+        output: 'css/bktippy.css',
+        alwaysOutput: true
+        // output: null
+      }),
+      */
+      nodeResolve(),
+      replace({
+        'process.env.NODE_ENV': JSON.stringify('development')
+      })
+    ]
   }
 ]
 
@@ -32,6 +48,17 @@ if (process.env.NODE_ENV !== 'watch') {
       }
     },
     plugins: [
+      /*
+      css({
+        output: 'css/bktippy.css',
+        alwaysOutput: true
+        // output: null
+      }),
+      */
+      nodeResolve(),
+      replace({
+        'process.env.NODE_ENV': JSON.stringify('production')
+      }),
       uglify({
         compress: {
           drop_console: true

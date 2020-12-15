@@ -20,10 +20,8 @@ use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Component;
 use bdk\Debug\Utility\PhpDoc;
 use Error;
-use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionObject;
-use Reflector;
 use RuntimeException;
 
 /**
@@ -41,6 +39,12 @@ class AbstractObject extends Component
     const OUTPUT_ATTRIBUTES_OBJ = 64;
     const COLLECT_ATTRIBUTES_CONST = 128;
     const OUTPUT_ATTRIBUTES_CONST = 256;
+    const COLLECT_ATTRIBUTES_PROP = 512;
+    const OUTPUT_ATTRIBUTES_PROP = 1024;
+    const COLLECT_ATTRIBUTES_METHOD = 2048;
+    const OUTPUT_ATTRIBUTES_METHOD = 4096;
+    const COLLECT_ATTRIBUTES_PARAM = 8192;
+    const OUTPUT_ATTRIBUTES_PARAM = 16384;
 
 	protected $abstracter;
     protected $debug;
@@ -201,6 +205,7 @@ class AbstractObject extends Component
                 $abs['properties'][$name]['value'] = $reflectionObject->getProperty($name)->getValue($obj);
             }
         }
+        $this->promoteParamDescs($abs);
     }
 
     /**
@@ -276,7 +281,7 @@ class AbstractObject extends Component
                 }
                 $constants[$name] = array(
                     'attributes' => $inclAttributes
-                        ? $this->getAttributes($const)
+                        ? $this->properties->getAttributes($const)
                         : array(),
                     'desc' => null,
                     'value' => $const->getValue(),
@@ -286,26 +291,6 @@ class AbstractObject extends Component
             $reflector = $reflector->getParentClass();
         }
         return $constants;
-    }
-
-    /**
-     * Get Object or constant attributes
-     *
-     * @param Reflector $reflector Reflection instance
-     *
-     * @return array
-     */
-    private function getAttributes(Reflector $reflector)
-    {
-        if (PHP_VERSION_ID < 80000) {
-            return array();
-        }
-        return \array_map(function (ReflectionAttribute $attribute) {
-            return array(
-                'name' => $attribute->getName(),
-                'arguments' => $attribute->getArguments(),
-            );
-        }, $reflector->getAttributes());
     }
 
     /**
@@ -353,7 +338,7 @@ class AbstractObject extends Component
             return;
         }
         if ($abs['flags'] & self::COLLECT_ATTRIBUTES_OBJ) {
-            $abs['attributes'] = $this->getAttributes($reflector);
+            $abs['attributes'] = $this->properties->getAttributes($reflector);
         }
         $this->addConstants($abs);
         while ($reflector = $reflector->getParentClass()) {
@@ -389,11 +374,17 @@ class AbstractObject extends Component
     {
         $flags = array(
             'collectAttributesConst' => self::COLLECT_ATTRIBUTES_CONST,
+            'collectAttributesMethod' => self::COLLECT_ATTRIBUTES_METHOD,
             'collectAttributesObj' => self::COLLECT_ATTRIBUTES_OBJ,
+            'collectAttributesParam' => self::COLLECT_ATTRIBUTES_PARAM,
+            'collectAttributesProp' => self::COLLECT_ATTRIBUTES_PROP,
             'collectConstants' => self::COLLECT_CONSTANTS,
             'collectMethods' => self::COLLECT_METHODS,
             'outputAttributesConst' => self::OUTPUT_ATTRIBUTES_CONST,
+            'outputAttributesMethod' => self::OUTPUT_ATTRIBUTES_METHOD,
             'outputAttributesObj' => self::OUTPUT_ATTRIBUTES_OBJ,
+            'outputAttributesParam' => self::OUTPUT_ATTRIBUTES_PARAM,
+            'outputAttributesProp' => self::OUTPUT_ATTRIBUTES_PROP,
             'outputConstants' => self::OUTPUT_CONSTANTS,
             'outputMethodDesc' => self::OUTPUT_METHOD_DESC,
             'outputMethods' => self::OUTPUT_METHODS,
@@ -566,6 +557,25 @@ class AbstractObject extends Component
             $abs['collectPropertyValues'] = false;
         }
         \restore_error_handler();
+    }
+
+    /**
+     * Reuse the phpDoc description from promoted __construct params
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     */
+    private function promoteParamDescs(Abstraction $abs)
+    {
+        if (isset($abs['methods']['__construct'])) {
+            foreach ($abs['methods']['__construct']['params'] as $info) {
+                if ($info['isPromoted'] && $info['desc']) {
+                    $paramName = \substr($info['name'], 1); // toss the "$"
+                    $abs['properties'][$paramName]['desc'] = $info['desc'];
+                }
+            }
+        }
     }
 
     /**

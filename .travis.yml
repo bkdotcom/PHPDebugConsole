@@ -14,8 +14,6 @@ matrix:
     - php: 8.0
       dist: xenial
   fast_finish: true
-  allow_failures:
-    - php: 8.0
 install:
   - |
     composer self-update

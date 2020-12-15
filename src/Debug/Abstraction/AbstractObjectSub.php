@@ -15,8 +15,10 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\Debug\Utility\UseStatements;
+use ReflectionAttribute;
 use ReflectionNamedType;
 use ReflectionType;
+use Reflector;
 
 /**
  * Base class for AbstractObjectMethod & AbstractObjectProperty
@@ -38,6 +40,26 @@ abstract class AbstractObjectSub
     {
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
+    }
+
+    /**
+     * Get object, constant, property, or method attributes
+     *
+     * @param Reflector $reflector Reflection instance
+     *
+     * @return array
+     */
+    public function getAttributes(Reflector $reflector)
+    {
+        if (PHP_VERSION_ID < 80000) {
+            return array();
+        }
+        return \array_map(function (ReflectionAttribute $attribute) {
+            return array(
+                'name' => $attribute->getName(),
+                'arguments' => $attribute->getArguments(),
+            );
+        }, $reflector->getAttributes());
     }
 
     /**

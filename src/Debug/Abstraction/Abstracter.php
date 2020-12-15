@@ -62,7 +62,10 @@ class Abstracter extends Component
         $this->cfg = array(
             'cacheMethods' => true,
             'collectAttributesConst' => true,
+            'collectAttributesMethod' => true,
             'collectAttributesObj' => true,
+            'collectAttributesParam' => true,
+            'collectAttributesProp' => true,
             'collectConstants' => true,
             'collectMethods' => true,
             'objectsExclude' => array(
@@ -71,7 +74,10 @@ class Abstracter extends Component
             'objectsWhitelist' => null,     // will be used if array
             'objectSort' => 'visibility',   // none, visibility, or name
             'outputAttributesConst' => true,
+            'outputAttributesMethod' => true,
             'outputAttributesObj' => true,
+            'outputAttributesParam' => true,
+            'outputAttributesProp' => true,
             'outputConstants' => true,
             'outputMethodDesc' => true,     // (or just summary)
             'outputMethods' => true,

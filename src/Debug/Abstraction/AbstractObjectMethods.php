@@ -17,7 +17,6 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use Exception;
 use ReflectionMethod;
-use ReflectionNamedType;
 use ReflectionParameter;
 
 /**
@@ -168,6 +167,7 @@ class AbstractObjectMethods extends AbstractObjectSub
         foreach ($abs['phpDoc']['method'] as $phpDocMethod) {
             $className = $inheritedFrom ? $inheritedFrom : $abs['className'];
             $abs['methods'][$phpDocMethod['name']] = array(
+                'attributes' => array(),
                 'implements' => null,
                 'inheritedFrom' => $inheritedFrom,
                 'isAbstract' => false,
@@ -176,10 +176,12 @@ class AbstractObjectMethods extends AbstractObjectSub
                 'isStatic' => $phpDocMethod['static'],
                 'params' => \array_map(function ($phpDocParam) use ($className) {
                     return array(
+                        'attributes' => array(),
                         'defaultValue' => $this->phpDocParamValue($phpDocParam, $className),
                         'desc' => null,
+                        'isOptional' => false,
+                        'isPromoted' => false,
                         'name' => $phpDocParam['name'],
-                        'optional' => false,
                         'type' => $this->resolvePhpDocType($phpDocParam['type']),
                     );
                 }, $phpDocMethod['param']),
@@ -226,26 +228,33 @@ class AbstractObjectMethods extends AbstractObjectSub
     private function getParams(ReflectionMethod $reflectionMethod, $phpDoc = array())
     {
         $paramArray = array();
-        $params = $reflectionMethod->getParameters();
+        $collectAttributes = $this->abs['flags'] & AbstractObject::COLLECT_ATTRIBUTES_PARAM;
         \set_error_handler(function () {
             // suppressing "Use of undefined constant STDERR" type notice
             // encountered on
             //    $reflectionParameter->getDefaultValue()
             //    $reflectionParameter->__toString()
         });
-        foreach ($params as $i => $reflectionParameter) {
-            $phpDocParam = isset($phpDoc['param'][$i])
-                ? $phpDoc['param'][$i]
-                : array();
-            $paramArray[] = array(
+        foreach ($reflectionMethod->getParameters() as $i => $reflectionParameter) {
+            $phpDocParam = \array_merge(array(
+                'desc' => null,
+                'name' => '',
+                'type' => null,
+            ), isset($phpDoc['param'][$i]) ? $phpDoc['param'][$i] : array());
+            $param = array(
+                'attributes' => $collectAttributes
+                    ? $this->getAttributes($reflectionParameter)
+                    : array(),
                 'defaultValue' => $this->getParamDefaultVal($reflectionParameter),
-                'desc' => isset($phpDocParam['desc'])
-                    ? $phpDocParam['desc']
-                    : null,
+                'desc' => $phpDocParam['desc'],
                 'isOptional' => $reflectionParameter->isOptional(),
-                'name' => $this->getParamName($reflectionParameter, $phpDocParam),
-                'type' => $this->getParamTypeHint($reflectionParameter, $phpDocParam),
+                'isPromoted' =>  PHP_VERSION_ID >= 80000
+                    ? $reflectionParameter->isPromoted()
+                    : false,
+                'name' => $this->getParamName($reflectionParameter, $phpDocParam['name']),
+                'type' => $this->getParamTypeHint($reflectionParameter, $phpDocParam['type']),
             );
+            $paramArray[] = $param;
         }
         \restore_error_handler();
         /*
@@ -254,16 +263,18 @@ class AbstractObjectMethods extends AbstractObjectSub
         $phpDocCount = isset($phpDoc['param'])
             ? \count($phpDoc['param'])
             : 0;
-        for ($i = \count($params); $i < $phpDocCount; $i++) {
+        for ($i = \count($paramArray); $i < $phpDocCount; $i++) {
             $phpDocParam = $phpDoc['param'][$i];
             $name = '$' . $phpDocParam['name'];
             if (\substr($name, -4) === ',...') {
                 $name = '...' . \substr($name, 0, -4);
             }
             $paramArray[] = array(
+                'attributes' => array(),
                 'defaultValue' => $this->phpDocParamValue($phpDocParam),
                 'desc' => $phpDocParam['desc'],
                 'isOptional' => true,
+                'isPromoted' => false,
                 'name' => $name,
                 'type' => $this->resolvePhpDocType($phpDocParam['type']),
             );
@@ -302,17 +313,17 @@ class AbstractObjectMethods extends AbstractObjectSub
      * Get Parameter "name"
      *
      * @param ReflectionParameter $reflectionParameter reflectionParameter
-     * @param array               $phpDoc              parsed phpDoc param info
+     * @param string              $phpDocName          name via phpDoc
      *
      * @return mixed
      */
-    private function getParamName(ReflectionParameter $reflectionParameter, $phpDoc = array())
+    private function getParamName(ReflectionParameter $reflectionParameter, $phpDocName)
     {
         $name = '$' . $reflectionParameter->getName();
         if (\method_exists($reflectionParameter, 'isVariadic') && $reflectionParameter->isVariadic()) {
             // php >= 5.6
             $name = '...' . $name;
-        } elseif (isset($phpDoc['name']) && \substr($phpDoc['name'], -4) === ',...') {
+        } elseif (\substr($phpDocName, -4) === ',...') {
             // phpDoc indicates variadic...
             $name = '...' . $name;
         }
@@ -326,15 +337,15 @@ class AbstractObjectMethods extends AbstractObjectSub
      * Get param typehint
      *
      * @param ReflectionParameter $reflectionParameter reflectionParameter
-     * @param array               $phpDoc              parsed phpDoc param info
+     * @param string|null         $phpDocType          type via phpDoc
      *
      * @return string|null
      */
-    private function getParamTypeHint(ReflectionParameter $reflectionParameter, $phpDoc = array())
+    private function getParamTypeHint(ReflectionParameter $reflectionParameter, $phpDocType)
     {
         $matches = array();
-        if (isset($phpDoc['type'])) {
-            return $this->resolvePhpDocType($phpDoc['type']);
+        if ($phpDocType !== null) {
+            return $this->resolvePhpDocType($phpDocType);
         }
         if (PHP_VERSION_ID >= 70000) {
             return $this->getTypeString($reflectionParameter->getType());
@@ -397,6 +408,9 @@ class AbstractObjectMethods extends AbstractObjectSub
             $vis = 'protected';
         }
         $info = array(
+            'attributes' => $this->abs['flags'] & AbstractObject::COLLECT_ATTRIBUTES_METHOD
+                ? $this->getAttributes($reflectionMethod)
+                : array(),
             'implements' => null,
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName

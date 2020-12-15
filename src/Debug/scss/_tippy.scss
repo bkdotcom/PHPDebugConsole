@@ -1,0 +1,196 @@
+// .tippy-box[data-animation=fade][data-state=hidden]{opacity:0}
+// [data-tippy-root]{max-width:calc(100vw - 10px)}
+// .tippy-box[data-placement^=top]>.tippy-arrow{bottom:0}
+// .tippy-box[data-placement^=top]>.tippy-arrow:before{bottom:-7px;left:0;border-width:8px 8px 0;border-top-color:initial;transform-origin:center top}
+// .tippy-box[data-placement^=bottom]>.tippy-arrow{top:0}
+// .tippy-box[data-placement^=bottom]>.tippy-arrow:before{top:-7px;left:0;border-width:0 8px 8px;border-bottom-color:initial;transform-origin:center bottom}
+// .tippy-box[data-placement^=left]>.tippy-arrow{right:0}
+// .tippy-box[data-placement^=left]>.tippy-arrow:before{border-width:8px 0 8px 8px;border-left-color:initial;right:-7px;transform-origin:center left}
+// .tippy-box[data-placement^=right]>.tippy-arrow{left:0}
+// .tippy-box[data-placement^=right]>.tippy-arrow:before{left:-7px;border-width:8px 8px 8px 0;border-right-color:initial;transform-origin:center right}
+// .tippy-box[data-inertia][data-state=visible]{transition-timing-function:cubic-bezier(.54,1.5,.38,1.11)}
+
+$namespace-prefix: 'tippy';
+$arrow-size: 16px;
+
+$color: white;
+$transparent-light: rgba(0, 8, 16, 0.08);
+$transparent-dark: rgba(0, 8, 16, 0.30);
+$transparent-darker: rgba(0, 8, 16, 0.50);
+
+.#{$namespace-prefix}-box {
+  background-color: $color;
+  background-clip: padding-box;
+  border: 2px solid $transparent-dark;
+  border-radius: 4px;
+  // font-size: 14px;
+  // line-height: 1.4;
+  outline: 0;
+  transition-property: transform,visibility,opacity;
+  color: #333;
+  box-shadow: 0 4px 14px -2px $transparent-light;
+
+  .#{$namespace-prefix}-content {
+    padding: 5px 9px;
+    // position: relative;
+    z-index: 1;
+  }
+
+  > .#{$namespace-prefix}-backdrop {
+    background-color: $color;
+  }
+
+  > .#{$namespace-prefix}-arrow {
+    width: $arrow-size;
+    height: $arrow-size;
+    color: #333;
+
+    &::before {
+      content: "";
+      position: absolute;
+      border-color: transparent;
+      border-style: solid;
+    }
+  }
+
+  > .#{$namespace-prefix}-arrow,
+  > .#{$namespace-prefix}-svg-arrow {
+    &::after {
+      content: '';
+      position: absolute;
+      z-index: -1;
+    }
+  }
+
+  > .#{$namespace-prefix}-arrow::after {
+    border-color: transparent;
+    border-style: solid;
+  }
+
+  &[data-placement^='top'] {
+    > .#{$namespace-prefix}-arrow {
+
+      bottom: 1px;
+
+      &::before {
+        bottom: -7px;
+        left: 0;
+        border-width: 8px 8px 0;
+        border-top-color: $color;
+        transform-origin: center top;
+      }
+
+      &::after {
+        border-top-color: $transparent-darker;
+        border-width: 7px 7px 0;
+        top: $arrow-size + 1;
+        left: 1px;
+      }
+    }
+
+    > .#{$namespace-prefix}-svg-arrow {
+      > svg {
+        top: $arrow-size;
+      }
+
+      &::after {
+        top: $arrow-size + 1;
+      }
+    }
+  }
+
+  &[data-placement^='bottom'] {
+    > .#{$namespace-prefix}-arrow {
+
+      top: 0;
+
+      &::before {
+        // bottom: $arrow-size;
+        top: -7px;
+        left: 0;
+        border-width: 0 8px 8px;
+        border-bottom-color: $color;
+        transform-origin: center bottom;
+      }
+
+      &::after {
+        border-bottom-color: $transparent-darker;
+        border-width: 0 7px 7px;
+        bottom: $arrow-size + 1;
+        left: 1px;
+      }
+    }
+
+    > .#{$namespace-prefix}-svg-arrow {
+      > svg {
+        bottom: $arrow-size;
+      }
+
+      &::after {
+        bottom: $arrow-size + 1;
+      }
+    }
+  }
+
+  &[data-placement^='left'] {
+    > .#{$namespace-prefix}-arrow {
+      &::before {
+        border-left-color: $color;
+      }
+
+      &::after {
+        border-left-color: $transparent-darker;
+        border-width: 7px 0 7px 7px;
+        left: $arrow-size + 1;
+        top: 1px;
+      }
+    }
+
+    > .#{$namespace-prefix}-svg-arrow {
+      > svg {
+        left: 11px;
+      }
+
+      &::after {
+        left: 12px;
+      }
+    }
+  }
+
+  &[data-placement^='right'] {
+    > .#{$namespace-prefix}-arrow {
+      &::before {
+        border-right-color: $color;
+        right: $arrow-size;
+      }
+
+      &::after {
+        border-width: 7px 7px 7px 0;
+        right: $arrow-size + 1;
+        top: 1px;
+        border-right-color: $transparent-darker;
+      }
+    }
+
+    > .#{$namespace-prefix}-svg-arrow {
+      > svg {
+        right: 11px;
+      }
+
+      &::after {
+        right: 12px;
+      }
+    }
+  }
+
+  > .#{$namespace-prefix}-svg-arrow {
+    fill: white;
+
+    &::after {
+      background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iNiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMCA2czEuNzk2LS4wMTMgNC42Ny0zLjYxNUM1Ljg1MS45IDYuOTMuMDA2IDggMGMxLjA3LS4wMDYgMi4xNDguODg3IDMuMzQzIDIuMzg1QzE0LjIzMyA2LjAwNSAxNiA2IDE2IDZIMHoiIGZpbGw9InJnYmEoMCwgOCwgMTYsIDAuMikiIC8+PC9zdmc+);
+      background-size: $arrow-size 6px;
+      width: $arrow-size;
+      height: 6px;
+    }
+  }
+}

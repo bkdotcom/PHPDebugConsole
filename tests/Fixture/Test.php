@@ -110,7 +110,7 @@ class Test extends TestBase
      *
      * @param SomeClass $param1 first param
      *                      two-line description!
-     * @param array     $param2 third param
+     * @param array     $param2 second param
      *
      * @return     void
      * @deprecated

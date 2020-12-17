@@ -182,10 +182,13 @@ class LogFiles extends Component
     {
         foreach ($excludedCounts as $path => $count) {
             $cur = &$tree;
-            $dirs = $path === 'closure://function'
-                ? array('', $path)
-                : \explode(DIRECTORY_SEPARATOR, $path);
-            \array_shift($dirs);
+            $dirs = array($path);
+            if ($path !== 'closure://function') {
+                $dirs = \explode(DIRECTORY_SEPARATOR, $path);
+                // $dir[0] is ''
+                \array_shift($dirs);
+                $dirs[0] = '/' . $dirs[0];
+            }
             foreach ($dirs as $i => $dir) {
                 if (!isset($cur[$dir])) {
                     $dir = \implode(DIRECTORY_SEPARATOR, \array_slice($dirs, $i));

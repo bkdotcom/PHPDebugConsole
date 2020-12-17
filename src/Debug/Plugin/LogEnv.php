@@ -208,6 +208,7 @@ class LogEnv implements SubscriberInterface
         }
         $this->debug->log('PHP Version', PHP_VERSION);
         $this->logPhpIni();
+        $this->logTimezone();
         $this->debug->log('memory_limit', $this->debug->utility->getBytes($this->debug->utility->memoryLimit()));
         $this->assertSetting(array(
             'name' => 'expose_php',
@@ -429,6 +430,23 @@ class LogEnv implements SubscriberInterface
             // aka session.save_handler
             $this->debug->log('session save_path', \session_save_path() ?: \sys_get_temp_dir());
         }
+    }
+
+    /**
+     * Log date.timezone setting (if set)
+     * otherwize log date_default_timezone_get()
+     *
+     * @return void
+     */
+    private function logTimezone()
+    {
+        $dateTimezone = \ini_get('date.timezone');
+        if ($dateTimezone) {
+            $this->debug->log('date.timezone', $dateTimezone);
+            return;
+        }
+        $this->debug->assert(false, '%cdate.timezone%c is no set', 'font-family:monospace;', '');
+        $this->debug->log('date_default_timezone_get()', \date_default_timezone_get());
     }
 
     /**

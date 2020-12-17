@@ -30,7 +30,7 @@ function addIcons ($node) {
     }
   })
   // $node.find('> .property > .fa:first-child, > .property > span:first-child > .fa')
-    // .addClass('fa-fw')
+  //   .addClass('fa-fw')
 }
 
 /**

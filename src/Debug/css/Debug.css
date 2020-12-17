@@ -297,7 +297,7 @@ color: #818a91
 .debug-noti-table { display: table; width: 100%; height: 100%; }
 @keyframes expandAndFade { from { opacity: 0.9; transform: scale(0.9, 0.94); }
   to { opacity: 0; transform: scale(1, 1); } }
-.debug .tippy-box { background-color: white; background-clip: padding-box; border: 2px solid rgba(0, 8, 16, 0.3); border-radius: 4px; outline: 0; transition-property: transform,visibility,opacity; color: #333; box-shadow: 0 4px 14px -2px rgba(0, 8, 16, 0.08); }
+.debug .tippy-box { background-color: white; background-clip: padding-box; border: 2px solid rgba(0, 8, 16, 0.3); border-radius: 4px; outline: 0; transition-property: transform, visibility, opacity; color: #333; box-shadow: 0 4px 14px -2px rgba(0, 8, 16, 0.08); }
 .debug .tippy-box .tippy-content { padding: 5px 9px; z-index: 1; }
 .debug .tippy-box > .tippy-backdrop { background-color: white; }
 .debug .tippy-box > .tippy-arrow { width: 16px; height: 16px; color: #333; }

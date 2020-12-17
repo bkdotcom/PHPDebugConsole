@@ -1,7 +1,7 @@
+import $ from 'jquery'
 import { delegate } from 'tippy.js'
 
 export function init ($root) {
-
   var preventShow = false
 
   $root.on('mouseenter', '[title] > .fa', function (e) {
@@ -54,13 +54,13 @@ export function init ($root) {
           options: {
             boundary: $ref.closest('.debug-tabs')[0],
             padding: 5
-          },
+          }
         },
         {
           name: 'preventOverflow',
           options: {
             boundary: $ref.closest('.tab-body')[0],
-            padding: {top: 2, bottom: 2, left: 5, right: 5}
+            padding: { top: 2, bottom: 2, left: 5, right: 5 }
           }
         }
       ]
@@ -86,7 +86,6 @@ export function init ($root) {
     } // end popperOptions
     */
   })
-
 }
 
 function mergeModifiers (modCur, modNew) {
@@ -141,20 +140,20 @@ function buildAttribute (attribute) {
   return html
 }
 
-function dumpSimple(val) {
+function dumpSimple (val) {
   var type = 'string'
   if (typeof val === 'number') {
-    type = val% 1 === 0
+    type = val % 1 === 0
       ? 'int'
       : 'float'
   }
   if (typeof val === 'string' && val.length && val.match(/^\d*(\.\d+)?$/) !== null) {
     type = 'string numeric'
   }
-  return '<span class="t_' + type + '">' + val  + '</span>'
+  return '<span class="t_' + type + '">' + val + '</span>'
 }
 
-function markupClassname(val) {
+function markupClassname (val) {
   var matches = val.match(/^(.+\\)([^\\]+)$/)
   val = matches
     ? '<span class="namespace">' + matches[1] + '</span>' + matches[2]

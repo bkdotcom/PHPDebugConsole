@@ -1106,11 +1106,11 @@ class Debug
             array(
                 'columns' => array('file','line','function'),
                 'detectFiles' => true,
+                'sortable' => false,
             ),
             array(
                 'inclContext' => false,
                 'caption' => 'trace',
-                'sortable' => false,
             ),
             array(
                 'caption',

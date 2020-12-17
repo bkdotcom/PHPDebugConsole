@@ -32,13 +32,18 @@ class TraceTest extends DebugTestFramework
             ),
             array(),
             array(
-                'custom' => function (LogEntry $logEntry) use ($values) {
+                'entry' => function (LogEntry $logEntry) use ($values) {
                     $trace = $logEntry['args'][0];
                     $this->assertSame($values['file0'], $trace[0]['file']);
                     $this->assertSame($values['line0'], $trace[0]['line']);
                     $this->assertIsInt($trace[0]['line']);
                     $this->assertSame(Abstracter::UNDEFINED, $trace[0]['function']);
                     $this->assertSame($values['function1'], $trace[1]['function']);
+
+                    $this->assertSame('trace', $logEntry->getMeta('caption'));
+                    $this->assertTrue($logEntry->getMeta('detectFiles'));
+                    $this->assertNull($logEntry->getMeta('inclContext'));
+                    $this->assertFalse($logEntry->getMeta('sortable'));
                 },
                 'chromeLogger' => function ($outputArray, LogEntry $logEntry) {
                     $traceExpect = \array_map(function ($row) {
@@ -134,11 +139,49 @@ class TraceTest extends DebugTestFramework
 
         $this->debug->setCfg('collect', false);
         $this->testMethod(
-            'log',
+            'trace',
             array('log message'),
             array(
                 'notLogged' => true,
                 'wamp' => false,
+            )
+        );
+    }
+
+    public function testTraceWithContext()
+    {
+        $this->testMethod(
+            'trace',
+            array(true), // inclTrace
+            array(
+                'entry' => function (LogEntry $logEntry) {
+                    $tableInfo = $logEntry->getMeta('tableInfo');
+                    $this->assertSame('trace', $logEntry->getMeta('caption'));
+                    $this->assertTrue($logEntry->getMeta('detectFiles'));
+                    $this->assertTrue($logEntry->getMeta('inclContext'));
+                    $this->assertFalse($logEntry->getMeta('sortable'));
+
+                    $this->assertIsArray($tableInfo['rows'][0]['args']);
+                    $this->assertIsArray($tableInfo['rows'][0]['context']);
+                },
+                'html' => function ($output, LogEntry $logEntry) {
+                    // $this->stderr('output', substr($output, 2000, 2000));
+                    $expectStartsWith = <<<'EOD'
+<li class="m_trace" data-detect-files="true">
+<table class="table-bordered trace-context">
+<caption>trace</caption>
+<thead>
+<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>
+</thead>
+<tbody>
+<tr class="expanded" data-toggle="next">
+EOD;
+                    $this->assertStringContainsString($expectStartsWith, $output);
+                    $expectMatch = '%a<tr class="context" style="display:table-row;"><td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-start="%d"><code class="language-php">%a';
+                    $this->assertStringMatchesFormat($expectMatch, $output);
+                    $expectContains = '</code></pre><hr />Arguments = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>';
+                    $this->assertStringContainsString($expectContains, $output);
+                },
             )
         );
     }

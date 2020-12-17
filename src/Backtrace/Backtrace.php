@@ -210,15 +210,12 @@ class Backtrace
             return $backtrace;
         }
         $options = static::translateOptions($options);
-        $limit = $limit
-            ? $limit + 2
-            : 0;
-        $backtrace = \debug_backtrace($options, $limit);
+        $backtrace = \debug_backtrace($options, $limit ? $limit + 2 : 0);
         if (\array_key_exists('file', \end($backtrace)) === true) {
             // We're NOT in shutdown
             $backtrace = static::normalize($backtrace);
             $backtrace = static::removeInternalFrames($backtrace);
-            return $backtrace;
+            return \array_slice($backtrace, 0, $limit);
         }
         /*
             We appear to be in shutdown - use xdebug
@@ -230,6 +227,7 @@ class Backtrace
         $backtrace = \array_reverse($backtrace);
         $backtrace = static::normalize($backtrace);
         $backtrace = static::removeInternalFrames($backtrace);
+        $backtrace = \array_slice($backtrace, 0, $limit);
         $error = \error_get_last();
         if ($error !== null && $error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR)) {
             // xdebug_get_function_stack doesn't include the frame that triggered the error!

@@ -153,7 +153,7 @@ class Error extends Event
         );
         $traceReflector = new \ReflectionProperty('Exception', 'trace');
         $traceReflector->setAccessible(true);
-        $traceReflector->setValue($exception, $this->getTrace());
+        $traceReflector->setValue($exception, $this->getTrace() ?: array());
         return $exception;
     }
 

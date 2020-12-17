@@ -52,7 +52,7 @@ class MethodTest extends DebugTestFramework
                     $this->assertSame(array(
                         'caption' => 'trace',
                         'detectFiles' => true,
-                        'sortable' => true,
+                        'sortable' => false,
                         'tableInfo' => array(
                             'class' => null,
                             'columns' => array(

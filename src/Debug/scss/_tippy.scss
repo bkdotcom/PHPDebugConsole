@@ -15,18 +15,16 @@ $arrow-size: 16px;
 
 $color: white;
 $transparent-light: rgba(0, 8, 16, 0.08);
-$transparent-dark: rgba(0, 8, 16, 0.30);
-$transparent-darker: rgba(0, 8, 16, 0.50);
+$transparent-dark: rgba(0, 8, 16, 0.3);
+$transparent-darker: rgba(0, 8, 16, 0.5);
 
 .#{$namespace-prefix}-box {
   background-color: $color;
   background-clip: padding-box;
   border: 2px solid $transparent-dark;
   border-radius: 4px;
-  // font-size: 14px;
-  // line-height: 1.4;
   outline: 0;
-  transition-property: transform,visibility,opacity;
+  transition-property: transform, visibility, opacity;
   color: #333;
   box-shadow: 0 4px 14px -2px $transparent-light;
 
@@ -69,7 +67,6 @@ $transparent-darker: rgba(0, 8, 16, 0.50);
 
   &[data-placement^='top'] {
     > .#{$namespace-prefix}-arrow {
-
       bottom: 1px;
 
       &::before {
@@ -101,7 +98,6 @@ $transparent-darker: rgba(0, 8, 16, 0.50);
 
   &[data-placement^='bottom'] {
     > .#{$namespace-prefix}-arrow {
-
       top: 0;
 
       &::before {

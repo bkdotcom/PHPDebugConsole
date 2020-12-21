@@ -52,6 +52,7 @@ class MethodTest extends DebugTestFramework
                     $this->assertSame(array(
                         'caption' => 'trace',
                         'detectFiles' => true,
+                        'inclArgs' => true,
                         'sortable' => false,
                         'tableInfo' => array(
                             'class' => null,
@@ -61,6 +62,7 @@ class MethodTest extends DebugTestFramework
                                 array('key' => 'function'),
                             ),
                             'haveObjRow' => false,
+                            'indexLabel' => null,
                             'rows' => array(),
                             'summary' => null,
                         ),
@@ -80,6 +82,7 @@ class MethodTest extends DebugTestFramework
                     array('something completely different'),
                     array(
                         'detectFiles' => true,
+                        'inclArgs' => true,
                         'format' => 'raw',
                         'foundFiles' => array(),
                     ),

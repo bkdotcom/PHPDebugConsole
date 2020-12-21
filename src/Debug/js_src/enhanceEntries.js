@@ -186,7 +186,7 @@ function createFileLinks ($entry, $strings, remove) {
   if (detectFiles === false) {
     return
   }
-  // console.info('createFileLinks', $entry[0], $strings)
+  // console.warn('createFileLinks', remove, $entry[0], $strings)
   if ($entry.is('.m_trace')) {
     isUpdate = $entry.find('.file-link').length > 0
     if (!isUpdate) {
@@ -245,7 +245,7 @@ function createFileLinks ($entry, $strings, remove) {
     var $replace
     var $string = $(this)
     var attrs = $string[0].attributes
-    var text = $.trim($string.text())
+    var html = $.trim($string.html())
     var matches = []
     if ($string.closest('.m_trace').length) {
       createFileLinks($string.closest('.m_trace'))
@@ -254,10 +254,10 @@ function createFileLinks ($entry, $strings, remove) {
     if ($string.data('file')) {
       // filepath specified in data attr
       matches = typeof $string.data('file') === 'boolean'
-        ? [null, text, 1]
+        ? [null, html, 1]
         : [null, $string.data('file'), $string.data('line') || 1]
-    } else if (dataFoundFiles.indexOf(text) === 0) {
-      matches = [null, text, 1]
+    } else if (dataFoundFiles.indexOf(html) === 0) {
+      matches = [null, html, 1]
     } else if ($string.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
       // object with file .debug-value
       matches = {
@@ -269,23 +269,23 @@ function createFileLinks ($entry, $strings, remove) {
         var val = $.trim($valNode[0].innerText)
         matches[prop] = val
       })
-      matches = [null, text, matches.line]
+      matches = [null, html, matches.line]
     } else {
-      matches = text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
+      matches = html.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
     }
     if (matches.length) {
       $replace = remove
         ? $('<span>', {
-          html: text
+          html: html
         })
         : $('<a>', {
-          html: text + ' <i class="fa fa-external-link"></i>',
+          html: html + ' <i class="fa fa-external-link"></i>',
           href: buildFileLink(matches[1], matches[2]),
           title: 'Open in editor'
         })
-      if ($string.is('td, li')) {
+      if ($string.is('td, th, li')) {
         $string.html(remove
-          ? text
+          ? html
           : $replace
         )
       } else {
@@ -424,7 +424,7 @@ export function enhanceEntry ($entry) {
         $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'))
       }
       createFileLinks($entry)
-    } else if ($entry.data('detect-files')) {
+    } else if ($entry.data('detectFiles')) {
       createFileLinks($entry, $entry.find('.t_string'))
     }
     addIcons($entry)
@@ -496,7 +496,7 @@ function enhanceValue ($entry, node) {
   } else if ($node.is('table')) {
     tableSort.makeSortable($node)
   } else if ($node.is('.t_string')) {
-    createFileLinks($entry, $node)
+    createFileLinks($entry, $node, true)
   }
   if ($node.is('.timestamp')) {
     var $i = $node.find('i')

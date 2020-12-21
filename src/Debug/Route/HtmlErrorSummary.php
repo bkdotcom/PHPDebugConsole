@@ -72,7 +72,7 @@ class HtmlErrorSummary
             ),
             array(
                 'attribs' => array(
-                    'class' => \implode(' ', $classes),
+                    'class' => $classes,
                     'data-detect-files' => true,
                 ),
                 'dismissible' => false,

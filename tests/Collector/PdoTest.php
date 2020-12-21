@@ -66,7 +66,7 @@ EOD;
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
-                            'class' => 'highlight language-sql',
+                            'class' => array('highlight', 'language-sql'),
                         ),
                         'debug' => Abstracter::ABSTRACTION,
                         'type' => Abstracter::TYPE_STRING,
@@ -76,7 +76,7 @@ EOD;
                 ),
                 'meta' => array(
                     'attribs' => array(
-                        'class' => 'no-indent',
+                        'class' => array('no-indent'),
                     ),
                     'channel' => 'general.PDO',
                 ),
@@ -107,6 +107,7 @@ EOD;
                             array('key' => 'type'),
                         ),
                         'haveObjRow' => false,
+                        'indexLabel' => null,
                         'rows' => array(),
                         'summary' => null,
                     ),

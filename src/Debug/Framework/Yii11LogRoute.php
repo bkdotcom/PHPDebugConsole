@@ -13,7 +13,6 @@
 namespace bdk\Debug\Framework;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
 use CLogger;
 use CLogRoute;
 use Exception;

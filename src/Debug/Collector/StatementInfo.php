@@ -307,7 +307,7 @@ class StatementInfo
                 CREATE(?:\sTEMPORARY)?\s+TABLE(?:\sIF\sNOT\sEXISTS)?\s+\S+|
                 DELETE.*?FROM\s+\S+|
                 INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
-                SELECT\s+(?P<select>.*?)\s+FROM\s+\S+|
+                SELECT\s+(?P<select>.*)\s+FROM\s+\S+|
                 UPDATE\s+\S+
             )(?P<more>.*)/imsx';
         $matches = array();

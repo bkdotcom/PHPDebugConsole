@@ -215,11 +215,23 @@ class Backtrace
             // We're NOT in shutdown
             $backtrace = static::normalize($backtrace);
             $backtrace = static::removeInternalFrames($backtrace);
-            return \array_slice($backtrace, 0, $limit);
+            return \array_slice($backtrace, 0, $limit ?: null);
         }
         /*
             We appear to be in shutdown - use xdebug
         */
+        return self::getBacktraceXdebug($limit);
+    }
+
+    /**
+     * Get backtrace via xdebug
+     *
+     * @param int $limit limit the number of stack frames returned.
+     *
+     * @return array|false
+     */
+    private static function getBacktraceXdebug($limit)
+    {
         $backtrace = static::xdebugGetFunctionStack();
         if ($backtrace === false) {
             return false;
@@ -227,7 +239,7 @@ class Backtrace
         $backtrace = \array_reverse($backtrace);
         $backtrace = static::normalize($backtrace);
         $backtrace = static::removeInternalFrames($backtrace);
-        $backtrace = \array_slice($backtrace, 0, $limit);
+        $backtrace = \array_slice($backtrace, 0, $limit ?: null);
         $error = \error_get_last();
         if ($error !== null && $error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR)) {
             // xdebug_get_function_stack doesn't include the frame that triggered the error!

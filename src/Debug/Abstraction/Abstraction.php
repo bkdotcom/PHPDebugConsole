@@ -37,8 +37,8 @@ class Abstraction extends Event implements JsonSerializable, Serializable
      */
     public function __construct($type, $values = array())
     {
-        $this->values = $values;
-        $this->values['type'] = $type;
+        $values['type'] = $type;
+        $this->setValues($values);
     }
 
     /**
@@ -105,5 +105,21 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     public function unserialize($data)
     {
         $this->values = \unserialize($data);
+    }
+
+    /**
+     * Make sure attribs['class'] is an array
+     *
+     * @return void
+     */
+    protected function onSet()
+    {
+        if (isset($this->values['attribs'])) {
+            if (!isset($this->values['attribs']['class'])) {
+                $this->values['attribs']['class'] = array();
+            } elseif (\is_string($this->values['attribs']['class'])) {
+                $this->values['attribs']['class'] = \explode(' ', $this->values['attribs']['class']);
+            }
+        }
     }
 }

@@ -172,7 +172,8 @@ class HtmlTable
             $labels[] = $label;
         }
         return '<thead>' . "\n"
-            . '<tr><th>&nbsp;</th>'
+            . '<tr>'
+                . ($this->tableInfo['indexLabel'] ? '<th class="text-right">' . $this->tableInfo['indexLabel'] . '</th>' : '<th>&nbsp;</th>')
                 . ($this->tableInfo['haveObjRow'] ? '<th>&nbsp;</th>' : '')
                 . '<th>' . \implode('</th><th scope="col">', $labels) . '</th>'
             . '</tr>' . "\n"
@@ -199,10 +200,10 @@ class HtmlTable
         */
         $str .= $this->debug->html->buildTag(
             'th',
-            array(
-                'class' => 't_key text-right ' . $rowKeyParsed['attribs']['class'],
+            $this->debug->utility->arrayMergeDeep($rowKeyParsed['attribs'], array(
+                'class' => array('t_key', 'text-right'),
                 'scope' => 'row',
-            ),
+            )),
             $rowKeyParsed['innerhtml']
         );
         /*

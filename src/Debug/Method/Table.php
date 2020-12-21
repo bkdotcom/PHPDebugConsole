@@ -39,8 +39,20 @@ class Table
     {
         $this->logEntry = $logEntry;
         $this->debug = $logEntry->getSubject();
+
+        $cfgRestore = array();
+        if (isset($logEntry['meta']['cfg'])) {
+            $cfgRestore = $this->debug->setCfg($logEntry['meta']['cfg']);
+            $logEntry->setMeta('cfg', null);
+        }
+
         $this->initLogEntry();
         $this->processRows();
+
+        if ($cfgRestore) {
+            $this->debug->setCfg($cfgRestore);
+        }
+
         if (!$this->haveTableData()) {
             $logEntry['method'] = 'log';
             if ($this->meta['caption']) {
@@ -57,9 +69,9 @@ class Table
      *
      * @return array
      */
-    private static function colKeys($rows)
+    private function colKeys($rows)
     {
-        if (Abstracter::isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
+        if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
             if (!$rows['traverseValues']) {
                 return array(self::SCALAR);
             }
@@ -71,7 +83,7 @@ class Table
         $colKeys = array();
         $curRowKeys = array();
         foreach ($rows as $row) {
-            $curRowKeys = self::keys($row);
+            $curRowKeys = $this->keys($row);
             if (empty($colKeys)) {
                 $colKeys = $curRowKeys;
             } elseif ($curRowKeys !== $colKeys) {
@@ -101,40 +113,19 @@ class Table
     private function initLogEntry()
     {
         $args = $this->logEntry['args'];
-        $this->initMeta();
         $argCount = \count($args);
-        $data = null;
         $other = Abstracter::UNDEFINED;
+        $this->initMeta();
+        $this->logEntry['args'] = array();
         for ($i = 0; $i < $argCount; $i++) {
-            if (\is_array($args[$i])) {
-                if ($data === null) {
-                    $data = $args[$i];
-                } elseif (!$this->meta['columns']) {
-                    $this->meta['columns'] = $args[$i];
-                }
-                continue;
-            }
-            if (\is_object($args[$i])) {
-                // Traversable or other
-                if ($data === null) {
-                    $data = $args[$i];
-                }
-                continue;
-            }
-            if (\is_string($args[$i]) && $this->meta['caption'] === null) {
-                $this->meta['caption'] = $args[$i];
-                continue;
-            }
-            if ($other === Abstracter::UNDEFINED) {
+            $isOther = $this->testArg($args[$i]);
+            if ($isOther && $other === Abstracter::UNDEFINED) {
                 $other = $args[$i];
             }
         }
-        if ($data === null) {
-            $data = $other;
+        if ($this->logEntry['args'] === array() && $other !== Abstracter::UNDEFINED) {
+            $this->logEntry['args'] = array($other);
         }
-        $this->logEntry['args'] = $data !== Abstracter::UNDEFINED
-            ? array($data)
-            : array();
     }
 
     /**
@@ -160,13 +151,15 @@ class Table
                 'class' => null,
                 'columns' => array(
                     /*
-                    key => array(
+                    array(
+                        key
                         class
                         total
                     )
                     */
                 ),
                 'haveObjRow' => false,
+                'indexLabel' => null,
                 'rows' => array(
                     /*
                     key => array(
@@ -216,9 +209,9 @@ class Table
      *
      * @return string[]
      */
-    private static function keys($val)
+    private function keys($val)
     {
-        if (Abstracter::isAbstraction($val)) {
+        if ($this->debug->abstracter->isAbstraction($val)) {
             // abstraction
             if ($val['type'] === Abstracter::TYPE_OBJECT) {
                 if ($val['traverseValues']) {
@@ -480,6 +473,37 @@ class Table
             );
         }
         $this->logEntry['meta'] = $this->meta;
+    }
+
+    /**
+     * Place argument as "data", "caption", "columns", or "other"
+     *
+     * @param mixed $val argument value
+     *
+     * @return bool whether to treat the val as "other"
+     */
+    private function testArg($val)
+    {
+        if (\is_array($val)) {
+            if ($this->logEntry['args'] === array()) {
+                $this->logEntry['args'] = array($val);
+            } elseif (!$this->meta['columns']) {
+                $this->meta['columns'] = $val;
+            }
+            return false;
+        }
+        if (\is_object($val)) {
+            // Traversable or other
+            if ($this->logEntry['args'] === array()) {
+                $this->logEntry['args'] = array($val);
+            }
+            return false;
+        }
+        if (\is_string($val) && $this->meta['caption'] === null) {
+            $this->meta['caption'] = $val;
+            return false;
+        }
+        return true;
     }
 
     /**

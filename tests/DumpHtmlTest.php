@@ -9,7 +9,7 @@ class DumpHtmlTest extends DebugTestFramework
 {
 
     /**
-     * Test overriding a core method
+     * Test MarkupIdentifier
      */
     public function testMarkupIdentifier()
     {
@@ -51,6 +51,21 @@ class DumpHtmlTest extends DebugTestFramework
         $this->assertSame(
             '<span class="classname"><span class="namespace">Foo\<wbr /></span>Bar</span><wbr /><span class="t_operator">-&gt;</span><span class="t_identifier">baz</span>',
             $dump->markupIdentifier('Foo\\Bar->baz', 'span', null, true)
+        );
+    }
+
+    public function testAbstractionAttribs()
+    {
+        $dump = $this->debug->getDump('html');
+        $abs = $this->debug->abstracter->crateWithVals('someFilePath', array(
+            'attribs' => array(
+                'data-file' => '/path/to/file.php',
+                'class' => 'foo bar', // test that output as "bar foo"
+            ),
+        ));
+        $this->assertSame(
+            '<span class="bar foo t_string" data-file="/path/to/file.php">someFilePath</span>',
+            $dump->dump($abs)
         );
     }
 }

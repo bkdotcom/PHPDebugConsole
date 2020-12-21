@@ -48,7 +48,7 @@ class Event implements ArrayAccess, IteratorAggregate
     public function __construct($subject = null, array $values = array())
     {
         $this->subject = $subject;
-        $this->values = $values;
+        $this->setValues($values);
     }
 
     /**
@@ -136,6 +136,7 @@ class Event implements ArrayAccess, IteratorAggregate
     public function setValue($key, $value)
     {
         $this->values[$key] = $value;
+        $this->onSet();
         return $this;
     }
 
@@ -149,6 +150,7 @@ class Event implements ArrayAccess, IteratorAggregate
     public function setValues(array $values = array())
     {
         $this->values = $values;
+        $this->onSet();
         return $this;
     }
 
@@ -227,5 +229,14 @@ class Event implements ArrayAccess, IteratorAggregate
     public function getIterator()
     {
         return new ArrayIterator($this->values);
+    }
+
+    /**
+     * Extendme to perform action after setting value/values
+     *
+     * @return void
+     */
+    protected function onSet()
+    {
     }
 }

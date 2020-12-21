@@ -42,7 +42,7 @@ class LogEntry extends Event
         $this->values = array(
             'method' => $method,
             'args' => $args ?: array(),
-            'meta' => $meta,
+            'meta' => array(),
             'numArgs' => 0,     // number of non-meta aargs passed (does not include added default values)
             'appendLog' => true,
             'return' => null,
@@ -57,11 +57,12 @@ class LogEntry extends Event
                 \array_replace(\array_values($defaultArgs), $args)
             );
             foreach ($argsToMeta as $k) {
-                $this->values['meta'][$k] = $args[$k];
+                $meta[$k] = $args[$k];
                 unset($args[$k]);
             }
             $this->values['args'] = \array_values($args + $argsMore);
         }
+        $this->setMeta($meta);
         $this->setMeta($metaExtracted);
     }
 
@@ -132,6 +133,13 @@ class LogEntry extends Event
                 return;
             }
             $meta = array($key => $val);
+        }
+        if (isset($meta['attribs'])) {
+            if (!isset($meta['attribs']['class'])) {
+                $meta['attribs']['class'] = array();
+            } elseif (\is_string($meta['attribs']['class'])) {
+                $meta['attribs']['class'] = \explode(' ', $meta['attribs']['class']);
+            }
         }
         $meta = \array_merge($this->values['meta'], $meta);
         $this->values['meta'] = $meta;

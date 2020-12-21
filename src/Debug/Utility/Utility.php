@@ -94,24 +94,22 @@ class Utility
     }
 
     /**
-     * Recursively merge two arrays
+     * Recursively merge arrays
      *
-     * @param array $arrayDef default array
-     * @param array $array2   array 2
+     * @param array $arrayDef   default array
+     * @param array $array2,... array to merge
      *
      * @return array
      */
     public static function arrayMergeDeep($arrayDef, $array2)
     {
-        if (!\is_array($arrayDef) || self::isCallable($arrayDef)) {
-            // not array or appears to be a callable
-            return $array2;
+        $mergeArrays = \func_get_args();
+        \array_shift($mergeArrays);
+        while ($mergeArrays) {
+            $array2 = \array_shift($mergeArrays);
+            $arrayDef = static::arrayMergeDeepWalk($arrayDef, $array2);
         }
-        if (!\is_array($array2) || self::isCallable($array2)) {
-            // not array or appears to be a callable
-            return $array2;
-        }
-        return static::arrayMergeDeepWalk($arrayDef, $array2);
+        return $arrayDef;
     }
 
     /**
@@ -493,21 +491,30 @@ class Utility
     }
 
     /**
-     * Syntax-only is_callable() check
-     * Additionally checks that $array[0] is an object
+     * Test if value is callable
      *
-     * Does not check for static class method - ie array('class', 'method')
-     *
-     * @param string|array $val value to check
+     * @param string|array $val          value to check
+     * @param bool         $strictNonObj whether we should check static class method
+     *                                      (ie array('class',''method'))
      *
      * @return bool
      */
-    public static function isCallable($val)
+    public static function isCallable($val, $strictNonObj = true)
     {
-        return \is_array($val)
-            // only test if "method_exists" if val[0] is an object
-            ? \is_callable($val, true) && \is_object($val[0]) && \is_callable($val)
-            : \is_callable($val);
+        if (!\is_array($val) || $strictNonObj) {
+            return \is_callable($val);
+        }
+        $isCallable = \is_callable($val, true); // syntax only
+        if (!$isCallable) {
+            // definitely not a callable
+            return false;
+        }
+        if (\is_object($val[0])) {
+            // object... test strictly
+            return \is_callable($val);
+        }
+        // non-object..  syntax-only appears to be callable
+        return true;
     }
 
     /**
@@ -702,17 +709,26 @@ class Utility
     private static function arrayMergeDeepWalk($arrayDef, $array2)
     {
         foreach ($array2 as $k2 => $v2) {
-            // append int-key'd values... unless value is an array
-            if (\is_int($k2) && !\is_array($v2)) {
-                if (!\in_array($v2, $arrayDef)) {
-                    $arrayDef[] = $v2;
+            if (!\is_array($v2) || static::isCallable($v2)) {
+                // not array or appears to be a callable
+                if (\is_int($k2) === false) {
+                    $arrayDef[$k2] = $v2;
+                    continue;
                 }
+                // append int-key'd values if not already in_array
+                if (\in_array($v2, $arrayDef)) {
+                    // already in array
+                    continue;
+                }
+                // append it
+                $arrayDef[] = $v2;
                 continue;
             }
-            if (!isset($arrayDef[$k2])) {
+            if (!isset($arrayDef[$k2]) || !\is_array($arrayDef[$k2]) || static::isCallable($arrayDef[$k2])) {
                 $arrayDef[$k2] = $v2;
                 continue;
             }
+            // both values are arrays... merge em
             $arrayDef[$k2] = static::arrayMergeDeep($arrayDef[$k2], $v2);
         }
         return $arrayDef;

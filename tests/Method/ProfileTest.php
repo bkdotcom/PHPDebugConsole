@@ -63,6 +63,7 @@ class ProfileTest extends DebugTestFramework
                                 ),
                             ),
                             'haveObjRow' => false,
+                            'indexLabel' => null,
                             'rows' => array(
                                 'bdk\DebugTests\Method\ProfileTest::a' => array(
                                     'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(

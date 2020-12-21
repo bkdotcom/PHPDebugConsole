@@ -1106,7 +1106,10 @@ class Debug
             array(
                 'columns' => array('file','line','function'),
                 'detectFiles' => true,
+                'inclArgs' => true, // incl arguments with context?
+                                    //   may want to set meta['cfg']['objectsExclude'] = '*'
                 'sortable' => false,
+                'trace' => null,  // set to specify trace
             ),
             array(
                 'inclContext' => false,
@@ -1119,9 +1122,10 @@ class Debug
         );
         // Get trace and include args if we're including context
         $inclContext = $logEntry->getMeta('inclContext');
+        $inclArgs = $logEntry->getMeta('inclArgs');
         $backtrace = isset($logEntry['meta']['trace'])
             ? $logEntry['meta']['trace']
-            : $this->backtrace->get($inclContext ? \bdk\Backtrace::INCL_ARGS : 0);
+            : $this->backtrace->get($inclArgs ? \bdk\Backtrace::INCL_ARGS : 0);
         $logEntry->setMeta('trace', null);
         if ($backtrace && $inclContext) {
             $backtrace = $this->backtrace->addContext($backtrace);
@@ -1246,35 +1250,42 @@ class Debug
      */
     public function getChannel($name, $config = array())
     {
-        if (\strpos($name, '.') !== false) {
-            $this->error('getChannel(): name should not contain period (.)');
-            return $this;
+        /*
+            Split on "."
+            Split on "/" not adjacent to whitespace
+        */
+        $names = \preg_split('#(\.|(?<!\s)/(?!\s))#', $name);
+        $cur = $this;
+        while ($names) {
+            $name = \array_shift($names);
+            $conf = $config;
+            if (!isset($cur->channels[$name])) {
+                $conf = \array_merge(
+                    array('nested' => true),
+                    $conf,
+                    isset($cur->cfg['channels'][$name])
+                        ? $cur->cfg['channels'][$name]
+                        : array()
+                );
+                $cfg = $cur->getCfg(null, self::CONFIG_INIT);
+                $cfg = $cur->internal->getPropagateValues($cfg);
+                // set channel values
+                $cfg['debug']['channelIcon'] = null;
+                $cfg['debug']['channelName'] = $conf['nested'] || $cur->readOnly['parentInstance']
+                    ? $cur->cfg['channelName'] . '.' . $name
+                    : $name;
+                $cfg['debug']['parent'] = $cur;
+                unset($conf['nested']);
+                // instantiate channel
+                $cur->channels[$name] = new static($cfg);
+            }
+            unset($conf['nested']);
+            if ($conf) {
+                $cur->channels[$name]->setCfg($conf);
+            }
+            $cur = $this->channels[$name];
         }
-        if (!isset($this->channels[$name])) {
-            $config = \array_merge(
-                array('nested' => true),
-                $config,
-                isset($this->cfg['channels'][$name])
-                    ? $this->cfg['channels'][$name]
-                    : array()
-            );
-            $cfg = $this->getCfg(null, self::CONFIG_INIT);
-            $cfg = $this->internal->getPropagateValues($cfg);
-            // set channel values
-            $cfg['debug']['channelIcon'] = null;
-            $cfg['debug']['channelName'] = $config['nested'] || $this->readOnly['parentInstance']
-                ? $this->cfg['channelName'] . '.' . $name
-                : $name;
-            $cfg['debug']['parent'] = $this;
-            unset($config['nested']);
-            // instantiate channel
-            $this->channels[$name] = new static($cfg);
-        }
-        unset($config['nested']);
-        if ($config) {
-            $this->channels[$name]->setCfg($config);
-        }
-        return $this->channels[$name];
+        return $cur;
     }
 
     /**

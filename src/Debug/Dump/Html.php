@@ -27,7 +27,9 @@ class Html extends Base
 
     protected $channels = array();
     protected $detectFiles = false;
+    /** @var array LogEntry meta attribs */
     protected $logEntryAttribs = array();
+    /** @var array attribs added here when dumping val*/
     protected $valAttribs = array();
     protected $valAttribsStack = array();
 
@@ -48,7 +50,7 @@ class Html extends Base
             'title' => null,
         );
         $absAttribs = $val instanceof Abstraction
-            ? $val['attribs']
+            ? (array) $val['attribs']
             : array();
         $val = parent::dump($val, $opts);
         if ($tagName === '__default__') {
@@ -60,25 +62,17 @@ class Html extends Base
             }
         }
         if ($tagName) {
-            $valAttribs = $this->debug->utility->arrayMergeDeep(
+            $attribs = $this->debug->utility->arrayMergeDeep(
+                $this->valAttribs,
+                $absAttribs,
                 array(
                     'class' => array(
                         't_' . $this->dumpType,
                         $this->dumpTypeMore,
                     ),
-                ),
-                $this->valAttribs
+                )
             );
-            if ($absAttribs) {
-                $absAttribs['class'] = isset($absAttribs['class'])
-                    ? (array) $absAttribs['class']
-                    : array();
-                $valAttribs = $this->debug->utility->arrayMergeDeep(
-                    $valAttribs,
-                    $absAttribs
-                );
-            }
-            $val = $this->debug->html->buildTag($tagName, $valAttribs, $val);
+            $val = $this->debug->html->buildTag($tagName, $attribs, $val);
         }
         $this->valAttribs = array();
         return $val;
@@ -127,8 +121,8 @@ class Html extends Base
             }
             $classname = $this->debug->html->buildTag(
                 $tagName,
-                \array_merge(array(
-                    'class' => 'classname',
+                $this->debug->utility->arrayMergeDeep(array(
+                    'class' => array('classname'),
                 ), (array) $attribs),
                 $classname
             ) . '<wbr />';
@@ -218,15 +212,14 @@ class Html extends Base
             $this->channels[$channelName] = $logEntry->getSubject();
         }
         $this->detectFiles = $meta['detectFiles'];
-        $this->logEntryAttribs = \array_merge(array(
-            'class' => '',
+        $this->logEntryAttribs = $this->debug->utility->arrayMergeDeep(array(
+            'class' => array('m_' . $method),
             'data-channel' => $channelName !== $this->channelNameRoot
                 ? $channelName
                 : null,
             'data-detect-files' => $meta['detectFiles'],
             'data-icon' => $meta['icon'],
         ), $meta['attribs']);
-        $this->logEntryAttribs['class'] .= ' m_' . $method;
         $str = parent::processLogEntry($logEntry);
         $str = \strtr($str, array(
             ' data-channel="null"' => '',
@@ -337,6 +330,25 @@ class Html extends Base
     }
 
     /**
+     * Is value a timestamp?
+     * Add vallAttribs class & title if so
+     *
+     * @param mixed $val value to check
+     *
+     * @return string|false
+     */
+    protected function checkTimestamp($val)
+    {
+        $date = parent::checkTimestamp($val);
+        if ($date) {
+            $this->valAttribs['class'][] = 'timestamp';
+            $this->valAttribs['title'] = $date;
+            return $date;
+        }
+        return false;
+    }
+
+    /**
      * Dump array as html
      *
      * @param array $array array
@@ -433,11 +445,7 @@ class Html extends Base
      */
     protected function dumpFloat($val)
     {
-        $date = $this->checkTimestamp($val);
-        if ($date) {
-            $this->valAttribs['class'][] = 'timestamp';
-            $this->valAttribs['title'] = $date;
-        }
+        $this->checkTimestamp($val);
         return $val;
     }
 
@@ -493,11 +501,7 @@ class Html extends Base
     protected function dumpString($val, Abstraction $abs = null)
     {
         if (\is_numeric($val)) {
-            $date = $this->checkTimestamp($val);
-            if ($date) {
-                $this->valAttribs['class'][] = 'timestamp';
-                $this->valAttribs['title'] = $date;
-            }
+            $this->checkTimestamp($val);
         }
         if ($this->detectFiles && $this->debug->utility->isFile($val)) {
             $this->valAttribs['data-file'] = true;
@@ -506,8 +510,16 @@ class Html extends Base
             'sanitizeNonBinary' => $this->valOpts['sanitize'],
             'useHtml' => true,
         ));
-        if ($abs && $abs['strlen']) {
-            $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)</span>';
+        if ($abs) {
+            if ($abs['typeMore'] === 'classname') {
+                $val = $this->markupIdentifier($val);
+                $parsed = $this->debug->html->parseTag($val);
+                $this->valAttribs = $this->debug->utility->arrayMergeDeep($this->valAttribs, $parsed['attribs']);
+                $val = $parsed['innerhtml'];
+            }
+            if ($abs['strlen']) {
+                $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)</span>';
+            }
         }
         if ($this->valOpts['visualWhiteSpace']) {
             $val = $this->visualWhiteSpace($val);
@@ -574,10 +586,11 @@ class Html extends Base
     protected function methodAlert(LogEntry $logEntry)
     {
         $meta = $logEntry['meta'];
-        $attribs = \array_merge($this->logEntryAttribs, array(
-            'class' => 'alert-' . $meta['level'] . ' ' . $this->logEntryAttribs['class'],
+        $attribs = \array_merge(array(
+            'class' => array(),
             'role' => 'alert',
-        ));
+        ), $this->logEntryAttribs);
+        $attribs['class'][] = 'alert-' . $meta['level'];
         $html = $this->dump(
             $logEntry['args'][0],
             array(
@@ -587,7 +600,7 @@ class Html extends Base
             false // don't wrap in span
         );
         if ($meta['dismissible']) {
-            $attribs['class'] .= ' alert-dismissible';
+            $attribs['class'][] = 'alert-dismissible';
             $html = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
                 . '<span aria-hidden="true">&times;</span>'
                 . '</button>'
@@ -622,7 +635,7 @@ class Html extends Base
         }
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if ($meta['errorCat']) {
-                $attribs['class'] .= ' error-' . $meta['errorCat'];
+                $attribs['class'][] = 'error-' . $meta['errorCat'];
             }
             if ($meta['uncollapse'] === false) {
                 $attribs['data-uncollapse'] = false;
@@ -741,11 +754,11 @@ class Html extends Base
     {
         $meta = $this->debug->utility->arrayMergeDeep(array(
             'attribs' => array(
-                'class' => array(
-                    'table-bordered',
-                    $logEntry->getMeta('sortable') ? 'sortable' : null,
-                    $logEntry->getMeta('inclContext') ? 'trace-context' : null,
-                ),
+                'class' => \array_keys(\array_filter(array(
+                    'table-bordered' => true,
+                    'sortable' => $logEntry->getMeta('sortable'),
+                    'trace-context' => $logEntry->getMeta('inclContext'),
+                ))),
             ),
             'caption' => null,
             'onBuildRow' => array(),

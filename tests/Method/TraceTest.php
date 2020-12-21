@@ -152,7 +152,10 @@ class TraceTest extends DebugTestFramework
     {
         $this->testMethod(
             'trace',
-            array(true), // inclTrace
+            array(
+                true,   // inclTrace
+                $this->debug->meta('cfg', 'objectsExclude', array('*')), // don't inspect any objects
+            ),
             array(
                 'entry' => function (LogEntry $logEntry) {
                     $tableInfo = $logEntry->getMeta('tableInfo');
@@ -165,7 +168,6 @@ class TraceTest extends DebugTestFramework
                     $this->assertIsArray($tableInfo['rows'][0]['context']);
                 },
                 'html' => function ($output, LogEntry $logEntry) {
-                    // $this->stderr('output', substr($output, 2000, 2000));
                     $expectStartsWith = <<<'EOD'
 <li class="m_trace" data-detect-files="true">
 <table class="table-bordered trace-context">

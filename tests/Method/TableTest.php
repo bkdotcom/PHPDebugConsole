@@ -19,21 +19,21 @@ class TableTest extends DebugTestFramework
      */
     public function testTableColKeys()
     {
-        $colKeysMeth = new ReflectionMethod('bdk\\Debug\\Method\\Table', 'colKeys');
+        $colKeysMeth = new ReflectionMethod($this->debug->methodTable, 'colKeys');
         $colKeysMeth->setAccessible(true);
         $array = array(
             array('col1' => '', 'col2' => '', 'col4' => ''),
             array('col1' => '', 'col2' => '', 'col3' => ''),
             array('col1' => '', 'col2' => '', 'col3' => ''),
         );
-        $colKeys = $colKeysMeth->invoke(null, $array);
+        $colKeys = $colKeysMeth->invoke($this->debug->methodTable, $array);
         $this->assertSame(array('col1','col2','col3','col4'), $colKeys);
         $array = array(
             array('a','b','c'),
             array('d','e','f','g'),
             array('h','i'),
         );
-        $colKeys = $colKeysMeth->invoke(null, $array);
+        $colKeys = $colKeysMeth->invoke($this->debug->methodTable, $array);
         $this->assertSame(array(0,1,2,3), $colKeys);
     }
 
@@ -224,6 +224,7 @@ EOD;
                                     array('key' => 'extracol'),
                                 ),
                                 'haveObjRow' => false,
+                                'indexLabel' => null,
                                 'rows' => array(),
                                 'summary' => null,
                             ),
@@ -256,6 +257,7 @@ EOD;
                                     array('key' => 'extracol'),
                                 ),
                                 'haveObjRow' => false,
+                                'indexLabel' => null,
                                 'rows' => array(),
                                 'summary' => null,
                             )
@@ -290,6 +292,7 @@ EOD;
                                     array('key' => 'extracol'),
                                 ),
                                 'haveObjRow' => false,
+                                'indexLabel' => null,
                                 'rows' => array(),
                                 'summary' => null,
                             )
@@ -354,6 +357,7 @@ EOD;
                                     array('key' => 'value'),
                                 ),
                                 'haveObjRow' => false,
+                                'indexLabel' => null,
                                 'rows' => array(
                                     array('isScalar' => true),
                                     array(

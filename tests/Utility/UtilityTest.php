@@ -29,6 +29,7 @@ class UtilityTest extends DebugTestFramework
         $array1 = array(
             'planes' => 'array1 val',
             'trains' => array('electric','diesel',),
+            'callable' => array($this, 'testArrayIsList'),
             'automobiles' => array(
                 'hatchback' => array(),
                 'sedan' => array('family','luxury'),
@@ -38,6 +39,7 @@ class UtilityTest extends DebugTestFramework
         );
         $array2 = array(
             'boats' => array('speed','house'),
+            'callable' => array($this, __FUNCTION__),
             'trains' => array('steam',),
             'planes' => 'array2 val',
             'automobiles' => array(
@@ -46,9 +48,13 @@ class UtilityTest extends DebugTestFramework
             ),
             1 => array('bar'),
         );
+        $array3 = array(
+            'trains' => array('maglev'),
+        );
         $arrayExpect = array(
             'planes' => 'array2 val',
-            'trains' => array('electric','diesel','steam',),
+            'trains' => array('electric','diesel','steam','maglev'),
+            'callable' => array($this, __FUNCTION__), // callable was replaced vs appending
             'automobiles' => array(
                 'hatchback' => 'array2 val',
                 'sedan' => array('family','luxury'),
@@ -57,8 +63,10 @@ class UtilityTest extends DebugTestFramework
             1 => array('foo','bar'),
             'boats' => array('speed','house'),
         );
-        $array3 = Utility::arrayMergeDeep($array1, $array2);
-        $this->assertSame($arrayExpect, $array3);
+        $arrayOut = Utility::arrayMergeDeep($array1, $array2, $array3);
+        $this->assertSame($arrayExpect, $arrayOut);
+
+
     }
 
     /**

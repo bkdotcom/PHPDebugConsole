@@ -18,6 +18,13 @@ namespace bdk\Debug\Utility;
 class Html
 {
 
+    /** @var whether to decode data attribute */
+    public const PARSE_ATTRIB_DATA = 1;
+    /** @var whether to explode class attribute */
+    public const PARSE_ATTRIB_CLASS = 2;
+    /** @var whether to cast numeric attribute value */
+    public const PARSE_ATTRIB_NUMERIC = 4;
+
     /**
      * self closing / empty / void html tags
      *
@@ -144,40 +151,27 @@ class Html
     }
 
     /**
-     * Parse string -o- attributes into a key=>value array
+     * Parse string -o- attributes into a key => value array
      *
-     * @param string $str        string to parse
-     * @param bool   $dataDecode (true) whether to json_decode data attributes
+     * @param string   $str     string to parse
+     * @param int|null $options bitmask of PARSE_ATTRIB_x flags
      *
      * @return array
      */
-    public static function parseAttribString($str, $dataDecode = true)
+    public static function parseAttribString($str, $options = null)
     {
+        if ($options === null) {
+            $options = self::PARSE_ATTRIB_CLASS | self::PARSE_ATTRIB_DATA | self::PARSE_ATTRIB_NUMERIC;
+        }
         $attribs = array();
         $regexAttribs = '/\b([\w\-]+)\b(?: \s*=\s*(["\'])(.*?)\\2 | \s*=\s*(\S+) )?/xs';
         \preg_match_all($regexAttribs, $str, $matches);
         $keys = \array_map('strtolower', $matches[1]);
         $values = \array_replace($matches[3], \array_filter($matches[4], 'strlen'));
-        foreach ($keys as $i => $k) {
-            $attribs[$k] = $values[$i];
-            if (\in_array($k, self::$htmlBoolAttr)) {
-                $attribs[$k] = true;
-            }
+        foreach ($keys as $i => $key) {
+            $attribs[$key] = self::parseAttribValue($key, $values[$i], $options);
         }
         \ksort($attribs);
-        foreach ($attribs as $k => $v) {
-            if (\is_string($v)) {
-                $attribs[$k] = \htmlspecialchars_decode($v);
-            }
-            $isDataAttrib = \strpos($k, 'data-') === 0;
-            if ($isDataAttrib && $dataDecode) {
-                $val = $attribs[$k];
-                $attribs[$k] = \json_decode((string) $attribs[$k], true);
-                if ($attribs[$k] === null && $val !== 'null') {
-                    $attribs[$k] = \json_decode('"' . $val . '"', true);
-                }
-            }
-        }
         return $attribs;
     }
 
@@ -190,11 +184,12 @@ class Html
      *    'innerhtml' => string | null
      * )
      *
-     * @param string $tag html tag to parse
+     * @param string   $tag     html tag to parse
+     * @param int|null $options bitmask of PARSE_ATTRIB_x flags
      *
      * @return array|false
      */
-    public static function parseTag($tag)
+    public static function parseTag($tag, $options = null)
     {
         $regexTag = '#<([^\s>]+)([^>]*)>(.*)</\\1>#is';
         $regexTag2 = '#^<(?:\/\s*)?([^\s>]+)(.*?)\/?>$#s';
@@ -202,14 +197,14 @@ class Html
         if (\preg_match($regexTag, $tag, $matches)) {
             return array(
                 'tagname' => $matches[1],
-                'attribs' => self::parseAttribString($matches[2]),
+                'attribs' => self::parseAttribString($matches[2], $options),
                 'innerhtml' => $matches[3],
             );
         }
         if (\preg_match($regexTag2, $tag, $matches)) {
             return array(
                 'tagname' => $matches[1],
-                'attribs' => self::parseAttribString($matches[2]),
+                'attribs' => self::parseAttribString($matches[2], $options),
                 'innerhtml' => null,
             );
         }
@@ -306,5 +301,38 @@ class Html
             return self::buildAttribArrayVal($key, $val);
         }
         return \trim($val);
+    }
+
+    /**
+     * Parse attribute value
+     *
+     * @param string $name    attribute name
+     * @param string $val     value (assumed to be htmlspecialchar'd)
+     * @param int    $options bitmask of self::PARSE_ATTRIB_x FLAGS
+     *
+     * @return mixed
+     */
+    private static function parseAttribValue($name, $val, $options)
+    {
+        if (\in_array($name, self::$htmlBoolAttr)) {
+            // presence of boolean attribute -> value = true
+            return true;
+        }
+        $val = \htmlspecialchars_decode($val);
+        if ($options & self::PARSE_ATTRIB_DATA && \strpos($name, 'data-') === 0) {
+            $decoded = \json_decode((string) $val, true);
+            if ($decoded === null && $val !== 'null') {
+                $decoded = \json_decode('"' . $val . '"', true);
+            }
+            return $decoded;
+        }
+        if ($options & self::PARSE_ATTRIB_CLASS && $name === 'class') {
+            $val = \explode(' ', $val);
+            return \array_unique($val);
+        }
+        if ($options & self::PARSE_ATTRIB_NUMERIC && \is_numeric($val)) {
+            return \json_decode($val);
+        }
+        return $val;
     }
 }

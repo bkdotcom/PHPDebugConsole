@@ -103,23 +103,23 @@ class HtmlObject
             ? $val['value']
             : $val;
         $valAppend = '';
-        $classArray = array(
-            't_stringified',
+        $attribs = array(
+            'class' => array('t_stringified'),
+            'title' => !$abs['stringified'] ? '__toString()' : null
         );
         if ($len > 100) {
             $val = \substr($val, 0, 100);
             $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';
-            $classArray[] = 't_string_trunc';   // truncated
+            $attribs['class'][] = 't_string_trunc';   // truncated
         }
         $toStringDump = $this->html->dump($val);
         $parsed = $this->debug->html->parseTag($toStringDump);
-        $attribs = array(
-            'class' => \array_merge($classArray, \explode(' ', $parsed['attribs']['class'])),
-            'title' => isset($parsed['attribs']['title'])
-                // ie a timestamp will have a human readable date in title
-                ? (!$abs['stringified'] ? '__toString() : ' : '') . $parsed['attribs']['title']
-                : (!$abs['stringified'] ? '__toString()' : null),
-        );
+        $attribs['class'] = \array_merge($attribs['class'], $parsed['attribs']['class']);
+        if (isset($parsed['attribs']['title'])) {
+            // ie a timestamp will have a human readable date in title
+            $attribs['title'] = ($attribs['title'] ? $attribs['title'] . ' : ' : '')
+                . $parsed['attribs']['title'];
+        }
         return $this->debug->html->buildTag(
             'span',
             $attribs,
@@ -310,7 +310,7 @@ class HtmlObject
             if ($info['defaultValue'] !== Abstracter::UNDEFINED) {
                 $paramStr .= ' <span class="t_operator">=</span> ';
                 $parsed = $this->debug->html->parseTag($this->html->dump($info['defaultValue']));
-                $parsed['attribs']['class'] .= ' t_parameter-default';
+                $parsed['attribs']['class'][] = 't_parameter-default';
                 $paramStr .= $this->debug->html->buildTag(
                     'span',
                     $parsed['attribs'],

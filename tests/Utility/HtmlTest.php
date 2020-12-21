@@ -143,22 +143,21 @@ class HtmlTest extends DebugTestFramework
         }
     }
 
-    /**
-     * @return void
-     */
-    public function testParseTag()
+    public function providerTestParseTag()
     {
-        $testStack = array(
+        return array(
+            // 0
             array(
                 'tag' => '<div class="test" ><i>stuff</i> &amp; things</div>',
                 'expect' => array(
                     'tagname' => 'div',
                     'attribs' => array(
-                        'class' => 'test',
+                        'class' => array('test'),
                     ),
                     'innerhtml' => '<i>stuff</i> &amp; things',
                 ),
             ),
+            // 1
             array(
                 'tag' => '<input name="name" value="Billy" required/>',
                 'expect' => array(
@@ -171,6 +170,7 @@ class HtmlTest extends DebugTestFramework
                     'innerhtml' => null,
                 ),
             ),
+            // 2
             array(
                 'tag' => '</ hr>',
                 'expect' => array(
@@ -180,9 +180,19 @@ class HtmlTest extends DebugTestFramework
                 ),
             ),
         );
-        foreach ($testStack as $test) {
-            $ret = Html::parseTag($test['tag']);
-            $this->assertSame($test['expect'], $ret);
-        }
+    }
+
+    /**
+     * @param string $tag    Html tag to parse
+     * @param array  $expect expected return value
+     *
+     * @return void
+     *
+     * @dataProvider providerTestParseTag
+     */
+    public function testParseTag($tag, $expect)
+    {
+        $parsed = Html::parseTag($tag);
+        $this->assertSame($expect, $parsed);
     }
 }

@@ -19,11 +19,11 @@ class Html
 {
 
     /** @var whether to decode data attribute */
-    public const PARSE_ATTRIB_DATA = 1;
+    const PARSE_ATTRIB_DATA = 1;
     /** @var whether to explode class attribute */
-    public const PARSE_ATTRIB_CLASS = 2;
+    const PARSE_ATTRIB_CLASS = 2;
     /** @var whether to cast numeric attribute value */
-    public const PARSE_ATTRIB_NUMERIC = 4;
+    const PARSE_ATTRIB_NUMERIC = 4;
 
     /**
      * self closing / empty / void html tags
@@ -166,10 +166,12 @@ class Html
         $attribs = array();
         $regexAttribs = '/\b([\w\-]+)\b(?: \s*=\s*(["\'])(.*?)\\2 | \s*=\s*(\S+) )?/xs';
         \preg_match_all($regexAttribs, $str, $matches);
-        $keys = \array_map('strtolower', $matches[1]);
+        $names = \array_map('strtolower', $matches[1]);
         $values = \array_replace($matches[3], \array_filter($matches[4], 'strlen'));
-        foreach ($keys as $i => $key) {
-            $attribs[$key] = self::parseAttribValue($key, $values[$i], $options);
+        foreach ($names as $i => $name) {
+            $attribs[$name] = \in_array($name, self::$htmlBoolAttr)
+                ? true
+                : self::parseAttribValue($name, $values[$i], $options);
         }
         \ksort($attribs);
         return $attribs;
@@ -314,10 +316,6 @@ class Html
      */
     private static function parseAttribValue($name, $val, $options)
     {
-        if (\in_array($name, self::$htmlBoolAttr)) {
-            // presence of boolean attribute -> value = true
-            return true;
-        }
         $val = \htmlspecialchars_decode($val);
         if ($options & self::PARSE_ATTRIB_DATA && \strpos($name, 'data-') === 0) {
             $decoded = \json_decode((string) $val, true);

@@ -688,9 +688,12 @@
           $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'));
         }
         createFileLinks($entry);
-      } else if ($entry.data('detectFiles')) {
-        createFileLinks($entry, $entry.find('.t_string'));
       }
+      /*
+       else if ($entry.data('detectFiles')) {
+        createFileLinks($entry, $entry.find('.t_string'))
+      }
+      */
       addIcons$1($entry);
       if ($entry.hasClass('m_table')) {
         $entry.find('> table > tbody > tr > td').each(function () {
@@ -760,7 +763,7 @@
     } else if ($node.is('table')) {
       makeSortable($node);
     } else if ($node.is('.t_string')) {
-      createFileLinks($entry, $node, true);
+      createFileLinks($entry, $node);
     }
     if ($node.is('.timestamp')) {
       var $i = $node.find('i');

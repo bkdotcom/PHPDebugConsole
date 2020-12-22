@@ -69,7 +69,7 @@ class ErrorHandler
             'errorFactory' => array($this, 'errorFactory'),
             'errorReporting' => E_ALL | E_STRICT,   // what errors are handled by handler? bitmask or "system" to use runtime value
                                                     //   note that if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
-            'errorThrow' => 0,          // bitmask: error types that whould be to converted to ErrorException and thrown
+            'errorThrow' => 0,          // bitmask: error types that should converted to ErrorException and thrown
             'onError' => null,          // shortcut for subscribing to errorHandler.error Event
                                         //   will receive error Event object
             'onEUserError' => 'normal', // only applicable if we're not continuing to a prev error handler

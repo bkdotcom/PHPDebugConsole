@@ -424,9 +424,12 @@ export function enhanceEntry ($entry) {
         $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'))
       }
       createFileLinks($entry)
-    } else if ($entry.data('detectFiles')) {
+    }
+    /*
+     else if ($entry.data('detectFiles')) {
       createFileLinks($entry, $entry.find('.t_string'))
     }
+    */
     addIcons($entry)
     if ($entry.hasClass('m_table')) {
       $entry.find('> table > tbody > tr > td').each(function () {
@@ -496,7 +499,7 @@ function enhanceValue ($entry, node) {
   } else if ($node.is('table')) {
     tableSort.makeSortable($node)
   } else if ($node.is('.t_string')) {
-    createFileLinks($entry, $node, true)
+    createFileLinks($entry, $node)
   }
   if ($node.is('.timestamp')) {
     var $i = $node.find('i')

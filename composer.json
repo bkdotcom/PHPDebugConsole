@@ -65,6 +65,13 @@
     "scripts-descriptions": {
         "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml"
     },
+	"extra": {
+	    "laravel": {
+	        "providers": [
+	            "bdk\\Debug\\Framework\\Laravel\\ServiceProvider"
+	        ]
+	    }
+	},
 	"suggest": {
 		"bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router",
 		"bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",

@@ -74,6 +74,7 @@ var config = new Config({
   linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
   useLocalStorage: true,
   cssFontAwesome5: '' +
+    '.debug .fa-pencil:before { content:"\\f303" }' +
     '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
     '.debug .fa-calendar:before { content:"\\f073"; }' +
     '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +

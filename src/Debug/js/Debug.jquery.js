@@ -443,7 +443,6 @@
     });
     var detectFiles = $entry.data('detectFiles') === true || $objects.length > 0;
     var dataFoundFiles = $entry.data('foundFiles') || [];
-    var isUpdate = false;
     if (!config$1.linkFiles && !remove) {
       return
     }
@@ -452,37 +451,11 @@
     }
     // console.warn('createFileLinks', remove, $entry[0], $strings)
     if ($entry.is('.m_trace')) {
-      isUpdate = $entry.find('.file-link').length > 0;
-      if (!isUpdate) {
-        $entry.find('table thead tr > *:last-child').after('<th></th>');
-      } else if (remove) {
-        $entry.find('table tr > *:last-child').remove();
-        return
-      }
-      $entry.find('table tbody tr').each(function () {
-        var $tr = $(this);
-        var $tds = $tr.find('> td');
-        var $a = $('<a>', {
-          class: 'file-link',
-          href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
-          html: '<i class="fa fa-fw fa-external-link"></i>',
-          style: 'vertical-align: bottom',
-          title: 'Open in editor'
-        });
-        if (isUpdate) {
-          $tr.find('.file-link').replaceWith($a);
-          return // continue
-        }
-        if ($tr.hasClass('context')) {
-          $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1);
-          return // continue;
-        }
-        $tds.last().after($('<td/>', {
-          class: 'text-center',
-          html: $a
-        }));
-      });
+      createFileLinksTrace($entry, remove);
       return
+    }
+    if ($entry.is('.m_table')) {
+      $strings = $entry.find('> table > tbody > tr > .t_string');
     }
     // don't remove data... link template may change
     // $entry.removeData('detectFiles foundFiles')
@@ -505,72 +478,118 @@
       $strings = [];
     }
     $.each($strings, function () {
-      // console.log('string', $(this).text())
-      var $replace;
-      var $string = $(this);
-      var attrs = $string[0].attributes;
-      var html = $.trim($string.html());
-      var matches = [];
-      if ($string.closest('.m_trace').length) {
-        createFileLinks($string.closest('.m_trace'));
-        return false
-      }
-      if ($string.data('file')) {
-        // filepath specified in data attr
-        matches = typeof $string.data('file') === 'boolean'
-          ? [null, html, 1]
-          : [null, $string.data('file'), $string.data('line') || 1];
-      } else if (dataFoundFiles.indexOf(html) === 0) {
-        matches = [null, html, 1];
-      } else if ($string.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
-        // object with file .debug-value
-        matches = {
-          line: 1
-        };
-        $string.parent().parent().find('> .property.debug-value').each(function () {
-          var prop = $(this).find('> .t_identifier')[0].innerText;
-          var $valNode = $(this).find('> *:last-child');
-          var val = $.trim($valNode[0].innerText);
-          matches[prop] = val;
-        });
-        matches = [null, html, matches.line];
-      } else {
-        matches = html.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || [];
-      }
-      if (matches.length) {
-        $replace = remove
-          ? $('<span>', {
-            html: html
-          })
-          : $('<a>', {
-            html: html + ' <i class="fa fa-external-link"></i>',
-            href: buildFileLink(matches[1], matches[2]),
-            title: 'Open in editor'
-          });
-        if ($string.is('td, th, li')) {
-          $string.html(remove
-            ? html
-            : $replace
-          );
-        } else {
-          /*
-            attrs is not a plain object, but an array of attribute nodes
-            which contain both the name and value
-          */
-          $.each(attrs, function () {
-            var name = this.name;
-            if (['html', 'href', 'title'].indexOf(name) > -1) {
-              return // continue
-            }
-            $replace.attr(name, this.value);
-          });
-          $string.replaceWith($replace);
-        }
-        if (!remove) {
-          $replace.addClass('file-link');
-        }
-      }
+      createFileLink(this, remove, dataFoundFiles);
     });
+  }
+
+  function createFileLinksTrace ($entry, remove) {
+    var isUpdate = $entry.find('.file-link').length > 0;
+    if (!isUpdate) {
+      $entry.find('table thead tr > *:last-child').after('<th></th>');
+    } else if (remove) {
+      $entry.find('table tr > *:last-child').remove();
+      return
+    }
+    $entry.find('table tbody tr').each(function () {
+      var $tr = $(this);
+      var $tds = $tr.find('> td');
+      var $a = $('<a>', {
+        class: 'file-link',
+        href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
+        html: '<i class="fa fa-fw fa-external-link"></i>',
+        style: 'vertical-align: bottom',
+        title: 'Open in editor'
+      });
+      if (isUpdate) {
+        $tr.find('.file-link').replaceWith($a);
+        return // continue
+      }
+      if ($tr.hasClass('context')) {
+        $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1);
+        return // continue;
+      }
+      $tds.last().after($('<td/>', {
+        class: 'text-center',
+        html: $a
+      }));
+    });
+  }
+
+  function createFileLink (string, remove, foundFiles) {
+    // console.log('createFileLink', $(string).text())
+    var $replace;
+    var $string = $(string);
+    var attrs = string.attributes;
+    var html = $.trim($string.html());
+    var matches = createFileLinkMatches($string, foundFiles);
+    if ($string.closest('.m_trace').length) {
+      createFileLinks($string.closest('.m_trace'));
+      return false
+    }
+    if (!matches.length) {
+      return
+    }
+    $replace = remove
+      ? $('<span>', {
+        html: html
+      })
+      : $('<a>', {
+        class: 'file-link',
+        href: buildFileLink(matches[1], matches[2]),
+        html: html + ' <i class="fa fa-external-link"></i>',
+        title: 'Open in editor'
+      });
+    /*
+      attrs is not a plain object, but an array of attribute nodes
+      which contain both the name and value
+    */
+    $.each(attrs, function () {
+      var name = this.name;
+      if (['html', 'href', 'title'].indexOf(name) > -1) {
+        return // continue
+      }
+      if (name === 'class') {
+        $replace.addClass(this.value);
+        return // continue
+      }
+      $replace.attr(name, this.value);
+    });
+    if ($string.is('td, th, li')) {
+      $string.html(remove
+        ? html
+        : $replace
+      );
+      return
+    }
+    $string.replaceWith($replace);
+  }
+
+  function createFileLinkMatches ($string, foundFiles) {
+    var matches = [];
+    var html = $.trim($string.html());
+    if ($string.data('file')) {
+      // filepath specified in data-file attr
+      return typeof $string.data('file') === 'boolean'
+        ? [null, html, 1]
+        : [null, $string.data('file'), $string.data('line') || 1]
+    }
+    if (foundFiles.indexOf(html) === 0) {
+      return [null, html, 1]
+    }
+    if ($string.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
+      // object with file .debug-value
+      matches = {
+        line: 1
+      };
+      $string.parent().parent().find('> .property.debug-value').each(function () {
+        var prop = $(this).find('> .t_identifier')[0].innerText;
+        var $valNode = $(this).find('> *:last-child');
+        var val = $.trim($valNode[0].innerText);
+        matches[prop] = val;
+      });
+      return [null, html, matches.line]
+    }
+    return html.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
   }
 
   /**
@@ -678,7 +697,7 @@
     // console.log('enhanceEntry', $entry[0])
     if ($entry.is('.m_group')) {
       enhanceGroup($entry);
-    } else if ($entry.is('.m_trace')) {
+    } else if ($entry.is('.m_table, .m_trace')) {
       createFileLinks($entry);
       addIcons$1($entry);
     } else {
@@ -5603,6 +5622,9 @@
         title = $ref.prop('title');
         if (title) {
           $ref.data('titleOrig', title);
+          if (title === 'Open in editor') {
+            title = '<i class="fa fa-pencil"></i> ' + title;
+          }
           return title.replace(/\n/g, '<br />')
         }
       },
@@ -5920,6 +5942,7 @@
     linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
     useLocalStorage: true,
     cssFontAwesome5: '' +
+      '.debug .fa-pencil:before { content:"\\f303" }' +
       '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
       '.debug .fa-calendar:before { content:"\\f073"; }' +
       '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +

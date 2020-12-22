@@ -268,7 +268,14 @@ class Middleware
             return;
         }
         $this->debug->groupSummary();
-        $this->debug->log('session', \get_class($this->container['session']), $this->container['session']->all());
+        $this->debug->log(
+            'session',
+            $this->debug->abstracter->crateWithVals(
+                \get_class($this->container['session']),
+                array('typeMore' => 'classname')
+            ),
+            $this->container['session']->all()
+        );
         $this->debug->groupEnd();
     }
 

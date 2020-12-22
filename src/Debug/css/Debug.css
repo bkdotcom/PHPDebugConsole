@@ -146,6 +146,7 @@
 .debug .t_int, .debug .t_float, .debug .numeric { font-family: Courier New, monospace, Ariel; color: #009; font-size: 1.15em; line-height: 1.15em; }
 .debug .t_int::before, .debug .t_int::after, .debug .t_float::before, .debug .t_float::after, .debug .numeric::before, .debug .numeric::after { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 0.8695em; }
 .debug .t_key { opacity: 0.75; }
+.debug .t_key[data-file] { opacity: 1; }
 .debug .t_key::before, .debug .t_key::after { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #999; }
 .debug .t_key::before { content: '['; margin-right: 1px; }
 .debug .t_key::after { content: ']'; margin-left: 1px; }

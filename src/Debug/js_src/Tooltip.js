@@ -27,6 +27,9 @@ export function init ($root) {
       title = $ref.prop('title')
       if (title) {
         $ref.data('titleOrig', title)
+        if (title === 'Open in editor') {
+          title = '<i class="fa fa-pencil"></i> ' + title
+        }
         return title.replace(/\n/g, '<br />')
       }
     },

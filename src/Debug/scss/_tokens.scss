@@ -72,6 +72,9 @@ $color-bg-unicode: #c0c0ff;
 
 .t_key {
   opacity: 0.75;
+  &[data-file] {
+    opacity: 1;
+  }
   &::before,
   &::after {
     font-family: $font-family;

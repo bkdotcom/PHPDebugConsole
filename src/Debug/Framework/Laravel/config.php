@@ -12,7 +12,7 @@ return array(
     'collect' => [
         'auth'           => true,  // Display Laravel authentication status
         'cacheEvents'    => true,  // Display cache events
-        'config'         => true, // Display config settings
+        'config'         => true,  // Display config settings
         'db'             => true,  // Show database (PDO) queries and bindings
         'events'         => true,  // All events fired
         'gate'           => true,  // Display Laravel Gate checks

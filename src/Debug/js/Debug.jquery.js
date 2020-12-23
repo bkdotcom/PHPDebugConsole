@@ -523,8 +523,9 @@
     var html = $.trim($string.html());
     var matches = createFileLinkMatches($string, foundFiles);
     if ($string.closest('.m_trace').length) {
+      // not recurssion...  will end up calling createFileLinksTrace
       createFileLinks($string.closest('.m_trace'));
-      return false
+      return
     }
     if (!matches.length) {
       return
@@ -5624,6 +5625,8 @@
           $ref.data('titleOrig', title);
           if (title === 'Open in editor') {
             title = '<i class="fa fa-pencil"></i> ' + title;
+          } else if (title.match(/^\/.+: line \d+$/)) {
+            title = '<i class="fa fa-file-code-o"></i> ' + title;
           }
           return title.replace(/\n/g, '<br />')
         }
@@ -5942,18 +5945,19 @@
     linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
     useLocalStorage: true,
     cssFontAwesome5: '' +
-      '.debug .fa-pencil:before { content:"\\f303" }' +
       '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
       '.debug .fa-calendar:before { content:"\\f073"; }' +
       '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
       '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
       '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
-      '.debug .fa-external-link:before { content:"\\f35d"; }' +
       '.debug .fa-exchange:before { content:"\\f362"; }' +
+      '.debug .fa-external-link:before { content:"\\f35d"; }' +
       '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
-      '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
+      '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
       '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
+      '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
       '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
+      '.debug .fa-pencil:before { content:"\\f303" }' +
       '.debug .fa-pie-chart:before { content:"\\f200"; }' +
       '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
       '.debug .fa-shield:before { content:"\\f3ed"; }' +

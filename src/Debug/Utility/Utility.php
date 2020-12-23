@@ -25,6 +25,10 @@ use SqlFormatter;
 class Utility
 {
 
+    const IS_CALLABLE_ARRAY_ONLY = 1;
+    const IS_CALLABLE_OBJ_ONLY = 2;
+    const IS_CALLABLE_STRICT = 3;
+
     protected static $domDocument;
 
     /**
@@ -493,28 +497,32 @@ class Utility
     /**
      * Test if value is callable
      *
-     * @param string|array $val          value to check
-     * @param bool         $strictNonObj whether we should check static class method
-     *                                      (ie array('class',''method'))
+     * @param string|array $val  value to check
+     * @param int          $opts bitmask of IS_CALLABLE_x constants
+     *                         default:  IS_CALLABLE_ARRAY_ONLY | IS_CALLABLE_OBJ_ONLY | IS_CALLABLE_STRICT
+     *                         IS_CALLABLE_ARRAY_ONLY
+     *                              must be array(x, 'method')
+     *                         IS_CALLABLE_OBJ_ONLY
+     *                              must be array(obj, 'methodName')
+     *                         IS_CALLABLE_STRICT
      *
      * @return bool
      */
-    public static function isCallable($val, $strictNonObj = true)
+    public static function isCallable($val, $opts = 0b111)
     {
-        if (!\is_array($val) || $strictNonObj) {
-            return \is_callable($val);
+        $syntaxOnly = $opts & self::IS_CALLABLE_STRICT !== self::IS_CALLABLE_STRICT;
+        if (\is_array($val) === false) {
+            return $opts & self::IS_CALLABLE_ARRAY_ONLY
+                ? false
+                : \is_callable($val, $syntaxOnly);
         }
-        $isCallable = \is_callable($val, true); // syntax only
-        if (!$isCallable) {
-            // definitely not a callable
+        if (!isset($val[0])) {
             return false;
         }
-        if (\is_object($val[0])) {
-            // object... test strictly
-            return \is_callable($val);
+        if ($opts & self::IS_CALLABLE_OBJ_ONLY && \is_object($val[0]) === false) {
+            return false;
         }
-        // non-object..  syntax-only appears to be callable
-        return true;
+        return \is_callable($val, $syntaxOnly);
     }
 
     /**

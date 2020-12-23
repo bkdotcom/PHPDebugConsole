@@ -161,6 +161,8 @@
 .debug .t_string::before, .debug .t_string::after { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; opacity: 0.33; color: #333; }
 .debug .t_string::before { content: open-quote; }
 .debug .t_string::after { content: close-quote; }
+.debug .t_string.classname::before { content: none; }
+.debug .t_string.classname::after { content: none; }
 .debug .t_string > * { white-space: normal; word-break: break-word; }
 .debug .t_string pre { white-space: pre; }
 .debug .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }

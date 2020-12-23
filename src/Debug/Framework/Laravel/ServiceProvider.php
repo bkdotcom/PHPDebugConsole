@@ -354,7 +354,7 @@ class ServiceProvider extends BaseServiceProvider
                     )
                 )
                 : null,
-            'params' => \call_user_func(function ($view) {
+            'params' => \call_user_func(function (View $view) {
                 $data = $view->getData();
                 /** @var bool|'type' */
                 $collectValues = $this->app['config']->get('phpDebugConsole.options.views.data');
@@ -366,7 +366,9 @@ class ServiceProvider extends BaseServiceProvider
                     foreach ($data as $k => $v) {
                         $type = $this->debug->abstracter->getType($v)[0];
                         $data[$k] = $type === 'object'
-                            ? \get_class($v)
+                            ? $this->debug->abstracter->crateWithVals(\get_class($v), array(
+                                'typeMore' => 'classname',
+                            ))
                             : $type;
                     }
                     \ksort($data);

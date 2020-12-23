@@ -259,8 +259,9 @@ function createFileLink (string, remove, foundFiles) {
   var html = $.trim($string.html())
   var matches = createFileLinkMatches($string, foundFiles)
   if ($string.closest('.m_trace').length) {
+    // not recurssion...  will end up calling createFileLinksTrace
     createFileLinks($string.closest('.m_trace'))
-    return false
+    return
   }
   if (!matches.length) {
     return

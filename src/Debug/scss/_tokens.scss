@@ -115,6 +115,10 @@ $color-bg-unicode: #c0c0ff;
   }
   &::before { content: open-quote; }
   &::after { content: close-quote; }
+  &.classname {
+    &::before { content: none; }
+    &::after { content: none; }
+  }
   > * {
     white-space: normal;
     word-break: break-word;

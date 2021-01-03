@@ -342,6 +342,9 @@ class AbstractObject extends Component
         }
         $this->addConstants($abs);
         while ($reflector = $reflector->getParentClass()) {
+            if ($abs['phpDoc'] === array('summary' => null, 'desc' => null)) {
+                $abs['phpDoc'] = $this->phpDoc->getParsed($reflector);
+            }
             $abs['extends'][] = $reflector->getName();
         }
     }

@@ -3,6 +3,22 @@
 
   $ = $ && Object.prototype.hasOwnProperty.call($, 'default') ? $['default'] : $;
 
+  if (!Object.keys) {
+    Object.keys = function (o) {
+      if (o !== Object(o)) {
+        throw new TypeError('Object.keys called on a non-object')
+      }
+      var k = [];
+      var p;
+      for (p in o) {
+        if (Object.prototype.hasOwnProperty.call(o, p)) {
+          k.push(p);
+        }
+      }
+      return k
+    };
+  }
+
   var config;
 
   function init ($delegateNode) {
@@ -701,6 +717,12 @@
     } else if ($entry.is('.m_table, .m_trace')) {
       createFileLinks($entry);
       addIcons$1($entry);
+      if ($entry.hasClass('m_table')) {
+        $entry.find('> table > tbody > tr > td').each(function () {
+          enhanceValue($entry, this);
+        });
+      }
+      makeSortable($entry.find('> table'));
     } else {
       // regular log-type entry
       if ($entry.data('file')) {
@@ -715,11 +737,6 @@
       }
       */
       addIcons$1($entry);
-      if ($entry.hasClass('m_table')) {
-        $entry.find('> table > tbody > tr > td').each(function () {
-          enhanceValue($entry, this);
-        });
-      }
       $entry.children().each(function () {
         enhanceValue($entry, this);
       });
@@ -1657,13 +1674,15 @@
     var $ul = $('<ul class="list-unstyled">');
     var channel;
     var channelName = '';
+    var channelNames = [];
     var isChecked = true;
-    // console.warn('channels', channels)
+    // console.warn('buildChannelList', channels)
     prepend = prepend || '';
     if ($.isArray(channels)) {
       channels = channelsToTree(channels);
     } else if (prepend.length === 0 && Object.keys(channels).length) {
       // start with (add) if there are other channels
+      // console.log('buildChannelLi name root', nameRoot)
       $li = buildChannelLi(
         nameRoot,
         nameRoot,
@@ -1673,7 +1692,9 @@
       );
       $ul.append($li);
     }
-    for (channelName in channels) {
+    channelNames = Object.keys(channels).sort();
+    for (var i = 0, len = channelNames.length; i < len; i++) {
+      channelName = channelNames[i];
       if (channelName === 'phpError') {
         // phpError is a special channel
         continue
@@ -1727,6 +1748,7 @@
     var i;
     var i2;
     var path;
+    /*
     channels = channels.sort(function (a, b) {
       if (a.name < b.name) {
         return -1
@@ -1735,7 +1757,9 @@
         return 1
       }
       return 0
-    });
+    })
+    console.warn('channels sorted', channels)
+    */
     for (i = 0; i < channels.length; i++) {
       ref = channelTree;
       channel = channels[i];

@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Framework;
+namespace bdk\Debug\Framework\Yii1_1;
 
 use bdk\Debug;
 use CLogger;
@@ -21,11 +21,19 @@ use Yii;
 /**
  * Yii v1.1 log router
  */
-class Yii11LogRoute extends CLogRoute
+class LogRoute extends CLogRoute
 {
     public $levels = 'error, info, profile, trace, warning';
 
     private $debug;
+
+    private $levelMap = array(
+        CLogger::LEVEL_INFO => 'log',
+        CLogger::LEVEL_WARNING => 'warn',
+        CLogger::LEVEL_ERROR => 'error',
+        CLogger::LEVEL_TRACE => 'trace',
+        CLogger::LEVEL_PROFILE => 'time',
+    );
 
     /**
      * @var array stack of yii begin-profile log entries
@@ -33,11 +41,13 @@ class Yii11LogRoute extends CLogRoute
     private $stack;
 
     /**
-     * @var array $excludeCategories An array of categories to exclude from logging.
+     * @var array $except An array of categories to exclude from logging.
      *                                  Regex pattern matching is supported
      *                                  We exclude system.db categories... handled via pdo wrapper
      */
-    protected $excludeCategories = array();
+    protected $except = array(
+        '/^system\.db/'
+    );
 
     /**
      * Constructor
@@ -86,31 +96,57 @@ class Yii11LogRoute extends CLogRoute
     }
 
     /**
+     * Get instance of this route
+     *
+     * @return Yii11LogRoute
+     */
+    public static function getInstance()
+    {
+        $routes = Yii::app()->log->routes;  // CMap obj
+        foreach ($routes as $route) {
+            if ($route instanceof static) {
+                return $route;
+            }
+        }
+        $route = new static();
+        $route->init();
+        $routes['phpDebugConsole'] = $route;
+        Yii::app()->log->routes = $routes;
+        return $route;
+    }
+
+    /**
      * Initialize component
      *
      * @return void
      */
     public function init()
     {
-        $this->setExcludeCategories(array());
         parent::init();
         // send each entry to debugger immediately
         Yii::getLogger()->autoFlush = 1;
     }
 
     /**
-     * Enable/Disable route
+     * Are we excluding category?
      *
-     * If route isn't currently one of the log routes, it will be added
+     * @param string $category log category
      *
-     * @param bool $enable enable/disable this route
-     *
-     * @return void
+     * @return bool
      */
-    public static function toggle($enable = true)
+    protected function isExcluded($category)
     {
-        $route = self::getInstance();
-        $route->enabled = $enable;
+        foreach ($this->except as $exceptCat) {
+            //  If found, we skip
+            if (\trim(\strtolower($exceptCat)) === \trim(\strtolower($category))) {
+                return true;
+            }
+            //  Check for regex
+            if ($exceptCat[0] === '/' && \preg_match($exceptCat, $category)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -120,7 +156,7 @@ class Yii11LogRoute extends CLogRoute
      *
      * @return array key=>value
      */
-    protected function buildLogEntry(array $logEntry)
+    protected function normalizeMessage(array $logEntry)
     {
         $logEntry = \array_combine(
             array('message','level','category','time'),
@@ -131,7 +167,6 @@ class Yii11LogRoute extends CLogRoute
             'meta' => array(),
             'trace' => array(),
         ));
-        $logEntry = $this->buildLogEntryChannel($logEntry);
         $haveTrace = $logEntry['level'] === CLogger::LEVEL_TRACE || YII_DEBUG && YII_TRACE_LEVEL > 0;
         if ($haveTrace === false) {
             return $logEntry;
@@ -149,13 +184,6 @@ class Yii11LogRoute extends CLogRoute
         }
         if (!$logEntry['trace']) {
             $logEntry['level'] = CLogger::LEVEL_INFO;
-            return $logEntry;
-        }
-        $logEntry['meta']['file'] = $logEntry['trace'][0]['file'];
-        $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
-        if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
-            $logEntry['meta']['trace'] = $logEntry['trace'];
-            unset($logEntry['trace']);
         }
         return $logEntry;
     }
@@ -167,8 +195,18 @@ class Yii11LogRoute extends CLogRoute
      *
      * @return array
      */
-    protected function buildLogEntryChannel(array $logEntry)
+    protected function messageMeta(array $logEntry)
     {
+
+        if ($logEntry['trace']) {
+            $logEntry['meta']['file'] = $logEntry['trace'][0]['file'];
+            $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
+            if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
+                $logEntry['meta']['trace'] = $logEntry['trace'];
+                unset($logEntry['trace']);
+            }
+        }
+
         if (\strpos($logEntry['category'], 'system.') === 0) {
             if (\strpos($logEntry['category'], 'system.caching.') === 0) {
                 $category = \str_replace('system.caching.', '', $logEntry['category']);
@@ -205,83 +243,6 @@ class Yii11LogRoute extends CLogRoute
     }
 
     /**
-     * Getter method
-     *
-     * @return array
-     */
-    protected function getExcludeCategories()
-    {
-        return $this->excludeCategories;
-    }
-
-    /**
-     * Get instance of this route
-     *
-     * @return Yii11LogRoute
-     */
-    protected static function getInstance()
-    {
-        $routes = Yii::app()->log->routes;  // CMap obj
-        foreach ($routes as $route) {
-            if ($route instanceof static) {
-                return $route;
-            }
-        }
-        $route = new static();
-        $route->init();
-        $routes[] = $route;
-        Yii::app()->log->routes = $routes;
-        return $route;
-    }
-
-    /**
-     * Are we excluding category?
-     *
-     * @param string $category log category
-     *
-     * @return bool
-     */
-    protected function isExcluded($category)
-    {
-        foreach ($this->excludeCategories as $excludedCat) {
-            //  If found, we skip
-            if (\trim(\strtolower($excludedCat)) === \trim(\strtolower($category))) {
-                return true;
-            }
-            //  Check for regex
-            if ($excludedCat[0] === '/' && \preg_match($excludedCat, $category)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Yii log type/level to PHPDebugConsole method
-     *
-     * @param string $type error, info, profile, trace, warning
-     *
-     * @return string
-     */
-    protected function levelToMethod($type)
-    {
-        /*
-        LEVEL_INFO
-        LEVEL_WARNING
-        LEVEL_ERROR
-        LEVEL_TRACE
-        LEVEL_PROFILE
-        */
-        $method = 'log';
-        if ($type === CLogger::LEVEL_ERROR) {
-            $method = 'error';
-        } elseif ($type === CLogger::LEVEL_WARNING) {
-            $method = 'warn';
-        }
-        return $method;
-    }
-
-    /**
      * Route log messages to PHPDebugConsole
      *
      * Extends CLogRoute
@@ -293,12 +254,11 @@ class Yii11LogRoute extends CLogRoute
     protected function processLogs($logs = array())
     {
         try {
-            foreach ($logs as $logEntry) {
-                if ($this->isExcluded($logEntry[2])) {
+            foreach ($logs as $message) {
+                if ($this->isExcluded($message[2])) {
                     continue;
                 }
-                $logEntry = $this->buildLogEntry($logEntry);
-                $this->processLogEntry($logEntry);
+                $this->processLogEntry($message);
             }
             //  Processed, clear!
             $this->logs = null;
@@ -316,7 +276,11 @@ class Yii11LogRoute extends CLogRoute
      */
     protected function processLogEntry(array $logEntry)
     {
+        $logEntry = $this->normalizeMessage($logEntry);
+        $logEntry = $this->messageMeta($logEntry);
+        $args = array();
         $debug = $logEntry['channel'];
+        $method = $this->levelMap[$logEntry['level']];
         if ($logEntry['level'] === CLogger::LEVEL_PROFILE) {
             if (\strpos($logEntry['message'], 'begin:') === 0) {
                 // add to stack
@@ -328,41 +292,25 @@ class Yii11LogRoute extends CLogRoute
                 ? $logEntryBegin['category'] . ': ' . $logEntryBegin['message']
                 : $logEntryBegin['message'];
             $duration = $logEntry['time'] - $logEntryBegin['time'];
-            $debug->time($message, $duration);
-            return;
+            $args = array($message, $duration);
         }
         if ($logEntry['level'] === CLogger::LEVEL_TRACE) {
             $caption = $logEntry['category']
                 ? $logEntry['category'] . ': ' . $logEntry['message']
                 : $logEntry['message'];
-            $logEntry['meta']['caption'] = $caption;
             $logEntry['meta']['columns'] = array('file','line');
             $logEntry['meta']['trace'] = $logEntry['trace'];
-            $debug->trace(false, $debug->meta($logEntry['meta']));
-            return;
+            $args = array(false, $caption);
         }
-        $method = $this->levelToMethod($logEntry['level']);
-        $args = array();
-        if ($logEntry['category']) {
-            $args[] = $logEntry['category'] . ':';
+        if (empty($args)) {
+            if ($logEntry['category']) {
+                $args[] = $logEntry['category'] . ':';
+            }
+            $args[] = $logEntry['message'];
         }
-        $args[] = $logEntry['message'];
         if ($logEntry['meta']) {
             $args[] = $debug->meta($logEntry['meta']);
         }
         \call_user_func_array(array($debug, $method), $args);
-    }
-
-    /**
-     * Setter method
-     *
-     * @param array $value array of categories
-     *
-     * @return void
-     */
-    protected function setExcludeCategories($value)
-    {
-        $this->excludeCategories = $value;
-        $this->excludeCategories[] = '/^system\.db/';
     }
 }

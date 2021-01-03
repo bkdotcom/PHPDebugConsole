@@ -9,7 +9,7 @@ return array(
     /*
         Laravel specific
     */
-    'collect' => [
+    'laravel' => [
         'auth'           => true,  // Display Laravel authentication status
         'cacheEvents'    => true,  // Display cache events
         'config'         => true,  // Display config settings

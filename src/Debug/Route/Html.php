@@ -304,17 +304,7 @@ class Html extends Base
     private function buildTabList()
     {
         $channels = $this->debug->getChannelsTop();
-        $channelNameRoot = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        \uasort($channels, function (Debug $channelA, Debug $channelB) use ($channelNameRoot) {
-            $sortA = $channelA->getCfg('channelSort', Debug::CONFIG_DEBUG);
-            $sortB = $channelB->getCfg('channelSort', Debug::CONFIG_DEBUG);
-            $nameA = $channelA->getCfg('channelName', Debug::CONFIG_DEBUG);
-            $nameB = $channelB->getCfg('channelName', Debug::CONFIG_DEBUG);
-            if ($nameA === $channelNameRoot) {
-                return -1;
-            }
-            return $sortB - $sortA ?: \strcasecmp($nameA, $nameB);
-        });
+        $channels = $this->sortTabChannels($channels);
         if (\count($channels) < 2) {
             return '';
         }
@@ -322,7 +312,7 @@ class Html extends Base
         foreach ($channels as $name => $instance) {
             $isActive = false;
             $nameTab = $name;
-            if ($name === $channelNameRoot) {
+            if ($instance === $this->debug) {
                 $isActive = true;
                 $nameTab = 'Log';
             }
@@ -442,5 +432,30 @@ class Html extends Base
         foreach (array('filepathCss', 'filepathScript') as $k) {
             $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__ . '/../', $this->cfg[$k]);
         }
+    }
+
+    /**
+     * Sort channels by channelSort & channelName
+     *
+     * @param Debug[] $channels Debug instances
+     *
+     * @return Debug[]
+     */
+    private function sortTabChannels($channels)
+    {
+        \uasort($channels, function (Debug $channelA, Debug $channelB) {
+            $sortA = $channelA->getCfg('channelSort', Debug::CONFIG_DEBUG);
+            $sortB = $channelB->getCfg('channelSort', Debug::CONFIG_DEBUG);
+            $nameA = $channelA->getCfg('channelName', Debug::CONFIG_DEBUG);
+            $nameB = $channelB->getCfg('channelName', Debug::CONFIG_DEBUG);
+            if ($channelA === $this->debug) {
+                return -1;
+            }
+            if ($channelB === $this->debug) {
+                return 1;
+            }
+            return $sortB - $sortA ?: \strcasecmp($nameA, $nameB);
+        });
+        return $channels;
     }
 }

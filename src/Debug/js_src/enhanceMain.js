@@ -133,13 +133,15 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
   var $ul = $('<ul class="list-unstyled">')
   var channel
   var channelName = ''
+  var channelNames = []
   var isChecked = true
-  // console.warn('channels', channels)
+  // console.warn('buildChannelList', channels)
   prepend = prepend || ''
   if ($.isArray(channels)) {
     channels = channelsToTree(channels)
   } else if (prepend.length === 0 && Object.keys(channels).length) {
     // start with (add) if there are other channels
+    // console.log('buildChannelLi name root', nameRoot)
     $li = buildChannelLi(
       nameRoot,
       nameRoot,
@@ -149,7 +151,9 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
     )
     $ul.append($li)
   }
-  for (channelName in channels) {
+  channelNames = Object.keys(channels).sort();
+  for (var i = 0, len = channelNames.length; i < len; i++) {
+    channelName = channelNames[i];
     if (channelName === 'phpError') {
       // phpError is a special channel
       continue
@@ -203,6 +207,7 @@ function channelsToTree (channels) {
   var i
   var i2
   var path
+  /*
   channels = channels.sort(function (a, b) {
     if (a.name < b.name) {
       return -1
@@ -212,6 +217,8 @@ function channelsToTree (channels) {
     }
     return 0
   })
+  console.warn('channels sorted', channels)
+  */
   for (i = 0; i < channels.length; i++) {
     ref = channelTree
     channel = channels[i]

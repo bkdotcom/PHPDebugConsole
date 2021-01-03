@@ -415,10 +415,10 @@ class ServiceProvider extends BaseServiceProvider
      * @param string $name    option name
      * @param mixed  $default default vale
      *
-     * @return [type]  [description]
+     * @return bool
      */
     protected function shouldCollect($name, $default = false)
     {
-        return $this->app['config']->get('phpDebugConsole.collect.' . $name, $default);
+        return $this->app['config']->get('phpDebugConsole.laravel.' . $name, $default);
     }
 }

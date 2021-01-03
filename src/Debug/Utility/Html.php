@@ -44,9 +44,6 @@ class Html
             enum attribues that behave like bool :
                 'autocapitalize' :  on|off  (along with other values)
                 'autocomplete' :    on|off
-                'contenteditable' : true|false
-                'draggable' :       true|false
-                'spellcheck' :      true|false
                 'translate' :       yes|no
         */
 
@@ -95,6 +92,23 @@ class Html
         'scrolling',// <iframe>
         'seamless', // <iframe> - removed from draft
         'sortable', // <table> - removed from draft
+    );
+
+    /**
+     * enum attribues that behave like bool, but have "true" / "false" value
+     *
+     * @var array
+     */
+    public static $htmlBoolAttrEnum = array(
+        'aria-checked',
+        'aria-expanded',
+        'aria-grabbed',
+        'aria-hidden',
+        'aria-pressed',
+        'aria-selected',
+        'contenteditable',
+        'draggable',
+        'spellcheck',
     );
 
     /**
@@ -255,12 +269,12 @@ class Html
      */
     private static function buildAttribBoolVal($key, $value = true)
     {
+        if (\in_array($key, self::$htmlBoolAttrEnum)) {
+            return $value ? 'true' : 'false';
+        }
         if (\in_array($key, array('autocapitalize', 'autocomplete'))) {
             // autocapitalize also takes other values...
             return $value ? 'on' : 'off';
-        }
-        if (\in_array($key, array('contenteditable', 'draggable', 'spellcheck'))) {
-            return $value ? 'true' : 'false';
         }
         if ($key === 'translate') {
             return $value ? 'yes' : 'no';
@@ -330,6 +344,9 @@ class Html
         }
         if ($options & self::PARSE_ATTRIB_NUMERIC && \is_numeric($val)) {
             return \json_decode($val);
+        }
+        if (\in_array($name, self::$htmlBoolAttrEnum) && \in_array($val, array('true','false'))) {
+            return $val === 'true';
         }
         return $val;
     }

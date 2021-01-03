@@ -437,6 +437,12 @@ export function enhanceEntry ($entry) {
   } else if ($entry.is('.m_table, .m_trace')) {
     createFileLinks($entry)
     addIcons($entry)
+    if ($entry.hasClass('m_table')) {
+      $entry.find('> table > tbody > tr > td').each(function () {
+        enhanceValue($entry, this)
+      })
+    }
+    tableSort.makeSortable($entry.find('> table'))
   } else {
     // regular log-type entry
     if ($entry.data('file')) {
@@ -451,11 +457,6 @@ export function enhanceEntry ($entry) {
     }
     */
     addIcons($entry)
-    if ($entry.hasClass('m_table')) {
-      $entry.find('> table > tbody > tr > td').each(function () {
-        enhanceValue($entry, this)
-      })
-    }
     $entry.children().each(function () {
       enhanceValue($entry, this)
     })

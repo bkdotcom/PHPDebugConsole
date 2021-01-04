@@ -232,7 +232,7 @@ class Event implements ArrayAccess, IteratorAggregate
     }
 
     /**
-     * Extendme to perform action after setting value/values
+     * Extend me to perform action after setting value/values
      *
      * @return void
      */

@@ -19,14 +19,14 @@ use bdk\PubSub\Manager as EventManager;
  * General-purpose error handler which supports fatal errors
  *
  * Able to register multiple onError "callback" functions
+ *
+ * @property \bdk\Backtrace $backtrace Backtrace instance
  */
 class ErrorHandler
 {
 
     const EVENT_ERROR = 'errorHandler.error';
 
-    /** @var Backtrace */
-    public $backtrace;
     /** @var EventManager */
     public $eventManager;
     /** @var array */
@@ -44,6 +44,9 @@ class ErrorHandler
     protected $prevDisplayErrors = null;
     protected $prevErrorHandler = null;
     protected $prevExceptionHandler = null;
+
+    /** @var Backtrace */
+    private $backtrace;
 
     /**
      * Temp store error exception caught/triggered inside __toString
@@ -90,6 +93,26 @@ class ErrorHandler
         $this->setCfg($cfg);
         $this->register();
         $this->eventManager->subscribe(EventManager::EVENT_PHP_SHUTDOWN, array($this, 'onShutdown'), PHP_INT_MAX);
+    }
+
+    /**
+     * Magic method to get inaccessible / undefined properties
+     * Lazy load child classes
+     *
+     * @param string $property property name
+     *
+     * @return mixed property value
+     */
+    public function __get($property)
+    {
+        /*
+            Check getter method
+        */
+        $getter = 'get' . \ucfirst($property);
+        if (\method_exists($this, $getter)) {
+            return $this->{$getter}();
+        }
+        return null;
     }
 
     /**
@@ -208,9 +231,6 @@ class ErrorHandler
      */
     public function handleError($errType, $errMsg, $file, $line, $vars = array())
     {
-        if (!$this->backtrace) {
-            $this->backtrace = new Backtrace();
-        }
         $error = $this->cfg['errorFactory']($this, $errType, $errMsg, $file, $line, $vars);
         $this->anonymousCheck($error);
         $this->toStringCheck($error);
@@ -550,6 +570,21 @@ class ErrorHandler
         if ($this->cfg['onEUserError'] === 'log' && !$error->isPropagationStopped()) {
             $error->log();
         }
+    }
+
+    /**
+     * Get Backtrace instance
+     *
+     * @return Backtrace
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function getBacktrace()
+    {
+        if (!$this->backtrace) {
+            $this->backtrace = new Backtrace();
+        }
+        return $this->backtrace;
     }
 
     /**

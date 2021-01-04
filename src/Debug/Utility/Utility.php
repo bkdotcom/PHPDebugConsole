@@ -547,6 +547,18 @@ class Utility
     }
 
     /**
+     * Throwable is a PHP 7+ thing
+     *
+     * @param mixed $val Value to test
+     *
+     * @return bool
+     */
+    public static function isThrowable($val)
+    {
+        return $val instanceof \Error || $val instanceof \Exception;
+    }
+
+    /**
      * Test if string is valid xml
      *
      * @param string $str string to test

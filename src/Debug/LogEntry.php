@@ -43,7 +43,7 @@ class LogEntry extends Event
             'method' => $method,
             'args' => $args ?: array(),
             'meta' => array(),
-            'numArgs' => 0,     // number of non-meta aargs passed (does not include added default values)
+            'numArgs' => 0,     // number of initial non-meta aargs passed (does not include added default values)
             'appendLog' => true,
             'return' => null,
         );

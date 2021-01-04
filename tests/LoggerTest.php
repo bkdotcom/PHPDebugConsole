@@ -71,31 +71,27 @@ class LoggerTest extends DebugTestFramework
             'args' => array('Critical test'),
             'meta' => $metaExpect,
         ), $this->logEntryToArray($this->debug->getData('log/__end__')));
+    }
 
+    public function testExceptionContext()
+    {
+        parent::$allowError = true;
         $this->debug->logger->critical('Make an exception', array(
-            'exception' => new \Exception(),
-            'file' => 'file',
+            'exception' => new \Exception('some exception'),
+            'file' => __FILE__,
             'foo' => 'bar',
         ));
         $metaSubset = array(
             'detectFiles' => true,
-            'file' => 'file',
+            'file' => __FILE__,
             'line' => __LINE__ - 7, // line of Exception
             'uncollapse' => true,
         );
-        $metaActual = $this->debug->getData('log/__end__/meta');
-        $this->assertSame('error', $this->debug->getData('log/__end__')['method']);
-        $this->assertSame('Make an exception', $this->debug->getData('log/__end__/args/0'));
-        // should just contain exception & foo...  file gets moved to meta
-        $this->assertCount(2, $this->debug->getData('log/__end__/args/1'));
-        $this->assertArraySubset(array(
-            'foo' => 'bar',
-        ), $this->debug->getData('log/__end__/args/1'));
-        $exceptionAbs = $this->debug->getData('log/__end__/args/1/exception');
-        $this->assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $exceptionAbs);
-        $this->assertSame('Exception', $exceptionAbs['className']);
-        $this->assertSame('object', $exceptionAbs['type']);
-        $this->assertArraySubset($metaSubset, $metaActual);
+        $this->assertSame('error', $this->debug->getData('log/__end__/method'));
+        $this->assertSame(array(
+            'some exception',
+        ), $this->debug->getData('log/__end__/args'));
+        $this->assertArraySubset($metaSubset, $this->debug->getData('log/__end__/meta'));
         $backtrace = $this->debug->getData('log/__end__/meta/trace');
         $this->assertIsArray($backtrace);
     }

@@ -26,6 +26,19 @@ class Logger extends AbstractLogger
 
     public $debug;
 
+    protected $cfg = array(
+        'levelMap' => array(
+            LogLevel::EMERGENCY => 'error',
+            LogLevel::ALERT => 'alert',
+            LogLevel::CRITICAL => 'error',
+            LogLevel::ERROR => 'error',
+            LogLevel::WARNING => 'warn',
+            LogLevel::NOTICE => 'warn',
+            LogLevel::INFO => 'info',
+            LogLevel::DEBUG => 'log',
+        ),
+    );
+
     /**
      * Constructor
      *
@@ -39,6 +52,10 @@ class Logger extends AbstractLogger
             $debug = Debug::getInstance();
         }
         $this->debug = $debug;
+        $this->cfg = $debug->utility->arrayMergeDeep(
+            $this->cfg,
+            $debug->getCfg('psr3', Debug::CONFIG_DEBUG) ?: array()
+        );
         $debug->backtrace->addInternalClass(array(
             'Monolog\\Logger',
             'Psr\\Log\\AbstractLogger',
@@ -58,16 +75,6 @@ class Logger extends AbstractLogger
     public function log($level, $message, array $context = array())
     {
         $this->assertValidLevel($level);
-        $levelMap = array(
-            LogLevel::EMERGENCY => 'error',
-            LogLevel::ALERT => 'alert',
-            LogLevel::CRITICAL => 'error',
-            LogLevel::ERROR => 'error',
-            LogLevel::WARNING => 'warn',
-            LogLevel::NOTICE => 'warn',
-            LogLevel::INFO => 'info',
-            LogLevel::DEBUG => 'log',
-        );
         /*
             Check if logging exception
         */
@@ -79,7 +86,7 @@ class Logger extends AbstractLogger
         */
         $logEntry = new LogEntry(
             $this->debug,
-            $levelMap[$level],
+            $this->cfg['levelMap'][$level],
             array(
                 $message,
                 $context,
@@ -130,20 +137,21 @@ class Logger extends AbstractLogger
         if (!isset($context['exception'])) {
             return false;
         }
+        if (!$this->debug->utility->isThrowable($context['exception'])) {
+            return false;
+        }
         $fatalLevels = array(
-            LogLevel::EMERGENCY => 'error',
-            LogLevel::ALERT => 'alert',
-            LogLevel::CRITICAL => 'error',
-            LogLevel::ERROR => 'error',
+            LogLevel::EMERGENCY,
+            LogLevel::ALERT,
+            LogLevel::CRITICAL,
+            LogLevel::ERROR,
         );
         if (!\in_array($level, $fatalLevels)) {
             return false;
         }
         $exception = $context['exception'];
-        if (!($exception instanceof \Error) && !($exception instanceof \Exception)) {
-            return false;
-        }
-        $this->debug->errorHandler->handleException($exception);
+        $method = $this->cfg['levelMap'][$level];
+        $this->debug->{$method}($exception);
         return true;
     }
 

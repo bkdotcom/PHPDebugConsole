@@ -1779,6 +1779,15 @@ class Debug
             $cfgRestore = $this->config->set($logEntry['meta']['cfg']);
             $logEntry->setMeta('cfg', null);
         }
+        if (\count($logEntry['args']) === 1 && $this->utility->isThrowable($logEntry['args'][0])) {
+            $exception = $logEntry['args'][0];
+            $logEntry['args'][0] = $exception->getMessage();
+            $logEntry->setMeta(array(
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $this->backtrace->get(null, 0, $exception),
+            ));
+        }
         foreach ($logEntry['args'] as $i => $v) {
             $logEntry['args'][$i] = $this->abstracter->crate($v, $logEntry['method']);
         }

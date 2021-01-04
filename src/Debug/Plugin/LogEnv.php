@@ -73,13 +73,7 @@ class LogEnv implements SubscriberInterface
         $this->logServerVals();
         $this->debug->groupEnd(); // end environment
 
-        $this->debug->group('session', $this->debug->meta(array(
-            'hideIfEmpty' => true,
-            'level' => 'info',
-        )));
-        $this->logSessionSettings();
         $this->logSession();
-        $this->debug->groupEnd(); // end session
 
         $this->debug->groupEnd(); // end groupSummary
         $this->debug->setCfg('collect', $collectWas);
@@ -367,18 +361,33 @@ class LogEnv implements SubscriberInterface
         if (!$this->debug->getCfg('logEnvInfo.session', Debug::CONFIG_DEBUG)) {
             return;
         }
+
+        $debugWas = $this->debug;
+
+        $channelOpts = array(
+            'channelIcon' => 'fa fa-suitcase',
+            'nested' => false,
+        );
+        $this->debug = $this->debug->rootInstance->getChannel('Session', $channelOpts);
+
+        $this->logSessionSettings();
         $namePrev = null;
         if (\session_status() !== PHP_SESSION_ACTIVE) {
             $name = $this->getSessionName();
             if ($name === null) {
-                $this->debug->log('Session:  No session id passed in request');
+                $this->debug->log('Session Inactive / No session id passed in request');
+                $this->debug = $debugWas;
                 return;
             }
             $namePrev = \session_name($name);
             \session_start();
         }
         if (\session_status() === PHP_SESSION_ACTIVE) {
-            $this->debug->log('$_SESSION', $_SESSION, $this->debug->meta('redact'));
+            $this->debug->log('session name', \session_name());
+            $this->debug->log('session id', \session_id());
+            $sessionVals = $_SESSION;
+            \ksort($sessionVals);
+            $this->debug->log('$_SESSION', $sessionVals, $this->debug->meta('redact'));
         }
         if ($namePrev) {
             /*
@@ -389,6 +398,7 @@ class LogEnv implements SubscriberInterface
             \session_name($namePrev);
             unset($_SESSION);
         }
+        $this->debug = $debugWas;
     }
 
     /**
@@ -398,9 +408,6 @@ class LogEnv implements SubscriberInterface
      */
     private function logSessionSettings()
     {
-        if (!$this->debug->getCfg('logEnvInfo.session', Debug::CONFIG_DEBUG)) {
-            return;
-        }
         $settings = array(
             array('name' => 'session.cookie_httponly'),
             array(

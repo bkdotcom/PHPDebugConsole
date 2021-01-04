@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2020 Brad Kent
+ * @version   v3.0
+ */
+
 namespace bdk\Debug\Framework\Yii2;
 
 use bdk\Debug;
@@ -9,6 +19,7 @@ use bdk\Debug\Framework\Yii2\LogTarget;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
+use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
 use Yii;
 use yii\base\BootstrapInterface;
@@ -36,6 +47,10 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
      * @param string $id     the ID of this module.
      * @param Module $parent the parent module (if any).
      * @param array  $config name-value pairs that will be used to initialize the object properties.
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct($id, $parent, $config = array())
     {

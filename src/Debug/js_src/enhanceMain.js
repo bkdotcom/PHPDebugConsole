@@ -151,9 +151,9 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
     )
     $ul.append($li)
   }
-  channelNames = Object.keys(channels).sort();
+  channelNames = Object.keys(channels).sort()
   for (var i = 0, len = channelNames.length; i < len; i++) {
-    channelName = channelNames[i];
+    channelName = channelNames[i]
     if (channelName === 'phpError') {
       // phpError is a special channel
       continue

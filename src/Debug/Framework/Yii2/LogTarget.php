@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2020 Brad Kent
+ * @version   v3.0
+ */
+
 namespace bdk\Debug\Framework\Yii2;
 
 use bdk\Debug;
@@ -7,9 +17,7 @@ use yii\log\Logger;
 use yii\log\Target;
 
 /**
- * PsrTarget is a log target which passes messages to PSR-3 compatible logger.
- *
- * @author Alexander Makarov <sam@rmcreative.ru>
+ * PhpDebugConsole Yii 2 log target
  */
 class LogTarget extends Target
 {
@@ -80,41 +88,6 @@ class LogTarget extends Target
     {
         foreach ($this->messages as $message) {
             $this->handleMessage($message);
-
-            /*
-            $level = $message[1];
-            $context = [];
-            if (isset($message[4])) {
-                $context['trace'] = $message[4];
-            }
-
-            if (isset($message[5])) {
-                $context['memory'] = $message[5];
-            }
-
-            if (isset($message[2])) {
-                $context['category'] = $message[2];
-            }
-
-            // if ($this->addTimestampToContext && isset($message[3])) {
-            //    $context['timestamp'] = $message[3];
-            // }
-
-            $text = $message[0];
-            if (!\is_string($text)) {
-                // exceptions may not be serializable if in the call stack somewhere is a Closure
-                if ($text instanceof \Throwable || $text instanceof \Exception) {
-                    $context['exception'] = $text;
-                    if ($this->extractExceptionTrace) {
-                        $context['trace'] = \explode(PHP_EOL, $text->getTraceAsString());
-                        $text = $text->getMessage();
-                    } else {
-                        $text = (string) $text;
-                    }
-                }
-            }
-            $this->getLogger()->log($this->_levelMap[$level], $text, $context);
-            */
         }
     }
 

@@ -74,6 +74,7 @@ var config = new Config({
   linkFiles: false,
   linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
   useLocalStorage: true,
+  tooltip: true,
   cssFontAwesome5: '' +
     '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
     '.debug .fa-calendar:before { content:"\\f073"; }' +
@@ -155,9 +156,6 @@ function getSelectedText () {
 $.fn.debugEnhance = function (method, arg1, arg2) {
   // console.warn('debugEnhance', method, this)
   var $self = this
-  // var dataOptions = {}
-  // var lsOptions = {} // localStorage options
-  // var options = {}
   if (method === 'sidebar') {
     if (arg1 === 'add') {
       sidebar.addMarkup($self)
@@ -184,7 +182,9 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
       conf.set(arg1)
     }
     tabs.init($self)
-    tooltip.init($self)
+    if (conf.get('tooltip')) {
+      tooltip.init($self)
+    }
     enhanceEntries.init($self)
     expandCollapse.init($self)
     registerListeners($self)

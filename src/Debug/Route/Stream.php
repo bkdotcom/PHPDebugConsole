@@ -25,6 +25,11 @@ class Stream extends Base
     protected $fileHandle;
     protected $cfg = array(
         'ansi' => 'default',        // default | true | false  (STDOUT & STDERR streams will default to true)
+        'channels' => array('*'),
+        'channelsExclude' => array(
+            'events',
+            'files',
+        ),
         'output' => false,          // kept in sync with Debug->cfg['output']
         'stream' => 'php://stderr', // filepath/uri/resource
     );
@@ -78,9 +83,11 @@ class Stream extends Base
     {
         $cfg = $event->getValues();
         $isCli = \strpos($this->debug->getInterface(), 'cli') !== false;
-        if (isset($cfg['debug']['output']) && $isCli) {
-            // if cli, abide by global output config
+        if ($isCli && isset($cfg['debug']['output'])) {
             $this->cfg['output'] = $cfg['debug']['output'];
+            if ($this->cfg['output']) {
+                $this->openStream($this->cfg['stream']);
+            }
         }
     }
 

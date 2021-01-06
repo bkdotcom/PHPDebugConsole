@@ -23,6 +23,13 @@ use bdk\PubSub\Event;
 class Script extends Base
 {
 
+    protected $cfg = array(
+        'channels' => array('*'),
+        'channelsExclude' => array(
+            'events',
+            'files',
+        ),
+    );
     protected $consoleMethods = array(
         'assert',
         // 'count',    // output as log

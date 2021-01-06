@@ -193,6 +193,7 @@ class Config
                 'outputCss',
                 'outputScript',
                 'sidebar',
+                'tooltip',
             ),
             'routeStream' => array(
                 'ansi',

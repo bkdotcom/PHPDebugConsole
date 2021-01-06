@@ -25,6 +25,13 @@ class Firephp extends Base
     const FIREPHP_PROTO_VER = '0.3';
     const MESSAGE_LIMIT = 99999;
 
+    protected $cfg = array(
+        'channels' => array('*'),
+        'channelsExclude' => array(
+            'events',
+            'files',
+        ),
+    );
     protected $firephpMethods = array(
         'log' => 'LOG',
         'info' => 'INFO',
@@ -77,7 +84,7 @@ class Firephp extends Base
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $this->processLogEntryviaEvent(new LogEntry(
+        $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupEnd'
         ));

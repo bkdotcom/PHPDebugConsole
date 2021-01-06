@@ -36,9 +36,16 @@ abstract class Base extends Component implements RouteInterface
     protected $channelNameRoot = '';
 
     protected $channelRegex;
+    protected $cfg = array(
+        'channels' => array('*'),
+        'channelsExclude' => array(),
+    );
     protected $data = array();
     protected $dump;
     protected $isRootInstance = false;
+
+    /** @var array channelName => bool */
+    private $shouldIncludeCache = array();
 
     /**
      * Constructor
@@ -163,6 +170,9 @@ abstract class Base extends Component implements RouteInterface
      */
     protected function processLogEntryViaEvent(LogEntry $logEntry)
     {
+        if ($this->shouldInclude($logEntry) === false) {
+            return '';
+        }
         $logEntry = new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta']);
         $logEntry['route'] = $this;
         $this->debug->publishBubbleEvent(Debug::EVENT_OUTPUT_LOG_ENTRY, $logEntry);
@@ -191,5 +201,59 @@ abstract class Base extends Component implements RouteInterface
             }
         }
         return $str;
+    }
+
+    /**
+     * Should this route handle/process/output this logEntry?
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return bool
+     */
+    protected function shouldInclude(LogEntry $logEntry)
+    {
+        $channelName = $logEntry->getChannelName();
+        $channelName = \strtolower($channelName);
+        if (isset($this->shouldIncludeCache[$channelName])) {
+            return $this->shouldIncludeCache[$channelName];
+        }
+        if (empty($this->cfg['channels'])) {
+            $this->cfg['channels'] = array('*');
+        }
+        if (!isset($this->cfg['channelsExclude'])) {
+            $this->cfg['channelsExclude'] = array();
+        }
+        $include = $this->testChannelNameMatch($channelName, $this->cfg['channels'])
+            && !$this->testChannelNameMatch($channelName, $this->cfg['channelsExclude']);
+        $this->shouldIncludeCache[$channelName] = $include;
+        return $include;
+    }
+
+    /**
+     * Test if string matches against list of strings
+     *
+     * @param string $channelName  channelName to test
+     * @param array  $channelNames list of channelNames (may include wildcard '*')
+     *
+     * @return [type] [description]
+     */
+    private function testChannelNameMatch($channelName, $channelNames = array())
+    {
+        foreach ($channelNames as $channelNameTest) {
+            $channelNameTest = \strtolower($channelNameTest);
+            if ($channelNameTest === '*') {
+                return true;
+            }
+            if ($channelNameTest === $channelName) {
+                return true;
+            }
+            if (\substr($channelNameTest, -1, 1) === '*') {
+                $prefix = \rtrim($channelNameTest, '*');
+                if (\strpos($channelName, $prefix) === 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

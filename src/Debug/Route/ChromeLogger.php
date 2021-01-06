@@ -30,6 +30,14 @@ class ChromeLogger extends Base
 
     const HEADER_NAME = 'X-ChromeLogger-Data';
 
+    protected $cfg = array(
+        'channels' => array('*'),
+        'channelsExclude' => array(
+            'events',
+            'files',
+        ),
+    );
+
     protected $consoleMethods = array(
         'assert',
         // 'count',    // output as log

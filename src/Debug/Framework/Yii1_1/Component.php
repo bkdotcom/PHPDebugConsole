@@ -26,6 +26,7 @@ use CActiveRecord;
 use CApplicationComponent;
 use CDbCommand;
 use CDbConnection;
+use CWebApplication;
 use ReflectionObject;
 use Yii;
 
@@ -463,6 +464,10 @@ class Component extends CApplicationComponent implements SubscriberInterface
 
         $session = $this->yiiApp->getComponent('session');
 
+        if ($session === null) {
+            return;
+        }
+
         $channelOpts = array(
             'channelIcon' => 'fa fa-suitcase',
             'nested' => false,
@@ -495,7 +500,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
         }
 
         $user = $this->yiiApp->user;
-        if ($user->getIsGuest()) {
+        if (\method_exists($user, 'getIsGuest') && $user->getIsGuest()) {
             return;
         }
 
@@ -516,6 +521,9 @@ class Component extends CApplicationComponent implements SubscriberInterface
         $debug->table(\get_class($user), $identityData);
 
         try {
+            if (!($this->yiiApp instanceof CWebApplication)) {
+                return;
+            }
             $authManager = $this->yiiApp->getAuthManager();
             $debug->log('authManager class', $debug->abstracter->crateWithVals(
                 \get_class($authManager),

@@ -47,6 +47,7 @@ class Html extends Base
             'outputCss' => true,
             'outputScript' => true,
             'sidebar' => true,
+            'tooltip' => true,
         );
         $this->dump = $debug->getDump('html');
     }
@@ -163,6 +164,7 @@ class Html extends Base
             'data-options' => array(
                 'drawer' => $this->cfg['drawer'],
                 'linkFilesTemplateDefault' => $lftDefault ?: null,
+                'tooltip' => $this->cfg['tooltip'],
             ),
         )) . ">\n";
         if ($this->cfg['outputCss']) {

@@ -36,9 +36,9 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
     /** @var \bdk\Debug */
     public $debug;
 
+    /** @var LogTarget */
     public $logTarget;
 
-    private $app;
     private $collectedEvents = array();
 
     /**
@@ -48,13 +48,10 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
      * @param Module $parent the parent module (if any).
      * @param array  $config name-value pairs that will be used to initialize the object properties.
      *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      * @SuppressWarnings(PHPMD.StaticAccess)
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct($id, $parent, $config = array())
     {
-        $this->app = $parent;
         $debugRootInstance = Debug::getInstance(array(
             'logEnvInfo' => array(
                 'session' => false,
@@ -82,6 +79,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         $debugRootInstance->errorHandler->unregister();
         $debugRootInstance->errorHandler->register();
         $this->debug = $debugRootInstance->getChannel('Yii');
+        parent::__construct($id, $parent, array());
     }
 
     /**
@@ -107,7 +105,8 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
      */
     public function bootstrap($app)
     {
-        $this->app = $app;
+        // setAlias needed for Console app
+        Yii::setAlias('@' . \str_replace('\\', '/', __NAMESPACE__), __DIR__);
         $this->collectEvent();
         $this->collectLog();
         $this->collectPdo();
@@ -195,7 +194,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         // Yii's handler will log the error.. we can ignore that
         $this->logTarget->enabled = false;
         if ($error['exception']) {
-            $this->app->handleException($error['exception']);
+            $this->module->errorHandler->handleException($error['exception']);
         } elseif ($error['category'] === Error::CAT_FATAL) {
             // Yii's error handler exits (for reasons)
             //    exit within shutdown procedure (that's us) = immediate exit
@@ -208,7 +207,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
                 }
             }
             $this->debug->rootInstance->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
-            $this->app->handleError($error['type'], $error['message'], $error['file'], $error['line']);
+            $this->module->errorHandler->handleError($error['type'], $error['message'], $error['file'], $error['line']);
         }
         $this->logTarget->enabled = true;
     }
@@ -223,7 +222,10 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         if ($this->shouldCollect('events') === false) {
             return;
         }
-        $yiiVersion = $this->app->getVersion();
+        /*
+            $this->module->getVersion() returns the application "module" version vs framework version ¯\_(ツ)_/¯
+        */
+        $yiiVersion = Yii::getVersion();  // Framework version
         if (!\version_compare($yiiVersion, '2.0.14', '>=')) {
             return;
         }
@@ -252,7 +254,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             return;
         }
         $this->logTarget = new LogTarget($this->debug);
-        $log = $this->app->getLog();
+        $log = $this->module->getLog();
         $log->flushInterval = 1;
         $log->targets['phpDebugConsole'] = $this->logTarget;
     }
@@ -339,7 +341,12 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             return;
         }
 
-        $session = $this->app->session;
+        $session = $this->module->get('session', false);
+
+        if ($session === null) {
+            return;
+        }
+
         $session->open();
 
         $channelOpts = array(
@@ -376,8 +383,8 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             return;
         }
 
-        $user = Yii::$app->get('user', false);
-        if ($user->isGuest) {
+        $user = $this->module->get('user', false);
+        if ($user === null || $user->isGuest) {
             return;
         }
 

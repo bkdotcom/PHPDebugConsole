@@ -1676,7 +1676,14 @@
     var channelName = '';
     var channelNames = [];
     var isChecked = true;
-    // console.warn('buildChannelList', channels)
+    var value = '';
+    /*
+    console.log('buildChannelList', {
+      nameRoot: nameRoot,
+      prepend: prepend,
+      channels: channels
+    })
+    */
     prepend = prepend || '';
     if ($.isArray(channels)) {
       channels = channelsToTree(channels);
@@ -1692,29 +1699,34 @@
       );
       $ul.append($li);
     }
-    channelNames = Object.keys(channels).sort();
+    channelNames = Object.keys(channels).sort(function (a, b) {
+      return a.localeCompare(b)
+    });
     for (var i = 0, len = channelNames.length; i < len; i++) {
       channelName = channelNames[i];
       if (channelName === 'phpError') {
         // phpError is a special channel
         continue
       }
-      if (prepend.length === 0 && channelName !== nameRoot) {
-        prepend = nameRoot + '.';
-      }
       channel = channels[channelName];
+      value = channelName;
+      if (prepend) {
+        value = prepend + channelName;
+      } else if (value !== nameRoot) {
+        value = nameRoot + '.' + value;
+      }
       isChecked = checkedChannels !== undefined
-        ? checkedChannels.indexOf(prepend + channelName) > -1
+        ? checkedChannels.indexOf(value) > -1
         : channel.options.show;
       $li = buildChannelLi(
         channelName,
-        prepend + channelName,
+        value,
         isChecked,
         false,
         channel.options
       );
       if (Object.keys(channel.channels).length) {
-        $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, prepend + channelName + '.'));
+        $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'));
       }
       $ul.append($li);
     }
@@ -1748,18 +1760,6 @@
     var i;
     var i2;
     var path;
-    /*
-    channels = channels.sort(function (a, b) {
-      if (a.name < b.name) {
-        return -1
-      }
-      if (a.name > b.name) {
-        return 1
-      }
-      return 0
-    })
-    console.warn('channels sorted', channels)
-    */
     for (i = 0; i < channels.length; i++) {
       ref = channelTree;
       channel = channels[i];
@@ -5968,6 +5968,7 @@
     linkFiles: false,
     linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
     useLocalStorage: true,
+    tooltip: true,
     cssFontAwesome5: '' +
       '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
       '.debug .fa-calendar:before { content:"\\f073"; }' +
@@ -6049,9 +6050,6 @@
   $.fn.debugEnhance = function (method, arg1, arg2) {
     // console.warn('debugEnhance', method, this)
     var $self = this;
-    // var dataOptions = {}
-    // var lsOptions = {} // localStorage options
-    // var options = {}
     if (method === 'sidebar') {
       if (arg1 === 'add') {
         addMarkup$1($self);
@@ -6078,7 +6076,9 @@
         conf.set(arg1);
       }
       init$8($self);
-      init$9($self);
+      if (conf.get('tooltip')) {
+        init$9($self);
+      }
       init$1($self);
       init$7($self);
       registerListeners();

@@ -14,11 +14,6 @@ var tests = [
 var preFilterCallbacks = [
   function ($root) {
     var $checkboxes = $root.find('input[data-toggle=channel]')
-    /*
-    channels = $checkboxes.length
-      ? []
-      : [undefined]
-    */
     if ($checkboxes.length === 0) {
       channels = [$root.data('channelNameRoot')]
       return
@@ -26,9 +21,6 @@ var preFilterCallbacks = [
     channels = []
     $checkboxes.filter(':checked').each(function () {
       channels.push($(this).val())
-      // if ($(this).data('isRoot')) {
-      //   channels.push(undefined)
-      // }
     })
   }
 ]
@@ -79,6 +71,7 @@ export function addPreFilter (func) {
 }
 
 function applyFilter ($root) {
+  var channelNameRoot = $root.data('channelNameRoot')
   var i
   var i2
   var len
@@ -105,7 +98,7 @@ function applyFilter ($root) {
     var $parentGroup
     var isFilterVis = true
     var unhiding = false
-    if ($node.data('channel') === 'general.phpError') {
+    if ($node.data('channel') === channelNameRoot + '.phpError') {
       // php Errors are filtered separately
       continue
     }

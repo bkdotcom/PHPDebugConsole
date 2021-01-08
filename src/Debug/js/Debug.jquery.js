@@ -996,11 +996,6 @@
   var preFilterCallbacks = [
     function ($root) {
       var $checkboxes = $root.find('input[data-toggle=channel]');
-      /*
-      channels = $checkboxes.length
-        ? []
-        : [undefined]
-      */
       if ($checkboxes.length === 0) {
         channels = [$root.data('channelNameRoot')];
         return
@@ -1008,9 +1003,6 @@
       channels = [];
       $checkboxes.filter(':checked').each(function () {
         channels.push($(this).val());
-        // if ($(this).data('isRoot')) {
-        //   channels.push(undefined)
-        // }
       });
     }
   ];
@@ -1061,6 +1053,7 @@
   }
 
   function applyFilter ($root) {
+    var channelNameRoot = $root.data('channelNameRoot');
     var i;
     var i2;
     var len;
@@ -1087,7 +1080,7 @@
       var $parentGroup;
       var isFilterVis = true;
       var unhiding = false;
-      if ($node.data('channel') === 'general.phpError') {
+      if ($node.data('channel') === channelNameRoot + '.phpError') {
         // php Errors are filtered separately
         continue
       }
@@ -1461,7 +1454,11 @@
     config$4.set('openSidebar', true);
   }
 
+  /**
+   * @param $node debugroot
+   */
   function addMethodToggles ($node) {
+    var channelNameRoot = $node.data('channelNameRoot');
     var $filters = $node.find('.debug-filters');
     var $entries = $node.find('> .debug-tabs .m_alert, .group-body > *');
     var val;
@@ -1476,7 +1473,7 @@
     for (val in labels) {
       haveEntry = val === 'other'
         ? $entries.not('.m_alert, .m_error, .m_warn, .m_info').length > 0
-        : $entries.filter('.m_' + val).not('[data-channel="general.phpError"]').length > 0;
+        : $entries.filter('.m_' + val).not('[data-channel="' + channelNameRoot + '.phpError"]').length > 0;
       $filters.append(
         $('<li />').append(
           $('<label class="toggle active" />').toggleClass('disabled', !haveEntry).append(
@@ -1594,9 +1591,10 @@
   }
 
   function addErrorIcons () {
+    var channelNameRoot = $root$3.data('channelNameRoot');
     var counts = {
-      error: $root$3.find('.m_error[data-channel="general.phpError"]').length,
-      warn: $root$3.find('.m_warn[data-channel="general.phpError"]').length
+      error: $root$3.find('.m_error[data-channel="' + channelNameRoot + '.phpError"]').length,
+      warn: $root$3.find('.m_warn[data-channel="' + channelNameRoot + '.phpError"]').length
     };
     var $icon;
     var $icons = $('<span>', { class: 'debug-error-counts' });

@@ -53,9 +53,10 @@ function addChannelToggles () {
 }
 
 function addErrorIcons () {
+  var channelNameRoot = $root.data('channelNameRoot')
   var counts = {
-    error: $root.find('.m_error[data-channel="general.phpError"]').length,
-    warn: $root.find('.m_warn[data-channel="general.phpError"]').length
+    error: $root.find('.m_error[data-channel="' + channelNameRoot + '.phpError"]').length,
+    warn: $root.find('.m_warn[data-channel="' + channelNameRoot + '.phpError"]').length
   }
   var $icon
   var $icons = $('<span>', { class: 'debug-error-counts' })

@@ -1932,7 +1932,7 @@ class Debug
                 return new Abstracter($debug, $debug->config->get('abstracter', self::CONFIG_INIT));
             },
             'backtrace' => function () {
-                $backtrace = new \bdk\Backtrace();
+                $backtrace = $this->errorHandler->backtrace;
                 $backtrace->addInternalClass('bdk\\Debug');
                 return $backtrace;
             },

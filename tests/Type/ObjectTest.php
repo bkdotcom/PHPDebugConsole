@@ -173,7 +173,11 @@ EOD;
                         $this->assertStringContainsString(
                             '<dt class="constants">constants</dt>' . "\n"
                             . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
-                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="constant documentation">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>',
+                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
+                                . (PHP_VERSION_ID >= 70100
+                                    ? ' title="constant documentation"'
+                                    : ''
+                                ) . '>MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>',
                             $str
                         );
 
@@ -360,7 +364,9 @@ EOD;
                 ),
                 'MY_CONSTANT' => array(
                     'attributes' => array(),
-                    'desc' => 'constant documentation',
+                    'desc' => PHP_VERSION_ID >= 70100
+                        ? 'constant documentation'
+                        : null,
                     'value' => 'redefined in Test',
                     'visibility' => 'public',
                 ),

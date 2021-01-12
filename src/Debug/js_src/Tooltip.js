@@ -19,6 +19,7 @@ export function init ($root) {
     content: function (reference) {
       var $ref = $(reference)
       var attributes
+      var classname
       var title
       if ($ref.hasClass('fa-hashtag')) {
         attributes = $ref.parent().data('attributes')
@@ -27,7 +28,15 @@ export function init ($root) {
       title = $ref.prop('title')
       if (title) {
         $ref.data('titleOrig', title)
-        if (title === 'Open in editor') {
+        if (title === 'Inherited') {
+          classname = $ref.parent().data('inheritedFrom')
+          if (classname) {
+            classname = '<span class="classname">' +
+              classname.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+              '</span>'
+            title = 'Inherited from ' + classname
+          }
+        } else if (title === 'Open in editor') {
           title = '<i class="fa fa-pencil"></i> ' + title
         } else if (title.match(/^\/.+: line \d+$/)) {
           title = '<i class="fa fa-file-code-o"></i> ' + title

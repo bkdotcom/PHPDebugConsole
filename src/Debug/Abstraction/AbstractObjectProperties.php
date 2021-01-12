@@ -16,6 +16,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionProperty;
+use Reflector;
 
 /**
  * Get object property info
@@ -28,6 +29,7 @@ class AbstractObjectProperties extends AbstractObjectSub
         'debugInfoExcluded' => false,   // true if not included in __debugInfo
         'desc' => null,                 // from phpDoc
         'inheritedFrom' => null,        // populated only if inherited
+                                        //   not populated if extended/redefined
         'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
         'overrides' => null,            // previous ancestor where property is defined
@@ -77,6 +79,42 @@ class AbstractObjectProperties extends AbstractObjectSub
     public static function buildPropInfo($values = array())
     {
         return \array_merge(static::$basePropInfo, $values);
+    }
+
+    /**
+     * Get type and description from phpDoc comment for Constant or Property
+     *
+     * @param Reflector $reflector ReflectionProperty or ReflectionClassConstant property object
+     *
+     * @return array
+     */
+    public function getVarPhpDoc(Reflector $reflector)
+    {
+        $name = $reflector->name;
+        $phpDoc = $this->phpDoc->getParsed($reflector);
+        $info = array(
+            'type' => null,
+            'desc' => $phpDoc['summary'],
+        );
+        if (!isset($phpDoc['var'])) {
+            return $info;
+        }
+        /*
+            php's getDocComment doesn't play nice with compound statements
+            https://www.phpdoc.org/docs/latest/references/phpdoc/tags/var.html
+        */
+        foreach ($phpDoc['var'] as $var) {
+            if ($var['name'] === $name) {
+                break;
+            }
+        }
+        $info['type'] = $var['type'];
+        if (!$info['desc']) {
+            $info['desc'] = $var['desc'];
+        } elseif ($var['desc']) {
+            $info['desc'] = $info['desc'] . ': ' . $var['desc'];
+        }
+        return $info;
     }
 
     /**
@@ -414,46 +452,6 @@ class AbstractObjectProperties extends AbstractObjectSub
     }
 
     /**
-     * Get property type and description from phpDoc comment
-     *
-     * @param ReflectionProperty $reflectionProperty reflection property object
-     *
-     * @return array
-     */
-    private function getPhpDoc(ReflectionProperty $reflectionProperty)
-    {
-        $name = $reflectionProperty->name;
-        $phpDoc = $this->phpDoc->getParsed($reflectionProperty);
-        $info = array(
-            'type' => null,
-            'desc' => $phpDoc['summary']
-                ? $phpDoc['summary']
-                : null,
-        );
-        if (isset($phpDoc['var'])) {
-            $var = $phpDoc['var'][0];
-            if (\count($phpDoc['var']) > 1) {
-                /*
-                    php's getDocComment doesn't play nice with compound statements
-                    https://www.phpdoc.org/docs/latest/references/phpdoc/tags/var.html
-                */
-                foreach ($phpDoc['var'] as $var) {
-                    if ($var['name'] === $name) {
-                        break;
-                    }
-                }
-            }
-            $info['type'] = $var['type'];
-            if (!$info['desc']) {
-                $info['desc'] = $var['desc'];
-            } elseif ($var['desc']) {
-                $info['desc'] = $info['desc'] . ': ' . $var['desc'];
-            }
-        }
-        return $info;
-    }
-
-    /**
      * Get property info
      *
      * @param Abstraction        $abs                Abstraction event object
@@ -470,7 +468,7 @@ class AbstractObjectProperties extends AbstractObjectSub
             : $obj;
         $reflectionProperty->setAccessible(true); // only accessible via reflection
         // get type and desc from phpdoc
-        $phpDoc = $this->getPhpDoc($reflectionProperty);
+        $phpDoc = $this->getVarPhpDoc($reflectionProperty);
         /*
             getDeclaringClass returns "LAST-declared/overriden"
         */

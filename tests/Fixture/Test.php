@@ -12,6 +12,7 @@ namespace bdk\DebugTests\Fixture;
 class Test extends TestBase
 {
 
+    /** constant documentation */
     const MY_CONSTANT = 'redefined in Test';
 
     public $someArray = array(
@@ -115,7 +116,7 @@ class Test extends TestBase
      * @return     void
      * @deprecated
      */
-    public function methodPublic(\SomeClass $param1, array $param2 = array())
+    final public function methodPublic(\SomeClass $param1, array $param2 = array())
     {
     }
 

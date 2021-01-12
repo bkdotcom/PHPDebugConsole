@@ -13,6 +13,7 @@
 namespace bdk\Debug\Utility;
 
 use ReflectionClass;
+use ReflectionClassConstant;
 use ReflectionFunction;
 use ReflectionMethod;
 use ReflectionObject;
@@ -179,23 +180,27 @@ class PhpDoc
      */
     private static function getHash($what)
     {
-        $str = null;
-        if (\is_object($what) && !($what instanceof Reflector)) {
-            $str = \get_class($what);
-        } elseif ($what instanceof ReflectionClass) {
-            $str = $what->getName();
-        } elseif ($what instanceof ReflectionMethod) {
-            $str = $what->getDeclaringClass()->getName() . '::' . $what->getName() . '()';
-        } elseif ($what instanceof ReflectionFunction) {
-            $str = $what->getName() . '()';
-        } elseif ($what instanceof ReflectionProperty) {
-            $str = $what->getDeclaringClass()->getName() . '::' . $what->getName();
-        } elseif (\is_string($what)) {
-            $str = $what;
+        if (\is_string($what)) {
+            return $str;
         }
-        return $str
-            ? \md5($str)
-            : null;
+        if (!\is_object($what)) {
+            return null;
+        }
+        $str = null;
+        if ($what instanceof ReflectionClass) {
+            $str = 'class:' . $what->getName();
+        } elseif ($what instanceof ReflectionClassConstant) {
+            $str = 'const:' . $what->getName();
+        } elseif ($what instanceof ReflectionMethod) {
+            $str = 'method:' . $what->getDeclaringClass()->getName() . '::' . $what->getName() . '()';
+        } elseif ($what instanceof ReflectionFunction) {
+            $str = 'func:' . $what->getName() . '()';
+        } elseif ($what instanceof ReflectionProperty) {
+            $str = 'prop:' . $what->getDeclaringClass()->getName() . '::' . $what->getName();
+        } elseif (!($what instanceof Reflector)) {
+            $str = \get_class($what);
+        }
+        return \md5($str);
     }
 
     /**

@@ -273,6 +273,7 @@ class AbstractObject extends Component
                 if (isset($constants[$name])) {
                     continue;
                 }
+                $phpDoc = $this->properties->getVarPhpDoc($const);
                 $vis = 'public';
                 if ($const->isPrivate()) {
                     $vis = 'private';
@@ -283,7 +284,7 @@ class AbstractObject extends Component
                     'attributes' => $inclAttributes
                         ? $this->properties->getAttributes($const)
                         : array(),
-                    'desc' => null,
+                    'desc' => $phpDoc['desc'],
                     'value' => $const->getValue(),
                     'visibility' => $vis,
                 );

@@ -208,7 +208,7 @@ class Html extends Base
         $logEntry->setMeta($meta);
         $channelName = $logEntry->getChannelName();
         // phpError channel is handled separately
-        if (!isset($this->channels[$channelName]) && $channelName !== 'general.phpError') {
+        if (!isset($this->channels[$channelName]) && $channelName !== $this->channelNameRoot . '.phpError') {
             $this->channels[$channelName] = $logEntry->getSubject();
         }
         $this->detectFiles = $meta['detectFiles'];
@@ -625,7 +625,7 @@ class Html extends Base
             'uncollapse' => null,
         ), $logEntry['meta']);
         $attribs = $this->logEntryAttribs;
-        if (isset($meta['file']) && $logEntry->getChannelName() !== 'general.phpError') {
+        if (isset($meta['file']) && $logEntry->getChannelName() !== $this->channelNameRoot . '.phpError') {
             // PHP errors will have file & line as one of the arguments
             //    so no need to store file & line as data args
             $attribs = \array_merge(array(

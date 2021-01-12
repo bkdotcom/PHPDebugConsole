@@ -278,7 +278,7 @@ color: #818a91
 .debug .t_array.expanded > .t_array-collapse, .debug .t_array.expanded > .t_punct { display: inline; }
 .debug .t_array.expanded > .array-inner { display: block; }
 .debug .t_object i.fa-eye { color: #00529b; font-size: 1.1em; border-bottom: 0; }
-.debug .t_object i.fa-magic { color: orange; }
+.debug .t_object i.fa-magic, .debug .t_object .t_modifier_magic, .debug .t_object .t_modifier_magic-read, .debug .t_object .t_modifier_magic-write { color: orange; }
 .debug .t_object .method i.fa-clone { color: #999; }
 .debug .t_object .debugInfo-excluded > i.fa-eye-slash { color: #999; }
 .debug .t_object .vis-toggles [data-toggle] { padding: 0.3em; }

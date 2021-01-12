@@ -29,8 +29,6 @@ function addIcons ($node) {
       $node.find(selector).append(v)
     }
   })
-  // $node.find('> .property > .fa:first-child, > .property > span:first-child > .fa')
-  //   .addClass('fa-fw')
 }
 
 /**

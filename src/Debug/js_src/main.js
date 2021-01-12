@@ -34,9 +34,10 @@ var config = new Config({
   },
   iconsObject: {
     '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
-    '> .method.magic': '<i class="fa fa-fw fa-magic" title="magic method"></i>',
-    '> .method.deprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
     '> .method.inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+    '> .method.deprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
+    '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
+    '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
     '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
     '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
     '> *[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
@@ -87,6 +88,7 @@ var config = new Config({
     '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
     '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
     '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
+    '.debug .fa-hand-stop-o:before { content:"\\f256"; font-weight:400; }' +
     '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
     '.debug .fa-pencil:before { content:"\\f303" }' +
     '.debug .fa-pie-chart:before { content:"\\f200"; }' +

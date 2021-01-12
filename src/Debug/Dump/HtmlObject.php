@@ -78,8 +78,11 @@ class HtmlObject
             . '</dl>' . "\n";
         // remove <dt>'s that have no <dd>'
         $html = \preg_replace('#(?:<dt>(?:extends|implements|phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
-        $html = \str_replace(' data-attributes="null"', '', $html);
-        $html = \str_replace(' title=""', '', $html);
+        $html = \str_replace(array(
+            ' data-attributes="null"',
+            ' data-inherited-from="null"',
+            ' title=""',
+        ), '', $html);
         return $html;
     }
 
@@ -128,7 +131,7 @@ class HtmlObject
     }
 
     /**
-     * Dump object constants as html
+     * Dump object attributes as html
      *
      * @param Abstraction $abs object "abstraction"
      *
@@ -192,7 +195,7 @@ class HtmlObject
                 . \implode(' ', \array_map(function ($modifier) {
                     return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
                 }, $modifiers))
-                . ' <span class="t_identifier">' . $k . '</span>'
+                . ' <span class="t_identifier" title="' . \htmlspecialchars($info['desc']) . '">' . $k . '</span>'
                 . ' <span class="t_operator">=</span> '
                 . $this->html->dump($info['value'])
                 . '</dd>' . "\n";
@@ -240,10 +243,11 @@ class HtmlObject
                 'dd',
                 array(
                     'class' => \array_merge($classes, $modifiers),
-                    'data-implements' => $info['implements'],
                     'data-attributes' => $outAttributesMethod
                         ? ($info['attributes'] ?: null)
                         : null,
+                    'data-implements' => $info['implements'],
+                    'data-inherited-from' => $info['inheritedFrom'],
                 ),
                 \implode(' ', \array_map(function ($modifier) {
                     return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
@@ -270,8 +274,10 @@ class HtmlObject
                     : '')
             ) . "\n";
         }
-        $str = \str_replace(' data-implements="null"', '', $str);
-        $str = \str_replace(' <span class="t_type"></span>', '', $str);
+        $str = \str_replace(array(
+            ' data-implements="null"',
+            ' <span class="t_type"></span>',
+        ), '', $str);
         return $str;
     }
 

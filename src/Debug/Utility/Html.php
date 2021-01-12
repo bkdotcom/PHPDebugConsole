@@ -301,7 +301,7 @@ class Html
             $val = true;
         }
         $key = \strtolower($key);
-        if (\strpos($key, 'data-') === 0) {
+        if (\substr($key, 0, 5) === 'data-') {
             if (!\is_string($val)) {
                 $val = \json_encode($val);
             }
@@ -331,7 +331,7 @@ class Html
     private static function parseAttribValue($name, $val, $options)
     {
         $val = \htmlspecialchars_decode($val);
-        if ($options & self::PARSE_ATTRIB_DATA && \strpos($name, 'data-') === 0) {
+        if ($options & self::PARSE_ATTRIB_DATA && \substr($name, 0, 5) === 'data-') {
             $decoded = \json_decode((string) $val, true);
             if ($decoded === null && $val !== 'null') {
                 $decoded = \json_decode('"' . $val . '"', true);

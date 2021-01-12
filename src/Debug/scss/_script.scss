@@ -85,7 +85,12 @@ i.fa-calendar { font-size: 1.1em; }
     font-size: 1.1em;
     border-bottom: 0;
   }
-  i.fa-magic { color: orange; }
+  i.fa-magic,
+  .t_modifier_magic,
+  .t_modifier_magic-read,
+  .t_modifier_magic-write {
+    color: orange;
+  }
   .method i.fa-clone { color: #999; }
   .debugInfo-excluded > i.fa-eye-slash { color: #999; }
   .vis-toggles {

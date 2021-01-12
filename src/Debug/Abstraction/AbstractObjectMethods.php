@@ -25,6 +25,36 @@ use ReflectionParameter;
 class AbstractObjectMethods extends AbstractObjectSub
 {
 
+    private static $baseMethodInfo = array(
+        'attributes' => array(),
+        'implements' => null,
+        'inheritedFrom' => null,
+        'isAbstract' => false,
+        'isDeprecated' => false,
+        'isFinal' => false,
+        'isStatic' => false,
+        'params' => array(),
+        'phpDoc' => array(
+            'summary' => null,
+            'desc' => null,
+        ),
+        'return' => array(
+            'type' => null,
+            'desc' => null,
+        ),
+        'visibility' => 'public',
+    );
+
+    private static $baseParamInfo = array(
+        'attributes' => array(),
+        'defaultValue' => Abstracter::UNDEFINED,
+        'desc' => null,
+        'isOptional' => false,
+        'isPromoted' => false,
+        'name' => '',
+        'type' => null,
+    );
+
     private static $methodCache = array();
 
     /**
@@ -45,6 +75,30 @@ class AbstractObjectMethods extends AbstractObjectSub
             return;
         }
         $this->addMethodsFull();
+    }
+
+    /**
+     * Return method info array
+     *
+     * @param array $values values to apply
+     *
+     * @return array
+     */
+    public static function buildMethodInfo($values = array())
+    {
+        return \array_merge(static::$baseMethodInfo, $values);
+    }
+
+    /**
+     * Return method info array
+     *
+     * @param array $values values to apply
+     *
+     * @return array
+     */
+    public static function buildParamInfo($values = array())
+    {
+        return \array_merge(static::$baseParamInfo, $values);
     }
 
     /**
@@ -166,24 +220,15 @@ class AbstractObjectMethods extends AbstractObjectSub
         }
         foreach ($abs['phpDoc']['method'] as $phpDocMethod) {
             $className = $inheritedFrom ? $inheritedFrom : $abs['className'];
-            $abs['methods'][$phpDocMethod['name']] = array(
-                'attributes' => array(),
-                'implements' => null,
+            $abs['methods'][$phpDocMethod['name']] = $this->buildMethodInfo(array(
                 'inheritedFrom' => $inheritedFrom,
-                'isAbstract' => false,
-                'isDeprecated' => false,
-                'isFinal' => false,
                 'isStatic' => $phpDocMethod['static'],
                 'params' => \array_map(function ($phpDocParam) use ($className) {
-                    return array(
-                        'attributes' => array(),
+                    return $this->buildParamInfo(array(
                         'defaultValue' => $this->phpDocParamValue($phpDocParam, $className),
-                        'desc' => null,
-                        'isOptional' => false,
-                        'isPromoted' => false,
                         'name' => $phpDocParam['name'],
                         'type' => $this->resolvePhpDocType($phpDocParam['type']),
-                    );
+                    ));
                 }, $phpDocMethod['param']),
                 'phpDoc' => array(
                     'summary' => $phpDocMethod['desc'],
@@ -194,7 +239,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                     'desc' => null,
                 ),
                 'visibility' => 'magic',
-            );
+            ));
         }
     }
 
@@ -241,7 +286,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                 'name' => '',
                 'type' => null,
             ), isset($phpDoc['param'][$i]) ? $phpDoc['param'][$i] : array());
-            $param = array(
+            $paramArray[] = $this->buildParamInfo(array(
                 'attributes' => $collectAttributes
                     ? $this->getAttributes($reflectionParameter)
                     : array(),
@@ -253,8 +298,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                     : false,
                 'name' => $this->getParamName($reflectionParameter, $phpDocParam['name']),
                 'type' => $this->getParamTypeHint($reflectionParameter, $phpDocParam['type']),
-            );
-            $paramArray[] = $param;
+            ));
         }
         \restore_error_handler();
         /*
@@ -269,15 +313,13 @@ class AbstractObjectMethods extends AbstractObjectSub
             if (\substr($name, -4) === ',...') {
                 $name = '...' . \substr($name, 0, -4);
             }
-            $paramArray[] = array(
-                'attributes' => array(),
+            $paramArray[] = $this->buildParamInfo(array(
                 'defaultValue' => $this->phpDocParamValue($phpDocParam),
                 'desc' => $phpDocParam['desc'],
                 'isOptional' => true,
-                'isPromoted' => false,
                 'name' => $name,
                 'type' => $this->resolvePhpDocType($phpDocParam['type']),
-            );
+            ));
         }
         return $paramArray;
     }
@@ -407,11 +449,10 @@ class AbstractObjectMethods extends AbstractObjectSub
         } elseif ($reflectionMethod->isProtected()) {
             $vis = 'protected';
         }
-        $info = array(
+        $info = $this->buildMethodInfo(array(
             'attributes' => $this->abs['flags'] & AbstractObject::COLLECT_ATTRIBUTES_METHOD
                 ? $this->getAttributes($reflectionMethod)
                 : array(),
-            'implements' => null,
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName
                 : null,
@@ -423,7 +464,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             'phpDoc' => $phpDoc,
             'return' => $this->getReturn($reflectionMethod, $phpDoc),
             'visibility' => $vis,   // public | private | protected | debug | magic
-        );
+        ));
         unset($info['phpDoc']['param']);
         unset($info['phpDoc']['return']);
         return $info;

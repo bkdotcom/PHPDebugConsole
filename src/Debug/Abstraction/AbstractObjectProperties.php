@@ -30,6 +30,7 @@ class AbstractObjectProperties extends AbstractObjectSub
         'desc' => null,                 // from phpDoc
         'inheritedFrom' => null,        // populated only if inherited
                                         //   not populated if extended/redefined
+        'isPromoted' => false,
         'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
         'overrides' => null,            // previous ancestor where property is defined
@@ -481,6 +482,9 @@ class AbstractObjectProperties extends AbstractObjectSub
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName
                 : null,
+            'isPromoted' =>  PHP_VERSION_ID >= 80000
+                ? $reflectionProperty->isPromoted()
+                : false,
             'isStatic' => $reflectionProperty->isStatic(),
             'type' => $this->getPropType($phpDoc['type'], $reflectionProperty),
             'visibility' => $this->getPropVis($reflectionProperty),

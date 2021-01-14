@@ -397,6 +397,7 @@ EOD;
         $this->assertArraySubset(
             array(
                 'attributes' => array(),
+                'isPromoted' => false,
                 'originallyDeclared' => 'bdk\DebugTests\Fixture\TestBase',
                 'overrides' => 'bdk\DebugTests\Fixture\TestBase',
                 'value' => 'redefined in Test (public)',
@@ -407,14 +408,16 @@ EOD;
         );
         $this->assertArraySubset(
             array(
+                'isPromoted' => false,
+                'valueFrom' => 'value',
                 'visibility' => 'public',
                 // 'value' => 'This property is debug only',
-                'valueFrom' => 'value',
             ),
             $abs['properties']['someArray']
         );
         $this->assertArraySubset(
             array(
+                'isPromoted' => false,
                 'visibility' => 'protected',
                 'value' => 'defined only in TestBase (protected)',
                 'inheritedFrom' => 'bdk\DebugTests\Fixture\TestBase',
@@ -427,30 +430,33 @@ EOD;
         $this->assertArraySubset(
             array(
                 'attributes' => array(),
-                'visibility' => 'private',
-                'value' => 'redefined in Test (private) (alternate value via __debugInfo)',
                 'inheritedFrom' => null,
-                'overrides' => 'bdk\DebugTests\Fixture\TestBase',
+                'isPromoted' => false,
                 'originallyDeclared' => 'bdk\DebugTests\Fixture\TestBase',
+                'overrides' => 'bdk\DebugTests\Fixture\TestBase',
+                'value' => 'redefined in Test (private) (alternate value via __debugInfo)',
                 'valueFrom' => 'debugInfo',
+                'visibility' => 'private',
             ),
             $abs['properties']['propPrivate']
         );
         $this->assertArraySubset(
             array(
                 'attributes' => array(),
-                'visibility' => 'private',
-                'value' => 'defined in TestBase (private)',
                 'inheritedFrom' => 'bdk\DebugTests\Fixture\TestBase',
-                'overrides' => null,
+                'isPromoted' => false,
                 'originallyDeclared' => null,
+                'overrides' => null,
+                'value' => 'defined in TestBase (private)',
                 'valueFrom' => 'value',
+                'visibility' => 'private',
             ),
             $abs['properties']['testBasePrivate']
         );
         $this->assertArraySubset(
             array(
                 'attributes' => array(),
+                'isPromoted' => false,
                 'value' => 'This property is debug only',
                 'valueFrom' => 'debugInfo',
             ),
@@ -595,6 +601,7 @@ EOD;
             array(
                 'entry' => function (LogEntry $logEntry) {
                     $abs = $logEntry['args'][0];
+                    $this->assertTrue($abs['properties']['arg1']['isPromoted']);
                     $this->assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
                     $this->assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
                 },

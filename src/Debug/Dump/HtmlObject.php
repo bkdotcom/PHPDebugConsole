@@ -463,6 +463,7 @@ class HtmlObject
             'debuginfo-value' => $info['valueFrom'] === 'debugInfo',
             'forceShow' => $info['forceShow'],
             'inherited' => $info['inheritedFrom'],
+            'isPromoted' => $info['isPromoted'],
             'private-ancestor' => $isPrivateAncestor,
             'property' => true,
         )));

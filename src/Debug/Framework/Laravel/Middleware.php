@@ -61,7 +61,7 @@ class Middleware
      * Handle an incoming request.
      *
      * @param Request $request Request instance
-     * @param Closure $next
+     * @param Closure $next    Next middleare handler
      *
      * @return mixed
      */
@@ -229,6 +229,22 @@ class Middleware
             ),
         ));
 
+        $info = $this->logRouteSetFile($info);
+
+        $this->debug->groupSummary();
+        $this->debug->log('Route info', $info, $this->debug->meta('detectFiles'));
+        $this->debug->groupEnd();
+    }
+
+    /**
+     * Add file info to route info
+     *
+     * @param array $info Route info
+     *
+     * @return route onfo
+     */
+    private function logRouteSetFile(array $info)
+    {
         $reflector = null;
         if (isset($info['controller']) && \is_string($info['controller']) && \strpos($info['controller'], '@') !== false) {
             list($controller, $method) = \explode('@', $info['controller']);
@@ -251,10 +267,7 @@ class Middleware
                 )
             );
         }
-
-        $this->debug->groupSummary();
-        $this->debug->log('Route info', $info, $this->debug->meta('detectFiles'));
-        $this->debug->groupEnd();
+        return $info;
     }
 
     /**

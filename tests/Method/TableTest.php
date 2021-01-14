@@ -385,6 +385,7 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\DebugTests\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestMethod</span></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_object" data-accessible="public"><span class="classname">Closure</span>
                             <dl class="object-inner">
+                            <dt class="t_modifier_final">final</dt>
                             <dt class="properties">properties</dt>
                             <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
                             <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>

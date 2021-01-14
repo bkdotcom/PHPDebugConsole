@@ -42,7 +42,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             'type' => null,
             'desc' => null,
         ),
-        'visibility' => 'public',
+        'visibility' => 'public',  // public | private | protected | magic
     );
 
     private static $baseParamInfo = array(
@@ -463,7 +463,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             'params' => $this->getParams($reflectionMethod, $phpDoc),
             'phpDoc' => $phpDoc,
             'return' => $this->getReturn($reflectionMethod, $phpDoc),
-            'visibility' => $vis,   // public | private | protected | debug | magic
+            'visibility' => $vis,
         ));
         unset($info['phpDoc']['param']);
         unset($info['phpDoc']['return']);

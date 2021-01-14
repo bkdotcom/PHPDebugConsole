@@ -105,6 +105,7 @@ class AbstractObject extends Component
             'implements' => $interfaceNames,
             'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
             'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
+            'isFinal' => $reflector->isFinal(),
             'isRecursion' => \in_array($obj, $hist, true),
             'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
             'phpDoc' => array(

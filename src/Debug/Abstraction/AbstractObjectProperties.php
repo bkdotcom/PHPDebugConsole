@@ -37,7 +37,7 @@ class AbstractObjectProperties extends AbstractObjectSub
         'forceShow' => false,           // initially show the property/value (even if protected or private)
                                         //   if value is an array, expand it
         'type' => null,
-        'value' => null,
+        'value' => Abstracter::UNDEFINED,
         'valueFrom' => 'value',         // 'value' | 'debugInfo' | 'debug'
         'visibility' => 'public',       // public, private, protected, magic, magic-read, magic-write, debug
                                         //   may also be an array (ie: ['private', 'magic-read'])

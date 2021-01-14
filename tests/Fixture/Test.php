@@ -114,7 +114,7 @@ class Test extends TestBase
      * @param array     $param2 second param
      *
      * @return     void
-     * @deprecated
+     * @deprecated this method is bad and should feel bad
      */
     final public function methodPublic(\SomeClass $param1, array $param2 = array())
     {

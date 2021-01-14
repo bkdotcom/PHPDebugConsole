@@ -5635,8 +5635,8 @@
       content: function (reference) {
         var $ref = $(reference);
         var attributes;
-        var classname;
         var title;
+        var titleMore;
         if ($ref.hasClass('fa-hashtag')) {
           attributes = $ref.parent().data('attributes');
           return buildAttributes(attributes)
@@ -5644,13 +5644,18 @@
         title = $ref.prop('title');
         if (title) {
           $ref.data('titleOrig', title);
-          if (title === 'Inherited') {
-            classname = $ref.parent().data('inheritedFrom');
-            if (classname) {
-              classname = '<span class="classname">' +
-                classname.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+          if (title === 'Deprecated') {
+            titleMore = $ref.parent().data('deprecatedDesc');
+            if (titleMore) {
+              title = 'Deprecated: ' + titleMore;
+            }
+          } else if (title === 'Inherited') {
+            titleMore = $ref.parent().data('inheritedFrom');
+            if (titleMore) {
+              titleMore = '<span class="classname">' +
+                titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
                 '</span>';
-              title = 'Inherited from ' + classname;
+              title = 'Inherited from ' + titleMore;
             }
           } else if (title === 'Open in editor') {
             title = '<i class="fa fa-pencil"></i> ' + title;
@@ -5932,8 +5937,9 @@
       '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
     },
     iconsObject: {
+      '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
       '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
-      '> .method.inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+      '> .inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
       '> .method.deprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
       '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
       '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',

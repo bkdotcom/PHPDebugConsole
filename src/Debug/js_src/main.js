@@ -33,8 +33,9 @@ var config = new Config({
     '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
   },
   iconsObject: {
+    '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
     '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
-    '> .method.inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+    '> .inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
     '> .method.deprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
     '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
     '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',

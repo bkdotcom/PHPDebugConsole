@@ -75,6 +75,7 @@
 .debug .t_array.array-file-tree .t_string::before, .debug .t_array.array-file-tree .t_string::after, .debug .t_array.array-file-tree .t_key::before, .debug .t_array.array-file-tree .t_key::after { display: none; }
 .debug li[class*=m_] > .t_array.array-file-tree > .array-inner { margin-left: -10px; }
 .debug .t_object { display: inline; }
+.debug .t_object > .object-inner > .t_modifier_final { color: #d8000c; background-color: #ffd4d4; border-bottom: solid 1px #d8000c; padding: 0.25em 0.25em 1px; }
 .debug .t_object .method .parameter .t_parameter-name[title], .debug .t_object .t_identifier[title], .debug .t_object .t_stringified, .debug .t_object .t_type[title] { text-decoration: underline; }
 .debug .t_object .method.deprecated { opacity: 0.66; }
 .debug .t_object .method.deprecated i { opacity: 0.66; color: #d8000c; border-bottom: 0; }

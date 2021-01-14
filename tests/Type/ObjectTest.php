@@ -126,6 +126,7 @@ EOD;
                             'flags',
                             'implements',
                             'isExcluded',
+                            'isFinal',
                             'isRecursion',
                             'methods',
                             'phpDoc',
@@ -199,21 +200,23 @@ EOD;
                             "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
-                            '<dd class="magic-read property protected"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
-                            '<dd class="property protected"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
+                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
+                            '<dd class="inherited property protected" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
                             '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value private property"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
-                            '<dd class="private private-ancestor property"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</i>)</span> <span class="t_identifier">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                            '<dd class="inherited private private-ancestor property" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</i>)</span> <span class="t_identifier">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
-                            '<dd class="debuginfo-excluded magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
+                            '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
                             '<dt class="methods">methods</dt>'
                         ));
-
+                        // preg_match('#<dt class="properties">(.*?)<dt class="methods"#is', $str, $matches);
+                        // var_dump($matches[1]);
+                        // var_dump($expect);
                         $this->assertStringContainsString($expect, $str);
 
                         // methods
-                        $this->assertStringContainsString(\implode("\n", array(
+                        $expect = \implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="info magic">This object has a <code>__call</code> method</dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span>, <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don\'t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
@@ -221,7 +224,7 @@ EOD;
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">array</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="t_identifier" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><br /><span class="t_string">abracadabra</span></dd>',
-                            '<dd class="deprecated final method public"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">SomeClass</span></span> <span class="t_parameter-name" title="first param',
+                            '<dd class="deprecated final method public" data-deprecated-desc="this method is bad and should feel bad"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_type">void</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">SomeClass</span></span> <span class="t_parameter-name" title="first param',
                                 'two-line description!">$param1</span></span>, <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="second param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier">testBasePublic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public static" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">testBaseStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
@@ -230,7 +233,11 @@ EOD;
                             '<dd class="inherited magic method" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">void</span> <span class="t_identifier" title="I\'m a magic method">presto</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span>, <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name">$int</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">1</span></span>, <span class="parameter"><span class="t_parameter-name">$bool</span> <span class="t_operator">=</span> <span class="t_bool t_parameter-default true">true</span></span>, <span class="parameter"><span class="t_parameter-name">$null</span> <span class="t_operator">=</span> <span class="t_null t_parameter-default">null</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited magic method static" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_modifier_static">static</span> <span class="t_type">void</span> <span class="t_identifier" title="I\'m a static magic method">prestoStatic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name">$noDefault</span></span>, <span class="parameter"><span class="t_parameter-name">$arr</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span>, <span class="parameter"><span class="t_parameter-name">$opts</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">array(\'a\'=&gt;\'ay\',\'b\'=&gt;\'bee\')</span></span><span class="t_punct">)</span></dd>',
                             '<dt>phpDoc</dt>',
-                        )), $str);
+                        ));
+                        // preg_match('#<dt class="methods">(.*?)<dt>phpDoc</dt>#is', $str, $matches);
+                        // var_dump($matches[1]);
+                        // var_dump($expect);
+                        $this->assertStringContainsString($expect, $str);
 
                         // phpdoc
                         $this->assertStringContainsString(\implode("\n", array(
@@ -274,8 +281,8 @@ EOD;
                         $expect = \implode("\n", array(
                             '<dt class="properties">properties</dt>',
                             '<dd class="info magic">This object has a <code>__get</code> method</dd>',
-                            '<dd class="magic-read property protected"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
-                            '<dd class="magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
+                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\DebugTests\Fixture\Test2Base"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
+                            '<dd class="inherited magic property" data-inherited-from="bdk\DebugTests\Fixture\Test2Base"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                         ));
                         $this->assertStringContainsString($expect, $str);
 
@@ -487,7 +494,7 @@ EOD;
                     'desc' => null,
                     'deprecated' => array(
                         array(
-                            'desc' => null,
+                            'desc' => 'this method is bad and should feel bad',
                         ),
                     ),
                 ),
@@ -678,6 +685,24 @@ EOD;
                     // $this->stdErr($html);
                     // @todo
                 },
+            )
+        );
+    }
+
+    public function testFinal()
+    {
+        $this->testMethod(
+            'log',
+            array(
+                new \bdk\DebugTests\Fixture\TestFinal(),
+            ),
+            array(
+                'entry' => function (LogEntry $logEntry) {
+                    $this->assertTrue($logEntry['args'][0]['isFinal']);
+                },
+                'html' => array(
+                    'contains' => '<dt class="t_modifier_final">final</dt>' . "\n",
+                ),
             )
         );
     }

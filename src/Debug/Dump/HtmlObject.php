@@ -62,6 +62,10 @@ class HtmlObject
         $html = $this->dumpToString($abs)
             . $strClassName . "\n"
             . '<dl class="object-inner">' . "\n"
+                . ($abs['isFinal']
+                    ? '<dt class="t_modifier_final">final</dt>' . "\n"
+                    : ''
+                )
                 . '<dt>extends</dt>' . "\n"
                     . \implode(\array_map(function ($classname) {
                         return '<dd class="extends">' . $this->html->markupIdentifier($classname) . '</dd>' . "\n";
@@ -217,64 +221,28 @@ class HtmlObject
         if (!$collectMethods || !$outputMethods) {
             return '';
         }
-        $outAttributesMethod = $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_METHOD;
-        $paramOpts = array(
-            'outputAttributes' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_PARAM,
+        $opts = array(
+            'outMethodDesc' => $abs['flags'] & AbstractObject::OUTPUT_METHOD_DESC,
+            'outMethodAttributes' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_METHOD,
+            'outParamAttributes' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_PARAM,
         );
         $methods = $abs['methods'];
-        $label = \count($methods)
-            ? 'methods'
-            : 'no methods';
         $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
-        $str = '<dt class="methods">' . $label . '</dt>' . "\n";
+        $str = $this->debug->html->buildTag(
+            'dt',
+            array(
+                'class' => 'methods',
+            ),
+            \count($methods)
+                ? 'methods'
+                : 'no methods'
+        ) . "\n";
         $str .= $this->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {
-            $classes = \array_keys(\array_filter(array(
-                'deprecated' => $info['isDeprecated'],
-                'inherited' => $info['inheritedFrom'],
-                'method' => true,
-            )));
-            $modifiers = \array_keys(\array_filter(array(
-                'final' => $info['isFinal'],
-                $info['visibility'] => true,
-                'static' => $info['isStatic'],
-            )));
-            $str .= $this->debug->html->buildTag(
-                'dd',
-                array(
-                    'class' => \array_merge($classes, $modifiers),
-                    'data-attributes' => $outAttributesMethod
-                        ? ($info['attributes'] ?: null)
-                        : null,
-                    'data-implements' => $info['implements'],
-                    'data-inherited-from' => $info['inheritedFrom'],
-                ),
-                \implode(' ', \array_map(function ($modifier) {
-                    return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-                }, $modifiers))
-                . ' ' . $this->html->markupType($info['return']['type'], array(
-                    'title' => $info['return']['desc'],
-                ))
-                . ' ' . $this->debug->html->buildTag(
-                    'span',
-                    array(
-                        'class' => 't_identifier',
-                        'title' => \trim($info['phpDoc']['summary']
-                            . ($abs['flags'] & AbstractObject::OUTPUT_METHOD_DESC
-                                ? "\n\n" . $info['phpDoc']['desc']
-                                : '')),
-                    ),
-                    $methodName
-                )
-                . '<span class="t_punct">(</span>'
-                . $this->dumpMethodParams($info['params'], $paramOpts)
-                . '<span class="t_punct">)</span>'
-                . ($methodName === '__toString'
-                    ? '<br />' . $this->html->dump($info['returnValue'])
-                    : '')
-            ) . "\n";
+            $str .= $this->dumpMethod($methodName, $info, $opts);
         }
         $str = \str_replace(array(
+            ' data-deprecated-desc="null"',
             ' data-implements="null"',
             ' <span class="t_type"></span>',
         ), '', $str);
@@ -282,10 +250,70 @@ class HtmlObject
     }
 
     /**
+     * Dump Method
+     *
+     * @param string $methodName method name
+     * @param array  $info       method info
+     * @param array  $opts       dump options
+     *
+     * @return string html
+     */
+    protected function dumpMethod($methodName, $info, $opts)
+    {
+        $classes = \array_keys(\array_filter(array(
+            'deprecated' => $info['isDeprecated'],
+            'inherited' => $info['inheritedFrom'],
+            'method' => true,
+        )));
+        $modifiers = \array_keys(\array_filter(array(
+            'final' => $info['isFinal'],
+            $info['visibility'] => true,
+            'static' => $info['isStatic'],
+        )));
+        return $this->debug->html->buildTag(
+            'dd',
+            array(
+                'class' => \array_merge($classes, $modifiers),
+                'data-attributes' => $opts['outMethodAttributes']
+                    ? ($info['attributes'] ?: null)
+                    : null,
+                'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])
+                    ? $info['phpDoc']['deprecated'][0]['desc']
+                    : null,
+                'data-implements' => $info['implements'],
+                'data-inherited-from' => $info['inheritedFrom'],
+            ),
+            \implode(' ', \array_map(function ($modifier) {
+                return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
+            }, $modifiers))
+            . ' ' . $this->html->markupType($info['return']['type'], array(
+                'title' => $info['return']['desc'],
+            ))
+            . ' ' . $this->debug->html->buildTag(
+                'span',
+                array(
+                    'class' => 't_identifier',
+                    'title' => \trim($info['phpDoc']['summary']
+                        . ($opts['outMethodDesc']
+                            ? "\n\n" . $info['phpDoc']['desc']
+                            : '')),
+                ),
+                $methodName
+            )
+            . '<span class="t_punct">(</span>'
+            . $this->dumpMethodParams($info['params'], $opts)
+            . '<span class="t_punct">)</span>'
+            . ($methodName === '__toString'
+                ? '<br />' . $this->html->dump($info['returnValue'])
+                : '')
+        ) . "\n";
+    }
+
+    /**
      * Dump method parameters as HTML
      *
      * @param array $params params as returned from getParams()
-     * @param array $opts   options (currently just outputAttributes)
+     * @param array $opts   options
      *
      * @return string html
      */
@@ -298,7 +326,7 @@ class HtmlObject
                     'isPromoted' => $info['isPromoted'],
                     'parameter' => true,
                 ))),
-                'data-attributes' => $opts['outputAttributes']
+                'data-attributes' => $opts['outParamAttributes']
                     ? ($info['attributes'] ?: null)
                     : null,
             )) . '>';
@@ -430,10 +458,11 @@ class HtmlObject
         $vis = (array) $info['visibility'];
         $isPrivateAncestor = \in_array('private', $vis) && $info['inheritedFrom'];
         $classes = \array_keys(\array_filter(array(
-            'debuginfo-value' => $info['valueFrom'] === 'debugInfo',
-            'debuginfo-excluded' => $info['debugInfoExcluded'],
-            'forceShow' => $info['forceShow'],
             'debug-value' => $info['valueFrom'] === 'debug',
+            'debuginfo-excluded' => $info['debugInfoExcluded'],
+            'debuginfo-value' => $info['valueFrom'] === 'debugInfo',
+            'forceShow' => $info['forceShow'],
+            'inherited' => $info['inheritedFrom'],
             'private-ancestor' => $isPrivateAncestor,
             'property' => true,
         )));
@@ -448,7 +477,8 @@ class HtmlObject
             'class' => $classes, // pass as array
             'data-attributes' => $opts['outputAttributes']
                 ? ($info['attributes'] ?: null)
-                : null
+                : null,
+            'data-inherited-from' => $info['inheritedFrom'],
         )) . '>'
             . \implode(' ', \array_map(function ($modifier) {
                 return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';

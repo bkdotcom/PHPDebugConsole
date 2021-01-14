@@ -148,6 +148,8 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
      * @param Event $event Event instance
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function onDebugOutput(Event $event)
     {

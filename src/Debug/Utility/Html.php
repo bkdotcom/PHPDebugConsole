@@ -320,6 +320,22 @@ class Html
     }
 
     /**
+     * Json decode data-xxx attribute
+     *
+     * @param string $val attribute value to decode
+     *
+     * @return mixed
+     */
+    private static function decodeDataValue($val)
+    {
+        $decoded = \json_decode((string) $val, true);
+        if ($decoded === null && $val !== 'null') {
+            $decoded = \json_decode('"' . $val . '"', true);
+        }
+        return $decoded;
+    }
+
+    /**
      * Parse attribute value
      *
      * @param string $name    attribute name
@@ -332,11 +348,7 @@ class Html
     {
         $val = \htmlspecialchars_decode($val);
         if ($options & self::PARSE_ATTRIB_DATA && \substr($name, 0, 5) === 'data-') {
-            $decoded = \json_decode((string) $val, true);
-            if ($decoded === null && $val !== 'null') {
-                $decoded = \json_decode('"' . $val . '"', true);
-            }
-            return $decoded;
+            return self::decodeDataValue($val);
         }
         if ($options & self::PARSE_ATTRIB_CLASS && $name === 'class') {
             $val = \explode(' ', $val);

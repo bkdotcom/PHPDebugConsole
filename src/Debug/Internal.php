@@ -287,7 +287,7 @@ class Internal implements SubscriberInterface
                     not particularly psr7 friendly
         */
         $argv = $this->getServerParam('argv');
-        $isCliOrCron = $argv && $argv !== array($this->getServerParam('QUERY_STRING'));
+        $isCliOrCron = $argv && \implode('+', $argv) !== $this->getServerParam('QUERY_STRING');
         if ($isCliOrCron) {
             // TERM is a linux/unix thing
             $return = $this->getServerParam('TERM') !== null || $this->getServerParam('PATH') !== null
@@ -362,9 +362,16 @@ class Internal implements SubscriberInterface
     public function getResponseHeader($header = 'Content-Type')
     {
         $headers = $this->getResponseHeaders();
-        return isset($headers[$header])
-            ? $headers[$header]
-            : array();
+        if (isset($headers['header'])) {
+            return $headers[$header];
+        }
+        $header = \strtolower($header);
+        foreach ($headers as $k => $v) {
+            if ($header === \strtolower($k)) {
+                return $v;
+            }
+        }
+        return array();
     }
 
     /**

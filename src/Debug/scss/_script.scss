@@ -56,50 +56,6 @@ i.fa-lg { font-size: 1.33em; }
 i.fa-plus-circle { opacity: 0.42; }
 i.fa-calendar { font-size: 1.1em; }
 
-[data-toggle],
-[data-toggle][title] { cursor: pointer; }
-
-.t_array {
-  > .t_array-collapse,
-  > .array-inner,
-  > .t_punct {
-    display: none;
-  }
-  &.expanded {
-    > .t_array-expand {
-      display: none;
-    }
-    > .t_array-collapse,
-    > .t_punct {
-      display: inline;
-    }
-    > .array-inner {
-      display: block;
-    }
-  }
-}
-
-.t_object {
-  i.fa-eye {
-    color: #00529b;
-    font-size: 1.1em;
-    border-bottom: 0;
-  }
-  i.fa-magic,
-  .t_modifier_magic,
-  .t_modifier_magic-read,
-  .t_modifier_magic-write {
-    color: orange;
-  }
-  .method i.fa-clone { color: #999; }
-  .debugInfo-excluded > i.fa-eye-slash { color: #999; }
-  .vis-toggles {
-    [data-toggle] {
-      padding: 0.3em;
-    }
-  }
-}
-
 .empty {
   &.m_group .group-header {
     cursor: auto;

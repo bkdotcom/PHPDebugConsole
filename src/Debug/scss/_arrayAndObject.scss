@@ -4,7 +4,15 @@
 
 $color-classname: #8d0c4c;
 $color-param: #263;
-$color-static: #00529b;
+
+$color-public: inherit;
+$color-protected: #000000c6;
+$color-private: #00000082;
+$color-magic: #ff8800ee;
+$color-debug: #000b9bee;
+
+$color-static: #da0d87ee;
+$color-final: #ff0000ee;
 
 .namespace { opacity: 0.5; }
 
@@ -19,31 +27,50 @@ $color-static: #00529b;
   color: $color-classname;
 }
 
+.t_array {
+  > .t_array-collapse,
+  > .array-inner,
+  > .t_punct {
+    display: none;
+  }
+  &.expanded {
+    > .t_array-expand {
+      display: none;
+    }
+    > .t_array-collapse,
+    > .t_punct {
+      display: inline;
+    }
+    > .array-inner {
+      display: block;
+    }
+  }
+  &.array-file-tree {
+    .array-inner {
+      margin-left: 0.25em;
+    }
+    .exclude-count {
+      background: $info-bg;
+      color: $info-fg;
+    }
+    .t_key {
+      color: #000040;
+      font-weight: bold;
+    }
+    .t_string,
+    .t_key {
+      // directory "key" & files
+      &::before,
+      &::after {
+        display: none;
+      }
+    }
+  }
+}
 .array-inner {
   > li {
     > .t_operator {
       margin: 0 0.25em;
-    }
-  }
-}
-.t_array.array-file-tree {
-  .array-inner {
-    margin-left: 0.25em;
-  }
-  .exclude-count {
-    background: $info-bg;
-    color: $info-fg;
-  }
-  .t_key {
-    color: #000040;
-    font-weight: bold;
-  }
-  .t_string,
-  .t_key {
-    // directory "key" & files
-    &::before,
-    &::after {
-      display: none;
     }
   }
 }
@@ -63,12 +90,19 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     }
   }
 
+  .vis-toggles {
+    [data-toggle] {
+      padding: 0.3em;
+    }
+  }
+
   .method .parameter .t_parameter-name[title],
   .t_identifier[title],
   .t_stringified,
   .t_type[title] {
     text-decoration: underline;
   }
+
   .method {
     &.deprecated {
       opacity: 0.66;
@@ -83,6 +117,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       font-weight: bold;
       color: inherit;
     }
+    i.fa-clone { color: #999; }
   }
   .t_parameter-name {
     // method parameter or attribute argument
@@ -91,13 +126,49 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   .property {
     &.private-ancestor:not(:hover) {
       > * { opacity: 0.5; }
+      > .fa-lock,
+      > .fa-clone,
+      > .t_modifier_private {
+        opacity: 1;
+      }
     }
+  }
+
+  .t_modifier_public {
+    color: $color-public;
+  }
+  .t_modifier_protected {
+    color: $color-protected;
+  }
+  .t_modifier_private {
+    color: $color-private;
+  }
+  .t_modifier_final {
+    color: $color-final;
+    font-weight: bold;
   }
   .t_modifier_static {
     font-style: italic;
     color: $color-static;
   }
+  .t_modifier_debug {
+    color: $color-debug;
+  }
+  i.fa-eye {
+    color: $color-debug;
+    font-size: 1.1em;
+    border-bottom: 0;
+  }
+  i.fa-magic,
+  .t_modifier_magic,
+  .t_modifier_magic-read,
+  .t_modifier_magic-write {
+    color: $color-magic;
+  }
+  .debugInfo-excluded > i.fa-eye-slash { color: #999; }
+
   .info {
+    // "this object has magic methods"
     display: inline-block;
     background-color: $info-bg;
     color: $info-fg;

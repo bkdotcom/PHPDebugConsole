@@ -1664,7 +1664,7 @@ class Debug
     }
 
     /**
-     * Appends debug output (if applicable) and adds headers (if applicable)
+     * Appends debug output (if applicable) and/or adds headers (if applicable)
      *
      * You should call this at the end of the request/response cycle in your PSR-7 project,
      * e.g. immediately before emitting the Response.

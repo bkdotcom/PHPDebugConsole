@@ -80,6 +80,12 @@
 .debug .array-inner > li > .t_operator { margin: 0 0.25em; }
 .debug li[class*=m_] > .t_array.array-file-tree > .array-inner { margin-left: -10px; }
 .debug .t_object { display: inline; }
+.debug .t_object .t_modifier_public { color: inherit; }
+.debug .t_object .t_modifier_protected { color: #000000c6; }
+.debug .t_object .t_modifier_private { color: #00000082; }
+.debug .t_object .t_modifier_final { color: #f00e; font-weight: bold; }
+.debug .t_object .t_modifier_static { font-style: italic; color: #da0d87ee; }
+.debug .t_object .t_modifier_debug { color: #000b9bee; }
 .debug .t_object > .object-inner > .t_modifier_final { color: #d8000c; background-color: #ffd4d4; border-bottom: solid 1px #d8000c; padding: 0.25em 0.25em 1px; }
 .debug .t_object .vis-toggles [data-toggle] { padding: 0.3em; }
 .debug .t_object .method .parameter .t_parameter-name[title], .debug .t_object .t_identifier[title], .debug .t_object .t_stringified, .debug .t_object .t_type[title] { text-decoration: underline; }
@@ -90,14 +96,8 @@
 .debug .t_object .t_parameter-name { color: #263; }
 .debug .t_object .property.private-ancestor:not(:hover) > * { opacity: 0.5; }
 .debug .t_object .property.private-ancestor:not(:hover) > .fa-lock, .debug .t_object .property.private-ancestor:not(:hover) > .fa-clone, .debug .t_object .property.private-ancestor:not(:hover) > .t_modifier_private { opacity: 1; }
-.debug .t_object .t_modifier_public { color: inherit; }
-.debug .t_object .t_modifier_protected { color: #000000c6; }
-.debug .t_object .t_modifier_private { color: #00000082; }
-.debug .t_object .t_modifier_final { color: #ff0000ee; font-weight: bold; }
-.debug .t_object .t_modifier_static { font-style: italic; color: #da0d87ee; }
-.debug .t_object .t_modifier_debug { color: #000b9bee; }
 .debug .t_object i.fa-eye { color: #000b9bee; font-size: 1.1em; border-bottom: 0; }
-.debug .t_object i.fa-magic, .debug .t_object .t_modifier_magic, .debug .t_object .t_modifier_magic-read, .debug .t_object .t_modifier_magic-write { color: #ff8800ee; }
+.debug .t_object i.fa-magic, .debug .t_object .t_modifier_magic, .debug .t_object .t_modifier_magic-read, .debug .t_object .t_modifier_magic-write { color: #f80e; }
 .debug .t_object .debugInfo-excluded > i.fa-eye-slash { color: #999; }
 .debug .t_object .info { display: inline-block; background-color: #d9edf7; color: #31708f; }
 .debug td.t_object { display: table-cell; }
@@ -213,7 +213,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug.debug-enhanced-ui .debug-menu-bar, .debug.debug-enhanced-ui .debug-menu-bar a { color: #6e6e6e; }
 .debug.debug-enhanced-ui .debug-menu-bar nav { display: inline-block; margin-left: 20px; font-size: 0; line-height: 23px; vertical-align: top; }
 .debug.debug-enhanced-ui .debug-menu-bar nav .fa { margin-right: 0.5em; }
-.debug.debug-enhanced-ui .debug-menu-bar nav a { display: inline-block; padding: 0 15px; font-size: 12px; line-height: 23px; vertical-align: top; color: #111; }
+.debug.debug-enhanced-ui .debug-menu-bar nav a { display: inline-block; padding: 0 15px; font-size: 12px; line-height: 23px; vertical-align: top; color: #111; cursor: pointer; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a:hover:not(.active) { background: #e6e6e6; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a.active { line-height: 22px; border-bottom: #4071e1 solid 2px; }
 .debug.debug-enhanced-ui .debug-menu-bar a:focus, .debug.debug-enhanced-ui .debug-menu-bar a:hover, .debug.debug-enhanced-ui .debug-menu-bar button:focus, .debug.debug-enhanced-ui .debug-menu-bar button:hover, .debug.debug-enhanced-ui .debug-menu-bar label:focus, .debug.debug-enhanced-ui .debug-menu-bar label:hover { color: #333; text-decoration: none; }

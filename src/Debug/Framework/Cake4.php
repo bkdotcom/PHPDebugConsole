@@ -96,7 +96,7 @@ class Cake4 extends BasePlugin
                 }
             },
         ), Configure::read('PHPDebugConsole', array()));
-        $this->debug = new \bdk\Debug($config);
+        $this->debug = new Debug($config);
 
         $this->addLogRoute();
 
@@ -119,7 +119,7 @@ class Cake4 extends BasePlugin
         /*
             Insert our middleware to output PHPDebugConsole
         */
-        $middleware->insertAfter(ErrorHandlerMiddleware::class, new Middleware(array(
+        $middleware->insertAfter(ErrorHandlerMiddleware::class, new Middleware($this->debug, array(
             'catchException' => true,   // we'll catch it, pass to PHPDebugConsole's errorHandler and passit on to Cake's handler
             'onCaughtException' => function (Exception $e, ServerRequestInterface $request) {
                 return $this->errorHandlerMiddleW->handleException($e, $request);
@@ -144,17 +144,36 @@ class Cake4 extends BasePlugin
      */
     protected function logEvents()
     {
+        $channelOptions = array(
+            'channelIcon' => 'fa fa-bell-o',
+            'nested' => false,
+        );
+        $debug = $this->debug->getChannel('Events', $channelOptions);
+
         $eventList = $this->app->getEventManager()->getEventList();
         $count = \count($eventList);
-        $eventNames = array();
+        $events = array();
         for ($i = 0; $i < $count; $i++) {
             $event = $eventList[$i];
-            $eventNames[] = $event->getName();
+            $name = $event->getName();
+            if (!isset($events[$name])) {
+                $events[$name] = array(
+                    'name' => $name,
+                    'subject' => $debug->abstracter->crateWithVals(
+                        \get_class($event->getSubject()),
+                        array(
+                            'typeMore' => 'classname',
+                        )
+                    ),
+                    'count' => 0
+                );
+            }
+            $events[$name]['count'] ++;
         }
-        $logChannel = $this->debug->getChannel('log');
-        $logChannel->groupSummary(0);
-        $logChannel->info('dispatched events', \array_unique($eventNames));
-        $logChannel->groupEnd();
+        \ksort($events);
+        $events = \array_values($events);
+
+        $debug->table('dispatched events', $events);
     }
 
     /**

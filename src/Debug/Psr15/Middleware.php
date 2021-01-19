@@ -13,6 +13,7 @@
 namespace bdk\Debug\Psr15;
 
 use bdk\Debug;
+use bdk\Debug\Component;
 use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -24,30 +25,29 @@ use Psr\Http\Server\RequestHandlerInterface;
  * This will delegate to the rest of the middleware stack unconditionally,
  *   then decorates the Response with Debug output/headers.
  */
-class Middleware implements MiddlewareInterface
+class Middleware extends Component implements MiddlewareInterface
 {
 
     /**
      * @var Debug
      */
     private $debug;
-    private $options = array();
 
     /**
      * Constructor
      *
-     * @param Debug $debug   (optional) Debug instance (will use singleton if not provided)
-     * @param array $options middleware options
+     * @param Debug $debug (optional) Debug instance (will use singleton if not provided)
+     * @param array $cfg   config/options
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(Debug $debug = null, $options = array())
+    public function __construct(Debug $debug = null, $cfg = array())
     {
         $this->debug = $debug ?: Debug::getInstance();
-        $this->options = \array_merge(array(
+        $this->cfg = \array_merge(array(
             'catchException' => false,
             'onCaughtException' => null,   // callable / should return ResponseInterface
-        ), $options);
+        ), $cfg);
     }
 
     /**
@@ -79,7 +79,7 @@ class Middleware implements MiddlewareInterface
      */
     private function getResponse(ServerRequestInterface $request, RequestHandlerInterface $handler)
     {
-        if ($this->options['catchException'] === false) {
+        if ($this->cfg['catchException'] === false) {
             /*
                 Don't catch exceptions : let outer middleware or uncaught-exception-handler deal with exception
             */
@@ -106,8 +106,8 @@ class Middleware implements MiddlewareInterface
             */
             $this->debug->errorHandler->handleException($e);
             $response = null;
-            if (\is_callable($this->options['onCaughtException'])) {
-                $response = \call_user_func($this->options['onCaughtException'], $e, $request);
+            if (\is_callable($this->cfg['onCaughtException'])) {
+                $response = \call_user_func($this->cfg['onCaughtException'], $e, $request);
             }
         }
         return $response;

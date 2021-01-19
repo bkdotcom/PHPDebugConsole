@@ -30,6 +30,7 @@
         line-height: 23px;
         vertical-align: top;
         color: $default-fg;
+        cursor: pointer;
         &:hover:not(.active) {
           background: darken($lite-grey, 5%);
         }

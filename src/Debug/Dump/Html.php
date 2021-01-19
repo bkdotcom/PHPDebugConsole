@@ -160,7 +160,7 @@ class Html extends Base
             '$this','false','mixed','static','self','true','void',
         );
         $typesPrimative = \array_merge($phpPrimatives, $typesOther);
-        $types = \preg_split('#\s*\|\s*#', $type);
+        $types = \preg_split('/\s*\|\s*/', $type);
         foreach ($types as $i => $type) {
             $isArray = false;
             if (\substr($type, -2) === '[]') {

@@ -8,11 +8,11 @@ $color-param: #263;
 $color-public: inherit;
 $color-protected: #000000c6;
 $color-private: #00000082;
-$color-magic: #ff8800ee;
+$color-magic: #f80e;
 $color-debug: #000b9bee;
 
 $color-static: #da0d87ee;
-$color-final: #ff0000ee;
+$color-final: #f00e;
 
 .namespace { opacity: 0.5; }
 
@@ -81,6 +81,27 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
 .t_object {
   display: inline;
 
+  .t_modifier_public {
+    color: $color-public;
+  }
+  .t_modifier_protected {
+    color: $color-protected;
+  }
+  .t_modifier_private {
+    color: $color-private;
+  }
+  .t_modifier_final {
+    color: $color-final;
+    font-weight: bold;
+  }
+  .t_modifier_static {
+    font-style: italic;
+    color: $color-static;
+  }
+  .t_modifier_debug {
+    color: $color-debug;
+  }
+
   > .object-inner {
     > .t_modifier_final {
       color: $error-fg;
@@ -134,26 +155,6 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     }
   }
 
-  .t_modifier_public {
-    color: $color-public;
-  }
-  .t_modifier_protected {
-    color: $color-protected;
-  }
-  .t_modifier_private {
-    color: $color-private;
-  }
-  .t_modifier_final {
-    color: $color-final;
-    font-weight: bold;
-  }
-  .t_modifier_static {
-    font-style: italic;
-    color: $color-static;
-  }
-  .t_modifier_debug {
-    color: $color-debug;
-  }
   i.fa-eye {
     color: $color-debug;
     font-size: 1.1em;

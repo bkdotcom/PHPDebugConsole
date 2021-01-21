@@ -319,9 +319,8 @@ class HtmlObject
      */
     protected function dumpMethodParams($params, $opts)
     {
-        $paramStr = '';
-        foreach ($params as $info) {
-            $paramStr .= '<span' . $this->debug->html->buildAttribString(array(
+        foreach ($params as $i => $info) {
+            $paramStr = '<span' . $this->debug->html->buildAttribString(array(
                 'class' => \array_keys(\array_filter(array(
                     'isPromoted' => $info['isPromoted'],
                     'parameter' => true,
@@ -351,10 +350,10 @@ class HtmlObject
                     $parsed['innerhtml']
                 );
             }
-            $paramStr .= '</span>, ';
+            $paramStr .= '</span>';
+            $params[$i] = $paramStr;
         }
-        $paramStr = \trim($paramStr, ', ');
-        return $paramStr;
+        return \implode('<span class="t_punct">,</span> ', $params);
     }
 
     /**

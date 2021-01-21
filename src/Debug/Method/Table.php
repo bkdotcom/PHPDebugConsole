@@ -453,7 +453,7 @@ class Table
     {
         $columns = array();
         foreach ($this->meta['tableInfo']['columns'] as $colInfo) {
-            $columns[] = \array_filter($colInfo);
+            $columns[] = \array_filter($colInfo, 'strlen');
         }
         $this->meta['tableInfo']['columns'] = $columns;
         unset(

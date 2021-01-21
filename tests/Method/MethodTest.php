@@ -1087,7 +1087,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="font-weight-bold group-label">)</span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("a","b","c");',
                 'text' => '▸ a("b", "c")',
@@ -1309,7 +1309,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-6: %d|[{"Collapsed":"false","Label":"' . $classEncoded . '->methodWithGroup","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">' . __NAMESPACE__ . '\</span>MethodTest</span><span class="t_operator">-&gt;</span><span class="t_identifier">methodWithGroup</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="group-label group-label-bold">)</span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">' . __NAMESPACE__ . '\</span>MethodTest</span><span class="t_operator">-&gt;</span><span class="t_identifier">methodWithGroup</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="font-weight-bold group-label">)</span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("' . $classEncoded . '->methodWithGroup","foo",10);',
                 'text' => '▸ ' . __CLASS__ . '->methodWithGroup("foo", 10)',
@@ -1342,7 +1342,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-7: 110|[{"Collapsed":"false","Label":"bdk\\\DebugTests\\\Fixture\\\TestBase->testBasePublic","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("bdk\\\DebugTests\\\Fixture\\\TestBase->testBasePublic");',
                 'text' => '▸ bdk\DebugTests\Fixture\TestBase->testBasePublic',
@@ -1375,7 +1375,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-8: 106|[{"Collapsed":"false","Label":"bdk\\\DebugTests\\\Fixture\\\Test->testBasePublic","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>Test</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>Test</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("bdk\\\DebugTests\\\Fixture\\\Test->testBasePublic");',
                 'text' => '▸ bdk\DebugTests\Fixture\Test->testBasePublic',
@@ -1410,7 +1410,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-9: 110|[{"Collapsed":"false","Label":"bdk\\\DebugTests\\\Fixture\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("bdk\\\DebugTests\\\Fixture\\\TestBase::testBaseStatic");',
                 'text' => '▸ bdk\DebugTests\Fixture\TestBase::testBaseStatic',
@@ -1444,7 +1444,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-10: 110|[{"Collapsed":"false","Label":"bdk\\\DebugTests\\\Fixture\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="group-label group-label-bold"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("bdk\\\DebugTests\\\Fixture\\\TestBase::testBaseStatic");',
                 'text' => '▸ bdk\DebugTests\Fixture\TestBase::testBaseStatic',
@@ -1478,7 +1478,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="group-label group-label-bold">a:</span> <span class="t_int">10</span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label">a:</span> <span class="t_int">10</span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("a",10);',
                 'text' => '▸ a: 10',
@@ -1523,7 +1523,7 @@ class MethodTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: 60|[{"Collapsed":"true","Label":"a","Type":"GROUP_START"},null]|',
                 'html' => '<li class="m_group">
-                    <div class="group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="font-weight-bold group-label">)</span></div>
                     <ul class="group-body">',
                 'script' => 'console.groupCollapsed("a","b","c");',
                 'text' => '▸ a("b", "c")',
@@ -1537,7 +1537,7 @@ class MethodTest extends DebugTestFramework
         $this->debug->log('after nested group');
         $this->outputTest(array(
             'html' => '<li class="m_group">
-                <div class="group-header"><span class="group-label group-label-bold">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="group-label group-label-bold">)</span></div>
+                <div class="group-header"><span class="font-weight-bold group-label">a(</span><span class="t_string">b</span>, <span class="t_string">c</span><span class="font-weight-bold group-label">)</span></div>
                 <ul class="group-body">
                     <li class="m_log"><span class="no-quotes t_string">after nested group</span></li>
                 </ul>',
@@ -1749,7 +1749,7 @@ class MethodTest extends DebugTestFramework
                 <ul class="debug-log-summary group-body">
                     <li class="m_log"><span class="no-quotes t_string">in summary</span></li>
                     <li class="expanded m_group">
-                        <div class="group-header"><span class="group-label group-label-bold">inner group opened but not closed</span></div>
+                        <div class="group-header"><span class="font-weight-bold group-label">inner group opened but not closed</span></div>
                         <ul class="group-body">
                             <li class="m_log"><span class="no-quotes t_string">in inner</span></li>
                         </ul>

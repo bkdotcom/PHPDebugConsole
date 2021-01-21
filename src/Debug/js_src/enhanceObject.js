@@ -55,20 +55,7 @@ export function enhance ($node) {
 
 export function enhanceInner ($nodeObj) {
   var $inner = $nodeObj.find('> .object-inner')
-  var flags = {
-    hasProtected: $inner.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
-    hasPrivate: $inner.children('.private').not('.magic, .magic-read, .magic-write').length > 0,
-    hasExcluded: $inner.children('.debuginfo-excluded').hide().length > 0,
-    hasInherited: $inner.children('.inherited').length > 0
-  }
   var accessible = $nodeObj.data('accessible')
-  var toggleClass = accessible === 'public'
-    ? 'toggle-off'
-    : 'toggle-on'
-  var toggleVerb = accessible === 'public'
-    ? 'show'
-    : 'hide'
-  var visToggles = ''
   var hiddenInterfaces = []
   if ($nodeObj.is('.enhanced')) {
     return
@@ -97,22 +84,43 @@ export function enhanceInner ($nodeObj) {
   if (accessible === 'public') {
     $inner.find('.private, .protected').hide()
   }
-  if (flags.hasProtected) {
-    visToggles += ' <span class="' + toggleClass + '" data-toggle="vis" data-vis="protected">' + toggleVerb + ' protected</span>'
-  }
-  if (flags.hasPrivate) {
-    visToggles += ' <span class="' + toggleClass + '" data-toggle="vis" data-vis="private">' + toggleVerb + ' private</span>'
-  }
-  if (flags.hasExcluded) {
-    visToggles += ' <span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>'
-  }
-  if (flags.hasInherited) {
-    visToggles += ' <span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited methods</span>'
-  }
-  $inner.prepend('<span class="vis-toggles">' + visToggles + '</span>')
+  visToggles($inner, accessible)
   addIcons($inner)
   $inner.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand')
   $nodeObj.addClass('enhanced')
+}
+
+function visToggles ($inner, accessible) {
+  var flags = {
+    hasProtected: $inner.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
+    hasPrivate: $inner.children('.private').not('.magic, .magic-read, .magic-write').length > 0,
+    hasExcluded: $inner.children('.debuginfo-excluded').hide().length > 0,
+    hasInherited: $inner.children('.inherited').length > 0
+  }
+  var toggleClass = accessible === 'public'
+    ? 'toggle-off'
+    : 'toggle-on'
+  var toggleVerb = accessible === 'public'
+    ? 'show'
+    : 'hide'
+  var $visToggles = $('<div class="vis-toggles"></div>')
+  if (flags.hasProtected) {
+    $visToggles.append('<span class="' + toggleClass + '" data-toggle="vis" data-vis="protected">' + toggleVerb + ' protected</span>')
+  }
+  if (flags.hasPrivate) {
+    $visToggles.append('<span class="' + toggleClass + '" data-toggle="vis" data-vis="private">' + toggleVerb + ' private</span>')
+  }
+  if (flags.hasExcluded) {
+    $visToggles.append('<span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>')
+  }
+  if (flags.hasInherited) {
+    $visToggles.append('<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited methods</span>')
+  }
+  if ($inner.find('> dt.t_modifier_final').length) {
+    $inner.find('> dt.t_modifier_final').after($visToggles)
+    return;
+  }
+  $inner.prepend($visToggles)
 }
 
 function toggleInterface (toggle) {

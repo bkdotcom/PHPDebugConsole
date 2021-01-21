@@ -685,8 +685,8 @@ class Html extends Base
             $label = $this->markupIdentifier($label);
         }
         $labelClasses = \implode(' ', \array_keys(\array_filter(array(
+            'font-weight-bold' => $meta['boldLabel'],
             'group-label' => true,
-            'group-label-bold' => $meta['boldLabel'],
         ))));
         $levelClass = $meta['level']
             ? 'level-' . $meta['level']

@@ -4,11 +4,11 @@
 	"keywords": ["debug", "chromelogger", "debugging", "firephp", "var_dump", "inspect", "errorhandler", "phpdebugconsole", "php-debugbar", "whoops", "logger", "PSR-3"],
 	"homepage": "http://bradkent.com/php/debug",
 	"license": "MIT",
-    "support": {
-    	"docs": "http://bradkent.com/php/debug",
-        "issues": "https://github.com/bkdotcom/PHPDebugConsole/issues",
-        "source": "https://github.com/bkdotcom/PHPDebugConsole"
-    },
+	"support": {
+		"docs": "http://bradkent.com/php/debug",
+		"issues": "https://github.com/bkdotcom/PHPDebugConsole/issues",
+		"source": "https://github.com/bkdotcom/PHPDebugConsole"
+	},
 	"authors": [
 		{
 			"name": "Brad Kent",

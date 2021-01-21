@@ -99,7 +99,10 @@ class LogReqRes implements SubscriberInterface
         if (\strpos($this->debug->getInterface(), 'http') !== 0) {
             return;
         }
-        $this->debug->log('response headers', $this->debug->getResponseHeaders(true));
+        $headers = \array_map(function ($vals) {
+            return implode("\n", $vals);
+        }, $this->debug->getResponseHeaders());
+        $this->debug->table('response headers', $headers);
         $contentType = \implode(', ', $this->debug->getResponseHeader('Content-Type'));
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
             // we're not interested in logging response

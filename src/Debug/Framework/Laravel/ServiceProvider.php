@@ -399,7 +399,7 @@ class ServiceProvider extends BaseServiceProvider
     }
 
     /**
-     * Register the our Middleware
+     * Register our Middleware
      *
      * @return void
      */

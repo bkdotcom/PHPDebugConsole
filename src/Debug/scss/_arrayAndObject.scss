@@ -78,6 +78,19 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   margin-left: -10px;
 }
 
+// this is outside of .t_object because tooltip gets placed outside
+.attribute {
+  .t_punct {
+    color: inherit;
+    font-weight: bold;
+  }
+}
+// method parameter or attribute argument
+// this is outside of .t_object because tooltip gets placed outside
+.t_parameter-name {
+  color: $color-param;
+}
+
 .t_object {
   display: inline;
 
@@ -112,8 +125,9 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   }
 
   .vis-toggles {
-    [data-toggle] {
-      padding: 0.3em;
+    *[data-toggle] {
+      padding: 0.15em 0.5em;
+      display: inline-block;
     }
   }
 
@@ -139,10 +153,6 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       color: inherit;
     }
     i.fa-clone { color: #999; }
-  }
-  .t_parameter-name {
-    // method parameter or attribute argument
-    color: $color-param;
   }
   .property {
     &.private-ancestor:not(:hover) {

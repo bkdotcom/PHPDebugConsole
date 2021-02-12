@@ -407,6 +407,9 @@ class Wamp implements RouteInterface
                     return $this->crateObject($clone);
                 case Abstracter::TYPE_STRING:
                     $clone['value'] = $this->crateString($clone['value']);
+                    if (isset($clone['valueDecoded'])) {
+                        $clone['valueDecoded'] = $this->crateValues($clone['valueDecoded']);
+                    }
                     return $clone;
             }
         }

@@ -185,9 +185,14 @@ class Logger extends AbstractLogger
     private function setArgs(LogEntry $logEntry)
     {
         list($message, $context) = $logEntry['args'];
+        $placeholders = array();
         $args = array(
-            $this->debug->utility->strInterpolate($message, $context, true),
+            $this->debug->utility->strInterpolate($message, $context, $placeholders),
         );
+        if (\is_array($context)) {
+            // remove interpolated values from context
+            $context = \array_diff_key($context, \array_flip($placeholders));
+        }
         if (\in_array($logEntry['method'], array('info','log'))) {
             if (isset($context['table']) && \is_array($context['table'])) {
                 /*

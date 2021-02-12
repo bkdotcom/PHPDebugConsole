@@ -603,7 +603,7 @@ class DebugTestFramework extends DOMTestCase
     protected function clearServerParamCache()
     {
         // Utility caches serverParams (statically)...  use serverParamsRef to clear it
-        $debugRef = new \ReflectionObject($this->debug);
+        $debugRef = new \ReflectionObject($this->debug->rootInstance);
         $internalRef = $debugRef->getProperty('internal');
         $internalRef->setAccessible(true);
         $internal = $internalRef->getValue($this->debug);

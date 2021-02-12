@@ -32,6 +32,7 @@ class Html extends Base
     /** @var array attribs added here when dumping val*/
     protected $valAttribs = array();
     protected $valAttribsStack = array();
+    protected $valTemplate = null;
 
     /**
      * Dump value as html
@@ -47,34 +48,40 @@ class Html extends Base
     {
         $this->valAttribs = array(
             'class' => array(),
-            'title' => null,
         );
-        $absAttribs = $val instanceof Abstraction
-            ? (array) $val['attribs']
-            : array();
+        $this->valTemplate = null;
+        if ($val instanceof Abstraction && \is_array($val['attribs'])) {
+            $this->valAttribs = $this->debug->utility->arrayMergeDeep(
+                $this->valAttribs,
+                $val['attribs']
+            );
+        }
         $val = parent::dump($val, $opts);
         if ($tagName === '__default__') {
             $tagName = 'span';
             if ($this->dumpType === Abstracter::TYPE_OBJECT) {
                 $tagName = 'div';
-            } elseif ($this->dumpType === Abstracter::TYPE_RECURSION) {
+            } elseif ($this->dumpType === null) {
                 $tagName = null;
             }
         }
         if ($tagName) {
-            $attribs = $this->debug->utility->arrayMergeDeep(
-                $this->valAttribs,
-                $absAttribs,
+            $this->valAttribs['class'] = \array_merge(
+                $this->valAttribs['class'],
                 array(
-                    'class' => array(
-                        't_' . $this->dumpType,
-                        $this->dumpTypeMore,
-                    ),
+                    't_' . $this->dumpType,
+                    !\in_array($this->dumpTypeMore, array(Abstracter::TYPE_STRING_LONG))
+                        ? $this->dumpTypeMore
+                        : null,
                 )
             );
-            $val = $this->debug->html->buildTag($tagName, $attribs, $val);
+            $val = $this->debug->html->buildTag($tagName, $this->valAttribs, $val);
         }
-        $this->valAttribs = array();
+        if ($this->valTemplate) {
+            $val = $this->debug->utility->strInterpolate($this->valTemplate, array(
+                'val' => $val,
+            ));
+        }
         return $val;
     }
 
@@ -331,7 +338,7 @@ class Html extends Base
 
     /**
      * Is value a timestamp?
-     * Add vallAttribs class & title if so
+     * Add valAttribs class & title if so
      *
      * @param mixed $val value to check
      *
@@ -341,8 +348,15 @@ class Html extends Base
     {
         $date = parent::checkTimestamp($val);
         if ($date) {
-            $this->valAttribs['class'][] = 'timestamp';
-            $this->valAttribs['title'] = $date;
+            $this->valTemplate = $this->debug->html->buildTag(
+                'span',
+                array(
+                    'class' => array('timestamp', 'value-container'),
+                    'data-type' => $this->debug->utility->arrayPathGet($this->dumpTypeStack, '__end__'),
+                    'title' => $date,
+                ),
+                '{val}'
+            );
             return $date;
         }
         return false;
@@ -487,6 +501,7 @@ class Html extends Base
      */
     protected function dumpRecursion()
     {
+        $this->debug->utility->arrayPathSet($this->dumpTypeStack, '__end__', null); // don't wrap value span
         return '<span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span>';
     }
 
@@ -506,26 +521,124 @@ class Html extends Base
         if ($this->detectFiles && $this->debug->utility->isFile($val)) {
             $this->valAttribs['data-file'] = true;
         }
+        if (!$this->valOpts['addQuotes']) {
+            $this->valAttribs['class'][] = 'no-quotes';
+        }
+        if ($abs) {
+            return $this->dumpStringAbs($val, $abs);
+        }
+        return $this->dumpStringHelper($val);
+    }
+
+    /**
+     * Dump string encapulated by Abstraction
+     *
+     * @param string      $val dumped plain value
+     * @param Abstraction $abs Abstraction
+     *
+     * @return string
+     */
+    private function dumpStringAbs($val, Abstraction $abs)
+    {
+        if ($abs['typeMore'] === Abstracter::TYPE_STRING_CLASSNAME) {
+            $val = $this->markupIdentifier($val);
+            $parsed = $this->debug->html->parseTag($val);
+            $this->valAttribs = $this->debug->utility->arrayMergeDeep($this->valAttribs, $parsed['attribs']);
+            return $parsed['innerhtml'];
+        }
+        $strlenDumped = \strlen($val);
+        $val = $this->dumpStringHelper($val);
+        if (
+            \in_array($abs['typeMore'], array(
+                Abstracter::TYPE_STRING_BASE64,
+                Abstracter::TYPE_STRING_JSON,
+                Abstracter::TYPE_STRING_SERIALIZED
+            ))
+        ) {
+            return $this->dumpStringEncoded($val, $abs);
+        }
+        if ($abs['strlen']) {
+            $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - $strlenDumped) . ' more bytes (not logged)</span>';
+        }
+        if ($abs['prettified']) {
+            $this->valTemplate = $this->debug->html->buildTag(
+                'span',
+                array(
+                    'class' => 'value-container',
+                    'data-type' => $abs['type'],
+                ),
+                '<span class="prettified">(prettified)</span> {val}'
+            );
+        }
+        return $val;
+    }
+
+    /**
+     * Dump encoded string (base64, json, serialized)
+     *
+     * @param string      $val raw value dumped
+     * @param Abstraction $abs (optional) full abstraction
+     *
+     * @return string
+     */
+    private function dumpStringEncoded($val, Abstraction $abs)
+    {
+        $attribs = $this->valAttribs;
+        $attribs['class'][] = 't_' . $abs['type'];
+        $vals = array(
+            'labelRaw' => 'Raw',
+            'labelDecoded' => 'Decoded',
+            'valRaw' => $this->debug->html->buildTag('span', $attribs, $val),
+            'valDecoded' => '',
+        );
+        if ($abs['typeMore'] === Abstracter::TYPE_STRING_BASE64) {
+            $vals['labelRaw'] = 'base64';
+            $vals['labelDecoded'] = 'decoded';
+            $vals['valDecoded'] = $this->dump($abs['valueDecoded']);
+        } elseif ($abs['typeMore'] === Abstracter::TYPE_STRING_JSON) {
+            $vals['labelRaw'] = 'json';
+            $vals['labelDecoded'] = 'decoded';
+            if ($abs['prettified'] || $abs['strlen']) {
+                $abs['typeMore'] = null; // unset typeMore to prevent loop
+                $vals['valRaw'] = $this->dump($abs);
+            }
+            $vals['valDecoded'] = $this->dump($abs['valueDecoded']);
+        } elseif ($abs['typeMore'] === Abstracter::TYPE_STRING_SERIALIZED) {
+            $vals['labelRaw'] = 'serialized';
+            $vals['labelDecoded'] = 'unserialized';
+            $vals['valDecoded'] = $this->dump($abs['valueDecoded']);
+        }
+        $this->debug->utility->arrayPathSet($this->dumpTypeStack, '__end__', null);
+        $val = '<span class="string-encoded tabs-container">'
+                . '<nav role="tablist">'
+                    . '<a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">{labelRaw}</a>'
+                    . '<a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">{labelDecoded}</a>'
+                . '</nav>'
+                . '<div class="string-raw tab-pane" role="tabpanel">'
+                    . '{valRaw}'
+                . '</div>'
+                . '<div class="active string-decoded tab-pane" role="tabpanel">'
+                    . '{valDecoded}'
+                . '</div>'
+            . '</span>';
+        return $this->debug->utility->strInterpolate($val, $vals);
+    }
+
+    /**
+     * Sanitize and dump string.
+     *
+     * @param string $val string value to dump
+     *
+     * @return string
+     */
+    private function dumpStringHelper($val)
+    {
         $val = $this->debug->utf8->dump($val, array(
             'sanitizeNonBinary' => $this->valOpts['sanitize'],
             'useHtml' => true,
         ));
-        if ($abs) {
-            if ($abs['typeMore'] === 'classname') {
-                $val = $this->markupIdentifier($val);
-                $parsed = $this->debug->html->parseTag($val);
-                $this->valAttribs = $this->debug->utility->arrayMergeDeep($this->valAttribs, $parsed['attribs']);
-                $val = $parsed['innerhtml'];
-            }
-            if ($abs['strlen']) {
-                $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)</span>';
-            }
-        }
         if ($this->valOpts['visualWhiteSpace']) {
             $val = $this->visualWhiteSpace($val);
-        }
-        if (!$this->valOpts['addQuotes']) {
-            $this->valAttribs['class'][] = 'no-quotes';
         }
         return $val;
     }
@@ -591,8 +704,20 @@ class Html extends Base
             'role' => 'alert',
         ), $this->logEntryAttribs);
         $attribs['class'][] = 'alert-' . $meta['level'];
+        $args = $logEntry['args'];
+        if ($logEntry->containsSubstitutions()) {
+            $args[0] = $this->dump($args[0], array(
+                'sanitize' => $meta['sanitizeFirst'],
+            ), null);
+            $args = $this->processSubstitutions($args, array(
+                'replace' => true,
+                'sanitize' => $meta['sanitize'],
+                'style' => true,
+            ));
+            $meta['sanitizeFirst'] = false;
+        }
         $html = $this->dump(
-            $logEntry['args'][0],
+            $args[0],
             array(
                 'sanitize' => $meta['sanitizeFirst'],
                 'visualWhiteSpace' => false,
@@ -640,7 +765,7 @@ class Html extends Base
             if ($meta['uncollapse'] === false) {
                 $attribs['data-uncollapse'] = false;
             }
-            if ($this->containsSubstitutions($logEntry)) {
+            if ($logEntry->containsSubstitutions()) {
                 $args[0] = $this->dump($args[0], array(
                     'sanitize' => $meta['sanitizeFirst'],
                 ), null);
@@ -817,23 +942,12 @@ class Html extends Base
     protected function visualWhiteSpace($str)
     {
         // display \r, \n, & \t
-        $str = \preg_replace_callback('/(\r\n|\r|\n)/', array($this, 'visualWhiteSpaceCallback'), $str);
-        $str = \preg_replace('#(<br />)?\n$#', '', $str);
+        $str = \preg_replace_callback('/(\r\n|\r|\n)/', function ($matches) {
+            $search = array("\r","\n");
+            $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>' . "\n");
+            return \str_replace($search, $replace, $matches[1]);
+        }, $str);
         $str = \str_replace("\t", '<span class="ws_t">' . "\t" . '</span>', $str);
         return $str;
-    }
-
-    /**
-     * Adds whitespace markup
-     *
-     * @param array $matches passed from preg_replace_callback
-     *
-     * @return string
-     */
-    protected function visualWhiteSpaceCallback($matches)
-    {
-        $search = array("\r","\n");
-        $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>' . "\n");
-        return \str_replace($search, $replace, $matches[1]);
     }
 }

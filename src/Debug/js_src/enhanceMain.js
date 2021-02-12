@@ -31,7 +31,7 @@ export function init ($debugRoot) {
 
 function addChannelToggles () {
   var channelNameRoot = $root.data('channelNameRoot')
-  var $log = $root.find('> .debug-tabs > .tab-primary')
+  var $log = $root.find('> .tab-panes > .tab-primary')
   var channels = $root.data('channels') || {}
   var $ul
   var $toggles
@@ -85,7 +85,7 @@ function addExpandAll () {
   var $expandAll = $('<button>', {
     class: 'expand-all'
   }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups')
-  var $logBody = $root.find('> .debug-tabs > .tab-primary > .tab-body')
+  var $logBody = $root.find('> .tab-panes > .tab-primary > .tab-body')
 
   // this is currently invoked before entries are enhance / empty class not yet added
   if ($logBody.find('.m_group:not(.empty)').length > 1) {

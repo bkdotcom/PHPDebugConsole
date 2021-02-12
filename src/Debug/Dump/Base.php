@@ -32,6 +32,7 @@ class Base extends Component
     protected $channelNameRoot;
     protected $dumpType;
     protected $dumpTypeMore;
+    protected $dumpTypeStack = array();
     protected $valOpts; // per-value options
     private $subInfo = array();
     private $subRegex;
@@ -45,17 +46,8 @@ class Base extends Component
     {
         $this->debug = $debug;
         $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $this->subRegex = '/%'
-        . '(?:'
-        . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
-        . '[+-]?'                // sign specifier
-        . '(?:[ 0]|\'.{1})?'     // padding specifier
-        . '-?'                   // alignment specifier
-        . '\d*'                  // width specifier
-        . '(?:\.\d+)?'           // precision specifier
-        . '[difs]'
-        . ')'
-        . '/';
+        $logEntry = new LogEntry($debug, null);
+        $this->subRegex = $logEntry->subRegex;
     }
 
     /**
@@ -74,17 +66,18 @@ class Base extends Component
             'visualWhiteSpace' => true,
         ), $opts);
         list($type, $typeMore) = $this->debug->abstracter->getType($val);
-        if ($typeMore === 'raw') {
+        if ($typeMore === Abstracter::TYPE_RAW) {
             if ($type === Abstracter::TYPE_OBJECT || $this->crateRaw) {
                 $val = $this->debug->abstracter->crate($val, 'dump');
             }
             $typeMore = null;
         }
+        $this->dumpTypeStack[] = $type;
         $method = 'dump' . \ucfirst($type);
-        $return = $typeMore === 'abstraction'
+        $return = $typeMore === Abstracter::TYPE_ABSTRACTION
             ? $this->dumpAbstraction($val, $typeMore)
             : $this->{$method}($val);
-        $this->dumpType = $type;
+        $this->dumpType = \array_pop($this->dumpTypeStack);
         $this->dumpTypeMore = $typeMore;
         return $return;
     }
@@ -146,22 +139,6 @@ class Base extends Component
             return \date('Y-m-d H:i:s', $val);
         }
         return false;
-    }
-
-    /**
-     * Do the logEntry arguments appear to have string substitutions
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return bool
-     */
-    protected function containsSubstitutions(LogEntry $logEntry)
-    {
-        $args = $logEntry['args'];
-        if (\count($args) < 2 || \is_string($args[0]) === false) {
-            return false;
-        }
-        return \preg_match($this->subRegex, $args[0]) === 1;
     }
 
     /**
@@ -426,8 +403,19 @@ class Base extends Component
      */
     protected function methodAlert(LogEntry $logEntry)
     {
-        $args = array('%c' . $logEntry['args'][0], '');
         $method = $logEntry->getMeta('level');
+        if ($logEntry->containsSubstitutions()) {
+            $logEntry['method'] = \in_array($method, array('info','success'))
+                ? 'info'
+                : 'log';
+            $args = $this->processSubstitutions($logEntry['args']);
+            foreach ($args as $i => $arg) {
+                $args[$i] = $this->dump($arg);
+            }
+            $logEntry['args'] = $args;
+            return;
+        }
+        $args = array('%c' . $logEntry['args'][0], '');
         $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
         switch ($method) {
             case 'error':
@@ -476,7 +464,7 @@ class Base extends Component
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
-            if ($this->containsSubstitutions($logEntry)) {
+            if ($logEntry->containsSubstitutions()) {
                 $args = $this->processSubstitutions($args);
             }
         }

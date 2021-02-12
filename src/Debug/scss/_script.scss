@@ -1,33 +1,7 @@
-.debug-tabs {
-  .tab-body .expand-all {
-    margin-bottom: 0.5em;
-  }
-  .m_assert > i {
-    margin-right: 0.33em;
-    margin-bottom: -0.2em;
-    display: inline-block;
-    line-height: 0.6em;
-    vertical-align: text-bottom;
-  }
-  .file-link {
-    &.lpad { margin-left: 0.33em; }
-    i {
-      margin-right: 0;
-      vertical-align: baseline;
-    }
-  }
-}
-
-.group-header {
-  i.fa-warning {
-    color: #cdcb06;
-    margin-left: 0.33em;
-  }
-  i.fa-times-circle {
-    color: #d8000c;
-    margin-left: 0.33em;
-  }
-}
+i.fa { margin-right: 0.33em; }
+i.fa-lg { font-size: 1.33em; }
+i.fa-plus-circle { opacity: 0.42; }
+i.fa-calendar { font-size: 1.1em; }
 
 .filter-hidden {
   display: none;
@@ -50,11 +24,6 @@
     }
   }
 }
-
-i.fa { margin-right: 0.33em; }
-i.fa-lg { font-size: 1.33em; }
-i.fa-plus-circle { opacity: 0.42; }
-i.fa-calendar { font-size: 1.1em; }
 
 .empty {
   &.m_group .group-header {

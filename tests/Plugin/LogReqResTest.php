@@ -79,17 +79,21 @@ class LogReqResTest extends DebugTestFramework
             array(
                 'method' => 'log',
                 'args' => array(
-                    'php://input %c%s',
-                    'font-style: italic; opacity: 0.8;',
-                    '(prettified)',
+                    'php://input',
+                    // 'font-style: italic; opacity: 0.8;',
+                    // '(prettified)',
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
                             'class' => array('highlight', 'language-json'),
                         ),
                         'debug' => Abstracter::ABSTRACTION,
+                        'prettified' => true,
+                        'strlen' => null,
                         'type' => Abstracter::TYPE_STRING,
+                        'typeMore' => Abstracter::TYPE_STRING_JSON,
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
+                        'valueDecoded' => \json_decode($requestBody, true),
                         'visualWhiteSpace' => false,
                     ),
                 ),
@@ -134,17 +138,21 @@ class LogReqResTest extends DebugTestFramework
             array(
                 'method' => 'log',
                 'args' => array(
-                    'php://input %c%s',
-                    'font-style: italic; opacity: 0.8;',
-                    '(prettified)',
+                    'php://input',
+                    // 'font-style: italic; opacity: 0.8;',
+                    // '(prettified)',
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
                             'class' => array('highlight', 'language-json'),
                         ),
                         'debug' => Abstracter::ABSTRACTION,
+                        'prettified' => true,
+                        'strlen' => null,
                         'type' => Abstracter::TYPE_STRING,
+                        'typeMore' => Abstracter::TYPE_STRING_JSON,
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
+                        'valueDecoded' => \json_decode($requestBody, true),
                         'visualWhiteSpace' => false,
                     ),
                 ),
@@ -171,7 +179,7 @@ class LogReqResTest extends DebugTestFramework
                 'image/png'
             ),
         );
-        $this->debug->setCfg('services', array(
+        $this->debug->rootInstance->setCfg('services', array(
             'request' => function () use ($files) {
                 $request = new ServerRequest('POST', null, array(
                     'REQUEST_METHOD' => 'POST',
@@ -243,17 +251,21 @@ class LogReqResTest extends DebugTestFramework
             array(
                 'method' => 'log',
                 'args' => array(
-                    'php://input %c%s',
-                    'font-style: italic; opacity: 0.8;',
-                    '(prettified)',
+                    'php://input',
+                    // 'font-style: italic; opacity: 0.8;',
+                    // '(prettified)',
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
                             'class' => array('highlight', 'language-json'),
                         ),
                         'debug' => Abstracter::ABSTRACTION,
+                        'prettified' => true,
+                        'strlen' => null,
                         'type' => Abstracter::TYPE_STRING,
+                        'typeMore' => Abstracter::TYPE_STRING_JSON,
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
+                        'valueDecoded' => \json_decode($requestBody, true),
                         'visualWhiteSpace' => false,
                     ),
                 ),
@@ -265,7 +277,6 @@ class LogReqResTest extends DebugTestFramework
             $this->logEntryToArray($this->debug->getData('log/0'))
         );
         $this->debug->setData('log', array());
-
 
         /*
             Reset request

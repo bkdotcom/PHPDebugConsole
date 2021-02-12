@@ -27,6 +27,7 @@ var config = new Config({
     empty: 'fa-square-o'
   },
   iconsMisc: {
+    '.string-encoded': '<i class="fa fa-barcode"></i>',
     '.timestamp': '<i class="fa fa-calendar"></i>'
   },
   iconsArray: {
@@ -210,7 +211,7 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
       var $self = $(this)
       if ($self.is('.debug')) {
         // console.warn('debugEnhance() : .debug')
-        $self.find('.debug-menu-bar > nav, .debug-tabs').show()
+        $self.find('.debug-menu-bar > nav, .tab-panes').show()
         $self.find('.tab-pane.active')
           .find('.m_alert, .debug-log-summary, .debug-log')
           .debugEnhance()

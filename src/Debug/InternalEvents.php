@@ -299,31 +299,32 @@ class InternalEvents implements SubscriberInterface
     public function onPrettify(Event $event)
     {
         $matches = array();
-        if (\preg_match('#\b(html|json|xml)\b#', $event['contentType'], $matches)) {
-            $string = $event['value'];
-            $type = $matches[1];
-            $lang = $type;
-            if ($type === 'html') {
-                $lang = 'markup';
-            } elseif ($type === 'json') {
-                $string = $this->debug->utility->prettyJson($string);
-            } elseif ($type === 'xml') {
-                $string = $this->debug->utility->prettyXml($string);
-            }
-            if (!$this->highlightAdded) {
-                $this->debug->addPlugin(new Highlight());
-                $this->highlightAdded = true;
-            }
-            $event['value'] = new Abstraction(Abstracter::TYPE_STRING, array(
-                'attribs' => array(
-                    'class' => 'highlight language-' . $lang,
-                ),
-                'addQuotes' => false,
-                'visualWhiteSpace' => false,
-                'value' => $string,
-            ));
-            $event->stopPropagation();
+        if (!\preg_match('#\b(html|json|xml)\b#', $event['contentType'], $matches)) {
+            return;
         }
+        $string = $event['value'];
+        $type = $matches[1];
+        $lang = $type;
+        if ($type === 'html') {
+            $lang = 'markup';
+        } elseif ($type === 'json') {
+            $string = $this->debug->utility->prettyJson($string);
+        } elseif ($type === 'xml') {
+            $string = $this->debug->utility->prettyXml($string);
+        }
+        if (!$this->highlightAdded) {
+            $this->debug->addPlugin(new Highlight());
+            $this->highlightAdded = true;
+        }
+        $event['value'] = $this->debug->abstracter->crateWithVals($string, array(
+            'attribs' => array(
+                'class' => 'highlight language-' . $lang,
+            ),
+            'addQuotes' => false,
+            'prettified' => true,
+            'visualWhiteSpace' => false,
+        ));
+        $event->stopPropagation();
     }
 
     /**

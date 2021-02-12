@@ -13,6 +13,7 @@
 namespace bdk\Debug\Framework\Laravel;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\MonologHandler;
 use bdk\Debug\Framework\Laravel\CacheEventsSubscriber;
 use bdk\Debug\Framework\Laravel\EventsSubscriber;
@@ -281,7 +282,7 @@ class ServiceProvider extends BaseServiceProvider
                 $modelCounts[] = $count;
                 $tableInfoRows[] = array(
                     'key' => $this->debug->abstracter->crateWithVals($class, array(
-                        'typeMore' => 'classname',
+                        'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
                         'attribs' => array(
                             'data-file' => $ref->getFileName(),
                         )
@@ -367,7 +368,7 @@ class ServiceProvider extends BaseServiceProvider
                         $type = $this->debug->abstracter->getType($v)[0];
                         $data[$k] = $type === 'object'
                             ? $this->debug->abstracter->crateWithVals(\get_class($v), array(
-                                'typeMore' => 'classname',
+                                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
                             ))
                             : $type;
                     }

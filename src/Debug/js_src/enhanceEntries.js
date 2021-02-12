@@ -68,6 +68,7 @@ export function init ($root) {
       })
     enhanceObject.enhanceInner($node)
   })
+
   $root.on('expanded.debug.next', '.context', function (e) {
     enhanceArray($(e.target).find('> td > .t_array'))
   })
@@ -521,23 +522,9 @@ function enhanceValue ($entry, node) {
     tableSort.makeSortable($node)
   } else if ($node.is('.t_string')) {
     createFileLinks($entry, $node)
-  }
-  if ($node.is('.timestamp')) {
-    var $i = $node.find('i')
-    var text = $node.text()
-    var $span = $('<span>' + text + '</span>')
-    if ($node.is('.t_string')) {
-      $span.addClass('t_string numeric')
-    } else if ($node.is('.t_int')) {
-      $span.addClass('t_int')
-    } else {
-      $span.addClass('t_float')
-    }
-    if ($node.is('.no-quotes')) {
-      $span.addClass('no-quotes')
-    }
-    $node.removeClass('t_float t_int t_string numeric no-quotes')
-    $node.html($i).append($span)
+  } else if ($node.is('.string-encoded.tabs-container')) {
+    // console.warn('enhanceStringEncoded', $node)
+    enhanceValue($node, $node.find('> .tab-pane.active > *'))
   }
 }
 

@@ -56,18 +56,18 @@
    */
   function enhance ($node) {
     $node.find('> .classname').each(function () {
-      var $toggle = $(this);
-      var $target = $toggle.next();
-      var isEnhanced = $toggle.data('toggle') === 'object';
+      var $classname = $(this);
+      var $target = $classname.next();
+      var isEnhanced = $classname.data('toggle') === 'object';
       if ($target.is('.t_recursion, .excluded')) {
-        $toggle.addClass('empty');
+        $classname.addClass('empty');
         return
       }
       if (isEnhanced) {
         return
       }
-      $toggle.append(' <i class="fa ' + config.iconsExpand.expand + '"></i>');
-      $toggle.attr('data-toggle', 'object');
+      $classname.wrap('<span data-toggle="object"></span>')
+        .after(' <i class="fa ' + config.iconsExpand.expand + '"></i>');
       $target.hide();
     });
   }
@@ -137,7 +137,7 @@
     }
     if ($inner.find('> dt.t_modifier_final').length) {
       $inner.find('> dt.t_modifier_final').after($visToggles);
-      return;
+      return
     }
     $inner.prepend($visToggles);
   }
@@ -354,6 +354,7 @@
         });
       enhanceInner($node);
     });
+
     $root.on('expanded.debug.next', '.context', function (e) {
       enhanceArray($(e.target).find('> td > .t_array'));
     });
@@ -807,23 +808,9 @@
       makeSortable($node);
     } else if ($node.is('.t_string')) {
       createFileLinks($entry, $node);
-    }
-    if ($node.is('.timestamp')) {
-      var $i = $node.find('i');
-      var text = $node.text();
-      var $span = $('<span>' + text + '</span>');
-      if ($node.is('.t_string')) {
-        $span.addClass('t_string numeric');
-      } else if ($node.is('.t_int')) {
-        $span.addClass('t_int');
-      } else {
-        $span.addClass('t_float');
-      }
-      if ($node.is('.no-quotes')) {
-        $span.addClass('no-quotes');
-      }
-      $node.removeClass('t_float t_int t_string numeric no-quotes');
-      $node.html($i).append($span);
+    } else if ($node.is('.string-encoded.tabs-container')) {
+      // console.warn('enhanceStringEncoded', $node)
+      enhanceValue($node, $node.find('> .tab-pane.active > *'));
     }
   }
 
@@ -890,7 +877,7 @@
 
     addMarkup();
 
-    $root.find('.debug-tabs').scrollLock();
+    $root.find('.tab-panes').scrollLock();
     $root.find('.debug-resize-handle').on('mousedown', onMousedown);
     $root.find('.debug-pull-tab').on('click', open);
     $root.find('.debug-menu-bar .close').on('click', close);
@@ -946,7 +933,7 @@
       // drawer isn't open / ignore resize
       return
     }
-    origH = $root.find('.debug-tabs').height();
+    origH = $root.find('.tab-panes').height();
     origPageY = e.pageY;
     $('html').addClass('debug-resizing');
     $root.parents()
@@ -964,7 +951,7 @@
   }
 
   function setHeight (height, viaUser) {
-    var $body = $root.find('.debug-tabs');
+    var $body = $root.find('.tab-panes');
     var menuH = $root.find('.debug-menu-bar').outerHeight();
     var minH = 20;
     // inacurate if document.doctype is null : $(window).height()
@@ -1070,7 +1057,7 @@
     /*
       find all log entries and process them greatest depth to least depth
     */
-    $root.find('> .debug-tabs > .tab-primary > .tab-body')
+    $root.find('> .tab-panes > .tab-primary > .tab-body')
       .find('.m_alert, .group-body > *:not(.m_groupSummary)')
       .each(function () {
         sort.push({
@@ -1319,7 +1306,7 @@
   var initialized = false;
 
   function init$5 ($debugRoot) {
-    var $debugTabLog = $debugRoot.find('> .debug-tabs > .tab-primary');
+    var $debugTabLog = $debugRoot.find('> .tab-panes > .tab-primary');
 
     config$4 = $debugRoot.data('config') || $('body').data('config');
     $root$2 = $debugRoot;
@@ -1401,7 +1388,7 @@
 
   function addMarkup$1 ($node) {
     var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
-    var $expAll = $node.find('.debug-tabs > .tab-primary > .tab-body > .expand-all');
+    var $expAll = $node.find('.tab-panes > .tab-primary > .tab-body > .expand-all');
     $sidebar.html(
       '<div class="sidebar-toggle">' +
         '<div class="collapse">' +
@@ -1431,7 +1418,7 @@
         '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
       '</div>'
     );
-    $node.find('.debug-tabs > .tab-primary > .tab-body').before($sidebar);
+    $node.find('.tab-panes > .tab-primary > .tab-body').before($sidebar);
 
     phpErrorToggles($node);
     moveChannelToggles($node);
@@ -1466,7 +1453,7 @@
   function addMethodToggles ($node) {
     var channelNameRoot = $node.data('channelNameRoot');
     var $filters = $node.find('.debug-filters');
-    var $entries = $node.find('> .debug-tabs .m_alert, .group-body > *');
+    var $entries = $node.find('> .tab-panes .m_alert, .group-body > *');
     var val;
     var labels = {
       alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
@@ -1498,20 +1485,20 @@
   }
 
   /**
-   * grab the .debug-tabs toggles and move them to sidebar
+   * grab the .tab-panes toggles and move them to sidebar
    */
   function moveChannelToggles ($node) {
-    var $togglesSrc = $node.find('.debug-tabs .channels > ul > li');
+    var $togglesSrc = $node.find('.tab-panes .channels > ul > li');
     var $togglesDest = $node.find('.debug-sidebar .channels ul');
     $togglesDest.append($togglesSrc);
     if ($togglesDest.children().length === 0) {
       $togglesDest.parent().hide();
     }
-    $node.find('> .debug-tabs > .tab-primary > .tab-body > .channels').remove();
+    $node.find('> .tab-panes > .tab-primary > .tab-body > .channels').remove();
   }
 
   /**
-   * Grab the error toggles from .debug-tabs's error-summary move to sidebar
+   * Grab the error toggles from .tab-panes's error-summary move to sidebar
    */
   function phpErrorToggles ($node) {
     var $togglesUl = $node.find('.debug-sidebar .php-errors ul');
@@ -1575,7 +1562,7 @@
 
   function addChannelToggles () {
     var channelNameRoot = $root$3.data('channelNameRoot');
-    var $log = $root$3.find('> .debug-tabs > .tab-primary');
+    var $log = $root$3.find('> .tab-panes > .tab-primary');
     var channels = $root$3.data('channels') || {};
     var $ul;
     var $toggles;
@@ -1629,7 +1616,7 @@
     var $expandAll = $('<button>', {
       class: 'expand-all'
     }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
-    var $logBody = $root$3.find('> .debug-tabs > .tab-primary > .tab-body');
+    var $logBody = $root$3.find('> .tab-panes > .tab-primary > .tab-body');
 
     // this is currently invoked before entries are enhance / empty class not yet added
     if ($logBody.find('.m_group:not(.empty)').length > 1) {
@@ -1818,14 +1805,14 @@
       toggle(this);
       return false
     });
-    $delegateNode.on('click', '[data-toggle=object]', function () {
-      toggle(this);
-      return false
-    });
     $delegateNode.on('click', '[data-toggle=next]', function (e) {
       if ($(e.target).closest('a,button').length) {
         return
       }
+      toggle(this);
+      return false
+    });
+    $delegateNode.on('click', '[data-toggle=object]', function () {
       toggle(this);
       return false
     });
@@ -1851,12 +1838,10 @@
     var what = isToggle
       ? $node.data('toggle')
       : $node.find('> *[data-toggle]').data('toggle');
-    var $toggle = isToggle
-      ? $node
-      : $node.find('> *[data-toggle]');
     var $wrap = isToggle
       ? $node.parent()
       : $node;
+    var $toggle = $wrap.find('> *[data-toggle]');
     var $groupEndValue;
     var eventNameDone = 'collapsed.debug.' + what;
     if (what === 'array') {
@@ -1899,12 +1884,10 @@
     var what = isToggle
       ? $node.data('toggle')
       : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop());
-    var $toggle = isToggle
-      ? $node
-      : $node.find('> *[data-toggle]');
     var $wrap = isToggle
       ? $node.parent()
       : $node;
+    var $toggle = $wrap.find('> *[data-toggle]');
     var $classTarget = what === 'next' // node that get's "expanded" class
       ? $toggle
       : $wrap;
@@ -2013,11 +1996,11 @@
 
   function init$8 ($delegateNode) {
     // config = $delegateNode.data('config').get()
-    var $debugTabs = $delegateNode.find('.debug-tabs');
+    var $debugTabs = $delegateNode.find('.tab-panes');
     $delegateNode.find('nav .nav-link').each(function () {
       var $tab = $(this);
       var targetSelector = $tab.data('target');
-      var $tabPane = $debugTabs.find(targetSelector);
+      var $tabPane = $debugTabs.find(targetSelector).eq(0);
       if ($tabPane.text().trim().length === 0) {
         $tab.hide();
       }
@@ -2027,42 +2010,32 @@
       return false
     });
     $delegateNode.on('shown.debug.tab', function (e) {
-      $(this).find('.m_alert, .group-body:visible').debugEnhance();
+      var $target = $(e.target);
+      if ($target.hasClass('string-raw')) {
+        $target.debugEnhance();
+        return
+      }
+      $target.find('.m_alert, .group-body:visible').debugEnhance();
     });
   }
 
   function show (node) {
     var $tab = $(node);
     var targetSelector = $tab.data('target');
-    var $debugTabs = $tab.closest('.debug').find('.debug-tabs');
-    var $tabPane = $debugTabs.find(targetSelector);
-    // console.log('show target', targetSelector)
+    // .tabs-container may wrap the nav and the tabs-panes...
+    var $context = (function () {
+      var $context = $tab.closest('.tabs-container');
+      return $context.length
+        ? $context
+        : $tab.closest('.debug').find('.tab-panes')
+    })();
+    var $tabPane = $context.find(targetSelector).eq(0);
     $tab.siblings().removeClass('active');
     $tab.addClass('active');
     $tabPane.siblings().removeClass('active');
     $tabPane.addClass('active');
     $tabPane.trigger('shown.debug.tab');
   }
-
-  /*
-  function toggle (node) {
-    if ($(node).hasClass("active")) {
-      hide(node)
-    } else {
-      show(node)
-    }
-  }
-
-  function hide (node) {
-    var $tab = $(node)
-    var targetSelector = $tab.data('target')
-    var $debugTags = $tab.closest('.debug').find('.debug-tabs')
-    var $tabPane = $debugTabs.find(targetSelector)
-    console.log('hide target', targetSelector)
-    $tab.removeClass('active')
-    $tabPane.removeClass('active')
-  }
-  */
 
   var top = 'top';
   var bottom = 'bottom';
@@ -5626,11 +5599,13 @@
   });
 
   function init$9 ($root) {
-    var preventShow = false;
+    // var preventShow = false
 
+    /*
     $root.on('mouseenter', '[title] > .fa', function (e) {
-      preventShow = true;
-    });
+      preventShow = true
+    })
+    */
 
     delegate($root[0], {
       target: '.fa-hashtag, [title]',
@@ -5679,6 +5654,7 @@
         if (title) {
           $ref.attr('title', title);
         }
+        // preventShow = false;
         setTimeout(function () {
           instance.destroy();
         }, 100);
@@ -5695,7 +5671,7 @@
           {
             name: 'flip',
             options: {
-              boundary: $ref.closest('.debug-tabs')[0],
+              boundary: $ref.closest('.tab-panes')[0],
               padding: 5
             }
           },
@@ -5717,11 +5693,14 @@
         var $ref = $(instance.reference);
         $ref.removeAttr('title');
         $ref.addClass('hasTooltip');
-        return preventShow === false
-      },
-      onUntrigger: function () {
-        preventShow = false;
+        // return preventShow === false
+        return true;
       }
+      /*
+      onUntrigger: function () {
+        preventShow = false
+      }
+      */
       /*
       popperOptions: {
         modifiers: [
@@ -5939,6 +5918,7 @@
       empty: 'fa-square-o'
     },
     iconsMisc: {
+      '.string-encoded': '<i class="fa fa-barcode"></i>',
       '.timestamp': '<i class="fa fa-calendar"></i>'
     },
     iconsArray: {
@@ -6122,7 +6102,7 @@
         var $self = $(this);
         if ($self.is('.debug')) {
           // console.warn('debugEnhance() : .debug')
-          $self.find('.debug-menu-bar > nav, .debug-tabs').show();
+          $self.find('.debug-menu-bar > nav, .tab-panes').show();
           $self.find('.tab-pane.active')
             .find('.m_alert, .debug-log-summary, .debug-log')
             .debugEnhance();

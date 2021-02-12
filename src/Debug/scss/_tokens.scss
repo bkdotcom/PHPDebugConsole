@@ -9,6 +9,8 @@ $color-key-bracket: #999;
 $color-punct: #999;
 $color-operator: #a67f59;
 
+$color-prettified: #000b9bee;
+
 $color-true: #993;
 $color-true-shadow: rgba(153, 153, 51, 0.5);
 $color-false: #c33;
@@ -133,6 +135,14 @@ $color-bg-unicode: #c0c0ff;
   opacity: 0.3;
 }
 
+.string-encoded.tabs-container {
+  > i {
+    line-height: 20px;
+    margin-right: 0;
+  }
+}
+
+.prettified { color: $color-prettified; }
 .timestamp { color: $color-timestamp; }
 
 .binary,

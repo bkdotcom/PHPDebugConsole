@@ -15,28 +15,19 @@
     }
 
     nav {
-      display: inline-block;
       margin-left: 20px;
-      font-size: 0; // so that child inline-blocks don't have space between them
       line-height: 23px;
-      vertical-align: top;
-      .fa {
-        margin-right: 0.5em;
-      }
       a {
-        display: inline-block;
-        padding: 0 15px;
-        font-size: 12px;
+        // padding: 0 15px;
+        // font-size: 12px;
         line-height: 23px;
-        vertical-align: top;
-        color: $default-fg;
-        cursor: pointer;
-        &:hover:not(.active) {
-          background: darken($lite-grey, 5%);
-        }
+        // vertical-align: top;
+        // &:hover:not(.active) {
+          // background: darken($lite-grey, 5%);
+        // }
         &.active {
           line-height: 22px;
-          border-bottom: #4071e1 solid 2px;
+          // border-bottom: #4071e1 solid 2px;
         }
       }
     }
@@ -72,7 +63,7 @@
     }
   }
 
-  .debug-tabs {
+  .tab-panes {
     overflow: auto;
     .tab-pane {
       display: none;

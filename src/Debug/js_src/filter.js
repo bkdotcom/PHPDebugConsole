@@ -82,7 +82,7 @@ function applyFilter ($root) {
   /*
     find all log entries and process them greatest depth to least depth
   */
-  $root.find('> .debug-tabs > .tab-primary > .tab-body')
+  $root.find('> .tab-panes > .tab-primary > .tab-body')
     .find('.m_alert, .group-body > *:not(.m_groupSummary)')
     .each(function () {
       sort.push({

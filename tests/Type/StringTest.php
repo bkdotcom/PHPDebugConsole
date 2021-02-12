@@ -130,7 +130,7 @@ EOD;
                 'log',
                 array(
                     "\xef\xbb\xbfPesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \x07 (a control char).",
-                    \bdk\Debug::_meta('sanitize', false),
+                    \bdk\Debug::meta('sanitize', false),
                 ),
                 array(
                     'chromeLogger' => '[["\\\u{feff}Pesky <abbr title=\"Byte-Order-Mark\">BOM<\/abbr> and \\\x07 (a control char)."],null,""]',
@@ -183,7 +183,7 @@ EOD;
                         null,
                         '',
                     )),
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="numeric t_string timestamp" title="' . \date('Y-m-d H:i:s', $ts) . '">' . $ts . '</span></li>',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="timestamp value-container" data-type="string" title="' . \date('Y-m-d H:i:s', $ts) . '"><span class="numeric t_string">' . $ts . '</span></span></li>',
                     'script' => 'console.log("timestamp","' . $ts . ' (' . \date('Y-m-d H:i:s') . ')");',
                     'text' => 'timestamp = 📅 "' . $ts . '" (' . \date('Y-m-d H:i:s') . ')',
                 ),
@@ -191,7 +191,7 @@ EOD;
             // 5
             array(
                 'log',
-                array('long string', $longString, \bdk\Debug::_meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
+                array('long string', $longString, \bdk\Debug::meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
                 array(
                     'chromeLogger' => \json_encode(array(
                         array(

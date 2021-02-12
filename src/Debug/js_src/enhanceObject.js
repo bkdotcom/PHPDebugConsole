@@ -37,18 +37,18 @@ function addIcons ($node) {
  */
 export function enhance ($node) {
   $node.find('> .classname').each(function () {
-    var $toggle = $(this)
-    var $target = $toggle.next()
-    var isEnhanced = $toggle.data('toggle') === 'object'
+    var $classname = $(this)
+    var $target = $classname.next()
+    var isEnhanced = $classname.data('toggle') === 'object'
     if ($target.is('.t_recursion, .excluded')) {
-      $toggle.addClass('empty')
+      $classname.addClass('empty')
       return
     }
     if (isEnhanced) {
       return
     }
-    $toggle.append(' <i class="fa ' + config.iconsExpand.expand + '"></i>')
-    $toggle.attr('data-toggle', 'object')
+    $classname.wrap('<span data-toggle="object"></span>')
+      .after(' <i class="fa ' + config.iconsExpand.expand + '"></i>')
     $target.hide()
   })
 }
@@ -118,7 +118,7 @@ function visToggles ($inner, accessible) {
   }
   if ($inner.find('> dt.t_modifier_final').length) {
     $inner.find('> dt.t_modifier_final').after($visToggles)
-    return;
+    return
   }
   $inner.prepend($visToggles)
 }

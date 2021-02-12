@@ -22,7 +22,9 @@
   $border-color: #d0d0d0;
   $lite-blue: #dde6f0;
 
-  font-size: 13px;
+  $font-size: 13px;
+
+  font-size: $font-size;
 
   @import "base";
 
@@ -54,15 +56,6 @@
       font-size: inherit;
       vertical-align: unset;
     }
-  }
-
-  .debug-tabs {
-    .hasTooltip,
-    *[title]:not(a) {
-      cursor: help;
-      &:hover { background-color: rgba(0, 0, 0, 0.05); }
-    }
-    *[data-toggle] { cursor: pointer; }
   }
 
   ul {
@@ -99,6 +92,7 @@
   @import "optionsDropdown";
   @import "sidebar";
   @import "script"; // misc css only applicable when javascript enhanced
+  @import "tabs";
   @import "tippy";
   @import "utilities";
 }

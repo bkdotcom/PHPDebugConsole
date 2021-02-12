@@ -101,7 +101,7 @@ class BasicTest extends DebugTestFramework
                 array($ts),
                 array(
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_int timestamp" title="' . $datetime . '">' . $ts . '</span></li>',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="int" title="' . $datetime . '"><span class="t_int">' . $ts . '</span></span></li>',
                     'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
                     'streamAnsi' => "📅 \e[96m" . $ts . "\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
                     'text' => '📅 ' . $ts . ' (' . $datetime . ')',
@@ -116,7 +116,7 @@ class BasicTest extends DebugTestFramework
                 array((string) $ts),
                 array(
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
-                    'html' => '<li class="m_log"><span class="no-quotes numeric t_string timestamp" title="' . $datetime . '">' . $ts . '</span></li>',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="no-quotes numeric t_string">' . $ts . '</span></span></li>',
                     'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
                     'streamAnsi' => "📅 \e[38;5;250m\"\e[96m" . $ts . "\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
                     'text' => '📅 "' . $ts . '" (' . $datetime . ')',

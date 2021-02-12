@@ -344,8 +344,9 @@ class Internal implements SubscriberInterface
      */
     public function getResponseCode()
     {
-        return $this->debug->response
-            ? $this->debug->response->getStatusCode()
+        $response = $this->debug->response;
+        return $response
+            ? $response->getStatusCode()
             : \http_response_code();
     }
 
@@ -386,8 +387,9 @@ class Internal implements SubscriberInterface
      */
     public function getResponseHeaders($asString = false)
     {
-        $headers = $this->debug->response
-            ? $this->debug->response->getHeaders()
+        $response = $this->debug->response;
+        $headers = $response
+            ? $response->getHeaders()
             : $this->debug->utility->getEmittedHeaders();
         if (!$asString) {
             return $headers;
@@ -416,8 +418,13 @@ class Internal implements SubscriberInterface
      */
     public function getServerParam($name, $default = null)
     {
+        if ($this->debug->parentInstance) {
+            // we are a child channel
+            // re-call via rootInstance so we use the same serverParams cache
+            return $this->debug->rootInstance->getServerParam($name, $default);
+        }
         if (!$this->serverParams) {
-            $request = $this->debug->rootInstance->request;
+            $request = $this->debug->request;
             $this->serverParams = $request->getServerParams();
         }
         return \array_key_exists($name, $this->serverParams)
@@ -561,6 +568,32 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Prettify string
+     *
+     * format whitepace
+     *    json, xml  (or anything else handled via Debug::EVENT_PRETTIFY)
+     * add attributes to indicate value should be syntax highlighted
+     *    html, json, xml
+     *
+     * @param string $string      string to prettify]
+     * @param string $contentType mime type
+     *
+     * @return Abstraction|string
+     */
+    public function prettify($string, $contentType)
+    {
+        $event = $this->debug->rootInstance->eventManager->publish(
+            Debug::EVENT_PRETTIFY,
+            $this->debug,
+            array(
+                'value' => $string,
+                'contentType' => $contentType,
+            )
+        );
+        return $event['value'];
+    }
+
+    /**
      * Publish/Trigger/Dispatch event
      * Event will get published on ancestor channels if propagation not stopped
      *
@@ -606,18 +639,20 @@ class Internal implements SubscriberInterface
         }
         if ($val instanceof Abstraction) {
             if ($val['type'] === Abstracter::TYPE_OBJECT) {
-                $props = $val['properties'];
-                foreach ($props as $name => $prop) {
-                    $props[$name]['value'] = $this->redact($prop['value'], $name);
-                }
-                $val['properties'] = $props;
+                $val['properties'] = $this->redact($val['properties']);
                 $val['stringified'] = $this->redact($val['stringified']);
                 if (isset($val['methods']['__toString']['returnValue'])) {
                     $val['methods']['__toString']['returnValue'] = $this->redact($val['methods']['__toString']['returnValue']);
                 }
-            } elseif ($val['value']) {
+                return $val;
+            }
+            if ($val['value']) {
                 $val['value'] = $this->redact($val['value']);
             }
+            if ($val['valueDecoded']) {
+                $val['valueDecoded'] = $this->redact($val['valueDecoded']);
+            }
+            return $val;
         }
         if (\is_array($val)) {
             foreach ($val as $k => $v) {
@@ -726,8 +761,9 @@ class Internal implements SubscriberInterface
         if (\strpos($this->getInterface(), 'cli') !== false) {
             return;
         }
-        $cookieParams = $this->debug->request->getCookieParams();
-        $queryParams = $this->debug->request->getQueryParams();
+        $request = $this->debug->request;
+        $cookieParams = $request->getCookieParams();
+        $queryParams = $request->getQueryParams();
         $requestKey = null;
         if (isset($queryParams['debug'])) {
             $requestKey = $queryParams['debug'];

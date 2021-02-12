@@ -122,7 +122,7 @@ class SubstitutionTest extends DebugTestFramework
                 'html' => '<li class="m_log"><span class="no-quotes t_string">'
                     . '<span class="t_float">123.45</span>'
                     . ' <span class="t_int">42</span>'
-                    . ' <span class="t_int timestamp" title="' . $timeStr . '">' . $time . '</span>'
+                    . ' <span class="timestamp value-container" data-type="int" title="' . $timeStr . '"><span class="t_int">' . $time . '</span></span>'
                     . ' &lt;i&gt;boring&lt;/i&gt;'
                     . ' <span class="binary">' . $binaryStr . '</span>'
                     . '</span></li>',
@@ -145,7 +145,7 @@ class SubstitutionTest extends DebugTestFramework
                 $location,
                 $location,
                 'extra',
-                Debug::_meta('sanitize', false),
+                $this->debug->meta('sanitize', false),
             ),
             array(
                 'entry' => array(
@@ -317,65 +317,71 @@ class SubstitutionTest extends DebugTestFramework
             '%c' => '%%c',
             '%s' => '%%s',
         );
-        foreach (array('error','info','log','warn') as $method) {
-            // $this->stderr('method', $method);
-            /*
+        $methods = array(
+            'alert',
+            'assert',
+            'error',
+            'info',
+            'log',
+            'warn',
+        );
+        foreach ($methods as $method) {
             if ($method === 'assert') {
                 \array_unshift($args, false);
                 \array_unshift($argsSansMeta, false);
             }
-            */
             foreach ($tests as $name => $test) {
-                // $this->stderr('test', $method, $name, $test);
+                // $this->stderr($method, $name, $test);
+                $foundArgs = false;
                 if (\is_array($test)) {
-                    $foundArgs = false;
                     foreach ($test as $i => $val) {
                         if ($val !== '{{args}}') {
                             continue;
                         }
                         $foundArgs = true;
                         $test[$i] = $argsSansMeta;
-                        /*
-                        if ($name === 'entry' && $method === 'assert') {
-                            \array_shift($test[$i]);
-                        }
-                        */
-                    }
-                    if ($name === 'chromeLogger') {
-                        if (!$foundArgs && $method === 'assert') {
-                            \array_unshift($test[0], false);
-                        }
-                        $test[0] = \array_map(function ($val) {
-                            return $this->debug->getDump('base')->dump($val);
-                        }, $test[0]);
-                        $test[1] = \in_array($method, array('error','warn'))
-                            ? $this->file . ': ' . $this->line
-                            : null;
-                        $test[2] = $method === 'log'
-                            ? ''
-                            : $method;
-                    } elseif ($name === 'entry') {
-                        $test['method'] = $method;
-                        if (\in_array($method, array('error','warn'))) {
-                            $test['meta']['detectFiles'] = true;
-                            $test['meta']['file'] = $this->file;
-                            $test['meta']['line'] = $this->line;
-                            $test['meta']['uncollapse'] = true;
-                        }
                     }
                     $tests[$name] = $test;
-                    continue;
                 }
-                if ($name === 'firephp') {
+                if ($name === 'chromeLogger') {
+                    if (!$foundArgs && $method === 'assert') {
+                        \array_unshift($test[0], false);
+                    }
+                    $test[0] = \array_map(function ($val) {
+                        return $this->debug->getDump('base')->dump($val);
+                    }, $test[0]);
+                    $test[1] = \in_array($method, array('error','warn'))
+                        ? $this->file . ': ' . $this->line
+                        : null;
+                    $test[2] = \in_array($method, array('alert','log'))
+                        ? ''
+                        : $method;
+                } elseif ($name === 'entry') {
+                    $test['method'] = $method;
+                    if ($method === 'alert') {
+                        $test['meta']['dismissible'] = false;
+                        $test['meta']['level'] = 'error';
+                    } elseif ($method === 'assert') {
+                        // the first arg (false) is not stored
+                        \array_shift($test['args']);
+                    } elseif (\in_array($method, array('error','warn'))) {
+                        $test['meta']['detectFiles'] = true;
+                        $test['meta']['file'] = $this->file;
+                        $test['meta']['line'] = $this->line;
+                        $test['meta']['uncollapse'] = true;
+                    }
+                } elseif ($name === 'firephp') {
                     $i = $method === 'assert'
                         ? 1
                         : 0;
                     $label = $argsSansMeta[$i];
                     $label = $this->debug->getDump('base')->dump($label);
+                    // $this->stderr('label', $label);
                     $label = \strtr($label, $replace);
                     // $label = strtr($label, array('\\u', 'foo'));
                     // $test = str_replace('{{label}}', $label, $test);
                     $firephpMethods = array(
+                        'alert' => 'ERROR',
                         'assert' => 'LOG',
                         'log' => 'LOG',
                         'info' => 'INFO',
@@ -394,16 +400,39 @@ class SubstitutionTest extends DebugTestFramework
                     $test = \str_replace('{{meta}}', \json_encode($firemeta, JSON_UNESCAPED_SLASHES), $test);
                 } elseif ($name === 'html') {
                     $attribs = array(
-                        'class' => 'm_' . $method,
+                        'class' => array('m_' . $method),
                     );
-                    if (\in_array($method, array('error','warn'))) {
+                    if ($method === 'alert') {
+                        $attribs['class'][] = 'alert-error';
+                        $attribs['role'] = 'alert';
+                        // $test = \str_replace(array('<li','</li'), array('<div', '</div'), $test);
+                        $test = \str_replace(
+                            ' = <span class="t_string">extra</span>',
+                            '',
+                            $test
+                        );
+                        $test = \str_replace(
+                            '<li class="m_log"><span class="no-quotes t_string">',
+                            '<div' . $this->debug->html->buildAttribString($attribs) . '>',
+                            $test
+                        );
+                        $test = \str_replace(
+                            '</span></li>',
+                            '</div>',
+                            $test
+                        );
+                    } elseif (\in_array($method, array('error','warn'))) {
                         $attribs['data-detect-files'] = true;
                         $attribs['data-file'] = $this->file;
                         $attribs['data-line'] = $this->line;
                     }
                     $test = \str_replace(' class="m_log"', $this->debug->html->buildAttribString($attribs), $test);
                 } elseif ($name === 'script') {
-                    $test = \str_replace('console.log', 'console.' . $method, $test);
+                    $consoleMethod = $method;
+                    if ($method === 'alert') {
+                        $consoleMethod = 'log';
+                    }
+                    $test = \str_replace('console.log', 'console.' . $consoleMethod, $test);
                     $fileLine = $this->file . ': line ' . $this->line;
                     if (\in_array($method, array('error','warn'))) {
                         $argsSansMeta[] = $fileLine;
@@ -418,6 +447,7 @@ class SubstitutionTest extends DebugTestFramework
                     }
                 } elseif ($name === 'text') {
                     $prefixes = array(
+                        'alert' => '',
                         'assert' => '≠ ',
                         'log' => '',
                         'error' => '⦻ ',
@@ -425,8 +455,12 @@ class SubstitutionTest extends DebugTestFramework
                         'warn' => '⚠ ',
                     );
                     $test = $prefixes[$method] . $test;
+                    if ($method === 'alert') {
+                        $test = \str_replace(' = "extra"', '', $test);
+                        $test = '》[Alert ⦻ error] ' . $test . '《';
+                    }
                 }
-                if (\strpos($test, '{{args}}') !== false) {
+                if (\is_string($test) && \strpos($test, '{{args}}') !== false) {
                     $i = $method === 'assert'
                         ? 2
                         : 1;
@@ -440,13 +474,16 @@ class SubstitutionTest extends DebugTestFramework
                 // $this->stderr('test', $name, $test);
             }
             // $this->stderr('test', $name, $method, $args, $test);
-            $this->testMethod($method, $args, $tests);
             /*
+            if ($method === 'alert') {
+                echo 'chromeLogger alert test ' . \print_r($tests['chromeLogger'], true) . "\n\n";
+            }
+            */
+            $this->testMethod($method, $args, $tests);
             if ($method === 'assert') {
                 \array_shift($args);
                 \array_shift($argsSansMeta);
             }
-            */
             $tests = $testsBack;
             $argsSansMeta = $argsSansMetaBack;
         }

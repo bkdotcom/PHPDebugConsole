@@ -89,11 +89,7 @@ class GuzzleMiddleware
         if ($this->cfg['inclRequestBody']) {
             $body = $this->getBody($request);
             $this->debug->log(
-                'request body %c%s',
-                'font-style: italic; opacity: 0.8;',
-                $body instanceof Abstraction
-                    ? '(prettified)'
-                    : '',
+                'request body',
                 $body,
                 $this->debug->meta('redact')
             );
@@ -118,11 +114,7 @@ class GuzzleMiddleware
         if ($this->cfg['inclResponseBody']) {
             $body = $this->getBody($response);
             $this->debug->log(
-                'response body %c%s',
-                'font-style: italic; opacity: 0.8;',
-                $body instanceof Abstraction
-                    ? '(prettified)'
-                    : '',
+                'response body',
                 $body,
                 $this->debug->meta('redact')
             );
@@ -212,19 +204,14 @@ class GuzzleMiddleware
             ? $contentType[0]
             : null;
         $body = $this->debug->utility->getStreamContents($msg->getBody());
-        $prettify = $msg instanceof RequestInterface
-            ? $this->cfg['prettyRequestBody']
-            : $this->cfg['prettyResponseBody'];
         if (\strlen($body) === 0) {
             return null;
         }
-        if ($prettify) {
-            $event = $this->debug->rootInstance->eventManager->publish(Debug::EVENT_PRETTIFY, $msg, array(
-                'value' => $body,
-                'contentType' => $contentType,
-            ));
-            return $event['value'];
-        }
-        return $body;
+        $prettify = $msg instanceof RequestInterface
+            ? $this->cfg['prettyRequestBody']
+            : $this->cfg['prettyResponseBody'];
+        return $prettify
+            ? $this->debug->prettify($body, $contentType)
+            : $body;
     }
 }

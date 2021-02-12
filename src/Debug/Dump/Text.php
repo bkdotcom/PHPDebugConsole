@@ -26,22 +26,22 @@ class Text extends Base
     protected $depth = 0;   // for keeping track of indentation
     protected $cfg = array(
         'prefixes' => array(
-            'error' => '⦻ ',
-            'info' => 'ℹ ',
-            'log' => '',
-            'warn' => '⚠ ',
             'assert' => '≠ ',
             'clear' => '⌦ ',
             'count' => '✚ ',
             'countReset' => '✚ ',
-            'time' => '⏱ ',
-            'timeLog' => '⏱ ',
+            'error' => '⦻ ',
             'group' => '▸ ',
             'groupCollapsed' => '▸ ',
+            'info' => 'ℹ ',
+            'log' => '',
+            'time' => '⏱ ',
+            'timeLog' => '⏱ ',
+            'warn' => '⚠ ',
         ),
         'glue' => array(
-            'multiple' => ', ',
             'equal' => ' = ',
+            'multiple' => ', ',
         ),
     );
     protected $valDepth = 0;
@@ -314,7 +314,17 @@ class Text extends Base
         $prefix = $this->cfg['prefixes'][$levelToMethod[$level]];
         $prefix = '[Alert ' . $prefix . $level . '] ';
         $wrap = array('》','《');
-        return $wrap[0] . $prefix . $logEntry['args'][0] . $wrap[1];
+        $args = $logEntry['args'];
+        if ($logEntry->containsSubstitutions()) {
+            $args = $this->processSubstitutions($args, array(
+                'replace' => true,
+                'style' => false,
+            ));
+            $args[0] = $this->dump($args[0], array(
+                'addQuotes' => false,
+            ));
+        }
+        return $wrap[0] . $prefix . $args[0] . $wrap[1];
     }
 
     /**
@@ -327,7 +337,7 @@ class Text extends Base
     protected function methodDefault(LogEntry $logEntry)
     {
         $args = $logEntry['args'];
-        if ($this->containsSubstitutions($logEntry)) {
+        if ($logEntry->containsSubstitutions()) {
             $args = $this->processSubstitutions($args, array(
                 'replace' => true,
                 'style' => false,

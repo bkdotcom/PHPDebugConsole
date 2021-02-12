@@ -21,6 +21,8 @@ use bdk\PubSub\Event;
 class LogEntry extends Event
 {
 
+    public $subRegex;
+
     /**
      * Construct a log entry
      *
@@ -47,6 +49,17 @@ class LogEntry extends Event
             'appendLog' => true,
             'return' => null,
         );
+        $this->subRegex = '/%'
+            . '(?:'
+            . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
+            . '[+-]?'                // sign specifier
+            . '(?:[ 0]|\'.{1})?'     // padding specifier
+            . '-?'                   // alignment specifier
+            . '\d*'                  // width specifier
+            . '(?:\.\d+)?'           // precision specifier
+            . '[difs]'
+            . ')'
+            . '/';
         $metaExtracted = $this->metaExtract($this->values['args']);
         if ($defaultArgs) {
             $count = \count($defaultArgs);
@@ -64,6 +77,20 @@ class LogEntry extends Event
         }
         $this->setMeta($meta);
         $this->setMeta($metaExtracted);
+    }
+
+    /**
+     * Do the logEntry arguments appear to have string substitutions
+     *
+     * @return bool
+     */
+    public function containsSubstitutions()
+    {
+        $args = $this->values['args'];
+        if (\count($args) < 2 || \is_string($args[0]) === false) {
+            return false;
+        }
+        return \preg_match($this->subRegex, $args[0]) === 1;
     }
 
     /**

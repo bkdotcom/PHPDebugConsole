@@ -45,10 +45,23 @@ class Abstracter extends Component
     const TYPE_RECURSION = 'recursion'; // non-native type
     const TYPE_UNKNOWN = 'unknown'; // non-native type
 
+    /*
+        "typeMore" values
+    */
+    const TYPE_ABSTRACTION = 'abstraction';
+    const TYPE_RAW = 'raw'; // raw object or array
+    const TYPE_STRING_BASE64 = 'base64';
+    const TYPE_STRING_CLASSNAME = 'classname';
+    const TYPE_STRING_JSON = 'json';
+    const TYPE_STRING_LONG = 'maxLen';
+    const TYPE_STRING_NUMERIC = 'numeric';
+    const TYPE_STRING_SERIALIZED = 'serialized';
+
     public $debug;
     public static $utility;
     protected $abstractArray;
     protected $abstractObject;
+    private $crateVals = array();
 
     /**
      * Constructor
@@ -93,6 +106,8 @@ class Abstracter extends Component
     /**
      * "crate" value for logging
      *
+     * Conditionally calls getAbstraction
+     *
      * @param mixed  $mixed  value to crate
      * @param string $method Method doing the crating
      * @param array  $hist   (@internal) array/object history (used to test for recursion)
@@ -102,12 +117,12 @@ class Abstracter extends Component
     public function crate($mixed, $method = null, $hist = array())
     {
         $typeInfo = self::needsAbstraction($mixed);
-        if ($typeInfo) {
-            $mixed = $typeInfo === array(self::TYPE_ARRAY, 'raw')
-                ? $this->abstractArray->crate($mixed, $method, $hist)
-                : $this->getAbstraction($mixed, $method, $typeInfo, $hist);
+        if (!$typeInfo) {
+            return $mixed;
         }
-        return $mixed;
+        return $typeInfo === array(self::TYPE_ARRAY, self::TYPE_RAW)
+            ? $this->abstractArray->crate($mixed, $method, $hist)
+            : $this->getAbstraction($mixed, $method, $typeInfo, $hist);
     }
 
     /**
@@ -120,10 +135,12 @@ class Abstracter extends Component
      */
     public function crateWithVals($mixed, $values = array())
     {
+        $this->crateVals = $values;
         $abs = $this->getAbstraction($mixed);
         foreach ($values as $k => $v) {
             $abs[$k] = $v;
         }
+        $this->crateVals = array();
         return $abs;
     }
 
@@ -149,7 +166,7 @@ class Abstracter extends Component
      */
     public function getAbstraction($mixed, $method = null, $typeInfo = array(), $hist = array())
     {
-        $typeInfo = $typeInfo ?: self::getType($mixed);
+        $typeInfo = $typeInfo ?: $this->getType($mixed);
         switch ($typeInfo[0]) {
             case self::TYPE_ARRAY:
                 return $this->abstractArray->getAbstraction($mixed, $method, $hist);
@@ -162,15 +179,7 @@ class Abstracter extends Component
                     'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
                 ));
             case self::TYPE_STRING:
-                $strlen = \strlen($mixed);
-                $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
-                return new Abstraction($typeInfo[0], array(
-                    'strlen' => $strlen > $maxLen
-                        ? $strlen
-                        : null,
-                    'typeMore' => $typeInfo[1],
-                    'value' => $this->debug->utf8->strcut($mixed, 0, $maxLen),
-                ));
+                return $this->getAbstractionString($mixed, $typeInfo[1]);
             default:
                 return new Abstraction($typeInfo[0], array(
                     'typeMore' => $typeInfo[1],
@@ -192,7 +201,7 @@ class Abstracter extends Component
      *    'false' (type bool)
      *    'numeric' (type string)
      */
-    public static function getType($val)
+    public function getType($val)
     {
         $type = \gettype($val);
         $map = array(
@@ -207,17 +216,17 @@ class Abstracter extends Component
         }
         switch ($type) {
             case self::TYPE_ARRAY:
-                return self::getTypeArray($val);
+                return $this->getTypeArray($val);
             case self::TYPE_BOOL:
                 return array(self::TYPE_BOOL, \json_encode($val));
             case self::TYPE_OBJECT:
-                return self::getTypeObject($val);
+                return $this->getTypeObject($val);
             case self::TYPE_RESOURCE:
-                return array(self::TYPE_RESOURCE, 'raw');
+                return array(self::TYPE_RESOURCE, self::TYPE_RAW);
             case self::TYPE_STRING:
-                return self::getTypeString($val);
+                return $this->getTypeString($val);
             case 'unknown type':
-                return self::getTypeUnknown($val);
+                return $this->getTypeUnknown($val);
             default:
                 return array($type, null);
         }
@@ -256,17 +265,55 @@ class Abstracter extends Component
         if ($val instanceof Abstraction) {
             return false;
         }
-        list($type, $typeMore) = self::getType($val);
-        if ($typeMore === 'raw') {
+        list($type, $typeMore) = $this->getType($val);
+        if ($typeMore === self::TYPE_RAW) {
             return array($type, $typeMore);
         }
-        if ($type === self::TYPE_STRING) {
-            $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
-            if ($maxLen && \strlen($val) > $maxLen) {
-                return array($type, $typeMore);
-            }
+        if ($type === self::TYPE_STRING && \in_array($typeMore, array(null, self::TYPE_STRING_NUMERIC), true) === false) {
+            return array($type, $typeMore);
         }
         return false;
+    }
+
+    /**
+     * Get a string abstraction..
+     *
+     * Ie a string and meta info
+     *
+     * @param string $string   string value
+     * @param string $typeMore ie, 'base64', 'json', 'numeric', etc
+     *
+     * @return [type] [description]
+     */
+    private function getAbstractionString($string, $typeMore)
+    {
+        $strLen = \strlen($string);
+        $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
+        $absValues = array(
+            'strlen' => $strLen > $maxLen
+                ? $strLen
+                : null,
+            'typeMore' => $typeMore,
+            'value' => $this->debug->utf8->strcut($string, 0, $maxLen),
+        );
+        if ($typeMore === self::TYPE_STRING_BASE64) {
+            $absValues['valueDecoded'] = $this->crate(\base64_decode($string));
+        } elseif ($typeMore === self::TYPE_STRING_JSON) {
+            $classes = $this->debug->utility->arrayPathGet($this->crateVals, 'attribs.class', array());
+            if (!\is_array($classes)) {
+                $classes = \explode(' ', $classes);
+            }
+            if (!\in_array('language-json', $classes)) {
+                $abstraction = $this->debug->prettify($string, 'application/json');
+                $absValues = $abstraction->getValues();
+            }
+            if (empty($absValues['valueDecoded'])) {
+                $absValues['valueDecoded'] = $this->crate(\json_decode($string, true));
+            }
+        } elseif ($typeMore === self::TYPE_STRING_SERIALIZED) {
+            $absValues['valueDecoded'] = $this->crate(\unserialize($string));
+        }
+        return new Abstraction(self::TYPE_STRING, $absValues);
     }
 
     /**
@@ -276,10 +323,10 @@ class Abstracter extends Component
      *
      * @return array
      */
-    private static function getTypeArray($val)
+    private function getTypeArray($val)
     {
         $type = self::TYPE_ARRAY;
-        $typeMore = 'raw';  // needs abstracted (references removed / values abstracted if necessary)
+        $typeMore = self::TYPE_RAW;  // needs abstracted (references removed / values abstracted if necessary)
         if (\count($val) === 2 && self::$utility->isCallable($val)) {
             $type = self::TYPE_CALLABLE;
         }
@@ -293,13 +340,13 @@ class Abstracter extends Component
      *
      * @return array type & typeMore
      */
-    private static function getTypeObject($object)
+    private function getTypeObject($object)
     {
         $type = self::TYPE_OBJECT;
-        $typeMore = 'raw';  // needs abstracted
+        $typeMore = self::TYPE_RAW;  // needs abstracted
         if ($object instanceof Abstraction) {
             $type = $object['type'];
-            $typeMore = 'abstraction';
+            $typeMore = self::TYPE_ABSTRACTION;
         }
         return array($type, $typeMore);
     }
@@ -311,7 +358,7 @@ class Abstracter extends Component
      *
      * @return array type and typeMore
      */
-    private static function getTypeString($val)
+    private function getTypeString($val)
     {
         if ($val === self::UNDEFINED) {
             return array(self::TYPE_UNDEFINED, null);       // not a native php type!
@@ -322,12 +369,26 @@ class Abstracter extends Component
         if ($val === self::NOT_INSPECTED) {
             return array(self::TYPE_NOT_INSPECTED, null);   // not a native php type!
         }
-        return array(
-            self::TYPE_STRING,
-            \is_numeric($val)
-                ? 'numeric'
-                : null
-        );
+        if (\is_numeric($val)) {
+            return array(self::TYPE_STRING, self::TYPE_STRING_NUMERIC);
+        }
+        $strlen = \strlen($val);
+        if ($strlen >= 16) {
+            if ($this->debug->utility->isBase64Encoded($val)) {
+                return array(self::TYPE_STRING, self::TYPE_STRING_BASE64);
+            }
+            if ($this->debug->utility->isJson($val)) {
+                return array(self::TYPE_STRING, self::TYPE_STRING_JSON);
+            }
+            if ($this->debug->utility->isSerializedSafe($val)) {
+                return array(self::TYPE_STRING, self::TYPE_STRING_SERIALIZED);
+            }
+        }
+        $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
+        if ($maxLen && $strlen > $maxLen) {
+            return array(self::TYPE_STRING, self::TYPE_STRING_LONG);
+        }
+        return array(self::TYPE_STRING, null);
     }
 
     /**
@@ -337,7 +398,7 @@ class Abstracter extends Component
      *
      * @return array type and typeMore
      */
-    private static function getTypeUnknown($val)
+    private function getTypeUnknown($val)
     {
         $type = self::TYPE_UNKNOWN;
         $typeMore = null;
@@ -348,7 +409,7 @@ class Abstracter extends Component
         */
         if (\strpos(\print_r($val, true), 'Resource') === 0) {
             $type = self::TYPE_RESOURCE;
-            $typeMore = 'raw';  // needs abstracted
+            $typeMore = self::TYPE_RAW;  // needs abstracted
         }
         return array($type, $typeMore);
     }

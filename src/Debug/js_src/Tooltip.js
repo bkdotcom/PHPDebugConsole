@@ -2,11 +2,13 @@ import $ from 'jquery'
 import { delegate } from 'tippy.js'
 
 export function init ($root) {
-  var preventShow = false
+  // var preventShow = false
 
+  /*
   $root.on('mouseenter', '[title] > .fa', function (e) {
     preventShow = true
   })
+  */
 
   delegate($root[0], {
     target: '.fa-hashtag, [title]',
@@ -55,6 +57,7 @@ export function init ($root) {
       if (title) {
         $ref.attr('title', title)
       }
+      // preventShow = false;
       setTimeout(function () {
         instance.destroy()
       }, 100)
@@ -71,7 +74,7 @@ export function init ($root) {
         {
           name: 'flip',
           options: {
-            boundary: $ref.closest('.debug-tabs')[0],
+            boundary: $ref.closest('.tab-panes')[0],
             padding: 5
           }
         },
@@ -93,11 +96,14 @@ export function init ($root) {
       var $ref = $(instance.reference)
       $ref.removeAttr('title')
       $ref.addClass('hasTooltip')
-      return preventShow === false
-    },
+      // return preventShow === false
+      return true;
+    }
+    /*
     onUntrigger: function () {
       preventShow = false
     }
+    */
     /*
     popperOptions: {
       modifiers: [

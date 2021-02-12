@@ -13,7 +13,6 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstraction;
 use Curl\Curl;
 use ReflectionObject;
 
@@ -127,11 +126,7 @@ class PhpCurlClass extends Curl
         if ($this->debugOptions['inclResponseBody']) {
             $body = $this->getResponseBody();
             $this->debug->log(
-                'response body %c%s',
-                'font-style: italic; opacity: 0.8;',
-                $body instanceof Abstraction
-                    ? '(prettified)'
-                    : '',
+                'response body',
                 $body,
                 $this->debug->meta('redact')
             );
@@ -221,7 +216,7 @@ class PhpCurlClass extends Curl
      *
      * Will return formatted Abstraction if html/json/xml
      *
-     * @return Abstraction|string|null
+     * @return \bdk\Debug\Abstraction\Abstraction|string|null
      */
     private function getResponseBody()
     {
@@ -229,13 +224,8 @@ class PhpCurlClass extends Curl
         if (\strlen($body) === 0) {
             return null;
         }
-        if ($this->debugOptions['prettyResponseBody']) {
-            $event = $this->debug->rootInstance->eventManager->publish(Debug::EVENT_PRETTIFY, $this, array(
-                'value' => $body,
-                'contentType' => $this->responseHeaders['content-type'],
-            ));
-            return $event['value'];
-        }
-        return $body;
+        return $this->debugOptions['prettyResponseBody']
+            ? $this->debug->prettify($body, $this->responseHeaders['content-type'])
+            : $body;
     }
 }

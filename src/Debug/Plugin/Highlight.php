@@ -30,7 +30,7 @@ class Highlight implements AssetProviderInterface
                 './js/prism.css',
                 '.debug pre[class*="language-"] {
                     padding: 0;
-                    margin: 0.5em 0 0 0;
+                    margin: 0.25em 0 0.25em 0;
                 }
                 .debug td > pre:first-child {
                     margin-top: 0;
@@ -62,7 +62,7 @@ class Highlight implements AssetProviderInterface
                             return
                         }
                         // console.log("enhanced.debug", e.target)
-                        $target.find(".highlight").removeClass("highlight").each(function () {
+                        $target.find(".highlight:visible").removeClass("highlight").each(function () {
                             var $high = $(this)
                             var $pre
                             var classes = $high.attr("class").split(" ")

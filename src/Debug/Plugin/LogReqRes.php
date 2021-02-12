@@ -74,6 +74,14 @@ class LogReqRes implements SubscriberInterface
         if (\strpos($this->debug->getInterface(), 'http') !== 0) {
             return;
         }
+        $this->debug->alert(
+            '%c%s%c %s',
+            'font-weight:bold;',
+            $this->debug->request->getMethod(),
+            '',
+            $this->debug->request->getRequestTarget(),
+            $this->debug->meta('level', 'info')
+        );
         $this->logRequestHeaders();
         if ($this->debug->getCfg('logRequestInfo.cookies', Debug::CONFIG_DEBUG)) {
             $cookieVals = $this->debug->request->getCookieParams();
@@ -100,7 +108,7 @@ class LogReqRes implements SubscriberInterface
             return;
         }
         $headers = \array_map(function ($vals) {
-            return implode("\n", $vals);
+            return \implode("\n", $vals);
         }, $this->debug->getResponseHeaders());
         $this->debug->table('response headers', $headers);
         $contentType = \implode(', ', $this->debug->getResponseHeader('Content-Type'));
@@ -208,7 +216,11 @@ class LogReqRes implements SubscriberInterface
             // Not POST, empty $_POST, or not application/x-www-form-urlencoded or multipart/form-data
             $input = $this->getRequestBodyContents();
             if ($input) {
-                $this->logRequestBody($contentType);
+                $this->debug->log(
+                    'php://input',
+                    $this->debug->prettify($input, $contentType),
+                    $this->debug->meta('redact')
+                );
             } elseif (!$request->getUploadedFiles()) {
                 $this->debug->warn(
                     $method . ' request with no body',
@@ -220,31 +232,6 @@ class LogReqRes implements SubscriberInterface
                 );
             }
         }
-    }
-
-    /**
-     * log php://input
-     *
-     * @param string $contentType Content-Type
-     *
-     * @return void
-     */
-    private function logRequestBody($contentType = null)
-    {
-        $event = $this->debug->rootInstance->eventManager->publish(Debug::EVENT_PRETTIFY, $this->debug, array(
-            'value' => $this->getRequestBodyContents(),
-            'contentType' => $contentType,
-        ));
-        $input = $event['value'];
-        $this->debug->log(
-            'php://input %c%s',
-            'font-style: italic; opacity: 0.8;',
-            $input instanceof Abstraction
-                ? '(prettified)'
-                : '',
-            $input,
-            $this->debug->meta('redact')
-        );
     }
 
     /**
@@ -264,7 +251,7 @@ class LogReqRes implements SubscriberInterface
                     'attribs' => array(
                         'class' => 'text-left',
                     ),
-                    'typeMore' => 'numeric',
+                    'typeMore' => Abstracter::TYPE_STRING_NUMERIC,
                     'value' => $val,
                 ));
             }
@@ -314,19 +301,12 @@ class LogReqRes implements SubscriberInterface
             $this->debug->log('response too large to output (' . $contentLength . ')');
             return;
         }
-        $event = $this->debug->rootInstance->eventManager->publish(Debug::EVENT_PRETTIFY, $this->debug, array(
-            'value' => $response,
-            'contentType' => $contentType,
-        ));
         $this->debug->log(
-            'response content (%c%s) %c%s',
+            'response content (%c%s%c)',
             'font-family: monospace;',
             $contentType,
-            'font-style: italic; opacity: 0.8;',
-            $event['value'] instanceof Abstraction
-                ? '(prettified)'
-                : '',
-            $event['value'],
+            '',
+            $this->debug->prettify($response, $contentType),
             $this->debug->meta('redact')
         );
     }

@@ -149,7 +149,7 @@ class ChannelTest extends DebugTestFramework
         $htmlFoo = <<<EOD
         <div class="debug" data-channel-name-root="general.foo" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
             <header class="debug-menu-bar">PHPDebugConsole<nav role="tablist"></nav></header>
-            <div class="debug-tabs">
+            <div class="tab-panes">
                 <div class="active debug-tab-general-foo tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
                     <div class="tab-body">
                         <div class="alert-error m_alert" data-channel="general.foo" role="alert">foo: alert</div>
@@ -185,7 +185,7 @@ EOD;
         $html = <<<EOD
         <div class="debug" data-channel-name-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true},&quot;channels&quot;:{&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
             <header class="debug-menu-bar">PHPDebugConsole<nav role="tablist"></nav></header>
-            <div class="debug-tabs">
+            <div class="tab-panes">
                 <div class="active debug-tab-general tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
                     <div class="tab-body">
                         <div class="alert-error m_alert" role="alert">main: alert</div>

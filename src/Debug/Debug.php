@@ -34,6 +34,17 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 /**
  * Web-browser/javascript like console class for PHP
  *
+ * @method Abstraction|string prettify(string $string, string $contentType)
+ * @method void email($toAddr, $subject, $body)
+ * @method string getInterface()
+ * @method string getResponseCode()
+ * @method string getResponseHeader($header = 'Content-Type')
+ * @method array|string getResponseHeaders($asString = false)
+ * @method mixed getServerParam($name, $default = null)
+ * @method bool hasLog()
+ * @method mixed redact($val, $key = null)
+ * @method string requestId()
+ *
  * @property Abstracter           $abstracter    lazy-loaded Abstracter instance
  * @property \bdk\Backtrace       $backtrace     lazy-loaded Backtrace instance
  * @property \bdk\ErrorHandler\ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer instance
@@ -316,6 +327,9 @@ class Debug
     /**
      * Display an alert at the top of the log
      *
+     * Can use styling & substitutions.
+     * If using substitutijons, will need to pass $level & $dismissible as meta values
+     *
      * @param string $message     message
      * @param string $level       (error), info, success, warn
      *                               "danger" and "warning" are still accepted, however deprecated
@@ -327,16 +341,32 @@ class Debug
      */
     public function alert($message, $level = 'error', $dismissible = false)
     {
+        $args = \func_get_args();
+        /*
+            Create a temporary LogEntry so we can test if we passed substitutions
+        */
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args(),
-            array(),
+            $args
+        );
+        $levelsAllowed = array('danger','error','info','success','warn','warning');
+        $haveSubstitutions = $logEntry->containsSubstitutions() && \array_key_exists(1, $args) && !\in_array($args[1], $levelsAllowed);
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            $args,
             array(
-                'message' => null,
                 'level' => 'error',
                 'dismissible' => false,
             ),
+            $haveSubstitutions
+                ? array()
+                : array(
+                    'message' => null,
+                    'level' => 'error',
+                    'dismissible' => false,
+                ),
             array('level','dismissible')
         );
         $level = $logEntry->getMeta('level');
@@ -349,7 +379,7 @@ class Debug
         );
         if (isset($levelTrans[$level])) {
             $level = $levelTrans[$level];
-        } elseif (!\in_array($level, array('error','info','success','warn'))) {
+        } elseif (!\in_array($level, $levelsAllowed)) {
             $level = 'error';
         }
         $logEntry->setMeta('level', $level);
@@ -563,8 +593,6 @@ class Debug
      * Create a new inline group
      *
      * Groups generally get indented and will receive an expand/collapse toggle.
-     *
-     * Supports styling & substitutions
      *
      * applicable meta args:
      *      argsAsParams: true

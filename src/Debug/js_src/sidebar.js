@@ -8,7 +8,7 @@ var $root
 var initialized = false
 
 export function init ($debugRoot) {
-  var $debugTabLog = $debugRoot.find('> .debug-tabs > .tab-primary')
+  var $debugTabLog = $debugRoot.find('> .tab-panes > .tab-primary')
 
   config = $debugRoot.data('config') || $('body').data('config')
   $root = $debugRoot
@@ -90,7 +90,7 @@ export function init ($debugRoot) {
 
 export function addMarkup ($node) {
   var $sidebar = $('<div class="debug-sidebar show no-transition"></div>')
-  var $expAll = $node.find('.debug-tabs > .tab-primary > .tab-body > .expand-all')
+  var $expAll = $node.find('.tab-panes > .tab-primary > .tab-body > .expand-all')
   $sidebar.html(
     '<div class="sidebar-toggle">' +
       '<div class="collapse">' +
@@ -120,7 +120,7 @@ export function addMarkup ($node) {
       '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
     '</div>'
   )
-  $node.find('.debug-tabs > .tab-primary > .tab-body').before($sidebar)
+  $node.find('.tab-panes > .tab-primary > .tab-body').before($sidebar)
 
   phpErrorToggles($node)
   moveChannelToggles($node)
@@ -155,7 +155,7 @@ export function open ($node) {
 function addMethodToggles ($node) {
   var channelNameRoot = $node.data('channelNameRoot')
   var $filters = $node.find('.debug-filters')
-  var $entries = $node.find('> .debug-tabs .m_alert, .group-body > *')
+  var $entries = $node.find('> .tab-panes .m_alert, .group-body > *')
   var val
   var labels = {
     alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
@@ -187,20 +187,20 @@ function addMethodToggles ($node) {
 }
 
 /**
- * grab the .debug-tabs toggles and move them to sidebar
+ * grab the .tab-panes toggles and move them to sidebar
  */
 function moveChannelToggles ($node) {
-  var $togglesSrc = $node.find('.debug-tabs .channels > ul > li')
+  var $togglesSrc = $node.find('.tab-panes .channels > ul > li')
   var $togglesDest = $node.find('.debug-sidebar .channels ul')
   $togglesDest.append($togglesSrc)
   if ($togglesDest.children().length === 0) {
     $togglesDest.parent().hide()
   }
-  $node.find('> .debug-tabs > .tab-primary > .tab-body > .channels').remove()
+  $node.find('> .tab-panes > .tab-primary > .tab-body > .channels').remove()
 }
 
 /**
- * Grab the error toggles from .debug-tabs's error-summary move to sidebar
+ * Grab the error toggles from .tab-panes's error-summary move to sidebar
  */
 function phpErrorToggles ($node) {
   var $togglesUl = $node.find('.debug-sidebar .php-errors ul')

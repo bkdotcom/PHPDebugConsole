@@ -13,6 +13,7 @@
 namespace bdk\Debug\Framework;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Psr15\Middleware;
 use bdk\ErrorHandler\Error;
@@ -162,7 +163,7 @@ class Cake4 extends BasePlugin
                     'subject' => $debug->abstracter->crateWithVals(
                         \get_class($event->getSubject()),
                         array(
-                            'typeMore' => 'classname',
+                            'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
                         )
                     ),
                     'count' => 0

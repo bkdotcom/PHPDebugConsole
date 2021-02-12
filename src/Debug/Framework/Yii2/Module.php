@@ -13,6 +13,7 @@
 namespace bdk\Debug\Framework\Yii2;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii2\LogTarget;
@@ -316,10 +317,10 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         foreach ($tableData as &$info) {
             unset($info['index']);
             $info['senderClass'] = $this->debug->abstracter->crateWithVals($info['senderClass'], array(
-                'typeMore' => 'classname',
+                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
             ));
             $info['eventClass'] = $this->debug->abstracter->crateWithVals($info['eventClass'], array(
-                'typeMore' => 'classname',
+                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
             ));
         }
 
@@ -362,7 +363,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         $debug->log('session class', $debug->abstracter->crateWithVals(
             \get_class($session),
             array(
-                'typeMore' => 'classname',
+                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
             )
         ));
 

@@ -170,7 +170,10 @@ class Firephp extends Base
             ? $levelToMethod[$level]
             : 'error';
         $logEntry['firephpMeta']['Type'] = $this->firephpMethods[$method];
-        return $logEntry['args'][0];
+        if ($logEntry->containsSubstitutions()) {
+            $this->dump->processLogEntry($logEntry);
+        }
+        return $this->getValue($logEntry);
     }
 
     /**

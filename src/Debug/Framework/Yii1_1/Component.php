@@ -13,6 +13,7 @@
 namespace bdk\Debug\Framework\Yii1_1;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii1_1\LogRoute;
@@ -479,7 +480,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
         $debug->log('session class', $debug->abstracter->crateWithVals(
             \get_class($session),
             array(
-                'typeMore' => 'classname',
+                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
             )
         ));
 
@@ -528,7 +529,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
             $debug->log('authManager class', $debug->abstracter->crateWithVals(
                 \get_class($authManager),
                 array(
-                    'typeMore' => 'classname',
+                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
                 )
             ));
 
@@ -537,7 +538,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
                 $debug->log('accessManager class', $debug->abstracter->crateWithVals(
                     \get_class($accessManager),
                     array(
-                        'typeMore' => 'classname',
+                        'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
                     )
                 ));
             }

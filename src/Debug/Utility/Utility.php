@@ -119,16 +119,17 @@ class Utility
     /**
      * Get value from array
      *
-     * @param array        $array array to traverse
-     * @param array|string $path  key path
-     *                               path may contain special keys:
-     *                                 * __count__ : return count() (traversal will cease)
-     *                                 * __end__ : last value
-     *                                 * __reset__ : first value
+     * @param array        $array   array to traverse
+     * @param array|string $path    key path
+     *                              path may contain special keys:
+     *                                * __count__ : return count() (traversal will cease)
+     *                                * __end__ : last value
+     *                                * __reset__ : first value
+     * @param mixed        $default default value
      *
      * @return mixed
      */
-    public static function arrayPathGet($array, $path)
+    public static function arrayPathGet($array, $path, $default = null)
     {
         if (!\is_array($path)) {
             $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
@@ -138,7 +139,7 @@ class Utility
             $key = \array_pop($path);
             $arrayAccess = \is_array($array) || $array instanceof \ArrayAccess;
             if (!$arrayAccess) {
-                return null;
+                return $default;
             }
             if (isset($array[$key])) {
                 $array = $array[$key];
@@ -157,7 +158,7 @@ class Utility
                 $path[] = \key($array);
                 continue;
             }
-            return null;
+            return $default;
         }
         return $array;
     }
@@ -485,13 +486,42 @@ class Utility
     /**
      * Checks if a given string is base64 encoded
      *
-     * @param string $str string to check
+     * @param string $val     value to check
+     * @param bool   $testLen (true) test that string length is properly padded
      *
      * @return bool
      */
-    public static function isBase64Encoded($str)
+    public static function isBase64Encoded($val, $testLen = true)
     {
-        return (bool) \preg_match('%^[a-zA-Z0-9(!\s+)?\r\n/+]*={0,2}$%', \trim($str));
+        if (\is_string($val) === false) {
+            return false;
+        }
+        $val = \trim($val);
+        // only allow whitspace at beginning and end of lines
+        $regex = '#'
+            . '(^[ \t]*[a-zA-Z0-9+/]*[ \t]*\r?$)*'
+            . '(^[ \t]*[a-zA-Z0-9+/]*={0,2}[ \t]*\r?$)'
+            . '#m';
+        if (\preg_match($regex, $val) !== 1) {
+            return false;
+        }
+        if ($testLen) {
+            $val = \preg_replace('#\s#', '', $val);
+            $mod = \strlen($val) % 4;
+            if ($mod > 0) {
+                return false;
+            }
+        }
+        $data = \base64_decode($val, true);
+        if ($data === false) {
+            return false;
+        }
+        /*
+            file/directory path is a common false positive
+        */
+        $hasNewline = \strpos($val, "\n") !== false;
+        $isFilepath = $hasNewline === false && \file_exists($val);
+        return $isFilepath === false;
     }
 
     /**
@@ -538,12 +568,71 @@ class Utility
             return false;
         }
         /*
-            pre-text / prevent "is_file() expects parameter 1 to be a valid path, string given"
+            pre-test / prevent "is_file() expects parameter 1 to be a valid path, string given"
         */
         if (\preg_match('#(://|[\r\n\x00])#', $val) === 1) {
             return false;
         }
         return \is_file($val);
+    }
+
+    /**
+     * Test if value is a json encoded  object or array
+     *
+     * @param string $val value to test
+     *
+     * @return bool
+     */
+    public static function isJson($val)
+    {
+        if (!\is_string($val)) {
+            return false;
+        }
+        if (!\preg_match('/^(\[.+\]|\{.+\})$/s', $val)) {
+            return false;
+        }
+        \json_decode($val);
+        return \json_last_error() === JSON_ERROR_NONE;
+    }
+
+    /**
+     * Test if value is output from `serialize()`
+     * Will return false if contains a object other than stdClass
+     *
+     * @param string $val value to test
+     *
+     * @return bool
+     */
+    public static function isSerializedSafe($val)
+    {
+        if (!\is_string($val)) {
+            return false;
+        }
+        if (\preg_match('/^b:[01];$/', $val)) {
+            // bool
+            return true;
+        }
+        $isSerialized = false;
+        $matches = array();
+        if (\preg_match('/^(N|i:\d+|d:\d+\.\d+|s:\d+:".*");$/', $val)) {
+            // null, int, float, or string
+            $isSerialized = true;
+        } elseif (\preg_match('/^(?:a|O:8:"stdClass"):\d+:\{(.+)\}$/', $val, $matches)) {
+            // appears to be a serialized array or stdClass object
+            $isSerialized = true;
+            if (\preg_match('/[OC]:\d+:"((?!stdClass)[^"])*":\d+:/', $matches[1])) {
+                // appears to contain a serialized obj other than stdClass
+                $isSerialized = false;
+            }
+        }
+        if ($isSerialized) {
+            \set_error_handler(function () {
+                // ignore unserialize errors
+            });
+            $isSerialized = \unserialize($val) !== false;
+            \restore_error_handler();
+        }
+        return $isSerialized;
     }
 
     /**
@@ -589,23 +678,28 @@ class Utility
 
     /**
      * Prettify JSON string
+     * The goal is to format whitespace without effecting the encoding
      *
-     * @param string $json JSON string to prettify
+     * @param string $json        JSON string to prettify
+     * @param int    $encodeFlags (0) specify json_encode flags
+     *                               we will always add JSON_PRETTY_PRINT
+     *                               we will add JSON_UNESCAPED_SLASHES if source doesn't contain escaped slashes
+     *                               we will add JSON_UNESCAPED_UNICODE IF source doesn't contain escaped unicode
      *
      * @return string
      */
-    public static function prettyJson($json)
+    public static function prettyJson($json, $encodeFlags = 0)
     {
-        $opts = JSON_PRETTY_PRINT;
+        $flags = $encodeFlags | JSON_PRETTY_PRINT;
         if (\strpos($json, '\\/') === false) {
             // json doesn't appear to contain escaped slashes
-            $opts |= JSON_UNESCAPED_SLASHES;
+            $flags |= JSON_UNESCAPED_SLASHES;
         }
-        if (\strpos($json, '/u') === false) {
+        if (\strpos($json, '\\u') === false) {
             // json doesn't appear to contain encoded unicode
-            $opts |= JSON_UNESCAPED_UNICODE;
+            $flags |= JSON_UNESCAPED_UNICODE;
         }
-        return \json_encode(\json_decode($json), $opts);
+        return \json_encode(\json_decode($json), $flags);
     }
 
     /**
@@ -655,16 +749,16 @@ class Utility
     /**
      * Interpolates context values into the message placeholders.
      *
-     * @param string|object $message message (string, or obj with __toString)
-     * @param array|object  $context optional array of key/values or object
-     *                                    if array: interpolated values get removed
-     * @param bool          $unset   (false) whether to unset values from context (if array)
+     * @param string|object $message      message (string, or obj with __toString)
+     * @param array|object  $context      optional array of key/values or object
+     *                                      if array: interpolated values get removed
+     * @param array         $placeholders gets set to the placeholders found in message
      *
      * @return string
      * @throws \RuntimeException if non-stringable object provided for $message
      * @throws \InvalidArgumentException if $context not array or object
      */
-    public function strInterpolate($message, &$context = array(), $unset = false)
+    public static function strInterpolate($message, $context = array(), &$placeholders = array())
     {
         // build a replacement array with braces around the context keys
         if (!\is_array($context) && !\is_object($context)) {
@@ -679,12 +773,9 @@ class Utility
             $message = (string) $message;
         }
         $matches = array();
-        \preg_match_all('/\{([a-zA-Z0-9.]+)\}/', $message, $matches);
+        \preg_match_all('/\{([a-zA-Z0-9._-]+)\}/', $message, $matches);
         $placeholders = \array_unique($matches[1]);
         $replaceVals = self::strInterpolateValues($placeholders, $context);
-        if ($unset && \is_array($context)) {
-            $context = \array_diff_key($context, \array_flip($placeholders));
-        }
         return \strtr((string) $message, $replaceVals);
     }
 

@@ -101,8 +101,7 @@ $transparent-darker: rgba(0, 8, 16, 0.5);
       top: 0;
 
       &::before {
-        // bottom: $arrow-size;
-        top: -7px;
+        top: -6px;
         left: 0;
         border-width: 0 8px 8px;
         border-bottom-color: $color;

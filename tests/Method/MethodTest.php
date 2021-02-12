@@ -209,7 +209,10 @@ class MethodTest extends DebugTestFramework
         );
         $this->testMethod(
             'alert',
-            array($message),
+            array(
+                $message,
+                // level error by default
+            ),
             array(
                 'entry' => $entry,
                 'chromeLogger' => array(
@@ -224,6 +227,84 @@ class MethodTest extends DebugTestFramework
                 'html' => '<div class="alert-error m_alert" role="alert">' . $messageEscaped . '</div>',
                 'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
                 'text' => '》[Alert ⦻ error] ' . $message . '《',
+                'wamp' => $entry,
+            )
+        );
+
+        $entry['meta']['level'] = 'info';
+        $style = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #d9edf7;border: 1px solid #bce8f1;color: #31708f;';
+        $this->testMethod(
+            'alert',
+            array(
+                $message,
+                $this->debug->meta('level', 'info'),
+            ),
+            array(
+                'entry' => $entry,
+                'chromeLogger' => array(
+                    array(
+                        '%c' . $message,
+                        $style,
+                    ),
+                    null,
+                    'info',
+                ),
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"INFO"},' . \json_encode($message, JSON_UNESCAPED_SLASHES) . ']|',
+                'html' => '<div class="alert-info m_alert" role="alert">' . $messageEscaped . '</div>',
+                'script' => \str_replace('%c', '%%c', 'console.info(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
+                'text' => '》[Alert ℹ info] ' . $message . '《',
+                'wamp' => $entry,
+            )
+        );
+
+        $entry['meta']['level'] = 'success';
+        $style = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #dff0d8;border: 1px solid #d6e9c6;color: #3c763d;';
+        $this->testMethod(
+            'alert',
+            array(
+                $message,
+                $this->debug->meta('level', 'success'),
+            ),
+            array(
+                'entry' => $entry,
+                'chromeLogger' => array(
+                    array(
+                        '%c' . $message,
+                        $style,
+                    ),
+                    null,
+                    'info',
+                ),
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"INFO"},' . \json_encode($message, JSON_UNESCAPED_SLASHES) . ']|',
+                'html' => '<div class="alert-success m_alert" role="alert">' . $messageEscaped . '</div>',
+                'script' => \str_replace('%c', '%%c', 'console.info(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
+                'text' => '》[Alert ℹ success] ' . $message . '《',
+                'wamp' => $entry,
+            )
+        );
+
+        $entry['meta']['level'] = 'warn';
+        $style = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #fcf8e3;border: 1px solid #faebcc;color: #8a6d3b;';
+        $this->testMethod(
+            'alert',
+            array(
+                $message,
+                $this->debug->meta('level', 'warn'),
+            ),
+            array(
+                'entry' => $entry,
+                'chromeLogger' => array(
+                    array(
+                        '%c' . $message,
+                        $style,
+                    ),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"WARN"},' . \json_encode($message, JSON_UNESCAPED_SLASHES) . ']|',
+                'html' => '<div class="alert-warn m_alert" role="alert">' . $messageEscaped . '</div>',
+                'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
+                'text' => '》[Alert ⚠ warn] ' . $message . '《',
                 'wamp' => $entry,
             )
         );
@@ -1743,7 +1824,7 @@ class MethodTest extends DebugTestFramework
         $outputExpect = <<<'EOD'
 <div class="debug" data-channel-name-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
     <header class="debug-menu-bar">PHPDebugConsole<nav role="tablist"></nav></header>
-    <div class="debug-tabs">
+    <div class="tab-panes">
         <div class="active debug-tab-general tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
             <div class="tab-body">
                 <ul class="debug-log-summary group-body">

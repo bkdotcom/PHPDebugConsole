@@ -13,6 +13,7 @@
 namespace bdk\Debug\Framework\Laravel;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use Closure;
 use Error;
 use Exception;
@@ -285,7 +286,7 @@ class Middleware
             'session',
             $this->debug->abstracter->crateWithVals(
                 \get_class($this->container['session']),
-                array('typeMore' => 'classname')
+                array('typeMore' => Abstracter::TYPE_STRING_CLASSNAME)
             ),
             $this->container['session']->all()
         );

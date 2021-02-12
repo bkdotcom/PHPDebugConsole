@@ -47,7 +47,7 @@ export function init ($debugRoot) {
 
   addMarkup()
 
-  $root.find('.debug-tabs').scrollLock()
+  $root.find('.tab-panes').scrollLock()
   $root.find('.debug-resize-handle').on('mousedown', onMousedown)
   $root.find('.debug-pull-tab').on('click', open)
   $root.find('.debug-menu-bar .close').on('click', close)
@@ -103,7 +103,7 @@ function onMousedown (e) {
     // drawer isn't open / ignore resize
     return
   }
-  origH = $root.find('.debug-tabs').height()
+  origH = $root.find('.tab-panes').height()
   origPageY = e.pageY
   $('html').addClass('debug-resizing')
   $root.parents()
@@ -121,7 +121,7 @@ function onMouseup () {
 }
 
 function setHeight (height, viaUser) {
-  var $body = $root.find('.debug-tabs')
+  var $body = $root.find('.tab-panes')
   var menuH = $root.find('.debug-menu-bar').outerHeight()
   var minH = 20
   // inacurate if document.doctype is null : $(window).height()

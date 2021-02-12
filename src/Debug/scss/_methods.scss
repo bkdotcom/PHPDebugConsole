@@ -23,10 +23,19 @@
   }
 }
 .m_assert { background-color: rgba(255, 204, 204, 0.75); }
+
 .m_group {
   .group-header {
     display: table;
     white-space: nowrap;
+    i.fa-warning {
+      color: #cdcb06;
+      margin-left: 0.33em;
+    }
+    i.fa-times-circle {
+      color: #d8000c;
+      margin-left: 0.33em;
+    }
   }
   .group-body {
     display: none;

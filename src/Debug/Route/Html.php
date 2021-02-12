@@ -187,9 +187,9 @@ class Html extends Base
         if ($this->cfg['outputScript']) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n";
         }
-        $str .= '<div class="debug-tabs"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>' . "\n";
+        $str .= '<div class="tab-panes"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>' . "\n";
         $str .= $this->buildTabPanes();
-        $str .= '</div>' . "\n"; // close .debug-tabs
+        $str .= '</div>' . "\n"; // close .tab-panes
         $str .= '</div>' . "\n"; // close .debug
         $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
         $str = \strtr($str, array(

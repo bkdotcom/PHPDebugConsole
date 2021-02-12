@@ -27,6 +27,19 @@ $color-final: #f00e;
   color: $color-classname;
 }
 
+// this is outside of .t_object because tooltip gets placed outside
+.attribute {
+  .t_punct {
+    color: inherit;
+    font-weight: bold;
+  }
+}
+// method parameter or attribute argument
+// this is outside of .t_object because tooltip gets placed outside
+.t_parameter-name {
+  color: $color-param;
+}
+
 .t_array {
   > .t_array-collapse,
   > .array-inner,
@@ -76,19 +89,6 @@ $color-final: #f00e;
 }
 li[class*=m_] > .t_array.array-file-tree > .array-inner {
   margin-left: -10px;
-}
-
-// this is outside of .t_object because tooltip gets placed outside
-.attribute {
-  .t_punct {
-    color: inherit;
-    font-weight: bold;
-  }
-}
-// method parameter or attribute argument
-// this is outside of .t_object because tooltip gets placed outside
-.t_parameter-name {
-  color: $color-param;
 }
 
 .t_object {

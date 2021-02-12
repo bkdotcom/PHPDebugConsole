@@ -16,14 +16,14 @@ export function init ($delegateNode) {
     toggle(this)
     return false
   })
-  $delegateNode.on('click', '[data-toggle=object]', function () {
-    toggle(this)
-    return false
-  })
   $delegateNode.on('click', '[data-toggle=next]', function (e) {
     if ($(e.target).closest('a,button').length) {
       return
     }
+    toggle(this)
+    return false
+  })
+  $delegateNode.on('click', '[data-toggle=object]', function () {
     toggle(this)
     return false
   })
@@ -49,12 +49,10 @@ export function collapse ($node, immediate) {
   var what = isToggle
     ? $node.data('toggle')
     : $node.find('> *[data-toggle]').data('toggle')
-  var $toggle = isToggle
-    ? $node
-    : $node.find('> *[data-toggle]')
   var $wrap = isToggle
     ? $node.parent()
     : $node
+  var $toggle = $wrap.find('> *[data-toggle]')
   var $groupEndValue
   var eventNameDone = 'collapsed.debug.' + what
   if (what === 'array') {
@@ -97,12 +95,10 @@ export function expand ($node) {
   var what = isToggle
     ? $node.data('toggle')
     : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop())
-  var $toggle = isToggle
-    ? $node
-    : $node.find('> *[data-toggle]')
   var $wrap = isToggle
     ? $node.parent()
     : $node
+  var $toggle = $wrap.find('> *[data-toggle]')
   var $classTarget = what === 'next' // node that get's "expanded" class
     ? $toggle
     : $wrap

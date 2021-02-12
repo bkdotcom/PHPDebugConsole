@@ -374,14 +374,9 @@ class Abstracter extends Component
         }
         $strlen = \strlen($val);
         if ($strlen >= 16) {
-            if ($this->debug->utility->isBase64Encoded($val)) {
-                return array(self::TYPE_STRING, self::TYPE_STRING_BASE64);
-            }
-            if ($this->debug->utility->isJson($val)) {
-                return array(self::TYPE_STRING, self::TYPE_STRING_JSON);
-            }
-            if ($this->debug->utility->isSerializedSafe($val)) {
-                return array(self::TYPE_STRING, self::TYPE_STRING_SERIALIZED);
+            $typeMore = $this->getTypeStringEncoded($val);
+            if ($typeMore) {
+                return array(self::TYPE_STRING, $typeMore);
             }
         }
         $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
@@ -389,6 +384,27 @@ class Abstracter extends Component
             return array(self::TYPE_STRING, self::TYPE_STRING_LONG);
         }
         return array(self::TYPE_STRING, null);
+    }
+
+    /**
+     * Test if string is Base64 enncoded, json, or serialized
+     *
+     * @param string $val string value
+     *
+     * @return string|null
+     */
+    private function getTypeStringEncoded($val)
+    {
+        if ($this->debug->utility->isBase64Encoded($val)) {
+            return self::TYPE_STRING_BASE64;
+        }
+        if ($this->debug->utility->isJson($val)) {
+            return self::TYPE_STRING_JSON;
+        }
+        if ($this->debug->utility->isSerializedSafe($val)) {
+            return self::TYPE_STRING_SERIALIZED;
+        }
+        return null;
     }
 
     /**

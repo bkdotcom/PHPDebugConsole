@@ -5694,7 +5694,7 @@
         $ref.removeAttr('title');
         $ref.addClass('hasTooltip');
         // return preventShow === false
-        return true;
+        return true
       }
       /*
       onUntrigger: function () {

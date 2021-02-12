@@ -4,7 +4,7 @@
  * @package   Backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2020 Brad Kent
+ * @copyright 2020-2021 Brad Kent
  * @version   v2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */

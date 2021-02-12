@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2020 Brad Kent
+ * @copyright 2014-2021 Brad Kent
  * @version   v3.0.1
  */
 
@@ -231,6 +231,15 @@ class ErrorHandler
      */
     public function handleError($errType, $errMsg, $file, $line, $vars = array())
     {
+        /*
+        echo '<pre>handleError : ' . \htmlspecialchars(\print_r(array(
+            'errType' => $errType,
+            // 'errTypeStr' => Error::$errTypes[$errType],
+            'errMsg' => $errMsg,
+            'file' => $file,
+            'line' => $line,
+        ), true)) . '</pre>';
+        */
         $error = $this->cfg['errorFactory']($this, $errType, $errMsg, $file, $line, $vars);
         $this->anonymousCheck($error);
         $this->toStringCheck($error);

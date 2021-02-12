@@ -6,15 +6,13 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2020 Brad Kent
+ * @copyright 2014-2021 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Highlight;
 use bdk\Debug\Utility\FindExit;

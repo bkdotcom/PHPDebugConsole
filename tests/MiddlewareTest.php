@@ -25,7 +25,9 @@ class MiddlewareTest extends DebugTestFramework
             $this->debug->middleware,
             $mockMiddleware,
         ]);
-        $response = $dispatcher->handle(new ServerRequest('GET', '/'));
+        $response = \method_exists($dispatcher, 'handle')
+            ? $dispatcher->handle(new ServerRequest('GET', '/'))  // middleman 4.0
+            : $dispatcher->dispatch(new ServerRequest('GET', '/'));  // older
         $chromeLoggerHeader = $response->getHeaderLine(\bdk\Debug\Route\ChromeLogger::HEADER_NAME);
         $chromeLoggerData = \json_decode(\base64_decode($chromeLoggerHeader), true);
         $body = $response->getBody()->getContents();

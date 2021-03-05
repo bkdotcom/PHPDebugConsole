@@ -110,7 +110,11 @@ I'm just too white and nerdy
 Really white and nerdy
 
 EOD;
-        $base64snip = 'iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAMAAAHtgW46AAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGAUExURcbGxgAAAMrKysjIyDU1NUVFRS0tLeTk';
+        $base64snip = substr(
+            \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
+            0,
+            156
+        );
         $base64snip2 = 'eyJwb29wIjoiXHVkODNkXHVkY2E5IiwiaW50Ijo0MiwicGFzc3dvcmQiOiJzZWNyZXQifQ==';
         return array(
             // 0

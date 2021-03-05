@@ -297,7 +297,7 @@ class InternalEvents implements SubscriberInterface
     public function onPrettify(Event $event)
     {
         $matches = array();
-        if (!\preg_match('#\b(html|json|xml)\b#', $event['contentType'], $matches)) {
+        if (!\preg_match('#\b(html|json|sql|xml)\b#', $event['contentType'], $matches)) {
             return;
         }
         $string = $event['value'];
@@ -307,6 +307,8 @@ class InternalEvents implements SubscriberInterface
             $lang = 'markup';
         } elseif ($type === 'json') {
             $string = $this->debug->utility->prettyJson($string);
+        } elseif ($type === 'sql') {
+            $string = $this->debug->utility->prettySql($string);
         } elseif ($type === 'xml') {
             $string = $this->debug->utility->prettyXml($string);
         }
@@ -314,12 +316,15 @@ class InternalEvents implements SubscriberInterface
             $this->debug->addPlugin(new Highlight());
             $this->highlightAdded = true;
         }
+        $isPrettified = $string !== $event['value'];
         $event['value'] = $this->debug->abstracter->crateWithVals($string, array(
             'attribs' => array(
                 'class' => 'highlight language-' . $lang,
             ),
             'addQuotes' => false,
-            'prettified' => true,
+            'contentType' => $event['contentType'],
+            'prettified' => $isPrettified,
+            'prettifiedTag' => $isPrettified,
             'visualWhiteSpace' => false,
         ));
         $event->stopPropagation();

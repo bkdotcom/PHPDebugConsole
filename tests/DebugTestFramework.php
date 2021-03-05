@@ -595,6 +595,7 @@ class DebugTestFramework extends DOMTestCase
         $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
         $message = "\e[1m" . $test . " not same\e[0m";
         if ($test === 'streamAnsi') {
+            $message .= "\nexpect: " . \str_replace("\e", '\e', $outputExpect) . "\n";
             $message .= "\nactual: " . \str_replace("\e", '\e', $output);
         }
         $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);

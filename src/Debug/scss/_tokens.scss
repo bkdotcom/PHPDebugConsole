@@ -9,8 +9,6 @@ $color-key-bracket: #999;
 $color-punct: #999;
 $color-operator: #a67f59;
 
-$color-prettified: #000b9bee;
-
 $color-true: #993;
 $color-true-shadow: rgba(153, 153, 51, 0.5);
 $color-false: #c33;
@@ -19,11 +17,6 @@ $color-numeric: #009;
 $color-recursion: #f00;
 $color-string: #333;
 $color-stringified: rgba(0, 200, 200, 0.6);
-$color-timestamp: #009;
-$color-bg-specialchar: #c0c0c0;
-$color-specialchar: #003;
-$color-bg-maxlen: #e0b450;
-$color-bg-unicode: #c0c0ff;
 
 //
 // property-name, constant-name, method-name
@@ -99,6 +92,7 @@ $color-bg-unicode: #c0c0ff;
   white-space: nowrap !important; //  override .debug .t_string > *
 }
 .t_punct { color: $color-punct; }
+
 .excluded,
 .t_notInspected,
 .t_recursion {
@@ -134,51 +128,3 @@ $color-bg-unicode: #c0c0ff;
   content: "undefined";
   opacity: 0.3;
 }
-
-.string-encoded.tabs-container {
-  > i {
-    line-height: 20px;
-    margin-right: 0;
-  }
-}
-
-.prettified { color: $color-prettified; }
-.timestamp { color: $color-timestamp; }
-
-.binary,
-.maxlen,
-.unicode {
-  margin: 0 0.1em;
-  padding: 0 0.3em;
-  background-color: $color-bg-specialchar;
-  color: $color-specialchar;
-  font-weight: bold;
-}
-.maxlen {
-  background-color: $color-bg-maxlen;
-}
-.unicode {
-  background-color: $color-bg-unicode;
-}
-.c1-control {
-  display: inline-block;
-  vertical-align: baseline;
-  clip-path: inset(30% 0);
-  transform: scale(2);
-}
-
-//
-// Whitespace
-//
-.ws_s,
-.ws_t,
-.ws_r,
-.ws_n,
-.ws_p { opacity: 0.33; }
-.ws_t::before {
-  display: inline-block;
-  content: "\203A"; // &rsaquo;
-  width: 1em;
-}
-.ws_r::before { content: "\\r"; }
-.ws_n::before { content: "\\n"; }

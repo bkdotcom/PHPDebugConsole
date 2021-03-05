@@ -65,8 +65,6 @@ class UtilityTest extends DebugTestFramework
         );
         $arrayOut = Utility::arrayMergeDeep($array1, $array2, $array3);
         $this->assertSame($arrayExpect, $arrayOut);
-
-
     }
 
     /**
@@ -86,17 +84,53 @@ class UtilityTest extends DebugTestFramework
                 )
             ),
         );
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed.comfy'), true);
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.rock.comfy'), false);
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed.comfy.foo'), null);
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed.comfy.0'), null);
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed'), array('comfy' => true));
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.bed.foo'), null);
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.__count__'), 2);
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.__end__.comfy'), false);
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.__reset__.comfy'), true);
-        $this->assertSame(Utility::arrayPathGet($array, 'surfaces.sofa.comfy'), null);
-        $this->assertSame(Utility::arrayPathGet($array, array('surfaces','__end__','comfy')), false);
+        $this->assertSame(true, Utility::arrayPathGet($array, 'surfaces.bed.comfy'));
+        $this->assertSame(false, Utility::arrayPathGet($array, 'surfaces.rock.comfy'));
+        $this->assertSame(null, Utility::arrayPathGet($array, 'surfaces.bed.comfy.foo'));
+        $this->assertSame(null, Utility::arrayPathGet($array, 'surfaces.bed.comfy.0'));
+        $this->assertSame(array('comfy' => true), Utility::arrayPathGet($array, 'surfaces.bed'));
+        $this->assertSame(null, Utility::arrayPathGet($array, 'surfaces.bed.foo'));
+        $this->assertSame(2, Utility::arrayPathGet($array, 'surfaces.__count__'));
+        $this->assertSame(false, Utility::arrayPathGet($array, 'surfaces.__end__.comfy'));
+        $this->assertSame(true, Utility::arrayPathGet($array, 'surfaces.__reset__.comfy'));
+        $this->assertSame(null, Utility::arrayPathGet($array, 'surfaces.sofa.comfy'));
+        $this->assertSame(false, Utility::arrayPathGet($array, array('surfaces','__end__','comfy')));
+    }
+
+    public function testArrayPathSet()
+    {
+        $array = array(
+            'surfaces' => array(
+                'bed' => array(
+                    'comfy' => true,
+                ),
+                'rock' => array(
+                    'comfy' => false,
+                )
+            ),
+        );
+
+        Utility::arrayPathSet($array, 'surfaces.__end__.hard', true);
+        Utility::arrayPathSet($array, 'surfaces.__reset__.hard', false);
+        Utility::arrayPathSet($array, 'surfaces.__end__.__push__', 'pushed');
+        Utility::arrayPathSet($array, 'surfaces.__push__.itchy', true);
+
+        $this->assertSame(array(
+            'surfaces' => array(
+                'bed' => array(
+                    'comfy' => true,
+                    'hard' => false,
+                ),
+                'rock' => array(
+                    'comfy' => false,
+                    'hard' => true,
+                    0 => 'pushed',
+                ),
+                0 => array(
+                    'itchy' => true,
+                ),
+            ),
+        ), $array);
     }
 
     public function testGetBytes()
@@ -136,7 +170,10 @@ class UtilityTest extends DebugTestFramework
     {
         $base64Str = \base64_encode(\chunk_split(\str_repeat('zippity do dah', 50)));
         $this->assertTrue(Utility::isBase64Encoded($base64Str));
+
         $this->assertFalse(Utility::isBase64Encoded('I\'m just a bill.'));
+        $this->assertFalse(Utility::isBase64Encoded('onRenderComplete'));
+        $this->assertFalse(Utility::isBase64Encoded('/Users/jblow/not/base64/'));
     }
 
     public function testIsFile()

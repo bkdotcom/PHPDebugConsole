@@ -210,7 +210,6 @@ class Debug
             'routeNonHtml' => 'chromeLogger',
             'services' => $this->getDefaultServices(),
             'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
-            'stringMaxLen' => 8192,
         );
         $this->bootstrap($cfg);
     }
@@ -410,19 +409,20 @@ class Debug
         );
         $args = $logEntry['args'];
         $assertion = \array_shift($args);
-        if (!$assertion) {
-            if (!$args) {
-                // add default message
-                $callerInfo = $this->backtrace->getCallerInfo();
-                $args = array(
-                    'Assertion failed:',
-                    \sprintf('%s (line %s)', $callerInfo['file'], $callerInfo['line']),
-                );
-                $logEntry->setMeta('detectFiles', true);
-            }
-            $logEntry['args'] = $args;
-            $this->appendLog($logEntry);
+        if ($assertion) {
+            return;
         }
+        if (!$args) {
+            // add default message
+            $callerInfo = $this->backtrace->getCallerInfo();
+            $args = array(
+                'Assertion failed:',
+                \sprintf('%s (line %s)', $callerInfo['file'], $callerInfo['line']),
+            );
+            $logEntry->setMeta('detectFiles', true);
+        }
+        $logEntry['args'] = $args;
+        $this->appendLog($logEntry);
     }
 
     /**

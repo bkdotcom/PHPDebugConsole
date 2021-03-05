@@ -38,14 +38,11 @@
 .debug fieldset { padding: 0.66em; margin: 0 0 10px 0; min-width: 0; border: 1px solid black; border-radius: 4px; }
 .debug fieldset > ul { font-size: 125%; }
 .debug .close { opacity: 1; float: none; }
-.debug .debug-menu-bar { position: relative; padding: 5px; font-size: 115%; background-color: rgba(0, 0, 0, 0.2); margin-bottom: 10px; }
-.debug .debug-menu-bar a { color: #6e6e6e; }
-.debug .debug-menu-bar button { height: 18px; border: 0; padding: 0; line-height: 0; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: transparent; }
-.debug .debug-error-counts .badge { padding: 0 0.4em 0 0.25em; color: inherit; background: inherit; font-size: inherit; vertical-align: unset; }
 .debug ul.debug-log-summary, .debug ul.debug-log, .debug ul .m_groupSummary > ul { list-style: none; margin-left: 0; border-left: 0; padding-left: 0; }
 .debug ul.debug-log-summary { margin-bottom: 0.75em; }
 .debug ul.debug-log-summary:empty { margin-bottom: 0; }
 .debug li.php-shutdown { display: block; border-bottom: #31708f solid 1px; }
+.debug .fa { line-height: 1; }
 .debug .alert, .debug .m_alert { padding: 0.66em; margin-bottom: 10px; border-radius: 4px; border: 1px solid transparent; }
 .debug .m_alert { font-size: 125%; }
 .debug .m_alert h3 { margin-bottom: 4px; }
@@ -63,6 +60,16 @@
 .debug .alert-success .alert-link { color: #2b542c; }
 .debug .alert-warn { background-color: #fefbe5; border-color: #faebcc; color: #8a6d3b; }
 .debug .alert-warn .alert-link { color: #66512c; }
+.debug nav[role=tablist] { display: inline-block; font-size: 0; line-height: 20px; vertical-align: top; }
+.debug nav[role=tablist] .fa { margin-right: 0.5em; }
+.debug nav[role=tablist] a { display: inline-block; padding: 0 13px; font-size: 13px; line-height: 20px; vertical-align: top; color: #111; cursor: pointer; }
+.debug nav[role=tablist] a:hover { text-decoration: none; }
+.debug nav[role=tablist] a:hover:not(.active) { background: #e6e6e6; }
+.debug nav[role=tablist] a.active { line-height: 19px; border-bottom: #4071e1 solid 2px; }
+.debug .tab-panes { overflow: auto; }
+.debug .tab-panes .tab-pane { display: none; }
+.debug .tab-panes .tab-pane.active { display: block; }
+.debug .tab-panes .tab-pane .tab-body { padding: 10px 12px 5px; background-color: #fff; overflow: auto; }
 .debug .namespace { opacity: 0.5; }
 .debug .array-inner, .debug .object-inner { display: block; margin-left: 1em; }
 .debug .classname { font-weight: bold; color: #8d0c4c; }
@@ -103,6 +110,7 @@
 .debug .m_table td, .debug .m_trace td { word-break: break-word; }
 .debug .m_table td.t_string, .debug .m_trace td.t_string { padding-left: 1em; text-indent: -0.75em; }
 .debug .m_assert { background-color: rgba(255, 204, 204, 0.75); }
+.debug .m_assert > i { margin-right: 0.33em; margin-bottom: -0.2em; display: inline-block; line-height: 0.6em; vertical-align: text-bottom; }
 .debug .m_group .group-header { display: table; white-space: nowrap; }
 .debug .m_group .group-header i.fa-warning { color: #cdcb06; margin-left: 0.33em; }
 .debug .m_group .group-header i.fa-times-circle { color: #d8000c; margin-left: 0.33em; }
@@ -141,7 +149,7 @@
 .debug table.table-hover tbody tr:hover { color: #212529; background-color: rgba(0, 0, 0, 0.075); }
 .debug table.table-sort > thead th { cursor: default; }
 .debug table.table-sort > thead th:hover { background-color: rgba(0, 0, 0, 0.25); }
-.debug table.table-sort .sort-arrows { text-align: center; height: 1.64em; width: 1.2em; margin-left: 0; margin-right: 1px; }
+.debug table.table-sort .sort-arrows { text-align: center; height: 1.5em; width: 1.2em; margin-left: 0; margin-right: 1px; }
 .debug table.table-sort .sort-arrows .fa { position: absolute; opacity: 0.33; }
 .debug table.table-sort .sort-arrows .fa-caret-down { bottom: 0; }
 .debug table.table-sort .sort-arrows .fa-caret-up { top: -1px; }
@@ -183,17 +191,6 @@
 .debug .t_string pre { white-space: pre; }
 .debug .t_stringified { text-shadow: 0 0 2px rgba(0, 200, 200, 0.6); }
 .debug .t_undefined::after { content: "undefined"; opacity: 0.3; }
-.debug .string-encoded.tabs-container > i { line-height: 20px; margin-right: 0; }
-.debug .prettified { color: #000b9bee; }
-.debug .timestamp { color: #009; }
-.debug .binary, .debug .maxlen, .debug .unicode { margin: 0 0.1em; padding: 0 0.3em; background-color: #c0c0c0; color: #003; font-weight: bold; }
-.debug .maxlen { background-color: #e0b450; }
-.debug .unicode { background-color: #c0c0ff; }
-.debug .c1-control { display: inline-block; vertical-align: baseline; clip-path: inset(30% 0); transform: scale(2); }
-.debug .ws_s, .debug .ws_t, .debug .ws_r, .debug .ws_n, .debug .ws_p { opacity: 0.33; }
-.debug .ws_t::before { display: inline-block; content: "\203A"; width: 1em; }
-.debug .ws_r::before { content: "\\r"; }
-.debug .ws_n::before { content: "\\n"; }
 .debug.debug-drawer { position: fixed; bottom: 0; left: 0; width: 100%; font-family: Arial, sans-serif; background-color: #fff; z-index: 1049; height: 100px; transform: translateY(100px); transition: all 0.5s; }
 .debug.debug-drawer > * { box-sizing: border-box; }
 .debug.debug-drawer .debug-pull-tab { display: inline-block; opacity: 1; position: absolute; height: 25px; top: -25px; margin-left: 20px; border: 1px solid #000; border-bottom-width: 0; border-radius: 5px 5px 0 0; padding: 4px 14px; font-size: 16px; background: #f3f3f3; cursor: pointer; transition: all 0.5s; }
@@ -210,20 +207,22 @@
 html.debug-resizing { cursor: ns-resize !important; }
 html.debug-resizing .debug-drawer { transition: none; }
 html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
-.debug.debug-enhanced-ui .debug-menu-bar { height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; padding: 0 6px; background: #f3f3f3; font-size: 16px; margin-bottom: 0; }
-.debug.debug-enhanced-ui .debug-menu-bar, .debug.debug-enhanced-ui .debug-menu-bar a { color: #6e6e6e; }
+.debug .debug-menu-bar { position: relative; padding: 5px; font-size: 115%; background-color: rgba(0, 0, 0, 0.2); margin-bottom: 10px; }
+.debug .debug-menu-bar a { color: #6e6e6e; }
+.debug .debug-menu-bar button { height: 18px; border: 0; padding: 0; line-height: 0; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: transparent; }
+.debug .debug-error-counts .badge { padding: 0 0.4em 0 0.25em; color: inherit; background: inherit; font-size: inherit; vertical-align: unset; }
+.debug.debug-enhanced-ui .debug-menu-bar { height: 25px; border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; color: #6e6e6e; padding: 0 6px; background: #f3f3f3; font-size: 16px; margin-bottom: 0; }
+.debug.debug-enhanced-ui .debug-menu-bar a:focus, .debug.debug-enhanced-ui .debug-menu-bar a:hover, .debug.debug-enhanced-ui .debug-menu-bar button:focus, .debug.debug-enhanced-ui .debug-menu-bar button:hover, .debug.debug-enhanced-ui .debug-menu-bar label:focus, .debug.debug-enhanced-ui .debug-menu-bar label:hover { color: #333; text-decoration: none; }
 .debug.debug-enhanced-ui .debug-menu-bar nav { margin-left: 20px; line-height: 23px; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a { line-height: 23px; }
-.debug.debug-enhanced-ui .debug-menu-bar nav a.active { line-height: 22px; }
-.debug.debug-enhanced-ui .debug-menu-bar a:focus, .debug.debug-enhanced-ui .debug-menu-bar a:hover, .debug.debug-enhanced-ui .debug-menu-bar button:focus, .debug.debug-enhanced-ui .debug-menu-bar button:hover, .debug.debug-enhanced-ui .debug-menu-bar label:focus, .debug.debug-enhanced-ui .debug-menu-bar label:hover { color: #333; text-decoration: none; }
+.debug.debug-enhanced-ui .debug-menu-bar nav a.has-assert { line-height: 22px; border-bottom: #da8585 solid 2px; }
+.debug.debug-enhanced-ui .debug-menu-bar nav a.has-warn { line-height: 22px; border-bottom: #e4cb0f solid 2px; }
+.debug.debug-enhanced-ui .debug-menu-bar nav a.has-error { line-height: 22px; border-bottom: #FF0000 solid 2px; }
+.debug.debug-enhanced-ui .debug-menu-bar nav a.active { line-height: 22px; border-bottom: #4071e1 solid 2px; }
 .debug.debug-enhanced-ui .debug-menu-bar button.close { font-size: 21px; font-weight: 300; }
 .debug.debug-enhanced-ui .debug-menu-bar .float-right { position: absolute; top: 0; right: 6px; }
 .debug.debug-enhanced-ui .debug-menu-bar .debug-error-counts { position: relative; top: -2px; font-size: 0.78em; }
 .debug.debug-enhanced-ui .debug-menu-bar > span { display: inline-block; line-height: 23px; }
-.debug.debug-enhanced-ui .tab-panes { overflow: auto; }
-.debug.debug-enhanced-ui .tab-panes .tab-pane { display: none; }
-.debug.debug-enhanced-ui .tab-panes .tab-pane.active { display: block; }
-.debug.debug-enhanced-ui .tab-panes .tab-pane .tab-body { padding: 10px 10px 5px; background-color: #fff; overflow: auto; }
 .debug #debug-options-toggle { position: relative; top: -1px; }
 .debug .debug-options { position: absolute; top: 100%; right: 0; max-height: 0; box-sizing: border-box; z-index: 1000; float: right; min-width: 12em; background: #f3f3f3; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25); transition: all 0.25s ease-out; overflow: hidden; font-size: 13px; }
 .debug .debug-options .debug-options-body { background-clip: padding-box; border: 1px solid #d0d0d0; padding: 0.5em 5px 0.5em 15px; }
@@ -244,7 +243,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-sidebar + .tab-body { margin-left: 6px; padding-left: 10px; transition: margin-left 0.33s; }
 .debug .debug-sidebar.no-transition + .tab-body { transition: none; }
 .debug .debug-sidebar .collapse { display: none; }
-.debug .debug-sidebar .sidebar-content { padding: 4px 11px 0 4px; opacity: 0; overflow: hidden; }
+.debug .debug-sidebar .sidebar-content { padding: 0 11px 0 4px; opacity: 0; overflow: hidden; }
 .debug .debug-sidebar.show { transform: translateX(0); }
 .debug .debug-sidebar.show .expand { display: none; }
 .debug .debug-sidebar.show .collapse { display: block; }
@@ -300,19 +299,24 @@ color: #818a91
 .debug-noti-table { display: table; width: 100%; height: 100%; }
 @keyframes expandAndFade { from { opacity: 0.9; transform: scale(0.9, 0.94); }
   to { opacity: 0; transform: scale(1, 1); } }
-.debug nav[role=tablist] { display: inline-block; font-size: 0; line-height: 20px; vertical-align: top; }
-.debug nav[role=tablist] .fa { margin-right: 0.5em; }
-.debug nav[role=tablist] a { display: inline-block; padding: 0 15px; font-size: 13px; line-height: 20px; vertical-align: top; color: #111; cursor: pointer; }
-.debug nav[role=tablist] a:hover { text-decoration: none; }
-.debug nav[role=tablist] a:hover:not(.active) { background: #e6e6e6; }
-.debug nav[role=tablist] a.active { line-height: 19px; border-bottom: #4071e1 solid 2px; }
-.debug .tab-panes .tab-body .expand-all { margin-bottom: 0.5em; }
-.debug .tab-panes .m_assert > i { margin-right: 0.33em; margin-bottom: -0.2em; display: inline-block; line-height: 0.6em; vertical-align: text-bottom; }
-.debug .tab-panes .file-link.lpad { margin-left: 0.33em; }
-.debug .tab-panes .file-link i { margin-right: 0; vertical-align: baseline; }
-.debug .tab-panes .hasTooltip, .debug .tab-panes *[title]:not(a) { cursor: help; }
-.debug .tab-panes .hasTooltip:hover, .debug .tab-panes *[title]:not(a):hover { background-color: rgba(0, 0, 0, 0.05); }
-.debug .tab-panes *[data-toggle] { cursor: pointer; }
+.debug .expand-all { margin-bottom: 0.5em; }
+.debug .file-link.lpad { margin-left: 0.33em; }
+.debug .file-link i { margin-right: 0; vertical-align: baseline; }
+.debug .hasTooltip, .debug *[title]:not(a) { cursor: help; }
+.debug .hasTooltip:hover, .debug *[title]:not(a):hover { background-color: rgba(0, 0, 0, 0.05); }
+.debug *[data-toggle] { cursor: pointer; }
+.debug .string-encoded.tabs-container > i { line-height: 20px; margin-right: 0; }
+.debug .string-encoded[data-type=base64] > .string-raw .t_string { font-family: monospace; }
+.debug .prettified { color: #000b9bee; }
+.debug .timestamp { color: #009; }
+.debug .binary, .debug .maxlen, .debug .unicode { margin: 0 0.1em; padding: 0 0.3em; background-color: #c0c0c0; color: #003; font-weight: bold; }
+.debug .maxlen { background-color: #e0b450; }
+.debug .unicode { background-color: #c0c0ff; }
+.debug .c1-control { display: inline-block; vertical-align: baseline; clip-path: inset(30% 0); transform: scale(2); }
+.debug .ws_s, .debug .ws_t, .debug .ws_r, .debug .ws_n, .debug .ws_p { opacity: 0.33; }
+.debug .ws_t::before { display: inline-block; content: "\203A"; width: 1em; }
+.debug .ws_r::before { content: "\\r"; }
+.debug .ws_n::before { content: "\\n"; }
 .debug .tippy-box { background-color: white; background-clip: padding-box; border: 2px solid rgba(0, 8, 16, 0.3); border-radius: 4px; outline: 0; transition-property: transform, visibility, opacity; color: #333; box-shadow: 0 4px 14px -2px rgba(0, 8, 16, 0.08); }
 .debug .tippy-box .tippy-content { padding: 5px 9px; z-index: 1; }
 .debug .tippy-box > .tippy-backdrop { background-color: white; }

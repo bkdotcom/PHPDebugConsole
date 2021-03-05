@@ -51,6 +51,7 @@ class Abstracter extends Component
     const TYPE_ABSTRACTION = 'abstraction';
     const TYPE_RAW = 'raw'; // raw object or array
     const TYPE_STRING_BASE64 = 'base64';
+    const TYPE_STRING_BINARY = 'binary';
     const TYPE_STRING_CLASSNAME = 'classname';
     const TYPE_STRING_JSON = 'json';
     const TYPE_STRING_LONG = 'maxLen';
@@ -61,6 +62,7 @@ class Abstracter extends Component
     public static $utility;
     protected $abstractArray;
     protected $abstractObject;
+    protected $abstractString;
     private $crateVals = array();
 
     /**
@@ -81,11 +83,12 @@ class Abstracter extends Component
             'collectAttributesProp' => true,
             'collectConstants' => true,
             'collectMethods' => true,
+            'fullyQualifyPhpDocType' => false,
             'objectsExclude' => array(
                 __NAMESPACE__,
             ),
-            'objectsWhitelist' => null,     // will be used if array
             'objectSort' => 'visibility',   // none, visibility, or name
+            'objectsWhitelist' => null,     // will be used if array
             'outputAttributesConst' => true,
             'outputAttributesMethod' => true,
             'outputAttributesObj' => true,
@@ -94,12 +97,23 @@ class Abstracter extends Component
             'outputConstants' => true,
             'outputMethodDesc' => true,     // (or just summary)
             'outputMethods' => true,
+            'stringMaxLen' => array(
+                'base64' => 156, // 2 lines of chunk_split'ed
+                'binary' => array(
+                    128 => 0, // if over 128 bytes don't capture / store
+                ),
+                'other' => 8192,
+            ),
+            'stringMinLen' => array(
+                'contentType' => 256, // try to determine content-type of binary string
+                'encoded' => 16, // test if bas64, json, or serialized (-1 = don't check)
+            ),
             'useDebugInfo' => true,
-            'fullyQualifyPhpDocType' => false,
         );
         $this->abstractArray = new AbstractArray($this);
         $this->abstractObject = new AbstractObject($this, new PhpDoc());
-        $this->setCfg($cfg);
+        $this->abstractString = new AbstractString($this);
+        $this->setCfg(\array_merge($this->cfg, $cfg));
         self::$utility = $debug->utility;
     }
 
@@ -135,6 +149,11 @@ class Abstracter extends Component
      */
     public function crateWithVals($mixed, $values = array())
     {
+        /*
+            Note: this->crateValues is the raw values passed to this method
+               the values may end up being processed in Abstraction::onSet
+               ie, converting attribs.class to an array
+        */
         $this->crateVals = $values;
         $abs = $this->getAbstraction($mixed);
         foreach ($values as $k => $v) {
@@ -179,7 +198,7 @@ class Abstracter extends Component
                     'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
                 ));
             case self::TYPE_STRING:
-                return $this->getAbstractionString($mixed, $typeInfo[1]);
+                return $this->abstractString->getAbstraction($mixed, $typeInfo[1], $this->crateVals);
             default:
                 return new Abstraction($typeInfo[0], array(
                     'typeMore' => $typeInfo[1],
@@ -189,7 +208,7 @@ class Abstracter extends Component
     }
 
     /**
-     * Returns value's type and "extended type" (ie "numeric"/"binary")
+     * Returns value's type and "extended type" (ie "numeric", "binary", etc)
      *
      * @param mixed $val value
      *
@@ -224,7 +243,7 @@ class Abstracter extends Component
             case self::TYPE_RESOURCE:
                 return array(self::TYPE_RESOURCE, self::TYPE_RAW);
             case self::TYPE_STRING:
-                return $this->getTypeString($val);
+                return $this->abstractString->getType($val);
             case 'unknown type':
                 return $this->getTypeUnknown($val);
             default:
@@ -276,44 +295,29 @@ class Abstracter extends Component
     }
 
     /**
-     * Get a string abstraction..
-     *
-     * Ie a string and meta info
-     *
-     * @param string $string   string value
-     * @param string $typeMore ie, 'base64', 'json', 'numeric', etc
-     *
-     * @return [type] [description]
+     * {@inheritDoc}
      */
-    private function getAbstractionString($string, $typeMore)
+    public function setCfg($mixed, $val = null)
     {
-        $strLen = \strlen($string);
-        $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
-        $absValues = array(
-            'strlen' => $strLen > $maxLen
-                ? $strLen
-                : null,
-            'typeMore' => $typeMore,
-            'value' => $this->debug->utf8->strcut($string, 0, $maxLen),
-        );
-        if ($typeMore === self::TYPE_STRING_BASE64) {
-            $absValues['valueDecoded'] = $this->crate(\base64_decode($string));
-        } elseif ($typeMore === self::TYPE_STRING_JSON) {
-            $classes = $this->debug->utility->arrayPathGet($this->crateVals, 'attribs.class', array());
-            if (!\is_array($classes)) {
-                $classes = \explode(' ', $classes);
+        if ($mixed === 'stringMaxLen') {
+            if (!\is_array($val)) {
+                $val = array('other' => $val);
             }
-            if (!\in_array('language-json', $classes)) {
-                $abstraction = $this->debug->prettify($string, 'application/json');
-                $absValues = $abstraction->getValues();
+            $val = \array_merge($this->cfg['stringMaxLen'], $val);
+        } elseif ($mixed === 'stringMinLen') {
+            $val = \array_merge($this->cfg['stringMinLen'], $val);
+        } elseif (\is_array($mixed)) {
+            if (isset($mixed['stringMaxLen'])) {
+                if (!\is_array($mixed['stringMaxLen'])) {
+                    $mixed['stringMaxLen'] = array('other' => $mixed['stringMaxLen']);
+                }
+                $mixed['stringMaxLen'] = \array_merge($this->cfg['stringMaxLen'], $mixed['stringMaxLen']);
             }
-            if (empty($absValues['valueDecoded'])) {
-                $absValues['valueDecoded'] = $this->crate(\json_decode($string, true));
+            if (isset($mixed['stringMixLen'])) {
+                $mixed['stringMinLen'] = \array_merge($this->cfg['stringMinLen'], $mixed['stringMinLen']);
             }
-        } elseif ($typeMore === self::TYPE_STRING_SERIALIZED) {
-            $absValues['valueDecoded'] = $this->crate(\unserialize($string));
         }
-        return new Abstraction(self::TYPE_STRING, $absValues);
+        return parent::setCfg($mixed, $val);
     }
 
     /**
@@ -352,62 +356,6 @@ class Abstracter extends Component
     }
 
     /**
-     * Get string's type.
-     *
-     * @param string $val string value
-     *
-     * @return array type and typeMore
-     */
-    private function getTypeString($val)
-    {
-        if ($val === self::UNDEFINED) {
-            return array(self::TYPE_UNDEFINED, null);       // not a native php type!
-        }
-        if ($val === self::RECURSION) {
-            return array(self::TYPE_RECURSION, null);       // not a native php type!
-        }
-        if ($val === self::NOT_INSPECTED) {
-            return array(self::TYPE_NOT_INSPECTED, null);   // not a native php type!
-        }
-        if (\is_numeric($val)) {
-            return array(self::TYPE_STRING, self::TYPE_STRING_NUMERIC);
-        }
-        $strlen = \strlen($val);
-        if ($strlen >= 16) {
-            $typeMore = $this->getTypeStringEncoded($val);
-            if ($typeMore) {
-                return array(self::TYPE_STRING, $typeMore);
-            }
-        }
-        $maxLen = $this->debug->getCfg('stringMaxLen', Debug::CONFIG_DEBUG);
-        if ($maxLen && $strlen > $maxLen) {
-            return array(self::TYPE_STRING, self::TYPE_STRING_LONG);
-        }
-        return array(self::TYPE_STRING, null);
-    }
-
-    /**
-     * Test if string is Base64 enncoded, json, or serialized
-     *
-     * @param string $val string value
-     *
-     * @return string|null
-     */
-    private function getTypeStringEncoded($val)
-    {
-        if ($this->debug->utility->isBase64Encoded($val)) {
-            return self::TYPE_STRING_BASE64;
-        }
-        if ($this->debug->utility->isJson($val)) {
-            return self::TYPE_STRING_JSON;
-        }
-        if ($this->debug->utility->isSerializedSafe($val)) {
-            return self::TYPE_STRING_SERIALIZED;
-        }
-        return null;
-    }
-
-    /**
      * Get "unknown" type & typeMore
      *
      * @param mixed $val value of unknown type (likely closed resource)
@@ -436,10 +384,22 @@ class Abstracter extends Component
     protected function postSetCfg($cfg = array())
     {
         $debugClass = \get_class($this->debug);
+        // string settings vs object settings
+        $strCfg = array(
+            'stringMaxLen' => null,
+            'stringMinLen' => null,
+        );
         if (!\array_intersect(array('*', $debugClass), $this->cfg['objectsExclude'])) {
             $this->cfg['objectsExclude'][] = $debugClass;
             $cfg['objectsExclude'] = $this->cfg['objectsExclude'];
         }
-        $this->abstractObject->setCfg($cfg);
+        $objCfg = \array_diff_key($cfg, $strCfg);
+        if ($objCfg) {
+            $this->abstractObject->setCfg($objCfg);
+        }
+        $strCfg = \array_intersect_key($cfg, $strCfg);
+        if ($strCfg) {
+            $this->abstractString->setCfg($strCfg);
+        }
     }
 }

@@ -87,8 +87,10 @@ class LogReqResTest extends DebugTestFramework
                         'attribs' => array(
                             'class' => array('highlight', 'language-json'),
                         ),
+                        'contentType' => 'application/json',
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
+                        'prettifiedTag' => true,
                         'strlen' => null,
                         'type' => Abstracter::TYPE_STRING,
                         'typeMore' => Abstracter::TYPE_STRING_JSON,
@@ -146,8 +148,10 @@ class LogReqResTest extends DebugTestFramework
                         'attribs' => array(
                             'class' => array('highlight', 'language-json'),
                         ),
+                        'contentType' => 'application/json',
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
+                        'prettifiedTag' => true,
                         'strlen' => null,
                         'type' => Abstracter::TYPE_STRING,
                         'typeMore' => Abstracter::TYPE_STRING_JSON,
@@ -259,8 +263,10 @@ class LogReqResTest extends DebugTestFramework
                         'attribs' => array(
                             'class' => array('highlight', 'language-json'),
                         ),
+                        'contentType' => 'application/json',
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
+                        'prettifiedTag' => true,
                         'strlen' => null,
                         'type' => Abstracter::TYPE_STRING,
                         'typeMore' => Abstracter::TYPE_STRING_JSON,

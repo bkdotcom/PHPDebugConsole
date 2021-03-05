@@ -39,7 +39,7 @@ class Request extends Message
      *
      * @var array
      */
-    private $validMethods = array(
+    protected $validMethods = array(
         'HEAD', // Asks for a response identical to that of a GET request,
                 // but without the response body.
         'GET',  // Requests a representation of the specified resource
@@ -258,7 +258,7 @@ class Request extends Message
      *
      * @throws InvalidArgumentException
      */
-    protected function assertMethod($method)
+    private function assertMethod($method)
     {
         if (!\is_string($method)) {
             throw new InvalidArgumentException(\sprintf(

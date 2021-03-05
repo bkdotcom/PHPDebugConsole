@@ -399,67 +399,6 @@ class Message
     }
 
     /**
-     * Get all HTTP header key/values as an associative array for the current request.
-     *
-     * Uses getallheaders (aka apache_request_headers) if avail / falls back to $_SERVER vals
-     *
-     * @param array $serverParams $_SERVER
-     *
-     * @return string[string] The HTTP header key/value pairs.
-     */
-    protected function getAllHeaders($serverParams)
-    {
-        if (\function_exists('getallheaders')) {
-            return \getallheaders();
-        }
-        $headers = array();
-        $keysSansHttp = array(
-            'CONTENT_TYPE'   => 'Content-Type',
-            'CONTENT_LENGTH' => 'Content-Length',
-            'CONTENT_MD5'    => 'Content-Md5',
-        );
-        foreach ($serverParams as $key => $value) {
-            if (\substr($key, 0, 5) === 'HTTP_') {
-                $key = \substr($key, 5);
-                if (!isset($keysSansHttp[$key]) || !isset($serverParams[$key])) {
-                    $key = \str_replace(' ', '-', \ucwords(\strtolower(\str_replace('_', ' ', $key))));
-                    $headers[$key] = $value;
-                }
-            } elseif (isset($keysSansHttp[$key])) {
-                $headers[$keysSansHttp[$key]] = $value;
-            }
-        }
-        if (!isset($headers['Authorization'])) {
-            $auth = $this->getAuthorizationHeader($serverParams);
-            if ($auth) {
-                $headers['Authorization'] = $auth;
-            }
-        }
-        return $headers;
-    }
-
-    /**
-     * Build Authorization header from $_SERVER values
-     *
-     * @param array $serverParams $_SERVER vals
-     *
-     * @return null|string
-     */
-    private function getAuthorizationHeader($serverParams)
-    {
-        $auth = null;
-        if (isset($serverParams['REDIRECT_HTTP_AUTHORIZATION'])) {
-            $auth = $serverParams['REDIRECT_HTTP_AUTHORIZATION'];
-        } elseif (isset($serverParams['PHP_AUTH_USER'])) {
-            $basicPass = isset($serverParams['PHP_AUTH_PW']) ? $serverParams['PHP_AUTH_PW'] : '';
-            $auth = 'Basic ' . \base64_encode($serverParams['PHP_AUTH_USER'] . ':' . $basicPass);
-        } elseif (isset($serverParams['PHP_AUTH_DIGEST'])) {
-            $auth = $serverParams['PHP_AUTH_DIGEST'];
-        }
-        return $auth;
-    }
-
-    /**
      * Trim header value(s)
      *
      * @param string|array $value header value

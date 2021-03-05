@@ -235,7 +235,7 @@ abstract class Base extends Component implements RouteInterface
      * @param string $channelName  channelName to test
      * @param array  $channelNames list of channelNames (may include wildcard '*')
      *
-     * @return [type] [description]
+     * @return bool
      */
     private function testChannelNameMatch($channelName, $channelNames = array())
     {

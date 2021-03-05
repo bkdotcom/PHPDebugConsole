@@ -356,16 +356,17 @@ class Wamp implements RouteInterface
     /**
      * Base64 encode string if it contains non-utf8 characters
      *
-     * @param string $str string
+     * @param string $str       string
+     * @param bool   $isNotUtf8 does string contain non-utf8 chars?
      *
      * @return string
      */
-    private function crateString($str)
+    private function crateString($str, $isNotUtf8 = false)
     {
         if (!$str) {
             return $str;
         }
-        if ($this->debug->utf8->isUtf8($str) === false) {
+        if ($isNotUtf8) {
             return '_b64_:' . \base64_encode($str);
         }
         if ($this->detectFiles && $this->debug->utility->isFile($str)) {
@@ -406,7 +407,15 @@ class Wamp implements RouteInterface
                 case Abstracter::TYPE_OBJECT:
                     return $this->crateObject($clone);
                 case Abstracter::TYPE_STRING:
-                    $clone['value'] = $this->crateString($clone['value']);
+                    $clone['value'] = $this->crateString(
+                        $clone['value'],
+                        $clone['typeMore'] === Abstracter::TYPE_STRING_BINARY
+                    );
+                    if ($clone['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
+                        // PITA to get strlen in javascript
+                        // pass the length of captured value
+                        $clone['strlenValue'] = \strlen($mixed['value']);
+                    }
                     if (isset($clone['valueDecoded'])) {
                         $clone['valueDecoded'] = $this->crateValues($clone['valueDecoded']);
                     }

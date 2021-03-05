@@ -1820,7 +1820,9 @@
       groupIconUpdate($(e.target));
     });
     $delegateNode.on('expanded.debug.group', function (e) {
-      $(e.target).find('> .group-header > i:last-child').remove();
+      var $target = $(e.target);
+      $target.find('> .group-header > i:last-child').remove();
+      $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug');
     });
   }
 
@@ -2001,8 +2003,18 @@
       var $tab = $(this);
       var targetSelector = $tab.data('target');
       var $tabPane = $debugTabs.find(targetSelector).eq(0);
+      if ($tab.hasClass('active')) {
+        // don't hide or highlight primary tab
+        return // continue
+      }
       if ($tabPane.text().trim().length === 0) {
         $tab.hide();
+      } else if ($tabPane.find('.m_error').length) {
+        $tab.addClass('has-error');
+      } else if ($tabPane.find('.m_warn').length) {
+        $tab.addClass('has-warn');
+      } else if ($tabPane.find('.m_assert').length) {
+        $tab.addClass('has-assert');
       }
     });
     $delegateNode.on('click', '[data-toggle=tab]', function () {
@@ -2016,6 +2028,8 @@
         return
       }
       $target.find('.m_alert, .group-body:visible').debugEnhance();
+      // highlight wasn't applied while hidden
+      $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug');
     });
   }
 
@@ -5693,6 +5707,9 @@
         var $ref = $(instance.reference);
         $ref.removeAttr('title');
         $ref.addClass('hasTooltip');
+        $ref.parents('.hasTooltip').each(function () {
+          this._tippy.hide();
+        });
         // return preventShow === false
         return true
       }
@@ -6108,17 +6125,18 @@
             .debugEnhance();
           return
         }
-        if (!$self.is('.filter-hidden')) {
-          // console.group('debugEnhance')
-          if ($self.is('.group-body')) {
-            // console.warn('group-body', $self.prev('.group-header').text(), this)
-            enhanceEntries($self);
-          } else {
-            // console.warn(this)
-            enhanceEntry($self);
-          }
-          // console.groupEnd()
+        if ($self.is('.filter-hidden')) {
+          return
         }
+        // console.group('debugEnhance')
+        if ($self.is('.group-body')) {
+          // console.warn('group-body', $self.prev('.group-header').text(), this)
+          enhanceEntries($self);
+        } else {
+          // console.warn(this)
+          enhanceEntry($self);
+        }
+        // console.groupEnd()
       });
     }
     return this

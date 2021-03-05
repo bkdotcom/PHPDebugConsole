@@ -35,9 +35,10 @@ class ConfigTest extends DebugTestFramework
             'collectAttributesProp',
             'collectConstants',
             'collectMethods',
+            'fullyQualifyPhpDocType',
             'objectsExclude',
-            'objectsWhitelist',
             'objectSort',
+            'objectsWhitelist',
             'outputAttributesConst',
             'outputAttributesMethod',
             'outputAttributesObj',
@@ -46,8 +47,9 @@ class ConfigTest extends DebugTestFramework
             'outputConstants',
             'outputMethodDesc',
             'outputMethods',
+            'stringMaxLen',
+            'stringMinLen',
             'useDebugInfo',
-            'fullyQualifyPhpDocType',
         );
         $debugKeys = array(
             'collect',
@@ -85,7 +87,6 @@ class ConfigTest extends DebugTestFramework
             'routeNonHtml',
             'services',
             'sessionName',
-            'stringMaxLen',
         );
 
         $this->assertSame(true, $this->debug->getCfg('collect'));

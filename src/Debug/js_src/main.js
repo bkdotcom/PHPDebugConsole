@@ -217,17 +217,18 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
           .debugEnhance()
         return
       }
-      if (!$self.is('.filter-hidden')) {
-        // console.group('debugEnhance')
-        if ($self.is('.group-body')) {
-          // console.warn('group-body', $self.prev('.group-header').text(), this)
-          enhanceEntries.enhanceEntries($self)
-        } else {
-          // console.warn(this)
-          enhanceEntries.enhanceEntry($self)
-        }
-        // console.groupEnd()
+      if ($self.is('.filter-hidden')) {
+        return
       }
+      // console.group('debugEnhance')
+      if ($self.is('.group-body')) {
+        // console.warn('group-body', $self.prev('.group-header').text(), this)
+        enhanceEntries.enhanceEntries($self)
+      } else {
+        // console.warn(this)
+        enhanceEntries.enhanceEntry($self)
+      }
+      // console.groupEnd()
     })
   }
   return this

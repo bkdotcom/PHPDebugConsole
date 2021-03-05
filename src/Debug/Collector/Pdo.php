@@ -155,8 +155,11 @@ class Pdo extends PdoBase
         $debug->time('total time', $this->getTimeSpent());
         $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
         $debug->log('server info', $serverInfo);
-        $debug->groupEnd();
-        $debug->groupEnd();
+        if ($this->prettified() === false) {
+            $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
+        }
+        $debug->groupEnd(); // groupCollapsed
+        $debug->groupEnd(); // groupSummary
     }
 
     /**
@@ -414,5 +417,25 @@ class Pdo extends PdoBase
             throw $exception;
         }
         return $result;
+    }
+
+    /**
+     * Were attempts to prettify successful?
+     *
+     * @return bool
+     */
+    private function prettified()
+    {
+        $falseCount = 0;
+        foreach ($this->loggedStatements as $info) {
+            $prettified = $info->prettified;
+            if ($prettified === true) {
+                return true;
+            }
+            if ($prettified === false) {
+                $falseCount++;
+            }
+        }
+        return $falseCount === 0;
     }
 }

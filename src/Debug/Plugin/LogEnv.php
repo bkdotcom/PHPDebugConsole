@@ -19,7 +19,7 @@ use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
- * Log environment info
+ * Log PHP info, Session, & included files
  */
 class LogEnv implements SubscriberInterface
 {
@@ -61,21 +61,11 @@ class LogEnv implements SubscriberInterface
     {
         $this->debug = $event->getSubject();
         $collectWas = $this->debug->setCfg('collect', true);
-        $this->debug->groupSummary();
 
-        $this->debug->group('PHP environment', $this->debug->meta(array(
-            'hideIfEmpty' => true,
-            'level' => 'info',
-        )));
         $this->logGitInfo();
-        $this->logPhpInfo();
-        $this->logPhpInfoEr();
-        $this->logServerVals();
-        $this->debug->groupEnd(); // end environment
-
+        $this->logPhp();
         $this->logSession();
 
-        $this->debug->groupEnd(); // end groupSummary
         $this->debug->setCfg('collect', $collectWas);
     }
 
@@ -93,19 +83,22 @@ class LogEnv implements SubscriberInterface
             'msg' => '',
             'name' => '',
             'operator' => '==',
-            'val' => true,
+            'val' => '__not_passed__',
+            'valTest' => true,
         ), $setting);
-        $actual = \filter_var(\ini_get($setting['name']), $setting['filter']);
-        $assert = $actual === $setting['val'];
-        $valFriendly = $setting['val'];
+        $actual = $setting['val'] !== '__not_passed__'
+            ? $setting['val']
+            : \filter_var(\ini_get($setting['name']), $setting['filter']);
+        $assert = $actual === $setting['valTest'];
+        $valFriendly = $setting['valTest'];
         if ($setting['filter'] === FILTER_VALIDATE_BOOLEAN) {
-            $valFriendly = $setting['val']
+            $valFriendly = $setting['valTest']
                 ? 'enabled'
                 : 'disabled';
         }
         $msgDefault = 'should be ' . $valFriendly;
         if ($setting['operator'] === '!=') {
-            $assert = $actual !== $setting['val'];
+            $assert = $actual !== $setting['valTest'];
             $msgDefault = 'should not be ' . $valFriendly;
         }
         $msg = $setting['msg'] ?: $msgDefault;
@@ -126,7 +119,7 @@ class LogEnv implements SubscriberInterface
      *
      * @return string|null
      */
-    private function getSessionName()
+    private function getPassedSessionName()
     {
         $name = $this->debug->getCfg('sessionName', Debug::CONFIG_DEBUG);
         $names = $name
@@ -191,6 +184,26 @@ class LogEnv implements SubscriberInterface
     }
 
     /**
+     * Log PHP info, error reporting, server vals
+     *
+     * @return void
+     */
+    private function logPhp()
+    {
+        $debugWas = $this->debug;
+        $channelOpts = array(
+            'channelIcon' => '<i class="fa" style="position:relative; top:2px; font-size:15px;">🐘</i>',
+            'channelSort' => 10,
+            'nested' => false,
+        );
+        $this->debug = $this->debug->rootInstance->getChannel('php', $channelOpts);
+        $this->logPhpInfo();
+        $this->logPhpInfoEr();
+        $this->logServerVals();
+        $this->debug = $debugWas;
+    }
+
+    /**
      * Log some PHP info
      *
      * @return void
@@ -206,7 +219,7 @@ class LogEnv implements SubscriberInterface
         $this->debug->log('memory_limit', $this->debug->utility->getBytes($this->debug->utility->memoryLimit()));
         $this->assertSetting(array(
             'name' => 'expose_php',
-            'val' => false,
+            'valTest' => false,
         ));
         $extensionsCheck = array('curl','mbstring');
         $extensionsCheck = \array_filter($extensionsCheck, function ($extension) {
@@ -227,7 +240,7 @@ class LogEnv implements SubscriberInterface
     }
 
     /**
-     * Log if
+     * Log Error Reporting settings if
      * PHP's error reporting !== (E_ALL | E_STRICT)
      * PHPDebugConsole is not logging (E_ALL | E_STRICT)
      *
@@ -370,16 +383,16 @@ class LogEnv implements SubscriberInterface
         );
         $this->debug = $this->debug->rootInstance->getChannel('Session', $channelOpts);
 
-        $this->logSessionSettings();
+        $namePassed = $this->getPassedSessionName();
         $namePrev = null;
+        $this->logSessionSettings($namePassed);
         if (\session_status() !== PHP_SESSION_ACTIVE) {
-            $name = $this->getSessionName();
-            if ($name === null) {
+            if ($namePassed === null) {
                 $this->debug->log('Session Inactive / No session id passed in request');
                 $this->debug = $debugWas;
                 return;
             }
-            $namePrev = \session_name($name);
+            $namePrev = \session_name($namePassed);
             \session_start();
         }
         if (\session_status() === PHP_SESSION_ACTIVE) {
@@ -393,6 +406,9 @@ class LogEnv implements SubscriberInterface
             /*
                 PHPDebugConsole started session... close it.
                 "<jedi>we were never here</jedi>"
+
+                Note:  There is a side-effect.
+                session_id() will  continue to return the id
             */
             \session_abort();
             \session_name($namePrev);
@@ -404,21 +420,24 @@ class LogEnv implements SubscriberInterface
     /**
      * Asserts recommended session ini settings
      *
+     * @param string|null $namePassed detected session name
+     *
      * @return void
      */
-    private function logSessionSettings()
+    private function logSessionSettings($namePassed)
     {
         $settings = array(
             array('name' => 'session.cookie_httponly'),
             array(
                 'name' => 'session.cookie_lifetime',
                 'filter' => FILTER_VALIDATE_INT,
-                'val' => 0,
+                'valTest' => 0,
             ),
             array(
                 'name' => 'session.name',
                 'filter' => FILTER_DEFAULT,
-                'val' => 'PHPSESSID',
+                'val' => $namePassed ?: \ini_get('session.name'),
+                'valTest' => 'PHPSESSID',
                 'operator' => '!=',
                 'msg' => 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)',
             ),
@@ -426,7 +445,7 @@ class LogEnv implements SubscriberInterface
             array('name' => 'session.use_strict_mode'),
             array(
                 'name' => 'session.use_trans_sid',
-                'val' => false
+                'valTest' => false
             ),
         );
         foreach ($settings as $setting) {

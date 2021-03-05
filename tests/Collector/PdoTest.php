@@ -68,8 +68,13 @@ EOD;
                         'attribs' => array(
                             'class' => array('highlight', 'language-sql'),
                         ),
+                        'contentType' => 'application/sql',
                         'debug' => Abstracter::ABSTRACTION,
+                        'prettified' => true,
+                        'prettifiedTag' => false,
+                        'strlen' => null,
                         'type' => Abstracter::TYPE_STRING,
+                        'typeMore' => null,
                         'value' => "SELECT \n  * \nFROM \n  `bob` \nWHERE \n  e < :datetime",
                         'visualWhiteSpace' => false,
                     ),

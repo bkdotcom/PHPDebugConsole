@@ -326,7 +326,6 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
 
         $channelOpts = array(
             'channelIcon' => 'fa fa-bell-o',
-            // 'channelSort' => -10,
             'nested' => false,
         );
         $debug = $this->debug->rootInstance->getChannel('events', $channelOpts);

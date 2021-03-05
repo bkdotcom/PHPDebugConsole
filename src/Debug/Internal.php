@@ -66,7 +66,7 @@ class Internal implements SubscriberInterface
      * Append logEntry
      * Adds default arguments and "stringifies"
      *
-     * @param LogEntry $logEntry [description]
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */

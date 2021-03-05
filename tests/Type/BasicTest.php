@@ -18,7 +18,7 @@ class BasicTest extends DebugTestFramework
         $test = new \bdk\DebugTests\Fixture\Test();
         // val, html, text, script
         return array(
-            // boolean
+            // #0 : boolean
             array(
                 'log',
                 array(true),
@@ -34,6 +34,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 )
             ),
+            // #1
             array(
                 'log',
                 array(false),
@@ -49,7 +50,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 )
             ),
-            // null
+            // #2 : null
             array(
                 'log',
                 array(null),
@@ -65,7 +66,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // number
+            // #3 : number
             array(
                 'log',
                 array(10),
@@ -81,6 +82,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
+            // #4
             array(
                 'log',
                 array(10.10),
@@ -96,6 +98,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
+            // #5
             array(
                 'log',
                 array($ts),
@@ -111,12 +114,13 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
+            // #6
             array(
                 'log',
                 array((string) $ts),
                 array(
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
-                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="no-quotes numeric t_string">' . $ts . '</span></span></li>',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="numeric t_string">' . $ts . '</span></span></li>',
                     'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
                     'streamAnsi' => "📅 \e[38;5;250m\"\e[96m" . $ts . "\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
                     'text' => '📅 "' . $ts . '" (' . $datetime . ')',
@@ -126,6 +130,42 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
+            // #7
+            array(
+                'log',
+                array(
+                    \bdk\Debug::getInstance()->abstracter->crateWithVals((string) $ts, array(
+                        'attribs' => array(
+                            'class' => 'testaroo', // also test that converted to array
+                        )
+                    ))
+                ),
+                array(
+                    'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="numeric t_string testaroo">' . $ts . '</span></span></li>',
+                    'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
+                    'streamAnsi' => "📅 \e[38;5;250m\"\e[96m" . $ts . "\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
+                    'text' => '📅 "' . $ts . '" (' . $datetime . ')',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'attribs' => array(
+                                    'class' => array(
+                                        'testaroo',
+                                    ),
+                                ),
+                                'debug' => Abstracter::ABSTRACTION,
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_STRING_NUMERIC,
+                                'value' => (string) $ts,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            // #8
             array(
                 'log',
                 array(Abstracter::UNDEFINED),
@@ -141,6 +181,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
+            // #9
             array(
                 'log',
                 array(array($test,'testBaseStatic')),

@@ -86,7 +86,7 @@ class FileStreamWrapper
     /**
      * Define EventManager
      *
-     * @param Manager $eventManager [description]
+     * @param Manager $eventManager Event manager
      *
      * @return void
      */

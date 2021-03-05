@@ -74,14 +74,6 @@ class LogReqRes implements SubscriberInterface
         if (\strpos($this->debug->getInterface(), 'http') !== 0) {
             return;
         }
-        $this->debug->alert(
-            '%c%s%c %s',
-            'font-weight:bold;',
-            $this->debug->request->getMethod(),
-            '',
-            $this->debug->request->getRequestTarget(),
-            $this->debug->meta('level', 'info')
-        );
         $this->logRequestHeaders();
         if ($this->debug->getCfg('logRequestInfo.cookies', Debug::CONFIG_DEBUG)) {
             $cookieVals = $this->debug->request->getCookieParams();
@@ -244,6 +236,14 @@ class LogReqRes implements SubscriberInterface
         if ($this->debug->getCfg('logRequestInfo.headers', Debug::CONFIG_DEBUG) === false) {
             return;
         }
+        $this->debug->alert(
+            '%c%s%c %s',
+            'font-weight:bold;',
+            $this->debug->request->getMethod(),
+            '',
+            $this->debug->request->getRequestTarget(),
+            $this->debug->meta('level', 'info')
+        );
         $headers = \array_map(function ($vals) {
             $val = \join(', ', $vals);
             if (\is_numeric($val)) {
@@ -257,6 +257,11 @@ class LogReqRes implements SubscriberInterface
             }
             return $val;
         }, $this->debug->request->getHeaders());
+        if (isset($headers['Authorization']) && \strpos($headers['Authorization'], 'Basic') === 0) {
+            $auth = \base64_decode(\str_replace('Basic ', '', $headers['Authorization']));
+            $userpass = \explode(':', $auth);
+            $headers['Authorization'] = 'Basic █████████ (base64\'d ' . $userpass[0] . ':password)';
+        }
         if ($headers) {
             \ksort($headers, SORT_NATURAL);
             $this->debug->table('request headers', $headers, $this->debug->meta('redact'));
@@ -325,10 +330,8 @@ class LogReqRes implements SubscriberInterface
     {
         $contentTypeRaw = $this->debug->request->getHeaderLine('Content-Type');
         if ($contentTypeRaw) {
-            // remove encoding if pressent
-            $matches = array();
-            \preg_match('#^([^;]+)#', $contentTypeRaw, $matches);
-            $contentType = $matches[1];
+            // remove charset/encoding if pressent
+            $contentType = \preg_replace('/\s*[;,].*$/', '', $contentTypeRaw);
         }
         if (!$this->debug->request->getParsedBody()) {
             // nothing in $_POST means it can't be wrong

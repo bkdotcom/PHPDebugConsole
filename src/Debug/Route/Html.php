@@ -450,6 +450,7 @@ class Html extends Base
             $sortB = $channelB->getCfg('channelSort', Debug::CONFIG_DEBUG);
             $nameA = $channelA->getCfg('channelName', Debug::CONFIG_DEBUG);
             $nameB = $channelB->getCfg('channelName', Debug::CONFIG_DEBUG);
+            // "root" channel should come first
             if ($channelA === $this->debug) {
                 return -1;
             }

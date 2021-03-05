@@ -80,8 +80,14 @@ class Text extends Base
     {
         $numArgs = \count($args);
         foreach ($args as $i => $v) {
+            list($type, $typeMore) = $this->debug->abstracter->getType($v);
+            $typeMore2 = $typeMore === Abstracter::TYPE_ABSTRACTION
+                ? $v['typeMore']
+                : $typeMore;
             $args[$i] = $this->dump($v, array(
-                'addQuotes' => $i !== 0,
+                'addQuotes' => $i !== 0 || $typeMore2 === Abstracter::TYPE_STRING_NUMERIC,
+                'type' => $type,
+                'typeMore' => $typeMore,
                 'visualWhiteSpace' => $i !== 0,
             ));
             $this->valDepth = 0;
@@ -268,19 +274,25 @@ class Text extends Base
      */
     protected function dumpString($val, Abstraction $abs = null)
     {
+        $addQuotes = $this->getDumpOpt('addQuotes');
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
-            $val = '"' . $val . '"';
+            if ($addQuotes) {
+                $val = '"' . $val . '"';
+            }
             return $date
                 ? '📅 ' . $val . ' (' . $date . ')'
                 : $val;
         }
         $val = $this->debug->utf8->dump($val);
-        if ($this->valOpts['addQuotes']) {
+        if ($addQuotes) {
             $val = '"' . $val . '"';
         }
-        if ($abs && $abs['strlen']) {
-            $val .= '[' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)]';
+        $diff = $abs && $abs['strlen']
+            ? $abs['strlen'] - \strlen($abs['value'])
+            : 0;
+        if ($diff) {
+            $val .= '[' . $diff . ' more bytes (not logged)]';
         }
         return $val;
     }

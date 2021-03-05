@@ -1,0 +1,96 @@
+.debug-menu-bar {
+  position: relative;
+  padding: 5px;
+  font-size: 115%;
+  background-color: rgba(0, 0, 0, 0.2);
+  margin-bottom: 10px;
+  a {
+    color: $grey-text;
+  }
+  button {
+    height: 18px;
+    border: 0;
+    padding: 0;
+    line-height: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: transparent;
+  }
+}
+.debug-error-counts {
+  .badge {
+    padding: 0 0.4em 0 0.25em;
+    color: inherit;
+    background: inherit;
+    font-size: inherit;
+    vertical-align: unset;
+  }
+}
+
+&.debug-enhanced-ui {
+  .debug-menu-bar {
+    height: 25px;
+    border-top: 1px solid $border-color;
+    border-bottom: 1px solid $border-color;
+    color: $grey-text;
+    padding: 0 6px;
+    background: $lite-grey;
+    font-size: 16px;
+    margin-bottom: 0;
+
+    a,
+    button,
+    label {
+      &:focus,
+      &:hover {
+        color: #333;
+        text-decoration: none;
+      }
+    }
+
+    nav {
+      margin-left: 20px;
+      line-height: 23px;
+      a {
+        line-height: 23px;
+        &.has-assert {
+          line-height: 22px;
+          border-bottom: $color-tab-assert-border solid 2px;
+        }
+        &.has-warn {
+          line-height: 22px;
+          border-bottom: $color-tab-warn-border solid 2px;
+        }
+        &.has-error {
+          line-height: 22px;
+          border-bottom: $color-tab-error-border solid 2px;
+        }
+        &.active {
+          line-height: 22px;
+          border-bottom: $color-tab-active-border solid 2px;
+        }
+      }
+    }
+
+    button.close {
+      font-size: 21px;
+      font-weight: 300;
+    }
+    .float-right {
+      position: absolute;
+      top: 0;
+      right: 6px;
+    }
+    .debug-error-counts {
+      position: relative;
+      top: -2px;
+      font-size: 0.78em;
+    }
+
+    > span {
+      display: inline-block;
+      line-height: 23px;
+    }
+  }
+}

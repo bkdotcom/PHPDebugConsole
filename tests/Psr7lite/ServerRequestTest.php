@@ -24,6 +24,25 @@ class ServerRequestTest extends TestCase
         $this->assertTrue($serverRequest instanceof ServerRequest);
     }
 
+    public function testConstructWithUri()
+    {
+        $serverRequest = new ServerRequest('GET', '/some/page?foo=bar&dingle.berry=brown');
+        $this->assertSame(array(
+            'foo' => 'bar',
+            'dingle.berry' => 'brown',
+        ), $serverRequest->getQueryParams());
+
+        /*
+            Test new values replace
+        */
+        $serverRequest = $serverRequest->withQueryParams(array(
+            'new' => true,
+        ));
+        $this->assertSame(array(
+            'new' => true,
+        ), $serverRequest->getQueryParams());
+    }
+
     public function testProperties()
     {
         $serverRequest = new ServerRequest();

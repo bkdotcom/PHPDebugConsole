@@ -126,9 +126,9 @@ class Utf8
     /**
      * mb_strcut implementation
      *
-     * @param string $str    [description]
-     * @param int    $start  [description]
-     * @param int    $length [description]
+     * @param string $str    The string being cut
+     * @param int    $start  start position
+     * @param int    $length length in bytes
      *
      * @return string
      * @see    https://www.php.net/manual/en/function.mb-strcut.php

@@ -669,7 +669,7 @@ class ErrorHandler
      *        return trigger_error ($e, E_USER_ERROR);
      *    }
      *
-     * @param Error $error [description]
+     * @param Error $error Error instance
      *
      * @return void
      * @throws \Exception re-throws caught exception

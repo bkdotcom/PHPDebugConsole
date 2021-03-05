@@ -3,6 +3,7 @@
 namespace bdk\DebugTests;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 
 /**
  * PHPUnit tests for Debug Methods
@@ -15,7 +16,8 @@ class SubstitutionTest extends DebugTestFramework
         $this->doTestSubstitution(
             'log',
             array(
-                '%s %s %s %s %s',
+                '%s %s %s %s %s %s',
+                'plain ol string',
                 array(0),
                 array(),
                 null,
@@ -30,14 +32,15 @@ class SubstitutionTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">'
-                    . '<span class="t_keyword">array</span><span class="t_punct">(</span>1<span class="t_punct">)</span>'
+                    . 'plain ol string'
+                    . ' <span class="t_keyword">array</span><span class="t_punct">(</span>1<span class="t_punct">)</span>'
                     . ' <span class="t_keyword">array</span><span class="t_punct">(</span>0<span class="t_punct">)</span>'
                     . ' <span class="t_null">null</span>'
                     . ' <span class="t_bool true">true</span>'
                     . ' <span class="false t_bool">false</span>'
                     . '</span></li>',
                 'script' => 'console.log({{args}});',
-                'text' => 'array(1) array(0) null true false',
+                'text' => 'plain ol string array(1) array(0) null true false',
                 // 'wamp' => // @todo
             )
         );
@@ -103,7 +106,20 @@ class SubstitutionTest extends DebugTestFramework
             array(
                 'entry' => array(
                     'method' => 'log',
-                    'args' => '{{args}}',
+                    'args' => array(
+                        '%s %s %s %s %s',
+                        123.45,
+                        42,
+                        $time,
+                        '<i>boring</i>',
+                        array(
+                            'strlen' => 16,
+                            'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                            'value' => $binary,
+                            'type' => Abstracter::TYPE_STRING,
+                            'debug' => Abstracter::ABSTRACTION,
+                        ),
+                    ),
                     'meta' => array(),
                 ),
                 'chromeLogger' => array(
@@ -124,7 +140,7 @@ class SubstitutionTest extends DebugTestFramework
                     . ' <span class="t_int">42</span>'
                     . ' <span class="timestamp value-container" data-type="int" title="' . $timeStr . '"><span class="t_int">' . $time . '</span></span>'
                     . ' &lt;i&gt;boring&lt;/i&gt;'
-                    . ' <span class="binary">' . $binaryStr . '</span>'
+                    . ' ' . $binaryStr
                     . '</span></li>',
                 'script' => 'console.log("%%s %%s %%s %%s %%s",123.45,42,"' . $time . ' (' . $timeStr . ')","<i>boring</i>","' . $binaryStr . '");',
                 'text' => '123.45 42 📅 ' . $time . ' (' . $timeStr . ') <i>boring</i> ' . $binaryStr,
@@ -362,8 +378,10 @@ class SubstitutionTest extends DebugTestFramework
                         $test['meta']['dismissible'] = false;
                         $test['meta']['level'] = 'error';
                     } elseif ($method === 'assert') {
-                        // the first arg (false) is not stored
-                        \array_shift($test['args']);
+                        if ($foundArgs) {
+                            // the first arg (false) is not stored
+                            \array_shift($test['args']);
+                        }
                     } elseif (\in_array($method, array('error','warn'))) {
                         $test['meta']['detectFiles'] = true;
                         $test['meta']['file'] = $this->file;

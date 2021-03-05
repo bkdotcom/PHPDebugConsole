@@ -25,15 +25,13 @@ use bdk\PubSub\Event;
 class Base extends Component
 {
 
-    public $crateRaw = true;    // whether dump() should call crate "raw" value
+    public $crateRaw = true;    // whether dump() should crate "raw" value
                                 //   when processing log this is set to false
                                 //   so not unecessarily re-crating arrays
     public $debug;
     protected $channelNameRoot;
-    protected $dumpType;
-    protected $dumpTypeMore;
-    protected $dumpTypeStack = array();
-    protected $valOpts; // per-value options
+    protected $dumpOptions = array();
+    protected $dumpOptStack = array();
     private $subInfo = array();
     private $subRegex;
 
@@ -54,32 +52,50 @@ class Base extends Component
      * Dump value
      *
      * @param mixed $val  value to dump
-     * @param array $opts options for string values
+     * @param array $opts options & info for string values
      *
      * @return mixed
      */
     public function dump($val, $opts = array())
     {
-        $this->valOpts = \array_merge(array(
+        $opts = \array_merge(array(
             'addQuotes' => true,
             'sanitize' => true,     // only applies to html
+            'type' => null,
+            'typeMore' => null,
             'visualWhiteSpace' => true,
         ), $opts);
-        list($type, $typeMore) = $this->debug->abstracter->getType($val);
-        if ($typeMore === Abstracter::TYPE_RAW) {
-            if ($type === Abstracter::TYPE_OBJECT || $this->crateRaw) {
+        if ($opts['type'] === null) {
+            list($opts['type'], $opts['typeMore']) = $this->debug->abstracter->getType($val);
+        }
+        if ($opts['typeMore'] === Abstracter::TYPE_RAW) {
+            if ($opts['type'] === Abstracter::TYPE_OBJECT || $this->crateRaw) {
                 $val = $this->debug->abstracter->crate($val, 'dump');
             }
-            $typeMore = null;
+            $opts['typeMore'] = null;
         }
-        $this->dumpTypeStack[] = $type;
-        $method = 'dump' . \ucfirst($type);
-        $return = $typeMore === Abstracter::TYPE_ABSTRACTION
-            ? $this->dumpAbstraction($val, $typeMore)
+        $this->dumpOptStack[] = $opts;
+        $method = 'dump' . \ucfirst($opts['type']);
+        $return = $opts['typeMore'] === Abstracter::TYPE_ABSTRACTION
+            ? $this->dumpAbstraction($val)
             : $this->{$method}($val);
-        $this->dumpType = \array_pop($this->dumpTypeStack);
-        $this->dumpTypeMore = $typeMore;
+        $this->dumpOptions = \array_pop($this->dumpOptStack);
         return $return;
+    }
+
+    /**
+     * Get "option" of value being dumped
+     *
+     * @param string $what (optional) name of option to get (ie sanitize, type, typeMore)
+     *
+     * @return mixed
+     */
+    public function getDumpOpt($what = null)
+    {
+        $path = $what === null
+            ? '__end__'
+            : '__end__.' . $what;
+        return $this->debug->utility->arrayPathGet($this->dumpOptStack, $path);
     }
 
     /**
@@ -125,6 +141,27 @@ class Base extends Component
     }
 
     /**
+     * Set "option" of value being dumped
+     *
+     * @param array|string $what name of value to set (or key/value array)
+     * @param mixed        $val  value
+     *
+     * @return void
+     */
+    public function setDumpOpt($what, $val = null)
+    {
+        if (\is_array($what)) {
+            $this->debug->utility->arrayPathSet($this->dumpOptStack, '__end__', $what);
+            return;
+        }
+        $this->debug->utility->arrayPathSet(
+            $this->dumpOptStack,
+            '__end__.' . $what,
+            $val
+        );
+    }
+
+    /**
      * Is value a timestamp?
      *
      * @param mixed $val value to check
@@ -144,24 +181,25 @@ class Base extends Component
     /**
      * Dump an abstraction
      *
-     * @param Abstraction $abs      Abstraction instance
-     * @param string|null $typeMore populated with "typeMore"
+     * @param Abstraction $abs Abstraction instance
      *
      * @return string|null
      */
-    protected function dumpAbstraction(Abstraction $abs, &$typeMore)
+    protected function dumpAbstraction(Abstraction $abs)
     {
         $type = $abs['type'];
         $method = 'dump' . \ucfirst($type);
-        foreach (\array_keys($this->valOpts) as $k) {
+        $opts = $this->getDumpOpt();
+        foreach (\array_keys($opts) as $k) {
             if ($abs[$k] !== null) {
-                $this->valOpts[$k] = $abs[$k];
+                $opts[$k] = $abs[$k];
             }
         }
         if ($abs['options']) {
-            $this->valOpts = \array_merge($this->valOpts, $abs['options']);
+            $opts = \array_merge($opts, $abs['options']);
         }
-        $typeMore = null;
+        $opts['typeMore'] = null;
+        $this->setDumpOpt($opts);
         if (\method_exists($this, $method) === false) {
             $event = $this->debug->publishBubbleEvent(Debug::EVENT_DUMP_CUSTOM, new Event(
                 $abs,
@@ -171,7 +209,7 @@ class Base extends Component
                     'typeMore' => $abs['typeMore'],
                 )
             ));
-            $typeMore = $event['typeMore'];
+            $this->setDumpOpt('typeMore', $event['typeMore']);
             return $event['return'];
         }
         $simpleTypes = array(
@@ -183,7 +221,7 @@ class Base extends Component
             Abstracter::TYPE_STRING,
         );
         if (\in_array($type, $simpleTypes)) {
-            $typeMore = $abs['typeMore'];
+            $this->setDumpOpt('typeMore', $abs['typeMore']);
             return $this->{$method}($abs['value'], $abs);
         }
         return $this->{$method}($abs);
@@ -377,11 +415,22 @@ class Base extends Component
                 ? $val . ' (' . $date . ')'
                 : $val;
         }
-        $val = $this->debug->utf8->dump($val);
-        if ($abs && $abs['strlen']) {
-            $val .= '[' . ($abs['strlen'] - \strlen($val)) . ' more bytes (not logged)]';
+        if ($abs) {
+            if ($abs['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
+                if (!$val) {
+                    return 'Binary data not collected';
+                }
+            }
+            $val = $this->debug->utf8->dump($val);
+            $diff = $abs['strlen']
+                ? $abs['strlen'] - \strlen($abs['value'])
+                : 0;
+            if ($diff) {
+                $val .= '[' . $diff . ' more bytes (not logged)]';
+            }
+            return $val;
         }
-        return $val;
+        return $this->debug->utf8->dump($val);
     }
 
     /**
@@ -697,8 +746,7 @@ class Base extends Component
      */
     protected function substitutionAsString($val, $opts)
     {
-        // function array dereferencing = php 5.4
-        $type = $this->debug->abstracter->getType($val)[0];
+        list($type, $typeMore) = $this->debug->abstracter->getType($val);
         if ($type === Abstracter::TYPE_ARRAY) {
             $count = \count($val);
             if ($count) {
@@ -710,6 +758,8 @@ class Base extends Component
         if ($type === Abstracter::TYPE_OBJECT) {
             return (string) $val;   // __toString or className
         }
+        $opts['type'] = $type;
+        $opts['typeMore'] = $typeMore;
         return $this->dump($val, $opts);
     }
 }

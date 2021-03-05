@@ -2,6 +2,7 @@
 
 namespace bdk\DebugTests\Type;
 
+use bdk\Debug\LogEntry;
 use bdk\DebugTests\DebugTestFramework;
 
 /**
@@ -109,7 +110,8 @@ I'm just too white and nerdy
 Really white and nerdy
 
 EOD;
-
+        $base64snip = 'iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAMAAAHtgW46AAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGAUExURcbGxgAAAMrKysjIyDU1NUVFRS0tLeTk';
+        $base64snip2 = 'eyJwb29wIjoiXHVkODNkXHVkY2E5IiwiaW50Ijo0MiwicGFzc3dvcmQiOiJzZWNyZXQifQ==';
         return array(
             // 0
             array(
@@ -145,14 +147,32 @@ EOD;
                 'log',
                 array('numeric string', '10'),
                 array(
-                    'chromeLogger' => \json_encode(array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            'numeric string',
+                            '10',
+                        ),
+                        'meta' => array(),
+                    ),
+                    'chromeLogger' => array(
                         array('numeric string', '10'),
                         null,
                         '',
-                    )),
+                    ),
                     'html' => '<li class="m_log"><span class="no-quotes t_string">numeric string</span> = <span class="numeric t_string">10</span></li>',
                     'script' => 'console.log("numeric string","10");',
                     'text' => 'numeric string = "10"',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            'numeric string',
+                            '10',
+                        ),
+                        array(
+                            'format' => 'raw',
+                        ),
+                    ),
                 ),
             ),
             // 3
@@ -160,11 +180,11 @@ EOD;
                 'log',
                 array('numeric string', '10.10'),
                 array(
-                    'chromeLogger' => \json_encode(array(
+                    'chromeLogger' => array(
                         array('numeric string', '10.10'),
                         null,
                         '',
-                    )),
+                    ),
                     'html' => '<li class="m_log"><span class="no-quotes t_string">numeric string</span> = <span class="numeric t_string">10.10</span></li>',
                     'script' => 'console.log("numeric string","10.10");',
                     'text' => 'numeric string = "10.10"',
@@ -175,14 +195,14 @@ EOD;
                 'log',
                 array('timestamp', (string) $ts),
                 array(
-                    'chromeLogger' => \json_encode(array(
+                    'chromeLogger' => array(
                         array(
                             'timestamp',
                             $ts . ' (' . \date('Y-m-d H:i:s') . ')',
                         ),
                         null,
                         '',
-                    )),
+                    ),
                     'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="timestamp value-container" data-type="string" title="' . \date('Y-m-d H:i:s', $ts) . '"><span class="numeric t_string">' . $ts . '</span></span></li>',
                     'script' => 'console.log("timestamp","' . $ts . ' (' . \date('Y-m-d H:i:s') . ')");',
                     'text' => 'timestamp = 📅 "' . $ts . '" (' . \date('Y-m-d H:i:s') . ')',
@@ -193,14 +213,14 @@ EOD;
                 'log',
                 array('long string', $longString, \bdk\Debug::meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
                 array(
-                    'chromeLogger' => \json_encode(array(
+                    'chromeLogger' => array(
                         array(
                             'long string',
                             $longStringExpect . '[1778 more bytes (not logged)]',
                         ),
                         null,
                         '',
-                    )),
+                    ),
                     'html' => '<li class="m_log">'
                         . '<span class="no-quotes t_string">long string</span> = '
                         . '<span class="t_string">'
@@ -215,6 +235,87 @@ EOD;
                     'text' => 'long string = "' . $longStringExpect . '"[1778 more bytes (not logged)]',
                 )
             ),
+            // 6
+            array(
+                'log',
+                array(
+                    \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
+                ),
+                array(
+                    'entry' => function (LogEntry $logEntry) use ($base64snip) {
+                        $jsonExpect = '{"method":"log","args":[{"strlen":10852,"typeMore":"base64","value":' . json_encode($base64snip) . ',"valueDecoded":{"strlen":8138,"typeMore":"binary","value":"","contentType":"image\/png","type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":[]}';
+                        $jsonified = \json_encode($logEntry->export());
+                        $this->assertSame($jsonExpect, $jsonified);
+                    },
+                    'chromeLogger' => array(
+                        array(
+                            $base64snip . '[10696 more bytes (not logged)]',
+                        ),
+                        null,
+                        ''
+                    ),
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type="base64">' . "\n"
+                        . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
+                        . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></div>' . "\n"
+                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_type">binary string</span>' . "\n"
+                        . '<ul class="list-unstyled value-container" data-type="string">' . "\n"
+                        . '<li>mime type = <span class="t_string">image/png</span></li>' . "\n"
+                        . '<li>size = <span class="t_int">8138</span></li>' . "\n"
+                        . '<li>Binary data not collected</li>' . "\n"
+                        . '</ul></div>' . "\n"
+                        . '</span></li>',
+                    'script' => 'console.log("' . $base64snip . '[10696 more bytes (not logged)]");',
+                    'text' => $base64snip . '[10696 more bytes (not logged)]',
+                ),
+            ),
+            // 7
+            array(
+                'log',
+                array(
+                    \base64_encode(
+                        \json_encode(array(
+                            'poop' => '💩',
+                            'int' => 42,
+                            'password' => 'secret',
+                        ))
+                    ),
+                    \bdk\Debug::meta('redact'),
+                ),
+                array(
+                    'entry' => function (LogEntry $logEntry) use ($base64snip2) {
+                        $jsonExpect = '{"method":"log","args":[{"strlen":null,"typeMore":"base64","value":"' . $base64snip2 . '","valueDecoded":{"strlen":null,"typeMore":"json","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","type":"string","attribs":{"class":["highlight","language-json"]},"addQuotes":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
+                        $jsonified = \json_encode($logEntry->export());
+                        $this->assertSame($jsonExpect, $jsonified);
+                    },
+                    'chromeLogger' => array(
+                        array(
+                            $base64snip2,
+                        ),
+                        null,
+                        '',
+                    ),
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type="base64">' . "\n"
+                        . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
+                        . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip2 . '</span></div>' . "\n"
+                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="string-encoded tabs-container" data-type="json">' . "\n"
+                            . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
+                            . '<div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{' . "\n"
+                                . '&quot;poop&quot;: &quot;\ud83d\udca9&quot;,' . "\n"
+                                . '&quot;int&quot;: 42,' . "\n"
+                                . '&quot;password&quot;: &quot;█████████&quot;' . "\n"
+                                . '}</span></span></div>' . "\n"
+                            . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
+                                . '<ul class="array-inner list-unstyled">' . "\n"
+                                . '<li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>' . "\n"
+                                . '<li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>' . "\n"
+                                . '<li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>' . "\n"
+                                . '</ul><span class="t_punct">)</span></span></div>' . "\n"
+                        . '</span></div>' . "\n"
+                        . '</span></li>',
+                    'script' => 'console.log("' . $base64snip2 . '");',
+                    'text' => $base64snip2,
+                )
+            )
         );
     }
 }

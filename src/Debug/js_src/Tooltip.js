@@ -96,6 +96,9 @@ export function init ($root) {
       var $ref = $(instance.reference)
       $ref.removeAttr('title')
       $ref.addClass('hasTooltip')
+      $ref.parents('.hasTooltip').each(function () {
+        this._tippy.hide()
+      })
       // return preventShow === false
       return true
     }

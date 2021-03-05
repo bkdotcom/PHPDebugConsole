@@ -11,8 +11,18 @@ export function init ($delegateNode) {
     var $tab = $(this)
     var targetSelector = $tab.data('target')
     var $tabPane = $debugTabs.find(targetSelector).eq(0)
+    if ($tab.hasClass('active')) {
+      // don't hide or highlight primary tab
+      return // continue
+    }
     if ($tabPane.text().trim().length === 0) {
       $tab.hide()
+    } else if ($tabPane.find('.m_error').length) {
+      $tab.addClass('has-error')
+    } else if ($tabPane.find('.m_warn').length) {
+      $tab.addClass('has-warn')
+    } else if ($tabPane.find('.m_assert').length) {
+      $tab.addClass('has-assert')
     }
   })
   $delegateNode.on('click', '[data-toggle=tab]', function () {
@@ -26,6 +36,8 @@ export function init ($delegateNode) {
       return
     }
     $target.find('.m_alert, .group-body:visible').debugEnhance()
+    // highlight wasn't applied while hidden
+    $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
   })
 }
 

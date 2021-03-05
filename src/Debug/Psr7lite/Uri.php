@@ -452,7 +452,7 @@ class Uri
      *
      * @throws InvalidArgumentException
      */
-    protected function assertHost($host)
+    private function assertHost($host)
     {
         $this->assertString($host, 'host');
         if ($host === '') {
@@ -496,7 +496,7 @@ class Uri
      *
      * @throws InvalidArgumentException
      */
-    protected function assertString($value, $what = '')
+    private function assertString($value, $what = '')
     {
         if (!\is_string($value)) {
             throw new InvalidArgumentException(\sprintf(

@@ -358,25 +358,32 @@ class TextAnsi extends Text
      */
     protected function dumpString($val, Abstraction $abs = null)
     {
+        $addQuotes = $this->getDumpOpt('addQuotes');
         $escapeCodes = $this->cfg['escapeCodes'];
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val);
-            $val = $escapeCodes['quote'] . '"'
-                . $escapeCodes['numeric'] . $val
-                . $escapeCodes['quote'] . '"'
-                . $this->escapeReset;
+            $val = $escapeCodes['numeric'] . $val;
+            if ($addQuotes) {
+                $val = $escapeCodes['quote'] . '"'
+                    . $val
+                    . $escapeCodes['quote'] . '"';
+            }
+            $val .= $this->escapeReset;
             return $date
                 ? '📅 ' . $val . ' ' . $escapeCodes['muted'] . '(' . $date . ')' . $this->escapeReset
                 : $val;
         }
         $ansiQuote = $escapeCodes['quote'] . '"' . $this->escapeReset;
         $val = $this->debug->utf8->dump($val);
-        if ($this->valOpts['addQuotes']) {
+        if ($addQuotes) {
             $val = $ansiQuote . $val . $ansiQuote;
         }
-        if ($abs && $abs['strlen']) {
+        $diff = $abs && $abs['strlen']
+            ? $abs['strlen'] - \strlen($abs['value'])
+            : 0;
+        if ($diff) {
             $val .= $escapeCodes['maxlen']
-                . '[' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)]'
+                . '[' . $diff . ' more bytes (not logged)]'
                 . $this->escapeReset;
         }
         return $val;

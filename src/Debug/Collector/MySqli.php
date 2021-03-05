@@ -202,14 +202,16 @@ class MySqli extends mysqliBase
             $serverInfo['Version'] = $this->server_info;
             \ksort($serverInfo);
             $debug->log('server info', $serverInfo);
-
+            if ($this->prettified() === false) {
+                $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
+            }
             $debug->groupEnd(); // groupCollapsed
         } catch (RuntimeException $e) {
             $debug->group('MySqli Error', $debug->meta(array('level' => 'error')));
             $debug->log('Connection Error');
+            $debug->groupEnd(); // groupCollapsed (opened in try)
         }
         \restore_error_handler();
-        $debug->groupEnd();
         $debug->groupEnd(); // groupSummary
     }
 
@@ -318,6 +320,26 @@ class MySqli extends mysqliBase
             $params['port'],
             $params['socket']
         );
+    }
+
+    /**
+     * Were attempts to prettify successful?
+     *
+     * @return bool
+     */
+    private function prettified()
+    {
+        $falseCount = 0;
+        foreach ($this->loggedStatements as $info) {
+            $prettified = $info->prettified;
+            if ($prettified === true) {
+                return true;
+            }
+            if ($prettified === false) {
+                $falseCount++;
+            }
+        }
+        return $falseCount === 0;
     }
 
     /**

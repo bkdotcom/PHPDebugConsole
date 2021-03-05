@@ -31,7 +31,9 @@ export function init ($delegateNode) {
     groupIconUpdate($(e.target))
   })
   $delegateNode.on('expanded.debug.group', function (e) {
-    $(e.target).find('> .group-header > i:last-child').remove()
+    var $target = $(e.target)
+    $target.find('> .group-header > i:last-child').remove()
+    $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
   })
 }
 

@@ -97,7 +97,7 @@ class HttpFoundationBridge
     /**
      * Create a Stream from HttpFoundationResponse
      *
-     * @param HttpFoundationResponse $response [description]
+     * @param HttpFoundationResponse $response response instance
      *
      * @return Stream
      */

@@ -47,6 +47,7 @@ class StatementInfo
     protected $memoryStart;
     protected $memoryUsage;
     protected $params;
+    protected $prettified = null;
     protected $rowCount;
     protected $sql;
     protected $timeEnd;
@@ -140,15 +141,13 @@ class StatementInfo
             'boldLabel' => false,
         )));
         if (\preg_replace('/[\r\n\s]+/', ' ', $this->sql) !== $label) {
+            $sqlPretty = $debug->prettify($this->sql, 'application/sql');
+            if ($sqlPretty instanceof Abstraction) {
+                $this->prettified = $sqlPretty['prettified'];
+                $sqlPretty['prettifiedTag'] = false; // don't add "(prettified)" to output"
+            }
             $debug->log(
-                new Abstraction(Abstracter::TYPE_STRING, array(
-                    'value' => $debug->utility->prettySql($this->sql),
-                    'attribs' => array(
-                        'class' => 'highlight language-sql',
-                    ),
-                    'addQuotes' => false,
-                    'visualWhiteSpace' => false,
-                )),
+                $sqlPretty,
                 $debug->meta(array(
                     'attribs' => array(
                         'class' => 'no-indent',
@@ -291,8 +290,6 @@ class StatementInfo
 
         return \strtr($sql, \array_flip($cleanBackRefCharMap));
     }
-
-
 
     /**
      * Get group's label

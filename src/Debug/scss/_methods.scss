@@ -22,7 +22,16 @@
     text-indent: -0.75em;
   }
 }
-.m_assert { background-color: rgba(255, 204, 204, 0.75); }
+.m_assert {
+  background-color: rgba(255, 204, 204, 0.75);
+  > i {
+    margin-right: 0.33em;
+    margin-bottom: -0.2em;
+    display: inline-block;
+    line-height: 0.6em;
+    vertical-align: text-bottom;
+  }
+}
 
 .m_group {
   .group-header {

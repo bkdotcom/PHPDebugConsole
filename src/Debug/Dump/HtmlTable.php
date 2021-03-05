@@ -139,7 +139,7 @@ class HtmlTable
                 $totalVal = \round($totalVal, 6);
             }
             $cells[] = $colHasTotal
-                ? $this->html->dump($totalVal, array(), 'td')
+                ? $this->html->dump($totalVal, array('tagName' => 'td'))
                 : '<td></td>';
             $haveTotal = $haveTotal || $colHasTotal;
         }
@@ -220,7 +220,7 @@ class HtmlTable
             Output values
         */
         foreach ($row as $v) {
-            $str .= $this->html->dump($v, array(), 'td');
+            $str .= $this->html->dump($v, array('tagName' => 'td'));
         }
         $str .= '</tr>' . "\n";
         return $str;

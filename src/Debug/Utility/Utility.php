@@ -28,6 +28,8 @@ class Utility
     const IS_CALLABLE_ARRAY_ONLY = 1;
     const IS_CALLABLE_OBJ_ONLY = 2;
     const IS_CALLABLE_STRICT = 3;
+    const IS_BASE64_LENGTH = 1;
+    const IS_BASE64_CHAR_STAT = 2;
 
     protected static $domDocument;
 
@@ -169,6 +171,7 @@ class Utility
      * @param array        $array array to edit
      * @param array|string $path  path may contain special keys:
      *                                 * __end__ : last value
+     *                                 * __push__ : append value
      *                                 * __reset__ : first value
      * @param mixed        $val   value to set
      *
@@ -183,6 +186,10 @@ class Utility
         $ref = &$array;
         while ($path) {
             $key = \array_pop($path);
+            if ($key === '__push__') {
+                $ref[] = null;
+                $key = '__end__';
+            }
             if ($key === '__end__') {
                 \end($ref);
                 $path[] = \key($ref);
@@ -486,42 +493,45 @@ class Utility
     /**
      * Checks if a given string is base64 encoded
      *
-     * @param string $val     value to check
-     * @param bool   $testLen (true) test that string length is properly padded
+     * FYI:
+     *   md5: 32-char hex
+     *   sha1:  40-char hex
+     *
+     * @param string $val  value to check
+     * @param int    $opts (IS_BASE64_LENGTH | IS_BASE64_CHAR_STAT)
      *
      * @return bool
      */
-    public static function isBase64Encoded($val, $testLen = true)
+    public static function isBase64Encoded($val, $opts = 3)
     {
         if (\is_string($val) === false) {
             return false;
         }
         $val = \trim($val);
+        $isHex = \preg_match('/^[0-9A-F]+$/i', $val) === 1;
+        if ($isHex) {
+            return false;
+        }
         // only allow whitspace at beginning and end of lines
-        $regex = '#'
-            . '(^[ \t]*[a-zA-Z0-9+/]*[ \t]*\r?$)*'
-            . '(^[ \t]*[a-zA-Z0-9+/]*={0,2}[ \t]*\r?$)'
-            . '#m';
+        $regex = '#^'
+            . '([ \t]*[a-zA-Z0-9+/]*[ \t]*[\r\n]+)*'
+            . '([ \t]*[a-zA-Z0-9+/]*={0,2})' // last line may have "=" padding at tend"
+            . '$#';
         if (\preg_match($regex, $val) !== 1) {
             return false;
         }
-        if ($testLen) {
-            $val = \preg_replace('#\s#', '', $val);
-            $mod = \strlen($val) % 4;
+        $valNoSpace = \preg_replace('#\s#', '', $val);
+        if ($opts & self::IS_BASE64_LENGTH) {
+            $mod = \strlen($valNoSpace) % 4;
             if ($mod > 0) {
                 return false;
             }
         }
-        $data = \base64_decode($val, true);
-        if ($data === false) {
+        if ($opts & self::IS_BASE64_CHAR_STAT && self::isBase64EncodedTestStats($valNoSpace) === false) {
             return false;
         }
-        /*
-            file/directory path is a common false positive
-        */
-        $hasNewline = \strpos($val, "\n") !== false;
-        $isFilepath = $hasNewline === false && \file_exists($val);
-        return $isFilepath === false;
+        $data = \base64_decode($valNoSpace, true);
+        return $data !== false;
     }
 
     /**
@@ -711,7 +721,7 @@ class Utility
      */
     public static function prettySql($sql)
     {
-        if (!\class_exists('\SqlFormatter')) {
+        if (!\class_exists('SqlFormatter')) {
             return $sql;
         }
         // whitespace only, don't highlight
@@ -871,6 +881,55 @@ class Utility
             return '%im %Ss'; // M:SS
         }
         return '%hh %Im %Ss'; // H:MM:SS
+    }
+
+    /**
+     * Test if character distribution is what we would expect for a bse 64 string
+     * This is quite unreliable as encoding isn't random
+     *
+     * @param string $val string alreadl striped of whitespace
+     *
+     * @return bool
+     */
+    private static function isBase64EncodedTestStats($val)
+    {
+        $count = 0;
+        $valNoPadding = \preg_replace('/=+$/', '', $val, -1, $count);
+        $strlen = \strlen($valNoPadding);
+        if ($count > 0) {
+            // if val ends with "=" it's pretty safe to assume base64
+            return true;
+        }
+        $stats = array(
+            'lower' => array(
+                \preg_match_all('/[a-z]/', $val),
+                40.626,
+                8,
+            ),
+            'upper' => array(
+                \preg_match_all('/[A-Z]/', $val),
+                40.625,
+                8,
+            ),
+            'num' => array(
+                \preg_match_all('/[0-9]/', $val),
+                15.625,
+                8,
+            ),
+            'other' => array(
+                \preg_match_all('/[+\/]/', $val),
+                3.125,
+                5,
+            )
+        );
+        foreach ($stats as $stat) {
+            $per = $stat[0] * 100 / $strlen;
+            $diff = \abs($per - $stat[1]);
+            if ($diff > $stat[2]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -64,7 +64,11 @@ class ServerRequest extends Request
     public function __construct($method = 'GET', $uri = '', $serverParams = array())
     {
         parent::__construct($method, $uri);
-        $headers = $this->getAllHeaders($serverParams);
+        $headers = $this->getHeadersViaServer($serverParams);
+        $query = $this->getUri()->getQuery();
+        $this->get = $query !== ''
+            ? self::parseStr($query)
+            : array();
         $this->server = $serverParams;
         $this->protocolVersion = isset($serverParams['SERVER_PROTOCOL'])
             ? \str_replace('HTTP/', '', $serverParams['SERVER_PROTOCOL'])
@@ -282,7 +286,7 @@ class ServerRequest extends Request
      *
      * @throws InvalidArgumentException
      */
-    protected function assertParsedBody($data)
+    private function assertParsedBody($data)
     {
         if (
             $data === null ||
@@ -396,6 +400,64 @@ class ServerRequest extends Request
     }
 
     /**
+     * Build Authorization header value from $_SERVER values
+     *
+     * @param array $serverParams $_SERVER vals
+     *
+     * @return null|string
+     */
+    private function getAuthorizationHeader($serverParams)
+    {
+        $auth = null;
+        if (isset($serverParams['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $auth = $serverParams['REDIRECT_HTTP_AUTHORIZATION'];
+        } elseif (isset($serverParams['PHP_AUTH_USER'])) {
+            $basicPass = isset($serverParams['PHP_AUTH_PW']) ? $serverParams['PHP_AUTH_PW'] : '';
+            $auth = 'Basic ' . \base64_encode($serverParams['PHP_AUTH_USER'] . ':' . $basicPass);
+        } elseif (isset($serverParams['PHP_AUTH_DIGEST'])) {
+            $auth = $serverParams['PHP_AUTH_DIGEST'];
+        }
+        return $auth;
+    }
+
+    /**
+     * Get all HTTP header key/values as an associative array for the current request.
+     *
+     * See also the php function `getallheaders`
+     *
+     * @param array $serverParams $_SERVER
+     *
+     * @return string[string] The HTTP header key/value pairs.
+     */
+    protected function getHeadersViaServer($serverParams)
+    {
+        $headers = array();
+        $keysSansHttp = array(
+            'CONTENT_TYPE'   => 'Content-Type',
+            'CONTENT_LENGTH' => 'Content-Length',
+            'CONTENT_MD5'    => 'Content-Md5',
+        );
+        foreach ($serverParams as $key => $value) {
+            if (\substr($key, 0, 5) === 'HTTP_') {
+                $key = \substr($key, 5);
+                if (!isset($keysSansHttp[$key]) || !isset($serverParams[$key])) {
+                    $key = \str_replace(' ', '-', \ucwords(\strtolower(\str_replace('_', ' ', $key))));
+                    $headers[$key] = $value;
+                }
+            } elseif (isset($keysSansHttp[$key])) {
+                $headers[$keysSansHttp[$key]] = $value;
+            }
+        }
+        if (!isset($headers['Authorization'])) {
+            $auth = $this->getAuthorizationHeader($serverParams);
+            if ($auth) {
+                $headers['Authorization'] = $auth;
+            }
+        }
+        return $headers;
+    }
+
+    /**
      * Get host and port from $_SERVER vals
      *
      * @return array host & port
@@ -440,11 +502,11 @@ class ServerRequest extends Request
     {
         $params = array();
         $opts = \array_merge(array(
-            'convDot' => false,
-            'convSpace' => false,
+            'convDot' => false,     // whether to convert '.' to '_'
+            'convSpace' => false,   // whether to convert ' ' to '_'
         ), $opts);
-        $useParseStr = (!$opts['convDot'] || \strpos($str, '.') === false)
-            && (!$opts['convSpace'] || \strpos($str, ' ') === false);
+        $useParseStr = ($opts['convDot'] || \strpos($str, '.') === false)
+            && ($opts['convSpace'] || \strpos($str, ' ') === false);
         if ($useParseStr) {
             // there are no spaces or dots in serialized data
             //   and/or we're not interested in converting them
@@ -491,7 +553,7 @@ class ServerRequest extends Request
      */
     protected static function postFromInput($method, $contentType, $rawBody = null)
     {
-        $contentType = \preg_replace('/\s*[;,]\s*.*$/', '', $contentType);
+        $contentType = \preg_replace('/\s*[;,].*$/', '', $contentType);
         $contentType = \strtolower($contentType);
         if ($method === 'GET') {
             return null;
@@ -515,7 +577,8 @@ class ServerRequest extends Request
                 ? $jsonParsedBody
                 : null;
         }
-        return self::parseStr($rawBody);
+        // don't know how to parse
+        return null;
     }
 
     /**

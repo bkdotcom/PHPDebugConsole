@@ -63,7 +63,6 @@ class AbstractObject extends Component
         $this->abstracter = $abstracter;
         $this->phpDoc = $phpDoc;
         $this->debug = $abstracter->debug;
-        $this->cfg = $abstracter->getCfg();
         $this->methods = new AbstractObjectMethods($abstracter, $phpDoc);
         $this->properties = new AbstractObjectProperties($abstracter, $phpDoc);
         if ($abstracter->debug->parentInstance) {
@@ -540,7 +539,7 @@ class AbstractObject extends Component
     /**
      * Test if we can collect mysqli property values
      *
-     * @param Abstraction $abs [description]
+     * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */

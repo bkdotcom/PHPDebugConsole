@@ -217,7 +217,7 @@ html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a { line-height: 23px; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a.has-assert { line-height: 22px; border-bottom: #da8585 solid 2px; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a.has-warn { line-height: 22px; border-bottom: #e4cb0f solid 2px; }
-.debug.debug-enhanced-ui .debug-menu-bar nav a.has-error { line-height: 22px; border-bottom: #FF0000 solid 2px; }
+.debug.debug-enhanced-ui .debug-menu-bar nav a.has-error { line-height: 22px; border-bottom: #f00 solid 2px; }
 .debug.debug-enhanced-ui .debug-menu-bar nav a.active { line-height: 22px; border-bottom: #4071e1 solid 2px; }
 .debug.debug-enhanced-ui .debug-menu-bar button.close { font-size: 21px; font-weight: 300; }
 .debug.debug-enhanced-ui .debug-menu-bar .float-right { position: absolute; top: 0; right: 6px; }

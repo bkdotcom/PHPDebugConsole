@@ -243,9 +243,9 @@ EOD;
                 ),
                 array(
                     'entry' => function (LogEntry $logEntry) use ($base64snip) {
-                        $jsonExpect = '{"method":"log","args":[{"strlen":10852,"typeMore":"base64","value":' . json_encode($base64snip) . ',"valueDecoded":{"strlen":8138,"typeMore":"binary","value":"","contentType":"image\/png","type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":[]}';
+                        $jsonExpect = '{"method":"log","args":[{"strlen":10852,"typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"strlen":8138,"typeMore":"binary","value":"","contentType":"%s","type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":[]}';
                         $jsonified = \json_encode($logEntry->export());
-                        $this->assertSame($jsonExpect, $jsonified);
+                        $this->assertStringMatchesFormat($jsonExpect, $jsonified);
                     },
                     'chromeLogger' => array(
                         array(
@@ -259,7 +259,7 @@ EOD;
                         . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></div>' . "\n"
                         . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_type">binary string</span>' . "\n"
                         . '<ul class="list-unstyled value-container" data-type="string">' . "\n"
-                        . '<li>mime type = <span class="t_string">image/png</span></li>' . "\n"
+                        . '<li>mime type = <span class="t_string">%s</span></li>' . "\n"
                         . '<li>size = <span class="t_int">8138</span></li>' . "\n"
                         . '<li>Binary data not collected</li>' . "\n"
                         . '</ul></div>' . "\n"

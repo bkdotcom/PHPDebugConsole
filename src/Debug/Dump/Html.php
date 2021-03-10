@@ -128,6 +128,25 @@ class Html extends Base
     }
 
     /**
+     * Get "option" of value being dumped
+     *
+     * @param string $what (optional) name of option to get (ie sanitize, type, typeMore)
+     *
+     * @return mixed
+     */
+    public function getDumpOpt($what = null)
+    {
+        $val = parent::getDumpOpt($what);
+        if ($what === 'tagName' && $val === '__default__') {
+            $val = 'span';
+            if (parent::getDumpOpt('type') === Abstracter::TYPE_OBJECT) {
+                $val = 'div';
+            }
+        }
+        return $val;
+    }
+
+    /**
      * Wrap classname in span.classname
      * if namespaced additionally wrap namespace in span.namespace
      * If callable, also wrap with .t_operator and .t_identifier
@@ -275,6 +294,23 @@ class Html extends Base
             ' data-icon="null"' => '',
         ));
         return $html . "\n";
+    }
+
+    /**
+     * Set "option" of value being dumped
+     *
+     * @param array|string $what name of value to set (or key/value array)
+     * @param mixed        $val  value
+     *
+     * @return void
+     */
+    public function setDumpOpt($what, $val = null)
+    {
+        if ($what === 'attribs' && empty($val['class'])) {
+            // make sure class is set
+            $val['class'] = array();
+        }
+        parent::setDumpOpt($what, $val);
     }
 
     /**

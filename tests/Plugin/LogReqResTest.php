@@ -209,7 +209,7 @@ class LogReqResTest extends DebugTestFramework
                     'channel' => 'Request / Response',
                 ),
             ),
-            $this->logEntryToArray($this->debug->getData('log/0'))
+            $this->logEntryToArray($this->debug->getData('log/1'))
         );
         $this->debug->setData('log', array());
 

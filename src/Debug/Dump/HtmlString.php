@@ -187,6 +187,10 @@ class HtmlString
                 ),
                 "\n" . \implode("\n", $lis) . "\n"
             );
+        if ($this->html->getDumpOpt('tagName') === 'td') {
+            // wrap with td without adding class="binary t_string"
+            $template = '<td>' . $template . '</td>';
+        }
         $this->html->setDumpOpt('tagName', null);
         $this->html->setDumpOpt('template', $template);
         $strLenDiff = $abs['strlen'] - \strlen($abs['value']);
@@ -233,19 +237,25 @@ class HtmlString
             $vals['labelDecoded'] = 'unserialized';
             $vals['labelRaw'] = 'serialized';
         }
+        $val = $this->debug->html->buildTag(
+            $this->html->getDumpOpt('tagName'),
+            array(
+                'class' => 'string-encoded tabs-container',
+                'data-type' => $typeMore,
+            ),
+            "\n"
+            . '<nav role="tablist">'
+                . '<a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">{labelRaw}</a>'
+                . '<a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">{labelDecoded}</a>'
+            . '</nav>' . "\n"
+            . '<div class="string-raw tab-pane" role="tabpanel">'
+                . '{valRaw}'
+            . '</div>' . "\n"
+            . '<div class="active string-decoded tab-pane" role="tabpanel">'
+                . '{valDecoded}'
+            . '</div>' . "\n"
+        );
         $this->html->setDumpOpt('tagName', null);
-        $val = '<span class="string-encoded tabs-container" data-type="' . $typeMore . '">' . "\n"
-                . '<nav role="tablist">'
-                    . '<a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">{labelRaw}</a>'
-                    . '<a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">{labelDecoded}</a>'
-                . '</nav>' . "\n"
-                . '<div class="string-raw tab-pane" role="tabpanel">'
-                    . '{valRaw}'
-                . '</div>' . "\n"
-                . '<div class="active string-decoded tab-pane" role="tabpanel">'
-                    . '{valDecoded}'
-                . '</div>' . "\n"
-            . '</span>';
         return $this->debug->utility->strInterpolate($val, $vals);
     }
 

@@ -5,6 +5,7 @@ namespace bdk\DebugTests\Method;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\DebugTests\DebugTestFramework;
 use ReflectionMethod;
+use ReflectionProperty;
 
 /**
  * PHPUnit tests for Debug class
@@ -19,6 +20,9 @@ class TableTest extends DebugTestFramework
      */
     public function testTableColKeys()
     {
+        $debugProp = new ReflectionProperty($this->debug->methodTable, 'debug');
+        $debugProp->setAccessible(true);
+        $debugProp->setValue($this->debug->methodTable, $this->debug);
         $colKeysMeth = new ReflectionMethod($this->debug->methodTable, 'colKeys');
         $colKeysMeth->setAccessible(true);
         $array = array(
@@ -568,6 +572,61 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-8: 188|[{"Label":"not all col values of same type","Type":"TABLE"},[["","date","date2"],[0,"1955-11-05T00:00:00%i","not a datetime"],[1,"1985-10-26T00:00:00%i","2015-10-21T00:00:00%i"]]]|',
                 ),
             ),
+        );
+    }
+
+    public function testSpecialValues()
+    {
+        $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==');
+        $binaryStr = \trim(\chunk_split(\bin2hex($binary), 2, ' '));
+        $this->testMethod(
+            'table',
+            array(
+                'foo',
+                array(
+                    array(
+                        'val' => $binary,
+                    ),
+                    array(
+                        'val' => \json_encode(array(
+                            'poop' => '💩',
+                            'int' => 42,
+                            'password' => 'secret',
+                        ))
+                    ),
+                ),
+            ),
+            array(
+                'html' => '<li class="m_table">
+                    <table class="sortable table-bordered">
+                    <caption>foo</caption>
+                    <thead>
+                        <tr><th>&nbsp;</th><th>val</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><th class="t_int t_key text-right" scope="row">0</th><td><span class="t_type">binary string</span>
+                            <ul class="list-unstyled value-container" data-type="string">
+                                <li>size = <span class="t_int">16</span></li>
+                                <li class="t_string"><span class="binary">' . $binaryStr . '</span></li>
+                            </ul></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="string-encoded tabs-container" data-type="json">
+                            <nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>
+                            <div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                                &quot;poop&quot;: &quot;\ud83d\udca9&quot;,
+                                &quot;int&quot;: 42,
+                                &quot;password&quot;: &quot;secret&quot;
+                            }</span></span></div>
+                            <div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                                <ul class="array-inner list-unstyled">
+                                    <li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
+                                    <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
+                                    <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">secret</span></li>
+                                </ul><span class="t_punct">)</span></span></div>
+                            </td></tr>
+                    </tbody>
+                    </table>
+                    </li>',
+            )
         );
     }
 }

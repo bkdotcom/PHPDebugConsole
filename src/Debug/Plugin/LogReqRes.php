@@ -31,6 +31,7 @@ class LogReqRes implements SubscriberInterface
 {
 
     private $debug;
+    private $headerStyle = 'display:block; font-size:110%; font-weight:bold; padding:0.25em 0.5em; text-indent:0; border-bottom:#31708f 1px solid; background: linear-gradient(0deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.1) 100%);';
 
     /**
      * {@inheritDoc}
@@ -74,6 +75,18 @@ class LogReqRes implements SubscriberInterface
         if (\strpos($this->debug->getInterface(), 'http') !== 0) {
             return;
         }
+        if (!\array_filter($this->debug->getCfg('logRequestInfo', Debug::CONFIG_DEBUG))) {
+            return;
+        }
+        $this->debug->log(
+            'Request',
+            $this->debug->meta(array(
+                'attribs' => array(
+                    'style' => $this->headerStyle,
+                ),
+                'icon' => 'fa fa-arrow-right',
+            ))
+        );
         $this->logRequestHeaders();
         if ($this->debug->getCfg('logRequestInfo.cookies', Debug::CONFIG_DEBUG)) {
             $cookieVals = $this->debug->request->getCookieParams();
@@ -99,6 +112,15 @@ class LogReqRes implements SubscriberInterface
         if (\strpos($this->debug->getInterface(), 'http') !== 0) {
             return;
         }
+        $this->debug->log(
+            'Response',
+            $this->debug->meta(array(
+                'attribs' => array(
+                    'style' => $this->headerStyle,
+                ),
+                'icon' => 'fa fa-arrow-left',
+            ))
+        );
         $headers = \array_map(function ($vals) {
             return \implode("\n", $vals);
         }, $this->debug->getResponseHeaders());

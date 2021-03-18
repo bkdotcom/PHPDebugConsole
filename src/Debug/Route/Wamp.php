@@ -421,6 +421,7 @@ class Wamp implements RouteInterface
                     }
                     return $clone;
             }
+            return $clone;
         }
         return $mixed;
     }

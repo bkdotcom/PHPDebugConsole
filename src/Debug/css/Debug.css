@@ -143,7 +143,7 @@
 .debug table thead th .classname::after { content: ")"; }
 .debug table tr[data-toggle] { cursor: default; }
 .debug table tr[data-toggle]:hover { color: #212529; background-color: rgba(0, 0, 0, 0.075); }
-.debug table tbody th.t_int, .debug table td.numeric, .debug table td.t_int { text-align: right; white-space: nowrap; }
+.debug table tbody th.t_int, .debug table td[data-type-more=numeric], .debug table td.t_int { text-align: right; white-space: nowrap; }
 .debug table.table-bordered th, .debug table.table-bordered td { border: 1px solid #7f7f7f; padding: 1px 0.25em; }
 .debug table.table-hover tbody tr { cursor: default; }
 .debug table.table-hover tbody tr:hover { color: #212529; background-color: rgba(0, 0, 0, 0.075); }
@@ -161,14 +161,14 @@
 .debug table.trace-context tr.context td hr { margin: 1em 0; }
 .debug .t_identifier { font-weight: bold; white-space: nowrap; }
 .debug .t_type { color: #693; }
-.debug .t_bool.true { color: #993; text-shadow: 1px 1px 2px rgba(153, 153, 51, 0.5); }
-.debug .t_bool.false { color: #c33; text-shadow: 1px 1px 2px rgba(204, 51, 51, 0.5); }
+.debug .t_bool[data-type-more=true] { color: #993; text-shadow: 1px 1px 2px rgba(153, 153, 51, 0.5); }
+.debug .t_bool[data-type-more=false] { color: #c33; text-shadow: 1px 1px 2px rgba(204, 51, 51, 0.5); }
 .debug .t_callable { font-weight: bold; }
 .debug .t_callable .t_type, .debug .t_callable .namespace { font-weight: normal; }
 .debug .t_const { color: #039; font-family: monospace; }
 .debug .t_const .t_identifier { color: inherit; }
-.debug .t_int, .debug .t_float, .debug .numeric { font-family: Courier New, monospace, Ariel; color: #009; font-size: 1.15em; line-height: 1.15em; }
-.debug .t_int::before, .debug .t_int::after, .debug .t_float::before, .debug .t_float::after, .debug .numeric::before, .debug .numeric::after { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 0.8695em; }
+.debug .t_int, .debug .t_float, .debug .t_string[data-type-more=numeric] { font-family: Courier New, monospace, Ariel; color: #009; font-size: 1.15em; line-height: 1.15em; }
+.debug .t_int::before, .debug .t_int::after, .debug .t_float::before, .debug .t_float::after, .debug .t_string[data-type-more=numeric]::before, .debug .t_string[data-type-more=numeric]::after { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 0.8695em; }
 .debug .t_key { opacity: 0.75; }
 .debug .t_key[data-file] { opacity: 1; }
 .debug .t_key::before, .debug .t_key::after { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #999; }

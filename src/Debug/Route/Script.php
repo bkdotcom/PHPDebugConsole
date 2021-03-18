@@ -131,17 +131,30 @@ class Script extends Base
             if (isset($meta['file'])) {
                 $args[] = \sprintf('%s: line %s', $meta['file'], $meta['line']);
             }
+        } elseif ($method === 'table') {
+            $args = $this->dump->dump($args);
         } elseif (!\in_array($method, $this->consoleMethods)) {
             $method = 'log';
         }
-        foreach ($args as $k => $arg) {
-            $arg = \json_encode($this->dump->dump($arg), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            // ensure - however unlikely - that </script> doesn't appear inside our <script>
-            $arg = \str_replace('</script>', '<\\/script>', $arg);
-            $args[$k] = $arg;
-        }
-        $str = 'console.' . $method . '(' . \implode(',', $args) . ');' . "\n";
-        $str = \str_replace(\json_encode(Abstracter::UNDEFINED), 'undefined', $str);
+        $args = \json_encode($args, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $args = \substr($args, 1, -1);
+        $str = 'console.' . $method . '(' . $args . ');' . "\n";
+        $str = \str_replace(
+            array(
+                // ensure that </script> doesn't appear inside our <script>
+                '</script>',
+                \json_encode(Abstracter::TYPE_FLOAT_INF),
+                \json_encode(Abstracter::TYPE_FLOAT_NAN),
+                \json_encode(Abstracter::UNDEFINED),
+            ),
+            array(
+                '<\\/script>',
+                'Infinity',
+                'NaN',
+                'undefined',
+            ),
+            $str
+        );
         return $str;
     }
 }

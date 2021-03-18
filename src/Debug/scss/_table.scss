@@ -53,7 +53,7 @@ table {
     }
   }
   tbody th.t_int,
-  td.numeric,
+  td[data-type-more=numeric],
   td.t_int {
     text-align: right;
     white-space: nowrap;

@@ -36,8 +36,8 @@ class SubstitutionTest extends DebugTestFramework
                     . ' <span class="t_keyword">array</span><span class="t_punct">(</span>1<span class="t_punct">)</span>'
                     . ' <span class="t_keyword">array</span><span class="t_punct">(</span>0<span class="t_punct">)</span>'
                     . ' <span class="t_null">null</span>'
-                    . ' <span class="t_bool true">true</span>'
-                    . ' <span class="false t_bool">false</span>'
+                    . ' <span class="t_bool" data-type-more="true">true</span>'
+                    . ' <span class="t_bool" data-type-more="false">false</span>'
                     . '</span></li>',
                 'script' => 'console.log({{args}});',
                 'text' => 'plain ol string array(1) array(0) null true false',

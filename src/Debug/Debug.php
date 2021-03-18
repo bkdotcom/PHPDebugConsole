@@ -1849,7 +1849,7 @@ class Debug
                   a. on initial instance (even though re-registering function does't re-register)
                   b. if we're unable to to find our Config class (must not be using Composer)
             */
-            if (\class_exists('bdk\\Debug\\Config') === false) {
+            if (\class_exists('bdk\\ErrorHandler') === false) {
                 \spl_autoload_register(array($this, 'autoloader'));
             }
         }

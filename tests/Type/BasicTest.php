@@ -16,7 +16,6 @@ class BasicTest extends DebugTestFramework
         $ts = \time();
         $datetime = \date('Y-m-d H:i:s', $ts);
         $test = new \bdk\DebugTests\Fixture\Test();
-        // val, html, text, script
         return array(
             // #0 : boolean
             array(
@@ -24,7 +23,7 @@ class BasicTest extends DebugTestFramework
                 array(true),
                 array(
                     'chromeLogger' => '[[true],null,""]',
-                    'html' => '<li class="m_log"><span class="t_bool true">true</span></li>',
+                    'html' => '<li class="m_log"><span class="t_bool" data-type-more="true">true</span></li>',
                     'script' => 'console.log(true);',
                     'streamAnsi' => "\e[32mtrue\e[0m",
                     'text' => 'true',
@@ -40,7 +39,7 @@ class BasicTest extends DebugTestFramework
                 array(false),
                 array(
                     'chromeLogger' => '[[false],null,""]',
-                    'html' => '<li class="m_log"><span class="false t_bool">false</span></li>',
+                    'html' => '<li class="m_log"><span class="t_bool" data-type-more="false">false</span></li>',
                     'script' => 'console.log(false);',
                     'streamAnsi' => "\e[91mfalse\e[0m",
                     'text' => 'false',
@@ -66,7 +65,53 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #3 : number
+            // #3 : INF
+            array(
+                'log',
+                array(INF),
+                array(
+                    'chromeLogger' => '[["INF"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_float" data-type-more="inf">INF</span></li>',
+                    'script' => 'console.log(Infinity);',
+                    'streamAnsi' =>  "\e[96mINF\e[0m",
+                    'text' => 'INF',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Abstracter::TYPE_FLOAT,
+                                'typeMore' => Abstracter::TYPE_FLOAT_INF,
+                                'value' => Abstracter::TYPE_FLOAT_INF,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            // #4 : NAN
+            array(
+                'log',
+                array(NAN),
+                array(
+                    'chromeLogger' => '[["NaN"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_float" data-type-more="nan">NaN</span></li>',
+                    'script' => 'console.log(NaN);',
+                    'streamAnsi' => "\e[96mNaN\e[0m",
+                    'text' => 'NaN',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Abstracter::TYPE_FLOAT,
+                                'typeMore' => Abstracter::TYPE_FLOAT_NAN,
+                                'value' => Abstracter::TYPE_FLOAT_NAN,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            // #5 : number
             array(
                 'log',
                 array(10),
@@ -82,7 +127,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #4
+            // #6 : float
             array(
                 'log',
                 array(10.10),
@@ -98,7 +143,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #5
+            // #7 : (int) timestamp
             array(
                 'log',
                 array($ts),
@@ -114,13 +159,13 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #6
+            // #8 : (string) timestamp
             array(
                 'log',
                 array((string) $ts),
                 array(
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
-                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="numeric t_string">' . $ts . '</span></span></li>',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="t_string" data-type-more="numeric">' . $ts . '</span></span></li>',
                     'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
                     'streamAnsi' => "📅 \e[38;5;250m\"\e[96m" . $ts . "\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
                     'text' => '📅 "' . $ts . '" (' . $datetime . ')',
@@ -130,7 +175,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #7
+            // #9 : (string) timestamp - crateWithVals
             array(
                 'log',
                 array(
@@ -142,7 +187,7 @@ class BasicTest extends DebugTestFramework
                 ),
                 array(
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
-                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="numeric t_string testaroo">' . $ts . '</span></span></li>',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="t_string testaroo" data-type-more="numeric">' . $ts . '</span></span></li>',
                     'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
                     'streamAnsi' => "📅 \e[38;5;250m\"\e[96m" . $ts . "\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
                     'text' => '📅 "' . $ts . '" (' . $datetime . ')',
@@ -165,7 +210,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #8
+            // #10 : undefined
             array(
                 'log',
                 array(Abstracter::UNDEFINED),
@@ -181,7 +226,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #9
+            // #11 : callable
             array(
                 'log',
                 array(array($test,'testBaseStatic')),

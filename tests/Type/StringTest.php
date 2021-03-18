@@ -164,7 +164,7 @@ EOD;
                         null,
                         '',
                     ),
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">numeric string</span> = <span class="numeric t_string">10</span></li>',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">numeric string</span> = <span class="t_string" data-type-more="numeric">10</span></li>',
                     'script' => 'console.log("numeric string","10");',
                     'text' => 'numeric string = "10"',
                     'wamp' => array(
@@ -189,7 +189,7 @@ EOD;
                         null,
                         '',
                     ),
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">numeric string</span> = <span class="numeric t_string">10.10</span></li>',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">numeric string</span> = <span class="t_string" data-type-more="numeric">10.10</span></li>',
                     'script' => 'console.log("numeric string","10.10");',
                     'text' => 'numeric string = "10.10"',
                 ),
@@ -207,7 +207,7 @@ EOD;
                         null,
                         '',
                     ),
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="timestamp value-container" data-type="string" title="' . \date('Y-m-d H:i:s', $ts) . '"><span class="numeric t_string">' . $ts . '</span></span></li>',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="timestamp value-container" data-type="string" title="' . \date('Y-m-d H:i:s', $ts) . '"><span class="t_string" data-type-more="numeric">' . $ts . '</span></span></li>',
                     'script' => 'console.log("timestamp","' . $ts . ' (' . \date('Y-m-d H:i:s') . ')");',
                     'text' => 'timestamp = 📅 "' . $ts . '" (' . \date('Y-m-d H:i:s') . ')',
                 ),
@@ -227,7 +227,7 @@ EOD;
                     ),
                     'html' => '<li class="m_log">'
                         . '<span class="no-quotes t_string">long string</span> = '
-                        . '<span class="t_string">'
+                        . '<span class="t_string" data-type-more="maxLen">'
                             . \str_replace("\n", '<span class="ws_n"></span>' . "\n", $longStringExpect)
                             . '<span class="maxlen">&hellip; 1778 more bytes (not logged)</span>'
                         . '</span></li>',
@@ -319,7 +319,17 @@ EOD;
                     'script' => 'console.log("' . $base64snip2 . '");',
                     'text' => $base64snip2,
                 )
-            )
+            ),
+            // 8
+            array(
+                'log',
+                array(
+                    '\u0000 / foo \\ bar',
+                ),
+                array(
+                    'script' => 'console.log(' . \json_encode('\u0000 / foo \\ bar', JSON_UNESCAPED_SLASHES) . ');',
+                ),
+            ),
         );
     }
 }

@@ -198,7 +198,7 @@ class Base extends Component
         if ($abs['options']) {
             $opts = \array_merge($opts, $abs['options']);
         }
-        $opts['typeMore'] = null;
+        $opts['typeMore'] = $abs['typeMore'];
         $this->setDumpOpt($opts);
         if (\method_exists($this, $method) === false) {
             $event = $this->debug->publishBubbleEvent(Debug::EVENT_DUMP_CUSTOM, new Event(
@@ -220,11 +220,9 @@ class Base extends Component
             Abstracter::TYPE_NULL,
             Abstracter::TYPE_STRING,
         );
-        if (\in_array($type, $simpleTypes)) {
-            $this->setDumpOpt('typeMore', $abs['typeMore']);
-            return $this->{$method}($abs['value'], $abs);
-        }
-        return $this->{$method}($abs);
+        return \in_array($type, $simpleTypes)
+            ? $this->{$method}($abs['value'], $abs)
+            : $this->{$method}($abs);
     }
 
     /**

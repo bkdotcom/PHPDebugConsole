@@ -92,7 +92,7 @@ export function init ($root) {
     } else {
       $strings = $()
     }
-    $strings.not('.numeric').each(function () {
+    $strings.not('[data-type-more=numeric]').each(function () {
       enhanceLongString($(this))
     })
   })

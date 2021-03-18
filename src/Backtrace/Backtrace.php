@@ -308,9 +308,6 @@ class Backtrace
         if (\preg_match(static::$internalClasses['regex'], $class)) {
             return true;
         }
-        if ($frame['function'] === '{closure}') {
-            return true;
-        }
         if (\in_array($frame['function'], array('call_user_func', 'call_user_func_array'))) {
             return true;
         }

@@ -82,14 +82,14 @@ class AbstractString extends Component
      */
     public function getType($val)
     {
-        if ($val === Abstracter::UNDEFINED) {
-            return array(Abstracter::TYPE_UNDEFINED, null);       // not a native php type!
+        if ($val === Abstracter::NOT_INSPECTED) {
+            return array(Abstracter::TYPE_NOT_INSPECTED, null);   // not a native php type!
         }
         if ($val === Abstracter::RECURSION) {
             return array(Abstracter::TYPE_RECURSION, null);       // not a native php type!
         }
-        if ($val === Abstracter::NOT_INSPECTED) {
-            return array(Abstracter::TYPE_NOT_INSPECTED, null);   // not a native php type!
+        if ($val === Abstracter::UNDEFINED) {
+            return array(Abstracter::TYPE_UNDEFINED, null);       // not a native php type!
         }
         if (\is_numeric($val)) {
             return array(Abstracter::TYPE_STRING, Abstracter::TYPE_STRING_NUMERIC);

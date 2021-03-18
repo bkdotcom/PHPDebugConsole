@@ -151,6 +151,12 @@ class Text extends Base
      */
     protected function dumpFloat($val)
     {
+        if ($val === Abstracter::TYPE_FLOAT_INF) {
+            return 'INF';
+        }
+        if ($val === Abstracter::TYPE_FLOAT_NAN) {
+            return 'NaN';
+        }
         $date = $this->checkTimestamp($val);
         return $date
             ? '📅 ' . $val . ' (' . $date . ')'

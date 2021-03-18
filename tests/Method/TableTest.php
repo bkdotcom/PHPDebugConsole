@@ -87,8 +87,8 @@ class TableTest extends DebugTestFramework
 <tr><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
 </thead>
 <tbody>
-<tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
-<tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
+<tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
+<tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
 </tbody>
 </table>
 </li>
@@ -430,7 +430,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},[["","value"],[0,"a"],[1,"2233-03-22T00:00:00%i"],[2,"Resource id #%d: stream"],[3,' . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . '],[4,{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]]]|',
                 ),
             ),
-            // 8 traversavle
+            // 8 traversable
             array(
                 'table',
                 array(
@@ -462,8 +462,8 @@ EOD;
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</td><td class="t_string">Bob</td><td class="numeric t_string">12</td><td class="t_string">M</td><td class="false t_bool">false</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</td><td class="t_string">Sally</td><td class="numeric t_string">10</td><td class="t_string">F</td><td class="t_bool true">true</td><td class="t_string">yes</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</td><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</td><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
                         </tbody>
                         </table>
                         </li>',
@@ -509,8 +509,8 @@ EOD;
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th>age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname">stdClass</td><td class="numeric t_string">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="false t_bool">false</td><td class="t_string">M</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname">stdClass</td><td class="numeric t_string">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool true">true</td><td class="t_string">F</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="t_bool" data-type-more="false">false</td><td class="t_string">M</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">F</td></tr>
                         </tbody>
                         </table>
                         </li>',

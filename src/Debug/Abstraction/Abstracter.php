@@ -50,6 +50,8 @@ class Abstracter extends Component
     */
     const TYPE_ABSTRACTION = 'abstraction';
     const TYPE_RAW = 'raw'; // raw object or array
+    const TYPE_FLOAT_INF = "\x00inf\x00";
+    const TYPE_FLOAT_NAN = "\x00nan\x00";
     const TYPE_STRING_BASE64 = 'base64';
     const TYPE_STRING_BINARY = 'binary';
     const TYPE_STRING_CLASSNAME = 'classname';
@@ -174,7 +176,7 @@ class Abstracter extends Component
      * Instead of storing objects in log, store "Abstraction" which containing
      *     type, methods, & properties
      *
-     * @param mixed  $mixed    array, object, or resource to prep
+     * @param mixed  $val      value to "abstract"
      * @param string $method   Method requesting abstraction
      * @param array  $typeInfo (@internal) array specifying value's type & "typeMore"
      * @param array  $hist     (@internal) array/object history (used to test for recursion)
@@ -183,26 +185,28 @@ class Abstracter extends Component
      *
      * @internal
      */
-    public function getAbstraction($mixed, $method = null, $typeInfo = array(), $hist = array())
+    public function getAbstraction($val, $method = null, $typeInfo = array(), $hist = array())
     {
-        $typeInfo = $typeInfo ?: $this->getType($mixed);
-        switch ($typeInfo[0]) {
+        list($type, $typeMore) = $typeInfo ?: $this->getType($val);
+        switch ($type) {
             case self::TYPE_ARRAY:
-                return $this->abstractArray->getAbstraction($mixed, $method, $hist);
+                return $this->abstractArray->getAbstraction($val, $method, $hist);
             case self::TYPE_CALLABLE:
-                return $this->abstractArray->getCallableAbstraction($mixed);
+                return $this->abstractArray->getCallableAbstraction($val);
+            case self::TYPE_FLOAT:
+                return $this->getAbstractionFloat($val, $typeMore);
             case self::TYPE_OBJECT:
-                return $this->abstractObject->getAbstraction($mixed, $method, $hist);
+                return $this->abstractObject->getAbstraction($val, $method, $hist);
             case self::TYPE_RESOURCE:
-                return new Abstraction($typeInfo[0], array(
-                    'value' => \print_r($mixed, true) . ': ' . \get_resource_type($mixed),
+                return new Abstraction($type, array(
+                    'value' => \print_r($val, true) . ': ' . \get_resource_type($val),
                 ));
             case self::TYPE_STRING:
-                return $this->abstractString->getAbstraction($mixed, $typeInfo[1], $this->crateVals);
+                return $this->abstractString->getAbstraction($val, $typeMore, $this->crateVals);
             default:
-                return new Abstraction($typeInfo[0], array(
-                    'typeMore' => $typeInfo[1],
-                    'value' => $mixed,
+                return new Abstraction($type, array(
+                    'typeMore' => $typeMore,
+                    'value' => $val,
                 ));
         }
     }
@@ -238,6 +242,8 @@ class Abstracter extends Component
                 return $this->getTypeArray($val);
             case self::TYPE_BOOL:
                 return array(self::TYPE_BOOL, \json_encode($val));
+            case self::TYPE_FLOAT:
+                return $this->getTypeFloat($val);
             case self::TYPE_OBJECT:
                 return $this->getTypeObject($val);
             case self::TYPE_RESOURCE:
@@ -288,6 +294,9 @@ class Abstracter extends Component
         if ($typeMore === self::TYPE_RAW) {
             return array($type, $typeMore);
         }
+        if ($type === self::TYPE_FLOAT && $typeMore) {
+            return array($type, $typeMore);
+        }
         if ($type === self::TYPE_STRING && \in_array($typeMore, array(null, self::TYPE_STRING_NUMERIC), true) === false) {
             return array($type, $typeMore);
         }
@@ -321,6 +330,29 @@ class Abstracter extends Component
     }
 
     /**
+     * Abstract a float
+     *
+     * This is done to avoid having NAN & INF values.. which can't be json encoded
+     *
+     * @param float       $val      float value
+     * @param string|null $typeMore (optional) TYPE_FLOAT_INF or TYPE_FLOAT_NAN
+     *
+     * @return Abstraction
+     */
+    private function getAbstractionFloat($val, $typeMore)
+    {
+        if ($typeMore === self::TYPE_FLOAT_INF) {
+            $val = self::TYPE_FLOAT_INF;
+        } elseif ($typeMore === self::TYPE_FLOAT_NAN) {
+            $val = self::TYPE_FLOAT_NAN;
+        }
+        return new Abstraction(self::TYPE_FLOAT, array(
+            'typeMore' => $typeMore,
+            'value' => $val,
+        ));
+    }
+
+    /**
      * Get Array's type & typeMore
      *
      * @param array $val array value
@@ -335,6 +367,27 @@ class Abstracter extends Component
             $type = self::TYPE_CALLABLE;
         }
         return array($type, $typeMore);
+    }
+
+    /**
+     * Get Float's type & typeMore
+     *
+     * INF and NAN are considered "float"
+     *
+     * @param float $val [description]
+     *
+     * @return array
+     */
+    private function getTypeFloat($val)
+    {
+        $typeMore = null;
+        if ($val === INF) {
+            $typeMore = self::TYPE_FLOAT_INF;
+        } elseif (\is_nan($val)) {
+            // using is_nan() func as comparing with NAN constant doesn't work
+            $typeMore = self::TYPE_FLOAT_NAN;
+        }
+        return array(self::TYPE_FLOAT, $typeMore);
     }
 
     /**

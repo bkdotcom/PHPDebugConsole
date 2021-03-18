@@ -85,9 +85,9 @@ class Stream extends Base
         $isCli = \strpos($this->debug->getInterface(), 'cli') !== false;
         if ($isCli && isset($cfg['debug']['output'])) {
             $this->cfg['output'] = $cfg['debug']['output'];
-            if ($this->cfg['output']) {
-                $this->openStream($this->cfg['stream']);
-            }
+        }
+        if ($this->cfg['output']) {
+            $this->openStream($this->cfg['stream']);
         }
     }
 

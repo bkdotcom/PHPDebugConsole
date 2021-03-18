@@ -27,11 +27,11 @@ $color-stringified: rgba(0, 200, 200, 0.6);
 }
 .t_type { color: $color-type; }
 
-.t_bool.true {
+.t_bool[data-type-more=true] {
   color: $color-true;
   text-shadow: 1px 1px 2px $color-true-shadow;
 }
-.t_bool.false {
+.t_bool[data-type-more=false] {
   color: $color-false;
   text-shadow: 1px 1px 2px $color-false-shadow;
 }
@@ -52,7 +52,7 @@ $color-stringified: rgba(0, 200, 200, 0.6);
 }
 .t_int,
 .t_float,
-.numeric {
+.t_string[data-type-more=numeric] {
   font-family: $font-family-numeric;
   color: $color-numeric;
   font-size: 1.15em;

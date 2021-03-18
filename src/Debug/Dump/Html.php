@@ -108,15 +108,10 @@ class Html extends Base
             }
         }
         if ($tagName) {
-            $this->dumpOptions['attribs']['class'] = \array_merge(
-                $this->dumpOptions['attribs']['class'],
-                array(
-                    't_' . $this->dumpOptions['type'],
-                    !\in_array($this->dumpOptions['typeMore'], array(Abstracter::TYPE_STRING_LONG))
-                        ? $this->dumpOptions['typeMore']
-                        : null,
-                )
-            );
+            $this->dumpOptions['attribs']['class'][] = 't_' . $this->dumpOptions['type'];
+            if ($this->dumpOptions['typeMore'] !== null) {
+                $this->dumpOptions['attribs']['data-type-more'] = \trim($this->dumpOptions['typeMore']);
+            }
             $val = $this->debug->html->buildTag($tagName, $this->dumpOptions['attribs'], $val);
         }
         if ($this->dumpOptions['template']) {
@@ -528,6 +523,12 @@ class Html extends Base
     protected function dumpFloat($val)
     {
         $this->checkTimestamp($val);
+        if ($val === Abstracter::TYPE_FLOAT_INF) {
+            return 'INF';
+        }
+        if ($val === Abstracter::TYPE_FLOAT_NAN) {
+            return 'NaN';
+        }
         return $val;
     }
 

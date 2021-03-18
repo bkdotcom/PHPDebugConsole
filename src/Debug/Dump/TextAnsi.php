@@ -13,6 +13,7 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
@@ -197,6 +198,11 @@ class TextAnsi extends Text
     protected function dumpFloat($val)
     {
         $date = $this->checkTimestamp($val);
+        if ($val === Abstracter::TYPE_FLOAT_INF) {
+            $val = 'INF';
+        } elseif ($val === Abstracter::TYPE_FLOAT_NAN) {
+            $val = 'NaN';
+        }
         $val = $this->cfg['escapeCodes']['numeric'] . $val . $this->escapeReset;
         return $date
             ? '📅 ' . $val . ' ' . $this->cfg['escapeCodes']['muted'] . '(' . $date . ')' . $this->escapeReset

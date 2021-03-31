@@ -13,8 +13,6 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 use Exception;
@@ -89,7 +87,16 @@ class LogReqRes implements SubscriberInterface
         );
         $this->logRequestHeaders();
         if ($this->debug->getCfg('logRequestInfo.cookies', Debug::CONFIG_DEBUG)) {
-            $cookieVals = $this->debug->request->getCookieParams();
+            $cookieVals = \array_map(function ($val) {
+                if (\is_numeric($val)) {
+                    $val = $this->debug->abstracter->crateWithVals($val, array(
+                        'attribs' => array(
+                            'class' => 'text-left',
+                        ),
+                    ));
+                }
+                return $val;
+            }, $this->debug->request->getCookieParams());
             \ksort($cookieVals, SORT_NATURAL);
             if ($cookieVals) {
                 $this->debug->table('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
@@ -128,9 +135,6 @@ class LogReqRes implements SubscriberInterface
         $contentType = \implode(', ', $this->debug->getResponseHeader('Content-Type'));
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
             // we're not interested in logging response
-            if (\ob_get_level()) {
-                \ob_end_flush();
-            }
             $this->debug->log(
                 $contentType
                     ? 'Not logging response body for Content-Type "' . $contentType . '"'
@@ -269,12 +273,10 @@ class LogReqRes implements SubscriberInterface
         $headers = \array_map(function ($vals) {
             $val = \join(', ', $vals);
             if (\is_numeric($val)) {
-                $val = new Abstraction(Abstracter::TYPE_STRING, array(
+                $val = $this->debug->abstracter->crateWithVals($val, array(
                     'attribs' => array(
                         'class' => 'text-left',
                     ),
-                    'typeMore' => Abstracter::TYPE_STRING_NUMERIC,
-                    'value' => $val,
                 ));
             }
             return $val;
@@ -301,9 +303,11 @@ class LogReqRes implements SubscriberInterface
     {
         $maxLen = $this->debug->getCfg('logResponseMaxLen', Debug::CONFIG_DEBUG);
         $maxLen = $this->debug->utility->getBytes($maxLen, true);
-        // get the contents of the output buffer we started to collect response
-        $response = \ob_get_clean();
-        echo $response;
+        /*
+            get the contents of the output buffer we started to collect response
+            Note that we don't clear, echo, flush, or end the buffer here
+        */
+        $response = \ob_get_contents();
         $contentLength = \strlen($response);
         if ($this->debug->response) {
             $response = '';

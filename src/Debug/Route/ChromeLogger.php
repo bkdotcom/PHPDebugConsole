@@ -30,12 +30,15 @@ class ChromeLogger extends Base
 
     const HEADER_NAME = 'X-ChromeLogger-Data';
 
+    protected $appendsHeaders = true;
+
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(
             'events',
             'files',
         ),
+        'group' => true, // contain/wrap log in a group?
     );
 
     protected $consoleMethods = array(
@@ -148,11 +151,20 @@ class ChromeLogger extends Base
         if ($this->jsonData) {
             $request = $this->debug->request;
             $serverParams = $request->getServerParams();
+            $info = array('PHP', isset($serverParams['REQUEST_METHOD'])
+                ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
+                : '$: ' . \implode(' ', $serverParams['argv'])
+            );
+            if (!$this->cfg['group']) {
+                \array_unshift($this->jsonData['rows'], array(
+                    $info,
+                    null,
+                    'info',
+                ));
+                return;
+            }
             \array_unshift($this->jsonData['rows'], array(
-                array('PHP', isset($serverParams['REQUEST_METHOD'])
-                    ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
-                    : '$: ' . \implode(' ', $serverParams['argv'])
-                ),
+                $info,
                 null,
                 'groupCollapsed',
             ));

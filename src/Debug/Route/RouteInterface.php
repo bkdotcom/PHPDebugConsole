@@ -28,6 +28,13 @@ interface RouteInterface extends SubscriberInterface
 {
 
     /**
+     * Does this route append headers?
+     *
+     * @return bool
+     */
+    public function appendsHeaders();
+
+    /**
      * Process log collectively (alerts, summary, log...)
      * likely implemented as a subscriber for the Debug::EVENT_OUTPUT event
      *

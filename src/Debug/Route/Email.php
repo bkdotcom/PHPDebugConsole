@@ -40,6 +40,14 @@ class Email implements RouteInterface
     /**
      * {@inheritDoc}
      */
+    public function appendsHeaders()
+    {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getSubscriptions()
     {
         return array(

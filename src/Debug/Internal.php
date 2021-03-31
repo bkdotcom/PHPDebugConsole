@@ -498,6 +498,37 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Flush the buffer and end buffering
+     *
+     * @return void
+     */
+    public function obEnd()
+    {
+        if ($this->debug->rootInstance->getData('isObCache') ===  false) {
+            return;
+        }
+        \ob_end_flush();
+        $this->debug->rootInstance->setData('isObCache', false);
+    }
+
+    /**
+     * Conditionally start output buffering
+     *
+     * @return void
+     */
+    public function obStart()
+    {
+        if ($this->debug->rootInstance->getData('isObCache')) {
+            return;
+        }
+        if ($this->debug->rootInstance->getCfg('collect', Debug::CONFIG_DEBUG) !== true) {
+            return;
+        }
+        \ob_start();
+        $this->debug->rootInstance->setData('isObCache', true);
+    }
+
+    /**
      * Debug::EVENT_BOOTSTRAP subscriber
      *
      * @return void

@@ -63,16 +63,7 @@ class InternalEvents implements SubscriberInterface
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
         }, 'onErrorLowPri'), PHP_INT_MAX * -1);
-        /*
-            Initial setCfg has already occured... so we missed the initial Debug::EVENT_CONFIG event
-            manually call onConfig here
-        */
-        $this->onConfig(new Event(
-            $this->debug,
-            array(
-                'debug' => $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
-            )
-        ));
+        $this->setInitialConfig();
     }
 
     /**
@@ -137,9 +128,13 @@ class InternalEvents implements SubscriberInterface
         );
         foreach ($valActions as $key => $callable) {
             if (isset($cfg[$key])) {
-                $callable($cfg[$key], $event);
+                $val = $callable($cfg[$key], $event);
+                if ($val) {
+                    $cfg[$key] = $val;
+                }
             }
         }
+        $event['debug'] = $cfg;
     }
 
     /**
@@ -384,9 +379,11 @@ class InternalEvents implements SubscriberInterface
             $this->runtimeVals();
             $this->debug->getRoute('email')->processLogEntries(new Event($this->debug));
         }
-        if (!$this->debug->getData('outputSent')) {
-            echo $this->debug->output();
+        if ($this->debug->getData('outputSent')) {
+            $this->debug->obEnd();
+            return;
         }
+        echo $this->debug->output();
     }
 
     /**
@@ -456,7 +453,7 @@ class InternalEvents implements SubscriberInterface
      *
      * @param mixed $val config value
      *
-     * @return void
+     * @return bool
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
@@ -477,13 +474,10 @@ class InternalEvents implements SubscriberInterface
             ) > 0;
         }
         if ($val) {
-            if (!$this->cfg['logResponse']) {
-                \ob_start();
-            }
-        } elseif ($this->cfg['logResponse']) {
-            \ob_end_flush();
+            $this->debug->obStart();
         }
         $this->cfg['logResponse'] = $val;
+        return $val;
     }
 
     /**
@@ -706,6 +700,41 @@ class InternalEvents implements SubscriberInterface
             $this->debug->setData('runtime', $vals);
         }
         return $vals;
+    }
+
+    /**
+     * Set Config
+     *
+     * We are constructed after Debug's Initial setCfg has already occured...
+     * So we missed the initial Debug::EVENT_CONFIG event
+     *       manually call onConfig here
+     *
+     * @return void
+     */
+    private function setInitialConfig()
+    {
+        $cfgDebugInit = $this->debug->getCfg(null, Debug::CONFIG_DEBUG);
+        $event = new Event(
+            $this->debug,
+            array(
+                'debug' => $cfgDebugInit,
+            )
+        );
+        $this->onConfig($event);
+        $cfgDebugDiff = array();
+        foreach ($event['debug'] as $k => $v) {
+            if ($v !== $cfgDebugInit[$k]) {
+                $cfgDebugDiff[$k] = $v;
+            }
+        }
+        if ($cfgDebugDiff) {
+            $this->debug->onConfig(new Event(
+                $this->debug,
+                array(
+                    'debug' => $cfgDebugDiff,
+                )
+            ));
+        }
     }
 
     /**

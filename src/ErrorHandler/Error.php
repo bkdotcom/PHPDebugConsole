@@ -337,7 +337,7 @@ class Error extends Event
     private function setContinueToNormal($errType, $continueToNormal)
     {
         if ($continueToNormal === false || \in_array($errType, array(E_USER_ERROR, E_RECOVERABLE_ERROR)) === false) {
-            return $continueToNormal;
+            return $continueToNormal && $this->subject->isCli === false;
         }
         switch ($this->subject->getCfg('onEUserError')) {
             case 'continue':
@@ -347,7 +347,7 @@ class Error extends Event
             case 'normal':
                 // force continueToNormal
                 // for a userError, php will log error and script will halt
-                return true;
+                return $this->subject->isCli === false;
         }
         return $continueToNormal;
     }

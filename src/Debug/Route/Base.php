@@ -25,6 +25,7 @@ abstract class Base extends Component implements RouteInterface
 {
 
     public $debug;
+    protected $appendsHeaders = false;
     protected $channelName = null;
 
     /**
@@ -59,6 +60,14 @@ abstract class Base extends Component implements RouteInterface
         $this->channelNameRoot = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function appendsHeaders()
+    {
+        return $this->appendsHeaders;
     }
 
     /**

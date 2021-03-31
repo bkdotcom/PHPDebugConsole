@@ -60,6 +60,14 @@ class Wamp implements RouteInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function appendsHeaders()
+    {
+        return false;
+    }
+
+    /**
      * Return a list of event subscribers
      *
      * @return array The event names to subscribe to

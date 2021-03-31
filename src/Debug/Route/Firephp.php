@@ -25,6 +25,8 @@ class Firephp extends Base
     const FIREPHP_PROTO_VER = '0.3';
     const MESSAGE_LIMIT = 99999;
 
+    protected $appendsHeaders = true;
+
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(

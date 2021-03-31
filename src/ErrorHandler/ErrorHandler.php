@@ -618,6 +618,22 @@ class ErrorHandler
     }
 
     /**
+     * Is script running from command line (or cron)?
+     *
+     * @return bool
+     */
+    private function getIsCli()
+    {
+        $argv = isset($_SERVER['argv'])
+            ? $_SERVER['argv']
+            : null;
+        $query = isset($_SERVER['QUERY_STRING'])
+            ? $_SERVER['QUERY_STRING']
+            : null;
+        return $argv && \implode('+', $argv) !== $query;
+    }
+
+    /**
      * Store last error
      *
      * We store up to two errors...  so that we can return last suppressed error (if desired)

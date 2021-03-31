@@ -109,6 +109,7 @@ class Debug
                                         //   used to return to the previous summary when groupEnd()ing out of a summary
                                         //   this allows calling groupSummary() while in a groupSummary
         'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
+        'isObCache'         => false,
         'log'               => array(),
         'logSummary'        => array(), // summary log entries subgrouped by priority
         'outputSent'        => false,
@@ -204,10 +205,10 @@ class Debug
                 array($str, $key);
                 return '█████████';
             },
-            'route' => 'auto',              // 'auto', chromeLogger', 'firephp', 'html', 'script', 'steam', 'text', or RouteInterface,
+            'route' => 'auto',              // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
                                             //   if 'auto', will be determined automatically
                                             //   if null, no output (unless output plugin added manually)
-            'routeNonHtml' => 'chromeLogger',
+            'routeNonHtml' => 'serverLog',
             'services' => $this->getDefaultServices(),
             'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
         );
@@ -1566,6 +1567,7 @@ class Debug
         $cfgRestore = $this->config->set($cfg);
         if (!$this->cfg['output']) {
             $this->config->set($cfgRestore);
+            $this->internal->obEnd();
             return null;
         }
         $route = $this->getCfg('route');
@@ -1594,6 +1596,7 @@ class Debug
             $this->data['outputSent'] = true;
         }
         $this->config->set($cfgRestore);
+        $this->internal->obEnd();
         return $event['return'];
     }
 
@@ -1856,7 +1859,7 @@ class Debug
         $this->getViaContainer('errorHandler');
         $this->registeredPlugins = new SplObjectStorage();
         $this->config = $this->getViaContainer('config');
-        $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'));
+        $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'), -1);
         $this->config->set($cfg);
         $this->bootstrapInstance();
         /*
@@ -2199,6 +2202,9 @@ class Debug
             if (\strpos($classname, $prefix) === 0) {
                 $prop = 'route' . \substr($classname, \strlen($prefix));
                 $this->readOnly[$prop] = $val;
+            }
+            if ($val->appendsHeaders()) {
+                $this->internal->obStart();
             }
         }
         return $val;

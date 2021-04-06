@@ -321,6 +321,7 @@ class Internal implements SubscriberInterface
         if (isset($cfg['debug']['services'])) {
             $cfg['debug']['services'] = \array_intersect_key($cfg['debug']['services'], \array_flip(array(
                 // these services aren't tied to a debug channel instance... allow inheritance
+                'arrayUtil',
                 'backtrace',
                 'html',
                 'methodClear',
@@ -504,7 +505,7 @@ class Internal implements SubscriberInterface
      */
     public function obEnd()
     {
-        if ($this->debug->rootInstance->getData('isObCache') ===  false) {
+        if ($this->debug->rootInstance->getData('isObCache') === false) {
             return;
         }
         \ob_end_flush();
@@ -739,7 +740,7 @@ class Internal implements SubscriberInterface
             $args[] = $function;
             $args = \array_merge($args, $caller['args']);
             // php < 7.0 debug_backtrace args are references!
-            $args = $this->debug->utility->arrayCopy($args, false);
+            $args = $this->debug->arrayUtil->copy($args, false);
         }
         return $args;
     }

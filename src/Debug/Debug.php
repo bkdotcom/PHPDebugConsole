@@ -59,7 +59,7 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
  * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
  * @property Debug\Psr7lite\ServerRequest $request lazy-loaded ServerRequest
  * @property \bdk\Debug           $rootInstance  root "channel"
- * @property Debug\Utility\StopWatch $stopWatch  lazy-loaded StopWatch Instance
+ * @property Debug\Utility\StopWatch $stopWatch  lazy-loaded StopWatch instance
  * @property Debug\Utility\Utf8   $utf8          lazy-loaded Utf8 instance
  * @property Debug\Utility        $utility       lazy-loaded Utility instance
  *
@@ -1261,7 +1261,7 @@ class Debug
             return $this->internal->getDefaultRoute(); // returns string
         }
         if ($opt === self::CONFIG_DEBUG) {
-            return $this->utility->arrayPathGet($this->cfg, $path);
+            return $this->arrayUtil->pathGet($this->cfg, $path);
         }
         return $this->config->get($path, $opt === self::CONFIG_INIT);
     }
@@ -1382,14 +1382,14 @@ class Debug
     public function getData($path = null)
     {
         if (!$path) {
-            $data = $this->utility->arrayCopy($this->data, false);
-            $data['logSummary'] = $this->utility->arrayCopy($data['logSummary'], false);
-            $data['groupStacks'] = $this->utility->arrayCopy($data['groupStacks'], false);
+            $data = $this->arrayUtil->copy($this->data, false);
+            $data['logSummary'] = $this->arrayUtil->copy($data['logSummary'], false);
+            $data['groupStacks'] = $this->arrayUtil->copy($data['groupStacks'], false);
             return $data;
         }
-        $data = $this->utility->arrayPathGet($this->data, $path);
+        $data = $this->arrayUtil->pathGet($this->data, $path);
         return \is_array($data) && \in_array($path, array('logSummary','groupStacks'))
-            ? $this->utility->arrayCopy($data, false)
+            ? $this->arrayUtil->copy($data, false)
             : $data;
     }
 
@@ -1540,7 +1540,7 @@ class Debug
                 $cfg[$key] = $callable($cfg[$key], $key);
             }
         }
-        $this->cfg = $this->utility->arrayMergeDeep($this->cfg, $cfg);
+        $this->cfg = $this->arrayUtil->mergeDeep($this->cfg, $cfg);
         /*
             propagate updated vals to child channels
         */
@@ -1653,7 +1653,7 @@ class Debug
         $this->data = \is_array($path)
             ? \array_merge($this->data, $path)
             : \call_user_func(function ($path, $value) {
-                $this->utility->arrayPathSet($this->data, $path, $value);
+                $this->arrayUtil->pathSet($this->data, $path, $value);
                 return $this->data;
             }, $path, $value);
         if (!$this->data['log']) {
@@ -1962,6 +1962,9 @@ class Debug
             'abstracter' => function (Debug $debug) {
                 return new Abstracter($debug, $debug->config->get('abstracter', self::CONFIG_INIT));
             },
+            'arrayUtil' => function () {
+                return new \bdk\Debug\Utility\ArrayUtil();
+            },
             'backtrace' => function () {
                 $backtrace = $this->errorHandler->backtrace;
                 $backtrace->addInternalClass('bdk\\Debug');
@@ -2176,7 +2179,7 @@ class Debug
         $allKeys = \array_keys($this->cfg[$name]);
         if (\is_bool($val)) {
             $val = \array_fill_keys($allKeys, $val);
-        } elseif ($this->utility->arrayIsList($val)) {
+        } elseif ($this->arrayUtil->isList($val)) {
             $val = \array_merge(
                 \array_fill_keys($allKeys, false),
                 \array_fill_keys($val, true)

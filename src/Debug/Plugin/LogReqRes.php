@@ -179,7 +179,7 @@ class LogReqRes implements SubscriberInterface
         if (!$files) {
             return;
         }
-        $files = $this->debug->utility->arrayMapRecursive(function ($uploadedFile) {
+        $files = $this->debug->arrayUtil->mapRecursive(function ($uploadedFile) {
             return array(
                 'error' => $uploadedFile->getError(),
                 'name' => $uploadedFile->getClientFilename(),

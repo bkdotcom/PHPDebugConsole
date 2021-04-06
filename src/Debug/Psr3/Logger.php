@@ -52,7 +52,7 @@ class Logger extends AbstractLogger
             $debug = Debug::getInstance();
         }
         $this->debug = $debug;
-        $this->cfg = $debug->utility->arrayMergeDeep(
+        $this->cfg = $debug->arrayUtil->mergeDeep(
             $this->cfg,
             $debug->getCfg('psr3', Debug::CONFIG_DEBUG) ?: array()
         );

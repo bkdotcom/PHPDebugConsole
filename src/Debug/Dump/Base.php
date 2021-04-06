@@ -95,7 +95,7 @@ class Base extends Component
         $path = $what === null
             ? '__end__'
             : '__end__.' . $what;
-        return $this->debug->utility->arrayPathGet($this->dumpOptStack, $path);
+        return $this->debug->arrayUtil->pathGet($this->dumpOptStack, $path);
     }
 
     /**
@@ -151,10 +151,10 @@ class Base extends Component
     public function setDumpOpt($what, $val = null)
     {
         if (\is_array($what)) {
-            $this->debug->utility->arrayPathSet($this->dumpOptStack, '__end__', $what);
+            $this->debug->arrayUtil->pathSet($this->dumpOptStack, '__end__', $what);
             return;
         }
-        $this->debug->utility->arrayPathSet(
+        $this->debug->arrayUtil->pathSet(
             $this->dumpOptStack,
             '__end__.' . $what,
             $val

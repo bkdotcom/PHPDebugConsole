@@ -139,7 +139,7 @@ class Table
             columns, columnNames, & totalCols will be moved to
             tableInfo['columns'] structure
         */
-        $this->meta = $this->debug->utility->arrayMergeDeep(array(
+        $this->meta = $this->debug->arrayUtil->mergeDeep(array(
             'caption' => null,
             'columns' => array(),
             'columnNames' => array(

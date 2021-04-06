@@ -125,7 +125,7 @@ class HtmlString
             $val = $this->html->markupIdentifier($abs['value']);
             $parsed = $this->debug->html->parseTag($val);
             $attribs = $this->html->getDumpOpt('attribs');
-            $attribs = $this->debug->utility->arrayMergeDeep($attribs, $parsed['attribs']);
+            $attribs = $this->debug->arrayUtil->mergeDeep($attribs, $parsed['attribs']);
             $this->html->setDumpOpt('attribs', $attribs);
             return $parsed['innerhtml'];
         }

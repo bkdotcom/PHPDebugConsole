@@ -376,7 +376,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<li class="m_assert" data-detect-files="true"><span class="no-quotes t_string">Assertion failed: </span><span class="t_string">' . $this->file . ' (line ' . $this->line . ')</span></li>',
                 'script' => 'console.assert(false,"Assertion failed:",' . \json_encode($this->file . ' (line ' . $this->line . ')', JSON_UNESCAPED_SLASHES) . ');',
                 'text' => '≠ Assertion failed: "' . $this->file . ' (line ' . $this->line . ')"',
-                'wamp' => $this->debug->utility->arrayMergeDeep($entry, array(
+                'wamp' => $this->debug->arrayUtil->mergeDeep($entry, array(
                     'meta' => array('foundFiles' => array()),
                 )),
             )

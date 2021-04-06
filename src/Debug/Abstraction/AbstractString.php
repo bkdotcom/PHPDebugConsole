@@ -167,7 +167,7 @@ class AbstractString extends Component
             'valueDecoded' => array(),
             'value' => $string,
         );
-        $classes = $this->debug->utility->arrayPathGet($crateVals, 'attribs.class', array());
+        $classes = $this->debug->arrayUtil->pathGet($crateVals, 'attribs.class', array());
         if (!\is_array($classes)) {
             $classes = \explode(' ', $classes);
         }

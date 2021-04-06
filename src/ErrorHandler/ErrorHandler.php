@@ -112,6 +112,9 @@ class ErrorHandler
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }
+        if (\preg_match('/^is[A-Z]/', $property) && \method_exists($this, $property)) {
+            return $this->{$property}();
+        }
         return null;
     }
 
@@ -277,6 +280,24 @@ class ErrorHandler
             $exception->getLine()
         );
         $this->data['uncaughtException'] = null;
+    }
+
+    /**
+     * Is script running from command line (or cron)?
+     *
+     * @return bool
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    public function isCli()
+    {
+        $argv = isset($_SERVER['argv'])
+            ? $_SERVER['argv']
+            : null;
+        $query = isset($_SERVER['QUERY_STRING'])
+            ? $_SERVER['QUERY_STRING']
+            : null;
+        return $argv && \implode('+', $argv) !== $query;
     }
 
     /**
@@ -615,22 +636,6 @@ class ErrorHandler
         $exHandlerCur = \set_exception_handler(array($this, 'handleException'));
         \restore_exception_handler();
         return $exHandlerCur;
-    }
-
-    /**
-     * Is script running from command line (or cron)?
-     *
-     * @return bool
-     */
-    private function getIsCli()
-    {
-        $argv = isset($_SERVER['argv'])
-            ? $_SERVER['argv']
-            : null;
-        $query = isset($_SERVER['QUERY_STRING'])
-            ? $_SERVER['QUERY_STRING']
-            : null;
-        return $argv && \implode('+', $argv) !== $query;
     }
 
     /**

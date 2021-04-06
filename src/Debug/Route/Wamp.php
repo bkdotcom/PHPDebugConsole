@@ -326,7 +326,7 @@ class Wamp implements RouteInterface
             }
             $return[$k] = $this->crateValues($v);
         }
-        if ($this->debug->utility->arrayIsList($array) === false) {
+        if ($this->debug->arrayUtil->isList($array) === false) {
             /*
                 Compare sorted vs unsorted
                 if differ pass the key order

@@ -184,7 +184,7 @@ class Html extends Base
             }
             $classname = $this->debug->html->buildTag(
                 $tagName,
-                $this->debug->utility->arrayMergeDeep(array(
+                $this->debug->arrayUtil->mergeDeep(array(
                     'class' => array('classname'),
                 ), (array) $attribs),
                 $classname
@@ -274,7 +274,7 @@ class Html extends Base
             $this->channels[$channelName] = $logEntry->getSubject();
         }
         $this->string->detectFiles = $meta['detectFiles'];
-        $this->logEntryAttribs = $this->debug->utility->arrayMergeDeep(array(
+        $this->logEntryAttribs = $this->debug->arrayUtil->mergeDeep(array(
             'class' => array('m_' . $method),
             'data-channel' => $channelName !== $this->channelNameRoot
                 ? $channelName
@@ -451,7 +451,7 @@ class Html extends Base
         if ($opts['asFileTree']) {
             $this->setDumpOpt('attribs.class.__push__', 'array-file-tree');
         }
-        $showKeys = $opts['showListKeys'] || !$this->debug->utility->arrayIsList($array);
+        $showKeys = $opts['showListKeys'] || !$this->debug->arrayUtil->isList($array);
         $html = '<span class="t_keyword">array</span>'
             . '<span class="t_punct">(</span>' . "\n"
             . '<ul class="array-inner list-unstyled">' . "\n";
@@ -817,7 +817,7 @@ class Html extends Base
      */
     protected function methodTabular(LogEntry $logEntry)
     {
-        $meta = $this->debug->utility->arrayMergeDeep(array(
+        $meta = $this->debug->arrayUtil->mergeDeep(array(
             'attribs' => array(
                 'class' => \array_keys(\array_filter(array(
                     'table-bordered' => true,

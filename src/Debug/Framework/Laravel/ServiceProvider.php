@@ -18,7 +18,7 @@ use bdk\Debug\Collector\MonologHandler;
 use bdk\Debug\Framework\Laravel\CacheEventsSubscriber;
 use bdk\Debug\Framework\Laravel\EventsSubscriber;
 use bdk\Debug\Framework\Laravel\Middleware;
-use bdk\Debug\Utility;
+use bdk\Debug\Utility\ArrayUtil;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 use Illuminate\View\View;
@@ -39,10 +39,9 @@ class ServiceProvider extends BaseServiceProvider
      */
     public function register()
     {
-
         $this->mergeConfigFrom(__DIR__ . '/config.php', 'phpDebugConsole');
 
-        $config = Utility::arrayMergeDeep($this->app['config']->get('phpDebugConsole'), array(
+        $config = ArrayUtil::mergeDeep($this->app['config']->get('phpDebugConsole'), array(
             'logEnvInfo' => array(
                 'session' => false,
             ),

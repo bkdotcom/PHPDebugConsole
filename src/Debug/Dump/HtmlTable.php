@@ -200,7 +200,7 @@ class HtmlTable
         */
         $str .= $this->debug->html->buildTag(
             'th',
-            $this->debug->utility->arrayMergeDeep($rowKeyParsed['attribs'], array(
+            $this->debug->arrayUtil->mergeDeep($rowKeyParsed['attribs'], array(
                 'class' => array('t_key', 'text-right'),
                 'scope' => 'row',
             )),

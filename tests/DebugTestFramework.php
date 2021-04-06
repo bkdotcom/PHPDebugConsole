@@ -545,7 +545,7 @@ class DebugTestFramework extends DOMTestCase
             if ($test === 'wamp') {
                 if ($outputExpect) {
                     unset($outputExpect['messageIndex']);
-                    $outputExpect = $this->debug->utility->arrayIsList($outputExpect)
+                    $outputExpect = $this->debug->arrayUtil->isList($outputExpect)
                         ? array('args' => $outputExpect)
                         : array('args' => \array_values($outputExpect));
                 }

@@ -89,9 +89,9 @@ class Config
         }
         $path = $this->normalizePath($path);
         $values = array();
-        $this->debug->utility->arrayPathSet($values, $path, $value);
+        $this->debug->arrayUtil->pathSet($values, $path, $value);
         $return = $this->doSet($values);
-        return $this->debug->utility->arrayPathGet($return, $path);
+        return $this->debug->arrayUtil->pathGet($return, $path);
     }
 
     /**
@@ -221,7 +221,7 @@ class Config
             return $this->debug->getCfg($path, Debug::CONFIG_DEBUG);
         }
         if (isset($this->valuesPending[$debugProp])) {
-            $val = $this->debug->utility->arrayPathGet($this->valuesPending[$debugProp], $path);
+            $val = $this->debug->arrayUtil->pathGet($this->valuesPending[$debugProp], $path);
             if ($forInit && $delPending) {
                 unset($this->valuesPending[$debugProp]);
             }

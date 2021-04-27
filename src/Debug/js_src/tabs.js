@@ -46,9 +46,16 @@ function show (node) {
   var targetSelector = $tab.data('target')
   // .tabs-container may wrap the nav and the tabs-panes...
   var $context = (function () {
-    var $context = $tab.closest('.tabs-container')
-    return $context.length
-      ? $context
+    var $tabsContainer = $tab.closest('.tabs-container')
+    /*
+    var $tabList = $tab.closest('nav')
+    if ($tabList.data('tabPanes')) {
+      // selector, dom obj obj, or jQuery obj
+      return $($tabList.data('tabPanes'))
+    }
+    */
+    return $tabsContainer.length
+      ? $tabsContainer
       : $tab.closest('.debug').find('.tab-panes')
   })()
   var $tabPane = $context.find(targetSelector).eq(0)

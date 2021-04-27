@@ -216,9 +216,8 @@ class HtmlObject
      */
     protected function dumpMethods(Abstraction $abs)
     {
-        $collectMethods = $abs['flags'] & AbstractObject::COLLECT_METHODS;
         $outputMethods = $abs['flags'] & AbstractObject::OUTPUT_METHODS;
-        if (!$collectMethods || !$outputMethods) {
+        if (!$outputMethods) {
             return '';
         }
         $opts = array(

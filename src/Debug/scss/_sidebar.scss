@@ -22,7 +22,7 @@
   $toggle-w: 7px;
   $trans-time: 0.33s;
 
-  position: fixed;
+  position: absolute;
   box-sizing: border-box;
   width: $sidebar-w + $toggle-w;
   background: $lite-grey;

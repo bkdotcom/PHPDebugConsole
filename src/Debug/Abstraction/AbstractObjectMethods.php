@@ -172,6 +172,7 @@ class AbstractObjectMethods extends AbstractObjectSub
     private function addMethodsMin()
     {
         $abs = $this->abs;
+        $abs['flags'] &= ~AbstractObject::OUTPUT_METHODS; // set outputMethods to false
         $obj = $abs->getSubject();
         if (\method_exists($obj, '__toString')) {
             $abs['methods']['__toString'] = array(

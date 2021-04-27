@@ -94,7 +94,7 @@ class Debug
     const EVENT_STREAM_WRAP = 'debug.streamWrap';
 
     const META = "\x00meta\x00";
-    const VERSION = '3.0';
+    const VERSION = '3.0.0-b1';
 
     protected $cfg = array();
     protected $config;
@@ -1128,10 +1128,18 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
+        if (!\is_string($caption)) {
+            $this->warn(__METHOD__ . ' expects param 2 to be a string. '
+                . (\is_object($caption) ? \get_class($caption) : \gettype($caption)) . ' provided');
+            $caption = 'trace';
+        }
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            \func_get_args(),
+            array(
+                (bool) $inclContext,
+                $caption,
+            ),
             array(
                 'columns' => array('file','line','function'),
                 'detectFiles' => true,

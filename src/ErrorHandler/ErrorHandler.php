@@ -5,7 +5,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2021 Brad Kent
- * @version   v3.0.1
+ * @version   v3.1
  */
 
 namespace bdk;

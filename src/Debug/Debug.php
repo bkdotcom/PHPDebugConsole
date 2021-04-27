@@ -1128,18 +1128,10 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        if (!\is_string($caption)) {
-            $this->warn(__METHOD__ . ' expects param 2 to be a string. '
-                . (\is_object($caption) ? \get_class($caption) : \gettype($caption)) . ' provided');
-            $caption = 'trace';
-        }
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            array(
-                (bool) $inclContext,
-                $caption,
-            ),
+            \func_get_args(),
             array(
                 'columns' => array('file','line','function'),
                 'detectFiles' => true,
@@ -1157,6 +1149,11 @@ class Debug
                 'inclContext',
             )
         );
+        if (!\is_string($logEntry->getMeta('caption'))) {
+            $this->warn(__METHOD__ . ' caption should be a string. '
+                . (\is_object($caption) ? \get_class($caption) : \gettype($caption)) . ' provided');
+            $logEntry->setMeta('caption', 'trace');
+        }
         // Get trace and include args if we're including context
         $inclContext = $logEntry->getMeta('inclContext');
         $inclArgs = $logEntry->getMeta('inclArgs');

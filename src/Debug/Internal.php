@@ -508,7 +508,9 @@ class Internal implements SubscriberInterface
         if ($this->debug->rootInstance->getData('isObCache') === false) {
             return;
         }
-        \ob_end_flush();
+        if (\ob_get_level()) {
+            \ob_end_flush();
+        }
         $this->debug->rootInstance->setData('isObCache', false);
     }
 

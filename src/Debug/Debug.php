@@ -211,6 +211,12 @@ class Debug
             'routeNonHtml' => 'serverLog',
             'services' => $this->getDefaultServices(),
             'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
+            'wampPublisher' => array(
+                // wampPuglisher
+                //    required if using Wamp route
+                //    must be installed separately
+                'realm' => 'debug'
+            ),
         );
         $this->bootstrap($cfg);
     }
@@ -1217,6 +1223,10 @@ class Debug
      */
     public function addPlugin($plugin)
     {
+        if (\is_object($plugin) === false) {
+            $this->warn(__METHOD__ . ' expects AssetProviderInterface|SubscriberInterface. ' . \gettype($plugin) . ' provided');
+            return $this;
+        }
         if ($this->registeredPlugins->contains($plugin)) {
             return $this;
         }
@@ -2036,6 +2046,14 @@ class Debug
                 return \bdk\Debug\Psr7lite\ServerRequest::fromGlobals();
             },
             'response' => null,
+            'routeWamp' => function () {
+                try {
+                    $wampPublisher = $this->wampPublisher;
+                } catch (\RuntimeException $e) {
+                    throw new \RuntimeException('Wamp route requires \bdk\WampPublisher, which must be installed separately');
+                }
+                return new \bdk\Debug\Route\Wamp($this, $wampPublisher);
+            },
             'stopWatch' => function () {
                 return new \bdk\Debug\Utility\StopWatch(array(
                     'requestTime' => $this->internal->getServerParam('REQUEST_TIME_FLOAT'),
@@ -2046,6 +2064,14 @@ class Debug
             },
             'utility' => function () {
                 return new \bdk\Debug\Utility();
+            },
+            'wampPublisher' => function ($debug) {
+                if (\class_exists('\\bdk\\WampPublisher') === false) {
+                    throw new \RuntimeException('PHPDebugConsole does not include WampPublisher.  Install separately');
+                }
+                return new \bdk\WampPublisher(
+                    $debug->config->get('wampPublisher', self::CONFIG_INIT)
+                );
             },
         );
     }
@@ -2073,6 +2099,7 @@ class Debug
         }
         $val = $this->getViaContainer($property);
         if ($val !== false) {
+            // getViaContainer checked if ConfigurableInterface and setCfg
             return $val;
         }
         $classname = 'bdk\\Debug\\' . \ucfirst($cat) . '\\' . \ucfirst($name);

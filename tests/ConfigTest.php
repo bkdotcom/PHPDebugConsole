@@ -87,6 +87,7 @@ class ConfigTest extends DebugTestFramework
             'routeNonHtml',
             'services',
             'sessionName',
+            'wampPublisher',
         );
 
         $this->assertSame(true, $this->debug->getCfg('collect'));

@@ -46,7 +46,7 @@ class LogRoute extends CLogRoute
      *                                  We exclude system.db categories... handled via pdo wrapper
      */
     protected $except = array(
-        '/^system\.db/'
+        '/^system\.db\./'
     );
 
     /**

@@ -91,6 +91,14 @@ class AbstractObjectProperties extends AbstractObjectSub
      */
     public function getVarPhpDoc(Reflector $reflector)
     {
+        $refObj = new \ReflectionObject($reflector);
+        if ($refObj->isInterface()) {
+            return array(
+                'type' => null,
+                'desc' => null,
+            );
+        }
+        /** @psalm-suppress NoInterfaceProperties */
         $name = $reflector->name;
         $phpDoc = $this->phpDoc->getParsed($reflector);
         $info = array(
@@ -104,6 +112,7 @@ class AbstractObjectProperties extends AbstractObjectSub
             php's getDocComment doesn't play nice with compound statements
             https://www.phpdoc.org/docs/latest/references/phpdoc/tags/var.html
         */
+        $var = array();
         foreach ($phpDoc['var'] as $var) {
             if ($var['name'] === $name) {
                 break;

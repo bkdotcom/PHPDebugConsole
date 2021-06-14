@@ -518,7 +518,7 @@ class Html extends Base
      *
      * @param float $val float value
      *
-     * @return float
+     * @return float|string
      */
     protected function dumpFloat($val)
     {

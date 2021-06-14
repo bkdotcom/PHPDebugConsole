@@ -44,7 +44,7 @@ class Base extends Component
     {
         $this->debug = $debug;
         $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $logEntry = new LogEntry($debug, null);
+        $logEntry = new LogEntry($debug, 'null');
         $this->subRegex = $logEntry->subRegex;
     }
 
@@ -460,7 +460,7 @@ class Base extends Component
                 $args[$i] = $this->dump($arg);
             }
             $logEntry['args'] = $args;
-            return;
+            return null;
         }
         $args = array('%c' . $logEntry['args'][0], '');
         $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';

@@ -68,7 +68,6 @@ class ConfigTest extends DebugTestFramework
             'emailLog',
             'emailTo',
             'exitCheck',
-            'factories',
             'headerMaxAll',
             'headerMaxPer',
             'logEnvInfo',
@@ -85,10 +84,12 @@ class ConfigTest extends DebugTestFramework
             'redactReplace',
             'route',
             'routeNonHtml',
-            'services',
+            'serviceProvider',
             'sessionName',
             'wampPublisher',
+            'container',
         );
+        \sort($debugKeys);
 
         $this->assertSame(true, $this->debug->getCfg('collect'));
         $this->assertSame(true, $this->debug->getCfg('debug.collect'));
@@ -97,15 +98,48 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame('visibility', $this->debug->getCfg('abstracter.objectSort'));
         $this->assertSame('visibility', $this->debug->getCfg('abstracter/objectSort'));
 
-        $this->assertSame($debugKeys, \array_keys($this->debug->getCfg('debug')));
+        $keysActual = \array_keys($this->debug->getCfg('debug'));
+        \sort($keysActual);
+        $this->assertSame($debugKeys, $keysActual);
         $this->assertSame($abstracterKeys, \array_keys($this->debug->getCfg('abstracter')));
         $this->assertSame($abstracterKeys, \array_keys($this->debug->getCfg('abstracter/*')));
         $this->assertIsBool($this->debug->getCfg('output'));       // debug/output
 
         $this->assertSame($configKeys, \array_keys($this->debug->getCfg()));
         $this->assertSame($configKeys, \array_keys($this->debug->getCfg('*')));
-        $this->assertSame($debugKeys, \array_keys($this->debug->getCfg('debug/*')));
+        $keysActual = \array_keys($this->debug->getCfg('debug/*'));
+        \sort($keysActual);
+        $this->assertSame($debugKeys, $keysActual);
         $this->assertSame(false, $this->debug->getCfg('logRequestInfo/cookies'));
+    }
+
+    public function testEmailTo()
+    {
+        /*
+            'emailTo' is currently set to null for tests..
+        */
+        $this->assertNull($this->debug->getCfg('emailTo'));
+
+        /*
+            test setting to 'default'
+        */
+        $this->debug->setCfg('emailTo', 'default');
+        $this->assertSame('ttesterman@test.com', $this->debug->getCfg('emailTo'));
+        $this->assertSame('ttesterman@test.com', $this->debug->getCfg('errorEmailer.emailTo'));
+        /*
+            updating the request obj will not update the default email!!
+            this is intentional
+        */
+        $this->debug->setCfg('serviceProvider', array(
+            'request' => new ServerRequest(
+                'GET',
+                null,
+                array(
+                    'SERVER_ADMIN' => 'bkfake-github@yahoo.com',
+                )
+            ),
+        ));
+        $this->assertSame('ttesterman@test.com', $this->debug->getCfg('emailTo'));
     }
 
     /**
@@ -125,7 +159,7 @@ class ConfigTest extends DebugTestFramework
         $debug = new Debug(array(
             'key' => 'swordfish',
             'logResponse' => false,
-            'services' => array(
+            'serviceProvider' => array(
                 'request' => (new ServerRequest(
                     'GET',
                     null,

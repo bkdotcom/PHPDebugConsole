@@ -238,7 +238,7 @@ class SimpleCache implements CacheInterface
      * @param string|array $keyOrKeys         key(s) being queried/set
      *
      * @return mixed The result of the call
-     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \RuntimeException
      */
     protected function profileCall($method, array $args = array(), $isSuccessResponse = false, $keyOrKeys = null)
     {
@@ -249,7 +249,7 @@ class SimpleCache implements CacheInterface
         try {
             $result = \call_user_func_array(array($this->cache, $method), $args);
             if ($isSuccessResponse && $result === false) {
-                $exception = new \Exception();
+                $exception = new \RuntimeException();
             }
         } catch (\Exception $e) {
             $exception = $e;

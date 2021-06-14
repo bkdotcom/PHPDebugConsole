@@ -375,7 +375,7 @@ class Utility
      */
     public static function isCallable($val, $opts = 0b111)
     {
-        $syntaxOnly = $opts & self::IS_CALLABLE_STRICT !== self::IS_CALLABLE_STRICT;
+        $syntaxOnly = ($opts & self::IS_CALLABLE_STRICT) !== self::IS_CALLABLE_STRICT;
         if (\is_array($val) === false) {
             return $opts & self::IS_CALLABLE_ARRAY_ONLY
                 ? false

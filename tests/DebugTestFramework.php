@@ -114,13 +114,14 @@ class DebugTestFramework extends DOMTestCase
             'outputHeaders' => false,
             'outputScript' => false,
             'route' => 'html',
-            'services' => array(
+            'serviceProvider' => array(
                 'request' => new ServerRequest(
                     'GET',
                     null,
                     array(
                         'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
                         'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
+                        'SERVER_ADMIN' => 'ttesterman@test.com',
                     )
                 ),
             ),
@@ -138,7 +139,6 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
-        $this->clearServerParamCache();
         /*
         if (self::$haveWampPlugin === false) {
             $wamp = $this->debug->getRoute('wamp', true) === false
@@ -210,20 +210,6 @@ class DebugTestFramework extends DOMTestCase
         $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
         $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
         $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
-        // $serverParams = $this->debug->request->getServerParams();
-        // $_SERVER['REQUEST_METHOD'] = 'GET';
-        /*
-        $this->debug->setCfg('services', array(
-            'request' => new ServerRequest(
-                'GET',
-                null,
-                array(
-                    'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
-                )
-            )
-        ));
-        $this->clearServerParamCache();
-        */
         while (\ob_get_level() > self::$obLevels) {
             \ob_end_clean();
         }
@@ -599,19 +585,6 @@ class DebugTestFramework extends DOMTestCase
             $message .= "\nactual: " . \str_replace("\e", '\e', $output);
         }
         $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
-    }
-
-    protected function clearServerParamCache()
-    {
-        // Utility caches serverParams (statically)...  use serverParamsRef to clear it
-        $debugRef = new \ReflectionObject($this->debug->rootInstance);
-        $internalRef = $debugRef->getProperty('internal');
-        $internalRef->setAccessible(true);
-        $internal = $internalRef->getValue($this->debug);
-        $internalRef = new \ReflectionObject($internal);
-        $serverParams = $internalRef->getProperty('serverParams');
-        $serverParams->setAccessible(true);
-        $serverParams->setValue($internal, array());
     }
 
     protected function deObjectifyData($data)

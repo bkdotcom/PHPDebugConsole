@@ -63,6 +63,7 @@ class StatementInfo
     public function __construct($sql, $params = null, $types = null)
     {
         if (!self::$constants) {
+            /** @psalm-suppress ArgumentTypeCoercion ignore expects class-string */
             $ref = new \ReflectionClass('PDO');
             $consts = array();
             $constsAll = $ref->getConstants();

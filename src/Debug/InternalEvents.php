@@ -63,7 +63,6 @@ class InternalEvents implements SubscriberInterface
             // this closure lazy-loads the subscriber object
             return $this->debug->errorEmailer;
         }, 'onErrorLowPri'), PHP_INT_MAX * -1);
-        $this->setInitialConfig();
     }
 
     /**
@@ -119,22 +118,28 @@ class InternalEvents implements SubscriberInterface
             // no debug config values have changed
             return;
         }
-        $cfg = $cfg['debug'];
+        $cfgDebug = $cfg['debug'];
         $valActions = array(
+            'emailTo' => array($this, 'onCfgEmailTo'),
             'logResponse' => array($this, 'onCfgLogResponse'),
             'onLog' => array($this, 'onCfgOnLog'),
             'onMiddleware' => array($this, 'onCfgOnMiddleware'),
             'onOutput' => array($this, 'onCfgOnOutput'),
         );
         foreach ($valActions as $key => $callable) {
-            if (isset($cfg[$key])) {
-                $val = $callable($cfg[$key], $event);
-                if ($val) {
-                    $cfg[$key] = $val;
-                }
+            if (isset($cfgDebug[$key]) === false) {
+                continue;
+            }
+            $cfgDebug[$key] = $callable($cfgDebug[$key], $event);
+        }
+        foreach (array('emailFrom','emailFunc','emailTo') as $key) {
+            if (isset($cfgDebug[$key]) && $cfgDebug[$key] !== 'default' && !isset($cfg['errorEmailer'][$key])) {
+                // also set for errorEmailer
+                $cfg['errorEmailer'][$key] = $cfgDebug[$key];
             }
         }
-        $event['debug'] = $cfg;
+        $cfg['debug'] = $cfgDebug;
+        $event->setValues($cfg);
     }
 
     /**
@@ -449,6 +454,22 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
+     * Handle "emailTo" config update
+     *
+     * @param string $val config value
+     *
+     * @return string
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgEmailto($val)
+    {
+        return $val === 'default'
+            ? $this->debug->getServerParam('SERVER_ADMIN')
+            : $val;
+    }
+
+    /**
      * Handle "logResponse" config update
      *
      * @param mixed $val config value
@@ -485,7 +506,7 @@ class InternalEvents implements SubscriberInterface
      *
      * @param mixed $val config value
      *
-     * @return void
+     * @return mixed
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
@@ -499,6 +520,7 @@ class InternalEvents implements SubscriberInterface
             $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, $prev);
         }
         $this->debug->eventManager->subscribe(Debug::EVENT_LOG, $val);
+        return $val;
     }
 
     /**
@@ -506,7 +528,7 @@ class InternalEvents implements SubscriberInterface
      *
      * @param mixed $val config value
      *
-     * @return void
+     * @return mixed
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
@@ -520,6 +542,7 @@ class InternalEvents implements SubscriberInterface
             $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT, $prev);
         }
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, $val);
+        return $val;
     }
 
     /**
@@ -527,7 +550,7 @@ class InternalEvents implements SubscriberInterface
      *
      * @param mixed $val config value
      *
-     * @return void
+     * @return mixed
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
@@ -541,6 +564,7 @@ class InternalEvents implements SubscriberInterface
             $this->debug->eventManager->unsubscribe(Debug::EVENT_MIDDLEWARE, $prev);
         }
         $this->debug->eventManager->subscribe(Debug::EVENT_MIDDLEWARE, $val);
+        return $val;
     }
 
     /**
@@ -667,6 +691,7 @@ class InternalEvents implements SubscriberInterface
         }
         $vals = $this->runtimeVals();
         $route = $this->debug->getCfg('route');
+        /** @psalm-suppress TypeDoesNotContainType */
         $isRouteHtml = $route && \get_class($route) === 'bdk\\Debug\\Route\\Html';
         $this->debug->groupSummary(1);
         $this->debug->info('Built In ' . $this->debug->utility->formatDuration($vals['runtime']));
@@ -700,41 +725,6 @@ class InternalEvents implements SubscriberInterface
             $this->debug->setData('runtime', $vals);
         }
         return $vals;
-    }
-
-    /**
-     * Set Config
-     *
-     * We are constructed after Debug's Initial setCfg has already occured...
-     * So we missed the initial Debug::EVENT_CONFIG event
-     *       manually call onConfig here
-     *
-     * @return void
-     */
-    private function setInitialConfig()
-    {
-        $cfgDebugInit = $this->debug->getCfg(null, Debug::CONFIG_DEBUG);
-        $event = new Event(
-            $this->debug,
-            array(
-                'debug' => $cfgDebugInit,
-            )
-        );
-        $this->onConfig($event);
-        $cfgDebugDiff = array();
-        foreach ($event['debug'] as $k => $v) {
-            if ($v !== $cfgDebugInit[$k]) {
-                $cfgDebugDiff[$k] = $v;
-            }
-        }
-        if ($cfgDebugDiff) {
-            $this->debug->onConfig(new Event(
-                $this->debug,
-                array(
-                    'debug' => $cfgDebugDiff,
-                )
-            ));
-        }
     }
 
     /**

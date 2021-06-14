@@ -38,7 +38,7 @@ class Backtrace
      * Utilizes `xdebug_get_function_stack()` (if available) to get backtrace in shutdown phase
      * When called internally, internal frames are removed
      *
-     * @param int                   $options   bitmask of options
+     * @param int|null              $options   bitmask of options
      * @param int                   $limit     limit the number of stack frames returned.
      * @param \Exception|\Throwable $exception (optional) Exception from which to get backtrace
      *
@@ -46,6 +46,7 @@ class Backtrace
      */
     public static function get($options = 0, $limit = 0, $exception = null)
     {
+        $options = $options ?: 0;
         $backtrace = self::getBacktrace($options, $limit, $exception);
         if (empty($backtrace)) {
             return array();

@@ -156,6 +156,7 @@ class LogEntry extends Event
         $meta = $key;
         if (!\is_array($key)) {
             if ($val === null) {
+                /** @psalm-suppress EmptyArrayAccess */
                 unset($this->values['meta'][$key]);
                 return;
             }

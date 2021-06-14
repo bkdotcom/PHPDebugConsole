@@ -181,7 +181,7 @@ class PhpDoc
     private static function getHash($what)
     {
         if (\is_string($what)) {
-            return $str;
+            return $what;
         }
         if (!\is_object($what)) {
             return null;

@@ -27,7 +27,7 @@ class MonologHandler extends PsrHandler
      * Constructor
      *
      * @param Debug|LoggerInterface $debug  Debug instance
-     * @param string|int            $level  The minimum logging level at which this handler will be triggered
+     * @param int                   $level  The minimum logging level at which this handler will be triggered (See Monolog/Logger constants)
      * @param bool                  $bubble Whether the messages that are handled can bubble up the stack or not
      *
      * @throws \InvalidArgumentException

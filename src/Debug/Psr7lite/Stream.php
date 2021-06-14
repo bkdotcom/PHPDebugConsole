@@ -31,7 +31,7 @@ class Stream
     const READABLE_MODES = '/r|a\+|ab\+|w\+|wb\+|x\+|xb\+|c\+|cb\+/';
     const WRITABLE_MODES = '/a|w|r\+|rb\+|rw|x|c/';
 
-    /** @var resource|null A resource reference */
+    /** @var resource|closed-resource|null A resource reference */
     private $resource;
     private $size;
     private $seekable;
@@ -63,7 +63,7 @@ class Stream
         $this->customMetadata = isset($options['metadata'])
             ? $options['metadata']
             : array();
-
+        /** @psalm-suppress PossiblyInvalidArgument */
         $meta = \stream_get_meta_data($this->resource);
         $this->seekable = $meta['seekable'];
         $this->readable = (bool) \preg_match(self::READABLE_MODES, $meta['mode']);
@@ -90,8 +90,12 @@ class Stream
      */
     public function __toString()
     {
+        if ($this->isOpenResource() === false) {
+            return '';
+        }
         try {
             $this->seek(0);
+            /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
             return (string) \stream_get_contents($this->resource);
         } catch (\Exception $e) {
             return '';
@@ -106,7 +110,8 @@ class Stream
     public function close()
     {
         if (isset($this->resource)) {
-            if (\is_resource($this->resource)) {
+            if ($this->isOpenResource() === true) {
+                /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
                 \fclose($this->resource);
             }
             $this->detach();
@@ -118,7 +123,7 @@ class Stream
      *
      * After the stream has been detached, the stream is in an unusable state.
      *
-     * @return resource|null Underlying PHP stream, if any
+     * @return resource|closed-resource|null Underlying PHP stream, if any
      */
     public function detach()
     {
@@ -146,7 +151,7 @@ class Stream
             return $this->size;
         }
 
-        if (!isset($this->resource)) {
+        if ($this->isOpenResource() === false) {
             return null;
         }
 
@@ -155,6 +160,7 @@ class Stream
             \clearstatcache(true, $this->uri);
         }
 
+        /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         $stats = \fstat($this->resource);
         if (isset($stats['size'])) {
             $this->size = $stats['size'];
@@ -172,10 +178,11 @@ class Stream
      */
     public function tell()
     {
-        if (!isset($this->resource)) {
+        if ($this->isOpenResource() === false) {
             throw new RuntimeException('Stream is detached');
         }
 
+        /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         $result = \ftell($this->resource);
         if ($result === false) {
             throw new RuntimeException('Unable to determine stream position');
@@ -191,9 +198,10 @@ class Stream
      */
     public function eof()
     {
-        if (!isset($this->resource)) {
+        if ($this->isOpenResource() === false) {
             throw new RuntimeException('Stream is detached');
         }
+        /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         return \feof($this->resource);
     }
 
@@ -226,12 +234,13 @@ class Stream
     {
         $whence = (int) $whence;
 
-        if (!isset($this->resource)) {
+        if ($this->isOpenResource() === false) {
             throw new RuntimeException('Stream is detached');
         }
         if (!$this->seekable) {
             throw new RuntimeException('Stream is not seekable');
         }
+        /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         if (\fseek($this->resource, $offset, $whence) === -1) {
             throw new RuntimeException('Unable to seek to stream position '
                 . $offset . ' with whence ' . \var_export($whence, true));
@@ -275,7 +284,7 @@ class Stream
      */
     public function write($string)
     {
-        if (!isset($this->resource)) {
+        if ($this->isOpenResource() === false) {
             throw new RuntimeException('Stream is detached');
         }
         if (!$this->writable) {
@@ -284,6 +293,7 @@ class Stream
 
         // We can't know the size after writing anything
         $this->size = null;
+        /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         $result = \fwrite($this->resource, $string);
         if ($result === false) {
             throw new RuntimeException('Unable to write to stream');
@@ -314,7 +324,7 @@ class Stream
      */
     public function read($length)
     {
-        if (!isset($this->resource)) {
+        if ($this->isOpenResource() === false) {
             throw new RuntimeException('Stream is detached');
         }
         if (!$this->readable) {
@@ -328,6 +338,7 @@ class Stream
             return '';
         }
 
+        /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         $string = \fread($this->resource, $length);
         if ($string === false) {
             throw new RuntimeException('Unable to read from stream');
@@ -344,12 +355,13 @@ class Stream
      */
     public function getContents()
     {
-        if (!isset($this->resource)) {
+        if ($this->isOpenResource() === false) {
             throw new RuntimeException('Stream is detached');
         }
 
         $contents = false;
         if ($this->readable) {
+            /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
             $contents = \stream_get_contents($this->resource);
         }
         if ($contents === false) {
@@ -370,24 +382,40 @@ class Stream
      *     provided. Returns a specific key value if a key is provided and the
      *     value is found, or null if the key is not found.
      * @link   http://php.net/manual/en/function.stream-get-meta-data.php
+     *
+     * @psalm-suppress PossiblyInvalidArgument we know resource is open
      */
     public function getMetadata($key = null)
     {
         if (!isset($this->resource)) {
             return $key ? null : array();
         }
+        $streamMeta = $this->isOpenResource() === true
+            ? \stream_get_meta_data($this->resource)
+            : array(); // not-a-resource (or closed)
         if ($key === null) {
-            return $this->customMetadata + \stream_get_meta_data($this->resource);
+            return $this->customMetadata + $streamMeta;
         }
         if (isset($this->customMetadata[$key])) {
             return $this->customMetadata[$key];
         }
-        $meta = \stream_get_meta_data($this->resource);
-        return isset($meta[$key]) ? $meta[$key] : null;
+        return isset($streamMeta[$key])
+            ? $streamMeta[$key]
+            : null;
     }
 
     /**
-     * Set resouce
+     * Is resource open?
+     *
+     * @return bool
+     */
+    private function isOpenResource()
+    {
+        return isset($this->resource) && \is_resource($this->resource);
+    }
+
+    /**
+     * Set resource
      *
      * @param mixed $value Resource, filepath, or string content to wrap.
      *

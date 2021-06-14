@@ -220,10 +220,10 @@ class Manager
      */
     private function doClosureFactory($closureFactory = array())
     {
-        $closureFactory[0] = $closureFactory[0]();
+        $closureFactory[0] = $closureFactory[0]($this);
         return \count($closureFactory) === 1
-            ? $closureFactory[0]
-            : $closureFactory;
+            ? $closureFactory[0]    // invokeable object
+            : $closureFactory;      // [obj, 'method']
     }
 
     /**
@@ -270,14 +270,15 @@ class Manager
     private function getInterfaceSubscribers(SubscriberInterface $interface)
     {
         $subscribers = array();
+        $priorityDefault = 0;
         foreach ($interface->getSubscriptions() as $eventName => $mixed) {
             if (\is_string($mixed)) {
                 // methodName
-                $subscribers[] = array($eventName, array($interface, $mixed), 0);
+                $subscribers[] = array($eventName, array($interface, $mixed), $priorityDefault);
                 continue;
             }
             if (\count($mixed) === 2 && \is_int($mixed[1])) {
-                // array('methodName', priority)
+                // ['methodName', priority]
                 $subscribers[] = array($eventName, array($interface, $mixed[0]), $mixed[1]);
                 continue;
             }
@@ -285,11 +286,11 @@ class Manager
                 // methodName
                 // or array(methodName[, priority])
                 if (\is_string($mixed2)) {
-                    $subscribers[] = array($eventName, array($interface, $mixed2), 0);
+                    $subscribers[] = array($eventName, array($interface, $mixed2), $priorityDefault);
                     continue;
                 }
                 $callable = array($interface, $mixed2[0]);
-                $priority = isset($mixed2[1]) ? $mixed2[1] : 0;
+                $priority = isset($mixed2[1]) ? $mixed2[1] : $priorityDefault;
                 $subscribers[] = array($eventName, $callable, $priority);
             }
         }

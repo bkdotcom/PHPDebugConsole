@@ -13,76 +13,27 @@ class DebugTest extends DebugTestFramework
 
     protected $debugBackup = array();
 
-    /**
-     * clear/backup some non-accessible things
-     *
-     * @return void
-     */
-    protected function destroyDebug()
-    {
-
-        $this->debugBackup = array(
-            'debug' => array(),
-            'eventManager' => array(),
-        );
-
-        $debugRef = new \ReflectionClass($this->debug);
-        $debugProps = $debugRef->getProperties(\ReflectionProperty::IS_STATIC);
-        foreach ($debugProps as $prop) {
-            $prop->setAccessible(true);
-            $name = $prop->getName();
-            $this->debugBackup['debug'][$name] = $prop->getValue();
-            $newVal = \is_array($this->debugBackup['debug'][$name])
-                ? array()
-                : null;
-            $prop->setValue($newVal);
-        }
-
-        /*
-            Backup eventManager data
-        */
-        $eventManagerRef = new \ReflectionClass($this->debug->eventManager);
-        $eventManagerProps = $eventManagerRef->getProperties();
-        foreach ($eventManagerProps as $prop) {
-            $prop->setAccessible(true);
-            $name = $prop->getName();
-            $this->debugBackup['eventManager'][$name] = $prop->getValue($this->debug->eventManager);
-        }
-    }
-
-    /**
-     * Restore non-accessible things
-     *
-     * @return void
-     */
-    protected function restoreDebug()
-    {
-        $debugRef = new \ReflectionClass($this->debug);
-        $debugProps = $debugRef->getProperties(\ReflectionProperty::IS_STATIC);
-        foreach ($debugProps as $prop) {
-            $prop->setAccessible(true);
-            $name = $prop->getName();
-            $prop->setValue($this->debugBackup['debug'][$name]);
-        }
-
-        /*
-            Restore eventManager data
-        */
-        $eventManagerRef = new \ReflectionClass($this->debug->eventManager);
-        $eventManagerProps = $eventManagerRef->getProperties();
-        foreach ($eventManagerProps as $prop) {
-            $prop->setAccessible(true);
-            $name = $prop->getName();
-            $prop->setValue($this->debug->eventManager, $this->debugBackup['eventManager'][$name]);
-        }
-    }
-
     public function testNoDebug()
     {
         $output = array();
         $returnVal = 0;
         \exec('php ' . __DIR__ . '/noComposer.php', $output, $returnVal);
         $this->assertSame(0, $returnVal, 'Failed to init Debug without composer');
+    }
+
+    public function testOnBootstrap()
+    {
+        $args = array();
+        $count = 0;
+        $debug = new Debug(array(
+            'onBootstrap' => function (\bdk\PubSub\Event $event) use (&$args, &$count) {
+                $count++;
+                $args = \func_get_args();
+            }
+        ));
+        $this->assertSame(1, $count);
+        $this->assertInstanceOf('bdk\PubSub\Event', $args[0]);
+        $this->assertSame($debug, $args[0]->getSubject());
     }
 
     public function testPhpError()
@@ -320,6 +271,70 @@ class DebugTest extends DebugTestFramework
             Debug::_setErrorCaller();
         } else {
             $this->debug->setErrorCaller();
+        }
+    }
+
+    /**
+     * clear/backup some non-accessible things
+     *
+     * @return void
+     */
+    protected function destroyDebug()
+    {
+
+        $this->debugBackup = array(
+            'debug' => array(),
+            'eventManager' => array(),
+        );
+
+        $debugRef = new \ReflectionClass($this->debug);
+        $debugProps = $debugRef->getProperties(\ReflectionProperty::IS_STATIC);
+        foreach ($debugProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $this->debugBackup['debug'][$name] = $prop->getValue();
+            $newVal = \is_array($this->debugBackup['debug'][$name])
+                ? array()
+                : null;
+            $prop->setValue($newVal);
+        }
+
+        /*
+            Backup eventManager data
+        */
+        $eventManagerRef = new \ReflectionClass($this->debug->eventManager);
+        $eventManagerProps = $eventManagerRef->getProperties();
+        foreach ($eventManagerProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $this->debugBackup['eventManager'][$name] = $prop->getValue($this->debug->eventManager);
+        }
+    }
+
+    /**
+     * Restore non-accessible things
+     *
+     * @return void
+     */
+    protected function restoreDebug()
+    {
+        $debugRef = new \ReflectionClass($this->debug);
+        $debugProps = $debugRef->getProperties(\ReflectionProperty::IS_STATIC);
+        foreach ($debugProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $prop->setValue($this->debugBackup['debug'][$name]);
+        }
+
+        /*
+            Restore eventManager data
+        */
+        $eventManagerRef = new \ReflectionClass($this->debug->eventManager);
+        $eventManagerProps = $eventManagerRef->getProperties();
+        foreach ($eventManagerProps as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $prop->setValue($this->debug->eventManager, $this->debugBackup['eventManager'][$name]);
         }
     }
 }

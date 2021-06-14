@@ -22,6 +22,7 @@ use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Psr7lite\HttpFoundationBridge;
 use bdk\Debug\Route\RouteInterface;
+use bdk\Debug\ServiceProvider;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -46,6 +47,7 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
  * @method string requestId()
  *
  * @property Abstracter           $abstracter    lazy-loaded Abstracter instance
+ * @property \bdk\Debug\Utility\ArrayUtil $arrayUtil lazy-loaded array utilitys
  * @property \bdk\Backtrace       $backtrace     lazy-loaded Backtrace instance
  * @property \bdk\ErrorHandler\ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer instance
  * @property \bdk\ErrorHandler    $errorHandler  lazy-loaded ErrorHandler instance
@@ -120,6 +122,7 @@ class Debug
             // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
         ),
     );
+    protected $container;
     protected $groupStackRef;   // points to $this->data['groupStacks'][x] (where x = 'main' or (int) priority)
     protected $internal;
     protected $internalEvents;
@@ -130,6 +133,7 @@ class Debug
         'rootInstance' => null,
     );
     protected $registeredPlugins;   // SplObjectHash
+    protected $serviceContainer;
 
     private static $instance;
     private $channels = array();
@@ -172,7 +176,6 @@ class Debug
                                     //   'onError':         email sent if error occured (unless output)
             'emailTo' => 'default', // will default to $_SERVER['SERVER_ADMIN'] if non-empty, null otherwise
             'exitCheck' => true,
-            'factories' => $this->getDefaultFactories(),
             'headerMaxAll' => 250000,
             'headerMaxPer' => null,
             'logEnvInfo' => array(      // may be set by passing a list
@@ -209,7 +212,7 @@ class Debug
                                             //   if 'auto', will be determined automatically
                                             //   if null, no output (unless output plugin added manually)
             'routeNonHtml' => 'serverLog',
-            'services' => $this->getDefaultServices(),
+            'serviceProvider' => array(), // ServiceProviderInterface, array, or callable that receives Container as param
             'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
             'wampPublisher' => array(
                 // wampPuglisher
@@ -305,10 +308,11 @@ class Debug
             );
             return;
         }
-        $val = $this->getViaContainer($property);
-        if ($val !== false) {
-            // may be null
-            return $val;
+        if ($this->serviceContainer->has($property)) {
+            return $this->serviceContainer[$property];
+        }
+        if ($this->container->has($property)) {
+            return $this->container[$property];
         }
         /*
             "Read-only" properties
@@ -1525,6 +1529,58 @@ class Debug
     }
 
     /**
+     * Update dependencies
+     *
+     * This is called during bootstrap and from Internal::onConfig
+     *    Internal::onConfig has higher priority than our own onConfig handler
+     *
+     * @param \bdk\Container\ServiceProviderInterface|callable|array $val dependency definitions
+     *
+     * @return array
+     */
+    public function onCfgServiceProvider($val)
+    {
+        $getContainerRawVals = function (\bdk\Container $container) {
+            $keys = $container->keys();
+            $return = array();
+            foreach ($keys as $key) {
+                $return[$key] = $container->raw($key);
+            }
+            return $return;
+        };
+
+        if ($val instanceof \bdk\Container\ServiceProviderInterface) {
+            /*
+                convert to array
+            */
+            $containerTmp = new \bdk\Container();
+            $containerTmp->registerProvider($val);
+            $val = $getContainerRawVals($containerTmp);
+        } elseif (\is_callable($val)) {
+            /*
+                convert to array
+            */
+            $containerTmp = new \bdk\Container();
+            \call_user_func($val, $containerTmp);
+            $val = $getContainerRawVals($containerTmp);
+        } elseif (!\is_array($val)) {
+            return $val;
+        }
+
+        $services = $this->container['services'];
+        foreach ($val as $k => $v) {
+            if (\in_array($k, $services)) {
+                $this->serviceContainer[$k] = $v;
+                unset($val[$k]);
+                continue;
+            }
+            $this->container[$k] = $v;
+        }
+
+        return $val;
+    }
+
+    /**
      * Debug::EVENT_CONFIG event listener
      *
      * Since setCfg() passes config through Config, we need a way for Config to pass values back.
@@ -1540,7 +1596,6 @@ class Debug
             return;
         }
         $valActions = array(
-            'route' => array($this, 'onCfgRoute'),
             'logEnvInfo' => array($this, 'onCfgList'),
             'logRequestInfo' => array($this, 'onCfgList'),
             'logServerKeys' => function ($val) {
@@ -1548,6 +1603,7 @@ class Debug
                 $this->cfg['logServerKeys'] = array();
                 return $val;
             },
+            'route' => array($this, 'onCfgRoute'),
         );
         foreach ($valActions as $key => $callable) {
             if (isset($cfg[$key])) {
@@ -1561,6 +1617,7 @@ class Debug
         */
         $channels = $this->getChannels(false, true);
         if ($channels) {
+            $event['debug'] = $cfg;
             $cfg = $this->internal->getPropagateValues($event->getValues());
             foreach ($channels as $channel) {
                 $channel->config->set($cfg);
@@ -1724,7 +1781,7 @@ class Debug
     public function writeToResponse($response)
     {
         if ($response instanceof ResponseInterface) {
-            $this->cfg['services']['response'] = $response;
+            $this->serviceContainer['response'] = $response;
             $this->cfg['outputHeaders'] = false;
             $debugOutput = $this->output();
             if ($debugOutput) {
@@ -1740,7 +1797,7 @@ class Debug
             return $response;
         }
         if ($response instanceof HttpFoundationResponse) {
-            $this->cfg['services']['response'] = HttpFoundationBridge::createResponse($response);
+            $this->serviceContainer['response'] = HttpFoundationBridge::createResponse($response);
             $this->cfg['outputHeaders'] = false;
             $content = $response->getContent();
             $pos = \strripos($content, '</body>');
@@ -1780,11 +1837,13 @@ class Debug
         $className = \ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
         $psr4Map = array(
             'bdk\\Debug\\' => __DIR__,
-            'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
+            'bdk\\Container\\' => __DIR__ . '/../Container',
             'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
+            'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
         );
         $classMap = array(
             'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
+            'bdk\\Container' => __DIR__ . '/../Container/Container.php',
             'bdk\\Debug\\Utility' => __DIR__ . '/Utility/Utility.php',
             'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
         );
@@ -1871,35 +1930,97 @@ class Debug
                 \spl_autoload_register(array($this, 'autoloader'));
             }
         }
-        $this->getViaContainer('errorHandler');
         $this->registeredPlugins = new SplObjectStorage();
-        $this->config = $this->getViaContainer('config');
+
+        $this->bootstrapInstance($cfg);
+        $this->bootstrapContainer($cfg);
+
+        // initialize config
+        $this->config = $this->container['config'];
+        $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
+        $this->serviceContainer->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'), -1);
+
+        // initialize errorHandler
+        $this->serviceContainer['errorHandler'];
+
+        $this->internal = $this->container['internal'];
+        $this->internalEvents = $this->container['internalEvents'];
+
         $this->config->set($cfg);
-        $this->bootstrapInstance();
-        /*
-            Initialize Internal
-        */
-        $this->internal = $this->getViaContainer('internal');
-        $this->internal->init();
         $this->data['requestId'] = $this->internal->requestId();
-        if ($this->cfg['emailTo'] === 'default') {
-            $this->cfg['emailTo'] = $this->internal->getServerParam('SERVER_ADMIN');
-        }
-        $this->internalEvents = $this->getViaContainer('internalEvents');
+
         $this->eventManager->publish(self::EVENT_BOOTSTRAP, $this);
+    }
+
+    /**
+     * Initialize dependancy containers
+     *
+     * @param array $cfg Raw config passed to constructor
+     *
+     * @return void
+     */
+    private function bootstrapContainer(&$cfg)
+    {
+        $containerCfg = array();
+        if (isset($cfg['debug']['container'])) {
+            $containerCfg = $cfg['debug']['container'];
+        } elseif (isset($cfg['container'])) {
+            $containerCfg = $cfg['container'];
+        }
+
+        $this->container = new \bdk\Container(
+            array(
+                'debug' => $this,
+            ),
+            $containerCfg
+        );
+        $this->container->registerProvider(new ServiceProvider());
+
+        if (empty($cfg['debug']['parent'])) {
+            // root instance
+            $this->serviceContainer = new \bdk\Container(
+                array(
+                    'debug' => $this,
+                ),
+                $containerCfg
+            );
+            foreach ($this->container['services'] as $service) {
+                $this->serviceContainer[$service] = $this->container->raw($service);
+                unset($this->container[$service]);
+            }
+        }
+        $this->serviceContainer = $this->readOnly['rootInstance']->serviceContainer;
+
+        /*
+            Now populate with overrides
+        */
+        $serviceProvider = $this->cfg['serviceProvider'];
+        if (isset($cfg['debug']['serviceProvider'])) {
+            $serviceProvider = $cfg['debug']['serviceProvider'];
+            // unset so we don't do this again with setCfg
+            unset($cfg['debug']['serviceProvider']);
+        } elseif (isset($cfg['serviceProvider'])) {
+            $serviceProvider = $cfg['serviceProvider'];
+            // unset so we don't do this again with setCfg
+            unset($cfg['serviceProvider']);
+        }
+
+        $this->cfg['serviceProvider'] = $this->onCfgServiceProvider($serviceProvider);
     }
 
     /**
      * Set instance, rootInstance, parentInstance, & initialize data
      *
+     * @param array $cfg Raw config passed to constructor
+     *
      * @return void
      */
-    private function bootstrapInstance()
+    private function bootstrapInstance($cfg)
     {
         $this->readOnly['rootInstance'] = $this;
-        if (isset($this->cfg['parent'])) {
-            $this->readOnly['parentInstance'] = $this->cfg['parent'];
+        if (isset($cfg['debug']['parent'])) {
+            $this->readOnly['parentInstance'] = $cfg['debug']['parent'];
             while ($this->readOnly['rootInstance']->readOnly['parentInstance']) {
                 $this->readOnly['rootInstance'] = $this->readOnly['rootInstance']->readOnly['parentInstance'];
             }
@@ -1953,130 +2074,6 @@ class Debug
     }
 
     /**
-     * Set "container" factories
-     *
-     * @return array
-     */
-    private function getDefaultFactories()
-    {
-        return array(
-            'methodProfile' => function () {
-                return new Debug\Method\Profile();
-            },
-        );
-    }
-
-    /**
-     * Set "container" services
-     *
-     * @return array
-     */
-    private function getDefaultServices()
-    {
-        return array(
-            'abstracter' => function (Debug $debug) {
-                return new Abstracter($debug, $debug->config->get('abstracter', self::CONFIG_INIT));
-            },
-            'arrayUtil' => function () {
-                return new \bdk\Debug\Utility\ArrayUtil();
-            },
-            'backtrace' => function () {
-                $backtrace = $this->errorHandler->backtrace;
-                $backtrace->addInternalClass('bdk\\Debug');
-                return $backtrace;
-            },
-            'config' => function (Debug $debug) {
-                return new \bdk\Debug\Config($debug);    // cfg is passed by reference
-            },
-            'errorEmailer' => function (Debug $debug) {
-                return new \bdk\ErrorHandler\ErrorEmailer($debug->config->get('errorEmailer', self::CONFIG_INIT));
-            },
-            'errorHandler' => function (Debug $debug) {
-                $existingInstance = \bdk\ErrorHandler::getInstance();
-                if ($existingInstance) {
-                    return $existingInstance;
-                }
-                $errorHandler = new \bdk\ErrorHandler($debug->eventManager);
-                /*
-                    log E_USER_ERROR to system_log without halting script
-                */
-                $errorHandler->setCfg('onEUserError', 'log');
-                return $errorHandler;
-            },
-            'eventManager' => function () {
-                return new \bdk\PubSub\Manager();
-            },
-            'html' => function () {
-                return new \bdk\Debug\Utility\Html();
-            },
-            'internal' => function (Debug $debug) {
-                return new \bdk\Debug\Internal($debug);
-            },
-            'internalEvents' => function (Debug $debug) {
-                return new \bdk\Debug\InternalEvents($debug);
-            },
-            'logEnv' => function () {
-                return new \bdk\Debug\Plugin\LogEnv();
-            },
-            'logFiles' => function (Debug $debug) {
-                return new \bdk\Debug\Plugin\LogFiles(
-                    $debug->config->get('logFiles', self::CONFIG_INIT),
-                    $debug
-                );
-            },
-            'logReqRes' => function () {
-                return new \bdk\Debug\Plugin\LogReqRes();
-            },
-            'logger' => function (Debug $debug) {
-                return new \bdk\Debug\Psr3\Logger($debug);
-            },
-            'methodClear' => function () {
-                return new \bdk\Debug\Method\Clear();
-            },
-            'methodTable' => function () {
-                return new \bdk\Debug\Method\Table();
-            },
-            'middleware' => function (Debug $debug) {
-                return new \bdk\Debug\Psr15\Middleware($debug);
-            },
-            'request' => function () {
-                /*
-                    This can return Psr\Http\Message\ServerRequestInterface
-                */
-                return \bdk\Debug\Psr7lite\ServerRequest::fromGlobals();
-            },
-            'response' => null,
-            'routeWamp' => function () {
-                try {
-                    $wampPublisher = $this->wampPublisher;
-                } catch (\RuntimeException $e) {
-                    throw new \RuntimeException('Wamp route requires \bdk\WampPublisher, which must be installed separately');
-                }
-                return new \bdk\Debug\Route\Wamp($this, $wampPublisher);
-            },
-            'stopWatch' => function () {
-                return new \bdk\Debug\Utility\StopWatch(array(
-                    'requestTime' => $this->internal->getServerParam('REQUEST_TIME_FLOAT'),
-                ));
-            },
-            'utf8' => function () {
-                return new \bdk\Debug\Utility\Utf8();
-            },
-            'utility' => function () {
-                return new \bdk\Debug\Utility();
-            },
-            'wampPublisher' => function ($debug) {
-                if (\class_exists('\\bdk\\WampPublisher') === false) {
-                    throw new \RuntimeException('PHPDebugConsole does not include WampPublisher.  Install separately');
-                }
-                return new \bdk\WampPublisher(
-                    $debug->config->get('wampPublisher', self::CONFIG_INIT)
-                );
-            },
-        );
-    }
-
-    /**
      * Get Dump or Route instance
      *
      * @param 'dump'|'route' $cat       "Category" (dump or route)
@@ -2097,10 +2094,8 @@ class Debug
         if ($isset) {
             return $this->readOnly[$property];
         }
-        $val = $this->getViaContainer($property);
-        if ($val !== false) {
-            // getViaContainer checked if ConfigurableInterface and setCfg
-            return $val;
+        if ($this->container->has($property)) {
+            return $this->container[$property];
         }
         $classname = 'bdk\\Debug\\' . \ucfirst($cat) . '\\' . \ucfirst($name);
         if (\class_exists($classname)) {
@@ -2145,37 +2140,6 @@ class Debug
             self::$methodDefaultArgs[$methodName] = $defaultArgs;
         }
         return $defaultArgs;
-    }
-
-    /**
-     * Check container for property
-     *
-     * @param string $property service/factory name
-     *
-     * @return mixed (false if doesn't exist)
-     */
-    private function getViaContainer($property)
-    {
-        $val = false;
-        $isNew = false;
-        if (\array_key_exists($property, $this->cfg['services'])) {
-            $val = $this->cfg['services'][$property];
-            if ($val instanceof \Closure) {
-                $isNew = true;
-                $val = $val($this);
-                $this->cfg['services'][$property] = $val;
-            }
-        } elseif (isset($this->cfg['factories'][$property])) {
-            $val = $this->cfg['factories'][$property];
-            if ($val instanceof \Closure) {
-                $isNew = true;
-                $val = $val($this);
-            }
-        }
-        if ($isNew && $val instanceof ConfigurableInterface) {
-            $val->setCfg($this->config->get($property, self::CONFIG_INIT));
-        }
-        return $val;
     }
 
     /**

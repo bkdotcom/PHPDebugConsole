@@ -284,7 +284,7 @@ class Pdo extends PdoBase
     }
 
     /*
-        query() in in MethodSignatureCompatTrait
+        query() is in MethodSignatureCompatTrait
     */
 
     /**

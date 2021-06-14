@@ -32,12 +32,16 @@ $modifyTests->modify(__DIR__);
     ... we want to make sure we initialize with route=>'html'
 */
 \bdk\Debug::getInstance(array(
+    'container' => array(
+        'allowOverride' => true,
+    ),
     'logResponse' => false,
     'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
     'enableProfiling' => true,
     'route' => 'html',
-    'services' => array(
-        'routeWamp' => function ($debug) {
+    'serviceProvider' => array(
+        'routeWamp' => function ($container) {
+            $debug = $container['debug'];
             return new \bdk\Debug\Route\Wamp($debug, new \bdk\DebugTests\Mock\WampPublisher());
         },
     ),

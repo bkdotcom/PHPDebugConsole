@@ -278,6 +278,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
         $message .= 'Log data:' . PHP_EOL;
         $message .= $this->dump();
         $evt->cancelBubble();
+        /** @psalm-suppress ArgumentTypeCoercion ignore 3rd argument expects Exception, but Throwable passed */
         throw new Swift_TransportException($message, $code, $exception->getPrevious());
     }
 

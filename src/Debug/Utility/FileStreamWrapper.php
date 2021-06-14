@@ -327,6 +327,21 @@ class FileStreamWrapper
         if (!$this->resource) {
             return false;
         }
+        $validOperations = array(
+            LOCK_SH,
+            LOCK_EX,
+            LOCK_UN,
+            LOCK_SH | LOCK_NB,
+            LOCK_EX | LOCK_NB,
+            LOCK_UN | LOCK_NB,
+        );
+        if ($operation === 0) {
+            // phpunit 9.5.5 issue ??
+            $operation = LOCK_EX;
+        }
+        if (!\in_array($operation, $validOperations)) {
+            return false;
+        }
         return \flock($this->resource, $operation);
     }
 

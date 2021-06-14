@@ -71,20 +71,20 @@ class Config
     /**
      * Called when container closure invoked
      *
-     * @param mixed  $val value returned from closure
-     * @param string $id  value identifier
+     * @param mixed  $val  value returned from closure
+     * @param string $name value identifier
      *
      * @return void
      */
-    public function onContainerInvoke($val, $id)
+    public function onContainerInvoke($val, $name)
     {
         if (!($val instanceof ConfigurableInterface)) {
-            $this->invokedServices[] = $id;
+            $this->invokedServices[] = $name;
             return;
         }
-        $cfg = $this->get($id, true);
+        $cfg = $this->get($name, true);
         $val->setCfg($cfg);
-        $this->invokedServices[] = $id;
+        $this->invokedServices[] = $name;
     }
 
     /**

@@ -102,25 +102,25 @@ class Container implements \ArrayAccess
     /**
      * Finds an entry of the container by its identifier and returns it.
      *
-     * @param string $id Identifier of the entry to look for.
+     * @param string $name Identifier of the entry to look for.
      *
      * @return mixed Entry.
      */
-    public function get($id)
+    public function get($name)
     {
-        return $this->offsetGet($id);
+        return $this->offsetGet($name);
     }
 
     /**
      * Do we have an entry for the given identifier.
      *
-     * @param string $id Identifier of the entry to look for.
+     * @param string $name Identifier of the entry to look for.
      *
      * @return bool
      */
-    public function has($id)
+    public function has($name)
     {
-        return $this->offsetExists($id);
+        return $this->offsetExists($name);
     }
 
     /**
@@ -136,19 +136,19 @@ class Container implements \ArrayAccess
     /**
      * Is value a service/factory that hasn't been invoked yet?
      *
-     * @param string $id Identifier of entry to check
+     * @param string $name Identifier of entry to check
      *
      * @return bool
      *
      * @throws \OutOfBoundsException If the identifier is not defined
      */
-    public function needsInvoked($id)
+    public function needsInvoked($name)
     {
-        $this->assertExists($id);
-        $notNeedInvoked = isset($this->invoked[$id]) === true
-            || \is_object($this->values[$id]) === false
-            || \method_exists($this->values[$id], '__invoke') === false
-            || isset($this->protected[$this->values[$id]]) === true;
+        $this->assertExists($name);
+        $notNeedInvoked = isset($this->invoked[$name]) === true
+            || \is_object($this->values[$name]) === false
+            || \method_exists($this->values[$name], '__invoke') === false
+            || isset($this->protected[$this->values[$name]]) === true;
         return $notNeedInvoked === false;
     }
 
@@ -156,48 +156,48 @@ class Container implements \ArrayAccess
      * ArrayAccess
      * Checks if a parameter or an object is set.
      *
-     * @param string $id The unique identifier for the parameter or object
+     * @param string $name The unique identifier for the parameter or object
      *
      * @return bool
      */
-    public function offsetExists($id)
+    public function offsetExists($name)
     {
-        return isset($this->keys[$id]);
+        return isset($this->keys[$name]);
     }
 
     /**
      * ArrayAccess
      * Gets a parameter or an object.
      *
-     * @param string $id The unique identifier for the parameter or object
+     * @param string $name The unique identifier for the parameter or object
      *
      * @return mixed The value of the parameter or an object
      * @throws \OutOfBoundsException If the identifier is not defined
      */
-    public function offsetGet($id)
+    public function offsetGet($name)
     {
-        $this->assertExists($id);
-        if ($this->needsInvoked($id) === false) {
-            return $this->values[$id];
+        $this->assertExists($name);
+        if ($this->needsInvoked($name) === false) {
+            return $this->values[$name];
         }
-        if (isset($this->factories[$this->values[$id]])) {
+        if (isset($this->factories[$this->values[$name]])) {
             // we're a factory
-            $val = $this->values[$id]($this);
+            $val = $this->values[$name]($this);
             if (\is_callable($this->cfg['onInvoke'])) {
-                $this->cfg['onInvoke']($val, $id, $this);
+                $this->cfg['onInvoke']($val, $name, $this);
             }
             return $val;
         }
         // we're a service
-        $raw = $this->values[$id];
-        $this->invoked[$id] = true;
-        $this->raw[$id] = $raw;
+        $raw = $this->values[$name];
+        $this->invoked[$name] = true;
+        $this->raw[$name] = $raw;
 
         $val = $raw($this);
         if (\is_callable($this->cfg['onInvoke'])) {
-            $this->cfg['onInvoke']($val, $id, $this);
+            $this->cfg['onInvoke']($val, $name, $this);
         }
-        $this->values[$id] = $val;
+        $this->values[$name] = $val;
 
         return $val;
     }
@@ -206,25 +206,25 @@ class Container implements \ArrayAccess
      * ArrayAccess
      * Sets a parameter or an object.
      *
-     * @param string $id    The unique identifier for the parameter or object
+     * @param string $name  The unique identifier for the parameter or object
      * @param mixed  $value The value of the parameter or a closure to define an object
      *
      * @throws \RuntimeException Prevent override of a already built service
      * @return void
      */
-    public function offsetSet($id, $value)
+    public function offsetSet($name, $value)
     {
-        if (isset($this->invoked[$id]) && $this->cfg['allowOverride'] === false) {
+        if (isset($this->invoked[$name]) && $this->cfg['allowOverride'] === false) {
             throw new \RuntimeException(
-                \sprintf('Cannot update "%s" after it has been instantiated.', $id)
+                \sprintf('Cannot update "%s" after it has been instantiated.', $name)
             );
         }
 
-        $this->keys[$id] = true;
-        $this->values[$id] = $value;
+        $this->keys[$name] = true;
+        $this->values[$name] = $value;
         unset(
-            $this->invoked[$id],
-            $this->raw[$id]
+            $this->invoked[$name],
+            $this->raw[$name]
         );
     }
 
@@ -232,26 +232,26 @@ class Container implements \ArrayAccess
      * ArrayAccess
      * Unsets a parameter or an object.
      *
-     * @param string $id The unique identifier for the parameter or object
+     * @param string $name The unique identifier for the parameter or object
      *
      * @return void
      */
-    public function offsetUnset($id)
+    public function offsetUnset($name)
     {
-        if ($this->offsetExists($id) === false) {
+        if ($this->offsetExists($name) === false) {
             return;
         }
-        if (\is_object($this->values[$id])) {
+        if (\is_object($this->values[$name])) {
             unset(
-                $this->factories[$this->values[$id]],
-                $this->protected[$this->values[$id]]
+                $this->factories[$this->values[$name]],
+                $this->protected[$this->values[$name]]
             );
         }
         unset(
-            $this->invoked[$id],
-            $this->keys[$id],
-            $this->raw[$id],
-            $this->values[$id]
+            $this->invoked[$name],
+            $this->keys[$name],
+            $this->raw[$name],
+            $this->values[$name]
         );
     }
 
@@ -281,21 +281,21 @@ class Container implements \ArrayAccess
     /**
      * Gets a parameter or the closure defining an object.
      *
-     * @param string $id The unique identifier for the parameter or object
+     * @param string $name The unique identifier for the parameter or object
      *
      * @return mixed The value of the parameter or the closure defining an object
      *
      * @throws \OutOfBoundsException If the identifier is not defined
      */
-    public function raw($id)
+    public function raw($name)
     {
-        $this->assertExists($id);
+        $this->assertExists($name);
 
-        if (isset($this->raw[$id])) {
-            return $this->raw[$id];
+        if (isset($this->raw[$name])) {
+            return $this->raw[$name];
         }
 
-        return $this->values[$id];
+        return $this->values[$name];
     }
 
     /**
@@ -352,17 +352,17 @@ class Container implements \ArrayAccess
     /**
      * Assert that the identifier exists
      *
-     * @param string $id Identifier of entry to check
+     * @param string $name Identifier of entry to check
      *
      * @return void
      *
      * @throws \OutOfBoundsException If the identifier is not defined
      */
-    private function assertExists($id)
+    private function assertExists($name)
     {
-        if ($this->offsetExists($id) === false) {
+        if ($this->offsetExists($name) === false) {
             throw new \OutOfBoundsException(
-                \sprintf('Unknown identifier: "%s"', $id)
+                \sprintf('Unknown identifier: "%s"', $name)
             );
         }
     }

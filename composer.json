@@ -20,11 +20,13 @@
 	"autoload": {
 		"classmap": [
 			"src/Backtrace/Backtrace.php",
+			"src/Container/Container.php",
 			"src/Debug/Debug.php",
 			"src/Debug/Utility/Utility.php",
 			"src/ErrorHandler/ErrorHandler.php"
 		],
 		"psr-4": {
+			"bdk\\Container\\": "src/Container/",
 			"bdk\\Debug\\": "src/Debug/",
 			"bdk\\ErrorHandler\\": "src/ErrorHandler/",
 			"bdk\\PubSub\\": "src/PubSub/"

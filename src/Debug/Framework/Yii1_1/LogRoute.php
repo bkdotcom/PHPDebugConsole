@@ -74,6 +74,7 @@ class LogRoute extends CLogRoute
         }
         $debug->backtrace->addInternalClass(array(
             'CLogger',
+            'CLogRoute',
             'YiiBase',
         ));
         $this->debug = $debug;
@@ -125,6 +126,29 @@ class LogRoute extends CLogRoute
         parent::init();
         // send each entry to debugger immediately
         Yii::getLogger()->autoFlush = 1;
+    }
+
+    /**
+     * Find backtrace frame that called log()
+     *
+     * @return array backtrace frame or empty array
+     */
+    private function getCallerInfo()
+    {
+        $callerInfo = array();
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 13);
+        foreach ($backtrace as $i => $frame) {
+            $method = $frame['class'] . '::' . $frame['function'];
+            if (!\in_array($method, array('CLogger::log', 'YiiBase::log'))) {
+                continue;
+            }
+            $callerInfo = $frame;
+            // check if log called by some other wrapper method
+            if (\in_array($backtrace[$i + 1]['function'], array('log','error','warn','warning'))) {
+                $callerInfo = $backtrace[$i + 1];
+            }
+        }
+        return $callerInfo;
     }
 
     /**
@@ -204,6 +228,14 @@ class LogRoute extends CLogRoute
             if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
                 $logEntry['meta']['trace'] = $logEntry['trace'];
                 unset($logEntry['trace']);
+            }
+        }
+
+        if (\in_array($logEntry['level'], array(CLogger::LEVEL_ERROR, CLogger::LEVEL_WARNING))) {
+            $callerInfo = $this->getCallerInfo();
+            if ($callerInfo) {
+                $logEntry['meta']['file'] = $callerInfo['file'];
+                $logEntry['meta']['line'] = $callerInfo['line'];
             }
         }
 

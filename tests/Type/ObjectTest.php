@@ -426,7 +426,9 @@ EOD;
             array(
                 'INHERITED' => array(
                     'attributes' => array(),
-                    'desc' => 'Inherited description',
+                    'desc' => PHP_VERSION_ID >= 70100
+                        ? 'Inherited description'
+                        : null,
                     'value' => 'defined in TestBase',
                     'visibility' => 'public',
                 ),

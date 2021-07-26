@@ -175,7 +175,11 @@ EOD;
                         // constants
                         $this->assertStringContainsString(
                             '<dt class="constants">constants</dt>' . "\n"
-                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Inherited description">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
+                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
+                                . (PHP_VERSION_ID >= 70100
+                                    ? ' title="Inherited description"'
+                                    : ''
+                                ) . '>INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
                             . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
                                 . (PHP_VERSION_ID >= 70100
                                     ? ' title="constant documentation"'

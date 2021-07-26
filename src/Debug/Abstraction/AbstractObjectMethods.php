@@ -35,8 +35,8 @@ class AbstractObjectMethods extends AbstractObjectSub
         'isStatic' => false,
         'params' => array(),
         'phpDoc' => array(
-            'summary' => null,
             'desc' => null,
+            'summary' => null,
         ),
         'return' => array(
             'type' => null,
@@ -162,6 +162,17 @@ class AbstractObjectMethods extends AbstractObjectSub
         if (isset($abs['methods']['__toString'])) {
             $abs['methods']['__toString']['returnValue'] = $this->toString();
         }
+        if (!($this->abs['flags'] & AbstractObject::COLLECT_PHPDOC)) {
+            foreach ($abs['methods'] as $name => $method) {
+                $method['phpDoc']['desc'] = null;
+                $method['phpDoc']['summary'] = null;
+                $keys = \array_keys($method['params']);
+                foreach ($keys as $key) {
+                    $method['params'][$key]['desc'] = null;
+                }
+                $abs['methods'][$name] = $method;
+            }
+        }
     }
 
     /**
@@ -219,6 +230,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                 return;
             }
         }
+        $collectPhpDoc = $abs['flags'] & AbstractObject::COLLECT_PHPDOC;
         foreach ($abs['phpDoc']['method'] as $phpDocMethod) {
             $className = $inheritedFrom ? $inheritedFrom : $abs['className'];
             $abs['methods'][$phpDocMethod['name']] = $this->buildMethodInfo(array(
@@ -232,12 +244,14 @@ class AbstractObjectMethods extends AbstractObjectSub
                     ));
                 }, $phpDocMethod['param']),
                 'phpDoc' => array(
-                    'summary' => $phpDocMethod['desc'],
                     'desc' => null,
+                    'summary' => $collectPhpDoc
+                        ? $phpDocMethod['desc']
+                        : null,
                 ),
                 'return' => array(
-                    'type' => $this->resolvePhpDocType($phpDocMethod['type']),
                     'desc' => null,
+                    'type' => $this->resolvePhpDocType($phpDocMethod['type']),
                 ),
                 'visibility' => 'magic',
             ));
@@ -416,12 +430,15 @@ class AbstractObjectMethods extends AbstractObjectSub
     private function getReturn(ReflectionMethod $reflectionMethod, $phpDoc)
     {
         $return = array(
-            'type' => null,
             'desc' => null,
+            'type' => null,
         );
         if (!empty($phpDoc['return'])) {
             $return = \array_merge($return, $phpDoc['return']);
             $return['type'] = $this->resolvePhpDocType($return['type']);
+            if (!($this->abs['flags'] & AbstractObject::COLLECT_PHPDOC)) {
+                $return['desc'] = null;
+            }
         } elseif (PHP_VERSION_ID >= 70000) {
             $return['type'] = $this->getTypeString($reflectionMethod->getReturnType());
         }
@@ -444,6 +461,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             : $obj;
         $declaringClassName = $reflectionMethod->getDeclaringClass()->getName();
         $phpDoc = $this->phpDoc->getParsed($reflectionMethod);
+        \ksort($phpDoc);
         $vis = 'public';
         if ($reflectionMethod->isPrivate()) {
             $vis = 'private';

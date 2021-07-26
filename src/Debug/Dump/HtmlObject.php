@@ -47,8 +47,11 @@ class HtmlObject
 	public function dump(Abstraction $abs)
 	{
         $title = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
+        $outPhpDoc = $abs['flags'] & AbstractObject::OUTPUT_PHPDOC;
         $strClassName = $this->html->markupIdentifier($abs['className'], 'span', array(
-            'title' => $title ?: null,
+            'title' => $outPhpDoc
+                ? $title
+                : null,
         ));
         if ($abs['isRecursion']) {
             return $strClassName
@@ -185,6 +188,7 @@ class HtmlObject
             return '';
         }
         $outAttributes = $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_CONST;
+        $outPhpDoc = $abs['flags'] & AbstractObject::OUTPUT_PHPDOC;
         $str = '<dt class="constants">constants</dt>' . "\n";
         foreach ($constants as $k => $info) {
             $modifiers = array(
@@ -199,7 +203,7 @@ class HtmlObject
                 . \implode(' ', \array_map(function ($modifier) {
                     return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
                 }, $modifiers))
-                . ' <span class="t_identifier" title="' . \htmlspecialchars($info['desc']) . '">' . $k . '</span>'
+                . ' <span class="t_identifier" title="' . \htmlspecialchars($outPhpDoc ? $info['desc'] : '') . '">' . $k . '</span>'
                 . ' <span class="t_operator">=</span> '
                 . $this->html->dump($info['value'])
                 . '</dd>' . "\n";
@@ -221,9 +225,10 @@ class HtmlObject
             return '';
         }
         $opts = array(
+            'outAttributesMethod' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_METHOD,
+            'outAttributesParam' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_PARAM,
             'outMethodDesc' => $abs['flags'] & AbstractObject::OUTPUT_METHOD_DESC,
-            'outMethodAttributes' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_METHOD,
-            'outParamAttributes' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_PARAM,
+            'outPhpDoc' => $abs['flags'] & AbstractObject::OUTPUT_PHPDOC,
         );
         $methods = $abs['methods'];
         $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
@@ -273,7 +278,7 @@ class HtmlObject
             'dd',
             array(
                 'class' => \array_merge($classes, $modifiers),
-                'data-attributes' => $opts['outMethodAttributes']
+                'data-attributes' => $opts['outAttributesMethod']
                     ? ($info['attributes'] ?: null)
                     : null,
                 'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])
@@ -286,16 +291,20 @@ class HtmlObject
                 return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
             }, $modifiers))
             . ' ' . $this->html->markupType($info['return']['type'], array(
-                'title' => $info['return']['desc'],
+                'title' => $opts['outPhpDoc']
+                    ? $info['return']['desc']
+                    : '',
             ))
             . ' ' . $this->debug->html->buildTag(
                 'span',
                 array(
                     'class' => 't_identifier',
-                    'title' => \trim($info['phpDoc']['summary']
-                        . ($opts['outMethodDesc']
-                            ? "\n\n" . $info['phpDoc']['desc']
-                            : '')),
+                    'title' => $opts['outPhpDoc']
+                        ? \trim($info['phpDoc']['summary']
+                            . ($opts['outMethodDesc']
+                                ? "\n\n" . $info['phpDoc']['desc']
+                                : ''))
+                        : '',
                 ),
                 $methodName
             )
@@ -324,7 +333,7 @@ class HtmlObject
                     'isPromoted' => $info['isPromoted'],
                     'parameter' => true,
                 ))),
-                'data-attributes' => $opts['outParamAttributes']
+                'data-attributes' => $opts['outAttributesParam']
                     ? ($info['attributes'] ?: null)
                     : null,
             )) . '>';
@@ -335,7 +344,9 @@ class HtmlObject
                 'span',
                 array(
                     'class' => 't_parameter-name',
-                    'title' => $info['desc'],
+                    'title' => $opts['outPhpDoc']
+                        ? $info['desc']
+                        : '',
                 ),
                 \htmlspecialchars($info['name'])
             );
@@ -430,7 +441,8 @@ class HtmlObject
             }
         }
         $opts = array(
-            'outputAttributes' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_PROP,
+            'outAttributes' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_PROP,
+            'outPhpDoc' => $abs['flags'] & AbstractObject::OUTPUT_PHPDOC,
         );
         $magicMethods = \array_intersect(array('__get','__set'), \array_keys($abs['methods']));
         $str = '<dt class="properties">' . $label . '</dt>' . "\n";
@@ -465,38 +477,40 @@ class HtmlObject
             'private-ancestor' => $isPrivateAncestor,
             'property' => true,
         )));
-        if ($info['visibility'] !== 'debug') {
-            $classes = \array_merge($classes, $vis);
-        }
+        $classes = \array_merge($classes, $vis);
+        $classes = \array_diff($classes, array('debug'));
         $modifiers = $vis;
         if ($info['isStatic']) {
             $modifiers[] = 'static';
         }
-        return '<dd' . $this->debug->html->buildAttribString(array(
-            'class' => $classes, // pass as array
-            'data-attributes' => $opts['outputAttributes']
-                ? ($info['attributes'] ?: null)
-                : null,
-            'data-inherited-from' => $info['inheritedFrom'],
-        )) . '>'
-            . \implode(' ', \array_map(function ($modifier) {
-                return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-            }, $modifiers))
-            . ($isPrivateAncestor
-                // wrapped in span for css rule `.private-ancestor > *`
-                ? ' <span>(' . $this->html->markupIdentifier($info['inheritedFrom'], 'i') . ')</span>'
-                : '')
-            . ($info['type']
-                ? ' ' . $this->html->markupType($info['type'])
-                : '')
-            . ' <span class="t_identifier"'
-                . ' title="' . \htmlspecialchars($info['desc']) . '"'
-                . '>' . $name . '</span>'
-            . ($info['value'] !== Abstracter::UNDEFINED
-                ? ' <span class="t_operator">=</span> '
-                    . $this->html->dump($info['value'])
-                : '')
-            . '</dd>';
+        $modifiers = \array_map(function ($modifier) {
+            return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
+        }, $modifiers);
+        return $this->debug->html->buildTag(
+            'dd',
+            array(
+                'class' => $classes, // pass as array
+                'data-attributes' => $opts['outAttributes']
+                    ? ($info['attributes'] ?: null)
+                    : null,
+                'data-inherited-from' => $info['inheritedFrom'],
+            ),
+            \implode(' ', $modifiers)
+                . ($isPrivateAncestor
+                    // wrapped in span for css rule `.private-ancestor > *`
+                    ? ' <span>(' . $this->html->markupIdentifier($info['inheritedFrom'], 'i') . ')</span>'
+                    : '')
+                . ($info['type']
+                    ? ' ' . $this->html->markupType($info['type'])
+                    : '')
+                . ' <span class="t_identifier"'
+                    . ' title="' . ($opts['outPhpDoc'] ? \htmlspecialchars($info['desc']) : '') . '"'
+                    . '>' . $name . '</span>'
+                . ($info['value'] !== Abstracter::UNDEFINED
+                    ? ' <span class="t_operator">=</span> '
+                        . $this->html->dump($info['value'])
+                    : '')
+        );
     }
 
     /**

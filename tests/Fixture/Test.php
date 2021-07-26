@@ -7,6 +7,8 @@ namespace bdk\DebugTests\Fixture;
 /**
  * PhpDoc Summary
  *
+ * PhpDoc Description
+ *
  * @link http://www.bradkent.com/php/debug PHPDebugConsole Homepage
  */
 class Test extends TestBase
@@ -46,6 +48,8 @@ class Test extends TestBase
     /**
      * Constructor
      *
+     * Constructor description
+     *
      * @param string $toString   value __toString will return;
      * @param int    $toStrThrow 0: don't, 1: throw, 2: throw & catch
      */
@@ -60,7 +64,7 @@ class Test extends TestBase
     /**
      * magic method
      *
-     * @return array
+     * @return array property=>value array
      */
     public function __debugInfo()
     {

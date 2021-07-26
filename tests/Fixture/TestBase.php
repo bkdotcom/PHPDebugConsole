@@ -16,10 +16,13 @@ namespace bdk\DebugTests\Fixture;
 class TestBase
 {
 
+    /** Inherited description */
     const INHERITED = 'defined in TestBase';
     const MY_CONSTANT = 'defined in TestBase';
 
     public $propPublic = 'defined in TestBase (public)';
+
+    /** @var string $testBasePrivate Inherited desc */
     private $testBasePrivate = 'defined in TestBase (private)';
     private $propPrivate = 'defined in TestBase (private)';
     protected $propProtected = 'defined only in TestBase (protected)';

@@ -85,6 +85,7 @@ class Abstracter extends Component
             'collectAttributesProp' => true,
             'collectConstants' => true,
             'collectMethods' => true,
+            'collectPhpDoc' => true, // description & summary
             'fullyQualifyPhpDocType' => false,
             'objectsExclude' => array(
                 __NAMESPACE__,
@@ -99,6 +100,7 @@ class Abstracter extends Component
             'outputConstants' => true,
             'outputMethodDesc' => true,     // (or just summary)
             'outputMethods' => true,
+            'outputPhpDoc' => true,
             'stringMaxLen' => array(
                 'base64' => 156, // 2 lines of chunk_split'ed
                 'binary' => array(

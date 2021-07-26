@@ -48,8 +48,8 @@
 	},
 	"require-dev": {
 		"bdk/css-xpath": "^1.0",
-		"bdk/wamp-publisher": "^1.0",
-		"doctrine/dbal": "^2.5.0",
+		"doctrine/dbal": "^3.0",
+		"bdk/wamp-publisher": "^1.1",
 		"guzzlehttp/psr7": "^1.6",
 		"jdorn/sql-formatter": "^1.2",
 		"monolog/monolog": "^1.0",

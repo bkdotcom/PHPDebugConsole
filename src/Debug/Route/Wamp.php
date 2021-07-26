@@ -56,7 +56,6 @@ class Wamp implements RouteInterface
     {
         $this->debug = $debug;
         $this->wamp = $wamp;
-        $this->requestId = $this->debug->getData('requestId');
     }
 
     /**
@@ -82,6 +81,7 @@ class Wamp implements RouteInterface
             return array();
         }
         return array(
+            Debug::EVENT_BOOTSTRAP => 'init',
             Debug::EVENT_CONFIG => 'onConfig',
             Debug::EVENT_LOG => array('onLog', PHP_INT_MAX * -1),
             Debug::EVENT_PLUGIN_INIT => 'init',
@@ -91,12 +91,13 @@ class Wamp implements RouteInterface
     }
 
     /**
-     * Debug::EVENT_PLUGIN_INIT subscriber
+     * Debug::EVENT_PLUGIN_INIT && Debug::EVENT_BOOTSTRAP subscriber
      *
      * @return void
      */
     public function init()
     {
+        $this->requestId = $this->debug->getData('requestId');
         $this->cfg['output'] = $this->debug->getCfg('output', Debug::CONFIG_DEBUG);
         if ($this->cfg['output']) {
             $this->publishMeta();
@@ -203,7 +204,9 @@ class Wamp implements RouteInterface
             'endOutput',
             array(),
             array(
-                'responseCode' => \http_response_code(),
+                'responseCode' => \strpos($this->debug->getInterface(), 'http') !== false
+                    ? $this->debug->getResponseCode()
+                    : null,
             )
         ));
     }

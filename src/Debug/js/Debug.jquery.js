@@ -634,7 +634,9 @@
     if ($.trim($arrayInner.html()).length < 1) {
       // empty array -> don't add expand/collapse
       $node.addClass('expanded').find('br').hide();
-      return
+      if ($node.hasClass('max-depth') === false) {
+        return
+      }
     }
     if ($node.closest('.array-file-tree').length) {
       $node.find('> .t_keyword, > .t_punct').remove();

@@ -145,7 +145,9 @@ EOD;
                         $this->assertStringStartsWith(
                             '<li class="m_log"><div class="t_object" data-accessible="public">'
                             . '<span class="t_string t_stringified" title="__toString()">abracadabra</span>' . "\n"
-                            . '<span class="classname" title="PhpDoc Summary"><span class="namespace">bdk\DebugTests\Fixture\</span>Test</span>',
+                            . '<span class="classname" title="PhpDoc Summary' . "\n"
+                            . "\n"
+                            . 'PhpDoc Description"><span class="namespace">bdk\DebugTests\Fixture\</span>Test</span>',
                             $str
                         );
                         $this->assertSelectCount('dl.object-inner', 1, $str);
@@ -173,7 +175,7 @@ EOD;
                         // constants
                         $this->assertStringContainsString(
                             '<dt class="constants">constants</dt>' . "\n"
-                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
+                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Inherited description">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
                             . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
                                 . (PHP_VERSION_ID >= 70100
                                     ? ' title="constant documentation"'
@@ -204,7 +206,7 @@ EOD;
                             '<dd class="inherited property protected" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
                             '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value private property"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
-                            '<dd class="inherited private private-ancestor property" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</i>)</span> <span class="t_identifier">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                            '<dd class="inherited private private-ancestor property" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\DebugTests\Fixture\</span>TestBase</i>)</span> <span class="t_type">string</span> <span class="t_identifier" title="Inherited desc">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
                             '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
@@ -219,7 +221,9 @@ EOD;
                         $expect = \implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="info magic">This object has a <code>__call</code> method</dd>',
-                            '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don\'t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
+                            '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor',
+                            '',
+                            'Constructor description">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don\'t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">array</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public" data-inherited-from="bdk\DebugTests\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span></dd>',
@@ -309,7 +313,64 @@ EOD;
                         array(
                             $cratedAbs2,
                         ),
-                    )
+                    ),
+                ),
+            ),
+            // 3 - collectPhpDoc = false
+            array(
+                'log',
+                array(
+                    new \bdk\DebugTests\Fixture\Test(),
+                    \bdk\Debug::meta('cfg', 'collectPhpDoc', false),
+                ),
+                array(
+                    'entry' => function (\bdk\Debug\LogEntry $logEntry) {
+                        $objAbs = $logEntry['args'][0];
+                        $this->assertSame(
+                            array('desc' => null, 'summary' => null),
+                            \array_intersect_key($objAbs['phpDoc'], \array_flip(array('desc','summary')))
+                        );
+                        foreach ($objAbs['constants'] as $const) {
+                            $this->assertNull($const['desc']);
+                        }
+                        foreach ($objAbs['properties'] as $name => $prop) {
+                            $this->assertNull($prop['desc']);
+                        }
+                        foreach ($objAbs['methods'] as $name => $method) {
+                            $this->assertSame(
+                                array('desc' => null, 'summary' => null),
+                                \array_intersect_key($method['phpDoc'], \array_flip(array('desc','summary')))
+                            );
+                        }
+                    },
+                ),
+            ),
+            // 4 outputPhpDoc = false
+            array(
+                'log',
+                array(
+                    new \bdk\DebugTests\Fixture\Test(),
+                    \bdk\Debug::meta('cfg', 'outputPhpDoc', false),
+                ),
+                array(
+                    'entry' => function (\bdk\Debug\LogEntry $logEntry) {
+                        // quick confirm that was collected
+                        $objAbs = $logEntry['args'][0];
+                        $this->assertSame(
+                            array(
+                                'desc' => 'PhpDoc Description',
+                                'summary' => 'PhpDoc Summary',
+                            ),
+                            \array_intersect_key($objAbs['phpDoc'], \array_flip(array('desc','summary')))
+                        );
+                    },
+                    'html' => function ($html, LogEntry $logEntry) {
+                        \preg_match_all('/title="([^"]+)"/s', $html, $matches);
+                        $matches = \array_diff($matches[1], array(
+                            '__toString()',
+                        ));
+                        $this->assertEmpty($matches, 'Html should not contain phpDoc summary & descriptions');
+                    }
                 ),
             ),
         );
@@ -365,7 +426,7 @@ EOD;
             array(
                 'INHERITED' => array(
                     'attributes' => array(),
-                    'desc' => null,
+                    'desc' => 'Inherited description',
                     'value' => 'defined in TestBase',
                     'visibility' => 'public',
                 ),
@@ -382,8 +443,8 @@ EOD;
         );
         $this->assertArraySubset(
             array(
+                'desc' => 'PhpDoc Description',
                 'summary' => 'PhpDoc Summary',
-                'desc' => null,
             ),
             $abs['phpDoc']
         );
@@ -496,17 +557,17 @@ EOD;
                     ),
                 ),
                 'phpDoc' => array(
-                    'summary' => 'This method is public',
-                    'desc' => null,
                     'deprecated' => array(
                         array(
                             'desc' => 'this method is bad and should feel bad',
                         ),
                     ),
+                    'desc' => null,
+                    'summary' => 'This method is public',
                 ),
                 'return' => array(
-                    'type' => 'void',
                     'desc' => null,
+                    'type' => 'void',
                 ),
                 'visibility' => 'public',
             ),

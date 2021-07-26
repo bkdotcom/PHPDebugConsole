@@ -30,21 +30,23 @@ use RuntimeException;
 class AbstractObject extends Component
 {
 
+    const COLLECT_ATTRIBUTES_CONST = 128;
+    const COLLECT_ATTRIBUTES_METHOD = 2048;
+    const COLLECT_ATTRIBUTES_OBJ = 32;
+    const COLLECT_ATTRIBUTES_PARAM = 8192;
+    const COLLECT_ATTRIBUTES_PROP = 512;
     const COLLECT_CONSTANTS = 1;
     const COLLECT_METHODS = 2;
-    const OUTPUT_CONSTANTS = 4;
-    const OUTPUT_METHODS = 8;
-    const OUTPUT_METHOD_DESC = 16;
-    const COLLECT_ATTRIBUTES_OBJ = 32;
-    const OUTPUT_ATTRIBUTES_OBJ = 64;
-    const COLLECT_ATTRIBUTES_CONST = 128;
+    const COLLECT_PHPDOC = 32768;
     const OUTPUT_ATTRIBUTES_CONST = 256;
-    const COLLECT_ATTRIBUTES_PROP = 512;
-    const OUTPUT_ATTRIBUTES_PROP = 1024;
-    const COLLECT_ATTRIBUTES_METHOD = 2048;
     const OUTPUT_ATTRIBUTES_METHOD = 4096;
-    const COLLECT_ATTRIBUTES_PARAM = 8192;
+    const OUTPUT_ATTRIBUTES_OBJ = 64;
     const OUTPUT_ATTRIBUTES_PARAM = 16384;
+    const OUTPUT_ATTRIBUTES_PROP = 1024;
+    const OUTPUT_CONSTANTS = 4;
+    const OUTPUT_METHOD_DESC = 16;
+    const OUTPUT_METHODS = 8;
+    const OUTPUT_PHPDOC = 65536;
 
 	protected $abstracter;
     protected $debug;
@@ -108,8 +110,8 @@ class AbstractObject extends Component
             'isRecursion' => \in_array($obj, $hist, true),
             'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
             'phpDoc' => array(
-                'summary' => null,
                 'desc' => null,
+                'summary' => null,
                 // additional tags
             ),
             'properties' => array(),
@@ -227,6 +229,10 @@ class AbstractObject extends Component
             'reflector',
         );
         $values = \array_diff_key($abs->getValues(), \array_flip($keysTemp));
+        if (!($abs['flags'] & self::COLLECT_PHPDOC)) {
+            $values['phpDoc']['desc'] = null;
+            $values['phpDoc']['summary'] = null;
+        }
         if (!$abs['isRecursion'] && !$abs['isExcluded']) {
             $this->sort($values['constants']);
             $this->sort($values['properties']);
@@ -251,7 +257,7 @@ class AbstractObject extends Component
         }
         $inclAttributes = $abs['flags'] & self::COLLECT_ATTRIBUTES_CONST === self::COLLECT_ATTRIBUTES_CONST;
         $abs['constants'] = PHP_VERSION_ID >= 70100
-            ? $this->getConstantsReflection($abs['reflector'], $inclAttributes)
+            ? $this->getConstantsReflection($abs, $inclAttributes)
             : $this->getConstants($abs['reflector']);
     }
 
@@ -259,14 +265,16 @@ class AbstractObject extends Component
      * Get constant arrays via `getReflectionConstants` (php 7.1)
      * This gets us visibility and access to phpDoc
      *
-     * @param ReflectionClass $reflector      ReflectionClass or ReflectionObject
-     * @param bool            $inclAttributes Whether to include attributes
+     * @param Abstraction $abs            Abstraction instance
+     * @param bool        $inclAttributes Whether to include attributes
      *
      * @return array name => array
      */
-    private function getConstantsReflection(ReflectionClass $reflector, $inclAttributes = true)
+    private function getConstantsReflection(Abstraction $abs, $inclAttributes = true)
     {
         $constants = array();
+        $reflector = $abs['reflector'];
+        $collectPhpDoc = $abs['flags'] & self::COLLECT_PHPDOC;
         while ($reflector) {
             foreach ($reflector->getReflectionConstants() as $const) {
                 $name = $const->getName();
@@ -284,7 +292,9 @@ class AbstractObject extends Component
                     'attributes' => $inclAttributes
                         ? $this->properties->getAttributes($const)
                         : array(),
-                    'desc' => $phpDoc['desc'],
+                    'desc' => $collectPhpDoc
+                        ? $phpDoc['desc']
+                        : null,
                     'value' => $const->getValue(),
                     'visibility' => $vis,
                 );
@@ -335,6 +345,7 @@ class AbstractObject extends Component
         $reflector = $abs['reflector'];
         $abs['phpDoc'] = $this->phpDoc->getParsed($reflector);
         if ($abs['isTraverseOnly']) {
+            \ksort($abs['phpDoc']);
             $this->addTraverseValues($abs);
             return;
         }
@@ -348,6 +359,7 @@ class AbstractObject extends Component
             }
             $abs['extends'][] = $reflector->getName();
         }
+        \ksort($abs['phpDoc']);
     }
 
     /**
@@ -384,6 +396,7 @@ class AbstractObject extends Component
             'collectAttributesProp' => self::COLLECT_ATTRIBUTES_PROP,
             'collectConstants' => self::COLLECT_CONSTANTS,
             'collectMethods' => self::COLLECT_METHODS,
+            'collectPhpDoc' => self::COLLECT_PHPDOC,
             'outputAttributesConst' => self::OUTPUT_ATTRIBUTES_CONST,
             'outputAttributesMethod' => self::OUTPUT_ATTRIBUTES_METHOD,
             'outputAttributesObj' => self::OUTPUT_ATTRIBUTES_OBJ,
@@ -392,6 +405,7 @@ class AbstractObject extends Component
             'outputConstants' => self::OUTPUT_CONSTANTS,
             'outputMethodDesc' => self::OUTPUT_METHOD_DESC,
             'outputMethods' => self::OUTPUT_METHODS,
+            'outputPhpDoc' => self::OUTPUT_PHPDOC,
         );
         $flagVals = \array_intersect_key($flags, \array_filter($this->cfg));
         return \array_reduce($flagVals, function ($carry, $val) {

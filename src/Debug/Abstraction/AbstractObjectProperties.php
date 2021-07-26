@@ -400,7 +400,7 @@ class AbstractObjectProperties extends AbstractObjectSub
     }
 
     /**
-     * Iterate over PhpDoc's magic properties & add to out abstrction
+     * Iterate over PhpDoc's magic properties & add to abstrction
      *
      * @param Abstraction $abs           Abstraction event object
      * @param string|null $inheritedFrom Where the magic properties were found
@@ -416,6 +416,7 @@ class AbstractObjectProperties extends AbstractObjectSub
             'property-write' => 'magic-write',
         );
         $properties = $abs['properties'];
+        $collectPhpDoc = $abs['flags'] & AbstractObject::COLLECT_PHPDOC;
         foreach ($tags as $tag => $vis) {
             if (!isset($abs['phpDoc'][$tag])) {
                 continue;
@@ -427,7 +428,9 @@ class AbstractObjectProperties extends AbstractObjectSub
                         ? $properties[ $phpDocProp['name'] ]
                         : self::$basePropInfo,
                     array(
-                        'desc' => $phpDocProp['desc'],
+                        'desc' => $collectPhpDoc
+                            ? $phpDocProp['desc']
+                            : null,
                         'type' => $this->resolvePhpDocType($phpDocProp['type']),
                         'inheritedFrom' => $inheritedFrom,
                         'visibility' => $exists
@@ -487,7 +490,9 @@ class AbstractObjectProperties extends AbstractObjectSub
             'attributes' => $abs['flags'] & AbstractObject::COLLECT_ATTRIBUTES_PROP
                 ? $this->getAttributes($reflectionProperty)
                 : array(),
-            'desc' => $phpDoc['desc'],
+            'desc' => $abs['flags'] & AbstractObject::COLLECT_PHPDOC
+                ? $phpDoc['desc']
+                : null,
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName
                 : null,

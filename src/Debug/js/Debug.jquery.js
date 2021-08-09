@@ -5636,7 +5636,7 @@
       allowHTML: true,
       maxWidth: 'none',
       appendTo: function (reference) {
-        return $(reference).closest('.group-body')[0]
+        return $(reference).closest('.group-body, .debug')[0]
       },
       content: function (reference) {
         var $ref = $(reference);
@@ -5717,7 +5717,9 @@
         $ref.removeAttr('title');
         $ref.addClass('hasTooltip');
         $ref.parents('.hasTooltip').each(function () {
-          this._tippy.hide();
+          if (this._tippy) {
+            this._tippy.hide();
+          }
         });
         // return preventShow === false
         return true

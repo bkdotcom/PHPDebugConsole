@@ -172,8 +172,8 @@ class Text extends Base
      */
     protected function dumpMethods(Abstraction $abs)
     {
-        $collectMethods = $abs['flags'] & AbstractObject::COLLECT_METHODS;
-        $outputMethods = $abs['flags'] & AbstractObject::OUTPUT_METHODS;
+        $collectMethods = $abs['cfgFlags'] & AbstractObject::COLLECT_METHODS;
+        $outputMethods = $abs['cfgFlags'] & AbstractObject::OUTPUT_METHODS;
         if (!$collectMethods || !$outputMethods) {
             return '';
         }

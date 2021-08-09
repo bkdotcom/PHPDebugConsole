@@ -3,6 +3,7 @@
 namespace bdk\DebugTests\Type;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
 use bdk\DebugTests\DebugTestFramework;
 
@@ -92,16 +93,15 @@ EOD;
 
         $wamp = \bdk\Debug::getInstance()->getRoute('wamp');
         $wampRef = new \ReflectionObject($wamp);
-        $crateRef = $wampRef->getMethod('crateValues');
-        $crateRef->setAccessible(true);
+        $crate = new \bdk\Debug\Route\WampCrate(\bdk\Debug::getInstance());
 
         $abs1 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTests\Fixture\Test(), 'log');
-        $cratedAbs1 = $crateRef->invoke($wamp, $abs1);
+        $cratedAbs1 = $crate->crate($abs1);
         $cratedAbs1 = $this->crate($cratedAbs1);
         $cratedAbs1['scopeClass'] = null;
 
         $abs2 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTests\Fixture\Test2(), 'log');
-        $cratedAbs2 = $crateRef->invoke($wamp, $abs2);
+        $cratedAbs2 = $crate->crate($abs2);
         $cratedAbs2 = $this->crate($cratedAbs2);
         $cratedAbs2['scopeClass'] = null;
 
@@ -118,12 +118,12 @@ EOD;
                         $values = $objAbs->getValues();
                         $keysExpect = array(
                             'attributes',
+                            'cfgFlags',
                             'className',
                             'constants',
                             'debugMethod',
                             'definition',
                             'extends',
-                            'flags',
                             'implements',
                             'isExcluded',
                             'isFinal',
@@ -375,6 +375,31 @@ EOD;
                         ));
                         $this->assertEmpty($matches, 'Html should not contain phpDoc summary & descriptions');
                     }
+                ),
+            ),
+            // 5 collectMethods = false
+            array(
+                'log',
+                array(
+                    new \bdk\DebugTests\Fixture\Test(),
+                    \bdk\Debug::meta('cfg', array(
+                        'collectMethods' => false,
+                        // 'outputMethods' => true,
+                    )),
+                ),
+                array(
+                    'entry' => function ($logEntry) {
+                        $objAbs = $logEntry['args'][0];
+                        $values = $objAbs->getValues();
+                        $this->assertFalse(($values['cfgFlags'] & AbstractObject::COLLECT_METHODS) === AbstractObject::COLLECT_METHODS);
+                        $this->assertTrue(($values['cfgFlags'] & AbstractObject::OUTPUT_METHODS) === AbstractObject::OUTPUT_METHODS);
+                    },
+                    'html' => function ($str) {
+                        $this->assertStringContainsString(\implode("\n", array(
+                            '<dt class="methods">methods not collected</dt>',
+                            '<dt>phpDoc</dt>',
+                        )), $str);
+                    },
                 ),
             ),
         );

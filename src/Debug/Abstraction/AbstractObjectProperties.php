@@ -416,7 +416,7 @@ class AbstractObjectProperties extends AbstractObjectSub
             'property-write' => 'magic-write',
         );
         $properties = $abs['properties'];
-        $collectPhpDoc = $abs['flags'] & AbstractObject::COLLECT_PHPDOC;
+        $collectPhpDoc = $abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC;
         foreach ($tags as $tag => $vis) {
             if (!isset($abs['phpDoc'][$tag])) {
                 continue;
@@ -487,10 +487,10 @@ class AbstractObjectProperties extends AbstractObjectSub
         */
         $declaringClassName = $reflectionProperty->getDeclaringClass()->getName();
         $propInfo = static::buildPropInfo(array(
-            'attributes' => $abs['flags'] & AbstractObject::COLLECT_ATTRIBUTES_PROP
+            'attributes' => $abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_PROP
                 ? $this->getAttributes($reflectionProperty)
                 : array(),
-            'desc' => $abs['flags'] & AbstractObject::COLLECT_PHPDOC
+            'desc' => $abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC
                 ? $phpDoc['desc']
                 : null,
             'inheritedFrom' => $declaringClassName !== $className

@@ -50,11 +50,11 @@ class DebugTestFramework extends DOMTestCase
         }
         if ($type === 'object') {
             $keys = array(
+                'cfgFlags',
                 'className',
                 'constants',
                 'definition',
                 'extends',
-                'flags',
                 'implements',
                 'isExcluded',
                 'isRecursion',

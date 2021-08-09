@@ -16,10 +16,9 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
+use bdk\Debug\Route\WampCrate;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -35,14 +34,23 @@ class Wamp implements RouteInterface
     public $debug;
     public $requestId;
     public $topic = 'bdk.debug';
+
+    /** @var WampPublisher */
     public $wamp;
+
     protected $cfg = array(
         'output' => false,      // kept in sync with debug->cfg['output']
     );
     protected $channelName = '';
     protected $channelNames = array();
-    protected $detectFiles = false;
-    protected $foundFiles = array();
+
+    /**
+     * Utility for "crating" up our values & abstractions for transport
+     *
+     * @var WampCrate
+     */
+    protected $crate;
+
     protected $metaPublished = false;
     protected $notConnectedAlert = false;
 
@@ -56,6 +64,7 @@ class Wamp implements RouteInterface
     {
         $this->debug = $debug;
         $this->wamp = $wamp;
+        $this->crate = new WampCrate($debug);
     }
 
     /**
@@ -280,161 +289,11 @@ class Wamp implements RouteInterface
         }
         if ($logEntry['return']) {
             $args = $logEntry['return'];
-        }
-        $this->detectFiles = $logEntry->getMeta('detectFiles', false);
-        $this->foundFiles = array();
-        if ($meta['format'] === 'raw') {
-            $args = $this->crateValues($args);
-        }
-        if (!empty($meta['trace'])) {
-            $logEntryTmp = new LogEntry(
-                $this->debug,
-                'trace',
-                array($meta['trace']),
-                array(
-                    'columns' => array('file','line','function'),
-                    'inclContext' => $logEntry->getMeta('inclContext', false),
-                )
-            );
-            $this->debug->methodTable->onLog($logEntryTmp);
-            unset($args[2]);
-            $meta = \array_merge($meta, array(
-                'caption' => 'trace',
-                'tableInfo' => $logEntryTmp['meta']['tableInfo'],
-                'trace' => $logEntryTmp['args'][0],
-            ));
-        }
-        if ($this->detectFiles) {
-            $meta['foundFiles'] = $this->foundFiles;
+        } elseif ($meta['format'] === 'raw') {
+            list($args, $metaTmp) = $this->crate->crateLogEntry($logEntry);
+            $meta = \array_merge($meta, $metaTmp);
         }
         $this->wamp->publish($this->topic, array($logEntry['method'], $args, $meta));
-    }
-
-    /**
-     * Crate array (may be encapsulated by Abstraction)
-     *
-     * @param array $array array
-     *
-     * @return array
-     */
-    private function crateArray($array)
-    {
-        $return = array();
-        $keys = array();
-        foreach ($array as $k => $v) {
-            if (\is_string($k) && \substr($k, 0, 1) === "\x00") {
-                // key starts with null...
-                // php based wamp router will choke (attempt to json_decode to obj)
-                $k = '_b64_:' . \base64_encode($k);
-            }
-            $return[$k] = $this->crateValues($v);
-        }
-        if ($this->debug->arrayUtil->isList($array) === false) {
-            /*
-                Compare sorted vs unsorted
-                if differ pass the key order
-            */
-            $keys = \array_keys($array);
-            $keysSorted = $keys;
-            \sort($keysSorted, SORT_STRING);
-            if ($keys !== $keysSorted) {
-                $return['__debug_key_order__'] = $keys;
-            }
-        }
-        return $return;
-    }
-
-    /**
-     * Crate object abstraction
-     * (make sure string values are base64 encoded when necessary)
-     *
-     * @param Abstraction $abs Object abstraction
-     *
-     * @return array
-     */
-    private function crateObject(Abstraction $abs)
-    {
-        $info = $abs->jsonSerialize();
-        foreach ($info['properties'] as $k => $propInfo) {
-            $info['properties'][$k]['value'] = $this->crateValues($propInfo['value']);
-        }
-        if (isset($info['methods']['__toString'])) {
-            $info['methods']['__toString'] = $this->crateValues($info['methods']['__toString']);
-        }
-        return $info;
-    }
-
-    /**
-     * Base64 encode string if it contains non-utf8 characters
-     *
-     * @param string $str       string
-     * @param bool   $isNotUtf8 does string contain non-utf8 chars?
-     *
-     * @return string
-     */
-    private function crateString($str, $isNotUtf8 = false)
-    {
-        if (!$str) {
-            return $str;
-        }
-        if ($isNotUtf8) {
-            return '_b64_:' . \base64_encode($str);
-        }
-        if ($this->detectFiles && $this->debug->utility->isFile($str)) {
-            $this->foundFiles[] = $str;
-        }
-        return $str;
-    }
-
-    /**
-     * JSON doesn't handle binary well (at all)
-     *     a) strings with invalid utf-8 can't be json_encoded
-     *     b) "javascript has a unicode problem" / will munge strings
-     *   base64_encode all strings!
-     *
-     * Associative arrays get JSON encoded to js objects...
-     *     Javascript doesn't maintain order for object properties
-     *     in practice this seems to only be an issue with int/numeric keys
-     *     store key order if needed
-     *
-     * @param mixed $mixed value to crate
-     *
-     * @return array|string
-     */
-    private function crateValues($mixed)
-    {
-        if (\is_array($mixed)) {
-            return $this->crateArray($mixed);
-        }
-        if (\is_string($mixed)) {
-            return $this->crateString($mixed);
-        }
-        if ($mixed instanceof Abstraction) {
-            $clone = clone $mixed;
-            switch ($mixed['type']) {
-                case Abstracter::TYPE_ARRAY:
-                    $clone['value'] = $this->crateArray($clone['value']);
-                    return $clone;
-                case Abstracter::TYPE_OBJECT:
-                    return $this->crateObject($clone);
-                case Abstracter::TYPE_STRING:
-                    $clone['value'] = $this->crateString(
-                        $clone['value'],
-                        $clone['typeMore'] === Abstracter::TYPE_STRING_BINARY
-                    );
-                    if ($clone['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
-                        // PITA to get strlen in javascript
-                        // pass the length of captured value
-                        $clone['strlenValue'] = \strlen($mixed['value']);
-                    }
-                    if (isset($clone['valueDecoded'])) {
-                        $clone['valueDecoded'] = $this->crateValues($clone['valueDecoded']);
-                    }
-                    return $clone;
-            }
-            return $clone;
-        }
-        return $mixed;
     }
 
     /**
@@ -465,6 +324,7 @@ class Wamp implements RouteInterface
         $this->metaPublished = true;
         $debugClass = \get_class($this->debug);
         $metaVals = array(
+            'processId' => \getmypid(),
             'HTTP_HOST' => null,
             'HTTPS' => null,
             'REMOTE_ADDR' => null,

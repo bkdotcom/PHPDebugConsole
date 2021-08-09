@@ -70,7 +70,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             return;
         }
         $this->abs = $abs;
-        if (!($abs['flags'] & AbstractObject::COLLECT_METHODS)) {
+        if (!($abs['cfgFlags'] & AbstractObject::COLLECT_METHODS)) {
             $this->addMethodsMin();
             return;
         }
@@ -162,7 +162,7 @@ class AbstractObjectMethods extends AbstractObjectSub
         if (isset($abs['methods']['__toString'])) {
             $abs['methods']['__toString']['returnValue'] = $this->toString();
         }
-        if (!($this->abs['flags'] & AbstractObject::COLLECT_PHPDOC)) {
+        if (!($this->abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC)) {
             foreach ($abs['methods'] as $name => $method) {
                 $method['phpDoc']['desc'] = null;
                 $method['phpDoc']['summary'] = null;
@@ -183,7 +183,6 @@ class AbstractObjectMethods extends AbstractObjectSub
     private function addMethodsMin()
     {
         $abs = $this->abs;
-        $abs['flags'] &= ~AbstractObject::OUTPUT_METHODS; // set outputMethods to false
         $obj = $abs->getSubject();
         if (\method_exists($obj, '__toString')) {
             $abs['methods']['__toString'] = array(
@@ -230,7 +229,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                 return;
             }
         }
-        $collectPhpDoc = $abs['flags'] & AbstractObject::COLLECT_PHPDOC;
+        $collectPhpDoc = $abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC;
         foreach ($abs['phpDoc']['method'] as $phpDocMethod) {
             $className = $inheritedFrom ? $inheritedFrom : $abs['className'];
             $abs['methods'][$phpDocMethod['name']] = $this->buildMethodInfo(array(
@@ -288,7 +287,7 @@ class AbstractObjectMethods extends AbstractObjectSub
     private function getParams(ReflectionMethod $reflectionMethod, $phpDoc = array())
     {
         $paramArray = array();
-        $collectAttributes = $this->abs['flags'] & AbstractObject::COLLECT_ATTRIBUTES_PARAM;
+        $collectAttributes = $this->abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_PARAM;
         \set_error_handler(function () {
             // suppressing "Use of undefined constant STDERR" type notice
             // encountered on
@@ -436,7 +435,7 @@ class AbstractObjectMethods extends AbstractObjectSub
         if (!empty($phpDoc['return'])) {
             $return = \array_merge($return, $phpDoc['return']);
             $return['type'] = $this->resolvePhpDocType($return['type']);
-            if (!($this->abs['flags'] & AbstractObject::COLLECT_PHPDOC)) {
+            if (!($this->abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC)) {
                 $return['desc'] = null;
             }
         } elseif (PHP_VERSION_ID >= 70000) {
@@ -469,7 +468,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             $vis = 'protected';
         }
         $info = $this->buildMethodInfo(array(
-            'attributes' => $this->abs['flags'] & AbstractObject::COLLECT_ATTRIBUTES_METHOD
+            'attributes' => $this->abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_METHOD
                 ? $this->getAttributes($reflectionMethod)
                 : array(),
             'inheritedFrom' => $declaringClassName !== $className

@@ -69,6 +69,17 @@ class Component extends CApplicationComponent implements SubscriberInterface
                 'user' => true,
             ),
         ));
+        /*
+            Debug instance may have already been instantiated
+            remove any session info that may have been logged
+            (already output to wamp & real-time) routes
+        */
+        $logEntries = $debugRootInstance->getData('log');
+        $logEntries = \array_filter($logEntries, function ($logEntry) {
+            return $logEntry->getChannelName() !== 'Session';
+        });
+        $debugRootInstance->setData('log', \array_values($logEntries));
+
         $debugRootInstance->eventManager->addSubscriberInterface($this);
         /*
             Debug error handler may have been registered first -> reregister

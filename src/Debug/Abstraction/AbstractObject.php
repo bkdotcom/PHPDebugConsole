@@ -93,6 +93,7 @@ class AbstractObject extends Component
         \sort($interfaceNames);
         $abs = new Abstraction(Abstracter::TYPE_OBJECT, array(
             'attributes' => array(),
+            'cfgFlags' => $this->getCfgFlags(),
             'className' => $className,
             'constants' => array(),
             'debugMethod' => $method,
@@ -102,7 +103,6 @@ class AbstractObject extends Component
                 'extensionName' => $reflector->getExtensionName(),
             ),
             'extends' => array(),
-            'flags' => $this->getFlags(),
             'implements' => $interfaceNames,
             'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
             'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
@@ -136,7 +136,7 @@ class AbstractObject extends Component
             Debug::EVENT_OBJ_ABSTRACT_START subscriber may
             set isExcluded
             set collectPropertyValues (boolean)
-            set flags (int / bitmask)
+            set cfgFlags (int / bitmask)
             set propertyOverrideValues
             set stringified
             set traverseValues
@@ -229,7 +229,7 @@ class AbstractObject extends Component
             'reflector',
         );
         $values = \array_diff_key($abs->getValues(), \array_flip($keysTemp));
-        if (!($abs['flags'] & self::COLLECT_PHPDOC)) {
+        if (!($abs['cfgFlags'] & self::COLLECT_PHPDOC)) {
             $values['phpDoc']['desc'] = null;
             $values['phpDoc']['summary'] = null;
         }
@@ -252,10 +252,10 @@ class AbstractObject extends Component
      */
     private function addConstants(Abstraction $abs)
     {
-        if (!($abs['flags'] & self::COLLECT_CONSTANTS)) {
+        if (!($abs['cfgFlags'] & self::COLLECT_CONSTANTS)) {
             return;
         }
-        $inclAttributes = $abs['flags'] & self::COLLECT_ATTRIBUTES_CONST === self::COLLECT_ATTRIBUTES_CONST;
+        $inclAttributes = $abs['cfgFlags'] & self::COLLECT_ATTRIBUTES_CONST === self::COLLECT_ATTRIBUTES_CONST;
         $abs['constants'] = PHP_VERSION_ID >= 70100
             ? $this->getConstantsReflection($abs, $inclAttributes)
             : $this->getConstants($abs['reflector']);
@@ -274,7 +274,7 @@ class AbstractObject extends Component
     {
         $constants = array();
         $reflector = $abs['reflector'];
-        $collectPhpDoc = $abs['flags'] & self::COLLECT_PHPDOC;
+        $collectPhpDoc = $abs['cfgFlags'] & self::COLLECT_PHPDOC;
         while ($reflector) {
             foreach ($reflector->getReflectionConstants() as $const) {
                 $name = $const->getName();
@@ -349,7 +349,7 @@ class AbstractObject extends Component
             $this->addTraverseValues($abs);
             return;
         }
-        if ($abs['flags'] & self::COLLECT_ATTRIBUTES_OBJ) {
+        if ($abs['cfgFlags'] & self::COLLECT_ATTRIBUTES_OBJ) {
             $abs['attributes'] = $this->properties->getAttributes($reflector);
         }
         $this->addConstants($abs);
@@ -386,7 +386,7 @@ class AbstractObject extends Component
      *
      * @return int bitmask
      */
-    private function getFlags()
+    private function getCfgFlags()
     {
         $flags = array(
             'collectAttributesConst' => self::COLLECT_ATTRIBUTES_CONST,
@@ -543,7 +543,7 @@ class AbstractObject extends Component
         if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 2) {
             $obj = $abs->getSubject();
             if ($obj instanceof \Traversable) {
-                $abs['flags'] &= ~self::COLLECT_METHODS;  // set collect methods to "false"
+                $abs['cfgFlags'] &= ~self::COLLECT_METHODS;  // set collect methods to "false"
                 return true;
             }
         }

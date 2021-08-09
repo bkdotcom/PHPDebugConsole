@@ -178,7 +178,7 @@ class Html extends Base
                     . $this->getScript() . "\n"
                 . '</script>' . "\n";
         }
-        $str .= '<header class="debug-menu-bar">'
+        $str .= '<header class="debug-bar debug-menu-bar">'
             . 'PHPDebugConsole'
             . '<nav role="tablist"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>'
                 . $this->buildTabList()

@@ -1,4 +1,7 @@
-.debug-menu-bar {
+//  debug-bar is used by
+//    debug-menu-bar
+//    xdebug-menu-bar
+.debug-bar {
   position: relative;
   padding: 5px;
   font-size: 115%;
@@ -7,15 +10,24 @@
   a {
     color: $grey-text;
   }
-  button {
-    height: 18px;
-    border: 0;
-    padding: 0;
-    line-height: 0;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: transparent;
+  .btn-group.xdebug-commands {
+    button {
+      border-radius: 0;
+      border-top-width: 0;
+      border-bottom-width: 0;
+    }
+  }
+  .float-right {
+    button {
+      height: 18px;
+      border: 0;
+      padding: 0;
+      line-height: 0;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-color: transparent;
+    }
   }
 }
 .debug-error-counts {
@@ -29,8 +41,7 @@
 }
 
 &.debug-enhanced-ui {
-  .debug-menu-bar {
-    height: 25px;
+  .debug-bar {
     border-top: 1px solid $border-color;
     border-bottom: 1px solid $border-color;
     color: $grey-text;

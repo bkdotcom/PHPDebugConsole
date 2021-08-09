@@ -47,7 +47,7 @@ class HtmlObject
 	public function dump(Abstraction $abs)
 	{
         $title = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
-        $outPhpDoc = $abs['flags'] & AbstractObject::OUTPUT_PHPDOC;
+        $outPhpDoc = $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC;
         $strClassName = $this->html->markupIdentifier($abs['className'], 'span', array(
             'title' => $outPhpDoc
                 ? $title
@@ -147,7 +147,7 @@ class HtmlObject
     protected function dumpAttributes(Abstraction $abs)
     {
         $attributes = $abs['attributes'];
-        if (!$attributes || !($abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_OBJ)) {
+        if (!$attributes || !($abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_OBJ)) {
             return '';
         }
         $str = '<dt class="attributes">attributes</dt>' . "\n";
@@ -184,11 +184,11 @@ class HtmlObject
     protected function dumpConstants(Abstraction $abs)
     {
         $constants = $abs['constants'];
-        if (!$constants || !($abs['flags'] & AbstractObject::OUTPUT_CONSTANTS)) {
+        if (!$constants || !($abs['cfgFlags'] & AbstractObject::OUTPUT_CONSTANTS)) {
             return '';
         }
-        $outAttributes = $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_CONST;
-        $outPhpDoc = $abs['flags'] & AbstractObject::OUTPUT_PHPDOC;
+        $outAttributes = $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_CONST;
+        $outPhpDoc = $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC;
         $str = '<dt class="constants">constants</dt>' . "\n";
         foreach ($constants as $k => $info) {
             $modifiers = array(
@@ -220,15 +220,25 @@ class HtmlObject
      */
     protected function dumpMethods(Abstraction $abs)
     {
-        $outputMethods = $abs['flags'] & AbstractObject::OUTPUT_METHODS;
+        $outputMethods = $abs['cfgFlags'] & AbstractObject::OUTPUT_METHODS;
         if (!$outputMethods) {
             return '';
         }
+        $collectMethods = $abs['cfgFlags'] & AbstractObject::COLLECT_METHODS;
+        if (!$collectMethods) {
+            return $this->debug->html->buildTag(
+                'dt',
+                array(
+                    'class' => 'methods',
+                ),
+                'methods not collected'
+            ) . "\n";
+        }
         $opts = array(
-            'outAttributesMethod' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_METHOD,
-            'outAttributesParam' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_PARAM,
-            'outMethodDesc' => $abs['flags'] & AbstractObject::OUTPUT_METHOD_DESC,
-            'outPhpDoc' => $abs['flags'] & AbstractObject::OUTPUT_PHPDOC,
+            'outAttributesMethod' => $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_METHOD,
+            'outAttributesParam' => $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_PARAM,
+            'outMethodDesc' => $abs['cfgFlags'] & AbstractObject::OUTPUT_METHOD_DESC,
+            'outPhpDoc' => $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC,
         );
         $methods = $abs['methods'];
         $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
@@ -441,8 +451,8 @@ class HtmlObject
             }
         }
         $opts = array(
-            'outAttributes' => $abs['flags'] & AbstractObject::OUTPUT_ATTRIBUTES_PROP,
-            'outPhpDoc' => $abs['flags'] & AbstractObject::OUTPUT_PHPDOC,
+            'outAttributes' => $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_PROP,
+            'outPhpDoc' => $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC,
         );
         $magicMethods = \array_intersect(array('__get','__set'), \array_keys($abs['methods']));
         $str = '<dt class="properties">' . $label . '</dt>' . "\n";

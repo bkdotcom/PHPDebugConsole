@@ -38,9 +38,9 @@
 .debug fieldset { padding: 0.66em; margin: 0 0 10px 0; min-width: 0; border: 1px solid black; border-radius: 4px; }
 .debug fieldset > ul { font-size: 125%; }
 .debug .close { opacity: 1; float: none; }
-.debug .tab-pane > * > .group-body, .debug .m_groupSummary > ul { list-style: none; margin-left: 0; border-left: 0; padding-left: 0; }
 .debug ul.debug-log-summary { margin-bottom: 0.75em; }
 .debug ul.debug-log-summary:empty { margin-bottom: 0; }
+.debug .tab-pane > * > .group-body, .debug .m_groupSummary > ul { list-style: none; margin-left: 0; border-left: 0; padding-left: 0; }
 .debug li.php-shutdown { display: block; border-bottom: #31708f solid 1px; }
 .debug .fa { line-height: 1; }
 .debug .alert, .debug .m_alert { padding: 0.66em; margin-bottom: 10px; border-radius: 4px; border: 1px solid transparent; }
@@ -209,7 +209,7 @@ html.debug-resizing .debug-drawer { transition: none; }
 html.debug-resizing .debug-drawer .debug-resize-handle { opacity: 1; }
 .debug .debug-bar { position: relative; padding: 5px; font-size: 115%; background-color: rgba(0, 0, 0, 0.2); margin-bottom: 10px; }
 .debug .debug-bar a { color: #6e6e6e; }
-.debug .debug-bar .btn-group.xdebug-commands button { border-radius: 0; border-top-width: 0; border-bottom-width: 0; }
+.debug .debug-bar button { border-radius: 0; border-top-width: 0; border-bottom-width: 0; }
 .debug .debug-bar .float-right button { height: 18px; border: 0; padding: 0; line-height: 0; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: transparent; }
 .debug .debug-error-counts .badge { padding: 0 0.4em 0 0.25em; color: inherit; background: inherit; font-size: inherit; vertical-align: unset; }
 .debug.debug-enhanced-ui .debug-bar { border-top: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0; color: #6e6e6e; padding: 0 6px; background: #f3f3f3; font-size: 16px; margin-bottom: 0; }

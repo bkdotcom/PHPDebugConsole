@@ -10,12 +10,10 @@
   a {
     color: $grey-text;
   }
-  .btn-group.xdebug-commands {
-    button {
-      border-radius: 0;
-      border-top-width: 0;
-      border-bottom-width: 0;
-    }
+  button {
+    border-radius: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
   }
   .float-right {
     button {

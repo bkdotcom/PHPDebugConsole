@@ -75,7 +75,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
             (already output to wamp & real-time) routes
         */
         $logEntries = $debugRootInstance->getData('log');
-        $logEntries = \array_filter($logEntries, function ($logEntry) {
+        $logEntries = \array_filter($logEntries, function (LogEntry $logEntry) {
             return $logEntry->getChannelName() !== 'Session';
         });
         $debugRootInstance->setData('log', \array_values($logEntries));

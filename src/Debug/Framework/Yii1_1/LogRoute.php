@@ -206,6 +206,9 @@ class LogRoute extends CLogRoute
                 'line' => $line[2] * 1,
             );
         }
+        if (\strpos($logEntry['category'], 'system.caching') === 0) {
+            $logEntry['trace'] = array();
+        }
         if (!$logEntry['trace']) {
             $logEntry['level'] = CLogger::LEVEL_INFO;
         }
@@ -246,6 +249,7 @@ class LogRoute extends CLogRoute
                 $logEntry['category'] = $category;
                 $logEntry['channel'] = $this->debug->getChannel($category, array(
                     'channelIcon' => $icon,
+                    'channelShow' => false,
                 ));
                 $logEntry['message'] = \preg_replace('# (to|from) cache$#', '', $logEntry['message']);
                 $logEntry['meta']['icon'] = $icon;

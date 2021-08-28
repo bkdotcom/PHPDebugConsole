@@ -326,11 +326,7 @@ class Html extends Base
         $html = \str_replace('<tr>', '<tr' . ($index === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $html);
         $html .= '<tr class="context" ' . ($index === 0 ? 'style="display:table-row;"' : '' ) . '>'
             . '<td colspan="4">'
-                . '<pre class="highlight line-numbers" data-line="' . $row['line'] . '" data-start="' . \key($rowInfo['context']) . '">'
-                    . '<code class="language-php">'
-                        . \htmlspecialchars(\implode($rowInfo['context']))
-                    . '</code>'
-                . '</pre>'
+                . $this->buildContext($rowInfo['context'], $row['line'])
                 . '{{arguments}}'
             . '</td>' . "\n"
             . '</tr>' . "\n";
@@ -425,6 +421,27 @@ class Html extends Base
             ));
         }
         return $args;
+    }
+
+    /**
+     * build php code snippet / context
+     *
+     * @param string[] $lines   lines of code
+     * @param int      $lineNum line number to highlight
+     *
+     * @return string
+     */
+    private function buildContext($lines, $lineNum)
+    {
+        return $this->debug->html->buildTag(
+            'pre',
+            array(
+                'class' => 'highlight line-numbers',
+                'data-line' => $lineNum,
+                'data-start' => \key($lines),
+            ),
+            '<code class="language-php">' . \htmlspecialchars(\implode($lines)) . '</code>'
+        );
     }
 
     /**
@@ -689,6 +706,7 @@ class Html extends Base
             'uncollapse' => null,
         ), $logEntry['meta']);
         $attribs = $this->logEntryAttribs;
+        $append = '';
         if (isset($meta['file']) && $logEntry->getChannelName() !== $this->channelNameRoot . '.phpError') {
             // PHP errors will have file & line as one of the arguments
             //    so no need to store file & line as data args
@@ -716,11 +734,14 @@ class Html extends Base
                 ));
                 $meta['sanitizeFirst'] = false;
             }
+            if (!empty($meta['context'])) {
+                $append = $this->buildContext($meta['context'], $meta['line']);
+            }
         }
         return $this->debug->html->buildTag(
             'li',
             $attribs,
-            $this->buildArgString($args, $meta)
+            $this->buildArgString($args, $meta) . $append
         );
     }
 

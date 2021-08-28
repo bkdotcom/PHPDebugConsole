@@ -15,6 +15,7 @@ namespace bdk\Debug;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Highlight;
+use bdk\Debug\Route\Stream;
 use bdk\Debug\Utility\FindExit;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
@@ -186,6 +187,12 @@ class InternalEvents implements SubscriberInterface
      */
     public function onError(Error $error)
     {
+        $cfgWas = $this->forceErrorOutput($error)
+            ? $this->debug->setCfg(array(
+                'collect' => true,
+                'output' => true,
+            ))
+            : null;
         if ($this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
             $meta = $this->debug->meta(array(
                 'context' => $error['category'] === 'fatal' && $error['backtrace'] === null
@@ -204,7 +211,7 @@ class InternalEvents implements SubscriberInterface
                 ? 'error'
                 : 'warn';
             /*
-                specify rootInstance as there's nothing to prevent calling Internal::onError() dirrectly (from aanother instance)
+                specify rootInstance as there's nothing to prevent calling Internal::onError() directly (from aanother instance)
             */
             $this->debug->rootInstance->getChannel('phpError')->{$method}(
                 $error['typeStr'] . ':',
@@ -217,6 +224,9 @@ class InternalEvents implements SubscriberInterface
             // Prevent ErrorHandler\ErrorEmailer from sending email.
             // Since we're collecting log info, we send email on shutdown
             $error['email'] = false;
+            if ($cfgWas) {
+                $this->debug->setCfg($cfgWas);
+            }
             return;
         }
         if ($this->debug->getCfg('output', Debug::CONFIG_DEBUG)) {
@@ -706,6 +716,18 @@ class InternalEvents implements SubscriberInterface
             $this->debug->meta('sanitize', false)
         );
         $this->debug->groupEnd();
+    }
+
+    /**
+     * Shoule we force output for the given error
+     *
+     * @param Error $error Error instance
+     *
+     * @return bool
+     */
+    private function forceErrorOutput(Error $error)
+    {
+        return $error->isFatal() && $this->debug->isCli() && $this->debug->getCfg('route') instanceof Stream;
     }
 
     /**

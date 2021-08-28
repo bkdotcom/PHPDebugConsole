@@ -37,7 +37,7 @@ export function init ($delegateNode) {
     }
     $target.find('.m_alert, .group-body:visible').debugEnhance()
     // highlight wasn't applied while hidden
-    $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
+    // $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
   })
 }
 

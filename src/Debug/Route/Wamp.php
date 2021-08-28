@@ -344,8 +344,7 @@ class Wamp implements RouteInterface
         foreach (\array_keys($metaVals) as $k) {
             $metaVals[$k] = $serverParams[$k];
         }
-        $isCli = \strpos($this->debug->getInterface(), 'cli') === 0;
-        if ($isCli) {
+        if ($this->debug->isCli()) {
             $metaVals['REQUEST_METHOD'] = null;
             $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $serverParams['argv']);
         }

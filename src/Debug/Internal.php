@@ -453,23 +453,14 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Initialize
-     * This is not called from __construct as we may call debug->internal which hasn't been set yet
+     * Is this a Command Line Interface request?
      *
-     * @return void
+     * @return bool
      */
-    /*
-    public function init()
+    public function isCli()
     {
-        $cfgEvent = new Event(
-            $this->debug,
-            array(
-                'debug' => $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
-            )
-        );
-        $this->onConfig($cfgEvent);
+        return \strpos($this->getInterface(), 'cli') === 0;
     }
-    */
 
     /**
      * Flush the buffer and end buffering
@@ -763,7 +754,7 @@ class Internal implements SubscriberInterface
      */
     private function onCfgKey($key, Event $event)
     {
-        if (\strpos($this->getInterface(), 'cli') !== false) {
+        if ($this->isCli()) {
             return $key;
         }
         $request = $this->debug->request;

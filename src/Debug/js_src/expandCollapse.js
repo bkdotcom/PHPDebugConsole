@@ -27,13 +27,13 @@ export function init ($delegateNode) {
     toggle(this)
     return false
   })
-  $delegateNode.on('collapsed.debug.group', function (e) {
+  $delegateNode.on('collapsed.debug.group updated.debug.group', function (e) {
     groupIconUpdate($(e.target))
   })
   $delegateNode.on('expanded.debug.group', function (e) {
     var $target = $(e.target)
     $target.find('> .group-header > i:last-child').remove()
-    $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
+    // $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
   })
 }
 

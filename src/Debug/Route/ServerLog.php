@@ -47,7 +47,7 @@ class ServerLog extends ChromeLogger
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->cfg['logDir'] = \strpos($debug->getInterface(), 'cli') !== false
+        $this->cfg['logDir'] = $debug->isCli()
             ? \sys_get_temp_dir() . '/logs'
             : $debug->getServerParam('DOCUMENT_ROOT') . '/logs';
     }

@@ -56,12 +56,11 @@ class Highlight implements AssetProviderInterface
                 './js/prism.js',
                 'Prism.manual = true;
                 (function(){
-                    $("body").on("enhanced.debug", function (e) {
+                    $("body").on("enhanced.debug shown.debug", function (e) {
                         var $target = $(e.target)
-                        if ($target.hasClass("m_group")) {
+                        if (e.type === "enhanced" && $target.hasClass("m_group")) {
                             return
                         }
-                        // console.log("enhanced.debug", e.target)
                         $target.find(".highlight:visible").removeClass("highlight").each(function () {
                             var $high = $(this)
                             var $pre
@@ -70,6 +69,8 @@ class Highlight implements AssetProviderInterface
                             var lang
                             var length
                             var i
+                            var endsWithNl
+                            var text
                             if ($high.is("pre")) {
                                 $pre = $high
                             } else {
@@ -96,6 +97,12 @@ class Highlight implements AssetProviderInterface
                                         }
                                     }
                                 })
+                            }
+                            text = $pre.find("> code").text()
+                            endsWithNl = text.substring(text.length - 1, text.length) === "\n";
+                            if (endsWithNl) {
+                                // throw a zero-width-space on the end so we get the blank line
+                                $pre.find("> code").append("&#8203;")
                             }
                             Prism.highlightElement($pre.find("> code")[0])
                         })

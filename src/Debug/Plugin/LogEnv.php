@@ -374,7 +374,7 @@ class LogEnv implements SubscriberInterface
         if (!$this->debug->getCfg('logEnvInfo.session', Debug::CONFIG_DEBUG)) {
             return;
         }
-        if (\strpos($this->debug->getInterface(), 'cli') === 0) {
+        if ($this->debug->isCli()) {
             return;
         }
 

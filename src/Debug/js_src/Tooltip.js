@@ -2,13 +2,6 @@ import $ from 'jquery'
 import { delegate } from 'tippy.js'
 
 export function init ($root) {
-  // var preventShow = false
-
-  /*
-  $root.on('mouseenter', '[title] > .fa', function (e) {
-    preventShow = true
-  })
-  */
 
   delegate($root[0], {
     target: '.fa-hashtag, [title]',
@@ -57,17 +50,10 @@ export function init ($root) {
       if (title) {
         $ref.attr('title', title)
       }
-      // preventShow = false;
       setTimeout(function () {
         instance.destroy()
       }, 100)
-      // return false
     },
-    /*
-    onCreate: function (instance) {
-      console.log('onCreate', instance)
-    },
-    */
     onMount: function (instance) {
       var $ref = $(instance.reference)
       var modifiersNew = [
@@ -101,20 +87,8 @@ export function init ($root) {
           this._tippy.hide()
         }
       })
-      // return preventShow === false
       return true
     }
-    /*
-    onUntrigger: function () {
-      preventShow = false
-    }
-    */
-    /*
-    popperOptions: {
-      modifiers: [
-      ],
-    } // end popperOptions
-    */
   })
 }
 

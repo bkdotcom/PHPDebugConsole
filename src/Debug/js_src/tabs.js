@@ -36,8 +36,6 @@ export function init ($delegateNode) {
       return
     }
     $target.find('.m_alert, .group-body:visible').debugEnhance()
-    // highlight wasn't applied while hidden
-    // $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
   })
 }
 
@@ -47,13 +45,6 @@ function show (node) {
   // .tabs-container may wrap the nav and the tabs-panes...
   var $context = (function () {
     var $tabsContainer = $tab.closest('.tabs-container')
-    /*
-    var $tabList = $tab.closest('nav')
-    if ($tabList.data('tabPanes')) {
-      // selector, dom obj obj, or jQuery obj
-      return $($tabList.data('tabPanes'))
-    }
-    */
     return $tabsContainer.length
       ? $tabsContainer
       : $tab.closest('.debug').find('.tab-panes')

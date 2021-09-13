@@ -68,7 +68,6 @@ export function init ($root) {
       })
     enhanceObject.enhanceInner($node)
   })
-
   $root.on('expanded.debug.next', '.context', function (e) {
     enhanceArray($(e.target).find('> td > .t_array'))
   })
@@ -243,7 +242,7 @@ function createFileLinksTrace ($entry, remove) {
     }
     if ($tr.hasClass('context')) {
       $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1)
-      return // continue;
+      return // continue
     }
     $tds.last().after($('<td/>', {
       class: 'text-center',
@@ -406,11 +405,6 @@ export function enhanceEntries ($node) {
   // console.warn('enhanceEntries', $node[0])
   var $parent = $node.parent()
   var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded')
-  /*
-  if ($node.hasClass('enhanced')) {
-    return;
-  }
-  */
   // temporarily hide when enhancing... minimize redraws
   $node.hide()
   $node.children().each(function () {
@@ -454,11 +448,6 @@ export function enhanceEntry ($entry) {
       }
       createFileLinks($entry)
     }
-    /*
-     else if ($entry.data('detectFiles')) {
-      createFileLinks($entry, $entry.find('.t_string'))
-    }
-    */
     addIcons($entry)
     $entry.children().each(function () {
       enhanceValue($entry, this)
@@ -484,9 +473,6 @@ function enhanceGroup ($group) {
     }
   })
   $toggle.removeClass('level-error level-info level-warn')
-  if ($.trim($target.html()).length < 1) {
-    $group.addClass('empty')
-  }
   if ($group.hasClass('filter-hidden')) {
     return
   }
@@ -514,7 +500,7 @@ function enhanceLongString ($node) {
   }
 }
 
-function enhanceValue ($entry, node) {
+export function enhanceValue ($entry, node) {
   var $node = $(node)
   if ($node.is('.t_array')) {
     enhanceArray($node)

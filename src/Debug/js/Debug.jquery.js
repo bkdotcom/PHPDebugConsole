@@ -354,7 +354,6 @@
         });
       enhanceInner($node);
     });
-
     $root.on('expanded.debug.next', '.context', function (e) {
       enhanceArray($(e.target).find('> td > .t_array'));
     });
@@ -529,7 +528,7 @@
       }
       if ($tr.hasClass('context')) {
         $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1);
-        return // continue;
+        return // continue
       }
       $tds.last().after($('<td/>', {
         class: 'text-center',
@@ -692,11 +691,6 @@
     // console.warn('enhanceEntries', $node[0])
     var $parent = $node.parent();
     var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded');
-    /*
-    if ($node.hasClass('enhanced')) {
-      return;
-    }
-    */
     // temporarily hide when enhancing... minimize redraws
     $node.hide();
     $node.children().each(function () {
@@ -740,11 +734,6 @@
         }
         createFileLinks($entry);
       }
-      /*
-       else if ($entry.data('detectFiles')) {
-        createFileLinks($entry, $entry.find('.t_string'))
-      }
-      */
       addIcons$1($entry);
       $entry.children().each(function () {
         enhanceValue($entry, this);
@@ -770,9 +759,6 @@
       }
     });
     $toggle.removeClass('level-error level-info level-warn');
-    if ($.trim($target.html()).length < 1) {
-      $group.addClass('empty');
-    }
     if ($group.hasClass('filter-hidden')) {
       return
     }
@@ -1017,17 +1003,16 @@
       $nested.prop('checked', isChecked);
       applyFilter($root);
       updateFilterStatus($root);
-      $root.find('.m_group:not(.filter-hidden)').trigger('collapsed.debug.group');
     });
 
     $delegateNode.on('change', 'input[data-toggle=error]', function () {
       var $this = $(this);
+      var isChecked = $this.is(':checked');
       var $root = $this.closest('.debug');
       var errorClass = $this.val();
-      var isChecked = $this.is(':checked');
       var selector = '.group-body .error-' + errorClass;
       $root.find(selector).toggleClass('filter-hidden', !isChecked);
-      // trigger collapse to potentially update group icon
+      // trigger collapse to potentially update group icon and add/remove empty class
       $root.find('.m_error, .m_warn').parents('.m_group')
         .trigger('collapsed.debug.group');
       updateFilterStatus($root);
@@ -1074,7 +1059,7 @@
       var $node = sort[i].node;
       var $parentGroup;
       var isFilterVis = true;
-      var unhiding = false;
+      var hiddenWas = $node.is('.filter-hidden');
       if ($node.data('channel') === channelNameRoot + '.phpError') {
         // php Errors are filtered separately
         continue
@@ -1085,18 +1070,22 @@
           break
         }
       }
-      unhiding = isFilterVis && $node.is('.filter-hidden');
       $node.toggleClass('filter-hidden', !isFilterVis);
-      if (unhiding) {
+      if (isFilterVis && hiddenWas) {
+        // unhiding
         $parentGroup = $node.parent().closest('.m_group');
         if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
           $node.debugEnhance();
         }
-      } else if (!isFilterVis) {
+      } else if (!isFilterVis && !hiddenWas) {
+        // hiding
         if ($node.hasClass('m_group')) {
           // filtering group... means children (if not filtered) are visible
           $node.find('> .group-body').debugEnhance();
         }
+      }
+      if (isFilterVis && $node.hasClass('m_group')) {
+        $node.trigger('collapsed.debug.group');
       }
     }
   }
@@ -1380,9 +1369,8 @@
       }
       if (['alert', 'error', 'warn', 'info'].indexOf(method) > -1) {
         return methods.indexOf(method) > -1
-      } else {
-        return methods.indexOf('other') > -1
       }
+      return methods.indexOf('other') > -1
     });
 
     initialized = true;
@@ -1540,7 +1528,6 @@
   /**
    * Add primary Ui elements
    */
-  // import { cookieGet, cookieRemove, cookieSet } from './http.js'
 
   var config$5;
   var $root$3;
@@ -1593,10 +1580,8 @@
     };
     var $icon;
     var $icons = $('<span>', { class: 'debug-error-counts' });
-    // var $badge = $('<span>', {class: 'badge'});
     if (counts.error) {
       $icon = $(config$5.iconsMethods['.m_error']).removeClass('fa-lg').addClass('text-error');
-      // $root.find('.debug-pull-tab').append($icon);
       $icons.append($icon).append($('<span>', {
         class: 'badge',
         html: counts.error
@@ -1604,7 +1589,6 @@
     }
     if (counts.warn) {
       $icon = $(config$5.iconsMethods['.m_warn']).removeClass('fa-lg').addClass('text-warn');
-      // $root.find('.debug-pull-tab').append($icon);
       $icons.append($icon).append($('<span>', {
         class: 'badge',
         html: counts.warn
@@ -1640,27 +1624,6 @@
         '</div>' +
       '</div>');
   }
-
-  /*
-  function addPersistOption () {
-    var $node;
-    if (config.debugKey) {
-      $node = $('<label class='debug-cookie' title='Add/remove debug cookie'><input type='checkbox'> Keep debug on</label>');
-      if (cookieGet('debug') === options.debugKey) {
-        $node.find('input').prop('checked', true);
-      }
-      $('input', $node).on('change', function () {
-        var checked = $(this).is(':checked');
-        if (checked) {
-          cookieSet('debug', options.debugKey, 7);
-        } else {
-          cookieRemove('debug');
-        }
-      });
-      $root.find('.debug-menu-bar').eq(0).prepend($node);
-    }
-  }
-  */
 
   function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
     var $li;
@@ -1819,12 +1782,11 @@
       return false
     });
     $delegateNode.on('collapsed.debug.group updated.debug.group', function (e) {
-      groupIconUpdate($(e.target));
+      groupUpdate($(e.target));
     });
     $delegateNode.on('expanded.debug.group', function (e) {
       var $target = $(e.target);
       $target.find('> .group-header > i:last-child').remove();
-      // $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
     });
   }
 
@@ -1942,13 +1904,25 @@
   /**
    * Update expand/collapse icon and nested error/warn icon
    */
-  function groupIconUpdate ($group) {
+  function groupUpdate ($group) {
     var selector = '> i:last-child';
     var $toggle = $group.find('> .group-header');
-    var haveVis = $group.find('> .group-body > *').not('.filter-hidden').length > 0;
+    var haveVis = $group.find('> .group-body > *').filter(function () {
+      /*
+        We return true only if visible
+      */
+      var $this = $(this);
+      if ($this.hasClass('filter-hidden')) {
+        return false
+      }
+      if ($this.is('.m_group.hide-if-empty.empty')) {
+        return false
+      }
+      return true
+    }).length > 0;
     var icon = groupErrorIconGet($group);
     var isExpanded = $group.hasClass('expanded');
-    // console.log('groupIconUpdate', $toggle.text(), icon)
+    // console.log('groupUpdate', $toggle.text(), icon, haveVis)
     $group.toggleClass('empty', !haveVis); // 'empty' class just affects cursor
     iconUpdate($toggle, config$6.iconsExpand[isExpanded ? 'collapse' : 'expand']);
     if (!icon || isExpanded) {
@@ -2030,8 +2004,6 @@
         return
       }
       $target.find('.m_alert, .group-body:visible').debugEnhance();
-      // highlight wasn't applied while hidden
-      // $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
     });
   }
 
@@ -2041,13 +2013,6 @@
     // .tabs-container may wrap the nav and the tabs-panes...
     var $context = (function () {
       var $tabsContainer = $tab.closest('.tabs-container');
-      /*
-      var $tabList = $tab.closest('nav')
-      if ($tabList.data('tabPanes')) {
-        // selector, dom obj obj, or jQuery obj
-        return $($tabList.data('tabPanes'))
-      }
-      */
       return $tabsContainer.length
         ? $tabsContainer
         : $tab.closest('.debug').find('.tab-panes')
@@ -5622,13 +5587,6 @@
   });
 
   function init$9 ($root) {
-    // var preventShow = false
-
-    /*
-    $root.on('mouseenter', '[title] > .fa', function (e) {
-      preventShow = true
-    })
-    */
 
     delegate($root[0], {
       target: '.fa-hashtag, [title]',
@@ -5677,17 +5635,10 @@
         if (title) {
           $ref.attr('title', title);
         }
-        // preventShow = false;
         setTimeout(function () {
           instance.destroy();
         }, 100);
-        // return false
       },
-      /*
-      onCreate: function (instance) {
-        console.log('onCreate', instance)
-      },
-      */
       onMount: function (instance) {
         var $ref = $(instance.reference);
         var modifiersNew = [
@@ -5721,20 +5672,8 @@
             this._tippy.hide();
           }
         });
-        // return preventShow === false
         return true
       }
-      /*
-      onUntrigger: function () {
-        preventShow = false
-      }
-      */
-      /*
-      popperOptions: {
-        modifiers: [
-        ],
-      } // end popperOptions
-      */
     });
   }
 
@@ -5817,7 +5756,7 @@
       storedConfig = lsGet(localStorageKey);
     }
     this.config = $.extend({}, defaults, storedConfig || {});
-    // console.warn('config', JSON.parse(JSON.stringify(this.config)));
+    // console.warn('config', JSON.parse(JSON.stringify(this.config)))
     this.haveSavedConfig = typeof storedConfig === 'object';
     this.localStorageKey = localStorageKey;
     this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate'];
@@ -5841,7 +5780,7 @@
     } else {
       setVals[key] = val;
     }
-    // console.log('config.set', setVals);
+    // console.log('config.set', setVals)
     for (var k in setVals) {
       this.config[k] = setVals[k];
     }
@@ -5938,7 +5877,6 @@
   var listenersRegistered = false;
   var config$7 = new Config({
     fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
-    // jQuerySrc: '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
     clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
     iconsExpand: {
       expand: 'fa-plus-square-o',
@@ -6045,15 +5983,6 @@
         }
       }
     },
-    /*
-    {
-      src: options.jQuerySrc,
-      onLoaded: start,
-      check: function () {
-        return typeof window.jQuery !== 'undefined'
-      }
-    },
-    */
     {
       src: config$7.get('clipboardSrc'),
       check: function () {
@@ -6064,18 +5993,6 @@
       }
     }
   ]);
-
-  /*
-  function getSelectedText () {
-    var text = ''
-    if (typeof window.getSelection !== 'undefined') {
-      text = window.getSelection().toString()
-    } else if (typeof document.selection !== 'undefined' && document.selection.type === 'Text') {
-      text = document.selection.createRange().text
-    }
-    return text
-  }
-  */
 
   $.fn.debugEnhance = function (method, arg1, arg2) {
     // console.warn('debugEnhance', method, this)
@@ -6141,11 +6058,18 @@
         }
         // console.group('debugEnhance')
         if ($self.is('.group-body')) {
-          // console.warn('group-body', $self.prev('.group-header').text(), this)
           enhanceEntries($self);
-        } else {
-          // console.warn(this)
+        } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
+          // logEntry  (alerts use <div>)
           enhanceEntry($self);
+        } else if ($self.prop('class').match(/\bt_/)) {
+          // value
+          enhanceValue(
+            $self.parents('li').filter(function () {
+              return $(this).prop('class').match(/\bm_/) !== null
+            }),
+            $self
+          );
         }
         // console.groupEnd()
       });

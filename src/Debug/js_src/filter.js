@@ -40,17 +40,16 @@ export function init ($delegateNode) {
     $nested.prop('checked', isChecked)
     applyFilter($root)
     updateFilterStatus($root)
-    $root.find('.m_group:not(.filter-hidden)').trigger('collapsed.debug.group')
   })
 
   $delegateNode.on('change', 'input[data-toggle=error]', function () {
     var $this = $(this)
+    var isChecked = $this.is(':checked')
     var $root = $this.closest('.debug')
     var errorClass = $this.val()
-    var isChecked = $this.is(':checked')
     var selector = '.group-body .error-' + errorClass
     $root.find(selector).toggleClass('filter-hidden', !isChecked)
-    // trigger collapse to potentially update group icon
+    // trigger collapse to potentially update group icon and add/remove empty class
     $root.find('.m_error, .m_warn').parents('.m_group')
       .trigger('collapsed.debug.group')
     updateFilterStatus($root)
@@ -97,7 +96,7 @@ function applyFilter ($root) {
     var $node = sort[i].node
     var $parentGroup
     var isFilterVis = true
-    var unhiding = false
+    var hiddenWas = $node.is('.filter-hidden')
     if ($node.data('channel') === channelNameRoot + '.phpError') {
       // php Errors are filtered separately
       continue
@@ -108,18 +107,22 @@ function applyFilter ($root) {
         break
       }
     }
-    unhiding = isFilterVis && $node.is('.filter-hidden')
     $node.toggleClass('filter-hidden', !isFilterVis)
-    if (unhiding) {
+    if (isFilterVis && hiddenWas) {
+      // unhiding
       $parentGroup = $node.parent().closest('.m_group')
       if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
         $node.debugEnhance()
       }
-    } else if (!isFilterVis) {
+    } else if (!isFilterVis && !hiddenWas) {
+      // hiding
       if ($node.hasClass('m_group')) {
         // filtering group... means children (if not filtered) are visible
         $node.find('> .group-body').debugEnhance()
       }
+    }
+    if (isFilterVis && $node.hasClass('m_group')) {
+      $node.trigger('collapsed.debug.group')
     }
   }
 }

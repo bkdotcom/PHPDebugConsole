@@ -1218,6 +1218,14 @@ class MethodTest extends DebugTestFramework
         $this->debug->groupEnd();
         $this->debug->log('after group');
         $this->outputTest(array(
+            'html' => '<li class="m_log"><span class="no-quotes t_string">before group</span></li>
+                <li class="expanded hide-if-empty m_group">
+                    <div class="group-header"><span class="font-weight-bold group-label">group</span></div>
+                    <ul class="group-body">
+                        <li class="m_log"><span class="no-quotes t_string">something</span></li>
+                    </ul>
+                </li>
+                <li class="m_log"><span class="no-quotes t_string">after group</span></li>',
             'script' => 'console.log("before group");
                 console.group("group");
                 console.log("something");

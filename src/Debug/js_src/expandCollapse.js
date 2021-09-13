@@ -28,12 +28,11 @@ export function init ($delegateNode) {
     return false
   })
   $delegateNode.on('collapsed.debug.group updated.debug.group', function (e) {
-    groupIconUpdate($(e.target))
+    groupUpdate($(e.target))
   })
   $delegateNode.on('expanded.debug.group', function (e) {
     var $target = $(e.target)
     $target.find('> .group-header > i:last-child').remove()
-    // $target.find('.highlight').closest('.enhanced:visible').trigger('enhanced.debug')
   })
 }
 
@@ -151,13 +150,25 @@ function groupErrorIconGet ($group) {
 /**
  * Update expand/collapse icon and nested error/warn icon
  */
-function groupIconUpdate ($group) {
+function groupUpdate ($group) {
   var selector = '> i:last-child'
   var $toggle = $group.find('> .group-header')
-  var haveVis = $group.find('> .group-body > *').not('.filter-hidden').length > 0
+  var haveVis = $group.find('> .group-body > *').filter(function () {
+    /*
+      We return true only if visible
+    */
+    var $this = $(this)
+    if ($this.hasClass('filter-hidden')) {
+      return false
+    }
+    if ($this.is('.m_group.hide-if-empty.empty')) {
+      return false
+    }
+    return true
+  }).length > 0
   var icon = groupErrorIconGet($group)
   var isExpanded = $group.hasClass('expanded')
-  // console.log('groupIconUpdate', $toggle.text(), icon)
+  // console.log('groupUpdate', $toggle.text(), icon, haveVis)
   $group.toggleClass('empty', !haveVis) // 'empty' class just affects cursor
   iconUpdate($toggle, config.iconsExpand[isExpanded ? 'collapse' : 'expand'])
   if (!icon || isExpanded) {

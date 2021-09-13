@@ -758,44 +758,24 @@ class Html extends Base
         if ($method === 'groupEnd') {
             return '</ul>' . "\n" . '</li>';
         }
-        $args = $logEntry['args'];
         $meta = \array_merge(array(
             'argsAsParams' => true,
             'boldLabel' => true,
+            'hideIfEmpty' => false,
             'isFuncName' => false,
             'level' => null,
         ), $logEntry['meta']);
-        $str = '';
-        $label = \array_shift($args);
-        if ($meta['isFuncName']) {
-            $label = $this->markupIdentifier($label);
-        }
-        $labelClasses = \implode(' ', \array_keys(\array_filter(array(
-            'font-weight-bold' => $meta['boldLabel'],
-            'group-label' => true,
-        ))));
         $levelClass = $meta['level']
             ? 'level-' . $meta['level']
             : null;
-        $headerAppend = '';
-        $headerInner = $label;
-        if ($args) {
-            foreach ($args as $k => $v) {
-                $args[$k] = $this->dump($v);
-            }
-            $argStr = \implode(', ', $args);
-            $headerInner .= $meta['argsAsParams']
-                ? '(</span>' . $argStr . '<span class="' . $labelClasses . '">)'
-                : ':';
-            $headerAppend = $meta['argsAsParams']
-                ? ''
-                : ' ' . $argStr;
-        }
 
         $classes = (array) $this->logEntryAttribs['class'];
         if ($method === 'group') {
             // groupCollapsed doesn't get expanded
             $classes[] = 'expanded';
+        }
+        if ($meta['hideIfEmpty']) {
+            $classes[] = 'hide-if-empty';
         }
         $classes = \implode(' ', $classes);
         $classes = \str_replace('m_' . $method, 'm_group', $classes);
@@ -812,10 +792,7 @@ class Html extends Base
                     $levelClass,
                 ),
             ),
-            '<span class="' . $labelClasses . '">'
-                . $headerInner
-                . '</span>'
-                . $headerAppend
+            $this->methodGroupHeader($logEntry['args'], $meta)
         ) . "\n";
         /*
             Group open
@@ -827,6 +804,45 @@ class Html extends Base
             ),
         )) . '>';
         return $str;
+    }
+
+    /**
+     * Build group header
+     *
+     * @param array $args [description]
+     * @param array $meta [description]
+     *
+     * @return [type] [description]
+     */
+    private function methodGroupHeader($args, $meta)
+    {
+        $label = \array_shift($args);
+        if ($meta['isFuncName']) {
+            $label = $this->markupIdentifier($label);
+        }
+        $labelClasses = \implode(' ', \array_keys(\array_filter(array(
+            'font-weight-bold' => $meta['boldLabel'],
+            'group-label' => true,
+        ))));
+
+        $headerAppend = '';
+        if ($args) {
+            foreach ($args as $k => $v) {
+                $args[$k] = $this->dump($v);
+            }
+            $argStr = \implode(', ', $args);
+            $label .= $meta['argsAsParams']
+                ? '(</span>' . $argStr . '<span class="' . $labelClasses . '">)'
+                : ':';
+            $headerAppend = $meta['argsAsParams']
+                ? ''
+                : ' ' . $argStr;
+        }
+
+        return '<span class="' . $labelClasses . '">'
+            . $label
+            . '</span>'
+            . $headerAppend;
     }
 
     /**

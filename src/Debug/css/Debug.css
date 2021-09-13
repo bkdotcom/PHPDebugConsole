@@ -282,6 +282,7 @@ color: #818a91
 .debug .filter-hidden.m_group > .group-header { display: none; }
 .debug .filter-hidden.m_group > .group-body { display: block !important; margin-left: 0; border-left: 0; padding-left: 0; }
 .debug .filter-hidden.m_group.filter-hidden-body > .group-body { display: none !important; }
+.debug .empty.hide-if-empty { display: none; }
 .debug .empty.m_group .group-header { cursor: auto; }
 .debug .vis-toggles span:hover, .debug [data-toggle=interface]:hover { background-color: rgba(0, 0, 0, 0.1); }
 .debug .vis-toggles .toggle-off, .debug .interface .toggle-off { color: #777; }

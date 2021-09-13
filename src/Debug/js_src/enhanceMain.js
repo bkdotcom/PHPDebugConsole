@@ -7,7 +7,6 @@ import * as drawer from './drawer.js'
 import * as filter from './filter.js'
 import * as optionsMenu from './optionsDropdown.js'
 import * as sidebar from './sidebar.js'
-// import { cookieGet, cookieRemove, cookieSet } from './http.js'
 
 var config
 var $root
@@ -60,10 +59,8 @@ function addErrorIcons () {
   }
   var $icon
   var $icons = $('<span>', { class: 'debug-error-counts' })
-  // var $badge = $('<span>', {class: 'badge'});
   if (counts.error) {
     $icon = $(config.iconsMethods['.m_error']).removeClass('fa-lg').addClass('text-error')
-    // $root.find('.debug-pull-tab').append($icon);
     $icons.append($icon).append($('<span>', {
       class: 'badge',
       html: counts.error
@@ -71,7 +68,6 @@ function addErrorIcons () {
   }
   if (counts.warn) {
     $icon = $(config.iconsMethods['.m_warn']).removeClass('fa-lg').addClass('text-warn')
-    // $root.find('.debug-pull-tab').append($icon);
     $icons.append($icon).append($('<span>', {
       class: 'badge',
       html: counts.warn
@@ -107,27 +103,6 @@ function addNoti ($root) {
       '</div>' +
     '</div>')
 }
-
-/*
-function addPersistOption () {
-  var $node;
-  if (config.debugKey) {
-    $node = $('<label class='debug-cookie' title='Add/remove debug cookie'><input type='checkbox'> Keep debug on</label>');
-    if (cookieGet('debug') === options.debugKey) {
-      $node.find('input').prop('checked', true);
-    }
-    $('input', $node).on('change', function () {
-      var checked = $(this).is(':checked');
-      if (checked) {
-        cookieSet('debug', options.debugKey, 7);
-      } else {
-        cookieRemove('debug');
-      }
-    });
-    $root.find('.debug-menu-bar').eq(0).prepend($node);
-  }
-}
-*/
 
 export function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
   var $li

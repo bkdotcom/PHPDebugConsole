@@ -26,6 +26,9 @@ i.fa-calendar { font-size: 1.1em; }
 }
 
 .empty {
+  &.hide-if-empty {
+    display: none;
+  }
   &.m_group .group-header {
     cursor: auto;
   }

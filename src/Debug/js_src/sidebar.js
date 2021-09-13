@@ -80,9 +80,8 @@ export function init ($debugRoot) {
     }
     if (['alert', 'error', 'warn', 'info'].indexOf(method) > -1) {
       return methods.indexOf(method) > -1
-    } else {
-      return methods.indexOf('other') > -1
     }
+    return methods.indexOf('other') > -1
   })
 
   initialized = true

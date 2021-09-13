@@ -124,6 +124,9 @@ class ErrorEmailer implements SubscriberInterface
      */
     public function onErrorLowPri(Error $error)
     {
+        if ($error['throw']) {
+            $error['email'] = false;
+        }
         if ($error['email'] && $this->cfg['emailMin'] > 0) {
             $this->throttleDataSet($error);
             $throttleSuccess = $this->throttleDataWrite();

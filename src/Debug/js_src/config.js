@@ -8,7 +8,7 @@ export function Config (defaults, localStorageKey) {
     storedConfig = lsGet(localStorageKey)
   }
   this.config = $.extend({}, defaults, storedConfig || {})
-  // console.warn('config', JSON.parse(JSON.stringify(this.config)));
+  // console.warn('config', JSON.parse(JSON.stringify(this.config)))
   this.haveSavedConfig = typeof storedConfig === 'object'
   this.localStorageKey = localStorageKey
   this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate']
@@ -32,7 +32,7 @@ Config.prototype.set = function (key, val) {
   } else {
     setVals[key] = val
   }
-  // console.log('config.set', setVals);
+  // console.log('config.set', setVals)
   for (var k in setVals) {
     this.config[k] = setVals[k]
   }

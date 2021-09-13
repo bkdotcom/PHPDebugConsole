@@ -193,6 +193,9 @@ class InternalEvents implements SubscriberInterface
                 'output' => true,
             ))
             : null;
+        if ($error['throw']) {
+            return;
+        }
         if ($this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
             $meta = $this->debug->meta(array(
                 'context' => $error['category'] === 'fatal' && $error['backtrace'] === null

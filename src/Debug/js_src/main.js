@@ -19,7 +19,6 @@ import loadDeps from './loadDeps.js'
 var listenersRegistered = false
 var config = new Config({
   fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
-  // jQuerySrc: '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
   clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
   iconsExpand: {
     expand: 'fa-plus-square-o',
@@ -126,15 +125,6 @@ loadDeps([
       }
     }
   },
-  /*
-  {
-    src: options.jQuerySrc,
-    onLoaded: start,
-    check: function () {
-      return typeof window.jQuery !== 'undefined'
-    }
-  },
-  */
   {
     src: config.get('clipboardSrc'),
     check: function () {
@@ -145,18 +135,6 @@ loadDeps([
     }
   }
 ])
-
-/*
-function getSelectedText () {
-  var text = ''
-  if (typeof window.getSelection !== 'undefined') {
-    text = window.getSelection().toString()
-  } else if (typeof document.selection !== 'undefined' && document.selection.type === 'Text') {
-    text = document.selection.createRange().text
-  }
-  return text
-}
-*/
 
 $.fn.debugEnhance = function (method, arg1, arg2) {
   // console.warn('debugEnhance', method, this)
@@ -222,11 +200,18 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
       }
       // console.group('debugEnhance')
       if ($self.is('.group-body')) {
-        // console.warn('group-body', $self.prev('.group-header').text(), this)
         enhanceEntries.enhanceEntries($self)
-      } else {
-        // console.warn(this)
+      } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
+        // logEntry  (alerts use <div>)
         enhanceEntries.enhanceEntry($self)
+      } else if ($self.prop('class').match(/\bt_/)) {
+        // value
+        enhanceEntries.enhanceValue(
+          $self.parents('li').filter(function () {
+            return $(this).prop('class').match(/\bm_/) !== null
+          }),
+          $self
+        )
       }
       // console.groupEnd()
     })

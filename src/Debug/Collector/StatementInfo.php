@@ -15,6 +15,7 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Component;
 use Exception;
 
 /**
@@ -37,7 +38,7 @@ use Exception;
  * @property-read float     $timeStart
  * @property-read array     $types
  */
-class StatementInfo
+class StatementInfo extends Component
 {
 
     protected $duration;
@@ -53,6 +54,21 @@ class StatementInfo
     protected $timeEnd;
     protected $timeStart;
     protected $types;
+    protected $readOnly = array(
+        'duration',
+        'exception',
+        'isSuccess',
+        'memoryEnd',
+        'memoryStart',
+        'memoryUsage',
+        'params',
+        'prettified',
+        'rowCount',
+        'sql',
+        'timeEnd',
+        'timeStart',
+        'types',
+    );
     protected static $constants;
 
     /**
@@ -103,28 +119,6 @@ class StatementInfo
             'sql' => $this->sql,
             'types' => $this->types,
         );
-    }
-
-    /**
-     * Magic getter
-     *
-     * @param string $name property name
-     *
-     * @return mixed
-     */
-    public function __get($name)
-    {
-        $getter = 'get' . \ucfirst($name);
-        if (\method_exists($this, $getter)) {
-            return $this->{$getter}();
-        }
-        if (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {
-            return $this->{$name}();
-        }
-        if (isset($this->$name)) {
-            return $this->{$name};
-        }
-        return null;
     }
 
     /**

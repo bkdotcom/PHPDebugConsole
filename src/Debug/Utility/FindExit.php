@@ -2,6 +2,8 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Backtrace;
+
 /**
  * Attempt to find if shutdown via `exit` or `die`
  */
@@ -35,7 +37,7 @@ class FindExit
         if (\extension_loaded('tokenizer') === false) {
             return false;
         }
-        if (self::isXdebugFuncStackAvail() === false) {
+        if (Backtrace::isXdebugFuncStackAvail() === false) {
             return false;
         }
         $frame = $this->getLastFrame();
@@ -60,26 +62,6 @@ class FindExit
             );
         }
         return null;
-    }
-
-    /**
-     * Check if `xdebug_get_function_stack()` is available for use
-     *
-     * @return bool
-     */
-    private static function isXdebugFuncStackAvail()
-    {
-        if (\extension_loaded('xdebug') === false) {
-            return false;
-        }
-        $xdebugVer = \phpversion('xdebug');
-        if (\version_compare($xdebugVer, '3.0.0', '>=')) {
-            $mode = \ini_get('xdebug.mode') ?: 'off';
-            if (\strpos($mode, 'develop') === false) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**

@@ -36,6 +36,12 @@ class Html extends Base
     /** @var HtmlString string dumper */
     protected $string;
 
+    /** @var HtmlObject */
+    protected $lazyObject;
+
+    /** @var HtmlTable */
+    protected $lazyTable;
+
     /**
      * Constructor
      *
@@ -630,9 +636,10 @@ class Html extends Base
      */
     protected function getObject()
     {
-        $object = new HtmlObject($this);
-        $this->readOnly['object'] = $object;
-        return $object;
+        if (!$this->lazyObject) {
+            $this->lazyObject = new HtmlObject($this);
+        }
+        return $this->lazyObject;
     }
 
     /**
@@ -642,27 +649,23 @@ class Html extends Base
      */
     protected function getTable()
     {
-        $table = new HtmlTable($this);
-        $this->readOnly['table'] = $table;
-        return $table;
+        if (!$this->lazyTable) {
+            $this->lazyTable = new HtmlTable($this);
+        }
+        return $this->lazyTable;
     }
 
     /**
-     * Handle alert method
+     * Process substitutions and return updated args and meta
      *
-     * @param LogEntry $logEntry logEntry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
-     * @return string
+     * @return array array($args, $meta)
      */
-    protected function methodAlert(LogEntry $logEntry)
+    protected function handleSubstitutions(LogEntry $logEntry)
     {
-        $meta = $logEntry['meta'];
-        $attribs = \array_merge(array(
-            'class' => array(),
-            'role' => 'alert',
-        ), $this->logEntryAttribs);
-        $attribs['class'][] = 'alert-' . $meta['level'];
         $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
         if ($logEntry->containsSubstitutions()) {
             $args[0] = $this->dump($args[0], array(
                 'sanitize' => $meta['sanitizeFirst'],
@@ -675,6 +678,24 @@ class Html extends Base
             ));
             $meta['sanitizeFirst'] = false;
         }
+        return array($args, $meta);
+    }
+
+    /**
+     * Handle alert method
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return string
+     */
+    protected function methodAlert(LogEntry $logEntry)
+    {
+        list($args, $meta) = $this->handleSubstitutions($logEntry);
+        $attribs = \array_merge(array(
+            'class' => array(),
+            'role' => 'alert',
+        ), $this->logEntryAttribs);
+        $attribs['class'][] = 'alert-' . $meta['level'];
         $html = $this->dump($args[0], array(
             'sanitize' => $meta['sanitizeFirst'],
             'tagName' => null, // don't wrap value span
@@ -693,7 +714,7 @@ class Html extends Base
     /**
      * Handle html output of default/standard methods
      *
-     * @param LogEntry $logEntry logEntry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return string
      */
@@ -715,28 +736,22 @@ class Html extends Base
                 'data-line' => $meta['line'],
             ), $attribs);
         }
-        if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
-            if ($meta['errorCat']) {
-                $attribs['class'][] = 'error-' . $meta['errorCat'];
-            }
-            if ($meta['uncollapse'] === false) {
-                $attribs['data-uncollapse'] = false;
-            }
-            if ($logEntry->containsSubstitutions()) {
-                $args[0] = $this->dump($args[0], array(
-                    'sanitize' => $meta['sanitizeFirst'],
-                    'tagName' => null,
-                ));
-                $args = $this->processSubstitutions($args, array(
-                    'replace' => true,
-                    'sanitize' => $meta['sanitize'],
-                    'style' => true,
-                ));
-                $meta['sanitizeFirst'] = false;
-            }
-            if (!empty($meta['context'])) {
-                $append = $this->buildContext($meta['context'], $meta['line']);
-            }
+        if (!\in_array($method, array('assert','clear','error','info','log','warn'))) {
+            return $this->debug->html->buildTag(
+                'li',
+                $attribs,
+                $this->buildArgString($args, $meta)
+            );
+        }
+        if ($meta['errorCat']) {
+            $attribs['class'][] = 'error-' . $meta['errorCat'];
+        }
+        if ($meta['uncollapse'] === false) {
+            $attribs['data-uncollapse'] = false;
+        }
+        list($args, $meta) = $this->handleSubstitutions($logEntry);
+        if (!empty($meta['context'])) {
+            $append = $this->buildContext($meta['context'], $meta['line']);
         }
         return $this->debug->html->buildTag(
             'li',
@@ -748,7 +763,7 @@ class Html extends Base
     /**
      * Handle html output of group, groupCollapsed, & groupEnd
      *
-     * @param LogEntry $logEntry logEntry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return string
      */
@@ -848,7 +863,7 @@ class Html extends Base
     /**
      * Handle profile(End), table, & trace methods
      *
-     * @param LogEntry $logEntry logEntry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return string
      */

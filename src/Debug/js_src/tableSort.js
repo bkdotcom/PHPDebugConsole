@@ -58,18 +58,10 @@ function sortTable (table, col, dir) {
     var bfloat = b.match(floatRe)
     var comp = 0
     if (afloat) {
-      a = Number.parseFloat(a)
-      if (afloat[2]) {
-        // sci notation
-        a = a.toFixed(6)
-      }
+      a = toFixed(a, afloat)
     }
     if (bfloat) {
-      b = Number.parseFloat(b)
-      if (bfloat[2]) {
-        // sci notation
-        b = b.toFixed(6)
-      }
+      b = toFixed(b, bfloat)
     }
     if (afloat && bfloat) {
       if (a < b) {
@@ -87,4 +79,13 @@ function sortTable (table, col, dir) {
   for (i = 0; i < rows.length; ++i) {
     body.appendChild(rows[i]) // append each row in order (which moves)
   }
+}
+
+function toFixed(str, matches) {
+  var num = Number.parseFloat(str)
+  if (matches[2]) {
+    // sci notation
+    num = num.toFixed(6)
+  }
+  return num
 }

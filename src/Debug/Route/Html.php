@@ -78,15 +78,10 @@ class Html extends Base
      */
     public function addAssetProvider(AssetProviderInterface $assetProvider)
     {
-        $assets = \array_merge(array(
-            'css' => array(),
-            'script' => array(),
-        ), $assetProvider->getAssets());
-        foreach ((array) $assets['css'] as $css) {
-            $this->addAsset('css', $css);
-        }
-        foreach ((array) $assets['script'] as $script) {
-            $this->addAsset('script', $script);
+        foreach ($assetProvider->getAssets() as $type => $assetsOfType) {
+            foreach ((array) $assetsOfType as $asset) {
+                $this->addAsset($type, $asset);
+            }
         }
     }
 
@@ -221,7 +216,7 @@ class Html extends Base
     }
 
     /**
-     * Get and register assets from passed provider
+     * UnRegister assets from passed provider
      *
      * @param AssetProviderInterface $assetProvider Asset provider
      *
@@ -229,15 +224,10 @@ class Html extends Base
      */
     public function removeAssetProvider(AssetProviderInterface $assetProvider)
     {
-        $assets = \array_merge(array(
-            'css' => array(),
-            'script' => array(),
-        ), $assetProvider->getAssets());
-        foreach ((array) $assets['css'] as $css) {
-            $this->removeAsset('css', $css);
-        }
-        foreach ((array) $assets['script'] as $script) {
-            $this->removeAsset('script', $script);
+        foreach ($assetProvider->getAssets() as $type => $assetsOfType) {
+            foreach ((array) $assetsOfType as $asset) {
+                $this->removeAsset($type, $asset);
+            }
         }
     }
 

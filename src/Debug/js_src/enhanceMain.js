@@ -59,20 +59,16 @@ function addErrorIcons () {
   }
   var $icon
   var $icons = $('<span>', { class: 'debug-error-counts' })
-  if (counts.error) {
-    $icon = $(config.iconsMethods['.m_error']).removeClass('fa-lg').addClass('text-error')
+  $.each(['error', 'warn'], function (i, what) {
+    if (counts[what] === 0) {
+      return;
+    }
+    $icon = $(config.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what)
     $icons.append($icon).append($('<span>', {
       class: 'badge',
-      html: counts.error
+      html: counts[what]
     }))
-  }
-  if (counts.warn) {
-    $icon = $(config.iconsMethods['.m_warn']).removeClass('fa-lg').addClass('text-warn')
-    $icons.append($icon).append($('<span>', {
-      class: 'badge',
-      html: counts.warn
-    }))
-  }
+  })
   $root.find('.debug-pull-tab').append($icons[0].outerHTML)
   $root.find('.debug-menu-bar .float-right').prepend($icons)
 }

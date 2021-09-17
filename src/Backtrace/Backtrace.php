@@ -187,6 +187,26 @@ class Backtrace
     }
 
     /**
+     * Check if `xdebug_get_function_stack()` is available for use
+     *
+     * @return bool
+     */
+    public static function isXdebugFuncStackAvail()
+    {
+        if (\extension_loaded('xdebug') === false) {
+            return false;
+        }
+        $xdebugVer = \phpversion('xdebug');
+        if (\version_compare($xdebugVer, '3.0.0', '>=')) {
+            $mode = \ini_get('xdebug.mode') ?: 'off';
+            if (\strpos($mode, 'develop') === false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Get backtrace from either passed exception,
      * debug_backtrace or xdebug_get_function_stack
      *
@@ -313,26 +333,6 @@ class Backtrace
             return true;
         }
         return $class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'));
-    }
-
-    /**
-     * Check if `xdebug_get_function_stack()` is available for use
-     *
-     * @return bool
-     */
-    private static function isXdebugFuncStackAvail()
-    {
-        if (\extension_loaded('xdebug') === false) {
-            return false;
-        }
-        $xdebugVer = \phpversion('xdebug');
-        if (\version_compare($xdebugVer, '3.0.0', '>=')) {
-            $mode = \ini_get('xdebug.mode') ?: 'off';
-            if (\strpos($mode, 'develop') === false) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**

@@ -133,7 +133,7 @@
       $visToggles.append('<span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>');
     }
     if (flags.hasInherited) {
-      $visToggles.append('<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited methods</span>');
+      $visToggles.append('<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited</span>');
     }
     if ($inner.find('> dt.t_modifier_final').length) {
       $inner.find('> dt.t_modifier_final').after($visToggles);
@@ -165,38 +165,38 @@
     var $objInner = $toggle.closest('.object-inner');
     var $toggles = $objInner.find('[data-toggle=vis][data-vis=' + vis + ']');
     var $nodes = $objInner.find('.' + vis);
-    if ($toggle.is('.toggle-off')) {
-      // show for this and all descendants
-      $toggles
-        .html($toggle.html().replace('show ', 'hide '))
-        .addClass('toggle-on')
-        .removeClass('toggle-off');
-      $nodes.each(function () {
-        var $node = $(this);
-        var $objInner = $node.closest('.object-inner');
-        var show = true;
-        $objInner.find('> .vis-toggles [data-toggle]').each(function () {
-          var $toggle = $(this);
-          var vis = $toggle.data('vis');
-          var isOn = $toggle.is('.toggle-on');
-          // if any applicable test is false, don't show it
-          if (!isOn && $node.hasClass(vis)) {
-            show = false;
-            return false // break
-          }
-        });
-        if (show) {
-          $node.show();
+    var show = $toggle.hasClass('toggle-off');
+    $toggles
+      .html($toggle.html().replace(
+        show ? 'show ' : 'hide ',
+        show ? 'hide ' : 'show '
+      ))
+      .addClass(show ? 'toggle-on' : 'toggle-off')
+      .removeClass(show ? 'toggle-off' : 'toggle-on');
+    if (!show) {
+      // hide for this and all descendants
+      $nodes.hide();
+      return
+    }
+    // show for this and all descendants
+    $nodes.each(function () {
+      var $node = $(this);
+      var $objInner = $node.closest('.object-inner');
+      var show = true;
+      $objInner.find('> .vis-toggles [data-toggle]').each(function () {
+        var $toggle = $(this);
+        var vis = $toggle.data('vis');
+        var isOn = $toggle.is('.toggle-on');
+        // if any applicable test is false, don't show it
+        if (!isOn && $node.hasClass(vis)) {
+          show = false;
+          return false // break
         }
       });
-    } else {
-      // hide for this and all descendants
-      $toggles
-        .html($toggle.html().replace('hide ', 'show '))
-        .addClass('toggle-off')
-        .removeClass('toggle-on');
-      $nodes.hide();
-    }
+      if (show) {
+        $node.show();
+      }
+    });
   }
 
   /**
@@ -257,18 +257,10 @@
       var bfloat = b.match(floatRe);
       var comp = 0;
       if (afloat) {
-        a = Number.parseFloat(a);
-        if (afloat[2]) {
-          // sci notation
-          a = a.toFixed(6);
-        }
+        a = toFixed(a, afloat);
       }
       if (bfloat) {
-        b = Number.parseFloat(b);
-        if (bfloat[2]) {
-          // sci notation
-          b = b.toFixed(6);
-        }
+        b = toFixed(b, bfloat);
       }
       if (afloat && bfloat) {
         if (a < b) {
@@ -286,6 +278,15 @@
     for (i = 0; i < rows.length; ++i) {
       body.appendChild(rows[i]); // append each row in order (which moves)
     }
+  }
+
+  function toFixed(str, matches) {
+    var num = Number.parseFloat(str);
+    if (matches[2]) {
+      // sci notation
+      num = num.toFixed(6);
+    }
+    return num
   }
 
   var config$1;
@@ -1580,20 +1581,16 @@
     };
     var $icon;
     var $icons = $('<span>', { class: 'debug-error-counts' });
-    if (counts.error) {
-      $icon = $(config$5.iconsMethods['.m_error']).removeClass('fa-lg').addClass('text-error');
+    $.each(['error', 'warn'], function (i, what) {
+      if (counts[what] === 0) {
+        return;
+      }
+      $icon = $(config$5.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what);
       $icons.append($icon).append($('<span>', {
         class: 'badge',
-        html: counts.error
+        html: counts[what]
       }));
-    }
-    if (counts.warn) {
-      $icon = $(config$5.iconsMethods['.m_warn']).removeClass('fa-lg').addClass('text-warn');
-      $icons.append($icon).append($('<span>', {
-        class: 'badge',
-        html: counts.warn
-      }));
-    }
+    });
     $root$3.find('.debug-pull-tab').append($icons[0].outerHTML);
     $root$3.find('.debug-menu-bar .float-right').prepend($icons);
   }

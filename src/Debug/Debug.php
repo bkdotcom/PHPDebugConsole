@@ -128,12 +128,16 @@ class Debug
     protected $internalEvents;
     protected $logRef;          // points to either log or logSummary[priority]
     protected static $methodDefaultArgs = array();
-    protected $readOnly = array(
-        'parentInstance' => null,
-        'rootInstance' => null,
-    );
+    protected $parentInstance;
     protected $registeredPlugins;   // SplObjectHash
+    protected $rootInstance;
     protected $serviceContainer;
+
+    protected $lazyObjects = array();
+    protected $readOnly = array(
+        'parentInstance',
+        'rootInstance',
+    );
 
     private static $instance;
     private $channels = array();
@@ -317,8 +321,11 @@ class Debug
         /*
             "Read-only" properties
         */
-        if (\array_key_exists($property, $this->readOnly)) {
-            return $this->readOnly[$property];
+        if (\in_array($property, $this->readOnly)) {
+            return $this->{$property};
+        }
+        if (\array_key_exists($property, $this->lazyObjects)) {
+            return $this->lazyObjects[$property];
         }
         /*
             Check getter method (although not utilized)
@@ -578,26 +585,7 @@ class Debug
      */
     public function error()
     {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(
-                'detectFiles' => true,
-                'uncollapse' => true,
-            )
-        );
-        // file & line meta may already be set (ie coming via errorHandler)
-        // file & line may also be defined as null
-        $default = "\x00default\x00";
-        if ($logEntry->getMeta('file', $default) === $default) {
-            $callerInfo = $this->backtrace->getCallerInfo();
-            $logEntry->setMeta(array(
-                'file' => $callerInfo['file'],
-                'line' => $callerInfo['line'],
-            ));
-        }
-        $this->appendLog($logEntry);
+        $this->doError(__FUNCTION__, \func_get_args());
     }
 
     /**
@@ -669,7 +657,7 @@ class Debug
             $logEntry->setMeta('closesSummary', true);
             $this->appendLog($logEntry, true);
         } elseif ($haveOpenGroup === 1) {
-            \array_pop($this->readOnly['rootInstance']->groupStackRef);
+            \array_pop($this->rootInstance->groupStackRef);
             if ($value !== Abstracter::UNDEFINED) {
                 $this->appendLog(new LogEntry(
                     $this,
@@ -719,7 +707,7 @@ class Debug
         */
         $logEntry['appendLog'] = false;
         // groupSumary's Debug::EVENT_LOG event should happen on the root instance
-        $this->readOnly['rootInstance']->appendLog($logEntry, true);
+        $this->rootInstance->appendLog($logEntry, true);
     }
 
     /**
@@ -1191,26 +1179,7 @@ class Debug
      */
     public function warn()
     {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(
-                'detectFiles' => true,
-                'uncollapse' => true,
-            )
-        );
-        // file & line meta may already be set (ie coming via errorHandler)
-        // file & line may also be defined as null
-        $default = "\x00default\x00";
-        if ($logEntry->getMeta('file', $default) === $default) {
-            $callerInfo = $this->backtrace->getCallerInfo();
-            $logEntry->setMeta(array(
-                'file' => $callerInfo['file'],
-                'line' => $callerInfo['line'],
-            ));
-        }
-        $this->appendLog($logEntry);
+        $this->doError(__FUNCTION__, \func_get_args());
     }
 
     /*
@@ -1237,7 +1206,7 @@ class Debug
         $isPlugin = false;
         if ($plugin instanceof AssetProviderInterface) {
             $isPlugin = true;
-            $this->readOnly['rootInstance']->getRoute('html')->addAssetProvider($plugin);
+            $this->rootInstance->getRoute('html')->addAssetProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
             $isPlugin = true;
@@ -1319,7 +1288,7 @@ class Debug
                 $cfg = $cur->internal->getPropagateValues($cfg);
                 // set channel values
                 $cfg['debug']['channelIcon'] = null;
-                $cfg['debug']['channelName'] = $conf['nested'] || $cur->readOnly['parentInstance']
+                $cfg['debug']['channelName'] = $conf['nested'] || $cur->parentInstance
                     ? $cur->cfg['channelName'] . '.' . $name
                     : $name;
                 $cfg['debug']['parent'] = $cur;
@@ -1359,7 +1328,7 @@ class Debug
                 );
             }
         }
-        if ($this === $this->readOnly['rootInstance']) {
+        if ($this === $this->rootInstance) {
             if ($inclTop) {
                 return $channels;
             }
@@ -1379,10 +1348,10 @@ class Debug
         $channels = array(
             $this->cfg['channelName'] => $this,
         );
-        if ($this->readOnly['parentInstance']) {
+        if ($this->parentInstance) {
             return $channels;
         }
-        foreach ($this->readOnly['rootInstance']->channels as $name => $channel) {
+        foreach ($this->rootInstance->channels as $name => $channel) {
             $fqn = $channel->getCfg('channelName');
             if (\strpos($fqn, '.') === false) {
                 $channels[$name] = $channel;
@@ -1664,7 +1633,7 @@ class Debug
                 )
             );
         }
-        if (!$this->readOnly['parentInstance']) {
+        if (!$this->parentInstance) {
             $this->data['outputSent'] = true;
         }
         $this->config->set($cfgRestore);
@@ -1683,7 +1652,7 @@ class Debug
     {
         $this->registeredPlugins->detach($plugin);
         if ($plugin instanceof AssetProviderInterface) {
-            $this->readOnly['rootInstance']->getRoute('html')->removeAssetProvider($plugin);
+            $this->rootInstance->getRoute('html')->removeAssetProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
             $this->eventManager->RemoveSubscriberInterface($plugin);
@@ -1901,7 +1870,7 @@ class Debug
             $this->config->set($cfgRestore);
         }
         if ($logEntry['appendLog']) {
-            $this->readOnly['rootInstance']->logRef[] = $logEntry;
+            $this->rootInstance->logRef[] = $logEntry;
             return true;
         }
         return false;
@@ -1990,7 +1959,7 @@ class Debug
                 unset($this->container[$service]);
             }
         }
-        $this->serviceContainer = $this->readOnly['rootInstance']->serviceContainer;
+        $this->serviceContainer = $this->rootInstance->serviceContainer;
 
         /*
             Now populate with overrides
@@ -2018,19 +1987,51 @@ class Debug
      */
     private function bootstrapInstance($cfg)
     {
-        $this->readOnly['rootInstance'] = $this;
+        $this->rootInstance = $this;
         if (isset($cfg['debug']['parent'])) {
-            $this->readOnly['parentInstance'] = $cfg['debug']['parent'];
-            while ($this->readOnly['rootInstance']->readOnly['parentInstance']) {
-                $this->readOnly['rootInstance'] = $this->readOnly['rootInstance']->readOnly['parentInstance'];
+            $this->parentInstance = $cfg['debug']['parent'];
+            while ($this->rootInstance->parentInstance) {
+                $this->rootInstance = $this->rootInstance->parentInstance;
             }
-            $this->data = &$this->readOnly['rootInstance']->data;
+            $this->data = &$this->rootInstance->data;
             unset($this->cfg['parent']);
             return;
         }
         // this is the root instance
         $this->setLogDest();
         $this->data['entryCountInitial'] = \count($this->data['log']);
+    }
+
+    /**
+     * Handle error & warn methods
+     *
+     * @param string $method "error" or "warn"
+     * @param array  $args   arguments passed to error or warn
+     *
+     * @return void
+     */
+    private function doError($method, $args)
+    {
+        $logEntry = new LogEntry(
+            $this,
+            $method,
+            $args,
+            array(
+                'detectFiles' => true,
+                'uncollapse' => true,
+            )
+        );
+        // file & line meta may already be set (ie coming via errorHandler)
+        // file & line may also be defined as null
+        $default = "\x00default\x00";
+        if ($logEntry->getMeta('file', $default) === $default) {
+            $callerInfo = $this->backtrace->getCallerInfo();
+            $logEntry->setMeta(array(
+                'file' => $callerInfo['file'],
+                'line' => $callerInfo['line'],
+            ));
+        }
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -2048,7 +2049,7 @@ class Debug
             $method,
             $args
         );
-        $this->readOnly['rootInstance']->groupStackRef[] = array(
+        $this->rootInstance->groupStackRef[] = array(
             'channel' => $this,
             'collect' => $this->cfg['collect'],
         );
@@ -2087,12 +2088,12 @@ class Debug
     private function getDumpRoute($cat, $name, $checkOnly)
     {
         $property = $cat . \ucfirst($name);
-        $isset = isset($this->readOnly[$property]);
+        $isset = isset($this->lazyObjects[$property]);
         if ($checkOnly) {
             return $isset;
         }
         if ($isset) {
-            return $this->readOnly[$property];
+            return $this->lazyObjects[$property];
         }
         if ($this->container->has($property)) {
             return $this->container[$property];
@@ -2105,7 +2106,7 @@ class Debug
                 $cfg = $this->config->get($property, self::CONFIG_INIT);
                 $val->setCfg($cfg);
             }
-            $this->readOnly[$property] = $val;
+            $this->lazyObjects[$property] = $val;
             return $val;
         }
         $caller = $this->backtrace->getCallerInfo();
@@ -2149,7 +2150,7 @@ class Debug
      */
     private function haveOpenGroup()
     {
-        $groupStackWas = $this->readOnly['rootInstance']->groupStackRef;
+        $groupStackWas = $this->rootInstance->groupStackRef;
         if ($this->data['groupPriorityStack'] && !$groupStackWas) {
             // we're in top level of group summary
             return 2;
@@ -2185,7 +2186,7 @@ class Debug
     }
 
     /**
-     * If "core" route, store in readOnly property
+     * If "core" route, store in lazyObjects property
      *
      * @param mixed $val route value
      *
@@ -2200,7 +2201,7 @@ class Debug
             $prefix = __NAMESPACE__ . '\\Debug\\Route\\';
             if (\strpos($classname, $prefix) === 0) {
                 $prop = 'route' . \substr($classname, \strlen($prefix));
-                $this->readOnly[$prop] = $val;
+                $this->lazyObjects[$prop] = $val;
             }
             if ($val->appendsHeaders()) {
                 $this->internal->obStart();
@@ -2225,11 +2226,11 @@ class Debug
         }
         switch ($where) {
             case 'alerts':
-                $this->readOnly['rootInstance']->logRef = &$this->readOnly['rootInstance']->data['alerts'];
+                $this->rootInstance->logRef = &$this->rootInstance->data['alerts'];
                 break;
             case 'log':
-                $this->readOnly['rootInstance']->logRef = &$this->readOnly['rootInstance']->data['log'];
-                $this->readOnly['rootInstance']->groupStackRef = &$this->readOnly['rootInstance']->data['groupStacks']['main'];
+                $this->rootInstance->logRef = &$this->rootInstance->data['log'];
+                $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks']['main'];
                 break;
             case 'summary':
                 $priority = \end($this->data['groupPriorityStack']);
@@ -2237,8 +2238,8 @@ class Debug
                     $this->data['logSummary'][$priority] = array();
                     $this->data['groupStacks'][$priority] = array();
                 }
-                $this->readOnly['rootInstance']->logRef = &$this->readOnly['rootInstance']->data['logSummary'][$priority];
-                $this->readOnly['rootInstance']->groupStackRef = &$this->readOnly['rootInstance']->data['groupStacks'][$priority];
+                $this->rootInstance->logRef = &$this->rootInstance->data['logSummary'][$priority];
+                $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks'][$priority];
         }
     }
 

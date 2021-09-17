@@ -124,10 +124,10 @@ class PhpDoc
             return self::getParsed('');
         }
         if ($reflector instanceof ReflectionMethod) {
-            return self::findInheritedMethod($reflector);
+            return self::findInherited($reflector, 'method');
         }
         if ($reflector instanceof ReflectionProperty) {
-            return self::findInheritedProperty($reflector);
+            return self::findInherited($reflector, 'property');
         }
         return self::getParsed('');
     }
@@ -244,48 +244,26 @@ class PhpDoc
      * Find phpDoc in parent classes / interfaces
      *
      * @param ReflectionMethod $reflector ReflectionMethod instance
+     * @param string           $what      'method' or 'property'
      *
      * @return array
      */
-    private static function findInheritedMethod(ReflectionMethod $reflector)
+    private static function findInherited(ReflectionMethod $reflector, $what)
     {
+        $hasWhat = 'has' . \ucfirst($what);
+        $getWhat = 'get' . \ucfirst($what);
         $name = $reflector->getName();
         $reflectionClass = $reflector->getDeclaringClass();
         $interfaces = $reflectionClass->getInterfaceNames();
         foreach ($interfaces as $className) {
             $reflectionInterface = new ReflectionClass($className);
-            if ($reflectionInterface->hasMethod($name)) {
-                return self::getParsed($reflectionInterface->getMethod($name));
+            if ($reflectionInterface->{$hasWhat}($name)) {
+                return self::getParsed($reflectionInterface->{$getWhat}($name));
             }
         }
         $parentClass = $reflectionClass->getParentClass();
-        if ($parentClass && $parentClass->hasMethod($name)) {
-            return self::getParsed($parentClass->getMethod($name));
-        }
-        return self::getParsed('');
-    }
-
-    /**
-     * Find phpDoc in parent classes / interfaces
-     *
-     * @param ReflectionProperty $reflector ReflectionProperty instance
-     *
-     * @return array
-     */
-    private static function findInheritedProperty(ReflectionProperty $reflector)
-    {
-        $name = $reflector->getName();
-        $reflectionClass = $reflector->getDeclaringClass();
-        $interfaces = $reflectionClass->getInterfaceNames();
-        foreach ($interfaces as $className) {
-            $reflectionInterface = new ReflectionClass($className);
-            if ($reflectionInterface->hasProperty($name)) {
-                return self::getParsed($reflectionInterface->getProperty($name));
-            }
-        }
-        $parentClass = $reflectionClass->getParentClass();
-        if ($parentClass && $parentClass->hasProperty($name)) {
-            return self::getParsed($parentClass->getProperty($name));
+        if ($parentClass && $parentClass->{$hasWhat}($name)) {
+            return self::getParsed($parentClass->{$getWhat}($name));
         }
         return self::getParsed('');
     }

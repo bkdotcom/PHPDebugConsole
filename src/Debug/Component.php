@@ -32,13 +32,17 @@ abstract class Component implements ConfigurableInterface
      */
     public function __get($prop)
     {
-        if (\array_key_exists($prop, $this->readOnly)) {
-            return $this->readOnly[$prop];
-        }
         $getter = 'get' . \ucfirst($prop);
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }
+        if (\preg_match('/^is[A-Z]/', $prop) && \method_exists($this, $prop)) {
+            return $this->{$prop}();
+        }
+        if (\in_array($prop, $this->readOnly)) {
+            return $this->{$prop};
+        }
+        return null;
     }
 
     /**

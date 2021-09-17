@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Collector\SimpleCache;
 
+use bdk\Debug\Component;
 use Exception;
 
 /**
@@ -28,18 +29,30 @@ use Exception;
  * @property-read float     $timeEnd
  * @property-read float     $timeStart
  */
-class CallInfo
+class CallInfo extends Component
 {
 
     protected $duration;
     protected $exception;
+    protected $keyOrKeys;
     protected $memoryEnd;
     protected $memoryStart;
     protected $memoryUsage;
     protected $method = '';
-    protected $keyOrKeys;
     protected $timeEnd;
     protected $timeStart;
+
+    protected $readOnly = array(
+        'duration',
+        'exception',
+        'keyOrKeys',
+        'memoryEnd',
+        'memoryStart',
+        'memoryUsage',
+        'method',
+        'timeEnd',
+        'timeStart',
+    );
 
     /**
      * @param string $method    method called
@@ -67,28 +80,6 @@ class CallInfo
             'method' => $this->method,
             'keyOrKeys' => $this->keyOrKeys,
         );
-    }
-
-    /**
-     * Magic getter
-     *
-     * @param string $name property name
-     *
-     * @return mixed
-     */
-    public function __get($name)
-    {
-        $getter = 'get' . \ucfirst($name);
-        if (\method_exists($this, $getter)) {
-            return $this->$getter();
-        }
-        if (\preg_match('/^is[A-Z]/', $name) && \method_exists($this, $name)) {
-            return $this->$name();
-        }
-        if (isset($this->$name)) {
-            return $this->{$name};
-        }
-        return null;
     }
 
     /**

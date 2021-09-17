@@ -114,7 +114,7 @@ function visToggles ($inner, accessible) {
     $visToggles.append('<span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>')
   }
   if (flags.hasInherited) {
-    $visToggles.append('<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited methods</span>')
+    $visToggles.append('<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited</span>')
   }
   if ($inner.find('> dt.t_modifier_final').length) {
     $inner.find('> dt.t_modifier_final').after($visToggles)
@@ -146,36 +146,36 @@ function toggleVis (toggle) {
   var $objInner = $toggle.closest('.object-inner')
   var $toggles = $objInner.find('[data-toggle=vis][data-vis=' + vis + ']')
   var $nodes = $objInner.find('.' + vis)
-  if ($toggle.is('.toggle-off')) {
-    // show for this and all descendants
-    $toggles
-      .html($toggle.html().replace('show ', 'hide '))
-      .addClass('toggle-on')
-      .removeClass('toggle-off')
-    $nodes.each(function () {
-      var $node = $(this)
-      var $objInner = $node.closest('.object-inner')
-      var show = true
-      $objInner.find('> .vis-toggles [data-toggle]').each(function () {
-        var $toggle = $(this)
-        var vis = $toggle.data('vis')
-        var isOn = $toggle.is('.toggle-on')
-        // if any applicable test is false, don't show it
-        if (!isOn && $node.hasClass(vis)) {
-          show = false
-          return false // break
-        }
-      })
-      if (show) {
-        $node.show()
+  var show = $toggle.hasClass('toggle-off')
+  $toggles
+    .html($toggle.html().replace(
+      show ? 'show ' : 'hide ',
+      show ? 'hide ' : 'show '
+    ))
+    .addClass(show ? 'toggle-on' : 'toggle-off')
+    .removeClass(show ? 'toggle-off' : 'toggle-on')
+  if (!show) {
+    // hide for this and all descendants
+    $nodes.hide()
+    return
+  }
+  // show for this and all descendants
+  $nodes.each(function () {
+    var $node = $(this)
+    var $objInner = $node.closest('.object-inner')
+    var show = true
+    $objInner.find('> .vis-toggles [data-toggle]').each(function () {
+      var $toggle = $(this)
+      var vis = $toggle.data('vis')
+      var isOn = $toggle.is('.toggle-on')
+      // if any applicable test is false, don't show it
+      if (!isOn && $node.hasClass(vis)) {
+        show = false
+        return false // break
       }
     })
-  } else {
-    // hide for this and all descendants
-    $toggles
-      .html($toggle.html().replace('hide ', 'show '))
-      .addClass('toggle-off')
-      .removeClass('toggle-on')
-    $nodes.hide()
-  }
+    if (show) {
+      $node.show()
+    }
+  })
 }

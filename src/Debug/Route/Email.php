@@ -89,14 +89,12 @@ class Email implements RouteInterface
         foreach (array('alerts','log','logSummary') as $what) {
             foreach ($data[$what] as $i => $v) {
                 if ($what === 'logSummary') {
-                    foreach ($v as $i2 => $v2) {
-                        $v2 = $v2->export();
-                        $data['logSummary'][$i][$i2] = \array_values($v2);
+                    foreach ($v as $i2 => $logEntry) {
+                        $data['logSummary'][$i][$i2] = \array_values($logEntry->export());
                     }
                     continue;
                 }
-                $v = $v->export();
-                $data[$what][$i] = \array_values($v);
+                $data[$what][$i] = \array_values($v->export());
             }
         }
         $str = \serialize($data);

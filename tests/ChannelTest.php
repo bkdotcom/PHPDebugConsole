@@ -38,13 +38,13 @@ class ChannelTest extends DebugTestFramework
                 array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
                 array('alert', array('foo: alert'), array('channel' => 'general.foo', 'dismissible' => false, 'level' => 'error')),
             ),
+            'groupPriorityStack' => array(),
             'groupStacks' => array(
                 'main' => array(
                     array('channel' => 'general', 'collect' => true),
                     array('channel' => 'general.foo', 'collect' => true),
                 ),
             ),
-            'groupPriorityStack' => array(),
             'log' => array(
                 array('log', array('main: log'), array()),
                 array('group', array('main: group'), array()),
@@ -86,12 +86,12 @@ class ChannelTest extends DebugTestFramework
             'alerts' => array(
                 array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
             ),
+            'groupPriorityStack' => array(),
             'groupStacks' => array(
                 'main' => array(
                     array('channel' => 'general', 'collect' => true),
                 ),
             ),
-            'groupPriorityStack' => array(),
             'log' => array(
                 array('log', array('main: log'), array()),
                 array('group', array('main: group'), array()),

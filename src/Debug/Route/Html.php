@@ -340,22 +340,13 @@ class Html extends Base
         $html = '';
         $names = \array_keys($this->debug->getChannelsTop());
         /*
-            We want Request / Response to come first in case we're not outputting tab UI
+            Sort channel names.
+            We want "Request / Response" & "Files" to come first in case we're not outputting tab UI
         */
-        $order = array('Request / Response', 'Files');
-        \usort($names, function ($valA, $valB) use ($order) {
-            $aPos = \array_search($valA, $order);
-            $bPos = \array_search($valB, $order);
-            if ($aPos === false && $bPos === false) {   // both items are dont cares
-                return 0;
-            }
-            if ($aPos === false) {                      // $a is a dont care
-                return 1;                               //   $a > $b
-            }
-            if ($bPos === false) {                      // $b is a dont care
-                return -1;                              //   $a < $b
-            }
-        });
+        $this->debug->arrayUtil->sortWithOrder(
+            $names,
+            array('Request / Response', 'Files')
+        );
         foreach ($names as $name) {
             $html .= $this->buildTabPane($name);
         }

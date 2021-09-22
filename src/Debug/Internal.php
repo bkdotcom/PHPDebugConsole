@@ -12,11 +12,9 @@
 
 namespace bdk\Debug;
 
-use bdk\Backtrace;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\Utility\FileStreamWrapper;
 use bdk\PubSub\Event;
@@ -60,61 +58,6 @@ class Internal implements SubscriberInterface
     {
         $this->debug = $debug;
         $this->debug->eventManager->addSubscriberInterface($this);
-    }
-
-    /**
-     * Append logEntry
-     * Adds default arguments and "stringifies"
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    public function doGroup(LogEntry $logEntry)
-    {
-        if (!$logEntry['args']) {
-            // give a default label
-            $logEntry['args'] = array( 'group' );
-            $caller = $this->debug->backtrace->getCallerInfo(0, Backtrace::INCL_ARGS);
-            $args = $this->doGroupAutoArgs($caller);
-            if ($args) {
-                $logEntry['args'] = $args;
-                $logEntry->setMeta('isFuncName', true);
-            }
-        }
-        $this->doGroupStringify($logEntry);
-        $this->debug->log($logEntry);
-    }
-
-    /**
-     * Log timeEnd() and timeGet()
-     *
-     * @param float|false $elapsed  elapsed time in seconds
-     * @param LogEntry    $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    public function doTime($elapsed, LogEntry $logEntry)
-    {
-        $meta = $logEntry['meta'];
-        if ($meta['silent']) {
-            return;
-        }
-        $label = isset($logEntry['args'][0])
-            ? $logEntry['args'][0]
-            : 'time';
-        $str = $elapsed === false
-            ? 'Timer \'' . $label . '\' does not exist'
-            : \strtr($meta['template'], array(
-                '%label' => $label,
-                '%time' => $this->debug->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']),
-            ));
-        $this->debug->log(new LogEntry(
-            $this->debug,
-            'time',
-            array($str),
-            \array_diff_key($meta, \array_flip(array('precision','silent','template','unit')))
-        ));
     }
 
     /**
@@ -183,69 +126,6 @@ class Internal implements SubscriberInterface
         );
         $stats['counts'] = \array_intersect_key(\array_merge(\array_flip($order), $stats['counts']), $stats['counts']);
         return $stats;
-    }
-
-    /**
-     * Return the group & groupCollapsed ("ancestors")
-     *
-     * @param 'auto'|'main'|int $where 'auto', 'main' or summary priority
-     *
-     * @return LogEntry[] kwys are maintained
-     */
-    public function getCurrentGroups($where = 'auto')
-    {
-        if ($where === 'auto') {
-            $where = $this->getCurrentPriority();
-        }
-
-        /*
-            Determine current depth
-        */
-        $curDepth = 0;
-        $groupStacks = $this->debug->getData(array('groupStacks', $where));
-        foreach ($groupStacks as $group) {
-            $curDepth += (int) $group['collect'];
-        }
-
-        $entries = array();
-        /*
-            curDepth will fluctuate as we go back through log
-            minDepth will decrease as we work our way down/up the groups
-        */
-        $logEntries = $where === 'main'
-            ? $this->debug->getData(array('log'))
-            : $this->debug->getData(array('logSummary', $where));
-        $minDepth = $curDepth;
-        for ($i = \count($logEntries) - 1; $i >= 0; $i--) {
-            if ($curDepth < 1) {
-                break;
-            }
-            $method = $logEntries[$i]['method'];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $curDepth--;
-                if ($curDepth < $minDepth) {
-                    $minDepth--;
-                    $entries[$i] = $logEntries[$i];
-                }
-            } elseif ($method === 'groupEnd') {
-                $curDepth++;
-            }
-        }
-        return $entries;
-    }
-
-    /**
-     * GEt current group priority
-     *
-     * @return 'main'|int
-     */
-    public function getCurrentPriority()
-    {
-        $priorityStack = $this->debug->getData('groupPriorityStack');
-        $priority = \end($priorityStack);
-        return $priority !== false
-            ? $priority
-            : 'main';
     }
 
     /**
@@ -672,73 +552,6 @@ class Internal implements SubscriberInterface
                 . ($this->getServerParam('REQUEST_TIME_FLOAT') ?: $unique)
                 . $this->getServerParam('REMOTE_PORT', '')
         );
-    }
-
-    /**
-     * Automatic group/groupCollapsed arguments
-     *
-     * @param array $caller CallerInfo
-     *
-     * @return array
-     */
-    private function doGroupAutoArgs($caller = array())
-    {
-        $args = array();
-        if (isset($caller['function']) === false) {
-            return $args;
-        }
-        // default args if first call inside function... and debugGroup is likely first call
-        $function = null;
-        $callerStartLine = 1;
-        if ($caller['class']) {
-            $refClass = new \ReflectionClass($caller['class']);
-            $refMethod = $refClass->getMethod($caller['function']);
-            $callerStartLine = $refMethod->getStartLine();
-            $function = $caller['class'] . $caller['type'] . $caller['function'];
-        } elseif (!\in_array($caller['function'], array('include', 'include_once', 'require', 'require_once'))) {
-            $refFunction = new \ReflectionFunction($caller['function']);
-            $callerStartLine = $refFunction->getStartLine();
-            $function = $caller['function'];
-        }
-        if ($function && $caller['line'] <= $callerStartLine + 2) {
-            $args[] = $function;
-            $args = \array_merge($args, $caller['args']);
-            // php < 7.0 debug_backtrace args are references!
-            $args = $this->debug->arrayUtil->copy($args, false);
-        }
-        return $args;
-    }
-
-    /**
-     * Use string representation for group args if available
-     *
-     * @param LogEntry $logEntry Log entry
-     *
-     * @return void
-     */
-    private function doGroupStringify(LogEntry $logEntry)
-    {
-        $args = $logEntry['args'];
-        $abstracter = $this->debug->abstracter;
-        foreach ($args as $k => $v) {
-            /*
-                doGroupStringify is called before appendLog.
-                values have not yet been abstracted.
-                abstract now
-            */
-            $typeInfo = $abstracter->getType($v);
-            if ($typeInfo[0] !== Abstracter::TYPE_OBJECT) {
-                continue;
-            }
-            $v = $abstracter->crate($v, $logEntry['method']);
-            if ($v['stringified']) {
-                $v = $v['stringified'];
-            } elseif (isset($v['methods']['__toString']['returnValue'])) {
-                $v = $v['methods']['__toString']['returnValue'];
-            }
-            $args[$k] = $v;
-        }
-        $logEntry['args'] = $args;
     }
 
     /**

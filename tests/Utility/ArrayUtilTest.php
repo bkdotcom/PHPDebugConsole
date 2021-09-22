@@ -3,15 +3,15 @@
 namespace bdk\DebugTests\Utility;
 
 use bdk\Debug\Utility\ArrayUtil;
-use bdk\DebugTests\DebugTestFramework;
+use PHPUnit\Framework\TestCase;
 
 /**
  * PHPUnit tests for Debug class
  */
-class ArrayUtilTest extends DebugTestFramework
+class ArrayUtilTest extends TestCase
 {
 
-    public function testArrayIsList()
+    public function testIsList()
     {
         $this->assertFalse(ArrayUtil::isList('string'));
         $this->assertTrue(ArrayUtil::isList(array()));     // empty array = "list"
@@ -24,12 +24,12 @@ class ArrayUtilTest extends DebugTestFramework
      *
      * @return void
      */
-    public function testArrayMergeDeep()
+    public function testMergeDeep()
     {
         $array1 = array(
             'planes' => 'array1 val',
             'trains' => array('electric','diesel',),
-            'callable' => array($this, 'testArrayIsList'),
+            'callable' => array($this, 'testIsList'),
             'automobiles' => array(
                 'hatchback' => array(),
                 'sedan' => array('family','luxury'),
@@ -72,7 +72,7 @@ class ArrayUtilTest extends DebugTestFramework
      *
      * @return void
      */
-    public function testArrayPathGet()
+    public function testPathGet()
     {
         $array = array(
             'surfaces' => array(
@@ -81,7 +81,7 @@ class ArrayUtilTest extends DebugTestFramework
                 ),
                 'rock' => array(
                     'comfy' => false,
-                )
+                ),
             ),
         );
         $this->assertSame(true, ArrayUtil::pathGet($array, 'surfaces.bed.comfy'));
@@ -95,9 +95,17 @@ class ArrayUtilTest extends DebugTestFramework
         $this->assertSame(true, ArrayUtil::pathGet($array, 'surfaces.__reset__.comfy'));
         $this->assertSame(null, ArrayUtil::pathGet($array, 'surfaces.sofa.comfy'));
         $this->assertSame(false, ArrayUtil::pathGet($array, array('surfaces','__end__','comfy')));
+        $this->assertSame(false, ArrayUtil::pathGet($array, '__reset__/__pop__/comfy'));
+        $this->assertSame(array(
+            'surfaces' => array(
+                'bed' => array(
+                    'comfy' => true,
+                ),
+            ),
+        ), $array);
     }
 
-    public function testArrayPathSet()
+    public function testPathSet()
     {
         $array = array(
             'surfaces' => array(
@@ -110,6 +118,7 @@ class ArrayUtilTest extends DebugTestFramework
             ),
         );
 
+        ArrayUtil::pathSet($array, 'surfaces.__reset__.comfy', '__unset__');
         ArrayUtil::pathSet($array, 'surfaces.__end__.hard', true);
         ArrayUtil::pathSet($array, 'surfaces.__reset__.hard', false);
         ArrayUtil::pathSet($array, 'surfaces.__end__.__push__', 'pushed');
@@ -118,15 +127,15 @@ class ArrayUtilTest extends DebugTestFramework
         $this->assertSame(array(
             'surfaces' => array(
                 'bed' => array(
-                    'comfy' => true,
-                    'hard' => false,
+                    // 'comfy' => true,  // we unset comfy
+                    'hard' => false,  // we set to false
                 ),
                 'rock' => array(
                     'comfy' => false,
-                    'hard' => true,
-                    0 => 'pushed',
+                    'hard' => true,  // we set to true
+                    0 => 'pushed',  // we pushed
                 ),
-                0 => array(
+                0 => array(         // we created
                     'itchy' => true,
                 ),
             ),

@@ -13,6 +13,7 @@
 namespace bdk\Debug\Psr7lite;
 
 use bdk\Debug\Psr7lite\Stream;
+use bdk\Debug\Utility\ArrayUtil;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 
@@ -170,20 +171,11 @@ class Message
         if ($nameLower === 'host') {
             // Ensure Host is the first header.
             // See: http://tools.ietf.org/html/rfc7230#section-5.4
-            $order = array($name);
-            \uksort($new->headers, function ($keyA, $keyB) use ($order) {
-                $aPos = \array_search($keyA, $order);
-                $bPos = \array_search($keyB, $order);
-                if ($aPos === false && $bPos === false) {   // both items are dont cares
-                    return 0;
-                }
-                if ($aPos === false) {                      // $a is a dont care
-                    return 1;                               //   $a > $b
-                }
-                if ($bPos === false) {                      // $b is a dont care
-                    return -1;                              //   $a < $b
-                }
-            });
+            ArrayUtil::sortWithOrder(
+                $new->headers,
+                array($name),
+                'key'
+            );
         }
         return $new;
     }

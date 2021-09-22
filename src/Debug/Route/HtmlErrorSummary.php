@@ -130,7 +130,7 @@ class HtmlErrorSummary
                     ),
                 )
             );
-            $this->debug->methodTable->onLog($logEntry);
+            $this->debug->methodTable->doTable($logEntry);
             $table = $this->routeHtml->dump->table->build($logEntry['args'][0], $logEntry['meta']);
             // restore previous objectsExclude
             $this->debug->setCfg('objectsExclude', $objectsExclude);

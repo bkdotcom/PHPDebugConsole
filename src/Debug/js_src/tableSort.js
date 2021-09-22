@@ -81,7 +81,7 @@ function sortTable (table, col, dir) {
   }
 }
 
-function toFixed(str, matches) {
+function toFixed (str, matches) {
   var num = Number.parseFloat(str)
   if (matches[2]) {
     // sci notation

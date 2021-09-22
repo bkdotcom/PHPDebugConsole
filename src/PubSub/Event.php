@@ -136,7 +136,9 @@ class Event implements ArrayAccess, IteratorAggregate
     public function setValue($key, $value)
     {
         $this->values[$key] = $value;
-        $this->onSet();
+        $this->onSet(array(
+            $key => $value,
+        ));
         return $this;
     }
 
@@ -150,7 +152,7 @@ class Event implements ArrayAccess, IteratorAggregate
     public function setValues(array $values = array())
     {
         $this->values = $values;
-        $this->onSet();
+        $this->onSet($values);
         return $this;
     }
 
@@ -234,9 +236,13 @@ class Event implements ArrayAccess, IteratorAggregate
     /**
      * Extend me to perform action after setting value/values
      *
+     * @param array $values key => values  being set
+     *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    protected function onSet()
+    protected function onSet($values = array())
     {
     }
 }

@@ -2,7 +2,6 @@ import $ from 'jquery'
 import { delegate } from 'tippy.js'
 
 export function init ($root) {
-
   delegate($root[0], {
     target: '.fa-hashtag, [title]',
     delay: [200, null], // show / hide delay (null = default)

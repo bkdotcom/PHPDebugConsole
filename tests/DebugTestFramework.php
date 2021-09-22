@@ -148,6 +148,28 @@ class DebugTestFramework extends DOMTestCase
             self::$haveWampPlugin = true;
         }
         */
+
+        $refProperties = &$this->getSharedVar('reflectionProperties');
+        if (!isset($refProperties['channels'])) {
+            $channelProp = new \ReflectionProperty($this->debug, 'channels');
+            $channelProp->setAccessible(true);
+            $refProperties['channels'] = $channelProp;
+        }
+        if (!isset($refProperties['textDepth'])) {
+            $depthRef = new \ReflectionProperty($this->debug->getDump('text'), 'depth');
+            $depthRef->setAccessible(true);
+            $refProperties['textDepth'] = $depthRef;
+        }
+        if (!isset($refProperties['registeredPlugins'])) {
+            $registeredPluginsRef = new \ReflectionProperty($this->debug, 'registeredPlugins');
+            $registeredPluginsRef->setAccessible(true);
+            $refProperties['registeredPlugins'] = $registeredPluginsRef;
+        }
+        $refProperties['channels']->setValue($this->debug, array());
+        $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
+        $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
+        $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
+
         if (!isset($this->file)) {
             /*
             this dummy test won't do any assertions, but will set
@@ -173,7 +195,6 @@ class DebugTestFramework extends DOMTestCase
     public function tearDown(): void
     {
         $this->debug->setCfg('output', false);
-        // fwrite(STDERR, "tearDown\n");
         $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_OUTPUT);
         foreach ($subscribers as $subscriber) {
             $unsub = false;
@@ -190,26 +211,6 @@ class DebugTestFramework extends DOMTestCase
         foreach ($subscribers as $subscriber) {
             $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, $subscriber);
         }
-        $refProperties = &$this->getSharedVar('reflectionProperties');
-        if (!isset($refProperties['channels'])) {
-            $channelProp = new \ReflectionProperty($this->debug, 'channels');
-            $channelProp->setAccessible(true);
-            $refProperties['channels'] = $channelProp;
-        }
-        if (!isset($refProperties['textDepth'])) {
-            $depthRef = new \ReflectionProperty($this->debug->getDump('text'), 'depth');
-            $depthRef->setAccessible(true);
-            $refProperties['textDepth'] = $depthRef;
-        }
-        if (!isset($refProperties['registeredPlugins'])) {
-            $registeredPluginsRef = new \ReflectionProperty($this->debug, 'registeredPlugins');
-            $registeredPluginsRef->setAccessible(true);
-            $refProperties['registeredPlugins'] = $registeredPluginsRef;
-        }
-        $refProperties['channels']->setValue($this->debug, array());
-        $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
-        $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
-        $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
         while (\ob_get_level() > self::$obLevels) {
             \ob_end_clean();
         }
@@ -231,7 +232,7 @@ class DebugTestFramework extends DOMTestCase
                     : \str_replace('\n', "\n", \json_encode($val, JSON_PRETTY_PRINT))
                 );
                 */
-                : \bdk\Debug::getInstance()->getDump('text')->dump($val);
+                : Debug::getInstance()->getDump('text')->dump($val);
             if (\json_last_error() !== JSON_ERROR_NONE) {
                 $new = \var_export($val, true);
             }
@@ -438,7 +439,7 @@ class DebugTestFramework extends DOMTestCase
             /*
                 We'll call processLogEntries directly
             */
-            $event = new \bdk\PubSub\Event(
+            $event = new Event(
                 $this->debug,
                 array(
                     'headers' => array(),

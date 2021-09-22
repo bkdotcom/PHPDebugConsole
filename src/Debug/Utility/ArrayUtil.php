@@ -113,16 +113,15 @@ class ArrayUtil
      *                              path may contain special keys:
      *                                * __count__ : return count() (traversal will cease)
      *                                * __end__ : last value
+     *                                * __pop__ : pop value
      *                                * __reset__ : first value
      * @param mixed        $default default value
      *
      * @return mixed
      */
-    public static function pathGet($array, $path, $default = null)
+    public static function pathGet(&$array, $path, $default = null)
     {
-        if (!\is_array($path)) {
-            $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
-        }
+        $path = self::pathToArray($path);
         $path = \array_reverse($path);
         while ($path) {
             $key = \array_pop($path);
@@ -131,7 +130,7 @@ class ArrayUtil
                 return $default;
             }
             if (isset($array[$key])) {
-                $array = $array[$key];
+                $array = &$array[$key];
                 continue;
             }
             if ($key === '__count__') {
@@ -140,6 +139,11 @@ class ArrayUtil
             if ($key === '__end__') {
                 \end($array);
                 $path[] = \key($array);
+                continue;
+            }
+            if ($key === '__pop__') {
+                $arrayNew = \array_pop($array);
+                $array = &$arrayNew;
                 continue;
             }
             if ($key === '__reset__') {
@@ -161,38 +165,70 @@ class ArrayUtil
      *                                 * __push__ : append value
      *                                 * __reset__ : first value
      * @param mixed        $val   value to set
+     *                                 * __unset__ to unset
      *
      * @return void
      */
     public static function pathSet(&$array, $path, $val)
     {
-        if (!\is_array($path)) {
-            $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
-        }
+        $path = self::pathToArray($path);
         $path = \array_reverse($path);
-        $ref = &$array;
         while ($path) {
             $key = \array_pop($path);
-            if ($key === '__push__') {
-                $ref[] = null;
-                $key = '__end__';
-            }
             if ($key === '__end__') {
-                \end($ref);
-                $path[] = \key($ref);
+                \end($array);
+                $path[] = \key($array);
+                continue;
+            }
+            if ($key === '__push__') {
+                $array[] = array();
+                $path[] = '__end__';
                 continue;
             }
             if ($key === '__reset__') {
-                \reset($ref);
-                $path[] = \key($ref);
+                \reset($array);
+                $path[] = \key($array);
                 continue;
             }
-            if (!isset($ref[$key]) || !\is_array($ref[$key])) {
-                $ref[$key] = array(); // initialize this level
+            if ($val === '__unset__' && empty($path)) {
+                unset($array[$key]);
+                return;
             }
-            $ref = &$ref[$key];
+            if (!isset($array[$key]) || !\is_array($array[$key])) {
+                $array[$key] = array(); // initialize this level
+            }
+            $array = &$array[$key];
         }
-        $ref = $val;
+        $array = $val;
+    }
+
+    /**
+     * Sort array, using `$order`
+     *
+     * @param array  $array Array to sort
+     * @param array  $order [description]
+     * @param string $what  [description]
+     *
+     * @return void
+     */
+    public static function sortWithOrder(&$array, $order, $what = 'val')
+    {
+        $callback = function ($valA, $valB) use ($order) {
+            $aPos = \array_search($valA, $order);
+            $bPos = \array_search($valB, $order);
+            if ($aPos === false && $bPos === false) {   // both items are dont cares
+                return 0;
+            }
+            if ($aPos === false) {                      // $a is a dont care
+                return 1;                               //   $a > $b
+            }
+            if ($bPos === false) {                      // $b is a dont care
+                return -1;                              //   $a < $b
+            }
+        };
+        $what === 'val'
+            ? \usort($array, $callback)
+            : \uksort($array, $callback);
     }
 
     /**
@@ -229,5 +265,19 @@ class ArrayUtil
             $arrayDef[$k2] = static::mergeDeep($arrayDef[$k2], $v2);
         }
         return $arrayDef;
+    }
+
+    /**
+     * Cast path to array
+     *
+     * @param array|string $path path
+     *
+     * @return array
+     */
+    private static function pathToArray($path)
+    {
+        return \is_array($path)
+            ? $path
+            : \array_filter(\preg_split('#[\./]#', $path), 'strlen');
     }
 }

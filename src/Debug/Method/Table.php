@@ -35,7 +35,7 @@ class Table
      *
      * @return void
      */
-    public function onLog(LogEntry $logEntry)
+    public function doTable(LogEntry $logEntry)
     {
         $this->logEntry = $logEntry;
         $this->debug = $logEntry->getSubject();

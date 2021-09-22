@@ -2,6 +2,7 @@
 
 namespace bdk\DebugTests\Type;
 
+use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\DebugTests\DebugTestFramework;
 
@@ -136,7 +137,7 @@ EOD;
                 'log',
                 array(
                     "\xef\xbb\xbfPesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \x07 (a control char).",
-                    \bdk\Debug::meta('sanitize', false),
+                    Debug::meta('sanitize', false),
                 ),
                 array(
                     'chromeLogger' => '[["\\\u{feff}Pesky <abbr title=\"Byte-Order-Mark\">BOM<\/abbr> and \\\x07 (a control char)."],null,""]',
@@ -215,7 +216,7 @@ EOD;
             // 5
             array(
                 'log',
-                array('long string', $longString, \bdk\Debug::meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
+                array('long string', $longString, Debug::meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
                 array(
                     'chromeLogger' => array(
                         array(
@@ -248,7 +249,7 @@ EOD;
                 array(
                     'entry' => function (LogEntry $logEntry) use ($base64snip) {
                         $jsonExpect = '{"method":"log","args":[{"strlen":10852,"typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"strlen":%d,"typeMore":"binary","value":"","contentType":"%s","type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":[]}';
-                        $jsonified = \json_encode($logEntry->export());
+                        $jsonified = \json_encode($logEntry);
                         $this->assertStringMatchesFormat($jsonExpect, $jsonified);
                     },
                     'chromeLogger' => array(
@@ -283,12 +284,12 @@ EOD;
                             'password' => 'secret',
                         ))
                     ),
-                    \bdk\Debug::meta('redact'),
+                    Debug::meta('redact'),
                 ),
                 array(
                     'entry' => function (LogEntry $logEntry) use ($base64snip2) {
                         $jsonExpect = '{"method":"log","args":[{"strlen":null,"typeMore":"base64","value":"' . $base64snip2 . '","valueDecoded":{"strlen":null,"typeMore":"json","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","type":"string","attribs":{"class":["highlight","language-json"]},"addQuotes":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
-                        $jsonified = \json_encode($logEntry->export());
+                        $jsonified = \json_encode($logEntry);
                         $this->assertSame($jsonExpect, $jsonified);
                     },
                     'chromeLogger' => array(

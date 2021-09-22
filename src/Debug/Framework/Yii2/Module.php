@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii2\LogTarget;
+use bdk\Debug\LogEntry;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;

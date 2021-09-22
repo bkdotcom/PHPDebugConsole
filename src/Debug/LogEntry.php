@@ -14,11 +14,12 @@ namespace bdk\Debug;
 
 use bdk\Debug;
 use bdk\PubSub\Event;
+use JsonSerializable;
 
 /**
  * Represents a log entry
  */
-class LogEntry extends Event
+class LogEntry extends Event implements JsonSerializable
 {
 
     public $subRegex;
@@ -41,14 +42,6 @@ class LogEntry extends Event
     public function __construct(Debug $subject, $method, $args = array(), $meta = array(), $defaultArgs = array(), $argsToMeta = array())
     {
         $this->subject = $subject;
-        $this->values = array(
-            'method' => $method,
-            'args' => $args ?: array(),
-            'meta' => array(),
-            'numArgs' => 0,     // number of initial non-meta aargs passed (does not include added default values)
-            'appendLog' => true,
-            'return' => null,
-        );
         $this->subRegex = '/%'
             . '(?:'
             . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
@@ -60,6 +53,14 @@ class LogEntry extends Event
             . '[difs]'
             . ')'
             . '/';
+        $this->values = array(
+            'method' => $method,
+            'args' => $args ?: array(),
+            'meta' => array(),
+            'numArgs' => 0,     // number of initial non-meta aargs passed (does not include added default values)
+            'appendLog' => true,
+            'return' => null,
+        );
         $metaExtracted = $this->metaExtract($this->values['args']);
         if ($defaultArgs) {
             $count = \count($defaultArgs);
@@ -75,8 +76,8 @@ class LogEntry extends Event
             }
             $this->values['args'] = \array_values($args + $argsMore);
         }
-        $this->setMeta($meta);
-        $this->setMeta($metaExtracted);
+        $this->values['meta'] = \array_merge($meta, $metaExtracted);
+        $this->onSet($this->values);
     }
 
     /**
@@ -143,6 +144,16 @@ class LogEntry extends Event
     }
 
     /**
+     * Specify data which should be serialized to JSON
+     *
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->export();
+    }
+
+    /**
      * Set meta value(s)
      * Value(s) get merged with existing values
      *
@@ -162,26 +173,8 @@ class LogEntry extends Event
             }
             $meta = array($key => $val);
         }
-        if (isset($meta['attribs'])) {
-            if (!isset($meta['attribs']['class'])) {
-                $meta['attribs']['class'] = array();
-            } elseif (\is_string($meta['attribs']['class'])) {
-                $meta['attribs']['class'] = \explode(' ', $meta['attribs']['class']);
-            }
-        }
         $meta = \array_merge($this->values['meta'], $meta);
-        $this->values['meta'] = $meta;
-        if (\array_key_exists('channel', $meta)) {
-            $channel = $meta['channel'];
-            unset($this->values['meta']['channel']);
-            if ($channel === null) {
-                $this->subject = $this->subject->rootInstance;
-                return;
-            }
-            $this->subject = $this->subject->parentInstance
-                ? $this->subject->parentInstance->getChannel($channel)
-                : $this->subject->getChannel($channel);
-        }
+        $this->setValue('meta', $meta);
     }
 
     /**
@@ -204,5 +197,37 @@ class LogEntry extends Event
         $array = \array_values($array);
         $this->values['numArgs'] = \count($array);
         return $meta;
+    }
+
+    /**
+     * Make sure attribs['class'] is an array
+     *
+     * @param array $values key => values being set
+     *
+     * @return void
+     */
+    protected function onSet($values = array())
+    {
+        if (isset($values['meta']) === false) {
+            return;
+        }
+        if (isset($values['meta']['attribs'])) {
+            if (!isset($values['meta']['attribs']['class'])) {
+                $this->values['meta']['attribs']['class'] = array();
+            } elseif (\is_string($values['meta']['attribs']['class'])) {
+                $this->values['meta']['attribs']['class'] = \explode(' ', $values['meta']['attribs']['class']);
+            }
+        }
+        if (\array_key_exists('channel', $values['meta'])) {
+            $channel = $values['meta']['channel'];
+            unset($this->values['meta']['channel']);
+            if ($channel === null) {
+                $this->subject = $this->subject->rootInstance;
+                return;
+            }
+            $this->subject = $this->subject->parentInstance
+                ? $this->subject->parentInstance->getChannel($channel)
+                : $this->subject->getChannel($channel);
+        }
     }
 }

@@ -34,7 +34,7 @@ class Clear
      *
      * @return void
      */
-    public function onLog(LogEntry $logEntry)
+    public function doClear(LogEntry $logEntry)
     {
         $this->debug = $logEntry->getSubject();
         $this->data = $this->debug->getData();
@@ -73,7 +73,7 @@ class Clear
                 ),
             ), $logEntry['meta']),
             'appendLog' => $args && !($bitmask & Debug::CLEAR_SILENT),
-            'publish' => (bool) $args,
+            'forcePublish' => (bool) $args,   // publish event even if collect = false
         ));
     }
 
@@ -197,7 +197,7 @@ class Clear
         $clearErrors = (bool) ($flags & Debug::CLEAR_LOG_ERRORS);
         if ($flags & Debug::CLEAR_LOG) {
             $return = 'log (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
-            $entriesKeep = $this->debug->getCurrentGroups('main');
+            $entriesKeep = $this->debug->methodGroup->getCurrentGroups('main');
             $this->clearLogHelper($this->data['log'], $clearErrors, $entriesKeep);
         } elseif ($clearErrors) {
             $return = 'errors';
@@ -253,7 +253,7 @@ class Clear
                     $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, array());
                     continue;
                 }
-                $entriesKeep = $this->debug->getCurrentGroups($priority);
+                $entriesKeep = $this->debug->methodGroup->getCurrentGroups($priority);
                 $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, $entriesKeep);
             }
         } elseif ($clearErrors) {

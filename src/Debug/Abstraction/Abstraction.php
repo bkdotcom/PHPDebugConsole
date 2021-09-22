@@ -110,16 +110,19 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     /**
      * Make sure attribs['class'] is an array
      *
+     * @param array $values key => values being set
+     *
      * @return void
      */
-    protected function onSet()
+    protected function onSet($values = array())
     {
-        if (isset($this->values['attribs'])) {
-            if (!isset($this->values['attribs']['class'])) {
-                $this->values['attribs']['class'] = array();
-            } elseif (\is_string($this->values['attribs']['class'])) {
-                $this->values['attribs']['class'] = \explode(' ', $this->values['attribs']['class']);
-            }
+        if (isset($values['attribs']) === false) {
+            return;
+        }
+        if (!isset($values['attribs']['class'])) {
+            $this->values['attribs']['class'] = array();
+        } elseif (\is_string($values['attribs']['class'])) {
+            $this->values['attribs']['class'] = \explode(' ', $values['attribs']['class']);
         }
     }
 }

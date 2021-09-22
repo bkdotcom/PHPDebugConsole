@@ -113,11 +113,18 @@ class ServiceProvider implements ServiceProviderInterface
         $container['methodClear'] = function () {
             return new \bdk\Debug\Method\Clear();
         };
+        $container['methodGroup'] = function (Container $container) {
+            $debug = $container['debug'];
+            return new \bdk\Debug\Method\Group($debug);
+        };
         $container['methodProfile'] = $container->factory(function () {
             return new \bdk\Debug\Method\Profile();
         });
         $container['methodTable'] = function () {
             return new \bdk\Debug\Method\Table();
+        };
+        $container['methodTime'] = function () {
+            return new \bdk\Debug\Method\Time();
         };
         $container['middleware'] = function (Container $container) {
             $debug = $container['debug'];

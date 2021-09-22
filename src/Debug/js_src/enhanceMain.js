@@ -61,7 +61,7 @@ function addErrorIcons () {
   var $icons = $('<span>', { class: 'debug-error-counts' })
   $.each(['error', 'warn'], function (i, what) {
     if (counts[what] === 0) {
-      return;
+      return
     }
     $icon = $(config.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what)
     $icons.append($icon).append($('<span>', {

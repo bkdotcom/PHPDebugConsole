@@ -280,7 +280,7 @@
     }
   }
 
-  function toFixed(str, matches) {
+  function toFixed (str, matches) {
     var num = Number.parseFloat(str);
     if (matches[2]) {
       // sci notation
@@ -1583,7 +1583,7 @@
     var $icons = $('<span>', { class: 'debug-error-counts' });
     $.each(['error', 'warn'], function (i, what) {
       if (counts[what] === 0) {
-        return;
+        return
       }
       $icon = $(config$5.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what);
       $icons.append($icon).append($('<span>', {
@@ -5584,7 +5584,6 @@
   });
 
   function init$9 ($root) {
-
     delegate($root[0], {
       target: '.fa-hashtag, [title]',
       delay: [200, null], // show / hide delay (null = default)

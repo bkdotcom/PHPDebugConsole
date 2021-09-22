@@ -15,6 +15,8 @@
 
 namespace bdk;
 
+use bdk\Container;
+use bdk\Container\ServiceProviderInterface;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
@@ -99,17 +101,20 @@ class Debug
     const VERSION = '3.0.0-b1';
 
     protected $cfg = array();
+    private $channels = array();
     protected $config;
+    protected $container;
     protected $data = array(
         'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
         'counts'            => array(), // count method
         'entryCountInitial' => 0,       // store number of log entries created during init
-        'groupStacks' => array(
-            'main' => array(),  // array('channel' => Debug, 'collect' => bool)[]
-        ),
         'groupPriorityStack' => array(), // array of priorities
                                         //   used to return to the previous summary when groupEnd()ing out of a summary
                                         //   this allows calling groupSummary() while in a groupSummary
+        'groupStacks' => array(
+            'main' => array(),  // array('channel' => Debug instance, 'collect' => bool)[]
+        ),
+        'groupStacksRef'    => null,    // points to $this->data['groupStacks'][x] (where x = 'main' or (int) priority)
         'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
         'isObCache'         => false,
         'log'               => array(),
@@ -122,25 +127,20 @@ class Debug
             // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
         ),
     );
-    protected $container;
-    protected $groupStackRef;   // points to $this->data['groupStacks'][x] (where x = 'main' or (int) priority)
     protected $internal;
     protected $internalEvents;
+    private static $instance;
+    protected $lazyObjects = array();
     protected $logRef;          // points to either log or logSummary[priority]
     protected static $methodDefaultArgs = array();
     protected $parentInstance;
-    protected $registeredPlugins;   // SplObjectHash
-    protected $rootInstance;
-    protected $serviceContainer;
-
-    protected $lazyObjects = array();
     protected $readOnly = array(
         'parentInstance',
         'rootInstance',
     );
-
-    private static $instance;
-    private $channels = array();
+    protected $registeredPlugins;   // SplObjectHash
+    protected $rootInstance;
+    protected $serviceContainer;
 
     /**
      * Constructor
@@ -473,10 +473,10 @@ class Debug
             ),
             array('bitmask')
         );
-        $this->methodClear->onLog($logEntry);
+        $this->methodClear->doClear($logEntry);
         // even if cleared from within summary, let's log this in primary log
         $this->setLogDest('log');
-        $this->appendLog($logEntry, $logEntry['publish']);
+        $this->appendLog($logEntry);
         $this->setLogDest('auto');
     }
 
@@ -608,7 +608,12 @@ class Debug
      */
     public function group()
     {
-        $this->doGroup(__FUNCTION__, \func_get_args());
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args()
+        );
+        $this->methodGroup->doGroup($logEntry);
     }
 
     /**
@@ -622,7 +627,12 @@ class Debug
      */
     public function groupCollapsed()
     {
-        $this->doGroup(__FUNCTION__, \func_get_args());
+        $logEntry = new LogEntry(
+            $this,
+            __FUNCTION__,
+            \func_get_args()
+        );
+        $this->methodGroup->doGroup($logEntry);
     }
 
     /**
@@ -640,37 +650,12 @@ class Debug
     {
         $logEntry = new LogEntry(
             $this,
-            __FUNCTION__
+            __FUNCTION__,
+            array(
+                $value,
+            )
         );
-        $haveOpenGroup = $this->haveOpenGroup();
-        if ($haveOpenGroup === 2) {
-            // we're closing a summary group
-            $priorityClosing = \array_pop($this->data['groupPriorityStack']);
-            // not really necessary to remove this empty placeholder, but lets keep things tidy
-            unset($this->data['groupStacks'][$priorityClosing]);
-            $this->setLogDest('auto');
-            /*
-                Publish the Debug::EVENT_LOG event (regardless of cfg.collect)
-                don't actually log
-            */
-            $logEntry['appendLog'] = false;
-            $logEntry->setMeta('closesSummary', true);
-            $this->appendLog($logEntry, true);
-        } elseif ($haveOpenGroup === 1) {
-            \array_pop($this->rootInstance->groupStackRef);
-            if ($value !== Abstracter::UNDEFINED) {
-                $this->appendLog(new LogEntry(
-                    $this,
-                    'groupEndValue',
-                    array('return', $value)
-                ));
-            }
-            $this->appendLog($logEntry);
-        }
-        $errorCaller = $this->errorHandler->get('errorCaller');
-        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->getGroupDepth() < $errorCaller['groupDepth']) {
-            $this->errorHandler->setErrorCaller(false);
-        }
+        $this->methodGroup->groupEnd($logEntry);
     }
 
     /**
@@ -699,15 +684,7 @@ class Debug
             ),
             array('priority')
         );
-        $this->data['groupPriorityStack'][] = $logEntry['meta']['priority'];
-        $this->setLogDest('summary');
-        /*
-            Publish the Debug::EVENT_LOG event (regardless of cfg.collect)
-            don't actually log
-        */
-        $logEntry['appendLog'] = false;
-        // groupSumary's Debug::EVENT_LOG event should happen on the root instance
-        $this->rootInstance->appendLog($logEntry, true);
+        $this->methodGroup->groupSummary($logEntry);
     }
 
     /**
@@ -727,16 +704,7 @@ class Debug
             __FUNCTION__,
             \func_get_args()
         );
-        $groups = $this->internal->getCurrentGroups('auto');
-        foreach ($groups as $groupLogEntry) {
-            $groupLogEntry['method'] = 'group';
-        }
-        /*
-            Publish the Debug::EVENT_LOG event (regardless of cfg.collect)
-            don't actually log
-        */
-        $logEntry['appendLog'] = false;
-        $this->appendLog($logEntry, true);
+        $this->methodGroup->groupUncollapse($logEntry);
     }
 
     /**
@@ -908,7 +876,7 @@ class Debug
             unset($this->data['profileInstances'][$name]);
         }
         $logEntry['args'] = $args;
-        $this->methodTable->onLog($logEntry);
+        $this->methodTable->doTable($logEntry);
         $this->appendLog($logEntry);
     }
 
@@ -936,7 +904,7 @@ class Debug
             __FUNCTION__,
             \func_get_args()
         );
-        $this->methodTable->onLog($logEntry);
+        $this->methodTable->doTable($logEntry);
         $this->appendLog($logEntry);
     }
 
@@ -965,31 +933,13 @@ class Debug
             $this,
             __FUNCTION__,
             \func_get_args(),
-            array(
-                // these meta values are used if duration is passed
-                'precision' => 4,
-                'silent' => false,
-                'template' => '%label: %time',
-                'unit' => 'auto',
-            ),
+            array(),
             array(
                 'label' => null,
                 'duration' => null,
             )
         );
-        $args = $logEntry['args'];
-        $floats = \array_filter($args, function ($val) {
-            return \is_float($val);
-        });
-        $args = \array_values(\array_diff_key($args, $floats));
-        $label = $args[0];
-        if ($floats) {
-            $duration = \reset($floats);
-            $logEntry['args'] = array($label);
-            $this->internal->doTime($duration, $logEntry);
-            return;
-        }
-        $this->stopWatch->start($label);
+        $this->methodTime->doTime($logEntry);
     }
 
     /**
@@ -1015,10 +965,7 @@ class Debug
     public function timeEnd($label = null, $log = true)
     {
         $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
-        $label = $logEntry['args'][0];
-        $elapsed = $this->stopWatch->stop($label);
-        $this->internal->doTime($elapsed, $logEntry);
-        return $elapsed;
+        return $this->methodTime->timeEnd($logEntry);
     }
 
     /**
@@ -1043,21 +990,7 @@ class Debug
     public function timeGet($label = null, $log = true)
     {
         $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
-        $label = $logEntry['args'][0];
-        $elapsed = $this->stopWatch->get($label);
-        if ($elapsed === false) {
-            if ($logEntry->getMeta('silent') === false) {
-                $this->appendLog(new LogEntry(
-                    $this,
-                    __FUNCTION__,
-                    array('Timer \'' . $label . '\' does not exist'),
-                    $logEntry['meta']
-                ));
-            }
-            return false;
-        }
-        $this->internal->doTime($elapsed, $logEntry);
-        return $elapsed;
+        return $this->methodTime->timeGet($logEntry);
     }
 
     /**
@@ -1084,29 +1017,7 @@ class Debug
                 'label' => null,
             )
         );
-        $args = $logEntry['args'];
-        $label = $args[0];
-        $elapsed = $this->stopWatch->get($label);
-        $meta = $logEntry['meta'];
-        if ($elapsed === false) {
-            $this->appendLog(new LogEntry(
-                $this,
-                __FUNCTION__,
-                array('Timer \'' . $label . '\' does not exist'),
-                \array_diff_key($meta, \array_flip(array('precision','unit')))
-            ));
-            return;
-        }
-        $elapsed = $this->utility->formatDuration(
-            $elapsed,
-            $meta['unit'],
-            $meta['precision']
-        );
-        $args[0] = $label . ': ';
-        \array_splice($args, 1, 0, $elapsed);
-        $logEntry['args'] = $args;
-        $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision','unit')));
-        $this->appendLog($logEntry);
+        $this->methodTime->timeLog($logEntry);
     }
 
     /**
@@ -1164,7 +1075,7 @@ class Debug
             $this->addPlugin(new \bdk\Debug\Plugin\Highlight());
         }
         $logEntry['args'] = array($backtrace);
-        $this->methodTable->onLog($logEntry);
+        $this->methodTable->doTable($logEntry);
         $this->appendLog($logEntry);
     }
 
@@ -1509,7 +1420,7 @@ class Debug
      */
     public function onCfgServiceProvider($val)
     {
-        $getContainerRawVals = function (\bdk\Container $container) {
+        $getContainerRawVals = function (Container $container) {
             $keys = $container->keys();
             $return = array();
             foreach ($keys as $key) {
@@ -1518,18 +1429,18 @@ class Debug
             return $return;
         };
 
-        if ($val instanceof \bdk\Container\ServiceProviderInterface) {
+        if ($val instanceof ServiceProviderInterface) {
             /*
                 convert to array
             */
-            $containerTmp = new \bdk\Container();
+            $containerTmp = new Container();
             $containerTmp->registerProvider($val);
             $val = $getContainerRawVals($containerTmp);
         } elseif (\is_callable($val)) {
             /*
                 convert to array
             */
-            $containerTmp = new \bdk\Container();
+            $containerTmp = new Container();
             \call_user_func($val, $containerTmp);
             $val = $getContainerRawVals($containerTmp);
         } elseif (!\is_array($val)) {
@@ -1691,12 +1602,25 @@ class Debug
      */
     public function setData($path, $value = null)
     {
-        $this->data = \is_array($path)
-            ? \array_merge($this->data, $path)
-            : \call_user_func(function ($path, $value) {
-                $this->arrayUtil->pathSet($this->data, $path, $value);
-                return $this->data;
-            }, $path, $value);
+        if ($path === 'logDest') {
+            $this->setLogDest($value);
+            return;
+        }
+        if (\is_string($path)) {
+            $this->arrayUtil->pathSet($this->data, $path, $value);
+            if (\strpos($path, 'group') === 0) {
+                /*
+                    if updating groupPriorityStack, groupStacks, or groupStacksRef
+                    don't clear stacks/ priorityStack
+                */
+                return;
+            }
+            if (\strpos($path, 'groupStacks') === 0) {
+                return;
+            }
+        } elseif (\is_array($path)) {
+            $this->data = \array_merge($this->data, $path);
+        }
         if (!$this->data['log']) {
             $this->data['groupStacks']['main'] = array();
         }
@@ -1730,7 +1654,7 @@ class Debug
         }
         if ($caller) {
             // groupEnd will check depth and potentially clear errorCaller
-            $caller['groupDepth'] = $this->getGroupDepth();
+            $caller['groupDepth'] = $this->methodGroup->getDepth();
         }
         $this->errorHandler->setErrorCaller($caller);
     }
@@ -1838,14 +1762,13 @@ class Debug
      *   + publishes Debug::EVENT_LOG event
      *   + appends log (if event propagation not stopped)
      *
-     * @param LogEntry $logEntry     log entry instance
-     * @param bool     $forcePublish (false) publish event event if collect is false
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return bool whether or not entry got appended
      */
-    protected function appendLog(LogEntry $logEntry, $forcePublish = false)
+    protected function appendLog(LogEntry $logEntry)
     {
-        if (!$this->cfg['collect'] && !$forcePublish) {
+        if (!$this->cfg['collect'] && !$logEntry['forcePublish']) {
             return false;
         }
         $cfgRestore = array();
@@ -1938,7 +1861,7 @@ class Debug
             $containerCfg = $cfg['container'];
         }
 
-        $this->container = new \bdk\Container(
+        $this->container = new Container(
             array(
                 'debug' => $this,
             ),
@@ -1948,7 +1871,7 @@ class Debug
 
         if (empty($cfg['debug']['parent'])) {
             // root instance
-            $this->serviceContainer = new \bdk\Container(
+            $this->serviceContainer = new Container(
                 array(
                     'debug' => $this,
                 ),
@@ -2035,46 +1958,6 @@ class Debug
     }
 
     /**
-     * Append group or groupCollapsed to log
-     *
-     * @param string $method 'group' or 'groupCollapsed'
-     * @param array  $args   arguments passed to group or groupCollapsed
-     *
-     * @return void
-     */
-    private function doGroup($method, $args)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            $method,
-            $args
-        );
-        $this->rootInstance->groupStackRef[] = array(
-            'channel' => $this,
-            'collect' => $this->cfg['collect'],
-        );
-        if ($this->cfg['collect'] === false) {
-            return;
-        }
-        $this->internal->doGroup($logEntry);
-    }
-
-    /**
-     * Calculate total group depth
-     *
-     * @return int
-     */
-    protected function getGroupDepth()
-    {
-        $depth = 0;
-        foreach ($this->data['groupStacks'] as $stack) {
-            $depth += \count($stack);
-        }
-        $depth += \count($this->data['groupPriorityStack']);
-        return $depth;
-    }
-
-    /**
      * Get Dump or Route instance
      *
      * @param 'dump'|'route' $cat       "Category" (dump or route)
@@ -2141,24 +2024,6 @@ class Debug
             self::$methodDefaultArgs[$methodName] = $defaultArgs;
         }
         return $defaultArgs;
-    }
-
-    /**
-     * Are we inside a group?
-     *
-     * @return int 2: group summary, 1: regular group, 0: not in group
-     */
-    private function haveOpenGroup()
-    {
-        $groupStackWas = $this->rootInstance->groupStackRef;
-        if ($this->data['groupPriorityStack'] && !$groupStackWas) {
-            // we're in top level of group summary
-            return 2;
-        }
-        if ($groupStackWas && \end($groupStackWas)['collect'] === $this->cfg['collect']) {
-            return 1;
-        }
-        return 0;
     }
 
     /**
@@ -2230,7 +2095,7 @@ class Debug
                 break;
             case 'log':
                 $this->rootInstance->logRef = &$this->rootInstance->data['log'];
-                $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks']['main'];
+                $this->data['groupStacksRef'] = &$this->data['groupStacks']['main'];
                 break;
             case 'summary':
                 $priority = \end($this->data['groupPriorityStack']);
@@ -2239,7 +2104,7 @@ class Debug
                     $this->data['groupStacks'][$priority] = array();
                 }
                 $this->rootInstance->logRef = &$this->rootInstance->data['logSummary'][$priority];
-                $this->rootInstance->groupStackRef = &$this->rootInstance->data['groupStacks'][$priority];
+                $this->data['groupStacksRef'] = &$this->data['groupStacks'][$priority];
         }
     }
 

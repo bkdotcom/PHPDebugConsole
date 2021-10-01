@@ -151,20 +151,31 @@ class DebugTestFramework extends DOMTestCase
 
         $refProperties = &$this->getSharedVar('reflectionProperties');
         if (!isset($refProperties['channels'])) {
-            $channelProp = new \ReflectionProperty($this->debug, 'channels');
-            $channelProp->setAccessible(true);
-            $refProperties['channels'] = $channelProp;
+            $prop = new \ReflectionProperty($this->debug, 'channels');
+            $prop->setAccessible(true);
+            $refProperties['channels'] = $prop;
+        }
+        if (!isset($refProperties['groupPriorityStack'])) {
+            $prop = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupPriorityStack');
+            $prop->setAccessible(true);
+            $refProperties['groupPriorityStack'] = $prop;
+        }
+        if (!isset($refProperties['groupStacks'])) {
+            $prop = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupStacks');
+            $prop->setAccessible(true);
+            $refProperties['groupStacks'] = $prop;
         }
         if (!isset($refProperties['textDepth'])) {
-            $depthRef = new \ReflectionProperty($this->debug->getDump('text'), 'depth');
-            $depthRef->setAccessible(true);
-            $refProperties['textDepth'] = $depthRef;
+            $prop = new \ReflectionProperty($this->debug->getDump('text'), 'depth');
+            $prop->setAccessible(true);
+            $refProperties['textDepth'] = $prop;
         }
         if (!isset($refProperties['registeredPlugins'])) {
-            $registeredPluginsRef = new \ReflectionProperty($this->debug, 'registeredPlugins');
-            $registeredPluginsRef->setAccessible(true);
-            $refProperties['registeredPlugins'] = $registeredPluginsRef;
+            $prop = new \ReflectionProperty($this->debug, 'registeredPlugins');
+            $prop->setAccessible(true);
+            $refProperties['registeredPlugins'] = $prop;
         }
+
         $refProperties['channels']->setValue($this->debug, array());
         $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
         $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);

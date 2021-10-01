@@ -102,12 +102,8 @@ function addNoti ($root) {
 
 export function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
   var $li
+  var $lis = []
   var $ul = $('<ul class="list-unstyled">')
-  var channel
-  var channelName = ''
-  var channelNames = []
-  var isChecked = true
-  var value = ''
   /*
   console.log('buildChannelList', {
     nameRoot: nameRoot,
@@ -130,9 +126,33 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
     )
     $ul.append($li)
   }
-  channelNames = Object.keys(channels).sort(function (a, b) {
+  $lis = buildChannelLis(channels, nameRoot, checkedChannels, prepend)
+  for (var i = 0, len = $lis.length; i < len; i++) {
+    $ul.append($lis[i])
+  }
+  return $ul
+}
+
+function buildChannelValue (channelName, prepend, nameRoot) {
+  var value = channelName
+  if (prepend) {
+    value = prepend + channelName
+  } else if (value !== nameRoot) {
+    value = nameRoot + '.' + value
+  }
+  return value
+}
+
+function buildChannelLis (channels, nameRoot, checkedChannels, prepend) {
+  var $li
+  var $lis = []
+  var channel
+  var channelName = ''
+  var channelNames = Object.keys(channels).sort(function (a, b) {
     return a.localeCompare(b)
   })
+  var isChecked = true
+  var value
   for (var i = 0, len = channelNames.length; i < len; i++) {
     channelName = channelNames[i]
     if (channelName === 'phpError') {
@@ -140,12 +160,7 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
       continue
     }
     channel = channels[channelName]
-    value = channelName
-    if (prepend) {
-      value = prepend + channelName
-    } else if (value !== nameRoot) {
-      value = nameRoot + '.' + value
-    }
+    value = buildChannelValue(channelName, prepend, nameRoot)
     isChecked = checkedChannels !== undefined
       ? checkedChannels.indexOf(value) > -1
       : channel.options.show
@@ -159,9 +174,9 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
     if (Object.keys(channel.channels).length) {
       $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'))
     }
-    $ul.append($li)
+    $lis.push($li)
   }
-  return $ul
+  return $lis
 }
 
 function buildChannelLi (channelName, value, isChecked, isRoot, options) {

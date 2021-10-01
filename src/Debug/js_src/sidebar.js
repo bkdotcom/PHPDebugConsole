@@ -21,70 +21,76 @@ export function init ($debugRoot) {
     close($root)
   }
 
-  $root.on('click', '.close[data-dismiss=alert]', function () {
-    // setTimeout -> new thread -> executed after event bubbled
-    var $debug = $(this).closest('.debug')
-    setTimeout(function () {
-      if ($debug.find('.m_alert').length) {
-        $debug.find('.debug-sidebar input[data-toggle=method][value=alert]').parent().addClass('disabled')
-      }
-    })
-  })
-
-  $root.on('click', '.sidebar-toggle', function () {
-    var $debug = $(this).closest('.debug')
-    var isVis = $debug.find('.debug-sidebar').is('.show')
-    if (!isVis) {
-      open($debug)
-    } else {
-      close($debug)
-    }
-  })
-
-  $root.on('change', '.debug-sidebar input[type=checkbox]', function (e) {
-    var $input = $(this)
-    var $toggle = $input.closest('.toggle')
-    var $nested = $toggle.next('ul').find('.toggle')
-    var isActive = $input.is(':checked')
-    var $errorSummary = $('.m_alert.error-summary.have-fatal')
-    $toggle.toggleClass('active', isActive)
-    $nested.toggleClass('active', isActive)
-    if ($input.val() === 'fatal') {
-      $errorSummary.find('.error-fatal').toggleClass('filter-hidden', !isActive)
-      $errorSummary.toggleClass('filter-hidden', $errorSummary.children().not('.filter-hidden').length === 0)
-    }
-  })
+  $root.on('click', '.close[data-dismiss=alert]', onClickCloseAlert)
+  $root.on('click', '.sidebar-toggle', onClickSidebarToggle)
+  $root.on('change', '.debug-sidebar input[type=checkbox]', onChangeSidebarInput)
 
   if (initialized) {
     return
   }
 
-  addPreFilter(function ($delegateRoot) {
-    $root = $delegateRoot
-    options = $root.find('.tab-primary').data('options')
-    methods = []
-    $root.find('input[data-toggle=method]:checked').each(function () {
-      methods.push($(this).val())
-    })
-  })
-
-  addFilterTest(function ($node) {
-    var matches = $node[0].className.match(/\bm_(\S+)\b/)
-    var method = matches ? matches[1] : null
-    if (!options.sidebar) {
-      return true
-    }
-    if (method === 'group' && $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)) {
-      method = $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)[1]
-      $node.toggleClass('filter-hidden-body', methods.indexOf(method) < 0)
-    }
-    if (['alert', 'error', 'warn', 'info'].indexOf(method) > -1) {
-      return methods.indexOf(method) > -1
-    }
-    return methods.indexOf('other') > -1
-  })
-
+  addPreFilter(preFilter)
+  addFilterTest(filterTest)
   initialized = true
+}
+
+function onChangeSidebarInput (e) {
+  var $input = $(this)
+  var $toggle = $input.closest('.toggle')
+  var $nested = $toggle.next('ul').find('.toggle')
+  var isActive = $input.is(':checked')
+  var $errorSummary = $('.m_alert.error-summary.have-fatal')
+  $toggle.toggleClass('active', isActive)
+  $nested.toggleClass('active', isActive)
+  if ($input.val() === 'fatal') {
+    $errorSummary.find('.error-fatal').toggleClass('filter-hidden', !isActive)
+    $errorSummary.toggleClass('filter-hidden', $errorSummary.children().not('.filter-hidden').length === 0)
+  }
+}
+
+function onClickCloseAlert () {
+  // setTimeout -> new thread -> executed after event bubbled
+  var $debug = $(this).closest('.debug')
+  setTimeout(function () {
+    if ($debug.find('.m_alert').length) {
+      $debug.find('.debug-sidebar input[data-toggle=method][value=alert]').parent().addClass('disabled')
+    }
+  })
+}
+
+function onClickSidebarToggle () {
+  var $debug = $(this).closest('.debug')
+  var isVis = $debug.find('.debug-sidebar').is('.show')
+  if (!isVis) {
+    open($debug)
+  } else {
+    close($debug)
+  }
+}
+
+function filterTest ($node) {
+  var matches = $node[0].className.match(/\bm_(\S+)\b/)
+  var method = matches ? matches[1] : null
+  if (!options.sidebar) {
+    return true
+  }
+  if (method === 'group' && $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)) {
+    method = $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)[1]
+    $node.toggleClass('filter-hidden-body', methods.indexOf(method) < 0)
+  }
+  if (['alert', 'error', 'warn', 'info'].indexOf(method) > -1) {
+    return methods.indexOf(method) > -1
+  }
+  return methods.indexOf('other') > -1
+}
+
+function preFilter ($delegateRoot) {
+  $root = $delegateRoot
+  options = $root.find('.tab-primary').data('options')
+  methods = []
+  $root.find('input[data-toggle=method]:checked').each(function () {
+    methods.push($(this).val())
+  })
 }
 
 export function addMarkup ($node) {

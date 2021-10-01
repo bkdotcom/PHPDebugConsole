@@ -147,51 +147,8 @@ class Html extends Base
         if ($errorSummary) {
             \array_unshift($this->data['alerts'], $errorSummary);
         }
-        $lftDefault = \strtr(\ini_get('xdebug.file_link_format'), array(
-            '%f' => '%file',
-            '%l' => '%line',
-        ));
-        $str = '<div' . $this->debug->html->buildAttribString(array(
-            'class' => 'debug',
-            // channel list gets built as log processed...  we'll str_replace this...
-            'data-channels' => '{{channels}}',
-            'data-channel-name-root' => $this->channelNameRoot,
-            'data-options' => array(
-                'drawer' => $this->cfg['drawer'],
-                'linkFilesTemplateDefault' => $lftDefault ?: null,
-                'tooltip' => $this->cfg['tooltip'],
-            ),
-        )) . ">\n";
-        if ($this->cfg['outputCss']) {
-            $str .= '<style type="text/css">' . "\n"
-                    . $this->getCss() . "\n"
-                . '</style>' . "\n";
-        }
-        if ($this->cfg['outputScript']) {
-            $str .= '<script>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n";
-            $str .= '<script>'
-                    . $this->getScript() . "\n"
-                . '</script>' . "\n";
-        }
-        $str .= '<header class="debug-bar debug-menu-bar">'
-            . 'PHPDebugConsole'
-            . '<nav role="tablist"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>'
-                . $this->buildTabList()
-            . '</nav>'
-            . '</header>' . "\n";
-        if ($this->cfg['outputScript']) {
-            $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n";
-        }
-        $str .= '<div class="tab-panes"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>' . "\n";
-        $str .= $this->buildTabPanes();
-        $str .= '</div>' . "\n"; // close .tab-panes
-        $str .= '</div>' . "\n"; // close .debug
-        $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
-        $str = \strtr($str, array(
-            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
-        ));
+        $event['return'] .= $this->buildOutput();
         $this->data = array();
-        $event['return'] .= $str;
         $this->dump->crateRaw = true;
     }
 
@@ -260,6 +217,43 @@ class Html extends Base
     }
 
     /**
+     * Build HTML output
+     *
+     * @return string
+     */
+    private function buildOutput()
+    {
+        $lftDefault = \strtr(\ini_get('xdebug.file_link_format'), array(
+            '%f' => '%file',
+            '%l' => '%line',
+        ));
+        $str = '<div' . $this->debug->html->buildAttribString(array(
+            'class' => 'debug',
+            // channel list gets built as log processed...  we'll str_replace this...
+            'data-channels' => '{{channels}}',
+            'data-channel-name-root' => $this->channelNameRoot,
+            'data-options' => array(
+                'drawer' => $this->cfg['drawer'],
+                'linkFilesTemplateDefault' => $lftDefault ?: null,
+                'tooltip' => $this->cfg['tooltip'],
+            ),
+        )) . ">\n";
+        $str .= $this->buildStyleTag();
+        $str .= $this->buildScriptTag();
+        $str .= $this->buildHeaderTag();
+        if ($this->cfg['outputScript']) {
+            $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n";
+        }
+        $str .= $this->buildTabPanes();
+        $str .= '</div>' . "\n"; // close .debug
+        $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
+        $str = \strtr($str, array(
+            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
+        ));
+        return $str;
+    }
+
+    /**
      * Build a tree of all channels that have been output
      *
      * @return array
@@ -286,6 +280,52 @@ class Html extends Base
             }
         }
         return $tree;
+    }
+
+    /**
+     * Build <header> tag
+     *
+     * @return string
+     */
+    private function buildHeaderTag()
+    {
+        return '<header class="debug-bar debug-menu-bar">'
+            . 'PHPDebugConsole'
+            . '<nav role="tablist"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>'
+                . $this->buildTabList()
+            . '</nav>'
+            . '</header>' . "\n";
+    }
+
+    /**
+     * Build <script> tag
+     *
+     * @return string
+     */
+    private function buildScriptTag()
+    {
+        if (!$this->cfg['outputScript']) {
+            return '';
+        }
+        return '<script>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n"
+            . '<script>'
+                . $this->getScript() . "\n"
+            . '</script>' . "\n";
+    }
+
+    /**
+     * Build <style> tag
+     *
+     * @return string
+     */
+    private function buildStyleTag()
+    {
+        if (!$this->cfg['outputCss']) {
+            return '';
+        }
+        return '<style type="text/css">' . "\n"
+                . $this->getCss() . "\n"
+            . '</style>' . "\n";
     }
 
     /**
@@ -337,19 +377,20 @@ class Html extends Base
      */
     private function buildTabPanes()
     {
-        $html = '';
-        $names = \array_keys($this->debug->getChannelsTop());
+        $tabNames = \array_keys($this->debug->getChannelsTop());
+        $html = '<div class="tab-panes"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>' . "\n";
         /*
             Sort channel names.
             We want "Request / Response" & "Files" to come first in case we're not outputting tab UI
         */
         $this->debug->arrayUtil->sortWithOrder(
-            $names,
+            $tabNames,
             array('Request / Response', 'Files')
         );
-        foreach ($names as $name) {
+        foreach ($tabNames as $name) {
             $html .= $this->buildTabPane($name);
         }
+        $html .= '</div>' . "\n"; // close .tab-panes
         return $html;
     }
 

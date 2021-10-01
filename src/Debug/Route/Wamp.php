@@ -323,6 +323,36 @@ class Wamp implements RouteInterface
         }
         $this->metaPublished = true;
         $debugClass = \get_class($this->debug);
+        $this->processLogEntry(new LogEntry(
+            $this->debug,
+            'meta',
+            array(
+                $this->debug->redact($this->publishMetaGet()),
+            ),
+            array(
+                'channelNameRoot' => $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG),
+                'debugVersion' => $debugClass::VERSION,
+                'drawer' => $this->debug->getCfg('routeHtml.drawer'),
+                'interface' => $this->debug->getInterface(),
+                'linkFilesTemplateDefault' => \strtr(
+                    \ini_get('xdebug.file_link_format'),
+                    array(
+                        '%f' => '%file',
+                        '%l' => '%line',
+                    )
+                ) ?: null,
+            )
+        ));
+        $this->processLogEntries();
+    }
+
+    /**
+     * Get meta values to publish
+     *
+     * @return array
+     */
+    private function publishMetaGet()
+    {
         $metaVals = array(
             'processId' => \getmypid(),
             'HTTP_HOST' => null,
@@ -348,26 +378,6 @@ class Wamp implements RouteInterface
             $metaVals['REQUEST_METHOD'] = null;
             $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $serverParams['argv']);
         }
-        $this->processLogEntry(new LogEntry(
-            $this->debug,
-            'meta',
-            array(
-                $this->debug->redact($metaVals),
-            ),
-            array(
-                'channelNameRoot' => $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG),
-                'debugVersion' => $debugClass::VERSION,
-                'drawer' => $this->debug->getCfg('routeHtml.drawer'),
-                'interface' => $this->debug->getInterface(),
-                'linkFilesTemplateDefault' => \strtr(
-                    \ini_get('xdebug.file_link_format'),
-                    array(
-                        '%f' => '%file',
-                        '%l' => '%line',
-                    )
-                ) ?: null,
-            )
-        ));
-        $this->processLogEntries();
+        return $metaVals;
     }
 }

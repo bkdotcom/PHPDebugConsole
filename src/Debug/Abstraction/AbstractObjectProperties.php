@@ -44,6 +44,52 @@ class AbstractObjectProperties extends AbstractObjectSub
                                         //   may also be an array (ie: ['private', 'magic-read'])
     );
 
+    private $domNodeProps = array(
+        'attributes' => 'DOMNamedNodeMap',
+        'childNodes' => 'DOMNodeList',
+        'firstChild' => 'DOMNode',
+        'lastChild' => 'DOMNode',
+        'localName' => 'string',
+        'namespaceURI' => 'string',
+        'nextSibling' => 'DOMNode', // var_dump() doesn't include ¯\_(ツ)_/¯
+        'nodeName' => 'string',
+        'nodeType' => 'int',
+        'nodeValue' => 'string',
+        'ownerDocument' => 'DOMDocument',
+        'parentNode' => 'DOMNode',
+        'prefix' => 'string',
+        'previousSibling' => 'DOMNode',
+        'textContent' => 'string',
+    );
+
+    private $domDocumentProps = array(
+        'actualEncoding' => 'string',
+        'baseURI' => 'string',
+        'config' => 'DOMConfiguration',
+        'doctype' => 'DOMDocumentType',
+        'documentElement' => 'DOMElement',
+        'documentURI' => 'string',
+        'encoding' => 'string',
+        'formatOutput' => 'bool',
+        'implementation' => 'DOMImplementation',
+        'preserveWhiteSpace' => 'bool',
+        'recover' => 'bool',
+        'resolveExternals' => 'bool',
+        'standalone' => 'bool',
+        'strictErrorChecking' => 'bool',
+        'substituteEntities' => 'bool',
+        'validateOnParse' => 'bool',
+        'version' => 'string',
+        'xmlEncoding' => 'string',
+        'xmlStandalone' => 'bool',
+        'xmlVersion' => 'string',
+    );
+
+    private $domElementProps = array(
+        'schemaTypeInfo' => 'bool',
+        'tagName' => 'string',
+    );
+
     /**
      * Add property info/values to abstraction
      *
@@ -266,6 +312,8 @@ class AbstractObjectProperties extends AbstractObjectSub
      * @param Abstraction $abs Abstraction event object
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
     private function addPropertiesDom(Abstraction $abs)
     {
@@ -285,53 +333,12 @@ class AbstractObjectProperties extends AbstractObjectSub
         $matches = array();
         \preg_match_all('/^\s+\[(.+?)\] => /m', $dump, $matches);
         $props = \array_fill_keys($matches[1], null);
-
         if ($obj instanceof \DOMNode) {
-            $props = \array_merge($props, array(
-                'attributes' => 'DOMNamedNodeMap',
-                'childNodes' => 'DOMNodeList',
-                'firstChild' => 'DOMNode',
-                'lastChild' => 'DOMNode',
-                'localName' => 'string',
-                'namespaceURI' => 'string',
-                'nextSibling' => 'DOMNode', // var_dump() doesn't include ¯\_(ツ)_/¯
-                'nodeName' => 'string',
-                'nodeType' => 'int',
-                'nodeValue' => 'string',
-                'ownerDocument' => 'DOMDocument',
-                'parentNode' => 'DOMNode',
-                'prefix' => 'string',
-                'previousSibling' => 'DOMNode',
-                'textContent' => 'string',
-            ));
+            $props = \array_merge($props, $this->domNodeProps);
             if ($obj instanceof \DOMDocument) {
-                $props = \array_merge($props, array(
-                    'actualEncoding' => 'string',
-                    'baseURI' => 'string',
-                    'config' => 'DOMConfiguration',
-                    'doctype' => 'DOMDocumentType',
-                    'documentElement' => 'DOMElement',
-                    'documentURI' => 'string',
-                    'encoding' => 'string',
-                    'formatOutput' => 'bool',
-                    'implementation' => 'DOMImplementation',
-                    'preserveWhiteSpace' => 'bool',
-                    'recover' => 'bool',
-                    'resolveExternals' => 'bool',
-                    'standalone' => 'bool',
-                    'strictErrorChecking' => 'bool',
-                    'substituteEntities' => 'bool',
-                    'validateOnParse' => 'bool',
-                    'version' => 'string',
-                    'xmlEncoding' => 'string',
-                    'xmlStandalone' => 'bool',
-                    'xmlVersion' => 'string',
-                ));
+                $props = \array_merge($props, $this->domDocumentProps);
             } elseif ($obj instanceof \DOMElement) {
-                $props = \array_merge($props, array(
-                    'schemaTypeInfo' => 'bool',
-                    'tagName' => 'string',
-                ));
+                $props = \array_merge($props, $this->domElementProps);
             }
         }
         foreach ($props as $propName => $type) {

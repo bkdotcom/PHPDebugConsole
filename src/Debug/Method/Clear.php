@@ -246,10 +246,10 @@ class Clear
         $clearErrors = (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS);
         if ($flags & Debug::CLEAR_SUMMARY) {
             $return = 'summary (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
-            $curPriority = \end($this->data['groupPriorityStack']);  // false if empty
+            $curPriority = $this->debug->methodGroup->getCurrentPriority(); // 'main'|int
             foreach (\array_keys($this->data['logSummary']) as $priority) {
                 if ($priority !== $curPriority) {
-                    $this->data['groupStacks'][$priority] = array();
+                    $this->debug->methodGroup->resetStack($priority);
                     $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, array());
                     continue;
                 }

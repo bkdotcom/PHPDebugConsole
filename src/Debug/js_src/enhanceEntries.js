@@ -11,89 +11,101 @@ export function init ($root) {
   $root.on('click', '.close[data-dismiss=alert]', function () {
     $(this).parent().remove()
   })
-  $root.on('click', '.show-more-container .show-more', function () {
-    var $container = $(this).closest('.show-more-container')
-    $container.find('.show-more-wrapper').animate({
-      height: $container.find('.t_string').height()
-    }, 400, 'swing', function () {
-      $(this).css('display', 'inline')
-    })
-    $container.find('.show-more-fade').fadeOut()
-    $container.find('.show-more').hide()
-    $container.find('.show-less').show()
-  })
-  $root.on('click', '.show-more-container .show-less', function () {
-    var $container = $(this).closest('.show-more-container')
-    $container.find('.show-more-wrapper')
-      .css('display', 'block')
-      .animate({
-        height: '70px'
-      })
-    $container.find('.show-more-fade').fadeIn()
-    $container.find('.show-more').show()
-    $container.find('.show-less').hide()
-  })
+  $root.on('click', '.show-more-container .show-less', onClickShowLess)
+  $root.on('click', '.show-more-container .show-more', onClickShowMore)
   $root.on('config.debug.updated', function (e, changedOpt) {
     e.stopPropagation()
     if (changedOpt === 'linkFilesTemplate') {
       updateFileLinks($root)
     }
   })
-  $root.on('expand.debug.array', function (e) {
-    var $node = $(e.target) // .t_array
-    var $entry = $node.closest('li[class*=m_]')
-    e.stopPropagation()
-    $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
-      enhanceValue($entry, this)
-    })
-  })
-  $root.on('expand.debug.group', function (e) {
-    var $node = $(e.target) // .m_group
-    e.stopPropagation()
-    $node.find('> .group-body').debugEnhance()
-  })
-  $root.on('expand.debug.object', function (e) {
-    var $node = $(e.target) // .t_object
-    var $entry = $node.closest('li[class*=m_]')
-    e.stopPropagation()
-    if ($node.is('.enhanced')) {
-      return
-    }
-    $node.find('> .object-inner')
-      .find('> .constant > :last-child,' +
-        '> .property > :last-child,' +
-        '> .method .t_string'
-      ).each(function () {
-        enhanceValue($entry, this)
-      })
-    enhanceObject.enhanceInner($node)
-  })
+  $root.on('expand.debug.array', onExpandArray)
+  $root.on('expand.debug.group', onExpandGroup)
+  $root.on('expand.debug.object', onExpandObject)
   $root.on('expanded.debug.next', '.context', function (e) {
     enhanceArray($(e.target).find('> td > .t_array'))
   })
-  $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
-    var $strings
-    var $target = $(e.target)
-    if ($target.hasClass('t_array')) {
-      // e.namespace = array.debug ??
-      $strings = $target.find('> .array-inner')
-        .find('> li > .t_string,' +
-          ' > li.t_string')
-    } else if ($target.hasClass('m_group')) {
-      // e.namespace = debug.group
-      $strings = $target.find('> .group-body > li > .t_string')
-    } else if ($target.hasClass('t_object')) {
-      // e.namespace = debug.object
-      $strings = $target.find('> .object-inner')
-        .find('> dd.constant > .t_string,' +
-          ' > dd.property:visible > .t_string,' +
-          ' > dd.method > .t_string')
-    } else {
-      $strings = $()
-    }
-    $strings.not('[data-type-more=numeric]').each(function () {
-      enhanceLongString($(this))
+  $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', onExpanded)
+}
+
+function onClickShowLess () {
+  var $container = $(this).closest('.show-more-container')
+  $container.find('.show-more-wrapper')
+    .css('display', 'block')
+    .animate({
+      height: '70px'
     })
+  $container.find('.show-more-fade').fadeIn()
+  $container.find('.show-more').show()
+  $container.find('.show-less').hide()
+}
+
+function onClickShowMore () {
+  var $container = $(this).closest('.show-more-container')
+  $container.find('.show-more-wrapper').animate({
+    height: $container.find('.t_string').height()
+  }, 400, 'swing', function () {
+    $(this).css('display', 'inline')
+  })
+  $container.find('.show-more-fade').fadeOut()
+  $container.find('.show-more').hide()
+  $container.find('.show-less').show()
+}
+
+function onExpandArray (e) {
+  var $node = $(e.target) // .t_array
+  var $entry = $node.closest('li[class*=m_]')
+  e.stopPropagation()
+  $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
+    enhanceValue($entry, this)
+  })
+}
+
+function onExpandGroup (e) {
+  var $node = $(e.target) // .m_group
+  e.stopPropagation()
+  $node.find('> .group-body').debugEnhance()
+}
+
+function onExpandObject (e) {
+  var $node = $(e.target) // .t_object
+  var $entry = $node.closest('li[class*=m_]')
+  e.stopPropagation()
+  if ($node.is('.enhanced')) {
+    return
+  }
+  $node.find('> .object-inner')
+    .find('> .constant > :last-child,' +
+      '> .property > :last-child,' +
+      '> .method .t_string'
+    ).each(function () {
+      enhanceValue($entry, this)
+    })
+  enhanceObject.enhanceInner($node)
+}
+
+function onExpanded (e) {
+  var $strings
+  var $target = $(e.target)
+  if ($target.hasClass('t_array')) {
+    // e.namespace = array.debug ??
+    $strings = $target.find('> .array-inner')
+      .find('> li > .t_string,' +
+        ' > li.t_string')
+  } else if ($target.hasClass('m_group')) {
+    // e.namespace = debug.group
+    $strings = $target.find('> .group-body > li > .t_string')
+  } else if ($target.hasClass('t_object')) {
+    // e.namespace = debug.object
+    $strings = $target.find('> .object-inner')
+      .find('> dd.constant > .t_string,' +
+        ' > dd.property:visible > .t_string,' +
+        ' > dd.method > .t_string')
+  } else {
+    $strings = $()
+  }
+  $strings.not('[data-type-more=numeric]').each(function () {
+    enhanceLongString($(this))
   })
 }
 
@@ -337,10 +349,6 @@ function enhanceArray ($node) {
   // console.log('enhanceArray', $node[0])
   var $arrayInner = $node.find('> .array-inner')
   var isEnhanced = $node.find(' > .t_array-expand').length > 0
-  var $expander
-  var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length
-  var expand = $node.data('expand')
-  var expandDefault = true
   if (isEnhanced) {
     return
   }
@@ -351,6 +359,16 @@ function enhanceArray ($node) {
       return
     }
   }
+  enhanceArrayAddMarkup($node)
+  $.each(config.iconsArray, function (selector, v) {
+    $node.find(selector).prepend(v)
+  })
+  $node.debugEnhance(enhanceArrayIsExpanded($node) ? 'expand' : 'collapse')
+}
+
+function enhanceArrayAddMarkup ($node) {
+  var $arrayInner = $node.find('> .array-inner')
+  var $expander
   if ($node.closest('.array-file-tree').length) {
     $node.find('> .t_keyword, > .t_punct').remove()
     $arrayInner.find('> li > .t_operator, > li > .t_key.t_int').remove()
@@ -362,40 +380,33 @@ function enhanceArray ($node) {
         '<span class="t_array-expand" data-toggle="array">▸ </span>' // ▶
       )
     })
-  } else {
-    $expander = $('<span class="t_array-expand" data-toggle="array">' +
-        '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-        '<i class="fa ' + config.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
-        '<span class="t_punct">)</span>' +
-      '</span>')
-    // add expand/collapse
-    $node.find('> .t_keyword').first()
-      .wrap('<span class="t_array-collapse" data-toggle="array">')
-      .after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>')
-      .parent().next().remove() // remove original '('
-    $node.prepend($expander)
+    return
   }
-  $.each(config.iconsArray, function (selector, v) {
-    $node.find(selector).prepend(v)
-  })
-  if (numParents === 0) {
-    // outermost array
-    expandDefault = true // expand
-  } else {
-    // nested array
-    expandDefault = false // collapse
-    if (expand === undefined) {
-      expand = $node.closest('.t_array[data-expand]').data('expand')
-    }
+  $expander = $('<span class="t_array-expand" data-toggle="array">' +
+      '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
+      '<i class="fa ' + config.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+      '<span class="t_punct">)</span>' +
+    '</span>')
+  // add expand/collapse
+  $node.find('> .t_keyword').first()
+    .wrap('<span class="t_array-collapse" data-toggle="array">')
+    .after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>')
+    .parent().next().remove() // remove original '('
+  $node.prepend($expander)
+}
+
+function enhanceArrayIsExpanded ($node) {
+  var expand = $node.data('expand')
+  var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length
+  var expandDefault = numParents === 0
+  if (expand === undefined && numParents !== 0) {
+    // nested array and expand === undefined
+    expand = $node.closest('.t_array[data-expand]').data('expand')
   }
   if (expand === undefined) {
     expand = expandDefault
   }
-  if (expand || $node.hasClass('array-file-tree')) {
-    $node.debugEnhance('expand')
-  } else {
-    $node.debugEnhance('collapse')
-  }
+  return expand || $node.hasClass('array-file-tree')
 }
 
 /**

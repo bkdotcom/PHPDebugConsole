@@ -38,7 +38,7 @@ class GroupTest extends DebugTestFramework
                         'main' => array(
                             array('channel' => $this->debug, 'collect' => true),
                         ),
-                    ), $this->debug->getData('groupStacks'));
+                    ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
                 },
                 'chromeLogger' => array(
                     array('a','b','c'),
@@ -477,7 +477,7 @@ class GroupTest extends DebugTestFramework
                         'main' => array(
                             0 => array('channel' => $this->debug, 'collect' => true),
                         ),
-                    ), $this->debug->getData('groupStacks'));
+                    ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
                 },
                 'chromeLogger' => array(
                     array('a','b','c'),
@@ -536,7 +536,7 @@ class GroupTest extends DebugTestFramework
         $this->debug->groupEnd();
         $this->assertSame(array(
             'main' => array(),
-        ), $this->debug->getData('groupStacks'));
+        ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
         $log = $this->debug->getData('log');
         $this->assertCount(2, $log);
         $this->assertSame(array(
@@ -578,7 +578,6 @@ class GroupTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
-                    // $this->assertSame(array(1,1), $this->debug->getData('groupDepth'));
                 },
                 'chromeLogger' => array(
                     array(),
@@ -669,40 +668,35 @@ class GroupTest extends DebugTestFramework
             $this->debug->log('in summary');
             $this->debug->group('inner group opened but not closed');
                 $this->debug->log('in inner');
-        $onOutputVals = array();
 
+
+        /*
+            collect some info before outputing
+            confirm nothing has been closed yet
+        */
+        $onOutputVals['groupPriorityStackA'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($this->debug->methodGroup);
+        $onOutputVals['groupStacksA'] = \array_map(function ($stack) {
+            return \count($stack);
+        }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, function (Event $event) use (&$onOutputVals) {
-            /*
-                Nothing has been closed yet
-            */
+            // At this point, log has been output.. all groups have been closed
             $debug = $event->getSubject();
-            $onOutputVals['groupPriorityStackA'] = $debug->getData('groupPriorityStack');
-            $onOutputVals['groupStacksA'] = $debug->getData('groupStacks');
-        }, 2);
-        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, function (Event $event) use (&$onOutputVals) {
-            /*
-                At this point, log has been output.. all groups have been closed
-            */
-            $debug = $event->getSubject();
-            $onOutputVals['groupPriorityStackB'] = $debug->getData('groupPriorityStack');
-            $onOutputVals['groupStacksB'] = $debug->getData('groupStacks');
+            $onOutputVals['groupPriorityStackB'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($debug->methodGroup);
+            $onOutputVals['groupStacksB'] = \array_map(function ($stack) {
+                return \count($stack);
+            }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($debug->methodGroup));
         }, -1);
 
         $output = $this->debug->output();
 
         $this->assertSame(array(1), $onOutputVals['groupPriorityStackA']);
         $this->assertSame(array(
-            'main' => array(),
-            1 => array(
-                array(
-                    'channel' => $this->debug,
-                    'collect' => true,
-                ),
-            ),
+            'main' => 0,
+            1 => 1,
         ), $onOutputVals['groupStacksA']);
         $this->assertSame(array(), $onOutputVals['groupPriorityStackB']);
         $this->assertSame(array(
-            'main' => array(),
+            'main' => 0,
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
 <div class="debug" data-channel-name-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
@@ -718,7 +712,7 @@ class GroupTest extends DebugTestFramework
                             <li class="m_log"><span class="no-quotes t_string">in inner</span></li>
                         </ul>
                     </li>
-                    <li class="m_info"><span class="no-quotes t_string">Built In %f %ss</span></li>
+                    <li class="m_info"><span class="no-quotes t_string">Built In %f %s</span></li>
                     <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
                 </ul>
                 <ul class="debug-log group-body"></ul>

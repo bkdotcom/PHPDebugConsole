@@ -15,11 +15,15 @@ namespace bdk\Debug\Framework\Laravel;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\MonologHandler;
+use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Framework\Laravel\CacheEventsSubscriber;
 use bdk\Debug\Framework\Laravel\EventsSubscriber;
 use bdk\Debug\Framework\Laravel\Middleware;
 use bdk\Debug\Utility\ArrayUtil;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Database\Connection as DbConnection;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 use Illuminate\View\View;
 
@@ -29,8 +33,9 @@ use Illuminate\View\View;
 class ServiceProvider extends BaseServiceProvider
 {
 
-    private $isLumen = false;
+    public $debug;
     protected $modelCounts = array();
+    private $isLumen = false;
 
     /**
      * Register services.
@@ -89,6 +94,94 @@ class ServiceProvider extends BaseServiceProvider
     }
 
     /**
+     * Register a database query listener with the connection.
+     *
+     * @param DatabaseManager $db        DatabaseManager instance
+     * @param Debug           $dbChannel Debug instance
+     *
+     * @return void
+     */
+    protected function dbListen(DatabaseManager $db, Debug $dbChannel)
+    {
+        // listen found in Illuminate\Database\Connection
+        $db->listen(function ($query, $bindings = null, $time = null, $connection = null) use ($db, $dbChannel) {
+            if (!$this->shouldCollect('db', true)) {
+                // We've turned off collecting after the listener was attached
+                return;
+            }
+
+            // Laravel 5.2 changed the way some core events worked. We must account for
+            // the first argument being an "event object", where arguments are passed
+            // via object properties, instead of individual arguments.
+            $connection = $query instanceof QueryExecuted
+                ? $query->connection
+                : $db->connection($connection);
+            if ($query instanceof QueryExecuted) {
+                $bindings = $query->bindings;
+                $time = $query->time;
+                $query = $query->sql;
+            }
+            $statementInfo = new StatementInfo(
+                $query,
+                $connection->prepareBindings($bindings)
+            );
+            $statementInfo->setDuration($time);
+            $statementInfo->appendLog($dbChannel);
+        });
+    }
+
+    /**
+     * Listen to database events
+     *
+     * @param DatabaseManager $db        DatabaseManager instance
+     * @param Debug           $dbChannel Debug instance
+     *
+     * @return void
+     */
+    private function dbSubscribe(DatabaseManager $db, Debug $dbChannel)
+    {
+        $db->getEventDispatcher()->listen(
+            \Illuminate\Database\Events\TransactionBeginning::class,
+            function () use ($dbChannel) {
+                $dbChannel->group('Begin Transaction');
+            }
+        );
+        $db->getEventDispatcher()->listen(
+            \Illuminate\Database\Events\TransactionCommitted::class,
+            function () use ($dbChannel) {
+                $dbChannel->groupEnd();
+            }
+        );
+        $db->getEventDispatcher()->listen(
+            \Illuminate\Database\Events\TransactionRolledBack::class,
+            function () use ($dbChannel) {
+                $dbChannel->log('rollback');
+                $dbChannel->groupEnd();
+            }
+        );
+
+        $db->getEventDispatcher()->listen(
+            'connection.*.beganTransaction',
+            function () use ($dbChannel) {
+                $dbChannel->group('Begin Transaction');
+            }
+        );
+        $db->getEventDispatcher()->listen(
+            'connection.*.committed',
+            function () use ($dbChannel) {
+                $dbChannel->groupEnd();
+            }
+        );
+        $db->getEventDispatcher()->listen(
+            'connection.*.rollingBack',
+            function () use ($dbChannel) {
+                $dbChannel->log('rollback');
+                $dbChannel->groupEnd();
+            }
+        );
+    }
+
+    /**
      * Log cache events
      *
      * @return void
@@ -135,84 +228,21 @@ class ServiceProvider extends BaseServiceProvider
             return;
         }
 
+        /** @var \Illuminate\Database\DatabaseManager */
+        $db = $this->app['db'];
+
         $dbChannel = $this->debug->getChannel('Db', array(
             'channelIcon' => 'fa fa-database',
         ));
 
-        /** @var \Illuminate\Database\DatabaseManager */
-        $db = $this->app['db'];
-
         try {
-            // listen found in Illuminate\Database\Connection
-            $db->listen(
-                function ($query, $bindings = null, $time = null, $connectionName = null) use ($db, $dbChannel) {
-                    if (!$this->shouldCollect('db', true)) {
-                        // We've turned off collecting after the listener was attached
-                        return;
-                    }
-                    // Laravel 5.2 changed the way some core events worked. We must account for
-                    // the first argument being an "event object", where arguments are passed
-                    // via object properties, instead of individual arguments.
-                    $connection = $query instanceof \Illuminate\Database\Events\QueryExecuted
-                        ? $query->connection
-                        : $db->connection($connectionName);
-                    if ($query instanceof \Illuminate\Database\Events\QueryExecuted) {
-                        $bindings = $query->bindings;
-                        $time = $query->time;
-                        $query = $query->sql;
-                    }
-                    $statementInfo = new \bdk\Debug\Collector\StatementInfo(
-                        $query,
-                        $connection->prepareBindings($bindings)
-                    );
-                    $statementInfo->setDuration($time);
-                    $statementInfo->appendLog($dbChannel);
-                }
-            );
+            $this->dbListen($db, $dbChannel);
         } catch (\Exception $e) {
             $this->debug->warn($e->getMessage());
         }
 
         try {
-            $db->getEventDispatcher()->listen(
-                \Illuminate\Database\Events\TransactionBeginning::class,
-                function () use ($dbChannel) {
-                    $dbChannel->group('Begin Transaction');
-                }
-            );
-            $db->getEventDispatcher()->listen(
-                \Illuminate\Database\Events\TransactionCommitted::class,
-                function () use ($dbChannel) {
-                    $dbChannel->groupEnd();
-                }
-            );
-            $db->getEventDispatcher()->listen(
-                \Illuminate\Database\Events\TransactionRolledBack::class,
-                function () use ($dbChannel) {
-                    $dbChannel->log('rollback');
-                    $dbChannel->groupEnd();
-                }
-            );
-
-            $db->getEventDispatcher()->listen(
-                'connection.*.beganTransaction',
-                function () use ($dbChannel) {
-                    $dbChannel->group('Begin Transaction');
-                }
-            );
-            $db->getEventDispatcher()->listen(
-                'connection.*.committed',
-                function () use ($dbChannel) {
-                    $dbChannel->groupEnd();
-                }
-            );
-            $db->getEventDispatcher()->listen(
-                'connection.*.rollingBack',
-                function () use ($dbChannel) {
-                    $dbChannel->log('rollback');
-                    $dbChannel->groupEnd();
-                }
-            );
+            $this->dbSubscribe($db, $dbChannel);
         } catch (\Exception $e) {
             $this->debug->log('exception', $e->getMessage());
         }

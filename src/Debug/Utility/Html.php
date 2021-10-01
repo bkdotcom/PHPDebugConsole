@@ -165,7 +165,7 @@ class Html
     }
 
     /**
-     * Parse string -o- attributes into a key => value array
+     * Parse string of attributes into a key => value array
      *
      * @param string   $str     string to parse
      * @param int|null $options bitmask of PARSE_ATTRIB_x flags

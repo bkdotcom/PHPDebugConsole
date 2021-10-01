@@ -28,6 +28,9 @@ class SoapClient extends \SoapClient
     private $debug;
     protected $icon = 'fa fa-exchange';
 
+    /** @var \DOMDocument */
+    private $dom;
+
     /**
      * Constructor
      *
@@ -55,27 +58,83 @@ class SoapClient extends \SoapClient
     /**
      * {@inheritDoc}
      */
-    public function __doRequest($request, $location, $action, $version, $one_way = 0)
+    public function __doRequest($request, $location, $action, $version, $oneWay = 0)
     {
-        $return = parent::__doRequest($request, $location, $action, $version, $one_way);
-        $debug = $this->debug;
+        $this->dom = new \DOMDocument();
+        $this->dom->preserveWhiteSpace = false;
+        $this->dom->formatOutput = true;
 
-        $dom = new \DOMDocument();
-        $dom->preserveWhiteSpace = false;
-        $dom->formatOutput = true;
+        $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay);
+        $xmlRequest = $this->getDebugXmlRequest($action);
 
-        $dom->loadXML($this->__getLastRequest());
-        $xmlRequest = $dom->saveXML();
+        $this->debug->groupCollapsed('soap', $action, $this->debug->meta('icon', $this->icon));
+        $this->logRequest($xmlRequest);
+        $this->logResponse($xmlResponse);
+        $this->debug->groupEnd();
+
+        return $xmlResponse;
+    }
+
+    /**
+     * Get whitespace formatted request xml
+     *
+     * @param string $action The SOAP action
+     *
+     * @return string XML
+     */
+    private function getDebugXmlRequest(&$action)
+    {
+        $this->dom->loadXML($this->__getLastRequest());
         if (!$action) {
-            $envelope = $dom->childNodes[0];
+            $envelope = $this->dom->childNodes[0];
             $body = $envelope->childNodes[0]->localName !== 'Header'
                 ? $envelope->childNodes[0]
                 : $envelope->childNodes[1];
             $action = $body->childNodes[0]->localName;
         }
-        $debug->groupCollapsed('soap', $action, $debug->meta('icon', $this->icon));
-        $debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
-        $debug->log(
+        return $this->dom->saveXML();
+    }
+
+    /**
+     * Get whitespace formatted response xml
+     *
+     * @param string $response XML response
+     *
+     * @return string XML
+     */
+    private function getDebugXmlResponse($response)
+    {
+        if (!$response) {
+            return '';
+        }
+        $this->dom->loadXML($response);
+        $xmlResponse = $this->dom->saveXML();
+        /*
+            determine if soapFault
+            a bit tricky from within __doRequest
+        */
+        $fault = $this->dom->getElementsByTagNameNS('http://schemas.xmlsoap.org/soap/envelope/', 'Fault');
+        if ($fault->length) {
+            $vals = array();
+            foreach ($fault[0]->childNodes as $node) {
+                $vals[$node->localName] = $node->nodeValue;
+            }
+            $this->debug->warn('soapFault', $vals);
+        }
+        return $xmlResponse;
+    }
+
+    /**
+     * Log request headers and body
+     *
+     * @param string $xmlRequest XML
+     *
+     * @return void
+     */
+    private function logRequest($xmlRequest)
+    {
+        $this->debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
+        $this->debug->log(
             'request body',
             new Abstraction(Abstracter::TYPE_STRING, array(
                 'value' => $xmlRequest,
@@ -85,34 +144,27 @@ class SoapClient extends \SoapClient
                 'addQuotes' => false,
                 'visualWhiteSpace' => false,
             )),
-            $debug->meta(array(
+            $this->debug->meta(array(
                 'attribs' => array(
                     'class' => 'no-indent',
                 ),
                 'redact' => true,
             ))
         );
-        $debug->log('response headers', $this->__getLastResponseHeaders(), $this->debug->meta('redact'));
+    }
 
-        $xmlResponse = '';
-        if ($return) {
-            $dom->loadXML($return);
-            $xmlResponse = $dom->saveXML();
-            /*
-                determine if soapFault
-                a bit tricky from within __doRequest
-            */
-            $fault = $dom->getElementsByTagNameNS('http://schemas.xmlsoap.org/soap/envelope/', 'Fault');
-            if ($fault->length) {
-                $vals = array();
-                foreach ($fault[0]->childNodes as $node) {
-                    $vals[$node->localName] = $node->nodeValue;
-                }
-                $debug->warn('soapFault', $vals);
-            }
-        }
-
-        $debug->log(
+    /**
+     * Log response headers and body
+     *
+     * @param string $response XML
+     *
+     * @return void
+     */
+    private function logResponse($response)
+    {
+        $xmlResponse = $this->getDebugXmlResponse($response);
+        $this->debug->log('response headers', $this->__getLastResponseHeaders(), $this->debug->meta('redact'));
+        $this->debug->log(
             'response body',
             new Abstraction(Abstracter::TYPE_STRING, array(
                 'value' => $xmlResponse,
@@ -122,14 +174,12 @@ class SoapClient extends \SoapClient
                 'addQuotes' => false,
                 'visualWhiteSpace' => false,
             )),
-            $debug->meta(array(
+            $this->debug->meta(array(
                 'attribs' => array(
                     'class' => 'no-indent',
                 ),
                 'redact' => true,
             ))
         );
-        $debug->groupEnd();
-        return $return;
     }
 }

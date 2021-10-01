@@ -38,13 +38,6 @@ class ChannelTest extends DebugTestFramework
                 array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
                 array('alert', array('foo: alert'), array('channel' => 'general.foo', 'dismissible' => false, 'level' => 'error')),
             ),
-            'groupPriorityStack' => array(),
-            'groupStacks' => array(
-                'main' => array(
-                    array('channel' => 'general', 'collect' => true),
-                    array('channel' => 'general.foo', 'collect' => true),
-                ),
-            ),
             'log' => array(
                 array('log', array('main: log'), array()),
                 array('group', array('main: group'), array()),
@@ -74,6 +67,13 @@ class ChannelTest extends DebugTestFramework
                     array('groupEnd', array(), array('channel' => 'general.foo')),
                 ),
             ),
+            'groupPriorityStack' => array(),
+            'groupStacks' => array(
+                'main' => array(
+                    array('channel' => 'general', 'collect' => true),
+                    array('channel' => 'general.foo', 'collect' => true),
+                ),
+            ),
         );
 
         $data = $this->genLog($this->debug);
@@ -85,12 +85,6 @@ class ChannelTest extends DebugTestFramework
         $dataFooClearedExpect = array(
             'alerts' => array(
                 array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
-            ),
-            'groupPriorityStack' => array(),
-            'groupStacks' => array(
-                'main' => array(
-                    array('channel' => 'general', 'collect' => true),
-                ),
             ),
             'log' => array(
                 array('log', array('main: log'), array()),
@@ -136,6 +130,12 @@ class ChannelTest extends DebugTestFramework
                     array('log', array('main: sum 1 / group 1 / group 2 / log'), array()),
                     array('groupEnd', array(), array()),
                     array('groupEnd', array(), array('channel' => 'general.foo')),
+                ),
+            ),
+            'groupPriorityStack' => array(),
+            'groupStacks' => array(
+                'main' => array(
+                    array('channel' => 'general', 'collect' => true),
                 ),
             ),
         );
@@ -203,7 +203,7 @@ EOD;
                                     </li>
                                 </ul>
                             </li>
-                            <li class="m_info"><span class="no-quotes t_string">Built In %f %ss</span></li>
+                            <li class="m_info"><span class="no-quotes t_string">Built In %f %s</span></li>
                             <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
                             <li class="expanded m_group" data-channel="general.foo">
                                 <div class="group-header"><span class="font-weight-bold group-label">foo: sum 0 / group 1</span></div>
@@ -302,8 +302,6 @@ EOD;
 
         $data = \array_intersect_key($this->debug->getData(), \array_flip(array(
             'alerts',
-            'groupPriorityStack',
-            'groupStacks',
             'log',
             'logSummary',
         )));
@@ -328,12 +326,14 @@ EOD;
             $temp = \preg_replace('/"(line)":\d+/', '"$1":""', $temp);
             $data[$what] = \json_decode($temp, true);
         }
-        foreach ($data['groupStacks'] as $k => $stack) {
+        $data['groupPriorityStack'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($this->debug->methodGroup);
+        $data['groupStacks'] = \array_map(function ($stack) {
             foreach ($stack as $k2 => $info) {
                 $channelName = $info['channel']->getCfg('channelName');
-                $data['groupStacks'][$k][$k2]['channel'] = $channelName;
+                $stack[$k2]['channel'] = $channelName;
             }
-        }
+            return $stack;
+        }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
         return $data;
     }
 }

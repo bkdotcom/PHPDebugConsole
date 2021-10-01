@@ -42,46 +42,34 @@ class HtmlObject
      *
      * @param Abstraction $abs object abstraction
      *
-     * @return string
+     * @return string html fragment
      */
 	public function dump(Abstraction $abs)
 	{
-        $title = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
-        $outPhpDoc = $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC;
-        $strClassName = $this->html->markupIdentifier($abs['className'], 'span', array(
-            'title' => $outPhpDoc
-                ? $title
-                : null,
-        ));
+        $classname = $this->dumpClassname($abs);
         if ($abs['isRecursion']) {
-            return $strClassName
+            return $classname
                 . ' <span class="t_recursion">*RECURSION*</span>';
         }
         if ($abs['isExcluded']) {
             return $this->dumpToString($abs)
-                . $strClassName . "\n"
+                . $classname . "\n"
                 . '<span class="excluded">NOT INSPECTED</span>';
         }
         $html = $this->dumpToString($abs)
-            . $strClassName . "\n"
+            . $classname . "\n"
             . '<dl class="object-inner">' . "\n"
                 . ($abs['isFinal']
                     ? '<dt class="t_modifier_final">final</dt>' . "\n"
                     : ''
                 )
-                . '<dt>extends</dt>' . "\n"
-                    . \implode(\array_map(function ($classname) {
-                        return '<dd class="extends">' . $this->html->markupIdentifier($classname) . '</dd>' . "\n";
-                    }, $abs['extends']))
-                . '<dt>implements</dt>' . "\n"
-                    . \implode(\array_map(function ($classname) {
-                        return '<dd class="interface">' . $this->html->markupIdentifier($classname) . '</dd>' . "\n";
-                    }, $abs['implements']))
+                . $this->dumpExtends($abs)
+                . $this->dumpImplements($abs)
                 . $this->dumpAttributes($abs)
                 . $this->dumpConstants($abs)
                 . $this->dumpProperties($abs)
                 . $this->dumpMethods($abs)
-                . $this->dumpPhpDoc($abs['phpDoc'])
+                . $this->dumpPhpDoc($abs)
             . '</dl>' . "\n";
         // remove <dt>'s that have no <dd>'
         $html = \preg_replace('#(?:<dt>(?:extends|implements|phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
@@ -94,55 +82,11 @@ class HtmlObject
     }
 
     /**
-     * Dump object's __toString or stringified value
-     *
-     * @param Abstraction $abs object abstraction
-     *
-     * @return string html
-     */
-    protected function dumpToString(Abstraction $abs)
-    {
-        $val = (string) $abs;
-        if ($val === $abs['className']) {
-            return '';
-        }
-        $len = $val instanceof Abstraction
-            ? $val['strlen']
-            : \strlen($val);
-        $val = $val instanceof Abstraction
-            ? $val['value']
-            : $val;
-        $valAppend = '';
-        $attribs = array(
-            'class' => array('t_stringified'),
-            'title' => !$abs['stringified'] ? '__toString()' : null
-        );
-        if ($len > 100) {
-            $val = \substr($val, 0, 100);
-            $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';
-            $attribs['class'][] = 't_string_trunc';   // truncated
-        }
-        $toStringDump = $this->html->dump($val);
-        $parsed = $this->debug->html->parseTag($toStringDump);
-        $attribs['class'] = \array_merge($attribs['class'], $parsed['attribs']['class']);
-        if (isset($parsed['attribs']['title'])) {
-            // ie a timestamp will have a human readable date in title
-            $attribs['title'] = ($attribs['title'] ? $attribs['title'] . ' : ' : '')
-                . $parsed['attribs']['title'];
-        }
-        return $this->debug->html->buildTag(
-            'span',
-            $attribs,
-            $parsed['innerhtml'] . $valAppend
-        ) . "\n";
-    }
-
-    /**
      * Dump object attributes as html
      *
      * @param Abstraction $abs object "abstraction"
      *
-     * @return string html
+     * @return string html fragment
      */
     protected function dumpAttributes(Abstraction $abs)
     {
@@ -175,11 +119,30 @@ class HtmlObject
     }
 
     /**
+     * Dump classname of object
+     * Classname may be wrapped in a span that includes phpDoc summary / desc
+     *
+     * @param Abstraction $abs object "abstraction"
+     *
+     * @return string html fragment
+     */
+    protected function dumpClassname(Abstraction $abs)
+    {
+        $title = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
+        $outPhpDoc = $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC;
+        return $this->html->markupIdentifier($abs['className'], 'span', array(
+            'title' => $outPhpDoc
+                ? $title
+                : null,
+        ));
+    }
+
+    /**
      * Dump object constants as html
      *
      * @param Abstraction $abs object "abstraction"
      *
-     * @return string html
+     * @return string html fragment
      */
     protected function dumpConstants(Abstraction $abs)
     {
@@ -212,27 +175,51 @@ class HtmlObject
     }
 
     /**
+     * Dump classnames of classes obj extends
+     *
+     * @param Abstraction $abs object "abstraction"
+     *
+     * @return string html fragment
+     */
+    protected function dumpExtends(Abstraction $abs)
+    {
+        return '<dt>extends</dt>' . "\n"
+            . \implode(\array_map(function ($classname) {
+                return '<dd class="extends">' . $this->html->markupIdentifier($classname) . '</dd>' . "\n";
+            }, $abs['extends']));
+    }
+
+    /**
+     * Dump classnames of interfaces obj extends
+     *
+     * @param Abstraction $abs object "abstraction"
+     *
+     * @return string html fragment
+     */
+    protected function dumpImplements(Abstraction $abs)
+    {
+        return '<dt>implements</dt>' . "\n"
+            . \implode(\array_map(function ($classname) {
+                return '<dd class="interface">' . $this->html->markupIdentifier($classname) . '</dd>' . "\n";
+            }, $abs['implements']));
+    }
+
+    /**
      * Dump object methods as html
      *
      * @param Abstraction $abs object "abstraction"
      *
-     * @return string html
+     * @return string html fragment
      */
     protected function dumpMethods(Abstraction $abs)
     {
-        $outputMethods = $abs['cfgFlags'] & AbstractObject::OUTPUT_METHODS;
-        if (!$outputMethods) {
+        if (!($abs['cfgFlags'] & AbstractObject::OUTPUT_METHODS)) {
+            // we're not outputting methods
             return '';
         }
-        $collectMethods = $abs['cfgFlags'] & AbstractObject::COLLECT_METHODS;
-        if (!$collectMethods) {
-            return $this->debug->html->buildTag(
-                'dt',
-                array(
-                    'class' => 'methods',
-                ),
-                'methods not collected'
-            ) . "\n";
+        $str = $this->dumpMethodsLabel($abs);
+        if (!($abs['cfgFlags'] & AbstractObject::COLLECT_METHODS)) {
+            return $str;
         }
         $opts = array(
             'outAttributesMethod' => $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_METHOD,
@@ -242,15 +229,6 @@ class HtmlObject
         );
         $methods = $abs['methods'];
         $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
-        $str = $this->debug->html->buildTag(
-            'dt',
-            array(
-                'class' => 'methods',
-            ),
-            \count($methods)
-                ? 'methods'
-                : 'no methods'
-        ) . "\n";
         $str .= $this->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {
             $str .= $this->dumpMethod($methodName, $info, $opts);
@@ -264,13 +242,37 @@ class HtmlObject
     }
 
     /**
+     * Returns <dt class="methods">methods</dt>
+     *
+     * @param Abstraction $abs object "abstraction"
+     *
+     * @return string html fragment
+     */
+    protected function dumpMethodsLabel(Abstraction $abs)
+    {
+        $label = \count($abs['methods']) > 0
+            ? 'methods'
+            : 'no methods';
+        if (!($abs['cfgFlags'] & AbstractObject::COLLECT_METHODS)) {
+            $label = 'methods not collected';
+        }
+        return $this->debug->html->buildTag(
+            'dt',
+            array(
+                'class' => 'methods',
+            ),
+            $label
+        ) . "\n";
+    }
+
+    /**
      * Dump Method
      *
      * @param string $methodName method name
      * @param array  $info       method info
      * @param array  $opts       dump options
      *
-     * @return string html
+     * @return string html fragment
      */
     protected function dumpMethod($methodName, $info, $opts)
     {
@@ -299,32 +301,44 @@ class HtmlObject
             ),
             \implode(' ', \array_map(function ($modifier) {
                 return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-            }, $modifiers))
-            . ' ' . $this->html->markupType($info['return']['type'], array(
+            }, $modifiers)) . ' '
+            . $this->html->markupType($info['return']['type'], array(
                 'title' => $opts['outPhpDoc']
                     ? $info['return']['desc']
                     : '',
-            ))
-            . ' ' . $this->debug->html->buildTag(
-                'span',
-                array(
-                    'class' => 't_identifier',
-                    'title' => $opts['outPhpDoc']
-                        ? \trim($info['phpDoc']['summary']
-                            . ($opts['outMethodDesc']
-                                ? "\n\n" . $info['phpDoc']['desc']
-                                : ''))
-                        : '',
-                ),
-                $methodName
-            )
-            . '<span class="t_punct">(</span>'
+            )) . ' '
+            . $this->dumpMethodName($methodName, $info, $opts)
             . $this->dumpMethodParams($info['params'], $opts)
-            . '<span class="t_punct">)</span>'
             . ($methodName === '__toString'
                 ? '<br />' . $this->html->dump($info['returnValue'])
                 : '')
         ) . "\n";
+    }
+
+    /**
+     * Dump method name with phpdoc summary & desc
+     *
+     * @param string $methodName method name
+     * @param array  $info       method info
+     * @param array  $opts       dump options
+     *
+     * @return string html fragment
+     */
+    protected function dumpMethodName($methodName, $info, $opts)
+    {
+        return $this->debug->html->buildTag(
+            'span',
+            array(
+                'class' => 't_identifier',
+                'title' => $opts['outPhpDoc']
+                    ? \trim($info['phpDoc']['summary']
+                        . ($opts['outMethodDesc']
+                            ? "\n\n" . $info['phpDoc']['desc']
+                            : ''))
+                    : '',
+            ),
+            $methodName
+        );
     }
 
     /**
@@ -333,7 +347,7 @@ class HtmlObject
      * @param array $params params as returned from getParams()
      * @param array $opts   options
      *
-     * @return string html
+     * @return string html fragment
      */
     protected function dumpMethodParams($params, $opts)
     {
@@ -373,20 +387,22 @@ class HtmlObject
             $paramStr .= '</span>';
             $params[$i] = $paramStr;
         }
-        return \implode('<span class="t_punct">,</span> ', $params);
+        return '<span class="t_punct">(</span>'
+            . \implode('<span class="t_punct">,</span> ', $params)
+            . '<span class="t_punct">)</span>';
     }
 
     /**
      * Dump object's phpDoc info as html
      *
-     * @param array $phpDoc Parsed phpDoc
+     * @param Abstraction $abs object "abstraction"
      *
-     * @return string html
+     * @return string html fragment
      */
-    protected function dumpPhpDoc($phpDoc)
+    protected function dumpPhpDoc(Abstraction $abs)
     {
         $str = '<dt>phpDoc</dt>' . "\n";
-        foreach ($phpDoc as $k => $values) {
+        foreach ($abs['phpDoc'] as $k => $values) {
             if (!\is_array($values)) {
                 continue;
             }
@@ -407,7 +423,7 @@ class HtmlObject
      * @param string $tagName PhpDoc tag name
      * @param array  $value   parsed tag
      *
-     * @return string html
+     * @return string html fragment
      */
     private function dumpPhpDocValue($tagName, $value)
     {
@@ -439,7 +455,7 @@ class HtmlObject
      *
      * @param Abstraction $abs object abstraction
      *
-     * @return string
+     * @return string html fragment
      */
     protected function dumpProperties(Abstraction $abs)
     {
@@ -470,13 +486,16 @@ class HtmlObject
      * @param array $info property info
      * @param array $opts options (currently just outputAttributes)
      *
-     * @return string html
+     * @return string html fragment
      */
     private function dumpProperty($info, $opts)
     {
-        $name = \str_replace('debug.', '', $info['name']);
         $vis = (array) $info['visibility'];
-        $isPrivateAncestor = \in_array('private', $vis) && $info['inheritedFrom'];
+        $info['isPrivateAncestor'] = \in_array('private', $vis) && $info['inheritedFrom'];
+        $info['modifiers'] = $vis;
+        if ($info['isStatic']) {
+            $info['modifiers'][] = 'static';
+        }
         $classes = \array_keys(\array_filter(array(
             'debug-value' => $info['valueFrom'] === 'debug',
             'debuginfo-excluded' => $info['debugInfoExcluded'],
@@ -484,18 +503,11 @@ class HtmlObject
             'forceShow' => $info['forceShow'],
             'inherited' => $info['inheritedFrom'],
             'isPromoted' => $info['isPromoted'],
-            'private-ancestor' => $isPrivateAncestor,
+            'private-ancestor' => $info['isPrivateAncestor'],
             'property' => true,
         )));
         $classes = \array_merge($classes, $vis);
         $classes = \array_diff($classes, array('debug'));
-        $modifiers = $vis;
-        if ($info['isStatic']) {
-            $modifiers[] = 'static';
-        }
-        $modifiers = \array_map(function ($modifier) {
-            return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-        }, $modifiers);
         return $this->debug->html->buildTag(
             'dd',
             array(
@@ -505,22 +517,83 @@ class HtmlObject
                     : null,
                 'data-inherited-from' => $info['inheritedFrom'],
             ),
-            \implode(' ', $modifiers)
-                . ($isPrivateAncestor
-                    // wrapped in span for css rule `.private-ancestor > *`
-                    ? ' <span>(' . $this->html->markupIdentifier($info['inheritedFrom'], 'i') . ')</span>'
-                    : '')
-                . ($info['type']
-                    ? ' ' . $this->html->markupType($info['type'])
-                    : '')
-                . ' <span class="t_identifier"'
-                    . ' title="' . ($opts['outPhpDoc'] ? \htmlspecialchars($info['desc']) : '') . '"'
-                    . '>' . $name . '</span>'
-                . ($info['value'] !== Abstracter::UNDEFINED
-                    ? ' <span class="t_operator">=</span> '
-                        . $this->html->dump($info['value'])
-                    : '')
+            $this->dumpPropertyInner($info, $opts)
         );
+    }
+
+    /**
+     * Build property inner html
+     *
+     * @param array $info property info
+     * @param array $opts options (currently just outputAttributes)
+     *
+     * @return string html fragment
+     */
+    private function dumpPropertyInner($info, $opts)
+    {
+        $name = \str_replace('debug.', '', $info['name']);
+        $modifiers = \array_map(function ($modifier) {
+            return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
+        }, $info['modifiers']);
+        return \implode(' ', $modifiers)
+            . ($info['isPrivateAncestor']
+                // wrapped in span for css rule `.private-ancestor > *`
+                ? ' <span>(' . $this->html->markupIdentifier($info['inheritedFrom'], 'i') . ')</span>'
+                : '')
+            . ($info['type']
+                ? ' ' . $this->html->markupType($info['type'])
+                : '')
+            . ' <span class="t_identifier"'
+                . ' title="' . ($opts['outPhpDoc'] ? \htmlspecialchars($info['desc']) : '') . '"'
+                . '>' . $name . '</span>'
+            . ($info['value'] !== Abstracter::UNDEFINED
+                ? ' <span class="t_operator">=</span> '
+                    . $this->html->dump($info['value'])
+                : '');
+    }
+
+    /**
+     * Dump object's __toString or stringified value
+     *
+     * @param Abstraction $abs object abstraction
+     *
+     * @return string html fragment
+     */
+    protected function dumpToString(Abstraction $abs)
+    {
+        $val = (string) $abs;
+        if ($val === $abs['className']) {
+            return '';
+        }
+        $len = $val instanceof Abstraction
+            ? $val['strlen']
+            : \strlen($val);
+        $val = $val instanceof Abstraction
+            ? $val['value']
+            : $val;
+        $valAppend = '';
+        $attribs = array(
+            'class' => array('t_stringified'),
+            'title' => !$abs['stringified'] ? '__toString()' : null
+        );
+        if ($len > 100) {
+            $val = \substr($val, 0, 100);
+            $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';
+            $attribs['class'][] = 't_string_trunc';   // truncated
+        }
+        $toStringDump = $this->html->dump($val);
+        $parsed = $this->debug->html->parseTag($toStringDump);
+        $attribs['class'] = \array_merge($attribs['class'], $parsed['attribs']['class']);
+        if (isset($parsed['attribs']['title'])) {
+            // ie a timestamp will have a human readable date in title
+            $attribs['title'] = ($attribs['title'] ? $attribs['title'] . ' : ' : '')
+                . $parsed['attribs']['title'];
+        }
+        return $this->debug->html->buildTag(
+            'span',
+            $attribs,
+            $parsed['innerhtml'] . $valAppend
+        ) . "\n";
     }
 
     /**
@@ -528,7 +601,7 @@ class HtmlObject
      *
      * @param array $methods method names
      *
-     * @return string
+     * @return string html fragment
      */
     private function magicMethodInfo($methods)
     {

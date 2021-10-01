@@ -138,15 +138,8 @@ loadDeps([
 
 $.fn.debugEnhance = function (method, arg1, arg2) {
   // console.warn('debugEnhance', method, this)
-  var $self = this
   if (method === 'sidebar') {
-    if (arg1 === 'add') {
-      sidebar.addMarkup($self)
-    } else if (arg1 === 'open') {
-      sidebar.open($self)
-    } else if (arg1 === 'close') {
-      sidebar.close($self)
-    }
+    debugEnhanceSidebar(this, arg1)
   } else if (method === 'buildChannelList') {
     return enhanceMain.buildChannelList(arg1, arg2, arguments[3])
   } else if (method === 'collapse') {
@@ -158,63 +151,11 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
       expandCollapse.expand($(this))
     })
   } else if (method === 'init') {
-    var conf = new Config(config.get(), 'phpDebugConsole')
-    $self.data('config', conf)
-    conf.set($self.eq(0).data('options') || {})
-    if (typeof arg1 === 'object') {
-      conf.set(arg1)
-    }
-    tabs.init($self)
-    if (conf.get('tooltip')) {
-      tooltip.init($self)
-    }
-    enhanceEntries.init($self)
-    expandCollapse.init($self)
-    registerListeners($self)
-    enhanceMain.init($self)
-    if (!conf.get('drawer')) {
-      $self.debugEnhance()
-    }
+    debugEnhanceInit(this, arg1)
   } else if (method === 'setConfig') {
-    if (typeof arg1 === 'object') {
-      config.set(arg1)
-      // update log entries that have already been enhanced
-      $(this)
-        .find('.debug-log.enhanced')
-        .closest('.debug')
-        .trigger('config.debug.updated', 'linkFilesTemplate')
-    }
+    debugEnhanceSetConfig(this, arg1)
   } else {
-    this.each(function () {
-      var $self = $(this)
-      if ($self.is('.debug')) {
-        // console.warn('debugEnhance() : .debug')
-        $self.find('.debug-menu-bar > nav, .tab-panes').show()
-        $self.find('.tab-pane.active')
-          .find('.m_alert, .debug-log-summary, .debug-log')
-          .debugEnhance()
-        return
-      }
-      if ($self.is('.filter-hidden')) {
-        return
-      }
-      // console.group('debugEnhance')
-      if ($self.is('.group-body')) {
-        enhanceEntries.enhanceEntries($self)
-      } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
-        // logEntry  (alerts use <div>)
-        enhanceEntries.enhanceEntry($self)
-      } else if ($self.prop('class').match(/\bt_/)) {
-        // value
-        enhanceEntries.enhanceValue(
-          $self.parents('li').filter(function () {
-            return $(this).prop('class').match(/\bm_/) !== null
-          }),
-          $self
-        )
-      }
-      // console.groupEnd()
-    })
+    debugEnhanceDefault(this)
   }
   return this
 }
@@ -224,6 +165,81 @@ $(function () {
     $(this).debugEnhance('init')
   })
 })
+
+function debugEnhanceInit ($node, arg1) {
+  var conf = new Config(config.get(), 'phpDebugConsole')
+  $node.data('config', conf)
+  conf.set($node.eq(0).data('options') || {})
+  if (typeof arg1 === 'object') {
+    conf.set(arg1)
+  }
+  tabs.init($node)
+  if (conf.get('tooltip')) {
+    tooltip.init($node)
+  }
+  enhanceEntries.init($node)
+  expandCollapse.init($node)
+  registerListeners($node)
+  enhanceMain.init($node)
+  if (!conf.get('drawer')) {
+    $node.debugEnhance()
+  }
+}
+
+function debugEnhanceDefault ($node) {
+  $node.each(function () {
+    var $self = $(this)
+    if ($self.is('.debug')) {
+      // console.warn('debugEnhance() : .debug')
+      $self.find('.debug-menu-bar > nav, .tab-panes').show()
+      $self.find('.tab-pane.active')
+        .find('.m_alert, .debug-log-summary, .debug-log')
+        .debugEnhance()
+      return
+    }
+    if ($self.is('.filter-hidden')) {
+      return
+    }
+    // console.group('debugEnhance')
+    if ($self.is('.group-body')) {
+      enhanceEntries.enhanceEntries($self)
+    } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
+      // logEntry  (alerts use <div>)
+      enhanceEntries.enhanceEntry($self)
+    } else if ($self.prop('class').match(/\bt_/)) {
+      // value
+      enhanceEntries.enhanceValue(
+        $self.parents('li').filter(function () {
+          return $(this).prop('class').match(/\bm_/) !== null
+        }),
+        $self
+      )
+    }
+    // console.groupEnd()
+  })
+}
+
+function debugEnhanceSetConfig ($node, arg1) {
+  if (typeof arg1 !== 'object') {
+    return
+  }
+  config.set(arg1)
+  // update log entries that have already been enhanced
+  $node
+    .find('.debug-log.enhanced')
+    .closest('.debug')
+    .trigger('config.debug.updated', 'linkFilesTemplate')
+}
+
+function debugEnhanceSidebar ($node, arg1) {
+  if (arg1 === 'add') {
+    sidebar.addMarkup($node)
+  } else if (arg1 === 'open') {
+    sidebar.open($node)
+  } else if (arg1 === 'close') {
+    sidebar.close($node)
+  }
+}
 
 /**
  * Add <style> tag to head of document

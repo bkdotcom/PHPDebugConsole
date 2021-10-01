@@ -115,6 +115,8 @@ class Text extends Base
      * @param array $array Array to display
      *
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
     protected function dumpArray($array)
     {

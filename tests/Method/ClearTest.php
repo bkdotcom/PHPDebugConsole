@@ -171,16 +171,15 @@ class ClearTest extends DebugTestFramework
                     $this->assertCount(1, $this->debug->getData('logSummary/0'));   // error remains
                     $this->assertCount(2, $this->debug->getData('logSummary/1'));   // group & error remain
                     $this->assertCount(6, $this->debug->getData('log'));
+
+                    $groupStackCounts = \array_map(function ($stack) {
+                        return \count($stack);
+                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
                     $this->assertSame(array(
-                        'main' => array(
-                            array('channel' => $this->debug, 'collect' => true),
-                            array('channel' => $this->debug, 'collect' => true),
-                        ),
-                        0 => array(),
-                        1 => array(
-                            array('channel' => $this->debug, 'collect' => true),
-                        ),
-                    ), $this->debug->getData('groupStacks'));
+                        'main' => 2,
+                        0 => 0,
+                        1 => 1,
+                    ), $groupStackCounts);
                 },
                 'chromeLogger' => array(
                     array('Cleared summary (sans errors)'),
@@ -231,20 +230,15 @@ class ClearTest extends DebugTestFramework
                     $this->assertCount(3, $this->debug->getData('logSummary/0'));
                     $this->assertCount(3, $this->debug->getData('logSummary/1'));
                     $this->assertCount(5, $this->debug->getData('log'));
+
+                    $groupStackCounts = \array_map(function ($stack) {
+                        return \count($stack);
+                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
                     $this->assertSame(array(
-                        // 0 => array(1, 1),
-                        // 1 => array(1, 1),
-                        'main' => array(
-                            array('channel' => $this->debug, 'collect' => true),
-                            array('channel' => $this->debug, 'collect' => true),
-                        ),
-                        0 => array(
-                            array('channel' => $this->debug, 'collect' => true),
-                        ),
-                        1 => array(
-                            array('channel' => $this->debug, 'collect' => true),
-                        ),
-                    ), $this->debug->getData('groupStacks'));
+                        'main' => 2,
+                        0 => 1,
+                        1 => 1,
+                    ), $groupStackCounts);
                 },
                 'chromeLogger' => array(
                     array('Cleared errors'),
@@ -295,18 +289,14 @@ class ClearTest extends DebugTestFramework
                     $this->assertCount(0, $this->debug->getData('logSummary/0'));
                     $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
                     $this->assertCount(3, $this->debug->getData('log'));    // groups remain
+                    $groupStackCounts = \array_map(function ($stack) {
+                        return \count($stack);
+                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
                     $this->assertSame(array(
-                        // 0 => array(0, 0),
-                        // 1 => array(1, 1),
-                        'main' => array(
-                            array('channel' => $this->debug, 'collect' => true),
-                            array('channel' => $this->debug, 'collect' => true),
-                        ),
-                        0 => array(),
-                        1 => array(
-                            array('channel' => $this->debug, 'collect' => true),
-                        ),
-                    ), $this->debug->getData('groupStacks'));
+                        'main' => 2,
+                        0 => 0,
+                        1 => 1,
+                    ), $groupStackCounts);
                 },
                 'chromeLogger' => array(
                     array('Cleared everything'),
@@ -357,18 +347,14 @@ class ClearTest extends DebugTestFramework
                     $this->assertCount(0, $this->debug->getData('logSummary/0'));
                     $this->assertCount(1, $this->debug->getData('logSummary/1'));   // group remains
                     $this->assertCount(6, $this->debug->getData('log'));
+                    $groupStackCounts = \array_map(function ($stack) {
+                        return \count($stack);
+                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
                     $this->assertSame(array(
-                        // 0 => array(0, 0),
-                        // 1 => array(1, 1),
-                        'main' => array(
-                            array('channel' => $this->debug, 'collect' => true),
-                            array('channel' => $this->debug, 'collect' => true),
-                        ),
-                        0 => array(),
-                        1 => array(
-                            array('channel' => $this->debug, 'collect' => true),
-                        ),
-                    ), $this->debug->getData('groupStacks'));
+                        'main' => 2,
+                        0 => 0,
+                        1 => 1,
+                    ), $groupStackCounts);
                 },
                 'chromeLogger' => array(
                     array('Cleared summary (incl errors)'),
@@ -464,6 +450,11 @@ class ClearTest extends DebugTestFramework
         );
     }
 
+    /**
+     * Clear the log and create log entries
+     *
+     * @return void
+     */
     private function clearPrep()
     {
         $this->debug->setData(array(

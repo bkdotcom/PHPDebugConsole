@@ -298,89 +298,101 @@
     $root.on('click', '.close[data-dismiss=alert]', function () {
       $(this).parent().remove();
     });
-    $root.on('click', '.show-more-container .show-more', function () {
-      var $container = $(this).closest('.show-more-container');
-      $container.find('.show-more-wrapper').animate({
-        height: $container.find('.t_string').height()
-      }, 400, 'swing', function () {
-        $(this).css('display', 'inline');
-      });
-      $container.find('.show-more-fade').fadeOut();
-      $container.find('.show-more').hide();
-      $container.find('.show-less').show();
-    });
-    $root.on('click', '.show-more-container .show-less', function () {
-      var $container = $(this).closest('.show-more-container');
-      $container.find('.show-more-wrapper')
-        .css('display', 'block')
-        .animate({
-          height: '70px'
-        });
-      $container.find('.show-more-fade').fadeIn();
-      $container.find('.show-more').show();
-      $container.find('.show-less').hide();
-    });
+    $root.on('click', '.show-more-container .show-less', onClickShowLess);
+    $root.on('click', '.show-more-container .show-more', onClickShowMore);
     $root.on('config.debug.updated', function (e, changedOpt) {
       e.stopPropagation();
       if (changedOpt === 'linkFilesTemplate') {
         updateFileLinks($root);
       }
     });
-    $root.on('expand.debug.array', function (e) {
-      var $node = $(e.target); // .t_array
-      var $entry = $node.closest('li[class*=m_]');
-      e.stopPropagation();
-      $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
-        enhanceValue($entry, this);
-      });
-    });
-    $root.on('expand.debug.group', function (e) {
-      var $node = $(e.target); // .m_group
-      e.stopPropagation();
-      $node.find('> .group-body').debugEnhance();
-    });
-    $root.on('expand.debug.object', function (e) {
-      var $node = $(e.target); // .t_object
-      var $entry = $node.closest('li[class*=m_]');
-      e.stopPropagation();
-      if ($node.is('.enhanced')) {
-        return
-      }
-      $node.find('> .object-inner')
-        .find('> .constant > :last-child,' +
-          '> .property > :last-child,' +
-          '> .method .t_string'
-        ).each(function () {
-          enhanceValue($entry, this);
-        });
-      enhanceInner($node);
-    });
+    $root.on('expand.debug.array', onExpandArray);
+    $root.on('expand.debug.group', onExpandGroup);
+    $root.on('expand.debug.object', onExpandObject);
     $root.on('expanded.debug.next', '.context', function (e) {
       enhanceArray($(e.target).find('> td > .t_array'));
     });
-    $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', function (e) {
-      var $strings;
-      var $target = $(e.target);
-      if ($target.hasClass('t_array')) {
-        // e.namespace = array.debug ??
-        $strings = $target.find('> .array-inner')
-          .find('> li > .t_string,' +
-            ' > li.t_string');
-      } else if ($target.hasClass('m_group')) {
-        // e.namespace = debug.group
-        $strings = $target.find('> .group-body > li > .t_string');
-      } else if ($target.hasClass('t_object')) {
-        // e.namespace = debug.object
-        $strings = $target.find('> .object-inner')
-          .find('> dd.constant > .t_string,' +
-            ' > dd.property:visible > .t_string,' +
-            ' > dd.method > .t_string');
-      } else {
-        $strings = $();
-      }
-      $strings.not('[data-type-more=numeric]').each(function () {
-        enhanceLongString($(this));
+    $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', onExpanded);
+  }
+
+  function onClickShowLess () {
+    var $container = $(this).closest('.show-more-container');
+    $container.find('.show-more-wrapper')
+      .css('display', 'block')
+      .animate({
+        height: '70px'
       });
+    $container.find('.show-more-fade').fadeIn();
+    $container.find('.show-more').show();
+    $container.find('.show-less').hide();
+  }
+
+  function onClickShowMore () {
+    var $container = $(this).closest('.show-more-container');
+    $container.find('.show-more-wrapper').animate({
+      height: $container.find('.t_string').height()
+    }, 400, 'swing', function () {
+      $(this).css('display', 'inline');
+    });
+    $container.find('.show-more-fade').fadeOut();
+    $container.find('.show-more').hide();
+    $container.find('.show-less').show();
+  }
+
+  function onExpandArray (e) {
+    var $node = $(e.target); // .t_array
+    var $entry = $node.closest('li[class*=m_]');
+    e.stopPropagation();
+    $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
+      enhanceValue($entry, this);
+    });
+  }
+
+  function onExpandGroup (e) {
+    var $node = $(e.target); // .m_group
+    e.stopPropagation();
+    $node.find('> .group-body').debugEnhance();
+  }
+
+  function onExpandObject (e) {
+    var $node = $(e.target); // .t_object
+    var $entry = $node.closest('li[class*=m_]');
+    e.stopPropagation();
+    if ($node.is('.enhanced')) {
+      return
+    }
+    $node.find('> .object-inner')
+      .find('> .constant > :last-child,' +
+        '> .property > :last-child,' +
+        '> .method .t_string'
+      ).each(function () {
+        enhanceValue($entry, this);
+      });
+    enhanceInner($node);
+  }
+
+  function onExpanded (e) {
+    var $strings;
+    var $target = $(e.target);
+    if ($target.hasClass('t_array')) {
+      // e.namespace = array.debug ??
+      $strings = $target.find('> .array-inner')
+        .find('> li > .t_string,' +
+          ' > li.t_string');
+    } else if ($target.hasClass('m_group')) {
+      // e.namespace = debug.group
+      $strings = $target.find('> .group-body > li > .t_string');
+    } else if ($target.hasClass('t_object')) {
+      // e.namespace = debug.object
+      $strings = $target.find('> .object-inner')
+        .find('> dd.constant > .t_string,' +
+          ' > dd.property:visible > .t_string,' +
+          ' > dd.method > .t_string');
+    } else {
+      $strings = $();
+    }
+    $strings.not('[data-type-more=numeric]').each(function () {
+      enhanceLongString($(this));
     });
   }
 
@@ -624,10 +636,6 @@
     // console.log('enhanceArray', $node[0])
     var $arrayInner = $node.find('> .array-inner');
     var isEnhanced = $node.find(' > .t_array-expand').length > 0;
-    var $expander;
-    var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length;
-    var expand = $node.data('expand');
-    var expandDefault = true;
     if (isEnhanced) {
       return
     }
@@ -638,6 +646,16 @@
         return
       }
     }
+    enhanceArrayAddMarkup($node);
+    $.each(config$1.iconsArray, function (selector, v) {
+      $node.find(selector).prepend(v);
+    });
+    $node.debugEnhance(enhanceArrayIsExpanded($node) ? 'expand' : 'collapse');
+  }
+
+  function enhanceArrayAddMarkup ($node) {
+    var $arrayInner = $node.find('> .array-inner');
+    var $expander;
     if ($node.closest('.array-file-tree').length) {
       $node.find('> .t_keyword, > .t_punct').remove();
       $arrayInner.find('> li > .t_operator, > li > .t_key.t_int').remove();
@@ -649,40 +667,33 @@
           '<span class="t_array-expand" data-toggle="array">▸ </span>' // ▶
         );
       });
-    } else {
-      $expander = $('<span class="t_array-expand" data-toggle="array">' +
-          '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-          '<i class="fa ' + config$1.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
-          '<span class="t_punct">)</span>' +
-        '</span>');
-      // add expand/collapse
-      $node.find('> .t_keyword').first()
-        .wrap('<span class="t_array-collapse" data-toggle="array">')
-        .after('<span class="t_punct">(</span> <i class="fa ' + config$1.iconsExpand.collapse + '"></i>')
-        .parent().next().remove(); // remove original '('
-      $node.prepend($expander);
+      return
     }
-    $.each(config$1.iconsArray, function (selector, v) {
-      $node.find(selector).prepend(v);
-    });
-    if (numParents === 0) {
-      // outermost array
-      expandDefault = true; // expand
-    } else {
-      // nested array
-      expandDefault = false; // collapse
-      if (expand === undefined) {
-        expand = $node.closest('.t_array[data-expand]').data('expand');
-      }
+    $expander = $('<span class="t_array-expand" data-toggle="array">' +
+        '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
+        '<i class="fa ' + config$1.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+        '<span class="t_punct">)</span>' +
+      '</span>');
+    // add expand/collapse
+    $node.find('> .t_keyword').first()
+      .wrap('<span class="t_array-collapse" data-toggle="array">')
+      .after('<span class="t_punct">(</span> <i class="fa ' + config$1.iconsExpand.collapse + '"></i>')
+      .parent().next().remove(); // remove original '('
+    $node.prepend($expander);
+  }
+
+  function enhanceArrayIsExpanded ($node) {
+    var expand = $node.data('expand');
+    var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length;
+    var expandDefault = numParents === 0;
+    if (expand === undefined && numParents !== 0) {
+      // nested array and expand === undefined
+      expand = $node.closest('.t_array[data-expand]').data('expand');
     }
     if (expand === undefined) {
       expand = expandDefault;
     }
-    if (expand || $node.hasClass('array-file-tree')) {
-      $node.debugEnhance('expand');
-    } else {
-      $node.debugEnhance('collapse');
-    }
+    return expand || $node.hasClass('array-file-tree')
   }
 
   /**
@@ -1311,70 +1322,76 @@
       close$2($root$2);
     }
 
-    $root$2.on('click', '.close[data-dismiss=alert]', function () {
-      // setTimeout -> new thread -> executed after event bubbled
-      var $debug = $(this).closest('.debug');
-      setTimeout(function () {
-        if ($debug.find('.m_alert').length) {
-          $debug.find('.debug-sidebar input[data-toggle=method][value=alert]').parent().addClass('disabled');
-        }
-      });
-    });
-
-    $root$2.on('click', '.sidebar-toggle', function () {
-      var $debug = $(this).closest('.debug');
-      var isVis = $debug.find('.debug-sidebar').is('.show');
-      if (!isVis) {
-        open$2($debug);
-      } else {
-        close$2($debug);
-      }
-    });
-
-    $root$2.on('change', '.debug-sidebar input[type=checkbox]', function (e) {
-      var $input = $(this);
-      var $toggle = $input.closest('.toggle');
-      var $nested = $toggle.next('ul').find('.toggle');
-      var isActive = $input.is(':checked');
-      var $errorSummary = $('.m_alert.error-summary.have-fatal');
-      $toggle.toggleClass('active', isActive);
-      $nested.toggleClass('active', isActive);
-      if ($input.val() === 'fatal') {
-        $errorSummary.find('.error-fatal').toggleClass('filter-hidden', !isActive);
-        $errorSummary.toggleClass('filter-hidden', $errorSummary.children().not('.filter-hidden').length === 0);
-      }
-    });
+    $root$2.on('click', '.close[data-dismiss=alert]', onClickCloseAlert);
+    $root$2.on('click', '.sidebar-toggle', onClickSidebarToggle);
+    $root$2.on('change', '.debug-sidebar input[type=checkbox]', onChangeSidebarInput);
 
     if (initialized) {
       return
     }
 
-    addPreFilter(function ($delegateRoot) {
-      $root$2 = $delegateRoot;
-      options = $root$2.find('.tab-primary').data('options');
-      methods = [];
-      $root$2.find('input[data-toggle=method]:checked').each(function () {
-        methods.push($(this).val());
-      });
-    });
-
-    addTest(function ($node) {
-      var matches = $node[0].className.match(/\bm_(\S+)\b/);
-      var method = matches ? matches[1] : null;
-      if (!options.sidebar) {
-        return true
-      }
-      if (method === 'group' && $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)) {
-        method = $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)[1];
-        $node.toggleClass('filter-hidden-body', methods.indexOf(method) < 0);
-      }
-      if (['alert', 'error', 'warn', 'info'].indexOf(method) > -1) {
-        return methods.indexOf(method) > -1
-      }
-      return methods.indexOf('other') > -1
-    });
-
+    addPreFilter(preFilter);
+    addTest(filterTest);
     initialized = true;
+  }
+
+  function onChangeSidebarInput (e) {
+    var $input = $(this);
+    var $toggle = $input.closest('.toggle');
+    var $nested = $toggle.next('ul').find('.toggle');
+    var isActive = $input.is(':checked');
+    var $errorSummary = $('.m_alert.error-summary.have-fatal');
+    $toggle.toggleClass('active', isActive);
+    $nested.toggleClass('active', isActive);
+    if ($input.val() === 'fatal') {
+      $errorSummary.find('.error-fatal').toggleClass('filter-hidden', !isActive);
+      $errorSummary.toggleClass('filter-hidden', $errorSummary.children().not('.filter-hidden').length === 0);
+    }
+  }
+
+  function onClickCloseAlert () {
+    // setTimeout -> new thread -> executed after event bubbled
+    var $debug = $(this).closest('.debug');
+    setTimeout(function () {
+      if ($debug.find('.m_alert').length) {
+        $debug.find('.debug-sidebar input[data-toggle=method][value=alert]').parent().addClass('disabled');
+      }
+    });
+  }
+
+  function onClickSidebarToggle () {
+    var $debug = $(this).closest('.debug');
+    var isVis = $debug.find('.debug-sidebar').is('.show');
+    if (!isVis) {
+      open$2($debug);
+    } else {
+      close$2($debug);
+    }
+  }
+
+  function filterTest ($node) {
+    var matches = $node[0].className.match(/\bm_(\S+)\b/);
+    var method = matches ? matches[1] : null;
+    if (!options.sidebar) {
+      return true
+    }
+    if (method === 'group' && $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)) {
+      method = $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)[1];
+      $node.toggleClass('filter-hidden-body', methods.indexOf(method) < 0);
+    }
+    if (['alert', 'error', 'warn', 'info'].indexOf(method) > -1) {
+      return methods.indexOf(method) > -1
+    }
+    return methods.indexOf('other') > -1
+  }
+
+  function preFilter ($delegateRoot) {
+    $root$2 = $delegateRoot;
+    options = $root$2.find('.tab-primary').data('options');
+    methods = [];
+    $root$2.find('input[data-toggle=method]:checked').each(function () {
+      methods.push($(this).val());
+    });
   }
 
   function addMarkup$1 ($node) {
@@ -1624,12 +1641,8 @@
 
   function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
     var $li;
+    var $lis = [];
     var $ul = $('<ul class="list-unstyled">');
-    var channel;
-    var channelName = '';
-    var channelNames = [];
-    var isChecked = true;
-    var value = '';
     /*
     console.log('buildChannelList', {
       nameRoot: nameRoot,
@@ -1652,9 +1665,33 @@
       );
       $ul.append($li);
     }
-    channelNames = Object.keys(channels).sort(function (a, b) {
+    $lis = buildChannelLis(channels, nameRoot, checkedChannels, prepend);
+    for (var i = 0, len = $lis.length; i < len; i++) {
+      $ul.append($lis[i]);
+    }
+    return $ul
+  }
+
+  function buildChannelValue (channelName, prepend, nameRoot) {
+    var value = channelName;
+    if (prepend) {
+      value = prepend + channelName;
+    } else if (value !== nameRoot) {
+      value = nameRoot + '.' + value;
+    }
+    return value
+  }
+
+  function buildChannelLis (channels, nameRoot, checkedChannels, prepend) {
+    var $li;
+    var $lis = [];
+    var channel;
+    var channelName = '';
+    var channelNames = Object.keys(channels).sort(function (a, b) {
       return a.localeCompare(b)
     });
+    var isChecked = true;
+    var value;
     for (var i = 0, len = channelNames.length; i < len; i++) {
       channelName = channelNames[i];
       if (channelName === 'phpError') {
@@ -1662,12 +1699,7 @@
         continue
       }
       channel = channels[channelName];
-      value = channelName;
-      if (prepend) {
-        value = prepend + channelName;
-      } else if (value !== nameRoot) {
-        value = nameRoot + '.' + value;
-      }
+      value = buildChannelValue(channelName, prepend, nameRoot);
       isChecked = checkedChannels !== undefined
         ? checkedChannels.indexOf(value) > -1
         : channel.options.show;
@@ -1681,9 +1713,9 @@
       if (Object.keys(channel.channels).length) {
         $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'));
       }
-      $ul.append($li);
+      $lis.push($li);
     }
-    return $ul
+    return $lis
   }
 
   function buildChannelLi (channelName, value, isChecked, isRoot, options) {
@@ -5592,85 +5624,93 @@
       appendTo: function (reference) {
         return $(reference).closest('.group-body, .debug')[0]
       },
-      content: function (reference) {
-        var $ref = $(reference);
-        var attributes;
-        var title;
-        var titleMore;
-        if ($ref.hasClass('fa-hashtag')) {
-          attributes = $ref.parent().data('attributes');
-          return buildAttributes(attributes)
+      content: tippyContent,
+      onHide: tippyOnHide,
+      onMount: tippyOnMount,
+      onShow: tippyOnShow
+    });
+  }
+
+  function tippyContent (reference) {
+    var $ref = $(reference);
+    var attributes;
+    var title;
+    var titleMore;
+    if ($ref.hasClass('fa-hashtag')) {
+      attributes = $ref.parent().data('attributes');
+      return buildAttributes(attributes)
+    }
+    title = $ref.prop('title');
+    if (title) {
+      $ref.data('titleOrig', title);
+      if (title === 'Deprecated') {
+        titleMore = $ref.parent().data('deprecatedDesc');
+        if (titleMore) {
+          title = 'Deprecated: ' + titleMore;
         }
-        title = $ref.prop('title');
-        if (title) {
-          $ref.data('titleOrig', title);
-          if (title === 'Deprecated') {
-            titleMore = $ref.parent().data('deprecatedDesc');
-            if (titleMore) {
-              title = 'Deprecated: ' + titleMore;
-            }
-          } else if (title === 'Inherited') {
-            titleMore = $ref.parent().data('inheritedFrom');
-            if (titleMore) {
-              titleMore = '<span class="classname">' +
-                titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
-                '</span>';
-              title = 'Inherited from ' + titleMore;
-            }
-          } else if (title === 'Open in editor') {
-            title = '<i class="fa fa-pencil"></i> ' + title;
-          } else if (title.match(/^\/.+: line \d+$/)) {
-            title = '<i class="fa fa-file-code-o"></i> ' + title;
-          }
-          return title.replace(/\n/g, '<br />')
+      } else if (title === 'Inherited') {
+        titleMore = $ref.parent().data('inheritedFrom');
+        if (titleMore) {
+          titleMore = '<span class="classname">' +
+            titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+            '</span>';
+          title = 'Inherited from ' + titleMore;
+        }
+      } else if (title === 'Open in editor') {
+        title = '<i class="fa fa-pencil"></i> ' + title;
+      } else if (title.match(/^\/.+: line \d+$/)) {
+        title = '<i class="fa fa-file-code-o"></i> ' + title;
+      }
+      return title.replace(/\n/g, '<br />')
+    }
+  }
+
+  function tippyOnHide (instance) {
+    var $ref = $(instance.reference);
+    var title = $ref.data('titleOrig');
+    if (title) {
+      $ref.attr('title', title);
+    }
+    setTimeout(function () {
+      instance.destroy();
+    }, 100);
+  }
+
+  function tippyOnMount (instance) {
+    var $ref = $(instance.reference);
+    var modifiersNew = [
+      {
+        name: 'flip',
+        options: {
+          boundary: $ref.closest('.tab-panes')[0],
+          padding: 5
         }
       },
-      onHide: function (instance) {
-        var $ref = $(instance.reference);
-        var title = $ref.data('titleOrig');
-        if (title) {
-          $ref.attr('title', title);
+      {
+        name: 'preventOverflow',
+        options: {
+          boundary: $ref.closest('.tab-body')[0],
+          padding: { top: 2, bottom: 2, left: 5, right: 5 }
         }
-        setTimeout(function () {
-          instance.destroy();
-        }, 100);
-      },
-      onMount: function (instance) {
-        var $ref = $(instance.reference);
-        var modifiersNew = [
-          {
-            name: 'flip',
-            options: {
-              boundary: $ref.closest('.tab-panes')[0],
-              padding: 5
-            }
-          },
-          {
-            name: 'preventOverflow',
-            options: {
-              boundary: $ref.closest('.tab-body')[0],
-              padding: { top: 2, bottom: 2, left: 5, right: 5 }
-            }
-          }
-        ];
-        // console.log('popperInstance options before', instance.popperInstance.state.options)
-        instance.popperInstance.setOptions({
-          modifiers: mergeModifiers(instance.popperInstance.state.options.modifiers, modifiersNew)
-        });
-        // console.log('popperInstance options after', instance.popperInstance.state.options)
-      },
-      onShow: function (instance) {
-        var $ref = $(instance.reference);
-        $ref.removeAttr('title');
-        $ref.addClass('hasTooltip');
-        $ref.parents('.hasTooltip').each(function () {
-          if (this._tippy) {
-            this._tippy.hide();
-          }
-        });
-        return true
+      }
+    ];
+    // console.log('popperInstance options before', instance.popperInstance.state.options)
+    instance.popperInstance.setOptions({
+      modifiers: mergeModifiers(instance.popperInstance.state.options.modifiers, modifiersNew)
+    });
+    // console.log('popperInstance options after', instance.popperInstance.state.options)
+  }
+
+  function tippyOnShow (instance) {
+    var $ref = $(instance.reference);
+    $ref.removeAttr('title');
+    $ref.addClass('hasTooltip');
+    $ref.parents('.hasTooltip').each(function () {
+      if (this._tippy) {
+        this._tippy.hide();
       }
     });
+    return true
   }
 
   function mergeModifiers (modCur, modNew) {
@@ -5992,15 +6032,8 @@
 
   $.fn.debugEnhance = function (method, arg1, arg2) {
     // console.warn('debugEnhance', method, this)
-    var $self = this;
     if (method === 'sidebar') {
-      if (arg1 === 'add') {
-        addMarkup$1($self);
-      } else if (arg1 === 'open') {
-        open$2($self);
-      } else if (arg1 === 'close') {
-        close$2($self);
-      }
+      debugEnhanceSidebar(this, arg1);
     } else if (method === 'buildChannelList') {
       return buildChannelList(arg1, arg2, arguments[3])
     } else if (method === 'collapse') {
@@ -6012,63 +6045,11 @@
         expand($(this));
       });
     } else if (method === 'init') {
-      var conf = new Config(config$7.get(), 'phpDebugConsole');
-      $self.data('config', conf);
-      conf.set($self.eq(0).data('options') || {});
-      if (typeof arg1 === 'object') {
-        conf.set(arg1);
-      }
-      init$8($self);
-      if (conf.get('tooltip')) {
-        init$9($self);
-      }
-      init$1($self);
-      init$7($self);
-      registerListeners();
-      init$6($self);
-      if (!conf.get('drawer')) {
-        $self.debugEnhance();
-      }
+      debugEnhanceInit(this, arg1);
     } else if (method === 'setConfig') {
-      if (typeof arg1 === 'object') {
-        config$7.set(arg1);
-        // update log entries that have already been enhanced
-        $(this)
-          .find('.debug-log.enhanced')
-          .closest('.debug')
-          .trigger('config.debug.updated', 'linkFilesTemplate');
-      }
+      debugEnhanceSetConfig(this, arg1);
     } else {
-      this.each(function () {
-        var $self = $(this);
-        if ($self.is('.debug')) {
-          // console.warn('debugEnhance() : .debug')
-          $self.find('.debug-menu-bar > nav, .tab-panes').show();
-          $self.find('.tab-pane.active')
-            .find('.m_alert, .debug-log-summary, .debug-log')
-            .debugEnhance();
-          return
-        }
-        if ($self.is('.filter-hidden')) {
-          return
-        }
-        // console.group('debugEnhance')
-        if ($self.is('.group-body')) {
-          enhanceEntries($self);
-        } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
-          // logEntry  (alerts use <div>)
-          enhanceEntry($self);
-        } else if ($self.prop('class').match(/\bt_/)) {
-          // value
-          enhanceValue(
-            $self.parents('li').filter(function () {
-              return $(this).prop('class').match(/\bm_/) !== null
-            }),
-            $self
-          );
-        }
-        // console.groupEnd()
-      });
+      debugEnhanceDefault(this);
     }
     return this
   };
@@ -6078,6 +6059,81 @@
       $(this).debugEnhance('init');
     });
   });
+
+  function debugEnhanceInit ($node, arg1) {
+    var conf = new Config(config$7.get(), 'phpDebugConsole');
+    $node.data('config', conf);
+    conf.set($node.eq(0).data('options') || {});
+    if (typeof arg1 === 'object') {
+      conf.set(arg1);
+    }
+    init$8($node);
+    if (conf.get('tooltip')) {
+      init$9($node);
+    }
+    init$1($node);
+    init$7($node);
+    registerListeners();
+    init$6($node);
+    if (!conf.get('drawer')) {
+      $node.debugEnhance();
+    }
+  }
+
+  function debugEnhanceDefault ($node) {
+    $node.each(function () {
+      var $self = $(this);
+      if ($self.is('.debug')) {
+        // console.warn('debugEnhance() : .debug')
+        $self.find('.debug-menu-bar > nav, .tab-panes').show();
+        $self.find('.tab-pane.active')
+          .find('.m_alert, .debug-log-summary, .debug-log')
+          .debugEnhance();
+        return
+      }
+      if ($self.is('.filter-hidden')) {
+        return
+      }
+      // console.group('debugEnhance')
+      if ($self.is('.group-body')) {
+        enhanceEntries($self);
+      } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
+        // logEntry  (alerts use <div>)
+        enhanceEntry($self);
+      } else if ($self.prop('class').match(/\bt_/)) {
+        // value
+        enhanceValue(
+          $self.parents('li').filter(function () {
+            return $(this).prop('class').match(/\bm_/) !== null
+          }),
+          $self
+        );
+      }
+      // console.groupEnd()
+    });
+  }
+
+  function debugEnhanceSetConfig ($node, arg1) {
+    if (typeof arg1 !== 'object') {
+      return
+    }
+    config$7.set(arg1);
+    // update log entries that have already been enhanced
+    $node
+      .find('.debug-log.enhanced')
+      .closest('.debug')
+      .trigger('config.debug.updated', 'linkFilesTemplate');
+  }
+
+  function debugEnhanceSidebar ($node, arg1) {
+    if (arg1 === 'add') {
+      addMarkup$1($node);
+    } else if (arg1 === 'open') {
+      open$2($node);
+    } else if (arg1 === 'close') {
+      close$2($node);
+    }
+  }
 
   /**
    * Add <style> tag to head of document

@@ -27,18 +27,25 @@ class ServiceProvider implements ServiceProviderInterface
      * @param Container $container Container instances
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function register(Container $container)
     {
-
+        /*
+            These "services" are reused between channels
+            each debug "rootInstance" gets at most one instance of the following
+        */
         $container['services'] = array(
             'arrayUtil',
             'backtrace',
             'errorHandler',
             'html',
             'methodClear',
+            'methodGroup',
             'methodProfile',
             'methodTable',
+            'methodTime',
             'request',
             'response',
             'utf8',
@@ -117,9 +124,9 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Method\Group($debug);
         };
-        $container['methodProfile'] = $container->factory(function () {
+        $container['methodProfile'] = function () {
             return new \bdk\Debug\Method\Profile();
-        });
+        };
         $container['methodTable'] = function () {
             return new \bdk\Debug\Method\Table();
         };

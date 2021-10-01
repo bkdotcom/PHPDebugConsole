@@ -343,6 +343,8 @@ class PhpDoc
      * Get the tag parsers
      *
      * @return array
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     protected static function parsers()
     {

@@ -30,10 +30,7 @@ class InternalEvents implements SubscriberInterface
 {
 
     private $debug;
-
     private $highlightAdded = false;
-    private $inShutdown = false;
-    protected $log = array();
 
     /**
      * duplicate/store frequently used cfg vals
@@ -165,6 +162,8 @@ class InternalEvents implements SubscriberInterface
      * @param Event $event Event instance
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
     public function onDumpCustom(Event $event)
     {
@@ -243,7 +242,7 @@ class InternalEvents implements SubscriberInterface
     /**
      * Debug::EVENT_LOG subscriber
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */
@@ -264,14 +263,17 @@ class InternalEvents implements SubscriberInterface
      */
     public function onOutput(Event $event)
     {
-        if ($event['isTarget']) {
-            /*
-                All channels share the same data.
-                We only need to do this via the channel that called output
-            */
-            $this->onOutputCleanup();
+        /*
+            All channels share the same data.
+            We only need to do this via the channel that called output
+        */
+        if (!$event['isTarget']) {
+            return;
         }
-        if (!$this->debug->parentInstance) {
+        $this->debug->setData('headers', array());
+        $debug = $event->getSubject();
+        if (!$debug->parentInstance) {
+            // this is the root instance
             $this->onOutputLogRuntime();
         }
     }
@@ -369,8 +371,6 @@ class InternalEvents implements SubscriberInterface
     public function onShutdownHigh()
     {
         $this->exitCheck();
-        $this->closeOpenGroups();
-        $this->inShutdown = true;
     }
 
     /**
@@ -402,33 +402,6 @@ class InternalEvents implements SubscriberInterface
             return;
         }
         echo $this->debug->output();
-    }
-
-    /**
-     * Close any unclosed groups
-     *
-     * We may have forgotten to end a group or the script may have exited
-     *
-     * @return void
-     */
-    private function closeOpenGroups()
-    {
-        if ($this->inShutdown) {
-            // we already closed
-            return;
-        }
-        $groupPriorityStack = \array_merge(array('main'), $this->debug->getData('groupPriorityStack'));
-        $groupStacks = $this->debug->getData('groupStacks');
-        while ($groupPriorityStack) {
-            $priority = \array_pop($groupPriorityStack);
-            foreach ($groupStacks[$priority] as $info) {
-                $info['channel']->groupEnd();
-            }
-            if (\is_int($priority)) {
-                // close the summary
-                $this->debug->groupEnd();
-            }
-        }
     }
 
     /**
@@ -581,115 +554,6 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * "cleanup"
-     *    close open groups
-     *    remove "hide-if-empty" groups
-     *    uncollapse errors
-     *
-     * @return void
-     */
-    private function onOutputCleanup()
-    {
-        $this->closeOpenGroups();
-        $data = $this->debug->getData();
-        $data['headers'] = array();
-        $this->log = &$data['log'];
-        $this->onOutputGroups();
-        $this->uncollapseErrors();
-        $summaryKeys = \array_keys($data['logSummary']);
-        foreach ($summaryKeys as $key) {
-            $this->log = &$data['logSummary'][$key];
-            $this->onOutputGroups();
-            $this->uncollapseErrors();
-        }
-        $this->debug->setData($data);
-    }
-
-    /**
-     * Remove empty groups having 'hideIfEmpty' meta value
-     * Convert empty groups having "ungroup" meta value to log entries
-     *
-     * @return void
-     */
-    private function onOutputGroups()
-    {
-        $groupStack = array(
-            array(
-                // dummy / root group
-                //  eliminates need to test if entry has parent group
-                'childCount' => 0,
-                'groupCount' => 0,
-            )
-        );
-        $groupStackCount = 1;
-        $reindex = false;
-        for ($i = 0, $count = \count($this->log); $i < $count; $i++) {
-            $logEntry = $this->log[$i];
-            $method = $logEntry['method'];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[] = array(
-                    'childCount' => 0,  // includes any child groups
-                    'groupCount' => 0,
-                    'i' => $i,
-                    'iEnd' => null,
-                    'meta' => $logEntry['meta'],
-                    'parent' => null,
-                );
-                $groupStack[$groupStackCount - 1]['childCount']++;
-                $groupStack[$groupStackCount - 1]['groupCount']++;
-                $groupStack[$groupStackCount]['parent'] = &$groupStack[$groupStackCount - 1];
-                $groupStackCount++;
-                continue;
-            }
-            if ($method === 'groupEnd') {
-                $group = \array_pop($groupStack);
-                $group['iEnd'] = $i;
-                $groupStackCount--;
-                $reindex = $this->onOutputGroup($group) || $reindex;
-                continue;
-            }
-            $groupStack[$groupStackCount - 1]['childCount']++;
-        }
-        if ($reindex) {
-            $this->log = \array_values($this->log);
-        }
-    }
-
-    /**
-     * Handle group hideIfEmpty & ungroup meta options
-     *
-     * @param array $group Group info collected in onOutputGroups
-     *
-     * @return bool Whether log needs re-indexed
-     */
-    private function onOutputGroup(&$group = array())
-    {
-        if (!empty($group['meta']['hideIfEmpty'])) {
-            if ($group['childCount'] === 0) {
-                unset($this->log[$group['i']]);     // remove open entry
-                unset($this->log[$group['iEnd']]);  // remove end entry
-                $group['parent']['childCount']--;
-                $group['parent']['groupCount']--;
-                return true;
-            }
-        }
-        if (!empty($group['meta']['ungroup'])) {
-            if ($group['childCount'] === 0) {
-                $this->log[$group['i']]['method'] = 'log';
-                unset($this->log[$group['iEnd']]);  // remove end entry
-                $group['parent']['groupCount']--;
-                return true;
-            } elseif ($group['childCount'] === 1 && $group['groupCount'] === 0) {
-                unset($this->log[$group['i']]);     // remove open entry
-                unset($this->log[$group['iEnd']]);  // remove end entry
-                $group['parent']['groupCount']--;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Log our runtime info in a summary group
      *
      * As we're only subscribed to root debug instance's Debug::EVENT_OUTPUT event, this info
@@ -783,30 +647,5 @@ class InternalEvents implements SubscriberInterface
             return !empty($emailableErrors);
         }
         return false;
-    }
-
-    /**
-     * Uncollapse groups containing errors.
-     *
-     * @return void
-     */
-    private function uncollapseErrors()
-    {
-        $groupStack = array();
-        for ($i = 0, $count = \count($this->log); $i < $count; $i++) {
-            $method = $this->log[$i]['method'];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[] = $i;
-            } elseif ($method === 'groupEnd') {
-                \array_pop($groupStack);
-            } elseif (\in_array($method, array('error', 'warn'))) {
-                if ($this->log[$i]->getMeta('uncollapse') === false) {
-                    continue;
-                }
-                foreach ($groupStack as $i2) {
-                    $this->log[$i2]['method'] = 'group';
-                }
-            }
-        }
     }
 }

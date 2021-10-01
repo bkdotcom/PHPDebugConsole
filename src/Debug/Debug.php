@@ -18,7 +18,6 @@ namespace bdk;
 use bdk\Container;
 use bdk\Container\ServiceProviderInterface;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
@@ -108,21 +107,12 @@ class Debug
         'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
         'counts'            => array(), // count method
         'entryCountInitial' => 0,       // store number of log entries created during init
-        'groupPriorityStack' => array(), // array of priorities
-                                        //   used to return to the previous summary when groupEnd()ing out of a summary
-                                        //   this allows calling groupSummary() while in a groupSummary
-        'groupStacks' => array(
-            'main' => array(),  // array('channel' => Debug instance, 'collect' => bool)[]
-        ),
-        'groupStacksRef'    => null,    // points to $this->data['groupStacks'][x] (where x = 'main' or (int) priority)
         'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
         'isObCache'         => false,
         'log'               => array(),
-        'logSummary'        => array(), // summary log entries subgrouped by priority
+        'logSummary'        => array(), // summary log entries grouped by priority
         'outputSent'        => false,
-        'profileAutoInc'    => 1,
-        'profileInstances'  => array(),
-        'requestId'         => '',  // set in bootstrap
+        'requestId'         => '',      // set in bootstrap
         'runtime'           => array(
             // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
         ),
@@ -146,6 +136,8 @@ class Debug
      * Constructor
      *
      * @param array $cfg config
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function __construct($cfg = array())
     {
@@ -475,7 +467,7 @@ class Debug
         );
         $this->methodClear->doClear($logEntry);
         // even if cleared from within summary, let's log this in primary log
-        $this->setLogDest('log');
+        $this->setLogDest('main');
         $this->appendLog($logEntry);
         $this->setLogDest('auto');
     }
@@ -766,20 +758,6 @@ class Debug
         if (!$this->cfg['collect']) {
             return;
         }
-        if (!$this->cfg['enableProfiling']) {
-            $callerInfo = $this->backtrace->getCallerInfo();
-            $msg = \sprintf(
-                'Profile: Unable to start - enableProfiling opt not set.  %s on line %s.',
-                $callerInfo['file'],
-                $callerInfo['line']
-            );
-            $this->appendLog(new LogEntry(
-                $this,
-                __FUNCTION__,
-                array($msg)
-            ));
-            return;
-        }
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -790,25 +768,7 @@ class Debug
             ),
             array('name')
         );
-        if ($logEntry['meta']['name'] === null) {
-            $logEntry['meta']['name'] = 'Profile ' . $this->data['profileAutoInc'];
-            $this->data['profileAutoInc']++;
-        }
-        $name = $logEntry['meta']['name'];
-        if (isset($this->data['profileInstances'][$name])) {
-            $instance = $this->data['profileInstances'][$name];
-            $instance->end();
-            $instance->start();
-            // move it to end (last started)
-            unset($this->data['profileInstances'][$name]);
-            $this->data['profileInstances'][$name] = $instance;
-            $logEntry['args'] = array('Profile \'' . $name . '\' restarted');
-            $this->appendLog($logEntry);
-            return;
-        }
-        $this->data['profileInstances'][$name] = $this->methodProfile; // factory
-        $logEntry['args'] = array('Profile \'' . $name . '\' started');
-        $this->appendLog($logEntry);
+        $this->methodProfile->doProfile($logEntry);
     }
 
     /**
@@ -834,50 +794,7 @@ class Debug
             ),
             array('name')
         );
-        if ($logEntry['meta']['name'] === null) {
-            \end($this->data['profileInstances']);
-            $logEntry['meta']['name'] = \key($this->data['profileInstances']);
-        }
-        $name = $logEntry['meta']['name'];
-        $args = array( $name !== null
-            ? 'profileEnd: No such Profile: ' . $name
-            : 'profileEnd: Not currently profiling'
-        );
-        if (isset($this->data['profileInstances'][$name])) {
-            $instance = $this->data['profileInstances'][$name];
-            $data = $instance->end();
-            /*
-                So that our row keys can receive 'callable' formatting,
-                set special '__key' value
-            */
-            $tableInfo = $logEntry->getMeta('tableInfo', array());
-            $tableInfo = \array_replace_recursive(array(
-                'rows' => \array_fill_keys(\array_keys($data), array()),
-            ), $tableInfo);
-            foreach (\array_keys($data) as $k) {
-                $tableInfo['rows'][$k]['key'] = new Abstraction(
-                    Abstracter::TYPE_CALLABLE,
-                    array(
-                        'value' => $k,
-                        'hideType' => true, // don't output 'callable'
-                    )
-                );
-            }
-            $caption = 'Profile \'' . $name . '\' Results';
-            $args = array($caption, 'no data');
-            if ($data) {
-                $args = array( $data );
-                $logEntry->setMeta(array(
-                    'caption' => $caption,
-                    'totalCols' => array('ownTime'),
-                    'tableInfo' => $tableInfo,
-                ));
-            }
-            unset($this->data['profileInstances'][$name]);
-        }
-        $logEntry['args'] = $args;
-        $this->methodTable->doTable($logEntry);
-        $this->appendLog($logEntry);
+        $this->methodProfile->profileEnd($logEntry);
     }
 
     /**
@@ -1283,11 +1200,10 @@ class Debug
         if (!$path) {
             $data = $this->arrayUtil->copy($this->data, false);
             $data['logSummary'] = $this->arrayUtil->copy($data['logSummary'], false);
-            $data['groupStacks'] = $this->arrayUtil->copy($data['groupStacks'], false);
             return $data;
         }
         $data = $this->arrayUtil->pathGet($this->data, $path);
-        return \is_array($data) && \in_array($path, array('logSummary','groupStacks'))
+        return \is_array($data) && \in_array($path, array('logSummary'))
             ? $this->arrayUtil->copy($data, false)
             : $data;
     }
@@ -1528,10 +1444,16 @@ class Debug
             $this->config->set('route', $route);
         }
         /*
-            Publish Debug::EVENT_OUTPUT on all descendant channels and then ourself
+            Publish Debug::EVENT_OUTPUT
+                on all descendant channels
+                rootInstance
+                finally ourself
             This isn't outputing each channel, but for performing any per-channel "before output" activities
         */
         $channels = $this->getChannels(true);
+        if ($this !== $this->rootInstance) {
+            $channels[] = $this->rootInstance;
+        }
         $channels[] = $this;
         foreach ($channels as $channel) {
             $event = $channel->eventManager->publish(
@@ -1608,28 +1530,14 @@ class Debug
         }
         if (\is_string($path)) {
             $this->arrayUtil->pathSet($this->data, $path, $value);
-            if (\strpos($path, 'group') === 0) {
-                /*
-                    if updating groupPriorityStack, groupStacks, or groupStacksRef
-                    don't clear stacks/ priorityStack
-                */
-                return;
-            }
-            if (\strpos($path, 'groupStacks') === 0) {
-                return;
-            }
         } elseif (\is_array($path)) {
             $this->data = \array_merge($this->data, $path);
         }
         if (!$this->data['log']) {
-            $this->data['groupStacks']['main'] = array();
+            $this->methodGroup->resetStack('main');
         }
         if (!$this->data['logSummary']) {
-            $this->data['groupStacks'] = \array_intersect_key(
-                $this->data['groupStacks'],
-                array('main' => true)
-            );
-            $this->data['groupPriorityStack'] = array();
+            $this->methodGroup->resetStack('summary');
         }
         $this->setLogDest();
     }
@@ -1921,7 +1829,7 @@ class Debug
             return;
         }
         // this is the root instance
-        $this->setLogDest();
+        $this->logRef = &$this->data['log']; // setLogDest
         $this->data['entryCountInitial'] = \count($this->data['log']);
     }
 
@@ -2078,33 +1986,32 @@ class Debug
     /**
      * Set where appendLog appends to
      *
-     * @param string $where ('auto'), 'alerts', log', 'summary'
+     * @param string $where ('auto'), 'alerts', 'main', 'summary'
      *
      * @return void
      */
     private function setLogDest($where = 'auto')
     {
+        $priority = $this->methodGroup->getCurrentPriority();
         if ($where === 'auto') {
-            $where = $this->data['groupPriorityStack']
-                ? 'summary'
-                : 'log';
+            $where = $priority === 'main'
+                ? 'main'
+                : 'summary';
         }
         switch ($where) {
             case 'alerts':
                 $this->rootInstance->logRef = &$this->rootInstance->data['alerts'];
                 break;
-            case 'log':
+            case 'main':
                 $this->rootInstance->logRef = &$this->rootInstance->data['log'];
-                $this->data['groupStacksRef'] = &$this->data['groupStacks']['main'];
+                $this->methodGroup->setLogDest('main');
                 break;
             case 'summary':
-                $priority = \end($this->data['groupPriorityStack']);
                 if (!isset($this->data['logSummary'][$priority])) {
                     $this->data['logSummary'][$priority] = array();
-                    $this->data['groupStacks'][$priority] = array();
                 }
                 $this->rootInstance->logRef = &$this->rootInstance->data['logSummary'][$priority];
-                $this->data['groupStacksRef'] = &$this->data['groupStacks'][$priority];
+                $this->methodGroup->setLogDest('summary');
         }
     }
 

@@ -12,26 +12,37 @@
 
 namespace bdk\Debug\Method;
 
+use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\LogEntry;
+
 /**
- * Clear method
+ * Handle Debug's profile methods
+ *
+ * Serves as both the handler for profile() / profileEnd()
+ * and as individual profile instances
  */
 class Profile
 {
+    /*
+        Handler properties
+    */
 
-    protected $namespace = 'bdk\\Debug';
+    protected $autoInc = 1;
+    protected $instances = array();
 
-    /**
-     * @var string Ignore methods in these namespaces
-     */
-    protected $nsIgnoreRegex;
+    /*
+        Profile instance properties
+    */
 
-    /**
-     * @var array profile data
-     */
+    /** @var array profile data */
     protected $data = array();
-
     protected $funcStack = array();
     protected $isProfiling = false;
+    protected $namespace = 'bdk\\Debug';
+    /** @var string Ignore methods in these namespaces */
+    protected $nsIgnoreRegex;
     protected $rootStack = array();
     protected $timeLastTick = null;
     protected $trace = array();
@@ -46,7 +57,109 @@ class Profile
         $namespacesIgnore = \array_merge(array($this->namespace), (array) $namespacesIgnore);
         $namespacesIgnore = \array_unique($namespacesIgnore);
         $this->nsIgnoreRegex = \str_replace('\\', '\\\\', '#^(' . \implode('|', $namespacesIgnore) . ')(\\|$)#');
-        $this->start();
+    }
+
+    /**
+     * Handle clear() call
+     *
+     * @param LogEntry $logEntry log entry instance
+     *
+     * @return void
+     */
+    public function doProfile(LogEntry $logEntry)
+    {
+        $debug = $logEntry->getSubject();
+        if (!$debug->getCfg('enableProfiling', Debug::CONFIG_DEBUG)) {
+            $callerInfo = $debug->backtrace->getCallerInfo();
+            $msg = \sprintf(
+                'Profile: Unable to start - enableProfiling opt not set.  %s on line %s.',
+                $callerInfo['file'],
+                $callerInfo['line']
+            );
+            $debug->log(new LogEntry(
+                $debug,
+                __FUNCTION__,
+                array($msg)
+            ));
+            return;
+        }
+        if ($logEntry['meta']['name'] === null) {
+            $logEntry['meta']['name'] = 'Profile ' . $this->autoInc;
+            $this->autoInc++;
+        }
+        $name = $logEntry['meta']['name'];
+        if (isset($this->instances[$name])) {
+            $instance = $this->instances[$name];
+            $instance->end();
+            $instance->start();
+            // move it to end (last started)
+            unset($this->instances[$name]);
+            $this->instances[$name] = $instance;
+            $logEntry['args'] = array('Profile \'' . $name . '\' restarted');
+            $debug->log($logEntry);
+            return;
+        }
+        $instance = new self();
+        $instance->start();
+        $this->instances[$name] = $instance;
+        $logEntry['args'] = array('Profile \'' . $name . '\' started');
+        $debug->appendLog($logEntry);
+    }
+
+    /**
+     * Handle profileEnd() call
+     *
+     * @param LogEntry $logEntry log entry instance
+     *
+     * @return void
+     */
+    public function profileEnd(LogEntry $logEntry)
+    {
+        $debug = $logEntry->getSubject();
+        if ($logEntry['meta']['name'] === null) {
+            \end($this->instances);
+            $logEntry['meta']['name'] = \key($this->instances);
+        }
+        $name = $logEntry['meta']['name'];
+        $args = array( $name !== null
+            ? 'profileEnd: No such Profile: ' . $name
+            : 'profileEnd: Not currently profiling'
+        );
+        if (isset($this->instances[$name])) {
+            $instance = $this->instances[$name];
+            $data = $instance->end();
+            /*
+                So that our row keys can receive 'callable' formatting,
+                set special '__key' value
+            */
+            $tableInfo = $logEntry->getMeta('tableInfo', array());
+            $tableInfo = \array_replace_recursive(array(
+                'rows' => \array_fill_keys(\array_keys($data), array()),
+            ), $tableInfo);
+            foreach (\array_keys($data) as $k) {
+                $tableInfo['rows'][$k]['key'] = new Abstraction(
+                    Abstracter::TYPE_CALLABLE,
+                    array(
+                        'value' => $k,
+                        'hideType' => true, // don't output 'callable'
+                    )
+                );
+            }
+            $caption = 'Profile \'' . $name . '\' Results';
+            $args = array($caption, 'no data');
+            if ($data) {
+                $args = array( $data );
+                $logEntry->setMeta(array(
+                    'caption' => $caption,
+                    'totalCols' => array('ownTime'),
+                    'tableInfo' => $tableInfo,
+                ));
+            }
+            unset($this->instances[$name]);
+        }
+        $logEntry['args'] = $args;
+        $debug->methodTable->doTable($logEntry);
+        $debug->log($logEntry);
     }
 
     /**

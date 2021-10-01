@@ -3,6 +3,7 @@
 namespace bdk\DebugTests\Collector;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Collector\SoapClient;
 use bdk\Debug\LogEntry;
 use bdk\DebugTests\DebugTestFramework;
 
@@ -15,7 +16,7 @@ class SoapClientTest extends DebugTestFramework
     {
 
         $wsdl = 'http://www.SoapClient.com/xml/SQLDataSoap.wsdl';
-        $soapClient = new \bdk\Debug\Collector\SoapClient($wsdl);
+        $soapClient = new SoapClient($wsdl);
 
         $soapClient->processSRL(
             '/xml/NEWS.SRI',

@@ -22,6 +22,10 @@ class Highlight implements AssetProviderInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getAssets()
     {

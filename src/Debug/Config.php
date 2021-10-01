@@ -25,6 +25,76 @@ class Config
     protected $debugPropChecked = array();
     protected $valuesPending = array();
     protected $invokedServices = array();
+    protected $configKeys = array(
+        'debug' => array(
+            // any key not found falls under 'debug'...
+        ),
+        'abstracter' => array(
+            'cacheMethods',
+            'collectAttributesConst',
+            'collectAttributesMethod',
+            'collectAttributesObj',
+            'collectAttributesParam',
+            'collectAttributesProp',
+            'collectConstants',
+            'collectMethods',
+            'collectPhpDoc',
+            'fullyQualifyPhpDocType',
+            'objectsExclude',
+            'objectSort',
+            'objectsWhitelist',
+            'outputAttributesConst',
+            'outputAttributesMethod',
+            'outputAttributesObj',
+            'outputAttributesParam',
+            'outputAttributesProp',
+            'outputConstants',
+            'outputMethodDesc',
+            'outputMethods',
+            'outputPhpDoc',
+            'stringMaxLen',
+            'stringMinLen',
+            'useDebugInfo',
+        ),
+        'errorEmailer' => array(
+            'emailBacktraceDumper',
+            // 'emailFrom',
+            // 'emailFunc',
+            'emailMask',
+            'emailMin',
+            'emailThrottledSummary',
+            'emailThrottleFile',
+            'emailThrottleRead',
+            'emailThrottleWrite',
+            // 'emailTo',
+            'emailTraceMask',
+            // 'dateTimeFmt',
+        ),
+        'errorHandler' => array(
+            'continueToPrevHandler',
+            'errorFactory',
+            'errorReporting',
+            'errorThrow',
+            'onError',
+            'onEUserError',
+            'suppressNever',
+        ),
+        'routeHtml' => array(
+            'css',
+            'drawer',
+            'filepathCss',
+            'filepathScript',
+            'jqueryUrl',
+            'outputCss',
+            'outputScript',
+            'sidebar',
+            'tooltip',
+        ),
+        'routeStream' => array(
+            'ansi',
+            'stream',
+        )
+    );
 
     /**
      * Constructor
@@ -53,7 +123,7 @@ class Config
         $forInit = \in_array($forInit, array(true, Debug::CONFIG_INIT), true);
         $debugProp = \array_shift($path);
         if ($debugProp === '*') {
-            $keys = \array_keys($this->getConfigKeys() + $this->valuesPending);
+            $keys = \array_keys($this->configKeys + $this->valuesPending);
             $values = array();
             foreach ($keys as $debugProp) {
                 $values[$debugProp] = $this->getPropCfg($debugProp, array(), $forInit, false);
@@ -158,85 +228,6 @@ class Config
     }
 
     /**
-     * Get available config keys for objects
-     *
-     * @return array
-     */
-    private function getConfigKeys()
-    {
-        return array(
-            'debug' => array(
-                // any key not found falls under 'debug'...
-            ),
-            'abstracter' => array(
-                'cacheMethods',
-                'collectAttributesConst',
-                'collectAttributesMethod',
-                'collectAttributesObj',
-                'collectAttributesParam',
-                'collectAttributesProp',
-                'collectConstants',
-                'collectMethods',
-                'collectPhpDoc',
-                'fullyQualifyPhpDocType',
-                'objectsExclude',
-                'objectSort',
-                'objectsWhitelist',
-                'outputAttributesConst',
-                'outputAttributesMethod',
-                'outputAttributesObj',
-                'outputAttributesParam',
-                'outputAttributesProp',
-                'outputConstants',
-                'outputMethodDesc',
-                'outputMethods',
-                'outputPhpDoc',
-                'stringMaxLen',
-                'stringMinLen',
-                'useDebugInfo',
-            ),
-            'errorEmailer' => array(
-                'emailBacktraceDumper',
-                // 'emailFrom',
-                // 'emailFunc',
-                'emailMask',
-                'emailMin',
-                'emailThrottledSummary',
-                'emailThrottleFile',
-                'emailThrottleRead',
-                'emailThrottleWrite',
-                // 'emailTo',
-                'emailTraceMask',
-                // 'dateTimeFmt',
-            ),
-            'errorHandler' => array(
-                'continueToPrevHandler',
-                'errorFactory',
-                'errorReporting',
-                'errorThrow',
-                'onError',
-                'onEUserError',
-                'suppressNever',
-            ),
-            'routeHtml' => array(
-                'css',
-                'drawer',
-                'filepathCss',
-                'filepathScript',
-                'jqueryUrl',
-                'outputCss',
-                'outputScript',
-                'sidebar',
-                'tooltip',
-            ),
-            'routeStream' => array(
-                'ansi',
-                'stream',
-            )
-        );
-    }
-
-    /**
      * Get debug property config value(s)
      *
      * @param string $debugProp  debug property name
@@ -300,10 +291,9 @@ class Config
     private function normalizeArray($cfg)
     {
         $return = array();
-        $configKeys = $this->getConfigKeys();
         foreach ($cfg as $k => $v) {
             $translated = false;
-            foreach ($configKeys as $objName => $objKeys) {
+            foreach ($this->configKeys as $objName => $objKeys) {
                 if (\is_array($v)) {
                     if ($k === $objName) {
                         $return[$objName] = isset($return[$objName])
@@ -312,7 +302,7 @@ class Config
                         $translated = true;
                         break;
                     }
-                    if (isset($configKeys[$k])) {
+                    if (isset($this->configKeys[$k])) {
                         continue;
                     }
                 }
@@ -350,9 +340,8 @@ class Config
         if (\count($path) === 0 || $path[0] === '*') {
             return array('*');
         }
-        $configKeys = $this->getConfigKeys();
         $found = false;
-        foreach ($configKeys as $objName => $objKeys) {
+        foreach ($this->configKeys as $objName => $objKeys) {
             if ($path[0] === $objName) {
                 $found = true;
                 break;

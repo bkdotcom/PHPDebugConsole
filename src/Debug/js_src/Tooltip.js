@@ -10,85 +10,93 @@ export function init ($root) {
     appendTo: function (reference) {
       return $(reference).closest('.group-body, .debug')[0]
     },
-    content: function (reference) {
-      var $ref = $(reference)
-      var attributes
-      var title
-      var titleMore
-      if ($ref.hasClass('fa-hashtag')) {
-        attributes = $ref.parent().data('attributes')
-        return buildAttributes(attributes)
+    content: tippyContent,
+    onHide: tippyOnHide,
+    onMount: tippyOnMount,
+    onShow: tippyOnShow
+  })
+}
+
+function tippyContent (reference) {
+  var $ref = $(reference)
+  var attributes
+  var title
+  var titleMore
+  if ($ref.hasClass('fa-hashtag')) {
+    attributes = $ref.parent().data('attributes')
+    return buildAttributes(attributes)
+  }
+  title = $ref.prop('title')
+  if (title) {
+    $ref.data('titleOrig', title)
+    if (title === 'Deprecated') {
+      titleMore = $ref.parent().data('deprecatedDesc')
+      if (titleMore) {
+        title = 'Deprecated: ' + titleMore
       }
-      title = $ref.prop('title')
-      if (title) {
-        $ref.data('titleOrig', title)
-        if (title === 'Deprecated') {
-          titleMore = $ref.parent().data('deprecatedDesc')
-          if (titleMore) {
-            title = 'Deprecated: ' + titleMore
-          }
-        } else if (title === 'Inherited') {
-          titleMore = $ref.parent().data('inheritedFrom')
-          if (titleMore) {
-            titleMore = '<span class="classname">' +
-              titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
-              '</span>'
-            title = 'Inherited from ' + titleMore
-          }
-        } else if (title === 'Open in editor') {
-          title = '<i class="fa fa-pencil"></i> ' + title
-        } else if (title.match(/^\/.+: line \d+$/)) {
-          title = '<i class="fa fa-file-code-o"></i> ' + title
-        }
-        return title.replace(/\n/g, '<br />')
+    } else if (title === 'Inherited') {
+      titleMore = $ref.parent().data('inheritedFrom')
+      if (titleMore) {
+        titleMore = '<span class="classname">' +
+          titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+          '</span>'
+        title = 'Inherited from ' + titleMore
+      }
+    } else if (title === 'Open in editor') {
+      title = '<i class="fa fa-pencil"></i> ' + title
+    } else if (title.match(/^\/.+: line \d+$/)) {
+      title = '<i class="fa fa-file-code-o"></i> ' + title
+    }
+    return title.replace(/\n/g, '<br />')
+  }
+}
+
+function tippyOnHide (instance) {
+  var $ref = $(instance.reference)
+  var title = $ref.data('titleOrig')
+  if (title) {
+    $ref.attr('title', title)
+  }
+  setTimeout(function () {
+    instance.destroy()
+  }, 100)
+}
+
+function tippyOnMount (instance) {
+  var $ref = $(instance.reference)
+  var modifiersNew = [
+    {
+      name: 'flip',
+      options: {
+        boundary: $ref.closest('.tab-panes')[0],
+        padding: 5
       }
     },
-    onHide: function (instance) {
-      var $ref = $(instance.reference)
-      var title = $ref.data('titleOrig')
-      if (title) {
-        $ref.attr('title', title)
+    {
+      name: 'preventOverflow',
+      options: {
+        boundary: $ref.closest('.tab-body')[0],
+        padding: { top: 2, bottom: 2, left: 5, right: 5 }
       }
-      setTimeout(function () {
-        instance.destroy()
-      }, 100)
-    },
-    onMount: function (instance) {
-      var $ref = $(instance.reference)
-      var modifiersNew = [
-        {
-          name: 'flip',
-          options: {
-            boundary: $ref.closest('.tab-panes')[0],
-            padding: 5
-          }
-        },
-        {
-          name: 'preventOverflow',
-          options: {
-            boundary: $ref.closest('.tab-body')[0],
-            padding: { top: 2, bottom: 2, left: 5, right: 5 }
-          }
-        }
-      ]
-      // console.log('popperInstance options before', instance.popperInstance.state.options)
-      instance.popperInstance.setOptions({
-        modifiers: mergeModifiers(instance.popperInstance.state.options.modifiers, modifiersNew)
-      })
-      // console.log('popperInstance options after', instance.popperInstance.state.options)
-    },
-    onShow: function (instance) {
-      var $ref = $(instance.reference)
-      $ref.removeAttr('title')
-      $ref.addClass('hasTooltip')
-      $ref.parents('.hasTooltip').each(function () {
-        if (this._tippy) {
-          this._tippy.hide()
-        }
-      })
-      return true
+    }
+  ]
+  // console.log('popperInstance options before', instance.popperInstance.state.options)
+  instance.popperInstance.setOptions({
+    modifiers: mergeModifiers(instance.popperInstance.state.options.modifiers, modifiersNew)
+  })
+  // console.log('popperInstance options after', instance.popperInstance.state.options)
+}
+
+function tippyOnShow (instance) {
+  var $ref = $(instance.reference)
+  $ref.removeAttr('title')
+  $ref.addClass('hasTooltip')
+  $ref.parents('.hasTooltip').each(function () {
+    if (this._tippy) {
+      this._tippy.hide()
     }
   })
+  return true
 }
 
 function mergeModifiers (modCur, modNew) {

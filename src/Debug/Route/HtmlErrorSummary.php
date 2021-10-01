@@ -83,6 +83,46 @@ class HtmlErrorSummary
     }
 
     /**
+     * Build backtrace table
+     *
+     * @param array $backtrace backtrace from error object
+     *
+     * @return string
+     */
+    protected function buildBacktrace($backtrace)
+    {
+        // more than one trace frame
+        // Don't inspect objects when dumping trace arguments...  potentially huge objects
+        $objectsExclude = $this->debug->getCfg('objectsExclude');
+        $this->debug->setCfg('objectsExclude', \array_merge($objectsExclude, array('*')));
+        $logEntry = new LogEntry(
+            $this->debug,
+            'table',
+            array($backtrace),
+            array(
+                'attribs' => array(
+                    'class' => 'trace trace-context table-bordered',
+                ),
+                'caption' => 'trace',
+                'columns' => array('file','line','function'),
+                'inclContext' => true,
+                'onBuildRow' => array(
+                    array($this->routeHtml->dump, 'tableMarkupFunction'),
+                    array($this->routeHtml->dump, 'tableAddContextRow'),
+                ),
+            )
+        );
+        $this->debug->methodTable->doTable($logEntry);
+        $table = $this->routeHtml->dump->table->build(
+            $logEntry['args'][0],
+            $logEntry['meta']
+        );
+        // restore previous objectsExclude
+        $this->debug->setCfg('objectsExclude', $objectsExclude);
+        return '<li class="m_trace" data-detect-files="true">' . $table . '</li>';
+    }
+
+    /**
      * If lastError was fatal, output the error
      *
      * @return string
@@ -109,32 +149,7 @@ class HtmlErrorSummary
         $this->debug->addPlugin(new Highlight());
         $backtrace = $error['backtrace'];
         if (\is_array($backtrace) && \count($backtrace) > 1) {
-            // more than one trace frame
-            // Don't inspect objects when dumping trace arguments...  potentially huge objects
-            $objectsExclude = $this->debug->getCfg('objectsExclude');
-            $this->debug->setCfg('objectsExclude', \array_merge($objectsExclude, array('*')));
-            $logEntry = new LogEntry(
-                $this->debug,
-                'table',
-                array($backtrace),
-                array(
-                    'attribs' => array(
-                        'class' => 'trace trace-context table-bordered',
-                    ),
-                    'caption' => 'trace',
-                    'columns' => array('file','line','function'),
-                    'inclContext' => true,
-                    'onBuildRow' => array(
-                        array($this->routeHtml->dump, 'tableMarkupFunction'),
-                        array($this->routeHtml->dump, 'tableAddContextRow'),
-                    ),
-                )
-            );
-            $this->debug->methodTable->doTable($logEntry);
-            $table = $this->routeHtml->dump->table->build($logEntry['args'][0], $logEntry['meta']);
-            // restore previous objectsExclude
-            $this->debug->setCfg('objectsExclude', $objectsExclude);
-            $html .= '<li class="m_trace" data-detect-files="true">' . $table . '</li>';
+            $html .= $this->buildBacktrace();
         } elseif ($backtrace === false) {
             $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
         } elseif ($backtrace === null) {

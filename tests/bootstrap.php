@@ -49,6 +49,5 @@ $modifyTests->modify(__DIR__);
         $debug = $event->getSubject();
         $wamp = $debug->getRoute('wamp');
         $debug->addPlugin($wamp);
-        // $debug->errorHandler->unregister();
     }
 ));

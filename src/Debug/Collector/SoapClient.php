@@ -134,40 +134,37 @@ class SoapClient extends \SoapClient
     private function logRequest($xmlRequest)
     {
         $this->debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
-        $this->debug->log(
-            'request body',
-            new Abstraction(Abstracter::TYPE_STRING, array(
-                'value' => $xmlRequest,
-                'attribs' => array(
-                    'class' => 'highlight language-xml',
-                ),
-                'addQuotes' => false,
-                'visualWhiteSpace' => false,
-            )),
-            $this->debug->meta(array(
-                'attribs' => array(
-                    'class' => 'no-indent',
-                ),
-                'redact' => true,
-            ))
-        );
+        $this->logXml('request body', $xmlRequest);
     }
 
     /**
      * Log response headers and body
      *
-     * @param string $response XML
+     * @param string $xmlResponse XML
      *
      * @return void
      */
-    private function logResponse($response)
+    private function logResponse($xmlResponse)
     {
-        $xmlResponse = $this->getDebugXmlResponse($response);
         $this->debug->log('response headers', $this->__getLastResponseHeaders(), $this->debug->meta('redact'));
+        $xmlResponse = $this->getDebugXmlResponse($xmlResponse);
+        $this->logXml('response body', $xmlResponse);
+    }
+
+    /**
+     * Log XML request or response
+     *
+     * @param string $label log label
+     * @param string $xml   XML
+     *
+     * @return void
+     */
+    private function logXml($label, $xml)
+    {
         $this->debug->log(
-            'response body',
+            $label,
             new Abstraction(Abstracter::TYPE_STRING, array(
-                'value' => $xmlResponse,
+                'value' => $xml,
                 'attribs' => array(
                     'class' => 'highlight language-xml',
                 ),

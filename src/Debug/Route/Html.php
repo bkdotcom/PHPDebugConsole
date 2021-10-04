@@ -140,6 +140,9 @@ class Html extends Base
      */
     public function processLogEntries(Event $event)
     {
+        if ($event['isTarget'] === false) {
+            return;
+        }
         $this->dump->crateRaw = false;
         $this->data = $this->debug->getData();
         // this could go in an extended processAlerts method

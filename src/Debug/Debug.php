@@ -148,9 +148,10 @@ class Debug
             'channels' => array(
                 /*
                 channelName => array(
-                    'channelIcon'
-                    'channelShow'
-                    'nested'
+                    'channelIcon' => '',
+                    'channelShow' => 'bool'
+                    'nested' => 'bool'
+                    etc
                 )
                 */
             ),

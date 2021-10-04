@@ -17,26 +17,26 @@ class MethodTest extends DebugTestFramework
      */
     public function testOverrideOutput()
     {
-        $closure = function ($event) {
-            if ($event['method'] === 'trace') {
-                $route = $event['route'];
+        $closure = function (LogEntry $logEntry) {
+            if ($logEntry['method'] === 'trace') {
+                $route = $logEntry['route'];
                 if ($route instanceof \bdk\Debug\Route\ChromeLogger) {
-                    $event['method'] = 'log';
-                    $event['args'] = array('this was a trace');
+                    $logEntry['method'] = 'log';
+                    $logEntry['args'] = array('this was a trace');
                 } elseif ($route instanceof \bdk\Debug\Route\Firephp) {
-                    $event['method'] = 'log';
-                    $event['args'] = array('this was a trace');
+                    $logEntry['method'] = 'log';
+                    $logEntry['args'] = array('this was a trace');
                 } elseif ($route instanceof \bdk\Debug\Route\Html) {
-                    $event['return'] = '<li class="m_trace">this was a trace</li>';
+                    $logEntry['return'] = '<li class="m_trace">this was a trace</li>';
                 } elseif ($route instanceof \bdk\Debug\Route\Script) {
-                    $event['return'] = 'console.log("this was a trace");';
+                    $logEntry['return'] = 'console.log("this was a trace");';
                 } elseif ($route instanceof \bdk\Debug\Route\Text) {
-                    $event['return'] = 'this was a trace';
+                    $logEntry['return'] = 'this was a trace';
                 } elseif ($route instanceof \bdk\Debug\Route\Wamp) {
-                    $event['method'] = 'log';
-                    $event['args'] = array('something completely different');
-                    $meta = \array_diff_key($event['meta'], \array_flip(array('caption','inclContext','requestId','sortable','tableInfo')));
-                    $event['meta'] = $meta;
+                    $logEntry['method'] = 'log';
+                    $logEntry['args'] = array('something completely different');
+                    $meta = \array_diff_key($logEntry['meta'], \array_flip(array('caption','inclContext','requestId','sortable','tableInfo')));
+                    $logEntry['meta'] = $meta;
                 }
             }
         };

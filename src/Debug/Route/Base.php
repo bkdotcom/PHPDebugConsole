@@ -43,7 +43,6 @@ abstract class Base extends Component implements RouteInterface
     );
     protected $data = array();
     protected $dump;
-    protected $isRootInstance = false;
 
     /** @var array channelName => bool */
     private $shouldIncludeCache = array();
@@ -59,7 +58,6 @@ abstract class Base extends Component implements RouteInterface
         $this->channelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $this->channelNameRoot = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
-        $this->isRootInstance = $this->debug->rootInstance === $this->debug;
     }
 
     /**

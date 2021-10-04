@@ -15,6 +15,7 @@ namespace bdk\Debug;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Psr7lite\Response;
 use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\Utility\FileStreamWrapper;
 use bdk\PubSub\Event;
@@ -264,9 +265,10 @@ class Internal implements SubscriberInterface
             return $headers;
         }
         $protocol = $this->getServerParam('SERVER_PROTOCOL') ?: 'HTTP/1.0';
-        $responseCode = $this->getResponseCode();
+        $code = $this->getResponseCode();
+        $phrase = Response::codePhrase($code);
         $headersAll = array(
-            $protocol . ' ' . $responseCode . ' ' . $this->debug->utility->httpStatusPhrase($responseCode),
+            $protocol . ' ' . $code . ' ' . $phrase,
         );
         foreach ($headers as $k => $vals) {
             foreach ($vals as $val) {

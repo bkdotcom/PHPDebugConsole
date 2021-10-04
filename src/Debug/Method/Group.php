@@ -395,7 +395,9 @@ class Group implements SubscriberInterface
         $groupPriorityStack = \array_merge(array('main'), $this->groupPriorityStack);
         while ($groupPriorityStack) {
             $priority = \array_pop($groupPriorityStack);
-            foreach ($this->groupStacks[$priority] as $info) {
+            $stack = $this->groupStacks[$priority];
+            while ($stack) {
+                $info = \array_pop($stack);
                 $info['channel']->groupEnd();
             }
             if (\is_int($priority)) {

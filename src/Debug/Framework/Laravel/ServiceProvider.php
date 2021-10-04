@@ -96,15 +96,15 @@ class ServiceProvider extends BaseServiceProvider
     /**
      * Register a database query listener with the connection.
      *
-     * @param DatabaseManager $db        DatabaseManager instance
+     * @param DatabaseManager $dbManager DatabaseManager instance
      * @param Debug           $dbChannel Debug instance
      *
      * @return void
      */
-    protected function dbListen(DatabaseManager $db, Debug $dbChannel)
+    protected function dbListen(DatabaseManager $dbManager, Debug $dbChannel)
     {
         // listen found in Illuminate\Database\Connection
-        $db->listen(function ($query, $bindings = null, $time = null, $connection = null) use ($db, $dbChannel) {
+        $dbManager->listen(function ($query, $bindings = null, $time = null, $connection = null) use ($dbManager, $dbChannel) {
             if (!$this->shouldCollect('db', true)) {
                 // We've turned off collecting after the listener was attached
                 return;
@@ -115,7 +115,7 @@ class ServiceProvider extends BaseServiceProvider
             // via object properties, instead of individual arguments.
             $connection = $query instanceof QueryExecuted
                 ? $query->connection
-                : $db->connection($connection);
+                : $dbManager->connection($connection);
             if ($query instanceof QueryExecuted) {
                 $bindings = $query->bindings;
                 $time = $query->time;
@@ -133,26 +133,26 @@ class ServiceProvider extends BaseServiceProvider
     /**
      * Listen to database events
      *
-     * @param DatabaseManager $db        DatabaseManager instance
+     * @param DatabaseManager $dbManager DatabaseManager instance
      * @param Debug           $dbChannel Debug instance
      *
      * @return void
      */
-    private function dbSubscribe(DatabaseManager $db, Debug $dbChannel)
+    private function dbSubscribe(DatabaseManager $dbManager, Debug $dbChannel)
     {
-        $db->getEventDispatcher()->listen(
+        $dbManager->getEventDispatcher()->listen(
             \Illuminate\Database\Events\TransactionBeginning::class,
             function () use ($dbChannel) {
                 $dbChannel->group('Begin Transaction');
             }
         );
-        $db->getEventDispatcher()->listen(
+        $dbManager->getEventDispatcher()->listen(
             \Illuminate\Database\Events\TransactionCommitted::class,
             function () use ($dbChannel) {
                 $dbChannel->groupEnd();
             }
         );
-        $db->getEventDispatcher()->listen(
+        $dbManager->getEventDispatcher()->listen(
             \Illuminate\Database\Events\TransactionRolledBack::class,
             function () use ($dbChannel) {
                 $dbChannel->log('rollback');
@@ -160,19 +160,19 @@ class ServiceProvider extends BaseServiceProvider
             }
         );
 
-        $db->getEventDispatcher()->listen(
+        $dbManager->getEventDispatcher()->listen(
             'connection.*.beganTransaction',
             function () use ($dbChannel) {
                 $dbChannel->group('Begin Transaction');
             }
         );
-        $db->getEventDispatcher()->listen(
+        $dbManager->getEventDispatcher()->listen(
             'connection.*.committed',
             function () use ($dbChannel) {
                 $dbChannel->groupEnd();
             }
         );
-        $db->getEventDispatcher()->listen(
+        $dbManager->getEventDispatcher()->listen(
             'connection.*.rollingBack',
             function () use ($dbChannel) {
                 $dbChannel->log('rollback');
@@ -229,20 +229,20 @@ class ServiceProvider extends BaseServiceProvider
         }
 
         /** @var \Illuminate\Database\DatabaseManager */
-        $db = $this->app['db'];
+        $dbManager = $this->app['db'];
 
         $dbChannel = $this->debug->getChannel('Db', array(
             'channelIcon' => 'fa fa-database',
         ));
 
         try {
-            $this->dbListen($db, $dbChannel);
+            $this->dbListen($dbManager, $dbChannel);
         } catch (\Exception $e) {
             $this->debug->warn($e->getMessage());
         }
 
         try {
-            $this->dbSubscribe($db, $dbChannel);
+            $this->dbSubscribe($dbManager, $dbChannel);
         } catch (\Exception $e) {
             $this->debug->log('exception', $e->getMessage());
         }

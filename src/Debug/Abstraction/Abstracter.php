@@ -65,6 +65,44 @@ class Abstracter extends Component
     protected $abstractArray;
     protected $abstractObject;
     protected $abstractString;
+    protected $cfg = array(
+        'cacheMethods' => true,
+        'collectAttributesConst' => true,
+        'collectAttributesMethod' => true,
+        'collectAttributesObj' => true,
+        'collectAttributesParam' => true,
+        'collectAttributesProp' => true,
+        'collectConstants' => true,
+        'collectMethods' => true,
+        'collectPhpDoc' => true, // description & summary
+        'fullyQualifyPhpDocType' => false,
+        'objectsExclude' => array(
+            // __NAMESPACE__ added in constructor
+        ),
+        'objectSort' => 'visibility',   // none, visibility, or name
+        'objectsWhitelist' => null,     // will be used if array
+        'outputAttributesConst' => true,
+        'outputAttributesMethod' => true,
+        'outputAttributesObj' => true,
+        'outputAttributesParam' => true,
+        'outputAttributesProp' => true,
+        'outputConstants' => true,
+        'outputMethodDesc' => true,     // (or just summary)
+        'outputMethods' => true,
+        'outputPhpDoc' => true,
+        'stringMaxLen' => array(
+            'base64' => 156, // 2 lines of chunk_split'ed
+            'binary' => array(
+                128 => 0, // if over 128 bytes don't capture / store
+            ),
+            'other' => 8192,
+        ),
+        'stringMinLen' => array(
+            'contentType' => 256, // try to determine content-type of binary string
+            'encoded' => 16, // test if bas64, json, or serialized (-1 = don't check)
+        ),
+        'useDebugInfo' => true,
+    );
     private $crateVals = array();
 
     /**
@@ -76,44 +114,7 @@ class Abstracter extends Component
     public function __construct(Debug $debug, $cfg = array())
     {
         $this->debug = $debug;  // we need debug instance so we can bubble events up channels
-        $this->cfg = array(
-            'cacheMethods' => true,
-            'collectAttributesConst' => true,
-            'collectAttributesMethod' => true,
-            'collectAttributesObj' => true,
-            'collectAttributesParam' => true,
-            'collectAttributesProp' => true,
-            'collectConstants' => true,
-            'collectMethods' => true,
-            'collectPhpDoc' => true, // description & summary
-            'fullyQualifyPhpDocType' => false,
-            'objectsExclude' => array(
-                __NAMESPACE__,
-            ),
-            'objectSort' => 'visibility',   // none, visibility, or name
-            'objectsWhitelist' => null,     // will be used if array
-            'outputAttributesConst' => true,
-            'outputAttributesMethod' => true,
-            'outputAttributesObj' => true,
-            'outputAttributesParam' => true,
-            'outputAttributesProp' => true,
-            'outputConstants' => true,
-            'outputMethodDesc' => true,     // (or just summary)
-            'outputMethods' => true,
-            'outputPhpDoc' => true,
-            'stringMaxLen' => array(
-                'base64' => 156, // 2 lines of chunk_split'ed
-                'binary' => array(
-                    128 => 0, // if over 128 bytes don't capture / store
-                ),
-                'other' => 8192,
-            ),
-            'stringMinLen' => array(
-                'contentType' => 256, // try to determine content-type of binary string
-                'encoded' => 16, // test if bas64, json, or serialized (-1 = don't check)
-            ),
-            'useDebugInfo' => true,
-        );
+        $this->cfg['objectsExclude'][] = __NAMESPACE__;
         $this->abstractArray = new AbstractArray($this);
         $this->abstractObject = new AbstractObject($this, new PhpDoc());
         $this->abstractString = new AbstractString($this);
@@ -186,6 +187,8 @@ class Abstracter extends Component
      * @return Abstraction
      *
      * @internal
+     *
+     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
     public function getAbstraction($val, $method = null, $typeInfo = array(), $hist = array())
     {
@@ -416,6 +419,8 @@ class Abstracter extends Component
      * @param mixed $val value of unknown type (likely closed resource)
      *
      * @return array type and typeMore
+     *
+     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
     private function getTypeUnknown($val)
     {

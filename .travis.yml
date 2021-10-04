@@ -32,11 +32,11 @@ before_script:
     php -r 'echo "PHP: ".PHP_VERSION."\n";';
     if [ $(echo "$TRAVIS_PHP_VERSION >= 8.0" | bc -l) -eq 1 ]; then
       echo using PHPUnit 9.x
-      curl -sSfL -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-9.phar
+      curl -sSfL -k -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-9.phar
     elif [ $(echo "$TRAVIS_PHP_VERSION >= 7.3" | bc -l) -eq 1 ]; then
       echo using PHPUnit 9.x
-      curl -sSfL -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-9.phar;
+      curl -sSfL -k -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-9.phar;
     elif [ $(echo "$TRAVIS_PHP_VERSION >= 7.2" | bc -l) -eq 1 ]; then
       echo using PHPUnit 7.5.20
-      curl -sSfL -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-7.5.20.phar;
+      curl -sSfL -k -o ~/.phpenv/versions/$TRAVIS_PHP_VERSION/bin/phpunit https://phar.phpunit.de/phpunit-7.5.20.phar;
     fi

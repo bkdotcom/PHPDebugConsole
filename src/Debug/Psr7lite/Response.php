@@ -28,7 +28,7 @@ class Response extends Message
      *
      * @var array
      */
-    private $phrases = array(
+    private static $phrases = array(
         // 1xx: Informational
         // Request received, continuing process.
         100 => 'Continue',
@@ -121,6 +121,21 @@ class Response extends Message
         list($code, $reasonPhrase) = $this->filterCodePhrase($code, $reasonPhrase);
         $this->statusCode = $code;
         $this->reasonPhrase = $reasonPhrase;
+    }
+
+    /**
+     * Get the "phrase" associated with the status code
+     *
+     * @param string $code 3-digit status code
+     *
+     * @return string
+     */
+    public static function codePhrase($code)
+    {
+        $code = (int) $code;
+        return isset(self::$phrases[$code])
+            ? self::$phrases[$code]
+            : '';
     }
 
     /**
@@ -218,7 +233,7 @@ class Response extends Message
     }
 
     /**
-     * Filter/validate cod and reason-phrase
+     * Filter/validate code and reason-phrase
      *
      * @param int    $code   Status Code
      * @param string $phrase Reason Phrase
@@ -242,8 +257,8 @@ class Response extends Message
             ));
         }
         if ($phrase === null || $phrase === '') {
-            $phrase = \array_key_exists($code, $this->phrases)
-                ? $this->phrases[$code]
+            $phrase = \array_key_exists($code, self::$phrases)
+                ? self::$phrases[$code]
                 : '';
         }
         $this->assertReasonPhrase($phrase);

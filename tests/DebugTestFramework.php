@@ -271,13 +271,15 @@ class DebugTestFramework extends DOMTestCase
         }
         $backupRoute = $debug->getCfg('route');
         $regexLtrim = '#^\s+#m';
-        foreach ($tests as $test => $expectContains) {
+        foreach ($tests as $test => $expect) {
             $debug->setCfg('route', $test);
             $output = $debug->output();
             $output = \preg_replace($regexLtrim, '', $output);
-            $expectContains = \preg_replace($regexLtrim, '', $expectContains);
-            if ($expectContains) {
-                $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
+            if (\is_string($expect)) {
+                $expectContains = \preg_replace($regexLtrim, '', $expect);
+                if ($expectContains) {
+                    $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
+                }
             }
         }
         $debug->setCfg('route', $backupRoute);

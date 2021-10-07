@@ -223,20 +223,22 @@ class AbstractString extends Component
     {
         $strLen = \strlen($val);
         $strLenEncoded = $this->cfg['stringMinLen']['encoded'];
+        $typeMore = null;
         if ($strLenEncoded > -1 && $strLen >= $strLenEncoded) {
             $typeMore = $this->getTypeStringEncoded($val);
-            if ($typeMore) {
-                return array(Abstracter::TYPE_STRING, $typeMore);
-            }
+        }
+        if ($typeMore) {
+            return array(Abstracter::TYPE_STRING, $typeMore);
         }
         if ($this->debug->utf8->isUtf8($val) === false) {
-            return array(Abstracter::TYPE_STRING, Abstracter::TYPE_STRING_BINARY);
+            $typeMore = Abstracter::TYPE_STRING_BINARY;
+            return array(Abstracter::TYPE_STRING, $typeMore);
         }
         $maxLen = $this->getMaxLen('other', $strLen);
         if ($maxLen > -1 && $strLen > $maxLen) {
-            return array(Abstracter::TYPE_STRING, Abstracter::TYPE_STRING_LONG);
+            $typeMore = Abstracter::TYPE_STRING_LONG;
         }
-        return array(Abstracter::TYPE_STRING, null);
+        return array(Abstracter::TYPE_STRING, $typeMore);
     }
 
     /**

@@ -42,16 +42,23 @@ function sortTable (table, col, dir) {
   var body = table.tBodies[0]
   var rows = body.rows
   var i
-  var floatRe = /^([+-]?(?:0|[1-9]\d*)(?:\.\d*)?)(?:[eE]([+-]?\d+))?$/
   var collator = typeof Intl.Collator === 'function'
     ? new Intl.Collator([], {
       numeric: true,
       sensitivity: 'base'
     })
-    : false
+    : null
   dir = dir === 'desc' ? -1 : 1
   rows = Array.prototype.slice.call(rows, 0) // Converts HTMLCollection to Array
-  rows = rows.sort(function (trA, trB) {
+  rows = rows.sort(rowComparator(col, dir, collator))
+  for (i = 0; i < rows.length; ++i) {
+    body.appendChild(rows[i]) // append each row in order (which moves)
+  }
+}
+
+function rowComparator (col, dir, collator) {
+  var floatRe = /^([+-]?(?:0|[1-9]\d*)(?:\.\d*)?)(?:[eE]([+-]?\d+))?$/
+  return function sortFunction (trA, trB) {
     var a = trA.cells[col].textContent.trim()
     var b = trB.cells[col].textContent.trim()
     var afloat = a.match(floatRe)
@@ -75,9 +82,6 @@ function sortTable (table, col, dir) {
       ? collator.compare(a, b)
       : a.localeCompare(b) // not a natural sort
     return dir * comp
-  })
-  for (i = 0; i < rows.length; ++i) {
-    body.appendChild(rows[i]) // append each row in order (which moves)
   }
 }
 

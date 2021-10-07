@@ -161,28 +161,15 @@ class Html extends Base
      */
     public function markupIdentifier($val, $tagName = 'span', $attribs = array(), $wbr = false)
     {
-        $classname = '';
-        $operator = '::';
-        $identifier = '';
-        $regex = '/^(.+)(::|->)(.+)$/';
         if ($val instanceof Abstraction) {
             $val = $val['value'];
         }
-        $classname = $val;
-        $matches = array();
-        if (\is_array($val)) {
-            list($classname, $identifier) = $val;
-        } elseif (\preg_match($regex, $val, $matches)) {
-            $classname = $matches[1];
-            $operator = $matches[2];
-            $identifier = $matches[3];
-        } elseif (\preg_match('/^(.+)(\\\\\{closure\})$/', $val, $matches)) {
-            $classname = $matches[1];
-            $operator = '';
-            $identifier = $matches[2];
-        }
-        $operator = '<span class="t_operator">' . \htmlspecialchars($operator) . '</span>';
-        if ($classname) {
+        $parts = $this->parseIdentifier($val);
+        $classname = '';
+        $operator = '<span class="t_operator">' . \htmlspecialchars($parts['operator']) . '</span>';
+        $identifier = '';
+        if ($parts['classname']) {
+            $classname = $parts['classname'];
             $idx = \strrpos($classname, '\\');
             if ($idx) {
                 $classname = '<span class="namespace">' . \str_replace('\\', '\\<wbr />', \substr($classname, 0, $idx + 1)) . '</span>'
@@ -196,8 +183,8 @@ class Html extends Base
                 $classname
             ) . '<wbr />';
         }
-        if ($identifier) {
-            $identifier = '<span class="t_identifier">' . $identifier . '</span>';
+        if ($parts['identifier']) {
+            $identifier = '<span class="t_identifier">' . $parts['identifier'] . '</span>';
         }
         $parts = \array_filter(array($classname, $identifier), 'strlen');
         $html = \implode($operator, $parts);
@@ -773,6 +760,31 @@ class Html extends Base
         if ($method === 'groupEnd') {
             return '</ul>' . "\n" . '</li>';
         }
+        $meta = $this->methodGroupPrep($logEntry);
+
+        $str = '<li' . $this->debug->html->buildAttribString($this->logEntryAttribs) . '>' . "\n";
+        $str .= $this->debug->html->buildTag(
+            'div',
+            array(
+                'class' => 'group-header',
+            ),
+            $this->methodGroupHeader($logEntry['args'], $meta)
+        ) . "\n";
+        $str .= '<ul' . $this->debug->html->buildAttribString(array(
+            'class' => 'group-body',
+        )) . '>';
+        return $str;
+    }
+
+    /**
+     * Adds 'class' value to `$this->logEntryAttribs`
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array meta values
+     */
+    private function methodGroupPrep(LogEntry $logEntry)
+    {
         $meta = \array_merge(array(
             'argsAsParams' => true,
             'boldLabel' => true,
@@ -780,45 +792,22 @@ class Html extends Base
             'isFuncName' => false,
             'level' => null,
         ), $logEntry['meta']);
-        $levelClass = $meta['level']
-            ? 'level-' . $meta['level']
-            : null;
 
         $classes = (array) $this->logEntryAttribs['class'];
-        if ($method === 'group') {
+        if ($logEntry['method'] === 'group') {
             // groupCollapsed doesn't get expanded
             $classes[] = 'expanded';
         }
         if ($meta['hideIfEmpty']) {
             $classes[] = 'hide-if-empty';
         }
+        if ($meta['level']) {
+            $classes[] = 'level-' . $meta['level'];
+        }
         $classes = \implode(' ', $classes);
-        $classes = \str_replace('m_' . $method, 'm_group', $classes);
+        $classes = \str_replace('m_' . $logEntry['method'], 'm_group', $classes);
         $this->logEntryAttribs['class'] = $classes;
-        $str = '<li' . $this->debug->html->buildAttribString($this->logEntryAttribs) . '>' . "\n";
-        /*
-            Header / label / toggle
-        */
-        $str .= $this->debug->html->buildTag(
-            'div',
-            array(
-                'class' => array(
-                    'group-header',
-                    $levelClass,
-                ),
-            ),
-            $this->methodGroupHeader($logEntry['args'], $meta)
-        ) . "\n";
-        /*
-            Group open
-        */
-        $str .= '<ul' . $this->debug->html->buildAttribString(array(
-            'class' => array(
-                'group-body',
-                $levelClass,
-            ),
-        )) . '>';
-        return $str;
+        return $meta;
     }
 
     /**
@@ -892,6 +881,37 @@ class Html extends Base
             $this->logEntryAttribs,
             "\n" . $this->table->build($logEntry['args'][0], $meta) . "\n"
         );
+    }
+
+    /**
+     * Split identifier into classname, operator, & identifier
+     *
+     * @param mixed $val classname or classname(::|->)name (method/property/const)
+     *
+     * @return array
+     */
+    private function parseIdentifier($val)
+    {
+        $parsed = array(
+            'classname' => $val,
+            'operator' => '::',
+            'identifier' => '',
+        );
+        $regex = '/^(.+)(::|->)(.+)$/';
+        $matches = array();
+        if (\is_array($val)) {
+            $parsed['classname'] = $val[0];
+            $parsed['identifier'] = $val[1];
+        } elseif (\preg_match($regex, $val, $matches)) {
+            $parsed['classname'] = $matches[1];
+            $parsed['operator'] = $matches[2];
+            $parsed['identifier'] = $matches[3];
+        } elseif (\preg_match('/^(.+)(\\\\\{closure\})$/', $val, $matches)) {
+            $parsed['classname'] = $matches[1];
+            $parsed['operator'] = '';
+            $parsed['identifier'] = $matches[2];
+        }
+        return $parsed;
     }
 
     /**

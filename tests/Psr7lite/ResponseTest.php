@@ -63,6 +63,6 @@ class ResponseTest extends TestCase
         $this->expectException('InvalidArgumentException');
         $response = new Response();
         // Exception => Reason phrase contains "\r" that is considered as a prohibited character.
-        $response->withStatus(200, 'Custom reason phrase\n\rThe next line');
+        $response->withStatus(200, "Custom reason phrase\n\rThe next line");
     }
 }

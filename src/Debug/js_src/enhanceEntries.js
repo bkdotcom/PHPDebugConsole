@@ -1,6 +1,7 @@
 import $ from 'jquery'
 import * as enhanceObject from './enhanceObject.js'
 import * as tableSort from './tableSort.js'
+import * as fileLinks from './FileLinks.js'
 
 var config
 var toExpandQueue = []
@@ -8,17 +9,12 @@ var toExpandQueue = []
 export function init ($root) {
   config = $root.data('config').get()
   enhanceObject.init($root)
+  fileLinks.init($root)
   $root.on('click', '.close[data-dismiss=alert]', function () {
     $(this).parent().remove()
   })
   $root.on('click', '.show-more-container .show-less', onClickShowLess)
   $root.on('click', '.show-more-container .show-more', onClickShowMore)
-  $root.on('config.debug.updated', function (e, changedOpt) {
-    e.stopPropagation()
-    if (changedOpt === 'linkFilesTemplate') {
-      updateFileLinks($root)
-    }
-  })
   $root.on('expand.debug.array', onExpandArray)
   $root.on('expand.debug.group', onExpandGroup)
   $root.on('expand.debug.object', onExpandObject)
@@ -114,37 +110,8 @@ function onExpanded (e) {
  */
 function addIcons ($node) {
   var $caption
-  var $icon
-  var $node2
-  var selector
-  for (selector in config.iconsMisc) {
-    $node2 = $node.find(selector)
-    if ($node2.length) {
-      $icon = $(config.iconsMisc[selector])
-      if ($node2.find('> i:first-child').hasClass($icon.attr('class'))) {
-        // already have icon
-        $icon = null
-        continue
-      }
-      $node2.prepend($icon)
-      $icon = null
-    }
-  }
-  if ($node.data('icon')) {
-    $icon = $node.data('icon').match('<')
-      ? $($node.data('icon'))
-      : $('<i>').addClass($node.data('icon'))
-  } else if (!$node.hasClass('m_group')) {
-    $node2 = $node.hasClass('group-header')
-      ? $node.parent()
-      : $node
-    for (selector in config.iconsMethods) {
-      if ($node2.is(selector)) {
-        $icon = $(config.iconsMethods[selector])
-        break
-      }
-    }
-  }
+  var $icon = determineIcon($node)
+  addIconsMisc($node)
   if (!$icon) {
     return
   }
@@ -167,178 +134,46 @@ function addIcons ($node) {
   $node.prepend($icon)
 }
 
-function buildFileLink (file, line) {
-  var data = {
-    file: file,
-    line: line || 1
-  }
-  return config.linkFilesTemplate.replace(
-    /%(\w*)\b/g,
-    function (m, key) {
-      return Object.prototype.hasOwnProperty.call(data, key)
-        ? data[key]
-        : ''
+function addIconsMisc ($node) {
+  var $icon
+  var $node2
+  var selector
+  for (selector in config.iconsMisc) {
+    $node2 = $node.find(selector)
+    if ($node2.length === 0) {
+      continue
     }
-  )
+    $icon = $(config.iconsMisc[selector])
+    if ($node2.find('> i:first-child').hasClass($icon.attr('class'))) {
+      // already have icon
+      $icon = null
+      continue
+    }
+    $node2.prepend($icon)
+    $icon = null
+  }
 }
 
-/**
- * Create text editor links for error, warn, & trace
- */
-function createFileLinks ($entry, $strings, remove) {
-  var $objects = $entry.find('.t_object > .object-inner > .property.debug-value > .t_identifier').filter(function () {
-    return this.innerText.match(/^file$/)
-  })
-  var detectFiles = $entry.data('detectFiles') === true || $objects.length > 0
-  var dataFoundFiles = $entry.data('foundFiles') || []
-  if (!config.linkFiles && !remove) {
-    return
-  }
-  if (detectFiles === false) {
-    return
-  }
-  // console.warn('createFileLinks', remove, $entry[0], $strings)
-  if ($entry.is('.m_trace')) {
-    createFileLinksTrace($entry, remove)
-    return
-  }
-  if ($entry.is('.m_table')) {
-    $strings = $entry.find('> table > tbody > tr > .t_string')
-  }
-  // don't remove data... link template may change
-  // $entry.removeData('detectFiles foundFiles')
-  if ($entry.is('[data-file]')) {
-    /*
-      Log entry link
-    */
-    $entry.find('> .file-link').remove()
-    if (!remove) {
-      $entry.append($('<a>', {
-        html: '<i class="fa fa-external-link"></i>',
-        href: buildFileLink($entry.data('file'), $entry.data('line')),
-        title: 'Open in editor',
-        class: 'file-link lpad'
-      })[0].outerHTML)
+function determineIcon ($node) {
+  var $icon
+  var $node2
+  var selector
+  if ($node.data('icon')) {
+    $icon = $node.data('icon').match('<')
+      ? $($node.data('icon'))
+      : $('<i>').addClass($node.data('icon'))
+  } else if (!$node.hasClass('m_group')) {
+    $node2 = $node.hasClass('group-header')
+      ? $node.parent()
+      : $node
+    for (selector in config.iconsMethods) {
+      if ($node2.is(selector)) {
+        $icon = $(config.iconsMethods[selector])
+        break
+      }
     }
-    return
   }
-  if (!$strings) {
-    $strings = []
-  }
-  $.each($strings, function () {
-    createFileLink(this, remove, dataFoundFiles)
-  })
-}
-
-function createFileLinksTrace ($entry, remove) {
-  var isUpdate = $entry.find('.file-link').length > 0
-  if (!isUpdate) {
-    $entry.find('table thead tr > *:last-child').after('<th></th>')
-  } else if (remove) {
-    $entry.find('table tr > *:last-child').remove()
-    return
-  }
-  $entry.find('table tbody tr').each(function () {
-    var $tr = $(this)
-    var $tds = $tr.find('> td')
-    var $a = $('<a>', {
-      class: 'file-link',
-      href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
-      html: '<i class="fa fa-fw fa-external-link"></i>',
-      style: 'vertical-align: bottom',
-      title: 'Open in editor'
-    })
-    if (isUpdate) {
-      $tr.find('.file-link').replaceWith($a)
-      return // continue
-    }
-    if ($tr.hasClass('context')) {
-      $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1)
-      return // continue
-    }
-    $tds.last().after($('<td/>', {
-      class: 'text-center',
-      html: $a
-    }))
-  })
-}
-
-function createFileLink (string, remove, foundFiles) {
-  // console.log('createFileLink', $(string).text())
-  var $replace
-  var $string = $(string)
-  var attrs = string.attributes
-  var html = $.trim($string.html())
-  var matches = createFileLinkMatches($string, foundFiles)
-  if ($string.closest('.m_trace').length) {
-    // not recurssion...  will end up calling createFileLinksTrace
-    createFileLinks($string.closest('.m_trace'))
-    return
-  }
-  if (!matches.length) {
-    return
-  }
-  $replace = remove
-    ? $('<span>', {
-      html: html
-    })
-    : $('<a>', {
-      class: 'file-link',
-      href: buildFileLink(matches[1], matches[2]),
-      html: html + ' <i class="fa fa-external-link"></i>',
-      title: 'Open in editor'
-    })
-  /*
-    attrs is not a plain object, but an array of attribute nodes
-    which contain both the name and value
-  */
-  $.each(attrs, function () {
-    var name = this.name
-    if (['html', 'href', 'title'].indexOf(name) > -1) {
-      return // continue
-    }
-    if (name === 'class') {
-      $replace.addClass(this.value)
-      return // continue
-    }
-    $replace.attr(name, this.value)
-  })
-  if ($string.is('td, th, li')) {
-    $string.html(remove
-      ? html
-      : $replace
-    )
-    return
-  }
-  $string.replaceWith($replace)
-}
-
-function createFileLinkMatches ($string, foundFiles) {
-  var matches = []
-  var html = $.trim($string.html())
-  if ($string.data('file')) {
-    // filepath specified in data-file attr
-    return typeof $string.data('file') === 'boolean'
-      ? [null, html, 1]
-      : [null, $string.data('file'), $string.data('line') || 1]
-  }
-  if (foundFiles.indexOf(html) === 0) {
-    return [null, html, 1]
-  }
-  if ($string.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
-    // object with file .debug-value
-    matches = {
-      line: 1
-    }
-    $string.parent().parent().find('> .property.debug-value').each(function () {
-      var prop = $(this).find('> .t_identifier')[0].innerText
-      var $valNode = $(this).find('> *:last-child')
-      var val = $.trim($valNode[0].innerText)
-      matches[prop] = val
-    })
-    return [null, html, matches.line]
-  }
-  return html.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
+  return $icon
 }
 
 /**
@@ -443,29 +278,37 @@ export function enhanceEntry ($entry) {
   if ($entry.is('.m_group')) {
     enhanceGroup($entry)
   } else if ($entry.is('.m_table, .m_trace')) {
-    createFileLinks($entry)
-    addIcons($entry)
-    if ($entry.hasClass('m_table')) {
-      $entry.find('> table > tbody > tr > td').each(function () {
-        enhanceValue($entry, this)
-      })
-    }
-    tableSort.makeSortable($entry.find('> table'))
+    enhanceEntryTabular($entry)
   } else {
-    // regular log-type entry
-    if ($entry.data('file')) {
-      if (!$entry.attr('title')) {
-        $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'))
-      }
-      createFileLinks($entry)
-    }
-    addIcons($entry)
-    $entry.children().each(function () {
-      enhanceValue($entry, this)
-    })
+    enhanceEntryDefault($entry)
   }
   $entry.addClass('enhanced')
   $entry.trigger('enhanced.debug')
+}
+
+function enhanceEntryDefault ($entry) {
+  // regular log-type entry
+  if ($entry.data('file')) {
+    if (!$entry.attr('title')) {
+      $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'))
+    }
+    fileLinks.create($entry)
+  }
+  addIcons($entry)
+  $entry.children().each(function () {
+    enhanceValue($entry, this)
+  })
+}
+
+function enhanceEntryTabular ($entry) {
+  fileLinks.create($entry)
+  addIcons($entry)
+  if ($entry.hasClass('m_table')) {
+    $entry.find('> table > tbody > tr > td').each(function () {
+      enhanceValue($entry, this)
+    })
+  }
+  tableSort.makeSortable($entry.find('> table'))
 }
 
 function enhanceGroup ($group) {
@@ -475,15 +318,15 @@ function enhanceGroup ($group) {
   addIcons($group) // custom data-icon
   addIcons($toggle) // expand/collapse
   $toggle.attr('data-toggle', 'group')
-  $.each(['level-error', 'level-info', 'level-warn'], function (i, val) {
-    var $icon
-    if ($toggle.hasClass(val)) {
-      $icon = $toggle.children('i').eq(0)
-      $toggle.wrapInner('<span class="' + val + '"></span>')
-      $toggle.prepend($icon) // move icon
+  $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
+    var $toggleIcon
+    if ($group.hasClass(classname)) {
+      $toggleIcon = $toggle.children('i').eq(0)
+      $toggle.wrapInner('<span class="' + classname + '"></span>')
+      $toggle.prepend($toggleIcon) // move icon
     }
   })
-  $toggle.removeClass('level-error level-info level-warn')
+  // $toggle.removeClass('level-error level-info level-warn')
   if ($group.hasClass('filter-hidden')) {
     return
   }
@@ -520,7 +363,7 @@ export function enhanceValue ($entry, node) {
   } else if ($node.is('table')) {
     tableSort.makeSortable($node)
   } else if ($node.is('.t_string')) {
-    createFileLinks($entry, $node)
+    fileLinks.create($entry, $node)
   } else if ($node.is('.string-encoded.tabs-container')) {
     // console.warn('enhanceStringEncoded', $node)
     enhanceValue($node, $node.find('> .tab-pane.active > *'))
@@ -531,14 +374,4 @@ function processExpandQueue () {
   while (toExpandQueue.length) {
     toExpandQueue.shift().debugEnhance('expand')
   }
-}
-
-/**
- * Linkify files if not already done or update already linked files
- */
-function updateFileLinks ($group) {
-  var remove = !config.linkFiles || config.linkFilesTemplate.length === 0
-  $group.find('li[data-detect-files]').each(function () {
-    createFileLinks($(this), $(this).find('.t_string'), remove)
-  })
 }

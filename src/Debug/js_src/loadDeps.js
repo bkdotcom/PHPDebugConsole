@@ -37,26 +37,33 @@ function addStylesheet (src) {
 
 function loadDepsDoer (deps, checkOnly) {
   var dep
-  var type
   var i
   for (i = deps.length - 1; i >= 0; i--) {
     dep = deps[i]
     if (dep.check()) {
       // dependency exists
-      if (dep.onLoaded) {
-        dep.onLoaded()
-      }
+      onDepLoaded(dep)
       deps.splice(i, 1) // remove it
       continue
     }
     if (dep.status !== 'loading' && !checkOnly) {
       dep.status = 'loading'
-      type = dep.type || 'script'
-      if (type === 'script') {
-        addScript(dep.src)
-      } else if (type === 'stylesheet') {
-        addStylesheet(dep.src)
-      }
+      addDep(dep)
     }
+  }
+}
+
+function addDep (dep) {
+  var type = dep.type || 'script'
+  if (type === 'script') {
+    addScript(dep.src)
+  } else if (type === 'stylesheet') {
+    addStylesheet(dep.src)
+  }
+}
+
+function onDepLoaded (dep) {
+  if (dep.onLoaded) {
+    dep.onLoaded()
   }
 }

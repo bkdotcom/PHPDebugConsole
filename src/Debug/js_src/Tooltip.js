@@ -21,34 +21,43 @@ function tippyContent (reference) {
   var $ref = $(reference)
   var attributes
   var title
-  var titleMore
   if ($ref.hasClass('fa-hashtag')) {
     attributes = $ref.parent().data('attributes')
     return buildAttributes(attributes)
   }
   title = $ref.prop('title')
-  if (title) {
-    $ref.data('titleOrig', title)
-    if (title === 'Deprecated') {
-      titleMore = $ref.parent().data('deprecatedDesc')
-      if (titleMore) {
-        title = 'Deprecated: ' + titleMore
-      }
-    } else if (title === 'Inherited') {
-      titleMore = $ref.parent().data('inheritedFrom')
-      if (titleMore) {
-        titleMore = '<span class="classname">' +
-          titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
-          '</span>'
-        title = 'Inherited from ' + titleMore
-      }
-    } else if (title === 'Open in editor') {
-      title = '<i class="fa fa-pencil"></i> ' + title
-    } else if (title.match(/^\/.+: line \d+$/)) {
-      title = '<i class="fa fa-file-code-o"></i> ' + title
-    }
-    return title.replace(/\n/g, '<br />')
+  if (!title) {
+    return
   }
+  $ref.data('titleOrig', title)
+  if (title === 'Deprecated') {
+    title = tippyContentDeprecated($ref, title)
+  } else if (title === 'Inherited') {
+    title = tippyContentInherited($ref, title)
+  } else if (title === 'Open in editor') {
+    title = '<i class="fa fa-pencil"></i> ' + title
+  } else if (title.match(/^\/.+: line \d+$/)) {
+    title = '<i class="fa fa-file-code-o"></i> ' + title
+  }
+  return title.replace(/\n/g, '<br />')
+}
+
+function tippyContentDeprecated ($ref, title) {
+  var titleMore = $ref.parent().data('deprecatedDesc')
+  return titleMore
+    ? 'Deprecated: ' + titleMore
+    : title
+}
+
+function tippyContentInherited ($ref, title) {
+  var titleMore = $ref.parent().data('inheritedFrom')
+  if (titleMore) {
+    titleMore = '<span class="classname">' +
+      titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+      '</span>'
+    title = 'Inherited from ' + titleMore
+  }
+  return title
 }
 
 function tippyOnHide (instance) {

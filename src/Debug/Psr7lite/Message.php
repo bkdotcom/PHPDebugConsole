@@ -170,7 +170,7 @@ class Message
         $new->headers[$name] = $value;
         if ($nameLower === 'host') {
             // Ensure Host is the first header.
-            // See: http://tools.ietf.org/html/rfc7230#section-5.4
+            // See: https://datatracker.ietf.org/doc/html/rfc7230#section-5.4
             ArrayUtil::sortWithOrder(
                 $new->headers,
                 array($name),
@@ -275,7 +275,7 @@ class Message
             throw new InvalidArgumentException('Header name can not be empty.');
         }
         /*
-            see https://tools.ietf.org/html/rfc7230#section-3.2.6
+            see https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.6
             alpha  => a-zA-Z
             digit  => 0-9
             others => !#$%&\'*+-.^_`|~
@@ -444,7 +444,7 @@ class Message
      *
      * @return string[] Trimmed header values
      *
-     * @see https://tools.ietf.org/html/rfc7230#section-3.2.4
+     * @see https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.4
      */
     private function trimHeaderValues($values = array())
     {

@@ -70,25 +70,7 @@ class Uri
         if ($parts === false) {
             throw new InvalidArgumentException('Unable to parse URI: ' . $uri);
         }
-        $partFilters = array(
-            'scheme' => 'lowercase',
-            'host' => 'lowercase',
-            'port' => 'filterPort',
-            'path' => 'filterPath',
-            'query' => 'filterQueryAndFragment',
-            'fragment' => 'filterQueryAndFragment',
-        );
-        foreach ($partFilters as $part => $filter) {
-            if (isset($parts[$part])) {
-                $this->{$part} = $this->{$filter}($parts[$part]);
-            }
-        }
-        if (isset($parts['user'])) {
-            $this->userInfo = $parts['user'];
-        }
-        if (isset($parts['pass'])) {
-            $this->userInfo .= ':' . $parts['pass'];
-        }
+        $this->setUrlParts($parts);
     }
 
     /**
@@ -98,13 +80,22 @@ class Uri
      */
     public function __toString()
     {
-        return self::createUriString(
-            $this->scheme,
-            $this->getAuthority(),
-            $this->path,
-            $this->query,
-            $this->fragment
-        );
+        $uri = '';
+        if ($this->scheme !== '') {
+            $uri .= $this->scheme . ':';
+        }
+        $authority = $this->getAuthority();
+        if ($authority !== '') {
+            $uri .= '//' . $authority;
+        }
+        $uri .= self::createUriPath($authority, $this->path);
+        if ($this->query !== '') {
+            $uri .= '?' . $this->query;
+        }
+        if ($this->fragment !== '') {
+            $uri .= '#' . $this->fragment;
+        }
+        return $uri;
     }
 
     /**
@@ -123,7 +114,7 @@ class Uri
      * If the port component is not set or is the standard port for the current
      * scheme, it will not be included
      *
-     * @see https://tools.ietf.org/html/rfc3986#section-3.2
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.2
      *
      * @return string The URI authority, in "[user-info@]host[:port]" format. (or empty string)
      */
@@ -164,7 +155,7 @@ class Uri
      * The value returned will be normalized to lowercase, per RFC 3986
      * Section 3.2.2.
      *
-     * @see http://tools.ietf.org/html/rfc3986#section-3.2.2
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2
      *
      * @return string The URI host (or empty string).
      */
@@ -211,8 +202,8 @@ class Uri
      * delimiter between path segments, that value will be passed in encoded
      * form (e.g., "%2F") to the instance.
      *
-     * @see https://tools.ietf.org/html/rfc3986#section-2
-     * @see https://tools.ietf.org/html/rfc3986#section-3.3
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
      *
      * @return string The URI path.
      */
@@ -235,8 +226,8 @@ class Uri
      * include an ampersand ("&") not intended as a delimiter between values,
      * that value MUST be passed in encoded form (e.g., "%26") to the instance.
      *
-     * @see https://tools.ietf.org/html/rfc3986#section-2
-     * @see https://tools.ietf.org/html/rfc3986#section-3.4
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.4
      *
      * @return string The URI query string. (or empty string)
      */
@@ -255,8 +246,8 @@ class Uri
      * any characters.
      * see RFC 3986, Sections 2 and 3.5.
      *
-     * @see https://tools.ietf.org/html/rfc3986#section-2
-     * @see https://tools.ietf.org/html/rfc3986#section-3.5
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.5
      *
      * @return string The URI fragment. (or empty string)
      */
@@ -472,9 +463,7 @@ class Uri
         if ($host === 'localhost') {
             return;
         }
-        // https://www.regextester.com/103452
-        $regex = '/(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/';
-        if (\preg_match($regex, $host)) {
+        if ($this->isFqdn($host)) {
             return;
         }
         if (\filter_var($host, FILTER_VALIDATE_IP)) {
@@ -508,36 +497,6 @@ class Uri
     }
 
     /**
-     * Create a URI string from its various parts.
-     *
-     * @param string $scheme    Scheme
-     * @param string $authority Authority [user-info@]host[:port]
-     * @param string $path      Path
-     * @param string $query     Query
-     * @param string $fragment  Fragment
-     *
-     * @return string
-     */
-    private static function createUriString($scheme, $authority, $path, $query, $fragment)
-    {
-        $uri = '';
-        if ($scheme !== '') {
-            $uri .= $scheme . ':';
-        }
-        if ($authority !== '') {
-            $uri .= '//' . $authority;
-        }
-        $uri .= self::createUriPath($authority, $path);
-        if ($query !== '') {
-            $uri .= '?' . $query;
-        }
-        if ($fragment !== '') {
-            $uri .= '#' . $fragment;
-        }
-        return $uri;
-    }
-
-    /**
      * Create path component of Uri
      *
      * @param string $authority Authority [user-info@]host[:port]
@@ -563,6 +522,21 @@ class Uri
             }
         }
         return $path;
+    }
+
+    /**
+     * Test if hostname is a fully-qualified domain naim
+     *
+     * @param string $host Hostname to test
+     *
+     * @return bool
+     *
+     * @see https://www.regextester.com/103452
+     */
+    private function isFqdn($host)
+    {
+        $regex = '/(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/';
+        return \preg_match($regex, $host) === 1;
     }
 
     /**
@@ -690,5 +664,35 @@ class Uri
         return \preg_replace_callback($regex, function ($matches) {
             return \rawurlencode($matches[0]);
         }, $str);
+    }
+
+    /**
+     * Set properties from parsed url
+     *
+     * @param array $urlParts Url parts parsed from parse_url
+     *
+     * @return void
+     */
+    private function setUrlParts($urlParts)
+    {
+        $partFilters = array(
+            'scheme' => 'lowercase',
+            'host' => 'lowercase',
+            'port' => 'filterPort',
+            'path' => 'filterPath',
+            'query' => 'filterQueryAndFragment',
+            'fragment' => 'filterQueryAndFragment',
+        );
+        foreach ($partFilters as $part => $filter) {
+            if (isset($urlParts[$part])) {
+                $this->{$part} = $this->{$filter}($urlParts[$part]);
+            }
+        }
+        if (isset($urlParts['user'])) {
+            $this->userInfo = $urlParts['user'];
+        }
+        if (isset($urlParts['pass'])) {
+            $this->userInfo .= ':' . $urlParts['pass'];
+        }
     }
 }

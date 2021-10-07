@@ -11,54 +11,28 @@ export function init ($debugRoot) {
 
   addDropdown()
 
-  $('#debug-options-toggle').on('click', function (e) {
-    var isVis = $('.debug-options').is('.show')
-    if (!isVis) {
-      open()
-    } else {
-      close()
-    }
-    e.stopPropagation()
-  })
+  $('#debug-options-toggle')
+    .on('click', onDebugOptionsToggle)
 
-  $('input[name=debugCookie]').on('change', function () {
-    var isChecked = $(this).is(':checked')
-    if (isChecked) {
-      cookieSet('debug', config.get('debugKey'), 7)
-    } else {
-      cookieRemove('debug')
-    }
-  }).prop('checked', config.get('debugKey') && cookieGet('debug') === config.get('debugKey'))
+  $('input[name=debugCookie]')
+    .on('change', onDebugCookieChange)
+    .prop('checked', config.get('debugKey') && cookieGet('debug') === config.get('debugKey'))
   if (!config.get('debugKey')) {
     $('input[name=debugCookie]').prop('disabled', true)
       .closest('label').addClass('disabled')
   }
 
-  $('input[name=persistDrawer]').on('change', function () {
-    var isChecked = $(this).is(':checked')
-    // options.persistDrawer = isChecked
-    config.set({
-      persistDrawer: isChecked,
-      openDrawer: isChecked,
-      openSidebar: true
-    })
-  }).prop('checked', config.get('persistDrawer'))
+  $('input[name=persistDrawer]')
+    .on('change', onPersistDrawerChange)
+    .prop('checked', config.get('persistDrawer'))
 
-  $('input[name=linkFiles]').on('change', function () {
-    var isChecked = $(this).prop('checked')
-    var $formGroup = $('#linkFilesTemplate').closest('.form-group')
-    isChecked
-      ? $formGroup.slideDown()
-      : $formGroup.slideUp()
-    config.set('linkFiles', isChecked)
-    $('input[name=linkFilesTemplate]').trigger('change')
-  }).prop('checked', config.get('linkFiles')).trigger('change')
+  $('input[name=linkFiles]')
+    .on('change', onLinkFilesChange)
+    .prop('checked', config.get('linkFiles')).trigger('change')
 
-  $('input[name=linkFilesTemplate]').on('change', function () {
-    var val = $(this).val()
-    config.set('linkFilesTemplate', val)
-    $debugRoot.trigger('config.debug.updated', 'linkFilesTemplate')
-  }).val(config.get('linkFilesTemplate'))
+  $('input[name=linkFilesTemplate]')
+    .on('change', onLinkFilesTemplateChange)
+    .val(config.get('linkFilesTemplate'))
 }
 
 function addDropdown () {
@@ -97,6 +71,46 @@ function onBodyKeyup (e) {
   if (e.keyCode === KEYCODE_ESC) {
     close()
   }
+}
+
+function onDebugCookieChange () {
+  var isChecked = $(this).is(':checked')
+  isChecked
+    ? cookieSet('debug', config.get('debugKey'), 7)
+    : cookieRemove('debug')
+}
+
+function onDebugOptionsToggle (e) {
+  var isVis = $('.debug-options').is('.show')
+  isVis
+    ? close()
+    : open()
+  e.stopPropagation()
+}
+
+function onLinkFilesChange () {
+  var isChecked = $(this).prop('checked')
+  var $formGroup = $('#linkFilesTemplate').closest('.form-group')
+  isChecked
+    ? $formGroup.slideDown()
+    : $formGroup.slideUp()
+  config.set('linkFiles', isChecked)
+  $('input[name=linkFilesTemplate]').trigger('change')
+}
+
+function onLinkFilesTemplateChange () {
+  var val = $(this).val()
+  config.set('linkFilesTemplate', val)
+  $root.trigger('config.debug.updated', 'linkFilesTemplate')
+}
+
+function onPersistDrawerChange () {
+  var isChecked = $(this).is(':checked')
+  config.set({
+    persistDrawer: isChecked,
+    openDrawer: isChecked,
+    openSidebar: true
+  })
 }
 
 function open () {

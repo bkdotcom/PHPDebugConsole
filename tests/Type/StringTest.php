@@ -132,6 +132,7 @@ EOD;
                     'text' => "string = \"a \"string\"\r\n\tline 2\"",
                 ),
             ),
+
             // 1
             array(
                 'log',
@@ -147,7 +148,34 @@ EOD;
                     'text' => '\u{feff}Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and \x07 (a control char).',
                 ),
             ),
+
             // 2
+            array(
+                'log',
+                array(
+                    "\tcontrol chars: \x07 \x1F \x7F\n",
+                    "\teasy-to-miss characters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
+                ),
+                array(
+                    'chromeLogger' => array(
+                        array(
+                            "\tcontrol chars: \\x07 \\x1f \\x7f\n",
+                            "\teasy-to-miss characters such as \\u{00a0}(nbsp), \\u{2009}(thsp), &amp; \\u{200b}(zwsp)",
+                        ),
+                        null,
+                        '',
+                    ),
+                    'firephp' => 'X-Wf-1-1-1-5: 155|[{"Label":"\tcontrol chars: \\\x07 \\\x1f \\\x7f\n","Type":"LOG"},"\teasy-to-miss characters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)"]|',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">' . "\t" . 'control chars: <span class="binary"><span class="c1-control" title="BEL: \x07">␇</span></span> <span class="binary"><span class="c1-control" title="US: \x1f">␟</span></span> <span class="binary"><span class="c1-control" title="DEL: \x7f">␡</span></span>' . "\n"
+                        . '</span> = <span class="t_string"><span class="ws_t">' . "\t" . '</span>easy-to-miss characters such as <a class="unicode" href="https://unicode-table.com/en/00a0" target="unicode-table" title="NBSP: \xc2 \xa0">\u00a0</a>(nbsp), <a class="unicode" href="https://unicode-table.com/en/2009" target="unicode-table" title="Thin Space: \xe2 \x80 \x89">\u2009</a>(thsp), &amp;amp; <a class="unicode" href="https://unicode-table.com/en/200b" target="unicode-table" title="Zero Width Space: \xe2 \x80 \x8b">\u200b</a>(zwsp)'
+                        . '</span></li>',
+                    'script' => 'console.log("\tcontrol chars: \\\x07 \\\x1f \\\x7f\n","\teasy-to-miss characters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)");',
+                    'text' => 'control chars: \x07 \x1f \x7f' . "\n"
+                        . '= "' . "\t" . 'easy-to-miss characters such as \u{00a0}(nbsp), \u{2009}(thsp), &amp; \u{200b}(zwsp)"',
+                ),
+            ),
+
+            // 3
             array(
                 'log',
                 array('numeric string', '10'),
@@ -180,7 +208,8 @@ EOD;
                     ),
                 ),
             ),
-            // 3
+
+            // 4
             array(
                 'log',
                 array('numeric string', '10.10'),
@@ -195,7 +224,8 @@ EOD;
                     'text' => 'numeric string = "10.10"',
                 ),
             ),
-            // 4
+
+            // 5
             array(
                 'log',
                 array('timestamp', (string) $ts),
@@ -213,7 +243,8 @@ EOD;
                     'text' => 'timestamp = 📅 "' . $ts . '" (' . \date('Y-m-d H:i:s') . ')',
                 ),
             ),
-            // 5
+
+            // 6
             array(
                 'log',
                 array('long string', $longString, Debug::meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
@@ -240,7 +271,8 @@ EOD;
                     'text' => 'long string = "' . $longStringExpect . '"[1778 more bytes (not logged)]',
                 )
             ),
-            // 6
+
+            // 7
             array(
                 'log',
                 array(
@@ -273,7 +305,8 @@ EOD;
                     'text' => $base64snip . '[10696 more bytes (not logged)]',
                 ),
             ),
-            // 7
+
+            // 8
             array(
                 'log',
                 array(
@@ -321,7 +354,8 @@ EOD;
                     'text' => $base64snip2,
                 )
             ),
-            // 8
+
+            // 9
             array(
                 'log',
                 array(

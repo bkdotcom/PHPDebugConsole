@@ -35,7 +35,7 @@ class Request extends Message
     private $uri;
 
     /**
-     * https://tools.ietf.org/html/rfc7231
+     * https://datatracker.ietf.org/doc/html/rfc7231
      *
      * @var array
      */
@@ -120,7 +120,7 @@ class Request extends Message
      *
      * @param mixed $requestTarget new request target
      *
-     * @see http://tools.ietf.org/html/rfc7230#section-5.3 (for the various
+     * @see https://datatracker.ietf.org/doc/html/rfc7230#section-5.3 (for the various
      *     request-target forms allowed in request messages)
      *
      * @return static
@@ -181,7 +181,7 @@ class Request extends Message
      * @return UriInterface|Uri Returns a UriInterface instance
      *     representing the URI of the request.
      *
-     * @see http://tools.ietf.org/html/rfc3986#section-4.3
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.3
      */
     public function getUri()
     {
@@ -216,7 +216,7 @@ class Request extends Message
      * @param UriInterface|Uri $uri          New request URI to use.
      * @param bool             $preserveHost Preserve the original state of the Host header.
      *
-     * @see http://tools.ietf.org/html/rfc3986#section-4.3
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.3
      *
      * @return static
      *

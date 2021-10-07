@@ -63,15 +63,15 @@
 }
 
 .m_error,
-.group-body.level-error,
-.m_group:not(.expanded) > .group-header > .level-error {
+.m_group.level-error > .group-body,
+.m_group.level-error:not(.expanded) > .group-header > .level-error {
   background-color: $error-bg;
   color: $error-fg;
 }
 
 .m_info,
-.group-body.level-info,
-.m_group:not(.expanded) > .group-header > .level-info {
+.m_group.level-info > .group-body,
+.m_group.level-info:not(.expanded) > .group-header > .level-info {
   background-color: $info-bg;
   color: $info-fg;
 }
@@ -83,8 +83,8 @@
 }
 
 .m_warn,
-.group-body.level-warn,
-.m_group:not(.expanded) > .group-header > .level-warn {
+.m_group.level-warn > .group-body,
+.m_group.level-warn:not(.expanded) > .group-header > .level-warn {
   background-color: $warn-bg;
   color: $warn-fg;
 }

@@ -160,6 +160,10 @@ function toggleVis (toggle) {
     return
   }
   // show for this and all descendants
+  toggleVisNodes($nodes)
+}
+
+function toggleVisNodes ($nodes) {
   $nodes.each(function () {
     var $node = $(this)
     var $objInner = $node.closest('.object-inner')

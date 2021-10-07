@@ -35,11 +35,10 @@ export function lsGet (key) {
   var val = window.localStorage.getItem(path[0])
   if (typeof val !== 'string' || val.length < 1) {
     return null
-  } else {
-    try {
-      val = JSON.parse(val)
-    } catch (e) {
-    }
+  }
+  try {
+    val = JSON.parse(val)
+  } catch (e) {
   }
   return path.length > 1
     ? val[path[1]]

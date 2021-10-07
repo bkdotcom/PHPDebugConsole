@@ -231,17 +231,7 @@ class Abstracter extends Component
      */
     public function getType($val)
     {
-        $type = \gettype($val);
-        $map = array(
-            'boolean' => self::TYPE_BOOL,
-            'double' => self::TYPE_FLOAT,
-            'integer' => self::TYPE_INT,
-            'NULL' => self::TYPE_NULL,
-            'resource (closed)' => self::TYPE_RESOURCE,
-        );
-        if (isset($map[$type])) {
-            $type = $map[$type];
-        }
+        $type = $this->getTypePhp($val);
         switch ($type) {
             case self::TYPE_ARRAY:
                 return $this->getTypeArray($val);
@@ -255,7 +245,7 @@ class Abstracter extends Component
                 return array(self::TYPE_RESOURCE, self::TYPE_RAW);
             case self::TYPE_STRING:
                 return $this->abstractString->getType($val);
-            case 'unknown type':
+            case self::TYPE_UNKNOWN:
                 return $this->getTypeUnknown($val);
             default:
                 return array($type, null);
@@ -411,6 +401,30 @@ class Abstracter extends Component
             $typeMore = self::TYPE_ABSTRACTION;
         }
         return array($type, $typeMore);
+    }
+
+    /**
+     * Get PHP type
+     *
+     * @param mixed` $val value
+     *
+     * @return string "array", "bool", "float","int","null","object","resource","string","unknown"
+     */
+    private function getTypePhp($val)
+    {
+        $type = \gettype($val);
+        $map = array(
+            'boolean' => self::TYPE_BOOL,
+            'double' => self::TYPE_FLOAT,
+            'integer' => self::TYPE_INT,
+            'NULL' => self::TYPE_NULL,
+            'resource (closed)' => self::TYPE_RESOURCE,
+            'unknown type' => self::TYPE_UNKNOWN,
+        );
+        if (isset($map[$type])) {
+            $type = $map[$type];
+        }
+        return $type;
     }
 
     /**

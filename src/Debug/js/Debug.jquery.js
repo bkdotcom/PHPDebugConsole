@@ -3,21 +3,19 @@
 
   $ = $ && Object.prototype.hasOwnProperty.call($, 'default') ? $['default'] : $;
 
-  if (!Object.keys) {
-    Object.keys = function (o) {
-      if (o !== Object(o)) {
-        throw new TypeError('Object.keys called on a non-object')
+  Object.keys = Object.keys || function (o) {
+    if (o !== Object(o)) {
+      throw new TypeError('Object.keys called on a non-object')
+    }
+    var k = [];
+    var p;
+    for (p in o) {
+      if (Object.prototype.hasOwnProperty.call(o, p)) {
+        k.push(p);
       }
-      var k = [];
-      var p;
-      for (p in o) {
-        if (Object.prototype.hasOwnProperty.call(o, p)) {
-          k.push(p);
-        }
-      }
-      return k
-    };
-  }
+    }
+    return k
+  };
 
   var config;
 
@@ -179,6 +177,10 @@
       return
     }
     // show for this and all descendants
+    toggleVisNodes($nodes);
+  }
+
+  function toggleVisNodes ($nodes) {
     $nodes.each(function () {
       var $node = $(this);
       var $objInner = $node.closest('.object-inner');
@@ -241,16 +243,23 @@
     var body = table.tBodies[0];
     var rows = body.rows;
     var i;
-    var floatRe = /^([+-]?(?:0|[1-9]\d*)(?:\.\d*)?)(?:[eE]([+-]?\d+))?$/;
     var collator = typeof Intl.Collator === 'function'
       ? new Intl.Collator([], {
         numeric: true,
         sensitivity: 'base'
       })
-      : false;
+      : null;
     dir = dir === 'desc' ? -1 : 1;
     rows = Array.prototype.slice.call(rows, 0); // Converts HTMLCollection to Array
-    rows = rows.sort(function (trA, trB) {
+    rows = rows.sort(rowComparator(col, dir, collator));
+    for (i = 0; i < rows.length; ++i) {
+      body.appendChild(rows[i]); // append each row in order (which moves)
+    }
+  }
+
+  function rowComparator (col, dir, collator) {
+    var floatRe = /^([+-]?(?:0|[1-9]\d*)(?:\.\d*)?)(?:[eE]([+-]?\d+))?$/;
+    return function sortFunction (trA, trB) {
       var a = trA.cells[col].textContent.trim();
       var b = trB.cells[col].textContent.trim();
       var afloat = a.match(floatRe);
@@ -274,9 +283,6 @@
         ? collator.compare(a, b)
         : a.localeCompare(b); // not a natural sort
       return dir * comp
-    });
-    for (i = 0; i < rows.length; ++i) {
-      body.appendChild(rows[i]); // append each row in order (which moves)
     }
   }
 
@@ -290,22 +296,222 @@
   }
 
   var config$1;
-  var toExpandQueue = [];
 
   function init$1 ($root) {
     config$1 = $root.data('config').get();
+    $root.on('config.debug.updated', function (e, changedOpt) {
+      e.stopPropagation();
+      if (changedOpt === 'linkFilesTemplate') {
+        update($root);
+      }
+    });
+  }
+
+  /**
+   * Linkify files if not already done or update already linked files
+   */
+  function update ($group) {
+    var remove = !config$1.linkFiles || config$1.linkFilesTemplate.length === 0;
+    $group.find('li[data-detect-files]').each(function () {
+      create($(this), $(this).find('.t_string'), remove);
+    });
+  }
+
+  /**
+   * Create text editor links for error, warn, & trace
+   */
+  function create ($entry, $strings, remove) {
+    var $objects = $entry.find('.t_object > .object-inner > .property.debug-value > .t_identifier').filter(function () {
+      return this.innerText.match(/^file$/)
+    });
+    var detectFiles = $entry.data('detectFiles') === true || $objects.length > 0;
+    if (!config$1.linkFiles && !remove) {
+      return
+    }
+    if (detectFiles === false) {
+      return
+    }
+    // console.warn('createFileLinks', remove, $entry[0], $strings)
+    if ($entry.is('.m_trace')) {
+      createFileLinksTrace($entry, remove);
+      return
+    }
+    // don't remove data... link template may change
+    // $entry.removeData('detectFiles foundFiles')
+    if ($entry.is('[data-file]')) {
+      /*
+        Log entry link
+      */
+      createFileLinkDataFile($entry, remove);
+      return
+    }
+    createFileLinksStrings($entry, $strings, remove);
+  }
+
+  function buildFileLink (file, line) {
+    var data = {
+      file: file,
+      line: line || 1
+    };
+    return config$1.linkFilesTemplate.replace(
+      /%(\w*)\b/g,
+      function (m, key) {
+        return Object.prototype.hasOwnProperty.call(data, key)
+          ? data[key]
+          : ''
+      }
+    )
+  }
+
+  function createFileLinksStrings ($entry, $strings, remove) {
+    var dataFoundFiles = $entry.data('foundFiles') || [];
+    if ($entry.is('.m_table')) {
+      $strings = $entry.find('> table > tbody > tr > .t_string');
+    }
+    if (!$strings) {
+      $strings = [];
+    }
+    $.each($strings, function () {
+      createFileLink(this, remove, dataFoundFiles);
+    });
+  }
+
+  function createFileLinkDataFile ($entry, remove) {
+    $entry.find('> .file-link').remove();
+    if (remove) {
+      return
+    }
+    $entry.append($('<a>', {
+      html: '<i class="fa fa-external-link"></i>',
+      href: buildFileLink($entry.data('file'), $entry.data('line')),
+      title: 'Open in editor',
+      class: 'file-link lpad'
+    })[0].outerHTML);
+  }
+
+  function createFileLinksTrace ($entry, remove) {
+    var isUpdate = $entry.find('.file-link').length > 0;
+    if (!isUpdate) {
+      $entry.find('table thead tr > *:last-child').after('<th></th>');
+    } else if (remove) {
+      $entry.find('table tr > *:last-child').remove();
+      return
+    }
+    $entry.find('table tbody tr').each(function () {
+      var $tr = $(this);
+      var $tds = $tr.find('> td');
+      var $a = $('<a>', {
+        class: 'file-link',
+        href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
+        html: '<i class="fa fa-fw fa-external-link"></i>',
+        style: 'vertical-align: bottom',
+        title: 'Open in editor'
+      });
+      if (isUpdate) {
+        $tr.find('.file-link').replaceWith($a);
+        return // continue
+      }
+      if ($tr.hasClass('context')) {
+        $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1);
+        return // continue
+      }
+      $tds.last().after($('<td/>', {
+        class: 'text-center',
+        html: $a
+      }));
+    });
+  }
+
+  function createFileLink (string, remove, foundFiles) {
+    // console.log('createFileLink', $(string).text())
+    var $replace;
+    var $string = $(string);
+    var attrs = string.attributes;
+    var html = $.trim($string.html());
+    var matches = createFileLinkMatches($string, foundFiles);
+    if ($string.closest('.m_trace').length) {
+      // not recurssion...  will end up calling createFileLinksTrace
+      create($string.closest('.m_trace'));
+      return
+    }
+    if (!matches.length) {
+      return
+    }
+    $replace = remove
+      ? $('<span>', {
+        html: html
+      })
+      : $('<a>', {
+        class: 'file-link',
+        href: buildFileLink(matches[1], matches[2]),
+        html: html + ' <i class="fa fa-external-link"></i>',
+        title: 'Open in editor'
+      });
+    /*
+      attrs is not a plain object, but an array of attribute nodes
+      which contain both the name and value
+    */
+    $.each(attrs, function () {
+      var name = this.name;
+      if (['html', 'href', 'title'].indexOf(name) > -1) {
+        return // continue
+      }
+      if (name === 'class') {
+        $replace.addClass(this.value);
+        return // continue
+      }
+      $replace.attr(name, this.value);
+    });
+    if ($string.is('td, th, li')) {
+      $string.html(remove
+        ? html
+        : $replace
+      );
+      return
+    }
+    $string.replaceWith($replace);
+  }
+
+  function createFileLinkMatches ($string, foundFiles) {
+    var matches = [];
+    var html = $.trim($string.html());
+    if ($string.data('file')) {
+      // filepath specified in data-file attr
+      return typeof $string.data('file') === 'boolean'
+        ? [null, html, 1]
+        : [null, $string.data('file'), $string.data('line') || 1]
+    }
+    if (foundFiles.indexOf(html) === 0) {
+      return [null, html, 1]
+    }
+    if ($string.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
+      // object with file .debug-value
+      matches = {
+        line: 1
+      };
+      $string.parent().parent().find('> .property.debug-value').each(function () {
+        var prop = $(this).find('> .t_identifier')[0].innerText;
+        var $valNode = $(this).find('> *:last-child');
+        var val = $.trim($valNode[0].innerText);
+        matches[prop] = val;
+      });
+      return [null, html, matches.line]
+    }
+    return html.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
+  }
+
+  var config$2;
+  var toExpandQueue = [];
+
+  function init$2 ($root) {
+    config$2 = $root.data('config').get();
     init($root);
+    init$1($root);
     $root.on('click', '.close[data-dismiss=alert]', function () {
       $(this).parent().remove();
     });
     $root.on('click', '.show-more-container .show-less', onClickShowLess);
     $root.on('click', '.show-more-container .show-more', onClickShowMore);
-    $root.on('config.debug.updated', function (e, changedOpt) {
-      e.stopPropagation();
-      if (changedOpt === 'linkFilesTemplate') {
-        updateFileLinks($root);
-      }
-    });
     $root.on('expand.debug.array', onExpandArray);
     $root.on('expand.debug.group', onExpandGroup);
     $root.on('expand.debug.object', onExpandObject);
@@ -401,37 +607,8 @@
    */
   function addIcons$1 ($node) {
     var $caption;
-    var $icon;
-    var $node2;
-    var selector;
-    for (selector in config$1.iconsMisc) {
-      $node2 = $node.find(selector);
-      if ($node2.length) {
-        $icon = $(config$1.iconsMisc[selector]);
-        if ($node2.find('> i:first-child').hasClass($icon.attr('class'))) {
-          // already have icon
-          $icon = null;
-          continue
-        }
-        $node2.prepend($icon);
-        $icon = null;
-      }
-    }
-    if ($node.data('icon')) {
-      $icon = $node.data('icon').match('<')
-        ? $($node.data('icon'))
-        : $('<i>').addClass($node.data('icon'));
-    } else if (!$node.hasClass('m_group')) {
-      $node2 = $node.hasClass('group-header')
-        ? $node.parent()
-        : $node;
-      for (selector in config$1.iconsMethods) {
-        if ($node2.is(selector)) {
-          $icon = $(config$1.iconsMethods[selector]);
-          break
-        }
-      }
-    }
+    var $icon = determineIcon($node);
+    addIconsMisc($node);
     if (!$icon) {
       return
     }
@@ -454,178 +631,46 @@
     $node.prepend($icon);
   }
 
-  function buildFileLink (file, line) {
-    var data = {
-      file: file,
-      line: line || 1
-    };
-    return config$1.linkFilesTemplate.replace(
-      /%(\w*)\b/g,
-      function (m, key) {
-        return Object.prototype.hasOwnProperty.call(data, key)
-          ? data[key]
-          : ''
+  function addIconsMisc ($node) {
+    var $icon;
+    var $node2;
+    var selector;
+    for (selector in config$2.iconsMisc) {
+      $node2 = $node.find(selector);
+      if ($node2.length === 0) {
+        continue
       }
-    )
+      $icon = $(config$2.iconsMisc[selector]);
+      if ($node2.find('> i:first-child').hasClass($icon.attr('class'))) {
+        // already have icon
+        $icon = null;
+        continue
+      }
+      $node2.prepend($icon);
+      $icon = null;
+    }
   }
 
-  /**
-   * Create text editor links for error, warn, & trace
-   */
-  function createFileLinks ($entry, $strings, remove) {
-    var $objects = $entry.find('.t_object > .object-inner > .property.debug-value > .t_identifier').filter(function () {
-      return this.innerText.match(/^file$/)
-    });
-    var detectFiles = $entry.data('detectFiles') === true || $objects.length > 0;
-    var dataFoundFiles = $entry.data('foundFiles') || [];
-    if (!config$1.linkFiles && !remove) {
-      return
-    }
-    if (detectFiles === false) {
-      return
-    }
-    // console.warn('createFileLinks', remove, $entry[0], $strings)
-    if ($entry.is('.m_trace')) {
-      createFileLinksTrace($entry, remove);
-      return
-    }
-    if ($entry.is('.m_table')) {
-      $strings = $entry.find('> table > tbody > tr > .t_string');
-    }
-    // don't remove data... link template may change
-    // $entry.removeData('detectFiles foundFiles')
-    if ($entry.is('[data-file]')) {
-      /*
-        Log entry link
-      */
-      $entry.find('> .file-link').remove();
-      if (!remove) {
-        $entry.append($('<a>', {
-          html: '<i class="fa fa-external-link"></i>',
-          href: buildFileLink($entry.data('file'), $entry.data('line')),
-          title: 'Open in editor',
-          class: 'file-link lpad'
-        })[0].outerHTML);
+  function determineIcon ($node) {
+    var $icon;
+    var $node2;
+    var selector;
+    if ($node.data('icon')) {
+      $icon = $node.data('icon').match('<')
+        ? $($node.data('icon'))
+        : $('<i>').addClass($node.data('icon'));
+    } else if (!$node.hasClass('m_group')) {
+      $node2 = $node.hasClass('group-header')
+        ? $node.parent()
+        : $node;
+      for (selector in config$2.iconsMethods) {
+        if ($node2.is(selector)) {
+          $icon = $(config$2.iconsMethods[selector]);
+          break
+        }
       }
-      return
     }
-    if (!$strings) {
-      $strings = [];
-    }
-    $.each($strings, function () {
-      createFileLink(this, remove, dataFoundFiles);
-    });
-  }
-
-  function createFileLinksTrace ($entry, remove) {
-    var isUpdate = $entry.find('.file-link').length > 0;
-    if (!isUpdate) {
-      $entry.find('table thead tr > *:last-child').after('<th></th>');
-    } else if (remove) {
-      $entry.find('table tr > *:last-child').remove();
-      return
-    }
-    $entry.find('table tbody tr').each(function () {
-      var $tr = $(this);
-      var $tds = $tr.find('> td');
-      var $a = $('<a>', {
-        class: 'file-link',
-        href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
-        html: '<i class="fa fa-fw fa-external-link"></i>',
-        style: 'vertical-align: bottom',
-        title: 'Open in editor'
-      });
-      if (isUpdate) {
-        $tr.find('.file-link').replaceWith($a);
-        return // continue
-      }
-      if ($tr.hasClass('context')) {
-        $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1);
-        return // continue
-      }
-      $tds.last().after($('<td/>', {
-        class: 'text-center',
-        html: $a
-      }));
-    });
-  }
-
-  function createFileLink (string, remove, foundFiles) {
-    // console.log('createFileLink', $(string).text())
-    var $replace;
-    var $string = $(string);
-    var attrs = string.attributes;
-    var html = $.trim($string.html());
-    var matches = createFileLinkMatches($string, foundFiles);
-    if ($string.closest('.m_trace').length) {
-      // not recurssion...  will end up calling createFileLinksTrace
-      createFileLinks($string.closest('.m_trace'));
-      return
-    }
-    if (!matches.length) {
-      return
-    }
-    $replace = remove
-      ? $('<span>', {
-        html: html
-      })
-      : $('<a>', {
-        class: 'file-link',
-        href: buildFileLink(matches[1], matches[2]),
-        html: html + ' <i class="fa fa-external-link"></i>',
-        title: 'Open in editor'
-      });
-    /*
-      attrs is not a plain object, but an array of attribute nodes
-      which contain both the name and value
-    */
-    $.each(attrs, function () {
-      var name = this.name;
-      if (['html', 'href', 'title'].indexOf(name) > -1) {
-        return // continue
-      }
-      if (name === 'class') {
-        $replace.addClass(this.value);
-        return // continue
-      }
-      $replace.attr(name, this.value);
-    });
-    if ($string.is('td, th, li')) {
-      $string.html(remove
-        ? html
-        : $replace
-      );
-      return
-    }
-    $string.replaceWith($replace);
-  }
-
-  function createFileLinkMatches ($string, foundFiles) {
-    var matches = [];
-    var html = $.trim($string.html());
-    if ($string.data('file')) {
-      // filepath specified in data-file attr
-      return typeof $string.data('file') === 'boolean'
-        ? [null, html, 1]
-        : [null, $string.data('file'), $string.data('line') || 1]
-    }
-    if (foundFiles.indexOf(html) === 0) {
-      return [null, html, 1]
-    }
-    if ($string.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
-      // object with file .debug-value
-      matches = {
-        line: 1
-      };
-      $string.parent().parent().find('> .property.debug-value').each(function () {
-        var prop = $(this).find('> .t_identifier')[0].innerText;
-        var $valNode = $(this).find('> *:last-child');
-        var val = $.trim($valNode[0].innerText);
-        matches[prop] = val;
-      });
-      return [null, html, matches.line]
-    }
-    return html.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
+    return $icon
   }
 
   /**
@@ -647,7 +692,7 @@
       }
     }
     enhanceArrayAddMarkup($node);
-    $.each(config$1.iconsArray, function (selector, v) {
+    $.each(config$2.iconsArray, function (selector, v) {
       $node.find(selector).prepend(v);
     });
     $node.debugEnhance(enhanceArrayIsExpanded($node) ? 'expand' : 'collapse');
@@ -671,13 +716,13 @@
     }
     $expander = $('<span class="t_array-expand" data-toggle="array">' +
         '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-        '<i class="fa ' + config$1.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+        '<i class="fa ' + config$2.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
         '<span class="t_punct">)</span>' +
       '</span>');
     // add expand/collapse
     $node.find('> .t_keyword').first()
       .wrap('<span class="t_array-collapse" data-toggle="array">')
-      .after('<span class="t_punct">(</span> <i class="fa ' + config$1.iconsExpand.collapse + '"></i>')
+      .after('<span class="t_punct">(</span> <i class="fa ' + config$2.iconsExpand.collapse + '"></i>')
       .parent().next().remove(); // remove original '('
     $node.prepend($expander);
   }
@@ -730,29 +775,37 @@
     if ($entry.is('.m_group')) {
       enhanceGroup($entry);
     } else if ($entry.is('.m_table, .m_trace')) {
-      createFileLinks($entry);
-      addIcons$1($entry);
-      if ($entry.hasClass('m_table')) {
-        $entry.find('> table > tbody > tr > td').each(function () {
-          enhanceValue($entry, this);
-        });
-      }
-      makeSortable($entry.find('> table'));
+      enhanceEntryTabular($entry);
     } else {
-      // regular log-type entry
-      if ($entry.data('file')) {
-        if (!$entry.attr('title')) {
-          $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'));
-        }
-        createFileLinks($entry);
-      }
-      addIcons$1($entry);
-      $entry.children().each(function () {
-        enhanceValue($entry, this);
-      });
+      enhanceEntryDefault($entry);
     }
     $entry.addClass('enhanced');
     $entry.trigger('enhanced.debug');
+  }
+
+  function enhanceEntryDefault ($entry) {
+    // regular log-type entry
+    if ($entry.data('file')) {
+      if (!$entry.attr('title')) {
+        $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'));
+      }
+      create($entry);
+    }
+    addIcons$1($entry);
+    $entry.children().each(function () {
+      enhanceValue($entry, this);
+    });
+  }
+
+  function enhanceEntryTabular ($entry) {
+    create($entry);
+    addIcons$1($entry);
+    if ($entry.hasClass('m_table')) {
+      $entry.find('> table > tbody > tr > td').each(function () {
+        enhanceValue($entry, this);
+      });
+    }
+    makeSortable($entry.find('> table'));
   }
 
   function enhanceGroup ($group) {
@@ -762,15 +815,15 @@
     addIcons$1($group); // custom data-icon
     addIcons$1($toggle); // expand/collapse
     $toggle.attr('data-toggle', 'group');
-    $.each(['level-error', 'level-info', 'level-warn'], function (i, val) {
-      var $icon;
-      if ($toggle.hasClass(val)) {
-        $icon = $toggle.children('i').eq(0);
-        $toggle.wrapInner('<span class="' + val + '"></span>');
-        $toggle.prepend($icon); // move icon
+    $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
+      var $toggleIcon;
+      if ($group.hasClass(classname)) {
+        $toggleIcon = $toggle.children('i').eq(0);
+        $toggle.wrapInner('<span class="' + classname + '"></span>');
+        $toggle.prepend($toggleIcon); // move icon
       }
     });
-    $toggle.removeClass('level-error level-info level-warn');
+    // $toggle.removeClass('level-error level-info level-warn')
     if ($group.hasClass('filter-hidden')) {
       return
     }
@@ -807,7 +860,7 @@
     } else if ($node.is('table')) {
       makeSortable($node);
     } else if ($node.is('.t_string')) {
-      createFileLinks($entry, $node);
+      create($entry, $node);
     } else if ($node.is('.string-encoded.tabs-container')) {
       // console.warn('enhanceStringEncoded', $node)
       enhanceValue($node, $node.find('> .tab-pane.active > *'));
@@ -820,17 +873,7 @@
     }
   }
 
-  /**
-   * Linkify files if not already done or update already linked files
-   */
-  function updateFileLinks ($group) {
-    var remove = !config$1.linkFiles || config$1.linkFilesTemplate.length === 0;
-    $group.find('li[data-detect-files]').each(function () {
-      createFileLinks($(this), $(this).find('.t_string'), remove);
-    });
-  }
-
-  var $root, config$2, origH, origPageY;
+  var $root, config$3, origH, origPageY;
 
   /**
    * @see https://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element-when-inner-element-scroll-position-reaches-t
@@ -866,10 +909,10 @@
       : this.off('DOMMouseScroll mousewheel wheel')
   };
 
-  function init$2 ($debugRoot) {
+  function init$3 ($debugRoot) {
     $root = $debugRoot;
-    config$2 = $root.data('config');
-    if (!config$2.get('drawer')) {
+    config$3 = $root.data('config');
+    if (!config$3.get('drawer')) {
       return
     }
 
@@ -882,7 +925,7 @@
     $root.find('.debug-pull-tab').on('click', open);
     $root.find('.debug-menu-bar .close').on('click', close);
 
-    if (config$2.get('persistDrawer') && config$2.get('openDrawer')) {
+    if (config$3.get('persistDrawer') && config$3.get('openDrawer')) {
       open();
     }
   }
@@ -909,8 +952,8 @@
     setHeight(); // makes sure height within min/max
     $('body').css('marginBottom', ($root.height() + 8) + 'px');
     $(window).on('resize', setHeight);
-    if (config$2.get('persistDrawer')) {
-      config$2.set('openDrawer', true);
+    if (config$3.get('persistDrawer')) {
+      config$3.set('openDrawer', true);
     }
   }
 
@@ -918,8 +961,8 @@
     $root.removeClass('debug-drawer-open');
     $('body').css('marginBottom', '');
     $(window).off('resize', setHeight);
-    if (config$2.get('persistDrawer')) {
-      config$2.set('openDrawer', false);
+    if (config$3.get('persistDrawer')) {
+      config$3.set('openDrawer', false);
     }
   }
 
@@ -960,8 +1003,8 @@
     if (!height || typeof height === 'object') {
       // no height passed -> use last or 100
       height = parseInt($body[0].style.height, 10);
-      if (!height && config$2.get('persistDrawer')) {
-        height = config$2.get('height');
+      if (!height && config$3.get('persistDrawer')) {
+        height = config$3.get('height');
       }
       if (!height) {
         height = 100;
@@ -970,8 +1013,8 @@
     height = Math.min(height, maxH);
     height = Math.max(height, minH);
     $body.css('height', height);
-    if (viaUser && config$2.get('persistDrawer')) {
-      config$2.set('height', height);
+    if (viaUser && config$3.get('persistDrawer')) {
+      config$3.set('height', height);
     }
   }
 
@@ -1000,40 +1043,41 @@
     }
   ];
 
-  function init$3 ($delegateNode) {
+  function init$4 ($delegateNode) {
     applyFilter($delegateNode);
-
-    $delegateNode.on('change', 'input[type=checkbox]', function () {
-      var $this = $(this);
-      var isChecked = $this.is(':checked');
-      var $nested = $this.closest('label').next('ul').find('input');
-      var $root = $this.closest('.debug');
-      if ($this.data('toggle') === 'error') {
-        // filtered separately
-        return
-      }
-      $nested.prop('checked', isChecked);
-      applyFilter($root);
-      updateFilterStatus($root);
-    });
-
-    $delegateNode.on('change', 'input[data-toggle=error]', function () {
-      var $this = $(this);
-      var isChecked = $this.is(':checked');
-      var $root = $this.closest('.debug');
-      var errorClass = $this.val();
-      var selector = '.group-body .error-' + errorClass;
-      $root.find(selector).toggleClass('filter-hidden', !isChecked);
-      // trigger collapse to potentially update group icon and add/remove empty class
-      $root.find('.m_error, .m_warn').parents('.m_group')
-        .trigger('collapsed.debug.group');
-      updateFilterStatus($root);
-    });
-
+    $delegateNode.on('change', 'input[type=checkbox]', onCheckboxChange);
+    $delegateNode.on('change', 'input[data-toggle=error]', onToggleErrorChange);
     $delegateNode.on('channelAdded.debug', function (e) {
       var $root = $(e.target).closest('.debug');
       updateFilterStatus($root);
     });
+  }
+
+  function onCheckboxChange () {
+    var $this = $(this);
+    var isChecked = $this.is(':checked');
+    var $nested = $this.closest('label').next('ul').find('input');
+    var $root = $this.closest('.debug');
+    if ($this.data('toggle') === 'error') {
+      // filtered separately
+      return
+    }
+    $nested.prop('checked', isChecked);
+    applyFilter($root);
+    updateFilterStatus($root);
+  }
+
+  function onToggleErrorChange () {
+    var $this = $(this);
+    var isChecked = $this.is(':checked');
+    var $root = $this.closest('.debug');
+    var errorClass = $this.val();
+    var selector = '.group-body .error-' + errorClass;
+    $root.find(selector).toggleClass('filter-hidden', !isChecked);
+    // trigger collapse to potentially update group icon and add/remove empty class
+    $root.find('.m_error, .m_warn').parents('.m_group')
+      .trigger('collapsed.debug.group');
+    updateFilterStatus($root);
   }
 
   function addTest (func) {
@@ -1144,11 +1188,10 @@
     var val = window.localStorage.getItem(path[0]);
     if (typeof val !== 'string' || val.length < 1) {
       return null
-    } else {
-      try {
-        val = JSON.parse(val);
-      } catch (e) {
-      }
+    }
+    try {
+      val = JSON.parse(val);
+    } catch (e) {
     }
     return path.length > 1
       ? val[path[1]]
@@ -1193,63 +1236,37 @@
   }
 
   var $root$1;
-  var config$3;
+  var config$4;
   var KEYCODE_ESC = 27;
 
-  function init$4 ($debugRoot) {
+  function init$5 ($debugRoot) {
     $root$1 = $debugRoot;
-    config$3 = $root$1.data('config');
+    config$4 = $root$1.data('config');
 
     addDropdown();
 
-    $('#debug-options-toggle').on('click', function (e) {
-      var isVis = $('.debug-options').is('.show');
-      if (!isVis) {
-        open$1();
-      } else {
-        close$1();
-      }
-      e.stopPropagation();
-    });
+    $('#debug-options-toggle')
+      .on('click', onDebugOptionsToggle);
 
-    $('input[name=debugCookie]').on('change', function () {
-      var isChecked = $(this).is(':checked');
-      if (isChecked) {
-        cookieSet('debug', config$3.get('debugKey'), 7);
-      } else {
-        cookieRemove('debug');
-      }
-    }).prop('checked', config$3.get('debugKey') && cookieGet('debug') === config$3.get('debugKey'));
-    if (!config$3.get('debugKey')) {
+    $('input[name=debugCookie]')
+      .on('change', onDebugCookieChange)
+      .prop('checked', config$4.get('debugKey') && cookieGet('debug') === config$4.get('debugKey'));
+    if (!config$4.get('debugKey')) {
       $('input[name=debugCookie]').prop('disabled', true)
         .closest('label').addClass('disabled');
     }
 
-    $('input[name=persistDrawer]').on('change', function () {
-      var isChecked = $(this).is(':checked');
-      // options.persistDrawer = isChecked
-      config$3.set({
-        persistDrawer: isChecked,
-        openDrawer: isChecked,
-        openSidebar: true
-      });
-    }).prop('checked', config$3.get('persistDrawer'));
+    $('input[name=persistDrawer]')
+      .on('change', onPersistDrawerChange)
+      .prop('checked', config$4.get('persistDrawer'));
 
-    $('input[name=linkFiles]').on('change', function () {
-      var isChecked = $(this).prop('checked');
-      var $formGroup = $('#linkFilesTemplate').closest('.form-group');
-      isChecked
-        ? $formGroup.slideDown()
-        : $formGroup.slideUp();
-      config$3.set('linkFiles', isChecked);
-      $('input[name=linkFilesTemplate]').trigger('change');
-    }).prop('checked', config$3.get('linkFiles')).trigger('change');
+    $('input[name=linkFiles]')
+      .on('change', onLinkFilesChange)
+      .prop('checked', config$4.get('linkFiles')).trigger('change');
 
-    $('input[name=linkFilesTemplate]').on('change', function () {
-      var val = $(this).val();
-      config$3.set('linkFilesTemplate', val);
-      $debugRoot.trigger('config.debug.updated', 'linkFilesTemplate');
-    }).val(config$3.get('linkFilesTemplate'));
+    $('input[name=linkFilesTemplate]')
+      .on('change', onLinkFilesTemplateChange)
+      .val(config$4.get('linkFilesTemplate'));
   }
 
   function addDropdown () {
@@ -1272,7 +1289,7 @@
         '</div>' +
       '</div>'
     );
-    if (!config$3.get('drawer')) {
+    if (!config$4.get('drawer')) {
       $menuBar.find('input[name=persistDrawer]').closest('label').remove();
     }
   }
@@ -1290,6 +1307,46 @@
     }
   }
 
+  function onDebugCookieChange () {
+    var isChecked = $(this).is(':checked');
+    isChecked
+      ? cookieSet('debug', config$4.get('debugKey'), 7)
+      : cookieRemove('debug');
+  }
+
+  function onDebugOptionsToggle (e) {
+    var isVis = $('.debug-options').is('.show');
+    isVis
+      ? close$1()
+      : open$1();
+    e.stopPropagation();
+  }
+
+  function onLinkFilesChange () {
+    var isChecked = $(this).prop('checked');
+    var $formGroup = $('#linkFilesTemplate').closest('.form-group');
+    isChecked
+      ? $formGroup.slideDown()
+      : $formGroup.slideUp();
+    config$4.set('linkFiles', isChecked);
+    $('input[name=linkFilesTemplate]').trigger('change');
+  }
+
+  function onLinkFilesTemplateChange () {
+    var val = $(this).val();
+    config$4.set('linkFilesTemplate', val);
+    $root$1.trigger('config.debug.updated', 'linkFilesTemplate');
+  }
+
+  function onPersistDrawerChange () {
+    var isChecked = $(this).is(':checked');
+    config$4.set({
+      persistDrawer: isChecked,
+      openDrawer: isChecked,
+      openSidebar: true
+    });
+  }
+
   function open$1 () {
     $root$1.find('.debug-options').addClass('show');
     $('body').on('click', onBodyClick);
@@ -1302,23 +1359,23 @@
     $('body').off('keyup', onBodyKeyup);
   }
 
-  var config$4;
+  var config$5;
   var options;
   var methods; // method filters
   var $root$2;
   var initialized = false;
 
-  function init$5 ($debugRoot) {
+  function init$6 ($debugRoot) {
     var $debugTabLog = $debugRoot.find('> .tab-panes > .tab-primary');
 
-    config$4 = $debugRoot.data('config') || $('body').data('config');
+    config$5 = $debugRoot.data('config') || $('body').data('config');
     $root$2 = $debugRoot;
 
     if ($debugTabLog.length && $debugTabLog.data('options').sidebar) {
       addMarkup$1($root$2);
     }
 
-    if (config$4.get('persistDrawer') && !config$4.get('openSidebar')) {
+    if (config$5.get('persistDrawer') && !config$5.get('openSidebar')) {
       close$2($root$2);
     }
 
@@ -1445,14 +1502,14 @@
       .removeClass('show')
       .attr('style', '')
       .trigger('close.debug.sidebar');
-    config$4.set('openSidebar', false);
+    config$5.set('openSidebar', false);
   }
 
   function open$2 ($node) {
     $node.find('.debug-sidebar')
       .addClass('show')
       .trigger('open.debug.sidebar');
-    config$4.set('openSidebar', true);
+    config$5.set('openSidebar', true);
   }
 
   /**
@@ -1547,21 +1604,21 @@
    * Add primary Ui elements
    */
 
-  var config$5;
+  var config$6;
   var $root$3;
 
-  function init$6 ($debugRoot) {
+  function init$7 ($debugRoot) {
     $root$3 = $debugRoot;
-    config$5 = $root$3.data('config').get();
+    config$6 = $root$3.data('config').get();
     $root$3.find('.debug-menu-bar').append($('<div />', { class: 'float-right' }));
     addChannelToggles();
     addExpandAll();
     addNoti($('body'));
     enhanceErrorSummary();
-    init$2($root$3);
     init$3($root$3);
-    init$5($root$3);
     init$4($root$3);
+    init$6($root$3);
+    init$5($root$3);
     addErrorIcons();
     $root$3.find('.loading').hide();
     $root$3.addClass('enhanced');
@@ -1602,7 +1659,7 @@
       if (counts[what] === 0) {
         return
       }
-      $icon = $(config$5.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what);
+      $icon = $(config$6.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what);
       $icons.append($icon).append($('<span>', {
         class: 'badge',
         html: counts[what]
@@ -1770,7 +1827,7 @@
 
   function enhanceErrorSummary () {
     var $errorSummary = $root$3.find('.m_alert.error-summary');
-    $errorSummary.find('h3:first-child').prepend(config$5.iconsMethods['.m_error']);
+    $errorSummary.find('h3:first-child').prepend(config$6.iconsMethods['.m_error']);
     $errorSummary.find('li[class*=error-]').each(function () {
       var category = $(this).attr('class').replace('error-', '');
       var html = $(this).html();
@@ -1787,29 +1844,19 @@
    * handle expanding/collapsing arrays, groups, & objects
    */
 
-  var config$6;
+  var config$7;
 
-  function init$7 ($delegateNode) {
-    config$6 = $delegateNode.data('config').get();
-    $delegateNode.on('click', '[data-toggle=array]', function () {
-      toggle(this);
-      return false
-    });
-    $delegateNode.on('click', '[data-toggle=group]', function () {
-      toggle(this);
-      return false
-    });
+  function init$8 ($delegateNode) {
+    config$7 = $delegateNode.data('config').get();
+    $delegateNode.on('click', '[data-toggle=array]', onClickToggle);
+    $delegateNode.on('click', '[data-toggle=group]', onClickToggle);
     $delegateNode.on('click', '[data-toggle=next]', function (e) {
       if ($(e.target).closest('a,button').length) {
         return
       }
-      toggle(this);
-      return false
+      return onClickToggle.call(this)
     });
-    $delegateNode.on('click', '[data-toggle=object]', function () {
-      toggle(this);
-      return false
-    });
+    $delegateNode.on('click', '[data-toggle=object]', onClickToggle);
     $delegateNode.on('collapsed.debug.group updated.debug.group', function (e) {
       groupUpdate($(e.target));
     });
@@ -1817,6 +1864,11 @@
       var $target = $(e.target);
       $target.find('> .group-header > i:last-child').remove();
     });
+  }
+
+  function onClickToggle () {
+    toggle(this);
+    return false
   }
 
   /**
@@ -1828,7 +1880,6 @@
    * @return void
    */
   function collapse ($node, immediate) {
-    var icon = config$6.iconsExpand.expand;
     var isToggle = $node.is('[data-toggle]');
     var what = isToggle
       ? $node.data('toggle')
@@ -1836,45 +1887,61 @@
     var $wrap = isToggle
       ? $node.parent()
       : $node;
-    var $toggle = $wrap.find('> *[data-toggle]');
-    var $groupEndValue;
+    var $toggle = isToggle
+      ? $node
+      : $wrap.find('> *[data-toggle]');
     var eventNameDone = 'collapsed.debug.' + what;
     if (what === 'array') {
       $wrap.removeClass('expanded');
     } else if (['group', 'object'].indexOf(what) > -1) {
-      $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child');
-      if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
-        $toggle.find('.group-label').last()
-          .after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML);
-      }
-      if (immediate) {
-        $wrap.removeClass('expanded');
-        iconUpdate($toggle, icon);
-        $wrap.trigger(eventNameDone);
-      } else {
-        $toggle.next().slideUp('fast', function () {
-          $wrap.removeClass('expanded');
-          iconUpdate($toggle, icon);
-          $wrap.trigger(eventNameDone);
-        });
-      }
+      collapseGroupObject($wrap, $toggle, immediate, eventNameDone);
     } else if (what === 'next') {
-      if (immediate) {
-        $toggle.removeClass('expanded').next().hide();
-        iconUpdate($toggle, icon);
-        $toggle.trigger(eventNameDone);
-      } else {
-        $toggle.next().slideUp('fast', function () {
-          $toggle.removeClass('expanded');
-          iconUpdate($toggle, icon);
-          $toggle.next().trigger(eventNameDone);
-        });
-      }
+      collapseNext($toggle, immediate, eventNameDone);
     }
   }
 
+  function collapseGroupObject ($wrap, $toggle, immediate, eventNameDone) {
+    var $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child');
+    if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
+      $toggle.find('.group-label').last()
+        .after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML);
+    }
+    if (immediate) {
+      collapseGroupObjectDone($wrap, $toggle, eventNameDone);
+      return
+    }
+    $toggle.next().slideUp('fast', function () {
+      collapseGroupObjectDone($wrap, $toggle, eventNameDone);
+    });
+  }
+
+  function collapseGroupObjectDone ($wrap, $toggle, eventNameDone) {
+    var icon = config$7.iconsExpand.expand;
+    $wrap.removeClass('expanded');
+    iconUpdate($toggle, icon);
+    $wrap.trigger(eventNameDone);
+  }
+
+  function collapseNext ($toggle, immediate, eventNameDone) {
+    if (immediate) {
+      $toggle.next().hide();
+      collapseNextDone($toggle, eventNameDone);
+      return
+    }
+    $toggle.next().slideUp('fast', function () {
+      collapseNextDone($toggle, eventNameDone);
+    });
+  }
+
+  function collapseNextDone ($toggle, eventNameDone) {
+    var icon = config$7.iconsExpand.expand;
+    $toggle.removeClass('expanded');
+    iconUpdate($toggle, icon);
+    $toggle.next().trigger(eventNameDone);
+  }
+
   function expand ($node) {
-    var icon = config$6.iconsExpand.collapse;
+    var icon = config$7.iconsExpand.collapse;
     var isToggle = $node.is('[data-toggle]');
     var what = isToggle
       ? $node.data('toggle')
@@ -1882,7 +1949,9 @@
     var $wrap = isToggle
       ? $node.parent()
       : $node;
-    var $toggle = $wrap.find('> *[data-toggle]');
+    var $toggle = isToggle
+      ? $node
+      : $wrap.find('> *[data-toggle]');
     var $classTarget = what === 'next' // node that get's "expanded" class
       ? $toggle
       : $wrap;
@@ -1923,9 +1992,9 @@
       return true
     };
     if ($group.find('.m_error').filter(filter).length) {
-      icon = config$6.iconsMethods['.m_error'];
+      icon = config$7.iconsMethods['.m_error'];
     } else if ($group.find('.m_warn').filter(filter).length) {
-      icon = config$6.iconsMethods['.m_warn'];
+      icon = config$7.iconsMethods['.m_warn'];
     }
     return icon
   }
@@ -1953,7 +2022,7 @@
     var isExpanded = $group.hasClass('expanded');
     // console.log('groupUpdate', $toggle.text(), icon, haveVis)
     $group.toggleClass('empty', !haveVis); // 'empty' class just affects cursor
-    iconUpdate($toggle, config$6.iconsExpand[isExpanded ? 'collapse' : 'expand']);
+    iconUpdate($toggle, config$7.iconsExpand[isExpanded ? 'collapse' : 'expand']);
     if (!icon || isExpanded) {
       $toggle.find(selector).remove();
       return
@@ -1968,9 +2037,9 @@
   function iconUpdate ($toggle, classNameNew) {
     var $icon = $toggle.children('i').eq(0);
     if ($toggle.hasClass('group-header') && $toggle.parent().hasClass('empty')) {
-      classNameNew = config$6.iconsExpand.empty;
+      classNameNew = config$7.iconsExpand.empty;
     }
-    $.each(config$6.iconsExpand, function (i, className) {
+    $.each(config$7.iconsExpand, function (i, className) {
       $icon.toggleClass(className, className === classNameNew);
     });
   }
@@ -1990,18 +2059,16 @@
     if (what === 'group' && $wrap.hasClass('.empty')) {
       return
     }
-    if (isExpanded) {
-      collapse($node);
-    } else {
-      expand($node);
-    }
+    isExpanded
+      ? collapse($node)
+      : expand($node);
   }
 
   /**
    * handle tabs
    */
 
-  function init$8 ($delegateNode) {
+  function init$9 ($delegateNode) {
     // config = $delegateNode.data('config').get()
     var $debugTabs = $delegateNode.find('.tab-panes');
     $delegateNode.find('nav .nav-link').each(function () {
@@ -5615,7 +5682,7 @@
     render: render
   });
 
-  function init$9 ($root) {
+  function init$a ($root) {
     delegate($root[0], {
       target: '.fa-hashtag, [title]',
       delay: [200, null], // show / hide delay (null = default)
@@ -5635,34 +5702,43 @@
     var $ref = $(reference);
     var attributes;
     var title;
-    var titleMore;
     if ($ref.hasClass('fa-hashtag')) {
       attributes = $ref.parent().data('attributes');
       return buildAttributes(attributes)
     }
     title = $ref.prop('title');
-    if (title) {
-      $ref.data('titleOrig', title);
-      if (title === 'Deprecated') {
-        titleMore = $ref.parent().data('deprecatedDesc');
-        if (titleMore) {
-          title = 'Deprecated: ' + titleMore;
-        }
-      } else if (title === 'Inherited') {
-        titleMore = $ref.parent().data('inheritedFrom');
-        if (titleMore) {
-          titleMore = '<span class="classname">' +
-            titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
-            '</span>';
-          title = 'Inherited from ' + titleMore;
-        }
-      } else if (title === 'Open in editor') {
-        title = '<i class="fa fa-pencil"></i> ' + title;
-      } else if (title.match(/^\/.+: line \d+$/)) {
-        title = '<i class="fa fa-file-code-o"></i> ' + title;
-      }
-      return title.replace(/\n/g, '<br />')
+    if (!title) {
+      return
     }
+    $ref.data('titleOrig', title);
+    if (title === 'Deprecated') {
+      title = tippyContentDeprecated($ref, title);
+    } else if (title === 'Inherited') {
+      title = tippyContentInherited($ref, title);
+    } else if (title === 'Open in editor') {
+      title = '<i class="fa fa-pencil"></i> ' + title;
+    } else if (title.match(/^\/.+: line \d+$/)) {
+      title = '<i class="fa fa-file-code-o"></i> ' + title;
+    }
+    return title.replace(/\n/g, '<br />')
+  }
+
+  function tippyContentDeprecated ($ref, title) {
+    var titleMore = $ref.parent().data('deprecatedDesc');
+    return titleMore
+      ? 'Deprecated: ' + titleMore
+      : title
+  }
+
+  function tippyContentInherited ($ref, title) {
+    var titleMore = $ref.parent().data('inheritedFrom');
+    if (titleMore) {
+      titleMore = '<span class="classname">' +
+        titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+        '</span>';
+      title = 'Inherited from ' + titleMore;
+    }
+    return title
   }
 
   function tippyOnHide (instance) {
@@ -5880,27 +5956,34 @@
 
   function loadDepsDoer (deps, checkOnly) {
     var dep;
-    var type;
     var i;
     for (i = deps.length - 1; i >= 0; i--) {
       dep = deps[i];
       if (dep.check()) {
         // dependency exists
-        if (dep.onLoaded) {
-          dep.onLoaded();
-        }
+        onDepLoaded(dep);
         deps.splice(i, 1); // remove it
         continue
       }
       if (dep.status !== 'loading' && !checkOnly) {
         dep.status = 'loading';
-        type = dep.type || 'script';
-        if (type === 'script') {
-          addScript(dep.src);
-        } else if (type === 'stylesheet') {
-          addStylesheet(dep.src);
-        }
+        addDep(dep);
       }
+    }
+  }
+
+  function addDep (dep) {
+    var type = dep.type || 'script';
+    if (type === 'script') {
+      addScript(dep.src);
+    } else if (type === 'stylesheet') {
+      addStylesheet(dep.src);
+    }
+  }
+
+  function onDepLoaded (dep) {
+    if (dep.onLoaded) {
+      dep.onLoaded();
     }
   }
 
@@ -5911,7 +5994,7 @@
    */
 
   var listenersRegistered = false;
-  var config$7 = new Config({
+  var config$8 = new Config({
     fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
     clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
     iconsExpand: {
@@ -6004,7 +6087,7 @@
   */
   loadDeps([
     {
-      src: config$7.get('fontAwesomeCss'),
+      src: config$8.get('fontAwesomeCss'),
       type: 'stylesheet',
       check: function () {
         var fontFamily = getFontFamily();
@@ -6015,12 +6098,12 @@
         var fontFamily = getFontFamily();
         var matches = fontFamily.match(/Font\s?Awesome.+(\d+)/);
         if (matches && matches[1] >= 5) {
-          addStyle(config$7.get('cssFontAwesome5'));
+          addStyle(config$8.get('cssFontAwesome5'));
         }
       }
     },
     {
-      src: config$7.get('clipboardSrc'),
+      src: config$8.get('clipboardSrc'),
       check: function () {
         return typeof window.ClipboardJS !== 'undefined'
       },
@@ -6061,20 +6144,20 @@
   });
 
   function debugEnhanceInit ($node, arg1) {
-    var conf = new Config(config$7.get(), 'phpDebugConsole');
+    var conf = new Config(config$8.get(), 'phpDebugConsole');
     $node.data('config', conf);
     conf.set($node.eq(0).data('options') || {});
     if (typeof arg1 === 'object') {
       conf.set(arg1);
     }
-    init$8($node);
+    init$9($node);
     if (conf.get('tooltip')) {
-      init$9($node);
+      init$a($node);
     }
-    init$1($node);
-    init$7($node);
+    init$2($node);
+    init$8($node);
     registerListeners();
-    init$6($node);
+    init$7($node);
     if (!conf.get('drawer')) {
       $node.debugEnhance();
     }
@@ -6117,7 +6200,7 @@
     if (typeof arg1 !== 'object') {
       return
     }
-    config$7.set(arg1);
+    config$8.set(arg1);
     // update log entries that have already been enhanced
     $node
       .find('.debug-log.enhanced')

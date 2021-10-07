@@ -27,38 +27,39 @@ var preFilterCallbacks = [
 
 export function init ($delegateNode) {
   applyFilter($delegateNode)
-
-  $delegateNode.on('change', 'input[type=checkbox]', function () {
-    var $this = $(this)
-    var isChecked = $this.is(':checked')
-    var $nested = $this.closest('label').next('ul').find('input')
-    var $root = $this.closest('.debug')
-    if ($this.data('toggle') === 'error') {
-      // filtered separately
-      return
-    }
-    $nested.prop('checked', isChecked)
-    applyFilter($root)
-    updateFilterStatus($root)
-  })
-
-  $delegateNode.on('change', 'input[data-toggle=error]', function () {
-    var $this = $(this)
-    var isChecked = $this.is(':checked')
-    var $root = $this.closest('.debug')
-    var errorClass = $this.val()
-    var selector = '.group-body .error-' + errorClass
-    $root.find(selector).toggleClass('filter-hidden', !isChecked)
-    // trigger collapse to potentially update group icon and add/remove empty class
-    $root.find('.m_error, .m_warn').parents('.m_group')
-      .trigger('collapsed.debug.group')
-    updateFilterStatus($root)
-  })
-
+  $delegateNode.on('change', 'input[type=checkbox]', onCheckboxChange)
+  $delegateNode.on('change', 'input[data-toggle=error]', onToggleErrorChange)
   $delegateNode.on('channelAdded.debug', function (e) {
     var $root = $(e.target).closest('.debug')
     updateFilterStatus($root)
   })
+}
+
+function onCheckboxChange () {
+  var $this = $(this)
+  var isChecked = $this.is(':checked')
+  var $nested = $this.closest('label').next('ul').find('input')
+  var $root = $this.closest('.debug')
+  if ($this.data('toggle') === 'error') {
+    // filtered separately
+    return
+  }
+  $nested.prop('checked', isChecked)
+  applyFilter($root)
+  updateFilterStatus($root)
+}
+
+function onToggleErrorChange () {
+  var $this = $(this)
+  var isChecked = $this.is(':checked')
+  var $root = $this.closest('.debug')
+  var errorClass = $this.val()
+  var selector = '.group-body .error-' + errorClass
+  $root.find(selector).toggleClass('filter-hidden', !isChecked)
+  // trigger collapse to potentially update group icon and add/remove empty class
+  $root.find('.m_error, .m_warn').parents('.m_group')
+    .trigger('collapsed.debug.group')
+  updateFilterStatus($root)
 }
 
 export function addTest (func) {

@@ -156,7 +156,7 @@ class Response extends Message
      *
      * @return string Reason phrase; must return an empty string if none present.
      *
-     * @see http://tools.ietf.org/html/rfc7231#section-6
+     * @see https://datatracker.ietf.org/doc/html/rfc7231#section-6
      * @see http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
      */
     public function getReasonPhrase()
@@ -178,7 +178,7 @@ class Response extends Message
      *
      * @return static
      *
-     * @see http://tools.ietf.org/html/rfc7231#section-6
+     * @see https://datatracker.ietf.org/doc/html/rfc7231#section-6
      * @see http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
      *
      * @throws \InvalidArgumentException For invalid status code arguments.
@@ -199,6 +199,8 @@ class Response extends Message
      *
      * @return void
      *
+     * @see https://datatracker.ietf.org/doc/html/rfc7230#section-3.1.2
+     *
      * @throws InvalidArgumentException
      */
     private function assertReasonPhrase($phrase)
@@ -212,22 +214,11 @@ class Response extends Message
             );
         }
 
-        // Special characters, such as "line breaks", "tab" and others...
-        $escapeChars = [
-            '\f', '\r', '\n', '\t', '\v', '\0', '[\b]',
-            '\s', '\S', '\w', '\W', '\d', '\D', '\b', '\B', '\cX', '\xhh', '\uhhhh',
-        ];
-        $filteredPhrase = \str_replace($escapeChars, '', $phrase);
-        if ($filteredPhrase === $phrase) {
-            return;
-        }
-        foreach ($escapeChars as $char) {
-            if (\strpos($phrase, $char) === false) {
-                continue;
-            }
+        // Don't allow control characters (incl \r & \n)
+        if (\preg_match('#[^\P{C}\t]#u', $phrase, $matches, PREG_OFFSET_CAPTURE) === 1) {
             throw new InvalidArgumentException(\sprintf(
-                'Reason phrase contains "%s" that is considered as a prohibited character.',
-                $char
+                'Reason phrase contains a prohibited character at position %s.',
+                $matches[0][1]
             ));
         }
     }

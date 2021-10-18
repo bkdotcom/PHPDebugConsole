@@ -189,15 +189,11 @@ class ErrorHandler
      */
     public function getLastError($inclSuppressed = false)
     {
-        if (!$inclSuppressed) {
-            // (default) skip over suppressed error to find last non-suppressed
-            foreach ($this->data['lastErrors'] as $error) {
-                if (!$error['isSuppressed']) {
-                    return $error;
-                }
+        foreach ($this->data['lastErrors'] as $error) {
+            if (!$inclSuppressed && $error['isSuppressed']) {
+                continue;
             }
-        } elseif ($this->data['lastErrors']) {
-            return $this->data['lastErrors'][0];
+            return $error;
         }
         return null;
     }
@@ -335,14 +331,9 @@ class ErrorHandler
                 : array()
         );
         /*
-            Find the fatal error/uncaught-exception and attach to shutdown event
+            Attach fatal error to event
         */
-        foreach ($this->data['errors'] as $error) {
-            if ($error['category'] === 'fatal') {
-                $event['error'] = $error;
-                break;
-            }
-        }
+        $event['error'] = $this->getLastError();
     }
 
     /**

@@ -187,42 +187,42 @@ class Config
     /**
      * Set cfg values for Debug and child classes
      *
-     * @param array $cfg config values grouped by class
+     * @param array $configs config values grouped by class
      *
      * @return array previous values
      */
-    private function doSet($cfg)
+    private function doSet($configs)
     {
-        if (!$cfg) {
+        if (!$configs) {
             return array();
         }
         /*
             Set previous (return) values
         */
         $return = array();
-        foreach ($cfg as $debugProp => $v) {
+        foreach ($configs as $debugProp => $cfg) {
             $cfgWas = $debugProp === 'debug'
                 ? $this->debug->getCfg(null, Debug::CONFIG_DEBUG)
                 : $this->getPropCfg($debugProp, array(), true, false);
-            $return[$debugProp] = \array_intersect_key($cfgWas, $v);
+            $return[$debugProp] = \array_intersect_key($cfgWas, $cfg);
         }
         /*
             Publish config event first... it may add/update debugProp values
         */
-        $cfg = $this->debug->eventManager->publish(
+        $configs = $this->debug->eventManager->publish(
             Debug::EVENT_CONFIG,
             $this->debug,
-            $cfg
+            $configs
         )->getValues();
         /*
             Now set the values
         */
-        foreach ($cfg as $debugProp => $v) {
+        foreach ($configs as $debugProp => $cfg) {
             if ($debugProp === 'debug') {
                 // debug uses a Debug::EVENT_CONFIG subscriber to set the value
                 continue;
             }
-            $this->setPropCfg($debugProp, $v);
+            $this->setPropCfg($debugProp, $cfg);
         }
         return $return;
     }

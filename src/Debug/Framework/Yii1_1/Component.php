@@ -44,31 +44,32 @@ class Component extends CApplicationComponent implements SubscriberInterface
     public $yiiApp;
 
     protected $ignoredErrors = array();
+    private $debugConfig = array(
+        'logEnvInfo' => array(
+            'session' => false,
+        ),
+        'logFiles' => array(
+            'filesExclude' => array(
+                '/framework/',
+                '/protected/components/system/',
+                '/vendor/',
+            ),
+        ),
+        'yii' => array(
+            'ignoredErrors' => true,
+            'log' => true,
+            'pdo' => true,
+            'session' => true,
+            'user' => true,
+        ),
+    );
 
     /**
      * Constructor
      */
     public function __construct()
     {
-        $debugRootInstance = Debug::getInstance(array(
-            'logEnvInfo' => array(
-                'session' => false,
-            ),
-            'logFiles' => array(
-                'filesExclude' => array(
-                    '/framework/',
-                    '/protected/components/system/',
-                    '/vendor/',
-                ),
-            ),
-            'yii' => array(
-                'ignoredErrors' => true,
-                'log' => true,
-                'pdo' => true,
-                'session' => true,
-                'user' => true,
-            ),
-        ));
+        $debugRootInstance = Debug::getInstance($this->debugConfig);
         /*
             Debug instance may have already been instantiated
             remove any session info that may have been logged
@@ -143,7 +144,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
 
         $this->addDebugProp();
         $this->collectLog();
-        $this->collectPdo();
+        $this->pdoCollect();
         $this->logSession();
 
         parent::init();
@@ -165,7 +166,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
     public function onComponentInit(Event $event)
     {
         if ($event->getSubject() instanceof CDbConnection) {
-            $this->collectPdo($event->getSubject());
+            $this->pdoCollect($event->getSubject());
         }
     }
 
@@ -295,23 +296,10 @@ class Component extends CApplicationComponent implements SubscriberInterface
      */
     public function onErrorHigh(Error $error)
     {
-        if (\in_array($error['category'], array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT))) {
-            /*
-                "Ignore" minor internal framework errors
-            */
-            $pathsIgnore = array(
-                Yii::getPathOfAlias('system'),
-                Yii::getPathOfAlias('webroot') . '/protected/extensions',
-                Yii::getPathOfAlias('webroot') . '/protected/components',
-            );
-            foreach ($pathsIgnore as $pathIgnore) {
-                if (\strpos($error['file'], $pathIgnore) === 0) {
-                    $error->stopPropagation();          // don't log it now
-                    $error['isSuppressed'] = true;
-                    $this->ignoredErrors[] = $error['hash'];
-                    break;
-                }
-            }
+        if ($this->isIgnorableError($error)) {
+            $error->stopPropagation();          // don't log it now
+            $error['isSuppressed'] = true;
+            $this->ignoredErrors[] = $error['hash'];
         }
         if ($error['category'] !== Error::CAT_FATAL) {
             /*
@@ -338,17 +326,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
         if ($error['exception']) {
             $this->yiiApp->handleException($error['exception']);
         } elseif ($error['category'] === Error::CAT_FATAL) {
-            // Yii's error handler exits (for reasons)
-            //    exit within shutdown procedure (that's us) = immediate exit
-            //    so... unsubscribe the callables that have already been called and
-            //    re-publish the shutdown event before calling yii's error handler
-            foreach ($this->debug->rootInstance->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN) as $callable) {
-                $this->debug->rootInstance->eventManager->unsubscribe(EventManager::EVENT_PHP_SHUTDOWN, $callable);
-                if (\is_array($callable) && $callable[0] === $this->debug->rootInstance->errorHandler) {
-                    break;
-                }
-            }
-            $this->debug->rootInstance->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
+            $this->republishShutdown();
             $this->yiiApp->handleError($error['type'], $error['message'], $error['file'], $error['line']);
         }
         $this->logRoute->enabled = true;
@@ -389,48 +367,66 @@ class Component extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
-     * Setup up PDO collector
-     * Log to PDO channel
+     * Test if error is a minor internal framework error
      *
-     * @param CDbConnection $dbConnection CDbConnection instance
+     * @param Error $error Error instance
+     *
+     * @return bool
+     */
+    private function isIgnorableError(Error $error)
+    {
+        $ignorableCats = array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT);
+        if (\in_array($error['category'], $ignorableCats) === false) {
+            return false;
+        }
+        /*
+            "Ignore" minor internal framework errors
+        */
+        $pathsIgnore = array(
+            Yii::getPathOfAlias('system'),
+            Yii::getPathOfAlias('webroot') . '/protected/extensions',
+            Yii::getPathOfAlias('webroot') . '/protected/components',
+        );
+        foreach ($pathsIgnore as $pathIgnore) {
+            if (\strpos($error['file'], $pathIgnore) === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Log auth & access manager info
      *
      * @return void
      */
-    protected function collectPdo(CDbConnection $dbConnection = null)
+    private function logAuthClass()
     {
-        if ($this->shouldCollect('pdo') === false) {
-            return;
-        }
-
-        $dbConnection = $dbConnection ?: $this->yiiApp->db;
-        $dbConnection->active = true; // creates pdo obj
-        $pdo = $dbConnection->pdoInstance;
-        if ($pdo instanceof Pdo) {
-            // already wrapped
-            return;
-        }
-        // nest the PDO channel under our Yii channel
-        $channelName = 'PDO';
-        if (\strpos($dbConnection->connectionString, 'master=true')) {
-            $channelName .= ' (master)';
-        } elseif (\strpos($dbConnection->connectionString, 'slave=true')) {
-            $channelName .= ' (slave)';
-        }
-        $pdoChannel = $this->debug->getChannel($channelName, array(
-            'channelIcon' => 'fa fa-database',
-            'channelShow' => false,
-        ));
-        $pdoCollector = new Pdo($pdo, $pdoChannel);
-        $dbRef = new ReflectionObject($dbConnection);
-        while (!$dbRef->hasProperty('_pdo')) {
-            $dbRef = $dbRef->getParentClass();
-            if ($dbRef === false) {
-                $this->debug->warn('unable initiate PDO collector');
+        $debug = $this->debug->rootInstance->getChannel('User');
+        try {
+            if (!($this->yiiApp instanceof CWebApplication)) {
+                return;
             }
+            $authManager = $this->yiiApp->getAuthManager();
+            $debug->log('authManager class', $debug->abstracter->crateWithVals(
+                \get_class($authManager),
+                array(
+                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                )
+            ));
+
+            $accessManager = $this->yiiApp->getComponent('accessManager');
+            if ($accessManager) {
+                $debug->log('accessManager class', $debug->abstracter->crateWithVals(
+                    \get_class($accessManager),
+                    array(
+                        'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                    )
+                ));
+            }
+        } catch (\Exception $e) {
+            $debug->error('Exception logging user info');
         }
-        $pdoProp = $dbRef->getProperty('_pdo');
-        $pdoProp->setAccessible(true);
-        $pdoProp->setValue($dbConnection, $pdoCollector);
     }
 
     /**
@@ -531,31 +527,99 @@ class Component extends CApplicationComponent implements SubscriberInterface
             }
         }
         $debug->table(\get_class($user), $identityData);
+        $this->logAuthClass();
+    }
 
-        try {
-            if (!($this->yiiApp instanceof CWebApplication)) {
-                return;
-            }
-            $authManager = $this->yiiApp->getAuthManager();
-            $debug->log('authManager class', $debug->abstracter->crateWithVals(
-                \get_class($authManager),
-                array(
-                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
-                )
-            ));
-
-            $accessManager = $this->yiiApp->getComponent('accessManager');
-            if ($accessManager) {
-                $debug->log('accessManager class', $debug->abstracter->crateWithVals(
-                    \get_class($accessManager),
-                    array(
-                        'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
-                    )
-                ));
-            }
-        } catch (\Exception $e) {
-            $debug->error('Exception logging user info');
+    /**
+     * Setup up PDO collector
+     * Log to PDO channel
+     *
+     * @param CDbConnection $dbConnection CDbConnection instance
+     *
+     * @return void
+     */
+    protected function pdoCollect(CDbConnection $dbConnection = null)
+    {
+        if ($this->shouldCollect('pdo') === false) {
+            return;
         }
+        $dbConnection = $dbConnection ?: $this->yiiApp->db;
+        $dbConnection->active = true; // creates pdo obj
+        $pdo = $dbConnection->pdoInstance;
+        if ($pdo instanceof Pdo) {
+            // already wrapped
+            return;
+        }
+        $pdoChannel = $this->pdoGetChannel($dbConnection);
+        $pdoCollector = new Pdo($pdo, $pdoChannel);
+        $this->pdoAttachCollector($dbConnection, $pdoCollector);
+    }
+
+    /**
+     * Get PDO Debug Channel for given db connection
+     *
+     * @param CDbConnection $dbConnection CDbConnection instance
+     *
+     * @return Debug
+     */
+    private function pdoGetChannel(CDbConnection $dbConnection)
+    {
+        $channelName = 'PDO';
+        if (\strpos($dbConnection->connectionString, 'master=true')) {
+            $channelName .= ' (master)';
+        } elseif (\strpos($dbConnection->connectionString, 'slave=true')) {
+            $channelName .= ' (slave)';
+        }
+        // nest the PDO channel under our Yii channel
+        return $this->debug->getChannel($channelName, array(
+            'channelIcon' => 'fa fa-database',
+            'channelShow' => false,
+        ));
+    }
+
+    /**
+     * Attache PDO Collector to db connection
+     *
+     * @param CDbConnection $dbConnection CDbConnection instance
+     * @param Pdo           $pdoCollector PDO collector instance
+     *
+     * @return void
+     */
+    private function pdoAttachCollector(CDbConnection $dbConnection, Pdo $pdoCollector)
+    {
+        $dbRefObj = new ReflectionObject($dbConnection);
+        while (!$dbRefObj->hasProperty('_pdo')) {
+            $dbRefObj = $dbRefObj->getParentClass();
+            if ($dbRefObj === false) {
+                $this->debug->warn('unable to initiate PDO collector');
+            }
+        }
+        $pdoPropObj = $dbRefObj->getProperty('_pdo');
+        $pdoPropObj->setAccessible(true);
+        $pdoPropObj->setValue($dbConnection, $pdoCollector);
+    }
+
+    /**
+     * Ensure all shutdown handlers are called
+     * Yii's error handler exits (for reasons)
+     * Exit within shutdown procedure (fatal error handler) = immediate exit
+     * Remedy
+     *  * unsubscribe the callables that have already been called
+     *  * re-publish the shutdown event
+     *  * finally: calling yii's error handler
+     *
+     * @return void
+     */
+    private function republishShutdown()
+    {
+        $eventManager = $this->debug->rootInstance->eventManager;
+        foreach ($eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN) as $callable) {
+            $eventManager->unsubscribe(EventManager::EVENT_PHP_SHUTDOWN, $callable);
+            if (\is_array($callable) && $callable[0] === $this->debug->rootInstance->errorHandler) {
+                break;
+            }
+        }
+        $eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
     }
 
     /**

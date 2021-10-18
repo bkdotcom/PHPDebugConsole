@@ -28,6 +28,28 @@ class HtmlErrorSummary
     protected $errorHandler;
     protected $routeHtml;
     protected $stats = array();
+    private $catStrings = array(
+        'deprecated' => array(
+            'header' => 'Deprecated',
+            'msg' => 'There were %d deprecated notices',
+        ),
+        'strict' => array(
+            'header' => 'Strict',
+            'msg' => 'There were %d strict errors',
+        ),
+        'error' => array(
+            'header' => 'Errors',
+            'msg' => 'There were %d errors',
+        ),
+        'notice' => array(
+            'header' => 'Notices',
+            'msg' => 'There were %d notices',
+        ),
+        'warning' => array(
+            'header' => 'Warnings',
+            'msg' => 'There were %d warnings',
+        ),
+    );
 
     /**
      * Constructor
@@ -134,45 +156,60 @@ class HtmlErrorSummary
             return '';
         }
         $error = $this->errorHandler->get('lastError');
-        $isHtml = $error['isHtml'];
         $html = '<div class="error-fatal">'
             . '<h3>' . $error['typeStr'] . '</h3>'
             . '<ul class="list-unstyled no-indent">';
         $html .= $this->html->buildTag(
             'li',
             array(),
-            ($isHtml
+            $error['isHtml']
                 ? $error['message']
                 : \htmlspecialchars($error['message'])
-            )
         );
         $this->debug->addPlugin(new Highlight());
         $backtrace = $error['backtrace'];
         if (\is_array($backtrace) && \count($backtrace) > 1) {
-            $html .= $this->buildBacktrace();
+            $html .= $this->buildBacktrace($backtrace);
         } elseif ($backtrace === false) {
             $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
         } elseif ($backtrace === null) {
-            $fileLines = $error['context'];
-            $html .= $this->html->buildTag(
-                'li',
-                array(
-                    'class' => 't_string no-quotes',
-                    'data-file' => $error['file'],
-                    'data-line' => $error['line'],
-                ),
-                \sprintf('%s (line %s)', $error['file'], $error['line'])
-            );
-            $html .= '<li>'
-                . '<pre class="highlight line-numbers" data-line="' . $error['line'] . '" data-start="' . \key($fileLines) . '">'
-                    . '<code class="language-php">'
-                        . \htmlspecialchars(\implode($fileLines))
-                    . '</code>'
-                . '</pre>'
-                . '</li>';
+            $html .= $this->buildFatalContext($error);
         }
         $html .= '</ul>'
             . '</div>';
+        return $html;
+    }
+
+    /**
+     * Build backtrace
+     *
+     * @param Error $error Error instance
+     *
+     * @return string html snippet
+     */
+    private function buildFatalContext(Error $error)
+    {
+        $fileLines = $error['context'];
+        $html .= $this->html->buildTag(
+            'li',
+            array(
+                'class' => 't_string no-quotes',
+                'data-file' => $error['file'],
+                'data-line' => $error['line'],
+            ),
+            \sprintf('%s (line %s)', $error['file'], $error['line'])
+        );
+        $html .= '<li>' . $this->html->buildTag(
+            'pre',
+            array(
+                'class' => 'highlight line-numbers',
+                'data-alert' => $error['line'],
+                'data-line' => \key($fileLines),
+            ),
+            '<code class="language-php">'
+                . \htmlspecialchars(\implode($fileLines))
+            . '</code>'
+        ) . '</li>';
         return $html;
     }
 
@@ -239,31 +276,9 @@ class HtmlErrorSummary
         if ($category === 'fatal') {
             return '';
         }
-        $catStrings = array(
-            'deprecated' => array(
-                'header' => 'Deprecated',
-                'msg' => 'There were %d deprecated notices',
-            ),
-            'strict' => array(
-                'header' => 'Strict',
-                'msg' => 'There were %d strict errors',
-            ),
-            'error' => array(
-                'header' => 'Errors',
-                'msg' => 'There were %d errors',
-            ),
-            'notice' => array(
-                'header' => 'Notices',
-                'msg' => 'There were %d notices',
-            ),
-            'warning' => array(
-                'header' => 'Warnings',
-                'msg' => 'There were %d warnings',
-            ),
-        );
         $countInCat = $catStats['inConsole'];
-        $header = $catStrings[$category]['header'];
-        $msg = \sprintf($catStrings[$category]['msg'], $countInCat);
+        $header = $this->catStrings[$category]['header'];
+        $msg = \sprintf($this->catStrings[$category]['msg'], $countInCat);
         if ($countInCat === 1) {
             $header = \ucfirst($category);
             $error = $this->getErrorsInCategory($category)[0];

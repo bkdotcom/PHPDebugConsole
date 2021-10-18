@@ -323,16 +323,30 @@ class ServerRequest extends Request
                 $this->assertUploadedFiles($file);
                 continue;
             }
-            if ($file instanceof UploadedFileInterface) {
-                continue;
-            }
-            if ($file instanceof UploadedFile) {
-                continue;
-            }
-            throw new InvalidArgumentException(
-                'Invalid leaf in uploaded files structure'
-            );
+            $this->assertUploadedFile($file);
         }
+    }
+
+    /**
+     * Validate file is instance of UploadedFileInterface/UploadedFile
+     *
+     * @param [type] $file [description]
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException if any leaf is not an UploadedFileInterface instance.
+     */
+    private function assertUploadedFile($file)
+    {
+        if ($file instanceof UploadedFileInterface) {
+            return;
+        }
+        if ($file instanceof UploadedFile) {
+            return;
+        }
+        throw new InvalidArgumentException(
+            'Invalid leaf in uploaded files structure'
+        );
     }
 
     /**
@@ -353,6 +367,9 @@ class ServerRequest extends Request
                     'error'    => $fileInfo['error'][$key],
                     'name'     => $fileInfo['name'][$key],
                     'type'     => $fileInfo['type'][$key],
+                    'full_path' => isset($fileInfo['full_path'][$key])
+                        ? $fileInfo['full_path'][$key]
+                        : null,
                 ];
                 $files[$key] = self::createUploadedFile($fileInfoNew);
             }
@@ -363,7 +380,10 @@ class ServerRequest extends Request
             (int) $fileInfo['size'],
             (int) $fileInfo['error'],
             $fileInfo['name'],
-            $fileInfo['type']
+            $fileInfo['type'],
+            isset($fileInfo['full_path'])
+                ? $fileInfo['full_path']
+                : null
         );
     }
 
@@ -380,23 +400,34 @@ class ServerRequest extends Request
     {
         $files = array();
         foreach ($phpFiles as $key => $value) {
-            if ($value instanceof UploadedFileInterface) {
-                $files[$key] = $value;
-                continue;
-            }
-            if ($value instanceof UploadedFile) {
-                $files[$key] = $value;
-                continue;
-            }
-            if (\is_array($value)) {
-                $files[$key] = isset($value['tmp_name'])
-                    ? self::createUploadedFile($value)
-                    : self::filesFromGlobals($value);
-                continue;
-            }
-            throw new InvalidArgumentException('Invalid value in files specification');
+            $files[$key] = self::fileFromGlobal($value);
         }
         return $files;
+    }
+
+    /**
+     * Convert php's upload-file info array to UploadedFile instance
+     *
+     * @param array $phpFile uploaded-file info
+     *
+     * @return UploadedFileInterface|UploadedFile|array
+     *
+     * @throws InvalidArgumentException
+     */
+    private static function fileFromGlobal($phpFile)
+    {
+        if ($phpFile instanceof UploadedFileInterface) {
+            return $phpFile;
+        }
+        if ($phpFile instanceof UploadedFile) {
+            return $phpFile;
+        }
+        if (\is_array($phpFile)) {
+            return isset($phpFile['tmp_name'])
+                ? self::createUploadedFile($phpFile)
+                : self::filesFromGlobals($phpFile);
+        }
+        throw new InvalidArgumentException('Invalid value in files specification');
     }
 
     /**
@@ -438,14 +469,14 @@ class ServerRequest extends Request
             'CONTENT_MD5'    => 'Content-Md5',
         );
         foreach ($serverParams as $key => $value) {
-            if (\substr($key, 0, 5) === 'HTTP_') {
+            if (isset($keysSansHttp[$key])) {
+                $key = $keysSansHttp[$key];
+                $headers[$key] = $value;
+            } elseif (\substr($key, 0, 5) === 'HTTP_') {
                 $key = \substr($key, 5);
-                if (!isset($keysSansHttp[$key]) || !isset($serverParams[$key])) {
-                    $key = \str_replace(' ', '-', \ucwords(\strtolower(\str_replace('_', ' ', $key))));
-                    $headers[$key] = $value;
-                }
-            } elseif (isset($keysSansHttp[$key])) {
-                $headers[$keysSansHttp[$key]] = $value;
+                $key = \strtolower($key);
+                $key = \str_replace(' ', '-', \ucwords(\str_replace('_', ' ', $key)));
+                $headers[$key] = $value;
             }
         }
         if (!isset($headers['Authorization'])) {
@@ -458,36 +489,6 @@ class ServerRequest extends Request
     }
 
     /**
-     * Get host and port from $_SERVER vals
-     *
-     * @return array host & port
-     *
-     * @SuppressWarnings(PHPMD.Superglobals)
-     */
-    private static function getHostPortFromGlobals()
-    {
-        $host = '';
-        $port = null;
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $url = 'http://' . $_SERVER['HTTP_HOST'];
-            $parts = \parse_url($url);
-            if ($parts === false) {
-                return [null, null];
-            }
-            $host = isset($parts['host']) ? $parts['host'] : '';
-            $port = isset($parts['port']) ? $parts['port'] : null;
-        } elseif (isset($_SERVER['SERVER_NAME'])) {
-            $host = $_SERVER['SERVER_NAME'];
-        } elseif (isset($_SERVER['SERVER_ADDR'])) {
-            $host = $_SERVER['SERVER_ADDR'];
-        }
-        if ($port === null && isset($_SERVER['SERVER_PORT'])) {
-            $port = $_SERVER['SERVER_PORT'];
-        }
-        return array($host, $port);
-    }
-
-    /**
      * like PHP's parse_str()
      *   key difference: by default this does not convert root key dots and spaces to '_'
      *
@@ -496,7 +497,7 @@ class ServerRequest extends Request
      *
      * @return array
      *
-     * @see https://github.com/api-platform/core/blob/master/src/Util/RequestParser.php#L50
+     * @see https://github.com/api-platform/core/blob/main/src/Core/Util/RequestParser.php#L50
      */
     private static function parseStr($str, $opts = array())
     {
@@ -514,7 +515,19 @@ class ServerRequest extends Request
             \parse_str($str, $params);
             return $params;
         }
+        return self::parseStrCustom($str, $opts);
+    }
 
+    /**
+     * Parses request parameters from the specified string
+     *
+     * @param string $str  input string
+     * @param array  $opts parse options
+     *
+     * @return array
+     */
+    private static function parseStrCustom($str, $opts)
+    {
         // Use a regex to replace keys with a bin2hex'd version
         // this will prevent parse_str from modifying the keys
         // '[' is urlencoded ('%5B') in the input, but we must urldecode it in order
@@ -527,6 +540,8 @@ class ServerRequest extends Request
             },
             $str
         );
+
+        // parse_str urldecodes both keys and values in resulting array
         \parse_str($str, $params);
 
         $replace = array();
@@ -596,26 +611,76 @@ class ServerRequest extends Request
             : 'http';
         $uri = $uri->withScheme($scheme);
 
-        list($host, $port) = self::getHostPortFromGlobals();
+        list($host, $port) = self::uriHostPortFromGlobals();
         if ($host) {
             $uri = $uri->withHost($host);
         }
         if ($port) {
             $uri = $uri->withPort($port);
         }
+
+        list($path, $query) = self::uriPathQueryFromGlobals();
+        if ($path) {
+            $uri = $uri->withPath($path);
+        }
+        if ($query) {
+            $uri = $uri->withQuery($query);
+        }
+
+        return $uri;
+    }
+
+    /**
+     * Get host and port from $_SERVER vals
+     *
+     * @return array host & port
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     */
+    private static function uriHostPortFromGlobals()
+    {
+        $host = '';
+        $port = null;
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $url = 'http://' . $_SERVER['HTTP_HOST'];
+            $parts = \parse_url($url);
+            if ($parts === false) {
+                return [null, null];
+            }
+            $host = isset($parts['host']) ? $parts['host'] : '';
+            $port = isset($parts['port']) ? $parts['port'] : null;
+        } elseif (isset($_SERVER['SERVER_NAME'])) {
+            $host = $_SERVER['SERVER_NAME'];
+        } elseif (isset($_SERVER['SERVER_ADDR'])) {
+            $host = $_SERVER['SERVER_ADDR'];
+        }
+        if ($port === null && isset($_SERVER['SERVER_PORT'])) {
+            $port = $_SERVER['SERVER_PORT'];
+        }
+        return array($host, $port);
+    }
+
+    /**
+     * Get request uri and query from $_SERVER
+     *
+     * @return array path & query
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     */
+    private static function uriPathQueryFromGlobals()
+    {
+        $path = null;
         $query = null;
         if (isset($_SERVER['REQUEST_URI'])) {
-            $requestUriParts = \explode('?', $_SERVER['REQUEST_URI'], 2);
-            $uri = $uri->withPath($requestUriParts[0]);
-            if (isset($requestUriParts[1])) {
-                $query = $requestUriParts[1];
-                $uri = $uri->withQuery($query);
-            }
+            $exploded = \explode('?', $_SERVER['REQUEST_URI'], 2);
+            // exploded is an array of length 1 or 2
+            // use array_shift to avoid testing if exploded[1] exists
+            $path = \array_shift($exploded);
+            $query = \array_shift($exploded); // string|null
         }
         if ($query === null && isset($_SERVER['QUERY_STRING'])) {
             $query = $_SERVER['QUERY_STRING'];
-            $uri = $uri->withQuery($query);
         }
-        return $uri;
+        return array($path, $query);
     }
 }

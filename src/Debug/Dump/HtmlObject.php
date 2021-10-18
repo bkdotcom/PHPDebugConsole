@@ -154,9 +154,10 @@ class HtmlObject
         $outPhpDoc = $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC;
         $str = '<dt class="constants">constants</dt>' . "\n";
         foreach ($constants as $k => $info) {
-            $modifiers = array(
-                $info['visibility'],
-            );
+            $modifiers = \array_keys(\array_filter(array(
+                $info['visibility'] => true,
+                'final' => $info['isFinal'],
+            )));
             $str .= '<dd' . $this->debug->html->buildAttribString(array(
                 'class' => 'constant ' . $info['visibility'],
                 'data-attributes' => $outAttributes

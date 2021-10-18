@@ -33,15 +33,6 @@ class InternalEvents implements SubscriberInterface
     private $highlightAdded = false;
 
     /**
-     * duplicate/store frequently used cfg vals
-     *
-     * @var array
-     */
-    private $cfg = array(
-        'logResponse' => false,
-    );
-
-    /**
      * Constructor
      *
      * @param Debug $debug debug instance
@@ -75,7 +66,6 @@ class InternalEvents implements SubscriberInterface
                     array('onOutput', 1),
                     array('onOutputHeaders', -1),
                 ),
-                Debug::EVENT_CONFIG => 'onConfig',
             );
         }
         /*
@@ -84,7 +74,6 @@ class InternalEvents implements SubscriberInterface
               "php.shutdown" log entry
         */
         return array(
-            Debug::EVENT_CONFIG => 'onConfig',
             Debug::EVENT_DUMP_CUSTOM => 'onDumpCustom',
             Debug::EVENT_LOG => array('onLog', PHP_INT_MAX),
             Debug::EVENT_OUTPUT => array(
@@ -100,44 +89,6 @@ class InternalEvents implements SubscriberInterface
                 array('onShutdownLow', PHP_INT_MAX * -1)
             ),
         );
-    }
-
-    /**
-     * Debug::EVENT_CONFIG subscriber
-     *
-     * @param Event $event Event instance
-     *
-     * @return void
-     */
-    public function onConfig(Event $event)
-    {
-        $cfg = $event->getValues();
-        if (empty($cfg['debug'])) {
-            // no debug config values have changed
-            return;
-        }
-        $cfgDebug = $cfg['debug'];
-        $valActions = array(
-            'emailTo' => array($this, 'onCfgEmailTo'),
-            'logResponse' => array($this, 'onCfgLogResponse'),
-            'onLog' => array($this, 'onCfgOnLog'),
-            'onMiddleware' => array($this, 'onCfgOnMiddleware'),
-            'onOutput' => array($this, 'onCfgOnOutput'),
-        );
-        foreach ($valActions as $key => $callable) {
-            if (isset($cfgDebug[$key]) === false) {
-                continue;
-            }
-            $cfgDebug[$key] = $callable($cfgDebug[$key], $event);
-        }
-        foreach (array('emailFrom','emailFunc','emailTo') as $key) {
-            if (isset($cfgDebug[$key]) && $cfgDebug[$key] !== 'default' && !isset($cfg['errorEmailer'][$key])) {
-                // also set for errorEmailer
-                $cfg['errorEmailer'][$key] = $cfgDebug[$key];
-            }
-        }
-        $cfg['debug'] = $cfgDebug;
-        $event->setValues($cfg);
     }
 
     /**
@@ -437,120 +388,6 @@ class InternalEvents implements SubscriberInterface
                 ))
             );
         }
-    }
-
-    /**
-     * Handle "emailTo" config update
-     *
-     * @param string $val config value
-     *
-     * @return string
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgEmailto($val)
-    {
-        return $val === 'default'
-            ? $this->debug->getServerParam('SERVER_ADMIN')
-            : $val;
-    }
-
-    /**
-     * Handle "logResponse" config update
-     *
-     * @param mixed $val config value
-     *
-     * @return bool
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgLogResponse($val)
-    {
-        if ($val === 'auto') {
-            $serverParams = \array_merge(array(
-                'HTTP_ACCEPT' => null,
-                'HTTP_SOAPACTION' => null,
-                'HTTP_USER_AGENT' => null,
-            ), $this->debug->request->getServerParams());
-            $val = \count(
-                \array_filter(array(
-                    \strpos($this->debug->getInterface(), 'http') !== false,
-                    $serverParams['HTTP_SOAPACTION'],
-                    \stripos($serverParams['HTTP_USER_AGENT'], 'curl') !== false,
-                ))
-            ) > 0;
-        }
-        if ($val) {
-            $this->debug->obStart();
-        }
-        $this->cfg['logResponse'] = $val;
-        return $val;
-    }
-
-    /**
-     * Handle "onLog" config update
-     *
-     * @param mixed $val config value
-     *
-     * @return mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgOnLog($val)
-    {
-        /*
-            Replace - not append - subscriber set via setCfg
-        */
-        $prev = $this->debug->getCfg('onLog', Debug::CONFIG_DEBUG);
-        if ($prev) {
-            $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, $prev);
-        }
-        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, $val);
-        return $val;
-    }
-
-    /**
-     * Handle "onOutput" config update
-     *
-     * @param mixed $val config value
-     *
-     * @return mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgOnOutput($val)
-    {
-        /*
-            Replace - not append - subscriber set via setCfg
-        */
-        $prev = $this->debug->getCfg('onOutput', Debug::CONFIG_DEBUG);
-        if ($prev) {
-            $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT, $prev);
-        }
-        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, $val);
-        return $val;
-    }
-
-    /**
-     * Handle "onMiddleware" config update
-     *
-     * @param mixed $val config value
-     *
-     * @return mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgOnMiddleware($val)
-    {
-        /*
-            Replace - not append - subscriber set via setCfg
-        */
-        $prev = $this->debug->getCfg('onMiddleware', Debug::CONFIG_DEBUG);
-        if ($prev) {
-            $this->debug->eventManager->unsubscribe(Debug::EVENT_MIDDLEWARE, $prev);
-        }
-        $this->debug->eventManager->subscribe(Debug::EVENT_MIDDLEWARE, $val);
-        return $val;
     }
 
     /**

@@ -458,6 +458,7 @@ EOD;
                     'desc' => PHP_VERSION_ID >= 70100
                         ? 'Inherited description'
                         : null,
+                    'isFinal' => false,
                     'value' => 'defined in TestBase',
                     'visibility' => 'public',
                 ),
@@ -466,6 +467,7 @@ EOD;
                     'desc' => PHP_VERSION_ID >= 70100
                         ? 'constant documentation'
                         : null,
+                    'isFinal' => false,
                     'value' => 'redefined in Test',
                     'visibility' => 'public',
                 ),

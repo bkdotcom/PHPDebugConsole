@@ -105,7 +105,6 @@ class Debug
     protected $container;
     protected $data = array(
         'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
-        'counts'            => array(), // count method
         'entryCountInitial' => 0,       // store number of log entries created during init
         'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
         'isObCache'         => false,
@@ -120,7 +119,6 @@ class Debug
     protected $internal;
     protected $internalEvents;
     private static $instance;
-    protected $lazyObjects = array();
     protected $logRef;          // points to either log or logSummary[priority]
     protected static $methodDefaultArgs = array();
     protected $parentInstance;
@@ -317,9 +315,6 @@ class Debug
         if (\in_array($property, $this->readOnly)) {
             return $this->{$property};
         }
-        if (\array_key_exists($property, $this->lazyObjects)) {
-            return $this->lazyObjects[$property];
-        }
         /*
             Check getter method (although not utilized)
         */
@@ -494,39 +489,7 @@ class Debug
             __FUNCTION__,
             \func_get_args()
         );
-        // label may be ommitted and only flags passed as a single argument
-        //   (excluding potential meta argument)
-        $args = $logEntry['args'];
-        if (\count($args) === 1 && \is_int($args[0])) {
-            $label = null;
-            $flags = $args[0];
-        }
-        $dataLabel = (string) $label;
-        if ($label === null) {
-            // determine dataLabel from calling file & line
-            $callerInfo = $this->backtrace->getCallerInfo();
-            $logEntry['meta'] = \array_merge(array(
-                'file' => $callerInfo['file'],
-                'line' => $callerInfo['line'],
-            ), $logEntry['meta']);
-            $label = 'count';
-            $dataLabel = $logEntry['meta']['file'] . ': ' . $logEntry['meta']['line'];
-        }
-        if (!isset($this->data['counts'][$dataLabel])) {
-            $this->data['counts'][$dataLabel] = 0;
-        }
-        if (!($flags & self::COUNT_NO_INC)) {
-            $this->data['counts'][$dataLabel]++;
-        }
-        $count = $this->data['counts'][$dataLabel];
-        if (!($flags & self::COUNT_NO_OUT)) {
-            $logEntry['args'] = array(
-                (string) $label,
-                $count,
-            );
-            $this->appendLog($logEntry);
-        }
-        return $count;
+        return $this->methodCount->doCount($logEntry);
     }
 
     /**
@@ -540,31 +503,14 @@ class Debug
      *
      * @return void
      */
-    public function countReset($label = 'default', $flags = null)
+    public function countReset($label = 'default', $flags = 0)
     {
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
             \func_get_args()
         );
-        // label may be ommitted and only flags passed as a single argument
-        //   (excluding potential meta argument)
-        $args = $logEntry['args'];
-        if (\count($args) === 1 && \is_int($args[0])) {
-            $label = 'default';
-            $flags = $args[0];
-        }
-        $logEntry['args'] = array('Counter \'' . $label . '\' doesn\'t exist.');
-        if (isset($this->data['counts'][$label])) {
-            $this->data['counts'][$label] = 0;
-            $logEntry['args'] = array(
-                (string) $label,
-                0,
-            );
-        }
-        if (!($flags & self::COUNT_NO_OUT)) {
-            $this->appendLog($logEntry);
-        }
+        $this->methodCount->countReset($logEntry);
     }
 
     /**
@@ -1055,7 +1001,7 @@ class Debug
             }
         }
         if ($plugin instanceof RouteInterface) {
-            $this->onCfgRoute($plugin);
+            $this->onCfgRoute($plugin, false);
         }
         if (!$isPlugin) {
             throw new InvalidArgumentException('addPlugin expects \\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface');
@@ -1393,8 +1339,6 @@ class Debug
             return;
         }
         $valActions = array(
-            'logEnvInfo' => array($this, 'onCfgList'),
-            'logRequestInfo' => array($this, 'onCfgList'),
             'logServerKeys' => function ($val) {
                 // don't append, replace
                 $this->cfg['logServerKeys'] = array();
@@ -1402,11 +1346,10 @@ class Debug
             },
             'route' => array($this, 'onCfgRoute'),
         );
+        $valActions = \array_intersect_key($valActions, $cfg);
         foreach ($valActions as $key => $callable) {
-            if (isset($cfg[$key])) {
-                /** @psalm-suppress TooManyArguments */
-                $cfg[$key] = $callable($cfg[$key], $key);
-            }
+            /** @psalm-suppress TooManyArguments */
+            $cfg[$key] = $callable($cfg[$key]);
         }
         $this->cfg = $this->arrayUtil->mergeDeep($this->cfg, $cfg);
         /*
@@ -1740,7 +1683,8 @@ class Debug
         $this->config = $this->container['config'];
         $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->serviceContainer->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
-        $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'), -1);
+        $this->addPlugin($this->container['configEventSubscriber']);
+        $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'));
 
         // initialize errorHandler
         $this->serviceContainer['errorHandler'];
@@ -1880,14 +1824,11 @@ class Debug
     private function getDumpRoute($cat, $name, $checkOnly)
     {
         $property = $cat . \ucfirst($name);
-        $isset = isset($this->lazyObjects[$property]);
+        $containerHas = $this->container->has($property);
         if ($checkOnly) {
-            return $isset;
+            return $containerHas;
         }
-        if ($isset) {
-            return $this->lazyObjects[$property];
-        }
-        if ($this->container->has($property)) {
+        if ($containerHas) {
             return $this->container[$property];
         }
         $classname = 'bdk\\Debug\\' . \ucfirst($cat) . '\\' . \ucfirst($name);
@@ -1898,7 +1839,7 @@ class Debug
                 $cfg = $this->config->get($property, self::CONFIG_INIT);
                 $val->setCfg($cfg);
             }
-            $this->lazyObjects[$property] = $val;
+            $this->container[$property] = $val;
             return $val;
         }
         $caller = $this->backtrace->getCallerInfo();
@@ -1936,30 +1877,6 @@ class Debug
     }
 
     /**
-     * Convert logEnvInfo & logRequestInfo values to key=>value arrays
-     *
-     * @param mixed  $val  value
-     * @param string $name 'logEnvInfo'|'logRequestInfo'
-     *
-     * @return array
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgList($val, $name)
-    {
-        $allKeys = \array_keys($this->cfg[$name]);
-        if (\is_bool($val)) {
-            $val = \array_fill_keys($allKeys, $val);
-        } elseif ($this->arrayUtil->isList($val)) {
-            $val = \array_merge(
-                \array_fill_keys($allKeys, false),
-                \array_fill_keys($val, true)
-            );
-        }
-        return $val;
-    }
-
-    /**
      * If "core" route, store in lazyObjects property
      *
      * @param mixed $val route value
@@ -1968,18 +1885,24 @@ class Debug
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
-    private function onCfgRoute($val)
+    private function onCfgRoute($val, $addPlugin = true)
     {
-        if ($val instanceof RouteInterface) {
-            $classname = \get_class($val);
-            $prefix = __NAMESPACE__ . '\\Debug\\Route\\';
-            if (\strpos($classname, $prefix) === 0) {
-                $prop = 'route' . \substr($classname, \strlen($prefix));
-                $this->lazyObjects[$prop] = $val;
-            }
-            if ($val->appendsHeaders()) {
-                $this->internal->obStart();
-            }
+        if (!($val instanceof RouteInterface)) {
+            return $val;
+        }
+        if ($addPlugin) {
+            $this->addPlugin($val);
+        }
+        $classname = \get_class($val);
+        $prefix = __NAMESPACE__ . '\\Debug\\Route\\';
+        $containerName = \strpos($classname, $prefix) === 0
+            ? 'route' . \substr($classname, \strlen($prefix))
+            : null;
+        if ($containerName && !$this->container->has($containerName)) {
+            $this->container->offsetSet($containerName, $val);
+        }
+        if ($val->appendsHeaders()) {
+            $this->internal->obStart();
         }
         return $val;
     }

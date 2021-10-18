@@ -295,6 +295,9 @@ class AbstractObject extends Component
                     'desc' => $collectPhpDoc
                         ? $phpDoc['desc']
                         : null,
+                    'isFinal' => PHP_VERSION_ID >= 80100
+                        ? $const->isFinal()
+                        : false,
                     'value' => $const->getValue(),
                     'visibility' => $vis,
                 );

@@ -16,8 +16,6 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Psr7lite\Response;
-use bdk\Debug\Route\RouteInterface;
-use bdk\Debug\Utility\FileStreamWrapper;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -45,7 +43,6 @@ class Internal implements SubscriberInterface
         'redactReplace' => null,
     );
 
-    private $isBootstrapped = false;
     private $isConfigured = false;
     private static $profilingEnabled = false;
     private $serverParams = array();
@@ -384,7 +381,6 @@ class Internal implements SubscriberInterface
      */
     public function onBootstrap()
     {
-        $this->isBootstrapped = true;
         $route = $this->debug->getCfg('route');
         if ($route === 'stream') {
             // normally we don't init the route until output
@@ -404,45 +400,39 @@ class Internal implements SubscriberInterface
      */
     public function onConfig(Event $event)
     {
-        $cfg = $event->getValues();
-        if (isset($cfg['routeStream']['stream'])) {
+        $configs = $event->getValues();
+        if (isset($configs['routeStream']['stream'])) {
             $this->debug->addPlugin($this->debug->getRoute('stream'));
         }
-        if (empty($cfg['debug'])) {
+        if (empty($configs['debug'])) {
             // no debug config values have changed
             return;
         }
-        $cfg = $cfg['debug'];
+        $cfgDebug = $configs['debug'];
         if (!$this->isConfigured) {
-            $cfg = \array_merge(
+            $cfgDebug = \array_merge(
                 \array_diff_key(
                     $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
                     \array_flip(array('collect','output'))
                 ),
-                $cfg
+                $cfgDebug
             );
             $this->isConfigured = true;
         }
         $valActions = array(
             'serviceProvider' => array($this, 'onCfgServiceProvider'),
-            'key' => array($this, 'onCfgKey'),
-            'onBootstrap' => array($this, 'onCfgOnBootstrap'),
             'redactKeys' => array($this, 'onCfgRedactKeys'),
             'redactReplace' => function ($val) {
                 $this->cfg['redactReplace'] = $val;
                 return $val;
             },
-            'route' => array($this, 'onCfgRoute'),
         );
+        $valActions = \array_intersect_key($valActions, $cfgDebug);
         foreach ($valActions as $key => $callable) {
-            if (isset($cfg[$key]) === false) {
-                continue;
-            }
             /** @psalm-suppress TooManyArguments */
-            $cfg[$key] = $callable($cfg[$key], $event);
+            $cfgDebug[$key] = $callable($cfgDebug[$key], $event);
         }
-        $this->onCfgProfilingUpdate($cfg);
-        $event['debug'] = \array_merge($event['debug'], $cfg);
+        $event['debug'] = \array_merge($event['debug'], $cfgDebug);
     }
 
     /**
@@ -557,89 +547,6 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Test $_REQUEST['debug'] against passed configured key
-     * Update collect & output values based on key value
-     *
-     * @param string $key   configured debug key
-     * @param Event  $event Debug::EVENT_CONFIG event instance
-     *
-     * @return string
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgKey($key, Event $event)
-    {
-        if ($this->isCli()) {
-            return $key;
-        }
-        $request = $this->debug->request;
-        $cookieParams = $request->getCookieParams();
-        $queryParams = $request->getQueryParams();
-        $requestKey = null;
-        if (isset($queryParams['debug'])) {
-            $requestKey = $queryParams['debug'];
-        } elseif (isset($cookieParams['debug'])) {
-            $requestKey = $cookieParams['debug'];
-        }
-        $isValidKey = $requestKey === $key;
-        $valsNew = array();
-        if ($isValidKey) {
-            // only enable collect / don't disable it
-            $valsNew['collect'] = true;
-        }
-        $valsNew['output'] = $isValidKey;
-        $event['debug'] = \array_merge($event['debug'], $valsNew);
-        return $key;
-    }
-
-    /**
-     * Handle "onBootstrap" config update
-     *
-     * @param mixed $val config value
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgOnBootstrap($val)
-    {
-        if ($this->isBootstrapped) {
-            // boostrap has already occured, so go ahead and call
-            \call_user_func($val, new Event($this->debug));
-            return;
-        }
-        // we're bootstraping
-        $this->debug->eventManager->subscribe(Debug::EVENT_BOOTSTRAP, $val);
-    }
-
-    /**
-     * Test if we need to enable profiling
-     *
-     * @param array $cfg Debug config values being updated
-     *
-     * @return void
-     */
-    private function onCfgProfilingUpdate($cfg)
-    {
-        if (static::$profilingEnabled) {
-            // profiling already enabled
-            return;
-        }
-        $cfgAll = \array_merge(
-            $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
-            $cfg
-        );
-        if ($cfgAll['enableProfiling'] && $cfgAll['collect']) {
-            static::$profilingEnabled = true;
-            FileStreamWrapper::setEventManager($this->debug->eventManager);
-            FileStreamWrapper::setPathsExclude(array(
-                __DIR__,
-            ));
-            FileStreamWrapper::register();
-        }
-    }
-
-    /**
      * Handle "redactKeys" config update
      *
      * @param mixed $val config value
@@ -656,39 +563,6 @@ class Internal implements SubscriberInterface
         }
         $this->cfg['redactKeys'] = $keys;
         return $val;
-    }
-
-    /**
-     * Set route value
-     * instantiate object if necessary & addPlugin if not already subscribed
-     *
-     * @param RouteInterface|string $route RouteInterface instance, or (short) classname
-     *
-     * @return RouteInterface|null
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgRoute($route)
-    {
-        if ($this->isBootstrapped) {
-            /*
-                Only need to worry about previous route if we're bootstrapped
-                There can only be one 'route' at a time:
-                If multiple output routes are desired, use debug->addPlugin()
-                unsubscribe current OutputInterface
-            */
-            $routePrev = $this->debug->getCfg('route');
-            if (\is_object($routePrev)) {
-                $this->debug->removePlugin($routePrev);
-            }
-        }
-        if (\is_string($route) && $route !== 'auto') {
-            $route = $this->debug->getRoute($route);
-        }
-        if ($route instanceof RouteInterface) {
-            $this->debug->addPlugin($route);
-        }
-        return $route;
     }
 
     /**

@@ -32,6 +32,9 @@ class UploadedFile
     private $clientFilename;
 
     /** @var string|null */
+    private $clientFullPath;
+
+    /** @var string|null */
     private $clientMediaType;
 
     /** @var int */
@@ -71,10 +74,11 @@ class UploadedFile
      * @param int    $error           one of the UPLOAD_ERR_* constants
      * @param string $clientFilename  client file name
      * @param string $clientMediaType client mime type
+     * @param string $clientFullPath  client full path (as of php 8.1)
      *
      * @throws InvalidArgumentException
      */
-    public function __construct($streamOrFile, $size = null, $error = UPLOAD_ERR_OK, $clientFilename = null, $clientMediaType = null)
+    public function __construct($streamOrFile, $size = null, $error = UPLOAD_ERR_OK, $clientFilename = null, $clientMediaType = null, $clientFullPath = null)
     {
         if ($size !== null && !\is_int($size)) {
             throw new InvalidArgumentException('Upload file size must be an integer');
@@ -90,6 +94,7 @@ class UploadedFile
         $this->size = $size;
         $this->error = $error;
         $this->clientFilename = $clientFilename;
+        $this->clientFullPath = $clientFullPath;
         $this->clientMediaType = $clientMediaType;
 
         if ($this->isOk()) {
@@ -259,6 +264,22 @@ class UploadedFile
     public function getClientFilename()
     {
         return $this->clientFilename;
+    }
+
+    /**
+     * Retrieve the full_path sent by the client.
+     * pull_path is new as of PHP 8.1 and passed by client when uploading a directory
+     *
+     * Do not trust the value returned by this method. A client could send
+     * a malicious filename with the intention to corrupt or hack your
+     * application.
+     *
+     * @return string|null The full-path sent by the client or null if none
+     *     was provided.
+     */
+    public function getClientFullPath()
+    {
+        return $this->clientFullPath;
     }
 
     /**

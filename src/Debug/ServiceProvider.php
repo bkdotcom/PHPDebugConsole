@@ -42,6 +42,7 @@ class ServiceProvider implements ServiceProviderInterface
             'errorHandler',
             'html',
             'methodClear',
+            'methodCount',
             'methodGroup',
             'methodProfile',
             'methodTable',
@@ -68,6 +69,10 @@ class ServiceProvider implements ServiceProviderInterface
         $container['config'] = function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Config($debug);
+        };
+        $container['configEventSubscriber'] = function (Container $container) {
+            $debug = $container['debug'];
+            return new \bdk\Debug\ConfigEventSubscriber($debug);
         };
         $container['errorEmailer'] = function (Container $container) {
             $debug = $container['debug'];
@@ -119,6 +124,9 @@ class ServiceProvider implements ServiceProviderInterface
         };
         $container['methodClear'] = function () {
             return new \bdk\Debug\Method\Clear();
+        };
+        $container['methodCount'] = function () {
+            return new \bdk\Debug\Method\Count();
         };
         $container['methodGroup'] = function (Container $container) {
             $debug = $container['debug'];

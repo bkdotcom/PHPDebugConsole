@@ -446,21 +446,9 @@ class Uri
     private function assertHost($host)
     {
         $this->assertString($host, 'host');
-        if ($host === '') {
+        if (\in_array($host, array('','localhost'), true)) {
             // An empty host value is equivalent to removing the host.
             // No validation required
-            return;
-        }
-        if (PHP_VERSION_ID >= 70000) {
-            if (\filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
-                return;
-            }
-            throw new InvalidArgumentException(\sprintf(
-                '"%s" is not a valid host',
-                $host
-            ));
-        }
-        if ($host === 'localhost') {
             return;
         }
         if ($this->isFqdn($host)) {
@@ -509,17 +497,15 @@ class Uri
         if ($path === '') {
             return '';
         }
-        if ($path[0] !== '/') {
-            if ($authority !== '') {
-                // If the path is rootless and an authority is present, the path MUST be prefixed by "/"
-                $path = '/' . $path;
-            }
-        } elseif (isset($path[1]) && $path[1] === '/') {
-            if ($authority === '') {
-                // If the path is starting with more than one "/" and no authority is present, the
-                // starting slashes MUST be reduced to one.
-                $path = '/' . \ltrim($path, '/');
-            }
+        if ($path[0] !== '/' && $authority !== '') {
+            // If the path is rootless and an authority is present,
+            // the path MUST be prefixed by "/"
+            return '/' . $path;
+        }
+        if (isset($path[1]) && $path[1] === '/' && $authority === '') {
+            // If the path is starting with more than one "/" and no authority is present,
+            // starting slashes MUST be reduced to one.
+            return '/' . \ltrim($path, '/');
         }
         return $path;
     }
@@ -535,6 +521,9 @@ class Uri
      */
     private function isFqdn($host)
     {
+        if (PHP_VERSION_ID >= 70000) {
+            return \filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME);
+        }
         $regex = '/(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/';
         return \preg_match($regex, $host) === 1;
     }
@@ -571,7 +560,9 @@ class Uri
         if (!\is_int($port)) {
             throw new InvalidArgumentException(\sprintf(
                 'Port must be a int, but %s provided.',
-                \is_object($port) ? \get_class($port) : \gettype($port)
+                \is_object($port)
+                    ? \get_class($port)
+                    : \gettype($port)
             ));
         }
         if ($port < 0 || $port > 0xffff) {
@@ -602,10 +593,9 @@ class Uri
     /**
      * Filter/validate query and fragment
      *
-     * @param string $str query & frabment
+     * @param string $str query or frabment
      *
      * @return string
-     * @throws InvalidArgumentException
      */
     private function filterQueryAndFragment($str)
     {

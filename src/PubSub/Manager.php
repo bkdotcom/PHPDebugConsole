@@ -169,7 +169,8 @@ class Manager
      */
     public function subscribe($eventName, $callable, $priority = 0)
     {
-        unset($this->sorted[$eventName]);           // clear the sorted cache
+        unset($this->sorted[$eventName]); // clear the sorted cache
+        $this->assertCallable($callable);
         $this->subscribers[$eventName][$priority][] = $callable;
     }
 
@@ -191,7 +192,7 @@ class Manager
         }
         foreach ($this->subscribers[$eventName] as $priority => $subscribers) {
             foreach ($subscribers as $k => $v) {
-                if ($v !== $callable && $this->isClosureFactory($v)) {
+                if ($this->isClosureFactory($v)) {
                     $v = $this->doClosureFactory($v);
                 }
                 if ($v === $callable) {
@@ -206,6 +207,29 @@ class Manager
             }
             unset($this->subscribers[$eventName][$priority]);
         }
+    }
+
+    /**
+     * Test if value is a callable or "closure factory"
+     *
+     * @param mixed $val Value to test
+     *
+     * @return void
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function assertCallable($val)
+    {
+        if (\is_callable($val, true)) {
+            return;
+        }
+        if ($this->isClosureFactory($val)) {
+            return;
+        }
+        throw new \InvalidArgumentException(\sprintf(
+            'Expected callable or "closure factory", but %s provided',
+            \is_object($val) ? \get_class($val) : \gettype($val)
+        ));
     }
 
     /**

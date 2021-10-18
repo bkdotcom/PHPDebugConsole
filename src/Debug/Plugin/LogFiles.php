@@ -84,36 +84,11 @@ class LogFiles extends Component
             $this->debug->info($countLogged . ' files logged');
         }
 
-        if (!$this->cfg['asTree']) {
-            $this->debug->log(
-                $files,
-                $this->debug->meta(array(
-                    'detectFiles' => true,
-                ))
-            );
-            if ($this->excludedCounts) {
-                $this->debug->log(
-                    \array_sum($this->excludedCounts) . ' excluded files',
-                    $this->excludedCounts
-                );
-            }
+        if ($this->cfg['asTree']) {
+            $this->logFilesAsTree($files);
             return;
         }
-        $files = $this->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);
-        $this->debug->log(
-            $this->debug->abstracter->crateWithVals(
-                $files,
-                array(
-                    'options' => array(
-                        'asFileTree' => true,
-                        'expand' => true,
-                    ),
-                )
-            ),
-            $this->debug->meta(array(
-                'detectFiles' => true,
-            ))
-        );
+        $this->logFiles($files);
     }
 
     /**
@@ -129,27 +104,19 @@ class LogFiles extends Component
     {
         $tree = array();
         foreach ($files as $filepath) {
-            $cur = &$tree;
             $dirs = \explode('/', \trim($filepath, '/'));
             $file = \array_pop($dirs);
             if ($dirs) {
                 $dirs[0] = '/' . $dirs[0];
             }
-            foreach ($dirs as $dir) {
-                if (!isset($cur[$dir])) {
-                    // we're adding a dir..
-                    $cur[$dir] = array();
-                    $this->sortDir($cur);
-                }
-                $cur = &$cur[$dir];
-            }
-            $cur[] = new Abstraction(Abstracter::TYPE_STRING, array(
+            $node = &$this->getTreeNode($tree, $dirs);
+            $node[] = new Abstraction(Abstracter::TYPE_STRING, array(
                 'value' => $file,
                 'attribs' => array(
                     'data-file' => $filepath,
                 ),
             ));
-            unset($cur);
+            unset($node);
         }
         $tree = $this->addExcludedToTree($tree, $excludedCounts);
         if ($condense) {
@@ -181,25 +148,15 @@ class LogFiles extends Component
     private function addExcludedToTree($tree, $excludedCounts)
     {
         foreach ($excludedCounts as $path => $count) {
-            $cur = &$tree;
-            $dirs = array($path);
-            if ($path !== 'closure://function') {
-                $dirs = \explode(DIRECTORY_SEPARATOR, $path);
-                // $dir[0] is ''
-                \array_shift($dirs);
-                $dirs[0] = '/' . $dirs[0];
+            $dirs = \explode(DIRECTORY_SEPARATOR, $path);
+            // $dir[0] is ''
+            \array_shift($dirs);
+            $dirs[0] = '/' . $dirs[0];
+            if ($path === 'closure://function') {
+                $dirs = array($path);
             }
-            foreach ($dirs as $i => $dir) {
-                if (!isset($cur[$dir])) {
-                    $dir = \implode(DIRECTORY_SEPARATOR, \array_slice($dirs, $i));
-                    $cur[$dir] = array();
-                    $this->sortDir($cur);
-                    $cur = &$cur[$dir];
-                    break;
-                }
-                $cur = &$cur[$dir];
-            }
-            \array_unshift($cur, new Abstraction(Abstracter::TYPE_STRING, array(
+            $node = &$this->getTreeNode($tree, $dirs);
+            \array_unshift($node, new Abstraction(Abstracter::TYPE_STRING, array(
                 'value' => $count . ' omitted',
                 'attribs' => array(
                     'class' => 'exclude-count',
@@ -207,6 +164,28 @@ class LogFiles extends Component
             )));
         }
         return $tree;
+    }
+
+    /**
+     * Get tree node for given path
+     *
+     * @param array &$tree file tree
+     * @param array $path  path to traverse
+     *
+     * @return array reference to tree node
+     */
+    private function &getTreeNode(&$tree, $path)
+    {
+        $cur = &$tree;
+        foreach ($path as $subdir) {
+            if (!isset($cur[$subdir])) {
+                // we're adding a dir..
+                $cur[$subdir] = array();
+                $this->sortDir($cur);
+            }
+            $cur = &$cur[$subdir];
+        }
+        return $cur;
     }
 
     /**
@@ -230,45 +209,63 @@ class LogFiles extends Component
         );
         while ($stack) {
             $cur = \array_shift($stack);
-            foreach ($cur['src'] as $k => &$val) {
-                $keys = array($k);
-                while (\is_array($val)) {
-                    if (\count($val) > 1) {
-                        break;
-                    }
-                    $vFirst = \current($val);
-                    if (\is_array($vFirst) === false) {
-                        $isOmittedCount = \preg_match('/^\d+ omitted/', $vFirst) === 1;
-                        if ($isOmittedCount) {
-                            break;
-                        }
-                        $val = $vFirst;
-                        $vNew = \implode('/', $keys) . '/' . $val;
-                        if ($val instanceof Abstraction) {
-                            $val['value'] = $vNew;
-                            $vNew = $val;
-                        }
-                        $val = $vNew;
-                        break;
-                    }
-                    $k = \key($val);
-                    $val = &$val[$k];
-                    $keys[] = $k;
-                }
-                if (!\is_array($val)) {
-                    $cur['out'][] = $val;
-                    continue;
-                }
-                $kOut = \implode('/', $keys);
-                // initialize output array
-                $cur['out'][$kOut] = array();
-                $stack[] = array(
-                    'src' => &$val,
-                    'out' => &$cur['out'][$kOut],
-                );
-            }
+            $this->condenseTreeFrame($cur, $stack);
         }
         return $out;
+    }
+
+    private function condenseTreeFrame($cur, &$stack)
+    {
+        foreach ($cur['src'] as $k => &$val) {
+            $keys = array($k);
+            while (\is_array($val)) {
+                if (\count($val) > 1) {
+                    break;
+                }
+                $vFirst = \current($val);
+                if (\is_array($vFirst) === false) {
+                    $isOmittedCount = \preg_match('/^\d+ omitted/', $vFirst) === 1;
+                    if ($isOmittedCount) {
+                        break;
+                    }
+                    $val = \implode('/', $keys) . '/' . $vFirst;
+                    if ($vFirst instanceof Abstraction) {
+                        $vFirst['value'] = $val;
+                        $val = $vFirst;
+                    }
+                    break;
+                }
+                $k = \key($val);
+                $val = &$val[$k];
+                $keys[] = $k;
+            }
+            if (!\is_array($val)) {
+                $cur['out'][] = $val;
+                continue;
+            }
+            $kOut = \implode('/', $keys);
+            // initialize output array
+            $cur['out'][$kOut] = array();
+            $stack[] = array(
+                'src' => &$val,
+                'out' => &$cur['out'][$kOut],
+            );
+        }
+    }
+
+    /**
+     * increment `$this->excludedCounts`
+     *
+     * @param string $path filepath
+     *
+     * @return void
+     */
+    private function exclude($path)
+    {
+        if (!isset($this->excludedCounts[$path])) {
+            $this->excludedCounts[$path] = 0;
+        }
+        $this->excludedCounts[$path] ++;
     }
 
     /**
@@ -282,32 +279,95 @@ class LogFiles extends Component
     {
         $this->excludedCounts = array();
         $files = \array_filter($files, function ($file) {
-            foreach ($this->cfg['filesExclude'] as $str) {
-                $strpos = \strpos($file, $str);
-                if ($strpos === false) {
+            foreach ($this->cfg['filesExclude'] as $searchStr) {
+                $excludePath = $this->filterExcludePath($file, $searchStr);
+                if ($excludePath === false) {
                     continue;
                 }
                 // excluded
-                $dir = \dirname($file) . DIRECTORY_SEPARATOR;
-                $strlen = $strpos + \strlen($str);
-                $path = \substr($dir, 0, $strlen);
-                if (\substr($path, -1) !== DIRECTORY_SEPARATOR) {
-                    $strpos = \strpos($dir, DIRECTORY_SEPARATOR, $strlen) ?: 0;
-                    $path = \substr($dir, 0, $strpos);
-                }
-                $path = \rtrim($path, DIRECTORY_SEPARATOR);
-                if ($str === 'closure://function') {
-                    $path = $str;
-                }
-                if (!isset($this->excludedCounts[$path])) {
-                    $this->excludedCounts[$path] = 0;
-                }
-                $this->excludedCounts[$path] ++;
+                $this->exclude($excludePath);
                 return false;
             }
             return true;
         });
         return \array_values($files);
+    }
+
+    /**
+     * Test if file contains searchstring
+     *
+     * @param string $file      filepath
+     * @param string $searchStr searchstring
+     *
+     * @return string portion of file preceeding and including searchStr
+     */
+    private function filterExcludePath($file, $searchStr)
+    {
+        $strpos = \strpos($file, $searchStr);
+        if ($strpos === false) {
+            return false;
+        }
+        if ($searchStr === 'closure://function') {
+            return $searchStr;
+        }
+        $dir = \dirname($file) . DIRECTORY_SEPARATOR;
+        $strlen = $strpos + \strlen($searchStr);
+        $path = \substr($dir, 0, $strlen);
+        if (\substr($path, -1) !== DIRECTORY_SEPARATOR) {
+            $strpos = \strpos($dir, DIRECTORY_SEPARATOR, $strlen) ?: 0;
+            $path = \substr($dir, 0, $strpos);
+        }
+        $path = \rtrim($path, DIRECTORY_SEPARATOR);
+        return $path;
+    }
+
+    /**
+     * Log files files
+     *
+     * @param string[] $files array of filepaths
+     *
+     * @return void
+     */
+    private function logFiles($files)
+    {
+        $this->debug->log(
+            $files,
+            $this->debug->meta(array(
+                'detectFiles' => true,
+            ))
+        );
+        if ($this->excludedCounts) {
+            $this->debug->log(
+                \array_sum($this->excludedCounts) . ' excluded files',
+                $this->excludedCounts
+            );
+        }
+    }
+
+    /**
+     * Log files as a file tree
+     *
+     * @param string[] $files array of filepaths
+     *
+     * @return void
+     */
+    private function logFilesAsTree($files)
+    {
+        $files = $this->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);
+        $this->debug->log(
+            $this->debug->abstracter->crateWithVals(
+                $files,
+                array(
+                    'options' => array(
+                        'asFileTree' => true,
+                        'expand' => true,
+                    ),
+                )
+            ),
+            $this->debug->meta(array(
+                'detectFiles' => true,
+            ))
+        );
     }
 
     /**

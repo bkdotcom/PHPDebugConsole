@@ -108,16 +108,15 @@ class Html extends Base
         $val = parent::dump($val, $opts);
         $tagName = $this->dumpOptions['tagName'];
         if ($tagName === '__default__') {
-            $tagName = 'span';
-            if ($this->dumpOptions['type'] === Abstracter::TYPE_OBJECT) {
-                $tagName = 'div';
-            }
+            $tagName = $this->dumpOptions['type'] === Abstracter::TYPE_OBJECT
+                ? 'div'
+                : 'span';
+        }
+        if ($this->dumpOptions['typeMore'] !== null) {
+            $this->dumpOptions['attribs']['data-type-more'] = \trim($this->dumpOptions['typeMore']);
         }
         if ($tagName) {
             $this->dumpOptions['attribs']['class'][] = 't_' . $this->dumpOptions['type'];
-            if ($this->dumpOptions['typeMore'] !== null) {
-                $this->dumpOptions['attribs']['data-type-more'] = \trim($this->dumpOptions['typeMore']);
-            }
             $val = $this->debug->html->buildTag($tagName, $this->dumpOptions['attribs'], $val);
         }
         if ($this->dumpOptions['template']) {
@@ -707,7 +706,6 @@ class Html extends Base
      */
     protected function methodDefault(LogEntry $logEntry)
     {
-        $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = \array_merge(array(
             'errorCat' => null,  //  should only be applicable for error & warn methods
@@ -722,13 +720,6 @@ class Html extends Base
                 'data-file' => $meta['file'],
                 'data-line' => $meta['line'],
             ), $attribs);
-        }
-        if (!\in_array($method, array('assert','clear','error','info','log','warn'))) {
-            return $this->debug->html->buildTag(
-                'li',
-                $attribs,
-                $this->buildArgString($args, $meta)
-            );
         }
         if ($meta['errorCat']) {
             $attribs['class'][] = 'error-' . $meta['errorCat'];

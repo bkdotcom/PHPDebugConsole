@@ -111,12 +111,19 @@ I'm just too white and nerdy
 Really white and nerdy
 
 EOD;
-        $base64snip = substr(
+        $base64snip = \substr(
             \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
             0,
             156
         );
-        $base64snip2 = 'eyJwb29wIjoiXHVkODNkXHVkY2E5IiwiaW50Ijo0MiwicGFzc3dvcmQiOiJzZWNyZXQifQ==';
+        // $base64snip2 = 'eyJwb29wIjoiXHVkODNkXHVkY2E5IiwiaW50Ijo0MiwicGFzc3dvcmQiOiJzZWNyZXQifQ==';
+        $base64snip2 = \base64_encode(
+            \json_encode(array(
+                'poop' => '💩',
+                'int' => 42,
+                'password' => 'secret',
+            ))
+        );
         return array(
             // 0
             array(
@@ -233,14 +240,14 @@ EOD;
                     'chromeLogger' => array(
                         array(
                             'timestamp',
-                            $ts . ' (' . \date('Y-m-d H:i:s') . ')',
+                            $ts . ' (' . \date(self::DATETIME_FORMAT, $ts) . ')',
                         ),
                         null,
                         '',
                     ),
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="timestamp value-container" data-type="string" title="' . \date('Y-m-d H:i:s', $ts) . '"><span class="t_string" data-type-more="numeric">' . $ts . '</span></span></li>',
-                    'script' => 'console.log("timestamp","' . $ts . ' (' . \date('Y-m-d H:i:s') . ')");',
-                    'text' => 'timestamp = 📅 "' . $ts . '" (' . \date('Y-m-d H:i:s') . ')',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="timestamp value-container" data-type="string" title="' . \date(self::DATETIME_FORMAT, $ts) . '"><span class="t_string" data-type-more="numeric">' . $ts . '</span></span></li>',
+                    'script' => 'console.log("timestamp","' . $ts . ' (' . \date(self::DATETIME_FORMAT, $ts) . ')");',
+                    'text' => 'timestamp = 📅 "' . $ts . '" (' . \date(self::DATETIME_FORMAT, $ts) . ')',
                 ),
             ),
 
@@ -310,13 +317,7 @@ EOD;
             array(
                 'log',
                 array(
-                    \base64_encode(
-                        \json_encode(array(
-                            'poop' => '💩',
-                            'int' => 42,
-                            'password' => 'secret',
-                        ))
-                    ),
+                    $base64snip2,
                     Debug::meta('redact'),
                 ),
                 array(

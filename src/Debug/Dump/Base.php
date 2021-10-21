@@ -173,7 +173,7 @@ class Base extends Component
         $secs = 86400 * 90; // 90 days worth o seconds
         $tsNow = \time();
         if ($val > $tsNow - $secs && $val < $tsNow + $secs) {
-            return \date('Y-m-d H:i:s', $val);
+            return \date('Y-m-d H:i:s T', $val);
         }
         return false;
     }

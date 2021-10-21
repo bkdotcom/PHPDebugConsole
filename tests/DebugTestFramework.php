@@ -18,9 +18,10 @@ class DebugTestFramework extends DOMTestCase
 {
     use AssertionTrait;
 
+    const DATETIME_FORMAT = 'Y-m-d H:i:s T';
+
     public static $allowError = false;
     public static $obLevels = 0;
-    // public static $haveWampPlugin = false;
 
     protected function &getSharedVar($key)
     {

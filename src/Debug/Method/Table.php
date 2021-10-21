@@ -13,7 +13,6 @@
 namespace bdk\Debug\Method;
 
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 
 /**
@@ -21,8 +20,6 @@ use bdk\Debug\LogEntry;
  */
 class Table
 {
-
-    const SCALAR = "\x00scalar\x00";
 
     private $debug;
     private $logEntry;
@@ -65,32 +62,60 @@ class Table
     /**
      * Go through all the "rows" of array to determine what the keys are and their order
      *
-     * @param array $rows array (or traversable abstraction)
+     * @param TableRow[] $rows array of TableRow instance
      *
      * @return array
      */
-    private function colKeys($rows)
+    private static function colKeys($rows)
     {
-        if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
-            if (!$rows['traverseValues']) {
-                return array(self::SCALAR);
-            }
-            $rows = $rows['traverseValues'];
-        }
         if (!\is_array($rows)) {
             return array();
         }
         $colKeys = array();
-        $curRowKeys = array();
         foreach ($rows as $row) {
-            $curRowKeys = $this->keys($row);
+            if (!$row instanceof TableRow) {
+                $row = new TableRow($row);
+            }
+            $curRowKeys = $row->keys();
             if (empty($colKeys)) {
                 $colKeys = $curRowKeys;
             } elseif ($curRowKeys !== $colKeys) {
-                $colKeys = self::mergeKeys($curRowKeys, $colKeys);
+                $colKeys = self::colKeysMerge($curRowKeys, $colKeys);
             }
         }
         return $colKeys;
+    }
+
+    /**
+     * Merge current row's keys with merged keys
+     *
+     * @param array $curRowKeys current row's keys
+     * @param array $colKeys    all col keys
+     *
+     * @return array
+     */
+    private static function colKeysMerge($curRowKeys, $colKeys)
+    {
+        $newKeys = array();
+        $count = \count($curRowKeys);
+        for ($i = 0; $i < $count; $i++) {
+            $curKey = $curRowKeys[$i];
+            if ($colKeys && $curKey === $colKeys[0]) {
+                \array_push($newKeys, $curKey);
+                \array_shift($colKeys);
+                continue;
+            }
+            $position = \array_search($curKey, $colKeys, true);
+            if ($position !== false) {
+                $segment = \array_splice($colKeys, 0, (int) $position + 1);
+                \array_splice($newKeys, \count($newKeys), 0, $segment);
+            } elseif (!\in_array($curKey, $newKeys, true)) {
+                \array_push($newKeys, $curKey);
+            }
+        }
+        // put on remaining colKeys
+        \array_splice($newKeys, \count($newKeys), 0, $colKeys);
+        return \array_unique($newKeys);
     }
 
     /**
@@ -143,7 +168,7 @@ class Table
             'caption' => null,
             'columns' => array(),
             'columnNames' => array(
-                self::SCALAR => 'value',
+                TableRow::SCALAR => 'value',
             ),
             'inclContext' => false, // for trace tables
             'sortable' => true,
@@ -187,7 +212,7 @@ class Table
     {
         $columns = array();
         $columnNames = $this->meta['columnNames'];
-        $keys = $this->meta['columns'] ?: $this->colKeys($this->logEntry['args'][0]);
+        $keys = $this->meta['columns'] ?: self::colKeys($this->logEntry['args'][0]);
         foreach ($keys as $key) {
             $colInfo = array(
                 'key' => isset($columnNames[$key])
@@ -200,192 +225,6 @@ class Table
             $columns[$key] = $colInfo;
         }
         $this->meta['tableInfo']['columns'] = $columns;
-    }
-
-    /**
-     * Get the keys contained in value
-     *
-     * @param mixed $val scalar value or abstraction
-     *
-     * @return string[]
-     */
-    private function keys($val)
-    {
-        if ($this->debug->abstracter->isAbstraction($val)) {
-            // abstraction
-            if ($val['type'] === Abstracter::TYPE_OBJECT) {
-                if ($val['traverseValues']) {
-                    // probably Traversable
-                    return \array_keys($val['traverseValues']);
-                }
-                if ($val['stringified']) {
-                    return array(self::SCALAR);
-                }
-                if (isset($val['methods']['__toString']['returnValue'])) {
-                    return array(self::SCALAR);
-                }
-                $val = \array_filter($val['properties'], function ($prop) {
-                    return $prop['visibility'] === 'public';
-                });
-                $keys = \array_keys($val);
-                /*
-                    Reflection doesn't return properties in any given order
-                    so, we'll sort for consistency
-                */
-                \sort($keys, SORT_NATURAL | SORT_FLAG_CASE);
-                return $keys;
-            }
-            // ie callable or resource
-            return array(self::SCALAR);
-        }
-        return \is_array($val)
-            ? \array_keys($val)
-            : array(self::SCALAR);
-    }
-
-    /**
-     * Get values for passed keys
-     *
-     * Used by table method
-     *
-     * @param array $row     should be array or abstraction
-     * @param array $keys    column keys
-     * @param array $rowInfo Will be populated with object info
-     *                           if row is an object, $rowInfo['row'] will be populated with
-     *                               'class' & 'summary'
-     *                           if a value is an object being displayed as a string,
-     *                               $rowInfo['classes'][key] will be populated with className
-     *
-     * @return array
-     */
-    private static function keyValues($row, $keys, &$rowInfo)
-    {
-        $rowInfo = array(
-            'class' => null,
-            'classes' => array(), // key => classname (or false if not stringified class)
-            'isScalar' => false,
-            'summary' => null,
-        );
-        if ($row instanceof Abstraction) {
-            $row = self::keyValuesAbstraction($row, $rowInfo);
-        } elseif (\is_array($row) === false) {
-            $row = array(self::SCALAR => $row);
-        }
-        $values = array();
-        foreach ($keys as $key) {
-            $rowInfo['classes'][$key] = false;
-            $value = \array_key_exists($key, $row)
-                ? $row[$key]
-                : Abstracter::UNDEFINED;
-            if ($value instanceof Abstraction) {
-                // just return the stringified / __toString value in a table
-                if (isset($value['stringified'])) {
-                    $rowInfo['classes'][$key] = $value['className'];
-                    $value = $value['stringified'];
-                } elseif (isset($value['__toString']['returnValue'])) {
-                    $rowInfo['classes'][$key] = $value['className'];
-                    $value = $value['__toString']['returnValue'];
-                }
-            }
-            $values[$key] = $value;
-        }
-        if (\array_keys($values) === array(self::SCALAR)) {
-            $rowInfo['isScalar'] = true;
-        }
-        return $values;
-    }
-
-    /**
-     * Get "object values" from abstraction
-     *
-     * @param Abstraction $abs     Abstraction instance
-     * @param array       $rowInfo row info
-     *
-     * @return array
-     */
-    private static function keyValuesAbstraction(Abstraction $abs, &$rowInfo)
-    {
-        if ($abs['type'] !== Abstracter::TYPE_OBJECT) {
-            // resource & callable
-            $rowInfo['isScalar'] = true;
-            return array(self::SCALAR => $abs);
-        }
-        if ($abs['className'] === 'Closure') {
-            $rowInfo['isScalar'] = true;
-            return array(self::SCALAR => $abs);
-        }
-        $rowInfo['class'] = $abs['className'];
-        $rowInfo['summary'] = $abs['phpDoc']['summary'];
-        $row = self::objectValues($abs);
-        if (\is_array($row) === false) {
-            // ie stringified value
-            $rowInfo['class'] = null;
-            $rowInfo['isScalar'] = true;
-            $row = array(self::SCALAR => $row);
-        }
-        return $row;
-    }
-
-    /**
-     * Merge current row's keys with merged keys
-     *
-     * @param array $curRowKeys current row's keys
-     * @param array $colKeys    all col keys
-     *
-     * @return array
-     */
-    private static function mergeKeys($curRowKeys, $colKeys)
-    {
-        $newKeys = array();
-        $count = \count($curRowKeys);
-        for ($i = 0; $i < $count; $i++) {
-            $curKey = $curRowKeys[$i];
-            if ($colKeys && $curKey === $colKeys[0]) {
-                \array_push($newKeys, $curKey);
-                \array_shift($colKeys);
-                continue;
-            }
-            $position = \array_search($curKey, $colKeys, true);
-            if ($position !== false) {
-                $segment = \array_splice($colKeys, 0, (int) $position + 1);
-                \array_splice($newKeys, \count($newKeys), 0, $segment);
-            } elseif (!\in_array($curKey, $newKeys, true)) {
-                \array_push($newKeys, $curKey);
-            }
-        }
-        // put on remaining colKeys
-        \array_splice($newKeys, \count($newKeys), 0, $colKeys);
-        return \array_unique($newKeys);
-    }
-
-    /**
-     * Get object abstraction's values
-     * if, object has a stringified or __toString value, it will be returned
-     *
-     * @param Abstraction $abs object abstraction
-     *
-     * @return array|string
-     */
-    private static function objectValues(Abstraction $abs)
-    {
-        if ($abs['traverseValues']) {
-            // probably Traversable
-            return $abs['traverseValues'];
-        }
-        if ($abs['stringified']) {
-            return $abs['stringified'];
-        }
-        if (isset($abs['methods']['__toString']['returnValue'])) {
-            return $abs['methods']['__toString']['returnValue'];
-        }
-        return \array_map(
-            function ($info) {
-                return $info['value'];
-            },
-            \array_filter($abs['properties'], function ($prop) {
-                return $prop['visibility'] === 'public';
-            })
-        );
     }
 
     /**
@@ -402,6 +241,28 @@ class Table
         if (!isset($this->logEntry['args'][0])) {
             return;
         }
+        $rows = $this->processRowsGet();
+        if (!\is_array($rows)) {
+            return;
+        }
+        foreach ($rows as $rowKey => $row) {
+            $rows[$rowKey] = new TableRow($row);
+        }
+        $this->logEntry['args'] = array($rows);
+        $this->initTableInfoColumns();
+        foreach ($rows as $rowKey => $row) {
+            $rows[$rowKey] = $this->processRow($row, $rowKey);
+        }
+        $this->logEntry['args'] = array($rows);
+    }
+
+    /**
+     * Get table rows
+     *
+     * @return array
+     */
+    private function processRowsGet()
+    {
         $rows = $this->debug->abstracter->crate($this->logEntry['args'][0], 'table');
         if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
             $this->meta['tableInfo']['class'] = $rows['className'];
@@ -417,31 +278,35 @@ class Table
                     })
                 );
         }
-        if (!\is_array($rows)) {
-            return;
-        }
-        $this->logEntry['args'] = array($rows);
-        $this->initTableInfoColumns();
+        return $rows;
+    }
+
+    /**
+     * Process table row
+     *
+     * @param TableRow   $row    TableRow instance
+     * @param string|int $rowKey index of row
+     *
+     * @return array key => value
+     */
+    private function processRow(TableRow $row, $rowKey)
+    {
         $columns = $this->meta['tableInfo']['columns'];
         $keys = \array_keys($columns);
-        $inclContext = $this->meta['inclContext'];
-        foreach ($rows as $rowKey => $row) {
-            // row may be "scalar", array, Traversable, or object
-            $rowInfo = array();
-            $valsTemp = $this->keyValues($row, $keys, $rowInfo);
-            if ($inclContext) {
-                $rowInfo['args'] = $row['args'];
-                $rowInfo['context'] = $row['context'];
-            }
-            $this->updateTableInfo($rowKey, $valsTemp, $rowInfo);
-            $values = array();
-            foreach ($valsTemp as $k => $v) {
-                $kNew = $columns[$k]['key'];
-                $values[$kNew] = $v;
-            }
-            $rows[$rowKey] = $values;
+        $rowInfo = array();
+        $valsTemp = $row->keyValues($keys);
+        $rowInfo = $row->getInfo();
+        if ($this->meta['inclContext']) {
+            $rowInfo['args'] = $row->getValue('args');
+            $rowInfo['context'] = $row->getValue('context');
         }
-        $this->logEntry['args'] = array($rows);
+        $this->updateTableInfo($rowKey, $valsTemp, $rowInfo);
+        $values = array();
+        foreach ($valsTemp as $k => $v) {
+            $kNew = $columns[$k]['key'];
+            $values[$kNew] = $v;
+        }
+        return $values;
     }
 
     /**

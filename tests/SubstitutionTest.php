@@ -92,7 +92,7 @@ class SubstitutionTest extends DebugTestFramework
         $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==');
         $binaryStr = \trim(\chunk_split(\bin2hex($binary), 2, ' '));
         $time = \time();
-        $timeStr = \date('Y-m-d H:i:s', $time);
+        $timeStr = \date(self::DATETIME_FORMAT, $time);
         $this->doTestSubstitution(
             'log',
             array(

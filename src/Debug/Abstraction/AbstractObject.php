@@ -325,6 +325,7 @@ class AbstractObject extends Component
                 $constants[$name] = array(
                     'attributes' => array(),
                     'desc' => null,
+                    'isFinal' => false,
                     'value' => $value,
                     'visibility' => 'public',
                 );

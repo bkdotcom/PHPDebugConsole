@@ -14,7 +14,7 @@ class BasicTest extends DebugTestFramework
     public function providerTestMethod()
     {
         $ts = \time();
-        $datetime = \date('Y-m-d H:i:s', $ts);
+        $datetime = \date(self::DATETIME_FORMAT, $ts);
         $test = new \bdk\DebugTests\Fixture\Test();
         return array(
             // #0 : boolean

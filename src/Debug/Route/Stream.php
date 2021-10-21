@@ -182,7 +182,7 @@ class Stream extends Base
         }
         $meta = \stream_get_meta_data($this->fileHandle);
         if ($meta['wrapper_type'] === 'plainfile') {
-            \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s') . ' *****' . "\n");
+            \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s T') . ' *****' . "\n");
             if (!$fileExists) {
                 // we just created file
                 \chmod($file, 0660);

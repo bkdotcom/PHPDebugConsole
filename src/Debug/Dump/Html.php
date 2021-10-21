@@ -65,16 +65,24 @@ class Html extends Base
     {
         $date = parent::checkTimestamp($val);
         if ($date) {
-            $template = $this->debug->html->buildTag(
-                'span',
-                array(
+            $this->setDumpOpt('postDump', function ($dumped, $opts) use ($val, $date) {
+                $attribs = array(
                     'class' => array('timestamp', 'value-container'),
-                    'data-type' => $this->getDumpOpt('type'),
+                    'data-type' => $opts['type'],
                     'title' => $date,
-                ),
-                '{val}'
-            );
-            $this->setDumpOpt('template', $template);
+                );
+                if ($opts['tagName'] === 'td') {
+                    $wrapped = $this->debug->html->buildTag('span', $attribs, $val);
+                    return $this->debug->html->buildTag(
+                        'td',
+                        array(
+                            'class' => 't_' . $opts['type']
+                        ),
+                        $wrapped
+                    );
+                }
+                return $this->debug->html->buildTag('span', $attribs, $dumped);
+            });
             return $date;
         }
         return false;
@@ -103,7 +111,7 @@ class Html extends Base
         $opts = \array_merge(array(
             'tagName' => '__default__',
             'attribs' => $attribs,
-            'template' => null,
+            'postDump' => null,
         ), $opts);
         $val = parent::dump($val, $opts);
         $tagName = $this->dumpOptions['tagName'];
@@ -119,10 +127,8 @@ class Html extends Base
             $this->dumpOptions['attribs']['class'][] = 't_' . $this->dumpOptions['type'];
             $val = $this->debug->html->buildTag($tagName, $this->dumpOptions['attribs'], $val);
         }
-        if ($this->dumpOptions['template']) {
-            $val = $this->debug->utility->strInterpolate($this->dumpOptions['template'], array(
-                'val' => $val,
-            ));
+        if ($this->dumpOptions['postDump']) {
+            $val = \call_user_func($this->dumpOptions['postDump'], $val, $this->dumpOptions);
         }
         return $val;
     }

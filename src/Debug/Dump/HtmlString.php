@@ -147,15 +147,22 @@ class HtmlString
             $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - $strlenDumped) . ' more bytes (not logged)</span>';
         }
         if ($abs['prettifiedTag']) {
-            $template = $this->debug->html->buildTag(
-                'span',
-                array(
-                    'class' => 'value-container',
-                    'data-type' => $abs['type'],
-                ),
-                '<span class="prettified">(prettified)</span> {val}'
-            );
-            $this->html->setDumpOpt('template', $template);
+            $this->html->setDumpOpt('postDump', function ($dumped, $opts) use ($abs) {
+                $tagName = 'span';
+                if ($opts['tagName'] === 'td') {
+                    $tagName = 'td';
+                    $parsed = $this->debug->html->parseTag($dumped);
+                    $dumped = $this->debug->html->buildTag('span', $parsed['attribs'], $parsed['innerhtml']);
+                }
+                return $this->debug->html->buildTag(
+                    $tagName,
+                    array(
+                        'class' => 'value-container',
+                        'data-type' => $abs['type'],
+                    ),
+                    '<span class="prettified">(prettified)</span> ' . $dumped
+                );
+            });
         }
         return $val;
     }
@@ -170,29 +177,32 @@ class HtmlString
      */
     private function dumpBinary($val, Abstraction $abs)
     {
-        $lis = array();
-        if ($abs['contentType']) {
-            $lis[] = '<li>mime type = <span class="t_string">' . $abs['contentType'] . '</span></li>';
-        }
-        $lis[] = '<li>size = <span class="t_int">' . $abs['strlen'] . '</span></li>';
-        $lis[] = $val
-            ? '<li class="t_string">{val}</li>'
-            : '<li>Binary data not collected</li>';
-        $template = '<span class="t_type">binary string</span>' . "\n"
-            . $this->debug->html->buildTag(
-                'ul',
-                array(
-                    'class' => array('list-unstyled', 'value-container'),
-                    'data-type' => $abs['type'],
-                ),
-                "\n" . \implode("\n", $lis) . "\n"
-            );
-        if ($this->html->getDumpOpt('tagName') === 'td') {
-            // wrap with td without adding class="binary t_string"
-            $template = '<td>' . $template . '</td>';
-        }
+        $tagName = $this->html->getDumpOpt('tagName');
         $this->html->setDumpOpt('tagName', null);
-        $this->html->setDumpOpt('template', $template);
+        $this->html->setDumpOpt('postDump', function ($dumped) use ($abs, $tagName) {
+            $lis = array();
+            if ($abs['contentType']) {
+                $lis[] = '<li>mime type = <span class="t_string">' . $abs['contentType'] . '</span></li>';
+            }
+            $lis[] = '<li>size = <span class="t_int">' . $abs['strlen'] . '</span></li>';
+            $lis[] = $dumped
+                ? '<li class="t_string">' . $dumped . '</li>'
+                : '<li>Binary data not collected</li>';
+            $wrapped =  '<span class="t_type">binary string</span>' . "\n"
+                . $this->debug->html->buildTag(
+                    'ul',
+                    array(
+                        'class' => array('list-unstyled', 'value-container'),
+                        'data-type' => $abs['type'],
+                    ),
+                    "\n" . \implode("\n", $lis) . "\n"
+                );
+            if ($tagName === 'td') {
+                // wrap with td without adding class="binary t_string"
+                $wrapped = '<td>' . $wrapped . '</td>';
+            }
+            return $wrapped;
+        });
         $strLenDiff = $abs['strlen'] - \strlen($abs['value']);
         if ($val && $strLenDiff) {
             $val .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';

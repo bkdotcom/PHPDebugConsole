@@ -44,7 +44,6 @@ class Internal implements SubscriberInterface
     );
 
     private $isConfigured = false;
-    private static $profilingEnabled = false;
     private $serverParams = array();
 
     /**

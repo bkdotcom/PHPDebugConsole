@@ -29,8 +29,17 @@ class ComposerScripts
             @see https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         */
         $haveSlevomat = false;
+        $haveCognitiveC = false;
         if ($event->isDevMode()) {
             $isCi = \filter_var(\getenv('CI'), FILTER_VALIDATE_BOOLEAN);
+            if (\version_compare(PHP_VERSION, '7.2', '>=') && !$isCi) {
+                \exec('composer require rarst/phpcs-cognitive-complexity --dev --no-scripts');
+                $haveCognitiveC = true;
+            }
+            if (\version_compare(PHP_VERSION, '7.1', '>=') && !$isCi) {
+                \exec('composer require slevomat/coding-standard ^7.0.0 --dev --no-scripts');
+                $haveSlevomat = true;
+            }
             if (\version_compare(PHP_VERSION, '7.0', '>=')) {
                 \exec('composer require psr/http-server-middleware --dev --no-scripts');
                 \exec('composer require mindplay/middleman --dev --no-scripts');
@@ -38,35 +47,43 @@ class ComposerScripts
             if (\version_compare(PHP_VERSION, '5.5', '>=')) {
                 \exec('composer require guzzlehttp/guzzle ^6.5 --dev --no-scripts');
             }
-            if (\version_compare(PHP_VERSION, '7.1', '>=') && !$isCi) {
-                \exec('composer require slevomat/coding-standard ^6.3.0 --dev --no-scripts');
-                $haveSlevomat = true;
-            }
         }
-        self::updatePhpcsXml($haveSlevomat);
+        self::updatePhpcsXml($haveSlevomat, $haveCognitiveC);
     }
 
     /**
      * update phpcs.xml.dist
      * convert relative dirs to absolute
      *
-     * @param bool $inclSlevomat whether or not to include Slevomat sniffs
+     * @param bool $inclSlevomat  whether or not to include Slevomat sniffs
+     * @param bool $inclCognitive whether or not to include cognitiveComplexity sniffs
      *
      * @return void
      */
-    public static function updatePhpcsXml($inclSlevomat = true)
+    public static function updatePhpcsXml($inclSlevomat = true, $inclCognitive = true)
     {
         /*
             Comment/uncomment slevomat rule
         */
         $phpcsPath = __DIR__ . '/../../phpcs.xml.dist';
         $xml = \file_get_contents($phpcsPath);
-        $rule = '<rule ref="./phpcs.slevomat.xml" />';
-        $regex = '#<!--\s*(' . \preg_quote($rule) . ')\s*-->#s';
+
+        $ruleSlevomat = '<rule ref="./phpcs.slevomat.xml" />';
+        $regex = '#<!--\s*(' . \preg_quote($ruleSlevomat) . ')\s*-->#s';
         $xml = \preg_replace($regex, '$1', $xml);
         if (!$inclSlevomat) {
-            \str_replace($rule, '<!--' . $rule . '-->', $xml);
+            \str_replace($ruleSlevomat, '<!--' . $ruleSlevomat . '-->', $xml);
         }
+
+        $regexFind = '#(<rule ref="[^"]+CognitiveComplexity/ruleset.xml".*?</rule>)#is';
+        \preg_match($regexFind, $xml, $matches);
+        $ruleCc = $matches[1];
+        $regex = '#<!--\s*(' . \preg_quote($ruleCc) . ')\s*-->#s';
+        $xml = \preg_replace($regex, '$1', $xml);
+        if (!$inclCognitive) {
+            \str_replace($ruleCc, '<!--' . $ruleCc . '-->', $xml);
+        }
+
         \file_put_contents($phpcsPath, $xml);
 
         if ($inclSlevomat) {

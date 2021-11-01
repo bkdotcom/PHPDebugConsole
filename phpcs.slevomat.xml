@@ -4,7 +4,7 @@
     <!--
         composer require slevomat/coding-standard - -dev
     -->
-    <description>Seleccted Slevomat Coding Standard Sniffs (PHP 7.2+)</description>
+    <description>Selected Slevomat Coding Standard Sniffs (PHP 7.2+)</description>
 
     <!--
     ComposerScripts::postUpdate will update this
@@ -43,6 +43,11 @@
     <rule ref="SlevomatCodingStandard.ControlStructures.UselessTernaryOperator" />
     <rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure" />
     <rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue" />
+    <rule ref="SlevomatCodingStandard.Functions.FunctionLength">
+        <properties>
+            <property name="maxLinesLength" value="25" />
+        </properties>
+    </rule>
     <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
     <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions" />
     <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses" />

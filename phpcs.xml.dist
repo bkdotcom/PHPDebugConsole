@@ -7,6 +7,10 @@
     <rule ref="./phpcs.slevomat.xml" />
     -->
 
+    <!--
+    <rule ref="./vendor/rarst/phpcs-cognitive-complexity/src/CognitiveComplexity/ruleset.xml" />
+    -->
+
     <rule ref="./sniffs/">
         <exclude name="bdk.Commenting.FunctionComment.EmptyThrows" />
         <exclude name="bdk.Commenting.FunctionComment.ParamCommentFullStop" />

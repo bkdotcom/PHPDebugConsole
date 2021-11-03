@@ -15,6 +15,8 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObjectConstants;
+use bdk\Debug\Abstraction\AbstractObjectHelper;
 use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Component;
@@ -48,11 +50,13 @@ class AbstractObject extends Component
     const OUTPUT_METHODS = 8;
     const OUTPUT_PHPDOC = 65536;
 
+    public $helper;
+
 	protected $abstracter;
     protected $debug;
+    protected $constants;
     protected $methods;
     protected $properties;
-	protected $phpDoc;
 
     /**
      * Constructor
@@ -63,10 +67,11 @@ class AbstractObject extends Component
     public function __construct(Abstracter $abstracter, PhpDoc $phpDoc)
     {
         $this->abstracter = $abstracter;
-        $this->phpDoc = $phpDoc;
         $this->debug = $abstracter->debug;
-        $this->methods = new AbstractObjectMethods($abstracter, $phpDoc);
-        $this->properties = new AbstractObjectProperties($abstracter, $phpDoc);
+        $this->helper = new AbstractObjectHelper($phpDoc);
+        $this->constants = new AbstractObjectConstants($abstracter, $this->helper);
+        $this->methods = new AbstractObjectMethods($abstracter, $this->helper);
+        $this->properties = new AbstractObjectProperties($abstracter, $this->helper);
         if ($abstracter->debug->parentInstance) {
             // we only need to subscribe to these events from root channel
             return;
@@ -88,13 +93,12 @@ class AbstractObject extends Component
     public function getAbstraction($obj, $method = null, $hist = array())
     {
         $reflector = $this->getReflector($obj);
-        $className = $reflector->getName();
         $interfaceNames = $reflector->getInterfaceNames();
         \sort($interfaceNames);
         $abs = new Abstraction(Abstracter::TYPE_OBJECT, array(
             'attributes' => array(),
             'cfgFlags' => $this->getCfgFlags(),
-            'className' => $className,
+            'className' => $reflector->getName(),
             'constants' => array(),
             'debugMethod' => $method,
             'definition' => array(
@@ -146,6 +150,7 @@ class AbstractObject extends Component
             return $this->absClean($abs);
         }
         $this->addMisc($abs);
+        $this->constants->add($abs);
         $this->methods->add($abs);
         $this->properties->add($abs);
         /*
@@ -190,10 +195,8 @@ class AbstractObject extends Component
     public function onEnd(Abstraction $abs)
     {
         $obj = $abs->getSubject();
-        if ($obj instanceof \Exception) {
-            if (isset($abs['properties']['xdebug_message'])) {
-                $abs['properties']['xdebug_message']['debugInfoExcluded'] = true;
-            }
+        if ($obj instanceof \Exception && isset($abs['properties']['xdebug_message'])) {
+            $abs['properties']['xdebug_message']['debugInfoExcluded'] = true;
         } elseif ($obj instanceof \mysqli && !$abs['collectPropertyValues']) {
             $propsAlwaysAvail = array(
                 'client_info','client_version','connect_errno','connect_error','errno','error','stat'
@@ -234,105 +237,13 @@ class AbstractObject extends Component
             $values['phpDoc']['summary'] = null;
         }
         if (!$abs['isRecursion'] && !$abs['isExcluded']) {
-            $this->sort($values['constants']);
-            $this->sort($values['properties']);
-            $this->sort($values['methods']);
+            $this->helper->sort($values['constants'], $this->cfg['objectSort']);
+            $this->helper->sort($values['properties'], $this->cfg['objectSort']);
+            $this->helper->sort($values['methods'], $this->cfg['objectSort']);
         }
         return $abs
             ->setSubject(null)
             ->setValues($values);
-    }
-
-    /**
-     * Add object's constants to abstraction
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function addConstants(Abstraction $abs)
-    {
-        if (!($abs['cfgFlags'] & self::COLLECT_CONSTANTS)) {
-            return;
-        }
-        $inclAttributes = $abs['cfgFlags'] & self::COLLECT_ATTRIBUTES_CONST === self::COLLECT_ATTRIBUTES_CONST;
-        $abs['constants'] = PHP_VERSION_ID >= 70100
-            ? $this->getConstantsReflection($abs, $inclAttributes)
-            : $this->getConstants($abs['reflector']);
-    }
-
-    /**
-     * Get constant arrays via `getReflectionConstants` (php 7.1)
-     * This gets us visibility and access to phpDoc
-     *
-     * @param Abstraction $abs            Abstraction instance
-     * @param bool        $inclAttributes Whether to include attributes
-     *
-     * @return array name => array
-     */
-    private function getConstantsReflection(Abstraction $abs, $inclAttributes = true)
-    {
-        $constants = array();
-        $reflector = $abs['reflector'];
-        $collectPhpDoc = $abs['cfgFlags'] & self::COLLECT_PHPDOC;
-        while ($reflector) {
-            foreach ($reflector->getReflectionConstants() as $const) {
-                $name = $const->getName();
-                if (isset($constants[$name])) {
-                    continue;
-                }
-                $phpDoc = $this->properties->getVarPhpDoc($const);
-                $vis = 'public';
-                if ($const->isPrivate()) {
-                    $vis = 'private';
-                } elseif ($const->isProtected()) {
-                    $vis = 'protected';
-                }
-                $constants[$name] = array(
-                    'attributes' => $inclAttributes
-                        ? $this->properties->getAttributes($const)
-                        : array(),
-                    'desc' => $collectPhpDoc
-                        ? $phpDoc['desc']
-                        : null,
-                    'isFinal' => PHP_VERSION_ID >= 80100
-                        ? $const->isFinal()
-                        : false,
-                    'value' => $const->getValue(),
-                    'visibility' => $vis,
-                );
-            }
-            $reflector = $reflector->getParentClass();
-        }
-        return $constants;
-    }
-
-    /**
-     * Get constant arrays
-     *
-     * @param ReflectionClass $reflector ReflectionClass or ReflectionObject
-     *
-     * @return array name => array
-     */
-    private function getConstants(ReflectionClass $reflector)
-    {
-        $constants = array();
-        while ($reflector) {
-            foreach ($reflector->getConstants() as $name => $value) {
-                if (isset($constants[$name])) {
-                    continue;
-                }
-                $constants[$name] = array(
-                    'attributes' => array(),
-                    'desc' => null,
-                    'isFinal' => false,
-                    'value' => $value,
-                    'visibility' => 'public',
-                );
-            }
-            $reflector = $reflector->getParentClass();
-        }
-        return $constants;
     }
 
     /**
@@ -347,19 +258,18 @@ class AbstractObject extends Component
     private function addMisc(Abstraction $abs)
     {
         $reflector = $abs['reflector'];
-        $abs['phpDoc'] = $this->phpDoc->getParsed($reflector);
+        $abs['phpDoc'] = $this->helper->getPhpDoc($reflector);
         if ($abs['isTraverseOnly']) {
             \ksort($abs['phpDoc']);
             $this->addTraverseValues($abs);
             return;
         }
         if ($abs['cfgFlags'] & self::COLLECT_ATTRIBUTES_OBJ) {
-            $abs['attributes'] = $this->properties->getAttributes($reflector);
+            $abs['attributes'] = $this->helper->getAttributes($reflector);
         }
-        $this->addConstants($abs);
         while ($reflector = $reflector->getParentClass()) {
             if ($abs['phpDoc'] === array('summary' => null, 'desc' => null)) {
-                $abs['phpDoc'] = $this->phpDoc->getParsed($reflector);
+                $abs['phpDoc'] = $this->helper->getPhpDoc($reflector);
             }
             $abs['extends'][] = $reflector->getName();
         }
@@ -590,51 +500,14 @@ class AbstractObject extends Component
      */
     private function promoteParamDescs(Abstraction $abs)
     {
-        if (isset($abs['methods']['__construct'])) {
-            foreach ($abs['methods']['__construct']['params'] as $info) {
-                if ($info['isPromoted'] && $info['desc']) {
-                    $paramName = \substr($info['name'], 1); // toss the "$"
-                    $abs['properties'][$paramName]['desc'] = $info['desc'];
-                }
-            }
-        }
-    }
-
-    /**
-     * Sorts constant/property/method array by visibility or name
-     *
-     * @param array $array array to sort
-     *
-     * @return void
-     */
-    protected function sort(&$array)
-    {
-        if (!$array) {
+        if (isset($abs['methods']['__construct']) === false) {
             return;
         }
-        $sort = $this->cfg['objectSort'];
-        if ($sort === 'name') {
-            // rather than a simple key sort, use array_multisort so that __construct is always first
-            $sortData = array();
-            foreach (\array_keys($array) as $name) {
-                $sortData[$name] = $name === '__construct'
-                    ? '0'
-                    : $name;
+        foreach ($abs['methods']['__construct']['params'] as $info) {
+            if ($info['isPromoted'] && $info['desc']) {
+                $paramName = \substr($info['name'], 1); // toss the "$"
+                $abs['properties'][$paramName]['desc'] = $info['desc'];
             }
-            \array_multisort($sortData, $array);
-        } elseif ($sort === 'visibility') {
-            $sortVisOrder = array('public', 'protected', 'private', 'magic', 'magic-read', 'magic-write', 'debug');
-            $sortData = array();
-            foreach ($array as $name => $info) {
-                $sortData['name'][$name] = $name === '__construct'
-                    ? '0'     // always place __construct at the top
-                    : $name;
-                $vis = \is_array($info['visibility'])
-                    ? $info['visibility'][0]
-                    : $info['visibility'];
-                $sortData['vis'][$name] = \array_search($vis, $sortVisOrder);
-            }
-            \array_multisort($sortData['vis'], $sortData['name'], $array);
         }
     }
 }

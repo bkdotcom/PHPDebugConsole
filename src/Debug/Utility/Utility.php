@@ -56,20 +56,12 @@ class Utility
         if (\headers_sent($file, $line)) {
             throw new \RuntimeException('Headers already sent: ' . $file . ', line ' . $line);
         }
-        foreach ($headers as $key => $nameVal) {
+        foreach ($headers as $key => $val) {
             if (\is_int($key)) {
-                \header($nameVal[0] . ': ' . $nameVal[1]);
-                continue;
+                $key = $val[0];
+                $val = $val[1];
             }
-            if (\is_string($nameVal)) {
-                \header($key . ': ' . $nameVal);
-                continue;
-            }
-            if (\is_array($nameVal)) {
-                foreach ($nameVal as $val) {
-                    \header($key . ': ' . $val);
-                }
-            }
+            $this->emitHeader($key, $val);
         }
     }
 
@@ -86,28 +78,7 @@ class Utility
     {
         $format = self::formatDurationGetFormat($duration, $format);
         if (\preg_match('/%[YyMmDdaHhIiSsFf]/', $format)) {
-            // php < 7.1 DateInterval doesn't support fraction..   we'll work around that
-            $hours = \floor($duration / 3600);
-            $sec = $duration - $hours * 3600;
-            $min = \floor($sec / 60);
-            $sec = $sec - $min * 60;
-            $sec = \round($sec, 6);
-            if (\preg_match('/%[Ff]/', $format)) {
-                $secWhole = \floor($sec);
-                $secFraction = $secWhole - $sec;
-                $sec = $secWhole;
-                $micros = $secFraction * 1000000;
-                $format = \strtr($format, array(
-                    '%F' => \sprintf('%06d', $micros),  // Microseconds: 6 digits with leading 0
-                    '%f' => $micros,                    // Microseconds: w/o leading zeros
-                ));
-            }
-            $format = \preg_replace('/%[Ss]/', (string) $sec, $format);
-            $dateInterval = new \DateInterval('PT0S');
-            $dateInterval->h = (int) $hours;
-            $dateInterval->i = (int) $min;
-            $dateInterval->s = (int) $sec;
-            return $dateInterval->format($format);
+            return static::formatDurationDateInterval($duration, $format);
         }
         switch ($format) {
             case 'us':
@@ -557,33 +528,56 @@ class Utility
     }
 
     /**
-     * Get substitution values for strInterpolate
+     * Emit a header
      *
-     * @param array        $placeholders keys
-     * @param array|object $context      values
+     * @param string       $name  Header name
+     * @param string|array $value Header value(s)
      *
-     * @return string[] key->value array
+     * @return void
      */
-    private static function strInterpolateValues($placeholders, $context)
+    private function emitHeader($name, $value)
     {
-        $replace = array();
-        $isArrayAccess = \is_array($context) || $context instanceof \ArrayAccess;
-        foreach ($placeholders as $key) {
-            $val = $isArrayAccess
-                ? (isset($context[$key]) ? $context[$key] : null)
-                : (isset($context->{$key}) ? $context->{$key} : null);
-            if (
-                \array_filter(array(
-                    $val === null,
-                    \is_array($val),
-                    \is_object($val) && \method_exists($val, '__toString') === false,
-                ))
-            ) {
-                continue;
+        if (\is_array($value)) {
+            foreach ($value as $val) {
+                \header($name . ': ' . $val);
             }
-            $replace['{' . $key . '}'] = (string) $val;
+            return;
         }
-        return $replace;
+        \header($name . ': ' . $value);
+    }
+
+    /**
+     * Format a duration using a DateInterval format string
+     *
+     * @param float  $duration duration in seconds
+     * @param string $format   DateInterval format string
+     *
+     * @return string
+     */
+    private static function formatDurationDateInterval($duration, $format)
+    {
+        // php < 7.1 DateInterval doesn't support fraction..   we'll work around that
+        $hours = \floor($duration / 3600);
+        $sec = $duration - $hours * 3600;
+        $min = \floor($sec / 60);
+        $sec = $sec - $min * 60;
+        $sec = \round($sec, 6);
+        if (\preg_match('/%[Ff]/', $format)) {
+            $secWhole = \floor($sec);
+            $secFraction = $secWhole - $sec;
+            $sec = $secWhole;
+            $micros = $secFraction * 1000000;
+            $format = \strtr($format, array(
+                '%F' => \sprintf('%06d', $micros),  // Microseconds: 6 digits with leading 0
+                '%f' => $micros,                    // Microseconds: w/o leading zeros
+            ));
+        }
+        $format = \preg_replace('/%[Ss]/', (string) $sec, $format);
+        $dateInterval = new \DateInterval('PT0S');
+        $dateInterval->h = (int) $hours;
+        $dateInterval->i = (int) $min;
+        $dateInterval->s = (int) $sec;
+        return $dateInterval->format($format);
     }
 
     /**
@@ -635,26 +629,10 @@ class Utility
             return true;
         }
         $stats = array(
-            'lower' => array(
-                \preg_match_all('/[a-z]/', $val),
-                40.626,
-                8,
-            ),
-            'upper' => array(
-                \preg_match_all('/[A-Z]/', $val),
-                40.625,
-                8,
-            ),
-            'num' => array(
-                \preg_match_all('/[0-9]/', $val),
-                15.625,
-                8,
-            ),
-            'other' => array(
-                \preg_match_all('/[+\/]/', $val),
-                3.125,
-                5,
-            )
+            'lower' => array(\preg_match_all('/[a-z]/', $val), 40.626, 8),
+            'upper' => array(\preg_match_all('/[A-Z]/', $val), 40.625, 8),
+            'num' => array(\preg_match_all('/[0-9]/', $val), 15.625, 8),
+            'other' => array(\preg_match_all('/[+\/]/', $val), 3.125, 5),
         );
         foreach ($stats as $stat) {
             $per = $stat[0] * 100 / $strlen;
@@ -703,5 +681,35 @@ class Utility
             return (int) $size;
         }
         return false;
+    }
+
+    /**
+     * Get substitution values for strInterpolate
+     *
+     * @param array        $placeholders keys
+     * @param array|object $context      values
+     *
+     * @return string[] key->value array
+     */
+    private static function strInterpolateValues($placeholders, $context)
+    {
+        $replace = array();
+        $isArrayAccess = \is_array($context) || $context instanceof \ArrayAccess;
+        foreach ($placeholders as $key) {
+            $val = $isArrayAccess
+                ? (isset($context[$key]) ? $context[$key] : null)
+                : (isset($context->{$key}) ? $context->{$key} : null);
+            if (
+                \array_filter(array(
+                    $val === null,
+                    \is_array($val),
+                    \is_object($val) && \method_exists($val, '__toString') === false,
+                ))
+            ) {
+                continue;
+            }
+            $replace['{' . $key . '}'] = (string) $val;
+        }
+        return $replace;
     }
 }

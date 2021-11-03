@@ -136,30 +136,8 @@ class Utf8
     public static function strcut($str, $start, $length = null)
     {
         self::setStr($str);
-        // find start
-        if ($start > 0) {
-            $start++; // increment so that we start at original
-            for ($i = 0; $i < 4; $i++) {
-                $start--;
-                self::$curI = $start;
-                if ($start === 0 || self::isOffsetUtf8()) {
-                    break;
-                }
-            }
-        }
-        // find end
-        $end = $start + $length;
-        if ($end < \strlen($str)) {
-            $end++; // increment so that we start at original
-            for ($i = 0; $i < 4; $i++) {
-                $end--;
-                self::$curI = $end;
-                if (self::isOffsetUtf8()) {
-                    break;
-                }
-            }
-        }
-        $length = $end - $start;
+        $start = self::strcutGetStart($start);
+        $length = self::strcutGetLength($start, $length);
         return \substr($str, $start, $length);
     }
 
@@ -301,23 +279,24 @@ class Utf8
      */
     public static function toUtf8($str)
     {
-        if (\extension_loaded('mbstring') && \function_exists('iconv')) {
-            $encoding = \mb_detect_encoding($str, \mb_detect_order(), true);
-            if (!$encoding) {
-                $strConv = false;
-                if (\function_exists('iconv')) {
-                    $strConv = \iconv('cp1252', 'UTF-8', $str);
-                }
-                if ($strConv === false) {
-                    $strConv = \htmlentities($str, ENT_COMPAT);
-                    $strConv = \html_entity_decode($strConv, ENT_COMPAT, 'UTF-8');
-                }
-                $str = $strConv;
-            } elseif (!\in_array($encoding, array('ASCII','UTF-8'))) {
-                $strNew = \iconv($encoding, 'UTF-8', $str);
-                if ($strNew !== false) {
-                    $str = $strNew;
-                }
+        if (\extension_loaded('mbstring') === false || \function_exists('iconv') === false) {
+            return $str;
+        }
+        $encoding = \mb_detect_encoding($str, \mb_detect_order(), true);
+        if (!$encoding) {
+            $strConv = false;
+            if (\function_exists('iconv')) {
+                $strConv = \iconv('cp1252', 'UTF-8', $str);
+            }
+            if ($strConv === false) {
+                $strConv = \htmlentities($str, ENT_COMPAT);
+                $strConv = \html_entity_decode($strConv, ENT_COMPAT, 'UTF-8');
+            }
+            $str = $strConv;
+        } elseif (!\in_array($encoding, array('ASCII','UTF-8'))) {
+            $strNew = \iconv($encoding, 'UTF-8', $str);
+            if ($strNew !== false) {
+                $str = $strNew;
             }
         }
         return $str;
@@ -553,6 +532,54 @@ class Utf8
         );
         self::$str = $str;
         self::$strNew = '';             // for dumping string
+    }
+
+    /**
+     * Find length value...
+     *
+     * @param int $start  Our start value
+     * @param int $length User supplied length
+     *
+     * @return int
+     */
+    private static function strcutGetLength($start, $length)
+    {
+        $end = $start + $length;
+        if ($end >= \strlen(self::$str)) {
+            return \strlen(self::$str) - $start;
+        }
+        $end++; // increment so that we start at original
+        for ($i = 0; $i < 4; $i++) {
+            $end--;
+            self::$curI = $end;
+            if (self::isOffsetUtf8()) {
+                break;
+            }
+        }
+        return $end - $start;
+    }
+
+    /**
+     * Find start position
+     *
+     * @param int $start User supplied start position
+     *
+     * @return int
+     */
+    private static function strcutGetStart($start)
+    {
+        if ($start <= 0) {
+            return 0;
+        }
+        $start++; // increment so that we start at original
+        for ($i = 0; $i < 4; $i++) {
+            $start--;
+            self::$curI = $start;
+            if ($start === 0 || self::isOffsetUtf8()) {
+                break;
+            }
+        }
+        return $start;
     }
 
     /**

@@ -39,7 +39,9 @@ class Internal implements SubscriberInterface
      * @var array
      */
     private $cfg = array(
-        'redactKeys' => array(),
+        'redactKeys' => array(
+            // key => regex of key
+        ),
         'redactReplace' => null,
     );
 
@@ -77,7 +79,7 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * get error statistics from errorHandler
+     * Get error statistics from errorHandler
      * how many errors were captured in/out of console
      * breakdown per error category
      *
@@ -90,7 +92,9 @@ class Internal implements SubscriberInterface
             'inConsole' => 0,
             'inConsoleCategories' => 0,
             'notInConsole' => 0,
-            'counts' => array(),
+            'counts' => array(
+                // category => array(inConsole, notInConsole)
+            ),
         );
         foreach ($errors as $error) {
             if ($error['isSuppressed']) {
@@ -121,7 +125,10 @@ class Internal implements SubscriberInterface
             'notice',
             'strict',
         );
-        $stats['counts'] = \array_intersect_key(\array_merge(\array_flip($order), $stats['counts']), $stats['counts']);
+        $stats['counts'] = \array_intersect_key(
+            \array_merge(\array_flip($order), $stats['counts']),
+            $stats['counts']
+        );
         return $stats;
     }
 
@@ -505,26 +512,10 @@ class Internal implements SubscriberInterface
             return $this->redactString($val, $key);
         }
         if ($val instanceof Abstraction) {
-            if ($val['type'] === Abstracter::TYPE_OBJECT) {
-                $val['properties'] = $this->redact($val['properties']);
-                $val['stringified'] = $this->redact($val['stringified']);
-                if (isset($val['methods']['__toString']['returnValue'])) {
-                    $val['methods']['__toString']['returnValue'] = $this->redact($val['methods']['__toString']['returnValue']);
-                }
-                return $val;
-            }
-            if ($val['value']) {
-                $val['value'] = $this->redact($val['value']);
-            }
-            if ($val['valueDecoded']) {
-                $val['valueDecoded'] = $this->redact($val['valueDecoded']);
-            }
-            return $val;
+            return $this->redactAbstraction($val);
         }
         if (\is_array($val)) {
-            foreach ($val as $k => $v) {
-                $val[$k] = $this->redact($v, $k);
-            }
+            return $this->redactArray($val);
         }
         return $val;
     }
@@ -602,6 +593,47 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Redact Abstraction
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return Abstraction
+     */
+    private function redactAbstraction(Abstraction $abs)
+    {
+        if ($abs['type'] === Abstracter::TYPE_OBJECT) {
+            $abs['properties'] = $this->redact($abs['properties']);
+            $abs['stringified'] = $this->redact($abs['stringified']);
+            if (isset($abs['methods']['__toString']['returnValue'])) {
+                $abs['methods']['__toString']['returnValue'] = $this->redact($abs['methods']['__toString']['returnValue']);
+            }
+            return $abs;
+        }
+        if ($abs['value']) {
+            $abs['value'] = $this->redact($abs['value']);
+        }
+        if ($abs['valueDecoded']) {
+            $abs['valueDecoded'] = $this->redact($abs['valueDecoded']);
+        }
+        return $abs;
+    }
+
+    /**
+     * Redact array
+     *
+     * @param array $array array to redact
+     *
+     * @return Abstraction
+     */
+    private function redactArray($array)
+    {
+        foreach ($array as $k => $v) {
+            $array[$k] = $this->redact($v, $k);
+        }
+        return $array;
+    }
+
+    /**
      * Redact string or portions within
      *
      * @param string $val string to redact
@@ -611,13 +643,8 @@ class Internal implements SubscriberInterface
      */
     private function redactString($val, $key = null)
     {
-        if (\is_string($key)) {
-            // do exact match against array key or object property
-            foreach (\array_keys($this->cfg['redactKeys']) as $redactKey) {
-                if ($redactKey === $key) {
-                    return \call_user_func($this->cfg['redactReplace'], $val, $key);
-                }
-            }
+        if (\is_string($key) && \array_key_exists($key, $this->cfg['redactKeys'])) {
+            return \call_user_func($this->cfg['redactReplace'], $val, $key);
         }
         foreach ($this->cfg['redactKeys'] as $key => $regex) {
             $val = \preg_replace_callback($regex, function ($matches) use ($key) {

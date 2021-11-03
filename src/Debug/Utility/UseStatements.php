@@ -46,24 +46,24 @@ class UseStatements
     /**
      * Return array of use statements from class.
      *
-     * @param ReflectionClass $reflection ReflectionClass instance
+     * @param ReflectionClass $reflector ReflectionClass instance
      *
      * @return array
      */
-    public static function getUseStatements(ReflectionClass $reflection)
+    public static function getUseStatements(ReflectionClass $reflector)
     {
-        if (!$reflection->isUserDefined()) {
+        if (!$reflector->isUserDefined()) {
             return self::$empty;
         }
-        $name = $reflection->getName();
+        $name = $reflector->getName();
         if (isset(self::$cache[$name])) {
             return self::$cache[$name];
         }
-        $source = self::getPreceedingLines($reflection->getFileName(), $reflection->getStartLine());
+        $source = self::getPreceedingLines($reflector->getFileName(), $reflector->getStartLine());
         $useStatements = \strpos($source, 'use')
             ? self::extractUse($source)
             : array();
-        $namespace = $reflection->getNamespaceName();
+        $namespace = $reflector->getNamespaceName();
         $useStatements = isset($useStatements[$namespace])
             ? $useStatements[$namespace]
             : self::$empty;

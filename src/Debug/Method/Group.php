@@ -181,7 +181,6 @@ class Group implements SubscriberInterface
             $curDepth += (int) $group['collect'];
         }
 
-        $entries = array();
         /*
             curDepth will fluctuate as we go back through log
             minDepth will decrease as we work our way down/up the groups
@@ -189,6 +188,7 @@ class Group implements SubscriberInterface
         $logEntries = $where === 'main'
             ? $this->debug->getData(array('log'))
             : $this->debug->getData(array('logSummary', $where));
+        $entries = array();
         $minDepth = $curDepth;
         for ($i = \count($logEntries) - 1; $i >= 0; $i--) {
             if ($curDepth < 1) {
@@ -197,12 +197,12 @@ class Group implements SubscriberInterface
             $method = $logEntries[$i]['method'];
             if (\in_array($method, array('group', 'groupCollapsed'))) {
                 $curDepth--;
-                if ($curDepth < $minDepth) {
-                    $minDepth--;
-                    $entries[$i] = $logEntries[$i];
-                }
             } elseif ($method === 'groupEnd') {
                 $curDepth++;
+            }
+            if ($curDepth < $minDepth) {
+                $minDepth--;
+                $entries[$i] = $logEntries[$i];
             }
         }
         return $entries;
@@ -486,27 +486,27 @@ class Group implements SubscriberInterface
      */
     private function onOutputCleanupGroup(&$group = array())
     {
-        if (!empty($group['meta']['hideIfEmpty'])) {
-            if ($group['childCount'] === 0) {
-                unset($this->log[$group['i']]);     // remove open entry
-                unset($this->log[$group['iEnd']]);  // remove end entry
-                $group['parent']['childCount']--;
-                $group['parent']['groupCount']--;
-                return true;
-            }
+        if (!empty($group['meta']['hideIfEmpty']) && $group['childCount'] === 0) {
+            unset($this->log[$group['i']]);     // remove open entry
+            unset($this->log[$group['iEnd']]);  // remove end entry
+            $group['parent']['childCount']--;
+            $group['parent']['groupCount']--;
+            return true;
         }
-        if (!empty($group['meta']['ungroup'])) {
-            if ($group['childCount'] === 0) {
-                $this->log[$group['i']]['method'] = 'log';
-                unset($this->log[$group['iEnd']]);  // remove end entry
-                $group['parent']['groupCount']--;
-                return true;
-            } elseif ($group['childCount'] === 1 && $group['groupCount'] === 0) {
-                unset($this->log[$group['i']]);     // remove open entry
-                unset($this->log[$group['iEnd']]);  // remove end entry
-                $group['parent']['groupCount']--;
-                return true;
-            }
+        if (empty($group['meta']['ungroup'])) {
+            return false;
+        }
+        if ($group['childCount'] === 0) {
+            $this->log[$group['i']]['method'] = 'log';
+            unset($this->log[$group['iEnd']]);  // remove end entry
+            $group['parent']['groupCount']--;
+            return true;
+        }
+        if ($group['childCount'] === 1 && $group['groupCount'] === 0) {
+            unset($this->log[$group['i']]);     // remove open entry
+            unset($this->log[$group['iEnd']]);  // remove end entry
+            $group['parent']['groupCount']--;
+            return true;
         }
         return false;
     }
@@ -552,18 +552,23 @@ class Group implements SubscriberInterface
     {
         $groupStack = array();
         for ($i = 0, $count = \count($this->log); $i < $count; $i++) {
-            $method = $this->log[$i]['method'];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[] = $i;
-            } elseif ($method === 'groupEnd') {
-                \array_pop($groupStack);
-            } elseif (\in_array($method, array('error', 'warn'))) {
-                if ($this->log[$i]->getMeta('uncollapse') === false) {
-                    continue;
-                }
-                foreach ($groupStack as $i2) {
-                    $this->log[$i2]['method'] = 'group';
-                }
+            switch ($this->log[$i]['method']) {
+                case 'group':
+                case 'groupCollapsed':
+                    $groupStack[] = $i;
+                    break;
+                case 'groupEnd':
+                    \array_pop($groupStack);
+                    break;
+                case 'error':
+                case 'warn':
+                    if ($this->log[$i]->getMeta('uncollapse') === false) {
+                        break;
+                    }
+                    foreach ($groupStack as $i2) {
+                        $this->log[$i2]['method'] = 'group';
+                    }
+                    break;
             }
         }
     }

@@ -15,6 +15,7 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\AbstractObjectHelper;
 use Exception;
 use ReflectionMethod;
 use ReflectionParameter;
@@ -22,8 +23,11 @@ use ReflectionParameter;
 /**
  * Get object method info
  */
-class AbstractObjectMethods extends AbstractObjectSub
+class AbstractObjectMethods
 {
+
+    protected $abstracter;
+    protected $helper;
 
     private static $baseMethodInfo = array(
         'attributes' => array(),
@@ -56,6 +60,18 @@ class AbstractObjectMethods extends AbstractObjectSub
     );
 
     private static $methodCache = array();
+
+    /**
+     * Constructor
+     *
+     * @param Abstracter           $abstracter abstracter instance
+     * @param AbstractObjectHelper $helper     helper class
+     */
+    public function __construct(Abstracter $abstracter, AbstractObjectHelper $helper)
+    {
+        $this->abstracter = $abstracter;
+        $this->helper = $helper;
+    }
 
     /**
      * Add method info to abstraction
@@ -216,7 +232,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                 // we've got __call and/or __callStatic method:  check if parent classes have @method tags
                 $reflector = $abs['reflector'];
                 while ($reflector = $reflector->getParentClass()) {
-                    $parsed = $this->phpDoc->getParsed($reflector);
+                    $parsed = $this->helper->getPhpDoc($reflector);
                     if (isset($parsed['method'])) {
                         $inheritedFrom = $reflector->getName();
                         $abs['phpDoc']['method'] = $parsed['method'];
@@ -239,7 +255,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                     return $this->buildParamInfo(array(
                         'defaultValue' => $this->phpDocParamValue($phpDocParam, $className),
                         'name' => $phpDocParam['name'],
-                        'type' => $this->resolvePhpDocType($phpDocParam['type']),
+                        'type' => $this->helper->resolvePhpDocType($phpDocParam['type'], $this->abs),
                     ));
                 }, $phpDocMethod['param']),
                 'phpDoc' => array(
@@ -250,7 +266,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                 ),
                 'return' => array(
                     'desc' => null,
-                    'type' => $this->resolvePhpDocType($phpDocMethod['type']),
+                    'type' => $this->helper->resolvePhpDocType($phpDocMethod['type'], $abs),
                 ),
                 'visibility' => 'magic',
             ));
@@ -302,7 +318,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             ), isset($phpDoc['param'][$i]) ? $phpDoc['param'][$i] : array());
             $paramArray[] = $this->buildParamInfo(array(
                 'attributes' => $collectAttributes
-                    ? $this->getAttributes($reflectionParameter)
+                    ? $this->helper->getAttributes($reflectionParameter)
                     : array(),
                 'defaultValue' => $this->getParamDefaultVal($reflectionParameter),
                 'desc' => $phpDocParam['desc'],
@@ -332,7 +348,7 @@ class AbstractObjectMethods extends AbstractObjectSub
                 'desc' => $phpDocParam['desc'],
                 'isOptional' => true,
                 'name' => $name,
-                'type' => $this->resolvePhpDocType($phpDocParam['type']),
+                'type' => $this->helper->resolvePhpDocType($phpDocParam['type'], $this->abs),
             ));
         }
         return $paramArray;
@@ -401,10 +417,10 @@ class AbstractObjectMethods extends AbstractObjectSub
     {
         $matches = array();
         if ($phpDocType !== null) {
-            return $this->resolvePhpDocType($phpDocType);
+            return $this->helper->resolvePhpDocType($phpDocType, $this->abs);
         }
         if (PHP_VERSION_ID >= 70000) {
-            return $this->getTypeString($reflectionParameter->getType());
+            return $this->helper->getTypeString($reflectionParameter->getType());
         }
         if ($reflectionParameter->isArray()) {
             // isArray is deprecated in php 8.0
@@ -434,12 +450,12 @@ class AbstractObjectMethods extends AbstractObjectSub
         );
         if (!empty($phpDoc['return'])) {
             $return = \array_merge($return, $phpDoc['return']);
-            $return['type'] = $this->resolvePhpDocType($return['type']);
+            $return['type'] = $this->helper->resolvePhpDocType($return['type'], $this->abs);
             if (!($this->abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC)) {
                 $return['desc'] = null;
             }
         } elseif (PHP_VERSION_ID >= 70000) {
-            $return['type'] = $this->getTypeString($reflectionMethod->getReturnType());
+            $return['type'] = $this->helper->getTypeString($reflectionMethod->getReturnType());
         }
         return $return;
     }
@@ -459,7 +475,7 @@ class AbstractObjectMethods extends AbstractObjectSub
             ? \get_class($obj)
             : $obj;
         $declaringClassName = $reflectionMethod->getDeclaringClass()->getName();
-        $phpDoc = $this->phpDoc->getParsed($reflectionMethod);
+        $phpDoc = $this->helper->getPhpDoc($reflectionMethod);
         \ksort($phpDoc);
         $vis = 'public';
         if ($reflectionMethod->isPrivate()) {
@@ -469,7 +485,7 @@ class AbstractObjectMethods extends AbstractObjectSub
         }
         $info = $this->buildMethodInfo(array(
             'attributes' => $this->abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_METHOD
-                ? $this->getAttributes($reflectionMethod)
+                ? $this->helper->getAttributes($reflectionMethod)
                 : array(),
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName

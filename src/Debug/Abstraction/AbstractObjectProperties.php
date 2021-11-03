@@ -16,13 +16,15 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionProperty;
-use Reflector;
 
 /**
  * Get object property info
  */
-class AbstractObjectProperties extends AbstractObjectSub
+class AbstractObjectProperties
 {
+
+    protected $abstracter;
+    protected $helper;
 
     private static $basePropInfo = array(
         'attributes' => array(),
@@ -91,6 +93,18 @@ class AbstractObjectProperties extends AbstractObjectSub
     );
 
     /**
+     * Constructor
+     *
+     * @param Abstracter           $abstracter abstracter instance
+     * @param AbstractObjectHelper $helper     helper class
+     */
+    public function __construct(Abstracter $abstracter, AbstractObjectHelper $helper)
+    {
+        $this->abstracter = $abstracter;
+        $this->helper = $helper;
+    }
+
+    /**
      * Add property info/values to abstraction
      *
      * @param Abstraction $abs Object abstraction
@@ -126,51 +140,6 @@ class AbstractObjectProperties extends AbstractObjectSub
     public static function buildPropInfo($values = array())
     {
         return \array_merge(static::$basePropInfo, $values);
-    }
-
-    /**
-     * Get type and description from phpDoc comment for Constant or Property
-     *
-     * @param Reflector $reflector ReflectionProperty or ReflectionClassConstant property object
-     *
-     * @return array
-     */
-    public function getVarPhpDoc(Reflector $reflector)
-    {
-        $refObj = new \ReflectionObject($reflector);
-        if ($refObj->isInterface()) {
-            return array(
-                'type' => null,
-                'desc' => null,
-            );
-        }
-        /** @psalm-suppress NoInterfaceProperties */
-        $name = $reflector->name;
-        $phpDoc = $this->phpDoc->getParsed($reflector);
-        $info = array(
-            'type' => null,
-            'desc' => $phpDoc['summary'],
-        );
-        if (!isset($phpDoc['var'])) {
-            return $info;
-        }
-        /*
-            php's getDocComment doesn't play nice with compound statements
-            https://www.phpdoc.org/docs/latest/references/phpdoc/tags/var.html
-        */
-        $var = array();
-        foreach ($phpDoc['var'] as $var) {
-            if ($var['name'] === $name) {
-                break;
-            }
-        }
-        $info['type'] = $var['type'];
-        if (!$info['desc']) {
-            $info['desc'] = $var['desc'];
-        } elseif ($var['desc']) {
-            $info['desc'] = $info['desc'] . ': ' . $var['desc'];
-        }
-        return $info;
     }
 
     /**
@@ -386,7 +355,7 @@ class AbstractObjectProperties extends AbstractObjectSub
             // we've got __get method:  check if parent classes have @property tags
             $reflector = $abs['reflector'];
             while ($reflector = $reflector->getParentClass()) {
-                $parsed = $this->phpDoc->getParsed($reflector);
+                $parsed = $this->helper->getPhpDoc($reflector);
                 $tagIntersect = \array_intersect_key($parsed, $tags);
                 if (!$tagIntersect) {
                     continue;
@@ -438,7 +407,7 @@ class AbstractObjectProperties extends AbstractObjectSub
                         'desc' => $collectPhpDoc
                             ? $phpDocProp['desc']
                             : null,
-                        'type' => $this->resolvePhpDocType($phpDocProp['type']),
+                        'type' => $this->helper->resolvePhpDocType($phpDocProp['type'], $abs),
                         'inheritedFrom' => $inheritedFrom,
                         'visibility' => $exists
                             ? array($properties[ $phpDocProp['name'] ]['visibility'], $vis)
@@ -488,14 +457,14 @@ class AbstractObjectProperties extends AbstractObjectSub
             : $obj;
         $reflectionProperty->setAccessible(true); // only accessible via reflection
         // get type and desc from phpdoc
-        $phpDoc = $this->getVarPhpDoc($reflectionProperty);
+        $phpDoc = $this->helper->getPhpDocVar($reflectionProperty); // phpDocVar
         /*
             getDeclaringClass returns "LAST-declared/overriden"
         */
         $declaringClassName = $reflectionProperty->getDeclaringClass()->getName();
         $propInfo = static::buildPropInfo(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_PROP
-                ? $this->getAttributes($reflectionProperty)
+                ? $this->helper->getAttributes($reflectionProperty)
                 : array(),
             'desc' => $abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC
                 ? $phpDoc['desc']
@@ -527,12 +496,12 @@ class AbstractObjectProperties extends AbstractObjectSub
      */
     private function getPropType($phpDocType, ReflectionProperty $reflectionProperty)
     {
-        $type = $this->resolvePhpDocType($phpDocType);
+        $type = $this->helper->resolvePhpDocType($phpDocType, $this->abs);
         if ($type !== null) {
             return $type;
         }
         return PHP_VERSION_ID >= 70400
-            ? $this->getTypeString($reflectionProperty->getType())
+            ? $this->helper->getTypeString($reflectionProperty->getType())
             : null;
     }
 

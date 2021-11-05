@@ -228,65 +228,6 @@ class Html
     }
 
     /**
-     * Convert array attribute value to string
-     *
-     * Convert class/style array value to string
-     * This function is not meant for data attributs
-     *
-     * @param string $key   attribute name (class|style)
-     * @param array  $value classnames for class, key/value for style
-     *
-     * @return string|null
-     */
-    private static function buildAttribArrayVal($key, $value = array())
-    {
-        if ($key === 'class') {
-            if (!\is_array($value)) {
-                $value = \explode(' ', $value);
-            }
-            $value = \array_filter(\array_unique($value));
-            \sort($value);
-            return \implode(' ', $value);
-        }
-        if ($key === 'style') {
-            $keyValues = array();
-            foreach ($value as $k => $v) {
-                $keyValues[] = $k . ':' . $v . ';';
-            }
-            \sort($keyValues);
-            return \implode('', $keyValues);
-        }
-        return null;
-    }
-
-    /**
-     * Convert boolean attribute value to string
-     *
-     * @param string $key   attribute name
-     * @param bool   $value true|false
-     *
-     * @return string|null
-     */
-    private static function buildAttribBoolVal($key, $value = true)
-    {
-        if (\in_array($key, self::$htmlBoolAttrEnum)) {
-            return $value ? 'true' : 'false';
-        }
-        if (\in_array($key, array('autocapitalize', 'autocomplete'))) {
-            // autocapitalize also takes other values...
-            return $value ? 'on' : 'off';
-        }
-        if ($key === 'translate') {
-            return $value ? 'yes' : 'no';
-        }
-        if ($value) {
-            // even if not a recognized boolean attribute
-            return $key;
-        }
-        return null;
-    }
-
-    /**
      * Converts attribute value to string
      *
      * @param string $key key
@@ -302,21 +243,103 @@ class Html
         }
         $key = \strtolower($key);
         if (\substr($key, 0, 5) === 'data-') {
-            if (!\is_string($val)) {
-                $val = \json_encode($val);
-            }
-            return $val;
+            return \is_string($val)
+                ? $val
+                : \json_encode($val);
         }
         if ($val === null) {
-            return null;
+            return '';
         }
         if (\is_bool($val)) {
-            return self::buildAttribBoolVal($key, $val);
+            return static::buildAttribValBool($key, $val);
         }
-        if (\is_array($val) || $key === 'class') {
-            return self::buildAttribArrayVal($key, $val);
+        if ($key === 'class') {
+            return static::buildAttribValClass($val);
+        }
+        if (\is_array($val)) {
+            return static::buildAttribValArray($key, $val);
         }
         return \trim($val);
+    }
+
+    /**
+     * Convert array attribute value to string
+     *
+     * This function is not meant for data attributs
+     *
+     * @param string $key    attribute name (class|style)
+     * @param array  $values key/value for style
+     *
+     * @return string|null
+     */
+    private static function buildAttribValArray($key, $values = array())
+    {
+        if ($key === 'style') {
+            $keyValues = array();
+            foreach ($values as $key => $val) {
+                $keyValues[] = $key . ':' . $val . ';';
+            }
+            \sort($keyValues);
+            return \implode('', $keyValues);
+        }
+        return null;
+    }
+
+    /**
+     * Convert boolean attribute value to string
+     *
+     * @param string $key   attribute name
+     * @param bool   $value true|false
+     *
+     * @return string|null
+     */
+    private static function buildAttribValBool($key, $value = true)
+    {
+        if (\in_array($key, self::$htmlBoolAttrEnum)) {
+            return $value ? 'true' : 'false';
+        }
+        $values = array(
+            'autocapitalize' => array('on','off'),
+            'autocomplete' => array('on','off'), // autocapitalize also takes other values...
+            'translate' => array('yes','no'),
+        );
+        if (isset($values[$key])) {
+            return $value ? $values[$key][0] : $values[$key[1]];
+        }
+        return $value
+            ? $key // even if not a recognized boolean attribute
+            : null;
+    }
+
+    /**
+     * Build class attribute value
+     * May pass
+     *   string:  'foo bar'
+     *   array:  [
+     *      'foo',
+     *      'bar' => true,
+     *      'notIncl' => false,
+     *      'key' => 'classValue',
+     *   ]
+     *
+     * @param string|array $values Class values.  May be array or space-separated string
+     *
+     * @return string
+     */
+    private static function buildAttribValClass($values)
+    {
+        if (!\is_array($values)) {
+            $values = \explode(' ', $values);
+        }
+        $values = \array_map(function ($key, $val) {
+            return \is_bool($val)
+                ? ($val ?  $key : null)
+                : $val;
+        }, \array_keys($values), $values);
+        // only interested in unique, non-empty values
+        $values = \array_filter(\array_unique($values));
+        \sort($values);
+        return \implode(' ', $values);
     }
 
     /**

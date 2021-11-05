@@ -17,9 +17,9 @@ class ArrayTest extends DebugTestFramework
         $arrayDumpHtml = <<<'EOD'
 <li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <ul class="array-inner list-unstyled">
-	<li><span class="t_key t_int">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
+	<li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
 	<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
-	<li><span class="t_key t_int">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
+	<li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
 </ul><span class="t_punct">)</span></span></li>
 EOD;
 		// indented with 4 spaces

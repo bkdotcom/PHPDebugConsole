@@ -24,7 +24,12 @@ class HtmlTest extends DebugTestFramework
                     'src' => '/path/to/image.png',
                     'width' => 80,
                     'height' => '100',
-                    'class' => array('test','dupe','dupe'),
+                    'class' => array(
+                        'test' => true,
+                        'nope' => false,
+                        'dupe',
+                        'dupe',
+                    ),
                     'title' => 'Pork & Beans',
                     'value' => '',      // value=""
                     'style' => array('position' => 'absolute','display' => 'inline-block'),

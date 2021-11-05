@@ -39,9 +39,9 @@ class UseStatements
      */
     protected static $groupNamespace = null;
     protected static $namespace = null;
-    protected static $record = null;        // 'namespace', 'class', 'function', 'const'
-    protected static $recordPart = null;    // 'class', 'alias'
-    protected static $useStatements = [];
+    protected static $record = null;        // 'class', 'const', 'function', or 'namespace'
+    protected static $recordPart = null;    // 'alias' or 'class'
+    protected static $useStatements = array();
 
     /**
      * Return array of use statements from class.
@@ -95,37 +95,12 @@ class UseStatements
                     self::handleStringToken($token);
                     continue;
                 }
-                switch ($token[0]) {
-                    case T_AS:
-                        self::$recordPart = 'alias';
-                        break;
-                    case T_CONST:
-                        // PHP 5.6+     `use const My\Full\CONSTANT;`
-                        self::$record = 'const';
-                        break;
-                    case T_FUNCTION:
-                        // PHP 5.6+     `use function My\Full\functionName as func;`
-                        self::$record = 'function';
-                        break;
-                }
+                self::setRecordInfo($token);
                 self::record($token);
                 continue;
             }
             // check if we need to start recording
-            // $token may not be an array, but that's ok... $token[0] will just be first char of string
-            switch ($token[0]) {
-                case T_NAMESPACE:
-                    self::$record = 'namespace';
-                    break;
-                case T_USE:
-                    self::$record = 'class';
-                    self::$recordPart = 'class';
-                    self::$currentUse = [
-                        'class' => '',
-                        'alias' => '',
-                    ];
-                    break;
-            }
+            self::setRecordInfo($token);
         }
         return self::sort(self::$useStatements);
     }
@@ -224,6 +199,7 @@ class UseStatements
                     case T_STRING:
                     case T_NS_SEPARATOR:
                         self::$namespace .= $token[1];
+                        break;
                 }
                 break;
             case 'class':
@@ -235,6 +211,42 @@ class UseStatements
                         self::$currentUse[self::$recordPart] .= $token[1];
                         break;
                 }
+                break;
+        }
+    }
+
+    /**
+     * Test if we should start "recording" use-statement info
+     *
+     * @param array|string $token token to test
+     *
+     * @return void
+     */
+    private static function setRecordInfo($token)
+    {
+        // $token may not be an array, but that's ok... $token[0] will just be first char of string
+        switch ($token[0]) {
+            case T_AS:
+                self::$recordPart = 'alias';
+                break;
+            case T_CONST:
+                // PHP 5.6+     `use const My\Full\CONSTANT;`
+                self::$record = 'const';
+                break;
+            case T_FUNCTION:
+                // PHP 5.6+     `use function My\Full\functionName as func;`
+                self::$record = 'function';
+                break;
+            case T_NAMESPACE:
+                self::$record = 'namespace';
+                break;
+            case T_USE:
+                self::$record = 'class';
+                self::$recordPart = 'class';
+                self::$currentUse = [
+                    'class' => '',
+                    'alias' => '',
+                ];
                 break;
         }
     }

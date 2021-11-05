@@ -129,8 +129,8 @@ class HtmlErrorSummary
                 'columns' => array('file','line','function'),
                 'inclContext' => true,
                 'onBuildRow' => array(
-                    array($this->routeHtml->dump, 'tableMarkupFunction'),
-                    array($this->routeHtml->dump, 'tableAddContextRow'),
+                    array($this->routeHtml->dump->helper, 'tableMarkupFunction'),
+                    array($this->routeHtml->dump->helper, 'tableAddContextRow'),
                 ),
             )
         );

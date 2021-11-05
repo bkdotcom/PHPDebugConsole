@@ -1877,9 +1877,10 @@ class Debug
     }
 
     /**
-     * If "core" route, store in lazyObjects property
+     * If "core" route, store in container
      *
-     * @param mixed $val route value
+     * @param mixed $val       route value
+     * @param bool  $addPlugin (true) Should we add as plugin?
      *
      * @return mixed
      *

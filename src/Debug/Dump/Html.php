@@ -30,9 +30,16 @@ class Html extends Base
 {
 
     protected $channels = array();
+
     /** @var array LogEntry meta attribs */
     protected $logEntryAttribs = array();
-    /** @var array attribs added here when dumping val*/
+
+    /** @var HtmlHelper helper class */
+    protected $helper;
+
+    /** @var \bdk\Debug\Utility\Html */
+    protected $html;
+
     /** @var HtmlString string dumper */
     protected $string;
 
@@ -50,12 +57,16 @@ class Html extends Base
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
+        $this->helper = new HtmlHelper($this, $debug);
+        $this->html = $debug->html;
         $this->string = new HtmlString($this);
     }
 
     /**
      * Is value a timestamp?
      * Add classname & title if so
+     *
+     * Extends Base
      *
      * @param mixed $val value to check
      *
@@ -72,8 +83,8 @@ class Html extends Base
                     'title' => $date,
                 );
                 if ($opts['tagName'] === 'td') {
-                    $wrapped = $this->debug->html->buildTag('span', $attribs, $val);
-                    return $this->debug->html->buildTag(
+                    $wrapped = $this->html->buildTag('span', $attribs, $val);
+                    return $this->html->buildTag(
                         'td',
                         array(
                             'class' => 't_' . $opts['type']
@@ -81,7 +92,7 @@ class Html extends Base
                         $wrapped
                     );
                 }
-                return $this->debug->html->buildTag('span', $attribs, $dumped);
+                return $this->html->buildTag('span', $attribs, $dumped);
             });
             return $date;
         }
@@ -114,18 +125,18 @@ class Html extends Base
             'postDump' => null,
         ), $opts);
         $val = parent::dump($val, $opts);
+        $this->dumpOptions['attribs']['class'][] = 't_' . $this->dumpOptions['type'];
+        if ($this->dumpOptions['typeMore'] !== null) {
+            $this->dumpOptions['attribs']['data-type-more'] = \trim($this->dumpOptions['typeMore']);
+        }
         $tagName = $this->dumpOptions['tagName'];
         if ($tagName === '__default__') {
             $tagName = $this->dumpOptions['type'] === Abstracter::TYPE_OBJECT
                 ? 'div'
                 : 'span';
         }
-        if ($this->dumpOptions['typeMore'] !== null) {
-            $this->dumpOptions['attribs']['data-type-more'] = \trim($this->dumpOptions['typeMore']);
-        }
         if ($tagName) {
-            $this->dumpOptions['attribs']['class'][] = 't_' . $this->dumpOptions['type'];
-            $val = $this->debug->html->buildTag($tagName, $this->dumpOptions['attribs'], $val);
+            $val = $this->html->buildTag($tagName, $this->dumpOptions['attribs'], $val);
         }
         if ($this->dumpOptions['postDump']) {
             $val = \call_user_func($this->dumpOptions['postDump'], $val, $this->dumpOptions);
@@ -157,6 +168,8 @@ class Html extends Base
      * if namespaced additionally wrap namespace in span.namespace
      * If callable, also wrap with .t_operator and .t_identifier
      *
+     * Extends Base
+     *
      * @param mixed  $val     classname or classname(::|->)name (method/property/const)
      * @param string $tagName ("span") html tag to use
      * @param array  $attribs (optional) additional html attributes for classname span
@@ -166,82 +179,7 @@ class Html extends Base
      */
     public function markupIdentifier($val, $tagName = 'span', $attribs = array(), $wbr = false)
     {
-        if ($val instanceof Abstraction) {
-            $val = $val['value'];
-        }
-        $parts = $this->parseIdentifier($val);
-        $classname = '';
-        $operator = '<span class="t_operator">' . \htmlspecialchars($parts['operator']) . '</span>';
-        $identifier = '';
-        if ($parts['classname']) {
-            $classname = $parts['classname'];
-            $idx = \strrpos($classname, '\\');
-            if ($idx) {
-                $classname = '<span class="namespace">' . \str_replace('\\', '\\<wbr />', \substr($classname, 0, $idx + 1)) . '</span>'
-                    . \substr($classname, $idx + 1);
-            }
-            $classname = $this->debug->html->buildTag(
-                $tagName,
-                $this->debug->arrayUtil->mergeDeep(array(
-                    'class' => array('classname'),
-                ), (array) $attribs),
-                $classname
-            ) . '<wbr />';
-        }
-        if ($parts['identifier']) {
-            $identifier = '<span class="t_identifier">' . $parts['identifier'] . '</span>';
-        }
-        $parts = \array_filter(array($classname, $identifier), 'strlen');
-        $html = \implode($operator, $parts);
-        if ($wbr === false) {
-            $html = \str_replace('<wbr />', '', $html);
-        }
-        return $html;
-    }
-
-    /**
-     * Markup type-hint / type declaration
-     *
-     * @param string $type    type declaration
-     * @param array  $attribs (optional) additional html attributes
-     *
-     * @return string
-     */
-    public function markupType($type, $attribs = array())
-    {
-        $phpPrimatives = array(
-            // scalar
-            Abstracter::TYPE_BOOL, Abstracter::TYPE_FLOAT, Abstracter::TYPE_INT, Abstracter::TYPE_STRING,
-            // compound
-            Abstracter::TYPE_ARRAY, Abstracter::TYPE_CALLABLE, Abstracter::TYPE_OBJECT, 'iterable',
-            // "special"
-            Abstracter::TYPE_NULL, Abstracter::TYPE_RESOURCE,
-        );
-        $typesOther = array(
-            '$this','false','mixed','static','self','true','void',
-        );
-        $typesPrimative = \array_merge($phpPrimatives, $typesOther);
-        $types = \preg_split('/\s*\|\s*/', $type);
-        foreach ($types as $i => $type) {
-            $isArray = false;
-            if (\substr($type, -2) === '[]') {
-                $isArray = true;
-                $type = \substr($type, 0, -2);
-            }
-            if (!\in_array($type, $typesPrimative)) {
-                $type = $this->markupIdentifier($type);
-            }
-            if ($isArray) {
-                $type .= '<span class="t_punct">[]</span>';
-            }
-            $types[$i] = '<span class="t_type">' . $type . '</span>';
-        }
-        $types = \implode('<span class="t_punct">|</span>', $types);
-        $attribs = \array_filter($attribs);
-        if ($attribs) {
-            $type = $this->debug->html->buildtag('span', $attribs, $types);
-        }
-        return $types;
+        return $this->helper->markupIdentifier($val, $tagName, $attribs, $wbr);
     }
 
     /**
@@ -253,7 +191,6 @@ class Html extends Base
      */
     public function processLogEntry(LogEntry $logEntry)
     {
-        $method = $logEntry['method'];
         $meta = \array_merge(array(
             'attribs' => array(),
             'detectFiles' => null,
@@ -273,7 +210,7 @@ class Html extends Base
         }
         $this->string->detectFiles = $meta['detectFiles'];
         $this->logEntryAttribs = $this->debug->arrayUtil->mergeDeep(array(
-            'class' => array('m_' . $method),
+            'class' => array('m_' . $logEntry['method']),
             'data-channel' => $channelName !== $this->channelNameRoot
                 ? $channelName
                 : null,
@@ -307,142 +244,6 @@ class Html extends Base
     }
 
     /**
-     * Insert a row containing code snip & arguments after the given row
-     *
-     * @param string $html    <tr>...</tr>
-     * @param array  $row     Row values
-     * @param array  $rowInfo Row info / meta
-     * @param int    $index   Row index
-     *
-     * @return string
-     */
-    public function tableAddContextRow($html, $row, $rowInfo, $index)
-    {
-        if (!$rowInfo['context']) {
-            return $html;
-        }
-        $html = \str_replace('<tr>', '<tr' . ($index === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $html);
-        $html .= '<tr class="context" ' . ($index === 0 ? 'style="display:table-row;"' : '' ) . '>'
-            . '<td colspan="4">'
-                . $this->buildContext($rowInfo['context'], $row['line'])
-                . '{{arguments}}'
-            . '</td>' . "\n"
-            . '</tr>' . "\n";
-        $crateRawWas = $this->crateRaw;
-        $this->crateRaw = true;
-        $args = $rowInfo['args']
-            ? '<hr />Arguments = ' . $this->dump($rowInfo['args'])
-            : '';
-        $this->crateRaw = $crateRawWas;
-        return \str_replace('{{arguments}}', $args, $html);
-    }
-
-    /**
-     * Format trace table's function column
-     *
-     * @param string $html <tr>...</tr>
-     * @param array  $row  row values
-     *
-     * @return string
-     */
-    public function tableMarkupFunction($html, $row)
-    {
-        if (isset($row['function'])) {
-            $regex = '/^(.+)(::|->)(.+)$/';
-            $replace = \preg_match($regex, $row['function']) || \strpos($row['function'], '{closure}')
-                ? $this->markupIdentifier($row['function'], 'span', array(), true)
-                : '<span class="t_identifier">' . \htmlspecialchars($row['function']) . '</span>';
-            $replace = '<td class="col-function no-quotes t_string">' . $replace . '</td>';
-            $html = \str_replace(
-                '<td class="t_string">' . \htmlspecialchars($row['function']) . '</td>',
-                $replace,
-                $html
-            );
-        }
-        return $html;
-    }
-
-    /**
-     * Convert all arguments to html and join them together.
-     *
-     * @param array $args arguments
-     * @param array $meta meta values
-     *
-     * @return string html
-     */
-    protected function buildArgString($args, $meta = array())
-    {
-        if (\count($args) === 0) {
-            return '';
-        }
-        $glueDefault = ', ';
-        $glueAfterFirst = true;
-        if (\is_string($args[0])) {
-            if (\preg_match('/[=:] ?$/', $args[0])) {
-                // first arg ends with "=" or ":"
-                $glueAfterFirst = false;
-                $args[0] = \rtrim($args[0]) . ' ';
-            } elseif (\count($args) === 2) {
-                $glueDefault = ' = ';
-            }
-        }
-        $glue = $meta['glue'] ?: $glueDefault;
-        $args = $this->buildArgStringArgs($args, $meta);
-        return $glueAfterFirst
-            ? \implode($glue, $args)
-            : $args[0] . \implode($glue, \array_slice($args, 1));
-    }
-
-    /**
-     * Return array of dumped arguments
-     *
-     * @param array $args arguments
-     * @param array $meta meta values
-     *
-     * @return array
-     */
-    private function buildArgStringArgs($args, $meta)
-    {
-        foreach ($args as $i => $v) {
-            list($type, $typeMore) = $this->debug->abstracter->getType($v);
-            $typeMore2 = $typeMore === Abstracter::TYPE_ABSTRACTION
-                ? $v['typeMore']
-                : $typeMore;
-            $args[$i] = $this->dump($v, array(
-                'addQuotes' => $i !== 0 || $typeMore2 === Abstracter::TYPE_STRING_NUMERIC,
-                'sanitize' => $i === 0
-                    ? $meta['sanitizeFirst']
-                    : $meta['sanitize'],
-                'type' => $type,
-                'typeMore' => $typeMore,
-                'visualWhiteSpace' => $i !== 0,
-            ));
-        }
-        return $args;
-    }
-
-    /**
-     * build php code snippet / context
-     *
-     * @param string[] $lines   lines of code
-     * @param int      $lineNum line number to highlight
-     *
-     * @return string
-     */
-    private function buildContext($lines, $lineNum)
-    {
-        return $this->debug->html->buildTag(
-            'pre',
-            array(
-                'class' => 'highlight line-numbers',
-                'data-line' => $lineNum,
-                'data-start' => \key($lines),
-            ),
-            '<code class="language-php">' . \htmlspecialchars(\implode($lines)) . '</code>'
-        );
-    }
-
-    /**
      * Dump array as html
      *
      * @param array $array array
@@ -471,19 +272,40 @@ class Html extends Base
             . '<span class="t_punct">(</span>' . "\n"
             . '<ul class="array-inner list-unstyled">' . "\n";
         foreach ($array as $key => $val) {
-            $html .= $showKeys
-                ? "\t" . '<li>'
-                    . '<span class="t_key' . (\is_int($key) ? ' t_int' : '') . '">'
-                        . $this->dump($key, array('tagName' => null)) // don't wrap it
-                    . '</span>'
-                    . '<span class="t_operator">=&gt;</span>'
-                    . $this->dump($val)
-                . '</li>' . "\n"
-                : "\t" . $this->dump($val, array('tagName' => 'li')) . "\n";
+            $html .= $this->dumpArrayValue($key, $val, $showKeys);
         }
         $html .= '</ul>'
             . '<span class="t_punct">)</span>';
         return $html;
+    }
+
+    /**
+     * Dump an array key/value pair
+     *
+     * @param int|string $key     key
+     * @param mixed      $val     value
+     * @param bool       $withKey include key with value?
+     *
+     * @return string
+     */
+    private function dumpArrayValue($key, $val, $withKey)
+    {
+        return $withKey
+            ? "\t" . '<li>'
+                . $this->html->buildTag(
+                    'span',
+                    array(
+                        'class' => array(
+                            't_key',
+                            't_int' => \is_int($key),
+                        ),
+                    ),
+                    $this->dump($key, array('tagName' => null)) // don't wrap it
+                )
+                . '<span class="t_operator">=&gt;</span>'
+                . $this->dump($val)
+            . '</li>' . "\n"
+            : "\t" . $this->dump($val, array('tagName' => 'li')) . "\n";
     }
 
     /**
@@ -629,7 +451,7 @@ class Html extends Base
     protected function getObject()
     {
         if (!$this->lazyObject) {
-            $this->lazyObject = new HtmlObject($this);
+            $this->lazyObject = new HtmlObject($this, $this->helper, $this->html);
         }
         return $this->lazyObject;
     }
@@ -700,7 +522,7 @@ class Html extends Base
                 . '</button>'
                 . $html;
         }
-        return $this->debug->html->buildTag('div', $attribs, $html);
+        return $this->html->buildTag('div', $attribs, $html);
     }
 
     /**
@@ -712,13 +534,11 @@ class Html extends Base
      */
     protected function methodDefault(LogEntry $logEntry)
     {
-        $args = $logEntry['args'];
         $meta = \array_merge(array(
             'errorCat' => null,  //  should only be applicable for error & warn methods
             'uncollapse' => null,
         ), $logEntry['meta']);
         $attribs = $this->logEntryAttribs;
-        $append = '';
         if (isset($meta['file']) && $logEntry->getChannelName() !== $this->channelNameRoot . '.phpError') {
             // PHP errors will have file & line as one of the arguments
             //    so no need to store file & line as data args
@@ -734,13 +554,13 @@ class Html extends Base
             $attribs['data-uncollapse'] = false;
         }
         list($args, $meta) = $this->handleSubstitutions($logEntry);
-        if (!empty($meta['context'])) {
-            $append = $this->buildContext($meta['context'], $meta['line']);
-        }
-        return $this->debug->html->buildTag(
+        $append = !empty($meta['context'])
+            ? $this->helper->buildContext($meta['context'], $meta['line'])
+            : '';
+        return $this->html->buildTag(
             'li',
             $attribs,
-            $this->buildArgString($args, $meta) . $append
+            $this->helper->buildArgString($args, $meta) . $append
         );
     }
 
@@ -759,15 +579,15 @@ class Html extends Base
         }
         $meta = $this->methodGroupPrep($logEntry);
 
-        $str = '<li' . $this->debug->html->buildAttribString($this->logEntryAttribs) . '>' . "\n";
-        $str .= $this->debug->html->buildTag(
+        $str = '<li' . $this->html->buildAttribString($this->logEntryAttribs) . '>' . "\n";
+        $str .= $this->html->buildTag(
             'div',
             array(
                 'class' => 'group-header',
             ),
             $this->methodGroupHeader($logEntry['args'], $meta)
         ) . "\n";
-        $str .= '<ul' . $this->debug->html->buildAttribString(array(
+        $str .= '<ul' . $this->html->buildAttribString(array(
             'class' => 'group-body',
         )) . '>';
         return $str;
@@ -849,6 +669,8 @@ class Html extends Base
     /**
      * Handle profile(End), table, & trace methods
      *
+     * Extends Base
+     *
      * @param LogEntry $logEntry LogEntry instance
      *
      * @return string
@@ -868,12 +690,12 @@ class Html extends Base
             'tableInfo' => array(),
         ), $logEntry['meta']);
         if ($logEntry['method'] === 'trace') {
-            $meta['onBuildRow'][] = array($this, 'tableMarkupFunction');
+            $meta['onBuildRow'][] = array($this->helper, 'tableMarkupFunction');
         }
         if ($logEntry->getMeta('inclContext')) {
-            $meta['onBuildRow'][] = array($this, 'tableAddContextRow');
+            $meta['onBuildRow'][] = array($this->helper, 'tableAddContextRow');
         }
-        return $this->debug->html->buildTag(
+        return $this->html->buildTag(
             'li',
             $this->logEntryAttribs,
             "\n" . $this->table->build($logEntry['args'][0], $meta) . "\n"
@@ -881,38 +703,9 @@ class Html extends Base
     }
 
     /**
-     * Split identifier into classname, operator, & identifier
-     *
-     * @param mixed $val classname or classname(::|->)name (method/property/const)
-     *
-     * @return array
-     */
-    private function parseIdentifier($val)
-    {
-        $parsed = array(
-            'classname' => $val,
-            'operator' => '::',
-            'identifier' => '',
-        );
-        $regex = '/^(.+)(::|->)(.+)$/';
-        $matches = array();
-        if (\is_array($val)) {
-            $parsed['classname'] = $val[0];
-            $parsed['identifier'] = $val[1];
-        } elseif (\preg_match($regex, $val, $matches)) {
-            $parsed['classname'] = $matches[1];
-            $parsed['operator'] = $matches[2];
-            $parsed['identifier'] = $matches[3];
-        } elseif (\preg_match('/^(.+)(\\\\\{closure\})$/', $val, $matches)) {
-            $parsed['classname'] = $matches[1];
-            $parsed['operator'] = '';
-            $parsed['identifier'] = $matches[2];
-        }
-        return $parsed;
-    }
-
-    /**
      * Coerce value to string
+     *
+     * Extends Base
      *
      * @param mixed $val  value
      * @param array $opts $options passed to dump

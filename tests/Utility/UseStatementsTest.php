@@ -13,8 +13,7 @@ class UseStatementsTest extends TestCase
 
     public function test()
     {
-        $source = '
-        <?php
+        $source = '<?php
         namespace foo;
         use My\Full\Classname as Another;
 

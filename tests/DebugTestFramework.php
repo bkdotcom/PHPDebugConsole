@@ -223,9 +223,11 @@ class DebugTestFramework extends DOMTestCase
         foreach ($subscribers as $subscriber) {
             $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, $subscriber);
         }
+        /*
         while (\ob_get_level() > self::$obLevels) {
             \ob_end_clean();
         }
+        */
     }
 
     /**

@@ -311,16 +311,8 @@ class Internal implements SubscriberInterface
      */
     public function getSubscriptions()
     {
-        if ($this->debug->parentInstance) {
-            // we are a child channel
-            return array(
-                Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
-            );
-        }
-        // root instance
         return array(
             Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
-            Debug::EVENT_BOOTSTRAP => array('onBootstrap', PHP_INT_MAX * -1),
         );
     }
 
@@ -378,23 +370,6 @@ class Internal implements SubscriberInterface
         }
         \ob_start();
         $this->debug->rootInstance->setData('isObCache', true);
-    }
-
-    /**
-     * Debug::EVENT_BOOTSTRAP subscriber
-     *
-     * @return void
-     */
-    public function onBootstrap()
-    {
-        $route = $this->debug->getCfg('route');
-        if ($route === 'stream') {
-            // normally we don't init the route until output
-            // but stream needs to begin listening now
-            $this->debug->setCfg('route', $route);
-        }
-        $this->debug->addPlugin($this->debug->logEnv);
-        $this->debug->addPlugin($this->debug->logReqRes);
     }
 
     /**

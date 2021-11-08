@@ -137,46 +137,17 @@ class InternalEvents implements SubscriberInterface
      */
     public function onError(Error $error)
     {
+        if ($error['throw']) {
+            return;
+        }
         $cfgWas = $this->forceErrorOutput($error)
             ? $this->debug->setCfg(array(
                 'collect' => true,
                 'output' => true,
             ))
             : null;
-        if ($error['throw']) {
-            return;
-        }
         if ($this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
-            $meta = $this->debug->meta(array(
-                'context' => $error['category'] === 'fatal' && $error['backtrace'] === null
-                    ? $error['context']
-                    : null,
-                'errorCat' => $error['category'],
-                'errorHash' => $error['hash'],
-                'errorType' => $error['type'],
-                'file' => $error['file'],
-                'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
-                'line' => $error['line'],
-                'sanitize' => $error['isHtml'] === false,
-                'trace' => $error['backtrace'],
-            ));
-            $method = $error['type'] & $this->debug->getCfg('errorMask', Debug::CONFIG_DEBUG)
-                ? 'error'
-                : 'warn';
-            /*
-                specify rootInstance as there's nothing to prevent calling Internal::onError() directly (from aanother instance)
-            */
-            $this->debug->rootInstance->getChannel('phpError')->{$method}(
-                $error['typeStr'] . ':',
-                $error['message'],
-                \sprintf('%s (line %s)', $error['file'], $error['line']),
-                $meta
-            );
-            $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
-            $error['inConsole'] = true;
-            // Prevent ErrorHandler\ErrorEmailer from sending email.
-            // Since we're collecting log info, we send email on shutdown
-            $error['email'] = false;
+            $this->logError($error);
             if ($cfgWas) {
                 $this->debug->setCfg($cfgWas);
             }
@@ -388,6 +359,47 @@ class InternalEvents implements SubscriberInterface
                 ))
             );
         }
+    }
+
+    /**
+     * Log error
+     *
+     * @param Error $error Error instance
+     *
+     * @return void
+     */
+    private function logError(Error $error)
+    {
+        $method = $error['type'] & $this->debug->getCfg('errorMask', Debug::CONFIG_DEBUG)
+            ? 'error'
+            : 'warn';
+        $meta = $this->debug->meta(array(
+            'context' => $error['category'] === 'fatal' && $error['backtrace'] === null
+                ? $error['context']
+                : null,
+            'errorCat' => $error['category'],
+            'errorHash' => $error['hash'],
+            'errorType' => $error['type'],
+            'file' => $error['file'],
+            'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
+            'line' => $error['line'],
+            'sanitize' => $error['isHtml'] === false,
+            'trace' => $error['backtrace'],
+        ));
+        /*
+            specify rootInstance as there's nothing to prevent calling Internal::onError() directly (from aanother instance)
+        */
+        $this->debug->rootInstance->getChannel('phpError')->{$method}(
+            $error['typeStr'] . ':',
+            $error['message'],
+            \sprintf('%s (line %s)', $error['file'], $error['line']),
+            $meta
+        );
+        $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
+        $error['inConsole'] = true;
+        // Prevent ErrorHandler\ErrorEmailer from sending email.
+        // Since we're collecting log info, we send email on shutdown
+        $error['email'] = false;
     }
 
     /**

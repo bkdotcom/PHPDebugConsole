@@ -57,6 +57,16 @@ class ConfigEventSubscriber implements SubscriberInterface
     public function onBootstrap()
     {
         $this->isBootstrapped = true;
+        if ($this->debug->parentInstance) {
+            return;
+        }
+        // this is the root instance
+        $route = $this->debug->getCfg('route');
+        if ($route === 'stream') {
+            // normally we don't init the route until output
+            // but stream needs to begin listening now
+            $this->debug->setCfg('route', $route);
+        }
     }
 
     /**

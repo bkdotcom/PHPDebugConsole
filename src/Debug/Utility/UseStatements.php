@@ -89,14 +89,14 @@ class UseStatements
         self::$recordPart = null;
         self::$useStatements = array();
 
+        if (!\defined('T_NAME_QUALIFIED')) {
+            // PHP 8.0
+            \define('T_NAME_QUALIFIED', 314);
+        }
+
         foreach ($tokens as $token) {
             if (self::$record) {
-                if (!\is_array($token)) {
-                    self::handleStringToken($token);
-                    continue;
-                }
-                self::setRecordInfo($token);
-                self::record($token);
+                self::recordToken($token);
                 continue;
             }
             // check if we need to start recording
@@ -145,13 +145,62 @@ class UseStatements
     }
 
     /**
+     * Record the specified token
+     *
+     * @param array $token Token to record
+     *
+     * @return void
+     */
+    private static function recordToken($token)
+    {
+        if (!\is_array($token)) {
+            self::recordTokenString($token);
+            return;
+        }
+        self::setRecordInfo($token);
+        self::recordTokenArray($token);
+    }
+
+    /**
+     * Record the specified array token
+     *
+     * @param array $token Token to record
+     *
+     * @return void
+     */
+    private static function recordTokenArray($token)
+    {
+        switch (self::$record) {
+            case 'namespace':
+                switch ($token[0]) {
+                    case T_STRING:
+                    case T_NS_SEPARATOR:
+                        self::$namespace .= $token[1];
+                        break;
+                }
+                break;
+            case 'class':
+            case 'function':
+            case 'const':
+                switch ($token[0]) {
+                    case T_STRING:
+                    case T_NS_SEPARATOR:
+                    case T_NAME_QUALIFIED:
+                        self::$currentUse[self::$recordPart] .= $token[1];
+                        break;
+                }
+                break;
+        }
+    }
+
+    /**
      * Handle simple string token while recording
      *
      * @param string $token string token (ie "(",")",",", or ";" )
      *
      * @return void
      */
-    private static function handleStringToken($token)
+    private static function recordTokenString($token)
     {
         if ($token === '{') {
             // start group  (PHP 7.0+)
@@ -182,37 +231,6 @@ class UseStatements
             return;
         }
         self::$record = null;
-    }
-
-    /**
-     * Record the specified token
-     *
-     * @param array $token token to record
-     *
-     * @return void
-     */
-    private static function record($token)
-    {
-        switch (self::$record) {
-            case 'namespace':
-                switch ($token[0]) {
-                    case T_STRING:
-                    case T_NS_SEPARATOR:
-                        self::$namespace .= $token[1];
-                        break;
-                }
-                break;
-            case 'class':
-            case 'function':
-            case 'const':
-                switch ($token[0]) {
-                    case T_STRING:
-                    case T_NS_SEPARATOR:
-                        self::$currentUse[self::$recordPart] .= $token[1];
-                        break;
-                }
-                break;
-        }
     }
 
     /**

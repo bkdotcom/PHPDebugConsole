@@ -92,12 +92,10 @@ class ChromeLogger extends Base
         if ($this->jsonData['rows']) {
             $max = $this->getMaxLength();
             $encoded = $this->encode($this->jsonData);
-            if ($max) {
-                if (\strlen($encoded) > $max) {
-                    $this->reduceData($max);
-                    $this->buildJsonData();
-                    $encoded = $this->encode($this->jsonData);
-                }
+            if ($max && \strlen($encoded) > $max) {
+                $this->reduceData($max);
+                $this->buildJsonData();
+                $encoded = $this->encode($this->jsonData);
                 if (\strlen($encoded) > $max) {
                     $this->jsonData['rows'] = array(
                         array(
@@ -244,6 +242,35 @@ class ChromeLogger extends Base
             array('Log abridged due to header size constraint'),
             array('level' => 'info')
         ));
+        $this->reduceDataSummary();
+        /*
+            Remove all log entries sans assert, error, & warn
+        */
+        $logBack = array();
+        foreach ($this->data['log'] as $i => $logEntry) {
+            if (!\in_array($logEntry['method'], array('assert','error','warn'))) {
+                unset($this->data['log'][$i]);
+                $logBack[$i] = $logEntry;
+            }
+        }
+        /*
+            Data is now just alerts, summary, and errors
+        */
+        $strlen = $this->calcHeaderSize();
+        $avail = $max - $strlen;
+        if ($avail > 2048) {
+            // we've got enough room to fill with additional entries
+            $this->reduceDataFill($max, $logBack);
+        }
+    }
+
+    /**
+     * Abridge the summary
+     *
+     * @return void
+     */
+    private function reduceDataSummary()
+    {
         /*
             Remove non-essential summary entries
         */
@@ -270,25 +297,6 @@ class ChromeLogger extends Base
                 }
             }
             $this->data['logSummary'][$priority] = \array_values($logEntries);
-        }
-        /*
-            Remove all log entries sans assert, error, & warn
-        */
-        $logBack = array();
-        foreach ($this->data['log'] as $i => $logEntry) {
-            if (!\in_array($logEntry['method'], array('assert','error','warn'))) {
-                unset($this->data['log'][$i]);
-                $logBack[$i] = $logEntry;
-            }
-        }
-        /*
-            Data is now just alerts, summary, and errors
-        */
-        $strlen = $this->calcHeaderSize();
-        $avail = $max - $strlen;
-        if ($avail > 2048) {
-            // we've got enough room to fill with additional entries
-            $this->reduceDataFill($max, $logBack);
         }
     }
 

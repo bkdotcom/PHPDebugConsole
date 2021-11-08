@@ -1695,6 +1695,10 @@ class Debug
         $this->config->set($cfg);
         $this->data['requestId'] = $this->internal->requestId();
 
+        if (!$this->parentInstance) {
+            $this->addPlugin($this->container['logEnv']);
+            $this->addPlugin($this->container['logReqRes']);
+        }
         $this->eventManager->publish(self::EVENT_BOOTSTRAP, $this);
     }
 

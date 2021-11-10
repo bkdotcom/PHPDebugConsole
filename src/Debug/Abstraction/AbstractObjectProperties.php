@@ -151,29 +151,29 @@ class AbstractObjectProperties
      */
     private function addPropertiesBase(Abstraction $abs)
     {
-        $reflectionObject = $abs['reflector'];
+        $refObject = $abs['reflector'];
         /*
             We trace our ancestory to learn where properties are inherited from
         */
-        while ($reflectionObject) {
-            $className = $reflectionObject->getName();
-            $properties = $reflectionObject->getProperties();
+        while ($refObject) {
+            $className = $refObject->getName();
+            $properties = $refObject->getProperties();
             while ($properties) {
-                $reflectionProperty = \array_shift($properties);
-                $name = $reflectionProperty->getName();
+                $refProperty = \array_shift($properties);
+                $name = $refProperty->getName();
                 if (isset($abs['properties'][$name])) {
                     // already have info... we're in an ancestor
                     $abs['properties'][$name]['overrides'] = $this->propOverrides(
-                        $reflectionProperty,
+                        $refProperty,
                         $abs['properties'][$name],
                         $className
                     );
                     $abs['properties'][$name]['originallyDeclared'] = $className;
                     continue;
                 }
-                $abs['properties'][$name] = $this->getPropInfo($abs, $reflectionProperty);
+                $abs['properties'][$name] = $this->getPropInfo($abs, $refProperty);
             }
-            $reflectionObject = $reflectionObject->getParentClass();
+            $refObject = $refObject->getParentClass();
         }
     }
 
@@ -443,28 +443,28 @@ class AbstractObjectProperties
     /**
      * Get property info
      *
-     * @param Abstraction        $abs                Abstraction event object
-     * @param ReflectionProperty $reflectionProperty ReflectionProperty instance
+     * @param Abstraction        $abs         Abstraction event object
+     * @param ReflectionProperty $refProperty ReflectionProperty instance
      *
      * @return array
      */
-    private function getPropInfo(Abstraction $abs, ReflectionProperty $reflectionProperty)
+    private function getPropInfo(Abstraction $abs, ReflectionProperty $refProperty)
     {
         $obj = $abs->getSubject();
         $isInstance = \is_object($obj);
         $className = $isInstance
             ? \get_class($obj) // prop->class is equiv to getDeclaringClass
             : $obj;
-        $reflectionProperty->setAccessible(true); // only accessible via reflection
+        $refProperty->setAccessible(true); // only accessible via reflection
         // get type and desc from phpdoc
-        $phpDoc = $this->helper->getPhpDocVar($reflectionProperty); // phpDocVar
+        $phpDoc = $this->helper->getPhpDocVar($refProperty); // phpDocVar
         /*
             getDeclaringClass returns "LAST-declared/overriden"
         */
-        $declaringClassName = $reflectionProperty->getDeclaringClass()->getName();
+        $declaringClassName = $refProperty->getDeclaringClass()->getName();
         $propInfo = static::buildPropInfo(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_PROP
-                ? $this->helper->getAttributes($reflectionProperty)
+                ? $this->helper->getAttributes($refProperty)
                 : array(),
             'desc' => $abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC
                 ? $phpDoc['desc']
@@ -473,14 +473,14 @@ class AbstractObjectProperties
                 ? $declaringClassName
                 : null,
             'isPromoted' =>  PHP_VERSION_ID >= 80000
-                ? $reflectionProperty->isPromoted()
+                ? $refProperty->isPromoted()
                 : false,
-            'isStatic' => $reflectionProperty->isStatic(),
-            'type' => $this->getPropType($phpDoc['type'], $reflectionProperty),
-            'visibility' => $this->getPropVis($reflectionProperty),
+            'isStatic' => $refProperty->isStatic(),
+            'type' => $this->getPropType($phpDoc['type'], $refProperty),
+            'visibility' => $this->helper->getVisibility($refProperty),
         ));
         if ($abs['collectPropertyValues']) {
-            $propInfo = $this->getPropValue($propInfo, $abs, $reflectionProperty);
+            $propInfo = $this->getPropValue($propInfo, $abs, $refProperty);
         }
         return $propInfo;
     }
@@ -489,34 +489,34 @@ class AbstractObjectProperties
      * Get Property's type
      * Priority given to phpDoc type, followed by declared type (PHP 7.4)
      *
-     * @param string             $phpDocType         type specified in phpDoc block
-     * @param ReflectionProperty $reflectionProperty ReflectionProperty instance
+     * @param string             $phpDocType  Type specified in phpDoc block
+     * @param ReflectionProperty $refProperty ReflectionProperty instance
      *
      * @return string|null
      */
-    private function getPropType($phpDocType, ReflectionProperty $reflectionProperty)
+    private function getPropType($phpDocType, ReflectionProperty $refProperty)
     {
         $type = $this->helper->resolvePhpDocType($phpDocType, $this->abs);
         if ($type !== null) {
             return $type;
         }
         return PHP_VERSION_ID >= 70400
-            ? $this->helper->getTypeString($reflectionProperty->getType())
+            ? $this->helper->getTypeString($refProperty->getType())
             : null;
     }
 
     /**
      * Set 'value' and 'valueFrom' values
      *
-     * @param array              $propInfo           propInfo array
-     * @param Abstraction        $abs                Abstraction event object
-     * @param ReflectionProperty $reflectionProperty ReflectionProperty
+     * @param array              $propInfo    propInfo array
+     * @param Abstraction        $abs         Abstraction event object
+     * @param ReflectionProperty $refProperty ReflectionProperty
      *
      * @return array updated propInfo
      */
-    private function getPropValue($propInfo, Abstraction $abs, ReflectionProperty $reflectionProperty)
+    private function getPropValue($propInfo, Abstraction $abs, ReflectionProperty $refProperty)
     {
-        $propName = $reflectionProperty->getName();
+        $propName = $refProperty->getName();
         if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
             $value = $abs['propertyOverrideValues'][$propName];
             $propInfo['value'] = $value;
@@ -529,30 +529,12 @@ class AbstractObjectProperties
         $obj = $abs->getSubject();
         $isInstance = \is_object($obj);
         if ($isInstance) {
-            $isInitialized = PHP_VERSION_ID < 70400 || $reflectionProperty->isInitialized($obj);
+            $isInitialized = PHP_VERSION_ID < 70400 || $refProperty->isInitialized($obj);
             $propInfo['value'] = $isInitialized
-                ? $reflectionProperty->getValue($obj)
+                ? $refProperty->getValue($obj)
                 : Abstracter::UNDEFINED;  // value won't be displayed
         }
         return $propInfo;
-    }
-
-    /**
-     * Get property visibility
-     *
-     * @param ReflectionProperty $reflectionProperty ReflectionProperty instance
-     *
-     * @return 'public'|'private'|'protected'
-     */
-    private function getPropVis(ReflectionProperty $reflectionProperty)
-    {
-        if ($reflectionProperty->isPrivate()) {
-            return 'private';
-        }
-        if ($reflectionProperty->isProtected()) {
-            return 'protected';
-        }
-        return 'public';
     }
 
     /**
@@ -572,18 +554,18 @@ class AbstractObjectProperties
      *
      * This is the classname of previous ancestor where property is defined
      *
-     * @param ReflectionProperty $reflectionProperty Reflection Property
-     * @param array              $propInfo           Property Info
-     * @param string             $className          className of object being inspected
+     * @param ReflectionProperty $refProperty Reflection Property
+     * @param array              $propInfo    Property Info
+     * @param string             $className   className of object being inspected
      *
      * @return string|null
      */
-    private function propOverrides(ReflectionProperty $reflectionProperty, $propInfo, $className)
+    private function propOverrides(ReflectionProperty $refProperty, $propInfo, $className)
     {
         if (
             empty($propInfo['overrides'])
             && empty($propInfo['inheritedFrom'])
-            && $reflectionProperty->getDeclaringClass()->getName() === $className
+            && $refProperty->getDeclaringClass()->getName() === $className
         ) {
             return $className;
         }

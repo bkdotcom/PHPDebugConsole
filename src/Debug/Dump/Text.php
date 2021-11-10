@@ -166,13 +166,50 @@ class Text extends Base
     }
 
     /**
+     * Dump null value
+     *
+     * @return string
+     */
+    protected function dumpNull()
+    {
+        return 'null';
+    }
+
+    /**
+     * Dump object as text
+     *
+     * @param Abstraction $abs object "abstraction"
+     *
+     * @return string
+     */
+    protected function dumpObject(Abstraction $abs)
+    {
+        if ($abs['isRecursion']) {
+            return $abs['className'] . ' *RECURSION*';
+        }
+        if ($abs['isExcluded']) {
+            return $abs['className'] . ' NOT INSPECTED';
+        }
+        $isNested = $this->valDepth > 0;
+        $this->valDepth++;
+        $str = $abs['className'] . "\n"
+            . $this->dumpObjectProperties($abs)
+            . $this->dumpObjectMethods($abs);
+        $str = \trim($str);
+        if ($isNested) {
+            $str = \str_replace("\n", "\n    ", $str);
+        }
+        return $str;
+    }
+
+    /**
      * Dump object methods as text
      *
      * @param Abstraction $abs object "abstraction"
      *
      * @return string html
      */
-    protected function dumpMethods(Abstraction $abs)
+    protected function dumpObjectMethods(Abstraction $abs)
     {
         $collectMethods = $abs['cfgFlags'] & AbstractObject::COLLECT_METHODS;
         $outputMethods = $abs['cfgFlags'] & AbstractObject::OUTPUT_METHODS;
@@ -201,50 +238,13 @@ class Text extends Base
     }
 
     /**
-     * Dump null value
-     *
-     * @return string
-     */
-    protected function dumpNull()
-    {
-        return 'null';
-    }
-
-    /**
-     * Dump object as text
-     *
-     * @param Abstraction $abs object "abstraction"
-     *
-     * @return string
-     */
-    protected function dumpObject(Abstraction $abs)
-    {
-        if ($abs['isRecursion']) {
-            return $abs['className'] . ' *RECURSION*';
-        }
-        if ($abs['isExcluded']) {
-            return $abs['className'] . ' NOT INSPECTED';
-        }
-        $isNested = $this->valDepth > 0;
-        $this->valDepth++;
-        $str = $abs['className'] . "\n"
-            . $this->dumpProperties($abs)
-            . $this->dumpMethods($abs);
-        $str = \trim($str);
-        if ($isNested) {
-            $str = \str_replace("\n", "\n    ", $str);
-        }
-        return $str;
-    }
-
-    /**
      * Dump object properties as text
      *
      * @param Abstraction $abs object abstraction
      *
      * @return string
      */
-    protected function dumpProperties(Abstraction $abs)
+    protected function dumpObjectProperties(Abstraction $abs)
     {
         $str = '';
         $propHeader = '';

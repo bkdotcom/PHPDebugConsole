@@ -218,21 +218,21 @@ class MethodTest extends DebugTestFramework
                 'chromeLogger' => array(
                     array(
                         '%c' . $message,
-                        'padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;',
+                        'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #ffbaba; border: 1px solid #d8000c; color: #d8000c;',
                     ),
                     null,
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"ERROR"},' . \json_encode($message, JSON_UNESCAPED_SLASHES) . ']|',
                 'html' => '<div class="alert-error m_alert" role="alert">' . $messageEscaped . '</div>',
-                'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #ffbaba;border: 1px solid #d8000c;color: #d8000c;");'),
+                'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #ffbaba; border: 1px solid #d8000c; color: #d8000c;");'),
                 'text' => '》[Alert ⦻ error] ' . $message . '《',
                 'wamp' => $entry,
             )
         );
 
         $entry['meta']['level'] = 'info';
-        $style = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #d9edf7;border: 1px solid #bce8f1;color: #31708f;';
+        $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #d9edf7; border: 1px solid #bce8f1; color: #31708f;';
         $this->testMethod(
             'alert',
             array(
@@ -258,7 +258,7 @@ class MethodTest extends DebugTestFramework
         );
 
         $entry['meta']['level'] = 'success';
-        $style = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #dff0d8;border: 1px solid #d6e9c6;color: #3c763d;';
+        $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #dff0d8; border: 1px solid #d6e9c6; color: #3c763d;';
         $this->testMethod(
             'alert',
             array(
@@ -284,7 +284,7 @@ class MethodTest extends DebugTestFramework
         );
 
         $entry['meta']['level'] = 'warn';
-        $style = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;background-color: #fcf8e3;border: 1px solid #faebcc;color: #8a6d3b;';
+        $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #fcf8e3; border: 1px solid #faebcc; color: #8a6d3b;';
         $this->testMethod(
             'alert',
             array(

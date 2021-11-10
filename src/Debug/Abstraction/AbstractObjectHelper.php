@@ -124,6 +124,23 @@ class AbstractObjectHelper
         return $info;
     }
 
+    /**
+     * Get constant/method/property visibility
+     *
+     * @param Reflector $reflector Reflection instance
+     *
+     * @return 'public'|'private'|'protected'
+     */
+    public function getVisibility(Reflector $reflector)
+    {
+        if ($reflector->isPrivate()) {
+            return 'private';
+        }
+        if ($reflector->isProtected()) {
+            return 'protected';
+        }
+        return 'public';
+    }
 
     /**
      * Get string representation of ReflectionNamedType or ReflectionType

@@ -1868,11 +1868,11 @@ class Debug
         if (isset(self::$methodDefaultArgs[$methodName])) {
             $defaultArgs = self::$methodDefaultArgs[$methodName];
         } elseif (\method_exists(self::$instance, $methodName)) {
-            $reflectionMethod = new ReflectionMethod(self::$instance, $methodName);
-            $params = $reflectionMethod->getParameters();
-            foreach ($params as $reflectionParameter) {
-                $defaultArgs[] = $reflectionParameter->isOptional()
-                    ? $reflectionParameter->getDefaultValue()
+            $refMethod = new ReflectionMethod(self::$instance, $methodName);
+            $params = $refMethod->getParameters();
+            foreach ($params as $refParameter) {
+                $defaultArgs[] = $refParameter->isOptional()
+                    ? $refParameter->getDefaultValue()
                     : null;
             }
             self::$methodDefaultArgs[$methodName] = $defaultArgs;

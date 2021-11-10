@@ -14,7 +14,6 @@ namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Utility\ErrorLevel;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -125,23 +124,24 @@ class LogEnv implements SubscriberInterface
         $names = $name
             ? array($name)
             : array('PHPSESSID', 'SESSIONID', 'SESSION_ID', 'SESSID', 'SESS_ID');
-        $cookies = $this->debug->request->getCookieParams();
-        $queryParams = $this->debug->request->getQueryParams();
+        $namesFound = array();
         $useCookies = \filter_var(\ini_get('session.use_cookies'), FILTER_VALIDATE_BOOLEAN);
-        $useOnlyCookies = \filter_var(\ini_get('session.use_only_cookies'), FILTER_VALIDATE_BOOLEAN);
         if ($useCookies) {
-            foreach ($names as $name) {
-                if (isset($cookies[$name])) {
-                    return $name;
-                }
-            }
+            $cookies = $this->debug->request->getCookieParams();
+            $keys = \array_keys($cookies);
+            $namesFound = \array_intersect($names, $keys);
         }
+        if ($namesFound) {
+            return \array_shift($namesFound);
+        }
+        $useOnlyCookies = \filter_var(\ini_get('session.use_only_cookies'), FILTER_VALIDATE_BOOLEAN);
         if ($useOnlyCookies === false) {
-            foreach ($names as $name) {
-                if (isset($queryParams[$name])) {
-                    return $name;
-                }
-            }
+            $queryParams = $this->debug->request->getQueryParams();
+            $keys = \array_keys($queryParams);
+            $namesFound = \array_intersect($names, $keys);
+        }
+        if ($namesFound) {
+            return \array_shift($namesFound);
         }
         return null;
     }
@@ -251,27 +251,7 @@ class LogEnv implements SubscriberInterface
         if (!$this->debug->getCfg('logEnvInfo.errorReporting', Debug::CONFIG_DEBUG)) {
             return;
         }
-        $msgLines = array();
-        $errorReportingRaw = $this->debug->errorHandler->getCfg('errorReporting');
-        $errorReporting = $this->debug->errorHandler->errorReporting();
-        if (\in_array(\error_reporting(), array(-1, E_ALL | E_STRICT)) === false) {
-            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . ErrorLevel::toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
-            if ($errorReporting === (E_ALL | E_STRICT)) {
-                $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
-            }
-        }
-        if ($errorReporting !== (E_ALL | E_STRICT)) {
-            $errReportingStr = ErrorLevel::toConstantString($errorReporting);
-            $msgLine = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
-                . '`%c' . $errReportingStr . '%c`';
-            if ($errorReportingRaw === 'system') {
-                $msgLine = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
-            } elseif ($errorReporting === \error_reporting()) {
-                $msgLine = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
-                    . '`%c' . $errReportingStr . '%c`';
-            }
-            $msgLines[] = $msgLine;
-        }
+        $msgLines = $this->logPhpInfoErMsgLines();
         if (!$msgLines) {
             return;
         }
@@ -290,6 +270,37 @@ class LogEnv implements SubscriberInterface
             'line' => null,
         ));
         \call_user_func_array(array($this->debug, 'warn'), $args);
+    }
+
+    /**
+     * Get the error reporting message lines
+     *
+     * @return array
+     */
+    private function logPhpInfoErMsgLines()
+    {
+        $msgLines = array();
+        $errorReportingRaw = $this->debug->errorHandler->getCfg('errorReporting');
+        $errorReporting = $this->debug->errorHandler->errorReporting();
+        if (\in_array(\error_reporting(), array(-1, E_ALL | E_STRICT)) === false) {
+            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . $this->debug->errorLevel->toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
+            if ($errorReporting === (E_ALL | E_STRICT)) {
+                $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
+            }
+        }
+        if ($errorReporting !== (E_ALL | E_STRICT)) {
+            $errReportingStr = $this->debug->errorLevel->toConstantString($errorReporting);
+            $msgLine = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
+                . '`%c' . $errReportingStr . '%c`';
+            if ($errorReportingRaw === 'system') {
+                $msgLine = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
+            } elseif ($errorReporting === \error_reporting()) {
+                $msgLine = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
+                    . '`%c' . $errReportingStr . '%c`';
+            }
+            $msgLines[] = $msgLine;
+        }
+        return $msgLines;
     }
 
     /**
@@ -333,7 +344,6 @@ class LogEnv implements SubscriberInterface
             return;
         }
         $logServerKeys = $this->debug->getCfg('logServerKeys', Debug::CONFIG_DEBUG);
-        $serverParams = $this->debug->request->getServerParams();
         if ($this->debug->request->getMethod() !== 'GET') {
             $logServerKeys[] = 'REQUEST_METHOD';
         }
@@ -349,17 +359,10 @@ class LogEnv implements SubscriberInterface
         if (empty($logServerKeys)) {
             return;
         }
-        $vals = array();
-        foreach ($logServerKeys as $k) {
-            $val = Abstracter::UNDEFINED;
-            if (\array_key_exists($k, $serverParams)) {
-                $val = $serverParams[$k];
-                if ($k === 'REQUEST_TIME') {
-                    $val = \date('Y-m-d H:i:s T', $val);
-                }
-            }
-            $vals[$k] = $val;
-        }
+        $vals = \array_fill_keys($logServerKeys, Abstracter::UNDEFINED);
+        $serverParams = $this->debug->request->getServerParams();
+        $serverParams = \array_intersect_key($serverParams, $vals);
+        $vals = \array_merge($vals, $serverParams);
         \ksort($vals, SORT_NATURAL);
         $this->debug->log('$_SERVER', $vals, $this->debug->meta('redact'));
     }
@@ -379,15 +382,14 @@ class LogEnv implements SubscriberInterface
         }
 
         $debugWas = $this->debug;
-
-        $channelOpts = array(
-            'channelIcon' => 'fa fa-suitcase',
-            'nested' => false,
-        );
-        $this->debug = $this->debug->rootInstance->getChannel('Session', $channelOpts);
-
         $namePassed = $this->getPassedSessionName();
         $namePrev = null;
+
+        $this->debug = $this->debug->rootInstance->getChannel('Session', array(
+            'channelIcon' => 'fa fa-suitcase',
+            'nested' => false,
+        ));
+
         $this->logSessionSettings($namePassed);
         if (\session_status() !== PHP_SESSION_ACTIVE) {
             if ($namePassed === null) {

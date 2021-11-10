@@ -40,6 +40,7 @@ class ServiceProvider implements ServiceProviderInterface
             'arrayUtil',
             'backtrace',
             'errorHandler',
+            'errorLevel',
             'html',
             'methodClear',
             'methodCount',
@@ -77,6 +78,9 @@ class ServiceProvider implements ServiceProviderInterface
         $container['errorEmailer'] = function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\ErrorHandler\ErrorEmailer($debug->getCfg('errorEmailer', \bdk\Debug::CONFIG_INIT));
+        };
+        $container['errorLevel'] = function () {
+            return new \bdk\Debug\Utility\ErrorLevel();
         };
         $container['errorHandler'] = function (Container $container) {
             $debug = $container['debug'];

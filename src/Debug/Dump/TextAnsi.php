@@ -210,13 +210,51 @@ class TextAnsi extends Text
     }
 
     /**
+     * Dump null value
+     *
+     * @return string
+     */
+    protected function dumpNull()
+    {
+        return $this->cfg['escapeCodes']['muted'] . 'null' . $this->escapeReset;
+    }
+
+    /**
+     * Dump object as text
+     *
+     * @param Abstraction $abs object "abstraction"
+     *
+     * @return string
+     */
+    protected function dumpObject(Abstraction $abs)
+    {
+        $escapeCodes = $this->cfg['escapeCodes'];
+        if ($abs['isRecursion']) {
+            return $escapeCodes['excluded'] . '*RECURSION*' . $this->escapeReset;
+        }
+        if ($abs['isExcluded']) {
+            return $escapeCodes['excluded'] . 'NOT INSPECTED' . $this->escapeReset;
+        }
+        $isNested = $this->valDepth > 0;
+        $this->valDepth++;
+        $str = $this->markupIdentifier($abs['className']) . "\n"
+            . $this->dumpObjectProperties($abs)
+            . $this->dumpObjectMethods($abs);
+        $str = \trim($str);
+        if ($isNested) {
+            $str = \str_replace("\n", "\n    ", $str);
+        }
+        return $str;
+    }
+
+    /**
      * Dump object methods as text
      *
      * @param Abstraction $abs object "abstraction"
      *
      * @return string html
      */
-    protected function dumpMethods(Abstraction $abs)
+    protected function dumpObjectMethods(Abstraction $abs)
     {
         $collectMethods = $abs['cfgFlags'] & AbstractObject::COLLECT_METHODS;
         $outputMethods = $abs['cfgFlags'] & AbstractObject::OUTPUT_METHODS;
@@ -248,51 +286,13 @@ class TextAnsi extends Text
     }
 
     /**
-     * Dump null value
-     *
-     * @return string
-     */
-    protected function dumpNull()
-    {
-        return $this->cfg['escapeCodes']['muted'] . 'null' . $this->escapeReset;
-    }
-
-    /**
-     * Dump object as text
-     *
-     * @param Abstraction $abs object "abstraction"
-     *
-     * @return string
-     */
-    protected function dumpObject(Abstraction $abs)
-    {
-        $escapeCodes = $this->cfg['escapeCodes'];
-        if ($abs['isRecursion']) {
-            return $escapeCodes['excluded'] . '*RECURSION*' . $this->escapeReset;
-        }
-        if ($abs['isExcluded']) {
-            return $escapeCodes['excluded'] . 'NOT INSPECTED' . $this->escapeReset;
-        }
-        $isNested = $this->valDepth > 0;
-        $this->valDepth++;
-        $str = $this->markupIdentifier($abs['className']) . "\n"
-            . $this->dumpProperties($abs)
-            . $this->dumpMethods($abs);
-        $str = \trim($str);
-        if ($isNested) {
-            $str = \str_replace("\n", "\n    ", $str);
-        }
-        return $str;
-    }
-
-    /**
      * Dump object properties as text with ANSI escape codes
      *
      * @param Abstraction $abs object abstraction
      *
      * @return string
      */
-    protected function dumpProperties(Abstraction $abs)
+    protected function dumpObjectProperties(Abstraction $abs)
     {
         $str = '';
         if (isset($abs['methods']['__get'])) {
@@ -302,7 +302,8 @@ class TextAnsi extends Text
                 . "\n";
         }
         foreach ($abs['properties'] as $name => $info) {
-            $str .= '    ' . $this->dumpPropVis($info)
+            $vis = $this->dumpPropVis($info);
+            $str .= '    ' . $this->cfg['escapeCodes']['muted'] . '(' . $vis . ')' . $this->escapeReset
                 . ' ' . $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset
                 . ($info['debugInfoExcluded']
                     ? ''
@@ -315,31 +316,6 @@ class TextAnsi extends Text
             ? "\e[4mProperties:\e[24m"
             : 'Properties: none!';
         return '  ' . $header . "\n" . $str;
-    }
-
-    /**
-     * Dump property visibility
-     *
-     * @param array $info property info array
-     *
-     * @return string visibility
-     */
-    private function dumpPropVis($info)
-    {
-        $vis = (array) $info['visibility'];
-        foreach ($vis as $i => $v) {
-            if (\in_array($v, array('magic','magic-read','magic-write'))) {
-                $vis[$i] = '✨ ' . $v;    // "sparkles" there is no magic-wand unicode char
-            } elseif ($v === 'private' && $info['inheritedFrom']) {
-                $vis[$i] = '🔒 ' . $v;
-            }
-        }
-        if ($info['debugInfoExcluded']) {
-            $vis[] = 'excluded';
-        }
-        $vis = \implode(' ', $vis);
-        $vis = $this->cfg['escapeCodes']['muted'] . '(' . $vis . ')' . $this->escapeReset;
-        return $vis;
     }
 
     /**

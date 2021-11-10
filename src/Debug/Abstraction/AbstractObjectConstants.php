@@ -105,12 +105,12 @@ class AbstractObjectConstants
      */
     private function addConstantsReflection(ReflectionClass $reflector)
     {
-        foreach ($reflector->getReflectionConstants() as $refConst) {
-            $name = $refConst->getName();
+        foreach ($reflector->getReflectionConstants() as $refConstant) {
+            $name = $refConstant->getName();
             if (isset($this->constants[$name])) {
                 continue;
             }
-            $this->constants[$name] = $this->getConstantReflection($refConst);
+            $this->constants[$name] = $this->getConstantReflection($refConstant);
         }
     }
 
@@ -123,12 +123,6 @@ class AbstractObjectConstants
      */
     private function getConstantReflection(ReflectionClassConstant $refConstant)
     {
-        $vis = 'public';
-        if ($refConstant->isPrivate()) {
-            $vis = 'private';
-        } elseif ($refConstant->isProtected()) {
-            $vis = 'protected';
-        }
         return array(
             'attributes' => $this->inclAttributes
                 ? $this->helper->getAttributes($refConstant)
@@ -140,7 +134,7 @@ class AbstractObjectConstants
                 ? $refConstant->isFinal()
                 : false,
             'value' => $refConstant->getValue(),
-            'visibility' => $vis,
+            'visibility' => $this->helper->getVisibility($refConstant),
         );
     }
 }

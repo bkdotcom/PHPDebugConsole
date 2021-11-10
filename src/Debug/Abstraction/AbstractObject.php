@@ -201,13 +201,13 @@ class AbstractObject extends Component
             $propsAlwaysAvail = array(
                 'client_info','client_version','connect_errno','connect_error','errno','error','stat'
             );
-            $reflectionObject = $abs['reflector'];
+            $refObject = $abs['reflector'];
             foreach ($propsAlwaysAvail as $name) {
                 if (!isset($abs['properties'][$name])) {
                     // stat property may be missing in php 7.4??
                     continue;
                 }
-                $abs['properties'][$name]['value'] = $reflectionObject->getProperty($name)->getValue($obj);
+                $abs['properties'][$name]['value'] = $refObject->getProperty($name)->getValue($obj);
             }
         }
         $this->promoteParamDescs($abs);

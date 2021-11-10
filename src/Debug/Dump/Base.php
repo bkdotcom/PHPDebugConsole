@@ -29,6 +29,32 @@ class Base extends Component
                                 //   when processing log this is set to false
                                 //   so not unecessarily re-crating arrays
     public $debug;
+    protected $simpleTypes = array(
+        Abstracter::TYPE_ARRAY,
+        Abstracter::TYPE_BOOL,
+        Abstracter::TYPE_FLOAT,
+        Abstracter::TYPE_INT,
+        Abstracter::TYPE_NULL,
+        Abstracter::TYPE_STRING,
+    );
+    protected $alertStyles = array(
+        'common' => 'padding: 5px;'
+            . ' line-height: 26px;'
+            . ' font-size: 125%;'
+            . ' font-weight: bold;',
+        'error' => 'background-color: #ffbaba;'
+            . ' border: 1px solid #d8000c;'
+            . ' color: #d8000c;',
+        'info' => 'background-color: #d9edf7;'
+            . ' border: 1px solid #bce8f1;'
+            . ' color: #31708f;',
+        'success' => 'background-color: #dff0d8;'
+            . ' border: 1px solid #d6e9c6;'
+            . ' color: #3c763d;',
+        'warn' => 'background-color: #fcf8e3;'
+            . ' border: 1px solid #faebcc;'
+            . ' color: #8a6d3b;',
+    );
     protected $channelNameRoot;
     protected $dumpOptions = array();
     protected $dumpOptStack = array();
@@ -212,15 +238,7 @@ class Base extends Component
             $this->setDumpOpt('typeMore', $event['typeMore']);
             return $event['return'];
         }
-        $simpleTypes = array(
-            Abstracter::TYPE_ARRAY,
-            Abstracter::TYPE_BOOL,
-            Abstracter::TYPE_FLOAT,
-            Abstracter::TYPE_INT,
-            Abstracter::TYPE_NULL,
-            Abstracter::TYPE_STRING,
-        );
-        return \in_array($type, $simpleTypes)
+        return \in_array($type, $this->simpleTypes)
             ? $this->{$method}($abs['value'], $abs)
             : $this->{$method}($abs);
     }
@@ -344,7 +362,7 @@ class Base extends Component
         }
         return array(
             '___class_name' => $abs['className'],
-        ) + (array) $this->dumpProperties($abs);
+        ) + (array) $this->dumpObjectProperties($abs);
     }
 
     /**
@@ -354,25 +372,38 @@ class Base extends Component
      *
      * @return array|string
      */
-    protected function dumpProperties(Abstraction $abs)
+    protected function dumpObjectProperties(Abstraction $abs)
     {
         $return = array();
         foreach ($abs['properties'] as $name => $info) {
-            $vis = (array) $info['visibility'];
-            foreach ($vis as $i => $v) {
-                if (\in_array($v, array('magic','magic-read','magic-write'))) {
-                    $vis[$i] = '✨ ' . $v;    // "sparkles": there is no magic-wand unicode char
-                } elseif ($v === 'private' && $info['inheritedFrom']) {
-                    $vis[$i] = '🔒 ' . $v;
-                }
-            }
-            if ($info['debugInfoExcluded']) {
-                $vis[] = 'excluded';
-            }
-            $name = '(' . \implode(' ', $vis) . ') ' . \str_replace('debug.', '', $name);
+            $vis = $this->dumpPropVis($info);
+            $name = '(' . $vis . ') ' . \str_replace('debug.', '', $name);
             $return[$name] = $this->dump($info['value']);
         }
         return $return;
+    }
+
+    /**
+     * Dump property visibility
+     *
+     * @param array $info property info array
+     *
+     * @return string visibility
+     */
+    protected function dumpPropVis($info)
+    {
+        $vis = (array) $info['visibility'];
+        foreach ($vis as $i => $v) {
+            if (\in_array($v, array('magic','magic-read','magic-write'))) {
+                $vis[$i] = '✨ ' . $v;    // "sparkles": there is no magic-wand unicode char
+            } elseif ($v === 'private' && $info['inheritedFrom']) {
+                $vis[$i] = '🔒 ' . $v;
+            }
+        }
+        if ($info['debugInfoExcluded']) {
+            $vis[] = 'excluded';
+        }
+        return \implode(' ', $vis);
     }
 
     /**
@@ -413,22 +444,31 @@ class Base extends Component
                 ? $val . ' (' . $date . ')'
                 : $val;
         }
-        if ($abs) {
-            if ($abs['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
-                if (!$val) {
-                    return 'Binary data not collected';
-                }
-            }
-            $val = $this->debug->utf8->dump($val);
-            $diff = $abs['strlen']
-                ? $abs['strlen'] - \strlen($abs['value'])
-                : 0;
-            if ($diff) {
-                $val .= '[' . $diff . ' more bytes (not logged)]';
-            }
-            return $val;
+        return $abs
+            ? $this->dumpStringAbs($abs)
+            : $this->debug->utf8->dump($val);
+    }
+
+    /**
+     * Dump string abstraction
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return string
+     */
+    private function dumpStringAbs(Abstraction $abs)
+    {
+        if ($abs['typeMore'] === Abstracter::TYPE_STRING_BINARY && !$abs['value']) {
+            return 'Binary data not collected';
         }
-        return $this->debug->utf8->dump($val);
+        $val = $this->debug->utf8->dump($abs['value']);
+        $diff = $abs['strlen']
+            ? $abs['strlen'] - \strlen($abs['value'])
+            : 0;
+        if ($diff) {
+            $val .= '[' . $diff . ' more bytes (not logged)]';
+        }
+        return $val;
     }
 
     /**
@@ -463,39 +503,15 @@ class Base extends Component
             return null;
         }
         $args = array('%c' . $logEntry['args'][0], '');
-        $styleCommon = 'padding:5px; line-height:26px; font-size:125%; font-weight:bold;';
-        switch ($method) {
-            case 'error':
-                // Just use log method... Chrome adds backtrace to error(), which we don't want
-                $method = 'log';
-                $args[1] = $styleCommon
-                    . 'background-color: #ffbaba;'
-                    . 'border: 1px solid #d8000c;'
-                    . 'color: #d8000c;';
-                break;
-            case 'info':
-                $args[1] = $styleCommon
-                    . 'background-color: #d9edf7;'
-                    . 'border: 1px solid #bce8f1;'
-                    . 'color: #31708f;';
-                break;
-            case 'success':
-                $method = 'info';
-                $args[1] = $styleCommon
-                    . 'background-color: #dff0d8;'
-                    . 'border: 1px solid #d6e9c6;'
-                    . 'color: #3c763d;';
-                break;
-            case 'warn':
-                // Just use log method... Chrome adds backtrace to warn(), which we don't want
-                $method = 'log';
-                $args[1] = $styleCommon
-                    . 'background-color: #fcf8e3;'
-                    . 'border: 1px solid #faebcc;'
-                    . 'color: #8a6d3b;';
-                break;
-        }
-        $logEntry['method'] = $method;
+        $args[1] = $this->alertStyles['common']
+            . ' ' . $this->alertStyles[$method];
+        $methodMap = array(
+            'error' => 'log', // Just use log method... Chrome adds backtrace to error(), which we don't want
+            'info' => 'info',
+            'success' => 'info',
+            'warn' => 'log', // Just use log method... Chrome adds backtrace to warn(), which we don't want
+        );
+        $logEntry['method'] = $methodMap[$method];
         $logEntry['args'] = $args;
     }
 

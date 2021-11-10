@@ -51,7 +51,7 @@ class ErrorEmailer implements SubscriberInterface
                 ? $this->serverParams['SERVER_ADMIN']
                 : null,
             'emailTraceMask' => E_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-            'dateTimeFmt' => 'Y-m-d H:i:s (T)',
+            'dateTimeFmt' => 'Y-m-d H:i:s T',
         );
         $this->setCfg($cfg);
     }

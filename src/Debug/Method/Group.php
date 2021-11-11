@@ -435,42 +435,19 @@ class Group implements SubscriberInterface
      */
     private function onOutputCleanup()
     {
-        $groupStack = array(
+        $this->groupStack = array(
             array(
                 // dummy / root group
                 //  eliminates need to test if entry has parent group
                 'childCount' => 0,
                 'groupCount' => 0,
+                'depth' => 0,
             )
         );
-        $groupStackCount = 1;
+        $this->groupStackCount = 1;
         $reindex = false;
         for ($i = 0, $count = \count($this->log); $i < $count; $i++) {
-            $logEntry = $this->log[$i];
-            $method = $logEntry['method'];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
-                $groupStack[] = array(
-                    'childCount' => 0,  // includes any child groups
-                    'groupCount' => 0,
-                    'i' => $i,
-                    'iEnd' => null,
-                    'meta' => $logEntry['meta'],
-                    'parent' => null,
-                );
-                $groupStack[$groupStackCount - 1]['childCount']++;
-                $groupStack[$groupStackCount - 1]['groupCount']++;
-                $groupStack[$groupStackCount]['parent'] = &$groupStack[$groupStackCount - 1];
-                $groupStackCount++;
-                continue;
-            }
-            if ($method === 'groupEnd') {
-                $group = \array_pop($groupStack);
-                $group['iEnd'] = $i;
-                $groupStackCount--;
-                $reindex = $this->onOutputCleanupGroup($group) || $reindex;
-                continue;
-            }
-            $groupStack[$groupStackCount - 1]['childCount']++;
+            $reindex = $this->processLogEntry($i) || $reindex;
         }
         if ($reindex) {
             $this->log = \array_values($this->log);
@@ -484,37 +461,74 @@ class Group implements SubscriberInterface
      *
      * @return bool Whether log needs re-indexed
      */
-    private function onOutputCleanupGroup(&$group = array())
+    private function onOutputCleanupGroup($group = array())
     {
+        $parent = &$this->groupStack[ $group['depth'] - 1 ];
         if (!empty($group['meta']['hideIfEmpty']) && $group['childCount'] === 0) {
-            unset($this->log[$group['i']]);     // remove open entry
-            unset($this->log[$group['iEnd']]);  // remove end entry
-            $group['parent']['childCount']--;
-            $group['parent']['groupCount']--;
+            unset($this->log[$group['index']]);     // remove open entry
+            unset($this->log[$group['indexEnd']]);  // remove end entry
+            $parent['childCount']--;
+            $parent['groupCount']--;
             return true;
         }
         if (empty($group['meta']['ungroup'])) {
             return false;
         }
         if ($group['childCount'] === 0) {
-            $this->log[$group['i']]['method'] = 'log';
-            unset($this->log[$group['iEnd']]);  // remove end entry
-            $group['parent']['groupCount']--;
+            $this->log[$group['index']]['method'] = 'log';
+            unset($this->log[$group['indexEnd']]);  // remove end entry
+            $parent['groupCount']--;
             return true;
         }
         if ($group['childCount'] === 1 && $group['groupCount'] === 0) {
-            unset($this->log[$group['i']]);     // remove open entry
-            unset($this->log[$group['iEnd']]);  // remove end entry
-            $group['parent']['groupCount']--;
+            unset($this->log[$group['index']]);     // remove open entry
+            unset($this->log[$group['indexEnd']]);  // remove end entry
+            $parent['groupCount']--;
             return true;
         }
         return false;
     }
 
     /**
+     * Update groupStack stats durring onOutputCleanup
+     *
+     * @param int $index Log entry index
+     *
+     * @return bool Whether log needs re-indexed
+     */
+    private function processLogEntry($index)
+    {
+        $logEntry = $this->log[$index];
+        $method = $logEntry['method'];
+        $groupStackCount = $this->groupStackCount;
+        if (\in_array($method, array('group', 'groupCollapsed'))) {
+            $this->groupStack[] = array(
+                'childCount' => 0,  // includes any child groups
+                'groupCount' => 0,
+                'index' => $index,
+                'indexEnd' => null,
+                'meta' => $logEntry['meta'],
+                'depth' => $groupStackCount,
+            );
+            $this->groupStack[$groupStackCount - 1]['childCount']++;
+            $this->groupStack[$groupStackCount - 1]['groupCount']++;
+            $this->groupStackCount++;
+            return false;
+        }
+        if ($method === 'groupEnd') {
+            $group = \array_pop($this->groupStack);
+            $group['indexEnd'] = $index;
+            $this->groupStackCount--;
+            return $this->onOutputCleanupGroup($group);
+        }
+        $this->groupStack[$groupStackCount - 1]['childCount']++;
+        return false;
+    }
+
+    /**
      * Use string representation for group args if available
      *
-     * @param LogEntry $logEntry Log entry
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */

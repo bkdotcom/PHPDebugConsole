@@ -285,9 +285,7 @@ class AbstractObjectMethods
             }, $phpDocMethod['param']),
             'phpDoc' => array(
                 'desc' => null,
-                'summary' => $this->abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC
-                    ? $phpDocMethod['desc']
-                    : null,
+                'summary' => $phpDocMethod['desc'],
             ),
             'return' => array(
                 'desc' => null,

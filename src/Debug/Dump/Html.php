@@ -110,20 +110,7 @@ class Html extends Base
      */
     public function dump($val, $opts = array())
     {
-        $attribs = array(
-            'class' => array(),
-        );
-        if ($val instanceof Abstraction && \is_array($val['attribs'])) {
-            $attribs = \array_merge(
-                $attribs,
-                $val['attribs']
-            );
-        }
-        $opts = \array_merge(array(
-            'tagName' => '__default__',
-            'attribs' => $attribs,
-            'postDump' => null,
-        ), $opts);
+        $opts = $this->setDumpOptDefaults($val, $opts);
         $val = parent::dump($val, $opts);
         $this->dumpOptions['attribs']['class'][] = 't_' . $this->dumpOptions['type'];
         if ($this->dumpOptions['typeMore'] !== null) {
@@ -185,24 +172,13 @@ class Html extends Base
     /**
      * Return a log entry as HTML
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return string|void
      */
     public function processLogEntry(LogEntry $logEntry)
     {
-        $meta = \array_merge(array(
-            'attribs' => array(),
-            'detectFiles' => null,
-            'glue' => null,
-            'icon' => null,
-            'sanitize' => true,         // apply htmlspecialchars (to non-first arg)?
-            'sanitizeFirst' => null,    // if null, use meta.sanitize
-        ), $logEntry['meta']);
-        if ($meta['sanitizeFirst'] === null) {
-            $meta['sanitizeFirst'] = $meta['sanitize'];
-        }
-        $logEntry->setMeta($meta);
+        $meta = $this->setMetaDefaults($logEntry);
         $channelName = $logEntry->getChannelName();
         // phpError channel is handled separately
         if (!isset($this->channels[$channelName]) && $channelName !== $this->channelNameRoot . '.phpError') {
@@ -534,10 +510,7 @@ class Html extends Base
      */
     protected function methodDefault(LogEntry $logEntry)
     {
-        $meta = \array_merge(array(
-            'errorCat' => null,  //  should only be applicable for error & warn methods
-            'uncollapse' => null,
-        ), $logEntry['meta']);
+        $meta = $logEntry['meta'];
         $attribs = $this->logEntryAttribs;
         if (isset($meta['file']) && $logEntry->getChannelName() !== $this->channelNameRoot . '.phpError') {
             // PHP errors will have file & line as one of the arguments
@@ -630,10 +603,10 @@ class Html extends Base
     /**
      * Build group header
      *
-     * @param array $args [description]
-     * @param array $meta [description]
+     * @param array $args arguments
+     * @param array $meta meta values
      *
-     * @return [type] [description]
+     * @return string
      */
     private function methodGroupHeader($args, $meta)
     {
@@ -647,6 +620,7 @@ class Html extends Base
         ))));
 
         $headerAppend = '';
+
         if ($args) {
             foreach ($args as $k => $v) {
                 $args[$k] = $this->dump($v);
@@ -700,6 +674,60 @@ class Html extends Base
             $this->logEntryAttribs,
             "\n" . $this->table->build($logEntry['args'][0], $meta) . "\n"
         );
+    }
+
+    /**
+     * Get dump options
+     *
+     * @param mixed $val  value being dumpted
+     * @param array $opts options for string values
+     *                      addQuotes, sanitize, visualWhitespace, etc
+     *
+     * @return array
+     */
+    private function setDumpOptDefaults($val, $opts)
+    {
+        $attribs = array(
+            'class' => array(),
+        );
+        if ($val instanceof Abstraction && \is_array($val['attribs'])) {
+            $attribs = \array_merge(
+                $attribs,
+                $val['attribs']
+            );
+        }
+        $opts = \array_merge(array(
+            'tagName' => '__default__',
+            'attribs' => $attribs,
+            'postDump' => null,
+        ), $opts);
+        return $opts;
+    }
+
+    /**
+     * Set default meta values
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array all meta values
+     */
+    private function setMetaDefaults(LogEntry $logEntry)
+    {
+        $meta = \array_merge(array(
+            'attribs' => array(),
+            'detectFiles' => null,
+            'errorCat' => null,         // should only be applicable for error & warn methods
+            'glue' => null,
+            'icon' => null,
+            'sanitize' => true,         // apply htmlspecialchars (to non-first arg)?
+            'sanitizeFirst' => null,    // if null, use meta.sanitize
+            'uncollapse' => null,
+        ), $logEntry['meta']);
+        if ($meta['sanitizeFirst'] === null) {
+            $meta['sanitizeFirst'] = $meta['sanitize'];
+        }
+        $logEntry->setMeta($meta);
+        return $meta;
     }
 
     /**

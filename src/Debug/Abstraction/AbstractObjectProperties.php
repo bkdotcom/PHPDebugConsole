@@ -92,6 +92,12 @@ class AbstractObjectProperties
         'tagName' => 'string',
     );
 
+    private $magicPhpDocTags = array(
+        'property' => 'magic',
+        'property-read' => 'magic-read',
+        'property-write' => 'magic-write',
+    );
+
     /**
      * Constructor
      *
@@ -107,7 +113,7 @@ class AbstractObjectProperties
     /**
      * Add property info/values to abstraction
      *
-     * @param Abstraction $abs Object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      */
@@ -117,84 +123,49 @@ class AbstractObjectProperties
             return;
         }
         $this->abs = $abs;
-        $this->addPropertiesBase($abs);
-        $this->addPropertiesPhpDoc($abs); // magic properties documented via phpDoc
+        $this->addViaReflection($abs);
+        $this->addViaPhpDoc($abs); // magic properties documented via phpDoc
         $obj = $abs->getSubject();
         if (\is_object($obj)) {
-            $this->addPropertiesDom($abs);
-            $this->addPropertiesDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
+            $this->addDom($abs);
+            $this->addDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
             if ($abs['className'] === 'Closure') {
-                $this->addPropertiesClosure($abs);
+                $this->addClosure($abs);
             }
         }
         $this->crate($abs);
     }
 
     /**
-     * Return property info array
+     * Build property info buy passing values
      *
      * @param array $values values to apply
      *
      * @return array
      */
-    public static function buildPropInfo($values = array())
+    public static function buildPropValues($values = array())
     {
         return \array_merge(static::$basePropInfo, $values);
     }
 
     /**
-     * Adds properties (via reflection) to abstraction
-     *
-     * @param Abstraction $abs Abstraction event object
-     *
-     * @return void
-     */
-    private function addPropertiesBase(Abstraction $abs)
-    {
-        $refObject = $abs['reflector'];
-        /*
-            We trace our ancestory to learn where properties are inherited from
-        */
-        while ($refObject) {
-            $className = $refObject->getName();
-            $properties = $refObject->getProperties();
-            while ($properties) {
-                $refProperty = \array_shift($properties);
-                $name = $refProperty->getName();
-                if (isset($abs['properties'][$name])) {
-                    // already have info... we're in an ancestor
-                    $abs['properties'][$name]['overrides'] = $this->propOverrides(
-                        $refProperty,
-                        $abs['properties'][$name],
-                        $className
-                    );
-                    $abs['properties'][$name]['originallyDeclared'] = $className;
-                    continue;
-                }
-                $abs['properties'][$name] = $this->getPropInfo($abs, $refProperty);
-            }
-            $refObject = $refObject->getParentClass();
-        }
-    }
-
-    /**
      * Add file & line debug properties for Closure
      *
-     * @param Abstraction $abs Abstraction event object
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      */
-    private function addPropertiesClosure(Abstraction $abs)
+    private function addClosure(Abstraction $abs)
     {
         $obj = $abs->getSubject();
         $ref = new \ReflectionFunction($obj);
-        $abs['properties']['debug.file'] = static::buildPropInfo(array(
+        $abs['properties']['debug.file'] = static::buildPropValues(array(
             'type' => Abstracter::TYPE_STRING,
             'value' => $ref->getFileName(),
             'valueFrom' => 'debug',
             'visibility' => 'debug',
         ));
-        $abs['properties']['debug.line'] = static::buildPropInfo(array(
+        $abs['properties']['debug.line'] = static::buildPropValues(array(
             'type' => Abstracter::TYPE_INT,
             'value' => $ref->getStartLine(),
             'valueFrom' => 'debug',
@@ -205,11 +176,11 @@ class AbstractObjectProperties
     /**
      * Add/Update properties with info from __debugInfo method
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      */
-    private function addPropertiesDebug(Abstraction $abs)
+    private function addDebug(Abstraction $abs)
     {
         if (!$abs['collectPropertyValues']) {
             return;
@@ -221,12 +192,12 @@ class AbstractObjectProperties
         $obj = $abs->getSubject();
         // temporarily store __debugInfo values in abstraction
         $abs['debugInfo'] = \call_user_func(array($obj, '__debugInfo'));
-        $properties = $this->addPropertiesDebugWalk($abs);
+        $properties = $this->addDebugWalk($abs);
         /*
             What remains in debugInfo are __debugInfo only values
         */
         foreach ($abs['debugInfo'] as $name => $value) {
-            $properties[$name] = static::buildPropInfo(array(
+            $properties[$name] = static::buildPropValues(array(
                 'value' => $value,
                 'valueFrom' => 'debugInfo',
                 'visibility' => 'debug',    // indicates this "property" is exclusive to debugInfo
@@ -239,11 +210,11 @@ class AbstractObjectProperties
     /**
      * Iterate over properties to set value & valueFrom
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return array
      */
-    private function addPropertiesDebugWalk(Abstraction $abs)
+    private function addDebugWalk(Abstraction $abs)
     {
         $debugInfo = $abs['debugInfo'];
         $properties = $abs['properties'];
@@ -278,13 +249,13 @@ class AbstractObjectProperties
      * DOM* properties are invisible to reflection
      * https://bugs.php.net/bug.php?id=48527
      *
-     * @param Abstraction $abs Abstraction event object
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      *
      * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
-    private function addPropertiesDom(Abstraction $abs)
+    private function addDom(Abstraction $abs)
     {
         $obj = $abs->getSubject();
         if ($abs['properties']) {
@@ -316,7 +287,7 @@ class AbstractObjectProperties
                 // function array dereferencing = php 5.4
                 $type = $this->abstracter->getType($val)[0];
             }
-            $abs['properties'][$propName] = static::buildPropInfo(array(
+            $abs['properties'][$propName] = static::buildPropValues(array(
                 'type' => $type,
                 'value' => \is_object($val)
                     ? Abstracter::NOT_INSPECTED
@@ -329,94 +300,108 @@ class AbstractObjectProperties
      * "Magic" properties may be defined in a class' doc-block
      * If so... move this information to the properties array
      *
-     * @param Abstraction $abs Abstraction event object
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      *
      * @see http://docs.phpdoc.org/references/phpdoc/tags/property.html
      */
-    private function addPropertiesPhpDoc(Abstraction $abs)
+    private function addViaPhpDoc(Abstraction $abs)
     {
-        // tag => visibility
-        $tags = array(
-            'property' => 'magic',
-            'property-read' => 'magic-read',
-            'property-write' => 'magic-write',
-        );
         $inheritedFrom = null;
-        if (!\array_intersect_key($abs['phpDoc'], $tags)) {
+        $haveMagic = \array_intersect_key($abs['phpDoc'], $this->magicPhpDocTags);
+        $obj = $abs->getSubject();
+        if (!$haveMagic && \method_exists($obj, '__get')) {
             // phpDoc doesn't contain any @property tags
-            $found = false;
-            $obj = $abs->getSubject();
-            if (!\method_exists($obj, '__get')) {
-                // don't have magic getter... don't bother searching ancestor phpDocs
-                return;
-            }
             // we've got __get method:  check if parent classes have @property tags
-            $reflector = $abs['reflector'];
-            while ($reflector = $reflector->getParentClass()) {
-                $parsed = $this->helper->getPhpDoc($reflector);
-                $tagIntersect = \array_intersect_key($parsed, $tags);
-                if (!$tagIntersect) {
+            $inheritedFrom = $this->addViaPhpDocInherit($abs);
+            $haveMagic = $inheritedFrom !== null;
+        }
+        if (!$haveMagic) {
+            return;
+        }
+        $this->addPhpDocIter($abs, $inheritedFrom);
+    }
+
+    /**
+     * Inspect inherited classes until we find properties defined in PhpDoc
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return string|null class where found
+     */
+    private function addViaPhpDocInherit(Abstraction $abs)
+    {
+        $inheritedFrom = null;
+        $reflector = $abs['reflector'];
+        while ($reflector = $reflector->getParentClass()) {
+            $parsed = $this->helper->getPhpDoc($reflector);
+            $tagIntersect = \array_intersect_key($parsed, $this->magicPhpDocTags);
+            if (!$tagIntersect) {
+                continue;
+            }
+            // $haveMagic = true;
+            $inheritedFrom = $reflector->getName();
+            $abs['phpDoc'] = \array_merge(
+                $abs['phpDoc'],
+                $tagIntersect
+            );
+            break;
+        }
+        return $inheritedFrom;
+    }
+
+    /**
+     * Adds properties (via reflection) to abstraction
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return void
+     */
+    private function addViaReflection(Abstraction $abs)
+    {
+        $refObject = $abs['reflector'];
+        /*
+            We trace our ancestory to learn where properties are inherited from
+        */
+        while ($refObject) {
+            $className = $refObject->getName();
+            $properties = $refObject->getProperties();
+            while ($properties) {
+                $refProperty = \array_shift($properties);
+                $name = $refProperty->getName();
+                if (isset($abs['properties'][$name])) {
+                    // already have info... we're in an ancestor
+                    $abs['properties'][$name]['overrides'] = $this->propOverrides(
+                        $refProperty,
+                        $abs['properties'][$name],
+                        $className
+                    );
+                    $abs['properties'][$name]['originallyDeclared'] = $className;
                     continue;
                 }
-                $found = true;
-                $inheritedFrom = $reflector->getName();
-                $abs['phpDoc'] = \array_merge(
-                    $abs['phpDoc'],
-                    $tagIntersect
-                );
-                break;
+                $abs['properties'][$name] = $this->buildPropRef($abs, $refProperty);
             }
-            if (!$found) {
-                return;
-            }
+            $refObject = $refObject->getParentClass();
         }
-        $this->addPropertiesPhpDocIter($abs, $inheritedFrom);
     }
 
     /**
      * Iterate over PhpDoc's magic properties & add to abstrction
      *
-     * @param Abstraction $abs           Abstraction event object
+     * @param Abstraction $abs           Object Abstraction instance
      * @param string|null $inheritedFrom Where the magic properties were found
      *
      * @return void
      */
-    private function addPropertiesPhpDocIter(Abstraction $abs, $inheritedFrom)
+    private function addPhpDocIter(Abstraction $abs, $inheritedFrom)
     {
-        // tag => visibility
-        $tags = array(
-            'property' => 'magic',
-            'property-read' => 'magic-read',
-            'property-write' => 'magic-write',
-        );
         $properties = $abs['properties'];
-        $collectPhpDoc = $abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC;
+        $tags = \array_intersect_key($this->magicPhpDocTags, $abs['phpDoc']);
         foreach ($tags as $tag => $vis) {
-            if (!isset($abs['phpDoc'][$tag])) {
-                continue;
-            }
             foreach ($abs['phpDoc'][$tag] as $phpDocProp) {
-                $exists = isset($properties[ $phpDocProp['name'] ]);
-                $properties[ $phpDocProp['name'] ] = \array_merge(
-                    $exists
-                        ? $properties[ $phpDocProp['name'] ]
-                        : self::$basePropInfo,
-                    array(
-                        'desc' => $collectPhpDoc
-                            ? $phpDocProp['desc']
-                            : null,
-                        'type' => $this->helper->resolvePhpDocType($phpDocProp['type'], $abs),
-                        'inheritedFrom' => $inheritedFrom,
-                        'visibility' => $exists
-                            ? array($properties[ $phpDocProp['name'] ]['visibility'], $vis)
-                            : $vis,
-                    )
-                );
-                if ($exists === false) {
-                    $properties[ $phpDocProp['name'] ]['value'] = Abstracter::UNDEFINED;
-                }
+                $name = $phpDocProp['name'];
+                $properties[$name] = $this->buildPropPhpDoc($abs, $phpDocProp, $inheritedFrom, $vis);
             }
             unset($abs['phpDoc'][$tag]);
         }
@@ -424,31 +409,43 @@ class AbstractObjectProperties
     }
 
     /**
-     * "Crate" property values
+     * Build property info from parsed PhpDoc values
      *
-     * @param Abstraction $abs Abstraction event object
+     * @param Abstraction $abs           Object Abstraction instance
+     * @param array       $phpDocProp    parsed property docblock tag
+     * @param string      $inheritedFrom className
+     * @param string      $vis           prop visibility]
      *
-     * @return void
+     * @return array
      */
-    private function crate(Abstraction $abs)
+    private function buildPropPhpDoc(Abstraction $abs, $phpDocProp, $inheritedFrom, $vis)
     {
-        $abs['hist'][] = $abs->getSubject();
-        $properties = $this->abs['properties'];
-        foreach ($properties as $name => $info) {
-            $properties[$name]['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
-        }
-        $abs['properties'] = $properties;
+        $name = $phpDocProp['name'];
+        $existing = isset($abs['properties'][$name])
+            ? $abs['properties'][$name]
+            : null;
+        return \array_merge(
+            $existing ?: self::$basePropInfo,
+            array(
+                'desc' => $phpDocProp['desc'],
+                'type' => $this->helper->resolvePhpDocType($phpDocProp['type'], $abs),
+                'inheritedFrom' => $inheritedFrom,
+                'visibility' => $existing
+                    ? array($existing['visibility'], $vis)
+                    : $vis,
+            )
+        );
     }
 
     /**
-     * Get property info
+     * Build property info via reflection
      *
-     * @param Abstraction        $abs         Abstraction event object
+     * @param Abstraction        $abs         Object Abstraction instance
      * @param ReflectionProperty $refProperty ReflectionProperty instance
      *
      * @return array
      */
-    private function getPropInfo(Abstraction $abs, ReflectionProperty $refProperty)
+    private function buildPropRef(Abstraction $abs, ReflectionProperty $refProperty)
     {
         $obj = $abs->getSubject();
         $isInstance = \is_object($obj);
@@ -462,13 +459,11 @@ class AbstractObjectProperties
             getDeclaringClass returns "LAST-declared/overriden"
         */
         $declaringClassName = $refProperty->getDeclaringClass()->getName();
-        $propInfo = static::buildPropInfo(array(
+        $propInfo = static::buildPropValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_PROP
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
-            'desc' => $abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC
-                ? $phpDoc['desc']
-                : null,
+            'desc' => $phpDoc['desc'],
             'inheritedFrom' => $declaringClassName !== $className
                 ? $declaringClassName
                 : null,
@@ -483,6 +478,28 @@ class AbstractObjectProperties
             $propInfo = $this->getPropValue($propInfo, $abs, $refProperty);
         }
         return $propInfo;
+    }
+
+    /**
+     * "Crate" property values
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return void
+     */
+    private function crate(Abstraction $abs)
+    {
+        $abs['hist'][] = $abs->getSubject();
+        $properties = $this->abs['properties'];
+        $collectPhpDoc = $abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC;
+        foreach ($properties as $name => $info) {
+            $info['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
+            if (!$collectPhpDoc) {
+                $info['desc'] = null;
+            }
+            $properties[$name] = $info;
+        }
+        $abs['properties'] = $properties;
     }
 
     /**
@@ -509,7 +526,7 @@ class AbstractObjectProperties
      * Set 'value' and 'valueFrom' values
      *
      * @param array              $propInfo    propInfo array
-     * @param Abstraction        $abs         Abstraction event object
+     * @param Abstraction        $abs         Object Abstraction instance
      * @param ReflectionProperty $refProperty ReflectionProperty
      *
      * @return array updated propInfo

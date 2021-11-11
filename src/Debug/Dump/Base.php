@@ -38,22 +38,22 @@ class Base extends Component
         Abstracter::TYPE_STRING,
     );
     protected $alertStyles = array(
-        'common' => 'padding: 5px;'
-            . ' line-height: 26px;'
-            . ' font-size: 125%;'
-            . ' font-weight: bold;',
-        'error' => 'background-color: #ffbaba;'
-            . ' border: 1px solid #d8000c;'
-            . ' color: #d8000c;',
-        'info' => 'background-color: #d9edf7;'
-            . ' border: 1px solid #bce8f1;'
-            . ' color: #31708f;',
-        'success' => 'background-color: #dff0d8;'
-            . ' border: 1px solid #d6e9c6;'
-            . ' color: #3c763d;',
-        'warn' => 'background-color: #fcf8e3;'
-            . ' border: 1px solid #faebcc;'
-            . ' color: #8a6d3b;',
+        'common' => 'padding: 5px;
+            line-height: 26px;
+            font-size: 125%;
+            font-weight: bold;',
+        'error' => 'background-color: #ffbaba;
+            border: 1px solid #d8000c;
+            color: #d8000c;',
+        'info' => 'background-color: #d9edf7;
+            border: 1px solid #bce8f1;
+            color: #31708f;',
+        'success' => 'background-color: #dff0d8;
+            border: 1px solid #d6e9c6;
+            color: #3c763d;',
+        'warn' => 'background-color: #fcf8e3;
+            border: 1px solid #faebcc;
+            color: #8a6d3b;',
     );
     protected $channelNameRoot;
     protected $dumpOptions = array();
@@ -502,9 +502,7 @@ class Base extends Component
             $logEntry['args'] = $args;
             return null;
         }
-        $args = array('%c' . $logEntry['args'][0], '');
-        $args[1] = $this->alertStyles['common']
-            . ' ' . $this->alertStyles[$method];
+        $style = $this->alertStyles['common'] . ' ' . $this->alertStyles[$method];
         $methodMap = array(
             'error' => 'log', // Just use log method... Chrome adds backtrace to error(), which we don't want
             'info' => 'info',
@@ -512,7 +510,10 @@ class Base extends Component
             'warn' => 'log', // Just use log method... Chrome adds backtrace to warn(), which we don't want
         );
         $logEntry['method'] = $methodMap[$method];
-        $logEntry['args'] = $args;
+        $logEntry['args'] = array(
+            '%c' . $logEntry['args'][0],
+            \preg_replace('/\n\s*/', ' ', $style),
+        );
     }
 
     /**
@@ -576,20 +577,21 @@ class Base extends Component
         $forceArray = $logEntry->getMeta('forceArray', true);
         $undefinedAs = $logEntry->getMeta('undefinedAs', 'unset');
         $tableInfo = $logEntry->getMeta('tableInfo');
-        if ($undefinedAs !== Abstracter::UNDEFINED || $forceArray === false || $tableInfo['haveObjRow']) {
-            $rows = $logEntry['args'][0];
-            if ($undefinedAs === 'null') {
-                $undefinedAs = null;
-            }
-            foreach ($rows as $rowKey => $row) {
-                $rowInfo = isset($tableInfo['rows'][$rowKey])
-                    ? $tableInfo['rows'][$rowKey]
-                    : array();
-                $rows[$rowKey] = $this->methodTabularRow($row, $forceArray, $undefinedAs, $rowInfo);
-            }
-            $logEntry['args'] = array($rows);
+        $processRows = $undefinedAs !== Abstracter::UNDEFINED || $forceArray === false || $tableInfo['haveObjRow'];
+        if (!$processRows) {
+            return null;
         }
-        return null;
+        $rows = $logEntry['args'][0];
+        if ($undefinedAs === 'null') {
+            $undefinedAs = null;
+        }
+        foreach ($rows as $rowKey => $row) {
+            $rowInfo = isset($tableInfo['rows'][$rowKey])
+                ? $tableInfo['rows'][$rowKey]
+                : array();
+            $rows[$rowKey] = $this->methodTabularRow($row, $forceArray, $undefinedAs, $rowInfo);
+        }
+        $logEntry['args'] = array($rows);
     }
 
     /**
@@ -615,12 +617,14 @@ class Base extends Component
             return \current($row);
         }
         foreach ($row as $k => $val) {
-            if ($val === Abstracter::UNDEFINED) {
-                $row[$k] = $undefinedAs;
-                if ($undefinedAs === 'unset') {
-                    unset($row[$k]);
-                }
+            if ($val !== Abstracter::UNDEFINED) {
+                continue;
             }
+            if ($undefinedAs === 'unset') {
+                unset($row[$k]);
+                continue;
+            }
+            $row[$k] = $undefinedAs;
         }
         if ($rowInfo['class']) {
             $row = \array_merge(

@@ -212,25 +212,24 @@ class Utf8
      * In addition, if valid UTF-8, will also report whether string contains
      * control, or other speical characters that could otherwise go unnoticed
      *
-     * @param string $str       string to check
-     * @param bool   $isSpecial does valid utf-8 string contain control or "exotic" whitespace type character
+     * @param string $str        string to check
+     * @param bool   $hasSpecial does valid utf-8 string contain control or "exotic" whitespace type character
      *
      * @return bool
      */
-    public static function isUtf8($str, &$isSpecial = false)
+    public static function isUtf8($str, &$hasSpecial = false)
     {
         self::setStr($str);
         $isSpecial = false;
         while (self::$curI < self::$stats['strLen']) {
             $isUtf8 = self::isOffsetUtf8($isSpecial); // special is only checking control chars
+            if ($isSpecial) {
+                $hasSpecial = true;
+            }
             if (!$isUtf8) {
                 return false;
             }
-            if ($isSpecial) {
-                $isSpecial = true;
-            }
         }
-        $isSpecial = $isSpecial || self::hasSpecial($str);
         return true;
     }
 

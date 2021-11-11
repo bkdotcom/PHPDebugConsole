@@ -206,12 +206,12 @@ class ArrayUtil
      * Sort array, using `$order`
      *
      * @param array  $array Array to sort
-     * @param array  $order [description]
-     * @param string $what  [description]
+     * @param array  $order values that define order / should come first
+     * @param string $what  ("value") or "key" - Specify if should sort by value or key
      *
      * @return void
      */
-    public static function sortWithOrder(&$array, $order, $what = 'val')
+    public static function sortWithOrder(&$array, $order, $what = 'value')
     {
         $callback = function ($valA, $valB) use ($order) {
             $aPos = \array_search($valA, $order);

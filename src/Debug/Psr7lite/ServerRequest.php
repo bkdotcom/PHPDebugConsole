@@ -330,7 +330,7 @@ class ServerRequest extends Request
     /**
      * Validate file is instance of UploadedFileInterface/UploadedFile
      *
-     * @param [type] $file [description]
+     * @param mixed $file File value to test
      *
      * @return void
      *

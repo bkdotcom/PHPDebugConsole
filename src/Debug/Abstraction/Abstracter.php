@@ -369,7 +369,7 @@ class Abstracter extends Component
      *
      * INF and NAN are considered "float"
      *
-     * @param float $val [description]
+     * @param float $val float/INF/NAN
      *
      * @return array
      */

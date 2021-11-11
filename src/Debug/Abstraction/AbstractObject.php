@@ -392,13 +392,13 @@ class AbstractObject extends Component
     {
         $abs['className'] = $this->debug->utility->friendlyClassName($abs['reflector']);
         $properties = $abs['properties'];
-        $properties['debug.file'] = $this->properties->buildPropInfo(array(
+        $properties['debug.file'] = $this->properties->buildPropValues(array(
             'type' => Abstracter::TYPE_STRING,
             'value' => $abs['definition']['fileName'],
             'valueFrom' => 'debug',
             'visibility' => 'debug',
         ));
-        $properties['debug.line'] = $this->properties->buildPropInfo(array(
+        $properties['debug.line'] = $this->properties->buildPropValues(array(
             'type' => Abstracter::TYPE_INT,
             'value' => (int) $abs['definition']['startLine'],
             'valueFrom' => 'debug',

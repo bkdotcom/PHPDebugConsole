@@ -60,20 +60,12 @@ class AbstractObjectHelper
     /**
      * Get parsed PhpDoc
      *
-     * @param Reflector $reflector [description]
+     * @param Reflector $reflector Reflector instance
      *
      * @return array
      */
     public function getPhpDoc(Reflector $reflector)
     {
-        /*
-        if ($reflector instanceof ReflectionClassConstant) {
-            return $this->getPhpDocVar($reflector);
-        }
-        if ($reflector instanceof ReflectionProperty) {
-            return $this->getPhpDocVar($reflector);
-        }
-        */
         return $this->phpDoc->getParsed($reflector);
     }
 
@@ -86,15 +78,6 @@ class AbstractObjectHelper
      */
     public function getPhpDocVar(Reflector $reflector)
     {
-        /*
-        $refObj = new ReflectionObject($reflector);
-        if ($refObj->isInterface()) {
-            return array(
-                'type' => null,
-                'desc' => null,
-            );
-        }
-        */
         /** @psalm-suppress NoInterfaceProperties */
         $name = $reflector->name;
         $phpDoc = $this->phpDoc->getParsed($reflector);

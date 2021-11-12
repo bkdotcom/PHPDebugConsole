@@ -169,39 +169,23 @@ class MySqli extends mysqliBase
             throw new RuntimeException($errstr, $errno);
         }, E_ALL);
         try {
-            $groupParams = array(
+            $debug->groupCollapsed(
                 'MySqli info',
-                $this->host_info
+                $this->host_info,
+                $debug->meta(array(
+                    'argsAsParams' => false,
+                    'icon' => $this->icon,
+                    'level' => 'info',
+                ))
             );
-            $groupParams[] = $debug->meta(array(
-                'argsAsParams' => false,
-                'icon' => $this->icon,
-                'level' => 'info',
-            ));
-            \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
-
-            $result = parent::query('select database() as `database`');
-            if ($result instanceof \mysqli_result) {
-                $row = $result->fetch_assoc();
-                if ($row) {
-                    $debug->log('database', $row['database']);
-                }
+            $database = $this->currentDatabase();
+            if ($database) {
+                $debug->log('database', $database);
             }
-
             $debug->log('logged operations: ', \count($this->loggedStatements));
             $debug->time('total time', $this->getTimeSpent());
             $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
-
-            // parse server info
-            $matches = array();
-            \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat(), $matches);
-            $serverInfo = \array_map(function ($val) {
-                /** @psalm-suppress InvalidOperand */
-                return $val * 1;
-            }, \array_combine($matches[1], $matches[2]));
-            $serverInfo['Version'] = $this->server_info;
-            \ksort($serverInfo);
-            $debug->log('server info', $serverInfo);
+            $debug->log('server info', $this->statParsed());
             if ($this->prettified() === false) {
                 $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
             }
@@ -283,6 +267,23 @@ class MySqli extends mysqliBase
     }
 
     /**
+     * Get current database / schema
+     *
+     * @return string|null
+     */
+    private function currentDatabase()
+    {
+        $result = parent::query('select database() as `database`');
+        if ($result instanceof \mysqli_result) {
+            $row = $result->fetch_assoc();
+            if ($row) {
+                return $row['database'];
+            }
+        }
+        return null;
+    }
+
+    /**
      * Call mysqli constructor with appropriate params
      *
      * @param array $params host, username, etc
@@ -306,11 +307,8 @@ class MySqli extends mysqliBase
             'port' => \ini_get('mysqli.default_port'),
             'socket' => \ini_get('mysqli.default_socket'),
         );
-        foreach ($params as $k => $v) {
-            if ($v === null) {
-                $params[$k] = $paramsDefault[$k];
-            }
-        }
+        $params = \array_filter($params);
+        $params = \array_merge($paramsDefault, $params);
         $this->connectionAttempted = true;
         parent::__construct(
             $params['host'],
@@ -370,5 +368,23 @@ class MySqli extends mysqliBase
         $info->end($exception, $affectedRows);
         $this->addStatementInfo($info);
         return $return;
+    }
+
+    /**
+     * `self::stat()`, but parsed
+     *
+     * @return array
+     */
+    private function statParsed()
+    {
+        $matches = array();
+        \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat(), $matches);
+        $serverInfo = \array_map(function ($val) {
+            /** @psalm-suppress InvalidOperand */
+            return $val * 1;
+        }, \array_combine($matches[1], $matches[2]));
+        $serverInfo['Version'] = $this->server_info;
+        \ksort($serverInfo);
+        return $serverInfo;
     }
 }

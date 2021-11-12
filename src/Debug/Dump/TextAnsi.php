@@ -222,7 +222,7 @@ class TextAnsi extends Text
     /**
      * Dump object as text
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string
      */
@@ -250,7 +250,7 @@ class TextAnsi extends Text
     /**
      * Dump object methods as text
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html
      */
@@ -288,7 +288,7 @@ class TextAnsi extends Text
     /**
      * Dump object properties as text with ANSI escape codes
      *
-     * @param Abstraction $abs object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string
      */

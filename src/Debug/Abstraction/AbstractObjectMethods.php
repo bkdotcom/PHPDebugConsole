@@ -76,7 +76,7 @@ class AbstractObjectMethods
     /**
      * Add method info to abstraction
      *
-     * @param Abstraction $abs Object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      */

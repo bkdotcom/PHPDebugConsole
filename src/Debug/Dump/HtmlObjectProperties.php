@@ -48,7 +48,7 @@ class HtmlObjectProperties
     /**
      * Dump object properties as HTML
      *
-     * @param Abstraction $abs object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
@@ -70,7 +70,7 @@ class HtmlObjectProperties
     /**
      * Returns <dt class="properties">properties</dt>
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */

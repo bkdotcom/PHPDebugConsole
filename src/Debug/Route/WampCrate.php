@@ -176,7 +176,7 @@ class WampCrate
      * Crate object abstraction
      * (make sure string values are base64 encoded when necessary)
      *
-     * @param Abstraction $abs Object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return array
      */

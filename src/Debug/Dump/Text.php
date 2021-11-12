@@ -178,7 +178,7 @@ class Text extends Base
     /**
      * Dump object as text
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string
      */
@@ -205,7 +205,7 @@ class Text extends Base
     /**
      * Dump object methods as text
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html
      */
@@ -240,7 +240,7 @@ class Text extends Base
     /**
      * Dump object properties as text
      *
-     * @param Abstraction $abs object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string
      */

@@ -47,7 +47,7 @@ class AbstractObjectConstants
     /**
      * Add object's constants to abstraction
      *
-     * @param Abstraction $abs Object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      */

@@ -50,7 +50,7 @@ class HtmlObject
     /**
      * Dump object
      *
-     * @param Abstraction $abs object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
@@ -69,10 +69,7 @@ class HtmlObject
         $html = $this->dumpToString($abs)
             . $classname . "\n"
             . '<dl class="object-inner">' . "\n"
-                . ($abs['isFinal']
-                    ? '<dt class="t_modifier_final">final</dt>' . "\n"
-                    : ''
-                )
+                . $this->dumpModifiers($abs)
                 . $this->dumpExtends($abs)
                 . $this->dumpImplements($abs)
                 . $this->dumpAttributes($abs)
@@ -190,34 +187,57 @@ class HtmlObject
     protected function dumpConstants(Abstraction $abs)
     {
         $constants = $abs['constants'];
-        if (!$constants || !($abs['cfgFlags'] & AbstractObject::OUTPUT_CONSTANTS)) {
+        $opts = array(
+            'outAttributes' => $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_CONST,
+            'outConstants' => $abs['cfgFlags'] & AbstractObject::OUTPUT_CONSTANTS,
+            'outPhpDoc' => $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC,
+        );
+        if (!$constants || !$opts['outConstants']) {
             return '';
         }
-        $outAttributes = $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_CONST;
-        $outPhpDoc = $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC;
         $html = '<dt class="constants">constants</dt>' . "\n";
-        foreach ($constants as $k => $info) {
-            $modifiers = \array_keys(\array_filter(array(
-                $info['visibility'] => true,
-                'final' => $info['isFinal'],
-            )));
-            $html .= $this->html->buildTag(
-                'dd',
-                array(
-                    'class' => 'constant ' . $info['visibility'],
-                    'data-attributes' => $outAttributes
-                        ? ($info['attributes'] ?: null)
-                        : null,
-                ),
-                \implode(' ', \array_map(function ($modifier) {
-                    return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-                }, $modifiers))
-                . ' <span class="t_identifier" title="' . \htmlspecialchars($outPhpDoc ? $info['desc'] : '') . '">' . $k . '</span>'
-                . ' <span class="t_operator">=</span> '
-                . $this->dumper->dump($info['value'])
-            ) . "\n";
+        foreach ($constants as $name => $info) {
+            $html .= $this->dumpConstant($name, $info, $opts);
         }
         return $html;
+    }
+
+    /**
+     * Dump Constant
+     *
+     * @param string $name Constant's name
+     * @param array  $info Constant info
+     * @param array  $opts Output options
+     *
+     * @return string html fragment
+     */
+    protected function dumpConstant($name, $info, $opts)
+    {
+        $modifiers = \array_keys(\array_filter(array(
+            $info['visibility'] => true,
+            'final' => $info['isFinal'],
+        )));
+        $title = $opts['outPhpDoc']
+            ? $info['desc']
+            : '';
+        return $this->html->buildTag(
+            'dd',
+            array(
+                'class' => \array_merge(
+                    array('constant'),
+                    $modifiers
+                ),
+                'data-attributes' => $opts['outAttributes'] && $info['attributes']
+                    ? $info['attributes']
+                    : null,
+            ),
+            \implode(' ', \array_map(function ($modifier) {
+                return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
+            }, $modifiers))
+            . ' <span class="t_identifier" title="' . \htmlspecialchars($title) . '">' . $name . '</span>'
+            . ' <span class="t_operator">=</span> '
+            . $this->dumper->dump($info['value'])
+        ) . "\n";
     }
 
     /**
@@ -248,6 +268,20 @@ class HtmlObject
             . \implode(\array_map(function ($classname) {
                 return '<dd class="interface">' . $this->dumper->markupIdentifier($classname) . '</dd>' . "\n";
             }, $abs['implements']));
+    }
+
+    /**
+     * Dump method modifiers (final)
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return string html fragment
+     */
+    protected function dumpModifiers(Abstraction $abs)
+    {
+        return $abs['isFinal']
+            ? '<dt class="t_modifier_final">final</dt>' . "\n"
+            : '';
     }
 
     /**
@@ -306,44 +340,62 @@ class HtmlObject
     /**
      * Dump object's __toString or stringified value
      *
-     * @param Abstraction $abs object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
     protected function dumpToString(Abstraction $abs)
     {
-        $val = (string) $abs;
+        $len = 0;
+        $val = $this->getToStringVal($abs, $len);
         if ($val === $abs['className']) {
             return '';
         }
-        $len = $val instanceof Abstraction
-            ? $val['strlen']
-            : \strlen($val);
-        $val = $val instanceof Abstraction
-            ? $val['value']
-            : $val;
         $valAppend = '';
-        $attribs = array(
-            'class' => array('t_stringified'),
-            'title' => !$abs['stringified'] ? '__toString()' : null
-        );
+        $classes = array('t_stringified');
         if ($len > 100) {
+            $classes[] = 't_string_trunc';   // truncated
             $val = \substr($val, 0, 100);
             $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';
-            $attribs['class'][] = 't_string_trunc';   // truncated
         }
-        $toStringDump = $this->dumper->dump($val);
-        $parsed = $this->html->parseTag($toStringDump);
-        $attribs['class'] = \array_merge($attribs['class'], $parsed['attribs']['class']);
-        if (isset($parsed['attribs']['title'])) {
-            // ie a timestamp will have a human readable date in title
-            $attribs['title'] = ($attribs['title'] ? $attribs['title'] . ' : ' : '')
-                . $parsed['attribs']['title'];
-        }
+        $valDumped = $this->dumper->dump($val);
+        $parsed = $this->html->parseTag($valDumped);
         return $this->html->buildTag(
             'span',
-            $attribs,
+            array(
+                'class' => \array_merge($classes, $parsed['attribs']['class']),
+                'title' => \implode(' : ', \array_filter(array(
+                    !$abs['stringified'] ? '__toString()' : null,
+                    // ie a timestamp will have a human readable date in title
+                    isset($parsed['attribs']['title']) ? $parsed['attribs']['title'] : null,
+                )))
+            ),
             $parsed['innerhtml'] . $valAppend
         ) . "\n";
+    }
+
+    /**
+     * Get object's "string" representation
+     *
+     * @param Abstraction $abs    Object Abstraction instance
+     * @param int         $strlen updated to ength of non-truncated value
+     *
+     * @return string
+     */
+    private function getToStringVal(Abstraction $abs, &$strlen)
+    {
+        $val = $abs['className'];
+        if ($abs['stringified']) {
+            $val = $abs['stringified'];
+        } elseif (isset($abs['methods']['__toString']['returnValue'])) {
+            $val = $abs['methods']['__toString']['returnValue'];
+        }
+        if ($val instanceof Abstraction) {
+            $strlen = $val['strlen'];
+            $val = $val['value'];
+        } elseif (\is_string($val)) {
+            $strlen = \strlen($val);
+        }
+        return $val;
     }
 }

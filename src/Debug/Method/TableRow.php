@@ -162,7 +162,7 @@ class TableRow
      * Get object abstraction's values
      * if, object has a stringified or __toString value, it will be returned
      *
-     * @param Abstraction $abs object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return array|string
      */

@@ -348,7 +348,7 @@ class Base extends Component
     /**
      * Dump object
      *
-     * @param Abstraction $abs object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string|array
      */
@@ -368,7 +368,7 @@ class Base extends Component
     /**
      * Return array of object properties (name->value)
      *
-     * @param Abstraction $abs object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return array|string
      */

@@ -44,7 +44,6 @@ class Clear
         $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
         $bitmask = $logEntry['meta']['bitmask'];
-        $callerInfo = $this->debug->backtrace->getCallerInfo();
         $cleared = array();
         $cleared[] = $this->clearAlerts($bitmask);
         $cleared[] = $this->clearLog($bitmask);
@@ -56,25 +55,7 @@ class Clear
         $args = $this->getLogArgs($cleared);
         $this->debug->setData($this->data);
         $this->data = array();
-        $logEntry->setValues(array(
-            'method' => 'clear',
-            'args' => $args,
-            'meta' =>  \array_merge(array(
-                'file' => $callerInfo['file'],
-                'line' => $callerInfo['line'],
-                'bitmask' => $bitmask,
-                'flags' => array(
-                    'alerts' => (bool) ($bitmask & Debug::CLEAR_ALERTS),
-                    'log' => (bool) ($bitmask & Debug::CLEAR_LOG),
-                    'logErrors' => (bool) ($bitmask & Debug::CLEAR_LOG_ERRORS),
-                    'summary' => (bool) ($bitmask & Debug::CLEAR_SUMMARY),
-                    'summaryErrors' => (bool) ($bitmask & Debug::CLEAR_SUMMARY_ERRORS),
-                    'silent' => (bool) ($bitmask & Debug::CLEAR_SILENT),
-                ),
-            ), $logEntry['meta']),
-            'appendLog' => $args && !($bitmask & Debug::CLEAR_SILENT),
-            'forcePublish' => (bool) $args,   // publish event even if collect = false
-        ));
+        $this->updateLogEntry($logEntry, $args);
     }
 
     /**
@@ -291,5 +272,38 @@ class Clear
             );
         }
         return array($msg);
+    }
+
+    /**
+     * Update logEntry
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     * @param array    $args     arguments]
+     *
+     * @return void
+     */
+    private function updateLogEntry(LogEntry $logEntry, $args)
+    {
+        $bitmask = $logEntry['meta']['bitmask'];
+        $callerInfo = $this->debug->backtrace->getCallerInfo();
+        $logEntry->setValues(array(
+            'method' => 'clear',
+            'args' => $args,
+            'meta' =>  \array_merge(array(
+                'file' => $callerInfo['file'],
+                'line' => $callerInfo['line'],
+                'bitmask' => $bitmask,
+                'flags' => array(
+                    'alerts' => (bool) ($bitmask & Debug::CLEAR_ALERTS),
+                    'log' => (bool) ($bitmask & Debug::CLEAR_LOG),
+                    'logErrors' => (bool) ($bitmask & Debug::CLEAR_LOG_ERRORS),
+                    'summary' => (bool) ($bitmask & Debug::CLEAR_SUMMARY),
+                    'summaryErrors' => (bool) ($bitmask & Debug::CLEAR_SUMMARY_ERRORS),
+                    'silent' => (bool) ($bitmask & Debug::CLEAR_SILENT),
+                ),
+            ), $logEntry['meta']),
+            'appendLog' => $args && !($bitmask & Debug::CLEAR_SILENT),
+            'forcePublish' => (bool) $args,   // publish event even if collect = false
+        ));
     }
 }

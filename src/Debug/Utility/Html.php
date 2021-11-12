@@ -248,7 +248,7 @@ class Html
                 : \json_encode($val);
         }
         if ($val === null) {
-            return '';
+            return null;
         }
         if (\is_bool($val)) {
             return static::buildAttribValBool($key, $val);

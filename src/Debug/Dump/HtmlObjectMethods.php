@@ -49,7 +49,7 @@ class HtmlObjectMethods
     /**
      * Dump object methods as html
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
@@ -86,7 +86,7 @@ class HtmlObjectMethods
     /**
      * Returns <dt class="methods">methods</dt>
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */

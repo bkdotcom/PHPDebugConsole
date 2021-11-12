@@ -33,6 +33,10 @@ class Group implements SubscriberInterface
     private $groupPriorityStack = array(); // array of priorities
                                         //   used to return to the previous summary when groupEnd()ing out of a summary
                                         //   this allows calling groupSummary() while in a groupSummary
+
+    private $groupStack = array();
+    private $groupStackCount = 0;
+
     private $groupStacks = array(
         'main' => array(),  // array('channel' => Debug instance, 'collect' => bool)[]
     );

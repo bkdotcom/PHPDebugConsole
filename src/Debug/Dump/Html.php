@@ -358,7 +358,7 @@ class Html extends Base
     /**
      * Dump object as html
      *
-     * @param Abstraction $abs object abstraction
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string
      */

@@ -73,7 +73,6 @@ export function addPreFilter (func) {
 function applyFilter ($root) {
   var channelNameRoot = $root.data('channelNameRoot')
   var i
-  var i2
   var len
   var sort = []
   for (i in preFilterCallbacks) {
@@ -95,36 +94,41 @@ function applyFilter ($root) {
   })
   for (i = 0, len = sort.length; i < len; i++) {
     var $node = sort[i].node
-    var $parentGroup
-    var isFilterVis = true
-    var hiddenWas = $node.is('.filter-hidden')
-    if ($node.data('channel') === channelNameRoot + '.phpError') {
-      // php Errors are filtered separately
-      continue
+    applyFilterToNode($node, channelNameRoot);
+  }
+}
+
+function applyFilterToNode ($node, channelNameRoot) {
+  var hiddenWas = $node.is('.filter-hidden')
+  var i
+  var isFilterVis = true
+  var $parentGroup
+  if ($node.data('channel') === channelNameRoot + '.phpError') {
+    // php Errors are filtered separately
+    return
+  }
+  for (i in tests) {
+    isFilterVis = tests[i]($node)
+    if (!isFilterVis) {
+      break
     }
-    for (i2 in tests) {
-      isFilterVis = tests[i2]($node)
-      if (!isFilterVis) {
-        break
-      }
+  }
+  $node.toggleClass('filter-hidden', !isFilterVis)
+  if (isFilterVis && hiddenWas) {
+    // unhiding
+    $parentGroup = $node.parent().closest('.m_group')
+    if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
+      $node.debugEnhance()
     }
-    $node.toggleClass('filter-hidden', !isFilterVis)
-    if (isFilterVis && hiddenWas) {
-      // unhiding
-      $parentGroup = $node.parent().closest('.m_group')
-      if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
-        $node.debugEnhance()
-      }
-    } else if (!isFilterVis && !hiddenWas) {
-      // hiding
-      if ($node.hasClass('m_group')) {
-        // filtering group... means children (if not filtered) are visible
-        $node.find('> .group-body').debugEnhance()
-      }
+  } else if (!isFilterVis && !hiddenWas) {
+    // hiding
+    if ($node.hasClass('m_group')) {
+      // filtering group... means children (if not filtered) are visible
+      $node.find('> .group-body').debugEnhance()
     }
-    if (isFilterVis && $node.hasClass('m_group')) {
-      $node.trigger('collapsed.debug.group')
-    }
+  }
+  if (isFilterVis && $node.hasClass('m_group')) {
+    $node.trigger('collapsed.debug.group')
   }
 }
 

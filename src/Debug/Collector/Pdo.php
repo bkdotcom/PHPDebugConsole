@@ -104,60 +104,38 @@ class Pdo extends PdoBase
     public function onDebugOutput(Event $event)
     {
         $debug = $event->getSubject();
+        $debug->groupSummary(0);
+
+        $nameParts = \explode('.', $debug->getCfg('channelName', Debug::CONFIG_DEBUG));
         $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
-
-        // parse server info
-        $serverInfo = $driverName !== 'sqlite'
-            ? $this->pdo->getAttribute(PdoBase::ATTR_SERVER_INFO)
-            : '';
-        $matches = array();
-        \preg_match_all('/([^:]+): ([a-zA-Z0-9.]+)\s*/', $serverInfo, $matches);
-        $serverInfo = \array_map(function ($val) {
-            /** @psalm-suppress InvalidOperand */
-            return $val * 1;
-        }, \array_combine($matches[1], $matches[2]));
-        $serverInfo['Version'] = $this->pdo->getAttribute(PdoBase::ATTR_SERVER_VERSION);
-        \ksort($serverInfo);
-
         $status = $driverName !== 'sqlite'
             ? $this->pdo->getAttribute(PdoBase::ATTR_CONNECTION_STATUS)
             : null;
 
-        $debug->groupSummary(0);
-        $nameParts = \explode('.', $debug->getCfg('channelName', Debug::CONFIG_DEBUG));
-        $name = \end($nameParts);
-        $groupParams = array(
-            $name . ' info',
+        $groupParams = \array_filter(array(
+            \end($nameParts) . ' info',
             $driverName,
-        );
-        if ($status) {
-            $groupParams[] = $status;
-        }
-        $groupParams[] = $debug->meta(array(
-            'argsAsParams' => false,
-            'icon' => $this->icon,
-            'level' => 'info',
+            $status,
+            $debug->meta(array(
+                'argsAsParams' => false,
+                'icon' => $this->icon,
+                'level' => 'info',
+            ))
         ));
         \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
-        try {
-            // Returns the default (current) database name as a string in the utf8 character set
-            $statement = $this->pdo->query('select database()');
-            if ($statement) {
-                $database = $statement->fetchColumn();
-                if ($database) {
-                    $debug->log('database', $database);
-                }
-            }
-        } catch (PDOException $e) {
-            // no such method
+
+        $database = $this->currentDatabase();
+        if ($database) {
+            $debug->log('database', $database);
         }
         $debug->log('logged operations: ', \count($this->loggedStatements));
         $debug->time('total time', $this->getTimeSpent());
         $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
-        $debug->log('server info', $serverInfo);
+        $debug->log('server info', $this->serverInfo());
         if ($this->prettified() === false) {
             $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
         }
+
         $debug->groupEnd(); // groupCollapsed
         $debug->groupEnd(); // groupSummary
     }
@@ -384,6 +362,24 @@ class Pdo extends PdoBase
     }
 
     /**
+     * Get current database / schema
+     *
+     * @return string|null
+     */
+    private function currentDatabase()
+    {
+        try {
+            // Returns the default (current) database name as a string in the utf8 character set
+            $statement = $this->pdo->query('select database()');
+            if ($statement) {
+                return $statement->fetchColumn();
+            }
+        } catch (PDOException $e) {
+            // no such method
+        }
+    }
+
+    /**
      * Profiles a call to a PDO method
      *
      * @param string $method PDO method
@@ -437,5 +433,28 @@ class Pdo extends PdoBase
             }
         }
         return $falseCount === 0;
+    }
+
+    /**
+     * Return server information
+     *
+     * @return array
+     */
+    private function serverInfo()
+    {
+        $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
+        // parse server info
+        $serverInfo = $driverName !== 'sqlite'
+            ? $this->pdo->getAttribute(PdoBase::ATTR_SERVER_INFO)
+            : '';
+        $matches = array();
+        \preg_match_all('/([^:]+): ([a-zA-Z0-9.]+)\s*/', $serverInfo, $matches);
+        $serverInfo = \array_map(function ($val) {
+            /** @psalm-suppress InvalidOperand */
+            return $val * 1;
+        }, \array_combine($matches[1], $matches[2]));
+        $serverInfo['Version'] = $this->pdo->getAttribute(PdoBase::ATTR_SERVER_VERSION);
+        \ksort($serverInfo);
+        return $serverInfo;
     }
 }

@@ -68,6 +68,8 @@ abstract class Component implements ConfigurableInterface
      *    setCfg('key', 'value')
      *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
+     * Calls self::postSetCfg() with new values and previous values
+     *
      * @param array|string $mixed key=>value array or key
      * @param mixed        $val   new value
      *
@@ -75,18 +77,20 @@ abstract class Component implements ConfigurableInterface
      */
     public function setCfg($mixed, $val = null)
     {
-        $ret = null;
+        $prev = null;
+        $prevArray = array();
         if (\is_string($mixed)) {
-            $ret = isset($this->cfg[$mixed])
+            $prev = isset($this->cfg[$mixed])
                 ? $this->cfg[$mixed]
                 : null;
+            $prevArray = array($mixed => $prev);
             $mixed = array($mixed => $val);
         } elseif (\is_array($mixed)) {
-            $ret = \array_intersect_key($this->cfg, $mixed);
+            $prev = \array_intersect_key($this->cfg, $mixed);
         }
         $this->cfg = \array_merge($this->cfg, $mixed);
-        $this->postSetCfg($mixed);
-        return $ret;
+        $this->postSetCfg($mixed, $prevArray ?: $prev);
+        return $prev;
     }
 
     /**
@@ -94,13 +98,14 @@ abstract class Component implements ConfigurableInterface
      *
      * extend me to perform class specific config operations
      *
-     * @param array $cfg new config values
+     * @param array $cfg  new config values
+     * @param array $prev previous config values
      *
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    protected function postSetCfg($cfg = array())
+    protected function postSetCfg($cfg = array(), $prev = array())
     {
     }
 }

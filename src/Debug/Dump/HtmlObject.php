@@ -294,16 +294,13 @@ class HtmlObject
     protected function dumpPhpDoc(Abstraction $abs)
     {
         $str = '<dt>phpDoc</dt>' . "\n";
-        foreach ($abs['phpDoc'] as $k => $values) {
+        foreach ($abs['phpDoc'] as $tagName => $values) {
             if (!\is_array($values)) {
                 continue;
             }
-            foreach ($values as $value) {
-                $str .= '<dd class="phpdoc phpdoc-' . $k . '">'
-                    . '<span class="phpdoc-tag">' . $k . '</span>'
-                    . '<span class="t_operator">:</span> '
-                    . $this->dumpPhpDocValue($k, $value)
-                    . '</dd>' . "\n";
+            foreach ($values as $tagData) {
+                $tagData['tagName'] = $tagName;
+                $str .= $this->dumpPhpDocTag($tagData);
             }
         }
         return $str;
@@ -312,29 +309,51 @@ class HtmlObject
     /**
      * Markup tag
      *
-     * @param string $tagName PhpDoc tag name
-     * @param array  $tagData parsed tag
+     * @param array $tagData parsed tag
      *
      * @return string html fragment
      */
-    private function dumpPhpDocValue($tagName, $tagData)
+    private function dumpPhpDocTag($tagData)
     {
-        if ($tagName === 'author') {
-            $html = $tagData['name'];
-            if ($tagData['email']) {
-                $html .= ' &lt;<a href="mailto:' . $tagData['email'] . '">' . $tagData['email'] . '</a>&gt;';
-            }
-            if ($tagData['desc']) {
-                $html .= ' ' . \htmlspecialchars($tagData['desc']);
-            }
-            return $html;
+        $tagName = $tagData['tagName'];
+        switch ($tagName) {
+            case 'author':
+                $info = $this->dumpPhpDocTagAuthor($tagData);
+                break;
+            case 'link':
+            case 'see':
+                $info = '<a href="' . $tagData['uri'] . '" target="_blank">'
+                    . \htmlspecialchars($tagData['desc'] ?: $tagData['uri'])
+                    . '</a>';
+                break;
+            default:
+                unset($tagData['tagName']);
+                $info = \htmlspecialchars(\implode(' ', $tagData));
         }
-        if (\in_array($tagName, array('link','see')) && $tagData['uri']) {
-            return '<a href="' . $tagData['uri'] . '" target="_blank">'
-                . \htmlspecialchars($tagData['desc'] ?: $tagData['uri'])
-                . '</a>';
+        return '<dd class="phpdoc phpdoc-' . $tagName . '">'
+            . '<span class="phpdoc-tag">' . $tagName . '</span>'
+            . '<span class="t_operator">:</span> '
+            . $info
+            . '</dd>' . "\n";
+    }
+
+    /**
+     * Dump PhpDoc author tag value
+     *
+     * @param array $tagData parsed tag
+     *
+     * @return string html partial
+     */
+    private function dumpPhpDocTagAuthor($tagData)
+    {
+        $html = $tagData['name'];
+        if ($tagData['email']) {
+            $html .= ' &lt;<a href="mailto:' . $tagData['email'] . '">' . $tagData['email'] . '</a>&gt;';
         }
-        return \htmlspecialchars(\implode(' ', $tagData));
+        if ($tagData['desc']) {
+            $html .= ' ' . \htmlspecialchars($tagData['desc']);
+        }
+        return $html;
     }
 
     /**

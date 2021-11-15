@@ -299,32 +299,6 @@ class Abstracter extends Component
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public function setCfg($mixed, $val = null)
-    {
-        if ($mixed === 'stringMaxLen') {
-            if (!\is_array($val)) {
-                $val = array('other' => $val);
-            }
-            $val = \array_merge($this->cfg['stringMaxLen'], $val);
-        } elseif ($mixed === 'stringMinLen') {
-            $val = \array_merge($this->cfg['stringMinLen'], $val);
-        } elseif (\is_array($mixed)) {
-            if (isset($mixed['stringMaxLen'])) {
-                if (!\is_array($mixed['stringMaxLen'])) {
-                    $mixed['stringMaxLen'] = array('other' => $mixed['stringMaxLen']);
-                }
-                $mixed['stringMaxLen'] = \array_merge($this->cfg['stringMaxLen'], $mixed['stringMaxLen']);
-            }
-            if (isset($mixed['stringMixLen'])) {
-                $mixed['stringMinLen'] = \array_merge($this->cfg['stringMinLen'], $mixed['stringMinLen']);
-            }
-        }
-        return parent::setCfg($mixed, $val);
-    }
-
-    /**
      * Abstract a float
      *
      * This is done to avoid having NAN & INF values.. which can't be json encoded
@@ -455,25 +429,49 @@ class Abstracter extends Component
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array())
+    protected function postSetCfg($cfg = array(), $prev = array())
     {
         $debugClass = \get_class($this->debug);
-        // string settings vs object settings
-        $strCfg = array(
-            'stringMaxLen' => null,
-            'stringMinLen' => null,
-        );
         if (!\array_intersect(array('*', $debugClass), $this->cfg['objectsExclude'])) {
             $this->cfg['objectsExclude'][] = $debugClass;
             $cfg['objectsExclude'] = $this->cfg['objectsExclude'];
         }
-        $objCfg = \array_diff_key($cfg, $strCfg);
-        if ($objCfg) {
-            $this->abstractObject->setCfg($objCfg);
+        if (isset($cfg['stringMaxLen'])) {
+            if (!\is_array($cfg['stringMaxLen'])) {
+                $cfg['stringMaxLen'] = array(
+                    'other' => $cfg['stringMaxLen'],
+                );
+            }
+            $cfg['stringMaxLen'] = \array_merge($prev['stringMaxLen'], $cfg['stringMaxLen']);
+            $this->cfg['stringMaxLen'] = $cfg['stringMaxLen'];
         }
-        $strCfg = \array_intersect_key($cfg, $strCfg);
+        if (isset($cfg['stringMixLen'])) {
+            $cfg['stringMinLen'] = \array_merge($prev['stringMinLen'], $cfg['stringMinLen']);
+            $this->cfg['stringMinLen'] = $cfg['stringMinLen'];
+        }
+        $this->setCfgDependencies($cfg);
+    }
+
+    /**
+     * Pass relevent config updates to AbstractObject & AbstractString
+     *
+     * @param array $cfg Updated config values
+     *
+     * @return void
+     */
+    private function setCfgDependencies($cfg)
+    {
+        $strCfgKeys = array(
+            'stringMaxLen',
+            'stringMinLen',
+        );
+        $strCfg = \array_intersect_key($cfg, \array_flip($strCfgKeys));
         if ($strCfg) {
             $this->abstractString->setCfg($strCfg);
+        }
+        $objCfg = \array_diff_key($cfg, \array_flip($strCfgKeys));
+        if ($objCfg) {
+            $this->abstractObject->setCfg($objCfg);
         }
     }
 }

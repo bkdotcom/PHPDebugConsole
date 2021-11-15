@@ -80,16 +80,11 @@ class UploadedFile
      */
     public function __construct($streamOrFile, $size = null, $error = UPLOAD_ERR_OK, $clientFilename = null, $clientMediaType = null, $clientFullPath = null)
     {
-        if ($size !== null && !\is_int($size)) {
-            throw new InvalidArgumentException('Upload file size must be an integer');
-        }
+        $this->assertSize($size);
         $this->assertError($error);
-        if ($clientFilename !== null && !\is_string($clientFilename)) {
-            throw new InvalidArgumentException('Upload file client filename must be a string or null');
-        }
-        if ($clientMediaType !== null && !\is_string($clientMediaType)) {
-            throw new InvalidArgumentException('Upload file client media type must be a string or null');
-        }
+        $this->assertStringOrNull($clientFilename, 'clientFilename');
+        $this->assertStringOrNull($clientMediaType, 'clientMediaType');
+        $this->assertStringOrNull($clientFullPath, 'clientFullPath');
 
         $this->size = $size;
         $this->error = $error;
@@ -314,6 +309,41 @@ class UploadedFile
     }
 
     /**
+     * Validate reported filesize
+     *
+     * @param int|null $size Reported filesize
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertSize($size)
+    {
+        if ($size === null || \is_int($size)) {
+            return;
+        }
+        throw new InvalidArgumentException('Upload file size must be an integer');
+    }
+
+    /**
+     * Validate client filename / filepath
+     *
+     * @param string|null $value Reported filesize
+     * @param string      $key   nNme of param being tested
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertStringOrNull($value, $key)
+    {
+        if ($value === null || \is_string($value)) {
+            return;
+        }
+        throw new InvalidArgumentException('Upload file ' . $key . ' must be a string or null');
+    }
+
+    /**
      * Validate target path
      *
      * @param string $targetPath Path to which to move the uploaded file.
@@ -408,12 +438,7 @@ class UploadedFile
             }
             return;
         }
-        if ($streamOrFile instanceof Stream) {
-            $this->stream = $streamOrFile;
-            $this->size = $this->stream->getSize();
-            return;
-        }
-        if ($streamOrFile instanceof StreamInterface) {
+        if ($streamOrFile instanceof Stream || $streamOrFile instanceof StreamInterface) {
             $this->stream = $streamOrFile;
             $this->size = $this->stream->getSize();
             return;

@@ -454,7 +454,7 @@ class Html extends Base
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array())
+    protected function postSetCfg($cfg = array(), $prev = array())
     {
         foreach (array('filepathCss', 'filepathScript') as $k) {
             $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__ . '/../', $this->cfg[$k]);

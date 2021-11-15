@@ -148,56 +148,57 @@ class LogTarget extends Target
     {
         $message['channel'] = $this->debug;
         $message['meta'] = array();
-        if (\preg_match('/^yii\\\\(\w+)\\\(.+)::/', $message['category'], $matches)) {
-            // Yii category
-            $namespace = $matches[1];
-            $category = $matches[2];
-            $message['category'] = $category;
-            if ($category === 'Application') {
-                $message['category'] = null;
-                $message['channel'] = $this->debug->getChannel('App');
-                return $message;
-            }
-            if ($namespace === 'caching') {
-                $icon = 'fa fa-cube';
-                $message['category'] = null;
-                $message['channel'] = $this->debug->getChannel('Cache', array(
-                    'channelIcon' => $icon,
-                    // 'channelShow' => false,
-                ));
-                $message['meta']['icon'] = $icon;
-                return $message;
-            }
-            if ($category === 'Connection') {
-                $icon = 'fa fa-database';
-                $message['category'] = null;
-                $message['channel'] = $this->debug->getChannel('PDO', array(
-                    'channelIcon' => $icon,
-                    'channelShow' => false,
-                ));
-                return $message;
-            }
-            if ($category === 'Module') {
-                $icon = 'fa fa-puzzle-piece';
-                $message['channel'] = $this->debug->getChannel($category, array(
-                    'channelIcon' => $icon,
-                    // 'channelShow' => false,
-                ));
-                $message['meta']['icon'] = $icon;
-                return $message;
-            }
-            if ($category === 'View') {
-                $icon = 'fa fa-file-text-o';
-                $message['category'] = null;
-                $message['channel'] = $this->debug->getChannel($category, array(
-                    'channelIcon' => $icon,
-                    // 'channelShow' => false,
-                ));
-                $message['meta']['icon'] = $icon;
-                return $message;
-            }
-            $message['channel'] = $this->debug->getChannel('misc');
+        if (\preg_match('/^yii\\\\(\w+)\\\(.+)::/', $message['category'], $matches) !== 1) {
+            return $message;
         }
+        // Yii category
+        $namespace = $matches[1];
+        $category = $matches[2];
+        $message['category'] = $category;
+        if ($category === 'Application') {
+            $message['category'] = null;
+            $message['channel'] = $this->debug->getChannel('App');
+            return $message;
+        }
+        if ($namespace === 'caching') {
+            $icon = 'fa fa-cube';
+            $message['category'] = null;
+            $message['channel'] = $this->debug->getChannel('Cache', array(
+                'channelIcon' => $icon,
+                // 'channelShow' => false,
+            ));
+            $message['meta']['icon'] = $icon;
+            return $message;
+        }
+        if ($category === 'Connection') {
+            $icon = 'fa fa-database';
+            $message['category'] = null;
+            $message['channel'] = $this->debug->getChannel('PDO', array(
+                'channelIcon' => $icon,
+                'channelShow' => false,
+            ));
+            return $message;
+        }
+        if ($category === 'Module') {
+            $icon = 'fa fa-puzzle-piece';
+            $message['channel'] = $this->debug->getChannel($category, array(
+                'channelIcon' => $icon,
+                // 'channelShow' => false,
+            ));
+            $message['meta']['icon'] = $icon;
+            return $message;
+        }
+        if ($category === 'View') {
+            $icon = 'fa fa-file-text-o';
+            $message['category'] = null;
+            $message['channel'] = $this->debug->getChannel($category, array(
+                'channelIcon' => $icon,
+                // 'channelShow' => false,
+            ));
+            $message['meta']['icon'] = $icon;
+            return $message;
+        }
+        $message['channel'] = $this->debug->getChannel('misc');
         return $message;
     }
 

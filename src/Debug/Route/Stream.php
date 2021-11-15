@@ -193,7 +193,7 @@ class Stream extends Base
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array())
+    protected function postSetCfg($cfg = array(), $prev = array())
     {
         if (\array_key_exists('stream', $cfg)) {
             // changing stream?

@@ -656,18 +656,20 @@
     var $node2;
     var selector;
     if ($node.data('icon')) {
-      $icon = $node.data('icon').match('<')
+      return $node.data('icon').match('<')
         ? $($node.data('icon'))
-        : $('<i>').addClass($node.data('icon'));
-    } else if (!$node.hasClass('m_group')) {
-      $node2 = $node.hasClass('group-header')
-        ? $node.parent()
-        : $node;
-      for (selector in config$2.iconsMethods) {
-        if ($node2.is(selector)) {
-          $icon = $(config$2.iconsMethods[selector]);
-          break
-        }
+        : $('<i>').addClass($node.data('icon'))
+    }
+    if ($node.hasClass('m_group')) {
+      return
+    }
+    $node2 = $node.hasClass('group-header')
+      ? $node.parent()
+      : $node;
+    for (selector in config$2.iconsMethods) {
+      if ($node2.is(selector)) {
+        $icon = $(config$2.iconsMethods[selector]);
+        break
       }
     }
     return $icon
@@ -1091,7 +1093,6 @@
   function applyFilter ($root) {
     var channelNameRoot = $root.data('channelNameRoot');
     var i;
-    var i2;
     var len;
     var sort = [];
     for (i in preFilterCallbacks) {
@@ -1113,36 +1114,41 @@
     });
     for (i = 0, len = sort.length; i < len; i++) {
       var $node = sort[i].node;
-      var $parentGroup;
-      var isFilterVis = true;
-      var hiddenWas = $node.is('.filter-hidden');
-      if ($node.data('channel') === channelNameRoot + '.phpError') {
-        // php Errors are filtered separately
-        continue
+      applyFilterToNode($node, channelNameRoot);
+    }
+  }
+
+  function applyFilterToNode ($node, channelNameRoot) {
+    var hiddenWas = $node.is('.filter-hidden');
+    var i;
+    var isFilterVis = true;
+    var $parentGroup;
+    if ($node.data('channel') === channelNameRoot + '.phpError') {
+      // php Errors are filtered separately
+      return
+    }
+    for (i in tests) {
+      isFilterVis = tests[i]($node);
+      if (!isFilterVis) {
+        break
       }
-      for (i2 in tests) {
-        isFilterVis = tests[i2]($node);
-        if (!isFilterVis) {
-          break
-        }
+    }
+    $node.toggleClass('filter-hidden', !isFilterVis);
+    if (isFilterVis && hiddenWas) {
+      // unhiding
+      $parentGroup = $node.parent().closest('.m_group');
+      if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
+        $node.debugEnhance();
       }
-      $node.toggleClass('filter-hidden', !isFilterVis);
-      if (isFilterVis && hiddenWas) {
-        // unhiding
-        $parentGroup = $node.parent().closest('.m_group');
-        if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
-          $node.debugEnhance();
-        }
-      } else if (!isFilterVis && !hiddenWas) {
-        // hiding
-        if ($node.hasClass('m_group')) {
-          // filtering group... means children (if not filtered) are visible
-          $node.find('> .group-body').debugEnhance();
-        }
+    } else if (!isFilterVis && !hiddenWas) {
+      // hiding
+      if ($node.hasClass('m_group')) {
+        // filtering group... means children (if not filtered) are visible
+        $node.find('> .group-body').debugEnhance();
       }
-      if (isFilterVis && $node.hasClass('m_group')) {
-        $node.trigger('collapsed.debug.group');
-      }
+    }
+    if (isFilterVis && $node.hasClass('m_group')) {
+      $node.trigger('collapsed.debug.group');
     }
   }
 
@@ -1800,7 +1806,6 @@
     var channel;
     var ref;
     var i;
-    var i2;
     var path;
     for (i = 0; i < channels.length; i++) {
       ref = channelTree;
@@ -1809,20 +1814,32 @@
       if (path.length > 1 && path[0] === channels[0].name) {
         path.shift();
       }
-      for (i2 = 0; i2 < path.length; i2++) {
-        if (!ref[path[i2]]) {
-          ref[path[i2]] = {
-            options: {
-              icon: i2 === path.length - 1 ? channel.icon : null,
-              show: i2 === path.length - 1 ? channel.show : null
-            },
-            channels: {}
-          };
-        }
-        ref = ref[path[i2]].channels;
-      }
+      channelsToTreeWalkPath(path, ref);
     }
     return channelTree
+  }
+
+  function channelsToTreeWalkPath (channel, path, channelTreeRef) {
+    var i;
+    var options;
+    for (i = 0; i < path.length; i++) {
+      options = i === path.length - 1
+        ? {
+          icon: channel.icon,
+          show: channel.show
+        }
+        : {
+          icon: null,
+          show: null
+        };
+      if (!channelTreeRef[path[i]]) {
+        channelTreeRef[path[i]] = {
+          options: options,
+          channels: {}
+        };
+      }
+      channelTreeRef = channelTreeRef[path[i2]].channels;
+    }
   }
 
   function enhanceErrorSummary () {

@@ -159,18 +159,20 @@ function determineIcon ($node) {
   var $node2
   var selector
   if ($node.data('icon')) {
-    $icon = $node.data('icon').match('<')
+    return $node.data('icon').match('<')
       ? $($node.data('icon'))
       : $('<i>').addClass($node.data('icon'))
-  } else if (!$node.hasClass('m_group')) {
-    $node2 = $node.hasClass('group-header')
-      ? $node.parent()
-      : $node
-    for (selector in config.iconsMethods) {
-      if ($node2.is(selector)) {
-        $icon = $(config.iconsMethods[selector])
-        break
-      }
+  }
+  if ($node.hasClass('m_group')) {
+    return
+  }
+  $node2 = $node.hasClass('group-header')
+    ? $node.parent()
+    : $node
+  for (selector in config.iconsMethods) {
+    if ($node2.is(selector)) {
+      $icon = $(config.iconsMethods[selector])
+      break
     }
   }
   return $icon

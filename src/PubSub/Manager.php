@@ -22,6 +22,7 @@ class Manager
 {
 
     const EVENT_PHP_SHUTDOWN = 'php.shutdown';
+    const DEFAULT_PRIORITY = 0;
 
     private $subscribers = array();
     private $sorted = array();
@@ -47,15 +48,17 @@ class Manager
      * @param SubscriberInterface $interface object implementing subscriber interface
      *
      * @return array a normalized list of subscriptions added.
-     *      each returned is array(eventName, callable, priority)
      */
     public function addSubscriberInterface(SubscriberInterface $interface)
     {
-        $subscribers = $this->getInterfaceSubscribers($interface);
-        foreach ($subscribers as $row) {
-            $this->subscribe($row[0], $row[1], $row[2]);
+        $subscribersByEvent = $this->getInterfaceSubscribers($interface);
+        foreach ($subscribersByEvent as $eventName => $subscribers) {
+            foreach ($subscribers as $methodPriority) {
+                $callable = array($interface, $methodPriority[0]);
+                $this->subscribe($eventName, $callable, $methodPriority[1]);
+            }
         }
-        return $subscribers;
+        return $subscribersByEvent;
     }
 
     /**
@@ -74,14 +77,14 @@ class Manager
                 return array();
             }
             if (!isset($this->sorted[$eventName])) {
-                $this->sortSubscribers($eventName);
+                $this->prepSubscribers($eventName);
             }
             return $this->sorted[$eventName];
         }
         // return all subscribers
         foreach (\array_keys($this->subscribers) as $eventName) {
             if (!isset($this->sorted[$eventName])) {
-                $this->sortSubscribers($eventName);
+                $this->prepSubscribers($eventName);
             }
         }
         return \array_filter($this->sorted);
@@ -122,9 +125,7 @@ class Manager
             ? $eventOrSubject
             : new Event($eventOrSubject, $values);
         $subscribers = $this->getSubscribers($eventName);
-        if ($subscribers) {
-            $this->doPublish($eventName, $subscribers, $event);
-        }
+        $this->doPublish($eventName, $subscribers, $event);
         return $event;
     }
 
@@ -136,15 +137,17 @@ class Manager
      * @param SubscriberInterface $interface object implementing subscriber interface
      *
      * @return array[] normalized list of subscriptions removed.
-     *      each returned is `array(eventName, callable, priority)`
      */
     public function removeSubscriberInterface(SubscriberInterface $interface)
     {
-        $subscribers = $this->getInterfaceSubscribers($interface);
-        foreach ($subscribers as $row) {
-            $this->unsubscribe($row[0], $row[1]);
+        $subscribersByEvent = $this->getInterfaceSubscribers($interface);
+        foreach ($subscribersByEvent as $eventName => $subscribers) {
+            foreach ($subscribers as $methodPriority) {
+                $callable = array($interface, $methodPriority[0]);
+                $this->unsubscribe($eventName, $callable);
+            }
         }
-        return $subscribers;
+        return $subscribersByEvent;
     }
 
     /**
@@ -190,22 +193,16 @@ class Manager
         if ($this->isClosureFactory($callable)) {
             $callable = $this->doClosureFactory($callable);
         }
+        $this->prepSubscribers($eventName);
         foreach ($this->subscribers[$eventName] as $priority => $subscribers) {
-            foreach ($subscribers as $k => $v) {
-                if ($this->isClosureFactory($v)) {
-                    $v = $this->doClosureFactory($v);
+            foreach ($subscribers as $k => $subscriber) {
+                if ($subscriber === $callable) {
+                    unset($this->subscribers[$eventName][$priority][$k], $this->sorted[$eventName]);
                 }
-                if ($v === $callable) {
-                    unset($subscribers[$k], $this->sorted[$eventName]);
-                    continue;
-                }
-                $subscribers[$k] = $v;
             }
-            if ($subscribers) {
-                $this->subscribers[$eventName][$priority] = $subscribers;
-                continue;
+            if (empty($this->subscribers[$eventName][$priority])) {
+                unset($this->subscribers[$eventName][$priority]);
             }
-            unset($this->subscribers[$eventName][$priority]);
         }
     }
 
@@ -294,41 +291,59 @@ class Manager
     private function getInterfaceSubscribers(SubscriberInterface $interface)
     {
         $subscribers = array();
-        $priorityDefault = 0;
         foreach ($interface->getSubscriptions() as $eventName => $mixed) {
-            if (\is_string($mixed)) {
-                // methodName
-                $subscribers[] = array($eventName, array($interface, $mixed), $priorityDefault);
-                continue;
-            }
-            if (\count($mixed) === 2 && \is_int($mixed[1])) {
-                // ['methodName', priority]
-                $subscribers[] = array($eventName, array($interface, $mixed[0]), $mixed[1]);
-                continue;
-            }
-            foreach ($mixed as $mixed2) {
-                // methodName
-                // or array(methodName[, priority])
-                if (\is_string($mixed2)) {
-                    $subscribers[] = array($eventName, array($interface, $mixed2), $priorityDefault);
-                    continue;
-                }
-                $callable = array($interface, $mixed2[0]);
-                $priority = isset($mixed2[1]) ? $mixed2[1] : $priorityDefault;
-                $subscribers[] = array($eventName, $callable, $priority);
-            }
+            $subscribers[$eventName] = $this->normalizeInterfaceSubscribers($mixed);
         }
         return $subscribers;
     }
 
     /**
+     * Normalize event subscribers
+     *
+     * @param string|array $mixed method(s) with priority
+     *
+     * @return array list of array(methodName, priority)
+     */
+    private function normalizeInterfaceSubscribers($mixed)
+    {
+        if (\is_string($mixed)) {
+            // methodName
+            return array(
+                array($mixed, self::DEFAULT_PRIORITY),
+            );
+        }
+        if (\count($mixed) === 2 && \is_int($mixed[1])) {
+            // ['methodName', priority]
+            return array(
+                $mixed,
+            );
+        }
+        // array of methods
+        $eventSubscribers = array();
+        foreach ($mixed as $mixed2) {
+            if (\is_string($mixed2)) {
+                // methodName
+                $eventSubscribers[] = array($mixed2, self::DEFAULT_PRIORITY);
+                continue;
+            }
+            // array(methodName[, priority])
+            $priority = isset($mixed2[1])
+                ? $mixed2[1]
+                : self::DEFAULT_PRIORITY;
+            $eventSubscribers[] = array($mixed2[0], $priority);
+        }
+        return $eventSubscribers;
+    }
+
+    /**
      * Sorts the internal list of subscribers for the given event by priority.
+     * Any closure factories for eventName are invoked
      *
      * @param string $eventName The name of the event
      *
      * @return void
      */
-    private function sortSubscribers($eventName)
+    private function prepSubscribers($eventName)
     {
         \krsort($this->subscribers[$eventName]);
         $this->sorted[$eventName] = array();

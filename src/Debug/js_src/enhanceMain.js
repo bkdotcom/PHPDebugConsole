@@ -204,7 +204,6 @@ function channelsToTree (channels) {
   var channel
   var ref
   var i
-  var i2
   var path
   for (i = 0; i < channels.length; i++) {
     ref = channelTree
@@ -213,20 +212,32 @@ function channelsToTree (channels) {
     if (path.length > 1 && path[0] === channels[0].name) {
       path.shift()
     }
-    for (i2 = 0; i2 < path.length; i2++) {
-      if (!ref[path[i2]]) {
-        ref[path[i2]] = {
-          options: {
-            icon: i2 === path.length - 1 ? channel.icon : null,
-            show: i2 === path.length - 1 ? channel.show : null
-          },
-          channels: {}
-        }
-      }
-      ref = ref[path[i2]].channels
-    }
+    channelsToTreeWalkPath(path, ref)
   }
   return channelTree
+}
+
+function channelsToTreeWalkPath (channel, path, channelTreeRef) {
+  var i
+  var options
+  for (i = 0; i < path.length; i++) {
+    options = i === path.length - 1
+      ? {
+        icon: channel.icon,
+        show: channel.show
+      }
+      : {
+        icon: null,
+        show: null
+      }
+    if (!channelTreeRef[path[i]]) {
+      channelTreeRef[path[i]] = {
+        options: options,
+        channels: {}
+      }
+    }
+    channelTreeRef = channelTreeRef[path[i2]].channels
+  }
 }
 
 function enhanceErrorSummary () {

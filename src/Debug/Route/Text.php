@@ -17,7 +17,7 @@ use bdk\Debug;
 /**
  * Output log as plain-text
  */
-class Text extends Base
+class Text extends AbstractRoute
 {
     /**
      * Constructor

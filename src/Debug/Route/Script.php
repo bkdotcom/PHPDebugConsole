@@ -20,7 +20,7 @@ use bdk\PubSub\Event;
 /**
  * Output log as <script> tag
  */
-class Script extends Base
+class Script extends AbstractRoute
 {
 
     protected $cfg = array(

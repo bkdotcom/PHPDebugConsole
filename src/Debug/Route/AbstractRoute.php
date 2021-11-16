@@ -21,7 +21,7 @@ use bdk\PubSub\Event;
 /**
  * Base output plugin
  */
-abstract class Base extends Component implements RouteInterface
+abstract class AbstractRoute extends Component implements RouteInterface
 {
 
     public $debug;

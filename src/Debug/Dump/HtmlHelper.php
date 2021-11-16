@@ -83,10 +83,7 @@ class HtmlHelper
      */
     public function markupIdentifier($val, $tagName = 'span', $attribs = array(), $wbr = false)
     {
-        if ($val instanceof Abstraction) {
-            $val = $val['value'];
-        }
-        $parts = $this->parseIdentifier($val);
+        $parts = $this->dumper->parseIdentifier($val);
         $classname = '';
         $operator = '<span class="t_operator">' . \htmlspecialchars($parts['operator']) . '</span>';
         $identifier = '';
@@ -264,36 +261,5 @@ class HtmlHelper
             ),
             '<code class="language-php">' . \htmlspecialchars(\implode($lines)) . '</code>'
         );
-    }
-
-    /**
-     * Split identifier into classname, operator, & identifier
-     *
-     * @param mixed $val classname or classname(::|->)name (method/property/const)
-     *
-     * @return array
-     */
-    private function parseIdentifier($val)
-    {
-        $parsed = array(
-            'classname' => $val,
-            'operator' => '::',
-            'identifier' => '',
-        );
-        $regex = '/^(.+)(::|->)(.+)$/';
-        $matches = array();
-        if (\is_array($val)) {
-            $parsed['classname'] = $val[0];
-            $parsed['identifier'] = $val[1];
-        } elseif (\preg_match($regex, $val, $matches)) {
-            $parsed['classname'] = $matches[1];
-            $parsed['operator'] = $matches[2];
-            $parsed['identifier'] = $matches[3];
-        } elseif (\preg_match('/^(.+)(\\\\\{closure\})$/', $val, $matches)) {
-            $parsed['classname'] = $matches[1];
-            $parsed['operator'] = '';
-            $parsed['identifier'] = $matches[2];
-        }
-        return $parsed;
     }
 }

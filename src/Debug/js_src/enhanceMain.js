@@ -236,7 +236,7 @@ function channelsToTreeWalkPath (channel, path, channelTreeRef) {
         channels: {}
       }
     }
-    channelTreeRef = channelTreeRef[path[i2]].channels
+    channelTreeRef = channelTreeRef[path[i]].channels
   }
 }
 

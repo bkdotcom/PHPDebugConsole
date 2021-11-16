@@ -82,32 +82,20 @@ class TextAnsi extends Text
      */
     public function markupIdentifier($val)
     {
+        $parts = $this->parseIdentifier($val);
         $classname = '';
-        $operator = '::';
+        $operator = $this->cfg['escapeCodes']['operator'] . $parts['operator'] . $this->escapeReset;
         $identifier = '';
-        $regex = '/^(.+)(::|->)(.+)$/';
-        if ($val instanceof Abstraction) {
-            $val = $val['value'];
-        }
-        $classname = $val;
-        $matches = array();
-        if (\is_array($val)) {
-            list($classname, $identifier) = $val;
-        } elseif (\preg_match($regex, $val, $matches)) {
-            $classname = $matches[1];
-            $operator = $matches[2];
-            $identifier = $matches[3];
-        }
-        $operator = $this->cfg['escapeCodes']['operator'] . $operator . $this->escapeReset;
-        if ($classname) {
-            $idx = \strrpos($classname, '\\');
+        if ($parts['classname']) {
+            $idx = \strrpos($parts['classname'], '\\');
+            $classname = $parts['classname'];
             $classname = $idx
                 ? $this->cfg['escapeCodes']['muted'] . \substr($classname, 0, $idx + 1) . $this->escapeReset
                     . "\e[1m" . \substr($classname, $idx + 1) . "\e[22m"
                 : "\e[1m" . $classname . "\e[22m";
         }
-        if ($identifier) {
-            $identifier = "\e[1m" . $identifier . "\e[22m";
+        if ($parts['identifier']) {
+            $identifier = "\e[1m" . $parts['identifier'] . "\e[22m";
         }
         $parts = \array_filter(array($classname, $identifier), 'strlen');
         return \implode($operator, $parts);

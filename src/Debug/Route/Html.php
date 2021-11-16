@@ -19,7 +19,7 @@ use bdk\PubSub\Event;
 /**
  * Output log as HTML
  */
-class Html extends Base
+class Html extends AbstractRoute
 {
 
     protected $errorSummary;

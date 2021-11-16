@@ -77,33 +77,13 @@ class LogEnv implements SubscriberInterface
      */
     private function assertSetting($setting)
     {
-        $setting = \array_merge(array(
-            'filter' => FILTER_VALIDATE_BOOLEAN,
-            'msg' => '',
-            'name' => '',
-            'operator' => '==',
-            'val' => '__not_passed__',
-            'valTest' => true,
-        ), $setting);
-        $actual = $setting['val'] !== '__not_passed__'
-            ? $setting['val']
-            : \filter_var(\ini_get($setting['name']), $setting['filter']);
-        $assert = $actual === $setting['valTest'];
-        $valFriendly = $setting['valTest'];
-        if ($setting['filter'] === FILTER_VALIDATE_BOOLEAN) {
-            $valFriendly = $setting['valTest']
-                ? 'enabled'
-                : 'disabled';
-        }
-        $msgDefault = 'should be ' . $valFriendly;
-        if ($setting['operator'] === '!=') {
-            $assert = $actual !== $setting['valTest'];
-            $msgDefault = 'should not be ' . $valFriendly;
-        }
-        $msg = $setting['msg'] ?: $msgDefault;
+        $setting = $this->assertSettingPrep($setting);
+        $assert = $setting['operator'] === '=='
+            ? $setting['valActual'] === $setting['valExpect']
+            : $setting['valActual'] !== $setting['valExpect'];
         $params = array(
             $assert,
-            '%c' . $setting['name'] . '%c ' . $msg,
+            '%c' . $setting['name'] . '%c ' . $setting['msg'],
         );
         $cCount = \substr_count($params[1], '%c');
         for ($i = 0; $i < $cCount; $i += 2) {
@@ -111,6 +91,36 @@ class LogEnv implements SubscriberInterface
             $params[] = '';
         }
         \call_user_func_array(array($this->debug, 'assert'), $params);
+    }
+
+    /**
+     * Merge default values
+     *
+     * @param array $setting setting name, "type", comparison value, operator
+     *
+     * @return array
+     */
+    private function assertSettingPrep($setting)
+    {
+        $setting = \array_merge(array(
+            'filter' => FILTER_VALIDATE_BOOLEAN,
+            'msg' => '',
+            'name' => '',
+            'operator' => '==',
+            'valActual' => '__use_ini_val__',
+            'valExpect' => true,
+        ), $setting);
+        if ($setting['valActual'] === '__use_ini_val__') {
+            $setting['valActual'] = \filter_var(\ini_get($setting['name']), $setting['filter']);
+        }
+        $valFriendly = $setting['filter'] === FILTER_VALIDATE_BOOLEAN
+            ? ($setting['valExpect'] ? 'enabled' : 'disabled')
+            : $setting['valExpect'];
+        $msgDefault = $setting['operator'] === '!=='
+            ? 'should be ' . $valFriendly
+            : 'should not be ' . $valFriendly;
+        $setting['msg'] = $setting['msg'] ?: $msgDefault;
+        return $setting;
     }
 
     /**
@@ -156,22 +166,10 @@ class LogEnv implements SubscriberInterface
         if (!$this->debug->getCfg('logEnvInfo.gitInfo', Debug::CONFIG_DEBUG)) {
             return;
         }
-        $redirect = \stripos(PHP_OS, 'WIN') !== 0
-            ? '2>/dev/null'
-            : '2> nul';
-        $outputLines = array();
-        $returnStatus = 0;
-        $matches = array();
-        \exec('git branch ' . $redirect, $outputLines, $returnStatus);
-        if ($returnStatus !== 0) {
+        $branch = $this->debug->utility->gitBranch();
+        if (!$branch) {
             return;
         }
-        $allLines = \implode("\n", $outputLines);
-        \preg_match('#^\* (.+)$#m', $allLines, $matches);
-        if (!$matches) {
-            return;
-        }
-        $branch = $matches[1];
         $this->debug->groupSummary(1);
         $this->debug->log(
             '%cgit branch: %c%s',
@@ -219,7 +217,7 @@ class LogEnv implements SubscriberInterface
         $this->debug->log('memory_limit', $this->debug->utility->getBytes($this->debug->utility->memoryLimit()));
         $this->assertSetting(array(
             'name' => 'expose_php',
-            'valTest' => false,
+            'valExpect' => false,
         ));
         $extensionsCheck = array('curl','mbstring');
         $extensionsCheck = \array_filter($extensionsCheck, function ($extension) {
@@ -381,23 +379,72 @@ class LogEnv implements SubscriberInterface
             return;
         }
 
-        $debugWas = $this->debug;
         $namePassed = $this->getPassedSessionName();
-        $namePrev = null;
 
+        $debugWas = $this->debug;
         $this->debug = $this->debug->rootInstance->getChannel('Session', array(
             'channelIcon' => 'fa fa-suitcase',
             'nested' => false,
         ));
-
         $this->logSessionSettings($namePassed);
+        $this->logSessionVals($namePassed);
+        $this->debug = $debugWas;
+    }
+
+    /**
+     * Asserts recommended session ini settings
+     *
+     * @param string|null $namePassed detected session name
+     *
+     * @return void
+     */
+    private function logSessionSettings($namePassed)
+    {
+        $settings = array(
+            array('name' => 'session.cookie_httponly'),
+            array('name' => 'session.cookie_lifetime',
+                'filter' => FILTER_VALIDATE_INT,
+                'valExpect' => 0,
+            ),
+            array('name' => 'session.name',
+                'filter' => FILTER_DEFAULT,
+                'valActual' => $namePassed ?: \ini_get('session.name'),
+                'valExpect' => 'PHPSESSID',
+                'operator' => '!=',
+                'msg' => 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)',
+            ),
+            array('name' => 'session.use_only_cookies'),
+            array('name' => 'session.use_strict_mode'),
+            array('name' => 'session.use_trans_sid',
+                'valExpect' => false
+            ),
+        );
+        foreach ($settings as $setting) {
+            $this->assertSetting($setting);
+        }
+        $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
+        if (\session_module_name() === 'files') {
+            // aka session.save_handler
+            $this->debug->log('session save_path', \session_save_path() ?: \sys_get_temp_dir());
+        }
+    }
+
+    /**
+     * Log session name, id, and session values
+     *
+     * @param string $sessionNamePassed Name of session name passed in request
+     *
+     * @return void
+     */
+    private function logSessionVals($sessionNamePassed)
+    {
+        $namePrev = null;
         if (\session_status() !== PHP_SESSION_ACTIVE) {
-            if ($namePassed === null) {
+            if ($sessionNamePassed === null) {
                 $this->debug->log('Session Inactive / No session id passed in request');
-                $this->debug = $debugWas;
                 return;
             }
-            $namePrev = \session_name($namePassed);
+            $namePrev = \session_name($sessionNamePassed);
             \session_start();
         }
         if (\session_status() === PHP_SESSION_ACTIVE) {
@@ -418,48 +465,6 @@ class LogEnv implements SubscriberInterface
             \session_abort();
             \session_name($namePrev);
             unset($_SESSION);
-        }
-        $this->debug = $debugWas;
-    }
-
-    /**
-     * Asserts recommended session ini settings
-     *
-     * @param string|null $namePassed detected session name
-     *
-     * @return void
-     */
-    private function logSessionSettings($namePassed)
-    {
-        $settings = array(
-            array('name' => 'session.cookie_httponly'),
-            array(
-                'name' => 'session.cookie_lifetime',
-                'filter' => FILTER_VALIDATE_INT,
-                'valTest' => 0,
-            ),
-            array(
-                'name' => 'session.name',
-                'filter' => FILTER_DEFAULT,
-                'val' => $namePassed ?: \ini_get('session.name'),
-                'valTest' => 'PHPSESSID',
-                'operator' => '!=',
-                'msg' => 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)',
-            ),
-            array('name' => 'session.use_only_cookies'),
-            array('name' => 'session.use_strict_mode'),
-            array(
-                'name' => 'session.use_trans_sid',
-                'valTest' => false
-            ),
-        );
-        foreach ($settings as $setting) {
-            $this->assertSetting($setting);
-        }
-        $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
-        if (\session_module_name() === 'files') {
-            // aka session.save_handler
-            $this->debug->log('session save_path', \session_save_path() ?: \sys_get_temp_dir());
         }
     }
 

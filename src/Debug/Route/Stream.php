@@ -19,7 +19,7 @@ use bdk\PubSub\Event;
 /**
  * Output log to a stream
  */
-class Stream extends Base
+class Stream extends AbstractRoute
 {
 
     protected $fileHandle;

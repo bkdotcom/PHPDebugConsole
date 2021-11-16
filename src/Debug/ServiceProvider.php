@@ -50,6 +50,7 @@ class ServiceProvider implements ServiceProviderInterface
             'methodTime',
             'request',
             'response',
+            'stringUtil',
             'utf8',
             'utility',
         );
@@ -164,6 +165,9 @@ class ServiceProvider implements ServiceProviderInterface
             }
             $debug = $container['debug'];
             return new \bdk\Debug\Route\Wamp($debug, $wampPublisher);
+        };
+        $container['stringUtil'] = function () {
+            return new \bdk\Debug\Utility\StringUtil();
         };
         $container['stopWatch'] = function (Container $container) {
             $debug = $container['debug'];

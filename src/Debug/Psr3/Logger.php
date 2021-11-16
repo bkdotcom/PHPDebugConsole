@@ -187,29 +187,31 @@ class Logger extends AbstractLogger
         list($message, $context) = $logEntry['args'];
         $placeholders = array();
         $args = array(
-            $this->debug->utility->strInterpolate($message, $context, $placeholders),
+            $this->debug->stringUtil->strInterpolate($message, $context, $placeholders),
         );
         if (\is_array($context)) {
             // remove interpolated values from context
             $context = \array_diff_key($context, \array_flip($placeholders));
         }
-        if (\in_array($logEntry['method'], array('info','log'))) {
-            if (isset($context['table']) && \is_array($context['table'])) {
-                /*
-                    context['table'] is table data
-                    context may contain other meta values
-                */
-                $args = array($context['table']);
-                $logEntry['method'] = 'table';
-                $logEntry->setMeta('caption', $message);
-                $meta = \array_intersect_key($context, \array_flip(array(
-                    'columns',
-                    'sortable',
-                    'totalCols',
-                )));
-                $logEntry->setMeta($meta);
-                $context = null;
-            }
+        if (
+            \in_array($logEntry['method'], array('info','log'))
+            && isset($context['table'])
+            && \is_array($context['table'])
+        ) {
+            /*
+                context['table'] is table data
+                context may contain other meta values
+            */
+            $args = array($context['table']);
+            $logEntry['method'] = 'table';
+            $logEntry->setMeta('caption', $message);
+            $meta = \array_intersect_key($context, \array_flip(array(
+                'columns',
+                'sortable',
+                'totalCols',
+            )));
+            $logEntry->setMeta($meta);
+            $context = null;
         }
         if ($context) {
             $args[] = $context;

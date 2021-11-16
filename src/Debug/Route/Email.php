@@ -129,7 +129,7 @@ class Email implements RouteInterface
         if (\preg_match($regex, $str, $matches)) {
             $str = $matches[1];
         }
-        $str = $debug->utility->isBase64Encoded($str)
+        $str = $debug->stringUtil->isBase64Encoded($str)
             ? \base64_decode($str)
             : false;
         if ($str && \function_exists('gzinflate')) {

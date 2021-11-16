@@ -3,12 +3,12 @@
 namespace bdk\DebugTests\Utility;
 
 use bdk\Debug\Utility;
-use bdk\DebugTests\DebugTestFramework;
+use PHPUnit\Framework\TestCase;
 
 /**
- * PHPUnit tests for Debug class
+ * PHPUnit tests for Utility class
  */
-class UtilityTest extends DebugTestFramework
+class UtilityTest extends TestCase
 {
 
     public function testGetBytes()
@@ -37,21 +37,6 @@ class UtilityTest extends DebugTestFramework
         \sort($filesA);
         \sort($filesB);
         $this->assertArraySubset($filesA, $filesB);
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testIsBase64Encoded()
-    {
-        $base64Str = \base64_encode(\chunk_split(\str_repeat('zippity do dah', 50)));
-        $this->assertTrue(Utility::isBase64Encoded($base64Str));
-
-        $this->assertFalse(Utility::isBase64Encoded('I\'m just a bill.'));
-        $this->assertFalse(Utility::isBase64Encoded('onRenderComplete'));
-        $this->assertFalse(Utility::isBase64Encoded('/Users/jblow/not/base64/'));
     }
 
     public function testIsFile()

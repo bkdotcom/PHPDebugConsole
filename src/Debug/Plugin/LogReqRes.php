@@ -376,7 +376,7 @@ class LogReqRes implements SubscriberInterface
             $contentType = 'application/json';
             return false;
         }
-        if ($this->debug->utility->isXml($input)) {
+        if ($this->debug->stringUtil->isXml($input)) {
             $contentType = 'text/xml';
             return false;
         }

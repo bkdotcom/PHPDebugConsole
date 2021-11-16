@@ -68,7 +68,7 @@ class ServerLog extends ChromeLogger
         if ($this->jsonData['rows']) {
             $filename = $this->filename();
             if ($this->writeLogFile($filename)) {
-                $url = $this->debug->utility->strInterpolate(
+                $url = $this->debug->stringUtil->strInterpolate(
                     $this->cfg['urlTemplate'],
                     array(
                         'filename' => $filename,
@@ -125,7 +125,6 @@ class ServerLog extends ChromeLogger
      */
     protected function writeLogFile($filename)
     {
-        $logData = \json_encode($this->jsonData, JSON_UNESCAPED_SLASHES);
         $logData = \str_replace(
             array(
                 \json_encode(Abstracter::TYPE_FLOAT_INF),
@@ -137,10 +136,9 @@ class ServerLog extends ChromeLogger
                 '"NaN"',
                 'null',
             ),
-            $logData
+            \json_encode($this->jsonData, JSON_UNESCAPED_SLASHES)
         );
         $logDir = $this->cfg['logDir'];
-        $localPath = $logDir . '/' . $filename;
         if (!\file_exists($logDir)) {
             \set_error_handler(function () {
                 // ignore error
@@ -148,6 +146,7 @@ class ServerLog extends ChromeLogger
             \mkdir($logDir, 0755, true);
             \restore_error_handler();
         }
+        $localPath = $logDir . '/' . $filename;
         if (\is_writeable($logDir) && \file_put_contents($localPath, $logData) !== false) {
             return true;
         }

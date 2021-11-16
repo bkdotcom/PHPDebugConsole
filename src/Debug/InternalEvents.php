@@ -243,11 +243,11 @@ class InternalEvents implements SubscriberInterface
         if ($type === 'html') {
             $lang = 'markup';
         } elseif ($type === 'json') {
-            $string = $this->debug->utility->prettyJson($string);
+            $string = $this->debug->stringUtil->prettyJson($string);
         } elseif ($type === 'sql') {
-            $string = $this->debug->utility->prettySql($string);
+            $string = $this->debug->stringUtil->prettySql($string);
         } elseif ($type === 'xml') {
-            $string = $this->debug->utility->prettyXml($string);
+            $string = $this->debug->stringUtil->prettyXml($string);
         }
         if (!$this->highlightAdded) {
             $this->debug->addPlugin(new Highlight());

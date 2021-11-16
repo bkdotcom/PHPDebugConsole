@@ -19,7 +19,7 @@ use bdk\PubSub\Event;
 /**
  * Output log via FirePHP
  */
-class Firephp extends Base
+class Firephp extends AbstractRoute
 {
 
     const FIREPHP_PROTO_VER = '0.3';

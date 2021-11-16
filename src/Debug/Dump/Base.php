@@ -143,6 +143,40 @@ class Base extends Component
     }
 
     /**
+     * Split identifier into classname, operator, & identifier
+     *
+     * @param mixed $val classname or classname(::|->)name (method/property/const)
+     *
+     * @return array
+     */
+    public function parseIdentifier($val)
+    {
+        if ($val instanceof Abstraction) {
+            $val = $val['value'];
+        }
+        $parts = array(
+            'classname' => $val,
+            'operator' => '::',
+            'identifier' => '',
+        );
+        $regex = '/^(.+)(::|->)(.+)$/';
+        $matches = array();
+        if (\is_array($val)) {
+            $parts['classname'] = $val[0];
+            $parts['identifier'] = $val[1];
+        } elseif (\preg_match($regex, $val, $matches)) {
+            $parts['classname'] = $matches[1];
+            $parts['operator'] = $matches[2];
+            $parts['identifier'] = $matches[3];
+        } elseif (\preg_match('/^(.+)(\\\\\{closure\})$/', $val, $matches)) {
+            $parts['classname'] = $matches[1];
+            $parts['operator'] = '';
+            $parts['identifier'] = $matches[2];
+        }
+        return $parts;
+    }
+
+    /**
      * Process log entry
      *
      * Transmogrify log entry to chromelogger format

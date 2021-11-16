@@ -661,7 +661,7 @@
         : $('<i>').addClass($node.data('icon'))
     }
     if ($node.hasClass('m_group')) {
-      return
+      return $icon
     }
     $node2 = $node.hasClass('group-header')
       ? $node.parent()
@@ -1838,7 +1838,7 @@
           channels: {}
         };
       }
-      channelTreeRef = channelTreeRef[path[i2]].channels;
+      channelTreeRef = channelTreeRef[path[i]].channels;
     }
   }
 

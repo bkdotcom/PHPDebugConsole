@@ -62,6 +62,7 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
  * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
  * @property Debug\Psr7lite\ServerRequest $request lazy-loaded ServerRequest
  * @property \bdk\Debug           $rootInstance  root "channel"
+ * @property \bdk\Debug\Utility\StringUtil $stringUtil lazy-loaded string utilitys
  * @property Debug\Utility\StopWatch $stopWatch  lazy-loaded StopWatch instance
  * @property Debug\Utility\Utf8   $utf8          lazy-loaded Utf8 instance
  * @property Debug\Utility        $utility       lazy-loaded Utility instance

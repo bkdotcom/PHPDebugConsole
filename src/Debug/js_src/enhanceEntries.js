@@ -164,7 +164,7 @@ function determineIcon ($node) {
       : $('<i>').addClass($node.data('icon'))
   }
   if ($node.hasClass('m_group')) {
-    return
+    return $icon
   }
   $node2 = $node.hasClass('group-header')
     ? $node.parent()

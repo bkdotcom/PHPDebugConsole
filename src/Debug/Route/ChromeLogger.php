@@ -25,7 +25,7 @@ use bdk\PubSub\Event;
  * ChromeLogger supports the following methods/log-types:
  * log, warn, error, info, group, groupEnd, groupCollapsed, and table
  */
-class ChromeLogger extends Base
+class ChromeLogger extends AbstractRoute
 {
 
     const HEADER_NAME = 'X-ChromeLogger-Data';

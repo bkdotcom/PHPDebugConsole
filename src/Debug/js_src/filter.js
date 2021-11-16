@@ -94,7 +94,7 @@ function applyFilter ($root) {
   })
   for (i = 0, len = sort.length; i < len; i++) {
     var $node = sort[i].node
-    applyFilterToNode($node, channelNameRoot);
+    applyFilterToNode($node, channelNameRoot)
   }
 }
 

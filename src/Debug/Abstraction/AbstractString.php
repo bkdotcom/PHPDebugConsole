@@ -250,13 +250,13 @@ class AbstractString extends Component
      */
     private function getTypeStringEncoded($val)
     {
-        if ($this->debug->utility->isBase64Encoded($val)) {
+        if ($this->debug->stringUtil->isBase64Encoded($val)) {
             return Abstracter::TYPE_STRING_BASE64;
         }
-        if ($this->debug->utility->isJson($val)) {
+        if ($this->debug->stringUtil->isJson($val)) {
             return Abstracter::TYPE_STRING_JSON;
         }
-        if ($this->debug->utility->isSerializedSafe($val)) {
+        if ($this->debug->stringUtil->isSerializedSafe($val)) {
             return Abstracter::TYPE_STRING_SERIALIZED;
         }
         return null;

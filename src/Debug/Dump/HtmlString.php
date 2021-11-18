@@ -266,7 +266,7 @@ class HtmlString
             . '</div>' . "\n"
         );
         $this->html->setDumpOpt('tagName', null);
-        return $this->debug->stringUtil->strInterpolate($val, $vals);
+        return $this->debug->stringUtil->interpolate($val, $vals);
     }
 
     /**

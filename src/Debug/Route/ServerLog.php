@@ -68,7 +68,7 @@ class ServerLog extends ChromeLogger
         if ($this->jsonData['rows']) {
             $filename = $this->filename();
             if ($this->writeLogFile($filename)) {
-                $url = $this->debug->stringUtil->strInterpolate(
+                $url = $this->debug->stringUtil->interpolate(
                     $this->cfg['urlTemplate'],
                     array(
                         'filename' => $filename,

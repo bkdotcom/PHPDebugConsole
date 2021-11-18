@@ -611,14 +611,16 @@ class Base extends Component
         $forceArray = $logEntry->getMeta('forceArray', true);
         $undefinedAs = $logEntry->getMeta('undefinedAs', 'unset');
         $tableInfo = $logEntry->getMeta('tableInfo');
-        $processRows = $undefinedAs !== Abstracter::UNDEFINED || $forceArray === false || $tableInfo['haveObjRow'];
+        $processRows = $undefinedAs !== Abstracter::UNDEFINED
+            || $forceArray === false
+            || $tableInfo['haveObjRow'];
         if (!$processRows) {
             return null;
         }
-        $rows = $logEntry['args'][0];
         if ($undefinedAs === 'null') {
             $undefinedAs = null;
         }
+        $rows = $logEntry['args'][0];
         foreach ($rows as $rowKey => $row) {
             $rowInfo = isset($tableInfo['rows'][$rowKey])
                 ? $tableInfo['rows'][$rowKey]
@@ -650,6 +652,27 @@ class Base extends Component
         if ($rowInfo['isScalar'] === true && $forceArray === false) {
             return \current($row);
         }
+        $row = $this->methodTabularUndefinedVals($row, $undefinedAs);
+        if ($rowInfo['class']) {
+            $row = \array_merge(
+                array('___class_name' => $rowInfo['class']),
+                $row
+            );
+        }
+        return $row;
+    }
+
+    /**
+     * Set (or unset) any undefined values
+     *
+     * @param array       $row         row
+     * @param string|null $undefinedAs value we should assign to undefined
+     *
+     * @return array
+     */
+    private function methodTabularUndefinedVals($row, $undefinedAs)
+    {
+        // handle undefined values
         foreach ($row as $k => $val) {
             if ($val !== Abstracter::UNDEFINED) {
                 continue;
@@ -659,12 +682,6 @@ class Base extends Component
                 continue;
             }
             $row[$k] = $undefinedAs;
-        }
-        if ($rowInfo['class']) {
-            $row = \array_merge(
-                array('___class_name' => $rowInfo['class']),
-                $row
-            );
         }
         return $row;
     }

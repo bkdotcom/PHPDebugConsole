@@ -3,12 +3,12 @@
 namespace bdk\DebugTests\Utility;
 
 use bdk\Debug\Utility;
-use PHPUnit\Framework\TestCase;
+use bdk\DebugTests\DebugTestFramework;
 
 /**
  * PHPUnit tests for Utility class
  */
-class UtilityTest extends TestCase
+class UtilityTest extends DebugTestFramework
 {
 
     public function testGetBytes()

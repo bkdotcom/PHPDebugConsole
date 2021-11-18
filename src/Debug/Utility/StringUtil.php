@@ -27,6 +27,39 @@ class StringUtil
     protected static $domDocument;
 
     /**
+     * Interpolates context values into the message placeholders.
+     *
+     * @param string|object $message      message (string, or obj with __toString)
+     * @param array|object  $context      optional array of key/values or object
+     *                                      if array: interpolated values get removed
+     * @param array         $placeholders gets set to the placeholders found in message
+     *
+     * @return string
+     * @throws \RuntimeException if non-stringable object provided for $message
+     * @throws \InvalidArgumentException if $context not array or object
+     */
+    public static function interpolate($message, $context = array(), &$placeholders = array())
+    {
+        // build a replacement array with braces around the context keys
+        if (!\is_array($context) && !\is_object($context)) {
+            throw new \InvalidArgumentException(
+                'Expected array or object for $context. ' . \gettype($context) . ' provided'
+            );
+        }
+        if (\is_object($message)) {
+            if (\method_exists($message, '__toString') === false) {
+                throw new \RuntimeException(__METHOD__ . ': ' . \get_class($message) . 'is not stringable');
+            }
+            $message = (string) $message;
+        }
+        $matches = array();
+        \preg_match_all('/\{([a-zA-Z0-9._-]+)\}/', $message, $matches);
+        $placeholders = \array_unique($matches[1]);
+        $replaceVals = self::interpolateValues($placeholders, $context);
+        return \strtr((string) $message, $replaceVals);
+    }
+
+    /**
      * Checks if a given string is base64 encoded
      *
      * FYI:
@@ -217,39 +250,6 @@ class StringUtil
     }
 
     /**
-     * Interpolates context values into the message placeholders.
-     *
-     * @param string|object $message      message (string, or obj with __toString)
-     * @param array|object  $context      optional array of key/values or object
-     *                                      if array: interpolated values get removed
-     * @param array         $placeholders gets set to the placeholders found in message
-     *
-     * @return string
-     * @throws \RuntimeException if non-stringable object provided for $message
-     * @throws \InvalidArgumentException if $context not array or object
-     */
-    public static function strInterpolate($message, $context = array(), &$placeholders = array())
-    {
-        // build a replacement array with braces around the context keys
-        if (!\is_array($context) && !\is_object($context)) {
-            throw new \InvalidArgumentException(
-                'Expected array or object for $context. ' . \gettype($context) . ' provided'
-            );
-        }
-        if (\is_object($message)) {
-            if (\method_exists($message, '__toString') === false) {
-                throw new \RuntimeException(__METHOD__ . ': ' . \get_class($message) . 'is not stringable');
-            }
-            $message = (string) $message;
-        }
-        $matches = array();
-        \preg_match_all('/\{([a-zA-Z0-9._-]+)\}/', $message, $matches);
-        $placeholders = \array_unique($matches[1]);
-        $replaceVals = self::strInterpolateValues($placeholders, $context);
-        return \strtr((string) $message, $replaceVals);
-    }
-
-    /**
      * Test if character distribution is what we would expect for a bse 64 string
      * This is quite unreliable as encoding isn't random
      *
@@ -286,14 +286,14 @@ class StringUtil
     }
 
     /**
-     * Get substitution values for strInterpolate
+     * Get substitution values for `interpolate()`
      *
      * @param array        $placeholders keys
      * @param array|object $context      values
      *
      * @return string[] key->value array
      */
-    private static function strInterpolateValues($placeholders, $context)
+    private static function interpolateValues($placeholders, $context)
     {
         $replace = array();
         $isArrayAccess = \is_array($context) || $context instanceof \ArrayAccess;

@@ -113,7 +113,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             */
             $lastError = $logEntry->getSubject()->errorHandler->getLastError();
             if ($lastError) {
-                $str = $this->debug->utility->strInterpolate(
+                $str = $this->debug->stringUtil->interpolate(
                     '"{typeStr}: {message}" at {file} line {line}',
                     $lastError
                 );

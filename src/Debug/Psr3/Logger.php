@@ -187,7 +187,7 @@ class Logger extends AbstractLogger
         list($message, $context) = $logEntry['args'];
         $placeholders = array();
         $args = array(
-            $this->debug->stringUtil->strInterpolate($message, $context, $placeholders),
+            $this->debug->stringUtil->interpolate($message, $context, $placeholders),
         );
         if (\is_array($context)) {
             // remove interpolated values from context

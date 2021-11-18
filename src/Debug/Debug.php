@@ -553,7 +553,7 @@ class Debug
             __FUNCTION__,
             \func_get_args()
         );
-        $this->methodGroup->doGroup($logEntry);
+        $this->methodGroup->methodGroup($logEntry);
     }
 
     /**
@@ -572,7 +572,7 @@ class Debug
             __FUNCTION__,
             \func_get_args()
         );
-        $this->methodGroup->doGroup($logEntry);
+        $this->methodGroup->methodGroup($logEntry);
     }
 
     /**
@@ -595,7 +595,7 @@ class Debug
                 $value,
             )
         );
-        $this->methodGroup->groupEnd($logEntry);
+        $this->methodGroup->methodGroupEnd($logEntry);
     }
 
     /**
@@ -624,7 +624,7 @@ class Debug
             ),
             array('priority')
         );
-        $this->methodGroup->groupSummary($logEntry);
+        $this->methodGroup->methodGroupSummary($logEntry);
     }
 
     /**
@@ -644,7 +644,7 @@ class Debug
             __FUNCTION__,
             \func_get_args()
         );
-        $this->methodGroup->groupUncollapse($logEntry);
+        $this->methodGroup->methodGroupUncollapse($logEntry);
     }
 
     /**

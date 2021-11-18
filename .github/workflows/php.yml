@@ -21,7 +21,7 @@ jobs:
       with:
         php-version: ${{ matrix.php-versions }}
         extensions: intl #optional
-        ini-values: "post_max_size=256M" #optional
+        ini-values: "post_max_size=256M, memory_limit=512M"
     - name: Check PHP Version
       run: php -v
     - name: Validate composer.json and composer.lock

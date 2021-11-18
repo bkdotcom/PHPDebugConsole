@@ -428,8 +428,10 @@ class InternalEvents implements SubscriberInterface
                     : '')
                 . ': '
                 . $this->debug->utility->getBytes($vals['memoryPeakUsage']) . ' / '
-                // . $this->debug->utility->getBytes($vals['memoryLimit']),
-                . \json_encode($vals['memoryLimit']),
+                . ($vals['memoryLimit'] === '-1'
+                    ? '∞'
+                    : $this->debug->utility->getBytes($vals['memoryLimit'])
+                ),
             $this->debug->meta('sanitize', false)
         );
         $this->debug->groupEnd();

@@ -79,8 +79,8 @@ class LogEnv implements SubscriberInterface
     {
         $setting = $this->assertSettingPrep($setting);
         $assert = $setting['operator'] === '=='
-            ? $setting['valActual'] === $setting['valExpect']
-            : $setting['valActual'] !== $setting['valExpect'];
+            ? $setting['valActual'] === $setting['valCompare']
+            : $setting['valActual'] !== $setting['valCompare'];
         $params = array(
             $assert,
             '%c' . $setting['name'] . '%c ' . $setting['msg'],
@@ -108,14 +108,14 @@ class LogEnv implements SubscriberInterface
             'name' => '',
             'operator' => '==',
             'valActual' => '__use_ini_val__',
-            'valExpect' => true,
+            'valCompare' => true,
         ), $setting);
         if ($setting['valActual'] === '__use_ini_val__') {
             $setting['valActual'] = \filter_var(\ini_get($setting['name']), $setting['filter']);
         }
         $valFriendly = $setting['filter'] === FILTER_VALIDATE_BOOLEAN
-            ? ($setting['valExpect'] ? 'enabled' : 'disabled')
-            : $setting['valExpect'];
+            ? ($setting['valCompare'] ? 'enabled' : 'disabled')
+            : $setting['valCompare'];
         $msgDefault = $setting['operator'] === '!=='
             ? 'should be ' . $valFriendly
             : 'should not be ' . $valFriendly;
@@ -214,10 +214,10 @@ class LogEnv implements SubscriberInterface
         $this->debug->log('PHP Version', PHP_VERSION);
         $this->logPhpIni();
         $this->logTimezone();
-        $this->debug->log('memory_limit', $this->debug->utility->getBytes($this->debug->utility->memoryLimit()));
+        $this->logPhpMemoryLimit();
         $this->assertSetting(array(
             'name' => 'expose_php',
-            'valExpect' => false,
+            'valCompare' => false,
         ));
         $extensionsCheck = array('curl','mbstring');
         $extensionsCheck = \array_filter($extensionsCheck, function ($extension) {
@@ -332,6 +332,26 @@ class LogEnv implements SubscriberInterface
     }
 
     /**
+     * Log Php's memory_limit setting
+     *
+     * @return void
+     */
+    private function logPhpMemoryLimit()
+    {
+        $memoryLimit = $this->debug->utility->memoryLimit();
+        $memoryLimit === '-1'
+            // overkill, but lets use assertSetting, which applies some styling
+            ? $this->assertSetting(array(
+                'name' => 'memory_limit',
+                'valActual' => '-1',
+                'valCompare' => '-1',
+                'operator' => '!=',
+                'msg' => 'should not be -1 (no limit)',
+            ))
+            : $this->debug->log('memory_limit', $this->debug->utility->getBytes($memoryLimit));
+    }
+
+    /**
      * Log $_SERVER values specified by `logServerKeys` config option
      *
      * @return void
@@ -404,19 +424,19 @@ class LogEnv implements SubscriberInterface
             array('name' => 'session.cookie_httponly'),
             array('name' => 'session.cookie_lifetime',
                 'filter' => FILTER_VALIDATE_INT,
-                'valExpect' => 0,
+                'valCompare' => 0,
             ),
             array('name' => 'session.name',
                 'filter' => FILTER_DEFAULT,
                 'valActual' => $namePassed ?: \ini_get('session.name'),
-                'valExpect' => 'PHPSESSID',
+                'valCompare' => 'PHPSESSID',
                 'operator' => '!=',
                 'msg' => 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)',
             ),
             array('name' => 'session.use_only_cookies'),
             array('name' => 'session.use_strict_mode'),
             array('name' => 'session.use_trans_sid',
-                'valExpect' => false
+                'valCompare' => false
             ),
         );
         foreach ($settings as $setting) {

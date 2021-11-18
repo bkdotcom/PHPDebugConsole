@@ -318,7 +318,7 @@ class Utility
      */
     public static function memoryLimit()
     {
-        $iniVal = \ini_get('memory_limit');
+        $iniVal = \trim(\ini_get('memory_limit') ?: \get_cfg_var('memory_limit'));
         return $iniVal ?: '128M';
     }
 

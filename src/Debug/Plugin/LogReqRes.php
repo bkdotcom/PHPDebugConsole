@@ -85,23 +85,16 @@ class LogReqRes implements SubscriberInterface
                 'icon' => 'fa fa-arrow-right',
             ))
         );
+        $this->debug->alert(
+            '%c%s%c %s',
+            'font-weight:bold;',
+            $this->debug->request->getMethod(),
+            '',
+            $this->debug->request->getRequestTarget(),
+            $this->debug->meta('level', 'info')
+        );
         $this->logRequestHeaders();
-        if ($this->debug->getCfg('logRequestInfo.cookies', Debug::CONFIG_DEBUG)) {
-            $cookieVals = \array_map(function ($val) {
-                if (\is_numeric($val)) {
-                    $val = $this->debug->abstracter->crateWithVals($val, array(
-                        'attribs' => array(
-                            'class' => 'text-left',
-                        ),
-                    ));
-                }
-                return $val;
-            }, $this->debug->request->getCookieParams());
-            \ksort($cookieVals, SORT_NATURAL);
-            if ($cookieVals) {
-                $this->debug->table('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
-            }
-        }
+        $this->logRequestCookies();
         $this->logPost();
         $this->logFiles();
     }
@@ -113,10 +106,10 @@ class LogReqRes implements SubscriberInterface
      */
     public function logResponse()
     {
-        if (!$this->debug->getCfg('logResponse', Debug::CONFIG_DEBUG)) {
+        if (\strpos($this->debug->getInterface(), 'http') !== 0) {
             return;
         }
-        if (\strpos($this->debug->getInterface(), 'http') !== 0) {
+        if (!$this->debug->getCfg('logResponse', Debug::CONFIG_DEBUG)) {
             return;
         }
         $this->debug->log(
@@ -128,10 +121,7 @@ class LogReqRes implements SubscriberInterface
                 'icon' => 'fa fa-arrow-left',
             ))
         );
-        $headers = \array_map(function ($vals) {
-            return \implode("\n", $vals);
-        }, $this->debug->getResponseHeaders());
-        $this->debug->table('response headers', $headers);
+        $this->logResponseHeaders();
         $contentType = \implode(', ', $this->debug->getResponseHeader('Content-Type'));
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
             // we're not interested in logging response
@@ -213,42 +203,95 @@ class LogReqRes implements SubscriberInterface
         $contentType = $request->getHeaderLine('Content-Type');
         $havePostVals = false;
         if ($method === 'POST') {
-            $isCorrectContentType = $this->testPostContentType($contentType);
-            $post = $request->getParsedBody();
-            if (!$isCorrectContentType) {
-                $this->debug->warn(
-                    'It appears ' . $contentType . ' was posted with the wrong Content-Type' . "\n"
-                        . 'Pay no attention to $_POST and instead use php://input',
-                    $this->debug->meta(array(
-                        'detectFiles' => false,
-                        'file' => null,
-                        'line' => null,
-                    ))
-                );
-            } elseif ($post) {
-                $havePostVals = true;
-                $this->debug->log('$_POST', $post, $this->debug->meta('redact'));
-            }
+            $havePostVals = $this->logPostMethod($contentType);
         }
         if (!$havePostVals) {
-            // Not POST, empty $_POST, or not application/x-www-form-urlencoded or multipart/form-data
-            $input = $this->getRequestBodyContents();
-            if ($input) {
-                $this->debug->log(
-                    'php://input',
-                    $this->debug->prettify($input, $contentType),
-                    $this->debug->meta('redact')
-                );
-            } elseif (!$request->getUploadedFiles()) {
-                $this->debug->warn(
-                    $method . ' request with no body',
-                    $this->debug->meta(array(
-                        'detectFiles' => false,
-                        'file' => null,
-                        'line' => null,
-                    ))
-                );
+            $this->logPostNoVals($method, $contentType);
+        }
+    }
+
+    /**
+     * Log $_POST information when http method = POST
+     *
+     * @param string $contentType Content-Type value
+     *
+     * @return bool
+     */
+    private function logPostMethod($contentType)
+    {
+        $havePostVals = false;
+        $isCorrectContentType = $this->testPostContentType($contentType);
+        $post = $this->debug->request->getParsedBody();
+        if (!$isCorrectContentType) {
+            $this->debug->warn(
+                'It appears ' . $contentType . ' was posted with the wrong Content-Type' . "\n"
+                    . 'Pay no attention to $_POST and instead use php://input',
+                $this->debug->meta(array(
+                    'detectFiles' => false,
+                    'file' => null,
+                    'line' => null,
+                ))
+            );
+        } elseif ($post) {
+            $havePostVals = true;
+            $this->debug->log('$_POST', $post, $this->debug->meta('redact'));
+        }
+        return $havePostVals;
+    }
+
+    /**
+     * Log info when expected $_POST not avail
+     *
+     * @param string $method      Http method
+     * @param string $contentType Content-Type value
+     *
+     * @return void
+     */
+    private function logPostNoVals($method, $contentType)
+    {
+        // Not POST, empty $_POST, or not application/x-www-form-urlencoded or multipart/form-data
+        $input = $this->getRequestBodyContents();
+        if ($input) {
+            $this->debug->log(
+                'php://input',
+                $this->debug->prettify($input, $contentType),
+                $this->debug->meta('redact')
+            );
+        } elseif (!$this->debug->request->getUploadedFiles()) {
+            $this->debug->warn(
+                $method . ' request with no body',
+                $this->debug->meta(array(
+                    'detectFiles' => false,
+                    'file' => null,
+                    'line' => null,
+                ))
+            );
+        }
+    }
+
+    /**
+     * Log Request Cookies
+     *
+     * @return void
+     */
+    private function logRequestCookies()
+    {
+        if ($this->debug->getCfg('logRequestInfo.cookies', Debug::CONFIG_DEBUG) === false) {
+            return;
+        }
+        $cookieVals = \array_map(function ($val) {
+            if (\is_numeric($val)) {
+                $val = $this->debug->abstracter->crateWithVals($val, array(
+                    'attribs' => array(
+                        'class' => 'text-left',
+                    ),
+                ));
             }
+            return $val;
+        }, $this->debug->request->getCookieParams());
+        \ksort($cookieVals, SORT_NATURAL);
+        if ($cookieVals) {
+            $this->debug->table('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
         }
     }
 
@@ -262,14 +305,6 @@ class LogReqRes implements SubscriberInterface
         if ($this->debug->getCfg('logRequestInfo.headers', Debug::CONFIG_DEBUG) === false) {
             return;
         }
-        $this->debug->alert(
-            '%c%s%c %s',
-            'font-weight:bold;',
-            $this->debug->request->getMethod(),
-            '',
-            $this->debug->request->getRequestTarget(),
-            $this->debug->meta('level', 'info')
-        );
         $headers = \array_map(function ($vals) {
             $val = \join(', ', $vals);
             if (\is_numeric($val)) {
@@ -311,21 +346,11 @@ class LogReqRes implements SubscriberInterface
         $contentLength = \strlen($response);
         if ($this->debug->response) {
             $response = '';
-            $contentLength = 0;
-            try {
-                $stream = $this->debug->response->getBody();
-                $contentLength = $stream->getSize(); // likely returns null (unknown)
-                if ($contentLength <= $maxLen) {
-                    $response = $this->debug->utility->getStreamContents($stream);
-                    $contentLength = \strlen($response);
-                }
-            } catch (Exception $e) {
-                $this->debug->warn('Exception', array(
-                    'message' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                ));
-                return;
+            $stream = $this->debug->response->getBody();
+            $contentLength = $stream->getSize(); // likely returns null (unknown)
+            if ($contentLength <= $maxLen) {
+                $response = $this->debug->utility->getStreamContents($stream);
+                $contentLength = \strlen($response);
             }
         }
         if ($maxLen && $contentLength > $maxLen) {
@@ -340,6 +365,19 @@ class LogReqRes implements SubscriberInterface
             $this->debug->prettify($response, $contentType),
             $this->debug->meta('redact')
         );
+    }
+
+    /**
+     * log response headers
+     *
+     * @return void
+     */
+    private function logResponseHeaders()
+    {
+        $headers = \array_map(function ($vals) {
+            return \implode("\n", $vals);
+        }, $this->debug->getResponseHeaders());
+        $this->debug->table('response headers', $headers);
     }
 
     /**

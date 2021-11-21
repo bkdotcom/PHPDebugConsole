@@ -66,11 +66,12 @@ class HtmlErrorSummary
     }
 
     /**
-     * Returns an error summary
+     * Returns an error summary LogEntry
+     * LogEntry['args'][0] could be an empty string
      *
      * @param array $stats error statistics
      *
-     * @return LogEntry|false
+     * @return LogEntry
      */
     public function build($stats)
     {
@@ -79,13 +80,6 @@ class HtmlErrorSummary
             . $this->buildFatal()
             . $this->buildInConsole()
             . $this->buildNotInConsole();
-        if (!$summary) {
-            return false;
-        }
-        $classes = \array_keys(\array_filter(array(
-            'error-summary' => true,
-            'have-fatal' => isset($this->stats['counts']['fatal']),
-        )));
         return new LogEntry(
             $this->routeHtml->debug->getChannel('phpError'),
             'alert',
@@ -94,7 +88,10 @@ class HtmlErrorSummary
             ),
             array(
                 'attribs' => array(
-                    'class' => $classes,
+                    'class' => array(
+                        'error-summary' => true,
+                        'have-fatal' => \array_sum($this->stats['counts']['fatal']) > 0,
+                    ),
                     'data-detect-files' => true,
                 ),
                 'dismissible' => false,
@@ -151,21 +148,21 @@ class HtmlErrorSummary
      */
     protected function buildFatal()
     {
-        $haveFatal = isset($this->stats['counts']['fatal']);
-        if (!$haveFatal) {
+        if (\array_sum($this->stats['counts']['fatal']) === 0) {
+            // no fatal errors
             return '';
         }
         $error = $this->errorHandler->get('lastError');
         $html = '<div class="error-fatal">'
             . '<h3>' . $error['typeStr'] . '</h3>'
-            . '<ul class="list-unstyled no-indent">';
-        $html .= $this->html->buildTag(
-            'li',
-            array(),
-            $error['isHtml']
-                ? $error['message']
-                : \htmlspecialchars($error['message'])
-        );
+            . '<ul class="list-unstyled no-indent">'
+            . $this->html->buildTag(
+                'li',
+                array(),
+                $error['isHtml']
+                    ? $error['message']
+                    : \htmlspecialchars($error['message'])
+            );
         $this->debug->addPlugin(new Highlight());
         $backtrace = $error['backtrace'];
         if (\is_array($backtrace) && \count($backtrace) > 1) {
@@ -223,32 +220,23 @@ class HtmlErrorSummary
         if (!$this->stats['inConsole']) {
             return '';
         }
-        $header = 'There were ' . $this->stats['inConsole'] . ' errors';
-        $haveFatal = isset($this->stats['counts']['fatal']);
-        if ($haveFatal) {
-            $countNonFatal = $this->stats['inConsole'] - $this->stats['counts']['fatal']['inConsole'];
-            $header = \sprintf(
-                'There %s %d additional %s',
-                $countNonFatal === 1 ? 'was' : 'were',
-                $countNonFatal,
-                $countNonFatal === 1 ? 'error' : 'errors'
-            );
-        } elseif ($this->stats['inConsoleCategories'] === 1) {
-            return $this->buildInConsoleOneCat();
+        $haveFatal = \array_sum($this->stats['counts']['fatal']) > 0;
+        if (!$haveFatal && \count($this->stats['inConsoleCategories']) === 1) {
+            return $html . $this->buildInConsoleOneCat();
         }
-        $html = '<h3>' . $header . ':</h3>' . "\n";
+        $html = '<h3>' . $this->buildInConsoleHeader() . '</h3>' . "\n";
         $html .= '<ul class="list-unstyled">';
-        foreach ($this->stats['counts'] as $category => $a) {
-            if (!$a['inConsole'] || $category === 'fatal') {
+        foreach ($this->stats['counts'] as $category => $vals) {
+            if ($category === 'fatal' || !$vals['inConsole']) {
                 continue;
             }
             $html .= $this->html->buildTag(
                 'li',
                 array(
                     'class' => 'error-' . $category,
-                    'data-count' => $a['inConsole'],
+                    'data-count' => $vals['inConsole'],
                 ),
-                $category . ': ' . $a['inConsole']
+                $category . ': ' . $vals['inConsole']
             );
         }
         $html .= '</ul>';
@@ -256,31 +244,39 @@ class HtmlErrorSummary
     }
 
     /**
+     * Build header
+     *
+     * @return string
+     */
+    private function buildInConsoleHeader()
+    {
+        $haveFatal = \array_sum($this->stats['counts']['fatal']) > 0;
+        if ($haveFatal === false) {
+            return 'There were ' . $this->stats['inConsole'] . ' errors';
+        }
+        $inConsoleCount = $this->stats['inConsole'] - $this->stats['counts']['fatal']['inConsole'];
+        return \sprintf(
+            'There %s %d additional %s',
+            $inConsoleCount === 1 ? 'was' : 'were',
+            $inConsoleCount,
+            $inConsoleCount === 1 ? 'error' : 'errors'
+        );
+    }
+
+    /**
      * Returns summary for errors that were logged to console (while collect = true)
      *
      * Assumes only 1 category of error was logged
-     * However, multiple errors in this category may have been logged
+     * (multiple errors in this category may have been logged)
      *
      * @return string
      */
     protected function buildInConsoleOneCat()
     {
-        $category = null;
-        $catStats = array();
-        // find category
-        foreach ($this->stats['counts'] as $category => $catStats) {
-            if ($catStats['inConsole']) {
-                break;
-            }
-        }
-        if ($category === 'fatal') {
-            return '';
-        }
-        $countInCat = $catStats['inConsole'];
-        $header = $this->catStrings[$category]['header'];
-        $msg = \sprintf($this->catStrings[$category]['msg'], $countInCat);
-        if ($countInCat === 1) {
-            $header = \ucfirst($category);
+        $category = $this->stats['inConsoleCategories'][0];
+        $inConsoleCount = $this->stats['counts'][$category]['inConsole'];
+        $msg = \sprintf($this->catStrings[$category]['msg'], $inConsoleCount);
+        if ($inConsoleCount === 1) {
             $error = $this->getErrorsInCategory($category)[0];
             $msg = \sprintf(
                 '%s (line %s): %s',
@@ -291,17 +287,31 @@ class HtmlErrorSummary
                     : \htmlspecialchars($error['message'])
             );
         }
-        return '<h3>' . $header . '</h3>'
+        return '<h3>' . $this->buildInConsoleOneCatHeader() . '</h3>' . "\n"
             . '<ul class="list-unstyled">'
                 . $this->html->buildTag(
                     'li',
                     array(
                         'class' => 'error-' . $category,
-                        'data-count' => $countInCat,
+                        'data-count' => $inConsoleCount,
                     ),
                     $msg
                 )
-                . '</ul>';
+            . '</ul>';
+    }
+
+    /**
+     * Build header
+     *
+     * @return string
+     */
+    private function buildInConsoleOneCatHeader()
+    {
+        $category = $this->stats['inConsoleCategories'][0];
+        $inConsoleCount = $this->stats['counts'][$category]['inConsole'];
+        return $inConsoleCount === 1
+            ? \ucfirst($category)
+            :  $this->catStrings[$category]['header'];
     }
 
     /**
@@ -311,46 +321,58 @@ class HtmlErrorSummary
      */
     protected function buildNotInConsole()
     {
-        if (!$this->stats['notInConsole']) {
+        $errors = $this->getErrorsNotInConsole();
+        $count = \count($errors);
+        if ($count === 0) {
             return '';
         }
+        $header = \sprintf(
+            'There %s captured while not collecting debug log',
+            $count === 1 ? 'was 1 error' : 'were ' . $count . ' errors'
+        );
+        return '<h3>' . $header . '</h3>'
+            . '<ul class="list-unstyled">' . "\n"
+            . \implode("\n", \array_map(function (Error $error) {
+                return \sprintf(
+                    '<li class="error-%s">%s: %s (line %s): %s</li>',
+                    $error['category'],
+                    $error['typeStr'],
+                    $error['file'],
+                    $error['line'],
+                    $error['isHtml']
+                        ? $error['message']
+                        : \htmlspecialchars($error['message'])
+                );
+            }, $errors)) . "\n"
+            . '</ul>';
+    }
+
+    /**
+     * Get all unsupressed errors that were not logged in console
+     *
+     * @return Error[]
+     */
+    private function getErrorsNotInConsole()
+    {
+        if (!$this->stats['notInConsole']) {
+            return array();
+        }
         $errors = $this->errorHandler->get('errors');
-        $lis = array();
-        foreach ($errors as $err) {
+        $errorsNotInConsole = array();
+        foreach ($errors as $error) {
             if (
                 \array_intersect_assoc(array(
                     // at least one of these is true
                     'category' => 'fatal',
                     'inConsole' => true,
                     'isSuppressed' => true,
-                ), $err->getValues())
+                ), $error->getValues())
             ) {
                 continue;
             }
-            $lis[] = \sprintf(
-                '<li>%s: %s (line %s): %s</li>',
-                $err['typeStr'],
-                $err['file'],
-                $err['line'],
-                $err['isHtml']
-                    ? $err['message']
-                    : \htmlspecialchars($err['message'])
-            );
+            $errorsNotInConsole[] = $error;
         }
-        if (!$lis) {
-            return '';
-        }
-        $count = \count($lis);
-        $header = \sprintf(
-            'There %s captured while not collecting debug log',
-            $count === 1
-                ? 'was 1 error'
-                : 'were ' . $count . ' errors'
-        );
-        return '<h3>' . $header . '</h3>'
-            . '<ul class="list-unstyled">' . "\n"
-            . \implode("\n", $lis) . "\n"
-            . '</ul>';
+        return $errorsNotInConsole;
     }
 
     /**

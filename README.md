@@ -93,8 +93,8 @@ $monolog->critical('all your base are belong to them');
 ## Tests / Quality
 
 ![No Dependencies](https://img.shields.io/badge/dependencies-none-333333.svg)
-[![Build Status](https://img.shields.io/travis/com/bkdotcom/PHPDebugConsole/master.svg)](https://travis-ci.com/github/bkdotcom/PHPDebugConsole)
-[![Codacy Score](https://shields.io/codacy/grade/e950849edfd9463b993386080d39875e/master.svg)](https://app.codacy.com/gh/bkdotcom/PHPDebugConsole/dashboard)
+![Build Status](https://img.shields.io/github/workflow/status/bkdotcom/PHPDebugConsole/PHP%20Composer.svg?logo=github)
+[![Codacy Score](https://img.shields.io/codacy/grade/e950849edfd9463b993386080d39875e/master.svg?logo=codacy)](https://app.codacy.com/gh/bkdotcom/PHPDebugConsole/dashboard)
 
 ## Changelog
 

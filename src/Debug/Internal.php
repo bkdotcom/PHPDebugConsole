@@ -87,48 +87,28 @@ class Internal implements SubscriberInterface
      */
     public function errorStats()
     {
-        $errors = $this->debug->errorHandler->get('errors');
         $stats = array(
             'inConsole' => 0,
-            'inConsoleCategories' => 0,
+            'inConsoleCategories' => array(),
             'notInConsole' => 0,
-            'counts' => array(
-                // category => array(inConsole, notInConsole)
-            ),
+            'counts' => \array_fill_keys(
+                array('fatal','error','warning','deprecated','notice','strict'),
+                array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0)
+            )
         );
-        foreach ($errors as $error) {
-            if ($error['isSuppressed']) {
-                continue;
-            }
+        foreach ($this->debug->errorHandler->get('errors') as $error) {
             $category = $error['category'];
-            if (!isset($stats['counts'][$category])) {
-                $stats['counts'][$category] = array(
-                    'inConsole' => 0,
-                    'notInConsole' => 0,
-                );
-            }
-            $key = $error['inConsole'] ? 'inConsole' : 'notInConsole';
+            $key = $error['inConsole']
+                ? 'inConsole'
+                : 'notInConsole';
+            $stats[$key]++;
             $stats['counts'][$category][$key]++;
-        }
-        foreach ($stats['counts'] as $a) {
-            $stats['inConsole'] += $a['inConsole'];
-            $stats['notInConsole'] += $a['notInConsole'];
-            if ($a['inConsole'] > 0) {
-                $stats['inConsoleCategories']++;
+            $stats['counts'][$category]['suppressed'] += (int) $error['isSuppressed'];
+            if ($key === 'inConsole') {
+                $stats['inConsoleCategories'][] = $category;
             }
         }
-        $order = array(
-            'fatal',
-            'error',
-            'warning',
-            'deprecated',
-            'notice',
-            'strict',
-        );
-        $stats['counts'] = \array_intersect_key(
-            \array_merge(\array_flip($order), $stats['counts']),
-            $stats['counts']
-        );
+        $stats['inConsoleCategories'] = \array_unique($stats['inConsoleCategories']);
         return $stats;
     }
 
@@ -389,17 +369,7 @@ class Internal implements SubscriberInterface
             // no debug config values have changed
             return;
         }
-        $cfgDebug = $configs['debug'];
-        if (!$this->isConfigured) {
-            $cfgDebug = \array_merge(
-                \array_diff_key(
-                    $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
-                    \array_flip(array('collect','output'))
-                ),
-                $cfgDebug
-            );
-            $this->isConfigured = true;
-        }
+        $cfgDebug = $this->onConfigInit($configs['debug']);
         $valActions = array(
             'serviceProvider' => array($this, 'onCfgServiceProvider'),
             'redactKeys' => array($this, 'onCfgRedactKeys'),
@@ -544,6 +514,30 @@ class Internal implements SubscriberInterface
     {
         $this->serverParams = array();
         return $this->debug->onCfgServiceProvider($val);
+    }
+
+    /**
+     * Merge in default config values if not yet configured
+     *
+     * @param array $cfg Config vals being updated
+     *
+     * @return array
+     */
+    private function onConfigInit($cfg)
+    {
+        if ($this->isConfigured) {
+            return $cfg;
+        }
+        $this->isConfigured = true;
+        return \array_merge(
+            \array_diff_key(
+                // remove current collect & output values,
+                //   so don't trigger updates for existing values
+                $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
+                \array_flip(array('collect','output'))
+            ),
+            $cfg
+        );
     }
 
     /**

@@ -147,7 +147,7 @@ class Html extends AbstractRoute
         $this->data = $this->debug->getData();
         // this could go in an extended processAlerts method
         $errorSummary = $this->errorSummary->build($this->debug->errorStats());
-        if ($errorSummary) {
+        if ($errorSummary['args'][0]) {
             \array_unshift($this->data['alerts'], $errorSummary);
         }
         $event['return'] .= $this->buildOutput();

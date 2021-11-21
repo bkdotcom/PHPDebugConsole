@@ -252,8 +252,6 @@ class AbstractObjectProperties
      * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
     private function addDom(Abstraction $abs)
     {
@@ -264,23 +262,7 @@ class AbstractObjectProperties
         if (!$this->isDomObj($obj)) {
             return;
         }
-        /*
-            use print_r to get the property names
-            get_object_vars() doesn't work
-            var_dump may be overridden by xdebug...  and if xdebug v3 unable to disable at runtime
-        */
-        $dump = \print_r($obj, true);
-        $matches = array();
-        \preg_match_all('/^\s+\[(.+?)\] => /m', $dump, $matches);
-        $props = \array_fill_keys($matches[1], null);
-        if ($obj instanceof \DOMNode) {
-            $props = \array_merge($props, $this->domNodeProps);
-            if ($obj instanceof \DOMDocument) {
-                $props = \array_merge($props, $this->domDocumentProps);
-            } elseif ($obj instanceof \DOMElement) {
-                $props = \array_merge($props, $this->domElementProps);
-            }
-        }
+        $props = $this->addDomGetProps($obj);
         foreach ($props as $propName => $type) {
             $val = $obj->{$propName};
             if (!$type) {
@@ -294,6 +276,34 @@ class AbstractObjectProperties
                     : $val,
             ));
         }
+    }
+
+    /**
+     * use print_r to get the property names
+     * get_object_vars() doesn't work
+     * var_dump may be overridden by xdebug...  and if xdebug v3 unable to disable at runtime
+     *
+     * @param object $obj DOMXXX instance
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
+     */
+    private function addDomGetProps($obj)
+    {
+        $dump = \print_r($obj, true);
+        $matches = array();
+        \preg_match_all('/^\s+\[(.+?)\] => /m', $dump, $matches);
+        $props = \array_fill_keys($matches[1], null);
+        if ($obj instanceof \DOMNode) {
+            $props = \array_merge($props, $this->domNodeProps);
+            if ($obj instanceof \DOMDocument) {
+                $props = \array_merge($props, $this->domDocumentProps);
+            } elseif ($obj instanceof \DOMElement) {
+                $props = \array_merge($props, $this->domElementProps);
+            }
+        }
+        return $props;
     }
 
     /**

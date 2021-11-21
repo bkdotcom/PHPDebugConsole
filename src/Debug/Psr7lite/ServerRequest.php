@@ -359,9 +359,9 @@ class ServerRequest extends Request
     private static function createUploadedFile($fileInfo)
     {
         if (\is_array($fileInfo['tmp_name'])) {
-            $files = array();
-            foreach (\array_keys($fileInfo['tmp_name']) as $key) {
-                $fileInfoNew = [
+            $keys = \array_keys($fileInfo['tmp_name']);
+            return \array_map(function ($key) use ($fileInfo) {
+                return self::createUploadedFile([
                     'tmp_name' => $fileInfo['tmp_name'][$key],
                     'size'     => $fileInfo['size'][$key],
                     'error'    => $fileInfo['error'][$key],
@@ -370,10 +370,8 @@ class ServerRequest extends Request
                     'full_path' => isset($fileInfo['full_path'][$key])
                         ? $fileInfo['full_path'][$key]
                         : null,
-                ];
-                $files[$key] = self::createUploadedFile($fileInfoNew);
-            }
-            return $files;
+                ]);
+            }, \array_combine($keys, $keys));
         }
         return new UploadedFile(
             $fileInfo['tmp_name'],
@@ -647,8 +645,12 @@ class ServerRequest extends Request
             if ($parts === false) {
                 return [null, null];
             }
-            $host = isset($parts['host']) ? $parts['host'] : '';
-            $port = isset($parts['port']) ? $parts['port'] : null;
+            $parts = \array_merge(array(
+                'host' => '',
+                'port' => null,
+            ), $parts);
+            $host = $parts['host'];
+            $port = $parts['port'];
         } elseif (isset($_SERVER['SERVER_NAME'])) {
             $host = $_SERVER['SERVER_NAME'];
         } elseif (isset($_SERVER['SERVER_ADDR'])) {

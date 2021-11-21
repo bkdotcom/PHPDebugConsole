@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Component;
+use Closure;
 use Exception;
 
 /**
@@ -41,6 +42,7 @@ use Exception;
 class StatementInfo extends Component
 {
 
+    protected $debug;
     protected $duration;
     protected $exception;
     protected $isSuccess;
@@ -78,29 +80,14 @@ class StatementInfo extends Component
      */
     public function __construct($sql, $params = null, $types = null)
     {
-        if (!self::$constants) {
-            /** @psalm-suppress ArgumentTypeCoercion ignore expects class-string */
-            $ref = new \ReflectionClass('PDO');
-            $consts = array();
-            $constsAll = $ref->getConstants();
-            foreach ($constsAll as $name => $val) {
-                if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
-                    $consts[$val] = 'PDO::' . $name;
-                }
-            }
-            if (\class_exists('Doctrine\\DBAL\\Connection')) {
-                $consts += array(
-                    \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
-                    \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',
-                );
-            }
-            self::$constants = $consts;
-        }
         $this->memoryStart = \memory_get_usage(false);
         $this->params = $params;
         $this->sql = \trim($sql);
         $this->timeStart = \microtime(true);
         $this->types = $types;
+        if (!self::$constants) {
+            $this->setConstants();
+        }
     }
 
     /**
@@ -130,34 +117,16 @@ class StatementInfo extends Component
      */
     public function appendLog(Debug $debug)
     {
+        $this->debug = $debug;
         $label = $this->getGroupLabel();
         $debug->groupCollapsed($label, $debug->meta(array(
             'icon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
             'boldLabel' => false,
         )));
-        if (\preg_replace('/[\r\n\s]+/', ' ', $this->sql) !== $label) {
-            $sqlPretty = $debug->prettify($this->sql, 'application/sql');
-            if ($sqlPretty instanceof Abstraction) {
-                $this->prettified = $sqlPretty['prettified'];
-                $sqlPretty['prettifiedTag'] = false; // don't add "(prettified)" to output"
-            }
-            $debug->log(
-                $sqlPretty,
-                $debug->meta(array(
-                    'attribs' => array(
-                        'class' => 'no-indent',
-                    ),
-                ))
-            );
-        }
-        $this->logParams($debug);
-        if ($this->duration !== null) {
-            $debug->time('duration', $this->duration);
-        }
-        if ($this->memoryUsage !== null) {
-            $debug->log('memory usage', $debug->utility->getBytes($this->memoryUsage));
-        }
-        $this->performQueryAnalysis($this->sql, $debug);
+        $this->logQuery($label);
+        $this->logParams();
+        $this->logDurationMemory();
+        $this->performQueryAnalysis();
         if ($this->exception) {
             $code = $this->exception->getCode();
             $msg = $this->exception->getMessage();
@@ -255,35 +224,46 @@ class StatementInfo extends Component
             $quoteLeft = \substr($quotationChars, 0, $len);
             $quoteRight = \substr($quotationChars, $len);
         }
-
         $sql = $this->sql;
-
         $cleanBackRefCharMap = array(
             '%' => '%%',
             '$' => '$%',
             '\\' => '\\%'
         );
-
         foreach ($this->params as $k => $v) {
             $backRefSafeV = \strtr($v, $cleanBackRefCharMap);
             $v = $quoteLeft . $backRefSafeV . $quoteRight;
-            $marker = \is_numeric($k)
-                ? '?'
-                : (\preg_match('/^:/', $k)
-                    ? $k
-                    : ':' . $k);
-
-            $matchRule = '/(' . $marker . '(?!\w))'
-                . '(?='
-                . '(?:[^' . $quotationChars . ']|'
-                . '[' . $quotationChars . '][^' . $quotationChars . ']*[' . $quotationChars . ']'
-                . ')*$)/';
-            do {
-                $sql = \preg_replace($matchRule, $v, $sql, 1);
-            } while (\mb_substr_count($sql, $k));
+            $sql = $this->replaceParam($sql, $k, $v, $quotationChars);
         }
-
         return \strtr($sql, \array_flip($cleanBackRefCharMap));
+    }
+
+    /**
+     * Replace param with value in query
+     *
+     * @param string $sql            SQL query
+     * @param string $key            param key
+     * @param string $value          param value
+     * @param string $quotationChars [description]
+     *
+     * @return string
+     */
+    private function replaceParam($sql, $key, $value, $quotationChars)
+    {
+        $marker = \is_numeric($key)
+            ? '?'
+            : (\preg_match('/^:/', $key)
+                ? $key
+                : ':' . $key);
+        $matchRule = '/(' . $marker . '(?!\w))'
+            . '(?='
+            . '(?:[^' . $quotationChars . ']|'
+            . '[' . $quotationChars . '][^' . $quotationChars . ']*[' . $quotationChars . ']'
+            . ')*$)/';
+        do {
+            $sql = \preg_replace($matchRule, $value, $sql, 1);
+        } while (\mb_substr_count($sql, $key));
+        return $sql;
     }
 
     /**
@@ -315,19 +295,32 @@ class StatementInfo extends Component
     }
 
     /**
-     * Log statement bound params
-     *
-     * @param Debug $debug Debug instance
+     * Log duration & memory usage
      *
      * @return void
      */
-    protected function logParams(Debug $debug)
+    private function logDurationMemory()
+    {
+        if ($this->duration !== null) {
+            $this->debug->time('duration', $this->duration);
+        }
+        if ($this->memoryUsage !== null) {
+            $this->debug->log('memory usage', $this->debug->utility->getBytes($this->memoryUsage));
+        }
+    }
+
+    /**
+     * Log statement bound params
+     *
+     * @return void
+     */
+    protected function logParams()
     {
         if (!$this->params) {
             return;
         }
         if (!$this->types) {
-            $debug->log('parameters', $this->params);
+            $this->debug->log('parameters', $this->params);
             return;
         }
         $params = array();
@@ -347,74 +340,125 @@ class StatementInfo extends Component
                 ));
             }
         }
-        $debug->table('parameters', $params);
+        $this->debug->table('parameters', $params);
+    }
+
+    /**
+     * Log the sql query
+     *
+     * @param string $label The abbrev'd sql statement
+     *
+     * @return void
+     */
+    private function logQuery($label)
+    {
+        if (\preg_replace('/[\r\n\s]+/', ' ', $this->sql) === $label) {
+            return;
+        }
+        $sqlPretty = $this->debug->prettify($this->sql, 'application/sql');
+        if ($sqlPretty instanceof Abstraction) {
+            $this->prettified = $sqlPretty['prettified'];
+            $sqlPretty['prettifiedTag'] = false; // don't add "(prettified)" to output"
+        }
+        $this->debug->log(
+            $sqlPretty,
+            $this->debug->meta(array(
+                'attribs' => array(
+                    'class' => 'no-indent',
+                ),
+            ))
+        );
     }
 
     /**
      * Find common query performance issues
      *
-     * @param string $query SQL query
-     * @param Debug  $debug Debug instance
-     *
      * @return void
      *
      * @link https://github.com/rap2hpoutre/mysql-xplain-xplain/blob/master/app/Explainer.php
      */
-    protected function performQueryAnalysis($query, Debug $debug)
+    protected function performQueryAnalysis()
     {
-        if (\preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $query)) {
-            $debug->warn(
+        $matches = array();
+        \array_map(array($this, 'performQueryAnalysisTest'), array(
+            array(\preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $this->sql) === 1,
                 'Use %cSELECT *%c only if you need all columns from table',
-                'font-family:monospace',
-                '',
-                $debug->meta('uncollapse', false)
-            );
-        }
-        if (\stripos($query, 'ORDER BY RAND()') !== false) {
-            $debug->warn(
+            ),
+            array(\stripos($this->sql, 'ORDER BY RAND()') !== false,
                 '%cORDER BY RAND()%c is slow, avoid if you can.',
-                'font-family:monospace',
-                '',
-                $debug->meta('uncollapse', false)
-            );
-        }
-        if (\strpos($query, '!=') !== false) {
-            $debug->warn(
+            ),
+            array(\strpos($this->sql, '!=') !== false,
                 'The %c!=%c operator is not standard. Use the %c<>%c operator instead.',
-                'font-family:monospace',
-                '',
-                'font-family:monospace',
-                '',
-                $debug->meta('uncollapse', false)
-            );
-        }
-        if (\preg_match('/^SELECT\s/i', $query) && \stripos($query, 'WHERE') === false) {
-            $debug->warn(
+            ),
+            array(\preg_match('/^SELECT\s/i', $this->sql) && \stripos($this->sql, 'WHERE') === false,
                 'The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended',
-                'font-family:monospace',
-                '',
-                'font-family:monospace',
-                '',
-                $debug->meta('uncollapse', false)
-            );
-        }
-        if (\preg_match('/LIKE\s+[\'"](%.*?)[\'"]/i', $query, $matches)) {
-            $debug->warn(
-                'An argument has a leading wildcard character: %c' . $matches[1] . '%c and cannot use an index if one exists.',
-                'font-family:monospace',
-                '',
-                $debug->meta('uncollapse', false)
-            );
-        }
-        if (\preg_match('/LIMIT\s/i', $query) && \stripos($query, 'ORDER BY') === false) {
-            $debug->warn(
+            ),
+            function () {
+                return \preg_match('/LIKE\s+[\'"](%.*?)[\'"]/i', $this->sql, $matches)
+                    ? 'An argument has a leading wildcard character: %c' . $matches[1] . '%c and cannot use an index if one exists.'
+                    : false;
+            },
+            array(\preg_match('/LIMIT\s/i', $this->sql) && \stripos($this->sql, 'ORDER BY') === false,
                 '%cLIMIT%c without %cORDER BY%c causes non-deterministic results',
-                'font-family:monospace',
-                '',
-                'font-family:monospace',
-                '',
-                $debug->meta('uncollapse', false)
+            ),
+        ));
+    }
+
+    /**
+     * Process query analysys test and log result if test fails
+     *
+     * @param array|closure $test query test
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function performQueryAnalysisTest($test)
+    {
+        if ($test instanceof Closure) {
+            $test = $test();
+            $test = array(
+                $test,
+                $test,
             );
         }
+        if ($test[0] === false) {
+            return;
+        }
+        $params = array(
+            $test[1],
+        );
+        $cCount = \substr_count($params[0], '%c');
+        for ($i = 0; $i < $cCount; $i += 2) {
+            $params[] = 'font-family:monospace';
+            $params[] = '';
+        }
+        $params[] = $this->debug->meta('uncollapse', false);
+        \call_user_func_array(array($this->debug, 'warn'), $params);
+    }
+
+    /**
+     * Set PDO constants as a static val => constName array
+     *
+     * @return void
+     */
+    private function setConstants()
+    {
+        /** @psalm-suppress ArgumentTypeCoercion ignore expects class-string */
+        $ref = new \ReflectionClass('PDO');
+        $consts = array();
+        $constsAll = $ref->getConstants();
+        foreach ($constsAll as $name => $val) {
+            if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
+                $consts[$val] = 'PDO::' . $name;
+            }
+        }
+        if (\class_exists('Doctrine\\DBAL\\Connection')) {
+            $consts += array(
+                \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
+                \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',
+            );
+        }
+        self::$constants = $consts;
     }
 }

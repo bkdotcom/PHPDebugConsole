@@ -24,13 +24,17 @@ class InternalTest extends DebugTestFramework
 
         $this->assertSame(array(
             'inConsole' => 1,
-            'inConsoleCategories' => 1,
+            'inConsoleCategories' => array(
+                'warning',
+            ),
             'notInConsole' => 0,
             'counts' => array(
-                'warning' => array(
-                    'inConsole' => 1,
-                    'notInConsole' => 0,
-                )
+                'fatal'      => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
+                'error'      => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
+                'warning'    => array('inConsole' => 1, 'notInConsole' => 0, 'suppressed' => 0, ),
+                'deprecated' => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
+                'notice'     => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
+                'strict'     => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
             ),
         ), $this->debug->errorStats());
     }

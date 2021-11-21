@@ -24,6 +24,13 @@ class Backtrace
     const INCL_ARGS = 1;
     const INCL_OBJECT = 2;
 
+    public static $skippableFuncs = array(
+        'array_map',
+        'array_walk',
+        'call_user_func',
+        'call_user_func_array',
+    );
+
     /**
      * @var array
      */
@@ -329,7 +336,7 @@ class Backtrace
         if (\preg_match(static::$internalClasses['regex'], $class)) {
             return true;
         }
-        if (\in_array($frame['function'], array('call_user_func', 'call_user_func_array'))) {
+        if (\in_array($frame['function'], self::$skippableFuncs)) {
             return true;
         }
         return $class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'));
@@ -358,8 +365,7 @@ class Backtrace
             'params' => null,
             'type' => null,
         );
-        $funcsSkip = array('call_user_func','call_user_func_array');
-        $funcsSkipRegex = '/^(' . \implode('|', $funcsSkip) . ')\b[:\(\{]?/';
+        $funcsSkipRegex = '/^(' . \implode('|', self::$skippableFuncs) . ')\b[:\(\{]?/';
         $count = \count($backtrace);
         $backtrace[] = array(); // add a frame so backtrace[$i + 1] is always a thing
         for ($i = 0; $i < $count; $i++) {

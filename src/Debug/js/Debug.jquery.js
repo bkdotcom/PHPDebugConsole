@@ -1814,7 +1814,7 @@
       if (path.length > 1 && path[0] === channels[0].name) {
         path.shift();
       }
-      channelsToTreeWalkPath(path, ref);
+      channelsToTreeWalkPath(channel, path, ref);
     }
     return channelTree
   }

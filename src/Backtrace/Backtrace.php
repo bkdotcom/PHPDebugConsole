@@ -24,12 +24,12 @@ class Backtrace
     const INCL_ARGS = 1;
     const INCL_OBJECT = 2;
 
-    public static $skippableFuncs = array(
-        'array_map',
-        'array_walk',
-        'call_user_func',
-        'call_user_func_array',
-    );
+    /**
+     * Cache whether non-namespaced functions are internal or not
+     *
+     * @var array
+     */
+    private static $internalFuncs = array();
 
     /**
      * @var array
@@ -322,9 +322,35 @@ class Backtrace
     }
 
     /**
+     * Test if frame is a non-namespaced internal function
+     * if so, it must be have a callable arg, such as
+     * array_map, array_walk, call_user_func, or call_user_func_array
+     *
+     * @param array $frame backtrace frame
+     *
+     * @return bool
+     */
+    private static function isInternal($frame)
+    {
+        if (isset($frame['class']) || empty($frame['function'])) {
+            return false;
+        }
+        $function = $frame['function'];
+        if (!isset(self::$internalFuncs[$function])) {
+            // avoid `function require() does not exit
+            self::$internalFuncs[$function] = true;
+            if (\function_exists($function)) {
+                $refFunction = new \ReflectionFunction($function);
+                self::$internalFuncs[$function] = $refFunction->isInternal();
+            }
+        }
+        return self::$internalFuncs[$function];
+    }
+
+    /**
      * Test if frame is skippable
      *
-     * @param array $frame frame
+     * @param array $frame backtrace frame
      *
      * @return bool
      */
@@ -336,10 +362,10 @@ class Backtrace
         if (\preg_match(static::$internalClasses['regex'], $class)) {
             return true;
         }
-        if (\in_array($frame['function'], self::$skippableFuncs)) {
+        if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
             return true;
         }
-        return $class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'));
+        return self::isInternal($frame);
     }
 
     /**
@@ -365,12 +391,11 @@ class Backtrace
             'params' => null,
             'type' => null,
         );
-        $funcsSkipRegex = '/^(' . \implode('|', self::$skippableFuncs) . ')\b[:\(\{]?/';
         $count = \count($backtrace);
         $backtrace[] = array(); // add a frame so backtrace[$i + 1] is always a thing
         for ($i = 0; $i < $count; $i++) {
             $frame = \array_merge($frameDefault, $frameTemp, $backtrace[$i]);
-            if (\preg_match($funcsSkipRegex, $frame['function'])) {
+            if (self::isInternal($frame)) {
                 // update previous frame's file & line
                 $backtraceNew[\count($backtraceNew) - 1]['file'] = $frame['file'];
                 $backtraceNew[\count($backtraceNew) - 1]['line'] = $frame['line'];

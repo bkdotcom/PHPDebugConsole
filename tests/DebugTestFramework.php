@@ -84,16 +84,6 @@ class DebugTestFramework extends DOMTestCase
      */
     public function setUp(): void
     {
-        /*
-        $count = &$this->getSharedVar('count');
-        $count = $count === null
-            ? 1
-            : $count + 1;
-        $GLOBALS['debugTest'] = $count == 10;
-        if ($GLOBALS['debugTest']) {
-            $this->stderr(' ----------------- setUp -----------------');
-        }
-        */
         self::$obLevels = \ob_get_level();
         self::$allowError = false;
         $this->debug = Debug::getInstance(array(
@@ -151,36 +141,39 @@ class DebugTestFramework extends DOMTestCase
         */
 
         $refProperties = &$this->getSharedVar('reflectionProperties');
-        if (!isset($refProperties['channels'])) {
-            $prop = new \ReflectionProperty($this->debug, 'channels');
-            $prop->setAccessible(true);
-            $refProperties['channels'] = $prop;
-        }
         if (!isset($refProperties['groupPriorityStack'])) {
-            $prop = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupPriorityStack');
-            $prop->setAccessible(true);
-            $refProperties['groupPriorityStack'] = $prop;
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupPriorityStack');
+            $refProp->setAccessible(true);
+            $refProperties['groupPriorityStack'] = $refProp;
         }
         if (!isset($refProperties['groupStacks'])) {
-            $prop = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupStacks');
-            $prop->setAccessible(true);
-            $refProperties['groupStacks'] = $prop;
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupStacks');
+            $refProp->setAccessible(true);
+            $refProperties['groupStacks'] = $refProp;
         }
         if (!isset($refProperties['textDepth'])) {
-            $prop = new \ReflectionProperty($this->debug->getDump('text'), 'depth');
-            $prop->setAccessible(true);
-            $refProperties['textDepth'] = $prop;
-        }
-        if (!isset($refProperties['registeredPlugins'])) {
-            $prop = new \ReflectionProperty($this->debug, 'registeredPlugins');
-            $prop->setAccessible(true);
-            $refProperties['registeredPlugins'] = $prop;
+            $refProp = new \ReflectionProperty($this->debug->getDump('text'), 'depth');
+            $refProp->setAccessible(true);
+            $refProperties['textDepth'] = $refProp;
         }
 
-        $refProperties['channels']->setValue($this->debug, array());
         $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
-        $registeredPlugins = $refProperties['registeredPlugins']->getValue($this->debug);
-        $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
+
+        $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_CUSTOM_METHOD);
+        foreach ($subscribers as $subscriber) {
+            $subscriberObj = $subscriber[0];
+            if (!($subscriberObj instanceof  \bdk\Debug\Plugin\AddonMethods)) {
+                continue;
+            }
+
+            $channelsRef = new \ReflectionProperty($subscriberObj, 'channels');
+            $channelsRef->setAccessible(true);
+            $channelsRef->setValue($subscriberObj, array());
+
+            $registeredPlugins = $this->getPrivateProp($subscriberObj, 'registeredPlugins');
+            $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
+            break;
+        }
 
         if (!isset($this->file)) {
             /*

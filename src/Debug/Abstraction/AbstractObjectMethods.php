@@ -94,6 +94,30 @@ class AbstractObjectMethods
     }
 
     /**
+     * Return method info array
+     *
+     * @param array $values values to apply
+     *
+     * @return array
+     */
+    public static function buildMethodValues($values = array())
+    {
+        return \array_merge(static::$baseMethodInfo, $values);
+    }
+
+    /**
+     * Return method info array
+     *
+     * @param array $values values to apply
+     *
+     * @return array
+     */
+    public static function buildParamValues($values = array())
+    {
+        return \array_merge(static::$baseParamInfo, $values);
+    }
+
+    /**
      * Adds methods to abstraction
      *
      * @return void
@@ -177,7 +201,7 @@ class AbstractObjectMethods
         $interfaceMethods = array(
             'ArrayAccess' => array('offsetExists','offsetGet','offsetSet','offsetUnset'),
             'Countable' => array('count'),
-            'Iterator' => array('current','key','next','rewind','void'),
+            'Iterator' => array('current','key','next','rewind','valid'),
             'IteratorAggregate' => array('getIterator'),
         );
         $interfaces = \array_intersect($abs['implements'], \array_keys($interfaceMethods));
@@ -331,30 +355,6 @@ class AbstractObjectMethods
         unset($info['phpDoc']['param']);
         unset($info['phpDoc']['return']);
         return $info;
-    }
-
-    /**
-     * Return method info array
-     *
-     * @param array $values values to apply
-     *
-     * @return array
-     */
-    private static function buildMethodValues($values = array())
-    {
-        return \array_merge(static::$baseMethodInfo, $values);
-    }
-
-    /**
-     * Return method info array
-     *
-     * @param array $values values to apply
-     *
-     * @return array
-     */
-    private static function buildParamValues($values = array())
-    {
-        return \array_merge(static::$baseParamInfo, $values);
     }
 
     /**

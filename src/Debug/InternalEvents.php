@@ -40,7 +40,6 @@ class InternalEvents implements SubscriberInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->debug->eventManager->addSubscriberInterface($this);
         if ($debug->parentInstance) {
             return;
         }

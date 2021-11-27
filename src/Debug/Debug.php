@@ -18,7 +18,6 @@ namespace bdk;
 use bdk\Container;
 use bdk\Container\ServiceProviderInterface;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Psr7lite\HttpFoundationBridge;
@@ -26,11 +25,9 @@ use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\ServiceProvider;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
-use bdk\PubSub\SubscriberInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface; // PSR-7
 use ReflectionMethod;
-use SplObjectStorage;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 /**
@@ -86,6 +83,7 @@ class Debug
 
     const EVENT_BOOTSTRAP = 'debug.bootstrap';
     const EVENT_CONFIG = 'debug.config';
+    const EVENT_CUSTOM_METHOD = 'debug.customMethod';
     const EVENT_DUMP_CUSTOM = 'debug.dumpCustom';
     const EVENT_LOG = 'debug.log';
     const EVENT_MIDDLEWARE = 'debug.middleware';
@@ -100,8 +98,80 @@ class Debug
     const META = "\x00meta\x00";
     const VERSION = '3.0.0-b1';
 
-    protected $cfg = array();
-    private $channels = array();
+    protected $cfg = array(
+        'collect'   => false,
+        'key'       => null,
+        'output'    => false,           // output the log?
+        'channels' => array(
+            /*
+            channelName => array(
+                'channelIcon' => '',
+                'channelShow' => 'bool'
+                'nested' => 'bool'
+                etc
+            )
+            */
+        ),
+        'channelIcon' => 'fa fa-list-ul',
+        'channelName' => 'general',     // channel or tab name
+        'channelShow' => true,          // wheter initially filtered or not
+        'channelSort' => 0, // if non-nested channel (tab), sort order
+                        // higher = first
+                        // tabs with same sort will be sorted alphabetically
+        'enableProfiling' => false,
+        // which error types appear as "error" in debug console... all other errors are "warn"
+        'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
+                        | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
+        'emailFrom' => null,    // null = use php's default (php.ini: sendmail_from)
+        'emailFunc' => 'mail',  // callable
+        'emailLog' => false,    // Whether to email a debug log.  (requires 'collect' to also be true)
+                                //   false:             email will not be sent
+                                //   true or 'always':  email sent (if log is not output)
+                                //   'onError':         email sent if error occured (unless output)
+        'emailTo' => 'default', // will default to $_SERVER['SERVER_ADMIN'] if non-empty, null otherwise
+        'exitCheck' => true,
+        'headerMaxAll' => 250000,
+        'headerMaxPer' => null,
+        'logEnvInfo' => array(      // may be set by passing a list
+            'errorReporting' => true,
+            'files' => true,
+            'gitInfo' => true,
+            'phpInfo' => true,
+            'serverVals' => true,
+            'session' => true,
+        ),
+        'logRequestInfo' => array(
+            'cookies' => true,
+            'files' => true,
+            'headers' => true,
+            'post' => true,
+        ),
+        'logResponse' => 'auto',
+        'logResponseMaxLen' => '1 MB',
+        'logRuntime' => true,
+        'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
+        'onBootstrap' => null,          // callable
+        'onLog' => null,                // callable
+        'onOutput' => null,             // callable
+        'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
+        'redactKeys' => array(          // case-insensitive
+            'password',
+        ),
+        'redactReplace' => null,        // closure
+        'route' => 'auto',              // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
+                                        //   if 'auto', will be determined automatically
+                                        //   if null, no output (unless output plugin added manually)
+        'routeNonHtml' => 'serverLog',
+        'serviceProvider' => array(), // ServiceProviderInterface, array, or callable that receives Container as param
+        'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
+        'wampPublisher' => array(
+            // wampPuglisher
+            //    required if using Wamp route
+            //    must be installed separately
+            'realm' => 'debug'
+        ),
+    );
+
     protected $config;
     protected $container;
     protected $data = array(
@@ -118,7 +188,6 @@ class Debug
         ),
     );
     protected $internal;
-    protected $internalEvents;
     private static $instance;
     protected $logRef;          // points to either log or logSummary[priority]
     protected static $methodDefaultArgs = array();
@@ -127,7 +196,6 @@ class Debug
         'parentInstance',
         'rootInstance',
     );
-    protected $registeredPlugins;   // SplObjectHash
     protected $rootInstance;
     protected $serviceContainer;
 
@@ -140,83 +208,11 @@ class Debug
      */
     public function __construct($cfg = array())
     {
-        $this->cfg = array(
-            'collect'   => false,
-            'key'       => null,
-            'output'    => false,           // output the log?
-            'channels' => array(
-                /*
-                channelName => array(
-                    'channelIcon' => '',
-                    'channelShow' => 'bool'
-                    'nested' => 'bool'
-                    etc
-                )
-                */
-            ),
-            'channelIcon' => 'fa fa-list-ul',
-            'channelName' => 'general',     // channel or tab name
-            'channelShow' => true,          // wheter initially filtered or not
-            'channelSort' => 0, // if non-nested channel (tab), sort order
-                            // higher = first
-                            // tabs with same sort will be sorted alphabetically
-            'enableProfiling' => false,
-            // which error types appear as "error" in debug console... all other errors are "warn"
-            'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
-                            | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
-            'emailFrom' => null,    // null = use php's default (php.ini: sendmail_from)
-            'emailFunc' => 'mail',  // callable
-            'emailLog' => false,    // Whether to email a debug log.  (requires 'collect' to also be true)
-                                    //   false:             email will not be sent
-                                    //   true or 'always':  email sent (if log is not output)
-                                    //   'onError':         email sent if error occured (unless output)
-            'emailTo' => 'default', // will default to $_SERVER['SERVER_ADMIN'] if non-empty, null otherwise
-            'exitCheck' => true,
-            'headerMaxAll' => 250000,
-            'headerMaxPer' => null,
-            'logEnvInfo' => array(      // may be set by passing a list
-                'errorReporting' => true,
-                'files' => true,
-                'gitInfo' => true,
-                'phpInfo' => true,
-                'serverVals' => true,
-                'session' => true,
-            ),
-            'logRequestInfo' => array(
-                'cookies' => true,
-                'files' => true,
-                'headers' => true,
-                'post' => true,
-            ),
-            'logResponse' => 'auto',
-            'logResponseMaxLen' => '1 MB',
-            'logRuntime' => true,
-            'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
-            'onBootstrap' => null,          // callable
-            'onLog' => null,                // callable
-            'onOutput' => null,             // callable
-            'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
-            'redactKeys' => array(          // case-insensitive
-                'password',
-            ),
-            'redactReplace' => function ($str, $key) {
-                // "use" our function params so things (ie phpmd) don't complain
-                array($str, $key);
-                return '█████████';
-            },
-            'route' => 'auto',              // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
-                                            //   if 'auto', will be determined automatically
-                                            //   if null, no output (unless output plugin added manually)
-            'routeNonHtml' => 'serverLog',
-            'serviceProvider' => array(), // ServiceProviderInterface, array, or callable that receives Container as param
-            'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
-            'wampPublisher' => array(
-                // wampPuglisher
-                //    required if using Wamp route
-                //    must be installed separately
-                'realm' => 'debug'
-            ),
-        );
+        $this->cfg['redactReplace'] = function ($str, $key) {
+            // "use" our function params so things (ie phpmd) don't complain
+            array($str, $key);
+            return '█████████';
+        };
         $this->bootstrap($cfg);
     }
 
@@ -236,12 +232,17 @@ class Debug
         if (\is_callable($callable)) {
             return \call_user_func_array($callable, $args);
         }
-        return $this->appendLog(new LogEntry(
+        $logEntry = new LogEntry(
             $this,
             $methodName,
-            $args,
-            array('isCustomMethod' => true)
-        ));
+            $args
+        );
+        $this->internal->publishBubbleEvent(self::EVENT_CUSTOM_METHOD, $logEntry);
+        if ($logEntry['handled'] !== true) {
+            $logEntry->setMeta('isCustomMethod', true);
+            $this->appendLog($logEntry);
+        }
+        return $logEntry['return'];
     }
 
     /**
@@ -294,7 +295,7 @@ class Debug
      */
     public function __get($property)
     {
-        if (\in_array($property, array('config', 'internal', 'internalEvents'))) {
+        if (\in_array($property, array('config', 'container', 'internal'))) {
             $caller = $this->backtrace->getCallerInfo();
             $this->errorHandler->handleError(
                 E_USER_NOTICE,
@@ -375,20 +376,7 @@ class Debug
                 ),
             array('level','dismissible')
         );
-        $level = $logEntry->getMeta('level');
-        /*
-            Continue to allow bootstrap "levels"
-        */
-        $levelTrans = array(
-            'danger' => 'error',
-            'warning' => 'warn',
-        );
-        if (isset($levelTrans[$level])) {
-            $level = $levelTrans[$level];
-        } elseif (!\in_array($level, $levelsAllowed)) {
-            $level = 'error';
-        }
-        $logEntry->setMeta('level', $level);
+        $this->internal->alertLevel($logEntry);
         $this->setLogDest('alerts');
         $this->appendLog($logEntry);
         $this->setLogDest('auto');
@@ -525,7 +513,7 @@ class Debug
      */
     public function error()
     {
-        $this->doError(__FUNCTION__, \func_get_args());
+        $this->internal->doError(__FUNCTION__, \func_get_args());
     }
 
     /**
@@ -683,7 +671,7 @@ class Debug
                 return;
             }
             if ($args[0] instanceof Error) {
-                $this->internalEvents->onError($args[0]);
+                $this->container['internalEvents']->onError($args[0]);
                 return;
             }
         }
@@ -923,25 +911,7 @@ class Debug
                 'inclContext',
             )
         );
-        if (!\is_string($logEntry->getMeta('caption'))) {
-            $this->warn(__METHOD__ . ' caption should be a string. '
-                . (\is_object($caption) ? \get_class($caption) : \gettype($caption)) . ' provided');
-            $logEntry->setMeta('caption', 'trace');
-        }
-        // Get trace and include args if we're including context
-        $inclContext = $logEntry->getMeta('inclContext');
-        $inclArgs = $logEntry->getMeta('inclArgs');
-        $backtrace = isset($logEntry['meta']['trace'])
-            ? $logEntry['meta']['trace']
-            : $this->backtrace->get($inclArgs ? \bdk\Backtrace::INCL_ARGS : 0);
-        $logEntry->setMeta('trace', null);
-        if ($backtrace && $inclContext) {
-            $backtrace = $this->backtrace->addContext($backtrace);
-            $this->addPlugin(new \bdk\Debug\Plugin\Highlight());
-        }
-        $logEntry['args'] = array($backtrace);
-        $this->methodTable->doTable($logEntry);
-        $this->appendLog($logEntry);
+        $this->internal->doTrace($logEntry);
     }
 
     /**
@@ -955,61 +925,12 @@ class Debug
      */
     public function warn()
     {
-        $this->doError(__FUNCTION__, \func_get_args());
+        $this->internal->doError(__FUNCTION__, \func_get_args());
     }
 
     /*
         "Non-Console" Methods
     */
-
-    /**
-     * Extend debug with a plugin
-     *
-     * @param AssetProviderInterface|SubscriberInterface $plugin object implementing SubscriberInterface and/or AssetProviderInterface
-     *
-     * @return $this
-     * @throws InvalidArgumentException
-     */
-    public function addPlugin($plugin)
-    {
-        if (\is_object($plugin) === false) {
-            $this->warn(__METHOD__ . ' expects AssetProviderInterface|SubscriberInterface. ' . \gettype($plugin) . ' provided');
-            return $this;
-        }
-        if ($this->registeredPlugins->contains($plugin)) {
-            return $this;
-        }
-        $isPlugin = false;
-        if ($plugin instanceof AssetProviderInterface) {
-            $isPlugin = true;
-            $this->rootInstance->getRoute('html')->addAssetProvider($plugin);
-        }
-        if ($plugin instanceof SubscriberInterface) {
-            $isPlugin = true;
-            $this->eventManager->addSubscriberInterface($plugin);
-            $subscriptions = $plugin->getSubscriptions();
-            if (isset($subscriptions[self::EVENT_PLUGIN_INIT])) {
-                /*
-                    plugin we just added subscribes to Debug::EVENT_PLUGIN_INIT
-                    call subscriber directly
-                */
-                \call_user_func(
-                    array($plugin, $subscriptions[self::EVENT_PLUGIN_INIT]),
-                    new Event($this),
-                    self::EVENT_PLUGIN_INIT,
-                    $this->eventManager
-                );
-            }
-        }
-        if ($plugin instanceof RouteInterface) {
-            $this->onCfgRoute($plugin, false);
-        }
-        if (!$isPlugin) {
-            throw new InvalidArgumentException('addPlugin expects \\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface');
-        }
-        $this->registeredPlugins->attach($plugin);
-        return $this;
-    }
 
     /**
      * Retrieve a configuration value
@@ -1028,112 +949,6 @@ class Debug
             return $this->arrayUtil->pathGet($this->cfg, $path);
         }
         return $this->config->get($path, $opt === self::CONFIG_INIT);
-    }
-
-    /**
-     * Return a named subinstance... if channel does not exist, it will be created
-     *
-     * Channels can be used to categorize log data... for example, may have a framework channel, database channel, library-x channel, etc
-     * Channels may have subchannels
-     *
-     * @param string $name   channel name
-     * @param array  $config channel specific configuration
-     *
-     * @return static new or existing `Debug` instance
-     */
-    public function getChannel($name, $config = array())
-    {
-        /*
-            Split on "."
-            Split on "/" not adjacent to whitespace
-        */
-        $names = \preg_split('#(\.|(?<!\s)/(?!\s))#', $name);
-        $cur = $this;
-        while ($names) {
-            $name = \array_shift($names);
-            $conf = $config;
-            if (!isset($cur->channels[$name])) {
-                $conf = \array_merge(
-                    array('nested' => true),
-                    $conf,
-                    isset($cur->cfg['channels'][$name])
-                        ? $cur->cfg['channels'][$name]
-                        : array()
-                );
-                $cfg = $cur->getCfg(null, self::CONFIG_INIT);
-                $cfg = $cur->internal->getPropagateValues($cfg);
-                // set channel values
-                $cfg['debug']['channelIcon'] = null;
-                $cfg['debug']['channelName'] = $conf['nested'] || $cur->parentInstance
-                    ? $cur->cfg['channelName'] . '.' . $name
-                    : $name;
-                $cfg['debug']['parent'] = $cur;
-                unset($conf['nested']);
-                // instantiate channel
-                $cur->channels[$name] = new static($cfg);
-            }
-            unset($conf['nested']);
-            if ($conf) {
-                $cur->channels[$name]->setCfg($conf);
-            }
-            $cur = $this->channels[$name];
-        }
-        return $cur;
-    }
-
-    /**
-     * Return array of channels
-     *
-     * If $allDescendants == true :  key = "fully qualified" channel name
-     *
-     * @param bool $allDescendants (false) include all descendants?
-     * @param bool $inclTop        (false) whether to incl topmost channels (ie "tabs")
-     *
-     * @return static[] Does not include self
-     */
-    public function getChannels($allDescendants = false, $inclTop = false)
-    {
-        $channels = $this->channels;
-        if ($allDescendants) {
-            $channels = array();
-            foreach ($this->channels as $channel) {
-                $channels = \array_merge(
-                    $channels,
-                    array($channel->getCfg('channelName', self::CONFIG_DEBUG) => $channel),
-                    $channel->getChannels(true)
-                );
-            }
-        }
-        if ($this === $this->rootInstance) {
-            if ($inclTop) {
-                return $channels;
-            }
-            $channelsTop = $this->getChannelsTop();
-            $channels = \array_diff_key($channels, $channelsTop);
-        }
-        return $channels;
-    }
-
-    /**
-     * Get the topmost channels (ie "tabs")
-     *
-     * @return static[]
-     */
-    public function getChannelsTop()
-    {
-        $channels = array(
-            $this->cfg['channelName'] => $this,
-        );
-        if ($this->parentInstance) {
-            return $channels;
-        }
-        foreach ($this->rootInstance->channels as $name => $channel) {
-            $fqn = $channel->getCfg('channelName');
-            if (\strpos($fqn, '.') === false) {
-                $channels[$name] = $channel;
-            }
-        }
-        return $channels;
     }
 
     /**
@@ -1420,25 +1235,6 @@ class Debug
     }
 
     /**
-     * Remove plugin
-     *
-     * @param SubscriberInterface $plugin object implementing SubscriberInterface
-     *
-     * @return $this
-     */
-    public function removePlugin(SubscriberInterface $plugin)
-    {
-        $this->registeredPlugins->detach($plugin);
-        if ($plugin instanceof AssetProviderInterface) {
-            $this->rootInstance->getRoute('html')->removeAssetProvider($plugin);
-        }
-        if ($plugin instanceof SubscriberInterface) {
-            $this->eventManager->RemoveSubscriberInterface($plugin);
-        }
-        return $this;
-    }
-
-    /**
      * Set one or more config values
      *
      * `setCfg('key', 'value')`
@@ -1675,28 +1471,26 @@ class Debug
                 \spl_autoload_register(array($this, 'autoloader'));
             }
         }
-        $this->registeredPlugins = new SplObjectStorage();
 
         $this->bootstrapInstance($cfg);
         $this->bootstrapContainer($cfg);
 
-        // initialize config
         $this->config = $this->container['config'];
         $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->serviceContainer->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
+        $this->internal = $this->container['internal'];
+        $this->eventManager->addSubscriberInterface($this->container['addonMethods']);
         $this->addPlugin($this->container['configEventSubscriber']);
+        $this->addPlugin($this->container['internalEvents']);
         $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'));
 
-        // initialize errorHandler
         $this->serviceContainer['errorHandler'];
-
-        $this->internal = $this->container['internal'];
-        $this->internalEvents = $this->container['internalEvents'];
 
         $this->config->set($cfg);
         $this->data['requestId'] = $this->internal->requestId();
 
         if (!$this->parentInstance) {
+            // we're the root instance
             $this->addPlugin($this->container['logEnv']);
             $this->addPlugin($this->container['logReqRes']);
         }
@@ -1784,38 +1578,6 @@ class Debug
     }
 
     /**
-     * Handle error & warn methods
-     *
-     * @param string $method "error" or "warn"
-     * @param array  $args   arguments passed to error or warn
-     *
-     * @return void
-     */
-    private function doError($method, $args)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            $method,
-            $args,
-            array(
-                'detectFiles' => true,
-                'uncollapse' => true,
-            )
-        );
-        // file & line meta may already be set (ie coming via errorHandler)
-        // file & line may also be defined as null
-        $default = "\x00default\x00";
-        if ($logEntry->getMeta('file', $default) === $default) {
-            $callerInfo = $this->backtrace->getCallerInfo();
-            $logEntry->setMeta(array(
-                'file' => $callerInfo['file'],
-                'line' => $callerInfo['line'],
-            ));
-        }
-        $this->appendLog($logEntry);
-    }
-
-    /**
      * Get Dump or Route instance
      *
      * @param 'dump'|'route' $cat       "Category" (dump or route)
@@ -1867,17 +1629,19 @@ class Debug
     {
         $defaultArgs = array();
         if (isset(self::$methodDefaultArgs[$methodName])) {
-            $defaultArgs = self::$methodDefaultArgs[$methodName];
-        } elseif (\method_exists(self::$instance, $methodName)) {
-            $refMethod = new ReflectionMethod(self::$instance, $methodName);
-            $params = $refMethod->getParameters();
-            foreach ($params as $refParameter) {
-                $defaultArgs[] = $refParameter->isOptional()
-                    ? $refParameter->getDefaultValue()
-                    : null;
-            }
-            self::$methodDefaultArgs[$methodName] = $defaultArgs;
+            return self::$methodDefaultArgs[$methodName];
         }
+        if (\method_exists(self::$instance, $methodName) === false) {
+            return $defaultArgs;
+        }
+        $refMethod = new ReflectionMethod(self::$instance, $methodName);
+        $params = $refMethod->getParameters();
+        foreach ($params as $refParameter) {
+            $defaultArgs[] = $refParameter->isOptional()
+                ? $refParameter->getDefaultValue()
+                : null;
+        }
+        self::$methodDefaultArgs[$methodName] = $defaultArgs;
         return $defaultArgs;
     }
 

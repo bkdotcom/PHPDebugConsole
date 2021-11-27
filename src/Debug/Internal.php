@@ -60,22 +60,96 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Send an email
+     * Set alert()'s alert level'\
      *
-     * @param string $toAddr  to
-     * @param string $subject subject
-     * @param string $body    body
+     * @param LogEntry $logEntry LogEntry
      *
      * @return void
      */
-    public function email($toAddr, $subject, $body)
+    public function alertLevel(LogEntry $logEntry)
     {
-        $addHeadersStr = '';
-        $fromAddr = $this->debug->getCfg('emailFrom', Debug::CONFIG_DEBUG);
-        if ($fromAddr) {
-            $addHeadersStr .= 'From: ' . $fromAddr;
+        $level = $logEntry->getMeta('level');
+        $levelsAllowed = array('danger','error','info','success','warn','warning');
+        /*
+            Continue to allow bootstrap "levels"
+        */
+        $levelTrans = array(
+            'danger' => 'error',
+            'warning' => 'warn',
+        );
+        if (isset($levelTrans[$level])) {
+            $level = $levelTrans[$level];
+        } elseif (!\in_array($level, $levelsAllowed)) {
+            $level = 'error';
         }
-        \call_user_func($this->debug->getCfg('emailFunc', Debug::CONFIG_DEBUG), $toAddr, $subject, $body, $addHeadersStr);
+        $logEntry->setMeta('level', $level);
+    }
+
+    /**
+     * Handle error & warn methods
+     *
+     * @param string $method "error" or "warn"
+     * @param array  $args   arguments passed to error or warn
+     *
+     * @return void
+     */
+    public function doError($method, $args)
+    {
+        $logEntry = new LogEntry(
+            $this->debug,
+            $method,
+            $args,
+            array(
+                'detectFiles' => true,
+                'uncollapse' => true,
+            )
+        );
+        // file & line meta may already be set (ie coming via errorHandler)
+        // file & line may also be defined as null
+        $default = "\x00default\x00";
+        if ($logEntry->getMeta('file', $default) === $default) {
+            $callerInfo = $this->debug->backtrace->getCallerInfo();
+            $logEntry->setMeta(array(
+                'file' => $callerInfo['file'],
+                'line' => $callerInfo['line'],
+            ));
+        }
+        $this->debug->log($logEntry);
+    }
+
+    /**
+     * Handle trace()
+     *
+     * @param LogEntry $logEntry LogEntry
+     *
+     * @return void
+     */
+    public function doTrace(LogEntry $logEntry)
+    {
+        $caption = $logEntry->getMeta('caption');
+        if (!\is_string($caption)) {
+            $this->warn(\sprintf(
+                'trace caption should be a string.  %s provided',
+                \is_object($caption)
+                    ? \get_class($caption)
+                    : \gettype($caption)
+            ));
+            $logEntry->setMeta('caption', 'trace');
+        }
+        // Get trace and include args if we're including context
+        $inclContext = $logEntry->getMeta('inclContext');
+        $inclArgs = $logEntry->getMeta('inclArgs');
+        $backtrace = isset($logEntry['meta']['trace'])
+            ? $logEntry['meta']['trace']
+            : $this->debug->backtrace->get($inclArgs ? \bdk\Backtrace::INCL_ARGS : 0);
+        $logEntry->setMeta('trace', null);
+        if ($backtrace && $inclContext) {
+            $backtrace = $this->debug->backtrace->addContext($backtrace);
+            $this->debug->addPlugin(new \bdk\Debug\Plugin\Highlight());
+        }
+        $logEntry['args'] = array($backtrace);
+        $this->debug->methodTable->doTable($logEntry);
+        $this->debug->log($logEntry);
     }
 
     /**
@@ -119,7 +193,7 @@ class Internal implements SubscriberInterface
      */
     public function getDefaultRoute()
     {
-        $interface = $this->getInterface();
+        $interface = $this->debug->getInterface();
         if (\strpos($interface, 'ajax') !== false) {
             return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
         }
@@ -131,36 +205,6 @@ class Internal implements SubscriberInterface
             return 'html';
         }
         return 'stream';
-    }
-
-    /**
-     * Returns cli, cron, ajax, or http
-     *
-     * @return string cli | "cli cron" | http | "http ajax"
-     */
-    public function getInterface()
-    {
-        $return = 'http';
-        /*
-            notes:
-                $_SERVER['argv'] could be populated with query string if register_argc_argv = On
-                don't use request->getMethod()... Psr7 implementation likely defaults to GET
-                we used to check for `defined('STDIN')`,
-                    but it's not unit test friendly
-                we used to check for getServerParam['REQUEST_METHOD'] === null
-                    not particularly psr7 friendly
-        */
-        $argv = $this->getServerParam('argv');
-        $isCliOrCron = $argv && \implode('+', $argv) !== $this->getServerParam('QUERY_STRING');
-        if ($isCliOrCron) {
-            // TERM is a linux/unix thing
-            $return = $this->getServerParam('TERM') !== null || $this->getServerParam('PATH') !== null
-                ? 'cli'
-                : 'cli cron';
-        } elseif ($this->getServerParam('HTTP_X_REQUESTED_WITH') === 'XMLHttpRequest') {
-            $return = 'http ajax';
-        }
-        return $return;
     }
 
     /**
@@ -262,7 +306,7 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Get $_SERVER param
+     * Get $_SERVER param/value
      * Gets serverParams from serverRequest interface
      *
      * @param string $name    $_SERVER key/name
@@ -294,29 +338,6 @@ class Internal implements SubscriberInterface
         return array(
             Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
         );
-    }
-
-    /**
-     * Do we have log entries?
-     *
-     * @return bool
-     */
-    public function hasLog()
-    {
-        $entryCountInitial = $this->debug->getData('entryCountInitial');
-        $entryCountCurrent = $this->debug->getData('log/__count__');
-        $lastEntryMethod = $this->debug->getData('log/__end__/method');
-        return $entryCountCurrent > $entryCountInitial && $lastEntryMethod !== 'clear';
-    }
-
-    /**
-     * Is this a Command Line Interface request?
-     *
-     * @return bool
-     */
-    public function isCli()
-    {
-        return \strpos($this->getInterface(), 'cli') === 0;
     }
 
     /**

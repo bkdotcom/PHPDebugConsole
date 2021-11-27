@@ -29,13 +29,15 @@ use bdk\Debug\LogEntry;
 class Html extends Base
 {
 
+    /** @var HtmlHelper helper class */
+    public $helper;
+
+    /** @var Debug[] Logged channels (channelName => Debug) */
     protected $channels = array();
 
     /** @var array LogEntry meta attribs */
     protected $logEntryAttribs = array();
 
-    /** @var HtmlHelper helper class */
-    protected $helper;
 
     /** @var \bdk\Debug\Utility\Html */
     protected $html;

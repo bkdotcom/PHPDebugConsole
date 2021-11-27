@@ -222,7 +222,7 @@ class HtmlErrorSummary
         }
         $haveFatal = \array_sum($this->stats['counts']['fatal']) > 0;
         if (!$haveFatal && \count($this->stats['inConsoleCategories']) === 1) {
-            return $html . $this->buildInConsoleOneCat();
+            return $this->buildInConsoleOneCat();
         }
         $html = '<h3>' . $this->buildInConsoleHeader() . '</h3>' . "\n";
         $html .= '<ul class="list-unstyled">';

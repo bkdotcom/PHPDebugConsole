@@ -59,6 +59,9 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Abstraction\Abstracter($debug, $debug->getCfg('abstracter', \bdk\Debug::CONFIG_INIT));
         };
+        $container['addonMethods'] = function () {
+            return new \bdk\Debug\Plugin\AddonMethods();
+        };
         $container['arrayUtil'] = function () {
             return new \bdk\Debug\Utility\ArrayUtil();
         };

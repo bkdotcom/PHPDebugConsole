@@ -334,10 +334,10 @@ class Config
      */
     private function normalizePath($path)
     {
-        if (\is_array($path) === false) {
+        if (\is_string($path)) {
             $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
         }
-        if (\count($path) === 0 || $path[0] === '*') {
+        if ($path === null || \count($path) === 0 || $path[0] === '*') {
             return array('*');
         }
         $found = false;

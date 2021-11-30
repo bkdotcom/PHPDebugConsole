@@ -120,8 +120,7 @@ class Debug
                         // tabs with same sort will be sorted alphabetically
         'enableProfiling' => false,
         // which error types appear as "error" in debug console... all other errors are "warn"
-        'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
-                        | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR,
+        'errorMask' => 0,
         'emailFrom' => null,    // null = use php's default (php.ini: sendmail_from)
         'emailFunc' => 'mail',  // callable
         'emailLog' => false,    // Whether to email a debug log.  (requires 'collect' to also be true)
@@ -208,6 +207,8 @@ class Debug
      */
     public function __construct($cfg = array())
     {
+        $this->cfg['errorMask'] = E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
+                        | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR;
         $this->cfg['redactReplace'] = function ($str, $key) {
             // "use" our function params so things (ie phpmd) don't complain
             array($str, $key);

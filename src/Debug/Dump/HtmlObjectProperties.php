@@ -106,6 +106,8 @@ class HtmlObjectProperties
             'forceShow' => $info['forceShow'],
             'inherited' => $info['inheritedFrom'],
             'isPromoted' => $info['isPromoted'],
+            'isReadOnly' => $info['isReadOnly'],
+            'isStatic' => $info['isStatic'],
             'private-ancestor' => $info['isPrivateAncestor'],
             'property' => true,
         )));
@@ -143,10 +145,13 @@ class HtmlObjectProperties
                 : '')
             . ($info['type']
                 ? ' ' . $this->helper->markupType($info['type'])
-                : '')
-            . ' <span class="t_identifier"'
-                . ' title="' . ($opts['outPhpDoc'] ? \htmlspecialchars($info['desc']) : '') . '"'
-                . '>' . $name . '</span>'
+                : '') . ' '
+            . $this->html->buildTag('span', array(
+                    'class' => 't_identifier',
+                    'title' => $opts['outPhpDoc']
+                        ? $info['desc']
+                        : '',
+                ), $name)
             . ($info['value'] !== Abstracter::UNDEFINED
                 ? ' <span class="t_operator">=</span> '
                     . $this->dumper->dump($info['value'])
@@ -163,9 +168,10 @@ class HtmlObjectProperties
     private function dumpModifiers($info)
     {
         $modifiers = (array) $info['visibility'];
-        if ($info['isStatic']) {
-            $modifiers[] = 'static';
-        }
+        $modifiers = \array_merge($modifiers, \array_keys(\array_filter(array(
+            'readonly' => $info['isReadOnly'],
+            'static' => $info['isStatic'],
+        ))));
         $modifiers = \array_map(function ($modifier) {
             return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
         }, $modifiers);

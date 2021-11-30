@@ -116,7 +116,7 @@ class LogEnv implements SubscriberInterface
         $valFriendly = $setting['filter'] === FILTER_VALIDATE_BOOLEAN
             ? ($setting['valCompare'] ? 'enabled' : 'disabled')
             : $setting['valCompare'];
-        $msgDefault = $setting['operator'] === '!=='
+        $msgDefault = $setting['operator'] === '=='
             ? 'should be ' . $valFriendly
             : 'should not be ' . $valFriendly;
         $setting['msg'] = $setting['msg'] ?: $msgDefault;
@@ -501,7 +501,7 @@ class LogEnv implements SubscriberInterface
             $this->debug->log('date.timezone', $dateTimezone);
             return;
         }
-        $this->debug->assert(false, '%cdate.timezone%c is no set', 'font-family:monospace;', '');
+        $this->debug->assert(false, '%cdate.timezone%c is not set', 'font-family:monospace;', '');
         $this->debug->log('date_default_timezone_get()', \date_default_timezone_get());
     }
 

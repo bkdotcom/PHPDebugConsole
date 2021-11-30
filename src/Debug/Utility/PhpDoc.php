@@ -503,7 +503,7 @@ class PhpDoc
      */
     private static function trimDesc($desc)
     {
-        $lines = \explode("\n", $desc);
+        $lines = \explode("\n", (string) $desc);
         $leadingSpaces = array();
         foreach ($lines as $line) {
             if (\strlen($line)) {
@@ -535,7 +535,7 @@ class PhpDoc
      */
     private static function typeEdit($type)
     {
-        $types = \preg_split('/\s*\|\s*/', $type);
+        $types = \preg_split('/\s*\|\s*/', (string) $type);
         foreach ($types as &$type) {
             $isArray = false;
             if (\substr($type, -2) === '[]') {

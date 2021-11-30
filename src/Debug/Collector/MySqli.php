@@ -92,6 +92,7 @@ class MySqli extends mysqliBase
      *
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function autocommit($mode)
     {
         if ($mode === false) {
@@ -110,6 +111,7 @@ class MySqli extends mysqliBase
      *
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function commit($flags = 0, $name = null)
     {
         $return = parent::commit($flags, $name);
@@ -202,6 +204,7 @@ class MySqli extends mysqliBase
     /**
      * {@inheritDoc}
      */
+    #[\ReturnTypeWillChange]
     public function multi_query($query)
     {
         return $this->profileCall('multi_query', $query, \func_get_args());
@@ -210,6 +213,7 @@ class MySqli extends mysqliBase
     /**
      * {@inheritDoc}
      */
+    #[\ReturnTypeWillChange]
     public function prepare($query)
     {
         return new MySqliStmt($this, $query);
@@ -218,6 +222,7 @@ class MySqli extends mysqliBase
     /**
      * {@inheritDoc}
      */
+    #[\ReturnTypeWillChange]
     public function query($query, $resultmode = MYSQLI_STORE_RESULT)
     {
         return $this->profileCall('query', $query, array($query, $resultmode));
@@ -226,15 +231,17 @@ class MySqli extends mysqliBase
     /**
      * {@inheritDoc}
      */
+    #[\ReturnTypeWillChange]
     public function real_connect($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, $flags = null)
     {
         $this->connectionAttempted = true;
-        return parent::real_connect($host, $username, $passwd, $dbname, $port, $socket, $flags);
+        return parent::real_connect($host, $username, $passwd, $dbname, $port, $socket, (int) $flags);
     }
 
     /**
      * {@inheritDoc}
      */
+    #[\ReturnTypeWillChange]
     public function real_query($query)
     {
         return $this->profileCall('real_query', $query, \func_get_args());
@@ -248,6 +255,7 @@ class MySqli extends mysqliBase
      *
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function rollBack($flags = 0, $name = null)
     {
         $return = parent::rollback($flags, $name);
@@ -261,6 +269,7 @@ class MySqli extends mysqliBase
     /**
      * {@inheritDoc}
      */
+    #[\ReturnTypeWillChange]
     public function stmt_init()
     {
         return new MySqliStmt($this, null);

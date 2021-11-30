@@ -111,6 +111,7 @@ I'm just too white and nerdy
 Really white and nerdy
 
 EOD;
+
         $base64snip = \substr(
             \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
             0,
@@ -264,12 +265,15 @@ EOD;
                         null,
                         '',
                     ),
-                    'html' => '<li class="m_log">'
+                    'html' => \str_replace(
+                        '\'',
+                        PHP_VERSION_ID >= 80100 ? '&#039;' : '\'',
+                        '<li class="m_log">'
                         . '<span class="no-quotes t_string">long string</span> = '
                         . '<span class="t_string" data-type-more="maxLen">'
                             . \str_replace("\n", '<span class="ws_n"></span>' . "\n", $longStringExpect)
                             . '<span class="maxlen">&hellip; 1778 more bytes (not logged)</span>'
-                        . '</span></li>',
+                        . '</span></li>'),
                     'script' => 'console.log("long string",' . \json_encode($longStringExpect . '[1778 more bytes (not logged)]') . ');',
                     'streamAnsi' => "long string \e[38;5;245m=\e[0m \e[38;5;250m\"\e[0m"
                         . $longStringExpect

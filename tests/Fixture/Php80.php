@@ -7,8 +7,8 @@ namespace bdk\DebugTests\Fixture;
  *
  * @link http://www.bradkent.com/php/debug PHPDebugConsole Homepage
  */
-#[ExampleClassAttribute("foo", PHP_VERSION_ID, name:"bar")]
-class Attributed
+#[ExampleClassAttribute('foo', PHP_VERSION_ID, name:'bar')]
+class Php80
 {
 
     #[ExampleConstAttribute]

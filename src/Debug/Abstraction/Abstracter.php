@@ -78,6 +78,7 @@ class Abstracter extends Component
         'fullyQualifyPhpDocType' => false,
         'objectsExclude' => array(
             // __NAMESPACE__ added in constructor
+            'DOMNode',
         ),
         'objectSort' => 'visibility',   // none, visibility, or name
         'objectsWhitelist' => null,     // will be used if array

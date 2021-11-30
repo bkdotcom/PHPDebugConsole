@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 class UseStatementsTest extends TestCase
 {
 
-    public function test()
+    public function testUseStatements()
     {
         $source = '<?php
         namespace foo;

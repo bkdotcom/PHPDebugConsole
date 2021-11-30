@@ -160,6 +160,7 @@ class Container implements \ArrayAccess
      *
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function offsetExists($name)
     {
         return isset($this->keys[$name]);
@@ -174,6 +175,7 @@ class Container implements \ArrayAccess
      * @return mixed The value of the parameter or an object
      * @throws \OutOfBoundsException If the identifier is not defined
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($name)
     {
         $this->assertExists($name);
@@ -212,6 +214,7 @@ class Container implements \ArrayAccess
      * @throws \RuntimeException Prevent override of a already built service
      * @return void
      */
+    #[\ReturnTypeWillChange]
     public function offsetSet($name, $value)
     {
         if (isset($this->invoked[$name]) && $this->cfg['allowOverride'] === false) {
@@ -236,6 +239,7 @@ class Container implements \ArrayAccess
      *
      * @return void
      */
+    #[\ReturnTypeWillChange]
     public function offsetUnset($name)
     {
         if ($this->offsetExists($name) === false) {

@@ -241,6 +241,7 @@ class Error extends Event
      *
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function &offsetGet($key)
     {
         if ($key === 'backtrace') {

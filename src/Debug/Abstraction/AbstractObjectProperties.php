@@ -33,6 +33,7 @@ class AbstractObjectProperties
         'inheritedFrom' => null,        // populated only if inherited
                                         //   not populated if extended/redefined
         'isPromoted' => false,
+        'isReadOnly' => false,
         'isStatic' => false,
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
         'overrides' => null,            // previous ancestor where property is defined
@@ -479,6 +480,9 @@ class AbstractObjectProperties
                 : null,
             'isPromoted' =>  PHP_VERSION_ID >= 80000
                 ? $refProperty->isPromoted()
+                : false,
+            'isReadOnly' => PHP_VERSION_ID >= 80100
+                ? $refProperty->isReadOnly()
                 : false,
             'isStatic' => $refProperty->isStatic(),
             'type' => $this->getPropType($phpDoc['type'], $refProperty),

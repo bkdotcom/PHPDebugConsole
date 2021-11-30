@@ -92,7 +92,7 @@ class ProfileTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Profile \'Profile 1\' Results","Type":"TABLE"},[["","calls","totalTime","ownTime"],["bdk\\\DebugTests\\\Method\\\ProfileTest::a",1,%f,%f],["bdk\\\DebugTests\\\Method\\\ProfileTest::b",1,%f,%f],["bdk\\\DebugTests\\\Method\\\ProfileTest::c",2,%f,%f]]]|',
                 'html' => '<li class="m_profileEnd">
                     <table class="sortable table-bordered">
-                    <caption>Profile \'Profile 1\' Results</caption>
+                    <caption>Profile ' . (PHP_VERSION_ID >= 80100 ? '&#039;Profile 1&#039;' : '\'Profile 1\'') . ' Results</caption>
                     <thead>
                         <tr><th>&nbsp;</th><th>calls</th><th scope="col">totalTime</th><th scope="col">ownTime</th></tr>
                     </thead>

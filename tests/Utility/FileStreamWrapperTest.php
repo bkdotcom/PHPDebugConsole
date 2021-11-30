@@ -90,6 +90,7 @@ class FileStreamWrapperTest extends TestCase
 
     public function testStreamCast()
     {
+        $this->markTestSkipped(__METHOD__);
         /*
         if (!is_dir(self::$tmpdir)) {
             mkdir(self::$tmpdir);
@@ -160,47 +161,56 @@ class FileStreamWrapperTest extends TestCase
         \fclose($fh);
     }
 
+    /*
     public function testStreamMetadata()
     {
-        /*
-        touch()
-        chmod()
-        chown()
-        chgrp()
-        */
+        // $this->markTestSkipped(__METHOD__);
+        // touch()
+        // chmod()
+        // chown()
+        // chgrp()
     }
 
     public function testStreamOpen()
     {
+        // $this->markTestSkipped(__METHOD__);
     }
 
     public function testStreamRead()
     {
+        // $this->markTestSkipped(__METHOD__);
     }
 
     public function testStreamSeek()
     {
+        // $this->markTestSkipped(__METHOD__);
     }
 
     public function testStreamSetOption()
     {
+        // $this->markTestSkipped(__METHOD__);
     }
 
     public function testStreamStat()
     {
+        // $this->markTestSkipped(__METHOD__);
     }
 
     public function testStreamTell()
     {
+        // $this->markTestSkipped(__METHOD__);
     }
 
     public function testStreamTruncate()
     {
+        // $this->markTestSkipped(__METHOD__);
     }
 
     public function testStreamWrite()
     {
+        // $this->markTestSkipped(__METHOD__);
     }
+    */
 
     public function testUnlink()
     {
@@ -215,6 +225,7 @@ class FileStreamWrapperTest extends TestCase
 
     public function testUrlStat()
     {
+        $this->markTestSkipped(__METHOD__);
     }
 
     protected static function rmdir($dirPath)

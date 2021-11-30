@@ -278,6 +278,6 @@ class ArrayUtil
     {
         return \is_array($path)
             ? $path
-            : \array_filter(\preg_split('#[\./]#', $path), 'strlen');
+            : \array_filter(\preg_split('#[\./]#', (string) $path), 'strlen');
     }
 }

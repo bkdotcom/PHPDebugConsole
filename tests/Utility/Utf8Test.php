@@ -92,7 +92,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
         foreach ($strings as $k => $pair) {
             $expected = $pair[1];
             $string = Utf8::toUtf8($pair[0]);
-            $string = \htmlentities($string, null, 'UTF-8');
+            $string = \htmlentities($string, 0, 'UTF-8');
             $this->assertSame($expected, $string, $k . ' does not match');
         }
     }

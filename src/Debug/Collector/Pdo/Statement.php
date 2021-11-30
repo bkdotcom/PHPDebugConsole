@@ -50,6 +50,7 @@ class Statement extends PDOStatement
      * @return bool
      * @link   http://php.net/manual/en/pdostatement.bindcolumn.php
      */
+    #[\ReturnTypeWillChange]
     public function bindColumn($column, &$param, $type = null, $maxlen = null, $driverdata = null)
     {
         $this->boundParameters[$column] = $param;
@@ -73,6 +74,7 @@ class Statement extends PDOStatement
      * @return bool
      * @link   http://php.net/manual/en/pdostatement.bindparam.php
      */
+    #[\ReturnTypeWillChange]
     public function bindParam($parameter, &$variable, $dataType = PdoBase::PARAM_STR, $length = null, $driverOptions = null)
     {
         $this->boundParameters[$parameter] = $variable;
@@ -93,6 +95,7 @@ class Statement extends PDOStatement
      * @return bool
      * @link   http://php.net/manual/en/pdostatement.bindvalue.php
      */
+    #[\ReturnTypeWillChange]
     public function bindValue($parameter, $value, $dataType = PdoBase::PARAM_STR)
     {
         $this->boundParameters[$parameter] = $value;
@@ -111,6 +114,7 @@ class Statement extends PDOStatement
      * @link   http://php.net/manual/en/pdostatement.execute.php
      * @throws PDOException
      */
+    #[\ReturnTypeWillChange]
     public function execute($inputParameters = null)
     {
         $boundParameters = $this->boundParameters;

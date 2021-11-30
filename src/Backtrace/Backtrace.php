@@ -358,7 +358,7 @@ class Backtrace
     {
         $class = isset($frame['class'])
             ? $frame['class']
-            : null;
+            : '';
         if (\preg_match(static::$internalClasses['regex'], $class)) {
             return true;
         }
@@ -430,24 +430,23 @@ class Backtrace
         */
         $regex = '/^(.+)\((\d+)\) : eval\(\)\'d code$/';
         $matches = array();
-        if (\preg_match($regex, $frame['file'], $matches)) {
-            // reported line = line within eval
-            // line inside paren is the line `eval` is on
-            $frame['evalLine'] = $frame['line'];
-            $frame['file'] = $matches[1];
-            $frame['line'] = (int) $matches[2];
-        }
         if ($frame['file'] === null) {
             // use file/line from next frame
             $frame = \array_merge(
                 $frame,
                 \array_intersect_key($frameNext, \array_flip(array('file','line')))
             );
+        } elseif (\preg_match($regex, $frame['file'], $matches)) {
+            // reported line = line within eval
+            // line inside paren is the line `eval` is on
+            $frame['evalLine'] = $frame['line'];
+            $frame['file'] = $matches[1];
+            $frame['line'] = (int) $matches[2];
         }
         /*
             Normalize Function / unset if empty
         */
-        $frame['type'] = \strtr($frame['type'], array(
+        $frame['type'] = \strtr($frame['type'] ?: '', array(
             'dynamic' => '->',
             'static' => '::',
         ));

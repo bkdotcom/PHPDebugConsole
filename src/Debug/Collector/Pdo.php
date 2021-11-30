@@ -146,6 +146,7 @@ class Pdo extends PdoBase
      * @link   http://php.net/manual/en/pdo.begintransaction.php
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function beginTransaction()
     {
         $this->debug->group('transaction', $this->debug->meta(array(
@@ -160,6 +161,7 @@ class Pdo extends PdoBase
      * @link   http://php.net/manual/en/pdo.commit.php
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function commit()
     {
         $return = $this->pdo->commit();
@@ -173,6 +175,7 @@ class Pdo extends PdoBase
      * @link   http://php.net/manual/en/pdo.errorinfo.php
      * @return string a five characters alphanumeric identifier defined in the ANSI SQL-92 standard
      */
+    #[\ReturnTypeWillChange]
     public function errorCode()
     {
         return $this->pdo->errorCode();
@@ -184,6 +187,7 @@ class Pdo extends PdoBase
      * @link   http://php.net/manual/en/pdo.errorinfo.php
      * @return array PDO::errorInfo returns an array of error information
      */
+    #[\ReturnTypeWillChange]
     public function errorInfo()
     {
         return $this->pdo->errorInfo();
@@ -200,6 +204,7 @@ class Pdo extends PdoBase
      *    return Boolean FALSE, but may also return a non-Boolean value which evaluates to FALSE.
      *    Please read the section on Booleans for more information
      */
+    #[\ReturnTypeWillChange]
     public function exec($statement)
     {
         return $this->profileCall('exec', $statement, \func_get_args());
@@ -214,6 +219,7 @@ class Pdo extends PdoBase
      * @return mixed A successful call returns the value of the requested PDO attribute.
      *    An unsuccessful call returns null.
      */
+    #[\ReturnTypeWillChange]
     public function getAttribute($attribute)
     {
         return $this->pdo->getAttribute($attribute);
@@ -225,6 +231,7 @@ class Pdo extends PdoBase
      * @link   http://php.net/manual/en/pdo.intransaction.php
      * @return bool true if a transaction is currently active, and false if not.
      */
+    #[\ReturnTypeWillChange]
     public function inTransaction()
     {
         return $this->pdo->inTransaction();
@@ -239,6 +246,7 @@ class Pdo extends PdoBase
      * @return string If a sequence name was not specified for the name parameter, PDO::lastInsertId
      *   returns a string representing the row ID of the last row that was inserted into the database.
      */
+    #[\ReturnTypeWillChange]
     public function lastInsertId($name = null)
     {
         return $this->pdo->lastInsertId($name);
@@ -256,6 +264,7 @@ class Pdo extends PdoBase
      *   PDO::prepare returns a PDOStatement object. If the database server cannot successfully prepare
      *   the statement, PDO::prepare returns FALSE or emits PDOException (depending on error handling).
      */
+    #[\ReturnTypeWillChange]
     public function prepare($statement, $driverOptions = array())
     {
         return $this->pdo->prepare($statement, $driverOptions);
@@ -276,6 +285,7 @@ class Pdo extends PdoBase
      *   Returns `false` if the driver does not support quoting in this way.
      * @link   http://php.net/manual/en/pdo.quote.php
      */
+    #[\ReturnTypeWillChange]
     public function quote($string, $parameterType = PdoBase::PARAM_STR)
     {
         return $this->pdo->quote($string, $parameterType);
@@ -287,6 +297,7 @@ class Pdo extends PdoBase
      * @return bool
      * @link   http://php.net/manual/en/pdo.rollback.php
      */
+    #[\ReturnTypeWillChange]
     public function rollBack()
     {
         $return = $this->pdo->rollBack();
@@ -306,6 +317,7 @@ class Pdo extends PdoBase
      * @return bool
      * @link   http://php.net/manual/en/pdo.setattribute.php
      */
+    #[\ReturnTypeWillChange]
     public function setAttribute($attribute, $value)
     {
         return $this->pdo->setAttribute($attribute, $value);

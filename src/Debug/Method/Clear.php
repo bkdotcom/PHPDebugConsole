@@ -41,7 +41,7 @@ class Clear
         $this->channelName = $this->debug->parentInstance
             ? $logEntry->getChannelName() // just clear this specific channel
             : null;
-        $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
+        $this->channelRegex = '#^' . \preg_quote($this->channelName ?: '', '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
         $bitmask = $logEntry['meta']['bitmask'];
         $cleared = array();

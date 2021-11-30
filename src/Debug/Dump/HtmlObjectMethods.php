@@ -111,20 +111,17 @@ class HtmlObjectMethods
      */
     protected function dumpMethod($methodName, $info)
     {
-        $classes = \array_keys(\array_filter(array(
-            'deprecated' => $info['isDeprecated'],
-            'inherited' => $info['inheritedFrom'],
-            'method' => true,
-        )));
-        $modifiers = \array_keys(\array_filter(array(
-            'final' => $info['isFinal'],
-            $info['visibility'] => true,
-            'static' => $info['isStatic'],
-        )));
         return $this->html->buildTag(
             'dd',
             array(
-                'class' => \array_merge($classes, $modifiers),
+                'class' => array(
+                    $info['visibility'] => true,
+                    'inherited' => (bool) $info['inheritedFrom'],
+                    'isDeprecated' => $info['isDeprecated'],
+                    'isFinal' => $info['isFinal'],
+                    'isStatic' => $info['isStatic'],
+                    'method' => true,
+                ),
                 'data-attributes' => $this->opts['outAttributesMethod']
                     ? ($info['attributes'] ?: null)
                     : null,
@@ -134,7 +131,7 @@ class HtmlObjectMethods
                 'data-implements' => $info['implements'],
                 'data-inherited-from' => $info['inheritedFrom'],
             ),
-            $this->dumpModifiers($modifiers) . ' '
+            $this->dumpModifiers($info) . ' '
             . $this->dumpReturnType($info) . ' '
             . $this->dumpName($methodName, $info)
             . $this->dumpParams($info['params'])
@@ -147,12 +144,17 @@ class HtmlObjectMethods
     /**
      * Dump method modifiers
      *
-     * @param array $modifiers Modifiers / facets
+     * @param array $info method info
      *
      * @return string
      */
-    protected function dumpModifiers($modifiers)
+    protected function dumpModifiers($info)
     {
+        $modifiers = \array_keys(\array_filter(array(
+            'final' => $info['isFinal'],
+            $info['visibility'] => true,
+            'static' => $info['isStatic'],
+        )));
         return ''
             . \implode(' ', \array_map(function ($modifier) {
                     return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';

@@ -218,7 +218,7 @@ class HtmlObject
             'final' => $info['isFinal'],
         )));
         $title = $opts['outPhpDoc']
-            ? $info['desc']
+            ? (string) $info['desc']
             : '';
         return $this->html->buildTag(
             'dd',

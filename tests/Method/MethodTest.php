@@ -124,7 +124,9 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
-                'html' => '<li class="m_myCustom"><ul><li>How\'s it goin?</li></ul></li>',
+                'html' => PHP_VERSION_ID >= 80100
+                    ? '<li class="m_myCustom"><ul><li>How&#039;s it goin?</li></ul></li>'
+                    : '<li class="m_myCustom"><ul><li>How\'s it goin?</li></ul></li>',
                 'script' => 'console.log("How\'s it goin?");',
                 'text' => 'How\'s it goin?',
                 'wamp' => $entry,
@@ -182,7 +184,9 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"How\'s it goin?"]|',
-                'html' => '<li class="m_myCustom"><span class="no-quotes t_string">How\'s it goin?</span></li>',
+                'html' => PHP_VERSION_ID >= 80100
+                    ? '<li class="m_myCustom"><span class="no-quotes t_string">How&#039;s it goin?</span></li>'
+                    : '<li class="m_myCustom"><span class="no-quotes t_string">How\'s it goin?</span></li>',
                 'script' => 'console.log("How\'s it goin?");',
                 'text' => 'How\'s it goin?',
                 'wamp' => $entry,
@@ -579,7 +583,9 @@ class MethodTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-73: 52|[{"Type":"LOG"},"Counter \'noExisty\' doesn\'t exist."]|',
-                'html' => '<li class="m_countReset"><span class="no-quotes t_string">Counter \'noExisty\' doesn\'t exist.</span></li>',
+                'html' => PHP_VERSION_ID >= 80100
+                    ? '<li class="m_countReset"><span class="no-quotes t_string">Counter &#039;noExisty&#039; doesn&#039;t exist.</span></li>'
+                    : '<li class="m_countReset"><span class="no-quotes t_string">Counter \'noExisty\' doesn\'t exist.</span></li>',
                 'script' => 'console.log("Counter \'noExisty\' doesn\'t exist.");',
                 'text' => '✚ Counter \'noExisty\' doesn\'t exist.',
                 'wamp' => array(
@@ -1193,7 +1199,9 @@ class MethodTest extends DebugTestFramework
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-172: 47|[{"Type":"LOG"},"Timer \'bogus\' does not exist"]|',
-                'html' => '<li class="m_timeLog"><span class="no-quotes t_string">Timer \'bogus\' does not exist</span></li>',
+                'html' => PHP_VERSION_ID >= 80100
+                    ? '<li class="m_timeLog"><span class="no-quotes t_string">Timer &#039;bogus&#039; does not exist</span></li>'
+                    : '<li class="m_timeLog"><span class="no-quotes t_string">Timer \'bogus\' does not exist</span></li>',
                 'script' => 'console.log("Timer \'bogus\' does not exist");',
                 'text' => '⏱ Timer \'bogus\' does not exist',
                 // 'wamp' => @todo

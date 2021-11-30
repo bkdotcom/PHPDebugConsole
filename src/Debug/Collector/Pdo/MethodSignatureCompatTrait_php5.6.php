@@ -16,6 +16,7 @@ trait MethodSignatureCompatTrait
      *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
+    #[\ReturnTypeWillChange]
     public function query($statement = null, $fetchMode = null, ...$fetchModeArgs)
     {
         return $this->profileCall('query', $statement, \func_get_args());

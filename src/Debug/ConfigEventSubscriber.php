@@ -144,7 +144,7 @@ class ConfigEventSubscriber implements SubscriberInterface
      */
     private function onCfgKey($key)
     {
-        if ($this->debug->isCli()) {
+        if ($key === null || $this->debug->isCli()) {
             return $key;
         }
         $request = $this->debug->request;
@@ -207,7 +207,7 @@ class ConfigEventSubscriber implements SubscriberInterface
             $serverParams = \array_merge(array(
                 'HTTP_ACCEPT' => null,
                 'HTTP_SOAPACTION' => null,
-                'HTTP_USER_AGENT' => null,
+                'HTTP_USER_AGENT' => '',
             ), $this->debug->request->getServerParams());
             $val = \count(
                 \array_filter(array(

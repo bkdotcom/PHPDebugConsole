@@ -175,6 +175,7 @@ class Event implements ArrayAccess, IteratorAggregate
      *
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function offsetExists($key)
     {
         return isset($this->values[$key]);
@@ -187,6 +188,7 @@ class Event implements ArrayAccess, IteratorAggregate
      *
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function &offsetGet($key)
     {
         if ($this->hasValue($key)) {
@@ -204,6 +206,7 @@ class Event implements ArrayAccess, IteratorAggregate
      *
      * @return void
      */
+    #[\ReturnTypeWillChange]
     public function offsetSet($key, $value)
     {
         $this->setValue($key, $value);
@@ -216,6 +219,7 @@ class Event implements ArrayAccess, IteratorAggregate
      *
      * @return void
      */
+    #[\ReturnTypeWillChange]
     public function offsetUnset($key)
     {
         unset($this->values[$key]);
@@ -228,6 +232,7 @@ class Event implements ArrayAccess, IteratorAggregate
      *
      * @return ArrayIterator
      */
+    #[\ReturnTypeWillChange]
     public function getIterator()
     {
         return new ArrayIterator($this->values);

@@ -42,6 +42,16 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     }
 
     /**
+     * Serialize
+     *
+     * @return string
+     */
+    public function __serialize()
+    {
+        return $this->values;
+    }
+
+    /**
      * Return stringified value
      *
      * @return string
@@ -63,6 +73,18 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     }
 
     /**
+     * Unserialize
+     *
+     * @param array $data serialized data
+     *
+     * @return void
+     */
+    public function __unserialize($data)
+    {
+        $this->values = $data;
+    }
+
+    /**
      * Set abstraction's subject
      *
      * @param mixed $subject (null) Subject omit or set to null to remove subject
@@ -80,6 +102,7 @@ class Abstraction extends Event implements JsonSerializable, Serializable
      *
      * @return array
      */
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->values + array('debug' => Abstracter::ABSTRACTION);
@@ -92,7 +115,7 @@ class Abstraction extends Event implements JsonSerializable, Serializable
      */
     public function serialize()
     {
-        return \serialize($this->values);
+        return \serialize($this->__serialize());
     }
 
     /**
@@ -104,7 +127,7 @@ class Abstraction extends Event implements JsonSerializable, Serializable
      */
     public function unserialize($data)
     {
-        $this->values = \unserialize($data);
+        $this->__unserialize(\unserialize($data));
     }
 
     /**

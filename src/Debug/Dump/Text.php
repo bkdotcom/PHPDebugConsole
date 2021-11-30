@@ -56,7 +56,7 @@ class Text extends Base
     public function processLogEntry(LogEntry $logEntry)
     {
         $str = parent::processLogEntry($logEntry);
-        $str = \rtrim($str);
+        $str = \rtrim($str ?: '');
         if ($str) {
             $method = $logEntry['method'];
             $prefix = isset($this->cfg['prefixes'][$method])

@@ -88,7 +88,7 @@ abstract class AbstractRoute extends Component implements RouteInterface
     public function processLogEntries(Event $event)
     {
         $this->dump->crateRaw = false;
-        $this->data = $this->debug->getData();
+        $this->data = $this->debug->data->get();
         $str = '';
         $str .= $this->processAlerts();
         $str .= $this->processSummary();
@@ -171,7 +171,7 @@ abstract class AbstractRoute extends Component implements RouteInterface
      * Return event['return'] if not empty
      * Otherwise, propagation not stopped, return result of processLogEntry()
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return mixed
      */

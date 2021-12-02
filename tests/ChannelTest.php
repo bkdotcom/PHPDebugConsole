@@ -263,7 +263,7 @@ EOD;
         if (!$clearer) {
             $clearer = $this->debug;
         }
-        $this->debug->setData(array(
+        $this->debug->data->set(array(
             'alerts' => array(),
             'log' => array(),
             'logSummary' => array(),
@@ -300,7 +300,7 @@ EOD;
             // $this->debugFoo->groupEnd(); // foo group
         // $this->debug->groupEnd(); // main group
 
-        $data = \array_intersect_key($this->debug->getData(), \array_flip(array(
+        $data = \array_intersect_key($this->debug->data->get(), \array_flip(array(
             'alerts',
             'log',
             'logSummary',

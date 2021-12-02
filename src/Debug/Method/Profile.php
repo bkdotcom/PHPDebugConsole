@@ -62,7 +62,7 @@ class Profile
     /**
      * Handle clear() call
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */
@@ -109,7 +109,7 @@ class Profile
     /**
      * Handle profileEnd() call
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */

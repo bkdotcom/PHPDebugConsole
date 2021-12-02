@@ -39,6 +39,7 @@ class ServiceProvider implements ServiceProviderInterface
         $container['services'] = array(
             'arrayUtil',
             'backtrace',
+            'data',
             'errorHandler',
             'errorLevel',
             'html',
@@ -78,6 +79,10 @@ class ServiceProvider implements ServiceProviderInterface
         $container['configEventSubscriber'] = function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\ConfigEventSubscriber($debug);
+        };
+        $container['data'] = function (Container $container) {
+            $debug = $container['debug'];
+            return new \bdk\Debug\Data($debug);
         };
         $container['errorEmailer'] = function (Container $container) {
             $debug = $container['debug'];
@@ -152,6 +157,9 @@ class ServiceProvider implements ServiceProviderInterface
         $container['middleware'] = function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Psr15\Middleware($debug);
+        };
+        $container['redaction'] = function () {
+            return new \bdk\Debug\Plugin\Redaction();
         };
         $container['request'] = function () {
             /*

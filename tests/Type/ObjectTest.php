@@ -943,7 +943,7 @@ EOD;
     {
         $test = new \bdk\DebugTests\Fixture\Test();
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/args/1');
+        $abstraction = $this->debug->data->get('log/0/args/1');
         $props = $abstraction['properties'];
         $this->assertArrayNotHasKey('propHidden', $props, 'propHidden shouldn\'t be debugged');
         // debugValue
@@ -965,7 +965,7 @@ EOD;
         $test->prop = array();
         $test->prop[] = &$test->prop;
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/args/1');
+        $abstraction = $this->debug->data->get('log/0/args/1');
         $this->assertEquals(
             Abstracter::RECURSION,
             $abstraction['properties']['prop']['value'][0],
@@ -991,7 +991,7 @@ EOD;
         $test = new \bdk\DebugTests\Fixture\Test();
         $test->propPublic = &$test;
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/args/1');
+        $abstraction = $this->debug->data->get('log/0/args/1');
         $this->assertEquals(
             true,
             $abstraction['properties']['propPublic']['value']['isRecursion'],
@@ -1010,7 +1010,7 @@ EOD;
         $test = new \bdk\DebugTests\Fixture\Test();
         $test->prop = array( &$test );
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->getData('log/0/args/1');
+        $abstraction = $this->debug->data->get('log/0/args/1');
         $this->assertEquals(
             true,
             $abstraction['properties']['prop']['value'][0]['isRecursion'],
@@ -1033,7 +1033,7 @@ EOD;
         $testOa->ob = $testOb;
         $testOb->oa = $testOa;
         $this->debug->log('test_oa', $testOa);
-        $abstraction = $this->debug->getData('log/0/args/1');
+        $abstraction = $this->debug->data->get('log/0/args/1');
         $this->assertEquals(
             true,
             $abstraction['properties']['ob']['value']['properties']['oa']['value']['isRecursion'],

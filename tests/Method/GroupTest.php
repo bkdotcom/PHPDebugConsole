@@ -90,7 +90,7 @@ class GroupTest extends DebugTestFramework
         /*
             hideIfEmpty group containing log entry
         */
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->log('before group');
         $this->debug->group($this->debug->meta('hideIfEmpty'));
         $this->debug->log('something');
@@ -115,7 +115,7 @@ class GroupTest extends DebugTestFramework
         /*
             hideIfEmtpy group containing empty group
         */
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->log('before group');
         $this->debug->group($this->debug->meta('hideIfEmpty'));
         $this->debug->group('inner group empty');
@@ -134,7 +134,7 @@ class GroupTest extends DebugTestFramework
         /*
             hideIfEmtpy group containing hideIfEmty group
         */
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->log('before group');
         $this->debug->group($this->debug->meta('hideIfEmpty'));
         $this->debug->group('inner group empty', $this->debug->meta('hideIfEmpty'));
@@ -162,7 +162,7 @@ class GroupTest extends DebugTestFramework
         ));
 
         // single child
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->log('before group');
         $this->debug->group('shazam', $this->debug->meta('ungroup'));
         $this->debug->log('shazam2');
@@ -176,7 +176,7 @@ class GroupTest extends DebugTestFramework
 
 
         // single child (nested group)
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->log('before group');
         $this->debug->group('ungroup', $this->debug->meta('ungroup'));
         $this->debug->group('nested');
@@ -193,7 +193,7 @@ class GroupTest extends DebugTestFramework
         ));
 
         // single child (nested hideIfEmpty group)
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->log('before group');
         $this->debug->group('ungroup', $this->debug->meta('ungroup'));
         $this->debug->group('nested', $this->debug->meta('hideIfEmpty'));
@@ -208,7 +208,7 @@ class GroupTest extends DebugTestFramework
 
 
         // Two children (log-entry + hideIfEmpty group)
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->log('before group');
         $this->debug->group('ungroup', $this->debug->meta('ungroup'));
         $this->debug->log('child entry');
@@ -225,7 +225,7 @@ class GroupTest extends DebugTestFramework
         /*
             nested ungroups
         */
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->log('before group');
         $this->debug->group('ungroup me!', $this->debug->meta('ungroup'));
         $this->debug->group('inner group', $this->debug->meta('ungroup'));
@@ -285,7 +285,7 @@ class GroupTest extends DebugTestFramework
             )
         );
 
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->getRoute('wamp')->wamp->messages = array();
         $testBase->testBasePublic();
         $entry = array(
@@ -318,7 +318,7 @@ class GroupTest extends DebugTestFramework
             )
         );
 
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->getRoute('wamp')->wamp->messages = array();
         $test->testBasePublic();
         $entry = array(
@@ -353,7 +353,7 @@ class GroupTest extends DebugTestFramework
 
         // yes, we call Test... but static method is defined in TestBase
         // .... PHP
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->getRoute('wamp')->wamp->messages = array();
         \bdk\DebugTests\Fixture\Test::testBaseStatic();
         $entry = array(
@@ -387,7 +387,7 @@ class GroupTest extends DebugTestFramework
         );
 
         // even if called with an arrow
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $this->debug->getRoute('wamp')->wamp->messages = array();
         $test->testBaseStatic();
         $entry = array(
@@ -537,7 +537,7 @@ class GroupTest extends DebugTestFramework
         $this->assertSame(array(
             'main' => array(),
         ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
-        $log = $this->debug->getData('log');
+        $log = $this->debug->data->get('log');
         $this->assertCount(2, $log);
         $this->assertSame(array(
             array('group', array('a','b','c'), array()),
@@ -547,25 +547,25 @@ class GroupTest extends DebugTestFramework
         }, $log));
 
         // reset log
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
 
         // create a group, turn off collect, close
         // (group should remain open)
         $this->debug->group('new group');
-        $logBefore = $this->debug->getData('log');
+        $logBefore = $this->debug->data->get('log');
         $this->debug->setCfg('collect', false);
         $this->debug->groupEnd();
-        $logAfter = $this->debug->getData('log');
+        $logAfter = $this->debug->data->get('log');
         $this->assertSame($logBefore, $logAfter, 'groupEnd() logged although collect=false');
 
         // turn collect back on and close the group
         $this->debug->setCfg('collect', true);
         $this->debug->groupEnd(); // close the open group
-        $this->assertCount(2, $this->debug->getData('log'));
+        $this->assertCount(2, $this->debug->data->get('log'));
 
         // nothing to close!
         $this->debug->groupEnd(); // close the open group
-        $this->assertCount(2, $this->debug->getData('log'));
+        $this->assertCount(2, $this->debug->data->get('log'));
 
         $entry = array(
             'method' => 'groupEnd',
@@ -749,7 +749,7 @@ EOD;
         $this->debug->setCfg('collect', true);
         $this->debug->log('the end');
 
-        $logSummary = $this->debug->getData('logSummary/0');
+        $logSummary = $this->debug->data->get('logSummary/0');
         $this->assertSame(array(
             array('group',array('group inside summary'), array()),
             array('log',array('I\'m in the summary!'), array()),
@@ -759,7 +759,7 @@ EOD;
         ), \array_map(function (LogEntry $logEntry) {
             return $this->logEntryToArray($logEntry, false);
         }, $logSummary));
-        $log = $this->debug->getData('log');
+        $log = $this->debug->data->get('log');
         $this->assertSame(array(
             array('log',array('I\'m not in the summary'), array()),
             array('log',array('the end'), array()),
@@ -781,7 +781,7 @@ EOD;
         $this->debug->groupEnd('level2');               // 3 & 4
         $this->debug->groupCollapsed('level2 (test)');  // 5
         $this->debug->groupUncollapse();
-        $log = $this->debug->getData('log');
+        $log = $this->debug->data->get('log');
         $this->assertSame('group', $log[0]['method']); // groupCollapsed converted to group
         $this->assertSame('groupCollapsed', $log[1]['method']);
         $this->assertSame('group', $log[5]['method']); // groupCollapsed converted to group

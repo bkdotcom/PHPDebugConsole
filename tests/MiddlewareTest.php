@@ -15,7 +15,7 @@ class MiddlewareTest extends DebugTestFramework
     public function testMiddleware()
     {
         if (\version_compare(PHP_VERSION, '7.0', '<')) {
-            return;
+            $this->markTestSkipped('MiddleWare requires PHP 7.0');
         }
         $this->debug->addPlugin($this->debug->getRoute('chromeLogger'));
         // $debugMiddleware = new Middleware($this->debug);

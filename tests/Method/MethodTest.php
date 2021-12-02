@@ -446,7 +446,7 @@ class MethodTest extends DebugTestFramework
             array('count', array('count_inc test',3), array()),
         ), \array_map(function ($logEntry) {
             return $this->logEntryToArray($logEntry, false);
-        }, $this->debug->getData('log')));
+        }, $this->debug->data->get('log')));
 
         // test label provided output
         $this->testMethod(
@@ -527,7 +527,7 @@ class MethodTest extends DebugTestFramework
                 'notLogged' => true,
                 // 'return' => 5,
                 // 'custom' => function () {
-                    // $this->assertSame(5, $this->debug->getData('counts/count test'));
+                    // $this->assertSame(5, $this->debug->data->get('counts/count test'));
                 // },
                 'wamp' => false,
             )
@@ -817,7 +817,7 @@ class MethodTest extends DebugTestFramework
         $this->assertIsFloat($timers['stack'][0]);
         $this->assertIsFloat($timers['labels']['some label'][1]);
 
-        $this->assertEmpty($this->debug->getData('log'));
+        $this->assertEmpty($this->debug->data->get('log'));
         $this->assertEmpty($this->debug->getRoute('wamp')->wamp->messages);
     }
 

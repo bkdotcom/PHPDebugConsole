@@ -85,7 +85,7 @@ EOD;
         $array = array();
         $array[] = &$array;
         $this->debug->log('array', $array);
-        $abstraction = $this->debug->getData('log/0/args/1');
+        $abstraction = $this->debug->data->get('log/0/args/1');
         $this->assertEquals(
             Abstracter::RECURSION,
             $abstraction[0],

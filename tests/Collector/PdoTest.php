@@ -42,7 +42,7 @@ EOD;
         $statement->bindParam(':datetime', $datetime, \PDO::PARAM_STR);
         $statement->execute();
 
-        $logEntries = $this->debug->getData('log');
+        $logEntries = $this->debug->data->get('log');
         $logEntries = \array_slice($logEntries, -8);
         $logEntries = \array_map(function (LogEntry $logEntry) {
             return $this->logEntryToArray($logEntry);

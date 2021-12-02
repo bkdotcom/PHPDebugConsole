@@ -49,7 +49,7 @@ class Text extends Base
     /**
      * Return log entry as text
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return string
      */
@@ -318,7 +318,7 @@ class Text extends Base
     /**
      * Build Alert
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return string
      */

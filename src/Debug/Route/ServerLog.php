@@ -63,7 +63,7 @@ class ServerLog extends ChromeLogger
     {
         $this->dump->crateRaw = false;
         $this->collectGarbage();
-        $this->data = $this->debug->getData();
+        $this->data = $this->debug->data->get();
         $this->buildJsonData();
         if ($this->jsonData['rows']) {
             $filename = $this->filename();
@@ -112,7 +112,7 @@ class ServerLog extends ChromeLogger
         return $this->cfg['filenamePrefix']
             . \gmdate('YmdHis')
             . '_'
-            . $this->debug->getData('requestId')
+            . $this->debug->data->get('requestId')
             . '.json';
     }
 

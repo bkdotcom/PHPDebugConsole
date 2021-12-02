@@ -144,7 +144,7 @@ class Html extends AbstractRoute
             return;
         }
         $this->dump->crateRaw = false;
-        $this->data = $this->debug->getData();
+        $this->data = $this->debug->data->get();
         // this could go in an extended processAlerts method
         $errorSummary = $this->errorSummary->build($this->debug->errorStats());
         if ($errorSummary['args'][0]) {

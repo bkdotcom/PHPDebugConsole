@@ -75,11 +75,11 @@ class Component extends CApplicationComponent implements SubscriberInterface
             remove any session info that may have been logged
             (already output to wamp & real-time) routes
         */
-        $logEntries = $debugRootInstance->getData('log');
+        $logEntries = $debugRootInstance->data->get('log');
         $logEntries = \array_filter($logEntries, function (LogEntry $logEntry) {
             return $logEntry->getChannelName() !== 'Session';
         });
-        $debugRootInstance->setData('log', \array_values($logEntries));
+        $debugRootInstance->data->set('log', \array_values($logEntries));
 
         $debugRootInstance->eventManager->addSubscriberInterface($this);
         /*

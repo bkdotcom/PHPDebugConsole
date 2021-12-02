@@ -89,11 +89,11 @@ class InternalEventsTest extends DebugTestFramework
         $this->assertSame($this->expectedSubject, $subject);
         $unserialized = $this->debug->getRoute('email')->unserializeLog($body, $this->debug);
         $expect = array(
-            'alerts' => $this->debug->getData('alerts'),
-            'log' => $this->debug->getData('log'),
-            'logSummary' => $this->debug->getData('logSummary'),
-            'requestId' => $this->debug->getData('requestId'),
-            'runtime' => $this->debug->getData('runtime'),
+            'alerts' => $this->debug->data->get('alerts'),
+            'log' => $this->debug->data->get('log'),
+            'logSummary' => $this->debug->data->get('logSummary'),
+            'requestId' => $this->debug->data->get('requestId'),
+            'runtime' => $this->debug->data->get('runtime'),
             'rootChannel' => $this->debug->getCfg('channelName'),
             'channels' => \array_map(function (Debug $channel) {
                 return array(

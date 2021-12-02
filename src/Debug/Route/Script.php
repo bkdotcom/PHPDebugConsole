@@ -68,7 +68,7 @@ class Script extends AbstractRoute
     public function processlogEntries(Event $event)
     {
         $this->dump->crateRaw = false;
-        $this->data = $this->debug->getData();
+        $this->data = $this->debug->data->get();
         $errorStats = $this->debug->errorStats();
         $serverParams = $this->debug->request->getServerParams();
         $errorStr = '';
@@ -108,7 +108,7 @@ class Script extends AbstractRoute
     /**
      * Return log entry as javascript console.xxxx
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return string
      */

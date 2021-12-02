@@ -13,8 +13,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\LogEntry;
 use bdk\Debug\Psr7lite\Response;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -32,19 +31,6 @@ class Internal implements SubscriberInterface
 {
 
     private $debug;
-
-    /**
-     * duplicate/store frequently used cfg vals
-     *
-     * @var array
-     */
-    private $cfg = array(
-        'redactKeys' => array(
-            // key => regex of key
-        ),
-        'redactReplace' => null,
-    );
-
     private $isConfigured = false;
     private $serverParams = array();
 
@@ -62,7 +48,7 @@ class Internal implements SubscriberInterface
     /**
      * Set alert()'s alert level'\
      *
-     * @param LogEntry $logEntry LogEntry
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */
@@ -120,7 +106,7 @@ class Internal implements SubscriberInterface
     /**
      * Handle trace()
      *
-     * @param LogEntry $logEntry LogEntry
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */
@@ -347,13 +333,13 @@ class Internal implements SubscriberInterface
      */
     public function obEnd()
     {
-        if ($this->debug->rootInstance->getData('isObCache') === false) {
+        if ($this->debug->data->get('isObCache') === false) {
             return;
         }
         if (\ob_get_level()) {
             \ob_end_flush();
         }
-        $this->debug->rootInstance->setData('isObCache', false);
+        $this->debug->data->set('isObCache', false);
     }
 
     /**
@@ -363,14 +349,14 @@ class Internal implements SubscriberInterface
      */
     public function obStart()
     {
-        if ($this->debug->rootInstance->getData('isObCache')) {
+        if ($this->debug->data->get('isObCache')) {
             return;
         }
         if ($this->debug->rootInstance->getCfg('collect', Debug::CONFIG_DEBUG) !== true) {
             return;
         }
         \ob_start();
-        $this->debug->rootInstance->setData('isObCache', true);
+        $this->debug->data->set('isObCache', true);
     }
 
     /**
@@ -393,11 +379,6 @@ class Internal implements SubscriberInterface
         $cfgDebug = $this->onConfigInit($configs['debug']);
         $valActions = array(
             'serviceProvider' => array($this, 'onCfgServiceProvider'),
-            'redactKeys' => array($this, 'onCfgRedactKeys'),
-            'redactReplace' => function ($val) {
-                $this->cfg['redactReplace'] = $val;
-                return $val;
-            },
         );
         $valActions = \array_intersect_key($valActions, $cfgDebug);
         foreach ($valActions as $key => $callable) {
@@ -465,28 +446,6 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Redact
-     *
-     * @param mixed $val value to scrub
-     * @param mixed $key array key, or property name
-     *
-     * @return mixed
-     */
-    public function redact($val, $key = null)
-    {
-        if (\is_string($val)) {
-            return $this->redactString($val, $key);
-        }
-        if ($val instanceof Abstraction) {
-            return $this->redactAbstraction($val);
-        }
-        if (\is_array($val)) {
-            return $this->redactArray($val);
-        }
-        return $val;
-    }
-
-    /**
      * Generate a unique request id
      *
      * @return string
@@ -503,22 +462,39 @@ class Internal implements SubscriberInterface
     }
 
     /**
-     * Handle "redactKeys" config update
+     * Create timeEnd & timeGet LogEntry
      *
-     * @param mixed $val config value
+     * @param string $method 'timeEnd' or 'timeGet'
+     * @param array  $args   arguments passed to method
      *
-     * @return mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @return LogEntry
      */
-    private function onCfgRedactKeys($val)
+    public function timeLogEntry($method, $args)
     {
-        $keys = array();
-        foreach ($val as $key) {
-            $keys[$key] = $this->redactBuildRegex($key);
+        $logEntry = new LogEntry(
+            $this->debug,
+            $method,
+            $args,
+            array(
+                'precision' => 4,
+                'silent' => false,
+                'template' => '%label: %time',
+                'unit' => 'auto',
+            ),
+            array(
+                'label' => null,
+                'log' => true,
+            )
+        );
+        list($label, $log) = $logEntry['args'];
+        $silent = !$log;
+        if ($logEntry['numArgs'] === 1 && \is_bool($label)) {
+            // $log passed as single arg
+            $silent = !$label;
+            $logEntry['args'] = array(null, $label);
         }
-        $this->cfg['redactKeys'] = $keys;
-        return $val;
+        $logEntry->setMeta('silent', $silent || $logEntry->getMeta('silent'));
+        return $logEntry;
     }
 
     /**
@@ -559,91 +535,5 @@ class Internal implements SubscriberInterface
             ),
             $cfg
         );
-    }
-
-    /**
-     * Build Regex that will search for key=val in string
-     *
-     * @param string $key key to redact
-     *
-     * @return string
-     */
-    private function redactBuildRegex($key)
-    {
-        return '#(?:'
-            // xml
-            . '<(?:\w+:)?' . $key . '\b.*?>\s*([^<]*?)\s*</(?:\w+:)?' . $key . '>'
-            . '|'
-            // json
-            . \json_encode($key) . '\s*:\s*"([^"]*?)"'
-            . '|'
-            // url encoded
-            . '\b' . $key . '=([^\s&]+\b)'
-            . ')#i';
-    }
-
-    /**
-     * Redact Abstraction
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return Abstraction
-     */
-    private function redactAbstraction(Abstraction $abs)
-    {
-        if ($abs['type'] === Abstracter::TYPE_OBJECT) {
-            $abs['properties'] = $this->redact($abs['properties']);
-            $abs['stringified'] = $this->redact($abs['stringified']);
-            if (isset($abs['methods']['__toString']['returnValue'])) {
-                $abs['methods']['__toString']['returnValue'] = $this->redact($abs['methods']['__toString']['returnValue']);
-            }
-            return $abs;
-        }
-        if ($abs['value']) {
-            $abs['value'] = $this->redact($abs['value']);
-        }
-        if ($abs['valueDecoded']) {
-            $abs['valueDecoded'] = $this->redact($abs['valueDecoded']);
-        }
-        return $abs;
-    }
-
-    /**
-     * Redact array
-     *
-     * @param array $array array to redact
-     *
-     * @return Abstraction
-     */
-    private function redactArray($array)
-    {
-        foreach ($array as $k => $v) {
-            $array[$k] = $this->redact($v, $k);
-        }
-        return $array;
-    }
-
-    /**
-     * Redact string or portions within
-     *
-     * @param string $val string to redact
-     * @param string $key if array value: the key. if object property: the prop name
-     *
-     * @return string
-     */
-    private function redactString($val, $key = null)
-    {
-        if (\is_string($key) && \array_key_exists($key, $this->cfg['redactKeys'])) {
-            return \call_user_func($this->cfg['redactReplace'], $val, $key);
-        }
-        foreach ($this->cfg['redactKeys'] as $key => $regex) {
-            $val = \preg_replace_callback($regex, function ($matches) use ($key) {
-                $matches = \array_filter($matches, 'strlen');
-                $substr = \end($matches);
-                $replacement = \call_user_func($this->cfg['redactReplace'], $substr, $key);
-                return \str_replace($substr, $replacement, $matches[0]);
-            }, $val);
-        }
-        return $val;
     }
 }

@@ -44,7 +44,7 @@ class SimpleCacheTest extends DebugTestFramework
     public function testDebugOutput()
     {
         self::$cache->onDebugOutput(new \bdk\PubSub\Event($this->debug));
-        $summaryData = $this->debug->getData('logSummary/0');
+        $summaryData = $this->debug->data->get('logSummary/0');
         $this->assertCount(5, $summaryData);
         $this->assertSame('SimpleCache info', $summaryData[0]['args'][0]);
     }

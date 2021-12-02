@@ -19,8 +19,8 @@ class LogReqResTest extends DebugTestFramework
     {
         $logReqRes = new LogReqRes();
         $this->debug->addPlugin($logReqRes);
-        $this->debug->setData('log', array());
-        $this->debug->setData('logSummary', array());
+        $this->debug->data->set('log', array());
+        $this->debug->data->set('logSummary', array());
         $this->debug->setCfg('logRequestInfo', true);
 
         $reflect = new \ReflectionObject($logReqRes);
@@ -59,9 +59,9 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->getData('log/0'))
+            $this->logEntryToArray($this->debug->data->get('log/0'))
         );
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
 
         /*
             json properly posted
@@ -104,9 +104,9 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 )
             ),
-            $this->logEntryToArray($this->debug->getData('log/0'))
+            $this->logEntryToArray($this->debug->data->get('log/0'))
         );
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
 
         /*
             json improperly posted
@@ -134,7 +134,7 @@ class LogReqResTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->getData('log/0'))
+            $this->logEntryToArray($this->debug->data->get('log/0'))
         );
         $this->assertEquals(
             array(
@@ -165,14 +165,14 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->getData('log/1'))
+            $this->logEntryToArray($this->debug->data->get('log/1'))
         );
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
 
         /*
             Post with just uploadedFiles
         */
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
         $serverParams->setValue($internal, array());
         $files = array(
             'foo' => new UploadedFile(
@@ -209,9 +209,9 @@ class LogReqResTest extends DebugTestFramework
                     'channel' => 'Request / Response',
                 ),
             ),
-            $this->logEntryToArray($this->debug->getData('log/1'))
+            $this->logEntryToArray($this->debug->data->get('log/1'))
         );
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
 
         /*
             Post with no body
@@ -234,9 +234,9 @@ class LogReqResTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->getData('log/0'))
+            $this->logEntryToArray($this->debug->data->get('log/0'))
         );
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
 
         /*
             Put method
@@ -280,9 +280,9 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->getData('log/0'))
+            $this->logEntryToArray($this->debug->data->get('log/0'))
         );
-        $this->debug->setData('log', array());
+        $this->debug->data->set('log', array());
 
         /*
             Reset request

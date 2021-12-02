@@ -181,7 +181,7 @@ class Base extends Component
      *
      * Transmogrify log entry to chromelogger format
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void|string
      */

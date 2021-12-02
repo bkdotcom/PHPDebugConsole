@@ -128,7 +128,7 @@ class Group implements SubscriberInterface
     public function methodGroupSummary(LogEntry $logEntry)
     {
         \array_push($this->groupPriorityStack, $logEntry['meta']['priority']);
-        $this->debug->setData('logDest', 'summary');
+        $this->debug->data->set('logDest', 'summary');
         $logEntry['appendLog'] = false;     // don't actually log
         $logEntry['forcePublish'] = true;   // publish the Debug::EVENT_LOG event (regardless of cfg.collect)
         // groupSumary's Debug::EVENT_LOG event should happen on the root instance
@@ -242,7 +242,7 @@ class Group implements SubscriberInterface
             return;
         }
         $this->closeOpen();
-        $data = $this->debug->getData();
+        $data = $this->debug->data->get();
         $this->log = &$data['log'];
         $this->onOutputCleanup();
         $this->uncollapseErrors();
@@ -252,7 +252,7 @@ class Group implements SubscriberInterface
             $this->onOutputCleanup();
             $this->uncollapseErrors();
         }
-        $this->debug->setData($data);
+        $this->debug->data->set($data);
     }
 
     /**
@@ -401,14 +401,14 @@ class Group implements SubscriberInterface
             'logEntries' => array(),
         );
         return $where === 'main'
-            ? $this->debug->getData(array('log'))
-            : $this->debug->getData(array('logSummary', $where));
+            ? $this->debug->data->get(array('log'))
+            : $this->debug->data->get(array('logSummary', $where));
     }
 
     /**
      * getCurrentGroups: Process LogEntry
      *
-     * @param LogEntry $logEntry LogEntry
+     * @param LogEntry $logEntry LogEntry instance
      * @param int      $index    logEntry index
      *
      * @return void
@@ -463,7 +463,7 @@ class Group implements SubscriberInterface
         $priorityClosing = \array_pop($this->groupPriorityStack);
         // not really necessary to remove this empty placeholder, but lets keep things tidy
         unset($this->groupStacks[$priorityClosing]);
-        $debug->setData('logDest', 'auto');
+        $debug->data->set('logDest', 'auto');
         $logEntry['appendLog'] = false;     // don't actually log
         $logEntry['args'] = array();
         $logEntry['forcePublish'] = true;   // Publish the Debug::EVENT_LOG event (regardless of cfg.collect)

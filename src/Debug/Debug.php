@@ -20,15 +20,11 @@ use bdk\Container\ServiceProviderInterface;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Psr7lite\HttpFoundationBridge;
 use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\ServiceProvider;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
-use InvalidArgumentException;
-use Psr\Http\Message\ResponseInterface; // PSR-7
 use ReflectionMethod;
-use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 /**
  * Web-browser/javascript like console class for PHP
@@ -173,22 +169,8 @@ class Debug
 
     protected $config;
     protected $container;
-    protected $data = array(
-        'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
-        'entryCountInitial' => 0,       // store number of log entries created during init
-        'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
-        'isObCache'         => false,
-        'log'               => array(),
-        'logSummary'        => array(), // summary log entries grouped by priority
-        'outputSent'        => false,
-        'requestId'         => '',      // set in bootstrap
-        'runtime'           => array(
-            // memoryPeakUsage, memoryLimit, & memoryLimit get stored here
-        ),
-    );
     protected $internal;
     private static $instance;
-    protected $logRef;          // points to either log or logSummary[priority]
     protected static $methodDefaultArgs = array();
     protected $parentInstance;
     protected $readOnly = array(
@@ -296,7 +278,7 @@ class Debug
      */
     public function __get($property)
     {
-        if (\in_array($property, array('config', 'container', 'internal'))) {
+        if (\in_array($property, array('config', 'internal'))) {
             $caller = $this->backtrace->getCallerInfo();
             $this->errorHandler->handleError(
                 E_USER_NOTICE,
@@ -378,9 +360,9 @@ class Debug
             array('level','dismissible')
         );
         $this->internal->alertLevel($logEntry);
-        $this->setLogDest('alerts');
+        $this->data->set('logDest', 'alerts');
         $this->appendLog($logEntry);
-        $this->setLogDest('auto');
+        $this->data->set('logDest', 'auto');
     }
 
     /**
@@ -453,9 +435,9 @@ class Debug
         );
         $this->methodClear->doClear($logEntry);
         // even if cleared from within summary, let's log this in primary log
-        $this->setLogDest('main');
+        $this->data->set('logDest', 'main');
         $this->appendLog($logEntry);
-        $this->setLogDest('auto');
+        $this->data->set('logDest', 'auto');
     }
 
     /**
@@ -818,7 +800,7 @@ class Debug
      */
     public function timeEnd($label = null, $log = true)
     {
-        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
+        $logEntry = $this->internal->timeLogEntry(__FUNCTION__, \func_get_args());
         return $this->methodTime->timeEnd($logEntry);
     }
 
@@ -843,7 +825,7 @@ class Debug
      */
     public function timeGet($label = null, $log = true)
     {
-        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
+        $logEntry = $this->internal->timeLogEntry(__FUNCTION__, \func_get_args());
         return $this->methodTime->timeGet($logEntry);
     }
 
@@ -953,26 +935,6 @@ class Debug
     }
 
     /**
-     * Advanced usage
-     *
-     * @param string $path path
-     *
-     * @return mixed
-     */
-    public function getData($path = null)
-    {
-        if (!$path) {
-            $data = $this->arrayUtil->copy($this->data, false);
-            $data['logSummary'] = $this->arrayUtil->copy($data['logSummary'], false);
-            return $data;
-        }
-        $data = $this->arrayUtil->pathGet($this->data, $path);
-        return \is_array($data) && \in_array($path, array('logSummary'))
-            ? $this->arrayUtil->copy($data, false)
-            : $data;
-    }
-
-    /**
      * Get dumper
      *
      * @param string $name      classname
@@ -995,8 +957,8 @@ class Debug
      */
     public function getHeaders()
     {
-        $headers = $this->data['headers'];
-        $this->data['headers'] = array();
+        $headers = $this->data->get('headers');
+        $this->data->set('headers', array());
         return $headers;
     }
 
@@ -1228,7 +1190,7 @@ class Debug
             );
         }
         if (!$this->parentInstance) {
-            $this->data['outputSent'] = true;
+            $this->data->set('outputSent', true);
         }
         $this->config->set($cfgRestore);
         $this->internal->obEnd();
@@ -1250,38 +1212,6 @@ class Debug
     public function setCfg($path, $value = null)
     {
         return $this->config->set($path, $value);
-    }
-
-    /**
-     * Advanced usage
-     *
-     *    setCfg('key', 'value')
-     *    setCfg('level1.level2', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
-     *
-     * @param string|array $path  path or array of values to merge
-     * @param mixed        $value value
-     *
-     * @return void
-     */
-    public function setData($path, $value = null)
-    {
-        if ($path === 'logDest') {
-            $this->setLogDest($value);
-            return;
-        }
-        if (\is_string($path)) {
-            $this->arrayUtil->pathSet($this->data, $path, $value);
-        } elseif (\is_array($path)) {
-            $this->data = \array_merge($this->data, $path);
-        }
-        if (!$this->data['log']) {
-            $this->methodGroup->resetStack('main');
-        }
-        if (!$this->data['logSummary']) {
-            $this->methodGroup->resetStack('summary');
-        }
-        $this->setLogDest();
     }
 
     /**
@@ -1307,61 +1237,6 @@ class Debug
             $caller['groupDepth'] = $this->methodGroup->getDepth();
         }
         $this->errorHandler->setErrorCaller($caller);
-    }
-
-    /**
-     * Appends debug output (if applicable) and/or adds headers (if applicable)
-     *
-     * You should call this at the end of the request/response cycle in your PSR-7 project,
-     * e.g. immediately before emitting the Response.
-     *
-     * @param ResponseInterface|HttpFoundationResponse $response PSR-7 or HttpFoundation response
-     *
-     * @return ResponseInterface|HttpFoundationResponse
-     *
-     * @throws InvalidArgumentException
-     */
-    public function writeToResponse($response)
-    {
-        if ($response instanceof ResponseInterface) {
-            $this->serviceContainer['response'] = $response;
-            $this->cfg['outputHeaders'] = false;
-            $debugOutput = $this->output();
-            if ($debugOutput) {
-                $stream = $response->getBody();
-                $stream->seek(0, SEEK_END);
-                $stream->write($debugOutput);
-                $stream->rewind();
-            }
-            $headers = $this->getHeaders();
-            foreach ($headers as $nameVal) {
-                $response = $response->withHeader($nameVal[0], $nameVal[1]);
-            }
-            return $response;
-        }
-        if ($response instanceof HttpFoundationResponse) {
-            $this->serviceContainer['response'] = HttpFoundationBridge::createResponse($response);
-            $this->cfg['outputHeaders'] = false;
-            $content = $response->getContent();
-            $pos = \strripos($content, '</body>');
-            if ($pos !== false) {
-                $content = \substr($content, 0, $pos)
-                    . $this->output()
-                    . \substr($content, $pos);
-                $response->setContent($content);
-                // reset the content length
-                $response->headers->remove('Content-Length');
-            }
-            $headers = $this->getHeaders();
-            foreach ($headers as $nameVal) {
-                $response = $response->headers->set($nameVal[0], $nameVal[1]);
-            }
-            return $response;
-        }
-        throw new InvalidArgumentException(\sprintf(
-            'writeToResponse expects ResponseInterface or HttpFoundationResponse, but %s provided',
-            \is_object($response) ? \get_class($response) : \gettype($response)
-        ));
     }
 
     /*
@@ -1443,7 +1318,7 @@ class Debug
             $this->config->set($cfgRestore);
         }
         if ($logEntry['appendLog']) {
-            $this->rootInstance->logRef[] = $logEntry;
+            $this->data->appendLog($logEntry);
             return true;
         }
         return false;
@@ -1483,15 +1358,19 @@ class Debug
         $this->eventManager->addSubscriberInterface($this->container['addonMethods']);
         $this->addPlugin($this->container['configEventSubscriber']);
         $this->addPlugin($this->container['internalEvents']);
+        $this->addPlugin($this->container['redaction']);
         $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'));
 
         $this->serviceContainer['errorHandler'];
 
         $this->config->set($cfg);
-        $this->data['requestId'] = $this->internal->requestId();
 
         if (!$this->parentInstance) {
             // we're the root instance
+            // this is the root instance
+            $this->data->set('requestId', $this->internal->requestId());
+            $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
+
             $this->addPlugin($this->container['logEnv']);
             $this->addPlugin($this->container['logReqRes']);
         }
@@ -1555,7 +1434,7 @@ class Debug
     }
 
     /**
-     * Set instance, rootInstance, parentInstance, & initialize data
+     * Set instance, rootInstance, & parentInstance
      *
      * @param array $cfg Raw config passed to constructor
      *
@@ -1569,13 +1448,9 @@ class Debug
             while ($this->rootInstance->parentInstance) {
                 $this->rootInstance = $this->rootInstance->parentInstance;
             }
-            $this->data = &$this->rootInstance->data;
             unset($this->cfg['parent']);
             return;
         }
-        // this is the root instance
-        $this->logRef = &$this->data['log']; // setLogDest
-        $this->data['entryCountInitial'] = \count($this->data['log']);
     }
 
     /**
@@ -1676,77 +1551,5 @@ class Debug
             $this->internal->obStart();
         }
         return $val;
-    }
-
-    /**
-     * Set where appendLog appends to
-     *
-     * @param string $where ('auto'), 'alerts', 'main', 'summary'
-     *
-     * @return void
-     */
-    private function setLogDest($where = 'auto')
-    {
-        $priority = $this->methodGroup->getCurrentPriority();
-        if ($where === 'auto') {
-            $where = $priority === 'main'
-                ? 'main'
-                : 'summary';
-        }
-        switch ($where) {
-            case 'alerts':
-                $this->rootInstance->logRef = &$this->rootInstance->data['alerts'];
-                break;
-            case 'main':
-                $this->rootInstance->logRef = &$this->rootInstance->data['log'];
-                $this->methodGroup->setLogDest('main');
-                break;
-            case 'summary':
-                if (!isset($this->data['logSummary'][$priority])) {
-                    $this->data['logSummary'][$priority] = array();
-                }
-                $this->rootInstance->logRef = &$this->rootInstance->data['logSummary'][$priority];
-                $this->methodGroup->setLogDest('summary');
-        }
-    }
-
-    /**
-     * Create timeEnd & timeGet LogEntry
-     *
-     * @param string $method 'timeEnd' or 'timeGet'
-     * @param array  $args   arguments passed to method
-     *
-     * @return LogEntry
-     */
-    private function timeLogEntry($method, $args)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            $method,
-            $args,
-            array(
-                'precision' => 4,
-                'silent' => false,
-                'template' => '%label: %time',
-                'unit' => 'auto',
-            ),
-            array(
-                'label' => null,
-                'log' => true,
-            )
-        );
-        $numArgs = $logEntry['numArgs'];
-        $args = $logEntry['args'];
-        $label = $args[0];
-        $log = $args[1];
-        if ($numArgs === 1 && \is_bool($label)) {
-            // $log passed as single arg
-            $logEntry->setMeta('silent', !$label);
-            $args[0] = null;
-            $logEntry['args'] = $args;
-        } elseif ($numArgs === 2) {
-            $logEntry->setMeta('silent', !$log);
-        }
-        return $logEntry;
     }
 }

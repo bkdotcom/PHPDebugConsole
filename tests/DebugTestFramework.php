@@ -125,7 +125,7 @@ class DebugTestFramework extends DOMTestCase
             'logSummary'    => array(),
             'outputSent'    => false,
         );
-        $this->debug->setData($resetValues);
+        $this->debug->data->set($resetValues);
         $this->debug->stopWatch->reset();
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
@@ -317,7 +317,7 @@ class DebugTestFramework extends DOMTestCase
             : 'log/__end__';
         $values = array(
             'logCountAfter' => 0,
-            'logCountBefore' => $this->debug->getData($countPath),
+            'logCountBefore' => $this->debug->data->get($countPath),
             'return' => null,
         );
         if (\is_array($method)) {
@@ -330,8 +330,8 @@ class DebugTestFramework extends DOMTestCase
             $this->file = __FILE__;
             $this->line = __LINE__ - 2;
         }
-        $values['logCountAfter'] = $this->debug->getData($countPath);
-        $logEntry = $this->debug->getData($dataPath);
+        $values['logCountAfter'] = $this->debug->data->get($countPath);
+        $logEntry = $this->debug->data->get($dataPath);
         if ($logEntry) {
             $meta = $logEntry['meta'];
             \ksort($meta);
@@ -428,7 +428,7 @@ class DebugTestFramework extends DOMTestCase
      *
      * @param string                               $test     chromeLogger|firephp|wampother
      * @param \bdk\Debug\Route\RouteInterface|null $routeObj Route instance
-     * @param LogEntry                             $logEntry LogEntry
+     * @param LogEntry                             $logEntry LogEntry instance
      * @param mixed                                $expect   expected output
      *
      * @return array|string
@@ -439,12 +439,12 @@ class DebugTestFramework extends DOMTestCase
         if (\in_array($test, array('chromeLogger','firephp','wamp'))) {
             // remove data - sans the logEntry we're interested in
             $dataBackup = array(
-                'alerts' => $this->debug->getData('alerts'),
-                'log' => $this->debug->getData('log'),
-                // 'logSummary' => $this->debug->getData('logSummary'),
+                'alerts' => $this->debug->data->get('alerts'),
+                'log' => $this->debug->data->get('log'),
+                // 'logSummary' => $this->debug->data->get('logSummary'),
             );
-            $this->debug->setData('alerts', array());
-            $this->debug->setData('log', array($logEntry));
+            $this->debug->data->set('alerts', array());
+            $this->debug->data->set('log', array($logEntry));
             /*
                 We'll call processLogEntries directly
             */
@@ -458,7 +458,7 @@ class DebugTestFramework extends DOMTestCase
             if ($routeObj) {
                 $routeObj->processLogEntries($event, Debug::EVENT_OUTPUT, $this->debug->eventManager);
             }
-            $this->debug->setData($dataBackup);
+            $this->debug->data->set($dataBackup);
             $headers = $event['headers'];
             switch ($test) {
                 case 'chromeLogger':
@@ -556,7 +556,7 @@ class DebugTestFramework extends DOMTestCase
                 ), $outputExpect);
                 $outputExpect['args'][2] = \array_merge(array(
                     'format' => 'raw',
-                    'requestId' => $this->debug->getData('requestId'),
+                    'requestId' => $this->debug->data->get('requestId'),
                 ), $outputExpect['args'][2]);
                 \ksort($outputExpect['args'][2]);
             }

@@ -87,7 +87,7 @@ class ChromeLogger extends AbstractRoute
     public function processLogEntries(Event $event)
     {
         $this->dump->crateRaw = false;
-        $this->data = $this->debug->getData();
+        $this->data = $this->debug->data->get();
         $this->buildJsonData();
         if ($this->jsonData['rows']) {
             $max = $this->getMaxLength();

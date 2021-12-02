@@ -15,11 +15,14 @@ namespace bdk\Debug\Plugin;
 use bdk\Debug;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Psr7lite\HttpFoundationBridge;
 use bdk\Debug\Route\RouteInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 use InvalidArgumentException;
+use Psr\Http\Message\ResponseInterface; // PSR-7
 use SplObjectStorage;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 /**
  * Add additional public methods to debug instance
@@ -72,6 +75,7 @@ class AddonMethods implements SubscriberInterface
             'hasLog',
             'isCli',
             'removePlugin',
+            'writeToResponse',
         );
         if (!\in_array($method, $methods)) {
             return;
@@ -186,9 +190,9 @@ class AddonMethods implements SubscriberInterface
      */
     public function hasLog()
     {
-        $entryCountInitial = $this->debug->getData('entryCountInitial');
-        $entryCountCurrent = $this->debug->getData('log/__count__');
-        $lastEntryMethod = $this->debug->getData('log/__end__/method');
+        $entryCountInitial = $this->debug->data->get('entryCountInitial');
+        $entryCountCurrent = $this->debug->data->get('log/__count__');
+        $lastEntryMethod = $this->debug->data->get('log/__end__/method');
         return $entryCountCurrent > $entryCountInitial && $lastEntryMethod !== 'clear';
     }
 
@@ -314,6 +318,89 @@ class AddonMethods implements SubscriberInterface
             $this->debug->eventManager->RemoveSubscriberInterface($plugin);
         }
         return $this;
+    }
+
+    /**
+     * Appends debug output (if applicable) and/or adds headers (if applicable)
+     *
+     * You should call this at the end of the request/response cycle in your PSR-7 project,
+     * e.g. immediately before emitting the Response.
+     *
+     * @param ResponseInterface|HttpFoundationResponse $response PSR-7 or HttpFoundation response
+     *
+     * @return ResponseInterface|HttpFoundationResponse
+     *
+     * @throws InvalidArgumentException
+     */
+    public function writeToResponse($response)
+    {
+        if ($response instanceof ResponseInterface) {
+            return $this->writeToResponseInterface($response);
+        }
+        if ($response instanceof HttpFoundationResponse) {
+            return $this->writeToHttpFoundationResponse($response);
+        }
+        throw new InvalidArgumentException(\sprintf(
+            'writeToResponse expects ResponseInterface or HttpFoundationResponse, but %s provided',
+            \is_object($response) ? \get_class($response) : \gettype($response)
+        ));
+    }
+
+    /**
+     * Write output to HttpFoundationResponse
+     *
+     * @param HttpFoundationResponse $response HttpFoundationResponse interface
+     *
+     * @return HttpFoundationResponse
+     */
+    private function writeToHttpFoundationResponse(HttpFoundationResponse $response)
+    {
+        $this->debug->setCfg('outputHeaders', false);
+        $content = $response->getContent();
+        $pos = \strripos($content, '</body>');
+        if ($pos !== false) {
+            $content = \substr($content, 0, $pos)
+                . $this->debug->output()
+                . \substr($content, $pos);
+            $response->setContent($content);
+            // reset the content length
+            $response->headers->remove('Content-Length');
+        }
+        $headers = $this->debug->getHeaders();
+        foreach ($headers as $nameVal) {
+            $response = $response->headers->set($nameVal[0], $nameVal[1]);
+        }
+        $this->debug->onCfgServiceProvider(array(
+            'response' => HttpFoundationBridge::createResponse($response),
+        ));
+        return $response;
+    }
+
+    /**
+     * Write output to PSR-7 ResponseInterface
+     *
+     * @param ResponseInterface $response ResponseInterface instance
+     *
+     * @return ResponseInterface
+     */
+    private function writeToResponseInterface(ResponseInterface $response)
+    {
+        $this->debug->setCfg('outputHeaders', false);
+        $debugOutput = $this->debug->output();
+        if ($debugOutput) {
+            $stream = $response->getBody();
+            $stream->seek(0, SEEK_END);
+            $stream->write($debugOutput);
+            $stream->rewind();
+        }
+        $headers = $this->debug->getHeaders();
+        foreach ($headers as $nameVal) {
+            $response = $response->withHeader($nameVal[0], $nameVal[1]);
+        }
+        $this->debug->onCfgServiceProvider(array(
+            'response' => $response,
+        ));
+        return $response;
     }
 
     /**

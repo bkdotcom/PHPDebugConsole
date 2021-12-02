@@ -191,7 +191,7 @@ class InternalEvents implements SubscriberInterface
         if (!$event['isTarget']) {
             return;
         }
-        $this->debug->setData('headers', array());
+        $this->debug->data->set('headers', array());
         $debug = $event->getSubject();
         if (!$debug->parentInstance) {
             // this is the root instance
@@ -214,8 +214,8 @@ class InternalEvents implements SubscriberInterface
         $headers = $event['headers'];
         $outputHeaders = $event->getSubject()->getCfg('outputHeaders', Debug::CONFIG_DEBUG);
         if (!$outputHeaders || !$headers) {
-            $event->getSubject()->setData('headers', \array_merge(
-                $event->getSubject()->getData('headers'),
+            $event->getSubject()->data->set('headers', \array_merge(
+                $event->getSubject()->data->get('headers'),
                 $headers
             ));
             return;
@@ -318,7 +318,7 @@ class InternalEvents implements SubscriberInterface
             $this->runtimeVals();
             $this->debug->getRoute('email')->processLogEntries(new Event($this->debug));
         }
-        if ($this->debug->getData('outputSent')) {
+        if ($this->debug->data->get('outputSent')) {
             $this->debug->obEnd();
             return;
         }
@@ -336,7 +336,7 @@ class InternalEvents implements SubscriberInterface
         if ($this->debug->getCfg('exitCheck', Debug::CONFIG_DEBUG) === false) {
             return;
         }
-        if ($this->debug->getData('outputSent')) {
+        if ($this->debug->data->get('outputSent')) {
             return;
         }
         $lastError = $this->debug->errorHandler->getLastError();
@@ -455,14 +455,14 @@ class InternalEvents implements SubscriberInterface
      */
     private function runtimeVals()
     {
-        $vals = $this->debug->getData('runtime');
+        $vals = $this->debug->data->get('runtime');
         if (!$vals) {
             $vals = array(
                 'memoryPeakUsage' => \memory_get_peak_usage(true),
                 'memoryLimit' => $this->debug->utility->memoryLimit(),
                 'runtime' => $this->debug->timeEnd('requestTime', $this->debug->meta('silent')),
             );
-            $this->debug->setData('runtime', $vals);
+            $this->debug->data->set('runtime', $vals);
         }
         return $vals;
     }

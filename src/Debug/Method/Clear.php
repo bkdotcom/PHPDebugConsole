@@ -30,14 +30,14 @@ class Clear
     /**
      * Handle clear() call
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */
     public function doClear(LogEntry $logEntry)
     {
         $this->debug = $logEntry->getSubject();
-        $this->data = $this->debug->getData();
+        $this->data = $this->debug->data->get();
         $this->channelName = $this->debug->parentInstance
             ? $logEntry->getChannelName() // just clear this specific channel
             : null;
@@ -53,7 +53,7 @@ class Clear
             $cleared = array('everything');
         }
         $args = $this->getLogArgs($cleared);
-        $this->debug->setData($this->data);
+        $this->debug->data->set($this->data);
         $this->data = array();
         $this->updateLogEntry($logEntry, $args);
     }

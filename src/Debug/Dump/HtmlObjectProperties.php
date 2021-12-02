@@ -147,11 +147,11 @@ class HtmlObjectProperties
                 ? ' ' . $this->helper->markupType($info['type'])
                 : '') . ' '
             . $this->html->buildTag('span', array(
-                    'class' => 't_identifier',
-                    'title' => $opts['outPhpDoc']
-                        ? $info['desc']
-                        : '',
-                ), $name)
+                'class' => 't_identifier',
+                'title' => $opts['outPhpDoc']
+                    ? $info['desc']
+                    : '',
+            ), $name)
             . ($info['value'] !== Abstracter::UNDEFINED
                 ? ' <span class="t_operator">=</span> '
                     . $this->dumper->dump($info['value'])

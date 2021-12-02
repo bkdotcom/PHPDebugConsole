@@ -169,7 +169,7 @@ class Email implements RouteInterface
         /*
             "attach" serialized log to body
         */
-        $data = \array_intersect_key($this->debug->getData(), \array_flip(array(
+        $data = \array_intersect_key($this->debug->data->get(), \array_flip(array(
             'alerts',
             'log',
             'logSummary',

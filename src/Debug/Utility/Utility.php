@@ -338,7 +338,7 @@ class Utility
             }
             return;
         }
-        \header($name . ': ' . $value);
+        // \header($name . ': ' . $value);
     }
 
     /**

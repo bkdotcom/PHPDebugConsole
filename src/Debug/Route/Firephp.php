@@ -69,7 +69,7 @@ class Firephp extends AbstractRoute
     {
         $this->dump->crateRaw = false;
         $this->outputEvent = $event;
-        $this->data = $this->debug->getData();
+        $this->data = $this->debug->data->get();
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER);
         $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');

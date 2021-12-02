@@ -106,7 +106,7 @@ class Wamp implements RouteInterface
      */
     public function init()
     {
-        $this->requestId = $this->debug->getData('requestId');
+        $this->requestId = $this->debug->data->get('requestId');
         $this->cfg['output'] = $this->debug->getCfg('output', Debug::CONFIG_DEBUG);
         if ($this->cfg['output']) {
             $this->publishMeta();
@@ -185,7 +185,7 @@ class Wamp implements RouteInterface
     /**
      * Debug::EVENT_LOG event subscriber
      *
-     * @param LogEntry $logEntry logEntry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */
@@ -234,7 +234,7 @@ class Wamp implements RouteInterface
      */
     public function processLogEntries(Event $event = null)
     {
-        $data = $this->debug->getData();
+        $data = $this->debug->data->get();
         foreach ($data['alerts'] as $logEntry) {
             $this->processLogEntryViaEvent($logEntry);
         }
@@ -267,7 +267,7 @@ class Wamp implements RouteInterface
     /**
      * Publish WAMP message to topic
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */
@@ -299,7 +299,7 @@ class Wamp implements RouteInterface
     /**
      * Process/publish a log entry
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */

@@ -95,6 +95,18 @@ class LogEntry extends Event implements JsonSerializable
     }
 
     /**
+     * "crate" all logEntry arguments
+     *
+     * @return void
+     */
+    public function crate()
+    {
+        foreach ($this->values['args'] as $i => $val) {
+            $this->values['args'][$i] = $this->subject->abstracter->crate($val, $this->values['method']);
+        }
+    }
+
+    /**
      * Return an array containing method, args, & meta
      *
      * @return array

@@ -18,12 +18,9 @@ namespace bdk;
 use bdk\Container;
 use bdk\Container\ServiceProviderInterface;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Route\RouteInterface;
-use bdk\Debug\ServiceProvider;
+use bdk\Debug\Scaffolding;
 use bdk\ErrorHandler\Error;
-use bdk\PubSub\Event;
 use ReflectionMethod;
 
 /**
@@ -62,7 +59,7 @@ use ReflectionMethod;
  *
  * @psalm-consistent-constructor
  */
-class Debug
+class Debug extends Scaffolding
 {
 
     const CLEAR_ALERTS = 1;
@@ -167,36 +164,27 @@ class Debug
         ),
     );
 
-    protected $config;
-    protected $container;
-    protected $internal;
-    private static $instance;
     protected static $methodDefaultArgs = array();
-    protected $parentInstance;
     protected $readOnly = array(
         'parentInstance',
         'rootInstance',
     );
-    protected $rootInstance;
-    protected $serviceContainer;
 
     /**
      * Constructor
      *
      * @param array $cfg config
-     *
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function __construct($cfg = array())
     {
         $this->cfg['errorMask'] = E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
-                        | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR;
+            | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR;
         $this->cfg['redactReplace'] = function ($str, $key) {
             // "use" our function params so things (ie phpmd) don't complain
             array($str, $key);
             return '█████████';
         };
-        $this->bootstrap($cfg);
+        parent::__construct($cfg);
     }
 
     /**
@@ -223,7 +211,7 @@ class Debug
         $this->internal->publishBubbleEvent(self::EVENT_CUSTOM_METHOD, $logEntry);
         if ($logEntry['handled'] !== true) {
             $logEntry->setMeta('isCustomMethod', true);
-            $this->appendLog($logEntry);
+            $this->internal->appendLog($logEntry);
         }
         return $logEntry['return'];
     }
@@ -242,20 +230,20 @@ class Debug
     public static function __callStatic($methodName, $args)
     {
         $methodName = \ltrim($methodName, '_');
+        if (!self::$instance && $methodName === 'setCfg') {
+            /*
+                Treat as a special case
+                Want to initialize with the passed config vs initialize, then setCfg
+                ie _setCfg(array('route'=>'html')) via command line
+                we don't want to first initialize with default STDERR output
+            */
+            $cfg = \is_array($args[0])
+                ? $args[0]
+                : array($args[0] => $args[1]);
+            new static($cfg);
+            return;
+        }
         if (!self::$instance) {
-            if ($methodName === 'setCfg') {
-                /*
-                    Treat as a special case
-                    Want to initialize with the passed config vs initialize, then setCfg
-                    ie _setCfg(array('route'=>'html')) via command line
-                    we don't want to first initialize with default STDERR output
-                */
-                $cfg = \is_array($args[0])
-                    ? $args[0]
-                    : array($args[0] => $args[1]);
-                new static($cfg);
-                return;
-            }
             new static();
         }
         /*
@@ -266,48 +254,6 @@ class Debug
         $args = \array_replace($defaultArgs, $args);
         $args[] = self::meta('statically');
         return \call_user_func_array(array(self::$instance, $methodName), $args);
-    }
-
-    /**
-     * Magic method to get inaccessible / undefined properties
-     * Lazy load child classes
-     *
-     * @param string $property property name
-     *
-     * @return mixed property value
-     */
-    public function __get($property)
-    {
-        if (\in_array($property, array('config', 'internal'))) {
-            $caller = $this->backtrace->getCallerInfo();
-            $this->errorHandler->handleError(
-                E_USER_NOTICE,
-                'property "' . $property . '" is not accessible',
-                $caller['file'],
-                $caller['line']
-            );
-            return;
-        }
-        if ($this->serviceContainer->has($property)) {
-            return $this->serviceContainer[$property];
-        }
-        if ($this->container->has($property)) {
-            return $this->container[$property];
-        }
-        /*
-            "Read-only" properties
-        */
-        if (\in_array($property, $this->readOnly)) {
-            return $this->{$property};
-        }
-        /*
-            Check getter method (although not utilized)
-        */
-        $getter = 'get' . \ucfirst($property);
-        if (\method_exists($this, $getter)) {
-            return $this->{$getter}();
-        }
-        return null;
     }
 
     /*
@@ -361,7 +307,7 @@ class Debug
         );
         $this->internal->alertLevel($logEntry);
         $this->data->set('logDest', 'alerts');
-        $this->appendLog($logEntry);
+        $this->internal->appendLog($logEntry);
         $this->data->set('logDest', 'auto');
     }
 
@@ -400,7 +346,7 @@ class Debug
             $logEntry->setMeta('detectFiles', true);
         }
         $logEntry['args'] = $args;
-        $this->appendLog($logEntry);
+        $this->internal->appendLog($logEntry);
     }
 
     /**
@@ -436,7 +382,7 @@ class Debug
         $this->methodClear->doClear($logEntry);
         // even if cleared from within summary, let's log this in primary log
         $this->data->set('logDest', 'main');
-        $this->appendLog($logEntry);
+        $this->internal->appendLog($logEntry);
         $this->data->set('logDest', 'auto');
     }
 
@@ -629,7 +575,7 @@ class Debug
      */
     public function info()
     {
-        $this->appendLog(new LogEntry(
+        $this->internal->appendLog(new LogEntry(
             $this,
             __FUNCTION__,
             \func_get_args()
@@ -650,7 +596,7 @@ class Debug
         $args = \func_get_args();
         if (\count($args) === 1) {
             if ($args[0] instanceof LogEntry) {
-                $this->appendLog($args[0]);
+                $this->internal->appendLog($args[0]);
                 return;
             }
             if ($args[0] instanceof Error) {
@@ -658,7 +604,7 @@ class Debug
                 return;
             }
         }
-        $this->appendLog(new LogEntry(
+        $this->internal->appendLog(new LogEntry(
             $this,
             __FUNCTION__,
             $args
@@ -741,7 +687,7 @@ class Debug
             \func_get_args()
         );
         $this->methodTable->doTable($logEntry);
-        $this->appendLog($logEntry);
+        $this->internal->appendLog($logEntry);
     }
 
     /**
@@ -935,34 +881,6 @@ class Debug
     }
 
     /**
-     * Get dumper
-     *
-     * @param string $name      classname
-     * @param bool   $checkOnly (false) only check if initialized
-     *
-     * @return \bdk\Debug\Dump\Base|bool
-     *
-     * @psalm-return ($checkOnly is true ? bool : \bdk\Debug\Dump\Base)
-     */
-    public function getDump($name, $checkOnly = false)
-    {
-        /** @var \bdk\Debug\Dump\Base|bool */
-        return $this->getDumpRoute('dump', $name, $checkOnly);
-    }
-
-    /**
-     * Get and clear headers that need to be output
-     *
-     * @return array headerName=>value array
-     */
-    public function getHeaders()
-    {
-        $headers = $this->data->get('headers');
-        $this->data->set('headers', array());
-        return $headers;
-    }
-
-    /**
      * Returns the *Singleton* instance of this class.
      *
      * @param array $cfg optional config
@@ -981,22 +899,6 @@ class Debug
     }
 
     /**
-     * Get route
-     *
-     * @param string $name      classname
-     * @param bool   $checkOnly (false) only check if initialized
-     *
-     * @return RouteInterface|bool
-     *
-     * @psalm-return ($checkOnly is true ? bool : RouteInterface)
-     */
-    public function getRoute($name, $checkOnly = false)
-    {
-        /** @var RouteInterface|bool */
-        return $this->getDumpRoute('route', $name, $checkOnly);
-    }
-
-    /**
      * "metafy" value/values
      *
      * accepts
@@ -1012,40 +914,21 @@ class Debug
     public static function meta()
     {
         $args = \func_get_args();
-        $count = \count($args);
         /** @var mixed[] make psalm happy */
-        $args = \array_replace(array(null, null, null), $args);
+        $args = \array_replace(array(null, true, true), $args);
         if (\is_array($args[0])) {
             $args[0]['debug'] = self::META;
             return $args[0];
         }
         if (!\is_string($args[0])) {
+            // invalid / return empty meta array
             return array('debug' => self::META);
         }
         if ($args[0] === 'cfg') {
-            if (\is_array($args[1])) {
-                return array(
-                    'cfg' => $args[1],
-                    'debug' => self::META,
-                );
-            }
-            if (!\is_string($args[1])) {
-                // invalid cfg key
-                return array('debug' => self::META);
-            }
-            return array(
-                'cfg' => array(
-                    $args[1] => $count > 2
-                        ? $args[2]
-                        : true,
-                ),
-                'debug' => self::META,
-            );
+            return self::$instance->internal->metaCfg($args[1], $args[2]);
         }
         return array(
-            $args[0] => $count > 1
-                ? $args[1]
-                : true,
+            $args[0] => $args[1],
             'debug' => self::META,
         );
     }
@@ -1056,39 +939,16 @@ class Debug
      * This is called during bootstrap and from Internal::onConfig
      *    Internal::onConfig has higher priority than our own onConfig handler
      *
-     * @param \bdk\Container\ServiceProviderInterface|callable|array $val dependency definitions
+     * @param ServiceProviderInterface|callable|array $val dependency definitions
      *
      * @return array
      */
     public function onCfgServiceProvider($val)
     {
-        $getContainerRawVals = function (Container $container) {
-            $keys = $container->keys();
-            $return = array();
-            foreach ($keys as $key) {
-                $return[$key] = $container->raw($key);
-            }
-            return $return;
-        };
-
-        if ($val instanceof ServiceProviderInterface) {
-            /*
-                convert to array
-            */
-            $containerTmp = new Container();
-            $containerTmp->registerProvider($val);
-            $val = $getContainerRawVals($containerTmp);
-        } elseif (\is_callable($val)) {
-            /*
-                convert to array
-            */
-            $containerTmp = new Container();
-            \call_user_func($val, $containerTmp);
-            $val = $getContainerRawVals($containerTmp);
-        } elseif (!\is_array($val)) {
+        $val = $this->serviceProviderToArray($val);
+        if (\is_array($val) === false) {
             return $val;
         }
-
         $services = $this->container['services'];
         foreach ($val as $k => $v) {
             if (\in_array($k, $services)) {
@@ -1098,50 +958,7 @@ class Debug
             }
             $this->container[$k] = $v;
         }
-
         return $val;
-    }
-
-    /**
-     * Debug::EVENT_CONFIG event listener
-     *
-     * Since setCfg() passes config through Config, we need a way for Config to pass values back.
-     *
-     * @param Event $event Debug::EVENT_CONFIG Event instance
-     *
-     * @return void
-     */
-    public function onConfig(Event $event)
-    {
-        $cfg = $event['debug'];
-        if (!$cfg) {
-            return;
-        }
-        $valActions = array(
-            'logServerKeys' => function ($val) {
-                // don't append, replace
-                $this->cfg['logServerKeys'] = array();
-                return $val;
-            },
-            'route' => array($this, 'onCfgRoute'),
-        );
-        $valActions = \array_intersect_key($valActions, $cfg);
-        foreach ($valActions as $key => $callable) {
-            /** @psalm-suppress TooManyArguments */
-            $cfg[$key] = $callable($cfg[$key]);
-        }
-        $this->cfg = $this->arrayUtil->mergeDeep($this->cfg, $cfg);
-        /*
-            propagate updated vals to child channels
-        */
-        $channels = $this->getChannels(false, true);
-        if ($channels) {
-            $event['debug'] = $cfg;
-            $cfg = $this->internal->getPropagateValues($event->getValues());
-            foreach ($channels as $channel) {
-                $channel->config->set($cfg);
-            }
-        }
     }
 
     /**
@@ -1166,35 +983,13 @@ class Debug
             // Internal::onConfig will convert to route object
             $this->config->set('route', $route);
         }
-        /*
-            Publish Debug::EVENT_OUTPUT
-                on all descendant channels
-                rootInstance
-                finally ourself
-            This isn't outputing each channel, but for performing any per-channel "before output" activities
-        */
-        $channels = $this->getChannels(true);
-        if ($this !== $this->rootInstance) {
-            $channels[] = $this->rootInstance;
-        }
-        $channels[] = $this;
-        foreach ($channels as $channel) {
-            $event = $channel->eventManager->publish(
-                self::EVENT_OUTPUT,
-                $channel,
-                array(
-                    'headers' => array(),
-                    'isTarget' => $channel === $this,
-                    'return' => '',
-                )
-            );
-        }
+        $output = $this->internal->publishOutputEvent();
         if (!$this->parentInstance) {
             $this->data->set('outputSent', true);
         }
         $this->config->set($cfgRestore);
         $this->internal->obEnd();
-        return $event['return'];
+        return $output;
     }
 
     /**
@@ -1244,257 +1039,6 @@ class Debug
     */
 
     /**
-     * Debug class autoloader
-     *
-     * @param string $className classname to attempt to load
-     *
-     * @return void
-     */
-    protected function autoloader($className)
-    {
-        $className = \ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
-        $psr4Map = array(
-            'bdk\\Debug\\' => __DIR__,
-            'bdk\\Container\\' => __DIR__ . '/../Container',
-            'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
-            'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
-        );
-        $classMap = array(
-            'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
-            'bdk\\Container' => __DIR__ . '/../Container/Container.php',
-            'bdk\\Debug\\Utility' => __DIR__ . '/Utility/Utility.php',
-            'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
-        );
-        if (isset($classMap[$className])) {
-            require $classMap[$className];
-            return;
-        }
-        foreach ($psr4Map as $namespace => $dir) {
-            if (\strpos($className, $namespace) === 0) {
-                $rel = \substr($className, \strlen($namespace));
-                $rel = \str_replace('\\', '/', $rel);
-                require $dir . '/' . $rel . '.php';
-                return;
-            }
-        }
-    }
-
-    /**
-     * Store the arguments
-     * if collect is false -> does nothing
-     * otherwise:
-     *   + abstracts values
-     *   + publishes Debug::EVENT_LOG event
-     *   + appends log (if event propagation not stopped)
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return bool whether or not entry got appended
-     */
-    protected function appendLog(LogEntry $logEntry)
-    {
-        if (!$this->cfg['collect'] && !$logEntry['forcePublish']) {
-            return false;
-        }
-        $cfgRestore = array();
-        if (isset($logEntry['meta']['cfg'])) {
-            $cfgRestore = $this->config->set($logEntry['meta']['cfg']);
-            $logEntry->setMeta('cfg', null);
-        }
-        if (\count($logEntry['args']) === 1 && $this->utility->isThrowable($logEntry['args'][0])) {
-            $exception = $logEntry['args'][0];
-            $logEntry['args'][0] = $exception->getMessage();
-            $logEntry->setMeta(array(
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-                'trace' => $this->backtrace->get(null, 0, $exception),
-            ));
-        }
-        foreach ($logEntry['args'] as $i => $v) {
-            $logEntry['args'][$i] = $this->abstracter->crate($v, $logEntry['method']);
-        }
-        $this->internal->publishBubbleEvent(self::EVENT_LOG, $logEntry);
-        if ($cfgRestore) {
-            $this->config->set($cfgRestore);
-        }
-        if ($logEntry['appendLog']) {
-            $this->data->appendLog($logEntry);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Initialize autoloader, container, & config
-     *
-     * @param array $cfg passed cfg
-     *
-     * @return void
-     */
-    private function bootstrap($cfg)
-    {
-        if (!isset(self::$instance)) {
-            /*
-               self::getInstance() will always return initial/first instance
-            */
-            self::$instance = $this;
-            /*
-                Only register autoloader:
-                  a. on initial instance (even though re-registering function does't re-register)
-                  b. if we're unable to to find our Config class (must not be using Composer)
-            */
-            if (\class_exists('bdk\\ErrorHandler') === false) {
-                \spl_autoload_register(array($this, 'autoloader'));
-            }
-        }
-
-        $this->bootstrapInstance($cfg);
-        $this->bootstrapContainer($cfg);
-
-        $this->config = $this->container['config'];
-        $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
-        $this->serviceContainer->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
-        $this->internal = $this->container['internal'];
-        $this->eventManager->addSubscriberInterface($this->container['addonMethods']);
-        $this->addPlugin($this->container['configEventSubscriber']);
-        $this->addPlugin($this->container['internalEvents']);
-        $this->addPlugin($this->container['redaction']);
-        $this->eventManager->subscribe(self::EVENT_CONFIG, array($this, 'onConfig'));
-
-        $this->serviceContainer['errorHandler'];
-
-        $this->config->set($cfg);
-
-        if (!$this->parentInstance) {
-            // we're the root instance
-            // this is the root instance
-            $this->data->set('requestId', $this->internal->requestId());
-            $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
-
-            $this->addPlugin($this->container['logEnv']);
-            $this->addPlugin($this->container['logReqRes']);
-        }
-        $this->eventManager->publish(self::EVENT_BOOTSTRAP, $this);
-    }
-
-    /**
-     * Initialize dependancy containers
-     *
-     * @param array $cfg Raw config passed to constructor
-     *
-     * @return void
-     */
-    private function bootstrapContainer(&$cfg)
-    {
-        $containerCfg = array();
-        if (isset($cfg['debug']['container'])) {
-            $containerCfg = $cfg['debug']['container'];
-        } elseif (isset($cfg['container'])) {
-            $containerCfg = $cfg['container'];
-        }
-
-        $this->container = new Container(
-            array(
-                'debug' => $this,
-            ),
-            $containerCfg
-        );
-        $this->container->registerProvider(new ServiceProvider());
-
-        if (empty($cfg['debug']['parent'])) {
-            // root instance
-            $this->serviceContainer = new Container(
-                array(
-                    'debug' => $this,
-                ),
-                $containerCfg
-            );
-            foreach ($this->container['services'] as $service) {
-                $this->serviceContainer[$service] = $this->container->raw($service);
-                unset($this->container[$service]);
-            }
-        }
-        $this->serviceContainer = $this->rootInstance->serviceContainer;
-
-        /*
-            Now populate with overrides
-        */
-        $serviceProvider = $this->cfg['serviceProvider'];
-        if (isset($cfg['debug']['serviceProvider'])) {
-            $serviceProvider = $cfg['debug']['serviceProvider'];
-            // unset so we don't do this again with setCfg
-            unset($cfg['debug']['serviceProvider']);
-        } elseif (isset($cfg['serviceProvider'])) {
-            $serviceProvider = $cfg['serviceProvider'];
-            // unset so we don't do this again with setCfg
-            unset($cfg['serviceProvider']);
-        }
-
-        $this->cfg['serviceProvider'] = $this->onCfgServiceProvider($serviceProvider);
-    }
-
-    /**
-     * Set instance, rootInstance, & parentInstance
-     *
-     * @param array $cfg Raw config passed to constructor
-     *
-     * @return void
-     */
-    private function bootstrapInstance($cfg)
-    {
-        $this->rootInstance = $this;
-        if (isset($cfg['debug']['parent'])) {
-            $this->parentInstance = $cfg['debug']['parent'];
-            while ($this->rootInstance->parentInstance) {
-                $this->rootInstance = $this->rootInstance->parentInstance;
-            }
-            unset($this->cfg['parent']);
-            return;
-        }
-    }
-
-    /**
-     * Get Dump or Route instance
-     *
-     * @param 'dump'|'route' $cat       "Category" (dump or route)
-     * @param string         $name      html, text, etc)
-     * @param bool           $checkOnly Only check if initialized?
-     *
-     * @return \bdk\Debug\Dump\Base|RouteInterface|bool
-     *
-     * @psalm-return ($checkOnly is true ? bool : \bdk\Debug\Dump\Base|RouteInterface)
-     */
-    private function getDumpRoute($cat, $name, $checkOnly)
-    {
-        $property = $cat . \ucfirst($name);
-        $containerHas = $this->container->has($property);
-        if ($checkOnly) {
-            return $containerHas;
-        }
-        if ($containerHas) {
-            return $this->container[$property];
-        }
-        $classname = 'bdk\\Debug\\' . \ucfirst($cat) . '\\' . \ucfirst($name);
-        if (\class_exists($classname)) {
-            /** @var \bdk\Debug\Dump\Base|RouteInterface */
-            $val = new $classname($this);
-            if ($val instanceof ConfigurableInterface) {
-                $cfg = $this->config->get($property, self::CONFIG_INIT);
-                $val->setCfg($cfg);
-            }
-            $this->container[$property] = $val;
-            return $val;
-        }
-        $caller = $this->backtrace->getCallerInfo();
-        $this->errorHandler->handleError(
-            E_USER_NOTICE,
-            '"' . $property . '" is not accessible',
-            $caller['file'],
-            $caller['line']
-        );
-    }
-
-    /**
      * Get Method's default argument list
      *
      * @param string $methodName Name of the method
@@ -1503,13 +1047,13 @@ class Debug
      */
     private static function getMethodDefaultArgs($methodName)
     {
-        $defaultArgs = array();
         if (isset(self::$methodDefaultArgs[$methodName])) {
             return self::$methodDefaultArgs[$methodName];
         }
         if (\method_exists(self::$instance, $methodName) === false) {
-            return $defaultArgs;
+            return array();
         }
+        $defaultArgs = array();
         $refMethod = new ReflectionMethod(self::$instance, $methodName);
         $params = $refMethod->getParameters();
         foreach ($params as $refParameter) {
@@ -1522,33 +1066,37 @@ class Debug
     }
 
     /**
-     * If "core" route, store in container
+     * Convert serviceProvider to array of name => value
      *
-     * @param mixed $val       route value
-     * @param bool  $addPlugin (true) Should we add as plugin?
+     * @param ServiceProviderInterface|callable|array $val dependency definitions
      *
-     * @return mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @return array
      */
-    private function onCfgRoute($val, $addPlugin = true)
+    private function serviceProviderToArray($val)
     {
-        if (!($val instanceof RouteInterface)) {
-            return $val;
+        $getContainerRawVals = function (Container $container) {
+            $keys = $container->keys();
+            $return = array();
+            foreach ($keys as $key) {
+                $return[$key] = $container->raw($key);
+            }
+            return $return;
+        };
+        if ($val instanceof ServiceProviderInterface) {
+            /*
+                convert to array
+            */
+            $containerTmp = new Container();
+            $containerTmp->registerProvider($val);
+            return $getContainerRawVals($containerTmp);
         }
-        if ($addPlugin) {
-            $this->addPlugin($val);
-        }
-        $classname = \get_class($val);
-        $prefix = __NAMESPACE__ . '\\Debug\\Route\\';
-        $containerName = \strpos($classname, $prefix) === 0
-            ? 'route' . \substr($classname, \strlen($prefix))
-            : null;
-        if ($containerName && !$this->container->has($containerName)) {
-            $this->container->offsetSet($containerName, $val);
-        }
-        if ($val->appendsHeaders()) {
-            $this->internal->obStart();
+        if (\is_callable($val)) {
+            /*
+                convert to array
+            */
+            $containerTmp = new Container();
+            \call_user_func($val, $containerTmp);
+            return $getContainerRawVals($containerTmp);
         }
         return $val;
     }

@@ -89,24 +89,15 @@ class ChromeLogger extends AbstractRoute
         $this->dump->crateRaw = false;
         $this->data = $this->debug->data->get();
         $this->buildJsonData();
-        if ($this->jsonData['rows']) {
-            $max = $this->getMaxLength();
+        $max = $this->getMaxLength();
+        $encoded = $this->encode($this->jsonData);
+        if ($max && \strlen($encoded) > $max) {
+            $this->reduceData($max);
+            $this->buildJsonData();
             $encoded = $this->encode($this->jsonData);
-            if ($max && \strlen($encoded) > $max) {
-                $this->reduceData($max);
-                $this->buildJsonData();
-                $encoded = $this->encode($this->jsonData);
-                if (\strlen($encoded) > $max) {
-                    $this->jsonData['rows'] = array(
-                        array(
-                            array('chromeLogger: unable to abridge log to ' . $this->debug->utility->getBytes($max)),
-                            null,
-                            'warn',
-                        )
-                    );
-                    $encoded = $this->encode($this->jsonData);
-                }
-            }
+            $encoded = $this->assertEncodedLength($encoded);
+        }
+        if ($this->jsonData['rows']) {
             $event['headers'][] = array(self::HEADER_NAME, $encoded);
         }
         $this->data = array();
@@ -136,6 +127,29 @@ class ChromeLogger extends AbstractRoute
     }
 
     /**
+     * Test that our header's length is less than max
+     *
+     * @param string $encoded ChromeLogger heaader value
+     *
+     * @return string header
+     */
+    private function assertEncodedLength($encoded)
+    {
+        $max = $this->getMaxLength();
+        if (\strlen($encoded) <= $max) {
+            return $encoded;
+        }
+        $this->jsonData['rows'] = array(
+            array(
+                array('chromeLogger: unable to abridge log to ' . $this->debug->utility->getBytes($max)),
+                null,
+                'warn',
+            )
+        );
+        return $this->encode($this->jsonData);
+    }
+
+    /**
      * Build Chromelogger JSON
      *
      * @return void
@@ -146,32 +160,25 @@ class ChromeLogger extends AbstractRoute
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        if ($this->jsonData) {
-            $request = $this->debug->request;
-            $serverParams = $request->getServerParams();
-            $info = array('PHP', isset($serverParams['REQUEST_METHOD'])
-                ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
-                : '$: ' . \implode(' ', $serverParams['argv'])
-            );
-            if (!$this->cfg['group']) {
-                \array_unshift($this->jsonData['rows'], array(
-                    $info,
-                    null,
-                    'info',
-                ));
-                return;
-            }
+        if (empty($this->jsonData['rows'])) {
+            return;
+        }
+        $request = $this->debug->request;
+        $serverParams = $request->getServerParams();
+        $info = array('PHP', isset($serverParams['REQUEST_METHOD'])
+            ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
+            : '$: ' . \implode(' ', $serverParams['argv'])
+        );
+        if (!$this->cfg['group']) {
             \array_unshift($this->jsonData['rows'], array(
                 $info,
                 null,
-                'groupCollapsed',
+                'info',
             ));
-            \array_push($this->jsonData['rows'], array(
-                array(),
-                null,
-                'groupEnd',
-            ));
+            return;
         }
+        \array_unshift($this->jsonData['rows'], array($info, null, 'groupCollapsed'));
+        \array_push($this->jsonData['rows'], array(array(), null, 'groupEnd'));
     }
 
     /**

@@ -103,7 +103,7 @@ class Profile
         $instance->start();
         $this->instances[$name] = $instance;
         $logEntry['args'] = array('Profile \'' . $name . '\' started');
-        $debug->appendLog($logEntry);
+        $debug->log($logEntry);
     }
 
     /**

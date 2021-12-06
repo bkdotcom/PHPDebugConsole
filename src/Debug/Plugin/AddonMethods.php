@@ -14,6 +14,7 @@ namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\AssetProviderInterface;
+use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Psr7lite\HttpFoundationBridge;
 use bdk\Debug\Route\RouteInterface;
@@ -71,9 +72,13 @@ class AddonMethods implements SubscriberInterface
             'getChannel',
             'getChannels',
             'getChannelsTop',
+            'getDump',
+            'getHeaders',
             'getInterface',
+            'getRoute',
             'hasLog',
             'isCli',
+            'prettify',
             'removePlugin',
             'writeToResponse',
         );
@@ -104,20 +109,7 @@ class AddonMethods implements SubscriberInterface
             $this->debug->rootInstance->getRoute('html')->addAssetProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
-            $this->debug->eventManager->addSubscriberInterface($plugin);
-            $subscriptions = $plugin->getSubscriptions();
-            if (isset($subscriptions[Debug::EVENT_PLUGIN_INIT])) {
-                /*
-                    plugin we just added subscribes to Debug::EVENT_PLUGIN_INIT
-                    call subscriber directly
-                */
-                \call_user_func(
-                    array($plugin, $subscriptions[Debug::EVENT_PLUGIN_INIT]),
-                    new Event($this->debug),
-                    Debug::EVENT_PLUGIN_INIT,
-                    $this->debug->eventManager
-                );
-            }
+            $this->addSubscriberInterface($plugin);
         }
         if ($plugin instanceof RouteInterface) {
             $refMethod = new \ReflectionMethod($this->debug, 'onCfgRoute');
@@ -151,59 +143,6 @@ class AddonMethods implements SubscriberInterface
             $body,
             $addHeadersStr
         );
-    }
-
-    /**
-     * Returns cli, cron, ajax, or http
-     *
-     * @return string cli | "cli cron" | http | "http ajax"
-     */
-    public function getInterface()
-    {
-        /*
-            notes:
-                $_SERVER['argv'] could be populated with query string if register_argc_argv = On
-                don't use request->getMethod()... Psr7 implementation likely defaults to GET
-                we used to check for `defined('STDIN')`,
-                    but it's not unit test friendly
-                we used to check for getServerParam['REQUEST_METHOD'] === null
-                    not particularly psr7 friendly
-        */
-        if ($this->debug->getServerParam('HTTP_X_REQUESTED_WITH') === 'XMLHttpRequest') {
-            return 'http ajax';
-        }
-        $argv = $this->debug->getServerParam('argv');
-        $isCliOrCron = $argv && \implode('+', $argv) !== $this->debug->getServerParam('QUERY_STRING');
-        if (!$isCliOrCron) {
-            return 'http';
-        }
-        // TERM is a linux/unix thing
-        return $this->debug->getServerParam('TERM') !== null || $this->debug->getServerParam('PATH') !== null
-            ? 'cli'
-            : 'cli cron';
-    }
-
-    /**
-     * Do we have log entries?
-     *
-     * @return bool
-     */
-    public function hasLog()
-    {
-        $entryCountInitial = $this->debug->data->get('entryCountInitial');
-        $entryCountCurrent = $this->debug->data->get('log/__count__');
-        $lastEntryMethod = $this->debug->data->get('log/__end__/method');
-        return $entryCountCurrent > $entryCountInitial && $lastEntryMethod !== 'clear';
-    }
-
-    /**
-     * Is this a Command Line Interface request?
-     *
-     * @return bool
-     */
-    public function isCli()
-    {
-        return \strpos($this->getInterface(), 'cli') === 0;
     }
 
     /**
@@ -302,6 +241,129 @@ class AddonMethods implements SubscriberInterface
     }
 
     /**
+     * Get dumper
+     *
+     * @param string $name      classname
+     * @param bool   $checkOnly (false) only check if initialized
+     *
+     * @return \bdk\Debug\Dump\Base|bool
+     *
+     * @psalm-return ($checkOnly is true ? bool : \bdk\Debug\Dump\Base)
+     */
+    public function getDump($name, $checkOnly = false)
+    {
+        /** @var \bdk\Debug\Dump\Base|bool */
+        return $this->getDumpRoute('dump', $name, $checkOnly);
+    }
+
+    /**
+     * Get and clear headers that need to be output
+     *
+     * @return array headerName=>value array
+     */
+    public function getHeaders()
+    {
+        $headers = $this->debug->data->get('headers');
+        $this->debug->data->set('headers', array());
+        return $headers;
+    }
+
+    /**
+     * Returns cli, cron, ajax, or http
+     *
+     * @return string cli | "cli cron" | http | "http ajax"
+     */
+    public function getInterface()
+    {
+        /*
+            notes:
+                $_SERVER['argv'] could be populated with query string if register_argc_argv = On
+                don't use request->getMethod()... Psr7 implementation likely defaults to GET
+                we used to check for `defined('STDIN')`,
+                    but it's not unit test friendly
+                we used to check for getServerParam['REQUEST_METHOD'] === null
+                    not particularly psr7 friendly
+        */
+        if ($this->debug->getServerParam('HTTP_X_REQUESTED_WITH') === 'XMLHttpRequest') {
+            return 'http ajax';
+        }
+        $argv = $this->debug->getServerParam('argv');
+        $isCliOrCron = $argv && \implode('+', $argv) !== $this->debug->getServerParam('QUERY_STRING');
+        if (!$isCliOrCron) {
+            return 'http';
+        }
+        // TERM is a linux/unix thing
+        return $this->debug->getServerParam('TERM') !== null || $this->debug->getServerParam('PATH') !== null
+            ? 'cli'
+            : 'cli cron';
+    }
+
+    /**
+     * Get route
+     *
+     * @param string $name      classname
+     * @param bool   $checkOnly (false) only check if initialized
+     *
+     * @return RouteInterface|bool
+     *
+     * @psalm-return ($checkOnly is true ? bool : RouteInterface)
+     */
+    public function getRoute($name, $checkOnly = false)
+    {
+        /** @var RouteInterface|bool */
+        return $this->getDumpRoute('route', $name, $checkOnly);
+    }
+
+    /**
+     * Do we have log entries?
+     *
+     * @return bool
+     */
+    public function hasLog()
+    {
+        $entryCountInitial = $this->debug->data->get('entryCountInitial');
+        $entryCountCurrent = $this->debug->data->get('log/__count__');
+        $lastEntryMethod = $this->debug->data->get('log/__end__/method');
+        return $entryCountCurrent > $entryCountInitial && $lastEntryMethod !== 'clear';
+    }
+
+    /**
+     * Is this a Command Line Interface request?
+     *
+     * @return bool
+     */
+    public function isCli()
+    {
+        return \strpos($this->getInterface(), 'cli') === 0;
+    }
+
+    /**
+     * Prettify string
+     *
+     * format whitepace
+     *    json, xml  (or anything else handled via Debug::EVENT_PRETTIFY)
+     * add attributes to indicate value should be syntax highlighted
+     *    html, json, xml
+     *
+     * @param string $string      string to prettify]
+     * @param string $contentType mime type
+     *
+     * @return Abstraction|string
+     */
+    public function prettify($string, $contentType)
+    {
+        $event = $this->debug->rootInstance->eventManager->publish(
+            Debug::EVENT_PRETTIFY,
+            $this->debug,
+            array(
+                'value' => $string,
+                'contentType' => $contentType,
+            )
+        );
+        return $event['value'];
+    }
+
+    /**
      * Remove plugin
      *
      * @param SubscriberInterface $plugin object implementing SubscriberInterface
@@ -347,60 +409,28 @@ class AddonMethods implements SubscriberInterface
     }
 
     /**
-     * Write output to HttpFoundationResponse
+     * Add SubscriberInterface plugin
      *
-     * @param HttpFoundationResponse $response HttpFoundationResponse interface
+     * @param SubscriberInterface $plugin SubscriberInterface instance
      *
-     * @return HttpFoundationResponse
+     * @return void
      */
-    private function writeToHttpFoundationResponse(HttpFoundationResponse $response)
+    private function addSubscriberInterface(SubscriberInterface $plugin)
     {
-        $this->debug->setCfg('outputHeaders', false);
-        $content = $response->getContent();
-        $pos = \strripos($content, '</body>');
-        if ($pos !== false) {
-            $content = \substr($content, 0, $pos)
-                . $this->debug->output()
-                . \substr($content, $pos);
-            $response->setContent($content);
-            // reset the content length
-            $response->headers->remove('Content-Length');
+        $this->debug->eventManager->addSubscriberInterface($plugin);
+        $subscriptions = $plugin->getSubscriptions();
+        if (isset($subscriptions[Debug::EVENT_PLUGIN_INIT])) {
+            /*
+                plugin we just added subscribes to Debug::EVENT_PLUGIN_INIT
+                call subscriber directly
+            */
+            \call_user_func(
+                array($plugin, $subscriptions[Debug::EVENT_PLUGIN_INIT]),
+                new Event($this->debug),
+                Debug::EVENT_PLUGIN_INIT,
+                $this->debug->eventManager
+            );
         }
-        $headers = $this->debug->getHeaders();
-        foreach ($headers as $nameVal) {
-            $response = $response->headers->set($nameVal[0], $nameVal[1]);
-        }
-        $this->debug->onCfgServiceProvider(array(
-            'response' => HttpFoundationBridge::createResponse($response),
-        ));
-        return $response;
-    }
-
-    /**
-     * Write output to PSR-7 ResponseInterface
-     *
-     * @param ResponseInterface $response ResponseInterface instance
-     *
-     * @return ResponseInterface
-     */
-    private function writeToResponseInterface(ResponseInterface $response)
-    {
-        $this->debug->setCfg('outputHeaders', false);
-        $debugOutput = $this->debug->output();
-        if ($debugOutput) {
-            $stream = $response->getBody();
-            $stream->seek(0, SEEK_END);
-            $stream->write($debugOutput);
-            $stream->rewind();
-        }
-        $headers = $this->debug->getHeaders();
-        foreach ($headers as $nameVal) {
-            $response = $response->withHeader($nameVal[0], $nameVal[1]);
-        }
-        $this->debug->onCfgServiceProvider(array(
-            'response' => $response,
-        ));
-        return $response;
     }
 
     /**
@@ -457,5 +487,107 @@ class AddonMethods implements SubscriberInterface
         $cfg['debug']['parent'] = $this->debug;
         unset($cfg['nested']);
         return new Debug($cfg);
+    }
+
+    /**
+     * Get Dump or Route instance
+     *
+     * @param 'dump'|'route' $cat       "Category" (dump or route)
+     * @param string         $name      html, text, etc)
+     * @param bool           $checkOnly Only check if initialized?
+     *
+     * @return \bdk\Debug\Dump\Base|RouteInterface|bool
+     *
+     * @psalm-return ($checkOnly is true ? bool : \bdk\Debug\Dump\Base|RouteInterface)
+     */
+    private function getDumpRoute($cat, $name, $checkOnly)
+    {
+        $property = $cat . \ucfirst($name);
+        $isDefined = isset($this->debug->{$property});
+        if ($checkOnly) {
+            return $isDefined;
+        }
+        if ($isDefined) {
+            return $this->debug->{$property};
+        }
+        $classname = 'bdk\\Debug\\' . \ucfirst($cat) . '\\' . \ucfirst($name);
+        if (\class_exists($classname)) {
+            /** @var \bdk\Debug\Dump\Base|RouteInterface */
+            $val = new $classname($this->debug);
+            if ($val instanceof ConfigurableInterface) {
+                $cfg = $this->debug->getCfg($property, Debug::CONFIG_INIT);
+                $val->setCfg($cfg);
+            }
+            // update container
+            $this->debug->onCfgServiceProvider(array(
+                $property => $val,
+            ));
+            return $val;
+        }
+        $caller = $this->debug->backtrace->getCallerInfo();
+        $this->debug->errorHandler->handleError(
+            E_USER_NOTICE,
+            '"' . $property . '" is not accessible',
+            $caller['file'],
+            $caller['line']
+        );
+    }
+
+    /**
+     * Write output to HttpFoundationResponse
+     *
+     * @param HttpFoundationResponse $response HttpFoundationResponse interface
+     *
+     * @return HttpFoundationResponse
+     */
+    private function writeToHttpFoundationResponse(HttpFoundationResponse $response)
+    {
+        $this->debug->setCfg('outputHeaders', false);
+        $content = $response->getContent();
+        $pos = \strripos($content, '</body>');
+        if ($pos !== false) {
+            $content = \substr($content, 0, $pos)
+                . $this->debug->output()
+                . \substr($content, $pos);
+            $response->setContent($content);
+            // reset the content length
+            $response->headers->remove('Content-Length');
+        }
+        $headers = $this->debug->getHeaders();
+        foreach ($headers as $nameVal) {
+            $response = $response->headers->set($nameVal[0], $nameVal[1]);
+        }
+        // update container
+        $this->debug->onCfgServiceProvider(array(
+            'response' => HttpFoundationBridge::createResponse($response),
+        ));
+        return $response;
+    }
+
+    /**
+     * Write output to PSR-7 ResponseInterface
+     *
+     * @param ResponseInterface $response ResponseInterface instance
+     *
+     * @return ResponseInterface
+     */
+    private function writeToResponseInterface(ResponseInterface $response)
+    {
+        $this->debug->setCfg('outputHeaders', false);
+        $debugOutput = $this->debug->output();
+        if ($debugOutput) {
+            $stream = $response->getBody();
+            $stream->seek(0, SEEK_END);
+            $stream->write($debugOutput);
+            $stream->rewind();
+        }
+        $headers = $this->debug->getHeaders();
+        foreach ($headers as $nameVal) {
+            $response = $response->withHeader($nameVal[0], $nameVal[1]);
+        }
+        $this->debug->onCfgServiceProvider(array(
+            'response' => $response,
+        ));
+        return $response;
     }
 }

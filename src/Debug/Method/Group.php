@@ -633,21 +633,34 @@ class Group implements SubscriberInterface
             switch ($this->log[$i]['method']) {
                 case 'group':
                 case 'groupCollapsed':
-                    $groupStack[] = $i;
+                    $groupStack[] = $this->log[$i];
                     break;
                 case 'groupEnd':
                     \array_pop($groupStack);
                     break;
                 case 'error':
                 case 'warn':
-                    if ($this->log[$i]->getMeta('uncollapse') === false) {
-                        break;
-                    }
-                    foreach ($groupStack as $i2) {
-                        $this->log[$i2]['method'] = 'group';
-                    }
+                    $this->uncollapseError($this->log[$i], $groupStack);
                     break;
             }
+        }
+    }
+
+    /**
+     * Error encountered.  Uncollapse ancestor groups
+     *
+     * @param LogEntry   $logEntry   LogEntry instance (error or warn)
+     * @param LogEntry[] $groupStack Ancestor groups
+     *
+     * @return void
+     */
+    private function uncollapseError(LogEntry $logEntry, $groupStack)
+    {
+        if ($logEntry->getMeta('uncollapse') === false) {
+            return;
+        }
+        foreach ($groupStack as $logEntry) {
+            $logEntry['method'] = 'group';
         }
     }
 }

@@ -30,6 +30,15 @@ use bdk\PubSub\SubscriberInterface;
 class Internal implements SubscriberInterface
 {
 
+    /**
+     * duplicate/store frequently used cfg vals
+     *
+     * @var array
+     */
+    private $cfg = array(
+        'collect' => false,
+    );
+
     private $debug;
     private $isConfigured = false;
     private $serverParams = array();
@@ -69,6 +78,49 @@ class Internal implements SubscriberInterface
             $level = 'error';
         }
         $logEntry->setMeta('level', $level);
+    }
+
+    /**
+     * Store the arguments
+     * if collect is false -> does nothing
+     * otherwise:
+     *   + abstracts values
+     *   + publishes Debug::EVENT_LOG event
+     *   + appends log (if event propagation not stopped)
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return bool whether or not entry got appended
+     */
+    public function appendLog(LogEntry $logEntry)
+    {
+        if (!$this->cfg['collect'] && !$logEntry['forcePublish']) {
+            return false;
+        }
+        $cfgRestore = array();
+        if (isset($logEntry['meta']['cfg'])) {
+            $cfgRestore = $this->debug->setCfg($logEntry['meta']['cfg']);
+            $logEntry->setMeta('cfg', null);
+        }
+        if (\count($logEntry['args']) === 1 && $this->debug->utility->isThrowable($logEntry['args'][0])) {
+            $exception = $logEntry['args'][0];
+            $logEntry['args'][0] = $exception->getMessage();
+            $logEntry->setMeta(array(
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $this->debug->backtrace->get(null, 0, $exception),
+            ));
+        }
+        $logEntry->crate();
+        $this->publishBubbleEvent(Debug::EVENT_LOG, $logEntry);
+        if ($cfgRestore) {
+            $this->debug->setCfg($cfgRestore);
+        }
+        if ($logEntry['appendLog']) {
+            $this->debug->data->appendLog($logEntry);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -327,6 +379,34 @@ class Internal implements SubscriberInterface
     }
 
     /**
+     * Create config meta argument/value
+     *
+     * @param string|array $key key or array of key/values
+     * @param mixed        $val config value
+     *
+     * @return array
+     */
+    public function metaCfg($key, $val)
+    {
+        if (\is_array($key)) {
+            return array(
+                'cfg' => $key,
+                'debug' => Debug::META,
+            );
+        }
+        if (\is_string($key)) {
+            return array(
+                'cfg' => array(
+                    $key => $val,
+                ),
+                'debug' => Debug::META,
+            );
+        }
+        // invalid cfg key / return empty meta array
+        return array('debug' => Debug::META);
+    }
+
+    /**
      * Flush the buffer and end buffering
      *
      * @return void
@@ -379,6 +459,10 @@ class Internal implements SubscriberInterface
         $cfgDebug = $this->onConfigInit($configs['debug']);
         $valActions = array(
             'serviceProvider' => array($this, 'onCfgServiceProvider'),
+            'collect' => function ($val) {
+                $this->cfg['collect'] = $val;
+                return $val;
+            },
         );
         $valActions = \array_intersect_key($valActions, $cfgDebug);
         foreach ($valActions as $key => $callable) {
@@ -386,32 +470,6 @@ class Internal implements SubscriberInterface
             $cfgDebug[$key] = $callable($cfgDebug[$key], $event);
         }
         $event['debug'] = \array_merge($event['debug'], $cfgDebug);
-    }
-
-    /**
-     * Prettify string
-     *
-     * format whitepace
-     *    json, xml  (or anything else handled via Debug::EVENT_PRETTIFY)
-     * add attributes to indicate value should be syntax highlighted
-     *    html, json, xml
-     *
-     * @param string $string      string to prettify]
-     * @param string $contentType mime type
-     *
-     * @return Abstraction|string
-     */
-    public function prettify($string, $contentType)
-    {
-        $event = $this->debug->rootInstance->eventManager->publish(
-            Debug::EVENT_PRETTIFY,
-            $this->debug,
-            array(
-                'value' => $string,
-                'contentType' => $contentType,
-            )
-        );
-        return $event['value'];
     }
 
     /**
@@ -443,6 +501,37 @@ class Internal implements SubscriberInterface
             $debug = $debug->parentInstance;
         } while (!$event->isPropagationStopped());
         return $event;
+    }
+
+    /**
+     * Publish Debug::EVENT_OUTPUT
+     *    on all descendant channels
+     *    rootInstance
+     *    finally ourself
+     * This isn't outputing each channel, but for performing any per-channel "before output" activities
+     *
+     * @return string output
+     */
+    public function publishOutputEvent()
+    {
+        $debug = $this->debug;
+        $channels = $debug->getChannels(true);
+        if ($debug !== $debug->rootInstance) {
+            $channels[] = $debug->rootInstance;
+        }
+        $channels[] = $debug;
+        foreach ($channels as $channel) {
+            $event = $channel->eventManager->publish(
+                Debug::EVENT_OUTPUT,
+                $channel,
+                array(
+                    'headers' => array(),
+                    'isTarget' => $channel === $debug,
+                    'return' => '',
+                )
+            );
+        }
+        return $event['return'];
     }
 
     /**

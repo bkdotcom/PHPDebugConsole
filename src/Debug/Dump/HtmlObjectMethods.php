@@ -113,31 +113,14 @@ class HtmlObjectMethods
     {
         return $this->html->buildTag(
             'dd',
-            array(
-                'class' => array(
-                    $info['visibility'] => true,
-                    'inherited' => (bool) $info['inheritedFrom'],
-                    'isDeprecated' => $info['isDeprecated'],
-                    'isFinal' => $info['isFinal'],
-                    'isStatic' => $info['isStatic'],
-                    'method' => true,
-                ),
-                'data-attributes' => $this->opts['outAttributesMethod']
-                    ? ($info['attributes'] ?: null)
-                    : null,
-                'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])
-                    ? $info['phpDoc']['deprecated'][0]['desc']
-                    : null,
-                'data-implements' => $info['implements'],
-                'data-inherited-from' => $info['inheritedFrom'],
-            ),
+            $this->methodAttribs($info),
             $this->dumpModifiers($info) . ' '
-            . $this->dumpReturnType($info) . ' '
-            . $this->dumpName($methodName, $info)
-            . $this->dumpParams($info['params'])
-            . ($methodName === '__toString'
-                ? '<br />' . $this->dumper->dump($info['returnValue'])
-                : '')
+                . $this->dumpReturnType($info) . ' '
+                . $this->dumpName($methodName, $info)
+                . $this->dumpParams($info['params'])
+                . ($methodName === '__toString'
+                    ? '<br />' . $this->dumper->dump($info['returnValue'])
+                    : '')
         ) . "\n";
     }
 
@@ -276,5 +259,34 @@ class HtmlObjectMethods
                     ? $info['return']['desc']
                     : '',
             ));
+    }
+
+    /**
+     * Get attributes for method markup
+     *
+     * @param array $info method info
+     *
+     * @return array
+     */
+    private function methodAttribs($info)
+    {
+        return array(
+            'class' => array(
+                $info['visibility'] => true,
+                'inherited' => (bool) $info['inheritedFrom'],
+                'isDeprecated' => $info['isDeprecated'],
+                'isFinal' => $info['isFinal'],
+                'isStatic' => $info['isStatic'],
+                'method' => true,
+            ),
+            'data-attributes' => $this->opts['outAttributesMethod']
+                ? ($info['attributes'] ?: null)
+                : null,
+            'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])
+                ? $info['phpDoc']['deprecated'][0]['desc']
+                : null,
+            'data-implements' => $info['implements'],
+            'data-inherited-from' => $info['inheritedFrom'],
+        );
     }
 }

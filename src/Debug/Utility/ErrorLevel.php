@@ -31,12 +31,7 @@ class ErrorLevel
     public static function getConstants($phpVer = null)
     {
         $phpVer = $phpVer ?: PHP_VERSION;
-        /*
-            version_compare considers 1 < 1.0 < 1.0.0
-        */
-        $phpVer = \preg_match('/^\d+\.\d+$/', $phpVer)
-            ? $phpVer . '.0'
-            : $phpVer;
+        $phpVer = self::normalizePhpVer($phpVer);
         $constants = array(
             'E_ERROR' => 1,
             'E_WARNING' => 2,
@@ -56,18 +51,7 @@ class ErrorLevel
             'E_ALL' => null, // calculated below
         );
         $constants = \array_filter($constants);
-        /*
-            E_ALL value:
-            >= 5.4: 32767
-               5.3: 30719 (doesn't include E_STRICT)
-               5.2: 6143 (doesn't include E_STRICT)
-             < 5.2: 2047 (doesn't include E_STRICT)
-        */
-        $constants['E_ALL'] = \array_sum($constants);
-        if (isset($constants['E_STRICT']) && \version_compare($phpVer, '5.4.0', '<')) {
-            // E_STRICT not included in E_ALL until 5.4
-            $constants['E_ALL'] -= $constants['E_STRICT'];
-        }
+        $constants['E_ALL'] = static::calculateEall($constants, $phpVer);
         return $constants;
     }
 
@@ -97,6 +81,30 @@ class ErrorLevel
         }
         $string = self::joinOnOff($flags['on'], $flags['off']);
         return $string ?: '0';
+    }
+
+    /**
+     * Calculate E_ALL for given php version
+     *
+     * E_ALL value:
+     *   >= 5.4: 32767
+     *      5.3: 30719 (doesn't include E_STRICT)
+     *      5.2: 6143 (doesn't include E_STRICT)
+     *    < 5.2: 2047 (doesn't include E_STRICT)
+     *
+     * @param array  $constants constant values (sans E_ALL)
+     * @param string $phpVer    php version
+     *
+     * @return [type] [description]
+     */
+    private static function calculateEall($constants, $phpVer)
+    {
+        $eAll = \array_sum($constants);
+        if (isset($constants['E_STRICT']) && \version_compare($phpVer, '5.4.0', '<')) {
+            // E_STRICT not included in E_ALL until 5.4
+            $eAll -= $constants['E_STRICT'];
+        }
+        return $eAll;
     }
 
     /**
@@ -181,5 +189,20 @@ class ErrorLevel
             return ' & ~' . $flag;
         }, $flagsOff));
         return $flagsOn . $flagsOff;
+    }
+
+    /**
+     * Make sur phpVersion string is of form x.x.x
+     * version_compare considers 1 < 1.0 < 1.0.0
+     *
+     * @param string $phpVer Php version string
+     *
+     * @return string
+     */
+    private static function normalizePhpVer($phpVer)
+    {
+        return \preg_match('/^\d+\.\d+$/', $phpVer)
+            ? $phpVer . '.0'
+            : $phpVer;
     }
 }

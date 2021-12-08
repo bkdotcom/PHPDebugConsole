@@ -78,24 +78,9 @@ class Cake4 extends BasePlugin
         $config = \array_merge(array(
             'errorHandler' => array(
                 'continueToPrevHandler' => false,
-                'onError' => function (Error $error) {
-                    if ($error->isFatal()) {
-                        // this includes Exceptions
-                        $error['continueToPrevHandler'] = true;
-                    }
-                    if ($error['exception']) {
-                        $error['continueToPrevHandler'] = false;
-                        $this->ignoreLogError = true;
-                    }
-                }
+                'onError' => array($this, 'onError'),
             ),
-            'onMiddleware' => function (Event $event) {
-                $this->logEvents();
-                if (\preg_match('#^/debug[-_]kit#', $event['request']->getPath())) {
-                    // Don't output if request is debug-kit or its assets
-                    $event->getSubject()->setCfg('output', false);
-                }
-            },
+            'onMiddleware' => array($this, 'onMiddleware'),
         ), Configure::read('PHPDebugConsole', array()));
         $this->debug = new Debug($config);
 
@@ -139,23 +124,55 @@ class Cake4 extends BasePlugin
     }
 
     /**
+     * Error event subscriber
+     *
+     * @param Error $error Error event instance
+     *
+     * @return void
+     */
+    public function onError(Error $error)
+    {
+        if ($error->isFatal()) {
+            // this includes Exceptions
+            $error['continueToPrevHandler'] = true;
+        }
+        if ($error['exception']) {
+            $error['continueToPrevHandler'] = false;
+            $this->ignoreLogError = true;
+        }
+    }
+
+    /**
+     * `Debug::EVENT_MIDDLEWARE` event subscriber
+     *
+     * @param Event $event [description]
+     *
+     * @return void
+     */
+    public function onMiddleware(Event $event)
+    {
+        $this->logEvents();
+        if (\preg_match('#^/debug[-_]kit#', $event['request']->getPath())) {
+            // Don't output if request is debug-kit or its assets
+            $event->getSubject()->setCfg('output', false);
+        }
+    }
+
+    /**
      * Log dispatched events
      *
      * @return void
      */
     protected function logEvents()
     {
-        $channelOptions = array(
+        $debug = $this->debug->getChannel('Events', array(
             'channelIcon' => 'fa fa-bell-o',
             'nested' => false,
-        );
-        $debug = $this->debug->getChannel('Events', $channelOptions);
+        ));
 
         $eventList = $this->app->getEventManager()->getEventList();
-        $count = \count($eventList);
         $events = array();
-        for ($i = 0; $i < $count; $i++) {
-            $event = $eventList[$i];
+        foreach ($eventList as $event) {
             $name = $event->getName();
             if (!isset($events[$name])) {
                 $events[$name] = array(
@@ -172,9 +189,7 @@ class Cake4 extends BasePlugin
             $events[$name]['count'] ++;
         }
         \ksort($events);
-        $events = \array_values($events);
-
-        $debug->table('dispatched events', $events);
+        $debug->table('dispatched events', \array_values($events));
     }
 
     /**

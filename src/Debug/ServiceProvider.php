@@ -69,7 +69,10 @@ class ServiceProvider implements ServiceProviderInterface
         $container['backtrace'] = function (Container $container) {
             $debug = $container['debug'];
             $backtrace = $debug->errorHandler->backtrace;
-            $backtrace->addInternalClass('bdk\\Debug');
+            $backtrace->addInternalClass(array(
+                'bdk\\Debug',
+                'bdk\\PubSub',
+            ));
             return $backtrace;
         };
         $container['config'] = function (Container $container) {

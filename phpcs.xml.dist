@@ -19,8 +19,9 @@
         <exclude name="bdk.Commenting.FunctionComment.ThrowsNoFullStop" />
         <exclude name="bdk.Commenting.FunctionComment.ThrowsNotCapital" />
         <exclude name="bdk.Commenting.FunctionComment.TypeHintMissing" />
-        <exclude name="bdk.Operators.ComparisonOperatorUsage.ImplicitTrue" />
+        <exclude name="bdk.Commenting.FunctionCommentThrowTag.WrongNumber" />
         <exclude name="bdk.Operators.ComparisonOperatorUsage.!NotAllowed" />
+        <exclude name="bdk.Operators.ComparisonOperatorUsage.ImplicitTrue" />
     </rule>
 
     <rule ref="PSR12">
@@ -47,7 +48,6 @@
         <!-- Allow single-line doc comments. See https://github.com/squizlabs/PHP_CodeSniffer/issues/258. -->
         <exclude name="Generic.Commenting.DocComment.ContentAfterOpen" />
         <exclude name="Generic.Commenting.DocComment.ContentBeforeClose" />
-
         <exclude name="Generic.Commenting.DocComment.LongNotCapital" />
         <exclude name="Generic.Commenting.DocComment.MissingShort" />
         <exclude name="Generic.Commenting.DocComment.ShortNotCapital" />
@@ -115,6 +115,7 @@
 
         <!-- FunctionCommentThrowTag -->
         <exclude name="Squiz.Commenting.FunctionCommentThrowTag.Missing" />
+        <exclude name="Squiz.Commenting.FunctionCommentThrowTag.WrongNumber" />
 
         <!-- InlineComment -->
         <exclude name="Squiz.Commenting.InlineComment.DocBlock" />

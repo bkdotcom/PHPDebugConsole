@@ -117,15 +117,15 @@ class ServerLog extends ChromeLogger
     }
 
     /**
-     * Write jsonData to file
+     * Handle INF, Nan, & "undefined"
      *
-     * @param string $filename filename
+     * @param string $json Json string
      *
-     * @return bool
+     * @return string
      */
-    protected function writeLogFile($filename)
+    private function translateJsonValues($json)
     {
-        $logData = \str_replace(
+        return \str_replace(
             array(
                 \json_encode(Abstracter::TYPE_FLOAT_INF),
                 \json_encode(Abstracter::TYPE_FLOAT_NAN),
@@ -136,8 +136,21 @@ class ServerLog extends ChromeLogger
                 '"NaN"',
                 'null',
             ),
-            \json_encode($this->jsonData, JSON_UNESCAPED_SLASHES)
+            $json
         );
+    }
+
+    /**
+     * Write jsonData to file
+     *
+     * @param string $filename filename
+     *
+     * @return bool
+     */
+    protected function writeLogFile($filename)
+    {
+        $json = \json_encode($this->jsonData, JSON_UNESCAPED_SLASHES);
+        $json = $this->translateJsonValues($json);
         $logDir = $this->cfg['logDir'];
         if (!\file_exists($logDir)) {
             \set_error_handler(function () {
@@ -147,7 +160,7 @@ class ServerLog extends ChromeLogger
             \restore_error_handler();
         }
         $localPath = $logDir . '/' . $filename;
-        if (\is_writeable($logDir) && \file_put_contents($localPath, $logData) !== false) {
+        if (\is_writeable($logDir) && \file_put_contents($localPath, $json) !== false) {
             return true;
         }
         \trigger_error('Unable to write serverLog file: ' . $localPath);

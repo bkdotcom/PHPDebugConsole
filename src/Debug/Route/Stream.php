@@ -125,6 +125,22 @@ class Stream extends AbstractRoute
     }
 
     /**
+     * Is file path writable?
+     *
+     * @param string $file file path
+     *
+     * @return bool
+     */
+    private function isWritable($file)
+    {
+        if (\strpos($file, 'php://') === 0 || \is_writable($file)) {
+            return true;
+        }
+        $dir = \dirname($file);
+        return !\file_exists($file) && \is_writeable($dir);
+    }
+
+    /**
      * Open file/stream
      *
      * @param resource|string $stream file path, uri, or stream resource
@@ -169,10 +185,8 @@ class Stream extends AbstractRoute
             return;
         }
         $file = $stream;
-        $dir = \dirname($file);
         $fileExists = \file_exists($file);
-        $isWritable = \strpos($file, 'php://') === 0 || \is_writable($file) || !\file_exists($file) && \is_writeable($dir);
-        if (!$isWritable) {
+        if ($this->isWritable($file) === false) {
             \trigger_error($file . ' is not writable', E_USER_NOTICE);
             return;
         }
@@ -181,12 +195,13 @@ class Stream extends AbstractRoute
             return;
         }
         $meta = \stream_get_meta_data($this->fileHandle);
-        if ($meta['wrapper_type'] === 'plainfile') {
-            \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s T') . ' *****' . "\n");
-            if (!$fileExists) {
-                // we just created file
-                \chmod($file, 0660);
-            }
+        if ($meta['wrapper_type'] !== 'plainfile') {
+            return;
+        }
+        \fwrite($this->fileHandle, '***** ' . \date('Y-m-d H:i:s T') . ' *****' . "\n");
+        if (!$fileExists) {
+            // we just created file
+            \chmod($file, 0660);
         }
     }
 

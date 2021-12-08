@@ -95,22 +95,20 @@ class DoctrineLogger implements SQLLogger
     public function onDebugOutput(Event $event)
     {
         $debug = $event->getSubject();
-        $connectionInfo = array();
-        if ($this->connection) {
-            $connectionInfo = $this->connection->getParams();
-        }
-
+        $connectionInfo = $this->connection
+            ? $this->connection->getParams()
+            : array();
         $debug->groupSummary(0);
-        $groupParams = array(
+        $groupParams = \array_filter(array(
             'Doctrine',
-        );
-        if ($connectionInfo) {
-            $groupParams[] = $connectionInfo['url'];
-        }
-        $groupParams[] = $debug->meta(array(
-            'argsAsParams' => false,
-            'icon' => $this->icon,
-            'level' => 'info',
+            $connectionInfo
+                ? $connectionInfo['url']
+                : null,
+            $debug->meta(array(
+                'argsAsParams' => false,
+                'icon' => $this->icon,
+                'level' => 'info',
+            )),
         ));
         \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
         $debug->log('logged operations: ', \count($this->loggedStatements));
@@ -119,8 +117,8 @@ class DoctrineLogger implements SQLLogger
         if ($connectionInfo) {
             $debug->log('connection info', $connectionInfo);
         }
-        $debug->groupEnd();
-        $debug->groupEnd();
+        $debug->groupEnd();  // groupCollapsed
+        $debug->groupEnd();  // groupSummary
     }
 
     /**

@@ -102,14 +102,15 @@ class EventsSubscriber
     {
         $listeners = $this->eventDispatcher->getListeners($eventName);
         foreach ($listeners as $i => $listener) {
-            if ($listener instanceof \Closure) {
-                $ref = new \ReflectionFunction($listener);
-                $filename = $ref->getFileName();
-                // ourself
-                if (\strpos($filename, '/Illuminate/Events/Dispatcher.php') !== false) {
-                    unset($listeners[$i]);
-                    break;
-                }
+            if (!($listener instanceof \Closure)) {
+                continue;
+            }
+            $ref = new \ReflectionFunction($listener);
+            $filename = $ref->getFileName();
+            // ourself
+            if (\strpos($filename, '/Illuminate/Events/Dispatcher.php') !== false) {
+                unset($listeners[$i]);
+                break;
             }
         }
         $this->debug->log('listeners', $listeners);

@@ -132,16 +132,10 @@ class Html
             $attribs = static::parseAttribString($attribs);
         }
         $attribPairs = array();
-        foreach ($attribs as $key => $val) {
-            $val = self::buildAttribVal($key, $val);
-            if ($val === null) {
-                continue;
-            }
-            if ($val === '' && \in_array($key, array('class', 'style'))) {
-                continue;
-            }
-            $attribPairs[] = $key . '="' . \htmlspecialchars($val) . '"';
+        foreach ($attribs as $name => $value) {
+            $attribPairs[] = static::buildAttribNameValue($name, $value);
         }
+        $attribPairs = \array_filter($attribPairs, 'strlen');
         \sort($attribPairs);
         return \rtrim(' ' . \implode(' ', $attribPairs));
     }
@@ -183,9 +177,7 @@ class Html
         $names = \array_map('strtolower', $matches[1]);
         $values = \array_replace($matches[3], \array_filter($matches[4], 'strlen'));
         foreach ($names as $i => $name) {
-            $attribs[$name] = \in_array($name, self::$htmlBoolAttr)
-                ? true
-                : self::parseAttribValue($name, $values[$i], $options);
+            $attribs[$name] = self::parseAttribValue($name, $values[$i], $options);
         }
         \ksort($attribs);
         return $attribs;
@@ -228,6 +220,26 @@ class Html
     }
 
     /**
+     * Buile name="value"
+     *
+     * @param string $name  Attribute name
+     * @param mixed  $value Attribute value
+     *
+     * @return string
+     */
+    private static function buildAttribNameValue($name, $value)
+    {
+        $value = self::buildAttribVal($name, $value);
+        if ($value === null) {
+            return '';
+        }
+        if ($value === '' && \in_array($name, array('class', 'style'))) {
+            return '';
+        }
+        return $name . '="' . \htmlspecialchars($value) . '"';
+    }
+
+    /**
      * Converts attribute value to string
      *
      * @param string $key key
@@ -242,24 +254,50 @@ class Html
             $val = true;
         }
         $key = \strtolower($key);
-        if (\substr($key, 0, 5) === 'data-') {
-            return \is_string($val)
-                ? $val
-                : \json_encode($val);
+        switch (static::buildAttribValType($key, $val)) {
+            case 'class':
+                return static::buildAttribValClass($val);
+            case 'data':
+                return \is_string($val)
+                    ? $val
+                    : \json_encode($val);
+            case 'valArray':
+                return static::buildAttribValArray($key, $val);
+            case 'valBool':
+                return static::buildAttribValBool($key, $val);
+            case 'valNull':
+                return null;
+            default:
+                return \trim($val);
+        }
+    }
+
+    /**
+     * Determine the type of attribute being updated
+     *
+     * @param string $name Attribute name
+     * @param mixed  $val  Attribute value
+     *
+     * @return string 'class', data', 'valArray', valBool', or 'valNull'
+     */
+    private static function buildAttribValType($name, $val)
+    {
+        if (\substr($name, 0, 5) === 'data-') {
+            return 'data';
         }
         if ($val === null) {
-            return null;
+            return 'valNull';
         }
         if (\is_bool($val)) {
-            return static::buildAttribValBool($key, $val);
+            return 'valBool';
         }
-        if ($key === 'class') {
-            return static::buildAttribValClass($val);
+        if ($name === 'class') {
+            return 'class';
         }
         if (\is_array($val)) {
-            return static::buildAttribValArray($key, $val);
+            return 'valArray';
         }
-        return \trim($val);
+        return 'string';
     }
 
     /**
@@ -296,7 +334,7 @@ class Html
     private static function buildAttribValBool($key, $value = true)
     {
         if (\in_array($key, self::$htmlBoolAttrEnum)) {
-            return $value ? 'true' : 'false';
+            return \json_encode($value);
         }
         $values = array(
             'autocapitalize' => array('on','off'),
@@ -304,7 +342,9 @@ class Html
             'translate' => array('yes','no'),
         );
         if (isset($values[$key])) {
-            return $value ? $values[$key][0] : $values[$key[1]];
+            return $value
+                ? $values[$key][0]
+                : $values[$key[1]];
         }
         return $value
             ? $key // even if not a recognized boolean attribute
@@ -343,22 +383,6 @@ class Html
     }
 
     /**
-     * Json decode data-xxx attribute
-     *
-     * @param string $val attribute value to decode
-     *
-     * @return mixed
-     */
-    private static function decodeDataValue($val)
-    {
-        $decoded = \json_decode((string) $val, true);
-        if ($decoded === null && $val !== 'null') {
-            $decoded = \json_decode('"' . $val . '"', true);
-        }
-        return $decoded;
-    }
-
-    /**
      * Parse attribute value
      *
      * @param string $name    attribute name
@@ -370,19 +394,89 @@ class Html
     private static function parseAttribValue($name, $val, $options)
     {
         $val = \htmlspecialchars_decode($val);
-        if ($options & self::PARSE_ATTRIB_DATA && \substr($name, 0, 5) === 'data-') {
-            return self::decodeDataValue($val);
+        if ($name === 'class') {
+            return self::parseAttribClass($val, $options & self::PARSE_ATTRIB_CLASS);
         }
-        if ($options & self::PARSE_ATTRIB_CLASS && $name === 'class') {
-            $val = \explode(' ', $val);
-            return \array_unique($val);
+        if (\substr($name, 0, 5) === 'data-') {
+            return self::parseAttribData($val, $options & self::PARSE_ATTRIB_DATA);
         }
-        if ($options & self::PARSE_ATTRIB_NUMERIC && \is_numeric($val)) {
-            return \json_decode($val);
+        if (\in_array($name, self::$htmlBoolAttr)) {
+            return true;
         }
-        if (\in_array($name, self::$htmlBoolAttrEnum) && \in_array($val, array('true','false'))) {
-            return $val === 'true';
+        if (\in_array($name, self::$htmlBoolAttrEnum)) {
+            return self::parseAttribBoolEnum($val);
+        }
+        if (\is_numeric($val)) {
+            return self::parseAttribNumeric($val, $options & self::PARSE_ATTRIB_NUMERIC);
         }
         return $val;
+    }
+
+    /**
+     * Convert class attribute value to array of classes
+     *
+     * @param string $val enum attribute value
+     *
+     * @return bool
+     */
+    private static function parseAttribBoolEnum($val)
+    {
+        $val = \strtolower($val);
+        return \in_array($val, array('true','false'))
+            ? $val === 'true'
+            : false;
+    }
+
+    /**
+     * Convert class attribute value to array of classes
+     *
+     * @param string $val    attribute value to decode
+     * @param bool   $decode whether to decode
+     *
+     * @return array|string
+     */
+    private static function parseAttribClass($val, $decode)
+    {
+        if (!$decode) {
+            return $val;
+        }
+        $classes = \explode(' ', $val);
+        \sort($classes);
+        return \array_unique($classes);
+    }
+
+    /**
+     * Json decode data-xxx attribute
+     *
+     * @param string $val    attribute value to decode
+     * @param bool   $decode whether to decode
+     *
+     * @return mixed
+     */
+    private static function parseAttribData($val, $decode)
+    {
+        if (!$decode) {
+            return $val;
+        }
+        $decoded = \json_decode((string) $val, true);
+        if ($decoded === null && $val !== 'null') {
+            $decoded = \json_decode('"' . $val . '"', true);
+        }
+        return $decoded;
+    }
+
+    /**
+     * Convert class attribute value to array of classes
+     *
+     * @param string $val    enum attribute value
+     * @param bool   $decode whether to decode
+     *
+     * @return string|float|int
+     */
+    private static function parseAttribNumeric($val, $decode)
+    {
+        return $decode
+            ? \json_decode($val)
+            : $val;
     }
 }

@@ -117,12 +117,11 @@ class Statement extends PDOStatement
     #[\ReturnTypeWillChange]
     public function execute($inputParameters = null)
     {
-        $boundParameters = $this->boundParameters;
-        if (\is_array($inputParameters)) {
-            $boundParameters = \array_merge($boundParameters, $inputParameters);
-        }
-
-        $info = new StatementInfo($this->queryString, $boundParameters, $this->boundParameterTypes);
+        $info = new StatementInfo(
+            $this->queryString,
+            $this->mergeParams($inputParameters),
+            $this->boundParameterTypes
+        );
         $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;
 
         $exception = null;
@@ -144,5 +143,19 @@ class Statement extends PDOStatement
             throw $exception;
         }
         return $result;
+    }
+
+    /**
+     * Combine execute's inputParameters with already bound parameters for statementInfo
+     *
+     * @param array $inputParameters parameters passed to execute
+     *
+     * @return array
+     */
+    private function mergeParams($inputParameters)
+    {
+        return \is_array($inputParameters)
+            ? \array_merge($this->boundParameters, $inputParameters)
+            : $this->boundParameters;
     }
 }

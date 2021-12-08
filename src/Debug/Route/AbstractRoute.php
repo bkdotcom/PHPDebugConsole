@@ -247,18 +247,34 @@ abstract class AbstractRoute extends Component implements RouteInterface
     private function testChannelNameMatch($channelName, $channelNames = array())
     {
         foreach ($channelNames as $channelNameTest) {
-            $channelNameTest = \strtolower($channelNameTest);
-            if ($channelNameTest === '*') {
+            if ($this->testChannelName($channelName, $channelNameTest)) {
                 return true;
             }
-            if ($channelNameTest === $channelName) {
+        }
+        return false;
+    }
+
+    /**
+     * Test if channel name matches test value
+     *
+     * @param string $channelName     channelName to test
+     * @param [type] $channelNameTest test string
+     *
+     * @return [type] [description]
+     */
+    private function testChannelName($channelName, $channelNameTest)
+    {
+        $channelNameTest = \strtolower($channelNameTest);
+        if ($channelNameTest === '*') {
+            return true;
+        }
+        if ($channelNameTest === $channelName) {
+            return true;
+        }
+        if (\substr($channelNameTest, -1, 1) === '*') {
+            $prefix = \rtrim($channelNameTest, '*');
+            if (\strpos($channelName, $prefix) === 0) {
                 return true;
-            }
-            if (\substr($channelNameTest, -1, 1) === '*') {
-                $prefix = \rtrim($channelNameTest, '*');
-                if (\strpos($channelName, $prefix) === 0) {
-                    return true;
-                }
             }
         }
         return false;

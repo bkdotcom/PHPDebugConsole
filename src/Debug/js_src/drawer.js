@@ -10,29 +10,7 @@ $.fn.scrollLock = function (enable) {
     ? true
     : enable
   return enable
-    ? this.on('DOMMouseScroll mousewheel wheel', function (e) {
-      var $this = $(this)
-      var st = this.scrollTop
-      var sh = this.scrollHeight
-      var h = $this.innerHeight()
-      var d = e.originalEvent.wheelDelta
-      var isUp = d > 0
-      var prevent = function () {
-        e.stopPropagation()
-        e.preventDefault()
-        e.returnValue = false
-        return false
-      }
-      if (!isUp && -d > sh - h - st) {
-        // Scrolling down, but this will take us past the bottom.
-        $this.scrollTop(sh)
-        return prevent()
-      } else if (isUp && d > st) {
-        // Scrolling up, but this will take us past the top.
-        $this.scrollTop(0)
-        return prevent()
-      }
-    })
+    ? enableScrollLock($(this))
     : this.off('DOMMouseScroll mousewheel wheel')
 }
 
@@ -55,6 +33,32 @@ export function init ($debugRoot) {
   if (config.get('persistDrawer') && config.get('openDrawer')) {
     open()
   }
+}
+
+function enableScrollLock ($node) {
+  $node.on('DOMMouseScroll mousewheel wheel', function (e) {
+    var $this = $(this)
+    var st = this.scrollTop
+    var sh = this.scrollHeight
+    var h = $this.innerHeight()
+    var d = e.originalEvent.wheelDelta
+    var isUp = d > 0
+    var prevent = function () {
+      e.stopPropagation()
+      e.preventDefault()
+      e.returnValue = false
+      return false
+    }
+    if (!isUp && -d > sh - h - st) {
+      // Scrolling down, but this will take us past the bottom.
+      $this.scrollTop(sh)
+      return prevent()
+    } else if (isUp && d > st) {
+      // Scrolling up, but this will take us past the top.
+      $this.scrollTop(0)
+      return prevent()
+    }
+  })
 }
 
 function addMarkup () {
@@ -127,20 +131,26 @@ function setHeight (height, viaUser) {
   // inacurate if document.doctype is null : $(window).height()
   //    aka document.documentElement.clientHeight
   var maxH = window.innerHeight - menuH - 50
-  if (!height || typeof height === 'object') {
-    // no height passed -> use last or 100
-    height = parseInt($body[0].style.height, 10)
-    if (!height && config.get('persistDrawer')) {
-      height = config.get('height')
-    }
-    if (!height) {
-      height = 100
-    }
-  }
+  height = checkHeight(height);
   height = Math.min(height, maxH)
   height = Math.max(height, minH)
   $body.css('height', height)
   if (viaUser && config.get('persistDrawer')) {
     config.set('height', height)
   }
+}
+
+function checkHeight (height) {
+  var $body = $root.find('.tab-panes')
+  if (height && typeof height !== 'object') {
+    return height;
+  }
+  // no height passed -> use last or 100
+  height = parseInt($body[0].style.height, 10)
+  if (!height && config.get('persistDrawer')) {
+    height = config.get('height')
+  }
+  return height
+    ? height
+    : 100
 }

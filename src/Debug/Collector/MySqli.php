@@ -180,17 +180,7 @@ class MySqli extends mysqliBase
                     'level' => 'info',
                 ))
             );
-            $database = $this->currentDatabase();
-            if ($database) {
-                $debug->log('database', $database);
-            }
-            $debug->log('logged operations: ', \count($this->loggedStatements));
-            $debug->time('total time', $this->getTimeSpent());
-            $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
-            $debug->log('server info', $this->statParsed());
-            if ($this->prettified() === false) {
-                $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
-            }
+            $this->logRuntime($debug);
             $debug->groupEnd(); // groupCollapsed
         } catch (RuntimeException $e) {
             $debug->group('MySqli Error', $debug->meta(array('level' => 'error')));
@@ -327,6 +317,28 @@ class MySqli extends mysqliBase
             $params['port'],
             $params['socket']
         );
+    }
+
+    /**
+     * Log runtime information
+     *
+     * @param Debug $debug Debug instance
+     *
+     * @return void
+     */
+    private function logRuntime(Debug $debug)
+    {
+        $database = $this->currentDatabase();
+        if ($database) {
+            $debug->log('database', $database);
+        }
+        $debug->log('logged operations: ', \count($this->loggedStatements));
+        $debug->time('total time', $this->getTimeSpent());
+        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
+        $debug->log('server info', $this->statParsed());
+        if ($this->prettified() === false) {
+            $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
+        }
     }
 
     /**

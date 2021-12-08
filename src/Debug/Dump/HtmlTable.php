@@ -56,26 +56,11 @@ class HtmlTable
             'tableInfo' => array(),
         ), $options);
         $this->tableInfo = $options['tableInfo'];
-        $caption = \htmlspecialchars($options['caption']);
-        if ($this->tableInfo['class']) {
-            $class = $this->html->markupIdentifier(
-                $this->tableInfo['class'],
-                'span',
-                array(
-                    'title' => $this->tableInfo['summary'] ?: null,
-                )
-            );
-            $caption = $caption
-                ? $caption . ' (' . $class . ')'
-                : $class;
-        }
         return $this->debug->html->buildTag(
             'table',
             $options['attribs'],
             "\n"
-                . ($caption
-                    ? '<caption>' . $caption . '</caption>' . "\n"
-                    : '')
+                . $this->buildCaption($options['caption'])
                 . $this->buildHeader($this->tableInfo['columns'])
                 . $this->buildbody($rows, $options)
                 . $this->buildFooter($this->tableInfo['columns'])
@@ -117,6 +102,33 @@ class HtmlTable
         }
         $tBody = \str_replace(' title=""', '', $tBody);
         return '<tbody>' . "\n" . $tBody . '</tbody>' . "\n";
+    }
+
+    /**
+     * Build table caption
+     *
+     * @param string $caption Table caption
+     *
+     * @return string
+     */
+    private function buildCaption($caption)
+    {
+        $caption = \htmlspecialchars($caption);
+        if ($this->tableInfo['class']) {
+            $class = $this->html->markupIdentifier(
+                $this->tableInfo['class'],
+                'span',
+                array(
+                    'title' => $this->tableInfo['summary'] ?: null,
+                )
+            );
+            $caption = $caption
+                ? $caption . ' (' . $class . ')'
+                : $class;
+        }
+        return $caption
+            ? '<caption>' . $caption . '</caption>' . "\n"
+            : '';
     }
 
     /**

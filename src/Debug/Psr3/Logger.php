@@ -125,6 +125,39 @@ class Logger extends AbstractLogger
     }
 
     /**
+     * Checkc if table data was passed in context and convert logEntry to table
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     * @param array    $context  Context values
+     *
+     * @return void
+     */
+    private function checkTableContext(LogEntry $logEntry, $context)
+    {
+        if (
+            \in_array($logEntry['method'], array('info','log'))
+            && isset($context['table'])
+            && \is_array($context['table'])
+        ) {
+            /*
+                context['table'] is table data
+                context may contain other meta values
+            */
+            $caption = $logEntry['args'][0];
+            $logEntry['args'] = array($context['table']);
+            $logEntry['method'] = 'table';
+            $logEntry->setMeta('caption', $caption);
+            $meta = \array_intersect_key($context, \array_flip(array(
+                'caption',
+                'columns',
+                'sortable',
+                'totalCols',
+            )));
+            $logEntry->setMeta($meta);
+        }
+    }
+
+    /**
      * Handle as exception if Error or Exception attached to contexxt
      *
      * @param string $level   Psr3 log level
@@ -192,26 +225,10 @@ class Logger extends AbstractLogger
         if (\is_array($context)) {
             // remove interpolated values from context
             $context = \array_diff_key($context, \array_flip($placeholders));
-        }
-        if (
-            \in_array($logEntry['method'], array('info','log'))
-            && isset($context['table'])
-            && \is_array($context['table'])
-        ) {
-            /*
-                context['table'] is table data
-                context may contain other meta values
-            */
-            $args = array($context['table']);
-            $logEntry['method'] = 'table';
-            $logEntry->setMeta('caption', $message);
-            $meta = \array_intersect_key($context, \array_flip(array(
-                'columns',
-                'sortable',
-                'totalCols',
-            )));
-            $logEntry->setMeta($meta);
-            $context = null;
+            $this->checkTableContext($logEntry, $context);
+            if ($logEntry['method'] === 'table') {
+                return;
+            }
         }
         if ($context) {
             $args[] = $context;

@@ -24,7 +24,6 @@ class ConfigEventSubscriber implements SubscriberInterface
 {
 
     protected $debug;
-    private $event;
     private $isBootstrapped = false;
     private static $profilingEnabled = false;
 
@@ -83,9 +82,11 @@ class ConfigEventSubscriber implements SubscriberInterface
             // no debug config values have changed
             return;
         }
-        $this->event = $event;
-        $valActions = array(
-            'emailTo' => array($this, 'onCfgEmailTo'),
+        $cfgDebug = $configs['debug'];
+        $valActions = \array_intersect_key(array(
+            'emailFrom' => array($this, 'onCfgEmail'),
+            'emailFunc' => array($this, 'onCfgEmail'),
+            'emailTo' => array($this, 'onCfgEmail'),
             'key' => array($this, 'onCfgKey'),
             'logEnvInfo' => array($this, 'onCfgList'),
             'logRequestInfo' => array($this, 'onCfgList'),
@@ -95,57 +96,58 @@ class ConfigEventSubscriber implements SubscriberInterface
             'onMiddleware' => array($this, 'onCfgOnMiddleware'),
             'onOutput' => array($this, 'onCfgOnOutput'),
             'route' => array($this, 'onCfgRoute'),
-        );
-        $cfgDebug = $configs['debug'];
-        $valActions = \array_intersect_key($valActions, $cfgDebug);
+        ), $cfgDebug);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
             $cfgDebug[$key] = $callable($cfgDebug[$key], $key, $event);
         }
-        $configs['debug'] = \array_merge($event['debug'], $cfgDebug);
-        foreach (array('emailFrom','emailFunc','emailTo') as $key) {
-            if (!isset($cfgDebug[$key])) {
-                continue;
-            }
-            if (!isset($configs['errorEmailer'][$key]) && $cfgDebug[$key] !== 'default') {
-                // also set for errorEmailer
-                $configs['errorEmailer'][$key] = $cfgDebug[$key];
-            }
-        }
-        $event->setValues($configs);
-        $this->onCfgProfilingUpdate($configs['debug']);
+        $event['debug'] = \array_merge($event['debug'], $cfgDebug);
+        $this->onCfgProfilingUpdate($cfgDebug);
     }
 
     /**
      * Handle "emailTo" config update
      *
-     * @param string $val config value
+     * @param string $val   config value
+     * @param string $key   config param name
+     * @param Event  $event The config change event
      *
      * @return string
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
-    private function onCfgEmailto($val)
+    private function onCfgEmail($val, $key, Event $event)
     {
-        return $val === 'default'
-            ? $this->debug->getServerParam('SERVER_ADMIN')
-            : $val;
+        if ($val === 'default' && $key === 'emailTo') {
+            $val = $this->debug->getServerParam('SERVER_ADMIN');
+        }
+        $errorEmailerCfg = $event['errorEmailer'];
+        if (!isset($errorEmailerCfg[$key])) {
+            // also set for errorEmailer
+            $errorEmailerCfg[$key] = $val;
+            $event['errorEmailer'] = $errorEmailerCfg;
+        }
+        return $val;
     }
 
     /**
      * Test $_REQUEST['debug'] against passed configured key
      * Update collect & output values based on key value
      *
-     * @param string $key configured debug key
+     * @param string $val   configured debug key
+     * @param string $name  config param name
+     * @param Event  $event The config change event
      *
      * @return string
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
-    private function onCfgKey($key)
+    private function onCfgKey($val, $name, Event $event)
     {
-        if ($key === null || $this->debug->isCli()) {
-            return $key;
+        if ($val === null || $this->debug->isCli()) {
+            return $val;
         }
         $request = $this->debug->request;
         $cookieParams = $request->getCookieParams();
@@ -156,15 +158,15 @@ class ConfigEventSubscriber implements SubscriberInterface
         } elseif (isset($cookieParams['debug'])) {
             $requestKey = $cookieParams['debug'];
         }
-        $isValidKey = $requestKey === $key;
+        $isValidKey = $requestKey === $val;
         $valsNew = array();
         if ($isValidKey) {
             // only enable collect / don't disable it
             $valsNew['collect'] = true;
         }
         $valsNew['output'] = $isValidKey;
-        $this->event['debug'] = \array_merge($this->event['debug'], $valsNew);
-        return $key;
+        $event['debug'] = \array_merge($event['debug'], $valsNew);
+        return $val;
     }
 
     /**

@@ -83,48 +83,26 @@ class Error extends Event
      */
     public function __construct(ErrorHandler $errHandler, $errType, $errMsg, $file, $line, $vars = array())
     {
-        unset($vars['GLOBALS']);
         $this->subject = $errHandler;
+        unset($vars['GLOBALS']);
         $this->values = array(
             'type'      => $errType,                    // int: aka severity / level
             'typeStr'   => self::$errTypes[$errType],   // string: friendly version of 'type'
-            'category'  => self::getCategory($errType),
+            'category'  => $this->getCategory($errType),
             'message'   => $errMsg,
             'file'      => $file,
             'line'      => $line,
             'vars'      => $vars,
             'continueToNormal' => null, // aka, let PHP do its thing (log error / exit if E_USER_ERROR)
             'continueToPrevHandler' => $errHandler->getCfg('continueToPrevHandler'),
-            'exception' => $errHandler->get('uncaughtException'),  // non-null if error is uncaught-exception
+            'exception'     => $errHandler->get('uncaughtException'),  // non-null if error is uncaught-exception
             'hash'          => null,    // populated below
             'isFirstOccur'  => true,    // populated below
             'isHtml'        => false,   // populated below
             'isSuppressed'  => false,   // populated below
             'throw'         => false,   // populated below (fatal errors never thrown)
         );
-        $hash = self::errorHash();
-        $prevOccurance = $errHandler->get('error', $hash);
-        $this->values = \array_merge($this->values, array(
-            'hash' => $hash,
-            'isHtml' => $this->isHtml(),
-            'isFirstOccur' => !$prevOccurance,
-            'isSuppressed' => $this->isSuppressed($errType, $prevOccurance),
-            'throw' => $this->isFatal() === false && ($errType & $errHandler->getCfg('errorThrow')) === $errType,
-        ));
-        $this->values = \array_merge($this->values, array(
-            'continueToNormal' => $this->setContinueToNormal($errType, $this->values['isSuppressed'] === false && !$prevOccurance),
-            'message' => $this->values['isHtml']
-                ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
-                : $this->values['message'],
-        ));
-        if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && $this->values['exception'] === null) {
-            // will return empty unless xdebug extension installed/enabled
-            $this->subject->backtrace->addInternalClass(array(
-                'bdk\\ErrorHandler',
-                'bdk\\PubSub',
-            ));
-            $this->backtrace = $this->subject->backtrace->get();
-        }
+        $this->setAdditionalValues();
         $errorCaller = $errHandler->get('errorCaller');
         if ($errorCaller) {
             $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file','line')));
@@ -263,7 +241,7 @@ class Error extends Event
      *
      * @return string hash
      */
-    protected function errorHash()
+    protected function hash()
     {
         $errMsg = $this->values['message'];
         // (\(.*?)\d+(.*?\))    "(tried to allocate 16384 bytes)" -> "(tried to allocate xxx bytes)"
@@ -325,6 +303,38 @@ class Error extends Event
             return false;
         }
         return \error_reporting() === 0;
+    }
+
+    /**
+     * Set additional values for constructor
+     *
+     * @return void
+     */
+    private function setAdditionalValues()
+    {
+        $errType = $this->values['type'];
+        $hash = $this->hash();
+        $prevOccurance = $this->subject->get('error', $hash);
+        $isSuppressed = $this->isSuppressed($errType, $prevOccurance);
+        $this->values = \array_merge($this->values, array(
+            'message' => $this->isHtml()
+                ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
+                : $this->values['message'],
+            'continueToNormal' => $this->setContinueToNormal($errType, $isSuppressed === false && !$prevOccurance),
+            'hash' => $hash,
+            'isFirstOccur' => !$prevOccurance,
+            'isHtml' => $this->isHtml(),
+            'isSuppressed' => $isSuppressed,
+            'throw' => $this->isFatal() === false && ($errType & $this->subject->getCfg('errorThrow')) === $errType,
+        ));
+        if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && $this->values['exception'] === null) {
+            // will return empty unless xdebug extension installed/enabled
+            $this->subject->backtrace->addInternalClass(array(
+                'bdk\\ErrorHandler',
+                'bdk\\PubSub',
+            ));
+            $this->backtrace = $this->subject->backtrace->get();
+        }
     }
 
     /**

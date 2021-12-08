@@ -885,29 +885,7 @@
       ? true
       : enable;
     return enable
-      ? this.on('DOMMouseScroll mousewheel wheel', function (e) {
-        var $this = $(this);
-        var st = this.scrollTop;
-        var sh = this.scrollHeight;
-        var h = $this.innerHeight();
-        var d = e.originalEvent.wheelDelta;
-        var isUp = d > 0;
-        var prevent = function () {
-          e.stopPropagation();
-          e.preventDefault();
-          e.returnValue = false;
-          return false
-        };
-        if (!isUp && -d > sh - h - st) {
-          // Scrolling down, but this will take us past the bottom.
-          $this.scrollTop(sh);
-          return prevent()
-        } else if (isUp && d > st) {
-          // Scrolling up, but this will take us past the top.
-          $this.scrollTop(0);
-          return prevent()
-        }
-      })
+      ? enableScrollLock($(this))
       : this.off('DOMMouseScroll mousewheel wheel')
   };
 
@@ -930,6 +908,32 @@
     if (config$3.get('persistDrawer') && config$3.get('openDrawer')) {
       open();
     }
+  }
+
+  function enableScrollLock ($node) {
+    $node.on('DOMMouseScroll mousewheel wheel', function (e) {
+      var $this = $(this);
+      var st = this.scrollTop;
+      var sh = this.scrollHeight;
+      var h = $this.innerHeight();
+      var d = e.originalEvent.wheelDelta;
+      var isUp = d > 0;
+      var prevent = function () {
+        e.stopPropagation();
+        e.preventDefault();
+        e.returnValue = false;
+        return false
+      };
+      if (!isUp && -d > sh - h - st) {
+        // Scrolling down, but this will take us past the bottom.
+        $this.scrollTop(sh);
+        return prevent()
+      } else if (isUp && d > st) {
+        // Scrolling up, but this will take us past the top.
+        $this.scrollTop(0);
+        return prevent()
+      }
+    });
   }
 
   function addMarkup () {
@@ -1002,22 +1006,28 @@
     // inacurate if document.doctype is null : $(window).height()
     //    aka document.documentElement.clientHeight
     var maxH = window.innerHeight - menuH - 50;
-    if (!height || typeof height === 'object') {
-      // no height passed -> use last or 100
-      height = parseInt($body[0].style.height, 10);
-      if (!height && config$3.get('persistDrawer')) {
-        height = config$3.get('height');
-      }
-      if (!height) {
-        height = 100;
-      }
-    }
+    height = checkHeight(height);
     height = Math.min(height, maxH);
     height = Math.max(height, minH);
     $body.css('height', height);
     if (viaUser && config$3.get('persistDrawer')) {
       config$3.set('height', height);
     }
+  }
+
+  function checkHeight (height) {
+    var $body = $root.find('.tab-panes');
+    if (height && typeof height !== 'object') {
+      return height;
+    }
+    // no height passed -> use last or 100
+    height = parseInt($body[0].style.height, 10);
+    if (!height && config$3.get('persistDrawer')) {
+      height = config$3.get('height');
+    }
+    return height
+      ? height
+      : 100
   }
 
   /**
@@ -2087,24 +2097,9 @@
 
   function init$9 ($delegateNode) {
     // config = $delegateNode.data('config').get()
-    var $debugTabs = $delegateNode.find('.tab-panes');
-    $delegateNode.find('nav .nav-link').each(function () {
-      var $tab = $(this);
-      var targetSelector = $tab.data('target');
-      var $tabPane = $debugTabs.find(targetSelector).eq(0);
-      if ($tab.hasClass('active')) {
-        // don't hide or highlight primary tab
-        return // continue
-      }
-      if ($tabPane.text().trim().length === 0) {
-        $tab.hide();
-      } else if ($tabPane.find('.m_error').length) {
-        $tab.addClass('has-error');
-      } else if ($tabPane.find('.m_warn').length) {
-        $tab.addClass('has-warn');
-      } else if ($tabPane.find('.m_assert').length) {
-        $tab.addClass('has-assert');
-      }
+    var $tabPanes = $delegateNode.find('.tab-panes');
+    $delegateNode.find('nav .nav-link').each(function (i, tab) {
+      initTab($(tab), $tabPanes);
     });
     $delegateNode.on('click', '[data-toggle=tab]', function () {
       show(this);
@@ -2118,6 +2113,24 @@
       }
       $target.find('.m_alert, .group-body:visible').debugEnhance();
     });
+  }
+
+  function initTab ($tab, $tabPanes) {
+    var targetSelector = $tab.data('target');
+    var $tabPane = $tabPanes.find(targetSelector).eq(0);
+    if ($tab.hasClass('active')) {
+      // don't hide or highlight primary tab
+      return // continue
+    }
+    if ($tabPane.text().trim().length === 0) {
+      $tab.hide();
+    } else if ($tabPane.find('.m_error').length) {
+      $tab.addClass('has-error');
+    } else if ($tabPane.find('.m_warn').length) {
+      $tab.addClass('has-warn');
+    } else if ($tabPane.find('.m_assert').length) {
+      $tab.addClass('has-assert');
+    }
   }
 
   function show (node) {

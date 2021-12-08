@@ -25,7 +25,7 @@ class UseStatements
 
     protected static $cache = array();
     protected static $currentUse = null;
-    protected static $empty = array(
+    protected static $categories = array(
         'class' => array(),
         'const' => array(),
         'function' => array(),
@@ -53,7 +53,7 @@ class UseStatements
     public static function getUseStatements(ReflectionClass $reflector)
     {
         if (!$reflector->isUserDefined()) {
-            return self::$empty;
+            return self::$categories;
         }
         $name = $reflector->getName();
         if (isset(self::$cache[$name])) {
@@ -66,7 +66,7 @@ class UseStatements
         $namespace = $reflector->getNamespaceName();
         $useStatements = isset($useStatements[$namespace])
             ? $useStatements[$namespace]
-            : self::$empty;
+            : self::$categories;
         self::$cache[$name] = $useStatements;
         return $useStatements;
     }
@@ -103,6 +103,22 @@ class UseStatements
             self::setRecordInfo($token);
         }
         return self::sort(self::$useStatements);
+    }
+
+    /**
+     * Add currentUse to self::$useStatements -> namespace
+     *
+     * @return void
+     */
+    private static function addUseStatement()
+    {
+        $class = \ltrim(self::$currentUse['class'], '\\');
+        $alias = self::$currentUse['alias'] ?: self::getShortName($class);
+        if (!isset(self::$useStatements[self::$namespace])) {
+            self::$useStatements[self::$namespace] = self::$categories;
+        }
+        self::$useStatements[self::$namespace][self::$record][$alias] = $class;
+        self::$currentUse = null;
     }
 
     /**
@@ -213,24 +229,28 @@ class UseStatements
             return;
         }
         if (self::$currentUse) {
-            $class = \ltrim(self::$currentUse['class'], '\\');
-            $alias = self::$currentUse['alias'] ?: self::getShortName($class);
-            if (!isset(self::$useStatements[self::$namespace])) {
-                self::$useStatements[self::$namespace] = self::$empty;
-            }
-            self::$useStatements[self::$namespace][self::$record][$alias] = $class;
-            self::$currentUse = null;
+            self::addUseStatement();
         }
         if ($token === ',') {
             // multiple use statements on the same line
-            self::$recordPart = 'class';
-            self::$currentUse = [
-                'class' => self::$groupNamespace ?: '',
-                'alias' => '',
-            ];
+            self::recordTokenClass();
             return;
         }
         self::$record = null;
+    }
+
+    /**
+     * comma encountered... reset currentUse
+     *
+     * @return void
+     */
+    private static function recordTokenClass()
+    {
+        self::$recordPart = 'class';
+        self::$currentUse = [
+            'class' => self::$groupNamespace ?: '',
+            'alias' => '',
+        ];
     }
 
     /**

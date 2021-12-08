@@ -6,25 +6,10 @@ import $ from 'jquery'
 
 export function init ($delegateNode) {
   // config = $delegateNode.data('config').get()
-  var $debugTabs = $delegateNode.find('.tab-panes')
-  $delegateNode.find('nav .nav-link').each(function () {
-    var $tab = $(this)
-    var targetSelector = $tab.data('target')
-    var $tabPane = $debugTabs.find(targetSelector).eq(0)
-    if ($tab.hasClass('active')) {
-      // don't hide or highlight primary tab
-      return // continue
-    }
-    if ($tabPane.text().trim().length === 0) {
-      $tab.hide()
-    } else if ($tabPane.find('.m_error').length) {
-      $tab.addClass('has-error')
-    } else if ($tabPane.find('.m_warn').length) {
-      $tab.addClass('has-warn')
-    } else if ($tabPane.find('.m_assert').length) {
-      $tab.addClass('has-assert')
-    }
-  })
+  var $tabPanes = $delegateNode.find('.tab-panes')
+  $delegateNode.find('nav .nav-link').each(function (i, tab) {
+    initTab($(tab), $tabPanes);
+  });
   $delegateNode.on('click', '[data-toggle=tab]', function () {
     show(this)
     return false
@@ -37,6 +22,24 @@ export function init ($delegateNode) {
     }
     $target.find('.m_alert, .group-body:visible').debugEnhance()
   })
+}
+
+function initTab ($tab, $tabPanes) {
+  var targetSelector = $tab.data('target')
+  var $tabPane = $tabPanes.find(targetSelector).eq(0)
+  if ($tab.hasClass('active')) {
+    // don't hide or highlight primary tab
+    return // continue
+  }
+  if ($tabPane.text().trim().length === 0) {
+    $tab.hide()
+  } else if ($tabPane.find('.m_error').length) {
+    $tab.addClass('has-error')
+  } else if ($tabPane.find('.m_warn').length) {
+    $tab.addClass('has-warn')
+  } else if ($tabPane.find('.m_assert').length) {
+    $tab.addClass('has-assert')
+  }
 }
 
 function show (node) {

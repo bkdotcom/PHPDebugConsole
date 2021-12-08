@@ -338,11 +338,14 @@ class Backtrace
         $function = $frame['function'];
         if (!isset(self::$internalFuncs[$function])) {
             // avoid `function require() does not exit
-            self::$internalFuncs[$function] = true;
-            if (\function_exists($function)) {
+            $isInternal = true;
+            if (\in_array($function, array('require', 'require_once', 'include', 'include_once'))) {
+                $isInternal = false;
+            } elseif (\function_exists($function)) {
                 $refFunction = new \ReflectionFunction($function);
-                self::$internalFuncs[$function] = $refFunction->isInternal();
+                $isInternal = $refFunction->isInternal();
             }
+            self::$internalFuncs[$function] = $isInternal;
         }
         return self::$internalFuncs[$function];
     }
@@ -403,6 +406,12 @@ class Backtrace
             }
             if ($frame['class'] === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
                 continue;
+            }
+            if ($frame['include_filename']) {
+                $backtraceNew[] = \array_merge($frameDefault, array(
+                    'file' => $frame['include_filename'],
+                    'line' => 0,
+                ));
             }
             $frame = self::normalizeFrame($frame, $backtrace[$i + 1]);
             $frame = \array_intersect_key($frame, $frameDefault);
@@ -482,14 +491,12 @@ class Backtrace
     {
         $count = \count($backtrace);
         $i = 2;
-        if (static::$internalClasses['regex']) {
-            for (; $i < $count; $i++) {
-                if (!\preg_match(static::$internalClasses['regex'], $backtrace[$i]['function'])) {
-                    break;
-                }
+        for (; $i < $count; $i++) {
+            if (!\preg_match(static::$internalClasses['regex'], $backtrace[$i]['function'])) {
+                break;
             }
         }
-        if ($backtrace[$i - 1]['line'] !== 0) {
+        if ($i === \count($backtrace) || $backtrace[$i - 1]['line'] !== 0) {
             $i--;
         }
         $i = \max(0, $i);

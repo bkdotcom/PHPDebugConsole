@@ -319,7 +319,7 @@ class LogReqRes implements SubscriberInterface
         if (isset($headers['Authorization']) && \strpos($headers['Authorization'], 'Basic') === 0) {
             $auth = \base64_decode(\str_replace('Basic ', '', $headers['Authorization']));
             $userpass = \explode(':', $auth);
-            $headers['Authorization'] = 'Basic █████████ (base64\'d ' . $userpass[0] . ':password)';
+            $headers['Authorization'] = 'Basic █████████ (base64\'d ' . $userpass[0] . ':█████)';
         }
         if ($headers) {
             \ksort($headers, SORT_NATURAL);

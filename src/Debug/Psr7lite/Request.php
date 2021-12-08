@@ -235,18 +235,9 @@ class Request extends Message
         }
         $new = clone $this;
         $new->uri = $uri;
-        if (!$preserveHost || !$this->hasHeader('Host')) {
-            $host = $uri->getHost();
-            if ($host === '') {
-                return $this;
-            }
-            $port = $uri->getPort();
-            if ($port !== null) {
-                $host .= ':' . $port;
-            }
-            return $new->withHeader('Host', $host);
-        }
-        return $new;
+        return $preserveHost && $this->hasHeader('Host')
+            ? $new
+            : $this->updateHostHeader($new, $uri);
     }
 
     /**
@@ -275,5 +266,28 @@ class Request extends Message
                 $method
             ));
         }
+    }
+
+    /**
+     * if uri has non-empty host
+     *    then Return the new Request with updated header
+     *    otherwise return static
+     *
+     * @param self             $new Request instance
+     * @param UriInterface|Uri $uri New request URI to use.
+     *
+     * @return static
+     */
+    private function updateHostHeader(self $new, $uri)
+    {
+        $host = $uri->getHost();
+        if ($host === '') {
+            return $this;
+        }
+        $port = $uri->getPort();
+        if ($port !== null) {
+            $host .= ':' . $port;
+        }
+        return $new->withHeader('Host', $host);
     }
 }

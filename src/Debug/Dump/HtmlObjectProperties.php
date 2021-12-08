@@ -99,24 +99,10 @@ class HtmlObjectProperties
     {
         $vis = (array) $info['visibility'];
         $info['isPrivateAncestor'] = \in_array('private', $vis) && $info['inheritedFrom'];
-        $classes = \array_keys(\array_filter(array(
-            'debug-value' => $info['valueFrom'] === 'debug',
-            'debuginfo-excluded' => $info['debugInfoExcluded'],
-            'debuginfo-value' => $info['valueFrom'] === 'debugInfo',
-            'forceShow' => $info['forceShow'],
-            'inherited' => $info['inheritedFrom'],
-            'isPromoted' => $info['isPromoted'],
-            'isReadOnly' => $info['isReadOnly'],
-            'isStatic' => $info['isStatic'],
-            'private-ancestor' => $info['isPrivateAncestor'],
-            'property' => true,
-        )));
-        $classes = \array_merge($classes, $vis);
-        $classes = \array_diff($classes, array('debug'));
         return $this->html->buildTag(
             'dd',
             array(
-                'class' => $classes, // pass as array
+                'class' => $this->propertyClasses($info),
                 'data-attributes' => $opts['outAttributes']
                     ? ($info['attributes'] ?: null)
                     : null,
@@ -176,5 +162,32 @@ class HtmlObjectProperties
             return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
         }, $modifiers);
         return \implode(' ', $modifiers);
+    }
+
+    /**
+     * Get a list of css classnames for property markup
+     *
+     * @param array $info property info
+     *
+     * @return string[]
+     */
+    protected function propertyClasses($info)
+    {
+        $vis = (array) $info['visibility'];
+        $classes = \array_keys(\array_filter(array(
+            'debug-value' => $info['valueFrom'] === 'debug',
+            'debuginfo-excluded' => $info['debugInfoExcluded'],
+            'debuginfo-value' => $info['valueFrom'] === 'debugInfo',
+            'forceShow' => $info['forceShow'],
+            'inherited' => $info['inheritedFrom'],
+            'isPromoted' => $info['isPromoted'],
+            'isReadOnly' => $info['isReadOnly'],
+            'isStatic' => $info['isStatic'],
+            'private-ancestor' => $info['isPrivateAncestor'],
+            'property' => true,
+        )));
+        $classes = \array_merge($classes, $vis);
+        $classes = \array_diff($classes, array('debug'));
+        return $classes;
     }
 }

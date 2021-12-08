@@ -63,29 +63,7 @@ class WampCrate
             return $this->crateString($mixed);
         }
         if ($mixed instanceof Abstraction) {
-            $clone = clone $mixed;
-            switch ($mixed['type']) {
-                case Abstracter::TYPE_ARRAY:
-                    $clone['value'] = $this->crateArray($clone['value']);
-                    return $clone;
-                case Abstracter::TYPE_OBJECT:
-                    return $this->crateObject($clone);
-                case Abstracter::TYPE_STRING:
-                    $clone['value'] = $this->crateString(
-                        $clone['value'],
-                        $clone['typeMore'] === Abstracter::TYPE_STRING_BINARY
-                    );
-                    if ($clone['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
-                        // PITA to get strlen in javascript
-                        // pass the length of captured value
-                        $clone['strlenValue'] = \strlen($mixed['value']);
-                    }
-                    if (isset($clone['valueDecoded'])) {
-                        $clone['valueDecoded'] = $this->crate($clone['valueDecoded']);
-                    }
-                    return $clone;
-            }
-            return $clone;
+            return $this->crateAbstraction($mixed);
         }
         return $mixed;
     }
@@ -139,6 +117,40 @@ class WampCrate
     }
 
     /**
+     * Crate abstraction
+     *
+     * @param Abstraction $abs [description]
+     *
+     * @return Abstraction
+     */
+    private function crateAbstraction(Abstraction $abs)
+    {
+        $clone = clone $abs;
+        switch ($clone['type']) {
+            case Abstracter::TYPE_ARRAY:
+                $clone['value'] = $this->crateArray($clone['value']);
+                return $clone;
+            case Abstracter::TYPE_OBJECT:
+                return $this->crateObject($clone);
+            case Abstracter::TYPE_STRING:
+                $clone['value'] = $this->crateString(
+                    $clone['value'],
+                    $clone['typeMore'] === Abstracter::TYPE_STRING_BINARY
+                );
+                if ($clone['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
+                    // PITA to get strlen in javascript
+                    // pass the length of captured value
+                    $clone['strlenValue'] = \strlen($abs['value']);
+                }
+                if (isset($clone['valueDecoded'])) {
+                    $clone['valueDecoded'] = $this->crate($clone['valueDecoded']);
+                }
+                return $clone;
+        }
+        return $clone;
+    }
+
+    /**
      * Crate array (may be encapsulated by Abstraction)
      *
      * @param array $array array
@@ -148,28 +160,38 @@ class WampCrate
     private function crateArray($array)
     {
         $return = array();
-        $keys = array();
         foreach ($array as $k => $v) {
-            if (\is_string($k) && \substr($k, 0, 1) === "\x00") {
+            if (\substr((string) $k, 0, 1) === "\x00") {
                 // key starts with null...
                 // php based wamp router will choke (attempt to json_decode to obj)
                 $k = '_b64_:' . \base64_encode($k);
             }
             $return[$k] = $this->crate($v);
         }
-        if ($this->debug->arrayUtil->isList($array) === false) {
-            /*
-                Compare sorted vs unsorted
-                if differ pass the key order
-            */
-            $keys = \array_keys($array);
-            $keysSorted = $keys;
-            \sort($keysSorted, SORT_STRING);
-            if ($keys !== $keysSorted) {
-                $return['__debug_key_order__'] = $keys;
-            }
+        $keys = $this->debug->arrayUtil->isList($array) === false
+            ? $this->crateArrayOrder(\array_keys($array))
+            : null;
+        if ($keys) {
+            $return['__debug_key_order__'] = $keys;
         }
         return $return;
+    }
+
+    /**
+     * Compare sorted vs unsorted
+     * if differ pass the key order
+     *
+     * @param array $keys array keys
+     *
+     * @return array|null
+     */
+    private function crateArrayOrder($keys)
+    {
+        $keysSorted = $keys;
+        \sort($keysSorted, SORT_STRING);
+        return $keys !== $keysSorted
+            ? $keys
+            : null;
     }
 
     /**

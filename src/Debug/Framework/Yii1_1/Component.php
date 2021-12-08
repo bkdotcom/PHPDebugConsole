@@ -229,19 +229,8 @@ class Component extends CApplicationComponent implements SubscriberInterface
         if (!$logEntry->getMeta('detectFiles')) {
             return;
         }
-        // let's embolden the primary files
-        \array_walk_recursive($logEntry['args'][0]['value'], function ($abs) {
-            if (!isset($abs['attribs']['data-file'])) {
-                return;
-            }
-            $file = $abs['attribs']['data-file'];
-            $isController = \preg_match('#/protected/controllers/.+.php#', $file);
-            $isView = \preg_match('#/protected/views(?:(?!/layout).)+.php#', $file);
-            $embolden = $isController || $isView;
-            if ($embolden) {
-                $abs['attribs']['style'] = 'font-weight:bold; color:#88bb11;';
-            }
-        });
+        // embolden the primary files
+        \array_walk_recursive($logEntry['args'][0]['value'], array($this, 'stylizeFileAbstraction'));
     }
 
     /**
@@ -636,5 +625,28 @@ class Component extends CApplicationComponent implements SubscriberInterface
         return $val !== null
             ? $val
             : $default;
+    }
+
+    /**
+     * Add style attrib to controller and view files
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function stylizeFileAbstraction(Abstraction $abs)
+    {
+        if (!isset($abs['attribs']['data-file'])) {
+            return;
+        }
+        $file = $abs['attribs']['data-file'];
+        $isController = \preg_match('#/protected/controllers/.+.php#', $file);
+        $isView = \preg_match('#/protected/views(?:(?!/layout).)+.php#', $file);
+        $embolden = $isController || $isView;
+        if ($embolden) {
+            $abs['attribs']['style'] = 'font-weight:bold; color:#88bb11;';
+        }
     }
 }

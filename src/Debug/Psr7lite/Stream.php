@@ -405,6 +405,34 @@ class Stream
     }
 
     /**
+     * Return object class or value type
+     *
+     * @param mixed $value The value being type checked
+     *
+     * @return string
+     */
+    private function getTypeDebug($value)
+    {
+        return \is_object($value)
+            ? \get_class($value)
+            : \gettype($value);
+    }
+
+    /**
+     * Safely test if value is a file
+     *
+     * @param string $value The value to check
+     *
+     * @return bool
+     */
+    private function isFile($value)
+    {
+        return \is_string($value)
+            && \preg_match('#(://|[\r\n\x00])#', $value) !== 1
+            && \is_file($value);
+    }
+
+    /**
      * Is resource open?
      *
      * @return bool
@@ -426,7 +454,7 @@ class Stream
      */
     private function setResource($value)
     {
-        if ($value === null || $value === '') {
+        if ($value === null) {
             $this->resource = \fopen('php://temp', 'wb+');
             return;
         }
@@ -434,23 +462,10 @@ class Stream
             $this->resource = $value;
             return;
         }
+        if ($this->isFile($value)) {
+            $this->setResourceFile($value);
+        }
         if (\is_string($value)) {
-            if (
-                \preg_match('#(://|[\r\n\x00])#', $value) !== 1
-                && \is_file($value)
-            ) {
-                \set_error_handler(function () {
-                });
-                $this->resource = \fopen($value, 'r');
-                \restore_error_handler();
-                if ($this->resource === false) {
-                    throw new RuntimeException(\sprintf(
-                        'The file %s cannot be opened.',
-                        $value
-                    ));
-                }
-                return;
-            }
             $this->resource = \fopen('php://temp', 'wb+');
             \fwrite($this->resource, $value);
             \rewind($this->resource);
@@ -458,7 +473,30 @@ class Stream
         }
         throw new InvalidArgumentException(\sprintf(
             'Expected resource, filename, or string. %s provided',
-            \is_object($value) ? \get_class($value) : \gettype($value)
+            $this->getTypeDebug($value)
         ));
+    }
+
+    /**
+     * Set resource to the specified file
+     *
+     * @param string $file filepath
+     *
+     * @return void
+     *
+     * @throws RuntimeException
+     */
+    private function setResourceFile($file)
+    {
+        \set_error_handler(function () {
+        });
+        $this->resource = \fopen($file, 'r');
+        \restore_error_handler();
+        if ($this->resource === false) {
+            throw new RuntimeException(\sprintf(
+                'The file %s cannot be opened.',
+                $file
+            ));
+        }
     }
 }

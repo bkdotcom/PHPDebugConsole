@@ -73,28 +73,13 @@ class StringUtil
      */
     public static function isBase64Encoded($val, $opts = 3)
     {
-        if (\is_string($val) === false) {
-            return false;
-        }
-        $val = \trim($val);
-        $isHex = \preg_match('/^[0-9A-F]+$/i', $val) === 1;
-        if ($isHex) {
-            return false;
-        }
-        // only allow whitspace at beginning and end of lines
-        $regex = '#^'
-            . '([ \t]*[a-zA-Z0-9+/]*[ \t]*[\r\n]+)*'
-            . '([ \t]*[a-zA-Z0-9+/]*={0,2})' // last line may have "=" padding at the end"
-            . '$#';
-        if (\preg_match($regex, $val) !== 1) {
+        if (self::isBase64RegexTest($val) === false) {
             return false;
         }
         $valNoSpace = \preg_replace('#\s#', '', $val);
-        if ($opts & self::IS_BASE64_LENGTH) {
-            $mod = \strlen($valNoSpace) % 4;
-            if ($mod > 0) {
-                return false;
-            }
+        $mod = \strlen($valNoSpace) % 4;
+        if ($opts & self::IS_BASE64_LENGTH && $mod > 0) {
+            return false;
         }
         if ($opts & self::IS_BASE64_CHAR_STAT && self::isBase64EncodedTestStats($valNoSpace) === false) {
             return false;
@@ -134,22 +119,15 @@ class StringUtil
         if (!\is_string($val)) {
             return false;
         }
-        if (\preg_match('/^b:[01];$/', $val)) {
-            // bool
-            return true;
-        }
         $isSerialized = false;
         $matches = array();
-        if (\preg_match('/^(N|i:\d+|d:\d+\.\d+|s:\d+:".*");$/', $val)) {
-            // null, int, float, or string
+        if (\preg_match('/^(N|b:[01]|i:\d+|d:\d+\.\d+|s:\d+:".*");$/', $val)) {
+            // null, bool, int, float, or string
             $isSerialized = true;
         } elseif (\preg_match('/^(?:a|O:8:"stdClass"):\d+:\{(.+)\}$/', $val, $matches)) {
             // appears to be a serialized array or stdClass object
-            $isSerialized = true;
-            if (\preg_match('/[OC]:\d+:"((?!stdClass)[^"])*":\d+:/', $matches[1])) {
-                // appears to contain a serialized obj other than stdClass
-                $isSerialized = false;
-            }
+            // make sure does not contain a serialized obj other than stdClass
+            $isSerialized = \preg_match('/[OC]:\d+:"((?!stdClass)[^"])*":\d+:/', $matches[1]) !== 1;
         }
         if ($isSerialized) {
             \set_error_handler(function () {
@@ -283,6 +261,31 @@ class StringUtil
             }
         }
         return true;
+    }
+
+    /**
+     * Test if value matches basic base64 regex
+     *
+     * @param string $val string to test
+     *
+     * @return bool
+     */
+    private static function isBase64RegexTest($val)
+    {
+        if (\is_string($val) === false) {
+            return false;
+        }
+        $val = \trim($val);
+        $isHex = \preg_match('/^[0-9A-F]+$/i', $val) === 1;
+        if ($isHex) {
+            return false;
+        }
+        // only allow whitspace at beginning and end of lines
+        $regex = '#^'
+            . '([ \t]*[a-zA-Z0-9+/]*[ \t]*[\r\n]+)*'
+            . '([ \t]*[a-zA-Z0-9+/]*={0,2})' // last line may have "=" padding at the end"
+            . '$#';
+        return \preg_match($regex, $val) === 1;
     }
 
     /**

@@ -47,6 +47,13 @@ class Middleware
     protected $debug;
 
     /**
+     * Temporary info built when logging auth
+     *
+     * @var array
+     */
+    protected $authData = array();
+
+    /**
      * Constructor
      *
      * @param Container $container Container
@@ -179,30 +186,44 @@ class Middleware
         if (!$this->shouldCollect('auth', true)) {
             return;
         }
-        $guards = $this->container['config']->get('auth.guards', array());
-        $data = array(
+        $this->authData = array(
             'guards' => array(),
             'names' => array(),
         );
+        $guards = $this->container['config']->get('auth.guards', array());
         foreach (\array_keys($guards) as $guardName) {
             try {
-                $guard = $this->container['auth']->guard($guardName);
-                if (!$this->hasUser($guard)) {
-                    $data['guards'][$guardName] = null;
-                    continue;
-                }
-                $user = $guard->user();
-                if ($user !== null) {
-                    $data['guards'][$guardName] = $this->getUserInformation($user);
-                    $data['names'][] = $guardName . ': ' . $data['guards'][$guardName]['name'];
-                }
+                $this->logAuthGuard($guardName);
             } catch (\Exception $e) {
                 continue;
             }
         }
         $this->debug->groupSummary();
-        $this->debug->log('Laravel auth', $data);
+        $this->debug->log('Laravel auth', $this->authData);
         $this->debug->groupEnd();
+        $this->authData = array();
+    }
+
+    /**
+     * Set guart info
+     *
+     * @param string $guardName Guard name
+     *
+     * @return void
+     */
+    private function logAuthGuard($guardName)
+    {
+        $guard = $this->container['auth']->guard($guardName);
+        if (!$this->hasUser($guard)) {
+            $this->authData['guards'][$guardName] = null;
+            return;
+        }
+        $user = $guard->user();
+        if ($user !== null) {
+            $userInfo = $this->getUserInformation($user);
+            $this->authData['guards'][$guardName] = $userInfo;
+            $this->authData['names'][] = $guardName . ': ' . $userInfo['name'];
+        }
     }
 
     /**
@@ -247,19 +268,21 @@ class Middleware
     private function logRouteSetFile(array $info)
     {
         $reflector = null;
-        if (isset($info['controller']) && \is_string($info['controller']) && \strpos($info['controller'], '@') !== false) {
-            list($controller, $method) = \explode('@', $info['controller']);
-            if (\class_exists($controller) && \method_exists($controller, $method)) {
-                $reflector = new \ReflectionMethod($controller, $method);
-            }
-            unset($info['uses']);
-        } elseif (isset($info['uses']) && $info['uses'] instanceof \Closure) {
-            $reflector = new \ReflectionFunction($info['uses']);
+        switch ($this->routeInfoUse($info)) {
+            case 'controllerMethod':
+                list($controller, $method) = \explode('@', $info['controller']);
+                if (\class_exists($controller) && \method_exists($controller, $method)) {
+                    $reflector = new \ReflectionMethod($controller, $method);
+                }
+                unset($info['uses']);
+                break;
+            case 'closure':
+                $reflector = new \ReflectionFunction($info['uses']);
         }
         if ($reflector) {
-            $filename = \ltrim(\str_replace(\base_path(), '', $reflector->getFileName()), '/');
+            $relFilename = \ltrim(\str_replace(\base_path(), '', $reflector->getFileName()), '/');
             $info['file'] = $this->debug->abstracter->crateWithVals(
-                $filename . ':' . $reflector->getStartLine() . '-' . $reflector->getEndLine(),
+                $relFilename . ':' . $reflector->getStartLine() . '-' . $reflector->getEndLine(),
                 array(
                     'attribs' => array(
                         'data-file' => $reflector->getFileName(),
@@ -269,6 +292,23 @@ class Middleware
             );
         }
         return $info;
+    }
+
+    /**
+     * Check if route info has the given data
+     *
+     * @param array $info Route info
+     *
+     * @return string|null 'controllerMethod' or 'closure'
+     */
+    private function routeInfoUse($info)
+    {
+        if (isset($info['controller']) && \is_string($info['controller']) && \strpos($info['controller'], '@') !== false) {
+            return 'controllerMethod';
+        } elseif (isset($info['uses']) && $info['uses'] instanceof \Closure) {
+            return 'closure';
+        }
+        return null;
     }
 
     /**

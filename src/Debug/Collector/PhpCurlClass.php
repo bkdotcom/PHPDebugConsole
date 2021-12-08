@@ -97,7 +97,6 @@ class PhpCurlClass extends Curl
             $this->debug->meta('icon', $this->icon)
         );
         $this->debug->log('options', $options);
-        $matches = array();
         $return = parent::exec($ch);
         $verboseOutput = null;
         $this->rawRequestHeaders = $this->getInfo(CURLINFO_HEADER_OUT);
@@ -109,34 +108,12 @@ class PhpCurlClass extends Curl
             $pointer = $options['CURLOPT_STDERR'];
             \rewind($pointer);
             $verboseOutput = \stream_get_contents($pointer);
+            $matches = array();
             \preg_match_all('/> (.*?)\r\n\r\n/s', $verboseOutput, $matches);
             $this->rawRequestHeaders = \end($matches[1]);
             $this->requestHeaders = $this->reflection['parseReqHeaders']->invoke($this, $this->rawRequestHeaders);
         }
-        if ($this->error) {
-            $this->debug->warn($this->errorCode, $this->errorMessage);
-        }
-        if ($this->effectiveUrl !== $options['CURLOPT_URL']) {
-            \preg_match_all('/^(Location:|URI: )(.*?)\r\n/im', $this->rawResponseHeaders, $matches);
-            $this->debug->log('Redirect(s)', $matches[2]);
-        }
-        $this->debug->log('request headers', $this->rawRequestHeaders, $this->debug->meta('redact'));
-        // Curl provides no means to get the request body
-        $this->debug->log('response headers', $this->rawResponseHeaders, $this->debug->meta('redact'));
-        if ($this->debugOptions['inclResponseBody']) {
-            $body = $this->getResponseBody();
-            $this->debug->log(
-                'response body',
-                $body,
-                $this->debug->meta('redact')
-            );
-        }
-        if ($this->debugOptions['inclInfo']) {
-            $this->debug->log('info', $this->getInfo());
-        }
-        if ($verboseOutput) {
-            $this->debug->log('verbose', $verboseOutput);
-        }
+        $this->logRequestResponse($verboseOutput, $options);
         $this->debug->groupEnd();
         return $return;
     }
@@ -152,26 +129,19 @@ class PhpCurlClass extends Curl
             return;
         }
         $consts = \get_defined_constants(true);
-        $consts = isset($consts['curl'])
-            ? (array) $consts['curl']
-            : array();
-        \ksort($consts);
-        $valToNames = array();
+        $consts = (array) $consts['curl'];
+        $valToNames = \array_fill_keys(\array_unique($consts), array());
         foreach ($consts as $name => $val) {
             if (\strpos($name, 'CURLOPT') !== 0 && $name !== 'CURLINFO_HEADER_OUT') {
                 continue;
             }
-            if (!isset($valToNames[$val])) {
-                $valToNames[$val] = array();
-            }
             $valToNames[$val][] = $name;
         }
-        \ksort($valToNames);
         self::$optionConstants = $valToNames;
     }
 
     /**
-     *  Build an array of human-readable options used
+     * Build an array of human-readable options used
      *
      * @return array
      */
@@ -227,5 +197,41 @@ class PhpCurlClass extends Curl
         return $this->debugOptions['prettyResponseBody']
             ? $this->debug->prettify($body, $this->responseHeaders['content-type'])
             : $body;
+    }
+
+    /**
+     * Log errors, redirects, request headers, response headers, response body, etc
+     *
+     * @param string $verboseOutput verbose output
+     * @param array  $options       Curl options used for request
+     *
+     * @return void
+     */
+    private function logRequestResponse($verboseOutput, $options)
+    {
+        if ($this->error) {
+            $this->debug->backtrace->addInternalClass('Curl\\');
+            $this->debug->warn($this->errorCode, $this->errorMessage);
+        }
+        if ($this->effectiveUrl !== $options['CURLOPT_URL']) {
+            \preg_match_all('/^(Location:|URI: )(.*?)\r\n/im', $this->rawResponseHeaders, $matches);
+            $this->debug->log('Redirect(s)', $matches[2]);
+        }
+        $this->debug->log('request headers', $this->rawRequestHeaders, $this->debug->meta('redact'));
+        // Curl provides no means to get the request body
+        $this->debug->log('response headers', $this->rawResponseHeaders, $this->debug->meta('redact'));
+        if ($this->debugOptions['inclResponseBody']) {
+            $this->debug->log(
+                'response body',
+                $this->getResponseBody(),
+                $this->debug->meta('redact')
+            );
+        }
+        if ($this->debugOptions['inclInfo']) {
+            $this->debug->log('info', $this->getInfo());
+        }
+        if ($verboseOutput) {
+            $this->debug->log('verbose', $verboseOutput);
+        }
     }
 }

@@ -33,14 +33,9 @@ class Count
     public function doCount(LogEntry $logEntry)
     {
         $debug = $logEntry->getSubject();
-        $args = $logEntry['args'];
-        list($label, $flags) = \array_slice(\array_replace(array(null, 0), $args), 0, 2);
-        // label may be ommitted and only flags passed as a single argument
-        //   (excluding potential meta argument)
-        if (\count($args) === 1 && \is_int($args[0])) {
-            $label = null;
-            $flags = $args[0];
-        }
+        $args = $this->args($logEntry);
+        $label = $args['label'];
+        $flags = $args['flags'];
         $dataLabel = (string) $label;
         if ($label === null) {
             // determine dataLabel from calling file & line
@@ -52,13 +47,7 @@ class Count
             $label = 'count';
             $dataLabel = $logEntry['meta']['file'] . ': ' . $logEntry['meta']['line'];
         }
-        if (!isset($this->counts[$dataLabel])) {
-            $this->counts[$dataLabel] = 0;
-        }
-        if (!($flags & Debug::COUNT_NO_INC)) {
-            $this->counts[$dataLabel]++;
-        }
-        $count = $this->counts[$dataLabel];
+        $count = $this->incCount($dataLabel, $flags & Debug::COUNT_NO_INC);
         if (!($flags & Debug::COUNT_NO_OUT)) {
             $logEntry['args'] = array(
                 (string) $label,
@@ -98,5 +87,47 @@ class Count
             $debug = $logEntry->getSubject();
             $debug->log($logEntry);
         }
+    }
+
+    /**
+     * Get label and flags
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array
+     */
+    private function args(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        list($label, $flags) = \array_slice(\array_replace(array(null, 0), $args), 0, 2);
+        // label may be ommitted and only flags passed as a single argument
+        //   (excluding potential meta argument)
+        if (\count($args) === 1 && \is_int($args[0])) {
+            $label = null;
+            $flags = $args[0];
+        }
+        return array(
+            'label' => $label,
+            'flags' => $flags,
+        );
+    }
+
+    /**
+     * Increment the counter and return new value
+     *
+     * @param string $dataLabel counter identifier
+     * @param bool   $noInc     don't increment / only return current value
+     *
+     * @return int
+     */
+    private function incCount($dataLabel, $noInc = false)
+    {
+        if (!isset($this->counts[$dataLabel])) {
+            $this->counts[$dataLabel] = 0;
+        }
+        if (!$noInc) {
+            $this->counts[$dataLabel]++;
+        }
+        return $this->counts[$dataLabel];
     }
 }

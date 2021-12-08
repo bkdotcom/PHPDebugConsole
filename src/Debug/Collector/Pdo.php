@@ -108,14 +108,13 @@ class Pdo extends PdoBase
 
         $nameParts = \explode('.', $debug->getCfg('channelName', Debug::CONFIG_DEBUG));
         $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
-        $status = $driverName !== 'sqlite'
-            ? $this->pdo->getAttribute(PdoBase::ATTR_CONNECTION_STATUS)
-            : null;
 
         $groupParams = \array_filter(array(
             \end($nameParts) . ' info',
             $driverName,
-            $status,
+            $driverName !== 'sqlite'
+                ? $this->pdo->getAttribute(PdoBase::ATTR_CONNECTION_STATUS)
+                : null,
             $debug->meta(array(
                 'argsAsParams' => false,
                 'icon' => $this->icon,
@@ -123,19 +122,7 @@ class Pdo extends PdoBase
             ))
         ));
         \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
-
-        $database = $this->currentDatabase();
-        if ($database) {
-            $debug->log('database', $database);
-        }
-        $debug->log('logged operations: ', \count($this->loggedStatements));
-        $debug->time('total time', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
-        $debug->log('server info', $this->serverInfo());
-        if ($this->prettified() === false) {
-            $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
-        }
-
+        $this->logRuntime($debug);
         $debug->groupEnd(); // groupCollapsed
         $debug->groupEnd(); // groupSummary
     }
@@ -388,6 +375,28 @@ class Pdo extends PdoBase
             }
         } catch (PDOException $e) {
             // no such method
+        }
+    }
+
+    /**
+     * Log runtime information
+     *
+     * @param Debug $debug Debug instance
+     *
+     * @return void
+     */
+    private function logRuntime(Debug $debug)
+    {
+        $database = $this->currentDatabase();
+        if ($database) {
+            $debug->log('database', $database);
+        }
+        $debug->log('logged operations: ', \count($this->loggedStatements));
+        $debug->time('total time', $this->getTimeSpent());
+        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
+        $debug->log('server info', $this->serverInfo());
+        if ($this->prettified() === false) {
+            $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
         }
     }
 

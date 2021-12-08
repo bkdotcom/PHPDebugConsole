@@ -28,8 +28,29 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class BdkDebugBundleListener implements EventSubscriberInterface
 {
-     protected $mode;
-     private $debug;
+    protected $mode;
+    private $debug;
+    private $debugCfg = array(
+        'channels' => array(
+            'event' => array(
+                'channelIcon' => 'fa fa-bell-o',
+                'channelShow' => false,
+            ),
+            'request' => array(
+                'channelIcon' => 'fa fa-arrow-left',
+            ),
+            'security' => array(
+                'channelIcon' => 'fa fa-shield',
+            ),
+        ),
+        'css' => '.debug .empty {border:none; padding:inherit;}',
+        'logFiles' => array(
+            'filesExclude' => array(
+                '/var/cache/',
+                '/vendor/',
+            ),
+        ),
+    );
 
     /**
      * Constructor
@@ -72,27 +93,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         if (!$event->isMasterRequest()) {
             return;
         }
-        $this->debug->setCfg(array(
-            'channels' => array(
-                'event' => array(
-                    'channelIcon' => 'fa fa-bell-o',
-                    'channelShow' => false,
-                ),
-                'request' => array(
-                    'channelIcon' => 'fa fa-arrow-left',
-                ),
-                'security' => array(
-                    'channelIcon' => 'fa fa-shield',
-                ),
-            ),
-            'css' => '.debug .empty {border:none; padding:inherit;}',
-            'logFiles' => array(
-                'filesExclude' => array(
-                    '/var/cache/',
-                    '/vendor/',
-                ),
-            ),
-        ));
+        $this->debug->setCfg($this->debugCfg);
         $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLog'));
         $this->debug->eventManager->subscribe('debug.objAbstractStart', array($this, 'onObjAbstractStart'));
     }
@@ -106,20 +107,21 @@ class BdkDebugBundleListener implements EventSubscriberInterface
      */
     public function onDebugLog(LogEntry $logEntry)
     {
-        if ($logEntry->getMeta('psr3level') === LogLevel::CRITICAL) {
-            /*
-                test if came via debug's errorHandler
-                if so, already logged
-            */
-            $lastError = $logEntry->getSubject()->errorHandler->getLastError();
-            if ($lastError) {
-                $str = $this->debug->stringUtil->interpolate(
-                    '"{typeStr}: {message}" at {file} line {line}',
-                    $lastError
-                );
-                if (\strpos($logEntry['args'][0], $str) !== false) {
-                    $logEntry['appendLog'] = false;
-                }
+        if ($logEntry->getMeta('psr3level') !== LogLevel::CRITICAL) {
+            return;
+        }
+        /*
+            test if came via debug's errorHandler
+            if so, already logged
+        */
+        $lastError = $logEntry->getSubject()->errorHandler->getLastError();
+        if ($lastError) {
+            $str = $this->debug->stringUtil->interpolate(
+                '"{typeStr}: {message}" at {file} line {line}',
+                $lastError
+            );
+            if (\strpos($logEntry['args'][0], $str) !== false) {
+                $logEntry['appendLog'] = false;
             }
         }
     }
